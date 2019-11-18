@@ -1,0 +1,152 @@
+import React, { Component } from 'react';
+import * as d3 from "d3";
+import Slider, { Range } from 'rc-slider';
+import 'rc-slider/assets/index.css';
+import { getBoundingClientObj } from 'react-select/src/utils';
+
+interface DataPoint {
+    x_axis: any,
+    y_axis: number
+}
+interface BarchartState {
+    y_axis_name: string,
+    x_axis_name: string,
+    data?: DataPoint[],
+    y_max?: number,
+    year_range?:number[]
+}
+interface BarchartProps{
+    y_axis_name: string,
+    x_axis_name: string,
+    year_range:number[],
+    filter_selection:String[]
+}
+
+class BarChart extends Component<BarchartState> {
+    state = {
+        y_axis_name: this.props.y_axis_name,
+        x_axis_name: this.props.x_axis_name,
+      //  data: [],
+        y_max: -1,
+        year_range:[]
+    } 
+    // constructor(props: BarchartProps) {
+    //      super(props)
+    //  }
+    componentDidMount() {
+        console.log(this.props)
+        
+        let svg= d3.select(".canvas-1").append("svg").attr("width", '100%').attr("height", "100%").attr('id', 'canvas-1-svg');
+        
+     //   this.drawChart(this.props);
+    }
+    componentWillReceiveProps(nextProps: BarchartProps) {
+        this.setState({
+            y_axis_name: nextProps.y_axis_name,
+            x_axis_name: nextProps.x_axis_name,
+            year_range:nextProps.year_range,
+            filter_selection:nextProps.filter_selection
+           // data: nextProps.data,
+ //           y_max: nextProps.y_max
+        })
+        console.log(this.state)
+        this.fetch_data_with_year(nextProps.x_axis_name,nextProps.y_axis_name,nextProps.year_range[0],nextProps.year_range[1],nextProps.filter_selection)
+     //   this.drawChart(this.props)
+    }
+    
+    fetch_data_with_year(x_axis: string, y_axis: string,year_min:number,year_max:number, filter_selection:Stirng[]) {
+        fetch('http://localhost:5000/todo/api/v1.0/requestwithyear', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                x_axis: x_axis,
+                y_axis: y_axis,
+                year_min: year_min.toString(),
+                year_max:year_max.toString()
+            })
+        })
+            .then(res => res.json())
+            .then((data) => {
+                data = data.task
+                if (data) {
+                    let y_max = -1;
+                    let cast_data = (data as any).map(function (ob: any) {
+                        if (ob.y_axis > y_max) {
+                            y_max = ob.y_axis
+                        }
+                        let new_ob: DataPoint = {
+                            x_axis: ob.x_axis,
+                            y_axis: ob.y_axis
+                        }
+                        return new_ob
+                    })
+                    //this.setState({ x_axis: x_axis, y_axis: y_axis })
+                    console.log(this.state)
+                    this.drawChart(cast_data, y_max)
+                }
+                else {
+                    console.log('something wrong')
+                }
+            })
+    }
+
+    drawChart(data: DataPoint[],y_max: number) {
+       // const data = props.data
+      //  const y_axis_name = props.y_axis;
+       // const x_axis_name = props.x_axis;
+       console.log(data)
+        const x_vals = data.map(function (dp) {
+            return dp.x_axis
+        })
+        const svg = d3.select('#canvas-1-svg')
+        const width = (svg as any).node().getBoundingClientRect().width;
+        const height = (svg as any).node().getBoundingClientRect().height;
+        const offset = 15
+        svg
+          .append("g")
+          .attr("id", "x-axis")
+          .attr("transform", "translate(0," + (height-offset) + ")");
+        svg
+          .append("g")
+          .attr("id", "y-axis")
+          .attr("transform", "translate(35,-"+offset+")");
+        const y_max_val = y_max;
+        let y_scale = d3.scaleLinear().domain([0, y_max_val]).range([height, offset])
+        let x_scale = d3.scaleBand().domain(x_vals).range([35, width]).paddingInner(0.1)
+
+        //const data = this.props.data;
+        console.log(data)
+        
+        let rects = svg.selectAll("rect")
+            .data(data);
+        rects.exit()
+            .remove();
+        rects = (rects as any).enter()
+            .append("rect")
+            .merge(rects as any);
+        rects.attr("x", (d: any) => (x_scale(d.x_axis) as any))
+            .attr("y", (d: any) =>  y_scale(d.y_axis))
+            .attr("width", x_scale.bandwidth())
+            .attr("height", (d: any) => height -y_scale(d.y_axis))
+            .attr("fill", "green")
+            .attr('opacity', '0.8')
+            .attr('transform','translate(0,-'+offset+')')
+        const x_axis = d3.axisBottom(x_scale)
+        const y_axis = d3.axisLeft(y_scale)
+        svg.select('#x-axis').call(x_axis as any);
+        svg.select('#y-axis').call(y_axis as any);
+
+    }
+    render() {return []
+    //    console.log(this.props) 
+    //     return <div>
+    //         <Range min={2014} max={2019} defaultValue={[2014, 2019]}
+    //             marks={({ 2014: 2014, 2015: 2015, 2016: 2016, 2017: 2017, 2018: 2018, 2019: 2019 } as any)} onAfterChange={this._onHandleYear} />
+    //     </div> 
+    }
+}
+
+export default BarChart;
