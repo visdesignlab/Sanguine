@@ -10,12 +10,14 @@ import  { Range } from "rc-slider";
 import "rc-slider/assets/index.css";
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated'
+import ScatterPlot from './ScatterPlot';
 
 
 
 export interface StyledCardState{
-  y_axis?: string
+  y_axis_1?: string
   x_axis?: string
+  y_axis_2?:string
   year_range?:[]
   filter_selection?:[]
   surgery_type?: []
@@ -38,7 +40,8 @@ class App extends Component<StyledCardState> {
   }
   state = {
     x_axis: "YEAR",
-    y_axis: "PRBC_UNITS",
+    y_axis_1: "PRBC_UNITS",
+    y_axis_2:"PRBC_UNITS",
     year_range:[2014,2019],
     filter_selection:[],
     surgery_type: []
@@ -113,12 +116,12 @@ class App extends Component<StyledCardState> {
   }
   _renderOnFirst=(event:any)=>{
     this.setState({x_axis:this.x_axis,
-      y_axis:this.y_axis,
+      y_axis_1:this.y_axis,
       year_range:this.year_range,
       filter_selection:this.filter_selection})
   }
   _renderOnSecond=(event:any)=>{
-    this.setState({x_axis:this.x_axis,y_axis:this.y_axis})
+    this.setState({x_axis:this.x_axis,y_axis_2:this.y_axis})
   }
 
   render() {
@@ -193,7 +196,7 @@ class App extends Component<StyledCardState> {
           <Space.Left size="50%">
             <Space.Top size="50%" className="canvas-1">
               <BarChart
-                y_axis_name={this.state.y_axis}
+                y_axis_name={this.state.y_axis_1}
                 x_axis_name={this.state.x_axis}
                 year_range={this.state.year_range}
                 filter_selection = {this.state.filter_selection}
@@ -202,7 +205,11 @@ class App extends Component<StyledCardState> {
             <Space.Fill></Space.Fill>
           </Space.Left>
           <Space.Fill>
-            <Space.Top size="50%"></Space.Top>
+            <Space.Top size="50%" className="canvas-2">
+              <ScatterPlot
+                x_axis_name={"HEMO_VALUE"}
+                y_axis_name={this.state.y_axis_2}/>
+            </Space.Top>
             <Space.Fill></Space.Fill>
           </Space.Fill>
         </Space.Fill>

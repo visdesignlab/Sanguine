@@ -1,9 +1,7 @@
-import React, { Component } from 'react';
+import { Component } from 'react';
 import * as d3 from "d3";
-import Slider, { Range } from 'rc-slider';
+
 import 'rc-slider/assets/index.css';
-import { getBoundingClientObj } from 'react-select/src/utils';
-import { any } from 'prop-types';
 
 interface DataPoint {
     x_axis: any,
@@ -61,7 +59,6 @@ class BarChart extends Component<BarchartState> {
             .style("text-anchor", "middle")
             .attr("font-size", "12px")
             .attr("font-weight", "bold");
-     //   this.drawChart(this.props);
     }
     componentWillReceiveProps(nextProps: BarchartProps) {
         this.setState({
@@ -69,12 +66,11 @@ class BarChart extends Component<BarchartState> {
             x_axis_name: nextProps.x_axis_name,
             year_range:nextProps.year_range,
             filter_selection:nextProps.filter_selection
-           // data: nextProps.data,
- //           y_max: nextProps.y_max
+
         })
         console.log(this.state)
         this.fetch_data_with_year(nextProps.x_axis_name,nextProps.y_axis_name,nextProps.year_range[0],nextProps.year_range[1],nextProps.filter_selection)
-     //   this.drawChart(this.props)
+
     }
     
     fetch_data_with_year(x_axis: string, y_axis: string,year_min:number,year_max:number, filter_selection:string[]) {
@@ -118,14 +114,12 @@ class BarChart extends Component<BarchartState> {
     }
 
     drawChart(data: DataPoint[],y_max: number) {
-       // const data = props.data
-      //  const y_axis_name = props.y_axis;
-       // const x_axis_name = props.x_axis;
+       
         let that = this;
        console.log(data)
         const x_vals = data.map(function (dp) {
             return dp.x_axis
-        })
+        }).sort()
         const svg = d3.select('#canvas-1-svg')
         const width = (svg as any).node().getBoundingClientRect().width;
         const height = (svg as any).node().getBoundingClientRect().height;
@@ -136,11 +130,10 @@ class BarChart extends Component<BarchartState> {
         svg.select('#y-axis').attr("transform", "translate(35,-" + offset + ")");
 
         const y_max_val = y_max;
-        let y_scale = d3.scaleLinear().domain([0, y_max_val]).range([height, offset])
+        let y_scale = d3.scaleLinear().domain([0, y_max_val+10]).range([height, offset])
         let x_scale = d3.scaleBand().domain(x_vals).range([35, width]).paddingInner(0.1)
         const tooltip=svg.select('.tooltip')
-        // //const data = this.props.data;
-        // console.log(data)
+        
         
         let rects = svg.select('#all-rects').selectAll(".bars")
             .data(data);
@@ -150,23 +143,30 @@ class BarChart extends Component<BarchartState> {
         rects = (rects as any).enter()
             .append("rect")
             .merge(rects as any);
-        rects.attr("x", (d: any) => (x_scale(d.x_axis) as any))
-            .attr("y", (d: any) => y_scale(d.y_axis))
-            .classed('bars',true)
-            .attr("width", x_scale.bandwidth())
-            .attr("height", (d: any) => height -y_scale(d.y_axis))
-            .attr("fill", "green")
-            .attr('opacity', '0.8')
-            .attr('transform', 'translate(0,-' + offset + ')')
-            .on("mouseover", function () { tooltip.style("display", null); })
-            .on("mouseout", function () { tooltip.style("display", "none"); })
-            .on("mousemove", function (d) {
-                
-                var xPosition = d3.mouse(this as any)[0] - 20;
-                var yPosition = d3.mouse(this as any)[1] - 40;
-                tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
-                tooltip.select("text").text( d.y_axis);
-            })
+        rects
+          .attr("x", (d: any) => x_scale(d.x_axis) as any)
+          .attr("y", (d: any) => y_scale(d.y_axis))
+          .classed("bars", true)
+          .attr("width", x_scale.bandwidth())
+          .attr("height", (d: any) => height - y_scale(d.y_axis))
+          .attr("fill", "lightblue")
+          //.attr("opacity", "1")
+          .attr("transform", "translate(0,-" + offset + ")")
+          .on("mouseover", function() {
+            tooltip.style("display", null);
+          })
+          .on("mouseout", function() {
+            tooltip.style("display", "none");
+          })
+          .on("mousemove", function(d) {
+            var xPosition = d3.mouse(this as any)[0] - 20;
+            var yPosition = d3.mouse(this as any)[1] - 40;
+            tooltip.attr(
+              "transform",
+              "translate(" + xPosition + "," + yPosition + ")"
+            );
+            tooltip.select("text").text(d.y_axis);
+          });
         const x_axis = d3.axisBottom(x_scale)
         const y_axis = d3.axisLeft(y_scale)
         svg.select('#x-axis').call(x_axis as any);
@@ -174,11 +174,7 @@ class BarChart extends Component<BarchartState> {
 
     }
     render() {return []
-    //    console.log(this.props) 
-    //     return <div>
-    //         <Range min={2014} max={2019} defaultValue={[2014, 2019]}
-    //             marks={({ 2014: 2014, 2015: 2015, 2016: 2016, 2017: 2017, 2018: 2018, 2019: 2019 } as any)} onAfterChange={this._onHandleYear} />
-    //     </div> 
+
     }
 }
 
