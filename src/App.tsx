@@ -105,9 +105,11 @@ class App extends Component<StyledCardState> {
   _onHandleYear = (event: any) => {
     this.year_range=event
   };
-  _onSelectFilter = (event:any)=>{
-    this.filter_selection=event.map((d:any)=>d.label)
-    console.log(this.filter_selection)
+  _onSelectFilter = (event: any) => {
+    if (event != null) {
+      this.filter_selection = event.map((d: any) => d.label)
+      console.log(this.filter_selection)
+    }
   }
   _renderOnFirst=(event:any)=>{
     this.setState({x_axis:this.x_axis,
