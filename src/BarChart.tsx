@@ -10,10 +10,10 @@ interface DataPoint {
 interface BarchartState {
     y_axis_name: string,
     x_axis_name: string,
-    data?: DataPoint[],
-    y_max?: number,
-    year_range?: number[],
-    filter_selection?: string[],
+    data: DataPoint[],
+    y_max: number,
+    year_range: string,
+    filter_selection: string,
     class_name:string
 }
 interface BarchartProps{
@@ -24,28 +24,30 @@ interface BarchartProps{
     class_name:string
 }
 
-class BarChart extends Component<BarchartProps,BarchartState> {
-  state = {
-    y_axis_name: this.props.y_axis_name,
-    x_axis_name: this.props.x_axis_name,
-    //  data: [],
-    y_max: -1,
-    year_range: this.props.year_range,
-    filter_selection: [],
-    class_name: this.props.class_name
-  };
-  // constructor(props: BarchartProps) {
-  //      super(props)
-  //  }
-  componentDidMount() {
-    console.log(this.props);
+class BarChart extends Component<BarchartProps, BarchartState> {
+    constructor(props: Readonly<BarchartProps>) {
+        super(props)
+        this.state={
+            y_axis_name: this.props.y_axis_name,
+            x_axis_name: this.props.x_axis_name,
+            data:[],
+            y_max: -1,
+            year_range: this.props.year_range.toString(),
+            filter_selection: this.props.filter_selection.toString(),
+            class_name: this.props.class_name,
+            //data: this.fetch_data_with_year()
+        };
+    }
 
+  componentDidMount() {
+    //console.log(this.props);
+    this.fetch_data_with_year()
     let svg = d3
-      .select("."+this.state.class_name)
+      .select("." + this.state.class_name)
       .append("svg")
       .attr("width", "100%")
       .attr("height", "100%")
-      .attr("id", this.state.class_name+"-svg");
+      .attr("id", this.state.class_name + "-svg");
     svg.append("g").attr("id", "x-axis");
     svg.append("g").attr("id", "y-axis");
     svg.append("g").attr("id", "all-rects");
@@ -69,79 +71,91 @@ class BarChart extends Component<BarchartProps,BarchartState> {
       .attr("font-size", "12px")
       .attr("font-weight", "bold");
   }
-  componentWillReceiveProps(nextProps: BarchartProps) {
-    this.setState({
-      y_axis_name: nextProps.y_axis_name,
-      x_axis_name: nextProps.x_axis_name,
-      year_range: nextProps.year_range,
-      filter_selection: nextProps.filter_selection
-    });
-    console.log(this.state);
-    this.fetch_data_with_year(
-      nextProps.x_axis_name,
-      nextProps.y_axis_name,
-      nextProps.year_range[0],
-      nextProps.year_range[1],
-      nextProps.filter_selection
-    );
+    componentWillReceiveProps(nextProps: BarchartProps) {
+        const filter_selection = nextProps.filter_selection.toString();
+        const year_range = nextProps.year_range.toString()
+    if (nextProps.y_axis_name !== this.state.y_axis_name ||
+        nextProps.x_axis_name !== this.state.x_axis_name ||
+        filter_selection !== this.state.filter_selection ||
+        year_range !== this.state.year_range) {
+        this.setState({
+            y_axis_name: nextProps.y_axis_name,
+            x_axis_name: nextProps.x_axis_name,
+            year_range: year_range,
+            filter_selection: filter_selection
+        });
+        this.fetch_data_with_year()
+        console.log("new props")
+    }
+    else {
+        this.drawChart(this.state.data,this.state.y_max)
+    } 
   }
 
-  fetch_data_with_year(
-    x_axis: string,
-    y_axis: string,
-    year_min: number,
-    year_max: number,
-    filter_selection: string[]
-  ) {
-    fetch("http://localhost:5000/bloodvis/api/requestwithyear", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        x_axis: x_axis,
-        y_axis: y_axis,
-        year_min: year_min.toString(),
-        year_max: year_max.toString(),
-        filter_selection: filter_selection.toString()
-      })
-    })
-      .then(res => res.json())
-      .then(data => {
-        data = data.task;
-        if (data) {
-          let y_max = -1;
-          let cast_data = (data as any).map(function(ob: any) {
-            if (ob.y_axis > y_max) {
-              y_max = ob.y_axis;
+    fetch_data_with_year() {
+
+        // const year_max = this.state.year_range[1]
+        // const year_min = this.state.year_range[0];
+        const year_range = this.state.year_range
+        const x_axis = this.state.x_axis_name;
+        const y_axis = this.state.y_axis_name;
+        const filter_selection = this.state.filter_selection
+        fetch("http://localhost:5000/bloodvis/api/requestwithyear", {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                x_axis: x_axis,
+                y_axis: y_axis,
+                year_range:year_range,
+                // year_min: year_min.toString(),
+                // year_max: year_max.toString(),
+                filter_selection: filter_selection.toString()
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            data = data.task;
+            if (data) {
+            let y_max = -1;
+            let cast_data = (data as any).map(function(ob: any) {
+                if (ob.y_axis > y_max) {
+                y_max = ob.y_axis;
+                }
+                let new_ob: DataPoint = {
+                x_axis: ob.x_axis,
+                y_axis: ob.y_axis
+                };
+                return new_ob;
+            });
+            this.setState({data: cast_data,y_max: y_max})
+            this.drawChart(cast_data, y_max);
+            } else {
+            console.log("something wrong");
             }
-            let new_ob: DataPoint = {
-              x_axis: ob.x_axis,
-              y_axis: ob.y_axis
-            };
-            return new_ob;
-          });
-          //this.setState({ x_axis: x_axis, y_axis: y_axis })
-          console.log(this.state);
-          this.drawChart(cast_data, y_max);
-        } else {
-          console.log("something wrong");
-        }
-      });
-  }
+        });
+    }
 
   drawChart(data: DataPoint[], y_max: number) {
-    let that = this;
-    console.log(data);
-    const x_vals = data
+    //let that = this;
+      //  console.log(data);
+      const x_vals = data
       .map(function(dp) {
         return dp.x_axis;
       })
-      .sort();
-    const svg = d3.select("#"+this.state.class_name+"-svg");
-    const width = (svg as any).node().getBoundingClientRect().width;
-    const height = (svg as any).node().getBoundingClientRect().height;
+          .sort();
+      const svg = d3.select("#" + this.state.class_name + "-svg");
+      const div = (d3.select("."+this.state.class_name)as any).node()
+      svg.attr('width', '100%')
+          .attr('height', '100%')
+      console.log(div.style.width, div.style.height)
+    //   const width = window.getComputedStyle(div).width;
+    //   const height = window.getComputedStyle(div).height;
+      const width = (svg as any).node().getBoundingClientRect().width;
+      const height = (svg as any).node().getBoundingClientRect().height;
+      console.log(width, height);
     const offset = 15;
 
     svg

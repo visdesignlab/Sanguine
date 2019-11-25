@@ -20,7 +20,9 @@ import { element } from 'prop-types';
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
 interface LayoutElement{
   x_axis_name: string,
-  y_axis_name:string,
+  y_axis_name: string,
+  year_range: number[],
+  filter_selection: string[]
   i: string,
   x: number,
   y: number,
@@ -40,8 +42,8 @@ interface PropsCard{
 class App extends Component<PropsCard, StyledCardState> {
   x_axis: string;
   y_axis: string;
-  year_range: Number[];
-  filter_selection: String[];
+  year_range: number[];
+  filter_selection: string[];
   current_id: number;
   col_data: { lg: number, md: number, sm: number, xs: number, xxs: number };
   current_select_id: string;
@@ -103,7 +105,9 @@ class App extends Component<PropsCard, StyledCardState> {
 
     let new_element: LayoutElement = {
       x_axis_name: this.x_axis,
-      y_axis_name:this.y_axis,
+      y_axis_name: this.y_axis,
+      year_range: this.year_range,
+      filter_selection: this.filter_selection,
       i:this.current_id.toString(),
       x:(this.state.layout.length*2)%(this.col_data.sm||12),
       y:Infinity,
@@ -114,12 +118,14 @@ class App extends Component<PropsCard, StyledCardState> {
     this.setState({
       layout: this.state.layout.concat(new_element)
     })
-    console.log(this.state)
+    console.log(this.state.layout)
     
   };
 
   _onLayoutChange = (event: any) => {
     this.forceUpdate();
+    console.log(event)
+    console.log(this.state.layout);
   };
 
   _onBreakpointChange = (event: any) => { };
@@ -156,8 +162,8 @@ class App extends Component<PropsCard, StyledCardState> {
           <BarChart
             x_axis_name={layoutE.x_axis_name}
             y_axis_name={layoutE.y_axis_name}
-            year_range={[2014, 2019]}
-            filter_selection={[]}
+            year_range={layoutE.year_range}
+            filter_selection={layoutE.filter_selection}
             class_name={"parent-node" + layoutE.i}
           ></BarChart>
         </div>
@@ -249,7 +255,7 @@ class App extends Component<PropsCard, StyledCardState> {
             onBreakpointChange={this._onBreakpointChange}
             className="layout"
             cols={this.col_data}
-            rowHeight={30}
+            // rowHeight={30}
             width={1200}
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
           >
