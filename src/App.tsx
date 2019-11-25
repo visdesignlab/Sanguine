@@ -45,12 +45,12 @@ class App extends Component<PropsCard, StyledCardState> {
   year_range: number[];
   filter_selection: string[];
   current_id: number;
-  col_data: { lg: number, md: number, sm: number, xs: number, xxs: number };
+  col_data: { lg: number; md: number; sm: number; xs: number; xxs: number };
   current_select_id: string;
 
   constructor(prop: Readonly<PropsCard>) {
     super(prop);
-    this.current_id = 0
+    this.current_id = 0;
     this.x_axis = "YEAR";
     this.y_axis = "PRBC_UNITS";
     this.year_range = [2014, 2019];
@@ -65,9 +65,8 @@ class App extends Component<PropsCard, StyledCardState> {
       sm: 6,
       xs: 4,
       xxs: 2
-    }
-    this.current_select_id = "-1"
-    
+    };
+    this.current_select_id = "-1";
   }
   animatedComponents = makeAnimated();
 
@@ -85,7 +84,6 @@ class App extends Component<PropsCard, StyledCardState> {
       .catch(console.log);
   }
 
-  
   _handleChangeX = (event: any) => {
     this.x_axis = event.value;
   };
@@ -102,43 +100,79 @@ class App extends Component<PropsCard, StyledCardState> {
   };
 
   _generate_new_graph = (event: any) => {
-
     let new_element: LayoutElement = {
       x_axis_name: this.x_axis,
       y_axis_name: this.y_axis,
       year_range: this.year_range,
       filter_selection: this.filter_selection,
-      i:this.current_id.toString(),
-      x:(this.state.layout.length*2)%(this.col_data.sm||12),
-      y:Infinity,
-      w:2,
-      h:2,
-    }
-    this.current_id+=1
+      i: this.current_id.toString(),
+      x: (this.state.layout.length * 2) % (this.col_data.sm || 12),
+      y: Infinity,
+      w: 2,
+      h: 2
+    };
+    this.current_id += 1;
     this.setState({
       layout: this.state.layout.concat(new_element)
-    })
-    console.log(this.state.layout)
-    
+    });
+    console.log(this.state.layout);
   };
 
   _onLayoutChange = (event: any) => {
     this.forceUpdate();
-    console.log(event)
+    console.log(event);
     console.log(this.state.layout);
   };
 
-  _onBreakpointChange = (event: any) => { };
-  
-  onRemoveItem = (event: any ) => {
-    let new_layout_array = this.state.layout.filter(element=>element.i!=event)
-    this.setState({layout: new_layout_array})
+  _onBreakpointChange = (event: any) => {};
+
+  onRemoveItem = (event: any) => {
+    let new_layout_array = this.state.layout.filter(
+      element => element.i != event
+    );
+    this.setState({ layout: new_layout_array });
   };
 
   onClickBlock = (event: any) => {
-  //  console.log(event)
-    this.current_select_id = event
-    console.log(this.current_select_id)
+    //  console.log(event)
+    if (this.current_select_id === event) {
+      this.current_select_id = "-1"
+    }
+    else {
+      this.current_select_id = event;
+    }
+    
+    this.forceUpdate();
+    console.log(this.current_select_id);
+  };
+
+  _change_selected = (eve: any) => {
+    const that = this
+    
+    let new_layout: LayoutElement[] = this.state.layout.map((layoutE) => {
+      if (layoutE.i === that.current_select_id) {
+        layoutE = {
+          x_axis_name: that.x_axis,
+          y_axis_name: that.y_axis,
+          year_range: that.year_range,
+          filter_selection: that.filter_selection,
+          i: layoutE.i,
+          x: layoutE.x,
+          w: layoutE.w,
+          y: layoutE.y,
+          h: layoutE.h
+        };
+      }
+      return layoutE
+    })
+    this.current_select_id = '-1'
+    
+    this.setState({
+      layout: new_layout
+    })
+    // this.forceUpdate()
+    console.log(this.state.layout, new_layout)
+
   }
 
   createElement(layoutE: LayoutElement) {
@@ -165,6 +199,7 @@ class App extends Component<PropsCard, StyledCardState> {
             year_range={layoutE.year_range}
             filter_selection={layoutE.filter_selection}
             class_name={"parent-node" + layoutE.i}
+            is_selected={this.current_select_id === layoutE.i}
           ></BarChart>
         </div>
         <span
@@ -243,6 +278,7 @@ class App extends Component<PropsCard, StyledCardState> {
                 onChange={this._onSelectFilter}
               />
               <button onClick={this._generate_new_graph}>Generate New</button>
+              <button onClick={this._change_selected}>Change Selected</button>
               {/* <p>confirm</p>
               <button onClick={this._renderOnFirst}>Render on 1</button>
               <button onClick={this._renderOnSecond}>Render on 2</button> */}

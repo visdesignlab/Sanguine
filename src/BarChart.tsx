@@ -14,14 +14,16 @@ interface BarchartState {
     y_max: number,
     year_range: string,
     filter_selection: string,
-    class_name:string
+    class_name: string,
+    is_selected:boolean
 }
 interface BarchartProps{
     y_axis_name: string,
     x_axis_name: string,
     year_range:number[],
     filter_selection: string[]
-    class_name:string
+    class_name: string,
+    is_selected: boolean
 }
 
 class BarChart extends Component<BarchartProps, BarchartState> {
@@ -35,6 +37,7 @@ class BarChart extends Component<BarchartProps, BarchartState> {
             year_range: this.props.year_range.toString(),
             filter_selection: this.props.filter_selection.toString(),
             class_name: this.props.class_name,
+            is_selected: this.props.is_selected
             //data: this.fetch_data_with_year()
         };
     }
@@ -77,12 +80,14 @@ class BarChart extends Component<BarchartProps, BarchartState> {
     if (nextProps.y_axis_name !== this.state.y_axis_name ||
         nextProps.x_axis_name !== this.state.x_axis_name ||
         filter_selection !== this.state.filter_selection ||
-        year_range !== this.state.year_range) {
+        year_range !== this.state.year_range ||
+        nextProps.is_selected!== this.state.is_selected) {
         this.setState({
             y_axis_name: nextProps.y_axis_name,
             x_axis_name: nextProps.x_axis_name,
             year_range: year_range,
-            filter_selection: filter_selection
+            filter_selection: filter_selection,
+            is_selected: nextProps.is_selected
         });
         this.fetch_data_with_year()
         console.log("new props")
@@ -139,7 +144,7 @@ class BarChart extends Component<BarchartProps, BarchartState> {
     }
 
   drawChart(data: DataPoint[], y_max: number) {
-    //let that = this;
+    let that = this;
       //  console.log(data);
       const x_vals = data
       .map(function(dp) {
@@ -192,7 +197,7 @@ class BarChart extends Component<BarchartProps, BarchartState> {
       .classed("bars", true)
       .attr("width", x_scale.bandwidth())
       .attr("height", (d: any) => height - y_scale(d.y_axis))
-      .attr("fill", "lightblue")
+        .attr("fill", d => that.state.is_selected? "blue":"lightblue" )
       //.attr("opacity", "1")
       .attr("transform", "translate(0,-" + offset + ")")
       .on("mouseover", function() {
