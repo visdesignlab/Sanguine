@@ -106,7 +106,7 @@ class BarChart extends Component<BarchartProps, BarchartState> {
         const y_axis = this.state.y_axis_name;
         const filter_selection = this.state.filter_selection
         fetch(`http://localhost:5000/bloodvis/api/requestwithyear?x_axis=${x_axis}&y_axis=${y_axis}&year_range=${year_range}&filter_selection=${filter_selection.toString()}`, {
-            method: "POST",
+            method: "GET",
             headers: {
                 Accept: "application/json",
                 "Content-Type": "application/json"
