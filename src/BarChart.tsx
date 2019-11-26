@@ -105,20 +105,12 @@ class BarChart extends Component<BarchartProps, BarchartState> {
         const x_axis = this.state.x_axis_name;
         const y_axis = this.state.y_axis_name;
         const filter_selection = this.state.filter_selection
-        fetch("http://localhost:5000/bloodvis/api/requestwithyear", {
+        fetch(`http://localhost:5000/bloodvis/api/requestwithyear/?x_axis=${x_axis}&y_axis=${y_axis}&year_range=${year_range}&filter_selection=${filter_selection.toString()}`, {
             method: "POST",
             headers: {
                 Accept: "application/json",
                 "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                x_axis: x_axis,
-                y_axis: y_axis,
-                year_range:year_range,
-                // year_min: year_min.toString(),
-                // year_max: year_max.toString(),
-                filter_selection: filter_selection.toString()
-            })
+            }
         })
         .then(res => res.json())
         .then(data => {

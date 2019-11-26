@@ -62,16 +62,12 @@ class ScatterPlot extends Component<StyledCardProps> {
         //   this.drawChart(this.props)
     }
     fetch_data(x_axis:string, y_axis: string) {
-        fetch("http://localhost:5000/bloodvis/api/v1.0/get_static", {
-          method: "POST",
+        fetch(`http://localhost:5000/bloodvis/api/v1.0/get_static/?x_axis=${x_axis}&y_axis=${y_axis}`, {
+          method: "GET",
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json"
-          },
-            body: JSON.stringify({
-                x_axis: x_axis,
-                y_axis: y_axis
-          })
+          }
         })
           .then(res => res.json())
           .then(data => {
