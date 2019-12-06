@@ -64,6 +64,15 @@ class ChartComponent extends Component<
       .attr("id", this.state.class_name + "-svg");
     svg.append("g").attr("id", "x-axis");
     svg.append("g").attr("id", "y-axis");
+    svg
+      .append("text")
+      .attr("class", "x-label")
+      .attr("text-anchor", "end");
+    svg
+      .append("text")
+      .attr("class", "y-label")
+      .attr("text-anchor", "end");
+    
     svg.append("g").attr("id", "all-rects");
     svg.append("g").attr("id","all-dots");
 
@@ -300,6 +309,17 @@ class ChartComponent extends Component<
       .attr("transform", "translate(35,-" + offset + ")")
       .call(y_axis as any);
     
+    svg.select(".x-label")
+      .attr("x", width)
+      .attr("y", height - 6)
+      .text(this.state.x_axis_name);
+    
+    svg
+      .select(".y-label")
+      .attr("dy", ".75em")
+      .attr("y", 6)
+      .attr("transform", "rotate(-90)")
+      .text(this.state.y_axis_name);
     if (this.state.plot_type === "bar") {
       dots.attr('opacity',0)
       circle_tooltip.attr('opacity',0)
