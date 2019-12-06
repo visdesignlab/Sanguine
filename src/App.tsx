@@ -360,7 +360,6 @@ class App extends Component<PropsCard, StyledCardState> {
         data-grid={layoutE}
       >
         <header>chart #{layoutE.i}</header>
-        {/* <span className="text">{"wowowowow" + layoutE.i}</span> */}
         <div>
           <ChartComponent
             x_axis_name={layoutE.x_axis_name}
