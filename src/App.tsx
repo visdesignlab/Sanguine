@@ -11,9 +11,9 @@ import  { Range } from "rc-slider";
 import "rc-slider/assets/index.css";
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated'
-import ScatterPlot from './ScatterPlot';
+// import ScatterPlot from './ScatterPlot';
 import { Responsive as ResponsiveReactGridLayout } from "react-grid-layout";
-import { element } from 'prop-types';
+// import { element } from 'prop-types';
 import Toggle from "react-toggle";
 import "react-toggle/style.css";
 import * as ProvenanceLibrary from '@visdesignlab/provenance-lib-core/lib/src/index.js'

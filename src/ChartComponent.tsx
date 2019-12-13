@@ -269,9 +269,9 @@ class ChartComponent extends Component<
           .append("circle")
           .merge(dots as any);
         dots
-          .attr("cx", (d: any) => x_scale(d.x_axis) as any)
+          .attr("cx", (d: any) => x_scale(d.x_axis) as any + x_scale.bandwidth()*0.5)
           .attr("cy", (d: any) => y_scale(d.y_axis))
-          .attr("r", "2.5px")
+          .attr("r", "5px")
           .classed("dots", true)
           .attr("fill", "#072F5F")
           .attr("opacity", "1")
@@ -309,25 +309,27 @@ class ChartComponent extends Component<
       .attr("transform", "translate(35,-" + offset + ")")
       .call(y_axis as any);
     
-    svg.select(".x-label")
-      .attr("x", width)
-      .attr("y", height - 6)
-      .text(this.state.x_axis_name);
+    // svg.select(".x-label")
+    //   .attr("x", width)
+    //   .attr("y", height - 6)
+    //   .text(this.state.x_axis_name);
     
-    svg
-      .select(".y-label")
-      .attr("dy", ".75em")
-      .attr("y", 6)
-      .attr("transform", "rotate(-90)")
-      .text(this.state.y_axis_name);
+    // svg
+    //   .select(".y-label")
+    //   .attr("dy", ".75em")
+    //   .attr("y", 6)
+    //   .attr("transform", "rotate(-90)")
+    //   .text(this.state.y_axis_name);
     if (this.state.plot_type === "bar") {
       dots.attr('opacity',0)
       circle_tooltip.attr('opacity',0)
+      rect_tooltip.attr('opacity',1)
     }
 
     if (this.state.plot_type === "scatter") {
       rects.attr('opacity', 0)
       rect_tooltip.attr('opacity',0)
+      circle_tooltip.attr('opacity',1)
     }
   }
   render() {
