@@ -1,0 +1,14 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+cx-oracle = "*"
+flask = "*"
+flask-cors = "*"
+
+[scripts]
+serve = "python app.py"
