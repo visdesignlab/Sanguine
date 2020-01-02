@@ -1,6 +1,4 @@
-import React, { Component, useLayoutEffect } from 'react';
-//import Dropdown from 'react-dropdown'
-//import 'react-dropdown/style.css'
+import React, { Component } from 'react';
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import './App.css';
@@ -11,9 +9,8 @@ import  { Range } from "rc-slider";
 import "rc-slider/assets/index.css";
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated'
-// import ScatterPlot from './ScatterPlot';
+import ScatterPlot from './ScatterPlot';
 import { Responsive as ResponsiveReactGridLayout } from "react-grid-layout";
-// import { element } from 'prop-types';
 import Toggle from "react-toggle";
 import "react-toggle/style.css";
 import * as ProvenanceLibrary from '@visdesignlab/provenance-lib-core/lib/src/index.js'
@@ -42,13 +39,15 @@ function CreateProvenance(provenance: ProvenanceLibrary.Provenance<NodeState>) {
 export interface NodeState {
   nodes: {
     layout_array: LayoutElement[]
+    current_selected: string
     };//this is the grid ID number to the list of props for the 
   }
 
 
 const initialState: NodeState = {
   nodes: {
-    layout_array: []
+    layout_array: [],
+    current_selected: "-1"
     }
   }
 
@@ -126,10 +125,12 @@ class App extends Component<PropsCard, StyledCardState> {
     })
       .then(res => res.json())
       .then(data => {
-        console.log(data);
+       // console.log(data);
         this.setState({ surgery_type: data.result });
       })
       .catch(console.log);
+
+
   }
   /**
    * Event Handlers for x and y generator change
@@ -154,7 +155,6 @@ class App extends Component<PropsCard, StyledCardState> {
   };
 
   _handleChartTypeChange = (event: any) => {
-    console.log(event)
 
     this.setState({ chart_type_change: event.value });
    // this.chart_type_change = event.value;
@@ -169,6 +169,7 @@ class App extends Component<PropsCard, StyledCardState> {
     });
     this.setState({ layout: new_layout_array });
   };
+
   _onSelectFilter = (event: any) => {
     if (event != null) {
       this.filter_selection = event.map((d: any) => d.label);
@@ -197,7 +198,7 @@ class App extends Component<PropsCard, StyledCardState> {
       y: Infinity,
       w: 2,
       h: 2,
-      plot_type: "bar"
+      plot_type: this.x_axis ==="HEMO_VALUE"?"scatter":"bar"
     };
     this.provenance.applyAction({
       label: this.current_id + "add",
@@ -234,7 +235,7 @@ class App extends Component<PropsCard, StyledCardState> {
   /**
    * Event Handler for redo and undo gesture.
    * Uses provenance to achieve
-   * TODO finish these two methods
+   * 
    */
   undo = (event: any) => {
     console.log(this.state);
@@ -242,11 +243,12 @@ class App extends Component<PropsCard, StyledCardState> {
     this.setState({
       layout: this.provenanceApp.currentState().nodes.layout_array
     });
+    this.current_select_id = this.provenanceApp.currentState().nodes.current_selected;
     console.log(this.state);
   };
 
   redo = (event: any) => {
-    if (this.provenance.graph().current.children.length == 0) {
+    if (this.provenance.graph().current.children.length === 0) {
       return;
     }
     console.log(this.state);
@@ -258,6 +260,7 @@ class App extends Component<PropsCard, StyledCardState> {
     this.setState({
       layout: this.provenanceApp.currentState().nodes.layout_array
     });
+    this.current_select_id = this.provenanceApp.currentState().nodes.current_selected;
     console.log(this.state);
   };
 
@@ -265,7 +268,7 @@ class App extends Component<PropsCard, StyledCardState> {
     if (this.current_select_id === id) {
       this.current_select_id = "-1";
     }
-    let new_layout_array = this.state.layout.filter(element => element.i != id);
+    let new_layout_array = this.state.layout.filter(element => element.i !== id);
     this.provenance.applyAction({
       label: this.current_id + "remove",
       action: (id: any) => {
@@ -278,7 +281,7 @@ class App extends Component<PropsCard, StyledCardState> {
 
     this.setState({ layout: new_layout_array });
     e.stopPropagation();
-    //TODO add provenance
+    
   };
 
   onClickBlock = (event: any) => {
@@ -289,6 +292,18 @@ class App extends Component<PropsCard, StyledCardState> {
     const current_selected_layout = this.state.layout.filter(
       d => d.i === this.current_select_id
     )[0];
+
+    //add provenence for select id
+    this.provenance.applyAction({
+      label: "change selected id",
+      action: (id: any) => {
+        let test = (this.provenanceApp.currentState() as any) as NodeState;
+        test.nodes.current_selected = event;
+        return test;
+      },
+      args: [this.current_id]
+    });
+
     this.setState({
       x_axis_change: current_selected_layout.x_axis_name,
       y_axis_change: current_selected_layout.y_axis_name,
@@ -303,7 +318,7 @@ class App extends Component<PropsCard, StyledCardState> {
     console.log(this.current_select_id);
   };
 
-  //TODO Change this to relate to the tool bar instead of highlighting
+  
   _change_selected = (eve: any) => {
     const that = this;
     console.log("called");
@@ -325,8 +340,19 @@ class App extends Component<PropsCard, StyledCardState> {
       }
       return layoutE;
     });
+    console.log(new_layout)
 
-    //TODO add provenance
+    // provenance implementation
+   // let new_layout_array = this.state.layout.filter(element => element.i !== id);
+    this.provenance.applyAction({
+      label: this.current_id + "change",
+      action: (id: any) => {
+        let test = (this.provenanceApp.currentState() as any) as NodeState;
+        test.nodes.layout_array = new_layout;
+        return test;
+      },
+      args: [this.current_id]
+    });
 
     this.setState(
       {
@@ -334,7 +360,7 @@ class App extends Component<PropsCard, StyledCardState> {
       },
       this.forceUpdate
     );
-    // console.log(this.state.layout, new_layout);
+   console.log(this.state.layout, new_layout);
   };
 
   handlePerCaseChange = (event: any) => {
@@ -352,35 +378,75 @@ class App extends Component<PropsCard, StyledCardState> {
     if (layoutE.y === null) {
       layoutE.y = Infinity;
     }
-    return (
-      <div
-        onClick={this.onClickBlock.bind(this, layoutE.i)}
-        key={layoutE.i}
-        className={"parent-node" + layoutE.i}
-        data-grid={layoutE}
-      >
-        <header>chart #{layoutE.i}</header>
-        <div>
-          <ChartComponent
-            x_axis_name={layoutE.x_axis_name}
-            y_axis_name={layoutE.y_axis_name}
-            year_range={layoutE.year_range}
-            filter_selection={layoutE.filter_selection}
-            class_name={"parent-node" + layoutE.i}
-            chart_id={layoutE.i}
-            per_case={this.state.percase}
-            plot_type={layoutE.plot_type}
-          />
-        </div>
-        <span
-          className="remove"
-          style={removeStyle}
-          onClick={this.onRemoveItem.bind(this, layoutE.i)}
+    //Change this eventually TODO
+    //The ScatterPlot is specially designed for individual cases
+
+    if (layoutE.x_axis_name !== "HEMO_VALUE") {
+    //if (layoutE.plot_type === "bar") {
+      return (
+        <div
+          onClick={this.onClickBlock.bind(this, layoutE.i)}
+          key={layoutE.i}
+          className={"parent-node" + layoutE.i}
+          data-grid={layoutE}
         >
-          x
-        </span>
-      </div>
-    );
+          <header>chart #{layoutE.i}</header>
+          <svg>
+            <ChartComponent
+              x_axis_name={layoutE.x_axis_name}
+              y_axis_name={layoutE.y_axis_name}
+              year_range={layoutE.year_range}
+              filter_selection={layoutE.filter_selection}
+              class_name={"parent-node" + layoutE.i}
+              chart_id={layoutE.i}
+              per_case={this.state.percase}
+            //plot_type={layoutE.plot_type}
+            />
+          </svg>
+          <span
+            className="remove"
+            style={removeStyle}
+            onClick={this.onRemoveItem.bind(this, layoutE.i)}
+          >
+            x
+          </span>
+        </div>
+      );
+    }
+    //TODO also need to change this
+    
+    //else if (layoutE.plot_type == "scatter") {
+    else{
+      return (
+        <div
+          onClick={this.onClickBlock.bind(this, layoutE.i)}
+          key={layoutE.i}
+          className={"parent-node" + layoutE.i}
+          data-grid={layoutE}
+        >
+          <header>chart #{layoutE.i}</header>
+          <svg>
+            <ScatterPlot
+              x_axis_name={layoutE.x_axis_name}
+              y_axis_name={layoutE.y_axis_name}
+              year_range={layoutE.year_range}
+              filter_selection={layoutE.filter_selection}
+              class_name={"parent-node" + layoutE.i}
+              chart_id={layoutE.i}
+             // per_case={this.state.percase}
+            //plot_type={layoutE.plot_type}
+            />
+          </svg>
+          <span
+            className="remove"
+            style={removeStyle}
+            onClick={this.onRemoveItem.bind(this, layoutE.i)}
+          >
+            x
+          </span>
+        </div>
+      );
+    }
   }
 
   render() {
@@ -393,7 +459,8 @@ class App extends Component<PropsCard, StyledCardState> {
     const x_axis_selection = [
       { value: "SURGEON_ID", label: "SURGEON_ID" },
       { value: "YEAR", label: "YEAR" },
-      { value: "ANESTHOLOGIST_ID", label: "ANESTHOLOGIST_ID" }
+      { value: "ANESTHOLOGIST_ID", label: "ANESTHOLOGIST_ID" },
+      {value: "HEMO_VALUE",label: "HEMOGLOBIN" }
     ];
     const chart_types = [
       { value: "bar", label: "Barchart" },
@@ -416,11 +483,15 @@ class App extends Component<PropsCard, StyledCardState> {
         const current_selected_y_axis = y_axis_selection.filter(
           d => d.value === this.state.y_axis_change
         )[0];
+
+        //TODO change this
+        //Problem: Scatter Plot with just bloodproduct vs surgeon is not really useful.
+        //To Change: the plot type should change dynamicly based on the selected variables
         style_sheet = (
           <div>
             <p>
               Current Selected Chart{" "}
-              {this.current_select_id == "-1" ? "" : this.current_select_id}
+              {this.current_select_id === "-1" ? "" : this.current_select_id}
             </p>
             <Select
               options={chart_types}
@@ -498,7 +569,7 @@ class App extends Component<PropsCard, StyledCardState> {
             </Grid.Box>
           </Grid.Bounds>
         </Grid.Box>
-        <Grid.Box>
+        <Grid.Box width = "64%">
           <ResponsiveReactGridLayout
             onLayoutChange={this._onLayoutChange}
             onBreakpointChange={this._onBreakpointChange}
@@ -508,8 +579,11 @@ class App extends Component<PropsCard, StyledCardState> {
             width={1200}
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
           >
-            {this.state.layout.map(layoutE => this.createElement(layoutE))}
+            {this.state.layout.map(layoutE => { console.log(layoutE);return this.createElement(layoutE)})}
           </ResponsiveReactGridLayout>
+        </Grid.Box>
+        <Grid.Box width='18%'>
+          <div className="individual-info"></div>
         </Grid.Box>
       </Grid.Bounds>
     );
