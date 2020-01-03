@@ -1,5 +1,7 @@
 from django.http import HttpResponse, JsonResponse
+
 import cx_Oracle
+import json
 
 # Makes and returns the database connection object
 def make_connection():
