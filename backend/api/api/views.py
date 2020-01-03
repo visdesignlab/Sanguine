@@ -18,7 +18,7 @@ def index(request):
     return HttpResponse("Bloodvis API endpoint. Please use the client application to access the data here.")
 
 
-def get_attributes():
+def get_attributes(request):
     # Make the connection and execute the command
     connection = make_connection()
     command = "SELECT DISTINCT PRIM_PROC_DESC FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE"
@@ -30,7 +30,7 @@ def get_attributes():
     return JsonResponse({'result': items})
 
 
-def summarize_attribute_w_year():
+def summarize_attribute_w_year(request):
     x_axis = request.args.get('x_axis')
     y_axis = request.args.get('y_axis')
     year_range = request.args.get('year_range').split(",")
@@ -99,7 +99,7 @@ def summarize_attribute_w_year():
     return JsonResponse({'task': data})
 
 
-def hemoglobin():
+def hemoglobin(request):
     command = \
     "SELECT labs1.DI_VISIT_NO, labs1.RESULT_VALUE, labs1.DI_RESULT_DTM, labs1.RESULT_DESC \n"\
     "FROM CLIN_DM.BPU_CTS_DI_PREOP_LABS labs1 \n"\
