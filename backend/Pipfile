@@ -12,4 +12,4 @@ flask-cors = "*"
 django = "*"
 
 [scripts]
-serve = "python app.py"
+serve = "python api/manage.py runserver"
