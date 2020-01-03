@@ -30,7 +30,6 @@ def get_attributes():
     return JsonResponse({'result': items})
 
 
-@app.route('/bloodvis/', methods=['GET'])
 def summarize_attribute_w_year():
     x_axis = request.args.get('x_axis')
     y_axis = request.args.get('y_axis')
