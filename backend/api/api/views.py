@@ -97,7 +97,7 @@ def summarize_attribute_w_year():
 
     data = [dict(zip([data_exchange[key[0]] for key in cur.description], row)) for row in result]
     print(data)
-    return json.dumps({'task': data})
+    return JsonResponse({'task': data})
 
 
 def hemoglobin():
@@ -129,4 +129,4 @@ def hemoglobin():
     result = cur.execute(command)
     items = [{"label":row[0],"value":row[0]} for row in result]
     
-    return jsonify({'result': items})
+    return JsonResponse({'result': items})
