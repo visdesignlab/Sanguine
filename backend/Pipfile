@@ -9,6 +9,7 @@ verify_ssl = true
 cx-oracle = "*"
 flask = "*"
 flask-cors = "*"
+django = "*"
 
 [scripts]
 serve = "python app.py"
