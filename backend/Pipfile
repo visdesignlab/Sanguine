@@ -13,3 +13,4 @@ django = "==2.1.*"
 
 [scripts]
 serve = "python api/manage.py runserver"
+test = "python api/manage.py test api"
