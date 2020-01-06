@@ -8,18 +8,22 @@ class APITestCase(TestCase):
         c = Client()
         response = c.get("/api/")
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content.decode(), 'Bloodvis API endpoint. Please use the client application to access the data here.')
 
     def test_get_attributes(self):
         c = Client()
         response = c.get("/api/get_attributes")
         self.assertEqual(response.status_code, 200)
 
+
     def test_summarize_with_year(self):
         c = Client()
         response = c.get("/api/summarize_with_year?x_axis=YEAR&y_axis=PRBC_UNITS&year_range=2016,2017")
         self.assertEqual(response.status_code, 200)
+
     
     def test_hemoglobin(self):
         c = Client()
         response = c.get("/api/hemoglobin")
         self.assertEqual(response.status_code, 200)
+

@@ -94,7 +94,6 @@ def summarize_attribute_w_year(request):
         data_exchange = {dict_for_exchange[x_axis].replace(" ",''):'x_axis', dict_for_exchange[y_axis].replace(" ",''):'y_axis',"CASES_COUNT":"case_count"}
 
         data = [dict(zip([data_exchange[key[0]] for key in cur.description], row)) for row in result]
-        print(data)
         return JsonResponse({'task': data})
 
 
@@ -121,7 +120,7 @@ def hemoglobin(request):
         # ") trans_new \n"\
         # "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE surgery \n"\
         # "ON trans_new.DI_VISIT_NO = surgery.DI_VISIT_NO;"
-        print(command)
+        # print(command)
 
         connection = make_connection()
         cur = connection.cursor()
