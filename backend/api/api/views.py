@@ -86,56 +86,28 @@ def summarize_attribute_w_year(request):
             "CRYO_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS)",
         }
 
-        # if data_origin[x_axis] == data_origin[y_axis]:
-        #     command = 'SELECT ' + command_dict[x_axis] + ', ' + command_dict[y_axis] +
-        # ' FROM '+data_origin[x_axis] + " WHERE "+ data_origin[x_axis]+".DI_CASE_DATE BETWEEN
-        # '01-JAN-"+year_min +"' AND '"+"31-DEC-"+year_max+"' GROUP BY " + command_dict[x_axis]
-        # + ' ORDER BY ' + command_dict[x_axis]
-        # else:
         extra_command = ""
-        print(filter_selection)
         if len(filter_selection) > 0:
             extra_command = " AND ("
             for filter_string in filter_selection[:-1]:
                 extra_command += (
-                    " CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC='"
-                    + filter_string
-                    + "' OR"
+                    f" CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC='{filter_string}' OR"
                 )
             filter_string = filter_selection[-1]
             extra_command += (
-                " CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC='"
-                + filter_string
-                + "')"
+                f" CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC='{filter_string}')"
             )
 
         command = (
-            "SELECT "
-            + command_dict[x_axis]
-            + ", "
-            + command_dict[y_axis]
-            + ", COUNT("
-            + data_origin[x_axis]
-            + ".DI_VISIT_NO) AS CASES_COUNT"
-            + " FROM "
-            + data_origin[x_axis]
-            + " INNER JOIN "
-            + data_origin[y_axis]
-            + " ON ("
-            + data_origin[x_axis]
-            + ".DI_VISIT_NO = "
-            + data_origin[y_axis]
-            + ".DI_VISIT_NO"
-            + extra_command
-            + ") WHERE "
-            + data_origin[x_axis]
-            + ".DI_CASE_DATE BETWEEN '01-JAN-"
-            + year_min
-            + "' AND '"
-            + "31-DEC-"
-            + year_max
-            + "' GROUP BY "
-            + command_dict[x_axis]
+            f"SELECT {command_dict[x_axis]}, {command_dict[y_axis]}, "
+            f"COUNT({data_origin[x_axis]}.DI_VISIT_NO) AS CASES_COUNT "
+            f"FROM {data_origin[x_axis]} "
+            f"INNER JOIN {data_origin[y_axis]} "
+            f"ON ({data_origin[x_axis]}.DI_VISIT_NO = {data_origin[y_axis]}.DI_VISIT_NO "
+            f"{extra_command}) "
+            f"WHERE {data_origin[x_axis]}.DI_CASE_DATE BETWEEN "
+            f"'01-JAN-{year_min}' AND '31-DEC-{year_max}' "
+            f"GROUP BY {command_dict[x_axis]}"
         )
 
         cur = connection.cursor()
