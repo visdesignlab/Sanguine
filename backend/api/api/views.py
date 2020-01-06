@@ -106,10 +106,10 @@ def summarize_attribute_w_year(request):
 
         command = (
             f"SELECT {command_dict[x_axis]}, {command_dict[y_axis]}, "
-            f"COUNT({data_origin[x_axis]}.DI_VISIT_NO) AS CASES_COUNT "
+            f"COUNT({data_origin[x_axis]}.DI_CASE_ID) AS CASES_COUNT "
             f"FROM {data_origin[x_axis]} "
             f"INNER JOIN {data_origin[y_axis]} "
-            f"ON ({data_origin[x_axis]}.DI_VISIT_NO = {data_origin[y_axis]}.DI_VISIT_NO "
+            f"ON ({data_origin[x_axis]}.DI_CASE_ID = {data_origin[y_axis]}.DI_CASE_ID "
             f"{extra_command}) "
             f"WHERE {data_origin[x_axis]}.DI_CASE_DATE BETWEEN "
             f"'01-JAN-{year_min}' AND '31-DEC-{year_max}' "
