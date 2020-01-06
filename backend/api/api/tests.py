@@ -16,7 +16,7 @@ class APITestCase(TestCase):
 
     def test_summarize_with_year(self):
         c = Client()
-        response = c.get("/api/summarize_with_year")
+        response = c.get("/api/summarize_with_year?x_axis=YEAR&y_axis=PRBC_UNITS&year_range=2016,2017")
         self.assertEqual(response.status_code, 200)
     
     def test_hemoglobin(self):
