@@ -11,6 +11,7 @@ cx-oracle = "*"
 flask = "*"
 flask-cors = "*"
 django = "==2.2.*"
+django-cors-headers = "*"
 
 [scripts]
 serve = "python api/manage.py runserver"
