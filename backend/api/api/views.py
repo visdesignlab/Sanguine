@@ -48,7 +48,7 @@ def summarize_attribute_w_year(request):
         year_range = request.GET.get("year_range").split(",")
         filter_selection = request.GET.get("filter_selection")
         filter_selection = (
-            [] if filter_selection is None else filter_selection.split(",")
+            [] if filter_selection is [] else filter_selection.split(",")
         )
 
         if not x_axis or not y_axis or not year_range:
