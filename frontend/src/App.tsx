@@ -120,7 +120,7 @@ class App extends Component<PropsCard, StyledCardState> {
    * Populate the filter of all procedures, API call gets a list of procedures from the table
    */
   componentDidMount() {
-    fetch("http://localhost:5000/bloodvis/api/get_attributes", {
+    fetch("http://localhost:8000/api/get_attributes", {
       method: "GET"
     })
       .then(res => res.json())
