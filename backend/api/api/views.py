@@ -47,9 +47,15 @@ def summarize_attribute_w_year(request):
         y_axis = request.GET.get("y_axis")
         year_range = request.GET.get("year_range").split(",")
         filter_selection = request.GET.get("filter_selection")
-        filter_selection = (
-            [] if filter_selection is [] else filter_selection.split(",")
-        )
+        print(filter_selection)
+        if filter_selection is None:
+            filter_selection = []
+        else:
+            filter_selection = (
+                [] if filter_selection.split(",") == [""] else filter_selection.split(",")
+            )
+        print(filter_selection)
+
 
         if not x_axis or not y_axis or not year_range:
             HttpResponseBadRequest("x_axis, y_axis, and year_range must be supplied.")
