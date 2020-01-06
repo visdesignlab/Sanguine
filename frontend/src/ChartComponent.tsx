@@ -141,46 +141,47 @@ class ChartComponent extends Component<
 
     //TODO if scatterplot, then this should be banded bar chart
     
-    if (x_axis === "HEMO_VALUE") {
-      fetch(`http://localhost:5000/bloodvis/api/get_static/?x_axis=${x_axis}&y_axis=${y_axis}&year_range=${year_range}&filter_selection=${filter_selection.toString()}`,
-        {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json"
-          }
-        }
-      )
-        .then(res => res.json())
-        .then(data => {
-          data = data.task;
-          //   console.log(data)
-          const that = this;
-          if (data) {
-            let y_max = -1;
-            let cast_data = (data as any).map(function (ob: any) {
-              let y_val = that.state.per_case
-                ? ob.y_axis / ob.case_count
-                : ob.y_axis;
-              if (y_val > y_max) {
-                y_max = y_val;
-              }
-              let new_ob: DataPoint = {
-                x_axis: ob.x_axis,
-                y_axis: y_val
-              };
-              return new_ob;
-            });
-            this.setState({ data: cast_data, y_max: y_max });
-            this.drawChart(cast_data, y_max);
-          } else {
-            console.log("something wrong");
-          }
-        });
-    }
-    else
-    {fetch(
-      `http://localhost:5000/bloodvis/api/requestwithyear/?x_axis=${x_axis}&y_axis=${y_axis}&year_range=${year_range}&filter_selection=${filter_selection.toString()}`,
+    // if (x_axis === "HEMO_VALUE") {
+    //   fetch(`http://localhost:5000/bloodvis/api/get_static/?x_axis=${x_axis}&y_axis=${y_axis}&year_range=${year_range}&filter_selection=${filter_selection.toString()}`,
+    //     {
+    //       method: "GET",
+    //       headers: {
+    //         Accept: "application/json",
+    //         "Content-Type": "application/json"
+    //       }
+    //     }
+    //   )
+    //     .then(res => res.json())
+    //     .then(data => {
+    //       data = data.task;
+    //       //   console.log(data)
+    //       const that = this;
+    //       if (data) {
+    //         let y_max = -1;
+    //         let cast_data = (data as any).map(function (ob: any) {
+    //           let y_val = that.state.per_case
+    //             ? ob.y_axis / ob.case_count
+    //             : ob.y_axis;
+    //           if (y_val > y_max) {
+    //             y_max = y_val;
+    //           }
+    //           let new_ob: DataPoint = {
+    //             x_axis: ob.x_axis,
+    //             y_axis: y_val
+    //           };
+    //           return new_ob;
+    //         });
+    //         this.setState({ data: cast_data, y_max: y_max });
+    //         this.drawChart(cast_data, y_max);
+    //       } else {
+    //         console.log("something wrong");
+    //       }
+    //     });
+    // }
+    // else
+    // {
+      fetch(
+      `http://localhost:8000/api/summarize_with_year?x_axis=${x_axis}&y_axis=${y_axis}&year_range=${year_range}&filter_selection=${filter_selection.toString()}`,
       {
         method: "GET",
         headers: {
@@ -215,7 +216,7 @@ class ChartComponent extends Component<
           console.log("something wrong");
         }
       });}
-  }
+//  }
 
   drawChart(data: DataPoint[], y_max: number) {
     const x_vals = data

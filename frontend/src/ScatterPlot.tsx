@@ -130,7 +130,7 @@ class ScatterPlot extends Component<
   }
 
   fetch_individual(visit_no:number) {
-    fetch(`http://localhost:5000/bloodvis/api/indvidual_record/?visit_no=${visit_no}`,
+    fetch(`http://localhost:8000/api/indvidual_record/?visit_no=${visit_no}`,
       {
         method: "GET",
         headers: {
@@ -169,7 +169,7 @@ class ScatterPlot extends Component<
     //TODO if scatterplot, then this should be banded bar chart
 
     
-      fetch(`http://localhost:5000/bloodvis/api/get_static/?x_axis=${x_axis}&y_axis=${y_axis}&year_range=${year_range}&filter_selection=${filter_selection.toString()}`,
+      fetch(`http://localhost:8000/api/get_static/?x_axis=${x_axis}&y_axis=${y_axis}&year_range=${year_range}&filter_selection=${filter_selection.toString()}`,
         {
           method: "GET",
           headers: {
