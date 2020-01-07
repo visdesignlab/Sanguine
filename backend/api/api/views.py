@@ -152,7 +152,8 @@ def hemoglobin(request):
                 "RESULT_DESC = 'Hemoglobin' AND "
                 "ROWNUM = 1 "
                 ") \"POSTOP_HEMO\" "
-            "FROM (select * from CLIN_DM.BPU_CTS_DI_SURGERY_CASE) outside"
+            "FROM (select * from CLIN_DM.BPU_CTS_DI_SURGERY_CASE) outside "
+            "WHERE ROWNUM < 30"
         )
 
         connection = make_connection()
