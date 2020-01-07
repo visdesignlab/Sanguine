@@ -134,29 +134,26 @@ def summarize_attribute_w_year(request):
 def hemoglobin(request):
     if request.method == "GET":
         command = (
-            "SELECT labs1.DI_VISIT_NO, labs1.RESULT_VALUE, labs1.DI_RESULT_DTM, labs1.RESULT_DESC "
-            "FROM CLIN_DM.BPU_CTS_DI_PREOP_LABS labs1 "
-            "INNER JOIN ( "
-            "SELECT DI_VISIT_NO, max(DI_RESULT_DTM) as MaxTime "
-            "FROM CLIN_DM.BPU_CTS_DI_PREOP_LABS "
-            "WHERE RESULT_DESC = 'Hemoglobin' "
-            "GROUP BY DI_VISIT_NO) labs2 "
-            "ON (labs2.DI_VISIT_NO = labs1.DI_VISIT_NO and "
-            "labs2.MaxTime = labs1.DI_RESULT_DTM and labs1.RESULT_DESC = 'Hemoglobin') "
-        )  # ") \n"\
-        # "SELECT trans_new.*, surgery.* \n"\
-        # "FROM ( \n"\
-        # "SELECT EXTRACT(YEAR FROM trans.DI_TRNSFSN_DTM) as year, \n"\
-        # "trans.CRYO_UNITS, trans.PLT_UNITS, trans.FFP_UNITS, trans.PRBC_UNITS,
-        # trans.DI_VISIT_NO, \n"\
-        # "Hemo.RESULT_VALUE as hemo_value \n"\
-        # "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD trans \n"\
-        # "INNER JOIN Hemo ON \n"\
-        # "Hemo.DI_VISIT_NO = trans.DI_VISIT_NO \n"\
-        # ") trans_new \n"\
-        # "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE surgery \n"\
-        # "ON trans_new.DI_VISIT_NO = surgery.DI_VISIT_NO;"
-        # print(command)
+            "SELECT DI_PAT_ID, DI_VISIT_NO, DI_CASE_ID, DI_CASE_DATE, DI_SURGERY_START_DTM, DI_SURGERY_END_DTM, "
+            "SURGERY_ELAP, SURGERY_TYPE_DESC, SURGEON_PROV_DWID, ANESTH_PROV_DWID, PRIM_PROC_DESC, POSTOP_ICU_LOS, SCHED_SITE_DESC, "
+                "( "
+                "SELECT RESULT_VALUE "
+                "FROM (SELECT * FROM CLIN_DM.BPU_CTS_DI_VST_LABS ORDER BY DI_DRAW_DTM DESC) "
+                "WHERE DI_DRAW_DTM <= outside.DI_SURGERY_START_DTM AND "
+                "DI_PAT_ID = outside.DI_PAT_ID AND "
+                "RESULT_DESC = 'Hemoglobin' AND "
+                "ROWNUM = 1 "
+                ") \"PREOP_HEMO\", "
+                "( "
+                "SELECT RESULT_VALUE "
+                "FROM (SELECT * FROM CLIN_DM.BPU_CTS_DI_VST_LABS ORDER BY DI_DRAW_DTM ASC) "
+                "WHERE DI_DRAW_DTM >= outside.DI_SURGERY_START_DTM AND "
+                "DI_PAT_ID = outside.DI_PAT_ID AND "
+                "RESULT_DESC = 'Hemoglobin' AND "
+                "ROWNUM = 1 "
+                ") \"POSTOP_HEMO\" "
+            "FROM (select * from CLIN_DM.BPU_CTS_DI_SURGERY_CASE) outside"
+        )
 
         connection = make_connection()
         cur = connection.cursor()
