@@ -159,5 +159,5 @@ def hemoglobin(request):
         connection = make_connection()
         cur = connection.cursor()
         result = cur.execute(command)
-        items = [{"label": row[0], "value": row[0]} for row in result]
+        items = [{"label": row[0], "value": [row["PREOP_HEMO"], row["POSTOP_HEMO"]]} for row in result]
         return JsonResponse({"result": items})
