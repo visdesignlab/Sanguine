@@ -23,5 +23,6 @@ urlpatterns = [
     path("api/", views.index, name="index"),
     path("api/get_attributes", views.get_attributes, name="index"),
     path("api/summarize_with_year", views.summarize_attribute_w_year, name="index"),
-    path("api/hemoglobin", views.hemoglobin, name="index"),
+    path("api/hemoglobin", views.hemoglobin, name = "index"),
+    path("api/request_transfused",views.request_transfused_units, name="index")
 ]
