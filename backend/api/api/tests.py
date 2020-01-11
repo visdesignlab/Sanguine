@@ -30,3 +30,10 @@ class APITestCase(TestCase):
         c = Client()
         response = c.get("/api/hemoglobin")
         self.assertEqual(response.status_code, 200)
+
+    def test_request_transfused(self):
+        c = Client()
+        response = c.get(
+            "/api/request_transfused?transfusion_type=PRBC_UNITS&year_range=2016,2017")
+        self.assertEqual(response.status_code,200)
+
