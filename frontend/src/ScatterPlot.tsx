@@ -7,6 +7,9 @@ interface DataPoint {
   y_axis: number,
   visit_no:number
 }
+
+
+
 interface ScatterPlotState {
   y_axis_name: string,
   x_axis_name: string,
@@ -26,9 +29,11 @@ interface ScatterPlotProps {
   class_name: string,
   //per_case: boolean,
   chart_id: string,
+  ID_selection_handler:(id:number)=>void
   // plot_type:string
 
 }
+
 //TODO Pass down the width and height from the flexible grid layout
 //Instead of retrieving from BoundingBox
 //It doesn't align correctly
@@ -127,35 +132,6 @@ class ScatterPlot extends Component<
     } else {
       this.drawChart();
     }
-  }
-
-  fetch_individual(visit_no:number) {
-    fetch(`http://localhost:8000/api/indvidual_record/?visit_no=${visit_no}`,
-      {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json"
-        }
-      }
-    ).then(res => res.json())
-      .then(data => { 
-        //data = JSON.parse(data.table[0])
-        let array_of_table = Object.keys(data.table[0]).map(function (key) {
-          return [key, data.table[0][key]];
-        });
-        d3.select('.individual-info').selectAll('table').remove();
-        let table = d3.select('.individual-info').append('table');
-        let tablebody = table.append('tbody')
-        let rows = tablebody.selectAll('tr').data(array_of_table).enter().append('tr');
-        rows.selectAll('td')
-          .data(d=>d)
-          .enter()
-          .append('td')
-          .text(d=>d)
-        
-     })
-    
   }
 
   fetch_data_with_year() {
@@ -264,9 +240,8 @@ class ScatterPlot extends Component<
           .attr("transform", "translate(0,-" + offset.bottom + ")")
           .on('click', function (d) {
             console.log(d.visit_no)
-            that.fetch_individual(d.visit_no)
+            that.props.ID_selection_handler(d.visit_no)
             d3.event.stopPropagation();
-            
           })
           .on("mouseover", function () {
             circle_tooltip.style("display", null);
