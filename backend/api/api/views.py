@@ -1,4 +1,4 @@
-from CLIN_DM.BPU_CTS_DI_PATIENT info
+
 import json
 import cx_Oracle
 
@@ -45,29 +45,38 @@ def get_attributes(request):
 def fetch_individual(request):
     if request.method == "GET":
         
-        visit_no = request.args.get('visit_no')
+        visit_no = request.GET.get('visit_no')
 
         if not visit_no:
-            abort(400)
+            HttpResponseBadRequest(
+                "visit_no must be supplied.")
         
-        command = f"SELECT info.DI_BIRTHDATE, info.GENDER_CODE, info.GENDER_DESC, "
+        command =(
+                f"SELECT info.DI_BIRTHDATE, info.GENDER_CODE, info.GENDER_DESC, "
                 f"info.RACE_CODE, info.RACE_DESC, info.ETHNICITY_CODE, info.ETHNICITY_DESC, "
                 f"info.DI_DEATH_DATE, surgery.DI_CASE_DATE, surgery.DI_SURGERY_START_DTM, "
                 f"surgery.DI_SURGERY_END_DTM, surgery.SURGERY_ELAP, surgery.SURGERY_TYPE_DESC, "
                 f"surgery.SURGEON_PROV_DWID, surgery.ANESTH_PROV_DWID, surgery.PRIM_PROC_DESC, "
-                f"surgery.POSTOP_ICU_LOS"
-                f"JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE surgery"
-                f"on info.DI_PAT_ID = surgery.DI_PAT_ID"
-                f"where surgery.di_visit_no = {visit_no}"
-        
+                f"surgery.POSTOP_ICU_LOS "
+                f"FROM CLIN_DM.BPU_CTS_DI_PATIENT info "
+                f"JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE surgery "
+                f"ON info.DI_PAT_ID = surgery.DI_PAT_ID "
+                f"WHERE surgery.di_visit_no = {visit_no}"
+        )
         connection = make_connection()
+        # print(command)
         cur = connection.cursor()
         result = cur.execute(command)
         # print(result)
 
-        data = [dict(zip([key[0] for key in cur.description], row))
-                for row in result]
-        return json.dumps({'table': data}, default=str)
+        # data = [dict(zip([key[0] for key in cur.description], row))
+        #         for row in result]
+        # return json.dumps({'table': data}, default=str)
+        data = [
+            dict(zip([key[0] for key in cur.description], row))
+            for row in result
+        ]
+        return JsonResponse({"table": data})
 
 
 def summarize_attribute_w_year(request):
