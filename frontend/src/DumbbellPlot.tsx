@@ -30,6 +30,7 @@ interface DumbbellPlotProps {
     //per_case: boolean,
     chart_id: string,
     // plot_type:string
+    ID_selection_handler:(id:number)=>void
 
 }
 
@@ -289,7 +290,31 @@ class DumbbellPlot extends Component<
           .attr("width", (d: any) =>
             Math.abs(x_scale(d.end_x_axis) - x_scale(d.start_x_axis))
           );
-        components.attr("transform", "translate(0,-" + offset.bottom + ")")
+        components
+          .attr("transform", "translate(0,-" + offset.bottom + ")")
+          .on("click", function(d) {
+            console.log(d.visit_no);
+            that.props.ID_selection_handler(d.visit_no);
+
+            d3.event.stopPropagation();
+          })
+          .on("mouseover", function() {
+            circle_tooltip.style("display", null);
+          })
+          .on("mouseout", function() {
+            circle_tooltip.style("display", "none");
+          })
+          .on("mousemove", function(d) {
+            var xPosition = d3.mouse(this as any)[0] - 20;
+            var yPosition = d3.mouse(this as any)[1] - 40;
+            circle_tooltip.attr(
+              "transform",
+              "translate(" + xPosition + "," + yPosition + ")"
+            );
+            circle_tooltip
+              .select("text")
+              .text("start " + d.start_x_axis + " end " + d.end_x_axis + " transfused "+d.y_axis);
+          });
         
         // dots.attr("cx", (d: any) => x_scale(d.start_x_axis) as any)
         //     .attr("cy", (d: any) => y_scale(d.y_axis))
