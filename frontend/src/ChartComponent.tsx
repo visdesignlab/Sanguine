@@ -197,13 +197,14 @@ class ChartComponent extends Component<
         const that = this;
         if (data) {
           let y_max = -1;
-          let cast_data = (data as any).map(function(ob: any) {
+          let cast_data = (data as any).map(function (ob: any) {
+            
             let y_val = that.state.per_case
               ? ob.y_axis / ob.case_count
               : ob.y_axis;
-            if (y_val > y_max) {
-              y_max = y_val;
-            }
+            
+            y_max = y_val > y_max ? y_val : y_max;
+
             let new_ob: DataPoint = {
               x_axis: ob.x_axis,
               y_axis: y_val
@@ -225,41 +226,21 @@ class ChartComponent extends Component<
       })
       .sort();
     const svg = d3.select("#" + this.state.class_name + "-svg");
-    //  const div = (d3.select("."+this.state.class_name)as any).node()
     svg.attr("width", "100%").attr("height", "100%");
-    // console.log(div.style.width, div.style.height)
-    //   const width = window.getComputedStyle(div).width;
-    //   const height = window.getComputedStyle(div).height;
     const width = (svg as any).node().getBoundingClientRect().width;
     const height = (svg as any).node().getBoundingClientRect().height;
-    //    console.log(width, height);
-    const offset = 20;
-
+    //const offset = 20;
+    const offset = {left:50, bottom:25}
     let y_scale = d3
       .scaleLinear()
-      .domain([0, 1.05*y_max])
-      .range([height, offset]);
+      .domain([0, 1.1*y_max])
+      .range([height, offset.bottom]);
     let x_scale:any;
-    // if (this.state.plot_type === "scatter" && this.state.x_axis_name==="HEMO_VALUE") {
-    //   let x_max = -1;
-    //   let x_min = Infinity;
-    //   data.map(d => {
-    //     let x_val = d.x_axis;
-        
-    //     if (x_val > x_max) {
-    //       x_max = x_val
-    //     }
-    //     if (x_val < x_min) {
-    //       x_min = x_val
-    //     }
-    //   })
-    //   x_scale = d3.scaleLinear().domain([0.95*x_min, 1.05*x_max]).range([35, width])
-      
-    // } else {
+    
       x_scale = d3
         .scaleBand()
         .domain(x_vals)
-        .range([35, width])
+        .range([offset.left, width])
         .paddingInner(0.1);
    // }
     const rect_tooltip = svg.select(".rect-tooltip");
@@ -284,7 +265,7 @@ class ChartComponent extends Component<
       .attr("height", (d: any) => height - y_scale(d.y_axis))
       .attr("fill", "#072F5F")
       .attr("opacity", "1")
-      .attr("transform", "translate(0,-" + offset + ")")
+      .attr("transform", "translate(0,-" + offset.bottom + ")")
       .on("mouseover", function() {
         rect_tooltip.style("display", null);
       })
@@ -308,36 +289,29 @@ class ChartComponent extends Component<
     const y_axis = d3.axisLeft(y_scale);
     svg
       .select("#x-axis")
-      .attr("transform", "translate(0," + (height - offset) + ")")
+      .attr("transform", "translate(0," + (height - offset.bottom) + ")")
       .call(x_axis as any);
 
     svg
       .select("#y-axis")
-      .attr("transform", "translate(35,-" + offset + ")")
+      .attr("transform", "translate("+offset.left+",-" + offset.bottom + ")")
       .call(y_axis as any);
     
-    // svg.select(".x-label")
-    //   .attr("x", width)
-    //   .attr("y", height - 6)
-    //   .text(this.state.x_axis_name);
+     svg.select(".x-label")
+      .attr("x", width)
+       .attr("y", height)
+       .attr('font-size','10px')
+      .text(this.state.x_axis_name);
     
-    // svg
-    //   .select(".y-label")
-    //   .attr("dy", ".75em")
-    //   .attr("y", 6)
-    //   .attr("transform", "rotate(-90)")
-    //   .text(this.state.y_axis_name);
-    // if (this.state.plot_type === "bar") {
-    //   dots.attr('opacity',0)
-    //   circle_tooltip.attr('opacity',0)
-    //   rect_tooltip.attr('opacity',1)
-    // }
+    svg
+      .select(".y-label")
+      .attr("dy", ".75em")
+      .attr("y", 6)
+      .attr('font-size', '10px')
+      .attr("transform", "rotate(-90)")
+      .text(this.state.y_axis_name);
 
-    // if (this.state.plot_type === "scatter") {
-    //   rects.attr('opacity', 0)
-    //   rect_tooltip.attr('opacity',0)
-    //   circle_tooltip.attr('opacity',1)
-    // }
+ 
   }
   render() {
     return [];

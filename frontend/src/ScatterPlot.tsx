@@ -169,7 +169,7 @@ class ScatterPlot extends Component<
     //TODO if scatterplot, then this should be banded bar chart
 
     
-      fetch(`http://localhost:8000/api/get_static/?x_axis=${x_axis}&y_axis=${y_axis}&year_range=${year_range}&filter_selection=${filter_selection.toString()}`,
+    fetch(`http://localhost:8000/api/hemoglobin?x_axis=${x_axis}&y_axis=${y_axis}&year_range=${year_range}&filter_selection=${filter_selection.toString()}`,
         {
           method: "GET",
           headers: {
@@ -180,28 +180,28 @@ class ScatterPlot extends Component<
       )
         .then(res => res.json())
         .then(data => {
-          data = data.task;
-          //   console.log(data)
-          if (data) {
-            let y_max = -1;
-            let cast_data = (data as any).map(function (ob: any) {
-              let y_val =  ob.y_axis;
-              if (y_val > y_max) {
-                y_max = y_val;
-              }
-              let visit_no=parseInt(ob.visit_no)
-              let new_ob: DataPoint = {
-                x_axis: ob.x_axis,
-                y_axis: y_val,
-                visit_no: visit_no
-              };
-              return new_ob;
-            });
-            this.setState({ data: cast_data, y_max: y_max },
-              this.drawChart);
-          } else {
-            console.log("something wrong");
-          }
+          data = data.result;
+             console.log(data)
+          // if (data) {
+          //   let y_max = -1;
+          //   let cast_data = (data as any).map(function (ob: any) {
+          //     let y_val =  ob.y_axis;
+          //     if (y_val > y_max) {
+          //       y_max = y_val;
+          //     }
+          //     let visit_no=parseInt(ob.visit_no)
+          //     let new_ob: DataPoint = {
+          //       x_axis: ob.x_axis,
+          //       y_axis: y_val,
+          //       visit_no: visit_no
+          //     };
+          //     return new_ob;
+          //   });
+          //   this.setState({ data: cast_data, y_max: y_max },
+          //     this.drawChart);
+          // } else {
+          //   console.log("something wrong");
+          // }
         });
     }
     
@@ -219,12 +219,13 @@ class ScatterPlot extends Component<
     const width = (svg as any).node().getBoundingClientRect().width;
     const height = (svg as any).node().getBoundingClientRect().height;
     //    console.log(width, height);
-    const offset = 20;
+    //const offset = 20;
+    const offset = { left: 50, bottom: 25 };
 
     let y_scale = d3
       .scaleLinear()
-      .domain([0, 1.05 * y_max])
-      .range([height, offset]);
+      .domain([0, 1.1 * y_max])
+      .range([height, offset.bottom]);
     let x_scale: any;
     // if (this.state.plot_type === "scatter" && this.state.x_axis_name==="HEMO_VALUE") {
     let x_max = -1;
@@ -239,7 +240,7 @@ class ScatterPlot extends Component<
         x_min = x_val
       }
     })
-    x_scale = d3.scaleLinear().domain([0.95 * x_min, 1.05 * x_max]).range([35, width])
+    x_scale = d3.scaleLinear().domain([0.9 * x_min, 1.1 * x_max]).range([offset.left, width])
     const circle_tooltip = svg.select(".circle-tooltip")
 
     let dots = svg
@@ -256,11 +257,11 @@ class ScatterPlot extends Component<
           // .attr("cx", (d: any) => x_scale(d.x_axis) as any + x_scale.bandwidth()*0.5)
           .attr("cx", (d: any) => x_scale(d.x_axis) as any )
           .attr("cy", (d: any) => y_scale(d.y_axis))
-          .attr("r", "2px")
+          .attr("r", "1%")
           .classed("dots", true)
           .attr("fill", "#072F5F")
           .attr("opacity", "1")
-          .attr("transform", "translate(0,-" + offset + ")")
+          .attr("transform", "translate(0,-" + offset.bottom + ")")
           .on('click', function (d) {
             console.log(d.visit_no)
             that.fetch_individual(d.visit_no)
@@ -290,13 +291,31 @@ class ScatterPlot extends Component<
 
     svg
       .select("#x-axis")
-      .attr("transform", "translate(0," + (height - offset) + ")")
+      .attr("transform", "translate(0," + (height - offset.bottom) + ")")
       .call(x_axis as any);
 
     svg
       .select("#y-axis")
-      .attr("transform", "translate(35,-" + offset + ")")
+      .attr(
+        "transform",
+        "translate(" + offset.left + ",-" + offset.bottom + ")"
+      )
       .call(y_axis as any);
+
+    svg
+      .select(".x-label")
+      .attr("x", width)
+      .attr("y", height)
+      .attr("font-size", "10px")
+      .text(this.state.x_axis_name);
+
+    svg
+      .select(".y-label")
+      .attr("dy", ".75em")
+      .attr("y", 6)
+      .attr("font-size", "10px")
+      .attr("transform", "rotate(-90)")
+      .text(this.state.y_axis_name);
   }
 
 

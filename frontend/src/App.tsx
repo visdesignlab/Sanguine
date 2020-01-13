@@ -10,6 +10,7 @@ import "rc-slider/assets/index.css";
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated'
 import ScatterPlot from './ScatterPlot';
+import DumbbellPlot from './DumbbellPlot'
 import { Responsive as ResponsiveReactGridLayout } from "react-grid-layout";
 import Toggle from "react-toggle";
 import "react-toggle/style.css";
@@ -198,7 +199,7 @@ class App extends Component<PropsCard, StyledCardState> {
       y: Infinity,
       w: 2,
       h: 2,
-      plot_type: this.x_axis ==="HEMO_VALUE"?"scatter":"bar"
+      plot_type: this.x_axis ==="HEMO_VALUE"?"dumbbell":"bar"
     };
     this.provenance.applyAction({
       label: this.current_id + "add",
@@ -310,11 +311,7 @@ class App extends Component<PropsCard, StyledCardState> {
       chart_type_change:current_selected_layout.plot_type
     });
 
-    // this.x_axis_change = current_selected_layout.x_axis_name;
-    // this.y_axis_change = current_selected_layout.y_axis_name;
-    // this.chart_type_change = current_selected_layout.plot_type;
-
-   //this.forceUpdate();
+   
     console.log(this.current_select_id);
   };
 
@@ -416,7 +413,8 @@ class App extends Component<PropsCard, StyledCardState> {
     //TODO also need to change this
     
     //else if (layoutE.plot_type == "scatter") {
-    else{
+    else {
+    if (layoutE.plot_type === "scatter") {
       return (
         <div
           onClick={this.onClickBlock.bind(this, layoutE.i)}
@@ -433,8 +431,6 @@ class App extends Component<PropsCard, StyledCardState> {
               filter_selection={layoutE.filter_selection}
               class_name={"parent-node" + layoutE.i}
               chart_id={layoutE.i}
-             // per_case={this.state.percase}
-            //plot_type={layoutE.plot_type}
             />
           </svg>
           <span
@@ -447,6 +443,38 @@ class App extends Component<PropsCard, StyledCardState> {
         </div>
       );
     }
+    else if (layoutE.plot_type === 'dumbbell') {
+      return (
+        <div
+          onClick={this.onClickBlock.bind(this, layoutE.i)}
+          key={layoutE.i}
+          className={"parent-node" + layoutE.i}
+          data-grid={layoutE}
+        >
+          <header>chart #{layoutE.i}</header>
+          <svg>
+            <DumbbellPlot
+              x_axis_name={layoutE.x_axis_name}
+              y_axis_name={layoutE.y_axis_name}
+              year_range={layoutE.year_range}
+              filter_selection={layoutE.filter_selection}
+              class_name={"parent-node" + layoutE.i}
+              chart_id={layoutE.i}
+              // per_case={this.state.percase}
+              //plot_type={layoutE.plot_type}
+            />
+          </svg>
+          <span
+            className="remove"
+            style={removeStyle}
+            onClick={this.onRemoveItem.bind(this, layoutE.i)}
+          >
+            x
+          </span>
+        </div>
+      );
+      }
+    }
   }
 
   render() {
@@ -454,7 +482,8 @@ class App extends Component<PropsCard, StyledCardState> {
       { value: "PRBC_UNITS", label: "PRBC_UNITS" },
       { value: "FFP_UNITS", label: "FFP_UNITS" },
       { value: "PLT_UNITS", label: "PLT_UNITS" },
-      { value: "CRYO_UNITS", label: "CRYO_UNITS" }
+      { value: "CRYO_UNITS", label: "CRYO_UNITS" },
+      { value: "CELL_SAVER_ML", label: "CELL_SAVER_ML" }
     ];
     const x_axis_selection = [
       { value: "SURGEON_ID", label: "SURGEON_ID" },
@@ -464,7 +493,8 @@ class App extends Component<PropsCard, StyledCardState> {
     ];
     const chart_types = [
       { value: "bar", label: "Barchart" },
-      { value: "scatter", label: "Scatter Plot" }
+      { value: "scatter", label: "Scatter Plot" },
+      {value: "dumbbell", label:"Dumbbell Plot"}
     ];
 
     let style_sheet = null;
