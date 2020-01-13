@@ -59,6 +59,7 @@ export interface StyledCardState {
   chart_type_change: string;
   x_axis_change: string;
   y_axis_change: string;
+  current_select_patient: number;
 }
 
 interface PropsCard{
@@ -70,7 +71,7 @@ class App extends Component<PropsCard, StyledCardState> {
   x_axis: string;
 
   //current_select_patient: number[];
-  current_select_patient: number;
+  //current_select_patient: number;
   y_axis: string;
   year_range: number[];
   filter_selection: string[];
@@ -86,7 +87,7 @@ class App extends Component<PropsCard, StyledCardState> {
     this.current_id = 0;
 
     //this.current_select_patient = []
-    this.current_select_patient = NaN;
+    // this.current_select_patient = NaN;
 
     this.x_axis = "YEAR";
 
@@ -103,7 +104,8 @@ class App extends Component<PropsCard, StyledCardState> {
       percase: false,
       x_axis_change: "",
       y_axis_change: "",
-      chart_type_change: ""
+      chart_type_change: "",
+      current_select_patient: NaN
     };
 
     this.col_data = {
@@ -369,12 +371,16 @@ class App extends Component<PropsCard, StyledCardState> {
   };
 
   IDSelectionHandler = (id: number) => {
-    this.current_select_patient = id;
-    console.log(this.current_select_patient);
-    this.fetch_individual(this.current_select_patient);
+    //this.current_select_patient = id;
+    this.setState({current_select_patient:id},this.fetch_individual);
+    //console.log(this.current_select_patient);
+   // this.fetch_individual(this.current_select_patient);
+   // this.render();
   };
 
-  fetch_individual(visit_no: number) {
+  fetch_individual() {
+    console.log(this.state)
+    const visit_no = this.state.current_select_patient
     fetch(`http://localhost:8000/api/fetch_individual?visit_no=${visit_no}`, {
       method: "GET",
       headers: {
@@ -405,6 +411,7 @@ class App extends Component<PropsCard, StyledCardState> {
           .enter()
           .append("td")
           .text(d => d);
+        
       });
   }
 
@@ -473,6 +480,7 @@ class App extends Component<PropsCard, StyledCardState> {
                 filter_selection={layoutE.filter_selection}
                 class_name={"parent-node" + layoutE.i}
                 chart_id={layoutE.i}
+                ID_selection_handler={this.IDSelectionHandler}
               />
             </svg>
             <span
@@ -502,6 +510,7 @@ class App extends Component<PropsCard, StyledCardState> {
                 class_name={"parent-node" + layoutE.i}
                 chart_id={layoutE.i}
                 ID_selection_handler={this.IDSelectionHandler}
+                current_selected_patient = {this.state.current_select_patient}
               />
             </svg>
             <span

@@ -247,7 +247,7 @@ def hemoglobin(request):
                 "( "
                 "SELECT RESULT_VALUE "
                 "FROM (SELECT * FROM CLIN_DM.BPU_CTS_DI_VST_LABS ORDER BY DI_DRAW_DTM ASC) "
-                "WHERE DI_DRAW_DTM >= outside.DI_SURGERY_START_DTM AND "
+                "WHERE DI_DRAW_DTM >= outside.DI_SURGERY_END_DTM AND "
                 "DI_PAT_ID = outside.DI_PAT_ID AND "
                 "RESULT_DESC = 'Hemoglobin' AND "
                 "ROWNUM = 1 "
