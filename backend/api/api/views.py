@@ -72,6 +72,7 @@ def summarize_attribute_w_year(request):
             "FFP_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS)",
             "PLT_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS)",
             "CRYO_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS)",
+            "CELL_SAVER_ML": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML)"
         }
         data_origin = {
             "YEAR": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE",
@@ -79,6 +80,7 @@ def summarize_attribute_w_year(request):
             "FFP_UNITS": "CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD",
             "PLT_UNITS": "CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD",
             "CRYO_UNITS": "CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD",
+            "CELL_SAVER_ML": "CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD",
             "SURGEON_ID": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE",
             "ANESTHOLOGIST_ID": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE",
         }
@@ -90,6 +92,7 @@ def summarize_attribute_w_year(request):
             "FFP_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS)",
             "PLT_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS)",
             "CRYO_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS)",
+            "CELL_SAVER_ML": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML)"
         }
 
         extra_command = ""
@@ -166,17 +169,20 @@ def request_transfused_units(request):
             "FFP_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS)",
             "PLT_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS)",
             "CRYO_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS)",
+            "CELL_SAVER_ML": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML)"
         }
 
         command = (
-            f"SELECT {command_dict[transfusion_type]}, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID "
+            f"SELECT transfused, di_case_id FROM ( "
+            f"SELECT {command_dict[transfusion_type]} transfused, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID di_case_id "
             f"FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
             f"INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
             f"ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID "
             f"{extra_command}) "
             f"WHERE CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_DATE BETWEEN "
             f"'01-JAN-{year_min}' AND '31-DEC-{year_max}' "
-            f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID"
+            f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID "
+            f") WHERE transfused>0"
         )
         
         connection = make_connection()
@@ -215,5 +221,5 @@ def hemoglobin(request):
         connection = make_connection()
         cur = connection.cursor()
         result = cur.execute(command)
-        items = [{"case_id": row[2], "hemo": [row[-2], row[-1]]} for row in result]
+        items = [{"case_id": row[2], "hemo": [row[-2], row[-1]],"visit_id":row[1]} for row in result]
         return JsonResponse({"result": items})
