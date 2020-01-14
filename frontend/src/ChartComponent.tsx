@@ -6,15 +6,12 @@ interface DataPoint {
     y_axis: number
 }
 interface ChartComponentState {
-  y_axis_name: string,
-  x_axis_name: string,
+
   data: DataPoint[],
   y_max: number,
-  year_range: string,
-  filter_selection: string,
+ 
   class_name: string,
-  per_case: boolean,
- // plot_type:string
+
 }
 interface ChartComponentProps{
     y_axis_name: string,
@@ -23,8 +20,7 @@ interface ChartComponentProps{
     filter_selection: string[]
     class_name: string,
   per_case: boolean,
-  chart_id: string,
- // plot_type:string
+  chart_id: string
     
 }
 //TODO Pass down the width and height from the flexible grid layout
@@ -38,14 +34,14 @@ class ChartComponent extends Component<
   constructor(props: Readonly<ChartComponentProps>) {
     super(props);
     this.state = {
-      y_axis_name: this.props.y_axis_name,
-      x_axis_name: this.props.x_axis_name,
+      // y_axis_name: this.props.y_axis_name,
+      // x_axis_name: this.props.x_axis_name,
       data: [],
       y_max: -1,
-      year_range: this.props.year_range.toString(),
-      filter_selection: this.props.filter_selection.toString(),
+      //year_range: this.props.year_range.toString(),
+     // filter_selection: this.props.filter_selection.toString(),
       class_name: this.props.class_name,
-      per_case: this.props.per_case,
+     // per_case: this.props.per_case,
      // plot_type:"scatter"
       //data: this.fetch_data_with_year()
     };
@@ -97,89 +93,29 @@ class ChartComponent extends Component<
     
     this.fetch_data_with_year();
   }
-  componentWillReceiveProps(nextProps: ChartComponentProps) {
-    const filter_selection = nextProps.filter_selection.toString();
-    const year_range = nextProps.year_range.toString();
-    //give a single case where per_case change
-    //no need to request all new data
-    if (
-      nextProps.y_axis_name !== this.state.y_axis_name ||
-      nextProps.x_axis_name !== this.state.x_axis_name ||
-      filter_selection !== this.state.filter_selection ||
-      year_range !== this.state.year_range ||
-      nextProps.per_case !== this.state.per_case 
-      //nextProps.plot_type !== this.state.plot_type
-    ) {
-      this.setState(
-        {
-          y_axis_name: nextProps.y_axis_name,
-          x_axis_name: nextProps.x_axis_name,
-          year_range: year_range,
-          filter_selection: filter_selection,
-          per_case: nextProps.per_case,
-        //  plot_type: nextProps.plot_type
-        },
-        this.fetch_data_with_year
-      );
 
-      console.log(this.state);
-
-      // this.fetch_data_with_year()
-      console.log("new props");
-    } else {
-      this.drawChart(this.state.data, this.state.y_max);
+  componentDidUpdate(prevProps: ChartComponentProps) {
+    
+    if (this.props.filter_selection !== prevProps.filter_selection ||
+      this.props.x_axis_name !== prevProps.x_axis_name ||
+      this.props.y_axis_name !== prevProps.y_axis_name ||
+      this.props.year_range !== prevProps.year_range ||
+      this.props.per_case !== prevProps.per_case) {
+      
+      this.fetch_data_with_year();
     }
-  }
+      else {
+        this.drawChart();
+      }
+      }
+  
 
   fetch_data_with_year() {
-    // const year_max = this.state.year_range[1]
-    // const year_min = this.state.year_range[0];
-    const year_range = this.state.year_range;
-    const x_axis = this.state.x_axis_name;
-    const y_axis = this.state.y_axis_name;
-    const filter_selection = this.state.filter_selection;
+    const year_range = this.props.year_range;
+    const x_axis = this.props.x_axis_name;
+    const y_axis = this.props.y_axis_name;
+    const filter_selection = this.props.filter_selection;
 
-    //TODO if scatterplot, then this should be banded bar chart
-    
-    // if (x_axis === "HEMO_VALUE") {
-    //   fetch(`http://localhost:5000/bloodvis/api/get_static/?x_axis=${x_axis}&y_axis=${y_axis}&year_range=${year_range}&filter_selection=${filter_selection.toString()}`,
-    //     {
-    //       method: "GET",
-    //       headers: {
-    //         Accept: "application/json",
-    //         "Content-Type": "application/json"
-    //       }
-    //     }
-    //   )
-    //     .then(res => res.json())
-    //     .then(data => {
-    //       data = data.task;
-    //       //   console.log(data)
-    //       const that = this;
-    //       if (data) {
-    //         let y_max = -1;
-    //         let cast_data = (data as any).map(function (ob: any) {
-    //           let y_val = that.state.per_case
-    //             ? ob.y_axis / ob.case_count
-    //             : ob.y_axis;
-    //           if (y_val > y_max) {
-    //             y_max = y_val;
-    //           }
-    //           let new_ob: DataPoint = {
-    //             x_axis: ob.x_axis,
-    //             y_axis: y_val
-    //           };
-    //           return new_ob;
-    //         });
-    //         this.setState({ data: cast_data, y_max: y_max });
-    //         this.drawChart(cast_data, y_max);
-    //       } else {
-    //         console.log("something wrong");
-    //       }
-    //     });
-    // }
-    // else
-    // {
       fetch(
       `http://localhost:8000/api/summarize_with_year?x_axis=${x_axis}&y_axis=${y_axis}&year_range=${year_range}&filter_selection=${filter_selection.toString()}`,
       {
@@ -199,7 +135,7 @@ class ChartComponent extends Component<
           let y_max = -1;
           let cast_data = (data as any).map(function (ob: any) {
             
-            let y_val = that.state.per_case
+            let y_val = that.props.per_case
               ? ob.y_axis / ob.case_count
               : ob.y_axis;
             
@@ -211,15 +147,18 @@ class ChartComponent extends Component<
             };
             return new_ob;
           });
-          this.setState({ data: cast_data, y_max: y_max });
-          this.drawChart(cast_data, y_max);
+          this.setState({ data: cast_data, y_max: y_max },
+            this.drawChart);
+          // this.drawChart(cast_data, y_max);
         } else {
           console.log("something wrong");
         }
       });}
 //  }
 
-  drawChart(data: DataPoint[], y_max: number) {
+  drawChart() {
+    const data = this.state.data;
+    const y_max = this.state.y_max
     const x_vals = data
       .map(function(dp) {
         return dp.x_axis;
@@ -242,9 +181,7 @@ class ChartComponent extends Component<
         .domain(x_vals)
         .range([offset.left, width])
         .paddingInner(0.1);
-   // }
     const rect_tooltip = svg.select(".rect-tooltip");
-    //const circle_tooltip = svg.select(".circle-tooltip")
 
     
     let rects = svg
@@ -301,7 +238,7 @@ class ChartComponent extends Component<
       .attr("x", width)
        .attr("y", height)
        .attr('font-size','10px')
-      .text(this.state.x_axis_name);
+      .text(this.props.x_axis_name);
     
     svg
       .select(".y-label")
@@ -309,7 +246,7 @@ class ChartComponent extends Component<
       .attr("y", 6)
       .attr('font-size', '10px')
       .attr("transform", "rotate(-90)")
-      .text(this.state.y_axis_name);
+      .text(this.props.y_axis_name);
 
  
   }
