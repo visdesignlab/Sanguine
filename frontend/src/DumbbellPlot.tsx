@@ -11,15 +11,15 @@ interface DataPoint {
     visit_no: number
 }
 interface DumbbellPlotState {
-    y_axis_name: string,
-    x_axis_name: string,
+    // y_axis_name: string,
+    // x_axis_name: string,
     data: DataPoint[],
     y_max: number,
     x_max: number,
     x_min:number,
-    year_range: string,
-    filter_selection: string,
-    class_name: string,
+    // year_range: string,
+    // filter_selection: string,
+   // class_name: string,
     //per_case: boolean,
     // plot_type:string
 }
@@ -45,15 +45,15 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
   constructor(props: Readonly<DumbbellPlotProps>) {
     super(props);
     this.state = {
-      y_axis_name: this.props.y_axis_name,
-      x_axis_name: this.props.x_axis_name,
+     // y_axis_name: this.props.y_axis_name,
+      //x_axis_name: this.props.x_axis_name,
       data: [],
       y_max: -1,
       x_max: -1,
       x_min: 100,
-      year_range: this.props.year_range.toString(),
-      filter_selection: this.props.filter_selection.toString(),
-      class_name: this.props.class_name
+     // year_range: this.props.year_range.toString(),
+     // filter_selection: this.props.filter_selection.toString(),
+     // class_name: this.props.class_name
       // per_case: this.props.per_case,
       // plot_type:"scatter"
       //data: this.fetch_data_with_year()
@@ -64,11 +64,11 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
     //console.log(this.props);
 
     let svg = d3
-      .select("." + this.state.class_name)
+      .select("." + this.props.class_name)
       .select("svg")
       .attr("width", "100%")
       .attr("height", "100%")
-      .attr("id", this.state.class_name + "-svg");
+      .attr("id", this.props.class_name + "-svg");
     svg.selectAll("rect").remove();
     svg.selectAll("circle").remove();
     svg.append("g").attr("id", "x-axis");
@@ -104,46 +104,27 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
       .attr("font-weight", "bold");
     this.fetch_data_with_year();
   }
-  // componentWillReceiveProps(nextProps: DumbbellPlotProps) {
-  //     const filter_selection = nextProps.filter_selection.toString();
-  //    const year_range = nextProps.year_range.toString();
-  //     //give a single case where per_case change
-  //     //no need to request all new data
-  //     if (
-  //         nextProps.y_axis_name !== this.state.y_axis_name ||
-  //         nextProps.x_axis_name !== this.state.x_axis_name ||
-  //         filter_selection !== this.state.filter_selection ||
-  //         year_range !== this.state.year_range
-  //     ) {
-  //         this.setState(
-  //             {
-  //                 y_axis_name: nextProps.y_axis_name,
-  //                 x_axis_name: nextProps.x_axis_name,
-  //                 // year_range: year_range,
-  //                 // filter_selection: filter_selection,
-  //                 //per_case: nextProps.per_case,
-  //                 //  plot_type: nextProps.plot_type
-  //             },
-  //             this.fetch_data_with_year
-  //         );
 
-  //         console.log(this.state);
 
-  //         // this.fetch_data_with_year()
-  //         console.log("new props");
-  //     } else {
-  //         this.drawChart();
-  //     }
-  // }
-    componentDidUpdate(prevProps: DumbbellPlotProps) {
+  componentDidUpdate(prevProps: DumbbellPlotProps) {
+    // const filter_selection = this.props.filter_selection.toString();
+    // const year_range = this.props.year_range.toString();
         if (!(this.props.current_selected_patient=== prevProps.current_selected_patient)){
-            this.drawChart();
-      }
+            
+          this.drawChart();
+        }
+        else if (this.props.y_axis_name !== prevProps.y_axis_name ||
+          this.props.year_range !== prevProps.year_range ||
+          this.props.filter_selection !== prevProps.filter_selection 
+        ) {
+          this.fetch_data_with_year()
+          
+        }
   }
   fetch_data_with_year() {
-    const year_range = this.state.year_range;
-    const y_axis = this.state.y_axis_name;
-    const filter_selection = this.state.filter_selection;
+    const year_range = this.props.year_range;
+    const y_axis = this.props.y_axis_name;
+    const filter_selection = this.props.filter_selection;
     let transfused_dict = {} as any;
     fetch(
       `http://localhost:8000/api/request_transfused?transfusion_type=${y_axis}&year_range=${year_range}&filter_selection=${filter_selection.toString()}`,
@@ -219,7 +200,7 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
     const y_max = this.state.y_max;
     console.log(data);
     const that = this;
-    const svg = d3.select("#" + this.state.class_name + "-svg");
+    const svg = d3.select("#" + this.props.class_name + "-svg");
     svg.attr("width", "100%").attr("height", "100%");
     const width = (svg as any).node().getBoundingClientRect().width;
     const height = (svg as any).node().getBoundingClientRect().height;
@@ -379,7 +360,7 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
       .attr("y", 6)
       .attr("font-size", "10px")
       .attr("transform", "rotate(-90)")
-      .text(this.state.y_axis_name);
+      .text(this.props.y_axis_name);
   }
 
   render() {
