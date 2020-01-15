@@ -16,6 +16,7 @@ import Toggle from "react-toggle";
 import "react-toggle/style.css";
 import * as ProvenanceLibrary from '@visdesignlab/provenance-lib-core/lib/src/index.js'
 import * as d3 from "d3";
+import Headroom from 'react-headroom'
 
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
 interface LayoutElement{
@@ -59,7 +60,8 @@ export interface StyledCardState {
   chart_type_change: string;
   x_axis_change: string;
   y_axis_change: string;
-  current_select_patient: number;
+  current_select_case: number;
+  
 }
 
 interface PropsCard{
@@ -70,8 +72,8 @@ interface PropsCard{
 class App extends Component<PropsCard, StyledCardState> {
   x_axis: string;
 
-  //current_select_patient: number[];
-  //current_select_patient: number;
+  //current_select_case: number[];
+  //current_select_case: number;
   y_axis: string;
   year_range: number[];
   filter_selection: string[];
@@ -86,8 +88,8 @@ class App extends Component<PropsCard, StyledCardState> {
     super(prop);
     this.current_id = 0;
 
-    //this.current_select_patient = []
-    // this.current_select_patient = NaN;
+    //this.current_select_case = []
+    // this.current_select_case = NaN;
 
     this.x_axis = "YEAR";
 
@@ -105,7 +107,7 @@ class App extends Component<PropsCard, StyledCardState> {
       x_axis_change: "",
       y_axis_change: "",
       chart_type_change: "",
-      current_select_patient: NaN
+      current_select_case: NaN
     };
 
     this.col_data = {
@@ -231,6 +233,11 @@ class App extends Component<PropsCard, StyledCardState> {
   /**
    * When a graph is resized, we need to rerender the chart inside
    */
+  /**
+   * TODO we don't want to use forceupdate
+   * instead,
+   * put the sizing inside props
+   */
   _onLayoutChange = (event: any) => {
     this.forceUpdate();
     console.log(event);
@@ -345,8 +352,7 @@ class App extends Component<PropsCard, StyledCardState> {
     console.log(new_layout);
 
     // provenance implementation
-    // let new_layout_array = this.state.layout.filter(element => element.i !== id);
-    this.provenance.applyAction({
+   this.provenance.applyAction({
       label: this.current_id + "change",
       action: (id: any) => {
         let test = (this.provenanceApp.currentState() as any) as NodeState;
@@ -359,42 +365,39 @@ class App extends Component<PropsCard, StyledCardState> {
     this.setState(
       {
         layout: new_layout
-      },
-      this.forceUpdate
+      }
     );
     console.log(this.state.layout, new_layout);
   };
 
   handlePerCaseChange = (event: any) => {
     this.setState({ percase: event.target.checked });
-    this.forceUpdate();
   };
 
   IDSelectionHandler = (id: number) => {
-    //this.current_select_patient = id;
-    this.setState({current_select_patient:id},this.fetch_individual);
-    //console.log(this.current_select_patient);
-   // this.fetch_individual(this.current_select_patient);
-   // this.render();
+    this.setState({current_select_case:id},this.fetch_individual);
+    
   };
 
   fetch_individual() {
-    console.log(this.state)
-    const visit_no = this.state.current_select_patient
-    fetch(`http://localhost:8000/api/fetch_individual?visit_no=${visit_no}`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json"
+    
+    fetch(
+      `http://localhost:8000/api/fetch_individual?case_id=${this.state.current_select_case}`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        }
       }
-    })
+    )
       .then(res => res.json())
       .then(data => {
         //data = JSON.parse(data.table[0])
         let array_of_table = Object.keys(data.table[0]).map(function(key) {
           return [key, data.table[0][key]];
         });
-        console.log(array_of_table)
+        console.log(array_of_table);
         d3.select(".individual-info")
           .selectAll("table")
           .remove();
@@ -411,7 +414,6 @@ class App extends Component<PropsCard, StyledCardState> {
           .enter()
           .append("td")
           .text(d => d);
-        
       });
   }
 
@@ -437,7 +439,7 @@ class App extends Component<PropsCard, StyledCardState> {
           className={"parent-node" + layoutE.i}
           data-grid={layoutE}
         >
-          <header>chart #{layoutE.i}</header>
+          {/* <header>chart #{layoutE.i}</header> */}
           <svg>
             <ChartComponent
               x_axis_name={layoutE.x_axis_name}
@@ -447,6 +449,7 @@ class App extends Component<PropsCard, StyledCardState> {
               class_name={"parent-node" + layoutE.i}
               chart_id={layoutE.i}
               per_case={this.state.percase}
+              current_select_case = {this.state.current_select_case}
               //plot_type={layoutE.plot_type}
             />
           </svg>
@@ -471,7 +474,7 @@ class App extends Component<PropsCard, StyledCardState> {
             className={"parent-node" + layoutE.i}
             data-grid={layoutE}
           >
-            <header>chart #{layoutE.i}</header>
+            {/* <header>chart #{layoutE.i}</header> */}
             <svg>
               <ScatterPlot
                 x_axis_name={layoutE.x_axis_name}
@@ -500,7 +503,7 @@ class App extends Component<PropsCard, StyledCardState> {
             className={"parent-node" + layoutE.i}
             data-grid={layoutE}
           >
-            <header>chart #{layoutE.i}</header>
+            {/* <header>chart #{layoutE.i}</header> */}
             <svg>
               <DumbbellPlot
                 x_axis_name={layoutE.x_axis_name}
@@ -510,7 +513,7 @@ class App extends Component<PropsCard, StyledCardState> {
                 class_name={"parent-node" + layoutE.i}
                 chart_id={layoutE.i}
                 ID_selection_handler={this.IDSelectionHandler}
-                current_selected_patient = {this.state.current_select_patient}
+                current_select_case = {this.state.current_select_case}
               />
             </svg>
             <span
@@ -599,7 +602,10 @@ class App extends Component<PropsCard, StyledCardState> {
       2018: 2018,
       2019: 2019
     } as any;
-    return (
+    return [
+      <Headroom className="headroom">
+        <h1 id="title">BloodVis</h1>
+      </Headroom>,
       <Grid.Bounds direction="horizontal">
         <Grid.Box width="18%" height="100%">
           <Grid.Bounds direction="vertical" valign="center">
@@ -638,10 +644,15 @@ class App extends Component<PropsCard, StyledCardState> {
                 defaultInputValue={"PRBC_UNITS"}
               />
               <button onClick={this._generate_new_graph}>Generate New</button>
-              <button onClick={this.redo}>Redo</button>
-              <button onClick={this.undo}>Undo</button>
+              <div>
+                <button onClick={this.redo}>Redo</button>
+                <button onClick={this.undo}>Undo</button>
+              </div>
             </Grid.Box>
-            <Grid.Box border="2px solid palevioletred" margin="12px">
+            <Grid.Box
+              border={style_sheet ? "2px solid #cce1fb" : "none"}
+              margin="12px"
+            >
               {style_sheet}
             </Grid.Box>
           </Grid.Bounds>
@@ -666,7 +677,7 @@ class App extends Component<PropsCard, StyledCardState> {
           <div className="individual-info"></div>
         </Grid.Box>
       </Grid.Bounds>
-    );
+    ];
   }
 }
 

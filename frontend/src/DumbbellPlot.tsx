@@ -1,27 +1,20 @@
 import { Component } from 'react';
 import * as d3 from "d3";
-import { scaleThreshold } from 'd3';
-import { equal } from 'assert';
 
-//populate <g>'s, and each <g> has a dumbell
 interface DataPoint {
     start_x_axis: number,
     end_x_axis:number,
     y_axis: number,
-    visit_no: number
+  visit_no: number,
+  case_id: number
 }
 interface DumbbellPlotState {
-    // y_axis_name: string,
-    // x_axis_name: string,
+    
     data: DataPoint[],
     y_max: number,
     x_max: number,
     x_min:number,
-    // year_range: string,
-    // filter_selection: string,
-   // class_name: string,
-    //per_case: boolean,
-    // plot_type:string
+   
 }
 interface DumbbellPlotProps {
     y_axis_name: string,
@@ -33,7 +26,7 @@ interface DumbbellPlotProps {
     chart_id: string,
     // plot_type:string
     ID_selection_handler: (id: number) => void,
-    current_selected_patient:number
+    current_select_case:number
 
 }
 
@@ -45,18 +38,11 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
   constructor(props: Readonly<DumbbellPlotProps>) {
     super(props);
     this.state = {
-     // y_axis_name: this.props.y_axis_name,
-      //x_axis_name: this.props.x_axis_name,
       data: [],
       y_max: -1,
       x_max: -1,
       x_min: 100,
-     // year_range: this.props.year_range.toString(),
-     // filter_selection: this.props.filter_selection.toString(),
-     // class_name: this.props.class_name
-      // per_case: this.props.per_case,
-      // plot_type:"scatter"
-      //data: this.fetch_data_with_year()
+     
     };
   }
 
@@ -73,6 +59,13 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
     svg.selectAll("circle").remove();
     svg.append("g").attr("id", "x-axis");
     svg.append("g").attr("id", "y-axis");
+     svg
+       .append("text")
+       .text("chart #" + this.props.chart_id)
+       .attr("alignment-baseline", "hanging")
+       .attr("x", 0)
+       .attr("font-size", "10px")
+       .attr("y", 0);
     svg
       .append("text")
       .attr("class", "x-label")
@@ -107,13 +100,9 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
 
 
   componentDidUpdate(prevProps: DumbbellPlotProps) {
-    // const filter_selection = this.props.filter_selection.toString();
-    // const year_range = this.props.year_range.toString();
-        if (!(this.props.current_selected_patient=== prevProps.current_selected_patient)){
-            
+        if (!(this.props.current_select_case=== prevProps.current_select_case)){
           this.drawChart();
-        }
-        else if (this.props.y_axis_name !== prevProps.y_axis_name ||
+        } else if (this.props.y_axis_name !== prevProps.y_axis_name ||
           this.props.year_range !== prevProps.year_range ||
           this.props.filter_selection !== prevProps.filter_selection 
         ) {
@@ -121,6 +110,7 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
           
         }
   }
+  
   fetch_data_with_year() {
     const year_range = this.props.year_range;
     const y_axis = this.props.y_axis_name;
@@ -175,7 +165,8 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
                 start_x_axis: begin_x,
                 end_x_axis: end_x,
                 visit_no: ob.visit_id,
-                y_axis: y_axis_val
+                y_axis: y_axis_val,
+                case_id:ob.case_id
               };
               return new_ob;
             }
@@ -205,17 +196,17 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
     const width = (svg as any).node().getBoundingClientRect().width;
     const height = (svg as any).node().getBoundingClientRect().height;
     //const offset = 20;
-    const offset = { left: 50, bottom: 25 };
+    const offset = { left: 70, bottom: 40, right: 10, top: 20 };
 
     let y_scale = d3
       .scaleLinear()
       .domain([0, 1.1 * y_max])
-      .range([height, offset.bottom]);
+      .range([height-offset.top, offset.bottom]);
     let x_scale: any;
     x_scale = d3
       .scaleLinear()
       .domain([0.9 * this.state.x_min, 1.1 * this.state.x_max])
-      .range([offset.left, width]);
+      .range([offset.left, width-offset.right]);
     const circle_tooltip = svg.select(".circle-tooltip");
     let components = svg
       .select("#all-dots")
@@ -235,8 +226,11 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
       .attr("r", "1%")
       .attr("fill", "#F6D55C")
       .attr("opacity", d => {
-        if (that.props.current_selected_patient) {
-          return d.visit_no === that.props.current_selected_patient ? 1 : 0.5;
+        if (d.start_x_axis === 0) {
+          return 0
+        }
+        if (that.props.current_select_case) {
+          return d.case_id === that.props.current_select_case ? 1 : 0.5;
         } else {
           return d.y_axis ? 1 : 0;
         }
@@ -248,11 +242,14 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
       .attr("r", "1%")
       .attr("fill", "#20639B")
       .attr("opacity", d => {
-        if (that.props.current_selected_patient) {
-          return d.visit_no === that.props.current_selected_patient ? 1 : 0.5;
-        } else {
-          return d.y_axis ? 1 : 0;
+        if (d.end_x_axis=== 0) {
+          return 0;
         }
+        if (that.props.current_select_case) {
+          return d.case_id === that.props.current_select_case ? 1 : 0.5;
+        } 
+        return d.y_axis ? 1 : 0;
+        
       });
     components
       .append("rect")
@@ -264,13 +261,18 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
       })
       .attr("y", (d: any) => y_scale(d.y_axis) - 1)
       .attr("height", "2px")
-      .attr("opacity", d => (d.y_axis ? 0.5 : 0))
+      .attr("opacity", d => {
+        if (d.start_x_axis === 0 || d.end_x_axis === 0) {
+          return 0
+        }
+        return d.y_axis ? 0.5 : 0
+      })
       .attr("width", (d: any) =>
         Math.abs(x_scale(d.end_x_axis) - x_scale(d.start_x_axis))
-      );
+    );
+    
     components
-      .attr("transform", "translate(0,-" + offset.bottom + ")")
-
+      .attr("transform", "translate(0,-" + (offset.bottom-offset.top) + ")")
       .on("mouseover", function() {
         circle_tooltip.style("display", null);
       })
@@ -296,42 +298,14 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
           );
       })
       .on("click", function(d) {
-        console.log(d.visit_no);
-        that.props.ID_selection_handler(d.visit_no);
+        // console.log(d.visit_no);
+        // that.props.ID_selection_handler(d.visit_no);
+        console.log(d.case_id)
+        that.props.ID_selection_handler(d.case_id)
         d3.event.stopPropagation();
       });
 
-    // dots.attr("cx", (d: any) => x_scale(d.start_x_axis) as any)
-    //     .attr("cy", (d: any) => y_scale(d.y_axis))
-    //     .attr("r", "2px")
-    //     .classed("dots", true)
-    //     .attr("fill", "#072F5F")
-    //     .attr("opacity", "1")
-    //     .attr("transform", "translate(0,-" + offset + ")")
-    //     .on('click', function (d) {
-    //         console.log(d.visit_no)
-    //        // that.fetch_individual(d.visit_no)
-    //         d3.event.stopPropagation();
-
-    //     })
-    //     .on("mouseover", function () {
-    //         circle_tooltip.style("display", null);
-    //     })
-    //     .on("mouseout", function () {
-    //         circle_tooltip.style("display", "none");
-    //     })
-    //     .on("mousemove", function (d) {
-    //         var xPosition = d3.mouse(this as any)[0] - 20;
-    //         var yPosition = d3.mouse(this as any)[1] - 40;
-    //         circle_tooltip.attr(
-    //             "transform",
-    //             "translate(" + xPosition + "," + yPosition + ")"
-    //         );
-    //         circle_tooltip
-    //             .select("text")
-    //             .text(Math.round(d.y_axis * 100) / 100);
-    //     });
-
+  
     const x_axis = d3.axisBottom(x_scale);
     const y_axis = d3.axisLeft(y_scale);
 
@@ -344,21 +318,24 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
       .select("#y-axis")
       .attr(
         "transform",
-        "translate(" + offset.left + ",-" + offset.bottom + ")"
+        "translate(" + offset.left + ",-" + (offset.bottom-offset.top) + ")"
       )
       .call(y_axis as any);
     svg
       .select(".x-label")
-      .attr("x", width)
-      .attr("y", height)
-      .attr("font-size", "10px")
+      .attr("x", width-10)
+      .attr("y", height-10)
+       .attr("alignment-baseline", "baseline")
+       .attr("font-size", "10px")
+       .attr('text-anchor','end')
       .text("hemoglobin");
 
     svg
       .select(".y-label")
-      .attr("dy", ".75em")
-      .attr("y", 6)
+      .attr("y", offset.top + 5)
+      .attr("x", -offset.top - 5)
       .attr("font-size", "10px")
+      .attr("text-anchor", "end")
       .attr("transform", "rotate(-90)")
       .text(this.props.y_axis_name);
   }
