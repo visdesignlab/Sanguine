@@ -104,8 +104,11 @@ class ChartComponent extends Component<
       this.props.per_case !== prevProps.per_case) {
       this.fetch_data_with_year();
     }
+    else if (this.props.current_select_case !== prevProps.current_select_case) {
+      this.fetch_select_patient_info();
+    }
       else {
-        this.drawChart();
+        this.subdrawChart();
       }
     }
   
