@@ -239,7 +239,7 @@ class App extends Component<PropsCard, StyledCardState> {
    * put the sizing inside props
    */
   _onLayoutChange = (event: any) => {
-    this.forceUpdate();
+    //this.forceUpdate();
     console.log(event);
     console.log(this.state.layout);
   };
