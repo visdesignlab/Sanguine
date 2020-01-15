@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import './App.css';
-import 'd3';
+// import 'd3';
 import ChartComponent from "./ChartComponent";
 import Grid from "hedron";
 import  { Range } from "rc-slider";
@@ -10,10 +10,13 @@ import "rc-slider/assets/index.css";
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated'
 import ScatterPlot from './ScatterPlot';
+import DumbbellPlot from './DumbbellPlot'
 import { Responsive as ResponsiveReactGridLayout } from "react-grid-layout";
 import Toggle from "react-toggle";
 import "react-toggle/style.css";
 import * as ProvenanceLibrary from '@visdesignlab/provenance-lib-core/lib/src/index.js'
+import * as d3 from "d3";
+import Headroom from 'react-headroom'
 
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
 interface LayoutElement{
@@ -43,14 +46,12 @@ export interface NodeState {
     };//this is the grid ID number to the list of props for the 
   }
 
-
 const initialState: NodeState = {
   nodes: {
     layout_array: [],
     current_selected: "-1"
     }
   }
-
 
 export interface StyledCardState {
   surgery_type: [];
@@ -59,6 +60,8 @@ export interface StyledCardState {
   chart_type_change: string;
   x_axis_change: string;
   y_axis_change: string;
+  current_select_case: number;
+  
 }
 
 interface PropsCard{
@@ -68,36 +71,45 @@ interface PropsCard{
 
 class App extends Component<PropsCard, StyledCardState> {
   x_axis: string;
-  
+
+  //current_select_case: number[];
+  //current_select_case: number;
   y_axis: string;
   year_range: number[];
   filter_selection: string[];
   current_id: number;
   col_data: { lg: number; md: number; sm: number; xs: number; xxs: number };
   current_select_id: string;
-  // currProv: any;
+
   provenance: ProvenanceLibrary.Provenance<NodeState>;
   provenanceApp: { currentState: () => NodeState };
 
   constructor(prop: Readonly<PropsCard>) {
     super(prop);
     this.current_id = 0;
+
+    //this.current_select_case = []
+    // this.current_select_case = NaN;
+
     this.x_axis = "YEAR";
-    
+
     this.y_axis = "PRBC_UNITS";
     this.year_range = [2014, 2019];
     this.filter_selection = [];
     let currProv = this.setupProvenance();
     this.provenance = currProv[0] as ProvenanceLibrary.Provenance<NodeState>;
     this.provenanceApp = currProv[1] as { currentState: () => NodeState };
+
     this.state = {
       surgery_type: [],
       layout: [],
       percase: false,
-      x_axis_change : "",
-      y_axis_change : "",
-      chart_type_change : "",
+      x_axis_change: "",
+      y_axis_change: "",
+      chart_type_change: "",
+      current_select_case: NaN
     };
+
     this.col_data = {
       lg: 12,
       md: 10,
@@ -105,6 +117,7 @@ class App extends Component<PropsCard, StyledCardState> {
       xs: 4,
       xxs: 2
     };
+
     this.current_select_id = "-1";
   }
   animatedComponents = makeAnimated();
@@ -125,12 +138,10 @@ class App extends Component<PropsCard, StyledCardState> {
     })
       .then(res => res.json())
       .then(data => {
-       // console.log(data);
+        // console.log(data);
         this.setState({ surgery_type: data.result });
       })
       .catch(console.log);
-
-
   }
   /**
    * Event Handlers for x and y generator change
@@ -144,21 +155,19 @@ class App extends Component<PropsCard, StyledCardState> {
   };
 
   _handleChangeXChange = (event: any) => {
-    this.setState({x_axis_change:event.value})
+    this.setState({ x_axis_change: event.value });
     //this.x_axis_change = event.value;
   };
 
   _handleChangeYChange = (event: any) => {
-
     this.setState({ y_axis_change: event.value });
-  //  this.y_axis_change = event.value;
+    //  this.y_axis_change = event.value;
   };
 
   _handleChartTypeChange = (event: any) => {
-
     this.setState({ chart_type_change: event.value });
-   // this.chart_type_change = event.value;
-  }
+    // this.chart_type_change = event.value;
+  };
 
   _onHandleYear = (event: any) => {
     //console.log(event)
@@ -198,7 +207,7 @@ class App extends Component<PropsCard, StyledCardState> {
       y: Infinity,
       w: 2,
       h: 2,
-      plot_type: this.x_axis ==="HEMO_VALUE"?"scatter":"bar"
+      plot_type: this.x_axis === "HEMO_VALUE" ? "dumbbell" : "bar"
     };
     this.provenance.applyAction({
       label: this.current_id + "add",
@@ -224,6 +233,11 @@ class App extends Component<PropsCard, StyledCardState> {
   /**
    * When a graph is resized, we need to rerender the chart inside
    */
+  /**
+   * TODO we don't want to use forceupdate
+   * instead,
+   * put the sizing inside props
+   */
   _onLayoutChange = (event: any) => {
     this.forceUpdate();
     console.log(event);
@@ -235,7 +249,7 @@ class App extends Component<PropsCard, StyledCardState> {
   /**
    * Event Handler for redo and undo gesture.
    * Uses provenance to achieve
-   * 
+   *
    */
   undo = (event: any) => {
     console.log(this.state);
@@ -268,7 +282,9 @@ class App extends Component<PropsCard, StyledCardState> {
     if (this.current_select_id === id) {
       this.current_select_id = "-1";
     }
-    let new_layout_array = this.state.layout.filter(element => element.i !== id);
+    let new_layout_array = this.state.layout.filter(
+      element => element.i !== id
+    );
     this.provenance.applyAction({
       label: this.current_id + "remove",
       action: (id: any) => {
@@ -281,7 +297,6 @@ class App extends Component<PropsCard, StyledCardState> {
 
     this.setState({ layout: new_layout_array });
     e.stopPropagation();
-    
   };
 
   onClickBlock = (event: any) => {
@@ -307,18 +322,12 @@ class App extends Component<PropsCard, StyledCardState> {
     this.setState({
       x_axis_change: current_selected_layout.x_axis_name,
       y_axis_change: current_selected_layout.y_axis_name,
-      chart_type_change:current_selected_layout.plot_type
+      chart_type_change: current_selected_layout.plot_type
     });
 
-    // this.x_axis_change = current_selected_layout.x_axis_name;
-    // this.y_axis_change = current_selected_layout.y_axis_name;
-    // this.chart_type_change = current_selected_layout.plot_type;
-
-   //this.forceUpdate();
     console.log(this.current_select_id);
   };
 
-  
   _change_selected = (eve: any) => {
     const that = this;
     console.log("called");
@@ -340,11 +349,10 @@ class App extends Component<PropsCard, StyledCardState> {
       }
       return layoutE;
     });
-    console.log(new_layout)
+    console.log(new_layout);
 
     // provenance implementation
-   // let new_layout_array = this.state.layout.filter(element => element.i !== id);
-    this.provenance.applyAction({
+   this.provenance.applyAction({
       label: this.current_id + "change",
       action: (id: any) => {
         let test = (this.provenanceApp.currentState() as any) as NodeState;
@@ -357,16 +365,57 @@ class App extends Component<PropsCard, StyledCardState> {
     this.setState(
       {
         layout: new_layout
-      },
-      this.forceUpdate
+      }
     );
-   console.log(this.state.layout, new_layout);
+    console.log(this.state.layout, new_layout);
   };
 
   handlePerCaseChange = (event: any) => {
     this.setState({ percase: event.target.checked });
-    this.forceUpdate();
   };
+
+  IDSelectionHandler = (id: number) => {
+    this.setState({current_select_case:id},this.fetch_individual);
+    
+  };
+
+  fetch_individual() {
+    
+    fetch(
+      `http://localhost:8000/api/fetch_individual?case_id=${this.state.current_select_case}`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        }
+      }
+    )
+      .then(res => res.json())
+      .then(data => {
+        //data = JSON.parse(data.table[0])
+        let array_of_table = Object.keys(data.table[0]).map(function(key) {
+          return [key, data.table[0][key]];
+        });
+        console.log(array_of_table);
+        d3.select(".individual-info")
+          .selectAll("table")
+          .remove();
+        let table = d3.select(".individual-info").append("table");
+        let tablebody = table.append("tbody");
+        let rows = tablebody
+          .selectAll("tr")
+          .data(array_of_table)
+          .enter()
+          .append("tr");
+        rows
+          .selectAll("td")
+          .data(d => d)
+          .enter()
+          .append("td")
+          .text(d => d);
+      });
+  }
 
   createElement(layoutE: LayoutElement) {
     const removeStyle = {
@@ -382,7 +431,7 @@ class App extends Component<PropsCard, StyledCardState> {
     //The ScatterPlot is specially designed for individual cases
 
     if (layoutE.x_axis_name !== "HEMO_VALUE") {
-    //if (layoutE.plot_type === "bar") {
+      //if (layoutE.plot_type === "bar") {
       return (
         <div
           onClick={this.onClickBlock.bind(this, layoutE.i)}
@@ -390,7 +439,7 @@ class App extends Component<PropsCard, StyledCardState> {
           className={"parent-node" + layoutE.i}
           data-grid={layoutE}
         >
-          <header>chart #{layoutE.i}</header>
+          {/* <header>chart #{layoutE.i}</header> */}
           <svg>
             <ChartComponent
               x_axis_name={layoutE.x_axis_name}
@@ -400,7 +449,8 @@ class App extends Component<PropsCard, StyledCardState> {
               class_name={"parent-node" + layoutE.i}
               chart_id={layoutE.i}
               per_case={this.state.percase}
-            //plot_type={layoutE.plot_type}
+              current_select_case = {this.state.current_select_case}
+              //plot_type={layoutE.plot_type}
             />
           </svg>
           <span
@@ -413,39 +463,69 @@ class App extends Component<PropsCard, StyledCardState> {
         </div>
       );
     }
-    //TODO also need to change this
-    
+
     //else if (layoutE.plot_type == "scatter") {
-    else{
-      return (
-        <div
-          onClick={this.onClickBlock.bind(this, layoutE.i)}
-          key={layoutE.i}
-          className={"parent-node" + layoutE.i}
-          data-grid={layoutE}
-        >
-          <header>chart #{layoutE.i}</header>
-          <svg>
-            <ScatterPlot
-              x_axis_name={layoutE.x_axis_name}
-              y_axis_name={layoutE.y_axis_name}
-              year_range={layoutE.year_range}
-              filter_selection={layoutE.filter_selection}
-              class_name={"parent-node" + layoutE.i}
-              chart_id={layoutE.i}
-             // per_case={this.state.percase}
-            //plot_type={layoutE.plot_type}
-            />
-          </svg>
-          <span
-            className="remove"
-            style={removeStyle}
-            onClick={this.onRemoveItem.bind(this, layoutE.i)}
+    else {
+      if (layoutE.plot_type === "scatter") {
+        return (
+          <div
+            onClick={this.onClickBlock.bind(this, layoutE.i)}
+            key={layoutE.i}
+            className={"parent-node" + layoutE.i}
+            data-grid={layoutE}
           >
-            x
-          </span>
-        </div>
-      );
+            {/* <header>chart #{layoutE.i}</header> */}
+            <svg>
+              <ScatterPlot
+                x_axis_name={layoutE.x_axis_name}
+                y_axis_name={layoutE.y_axis_name}
+                year_range={layoutE.year_range}
+                filter_selection={layoutE.filter_selection}
+                class_name={"parent-node" + layoutE.i}
+                chart_id={layoutE.i}
+                ID_selection_handler={this.IDSelectionHandler}
+              />
+            </svg>
+            <span
+              className="remove"
+              style={removeStyle}
+              onClick={this.onRemoveItem.bind(this, layoutE.i)}
+            >
+              x
+            </span>
+          </div>
+        );
+      } else if (layoutE.plot_type === "dumbbell") {
+        return (
+          <div
+            onClick={this.onClickBlock.bind(this, layoutE.i)}
+            key={layoutE.i}
+            className={"parent-node" + layoutE.i}
+            data-grid={layoutE}
+          >
+            {/* <header>chart #{layoutE.i}</header> */}
+            <svg>
+              <DumbbellPlot
+                x_axis_name={layoutE.x_axis_name}
+                y_axis_name={layoutE.y_axis_name}
+                year_range={layoutE.year_range}
+                filter_selection={layoutE.filter_selection}
+                class_name={"parent-node" + layoutE.i}
+                chart_id={layoutE.i}
+                ID_selection_handler={this.IDSelectionHandler}
+                current_select_case = {this.state.current_select_case}
+              />
+            </svg>
+            <span
+              className="remove"
+              style={removeStyle}
+              onClick={this.onRemoveItem.bind(this, layoutE.i)}
+            >
+              x
+            </span>
+          </div>
+        );
+      }
     }
   }
 
@@ -454,17 +534,19 @@ class App extends Component<PropsCard, StyledCardState> {
       { value: "PRBC_UNITS", label: "PRBC_UNITS" },
       { value: "FFP_UNITS", label: "FFP_UNITS" },
       { value: "PLT_UNITS", label: "PLT_UNITS" },
-      { value: "CRYO_UNITS", label: "CRYO_UNITS" }
+      { value: "CRYO_UNITS", label: "CRYO_UNITS" },
+      { value: "CELL_SAVER_ML", label: "CELL_SAVER_ML" }
     ];
     const x_axis_selection = [
       { value: "SURGEON_ID", label: "SURGEON_ID" },
       { value: "YEAR", label: "YEAR" },
       { value: "ANESTHOLOGIST_ID", label: "ANESTHOLOGIST_ID" },
-      {value: "HEMO_VALUE",label: "HEMOGLOBIN" }
+      { value: "HEMO_VALUE", label: "HEMOGLOBIN" }
     ];
     const chart_types = [
       { value: "bar", label: "Barchart" },
-      { value: "scatter", label: "Scatter Plot" }
+      { value: "scatter", label: "Scatter Plot" },
+      { value: "dumbbell", label: "Dumbbell Plot" }
     ];
 
     let style_sheet = null;
@@ -472,8 +554,6 @@ class App extends Component<PropsCard, StyledCardState> {
     //TODO change the bind for _change_selected()
     if (this.current_select_id !== "-1") {
       try {
-
-        
         const current_selected_type = chart_types.filter(
           d => d.value === this.state.chart_type_change
         )[0];
@@ -522,7 +602,10 @@ class App extends Component<PropsCard, StyledCardState> {
       2018: 2018,
       2019: 2019
     } as any;
-    return (
+    return [
+      <Headroom className="headroom">
+        <h1 id="title">BloodVis</h1>
+      </Headroom>,
       <Grid.Bounds direction="horizontal">
         <Grid.Box width="18%" height="100%">
           <Grid.Bounds direction="vertical" valign="center">
@@ -561,15 +644,20 @@ class App extends Component<PropsCard, StyledCardState> {
                 defaultInputValue={"PRBC_UNITS"}
               />
               <button onClick={this._generate_new_graph}>Generate New</button>
-              <button onClick={this.redo}>Redo</button>
-              <button onClick={this.undo}>Undo</button>
+              <div>
+                <button onClick={this.redo}>Redo</button>
+                <button onClick={this.undo}>Undo</button>
+              </div>
             </Grid.Box>
-            <Grid.Box border="2px solid palevioletred" margin="12px">
+            <Grid.Box
+              border={style_sheet ? "2px solid #cce1fb" : "none"}
+              margin="12px"
+            >
               {style_sheet}
             </Grid.Box>
           </Grid.Bounds>
         </Grid.Box>
-        <Grid.Box width = "64%">
+        <Grid.Box width="64%">
           <ResponsiveReactGridLayout
             onLayoutChange={this._onLayoutChange}
             onBreakpointChange={this._onBreakpointChange}
@@ -579,14 +667,17 @@ class App extends Component<PropsCard, StyledCardState> {
             width={1200}
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
           >
-            {this.state.layout.map(layoutE => { console.log(layoutE);return this.createElement(layoutE)})}
+            {this.state.layout.map(layoutE => {
+              console.log(layoutE);
+              return this.createElement(layoutE);
+            })}
           </ResponsiveReactGridLayout>
         </Grid.Box>
-        <Grid.Box width='18%'>
+        <Grid.Box width="18%">
           <div className="individual-info"></div>
         </Grid.Box>
       </Grid.Bounds>
-    );
+    ];
   }
 }
 
