@@ -45,11 +45,11 @@ def get_attributes(request):
 def fetch_individual(request):
     if request.method == "GET":
         
-        visit_no = request.GET.get('visit_no')
+        case_id = request.GET.get('case_id')
 
-        if not visit_no:
+        if not case_id:
             HttpResponseBadRequest(
-                "visit_no must be supplied.")
+                "case_id must be supplied.")
         
         command =(
                 f"SELECT info.DI_BIRTHDATE, info.GENDER_CODE, info.GENDER_DESC, "
@@ -61,7 +61,7 @@ def fetch_individual(request):
                 f"FROM CLIN_DM.BPU_CTS_DI_PATIENT info "
                 f"JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE surgery "
                 f"ON info.DI_PAT_ID = surgery.DI_PAT_ID "
-                f"WHERE surgery.di_visit_no = {visit_no}"
+                f"WHERE surgery.DI_CASE_ID = {case_id}"
         )
         connection = make_connection()
         # print(command)
@@ -172,7 +172,31 @@ def summarize_attribute_w_year(request):
         return JsonResponse({"task": data})
 
 
-#TODO Get transfused units, based on year limit, unit selected, surgery filter selected
+def request_individual_specific(request):
+    if request.method == "GET":
+        case_id = request.GET.get("case_id")
+        attribute_to_retrieve = request.GET.get("attribute")
+        if not case_id or attribute_to_retrieve:
+            HttpResponseBadRequest("case_id and attribute must be supplied")
+        connection = make_connection()
+        command_dict = {
+            "YEAR": "EXTRACT (YEAR FROM DI_CASE_DATE)",
+            "SURGEON_ID": "SURGEON_PROV_DWID",
+            "ANESTHOLOGIST_ID": "ANESTH_PROV_DWID"
+        }
+        command = (
+            f"SELECT {command_dict[attribute_to_retrieve]} "
+            f"FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
+            f"WHERE DI_CASE_ID = {case_id}"
+        )
+        print(command)
+        cur = connection.cursor()
+        result = cur.execute(command)
+        items = [{"result":row[0]} for row in result]
+        return JsonResponse({"result": items})
+            
+
+
 def request_transfused_units(request):
     if request.method == "GET":
         transfusion_type = request.GET.get("transfusion_type")
@@ -234,7 +258,7 @@ def request_transfused_units(request):
 def hemoglobin(request):
     if request.method == "GET":
         command = (
-            "SELECT DI_PAT_ID, DI_VISIT_NO, DI_CASE_ID, DI_CASE_DATE, DI_SURGERY_START_DTM, DI_SURGERY_END_DTM, "
+            "SELECT DI_PAT_ID, DI_case_id, DI_CASE_ID, DI_CASE_DATE, DI_SURGERY_START_DTM, DI_SURGERY_END_DTM, "
             "SURGERY_ELAP, SURGERY_TYPE_DESC, SURGEON_PROV_DWID, ANESTH_PROV_DWID, PRIM_PROC_DESC, POSTOP_ICU_LOS, SCHED_SITE_DESC, "
                 "( "
                 "SELECT RESULT_VALUE "

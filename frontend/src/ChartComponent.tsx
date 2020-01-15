@@ -9,18 +9,19 @@ interface ChartComponentState {
 
   data: DataPoint[],
   y_max: number,
+  value_to_highlight: number,
  
-  class_name: string,
 
 }
 interface ChartComponentProps{
-    y_axis_name: string,
-    x_axis_name: string,
-    year_range:number[],
-    filter_selection: string[]
-    class_name: string,
+  y_axis_name: string,
+  x_axis_name: string,
+  year_range:number[],
+  filter_selection: string[]
+  class_name: string,
   per_case: boolean,
-  chart_id: string
+  chart_id: string,
+  current_select_case: number
     
 }
 //TODO Pass down the width and height from the flexible grid layout
@@ -34,32 +35,32 @@ class ChartComponent extends Component<
   constructor(props: Readonly<ChartComponentProps>) {
     super(props);
     this.state = {
-      // y_axis_name: this.props.y_axis_name,
-      // x_axis_name: this.props.x_axis_name,
       data: [],
       y_max: -1,
-      //year_range: this.props.year_range.toString(),
-     // filter_selection: this.props.filter_selection.toString(),
-      class_name: this.props.class_name,
-     // per_case: this.props.per_case,
-     // plot_type:"scatter"
-      //data: this.fetch_data_with_year()
+      value_to_highlight: NaN
     };
   }
 
   componentDidMount() {
-    //console.log(this.props);
     
     let svg = d3
-      .select("." + this.state.class_name)
+      .select("." + this.props.class_name)
       .select("svg")
       .attr("width", "100%")
       .attr("height", "100%")
-      .attr("id", this.state.class_name + "-svg");
+      .attr("id", this.props.class_name + "-svg");
     svg.selectAll('rect').remove();
     svg.selectAll('circle').remove();
     svg.append("g").attr("id", "x-axis");
     svg.append("g").attr("id", "y-axis");
+    svg
+      .append("text")
+      .text("chart #" + this.props.chart_id)
+      .attr("alignment-baseline", "hanging")
+      .attr("x", 0)
+      .attr("y", 0)
+      .attr("font-size", "10px");
+
     svg
       .append("text")
       .attr("class", "x-label")
@@ -101,13 +102,12 @@ class ChartComponent extends Component<
       this.props.y_axis_name !== prevProps.y_axis_name ||
       this.props.year_range !== prevProps.year_range ||
       this.props.per_case !== prevProps.per_case) {
-      
       this.fetch_data_with_year();
     }
       else {
         this.drawChart();
       }
-      }
+    }
   
 
   fetch_data_with_year() {
@@ -115,7 +115,6 @@ class ChartComponent extends Component<
     const x_axis = this.props.x_axis_name;
     const y_axis = this.props.y_axis_name;
     const filter_selection = this.props.filter_selection;
-
       fetch(
       `http://localhost:8000/api/summarize_with_year?x_axis=${x_axis}&y_axis=${y_axis}&year_range=${year_range}&filter_selection=${filter_selection.toString()}`,
       {
@@ -149,14 +148,40 @@ class ChartComponent extends Component<
           });
           this.setState({ data: cast_data, y_max: y_max },
             this.drawChart);
-          // this.drawChart(cast_data, y_max);
         } else {
           console.log("something wrong");
         }
       });}
-//  }
+
+  fetch_select_patient_info() {
+    fetch(`http://localhost:8000/api/request_individual_specific?case_id=${this.props.current_select_case}&attribute=${this.props.x_axis_name}`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      }
+    }
+    ).then(res => res.json())
+      .then(data => {
+        this.setState({ value_to_highlight: data.result[0].result },
+        this.subdrawChart)
+        
+      })
+      ;
+  
+  }
+
 
   drawChart() {
+    if (this.props.current_select_case) {
+      this.fetch_select_patient_info();
+    } else {
+      this.subdrawChart();
+    }
+  }
+  
+  subdrawChart() {
+    
     const data = this.state.data;
     const y_max = this.state.y_max
     const x_vals = data
@@ -164,22 +189,22 @@ class ChartComponent extends Component<
         return dp.x_axis;
       })
       .sort();
-    const svg = d3.select("#" + this.state.class_name + "-svg");
+    const svg = d3.select("#" + this.props.class_name + "-svg");
     svg.attr("width", "100%").attr("height", "100%");
     const width = (svg as any).node().getBoundingClientRect().width;
     const height = (svg as any).node().getBoundingClientRect().height;
-    //const offset = 20;
-    const offset = {left:50, bottom:25}
+    
+    const offset = {left:70, bottom:40,right:10, top:20}
     let y_scale = d3
       .scaleLinear()
       .domain([0, 1.1*y_max])
-      .range([height, offset.bottom]);
+      .range([height-offset.top, offset.bottom]);
     let x_scale:any;
     
       x_scale = d3
         .scaleBand()
         .domain(x_vals)
-        .range([offset.left, width])
+        .range([offset.left, width-offset.right])
         .paddingInner(0.1);
     const rect_tooltip = svg.select(".rect-tooltip");
 
@@ -199,10 +224,15 @@ class ChartComponent extends Component<
       .attr("y", (d: any) => y_scale(d.y_axis))
       .classed("bars", true)
       .attr("width", (d) => { try { return x_scale.bandwidth() } catch{ }})
-      .attr("height", (d: any) => height - y_scale(d.y_axis))
+      .attr("height", (d: any) => height - y_scale(d.y_axis)-offset.top)
       .attr("fill", "#072F5F")
-      .attr("opacity", "1")
-      .attr("transform", "translate(0,-" + offset.bottom + ")")
+      .attr("opacity", d => {
+        if (this.state.value_to_highlight) {
+          return d.x_axis===this.state.value_to_highlight?1:0.5
+        }
+        return 1
+      })
+      .attr("transform", "translate(0,-" + (offset.bottom-offset.top) + ")")
       .on("mouseover", function() {
         rect_tooltip.style("display", null);
       })
@@ -231,20 +261,25 @@ class ChartComponent extends Component<
 
     svg
       .select("#y-axis")
-      .attr("transform", "translate("+offset.left+",-" + offset.bottom + ")")
+      .attr("transform", "translate("+offset.left+",-" + (offset.bottom-offset.top) + ")")
       .call(y_axis as any);
     
-     svg.select(".x-label")
-      .attr("x", width)
-       .attr("y", height)
-       .attr('font-size','10px')
-      .text(this.props.x_axis_name);
+     svg
+       .select(".x-label")
+       .attr("x", width-10)
+       .attr("y", height-10)
+       .attr("alignment-baseline", "baseline")
+       .attr("font-size", "10px")
+       .attr('text-anchor','end')
+       .text(this.props.x_axis_name);
     
     svg
       .select(".y-label")
-      .attr("dy", ".75em")
-      .attr("y", 6)
-      .attr('font-size', '10px')
+     // .attr("dy", ".75em")
+      .attr("y", offset.top+5)
+      .attr('x',-offset.top-5)
+      .attr("font-size", "10px")
+      .attr("text-anchor", "end")
       .attr("transform", "rotate(-90)")
       .text(this.props.y_axis_name);
 
