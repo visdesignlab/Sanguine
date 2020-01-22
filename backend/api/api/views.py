@@ -235,15 +235,18 @@ def request_transfused_units(request):
         }
 
         command = (
-            f"SELECT transfused, di_case_id FROM ( "
-            f"SELECT {command_dict[transfusion_type]} transfused, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID di_case_id "
+            f"SELECT transfused, di_case_id, YEAR, SURGEON_ID, ANESTHOLOGIST_ID FROM ( "
+            f"SELECT {command_dict[transfusion_type]} transfused, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID di_case_id, "
+            f"EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE) YEAR, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID SURGEON_ID, "
+            f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID ANESTHOLOGIST_ID "
             f"FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
             f"INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
             f"ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID "
             f"{extra_command}) "
             f"WHERE CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_DATE BETWEEN "
             f"'01-JAN-{year_min}' AND '31-DEC-{year_max}' "
-            f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID "
+            f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE), CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID, "
+            f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID "
             f") WHERE transfused>0"
         )
         
@@ -251,7 +254,7 @@ def request_transfused_units(request):
         cur = connection.cursor()
         result = cur.execute(command)
         
-        items = [{"case_id": row[1], "transfused": row[0]}
+        items = [{"case_id": row[1], "transfused": row[0], "YEAR": row[2], "SURGEON_ID": row[3], "ANESTHOLOGIST_ID":row[4]}
                  for row in result]
         return JsonResponse({"result": items})
 

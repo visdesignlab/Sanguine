@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import * as d3 from "d3";
+import { SelectSet } from './App';
 
 interface DataPoint {
     x_axis: any,
@@ -21,8 +22,9 @@ interface ChartComponentProps{
   class_name: string,
   per_case: boolean,
   chart_id: string,
-  current_select_case: number
-    
+  current_select_case: number,
+  current_select_set:SelectSet|null,
+  set_selection_handler:(set_name:string, set_value:number)=>void
 }
 //TODO Pass down the width and height from the flexible grid layout
 //Instead of retrieving from BoundingBox
@@ -187,7 +189,8 @@ class ChartComponent extends Component<
   subdrawChart() {
     
     const data = this.state.data;
-    const y_max = this.state.y_max
+    const y_max = this.state.y_max;
+    const that = this; 
     const x_vals = data
       .map(function(dp) {
         return dp.x_axis;
@@ -227,16 +230,25 @@ class ChartComponent extends Component<
       .attr("x", (d: any) => x_scale(d.x_axis) as any)
       .attr("y", (d: any) => y_scale(d.y_axis))
       .classed("bars", true)
-      .attr("width", (d) => { try { return x_scale.bandwidth() } catch{ }})
-      .attr("height", (d: any) => height - y_scale(d.y_axis)-offset.top)
+      .attr("width", (d) => { try { return x_scale.bandwidth() } catch{ } })
+      .attr("height", (d: any) => height - y_scale(d.y_axis) - offset.top)
       .attr("fill", "#072F5F")
       .attr("opacity", d => {
         if (this.state.value_to_highlight) {
-          return d.x_axis===this.state.value_to_highlight?1:0.5
+          return d.x_axis === this.state.value_to_highlight ? 1 : 0.5;
+        }
+        if (this.props.current_select_set) {
+          if (this.props.current_select_set.set_name === this.props.x_axis_name) {
+            return d.x_axis === this.props.current_select_set.set_value ? 1 : 0.5;
+          }
+          else{return 1}
         }
         return 1
       })
-      .attr("transform", "translate(0,-" + (offset.bottom-offset.top) + ")")
+      .attr("transform", "translate(0,-" + (offset.bottom - offset.top) + ")")
+      .on('click', function (d) {
+        that.props.set_selection_handler(that.props.x_axis_name,d.x_axis)
+      })
       .on("mouseover", function() {
         rect_tooltip.style("display", null);
       })

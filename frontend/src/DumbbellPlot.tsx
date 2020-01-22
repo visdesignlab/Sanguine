@@ -1,12 +1,16 @@
 import { Component } from 'react';
 import * as d3 from "d3";
+import { SelectSet } from './App';
 
 interface DataPoint {
-    start_x_axis: number,
-    end_x_axis:number,
-    y_axis: number,
+  start_x_axis: number,
+  end_x_axis:number,
+  y_axis: number,
   visit_no: number,
-  case_id: number
+  case_id: number,
+  YEAR: number,
+  SURGEON_ID: number,
+  ANESTHOLOGIST_ID: number
 }
 interface DumbbellPlotState {
     
@@ -26,7 +30,8 @@ interface DumbbellPlotProps {
     chart_id: string,
     // plot_type:string
     ID_selection_handler: (id: number) => void,
-    current_select_case:number
+  current_select_case: number,
+  current_select_set:SelectSet|null
 
 }
 
@@ -47,8 +52,6 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
   }
 
   componentDidMount() {
-    //console.log(this.props);
-
     let svg = d3
       .select("." + this.props.class_name)
       .select("svg")
@@ -131,7 +134,12 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
         let transfused_result = data.result;
 
         transfused_result.forEach((element: any) => {
-          transfused_dict[element.case_id] = element.transfused;
+          transfused_dict[element.case_id] = {
+            transfused: element.transfused,
+            year: element.YEAR,
+            surgeon_id: element.SURGEON_ID,
+            anesth_id: element.ANESTHOLOGIST_ID
+          };
         });
       });
     fetch(`http://localhost:8000/api/hemoglobin`, {
@@ -152,7 +160,10 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
           let cast_data = data.map((ob: any) => {
             const begin_x = +ob.hemo[0];
             const end_x = +ob.hemo[1];
-            const y_axis_val = transfused_dict[ob.case_id];
+            let y_axis_val
+            if (transfused_dict[ob.case_id]) {
+               y_axis_val = transfused_dict[ob.case_id].transfused;
+            }
             //This filter out anything that has empty value
             if (y_axis_val) {
               y_max = y_axis_val > y_max ? y_axis_val : y_max;
@@ -166,7 +177,10 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
                 end_x_axis: end_x,
                 visit_no: ob.visit_id,
                 y_axis: y_axis_val,
-                case_id:ob.case_id
+                case_id: ob.case_id,
+                YEAR: transfused_dict[ob.case_id].year,
+                ANESTHOLOGIST_ID: transfused_dict[ob.case_id].anesth_id,
+                SURGEON_ID: transfused_dict[ob.case_id].surgeon_id
               };
               return new_ob;
             }
@@ -224,13 +238,31 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
       .attr("cx", (d: any) => x_scale(d.start_x_axis) as any)
       .attr("cy", (d: any) => y_scale(d.y_axis))
       .attr("r", "1%")
-      .attr("fill", "#F6D55C")
+      .attr("fill", "#ba9407")
       .attr("opacity", d => {
         if (d.start_x_axis === 0) {
-          return 0
+          return 0;
         }
         if (that.props.current_select_case) {
           return d.case_id === that.props.current_select_case ? 1 : 0.5;
+        } else if (that.props.current_select_set) {
+          switch (that.props.current_select_set.set_name) {
+            case "YEAR":
+              return d.YEAR === that.props.current_select_set.set_value
+                ? 1
+                : 0.5;
+            case "SURGEON_ID":
+              return d.SURGEON_ID === that.props.current_select_set.set_value
+                ? 1
+                : 0.5;
+            case "ANESTHOLOGIST_ID":
+              return d.ANESTHOLOGIST_ID ===
+                that.props.current_select_set.set_value
+                ? 1
+                : 0.5;
+            default:
+              return d.y_axis ? 1 : 0;
+          }
         } else {
           return d.y_axis ? 1 : 0;
         }
@@ -247,7 +279,25 @@ class DumbbellPlot extends Component<DumbbellPlotProps, DumbbellPlotState> {
         }
         if (that.props.current_select_case) {
           return d.case_id === that.props.current_select_case ? 1 : 0.5;
-        } 
+        } else if (that.props.current_select_set) {
+          switch (that.props.current_select_set.set_name) {
+            case "YEAR":
+              return d.YEAR === that.props.current_select_set.set_value
+                ? 1
+                : 0.5;
+            case "SURGEON_ID":
+              return d.SURGEON_ID === that.props.current_select_set.set_value
+                ? 1
+                : 0.5;
+            case "ANESTHOLOGIST_ID":
+              return d.ANESTHOLOGIST_ID ===
+                that.props.current_select_set.set_value
+                ? 1
+                : 0.5;
+            default:
+              return d.y_axis ? 1 : 0;
+          }
+        }
         return d.y_axis ? 1 : 0;
         
       });

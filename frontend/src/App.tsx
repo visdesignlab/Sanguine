@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import './App.css';
-// import 'd3';
+
 import ChartComponent from "./ChartComponent";
 import Grid from "hedron";
 import  { Range } from "rc-slider";
@@ -17,6 +17,11 @@ import "react-toggle/style.css";
 import * as ProvenanceLibrary from '@visdesignlab/provenance-lib-core/lib/src/index.js'
 import * as d3 from "d3";
 import Headroom from 'react-headroom'
+import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
+import "react-tabs/style/react-tabs.css";
+
+
+import * as LineUpJS from "lineupjsx";
 
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
 interface LayoutElement{
@@ -30,6 +35,11 @@ interface LayoutElement{
   w: number,
   h: number,
   plot_type: string
+}
+
+export interface SelectSet {
+  set_name: string,
+  set_value:number
 }
 
 function CreateProvenance(provenance: ProvenanceLibrary.Provenance<NodeState>) {
@@ -61,7 +71,7 @@ export interface StyledCardState {
   x_axis_change: string;
   y_axis_change: string;
   current_select_case: number;
-  
+  current_select_set: SelectSet|null;
 }
 
 interface PropsCard{
@@ -107,7 +117,8 @@ class App extends Component<PropsCard, StyledCardState> {
       x_axis_change: "",
       y_axis_change: "",
       chart_type_change: "",
-      current_select_case: NaN
+      current_select_case: NaN,
+      current_select_set:null
     };
 
     this.col_data = {
@@ -375,9 +386,15 @@ class App extends Component<PropsCard, StyledCardState> {
   };
 
   IDSelectionHandler = (id: number) => {
-    this.setState({current_select_case:id},this.fetch_individual);
-    
+    this.setState({current_select_case:id, current_select_set:null},this.fetch_individual);
   };
+
+  SetSelectionHandler = (select_name: string, select_value: number) => {
+    console.log(select_value,select_name)
+    this.setState({ current_select_case: NaN, current_select_set: {set_name:select_name,set_value:select_value}})
+  }
+
+
 
   fetch_individual() {
     
@@ -449,7 +466,9 @@ class App extends Component<PropsCard, StyledCardState> {
               class_name={"parent-node" + layoutE.i}
               chart_id={layoutE.i}
               per_case={this.state.percase}
-              current_select_case = {this.state.current_select_case}
+              current_select_case={this.state.current_select_case}
+              set_selection_handler={this.SetSelectionHandler}
+              current_select_set = {this.state.current_select_set}
               //plot_type={layoutE.plot_type}
             />
           </svg>
@@ -513,7 +532,8 @@ class App extends Component<PropsCard, StyledCardState> {
                 class_name={"parent-node" + layoutE.i}
                 chart_id={layoutE.i}
                 ID_selection_handler={this.IDSelectionHandler}
-                current_select_case = {this.state.current_select_case}
+                current_select_case={this.state.current_select_case}
+                current_select_set={this.state.current_select_set}
               />
             </svg>
             <span
@@ -602,81 +622,107 @@ class App extends Component<PropsCard, StyledCardState> {
       2018: 2018,
       2019: 2019
     } as any;
+
+    let arr = [];
+    const cats = ["c1", "c2", "c3"];
+    for (let i = 0; i < 100; i++) {
+      arr.push({
+        a: Math.random() * 10,
+        d: "Row " + i,
+        cat: cats[Math.floor(Math.random() * 3)],
+        cat2: cats[Math.floor(Math.random() * 3)]
+      });
+    }
+   
+
     return [
       <Headroom className="headroom">
         <h1 id="title">BloodVis</h1>
       </Headroom>,
-      <Grid.Bounds direction="horizontal">
-        <Grid.Box width="18%" height="100%">
-          <Grid.Bounds direction="vertical" valign="center">
-            <Grid.Box margin="12px">
-              <Toggle
-                id="percase-status"
-                defaultChecked={this.state.percase}
-                onChange={this.handlePerCaseChange}
-              />
-              <label htmlFor="percase-status"> Per Case</label>
-              <Range
-                min={2014}
-                max={2019}
-                defaultValue={[2014, 2019]}
-                marks={marks}
-                onAfterChange={this._onHandleYear}
-              />
-              <p>Optional Filters</p>
-              <Select
-                closeMenuOnSelect={false}
-                components={this.animatedComponents}
-                isMulti
-                options={this.state.surgery_type}
-                onChange={this._onSelectFilter}
-              />
-              <p>x axis</p>
-              <Select
-                options={x_axis_selection}
-                onChange={this._handleChangeX}
-                defaultInputValue={"YEAR"}
-              />
-              <p>y axis</p>
-              <Select
-                options={y_axis_selection}
-                onChange={this._handleChangeY}
-                defaultInputValue={"PRBC_UNITS"}
-              />
-              <button onClick={this._generate_new_graph}>Generate New</button>
-              <div>
-                <button onClick={this.redo}>Redo</button>
-                <button onClick={this.undo}>Undo</button>
-              </div>
+      <Tabs>
+        <TabList>
+          <Tab>Charts</Tab>
+          <Tab>LineUp</Tab>
+        </TabList>
+        <TabPanel>
+          <Grid.Bounds direction="horizontal">
+            <Grid.Box width="18%" height="100%">
+              <Grid.Bounds direction="vertical" valign="center">
+                <Grid.Box margin="12px">
+                  <Toggle
+                    id="percase-status"
+                    defaultChecked={this.state.percase}
+                    onChange={this.handlePerCaseChange}
+                  />
+                  <label htmlFor="percase-status"> Per Case</label>
+                  <Range
+                    min={2014}
+                    max={2019}
+                    defaultValue={[2014, 2019]}
+                    marks={marks}
+                    onAfterChange={this._onHandleYear}
+                  />
+                  <p>Optional Filters</p>
+                  <Select
+                    closeMenuOnSelect={false}
+                    components={this.animatedComponents}
+                    isMulti
+                    options={this.state.surgery_type}
+                    onChange={this._onSelectFilter}
+                  />
+                  <p>x axis</p>
+                  <Select
+                    options={x_axis_selection}
+                    onChange={this._handleChangeX}
+                    defaultInputValue={"YEAR"}
+                  />
+                  <p>y axis</p>
+                  <Select
+                    options={y_axis_selection}
+                    onChange={this._handleChangeY}
+                    defaultInputValue={"PRBC_UNITS"}
+                  />
+                  <button onClick={this._generate_new_graph}>
+                    Generate New
+                  </button>
+                  <div>
+                    <button onClick={this.redo}>Redo</button>
+                    <button onClick={this.undo}>Undo</button>
+                  </div>
+                </Grid.Box>
+                <Grid.Box
+                  border={style_sheet ? "2px solid #cce1fb" : "none"}
+                  margin="12px"
+                >
+                  {style_sheet}
+                </Grid.Box>
+              </Grid.Bounds>
             </Grid.Box>
-            <Grid.Box
-              border={style_sheet ? "2px solid #cce1fb" : "none"}
-              margin="12px"
-            >
-              {style_sheet}
+            <Grid.Box width="64%">
+              <ResponsiveReactGridLayout
+                onLayoutChange={this._onLayoutChange}
+                onBreakpointChange={this._onBreakpointChange}
+                className="layout"
+                cols={this.col_data}
+                // rowHeight={30}
+                width={1200}
+                breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+              >
+                {this.state.layout.map(layoutE => {
+                  console.log(layoutE);
+                  return this.createElement(layoutE);
+                })}
+              </ResponsiveReactGridLayout>
+            </Grid.Box>
+            <Grid.Box width="18%">
+              <div className="individual-info"></div>
             </Grid.Box>
           </Grid.Bounds>
-        </Grid.Box>
-        <Grid.Box width="64%">
-          <ResponsiveReactGridLayout
-            onLayoutChange={this._onLayoutChange}
-            onBreakpointChange={this._onBreakpointChange}
-            className="layout"
-            cols={this.col_data}
-            // rowHeight={30}
-            width={1200}
-            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-          >
-            {this.state.layout.map(layoutE => {
-              console.log(layoutE);
-              return this.createElement(layoutE);
-            })}
-          </ResponsiveReactGridLayout>
-        </Grid.Box>
-        <Grid.Box width="18%">
-          <div className="individual-info"></div>
-        </Grid.Box>
-      </Grid.Bounds>
+        </TabPanel>
+        <TabPanel>
+          <LineUpJS.LineUp data={arr} />
+        </TabPanel>
+      </Tabs>
     ];
   }
 }
