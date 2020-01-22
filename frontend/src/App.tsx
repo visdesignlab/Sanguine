@@ -14,7 +14,7 @@ import DumbbellPlot from './DumbbellPlot'
 import { Responsive as ResponsiveReactGridLayout } from "react-grid-layout";
 import Toggle from "react-toggle";
 import "react-toggle/style.css";
-import * as ProvenanceLibrary from '@visdesignlab/provenance-lib-core/lib/src/index.js'
+import * as ProvenanceLibrary from '@visdesignlab/provenance-lib-core'
 import * as d3 from "d3";
 import Headroom from 'react-headroom'
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
@@ -44,7 +44,7 @@ export interface SelectSet {
 
 function CreateProvenance(provenance: ProvenanceLibrary.Provenance<NodeState>) {
   return {
-    currentState: () => provenance.graph().current.state
+    currentState: () => provenance.current()
   }
 }
 
@@ -108,7 +108,7 @@ class App extends Component<PropsCard, StyledCardState> {
     this.filter_selection = [];
     let currProv = this.setupProvenance();
     this.provenance = currProv[0] as ProvenanceLibrary.Provenance<NodeState>;
-    this.provenanceApp = currProv[1] as { currentState: () => NodeState };
+    this.provenanceApp = currProv[1] as unknown as { currentState: () => NodeState };
 
     this.state = {
       surgery_type: [],
@@ -220,15 +220,16 @@ class App extends Component<PropsCard, StyledCardState> {
       h: 2,
       plot_type: this.x_axis === "HEMO_VALUE" ? "dumbbell" : "bar"
     };
-    this.provenance.applyAction({
-      label: this.current_id + "add",
-      action: (id: any) => {
+    
+    this.provenance.applyAction(
+      this.current_id + "add",
+      (id: any) => {
         let test = (this.provenanceApp.currentState() as any) as NodeState;
         test.nodes.layout_array = test.nodes.layout_array.concat(new_element);
         return test;
       },
-      args: [this.current_id]
-    });
+      
+    );
     //  console.log(this.provenanceApp.currentState());
     this.current_id += 1;
     //round back to 0 when the current_id has exceeded 100
@@ -252,8 +253,40 @@ class App extends Component<PropsCard, StyledCardState> {
   _onLayoutChange = (event: any) => {
     //this.forceUpdate();
     console.log(event);
-    console.log(this.state.layout);
-  };
+    //console.log(this.state.layout);
+    let new_layout: LayoutElement[] = this.state.layout.map(layoutE => {
+      const i = layoutE.i;
+      const res_layout = event.filter((d: any) => d.i === i)[0];
+
+      layoutE = {
+        x_axis_name: layoutE.x_axis_name,
+        y_axis_name: layoutE.y_axis_name,
+        year_range: layoutE.year_range,
+        filter_selection: layoutE.filter_selection,
+        i: layoutE.i,
+        x: res_layout.x,
+        w: res_layout.w,
+        y: res_layout.y,
+        h: res_layout.h,
+        plot_type: layoutE.plot_type
+      };
+      return layoutE
+    
+    })
+    this.provenance.applyAction(
+       "change layout",
+      () => {
+        let test = (this.provenanceApp.currentState() as any) as NodeState;
+        test.nodes.layout_array = new_layout;
+        return test;
+      },
+       [this.current_id]
+    );
+
+    this.setState({ layout: new_layout });
+    
+  }
+
 
   _onBreakpointChange = (event: any) => {};
 
@@ -273,18 +306,11 @@ class App extends Component<PropsCard, StyledCardState> {
   };
 
   redo = (event: any) => {
-    if (this.provenance.graph().current.children.length === 0) {
-      return;
-    }
-    console.log(this.state);
-    this.provenance.goToNode(
-      this.provenance.graph().current.children[
-        this.provenance.graph().current.children.length - 1
-      ]
-    );
+    this.provenance.goForwardOneStep();
     this.setState({
       layout: this.provenanceApp.currentState().nodes.layout_array
     });
+    // this.forceUpdate()
     this.current_select_id = this.provenanceApp.currentState().nodes.current_selected;
     console.log(this.state);
   };
@@ -296,15 +322,15 @@ class App extends Component<PropsCard, StyledCardState> {
     let new_layout_array = this.state.layout.filter(
       element => element.i !== id
     );
-    this.provenance.applyAction({
-      label: this.current_id + "remove",
-      action: (id: any) => {
+    this.provenance.applyAction(
+       "remove",
+      (id: any) => {
         let test = (this.provenanceApp.currentState() as any) as NodeState;
         test.nodes.layout_array = new_layout_array;
         return test;
       },
-      args: [this.current_id]
-    });
+      [this.current_id]
+    );
 
     this.setState({ layout: new_layout_array });
     e.stopPropagation();
@@ -320,15 +346,15 @@ class App extends Component<PropsCard, StyledCardState> {
     )[0];
 
     //add provenence for select id
-    this.provenance.applyAction({
-      label: "change selected id",
-      action: (id: any) => {
+    this.provenance.applyAction(
+       "change selected id",
+       (id: any) => {
         let test = (this.provenanceApp.currentState() as any) as NodeState;
         test.nodes.current_selected = event;
         return test;
       },
-      args: [this.current_id]
-    });
+      [this.current_id]
+    );
 
     this.setState({
       x_axis_change: current_selected_layout.x_axis_name,
@@ -363,15 +389,15 @@ class App extends Component<PropsCard, StyledCardState> {
     console.log(new_layout);
 
     // provenance implementation
-   this.provenance.applyAction({
-      label: this.current_id + "change",
-      action: (id: any) => {
+   this.provenance.applyAction(
+       this.current_id + "change",
+       (id: any) => {
         let test = (this.provenanceApp.currentState() as any) as NodeState;
         test.nodes.layout_array = new_layout;
         return test;
       },
-      args: [this.current_id]
-    });
+       [this.current_id]
+    );
 
     this.setState(
       {
@@ -622,7 +648,7 @@ class App extends Component<PropsCard, StyledCardState> {
       2018: 2018,
       2019: 2019
     } as any;
-
+    
     let arr = [];
     const cats = ["c1", "c2", "c3"];
     for (let i = 0; i < 100; i++) {
@@ -707,6 +733,7 @@ class App extends Component<PropsCard, StyledCardState> {
                 // rowHeight={30}
                 width={1200}
                 breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+                layouts = {{lg:this.state.layout}}
               >
                 {this.state.layout.map(layoutE => {
                   console.log(layoutE);
