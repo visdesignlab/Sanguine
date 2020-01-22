@@ -71,7 +71,6 @@ class ChartComponent extends Component<
       .attr("text-anchor", "end");
     
     svg.append("g").attr("id", "all-rects");
-    //svg.append("g").attr("id","all-dots");
 
     let rect_tooltip = svg
       .append("g")
@@ -104,7 +103,8 @@ class ChartComponent extends Component<
       this.props.per_case !== prevProps.per_case) {
       this.fetch_data_with_year();
     }
-    else if (this.props.current_select_case !== prevProps.current_select_case) {
+    else if ((this.props.current_select_case !== prevProps.current_select_case) && this.props.current_select_case) {
+     // console.log(this.props.current_select_case)
       this.fetch_select_patient_info();
     }
       else {
@@ -177,6 +177,7 @@ class ChartComponent extends Component<
 
   drawChart() {
     if (this.props.current_select_case) {
+      console.log(this.props.current_select_case)
       this.fetch_select_patient_info();
     } else {
       this.subdrawChart();
@@ -197,7 +198,7 @@ class ChartComponent extends Component<
     const width = (svg as any).node().getBoundingClientRect().width;
     const height = (svg as any).node().getBoundingClientRect().height;
     
-    const offset = {left:70, bottom:40,right:10, top:20}
+    const offset = {left:70, bottom:40,right:10, top:20,margin:30}
     let y_scale = d3
       .scaleLinear()
       .domain([0, 1.1*y_max])
@@ -207,7 +208,7 @@ class ChartComponent extends Component<
       x_scale = d3
         .scaleBand()
         .domain(x_vals)
-        .range([offset.left, width-offset.right])
+        .range([offset.left, width-offset.right-offset.margin])
         .paddingInner(0.1);
     const rect_tooltip = svg.select(".rect-tooltip");
 
@@ -252,15 +253,19 @@ class ChartComponent extends Component<
 
         rect_tooltip.select("text").text(Math.round(d.y_axis * 100) / 100);
       });
-    
-    
-
+  
     const x_axis = d3.axisBottom(x_scale);
     const y_axis = d3.axisLeft(y_scale);
     svg
       .select("#x-axis")
       .attr("transform", "translate(0," + (height - offset.bottom) + ")")
-      .call(x_axis as any);
+      .call(x_axis as any)
+      .selectAll("text")
+      .attr("y", 0)
+      .attr("x", 9)
+      .attr("dy", ".35em")
+      .attr("transform", "rotate(90)")
+      .style("text-anchor", "start");
 
     svg
       .select("#y-axis")
@@ -269,18 +274,18 @@ class ChartComponent extends Component<
     
      svg
        .select(".x-label")
-       .attr("x", width-10)
-       .attr("y", height-10)
-       .attr("alignment-baseline", "baseline")
+       .attr("x", height-10)
+       .attr("y", -width+offset.right)
+       .attr("alignment-baseline", "hanging")
        .attr("font-size", "10px")
-       .attr('text-anchor','end')
+       .attr("text-anchor", "end")
+       .attr('transform',"rotate(90)")
        .text(this.props.x_axis_name);
     
     svg
       .select(".y-label")
-     // .attr("dy", ".75em")
-      .attr("y", offset.top+5)
-      .attr('x',-offset.top-5)
+      .attr("y", offset.top + 5)
+      .attr("x", -offset.top - 5)
       .attr("font-size", "10px")
       .attr("text-anchor", "end")
       .attr("transform", "rotate(-90)")
