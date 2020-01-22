@@ -21,6 +21,7 @@ def make_connection():
     )
     return cx_Oracle.connect(user=usr_name, password=password, dsn=dsn_tns)
 
+
 # Read in the data dictionary
 def data_dictionary():
     # Instantiate mapping array
