@@ -1,4 +1,4 @@
-
+import csv
 import json
 import cx_Oracle
 
@@ -20,6 +20,18 @@ def make_connection():
         service_name="dwrac_som_analysts.med.utah.edu",
     )
     return cx_Oracle.connect(user=usr_name, password=password, dsn=dsn_tns)
+
+# Read in the data dictionary
+def data_dictionary():
+    # Instantiate mapping array
+    data_dictionary = {}
+
+    with open("data_dictionary.csv", "r") as file:
+        read_csv = csv.reader(file, delimiter=",")
+        for row in read_csv:
+            data_dictionary[row[0]] = row[1]
+
+    return data_dictionary
 
 
 def index(request):
@@ -64,16 +76,13 @@ def fetch_individual(request):
                 f"WHERE surgery.DI_CASE_ID = {case_id}"
         )
         connection = make_connection()
-        # print(command)
         cur = connection.cursor()
         result = cur.execute(command)
-        # print(result)
 
-        # data = [dict(zip([key[0] for key in cur.description], row))
-        #         for row in result]
-        # return json.dumps({'table': data}, default=str)
+        data_dictionary = data_dictionary()
+
         data = [
-            dict(zip([key[0] for key in cur.description], row))
+            dict(zip([data_dictionary[key[0]] for key in cur.description], row))
             for row in result
         ]
         return JsonResponse({"table": data})
