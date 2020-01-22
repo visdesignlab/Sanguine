@@ -14,7 +14,12 @@ import DumbbellPlot from './DumbbellPlot'
 import { Responsive as ResponsiveReactGridLayout } from "react-grid-layout";
 import Toggle from "react-toggle";
 import "react-toggle/style.css";
-import * as ProvenanceLibrary from '@visdesignlab/provenance-lib-core'
+import {
+  initProvenance,
+  Provenance,
+  ProvenanceGraph,
+  ActionFunction
+} from "@visdesignlab/provenance-lib-core";
 import * as d3 from "d3";
 import Headroom from 'react-headroom'
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
@@ -42,11 +47,11 @@ export interface SelectSet {
   set_value:number
 }
 
-function CreateProvenance(provenance: ProvenanceLibrary.Provenance<NodeState>) {
-  return {
-    currentState: () => provenance.current()
-  }
-}
+// function CreateProvenance(provenance: ProvenanceLibrary.Provenance<NodeState>) {
+//   return {
+//     currentState: () => provenance.current()
+//   }
+// }
 
 
 export interface NodeState {
@@ -62,6 +67,22 @@ const initialState: NodeState = {
     current_selected: "-1"
     }
   }
+
+const changeDataset: ActionFunction<NodeState> = (
+  state: NodeState,
+  newLayoutArray: LayoutElement[]
+) => {
+  state.nodes.layout_array = newLayoutArray;
+  return state;
+};
+
+const changeSelected: ActionFunction<NodeState> = (
+  state: NodeState,
+  new_selected: string
+) => {
+  state.nodes.current_selected = new_selected;
+  return state;
+};
 
 export interface StyledCardState {
   surgery_type: [];
@@ -90,9 +111,9 @@ class App extends Component<PropsCard, StyledCardState> {
   current_id: number;
   col_data: { lg: number; md: number; sm: number; xs: number; xxs: number };
   current_select_id: string;
-
-  provenance: ProvenanceLibrary.Provenance<NodeState>;
-  provenanceApp: { currentState: () => NodeState };
+  
+  provenance: Provenance<NodeState>;
+  //provenanceApp: { currentState: () => NodeState };
 
   constructor(prop: Readonly<PropsCard>) {
     super(prop);
@@ -106,9 +127,9 @@ class App extends Component<PropsCard, StyledCardState> {
     this.y_axis = "PRBC_UNITS";
     this.year_range = [2014, 2019];
     this.filter_selection = [];
-    let currProv = this.setupProvenance();
-    this.provenance = currProv[0] as ProvenanceLibrary.Provenance<NodeState>;
-    this.provenanceApp = currProv[1] as unknown as { currentState: () => NodeState };
+   // let currProv = this.setupProvenance();
+    this.provenance = initProvenance(initialState)
+    // this.provenanceApp = currProv[1] as unknown as { currentState: () => NodeState };
 
     this.state = {
       surgery_type: [],
@@ -132,14 +153,15 @@ class App extends Component<PropsCard, StyledCardState> {
     this.current_select_id = "-1";
   }
   animatedComponents = makeAnimated();
+
   /**
    * Set up the provenance tracking
    */
-  setupProvenance() {
-    const provenance = ProvenanceLibrary.initProvenance(initialState);
-    const app = CreateProvenance(provenance);
-    return [provenance, app];
-  }
+  // setupProvenance() {
+  //   const provenance = ProvenanceLibrary.initProvenance(initialState);
+  //   const app = CreateProvenance(provenance);
+  //   return [provenance, app];
+  // }
   /**
    * Populate the filter of all procedures, API call gets a list of procedures from the table
    */
@@ -223,12 +245,8 @@ class App extends Component<PropsCard, StyledCardState> {
     
     this.provenance.applyAction(
       this.current_id + "add",
-      (id: any) => {
-        let test = (this.provenanceApp.currentState() as any) as NodeState;
-        test.nodes.layout_array = test.nodes.layout_array.concat(new_element);
-        return test;
-      },
-      
+      changeDataset,
+      [this.state.layout.concat(new_element)]
     );
     //  console.log(this.provenanceApp.currentState());
     this.current_id += 1;
@@ -274,13 +292,9 @@ class App extends Component<PropsCard, StyledCardState> {
     
     })
     this.provenance.applyAction(
-       "change layout",
-      () => {
-        let test = (this.provenanceApp.currentState() as any) as NodeState;
-        test.nodes.layout_array = new_layout;
-        return test;
-      },
-       [this.current_id]
+      "change layout",
+      changeDataset,
+      [new_layout]
     );
 
     this.setState({ layout: new_layout });
@@ -299,19 +313,19 @@ class App extends Component<PropsCard, StyledCardState> {
     console.log(this.state);
     this.provenance.goBackOneStep();
     this.setState({
-      layout: this.provenanceApp.currentState().nodes.layout_array
-    });
-    this.current_select_id = this.provenanceApp.currentState().nodes.current_selected;
+      layout: this.provenance.current().state.nodes.layout_array
+    }, this.forceUpdate);
+    this.current_select_id = this.provenance.current().state.nodes.current_selected;
     console.log(this.state);
   };
 
   redo = (event: any) => {
     this.provenance.goForwardOneStep();
     this.setState({
-      layout: this.provenanceApp.currentState().nodes.layout_array
-    });
+      layout: this.provenance.current().state.nodes.layout_array
+    },this.forceUpdate);
     // this.forceUpdate()
-    this.current_select_id = this.provenanceApp.currentState().nodes.current_selected;
+    this.current_select_id = this.provenance.current().state.nodes.current_selected;
     console.log(this.state);
   };
 
@@ -324,12 +338,8 @@ class App extends Component<PropsCard, StyledCardState> {
     );
     this.provenance.applyAction(
        "remove",
-      (id: any) => {
-        let test = (this.provenanceApp.currentState() as any) as NodeState;
-        test.nodes.layout_array = new_layout_array;
-        return test;
-      },
-      [this.current_id]
+      changeDataset,
+      [new_layout_array]
     );
 
     this.setState({ layout: new_layout_array });
@@ -347,13 +357,9 @@ class App extends Component<PropsCard, StyledCardState> {
 
     //add provenence for select id
     this.provenance.applyAction(
-       "change selected id",
-       (id: any) => {
-        let test = (this.provenanceApp.currentState() as any) as NodeState;
-        test.nodes.current_selected = event;
-        return test;
-      },
-      [this.current_id]
+      "change selected id",
+      changeSelected,
+      [this.current_id.toString()]
     );
 
     this.setState({
@@ -390,14 +396,10 @@ class App extends Component<PropsCard, StyledCardState> {
 
     // provenance implementation
    this.provenance.applyAction(
-       this.current_id + "change",
-       (id: any) => {
-        let test = (this.provenanceApp.currentState() as any) as NodeState;
-        test.nodes.layout_array = new_layout;
-        return test;
-      },
-       [this.current_id]
-    );
+     this.current_id + "change",
+     changeDataset,
+     [new_layout]
+   )
 
     this.setState(
       {
