@@ -314,7 +314,7 @@ class App extends Component<PropsCard, StyledCardState> {
     this.provenance.goBackOneStep();
     this.setState({
       layout: this.provenance.current().state.nodes.layout_array
-    }, this.forceUpdate);
+    });
     this.current_select_id = this.provenance.current().state.nodes.current_selected;
     console.log(this.state);
   };
@@ -323,7 +323,7 @@ class App extends Component<PropsCard, StyledCardState> {
     this.provenance.goForwardOneStep();
     this.setState({
       layout: this.provenance.current().state.nodes.layout_array
-    },this.forceUpdate);
+    });
     // this.forceUpdate()
     this.current_select_id = this.provenance.current().state.nodes.current_selected;
     console.log(this.state);
