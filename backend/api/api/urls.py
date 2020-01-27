@@ -26,5 +26,6 @@ urlpatterns = [
     path("api/hemoglobin", views.hemoglobin, name = "index"),
     path("api/request_transfused", views.request_transfused_units, name = "index"),
     path("api/fetch_individual", views.fetch_individual, name="index"),
-    path("api/request_individual_specific",views.request_individual_specific, name="index")
+    path("api/request_individual_specific", views.request_individual_specific, name = "index"),
+    path("api/request_fetch_professional_set"), views.fetch_professional_set, name = "index")
 ]
