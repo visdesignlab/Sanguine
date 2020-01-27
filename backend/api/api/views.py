@@ -63,12 +63,6 @@ def fetch_professional_set(request):
             HttpResponseBadRequest(
                 "professional type and id must be supplied.")
 
-    "PRBC_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS)",
-    "FFP_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS)",
-    "PLT_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS)",
-    "CRYO_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS)",
-    "CELL_SAVER_ML": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML)"
-
         if profesional_type == "ANESTHOLOGIST_ID":
             command = (
                 f"SELECT SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS) PRBC_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS) FFP_UNITS, "
@@ -99,7 +93,7 @@ def fetch_professional_set(request):
         connection = make_connection()
         cur = connection.cursor()
         result = cur.execute(command)
-        items = [{"PRBC_UNITS": row[0], "FFP_UNITS": row[1], "PLT_UNITS": row[2], "CRYO_UNITS":row[3], "CELL_SAVER_ML":row[4], partner: row[5], "DI_CASE_ID":row[6],"DESC":row[7]}
+        items = [{"PRBC_UNITS": row[0] if row[0] else 0, "FFP_UNITS": row[1] if row[1] else 0, "PLT_UNITS": row[2] if row[2] else 0, "CRYO_UNITS":row[3] if row[3] else 0, "CELL_SAVER_ML":row[4] if row[4] else 0, partner: row[5], "DI_CASE_ID":row[6], "DESC":row[7]}
                  for row in result]
         return JsonResponse({"result": items})
 
