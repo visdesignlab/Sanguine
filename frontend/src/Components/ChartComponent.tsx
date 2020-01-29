@@ -1,6 +1,6 @@
 import { Component } from 'react';
 import * as d3 from "d3";
-import { SelectSet } from './App';
+import { SelectSet } from '../App';
 
 interface DataPoint {
     x_axis: any,

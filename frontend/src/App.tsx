@@ -3,14 +3,14 @@ import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import './App.css';
 
-import ChartComponent from "./ChartComponent";
+import ChartComponent from "./Components/ChartComponent";
 import Grid from "hedron";
 import  { Range } from "rc-slider";
 import "rc-slider/assets/index.css";
 import Select from 'react-select';
 import makeAnimated from 'react-select/animated'
-import ScatterPlot from './ScatterPlot';
-import DumbbellPlot from './DumbbellPlot'
+import ScatterPlot from './Components/ScatterPlot';
+import DumbbellPlot from './Components/DumbbellPlot'
 import { Responsive as ResponsiveReactGridLayout } from "react-grid-layout";
 import Toggle from "react-toggle";
 import "react-toggle/style.css";
@@ -29,23 +29,9 @@ import "react-tabs/style/react-tabs.css";
 import * as LineUpJS from "lineupjsx";
 
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
-interface LayoutElement{
-  x_axis_name: string,
-  y_axis_name: string,
-  year_range: number[],
-  filter_selection: string[]
-  i: string,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  plot_type: string
-}
 
-export interface SelectSet {
-  set_name: string,
-  set_value:number
-}
+
+
 
 // function CreateProvenance(provenance: ProvenanceLibrary.Provenance<NodeState>) {
 //   return {
@@ -54,19 +40,8 @@ export interface SelectSet {
 // }
 
 
-export interface NodeState {
-  nodes: {
-    layout_array: LayoutElement[]
-    current_selected: string
-    };//this is the grid ID number to the list of props for the 
-  }
 
-const initialState: NodeState = {
-  nodes: {
-    layout_array: [],
-    current_selected: "-1"
-    }
-  }
+
 
 const changeDataset: ActionFunction<NodeState> = (
   state: NodeState,
@@ -92,7 +67,8 @@ export interface StyledCardState {
   x_axis_change: string;
   y_axis_change: string;
   current_select_case: number;
-  current_select_set: SelectSet|null;
+  current_select_set: SelectSet | null;
+  professional_set:any[]
 }
 
 interface PropsCard{
@@ -111,9 +87,15 @@ class App extends Component<PropsCard, StyledCardState> {
   current_id: number;
   col_data: { lg: number; md: number; sm: number; xs: number; xxs: number };
   current_select_id: string;
+<<<<<<< Updated upstream
   
   provenance: Provenance<NodeState>;
   //provenanceApp: { currentState: () => NodeState };
+=======
+ // profession_data: {}[]
+  provenance: ProvenanceLibrary.Provenance<NodeState>;
+  provenanceApp: { currentState: () => NodeState };
+>>>>>>> Stashed changes
 
   constructor(prop: Readonly<PropsCard>) {
     super(prop);
@@ -139,7 +121,8 @@ class App extends Component<PropsCard, StyledCardState> {
       y_axis_change: "",
       chart_type_change: "",
       current_select_case: NaN,
-      current_select_set:null
+      current_select_set: null,
+      professional_set : []
     };
 
     this.col_data = {
@@ -419,9 +402,29 @@ class App extends Component<PropsCard, StyledCardState> {
 
   SetSelectionHandler = (select_name: string, select_value: number) => {
     console.log(select_value,select_name)
-    this.setState({ current_select_case: NaN, current_select_set: {set_name:select_name,set_value:select_value}})
+    this.setState({ current_select_case: NaN, current_select_set: { set_name: select_name, set_value: select_value } }, this.fetch_professional)
   }
 
+  async fetch_professional() {
+    if (this.state.current_select_set) {
+      fetch(`http://localhost:8000/api/request_fetch_professional_set?professional_type=${this.state.current_select_set.set_name}&professional_id=${this.state.current_select_set.set_value}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          }
+        }
+      )
+        .then(res => res.json())
+        .then(data => {
+          console.log(data.result)
+          this.setState({professional_set:data.result})
+      })
+    }
+    // console.log(array_to_return)
+    // return array_to_return
+  }
 
 
   fetch_individual() {
@@ -597,6 +600,7 @@ class App extends Component<PropsCard, StyledCardState> {
       { value: "dumbbell", label: "Dumbbell Plot" }
     ];
 
+    
     let style_sheet = null;
     //Generate the sheet if a chart is selected
     //TODO change the bind for _change_selected()
@@ -650,7 +654,17 @@ class App extends Component<PropsCard, StyledCardState> {
       2018: 2018,
       2019: 2019
     } as any;
+<<<<<<< Updated upstream
     
+=======
+    // let array_to_lineup:any[] = []
+    // const p = Promise.resolve(this.fetch_professional())
+    // p.then(d=>array_to_lineup = d)
+    // if (this.state.current_select_set) {
+    //   array_to_lineup = await this.fetch_professional();
+    // }
+
+>>>>>>> Stashed changes
     let arr = [];
     const cats = ["c1", "c2", "c3"];
     for (let i = 0; i < 100; i++) {
@@ -672,6 +686,9 @@ class App extends Component<PropsCard, StyledCardState> {
           <Tab>Charts</Tab>
           <Tab>LineUp</Tab>
         </TabList>
+        <TabPanel>
+          <LineUpJS.LineUp data={arr} />
+        </TabPanel>
         <TabPanel>
           <Grid.Bounds direction="horizontal">
             <Grid.Box width="18%" height="100%">
@@ -748,9 +765,7 @@ class App extends Component<PropsCard, StyledCardState> {
             </Grid.Box>
           </Grid.Bounds>
         </TabPanel>
-        <TabPanel>
-          <LineUpJS.LineUp data={arr} />
-        </TabPanel>
+        
       </Tabs>
     ];
   }
