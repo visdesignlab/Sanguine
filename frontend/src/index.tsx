@@ -6,6 +6,7 @@ import * as serviceWorker from './serviceWorker';
 import { setupProvenance } from './Provenance'
 import { store } from './Interfaces/Store'
 import { Provider } from 'mobx-react';
+import "semantic-ui-css/semantic.min.css"
 
 export const { provenance, actions } = setupProvenance();
 
