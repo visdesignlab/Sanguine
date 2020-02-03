@@ -5,7 +5,7 @@ import 'react-resizable/css/styles.css'
 import './App.css';
 import UserControl from './Components/UserControl'
 
-import BarChart from "./Components/BarChart/BarChartVisualization";
+import BarChartVisualization from "./Components/BarChart/BarChartVisualization";
 import DumbbellChart from "./Components/DumbbellChart/DumbbellChartVisualization";
 // import Grid from "hedron";
 // import  { Range } from "rc-slider";
@@ -64,9 +64,9 @@ const App: FC<Props> = ({ store }: Props) => {
     if (layout.x_axis_name === "HEMO_VALUE") {
       return (
         <div key={layout.i} className={"parent-node" + layout.i}>
-          <svg>
+          {/* <svg> */}
             <DumbbellChart yAxis={layout.y_axis_name} chartId={layout.i} />
-          </svg>
+          {/* </svg> */}
           <span
             className="remove"
             style={removeStyle}
@@ -84,8 +84,8 @@ const App: FC<Props> = ({ store }: Props) => {
       // data-grid={layoutE}
     >
       {/* <header>chart #{layout.i}</header> */}
-      <svg >
-        <BarChart
+      {/* <svg > */}
+        <BarChartVisualization
           xAxis={layout.x_axis_name}
           yAxis={layout.y_axis_name}
           // class_name={"parent-node" + layoutE.i}
@@ -94,7 +94,7 @@ const App: FC<Props> = ({ store }: Props) => {
 
           //plot_type={layoutE.plot_type}
         />
-      </svg>
+      {/* </svg> */}
       <span
         className="remove"
         style={removeStyle}
