@@ -8,6 +8,18 @@ export interface SingularDataPoint {
   yVal: number;
 }
 
+export interface DumbbellDataPoint {
+  startXVal: number;
+  endXVal: number;
+  yVal: number;
+  visitNum: number;
+  caseId: number;
+  YEAR: number;
+  SURGEON_ID: number;
+  ANESTHOLOGIST_ID: number;
+  patientID: number;
+}
+
 export interface ApplicationState {
   layoutArray: LayoutElement[];
   currentSelected: string;

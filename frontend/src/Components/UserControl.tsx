@@ -65,7 +65,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         key: "ANESTHOLOGIST_ID",
         text: "Anesthologist ID"
       },
-      { value: "HEMO_VALUE", key: "HEMOGLOBIN", text: "Hemoglobin Value" }
+      { value: "HEMO_VALUE", key: "HEMO_VALUE", text: "Hemoglobin Value" }
     ];
 
     // const chart_types = [
