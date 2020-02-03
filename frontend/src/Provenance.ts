@@ -31,11 +31,14 @@ export function setupProvenance(): AppProvenance{
          store.isAtLatest = provenance.current().children.length === 0;
     })
 
-    provenance.addObserver(["currentSelected"], (state?: ApplicationState) => {
-      store.currentSelectedChart = state
-        ? state.currentSelected
-        : store.currentSelectedChart;
-    });
+    provenance.addObserver(
+      ["currentSelectedChart"],
+      (state?: ApplicationState) => {
+        store.currentSelectedChart = state
+          ? state.currentSelectedChart
+          : store.currentSelectedChart;
+      }
+    );
 
     provenance.addObserver(["layoutArray"], (state?: ApplicationState) => {
         store.layoutArray = state ? state.layoutArray : store.layoutArray;
@@ -89,10 +92,10 @@ export function setupProvenance(): AppProvenance{
         provenance.applyAction(
             `Selecting ${chartID}`,
             (state: ApplicationState) => {
-                if (state.currentSelected === chartID) {
-                    state.currentSelected = '-1'
+                if (state.currentSelectedChart === chartID) {
+                    state.currentSelectedChart = "-1";
                 } else {
-                    state.currentSelected = chartID
+                    state.currentSelectedChart = chartID;
                 }
                 return state;
             }

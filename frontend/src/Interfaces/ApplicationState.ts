@@ -22,7 +22,7 @@ export interface DumbbellDataPoint {
 
 export interface ApplicationState {
   layoutArray: LayoutElement[];
-  currentSelected: string;
+  currentSelectedChart: string;
   perCaseSelected: boolean;
   yearRange: number[];
   filterSelection: string[];
@@ -40,8 +40,8 @@ export interface LayoutElement{
 
 export const defaultState: ApplicationState = {
   layoutArray: [],
-  currentSelected: "-1",
+  currentSelectedChart: "-1",
   perCaseSelected: false,
   yearRange: [0, 5],
-  filterSelection:[]
+  filterSelection: []
 };
