@@ -38,7 +38,7 @@ def get_attributes(request):
         result = cur.execute(command)
 
         # Return the result, the multi-selector component in React requires the below format
-        items = [{"label": row[0], "value": row[0]} for row in result]
+        items = [{"key": row[0], "value": row[0],"text":row[0]} for row in result]
         return JsonResponse({"result": items})
 
 
@@ -169,7 +169,7 @@ def summarize_attribute_w_year(request):
             dict(zip([data_exchange[key[0]] for key in cur.description], row))
             for row in result
         ]
-        return JsonResponse({"task": data})
+        return JsonResponse({"result": data})
 
 
 def request_individual_specific(request):

@@ -12,6 +12,9 @@ export default class Store {
   @observable perCaseSelected: boolean = defaultState.perCaseSelected;
   @observable yearRange: number[] = defaultState.yearRange;
   @observable filterSelection: string[] = defaultState.filterSelection;
+  @computed get actualYearRange() {
+    return [this.yearRange[0]+2014,this.yearRange[1]+2014]
+  }
 }
     
 
