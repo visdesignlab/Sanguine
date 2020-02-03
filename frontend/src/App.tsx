@@ -51,6 +51,14 @@ const App: FC<Props> = ({ store }: Props) => {
     cursor: "pointer"
   };
 
+  const colData = {
+      lg: 2,
+      md: 2,
+      sm: 2,
+      xs: 2,
+      xxs: 2
+    };
+
   const createElement=(layout: LayoutElement) => {
     return (<div
       //onClick={this.onClickBlock.bind(this, layoutE.i)}
@@ -58,8 +66,8 @@ const App: FC<Props> = ({ store }: Props) => {
       className={"parent-node" + layout.i}
       // data-grid={layoutE}
     >
-      <header>chart #{layout.i}</header>
-      <svg>
+      {/* <header>chart #{layout.i}</header> */}
+      <svg >
         <BarChart
           xAxis={layout.x_axis_name}
           yAxis={layout.y_axis_name}
@@ -90,11 +98,12 @@ const App: FC<Props> = ({ store }: Props) => {
           // onLayoutChange={this._onLayoutChange}
           // onBreakpointChange={this._onBreakpointChange}
           className="layout"
-        //  cols={this.col_data}
-          // rowHeight={30}
+          cols={colData}
+          rowHeight={300}
           width={1200}
-          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-          //layouts={{ lg: this.state.layout }}
+          //cols={2}
+          //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+         // layouts={{ lg: layoutArray }}
         >
           {layoutArray.map(layoutE => {
             return createElement(layoutE);

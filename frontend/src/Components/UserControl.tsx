@@ -18,7 +18,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     const [addMode, setAddMode] = useState(false);
     const [xSelection, setXSelection] = useState("")
     const [ySelection, setYSelection] = useState("")
-    const [elementCounter,addToElementCounter]=useState(-1)
+    const [elementCounter,addToElementCounter]=useState(0)
     const sliderSettings = {
         start: [0, 5],
         min: 0,

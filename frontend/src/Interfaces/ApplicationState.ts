@@ -3,6 +3,11 @@ export interface SelectSet {
   set_value: number;
 }
 
+export interface SingularDataPoint {
+  xVal: any;
+  yVal: number;
+}
+
 export interface ApplicationState {
   layoutArray: LayoutElement[];
   currentSelected: string;
