@@ -6,7 +6,6 @@ import { actions } from "../..";
 import { select, selectAll, scaleLinear, scaleBand, mouse, axisBottom, axisLeft } from "d3";
 import {SingularDataPoint} from '../../Interfaces/ApplicationState'
 
-
 interface OwnProps{
     xAxis: string;
     yAxis: string;
@@ -21,7 +20,7 @@ const BarChart: FC<Props> = ({ xAxis,yAxis,chartId,store }: Props) => {
    // const svgRef = useRef<SVGSVGElement>(null);
     const [data, setData] = useState({ result: [] });
     const [yMax, setYMax] = useState(0)
-    console.log(perCaseSelected)
+    
     async function fetchChartData() {
         const res = await fetch(`http://localhost:8000/api/summarize_with_year?x_axis=${xAxis}&y_axis=${yAxis}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`);
         const dataResult = await res.json();
@@ -39,7 +38,6 @@ const BarChart: FC<Props> = ({ xAxis,yAxis,chartId,store }: Props) => {
               };
               return new_ob;
             });
-            console.log(dataResult);
             setData({result:cast_data});
             setYMax(yMaxTemp);
         }   
@@ -47,7 +45,7 @@ const BarChart: FC<Props> = ({ xAxis,yAxis,chartId,store }: Props) => {
 
     useEffect(() => {
         fetchChartData();
-    }, []);
+    }, [data,yMax]);
 
     const svg = select(`.parent-node${chartId}`).select("svg");
 
@@ -93,7 +91,6 @@ const BarChart: FC<Props> = ({ xAxis,yAxis,chartId,store }: Props) => {
       let rects = svg.selectAll(".bars").data(data.result);
 
       rects.exit().remove();
-      console.log(yScale);
       rects = (rects as any)
         .enter()
         .append("rect")
@@ -109,8 +106,7 @@ const BarChart: FC<Props> = ({ xAxis,yAxis,chartId,store }: Props) => {
           (d: SingularDataPoint) => height - yScale(d.yVal) - offset.top
         )
         .attr("fill", "#072F5F")
-          .attr("opacity", d => {
-            const something=perCaseSelected
+        .attr("opacity", d => {
           // if (this.state.value_to_highlight) {
           //   return d.x_axis === this.state.value_to_highlight ? 1 : 0.5;
           // }

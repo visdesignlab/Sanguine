@@ -6,6 +6,7 @@ import './App.css';
 import UserControl from './Components/UserControl'
 
 import BarChart from "./Components/BarChart/BarChartVisualization";
+import DumbbellChart from "./Components/DumbbellChart/DumbbellChartVisualization";
 // import Grid from "hedron";
 // import  { Range } from "rc-slider";
 // import "rc-slider/assets/index.css";
@@ -59,7 +60,23 @@ const App: FC<Props> = ({ store }: Props) => {
       xxs: 2
     };
 
-  const createElement=(layout: LayoutElement) => {
+  const createElement = (layout: LayoutElement) => {
+    if (layout.x_axis_name === "HEMO_VALUE") {
+      return (
+        <div key={layout.i} className={"parent-node" + layout.i}>
+          <svg>
+            <DumbbellChart yAxis={layout.y_axis_name} chartId={layout.i} />
+          </svg>
+          <span
+            className="remove"
+            style={removeStyle}
+            // onClick={this.onRemoveItem.bind(this, layoutE.i)}
+          >
+            x
+          </span>
+        </div>
+      );
+    }
     return (<div
       //onClick={this.onClickBlock.bind(this, layoutE.i)}
       key={layout.i}
