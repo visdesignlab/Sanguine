@@ -5,7 +5,7 @@ import 'react-resizable/css/styles.css'
 import './App.css';
 import UserControl from './Components/UserControl'
 
-// import ChartComponent from "./Components/BarChart";
+import BarChart from "./Components/BarChart/BarChartVisualization";
 // import Grid from "hedron";
 // import  { Range } from "rc-slider";
 // import "rc-slider/assets/index.css";
@@ -13,7 +13,7 @@ import UserControl from './Components/UserControl'
 // import makeAnimated from 'react-select/animated'
 // import ScatterPlot from './Components/ScatterPlot';
 // import DumbbellPlot from './Components/DumbbellPlot'
-// import { Responsive as ResponsiveReactGridLayout } from "react-grid-layout";
+import { Responsive as ResponsiveReactGridLayout } from "react-grid-layout";
 import {
   Button, Checkbox, Tab, Container
 } from 'semantic-ui-react'
@@ -25,6 +25,7 @@ import Store from './Interfaces/Store'
 
 import * as LineUpJS from "lineupjsx";
 import { inject, observer } from 'mobx-react';
+import { LayoutElement } from './Interfaces/ApplicationState';
 
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
@@ -39,7 +40,69 @@ interface OwnProps{
 type Props = OwnProps;
 
 const App: FC<Props> = ({ store }: Props) => {
-  return (<UserControl></UserControl>)
+  const {
+    layoutArray
+  } = store!;
+
+  const removeStyle = {
+    position: "absolute" as "absolute",
+    right: "2px",
+    top: 0,
+    cursor: "pointer"
+  };
+
+  const createElement=(layout: LayoutElement) => {
+    return (<div
+      //onClick={this.onClickBlock.bind(this, layoutE.i)}
+      key={layout.i}
+      className={"parent-node" + layout.i}
+      // data-grid={layoutE}
+    >
+      <header>chart #{layout.i}</header>
+      <svg>
+        <BarChart
+          xAxis={layout.x_axis_name}
+          yAxis={layout.y_axis_name}
+          // class_name={"parent-node" + layoutE.i}
+          chartId={layout.i}
+          // set_selection_handler={this.SetSelectionHandler}
+
+          //plot_type={layoutE.plot_type}
+        />
+      </svg>
+      <span
+        className="remove"
+        style={removeStyle}
+       // onClick={this.onRemoveItem.bind(this, layoutE.i)}
+      >
+        x
+      </span>
+    </div>);
+  }
+
+  return (
+    <LayoutDiv>
+      <div >
+        <UserControl />
+      </div>
+      <Container>
+        <ResponsiveReactGridLayout
+          // onLayoutChange={this._onLayoutChange}
+          // onBreakpointChange={this._onBreakpointChange}
+          className="layout"
+        //  cols={this.col_data}
+          // rowHeight={30}
+          width={1200}
+          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+          //layouts={{ lg: this.state.layout }}
+        >
+          {layoutArray.map(layoutE => {
+            return createElement(layoutE);
+          })}
+        </ResponsiveReactGridLayout>
+      </Container>
+    </LayoutDiv>
+  );
 }
 
 export default inject('store')(observer(App));
@@ -47,6 +110,4 @@ export default inject('store')(observer(App));
 const LayoutDiv = styled.div`
   width: 100vw;
   height: 100vh;
-  display: grid;
-  grid-template-rows: min-content min-content 1fr;
 `;

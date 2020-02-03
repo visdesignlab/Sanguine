@@ -16,6 +16,7 @@ interface AppProvenance{
         togglePerCase: (event: any, data: any) => void;
         filterSelectionChange: (event: any, data: any) => void;
         yearRangeChange: (data: any) => void;
+        addNewChart: (x: string, y: string,i:number) => void;
     }
 }
 export function setupProvenance(): AppProvenance{
@@ -71,6 +72,19 @@ export function setupProvenance(): AppProvenance{
         )
     }
 
+    const addNewChart = (xAxisAttribute: string, yAxisAttribute: string,index:number) => {
+        const newLayoutElement: LayoutElement = {
+            x_axis_name: xAxisAttribute,
+            y_axis_name: yAxisAttribute,  
+            i: index.toString()
+        } 
+        provenance.applyAction("Add new chart",
+            (state: ApplicationState) => {
+                state.layoutArray.push(newLayoutElement)
+                return state;
+        })
+    }
+
     const selectChart = (chartID: string) => {
         provenance.applyAction(
             `Selecting ${chartID}`,
@@ -86,7 +100,6 @@ export function setupProvenance(): AppProvenance{
     }
 
     const togglePerCase = (event: any, perCaseSelected: any) => {
-      
       provenance.applyAction(
         `Per Case ${perCaseSelected.checked}`,
         (state: ApplicationState) => {
@@ -136,7 +149,8 @@ export function setupProvenance(): AppProvenance{
         selectChart,
         togglePerCase,
         filterSelectionChange,
-        yearRangeChange
+        yearRangeChange,
+        addNewChart
       }
     };
 
