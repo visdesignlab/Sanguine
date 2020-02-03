@@ -54,7 +54,6 @@ const DumbbellChart: FC<Props> = ({ yAxis, chartId, store }: Props) => {
           transfused: element.transfused
         };
       });
-      console.log(transfused_dict);
       const hemoRes = await fetch(`http://localhost:8000/api/hemoglobin`);
       const hemoDataResult = await hemoRes.json();
       const hemo_data = hemoDataResult.result;
@@ -111,8 +110,7 @@ const DumbbellChart: FC<Props> = ({ yAxis, chartId, store }: Props) => {
     const svg = select(`.parent-node${chartId}`).select("svg");
 
     if ((svg as any).node()) { 
-        // console.log(data)
-        
+
         svg.attr("width", "100%").attr("height", "100%");
         const width = (svg as any).node().getBoundingClientRect().width;
         const height = (svg as any).node().getBoundingClientRect().height;

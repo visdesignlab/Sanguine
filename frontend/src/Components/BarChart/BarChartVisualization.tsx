@@ -47,10 +47,11 @@ const BarChart: FC<Props> = ({ xAxis,yAxis,chartId,store }: Props) => {
         fetchChartData();
     }, [data,yMax]);
 
-    const svg = select(`.parent-node${chartId}`).select("svg");
+  const svg = select(`.parent-node${chartId}`).select("svg");
+  
 
   if ((svg as any).node()) {
-    
+
     svg.attr("width", "100%").attr("height", "100%");
     const width = (svg as any).node().getBoundingClientRect().width;
     const height = (svg as any).node().getBoundingClientRect().height;
@@ -186,7 +187,11 @@ const BarChart: FC<Props> = ({ xAxis,yAxis,chartId,store }: Props) => {
           <text className="x-label" style={{ textAnchor: "end" }} />
           <text className="y-label" style={{textAnchor:"end"}}/>
         </g>
-        <g className="chart"></g>
+        <g className="chart">
+          {/* {data.result.map((dataPoint:SingularDataPoint) => {
+            <Bar x={xScale} />;
+          })} */}
+        </g>
         <g className="rect-tooltip" style={{display:"none"}}>
           <rect fill="white" style={{ opacity: "0.5", width: "30", height: "20" }} />
           <text x="15" dy="1.2em" style={{textAnchor:"middle", fontSize:"12px",fontWeight:"bold"}}/>
@@ -202,3 +207,14 @@ export default inject("store")(observer(BarChart));
 //   height: 100%;
 //   width: 100%;
 // `;
+
+// const Bar = styled("rect")<BarProps>`
+//   fill: ${props => (props.isSelected ? "red" : "steelblue")};
+//   &:hover {
+//     fill: ${props => (props.isSelected ? "red" : "blueviolet")};
+//   }
+// `;
+
+const Bar = styled("rect")`
+  fill: #072f5f;
+`;
