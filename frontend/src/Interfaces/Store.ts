@@ -7,7 +7,7 @@ import {
 export default class Store {
   @observable isAtRoot: boolean = true;
   @observable isAtLatest: boolean = true;
-  @observable currentSelectedChart: string = defaultState.currentSelected;
+  @observable currentSelectedChart: string = defaultState.currentSelectedChart;
   @observable layoutArray: LayoutElement[] = defaultState.layoutArray;
   @observable perCaseSelected: boolean = defaultState.perCaseSelected;
   @observable yearRange: number[] = defaultState.yearRange;

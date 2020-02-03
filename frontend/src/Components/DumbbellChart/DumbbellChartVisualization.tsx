@@ -112,45 +112,7 @@ const DumbbellChart: FC<Props> = ({ yAxis, chartId, store }: Props) => {
 
     if ((svg as any).node()) { 
         // console.log(data)
-        if (!(svg.select("#x-axis") as any).node()) {
-            svg.append("g").attr("id", "x-axis");
-            svg.append("g").attr("id", "y-axis");
-            svg.append("g").attr("id", "chart-comp");
-            svg
-                .append("text")
-                .text("chart #" + chartId)
-                .attr("alignment-baseline", "hanging")
-                .attr("x", 0)
-                .attr("font-size", "10px")
-                .attr("y", 0);
-            svg
-                .append("text")
-                .attr("class", "x-label")
-                .attr("text-anchor", "end");
-            svg
-                .append("text")
-                .attr("class", "y-label")
-                .attr("text-anchor", "end");
-            
-            let circle_tooltip = svg
-              .append("g")
-              .attr("class", "circle-tooltip")
-              .style("display", "none");
-            circle_tooltip
-              .append("rect")
-              .attr("width", 30)
-              .attr("height", 20)
-              .attr("fill", "white")
-              .style("opacity", 0.5);
-
-            circle_tooltip
-              .append("text")
-              .attr("x", 15)
-              .attr("dy", "1.2em")
-              .style("text-anchor", "middle")
-              .attr("font-size", "12px")
-              .attr("font-weight", "bold");
-        }
+        
         svg.attr("width", "100%").attr("height", "100%");
         const width = (svg as any).node().getBoundingClientRect().width;
         const height = (svg as any).node().getBoundingClientRect().height;
@@ -165,7 +127,7 @@ const DumbbellChart: FC<Props> = ({ yAxis, chartId, store }: Props) => {
         const circle_tooltip = svg.select(".circle-tooltip");
 
         let components = svg
-          .select("#chart-comp")
+          .select(".chart-comp")
           .selectAll("g")
           .data(data.result);
         components.exit().remove();
@@ -175,6 +137,25 @@ const DumbbellChart: FC<Props> = ({ yAxis, chartId, store }: Props) => {
           .merge(components as any);
         components.selectAll("circle").remove();
         components.selectAll("rect").remove();
+        components
+          .append("rect")
+          .attr("x", (d: DumbbellDataPoint) => {
+            const start = xScale(d.startXVal);
+            const end = xScale(d.endXVal);
+            const returning = start > end ? end : start;
+            return returning;
+          })
+          .attr("y", (d: DumbbellDataPoint) => yScale(d.yVal) - 1)
+          .attr("height", "2px")
+          .attr("opacity", (d: DumbbellDataPoint) => {
+            if (d.startXVal === 0 || d.endXVal === 0) {
+              return 0;
+            }
+            return d.yVal ? 0.5 : 0;
+          })
+          .attr("width", (d: DumbbellDataPoint) =>
+            Math.abs(xScale(d.endXVal) - xScale(d.startXVal))
+          );
         components
           .append("circle")
           .attr("cx", (d: DumbbellDataPoint) => xScale(d.startXVal) as any)
@@ -245,25 +226,7 @@ const DumbbellChart: FC<Props> = ({ yAxis, chartId, store }: Props) => {
             // }
             return d.yVal ? 1 : 0;
           });
-        components
-          .append("rect")
-          .attr("x", (d: DumbbellDataPoint) => {
-            const start = xScale(d.startXVal);
-            const end = xScale(d.endXVal);
-            const returning = start > end ? end : start;
-            return returning;
-          })
-          .attr("y", (d: DumbbellDataPoint) => yScale(d.yVal) - 1)
-          .attr("height", "2px")
-          .attr("opacity", (d: DumbbellDataPoint) => {
-            if (d.startXVal === 0 || d.endXVal === 0) {
-              return 0;
-            }
-            return d.yVal ? 0.5 : 0;
-          })
-          .attr("width", (d: DumbbellDataPoint) =>
-            Math.abs(xScale(d.endXVal) - xScale(d.startXVal))
-          );
+        
 
         components
           .attr(
@@ -305,13 +268,14 @@ const DumbbellChart: FC<Props> = ({ yAxis, chartId, store }: Props) => {
         const xAxisLabel = axisBottom(xScale);
         const yAxisLabel = axisLeft(yScale);
 
-        svg
-          .select("#x-axis")
+        svg.select('.axes')
+          .select(".x-axis")
           .attr("transform", "translate(0," + (height - offset.bottom) + ")")
           .call(xAxisLabel as any);
 
         svg
-          .select("#y-axis")
+          .select(".axes")
+          .select(".y-axis")
           .attr(
             "transform",
             "translate(" +
@@ -322,6 +286,7 @@ const DumbbellChart: FC<Props> = ({ yAxis, chartId, store }: Props) => {
           )
           .call(yAxisLabel as any);
         svg
+          .select(".axes")
           .select(".x-label")
           .attr("x", width - 10)
           .attr("y", height - 10)
@@ -331,6 +296,7 @@ const DumbbellChart: FC<Props> = ({ yAxis, chartId, store }: Props) => {
           .text("hemoglobin");
 
         svg
+          .select(".axes")
           .select(".y-label")
           .attr("y", offset.top + 5)
           .attr("x", -offset.top - 5)
@@ -339,8 +305,42 @@ const DumbbellChart: FC<Props> = ({ yAxis, chartId, store }: Props) => {
           .attr("transform", "rotate(-90)")
           .text(yAxis);
     }
-
-    return (<></>)
+    
+    return (
+      <>
+        <g className="axes">
+          <g className="x-axis"></g>
+          <g className="y-axis"></g>
+          <text
+            x="0"
+            y="0"
+            style={{
+              fontSize: "10px",
+              alignmentBaseline: "hanging"
+            }}
+          >
+            chart # ${chartId}
+          </text>
+          <text className="x-label" style={{ textAnchor: "end" }} />
+          <text className="y-label" style={{ textAnchor: "end" }} />
+        </g>
+        <g className="chart-comp" />
+        <g className=".circle-tooltip" style={{ display: "none" }}>
+          <rect
+            style={{ width: "30", height: "20", fill: "white", opacity: "0.5" }}
+          />
+          <text
+            x="15"
+            dy="1.2em"
+            style={{
+              textAnchor: "middle",
+              fontSize: "12px",
+              fontWeight: "bold"
+            }}
+          />
+        </g>
+      </>
+    );
 }
 
 export default inject("store")(observer(DumbbellChart));
