@@ -25,11 +25,12 @@ interface OwnProps{
     yAxis: string;
     chartId: string;
     store?: Store;
+     chartIndex:number
 }
 
 export type Props = OwnProps;
 
-const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store }: Props) => {
+const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store,chartIndex }: Props) => {
 
     const {
       layoutArray,
@@ -52,7 +53,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store }: Props)
             width: svgRef.current.clientWidth
         });
         }
-    }, []);
+    }, [layoutArray[ chartIndex]]);
 
     async function fetchChartData() {
       let transfused_dict = {} as any;

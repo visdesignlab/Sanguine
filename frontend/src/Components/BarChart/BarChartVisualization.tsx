@@ -11,12 +11,13 @@ interface OwnProps{
     xAxis: string;
     yAxis: string;
     chartId: string;
-    store?: Store;
+  store?: Store;
+   chartIndex:number
 }
 
 export type Props = OwnProps;
 
-const BarChartVisualization: FC<Props> = ({ xAxis,yAxis,chartId,store }: Props) => {
+const BarChartVisualization: FC<Props> = ({ xAxis,yAxis,chartId,store,chartIndex }: Props) => {
     const { layoutArray, filterSelection, perCaseSelected, currentSelectedChart,actualYearRange } = store!
     const svgRef = useRef<SVGSVGElement>(null);
     const [data, setData] = useState({ result: [] });
@@ -30,7 +31,7 @@ const BarChartVisualization: FC<Props> = ({ xAxis,yAxis,chartId,store }: Props) 
           width: svgRef.current.clientWidth
         });
       }
-    }, []);
+    }, [layoutArray[chartIndex]]);
     
     async function fetchChartData() {
       const res = await fetch(`http://localhost:8000/api/summarize_with_year?x_axis=${xAxis}&y_axis=${yAxis}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`);

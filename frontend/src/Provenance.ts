@@ -20,8 +20,10 @@ interface AppProvenance{
         addNewChart: (x: string, y: string, i: number) => void;
       removeChart: (event: any, i: any) => void;
       updateCaseCount: (newCaseCount: number) => void;
+      onLayoutchange: ( data: any) => void;
     }
 }
+let sameRow = 0
 export function setupProvenance(): AppProvenance{
     const provenance = initProvenance(defaultState, true);
     provenance.addGlobalObserver(() => {
@@ -82,11 +84,16 @@ export function setupProvenance(): AppProvenance{
         )
     }
 
-    const addNewChart = (xAxisAttribute: string, yAxisAttribute: string,index:number) => {
+  const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number) => {
+   // console.log('add')
         const newLayoutElement: LayoutElement = {
             x_axis_name: xAxisAttribute,
             y_axis_name: yAxisAttribute,  
-            i: index.toString()
+            i: index.toString(),
+            w: 1,
+          h: 1,
+          x: 0,
+          y:Infinity
         } 
         provenance.applyAction("Add new chart",
             (state: ApplicationState) => {
@@ -94,6 +101,24 @@ export function setupProvenance(): AppProvenance{
                 return state;
         })
     }
+  
+  const onLayoutchange = (data: any) => {
+    console.log(data)
+    provenance.applyAction(
+      `change layout to chart ${data.i}`,
+      //We use index here because the layout array should always have the same order as the layoutlement array
+      (state: ApplicationState) => {
+        state.layoutArray = state.layoutArray.map((d,i) => {
+          d.w = data[i].w;
+          d.h = data[i].h;
+          d.x = data[i].x;
+          d.y = data[i].y;
+          return d
+        })
+        return state;
+      }
+    )
+  }
 
     const removeChart = (event: any,child:any) => {
     //    console.log(event,index)
@@ -104,6 +129,7 @@ export function setupProvenance(): AppProvenance{
             state.layoutArray = state.layoutArray.filter(
               d => d.i !== remove_index
             );
+            console.log(state)
             return state;
           }
         );
@@ -180,8 +206,6 @@ export function setupProvenance(): AppProvenance{
         provenance.goBackOneStep();
     };
   
-  
-
     return {
       provenance,
       actions: {
@@ -195,7 +219,8 @@ export function setupProvenance(): AppProvenance{
         yearRangeChange,
         addNewChart,
         removeChart,
-        updateCaseCount
+        updateCaseCount,
+        onLayoutchange
       }
     };
 
