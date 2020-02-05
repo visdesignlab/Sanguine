@@ -3,8 +3,7 @@ import React, {
   useEffect,
   useRef,
   useLayoutEffect,
-  useState,
-  useMemo
+  useState
 } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
@@ -19,7 +18,8 @@ import {
   axisBottom,
   axisLeft
 } from "d3";
-import {DumbbellDataPoint} from "../../Interfaces/ApplicationState"
+import { DumbbellDataPoint } from "../../Interfaces/ApplicationState"
+import DumbbellChart from "./DumbbellChart"
 
 interface OwnProps{
     yAxis: string;
@@ -29,7 +29,8 @@ interface OwnProps{
 
 export type Props = OwnProps;
 
-const DumbbellChart: FC<Props> = ({ yAxis, chartId, store }: Props) => {
+const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store }: Props) => {
+
     const {
       layoutArray,
       filterSelection,
@@ -37,11 +38,22 @@ const DumbbellChart: FC<Props> = ({ yAxis, chartId, store }: Props) => {
       currentSelectedChart,
       actualYearRange
     } = store!;
-    // const svgRef = useRef<SVGSVGElement>(null);
+
+    const svgRef = useRef<SVGSVGElement>(null);
     const [data, setData] = useState({ result: [] });
+    const [dimension, setDimensions] = useState({ width: 0, height: 0 });
     const [yMax, setYMax] = useState(0);
-    const [xRange, setXRange] = useState({ min: 0, max: Infinity })
-    
+    const [xRange, setXRange] = useState({ xMin: 0, xMax: Infinity });
+
+    useLayoutEffect(() => {
+        if (svgRef.current) {
+        setDimensions({
+            height: svgRef.current.clientHeight,
+            width: svgRef.current.clientWidth
+        });
+        }
+    }, []);
+
     async function fetchChartData() {
       let transfused_dict = {} as any;
       const transfusedRes = await fetch(
@@ -70,11 +82,15 @@ const DumbbellChart: FC<Props> = ({ yAxis, chartId, store }: Props) => {
                 if (transfused_dict[ob.case_id]) {
                     yAxisLabel_val = transfused_dict[ob.case_id].transfused;
                     };
-                //console.log(yAxisLabel_val)
+              //  console.log(transfused_dict);
                 //This filter out anything that has empty value
                 if (yAxisLabel_val) {
                     if (yAxisLabel_val < 100 && yAxis==="PRBC_UNITS") {
                         tempYMax = yAxisLabel_val > tempYMax ? yAxisLabel_val : tempYMax;
+                    }
+                    else {
+                        tempYMax =
+                          yAxisLabel_val > tempYMax ? yAxisLabel_val : tempYMax;
                     }
                     tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
                     tempXMin = end_x < tempXMin ? end_x : tempXMin;
@@ -96,249 +112,47 @@ const DumbbellChart: FC<Props> = ({ yAxis, chartId, store }: Props) => {
                 }
             });
             cast_data = cast_data.filter((d: any) => d);
+            console.log(cast_data)
             setData({ result: cast_data });
             setYMax(tempYMax);
-            setXRange({ min: tempXMin, max: tempXMax });
+            setXRange({ xMin: tempXMin, xMax: tempXMax });
             
         }
     }
 
     useEffect(() => {
         fetchChartData();
-    }, []);
+    }, [actualYearRange,filterSelection]);
 
-    const svg = select(`.parent-node${chartId}`).select("svg");
-
-    if ((svg as any).node()) { 
-
-        svg.attr("width", "100%").attr("height", "100%");
-        const width = (svg as any).node().getBoundingClientRect().width;
-        const height = (svg as any).node().getBoundingClientRect().height;
-        const offset = { left: 70, bottom: 40, right: 10, top: 20 };
-
-        const yScale = scaleLinear()
-          .domain([0, 1.1 * yMax])
-          .range([height - offset.top, offset.bottom]);
-        const xScale = scaleLinear()
-          .domain([0.9 * xRange.min, 1.1 * xRange.max])
-          .range([offset.left, width - offset.right]);
-        const circle_tooltip = svg.select(".circle-tooltip");
-
-        let components = svg
-          .select(".chart-comp")
-          .selectAll("g")
-          .data(data.result);
-        components.exit().remove();
-        components = (components as any)
-          .enter()
-          .append("g")
-          .merge(components as any);
-        components.selectAll("circle").remove();
-        components.selectAll("rect").remove();
-        components
-          .append("rect")
-          .attr("x", (d: DumbbellDataPoint) => {
-            const start = xScale(d.startXVal);
-            const end = xScale(d.endXVal);
-            const returning = start > end ? end : start;
-            return returning;
-          })
-          .attr("y", (d: DumbbellDataPoint) => yScale(d.yVal) - 1)
-          .attr("height", "2px")
-          .attr("opacity", (d: DumbbellDataPoint) => {
-            if (d.startXVal === 0 || d.endXVal === 0) {
-              return 0;
-            }
-            return d.yVal ? 0.5 : 0;
-          })
-          .attr("width", (d: DumbbellDataPoint) =>
-            Math.abs(xScale(d.endXVal) - xScale(d.startXVal))
-          );
-        components
-          .append("circle")
-          .attr("cx", (d: DumbbellDataPoint) => xScale(d.startXVal) as any)
-          .attr("cy", (d: DumbbellDataPoint) => yScale(d.yVal))
-          .attr("r", "1%")
-          .attr("fill", "#ba9407")
-          .attr("opacity", (d:DumbbellDataPoint) => {
-            if (d.startXVal === 0) {
-              return 0;
-            }
-            // if (that.props.current_select_case) {
-            //   return d.case_id === that.props.current_select_case ? 1 : 0.5;
-            // } else if (that.props.current_select_set) {
-            //   switch (that.props.current_select_set.set_name) {
-            //     case "YEAR":
-            //       return d.YEAR === that.props.current_select_set.set_value
-            //         ? 1
-            //         : 0.5;
-            //     case "SURGEON_ID":
-            //       return d.SURGEON_ID ===
-            //         that.props.current_select_set.set_value
-            //         ? 1
-            //         : 0.5;
-            //     case "ANESTHOLOGIST_ID":
-            //       return d.ANESTHOLOGIST_ID ===
-            //         that.props.current_select_set.set_value
-            //         ? 1
-            //         : 0.5;
-            //     default:
-            //       return d.yAxisLabel ? 1 : 0;
-            //   }
-            // } 
-            else {
-              return d.yVal ? 1 : 0;
-            }
-          });
-        components
-          .append("circle")
-          .attr("cx", (d: DumbbellDataPoint) => xScale(d.endXVal) as any)
-          .attr("cy", (d: DumbbellDataPoint) => yScale(d.yVal))
-          .attr("r", "1%")
-          .attr("fill", "#20639B")
-          .attr("opacity", (d:DumbbellDataPoint) => {
-            if (d.endXVal === 0) {
-              return 0;
-            }
-            // if (that.props.current_select_case) {
-            //   return d.case_id === that.props.current_select_case ? 1 : 0.5;
-            // } else if (that.props.current_select_set) {
-            //   switch (that.props.current_select_set.set_name) {
-            //     case "YEAR":
-            //       return d.YEAR === that.props.current_select_set.set_value
-            //         ? 1
-            //         : 0.5;
-            //     case "SURGEON_ID":
-            //       return d.SURGEON_ID ===
-            //         that.props.current_select_set.set_value
-            //         ? 1
-            //         : 0.5;
-            //     case "ANESTHOLOGIST_ID":
-            //       return d.ANESTHOLOGIST_ID ===
-            //         that.props.current_select_set.set_value
-            //         ? 1
-            //         : 0.5;
-            //     default:
-            //       return d.yAxisLabel ? 1 : 0;
-            //   }
-            // }
-            return d.yVal ? 1 : 0;
-          });
-        
-
-        components
-          .attr(
-            "transform",
-            "translate(0,-" + (offset.bottom - offset.top) + ")"
-          )
-          .on("mouseover", function() {
-            circle_tooltip.style("display", null);
-          })
-          .on("mouseout", function() {
-            circle_tooltip.style("display", "none");
-          })
-          .on("mousemove", function(d:DumbbellDataPoint) {
-            var xPosition = mouse(this as any)[0] - 20;
-            var yPosition = mouse(this as any)[1] - 40;
-            circle_tooltip.attr(
-              "transform",
-              "translate(" + xPosition + "," + yPosition + ")"
-            );
-            circle_tooltip
-              .select("text")
-              .text(
-                "start " +
-                  d.startXVal +
-                  " end " +
-                  d.endXVal +
-                  " transfused " +
-                  d.yVal
-              );
-          })
-          .on("click", function(d:DumbbellDataPoint) {
-            // console.log(d.visit_no);
-            // that.props.ID_selection_handler(d.visit_no);
-            console.log(d.caseId);
-            //that.props.ID_selection_handler(d.case_id);
-            //d3.event.stopPropagation();
-          });
-
-        const xAxisLabel = axisBottom(xScale);
-        const yAxisLabel = axisLeft(yScale);
-
-        svg.select('.axes')
-          .select(".x-axis")
-          .attr("transform", "translate(0," + (height - offset.bottom) + ")")
-          .call(xAxisLabel as any);
-
-        svg
-          .select(".axes")
-          .select(".y-axis")
-          .attr(
-            "transform",
-            "translate(" +
-              offset.left +
-              ",-" +
-              (offset.bottom - offset.top) +
-              ")"
-          )
-          .call(yAxisLabel as any);
-        svg
-          .select(".axes")
-          .select(".x-label")
-          .attr("x", width - 10)
-          .attr("y", height - 10)
-          .attr("alignment-baseline", "baseline")
-          .attr("font-size", "10px")
-          .attr("text-anchor", "end")
-          .text("hemoglobin");
-
-        svg
-          .select(".axes")
-          .select(".y-label")
-          .attr("y", offset.top + 5)
-          .attr("x", -offset.top - 5)
-          .attr("font-size", "10px")
-          .attr("text-anchor", "end")
-          .attr("transform", "rotate(-90)")
-          .text(yAxis);
-    }
+    
     
     return (
-      <>
-        <g className="axes">
-          <g className="x-axis"></g>
-          <g className="y-axis"></g>
-          <text
-            x="0"
-            y="0"
-            style={{
-              fontSize: "10px",
-              alignmentBaseline: "hanging"
-            }}
-          >
-            chart # ${chartId}
-          </text>
-          <text className="x-label" style={{ textAnchor: "end" }} />
-          <text className="y-label" style={{ textAnchor: "end" }} />
-        </g>
-        <g className="chart-comp" />
-        <g className=".circle-tooltip" style={{ display: "none" }}>
-          <rect
-            style={{ width: "30", height: "20", fill: "white", opacity: "0.5" }}
-          />
-          <text
-            x="15"
-            dy="1.2em"
-            style={{
-              textAnchor: "middle",
-              fontSize: "12px",
-              fontWeight: "bold"
-            }}
-          />
-        </g>
-      </>
-    );
-}
+      <SVG ref={svgRef}>
+        <text
+          x="0"
+          y="0"
+          style={{
+            fontSize: "10px",
+            alignmentBaseline: "hanging"
+          }}
+        >
+          chart # ${chartId}
+        </text>
+        <DumbbellChart
+          svg={svgRef}
+          yAxisName={yAxis}
+          data={data.result}
+          dimension={dimension}
+          xRange={xRange}
+          yMax={yMax}
+        />
+      </SVG>
+    );}
 
-export default inject("store")(observer(DumbbellChart));
+
+export default inject("store")(observer(DumbbellChartVisualization));
+
+const SVG = styled.svg`
+  height: 100%;
+  width: 100%;
+`;

@@ -4,9 +4,10 @@ import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import './App.css';
 import UserControl from './Components/UserControl'
+import SideBar from './Components/SideBar'
 
 import BarChartVisualization from "./Components/BarChart/BarChartVisualization";
-import DumbbellChart from "./Components/DumbbellChart/DumbbellChartVisualization";
+import DumbbellChartVisualization from "./Components/DumbbellChart/DumbbellChartVisualization";
 // import Grid from "hedron";
 // import  { Range } from "rc-slider";
 // import "rc-slider/assets/index.css";
@@ -16,7 +17,7 @@ import DumbbellChart from "./Components/DumbbellChart/DumbbellChartVisualization
 // import DumbbellPlot from './Components/DumbbellPlot'
 import { Responsive as ResponsiveReactGridLayout } from "react-grid-layout";
 import {
-  Button, Checkbox, Tab, Container
+  Icon, Button, Tab, Container,Grid
 } from 'semantic-ui-react'
 import Store from './Interfaces/Store'
 
@@ -27,6 +28,8 @@ import Store from './Interfaces/Store'
 import * as LineUpJS from "lineupjsx";
 import { inject, observer } from 'mobx-react';
 import { LayoutElement } from './Interfaces/ApplicationState';
+import { action } from 'mobx';
+import {actions} from './index'
 
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
@@ -65,7 +68,7 @@ const App: FC<Props> = ({ store }: Props) => {
       return (
         <div key={layout.i} className={"parent-node" + layout.i}>
           {/* <svg> */}
-            <DumbbellChart yAxis={layout.y_axis_name} chartId={layout.i} />
+            <DumbbellChartVisualization yAxis={layout.y_axis_name} chartId={layout.i} />
           {/* </svg> */}
           <span
             className="remove"
@@ -77,14 +80,24 @@ const App: FC<Props> = ({ store }: Props) => {
         </div>
       );
     }
-    return (<div
-      //onClick={this.onClickBlock.bind(this, layoutE.i)}
-      key={layout.i}
-      className={"parent-node" + layout.i}
-      // data-grid={layoutE}
-    >
-      {/* <header>chart #{layout.i}</header> */}
-      {/* <svg > */}
+    return (
+      <div
+        //onClick={this.onClickBlock.bind(this, layoutE.i)}
+        key={layout.i}
+        className={"parent-node" + layout.i}
+        // data-grid={layoutE}
+      >
+        <Button
+          icon
+          floated={"right"}
+          circular
+          size="mini"
+          onClick={actions.removeChart.bind(layout.i)}
+        >
+          <Icon key={layout.i} name="close" />
+        </Button>
+        {/* <header>chart #{layout.i}</header> */}
+        {/* <svg > */}
         <BarChartVisualization
           xAxis={layout.x_axis_name}
           yAxis={layout.y_axis_name}
@@ -94,39 +107,48 @@ const App: FC<Props> = ({ store }: Props) => {
 
           //plot_type={layoutE.plot_type}
         />
-      {/* </svg> */}
-      <span
+        {/* </svg> */}
+
+        {/* <span
         className="remove"
         style={removeStyle}
-       // onClick={this.onRemoveItem.bind(this, layoutE.i)}
+        onClick={actions.removeChart(layout.i)}
       >
         x
-      </span>
-    </div>);
+      </span> */}
+      </div>
+    );
   }
 
   return (
     <LayoutDiv>
-      <div >
+      <Container fluid>
         <UserControl />
-      </div>
-      <Container>
-        <ResponsiveReactGridLayout
-          // onLayoutChange={this._onLayoutChange}
-          // onBreakpointChange={this._onBreakpointChange}
-          className="layout"
-          cols={colData}
-          rowHeight={300}
-          width={1200}
-          //cols={2}
-          //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-         // layouts={{ lg: layoutArray }}
-        >
-          {layoutArray.map(layoutE => {
-            return createElement(layoutE);
-          })}
-        </ResponsiveReactGridLayout>
       </Container>
+      <Grid>
+        <Grid.Column width={3}>
+          <SideBar></SideBar>
+        </Grid.Column>
+        <Grid.Column width={9}>
+          <Container>
+            <ResponsiveReactGridLayout
+              // onLayoutChange={this._onLayoutChange}
+              // onBreakpointChange={this._onBreakpointChange}
+              className="layout"
+              cols={colData}
+              rowHeight={300}
+              width={1200}
+              //cols={2}
+              //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+              // layouts={{ lg: layoutArray }}
+            >
+              {layoutArray.map(layoutE => {
+                return createElement(layoutE);
+              })}
+            </ResponsiveReactGridLayout>
+          </Container>
+        </Grid.Column>
+      </Grid>
     </LayoutDiv>
   );
 }

@@ -16,7 +16,8 @@ interface AppProvenance{
         togglePerCase: (event: any, data: any) => void;
         filterSelectionChange: (event: any, data: any) => void;
         yearRangeChange: (data: any) => void;
-        addNewChart: (x: string, y: string,i:number) => void;
+        addNewChart: (x: string, y: string, i: number) => void;
+        removeChart: (event: any,i: any) => void;
     }
 }
 export function setupProvenance(): AppProvenance{
@@ -24,9 +25,9 @@ export function setupProvenance(): AppProvenance{
     provenance.addGlobalObserver(() => {
          let isAtRoot = false;
          const currentNode = provenance.current();
-         if (isStateNode(currentNode)) {
-           isAtRoot = currentNode.parent === provenance.root().id;
-         }
+         //if (isStateNode(currentNode)) {
+           isAtRoot = currentNode.id === provenance.root().id;
+         //}
          store.isAtRoot = isAtRoot;
          store.isAtLatest = provenance.current().children.length === 0;
     })
@@ -86,6 +87,20 @@ export function setupProvenance(): AppProvenance{
                 state.layoutArray.push(newLayoutElement)
                 return state;
         })
+    }
+
+    const removeChart = (event: any,child:any) => {
+    //    console.log(event,index)
+        const remove_index=child.children.key
+        provenance.applyAction(
+          `remove chart ${remove_index}`,
+          (state: ApplicationState) => {
+            state.layoutArray = state.layoutArray.filter(
+              d => d.i !== remove_index
+            );
+            return state;
+          }
+        );
     }
 
     const selectChart = (chartID: string) => {
@@ -153,7 +168,8 @@ export function setupProvenance(): AppProvenance{
         togglePerCase,
         filterSelectionChange,
         yearRangeChange,
-        addNewChart
+          addNewChart,
+        removeChart
       }
     };
 

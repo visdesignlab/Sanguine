@@ -28,19 +28,20 @@ interface OwnProps{
     // chartId: string;
     store?: Store;
     dimension: { width: number, height: number } 
-    data: SingularDataPoint[];
-    svg:React.RefObject<SVGSVGElement>
+  data: SingularDataPoint[];
+  svg: React.RefObject<SVGSVGElement>;
+  yMax: number
 }
 
 export type Props = OwnProps;
 
-const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg }: Props) => {
+const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg,yMax }: Props) => {
     const offset = { left: 70, bottom: 40, right: 10, top: 20, margin: 30 };
 
     const svgSelection = select(svg.current);
 
     const [xScale, yScale] = useMemo(() => {
-        const yMax = max(data.map(d=>d.yVal))||0
+        // const yMax = max(data.map(d=>d.yVal))||0
         const xVals = data
             .map(function(dp) {
             return dp.xVal;
@@ -54,21 +55,10 @@ const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg
                 .range([offset.left, dimension.width - offset.right - offset.margin])
                 .paddingInner(0.1);
         return [xScale, yScale];
-        },[dimension,data])
-    // if (svg.current) {
-        // if ((svg as any).node()) {
-        //     svg.attr("width", "100%").attr("height", "100%");
-        //     const width = (svg as any).node().getBoundingClientRect().width;
-        //     const height = (svg as any).node().getBoundingClientRect().height;
-        //     
-        //     const offset = { left: 70, bottom: 40, right: 10, top: 20, margin: 30 };
-        //     let yScale = scaleLinear()
-        //         .domain([0, 1.1 * yMax])
-        //         .range([height - offset.top, offset.bottom]);
-        //     let xScale = scaleBand()
-        //         .domain(xVals)
-        //         .range([offset.left, width - offset.right - offset.margin])
-        //         .paddingInner(0.1);
+        },[dimension,data,yMax])
+   
+
+  
         //     const rect_tooltip = svg.select(".rect-tooltip");
 
         //     let rects = svg
