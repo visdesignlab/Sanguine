@@ -1,4 +1,3 @@
-import csv
 import json
 import cx_Oracle
 
@@ -51,7 +50,7 @@ def get_attributes(request):
         result = cur.execute(command)
 
         # Return the result, the multi-selector component in React requires the below format
-        items = [{"label": row[0], "value": row[0]} for row in result]
+        items = [{"key": row[0], "value": row[0],"text":row[0]} for row in result]
         return JsonResponse({"result": items})
 
 def fetch_professional_set(request):
@@ -130,7 +129,7 @@ def fetch_individual(request):
             dict(zip([data_dictionary[key[0]] for key in cur.description], row))
             for row in result
         ]
-        return JsonResponse({"table": data})
+        return JsonResponse({"result": data})
 
 
 def summarize_attribute_w_year(request):
@@ -201,7 +200,7 @@ def summarize_attribute_w_year(request):
 
         command = (
             f"SELECT {command_dict[x_axis]}, {command_dict[y_axis]}, "
-            f"COUNT({data_origin[x_axis]}.DI_CASE_ID) AS CASES_COUNT "
+            f"COUNT(DISTINCT {data_origin[x_axis]}.DI_CASE_ID) AS CASES_COUNT "
             f"FROM {data_origin[x_axis]} "
             f"INNER JOIN {data_origin[y_axis]} "
             f"ON ({data_origin[x_axis]}.DI_CASE_ID = {data_origin[y_axis]}.DI_CASE_ID "
@@ -223,7 +222,7 @@ def summarize_attribute_w_year(request):
             dict(zip([data_exchange[key[0]] for key in cur.description], row))
             for row in result
         ]
-        return JsonResponse({"task": data})
+        return JsonResponse({"result": data})
 
 
 def request_individual_specific(request):
@@ -308,7 +307,7 @@ def request_transfused_units(request):
         cur = connection.cursor()
         result = cur.execute(command)
         
-        items = [{"case_id": row[1], "transfused": row[0], "YEAR": row[2], "SURGEON_ID": row[3], "ANESTHOLOGIST_ID":row[4]}
+        items = [{"case_id": row[1], "transfused": row[0]}
                  for row in result]
         return JsonResponse({"result": items})
 
@@ -316,111 +315,122 @@ def hemoglobin(request):
     if request.method == "GET":
         command = (
             "WITH "
-                "LAB_HB AS "
-                "( "
-                    "SELECT "
-                        "V.DI_PAT_ID "
-                        ",V.DI_VISIT_NO "
-                        ",V.DI_DRAW_DTM "
-                        ",V.DI_RESULT_DTM "
-                        ",V.RESULT_CODE "
-                        ",V.RESULT_VALUE "
-                    "FROM CLIN_DM.BPU_CTS_DI_VST_LABS V "
-                    "WHERE UPPER(V.RESULT_DESC) = 'HEMOGLOBIN' "
-                "), "
-                "PREOP_HB AS "
-                "( "
-                    "SELECT "
-                        "X.DI_PAT_ID "
-                        ",X.DI_VISIT_NO "
-                        ",X.DI_CASE_ID "
-                        ",X.DI_SURGERY_START_DTM "
-                        ",X.DI_SURGERY_END_DTM "
-                        ",X.DI_PREOP_DRAW_DTM "
-                        ",LH2.RESULT_VALUE "
-                    "FROM "
-                    "( "
-                        "SELECT "
-                            "SC.DI_PAT_ID "
-                            ",SC.DI_VISIT_NO "
-                            ",SC.DI_CASE_ID "
-                            ",SC.DI_SURGERY_START_DTM "
-                            ",SC.DI_SURGERY_END_DTM "
-                            ",MAX(LH.DI_DRAW_DTM) AS DI_PREOP_DRAW_DTM "
-                        "FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE SC "
-                            "INNER JOIN LAB_HB LH "
-                                "ON SC.DI_VISIT_NO = LH.DI_VISIT_NO "
-                        "WHERE LH.DI_RESULT_DTM < SC.DI_SURGERY_START_DTM "
-                        "GROUP BY SC.DI_PAT_ID "
-                                ",SC.DI_VISIT_NO "
-                                ",SC.DI_CASE_ID "
-                                ",SC.DI_SURGERY_START_DTM "
-                                ",SC.DI_SURGERY_END_DTM "
-                    ") X "
-                        "INNER JOIN LAB_HB LH2 "
-                            "ON X.DI_VISIT_NO = LH2.DI_VISIT_NO "
-                            "AND X.DI_PREOP_DRAW_DTM = LH2.DI_DRAW_DTM "
-                "), "
-                "POSTOP_HB AS "
-                "( "
-                   " SELECT "
-                        "Z.DI_PAT_ID "
-                        ",Z.DI_VISIT_NO "
-                        ",Z.DI_CASE_ID "
-                        ",Z.DI_SURGERY_START_DTM "
-                        ",Z.DI_SURGERY_END_DTM "
-                        ",Z.DI_POSTOP_DRAW_DTM "
-                        ",LH4.RESULT_VALUE "
-                    "FROM "
-                    "( "
-                        "SELECT "
-                            "SC2.DI_PAT_ID "
-                            ",SC2.DI_VISIT_NO "
-                            ",SC2.DI_CASE_ID "
-                            ",SC2.DI_SURGERY_START_DTM "
-                            ",SC2.DI_SURGERY_END_DTM "
-                            ",MIN(LH3.DI_DRAW_DTM) AS DI_POSTOP_DRAW_DTM " 
-                        "FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE SC2 "
-                            "INNER JOIN LAB_HB LH3 "
-                                "ON SC2.DI_VISIT_NO = LH3.DI_VISIT_NO "
-                        "WHERE LH3.DI_DRAW_DTM > SC2.DI_SURGERY_END_DTM "
-                        "GROUP BY SC2.DI_PAT_ID "
-                            ",SC2.DI_VISIT_NO "
-                            ",SC2.DI_CASE_ID "
-                            ",SC2.DI_SURGERY_START_DTM "
-                            ",SC2.DI_SURGERY_END_DTM "
-                    ") Z "
-                        "INNER JOIN LAB_HB LH4 "
-                            "ON Z.DI_VISIT_NO = LH4.DI_VISIT_NO "
-                            "AND Z.DI_POSTOP_DRAW_DTM = LH4.DI_DRAW_DTM "
-                ") "
-            "SELECT "
-                "SC3.DI_PAT_ID "
-                ",SC3.DI_CASE_ID "
-                ",SC3.DI_CASE_ID "
-                ",SC3.DI_CASE_DATE "
-                ",SC3.DI_SURGERY_START_DTM "
-                ",SC3.DI_SURGERY_END_DTM "
-                ",SC3.SURGERY_ELAP "
-                ",SC3.SURGERY_TYPE_DESC "
-                ",SC3.SURGEON_PROV_DWID "
-                ",SC3.ANESTH_PROV_DWID "
-                ",SC3.PRIM_PROC_DESC "
-                ",SC3.POSTOP_ICU_LOS "
-                ",SC3.SCHED_SITE_DESC "
-                ",PRE.DI_PREOP_DRAW_DTM "
-                ",PRE.RESULT_VALUE AS PREOP_HEMO "
-                ",POST.DI_POSTOP_DRAW_DTM "
-                ",POST.RESULT_VALUE AS POSTOP_HEMO "
-            "FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE SC3 "
-                "LEFT OUTER JOIN PREOP_HB PRE "
-                    "ON SC3.DI_CASE_ID = PRE.DI_CASE_ID "
-                "LEFT OUTER JOIN POSTOP_HB POST "
-                    "ON SC3.DI_CASE_ID = POST.DI_CASE_ID "
-        )
 
+            "LAB_HB AS "
+            "( "
+            "SELECT "
+            "V.DI_PAT_ID "
+            ",V.DI_VISIT_NO "
+            ",V.DI_DRAW_DTM "
+            ",V.DI_RESULT_DTM "
+            ",V.RESULT_CODE "
+            ",V.RESULT_VALUE "
+            "FROM CLIN_DM.BPU_CTS_DI_VST_LABS V "
+            "WHERE UPPER(V.RESULT_DESC) = 'HEMOGLOBIN' "
+            "), "
+            "PREOP_HB AS "
+            "( "
+            "SELECT "
+            "X.DI_PAT_ID "
+            ",X.DI_VISIT_NO "
+            ",X.DI_CASE_ID "
+            ",X.DI_SURGERY_START_DTM "
+            ",X.DI_SURGERY_END_DTM "
+            ",X.DI_PREOP_DRAW_DTM "
+            ",LH2.RESULT_VALUE "
+            "FROM "
+            "( "
+            "SELECT "
+            "SC.DI_PAT_ID "
+            ",SC.DI_VISIT_NO "
+            ",SC.DI_CASE_ID "
+            ",SC.DI_SURGERY_START_DTM "
+            ",SC.DI_SURGERY_END_DTM "
+            ",MAX(LH.DI_DRAW_DTM) AS DI_PREOP_DRAW_DTM "
+            "FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE SC "
+            "INNER JOIN LAB_HB LH "
+            "ON SC.DI_VISIT_NO = LH.DI_VISIT_NO "
+            "WHERE LH.DI_RESULT_DTM < SC.DI_SURGERY_START_DTM "
+            "GROUP BY SC.DI_PAT_ID "
+            ",SC.DI_VISIT_NO "
+            ",SC.DI_CASE_ID "
+            ",SC.DI_SURGERY_START_DTM "
+            ",SC.DI_SURGERY_END_DTM "
+            ") X "
+            "INNER JOIN LAB_HB LH2 "
+            "ON X.DI_VISIT_NO = LH2.DI_VISIT_NO "
+            "AND X.DI_PREOP_DRAW_DTM = LH2.DI_DRAW_DTM "
+            "), "
+            "POSTOP_HB AS "
+            "( "
+            " SELECT "
+            "Z.DI_PAT_ID "
+            ",Z.DI_VISIT_NO "
+            ",Z.DI_CASE_ID "
+            ",Z.DI_SURGERY_START_DTM "
+            ",Z.DI_SURGERY_END_DTM "
+            ",Z.DI_POSTOP_DRAW_DTM "
+            ",LH4.RESULT_VALUE "
+            "FROM "
+            "( "
+            "SELECT "
+            "SC2.DI_PAT_ID "
+            ",SC2.DI_VISIT_NO "
+            ",SC2.DI_CASE_ID "
+            ",SC2.DI_SURGERY_START_DTM "
+            ",SC2.DI_SURGERY_END_DTM "
+            ",MIN(LH3.DI_DRAW_DTM) AS DI_POSTOP_DRAW_DTM "
+            "FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE SC2 "
+            "INNER JOIN LAB_HB LH3 "
+            "ON SC2.DI_VISIT_NO = LH3.DI_VISIT_NO "
+            "WHERE LH3.DI_DRAW_DTM > SC2.DI_SURGERY_END_DTM "
+            "GROUP BY SC2.DI_PAT_ID "
+            ",SC2.DI_VISIT_NO "
+            ",SC2.DI_CASE_ID "
+            ",SC2.DI_SURGERY_START_DTM "
+            ",SC2.DI_SURGERY_END_DTM "
+            ") Z "
+            "INNER JOIN LAB_HB LH4 "
+            "ON Z.DI_VISIT_NO = LH4.DI_VISIT_NO "
+            "AND Z.DI_POSTOP_DRAW_DTM = LH4.DI_DRAW_DTM "
+            ") "
+            "SELECT "
+            "SC3.DI_PAT_ID "
+            ",SC3.DI_CASE_ID "
+            ",SC3.DI_VISIT_NO "
+            ",SC3.DI_CASE_DATE "
+            ",EXTRACT (YEAR from SC3.DI_CASE_DATE) YEAR "
+            ",SC3.DI_SURGERY_START_DTM "
+            ",SC3.DI_SURGERY_END_DTM "
+            ",SC3.SURGERY_ELAP "
+            ",SC3.SURGERY_TYPE_DESC "
+            ",SC3.SURGEON_PROV_DWID "
+            ",SC3.ANESTH_PROV_DWID "
+            ",SC3.PRIM_PROC_DESC "
+            ",SC3.POSTOP_ICU_LOS "
+            ",SC3.SCHED_SITE_DESC "
+            ",PRE.DI_PREOP_DRAW_DTM "
+            ",PRE.RESULT_VALUE AS PREOP_HEMO "
+            ",POST.DI_POSTOP_DRAW_DTM "
+            ",POST.RESULT_VALUE AS POSTOP_HEMO "
+            "FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE SC3 "
+            "LEFT OUTER JOIN PREOP_HB PRE "
+            "ON SC3.DI_CASE_ID = PRE.DI_CASE_ID "
+            "LEFT OUTER JOIN POSTOP_HB POST "
+            "ON SC3.DI_CASE_ID = POST.DI_CASE_ID "
+
+               
+        )
         connection = make_connection()
         cur = connection.cursor()
         result = cur.execute(command)
-        items = [{"case_id": row[2], "hemo": [row[-3], row[-1]],"visit_id":row[1]} for row in result]
+
+        items = [{"case_id":row[1],
+                "visit_id": row[2],
+                "year":row[4],
+                "hemo": [row[-3], row[-1]],
+                "surgeon_id": row[9],
+                "anesth_id":row[10],
+                "patient_id":row[0]} for row in result]
+
         return JsonResponse({"result": items})
