@@ -14,7 +14,7 @@ export type Props = OwnProps;
 
 const UserControl: FC<Props> = ({ store }: Props) => {
     const { isAtRoot, isAtLatest, perCaseSelected, yearRange, filterSelection } = store!;
-    const [procedureList, setProcedureList] = useState({ result: [] })
+  //  const [procedureList, setProcedureList] = useState({ result: [] })
     const [addMode, setAddMode] = useState(false);
     const [xSelection, setXSelection] = useState("")
     const [ySelection, setYSelection] = useState("")
@@ -74,15 +74,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     //   { value: "dumbbell", label: "Dumbbell Plot" }
     // ];
 
-    async function fetchProcedureList() {
-        const res = await fetch("http://localhost:8000/api/get_attributes")
-        const data = await res.json()
-        setProcedureList(data)
-    }
     
-    useEffect(() => {
-        fetchProcedureList()
-    }, [])
 
     const addModeButtonHandler = () => {
         setAddMode(true);
@@ -110,7 +102,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     }
 
     const regularMenu = (
-      <Menu widths={7}>
+      <Menu widths={4}>
         <Menu.Item>
           <Button.Group>
             <Button primary disabled={isAtRoot} onClick={actions.goBack}>
@@ -129,17 +121,6 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             onClick={actions.togglePerCase}
           />
           <label>Per Case Mode</label>
-        </Menu.Item>
-        <Menu.Item>
-          <Dropdown
-            placeholder="Procedure"
-            multiple
-            search
-            selection
-            onChange={actions.filterSelectionChange}
-            options={procedureList.result}
-            value={filterSelection}
-          />
         </Menu.Item>
         <Menu.Item>
           <Container>
