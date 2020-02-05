@@ -6,10 +6,10 @@ import React, {
   useState,
   useMemo
 } from "react";
+import { actions } from "../..";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
-import { actions } from "../..";
 import {
   select,
   selectAll,
@@ -68,7 +68,9 @@ const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg
    
 
   
-        //     const rect_tooltip = svg.select(".rect-tooltip");
+  // useEffect(() => {
+  //     svgSelection.select(".chart").selectAll('rect').on('click',()=>{})
+  //   })
 
 
         //     rects
@@ -94,22 +96,9 @@ const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg
         //         //   .on("click", function(d) {
         //         //     that.props.set_selection_handler(that.props.x_axis_name, d.x_axis);
         //         //   })
-        //         .on("mouseover", function () {
-        //             rect_tooltip.style("display", null);
-        //         })
-        //         .on("mouseout", function () {
-        //             rect_tooltip.style("display", "none");
-        //         })
-        //         .on("mousemove", function (d: SingularDataPoint) {
-        //             var xPosition = mouse(this as any)[0] - 20;
-        //             var yPosition = mouse(this as any)[1] - 40;
-        //             rect_tooltip.attr(
-        //                 "transform",
-        //                 "translate(" + xPosition + "," + yPosition + ")"
-        //             );
 
-        //             rect_tooltip.select("text").text(Math.round(d.yVal * 100) / 100);
-        //         });
+        //         })
+
 
             const xAxisLabel = axisBottom(xScale);
   const yAxisLabel = axisLeft(yScale);
@@ -181,7 +170,11 @@ const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg
                 x={xScale(dataPoint.xVal)}
                 y={yScale(dataPoint.yVal)}
                 width={xScale.bandwidth()}
-                height={dimension.height - yScale(dataPoint.yVal) - offset.top}/>}
+                height={dimension.height - yScale(dataPoint.yVal) - offset.top}
+                onClick={() => {
+                  actions.selectPatient(dataPoint)
+                }}
+              />}
             />
           );
         })}

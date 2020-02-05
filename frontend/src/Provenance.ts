@@ -20,7 +20,8 @@ interface AppProvenance{
         addNewChart: (x: string, y: string, i: number) => void;
       removeChart: (event: any, i: any) => void;
       updateCaseCount: (newCaseCount: number) => void;
-      onLayoutchange: ( data: any) => void;
+      onLayoutchange: (data: any) => void;
+      selectPatient: (data: any) => void;
     }
 }
 let sameRow = 0
@@ -68,6 +69,20 @@ export function setupProvenance(): AppProvenance{
     provenance.addObserver(["filterSelection"], (state?: ApplicationState) => {
       store.filterSelection = state?state.filterSelection:store.filterSelection  
     })
+  
+  provenance.addObserver(
+    ["currentSelectPatient"],
+    (state?: ApplicationState) => {
+      store.currentSelectPatient = state
+        ? state.currentSelectPatient
+        : store.currentSelectPatient;
+    }
+  );
+  provenance.addObserver(["currentSelectSet"], (state?: ApplicationState) => {
+    store.currentSelectSet = state
+      ? state.currentSelectSet
+      : store.currentSelectSet;
+  });
 
     provenance.done();
 
@@ -177,7 +192,6 @@ export function setupProvenance(): AppProvenance{
                 return state;
             }
         )
-       // console.log(newFilterSelection);
     }
 
     const yearRangeChange = (newYearRange: any) => {
@@ -191,6 +205,10 @@ export function setupProvenance(): AppProvenance{
         }
       );
     };
+  
+  const selectPatient = (data: any) => {
+    console.log(data);
+  };
   
   const updateCaseCount = (newCaseCount: number) => {
   //  if (store.totalCaseCount < newCaseCount){
@@ -220,7 +238,8 @@ export function setupProvenance(): AppProvenance{
         addNewChart,
         removeChart,
         updateCaseCount,
-        onLayoutchange
+        onLayoutchange,
+        selectPatient
       }
     };
 
