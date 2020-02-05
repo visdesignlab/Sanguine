@@ -21,6 +21,19 @@ def make_connection():
     return cx_Oracle.connect(user=usr_name, password=password, dsn=dsn_tns)
 
 
+# Read in the data dictionary
+def data_dictionary():
+    # Instantiate mapping array
+    data_dictionary = {}
+
+    with open("data_dictionary.csv", "r") as file:
+        read_csv = csv.reader(file, delimiter=",")
+        for row in read_csv:
+            data_dictionary[row[0]] = row[1]
+
+    return data_dictionary
+
+
 def index(request):
     if request.method == "GET":
         return HttpResponse(
@@ -39,6 +52,50 @@ def get_attributes(request):
         # Return the result, the multi-selector component in React requires the below format
         items = [{"key": row[0], "value": row[0],"text":row[0]} for row in result]
         return JsonResponse({"result": items})
+
+def fetch_professional_set(request):
+    if request.method == "GET":
+        profesional_type = request.GET.get('professional_type')
+        professional_id = request.GET.get('professional_id')
+        
+        if not profesional_type or not professional_id:
+            HttpResponseBadRequest(
+                "professional type and id must be supplied.")
+
+        if profesional_type == "ANESTHOLOGIST_ID":
+            command = (
+                f"SELECT SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS) PRBC_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS) FFP_UNITS, "
+                f"SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS, "
+                f"SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS) CRYO_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML) CELL_SAVER_ML, "
+                f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID SURGEON_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC "
+                f"FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
+                f"INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
+                f"ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID) "
+                f"WHERE CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID = {professional_id}"
+                f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID,CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC"
+            )
+            partner = "SURGEON_ID"
+        else:
+            command = (
+                f"SELECT SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS) PRBC_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS) FFP_UNITS, "
+                f"SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS, "
+                f"SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS) CRYO_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML) CELL_SAVER_ML, "
+                f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID ANESTHOLOGIST_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC "
+                f"FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
+                f"INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
+                f"ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID) "
+                f"WHERE CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID = {professional_id}"
+                f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID,CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC"
+            )
+            partner = "ANESTHOLOGIST_ID"
+
+        connection = make_connection()
+        cur = connection.cursor()
+        result = cur.execute(command)
+        items = [{"PRBC_UNITS": row[0] if row[0] else 0, "FFP_UNITS": row[1] if row[1] else 0, "PLT_UNITS": row[2] if row[2] else 0, "CRYO_UNITS":row[3] if row[3] else 0, "CELL_SAVER_ML":row[4] if row[4] else 0, partner: row[5], "DI_CASE_ID":row[6], "DESC":row[7]}
+                 for row in result]
+        return JsonResponse({"result": items})
+
 
 
 def fetch_individual(request):
@@ -63,16 +120,13 @@ def fetch_individual(request):
                 f"WHERE surgery.DI_CASE_ID = {case_id}"
         )
         connection = make_connection()
-        # print(command)
         cur = connection.cursor()
         result = cur.execute(command)
-        # print(result)
 
-        # data = [dict(zip([key[0] for key in cur.description], row))
-        #         for row in result]
-        # return json.dumps({'table': data}, default=str)
+        data_dictionary = data_dictionary()
+
         data = [
-            dict(zip([key[0] for key in cur.description], row))
+            dict(zip([data_dictionary[key[0]] for key in cur.description], row))
             for row in result
         ]
         return JsonResponse({"result": data})
@@ -261,6 +315,7 @@ def hemoglobin(request):
     if request.method == "GET":
         command = (
             "WITH "
+
             "LAB_HB AS "
             "( "
             "SELECT "
@@ -363,10 +418,13 @@ def hemoglobin(request):
             "ON SC3.DI_CASE_ID = PRE.DI_CASE_ID "
             "LEFT OUTER JOIN POSTOP_HB POST "
             "ON SC3.DI_CASE_ID = POST.DI_CASE_ID "
+
+               
         )
         connection = make_connection()
         cur = connection.cursor()
         result = cur.execute(command)
+
         items = [{"case_id":row[1],
                 "visit_id": row[2],
                 "year":row[4],
@@ -374,4 +432,5 @@ def hemoglobin(request):
                 "surgeon_id": row[9],
                 "anesth_id":row[10],
                 "patient_id":row[0]} for row in result]
+
         return JsonResponse({"result": items})
