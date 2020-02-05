@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useState } from "react";
 import Store from "../Interfaces/Store";
 // import {}
-import { Menu,  Dropdown, Grid, Container } from "semantic-ui-react";
+import { Menu,  Dropdown, Grid, Container,Message } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";
 import { actions } from "..";
 
@@ -12,13 +12,7 @@ interface OwnProps{
 export type Props = OwnProps;
 
 const SideBar: FC<Props> = ({ store }: Props) => { 
-       const {
-         isAtRoot,
-         isAtLatest,
-         perCaseSelected,
-         yearRange,
-         filterSelection
-       } = store!;
+       const { totalCaseCount, actualYearRange, filterSelection } = store!;
     const [procedureList, setProcedureList] = useState({ result: [] });
     async function fetchProcedureList() {
       const res = await fetch("http://localhost:8000/api/get_attributes");
@@ -35,22 +29,31 @@ const SideBar: FC<Props> = ({ store }: Props) => {
         divided="vertically"
         centered={true}
         verticalAlign={"middle"}
-        padded={"vertically"}
+        padded
       >
         <Grid.Row>
-          <Dropdown
-            placeholder="Procedure"
-            multiple
-            search
-            selection
-            onChange={actions.filterSelectionChange}
-            options={procedureList.result}
-            value={filterSelection}
-          />
+          <Container>
+            <Dropdown
+              placeholder="Procedure"
+              multiple
+              search
+              selection
+              onChange={actions.filterSelectionChange}
+              options={procedureList.result}
+              value={filterSelection}
+            />
+          </Container>
         </Grid.Row>
         <Grid.Row>
-          <Container>Something Something</Container>
+          <Message>
+            <Message.Header>Current View</Message.Header>
+            <Message.Item>Case Count:{totalCaseCount}</Message.Item>
+            <Message.Item>
+              Selected Year Range: {actualYearRange[0]} - {actualYearRange[1]}
+            </Message.Item>
+          </Message>
         </Grid.Row>
+            
       </Grid>
     );
 }

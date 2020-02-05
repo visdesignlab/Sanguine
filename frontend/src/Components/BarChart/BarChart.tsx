@@ -25,6 +25,7 @@ import {
   offset,
   AxisLabelDict
 } from "../../Interfaces/ApplicationState";
+import {Popup} from 'semantic-ui-react'
 
 interface OwnProps{
     xAxisName: string;
@@ -40,7 +41,6 @@ interface OwnProps{
 export type Props = OwnProps;
 
 const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg,yMax }: Props) => {
-   // const offset = { left: 70, bottom: 40, right: 10, top: 0, margin: 30 };
 
     const svgSelection = select(svg.current);
     
@@ -164,17 +164,6 @@ const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg
             return AxisLabelDict[yAxisName]? AxisLabelDict[yAxisName]+trailing : yAxisName+trailing
           }
           );
-    
-    // }
-    // <Bars
-    // chartId={chartId}
-    // data={data.result}
-    // yMax={yMax}
-    // xAxisName={xAxis}
-    // yAxisName={yAxis}
-    // />
-    // <>
-    // </>
     return (
     <>
     <g className="axes">
@@ -185,10 +174,15 @@ const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg
       </g>
             <g className="chart" transform={`translate(0,-${offset.bottom - offset.top})`}>
         {data.map((dataPoint) => {
-            return (<Bar key={dataPoint.xVal} x={xScale(dataPoint.xVal)}
+          return (
+            <Popup content={dataPoint.yVal} key={dataPoint.xVal} trigger={
+              <Bar
+                x={xScale(dataPoint.xVal)}
                 y={yScale(dataPoint.yVal)}
                 width={xScale.bandwidth()}
-            height={dimension.height - yScale(dataPoint.yVal) - offset.top} />);
+                height={dimension.height - yScale(dataPoint.yVal) - offset.top}/>}
+            />
+          );
         })}
       </g>
       <g className="rect-tooltip" style={{display:"none"}}>

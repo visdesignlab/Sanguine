@@ -33,12 +33,16 @@ const BarChartVisualization: FC<Props> = ({ xAxis,yAxis,chartId,store }: Props) 
     }, []);
     
     async function fetchChartData() {
-        const res = await fetch(`http://localhost:8000/api/summarize_with_year?x_axis=${xAxis}&y_axis=${yAxis}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`);
-        const dataResult = await res.json();
+      const res = await fetch(`http://localhost:8000/api/summarize_with_year?x_axis=${xAxis}&y_axis=${yAxis}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`);
+      const dataResult = await res.json();
+      let caseCount = 0;
         if (dataResult) {
           let yMaxTemp = -1;
           let cast_data = (dataResult.result as any).map(function (ob: any) {
-              
+            if (ob.y_axis > 1000 && yAxis === "PRBC_UNITS") {
+              ob.y_axis-=999
+            }
+              caseCount += ob.case_count;
               let y_val = perCaseSelected
                 ? ob.y_axis / ob.case_count
                 : ob.y_axis;
@@ -51,7 +55,8 @@ const BarChartVisualization: FC<Props> = ({ xAxis,yAxis,chartId,store }: Props) 
               return new_ob;
             });
             setData({result:cast_data});
-            setYMax(yMaxTemp);
+          setYMax(yMaxTemp);
+          actions.updateCaseCount(caseCount);
         }   
     }
 

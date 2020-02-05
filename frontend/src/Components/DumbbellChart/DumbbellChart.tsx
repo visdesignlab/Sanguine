@@ -10,18 +10,19 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
+import { Popup } from "semantic-ui-react";
 import {
   select,
-  selectAll,
+  range,
   scaleLinear,
-  scaleBand,
+  scaleOrdinal,
   mouse,
   axisBottom,
-  axisLeft
+  axisLeft,
+  ScaleLinear,
+  ScaleOrdinal,
 } from "d3";
-import { DumbbellDataPoint, offset,AxisLabelDict } from "../../Interfaces/ApplicationState";
-
-//const offset = { left: 70, bottom: 40, right: 10, top: 20, margin: 30 };
+import { DumbbellDataPoint, offset, AxisLabelDict } from "../../Interfaces/ApplicationState";
       
 interface OwnProps{
   yAxisName: string;
@@ -38,26 +39,39 @@ export type Props = OwnProps;
 
 const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax, xRange }: Props) => {
 
-      
+  const { dumbbellSorted }=store!;
   const svgSelection = select(svg.current);
+  data = data.sort(
+    (a, b) =>
+      Math.abs(a.startXVal - a.endXVal) - Math.abs(b.startXVal - b.endXVal)
+  );
 
   const [xScale, yScale] = useMemo(() => {
-        
-    const yScale = scaleLinear()
-      .domain([0, 1.1 * yMax])
-      .range([dimension.height - offset.top, offset.bottom]);
     const xScale = scaleLinear()
       .domain([0.9 * xRange.xMin, 1.1 * xRange.xMax])
-      .range([offset.left, dimension.width - offset.right - offset.margin]);
-    return [xScale, yScale];
-  }, [dimension, data, yMax, xRange]);
+      .range([
+        offset.left,
+        dimension.width - offset.right - offset.margin
+      ]);
 
-  //     const yScale = scaleLinear()
-  //       .domain([0, 1.1 * yMax])
-  //       .range([height - offset.top, offset.bottom]);
-  //     const xScale = scaleLinear()
-  //       .domain([0.9 * xRange.min, 1.1 * xRange.max])
-  //       .range([offset.left, width - offset.right]);
+    let yScale;
+    if (!dumbbellSorted) {
+     yScale = scaleLinear()
+      .domain([0, 1.1 * yMax])
+      .range([dimension.height - offset.top, offset.bottom]);
+    }
+    else {
+      const indices = range(0,data.length)
+      yScale = scaleOrdinal()
+        .domain(indices as any)
+       .range(range(dimension.height - offset.top, offset.bottom, -(dimension.height - offset.top - offset.bottom) / data.length));
+       // .range([dimension.height - offset.top, offset.bottom]);
+      
+    }
+    return [xScale, yScale];
+  }, [dimension, data, yMax, xRange,dumbbellSorted]);
+
+ 
   //     const circle_tooltip = svg.select(".circle-tooltip");
 
   //     let components = svg
@@ -199,32 +213,15 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
   //       });
 
   const xAxisLabel = axisBottom(xScale);
-  const yAxisLabel = axisLeft(yScale);
-
-  svgSelection.select('.axes')
-    .select(".x-axis")
-    .attr("transform", `translate(0, ${(dimension.height - offset.bottom)})`)
-    .call(xAxisLabel as any);
-
-  svgSelection
+  if (!dumbbellSorted){
+    const yAxisLabel = axisLeft(yScale as ScaleLinear<number, number>);
+      svgSelection
     .select(".axes")
     .select(".y-axis")
     .attr("transform",
       `translate(${offset.left} ,-${offset.bottom - offset.top} )`)
-    .call(yAxisLabel as any);
-  
-        svgSelection
-          .select(".axes")
-          .select(".x-label")
-          .attr("x", 0.5 * (dimension.width + offset.left))
-          .attr("y", dimension.height)
-          .attr("alignment-baseline", "baseline")
-          .attr("font-size", "11px")
-          .attr("text-anchor", "middle")
-          //.attr("transform", "rotate(90)")
-          .text("Hemoglobin Value");
-
-        svgSelection
+        .call(yAxisLabel as any);
+            svgSelection
           .select(".axes")
           .select(".y-label")
           .attr("y", 0)
@@ -236,6 +233,30 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
           .text(
             AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
           );
+  }
+  else {
+    //TODO
+  }
+  
+
+  svgSelection.select('.axes')
+    .select(".x-axis")
+    .attr("transform", `translate(0, ${(dimension.height - offset.bottom)})`)
+    .call(xAxisLabel as any);
+
+
+  
+        svgSelection
+          .select(".axes")
+          .select(".x-label")
+          .attr("x", 0.5 * (dimension.width + offset.left))
+          .attr("y", dimension.height)
+          .attr("alignment-baseline", "baseline")
+          .attr("font-size", "11px")
+          .attr("text-anchor", "middle")
+          .text("Hemoglobin Value");
+
+
             
 
     return (
@@ -247,33 +268,56 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
           <text className="y-label" style={{ textAnchor: "end" }} />
         </g>
         <g className="chart-comp" >
-          {data.map((dataPoint) => {
+          {data.map((dataPoint,index) => {
             const start = xScale(dataPoint.startXVal);
             const end = xScale(dataPoint.endXVal);
             const returning = start > end ? end : start;
             const rectwidth = Math.abs(end - start)
             return (
-              <DumbbellG
-                dataPoint={dataPoint}
+              <Popup
+                content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}`}
                 key={dataPoint.caseId}
-                transform={`translate(0,-${offset.bottom - offset.top})`}
-              >
-                <Rect
-                  x={returning}
-                  y={yScale(dataPoint.yVal) - 1}
-                  width={rectwidth}
-                />
-                <Circle
-                  cx={xScale(dataPoint.startXVal)}
-                  cy={yScale(dataPoint.yVal)}
-                  fill="#ba9407"
-                />
-                <Circle
-                  cx={xScale(dataPoint.endXVal)}
-                  cy={yScale(dataPoint.yVal)}
-                  fill="#20639B"
-                />
-              </DumbbellG>
+                trigger={
+                  <DumbbellG
+                    dataPoint={dataPoint}
+                    transform={`translate(0,-${offset.bottom - offset.top})`}
+                  >
+                    <Rect
+                      x={returning}
+                      y={
+                        dumbbellSorted
+                          ? (yScale as ScaleOrdinal<any, any>)(index)
+                          : (yScale as ScaleLinear<number, number>)(
+                              dataPoint.yVal
+                            ) - 1
+                      }
+                      width={rectwidth}
+                    />
+                    <Circle
+                      cx={xScale(dataPoint.startXVal)}
+                      cy={
+                        dumbbellSorted
+                          ? (yScale as ScaleOrdinal<any, any>)(index)
+                          : (yScale as ScaleLinear<number, number>)(
+                              dataPoint.yVal
+                            )
+                      }
+                      fill="#ba9407"
+                    />
+                    <Circle
+                      cx={xScale(dataPoint.endXVal)}
+                      cy={
+                        dumbbellSorted
+                          ? (yScale as ScaleOrdinal<any, any>)(index)
+                          : (yScale as ScaleLinear<number, number>)(
+                              dataPoint.yVal
+                            )
+                      }
+                      fill="#20639B"
+                    />
+                  </DumbbellG>
+                }
+              />
             );
         })}
         </g>
@@ -300,18 +344,20 @@ export default inject("store")(observer(DumbbellChart));
 interface DumbbellProps{
   dataPoint: DumbbellDataPoint;
 }
+  // display: ${props =>
+  //   props.dataPoint.endXVal === 0 || props.dataPoint.startXVal === 0
+  //     ? "none"
+  //     : null} 
 
 const DumbbellG = styled(`g`)<DumbbellProps>`
-  display: ${props =>
-    props.dataPoint.endXVal === 0 || props.dataPoint.startXVal === 0
-      ? "none"
-      : null} 
+
 `;
 
 const Circle = styled(`circle`)`
-  r:1%
+  r:0.8%
 `;
 
 const Rect = styled(`rect`)`
- height:2px
+ height:1.5px
+ opacity:50%
 `;

@@ -26,7 +26,10 @@ export interface ApplicationState {
   perCaseSelected: boolean;
   yearRange: number[];
   filterSelection: string[];
+  totalCaseCount: number;
+  dumbbellSorted: boolean;
 }
+
 export interface LayoutElement{
   x_axis_name: string,
   y_axis_name: string,
@@ -43,7 +46,9 @@ export const defaultState: ApplicationState = {
   currentSelectedChart: "-1",
   perCaseSelected: false,
   yearRange: [0, 5],
-  filterSelection: []
+  filterSelection: [],
+  totalCaseCount: 0,
+  dumbbellSorted: false
 };
 
 export const offset = { left: 70, bottom: 60, right: 10, top: 0, margin: 30 };
