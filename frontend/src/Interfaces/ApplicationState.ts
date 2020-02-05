@@ -45,3 +45,16 @@ export const defaultState: ApplicationState = {
   yearRange: [0, 5],
   filterSelection: []
 };
+
+export const offset = { left: 70, bottom: 60, right: 10, top: 0, margin: 30 };
+export const AxisLabelDict:any = {
+  PRBC_UNITS: "Intraoperative RBCs Transfused",
+  FFP_UNITS: "Intraoperative FFP Transfused",
+  PLT_UNITS: "Intraoperative Platelets Transfused",
+  CRYO_UNITS: "Intraoperative Cryo Transfused",
+  CELL_SAVER_ML: "Cell Salvage Volume (ml)",
+  SURGEON_ID: "Surgeon ID",
+  ANESTHOLOGIST_ID: "Anesthologist ID",
+  YEAR: "Year",
+  HEMO_VALUE:"Hemoglobin Value"
+};

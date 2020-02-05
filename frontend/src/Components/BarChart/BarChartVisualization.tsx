@@ -70,7 +70,7 @@ const BarChartVisualization: FC<Props> = ({ xAxis,yAxis,chartId,store }: Props) 
       // />
 
       <SVG ref={svgRef}>
-        <text
+        {/* <text
           x="0"
           y="0"
           style={{
@@ -79,7 +79,7 @@ const BarChartVisualization: FC<Props> = ({ xAxis,yAxis,chartId,store }: Props) 
           }}
         >
           chart # ${chartId}
-        </text>
+        </text> */}
         <BarChart
           dimension={dimensions}
           data={data.result}
