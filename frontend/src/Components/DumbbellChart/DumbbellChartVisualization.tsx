@@ -74,11 +74,14 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store }: Props)
       let tempXMax = 0;
     //  console.log(hemo_data);
         if (hemo_data) {
+            //TODO:
+            //How to solve the total case viewing potential discrepency?
+            
             let cast_data = hemo_data.map((ob: any) => {
                 const begin_x = +ob.hemo[0];
                 const end_x = +ob.hemo[1];
                 let yAxisLabel_val;
-            
+                
                 if (transfused_dict[ob.case_id]) {
                     yAxisLabel_val = transfused_dict[ob.case_id].transfused;
                     };
@@ -110,7 +113,10 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store }: Props)
                 }
             });
             cast_data = cast_data.filter((d: any) => d);
-            console.log(cast_data)
+            let total_count = 0;
+            cast_data = cast_data.filter((d: DumbbellDataPoint) => { total_count += 1; return (d.startXVal - d.endXVal) > 0 })
+           // console.log(cast_data)
+            actions.updateCaseCount(total_count)
             setData({ result: cast_data });
             setYMax(tempYMax);
             setXRange({ xMin: tempXMin, xMax: tempXMax });

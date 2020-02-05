@@ -13,7 +13,13 @@ interface OwnProps{
 export type Props = OwnProps;
 
 const UserControl: FC<Props> = ({ store }: Props) => {
-    const { isAtRoot, isAtLatest, perCaseSelected, yearRange, filterSelection } = store!;
+    const {
+      isAtRoot,
+      isAtLatest,
+      perCaseSelected,
+      yearRange,
+      dumbbellSorted
+    } = store!;
   //  const [procedureList, setProcedureList] = useState({ result: [] })
     const [addMode, setAddMode] = useState(false);
     const [xSelection, setXSelection] = useState("")
@@ -102,7 +108,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     }
 
     const regularMenu = (
-      <Menu widths={4}>
+      <Menu widths={6}>
         <Menu.Item>
           <Button.Group>
             <Button primary disabled={isAtRoot} onClick={actions.goBack}>
@@ -120,7 +126,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             checked={perCaseSelected}
             onClick={actions.togglePerCase}
           />
-          <label>Per Case Mode</label>
+          <label> Per Case Mode</label>
         </Menu.Item>
         <Menu.Item>
           <Container>
@@ -133,7 +139,11 @@ const UserControl: FC<Props> = ({ store }: Props) => {
           </Container>
         </Menu.Item>
         <Menu.Item>
-            <Button onClick={addModeButtonHandler} content={"Add"}/>
+          <Button onClick={addModeButtonHandler} content={"Add"} />
+        </Menu.Item>
+        <Menu.Item>
+                <Checkbox toggle checked={dumbbellSorted} onClick={actions.toggleDumbbell}/>
+          <label> Sort Dumbbell</label>
         </Menu.Item>
       </Menu>
     );

@@ -128,7 +128,7 @@ const App: FC<Props> = ({ store }: Props) => {
       <Container fluid>
         <UserControl />
       </Container>
-      <Grid>
+      <Grid padded>
         <Grid.Column width={3}>
           <SideBar></SideBar>
         </Grid.Column>
