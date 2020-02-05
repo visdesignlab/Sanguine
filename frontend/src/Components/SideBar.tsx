@@ -53,7 +53,6 @@ const SideBar: FC<Props> = ({ store }: Props) => {
             </Message.Item>
           </Message>
         </Grid.Row>
-            
       </Grid>
     );
 }

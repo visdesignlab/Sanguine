@@ -28,6 +28,8 @@ export interface ApplicationState {
   filterSelection: string[];
   totalCaseCount: number;
   dumbbellSorted: boolean;
+  currentSelectSet: SelectSet | null;
+  currentSelectPatient: string | null;
 }
 
 export interface LayoutElement{
@@ -48,7 +50,9 @@ export const defaultState: ApplicationState = {
   yearRange: [0, 5],
   filterSelection: [],
   totalCaseCount: 0,
-  dumbbellSorted: false
+  dumbbellSorted: false,
+  currentSelectSet: null,
+  currentSelectPatient: null
 };
 
 export const offset = { left: 70, bottom: 60, right: 10, top: 0, margin: 30 };

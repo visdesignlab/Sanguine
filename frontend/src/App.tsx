@@ -72,7 +72,8 @@ const App: FC<Props> = ({ store }: Props) => {
             floated={"right"}
             circular
             size="mini"
-            onClick={actions.removeChart.bind(layout.i)}
+            onClick={
+              actions.removeChart.bind(layout.i)}
           >
             <Icon key={layout.i} name="close" />
           </Button>
