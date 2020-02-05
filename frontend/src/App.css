@@ -9,9 +9,7 @@
 #title{
   color:black;
 }
-.headroom{
-  background: #cce1fb;
-}
+
 
 /* .App-header {
   background-color: #282c34;
@@ -23,13 +21,7 @@
   font-size: calc(10px + 2vmin);
   color: white;
 } */
-.sidebar{
-  /* float: left;
-  width: 5%;
-  height: 100%; */
-  padding-left: 10px;
-  padding-right: 10px
-}
+
 /* .canvas-1{
   padding-top: 10px;
   padding-bottom: 10px;
