@@ -67,16 +67,21 @@ const App: FC<Props> = ({ store }: Props) => {
     if (layout.x_axis_name === "HEMO_VALUE") {
       return (
         <div key={layout.i} className={"parent-node" + layout.i}>
-          {/* <svg> */}
-            <DumbbellChartVisualization yAxis={layout.y_axis_name} chartId={layout.i} />
-          {/* </svg> */}
-          <span
-            className="remove"
-            style={removeStyle}
-            // onClick={this.onRemoveItem.bind(this, layoutE.i)}
+          <Button
+            icon
+            floated={"right"}
+            circular
+            size="mini"
+            onClick={actions.removeChart.bind(layout.i)}
           >
-            x
-          </span>
+            <Icon key={layout.i} name="close" />
+          </Button>
+          {/* <svg> */}
+          <DumbbellChartVisualization
+            yAxis={layout.y_axis_name}
+            chartId={layout.i}
+          />
+          {/* </svg> */}
         </div>
       );
     }
@@ -96,8 +101,6 @@ const App: FC<Props> = ({ store }: Props) => {
         >
           <Icon key={layout.i} name="close" />
         </Button>
-        {/* <header>chart #{layout.i}</header> */}
-        {/* <svg > */}
         <BarChartVisualization
           xAxis={layout.x_axis_name}
           yAxis={layout.y_axis_name}

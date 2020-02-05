@@ -85,13 +85,11 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store }: Props)
               //  console.log(transfused_dict);
                 //This filter out anything that has empty value
                 if (yAxisLabel_val) {
-                    if (yAxisLabel_val < 100 && yAxis==="PRBC_UNITS") {
+                    if (!(yAxisLabel_val > 100 && yAxis==="PRBC_UNITS")) {
                         tempYMax = yAxisLabel_val > tempYMax ? yAxisLabel_val : tempYMax;
+                        
                     }
-                    else {
-                        tempYMax =
-                          yAxisLabel_val > tempYMax ? yAxisLabel_val : tempYMax;
-                    }
+                    
                     tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
                     tempXMin = end_x < tempXMin ? end_x : tempXMin;
                     tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
@@ -128,7 +126,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store }: Props)
     
     return (
       <SVG ref={svgRef}>
-        <text
+        {/* <text
           x="0"
           y="0"
           style={{
@@ -137,7 +135,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store }: Props)
           }}
         >
           chart # ${chartId}
-        </text>
+        </text> */}
         <DumbbellChart
           svg={svgRef}
           yAxisName={yAxis}

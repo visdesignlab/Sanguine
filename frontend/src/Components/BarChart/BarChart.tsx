@@ -20,7 +20,11 @@ import {
   axisBottom,
   axisLeft
 } from "d3";
-import { SingularDataPoint } from "../../Interfaces/ApplicationState";
+import {
+  SingularDataPoint,
+  offset,
+  AxisLabelDict
+} from "../../Interfaces/ApplicationState";
 
 interface OwnProps{
     xAxisName: string;
@@ -36,7 +40,7 @@ interface OwnProps{
 export type Props = OwnProps;
 
 const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg,yMax }: Props) => {
-    const offset = { left: 70, bottom: 40, right: 10, top: 20, margin: 30 };
+   // const offset = { left: 70, bottom: 40, right: 10, top: 0, margin: 30 };
 
     const svgSelection = select(svg.current);
 
@@ -61,27 +65,9 @@ const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg
   
         //     const rect_tooltip = svg.select(".rect-tooltip");
 
-        //     let rects = svg
-        //         .select(".chart")
-        //         .selectAll(".bars")
-        //         .data(data.result);
-
-        //     rects.exit().remove();
-        //     rects = (rects as any)
-        //         .enter()
-        //         .append("rect")
-        //         .merge(rects as any);
 
         //     rects
-        //         .attr("x", (d: SingularDataPoint) => xScale(d.xVal) as any)
-        //         .attr("y", (d: SingularDataPoint) => yScale(d.yVal))
-        //         .classed("bars", true)
-        //         .attr("width", xScale.bandwidth())
-        //         .attr(
-        //             "height",
-        //             (d: SingularDataPoint) => height - yScale(d.yVal) - offset.top
-        //         )
-        //         .attr("fill", "#072F5F")
+
         //         .attr("opacity", d => {
         //             // if (this.state.value_to_highlight) {
         //             //   return d.x_axis === this.state.value_to_highlight ? 1 : 0.5;
@@ -121,46 +107,55 @@ const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg
         //         });
 
             const xAxisLabel = axisBottom(xScale);
-            const yAxisLabel = axisLeft(yScale);
+  const yAxisLabel = axisLeft(yScale);
+  
             svgSelection
-                .select(".axes")
-                .select(".x-axis")
-                .attr("transform", "translate(0," + (dimension.height - offset.bottom) + ")")
-                .call(xAxisLabel as any)
-                .selectAll("text")
-                .attr("y", 0)
-                .attr("x", 9)
-                .attr("dy", ".35em")
-                .attr("transform", "rotate(90)")
-                .style("text-anchor", "start");
+              .select(".axes")
+              .select(".x-axis")
+              .attr(
+                "transform",
+                `translate(0, ${dimension.height - offset.bottom})`
+              )
+              .call(xAxisLabel as any)
+              .selectAll("text")
+              .attr("y", 0)
+              .attr("x", 9)
+              .attr("dy", ".35em")
+              .attr("transform", "rotate(90)")
+              .style("text-anchor", "start");
 
             svgSelection
-                .select(".axes")
-                .select(".y-axis")
-                .attr(
-                    "transform",
-                    "translate(" + offset.left + ",-" + (offset.bottom - offset.top) + ")"
-                )
-                .call(yAxisLabel as any);
+              .select(".axes")
+              .select(".y-axis")
+              .attr(
+                "transform",
+                `translate(${offset.left} ,-${offset.bottom - offset.top} )`
+              )
+              .call(yAxisLabel as any);
 
-        svgSelection.select(".axes")
-            .select(".x-label")
-            .attr("x", dimension.height - 10)
-            .attr("y", -dimension.width + offset.right)
-            .attr("alignment-baseline", "hanging")
-            .attr("font-size", "10px")
-            .attr("text-anchor", "end")
-            .attr("transform", "rotate(90)")
-            .text(xAxisName);
+        svgSelection
+          .select(".axes")
+          .select(".x-label")
+          .attr("x", 0.5 * dimension.width+1.5*offset.left)
+          .attr("y", dimension.height)
+          .attr("alignment-baseline", "baseline")
+          .attr("font-size", "10px")
+          .attr("text-anchor", "middle")
+          //.attr("transform", "rotate(90)")
+          .text(AxisLabelDict[xAxisName]?AxisLabelDict[xAxisName]:xAxisName);
 
-        svgSelection.select(".axes")
-            .select(".y-label")
-            .attr("y", offset.top + 5)
-            .attr("x", -offset.top - 5)
-            .attr("font-size", "10px")
-            .attr("text-anchor", "end")
-            .attr("transform", "rotate(-90)")
-            .text(yAxisName);
+        svgSelection
+          .select(".axes")
+          .select(".y-label")
+          .attr("y", 0)
+          .attr("x", -0.5 * dimension.height + 1.5*offset.bottom)
+          .attr("font-size", "10px")
+          .attr("text-anchor", "middle")
+          .attr("alignment-baseline", "hanging")
+          .attr("transform", "rotate(-90)")
+          .text(
+            AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
+          );
     
     // }
     // <Bars
