@@ -43,7 +43,11 @@ const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg
    // const offset = { left: 70, bottom: 40, right: 10, top: 0, margin: 30 };
 
     const svgSelection = select(svg.current);
-
+    
+    const {
+      perCaseSelected
+    } = store!;
+  
     const [xScale, yScale] = useMemo(() => {
         // const yMax = max(data.map(d=>d.yVal))||0
         const xVals = data
@@ -136,25 +140,29 @@ const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg
         svgSelection
           .select(".axes")
           .select(".x-label")
-          .attr("x", 0.5 * dimension.width+1.5*offset.left)
+          .attr("x", 0.5 * (dimension.width + offset.left))
           .attr("y", dimension.height)
           .attr("alignment-baseline", "baseline")
-          .attr("font-size", "10px")
+          .attr("font-size", "11px")
           .attr("text-anchor", "middle")
           //.attr("transform", "rotate(90)")
-          .text(AxisLabelDict[xAxisName]?AxisLabelDict[xAxisName]:xAxisName);
+          .text(
+            AxisLabelDict[xAxisName] ? AxisLabelDict[xAxisName] : xAxisName
+          );
 
         svgSelection
           .select(".axes")
           .select(".y-label")
           .attr("y", 0)
           .attr("x", -0.5 * dimension.height + 1.5*offset.bottom)
-          .attr("font-size", "10px")
+          .attr("font-size", "11px")
           .attr("text-anchor", "middle")
           .attr("alignment-baseline", "hanging")
           .attr("transform", "rotate(-90)")
-          .text(
-            AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
+          .text(() => {
+            const trailing = perCaseSelected ? " / Case" : "";
+            return AxisLabelDict[yAxisName]? AxisLabelDict[yAxisName]+trailing : yAxisName+trailing
+          }
           );
     
     // }
