@@ -63,7 +63,7 @@ const App: FC<Props> = ({ store }: Props) => {
       xxs: 2
     };
 
-  const createElement = (layout: LayoutElement) => {
+  const createElement = (layout: LayoutElement,index:number) => {
     if (layout.x_axis_name === "HEMO_VALUE") {
       return (
         <div key={layout.i} className={"parent-node" + layout.i}>
@@ -76,12 +76,11 @@ const App: FC<Props> = ({ store }: Props) => {
           >
             <Icon key={layout.i} name="close" />
           </Button>
-          {/* <svg> */}
           <DumbbellChartVisualization
             yAxis={layout.y_axis_name}
             chartId={layout.i}
+            chartIndex={index}
           />
-          {/* </svg> */}
         </div>
       );
     }
@@ -106,11 +105,11 @@ const App: FC<Props> = ({ store }: Props) => {
           yAxis={layout.y_axis_name}
           // class_name={"parent-node" + layoutE.i}
           chartId={layout.i}
+          chartIndex={index}
           // set_selection_handler={this.SetSelectionHandler}
 
           //plot_type={layoutE.plot_type}
         />
-        {/* </svg> */}
 
         {/* <span
         className="remove"
@@ -135,7 +134,8 @@ const App: FC<Props> = ({ store }: Props) => {
         <Grid.Column width={9}>
           <Container>
             <ResponsiveReactGridLayout
-              // onLayoutChange={this._onLayoutChange}
+              onResizeStop={actions.onLayoutchange}
+              onDragStop={actions.onLayoutchange}
               // onBreakpointChange={this._onBreakpointChange}
               className="layout"
               cols={colData}
@@ -143,10 +143,10 @@ const App: FC<Props> = ({ store }: Props) => {
               width={1200}
               //cols={2}
               //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-              // layouts={{ lg: layoutArray }}
+              layouts={{ md: layoutArray }}
             >
-              {layoutArray.map(layoutE => {
-                return createElement(layoutE);
+              {layoutArray.map((layoutE,i) => {
+                return createElement(layoutE,i);
               })}
             </ResponsiveReactGridLayout>
           </Container>

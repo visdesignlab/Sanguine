@@ -217,25 +217,34 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
     const yAxisLabel = axisLeft(yScale as ScaleLinear<number, number>);
       svgSelection
     .select(".axes")
-    .select(".y-axis")
+        .select(".y-axis")
+        .attr('display',null)
     .attr("transform",
       `translate(${offset.left} ,-${offset.bottom - offset.top} )`)
         .call(yAxisLabel as any);
             svgSelection
-          .select(".axes")
-          .select(".y-label")
-          .attr("y", 0)
-          .attr("x", -0.5 * dimension.height + 1.5*offset.bottom)
-          .attr("font-size", "11px")
-          .attr("text-anchor", "middle")
-          .attr("alignment-baseline", "hanging")
-          .attr("transform", "rotate(-90)")
-          .text(
-            AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
-          );
+              .select(".axes")
+              .select(".y-label")
+              .attr("display", null)
+              .attr("y", 0)
+              .attr("x", -0.5 * dimension.height + 1.5 * offset.bottom)
+              .attr("font-size", "11px")
+              .attr("text-anchor", "middle")
+              .attr("alignment-baseline", "hanging")
+              .attr("transform", "rotate(-90)")
+              .text(
+                AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
+              );
   }
   else {
-    //TODO
+     svgSelection
+       .select(".axes")
+       .select(".y-axis")
+       .attr("display", "none");
+    svgSelection
+      .select(".axes")
+      .select(".y-label")
+      .attr("display", "none");
   }
   
 
@@ -354,7 +363,7 @@ const DumbbellG = styled(`g`)<DumbbellProps>`
 `;
 
 const Circle = styled(`circle`)`
-  r:0.8%
+  r:4px
 `;
 
 const Rect = styled(`rect`)`

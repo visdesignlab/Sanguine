@@ -34,10 +34,10 @@ export interface LayoutElement{
   x_axis_name: string,
   y_axis_name: string,
   i: string,
-  // x: number,
-  // y: number,
-  // w: number,
-  // h: number,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
   // plot_type: string
 }
 

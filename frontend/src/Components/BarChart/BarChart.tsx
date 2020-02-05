@@ -36,6 +36,7 @@ interface OwnProps{
   data: SingularDataPoint[];
   svg: React.RefObject<SVGSVGElement>;
   yMax: number
+ 
 }
 
 export type Props = OwnProps;
