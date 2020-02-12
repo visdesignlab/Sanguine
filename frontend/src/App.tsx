@@ -20,6 +20,7 @@ import {
   Icon, Button, Tab, Container,Grid
 } from 'semantic-ui-react'
 import Store from './Interfaces/Store'
+// import LineUp from 'lineupjsx'
 
 //import {provenance} from '.'
 // import * as d3 from "d3";
@@ -30,6 +31,7 @@ import { inject, observer } from 'mobx-react';
 import { LayoutElement } from './Interfaces/ApplicationState';
 import { action } from 'mobx';
 import {actions} from './index'
+import { LineUpStringColumnDesc, LineUpCategoricalColumnDesc, LineUpNumberColumnDesc, LineUpSupportColumn, LineUpColumn} from 'lineupjsx';
 
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
@@ -122,6 +124,40 @@ const App: FC<Props> = ({ store }: Props) => {
       </div>
     );
   }
+  const arr: { a: number; d: string; cat: string; cat2: string; }[] = [];
+  const cats = ['c1', 'c2', 'c3'];
+  for (let i = 0; i < 100; ++i) {
+    arr.push({
+      a: Math.random() * 10,
+      d: 'Row ' + i,
+      cat: cats[Math.floor(Math.random() * 3)],
+      cat2: cats[Math.floor(Math.random() * 3)]
+    })
+  }
+  const panes = [{
+    menuItem: 'Tab 1', render: () => <Container>
+      <ResponsiveReactGridLayout
+        onResizeStop={actions.onLayoutchange}
+        onDragStop={actions.onLayoutchange}
+        // onBreakpointChange={this._onBreakpointChange}
+        className="layout"
+        cols={colData}
+        rowHeight={300}
+        width={1200}
+        //cols={2}
+        //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+        layouts={{ md: layoutArray }}
+      >
+        {layoutArray.map((layoutE, i) => {
+          return createElement(layoutE, i);
+        })}
+      </ResponsiveReactGridLayout>
+    </Container>
+  },
+    {
+      menuItem: 'Tab 2', render: () =>
+        <div className={"okok"}>
+      <LineUpJS.LineUp data={arr}/></div>}]
 
   return (
     <LayoutDiv>
@@ -133,24 +169,10 @@ const App: FC<Props> = ({ store }: Props) => {
           <SideBar></SideBar>
         </Grid.Column>
         <Grid.Column width={9}>
-          <Container>
-            <ResponsiveReactGridLayout
-              onResizeStop={actions.onLayoutchange}
-              onDragStop={actions.onLayoutchange}
-              // onBreakpointChange={this._onBreakpointChange}
-              className="layout"
-              cols={colData}
-              rowHeight={300}
-              width={1200}
-              //cols={2}
-              //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-              layouts={{ md: layoutArray }}
-            >
-              {layoutArray.map((layoutE,i) => {
-                return createElement(layoutE,i);
-              })}
-            </ResponsiveReactGridLayout>
-          </Container>
+          <Tab panes={panes}
+            //  renderActiveOnly={false}
+          ></Tab>
+          
         </Grid.Column>
       </Grid>
     </LayoutDiv>

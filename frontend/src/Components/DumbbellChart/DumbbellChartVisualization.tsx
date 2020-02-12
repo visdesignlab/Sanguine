@@ -9,16 +9,7 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import {
-  select,
-  selectAll,
-  scaleLinear,
-  scaleBand,
-  mouse,
-  axisBottom,
-  axisLeft
-} from "d3";
-import { DumbbellDataPoint } from "../../Interfaces/ApplicationState"
+import { DumbbellDataPoint, SelectSet } from "../../Interfaces/ApplicationState"
 import DumbbellChart from "./DumbbellChart"
 
 interface OwnProps{
@@ -32,19 +23,17 @@ export type Props = OwnProps;
 
 const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store,chartIndex }: Props) => {
 
-    const {
-      layoutArray,
-      filterSelection,
-      perCaseSelected,
-      currentSelectedChart,
-      actualYearRange
+  const {
+    layoutArray,
+    filterSelection,
+    actualYearRange
     } = store!;
 
     const svgRef = useRef<SVGSVGElement>(null);
     const [data, setData] = useState({ result: [] });
     const [dimension, setDimensions] = useState({ width: 0, height: 0 });
     const [yMax, setYMax] = useState(0);
-    const [xRange, setXRange] = useState({ xMin: 0, xMax: Infinity });
+  const [xRange, setXRange] = useState({ xMin: 0, xMax: Infinity });
 
     useLayoutEffect(() => {
         if (svgRef.current) {
@@ -54,6 +43,8 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store,chartInde
         });
         }
     }, [layoutArray[ chartIndex]]);
+
+
 
     async function fetchChartData() {
       let transfused_dict = {} as any;

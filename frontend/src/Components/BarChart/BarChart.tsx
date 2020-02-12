@@ -36,17 +36,18 @@ interface OwnProps{
   data: SingularDataPoint[];
   svg: React.RefObject<SVGSVGElement>;
   yMax: number
- 
+  selectedVal:number|null
 }
 
 export type Props = OwnProps;
 
-const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg,yMax }: Props) => {
+const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg,yMax ,selectedVal}: Props) => {
 
     const svgSelection = select(svg.current);
     
     const {
-      perCaseSelected
+      perCaseSelected,
+      currentSelectSet
     } = store!;
   
     const [xScale, yScale] = useMemo(() => {
@@ -67,37 +68,6 @@ const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg
         },[dimension,data,yMax])
    
 
-  
-  // useEffect(() => {
-  //     svgSelection.select(".chart").selectAll('rect').on('click',()=>{})
-  //   })
-
-
-        //     rects
-
-        //         .attr("opacity", d => {
-        //             // if (this.state.value_to_highlight) {
-        //             //   return d.x_axis === this.state.value_to_highlight ? 1 : 0.5;
-        //             // }
-        //             // if (this.props.current_select_set) {
-        //             //   if (
-        //             //     this.props.current_select_set.set_name === this.props.x_axis_name
-        //             //   ) {
-        //             //     return d.x_axis === this.props.current_select_set.set_value
-        //             //       ? 1
-        //             //       : 0.5;
-        //             //   } else {
-        //             //     return 1;
-        //             //   }
-        //             // }
-        //             return 1;
-        //         })
-        //         .attr("transform", "translate(0,-" + (offset.bottom - offset.top) + ")")
-        //         //   .on("click", function(d) {
-        //         //     that.props.set_selection_handler(that.props.x_axis_name, d.x_axis);
-        //         //   })
-
-        //         })
 
 
             const xAxisLabel = axisBottom(xScale);
@@ -153,7 +123,19 @@ const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg
             const trailing = perCaseSelected ? " / Case" : "";
             return AxisLabelDict[yAxisName]? AxisLabelDict[yAxisName]+trailing : yAxisName+trailing
           }
-          );
+        );
+  
+  const decideIfSelected = (d: SingularDataPoint) => {
+    if (selectedVal) {
+      return selectedVal === d.xVal
+    }
+    else if (currentSelectSet) {
+      return currentSelectSet.set_name === xAxisName && currentSelectSet.set_value === d.xVal;
+    }
+    else {
+      return false;
+    }
+  }
     return (
     <>
     <g className="axes">
@@ -163,17 +145,18 @@ const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg
         <text className="y-label" style={{textAnchor:"end"}}/>
       </g>
             <g className="chart" transform={`translate(0,-${offset.bottom - offset.top})`}>
-        {data.map((dataPoint) => {
-          return (
-            <Popup content={dataPoint.yVal} key={dataPoint.xVal} trigger={
-              <Bar
-                x={xScale(dataPoint.xVal)}
-                y={yScale(dataPoint.yVal)}
-                width={xScale.bandwidth()}
-                height={dimension.height - yScale(dataPoint.yVal) - offset.top}
-                onClick={() => {
-                  actions.selectPatient(dataPoint)
-                }}
+          {data.map((dataPoint) => {
+            return (
+              <Popup content={dataPoint.yVal} key={dataPoint.xVal} trigger={
+                <Bar
+                  x={xScale(dataPoint.xVal)}
+                  y={yScale(dataPoint.yVal)}
+                  width={xScale.bandwidth()}
+                  height={dimension.height - yScale(dataPoint.yVal) - offset.top}
+                  onClick={() => {
+                    actions.selectSet({ set_name: xAxisName, set_value: dataPoint.xVal })
+                  }}
+                isSelected={decideIfSelected(dataPoint)}
               />}
             />
           );
@@ -188,6 +171,9 @@ const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg
 }
 export default inject("store")(observer(BarChart));
 
-const Bar = styled(`rect`)`
-  fill: #072f5f;
+interface BarProps{
+  isSelected: boolean;
+}
+const Bar = styled(`rect`)<BarProps>`
+   fill:${props => (props.isSelected ? '#d98532' : '#20639B')}
 `;

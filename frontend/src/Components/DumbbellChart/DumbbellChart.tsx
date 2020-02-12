@@ -22,7 +22,7 @@ import {
   ScaleLinear,
   ScaleOrdinal,
 } from "d3";
-import { DumbbellDataPoint, offset, AxisLabelDict } from "../../Interfaces/ApplicationState";
+import { DumbbellDataPoint, offset, AxisLabelDict, SelectSet } from "../../Interfaces/ApplicationState";
       
 interface OwnProps{
   yAxisName: string;
@@ -32,14 +32,14 @@ interface OwnProps{
   data: DumbbellDataPoint[];
   svg: React.RefObject<SVGSVGElement>
   yMax: number;
-  xRange: {xMin:number,xMax:number}
+  xRange: { xMin: number, xMax: number };
 }
 
 export type Props = OwnProps;
 
 const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax, xRange }: Props) => {
 
-  const { dumbbellSorted }=store!;
+  const { dumbbellSorted,currentSelectPatient,currentSelectSet }=store!;
   const svgSelection = select(svg.current);
   data = data.sort(
     (a, b) =>
@@ -70,147 +70,6 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
     }
     return [xScale, yScale];
   }, [dimension, data, yMax, xRange,dumbbellSorted]);
-
- 
-  //     const circle_tooltip = svg.select(".circle-tooltip");
-
-  //     let components = svg
-  //       .select(".chart-comp")
-  //       .selectAll("g")
-  //       .data(data.result);
-  //     components.exit().remove();
-  //     components = (components as any)
-  //       .enter()
-  //       .append("g")
-  //       .merge(components as any);
-  //     components.selectAll("circle").remove();
-  //     components.selectAll("rect").remove();
-  //     components
-  //       .append("rect")
-  //       .attr("x", (d: DumbbellDataPoint) => {
-  //         const start = xScale(d.startXVal);
-  //         const end = xScale(d.endXVal);
-  //         const returning = start > end ? end : start;
-  //         return returning;
-  //       })
-  //       .attr("y", (d: DumbbellDataPoint) => yScale(d.yVal) - 1)
-  //       .attr("height", "2px")
-  //       .attr("opacity", (d: DumbbellDataPoint) => {
-  //         if (d.startXVal === 0 || d.endXVal === 0) {
-  //           return 0;
-  //         }
-  //         return d.yVal ? 0.5 : 0;
-  //       })
-  //       .attr("width", (d: DumbbellDataPoint) =>
-  //         Math.abs(xScale(d.endXVal) - xScale(d.startXVal))
-  //       );
-  //     components
-  //       .append("circle")
-  //       .attr("cx", (d: DumbbellDataPoint) => xScale(d.startXVal) as any)
-  //       .attr("cy", (d: DumbbellDataPoint) => yScale(d.yVal))
-  //       .attr("r", "1%")
-  //       .attr("fill", "#ba9407")
-  //       .attr("opacity", (d:DumbbellDataPoint) => {
-  //         if (d.startXVal === 0) {
-  //           return 0;
-  //         }
-  //         // if (that.props.current_select_case) {
-  //         //   return d.case_id === that.props.current_select_case ? 1 : 0.5;
-  //         // } else if (that.props.current_select_set) {
-  //         //   switch (that.props.current_select_set.set_name) {
-  //         //     case "YEAR":
-  //         //       return d.YEAR === that.props.current_select_set.set_value
-  //         //         ? 1
-  //         //         : 0.5;
-  //         //     case "SURGEON_ID":
-  //         //       return d.SURGEON_ID ===
-  //         //         that.props.current_select_set.set_value
-  //         //         ? 1
-  //         //         : 0.5;
-  //         //     case "ANESTHOLOGIST_ID":
-  //         //       return d.ANESTHOLOGIST_ID ===
-  //         //         that.props.current_select_set.set_value
-  //         //         ? 1
-  //         //         : 0.5;
-  //         //     default:
-  //         //       return d.yAxisLabel ? 1 : 0;
-  //         //   }
-  //         // }
-  //         else {
-  //           return d.yVal ? 1 : 0;
-  //         }
-  //       });
-  //     components
-  //       .append("circle")
-  //       .attr("cx", (d: DumbbellDataPoint) => xScale(d.endXVal) as any)
-  //       .attr("cy", (d: DumbbellDataPoint) => yScale(d.yVal))
-  //       .attr("r", "1%")
-  //       .attr("fill", "#20639B")
-  //       .attr("opacity", (d:DumbbellDataPoint) => {
-  //         if (d.endXVal === 0) {
-  //           return 0;
-  //         }
-  //         // if (that.props.current_select_case) {
-  //         //   return d.case_id === that.props.current_select_case ? 1 : 0.5;
-  //         // } else if (that.props.current_select_set) {
-  //         //   switch (that.props.current_select_set.set_name) {
-  //         //     case "YEAR":
-  //         //       return d.YEAR === that.props.current_select_set.set_value
-  //         //         ? 1
-  //         //         : 0.5;
-  //         //     case "SURGEON_ID":
-  //         //       return d.SURGEON_ID ===
-  //         //         that.props.current_select_set.set_value
-  //         //         ? 1
-  //         //         : 0.5;
-  //         //     case "ANESTHOLOGIST_ID":
-  //         //       return d.ANESTHOLOGIST_ID ===
-  //         //         that.props.current_select_set.set_value
-  //         //         ? 1
-  //         //         : 0.5;
-  //         //     default:
-  //         //       return d.yAxisLabel ? 1 : 0;
-  //         //   }
-  //         // }
-  //         return d.yVal ? 1 : 0;
-  //       });
-
-  //     components
-  //       .attr(
-  //         "transform",
-  //         "translate(0,-" + (offset.bottom - offset.top) + ")"
-  //       )
-  //       .on("mouseover", function() {
-  //         circle_tooltip.style("display", null);
-  //       })
-  //       .on("mouseout", function() {
-  //         circle_tooltip.style("display", "none");
-  //       })
-  //       .on("mousemove", function(d:DumbbellDataPoint) {
-  //         var xPosition = mouse(this as any)[0] - 20;
-  //         var yPosition = mouse(this as any)[1] - 40;
-  //         circle_tooltip.attr(
-  //           "transform",
-  //           "translate(" + xPosition + "," + yPosition + ")"
-  //         );
-  //         circle_tooltip
-  //           .select("text")
-  //           .text(
-  //             "start " +
-  //               d.startXVal +
-  //               " end " +
-  //               d.endXVal +
-  //               " transfused " +
-  //               d.yVal
-  //           );
-  //       })
-  //       .on("click", function(d:DumbbellDataPoint) {
-  //         // console.log(d.visit_no);
-  //         // that.props.ID_selection_handler(d.visit_no);
-  //         console.log(d.caseId);
-  //         //that.props.ID_selection_handler(d.case_id);
-  //         //d3.event.stopPropagation();
-  //       });
 
   const xAxisLabel = axisBottom(xScale);
   if (!dumbbellSorted){
@@ -266,8 +125,19 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
           .text("Hemoglobin Value");
 
 
-            
-
+  const decideIfSelected = (d: DumbbellDataPoint) => {
+    if (currentSelectPatient) {
+      return currentSelectPatient.patientID===d.patientID
+    }
+    else if (currentSelectSet) {
+      return d[currentSelectSet.set_name]===currentSelectSet.set_value
+    }
+    else {
+      return false;
+    }
+  //  return true;
+  }
+      
     return (
       <>
         <g className="axes">
@@ -277,6 +147,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
           <text className="y-label" style={{ textAnchor: "end" }} />
         </g>
         <g className="chart-comp" >
+          <line x1={xScale(11)} x2={xScale(11)} y1={dimension.height-offset.bottom} y2={0} style={{ stroke: "#990D0D",strokeWidth:"2"}} />
           {data.map((dataPoint,index) => {
             const start = xScale(dataPoint.startXVal);
             const end = xScale(dataPoint.endXVal);
@@ -287,7 +158,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
                 content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}`}
                 key={dataPoint.caseId}
                 trigger={
-                  <DumbbellG
+                  <DumbbellG 
                     dataPoint={dataPoint}
                     transform={`translate(0,-${offset.bottom - offset.top})`}
                   >
@@ -301,6 +172,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
                             ) - 1
                       }
                       width={rectwidth}
+                      isSelected={decideIfSelected(dataPoint)}
                     />
                     <Circle
                       cx={xScale(dataPoint.startXVal)}
@@ -308,10 +180,10 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
                         dumbbellSorted
                           ? (yScale as ScaleOrdinal<any, any>)(index)
                           : (yScale as ScaleLinear<number, number>)(
-                              dataPoint.yVal
-                            )
-                      }
-                      fill="#ba9407"
+                            dataPoint.yVal
+                          )}
+                      onClick={() => { actions.selectPatient(dataPoint) }}
+                      isSelected={decideIfSelected(dataPoint)}
                     />
                     <Circle
                       cx={xScale(dataPoint.endXVal)}
@@ -322,7 +194,12 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
                               dataPoint.yVal
                             )
                       }
-                      fill="#20639B"
+                      onClick={() => {
+                        actions.selectPatient(dataPoint)
+                      }}
+                      isSelected={decideIfSelected(dataPoint)}
+                      
+                      
                     />
                   </DumbbellG>
                 }
@@ -353,6 +230,11 @@ export default inject("store")(observer(DumbbellChart));
 interface DumbbellProps{
   dataPoint: DumbbellDataPoint;
 }
+
+interface DotProps{
+  isSelected: boolean;
+}
+
   // display: ${props =>
   //   props.dataPoint.endXVal === 0 || props.dataPoint.startXVal === 0
   //     ? "none"
@@ -362,11 +244,15 @@ const DumbbellG = styled(`g`)<DumbbellProps>`
 
 `;
 
-const Circle = styled(`circle`)`
+
+
+const Circle = styled(`circle`)<DotProps>`
   r:4px
+  fill:${props => (props.isSelected ?'#d98532':'#20639B')}
 `;
 
-const Rect = styled(`rect`)`
+const Rect = styled(`rect`) <DotProps>`
  height:1.5px
  opacity:50%
+ fill:${props => (props.isSelected ? '#d98532' : '#20639B')}
 `;

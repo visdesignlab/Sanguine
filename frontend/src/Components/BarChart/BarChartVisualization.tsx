@@ -18,11 +18,13 @@ interface OwnProps{
 export type Props = OwnProps;
 
 const BarChartVisualization: FC<Props> = ({ xAxis,yAxis,chartId,store,chartIndex }: Props) => {
-    const { layoutArray, filterSelection, perCaseSelected, currentSelectedChart,actualYearRange } = store!
+    const { layoutArray, filterSelection, perCaseSelected, currentSelectPatient,actualYearRange } = store!
     const svgRef = useRef<SVGSVGElement>(null);
     const [data, setData] = useState({ result: [] });
-    const [yMax, setYMax] = useState(0)
-    const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
+  const [yMax, setYMax] = useState(0);
+  const [selectedBar, setSelectedBarVal] = useState<number|null>(null);
+  const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
+  
 
     useLayoutEffect(() => {
       if (svgRef.current) {
@@ -32,6 +34,15 @@ const BarChartVisualization: FC<Props> = ({ xAxis,yAxis,chartId,store,chartIndex
         });
       }
     }, [layoutArray[chartIndex]]);
+  
+  useEffect(() => {
+    if (currentSelectPatient) {
+      setSelectedBarVal(currentSelectPatient[xAxis])
+    }
+    else {
+      setSelectedBarVal(null);
+    }
+  },[currentSelectPatient])
     
     async function fetchChartData() {
       const res = await fetch(`http://localhost:8000/api/summarize_with_year?x_axis=${xAxis}&y_axis=${yAxis}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`);
@@ -63,7 +74,11 @@ const BarChartVisualization: FC<Props> = ({ xAxis,yAxis,chartId,store,chartIndex
 
     useEffect(() => {
         fetchChartData();
-    }, [perCaseSelected,filterSelection,actualYearRange]);
+    }, [perCaseSelected, filterSelection, actualYearRange]);
+
+ 
+    //  return true;
+  
 
  
     return (
@@ -93,6 +108,7 @@ const BarChartVisualization: FC<Props> = ({ xAxis,yAxis,chartId,store,chartIndex
           xAxisName={xAxis}
           yAxisName={yAxis}
           yMax={yMax}
+          selectedVal={selectedBar}
         />
       </SVG>
     );
