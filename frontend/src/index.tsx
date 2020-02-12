@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
-import { setupProvenance } from './Provenance'
+import { setupProvenance } from './Interfaces/Provenance'
 import { store } from './Interfaces/Store'
 import { Provider } from 'mobx-react';
 import "semantic-ui-css/semantic.min.css"

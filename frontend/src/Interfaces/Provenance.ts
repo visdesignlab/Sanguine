@@ -2,9 +2,11 @@ import { Provenance, initProvenance, isStateNode, } from '@visdesignlab/provenan
 import {
   ApplicationState,
   defaultState,
-  LayoutElement
-} from "./Interfaces/ApplicationState";
-import { store } from './Interfaces/Store';
+  LayoutElement,
+  DumbbellDataPoint,
+  SelectSet
+} from "./ApplicationState";
+import { store } from './Store';
 
 interface AppProvenance{
     provenance: Provenance<ApplicationState>;
@@ -21,7 +23,8 @@ interface AppProvenance{
       removeChart: (event: any, i: any) => void;
       updateCaseCount: (newCaseCount: number) => void;
       onLayoutchange: (data: any) => void;
-      selectPatient: (data: any) => void;
+      selectPatient: (data: DumbbellDataPoint) => void;
+      selectSet: (data: SelectSet) => void;
     }
 }
 let sameRow = 0
@@ -206,9 +209,36 @@ export function setupProvenance(): AppProvenance{
       );
     };
   
-  const selectPatient = (data: any) => {
-    console.log(data);
+  const selectPatient = (data: DumbbellDataPoint) => {
+    provenance.applyAction(`select patient ${data.patientID}`, (state: ApplicationState) => {
+   
+        if (state.currentSelectPatient && data.patientID === state.currentSelectPatient.patientID) {
+          state.currentSelectPatient = null;
+          state.currentSelectSet = null;
+        }
+      
+      else {
+        state.currentSelectPatient = data;
+        state.currentSelectSet = null;
+      }
+      return state;
+    })
   };
+
+  const selectSet = (data: SelectSet) => {
+    provenance.applyAction(`select set ${data.set_name} at ${data.set_value}`, (state: ApplicationState) => {
+      if (state.currentSelectSet && data === state.currentSelectSet) {
+        state.currentSelectSet = null;
+        state.currentSelectPatient = null;
+      }
+      else {
+        state.currentSelectSet = data;
+        state.currentSelectPatient = null;
+    }
+      console.log(state.currentSelectSet)
+      return state
+    })
+  }
   
   const updateCaseCount = (newCaseCount: number) => {
   //  if (store.totalCaseCount < newCaseCount){
@@ -239,7 +269,8 @@ export function setupProvenance(): AppProvenance{
         removeChart,
         updateCaseCount,
         onLayoutchange,
-        selectPatient
+        selectPatient,
+        selectSet
       }
     };
 

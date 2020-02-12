@@ -18,6 +18,7 @@ export interface DumbbellDataPoint {
   SURGEON_ID: number;
   ANESTHOLOGIST_ID: number;
   patientID: number;
+  [key: string]: number;
 }
 
 export interface ApplicationState {
@@ -29,7 +30,7 @@ export interface ApplicationState {
   totalCaseCount: number;
   dumbbellSorted: boolean;
   currentSelectSet: SelectSet | null;
-  currentSelectPatient: string | null;
+  currentSelectPatient: DumbbellDataPoint | null;
 }
 
 export interface LayoutElement{
