@@ -248,12 +248,11 @@ def request_individual_specific(request):
         result = cur.execute(command)
         items = [{"result":row[0]} for row in result]
         return JsonResponse({"result": items})
-            
 
-
-def request_transfused_units(request):
+#this is for scatterplot. It takes a x_axis value, which can be blood product OR an attribute, and this table will be used for scatterplot.
+def request_blood_or_attribute_table(request):
     if request.method == "GET":
-        transfusion_type = request.GET.get("transfusion_type")
+        variable = request.GET.get("variable")
         year_range = request.GET.get("year_range").split(",")
         filter_selection = request.GET.get("filter_selection")
         year_min = year_range[0]
@@ -262,55 +261,147 @@ def request_transfused_units(request):
             filter_selection = []
         else:
             filter_selection = (
-                [] if filter_selection.split(",") == [""] else filter_selection.split(",")
+                [] if filter_selection.split(
+                    ",") == [""] else filter_selection.split(",")
             )
 
-        if not transfusion_type or not year_range:
-            HttpResponseBadRequest("transfusion_type, and year_range must be supplied.")
+        if not variable or not year_range:
+            HttpResponseBadRequest(
+                "transfusion_type, and year_range must be supplied.")
 
-        extra_command = ""
-        if len(filter_selection) > 0:
-            extra_command = " AND ("
-            for filter_string in filter_selection[:-1]:
-                extra_command += (
-                    f" CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC='{filter_string}' OR"
-                )
-            filter_string = filter_selection[-1]
-            extra_command += (
-                f" CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC='{filter_string}')"
-            )
-
-        command_dict = {
+        
+        command_dict_blood = {
             "PRBC_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS)",
             "FFP_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS)",
             "PLT_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS)",
             "CRYO_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS)",
             "CELL_SAVER_ML": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML)"
         }
+        command_dict_attribute = {
+            "YEAR": "EXTRACT (YEAR FROM DI_CASE_DATE)",
+            "SURGEON_ID": "SURGEON_PROV_DWID",
+            "ANESTHOLOGIST_ID": "ANESTH_PROV_DWID"}
 
-        command = (
-            f"SELECT transfused, di_case_id, YEAR, SURGEON_ID, ANESTHOLOGIST_ID FROM ( "
-            f"SELECT {command_dict[transfusion_type]} transfused, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID di_case_id, "
-            f"EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE) YEAR, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID SURGEON_ID, "
-            f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID ANESTHOLOGIST_ID "
-            f"FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
-            f"INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
-            f"ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID "
-            f"{extra_command}) "
-            f"WHERE CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_DATE BETWEEN "
-            f"'01-JAN-{year_min}' AND '31-DEC-{year_max}' "
-            f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE), CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID, "
-            f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID "
-            f") WHERE transfused>0"
-        )
+        if variable in command_dict_blood:
+            extra_command = ""
+            if len(filter_selection) > 0:
+                extra_command = " AND ("
+                for filter_string in filter_selection[:-1]:
+                    extra_command += (
+                        f" CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC='{filter_string}' OR"
+                    )
+                filter_string = filter_selection[-1]
+                extra_command += (
+                    f" CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC='{filter_string}')"
+                )
+            command = (
+                f"SELECT transfused, di_case_id, YEAR, SURGEON_ID, ANESTHOLOGIST_ID FROM ( "
+                f"SELECT {command_dict_blood[variable]} transfused, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID di_case_id, "
+                f"EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE) YEAR, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID SURGEON_ID, "
+                f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID ANESTHOLOGIST_ID "
+                f"FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
+                f"INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
+                f"ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID "
+                f"{extra_command}) "
+                f"WHERE CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_DATE BETWEEN "
+                f"'01-JAN-{year_min}' AND '31-DEC-{year_max}' "
+                f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE), CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID, "
+                f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID "
+                f") WHERE transfused>0"
+            )
+            connection = make_connection()
+            cur = connection.cursor()
+            result = cur.execute(command)
+
+            items = [{"case_id": row[1], "value": row[0]}
+                    for row in result]
+            return JsonResponse({"result": items})
+
+        else:
+            extra_command = ""
+            if len(filter_selection) > 0:
+                extra_command = " AND ("
+                for filter_string in filter_selection[:-1]:
+                    extra_command += (
+                        f" PRIM_PROC_DESC='{filter_string}' OR"
+                    )
+                filter_string = filter_selection[-1]
+                extra_command += (
+                    f" PRIM_PROC_DESC='{filter_string}')"
+                )
+            command = (
+                f"SELECT {command_dict_attribute[variable]} {variable},  DI_CASE_ID di_case_id FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
+                f"WHERE DI_CASE_DATE BETWEEN '01-JAN-{year_min}' AND '31-DEC-{year_max}' "
+                f"{extra_command}"
+            )
+            connection = make_connection()
+            cur = connection.cursor()
+            result = cur.execute(command)
+
+            items = [{"case_id": row[1], "value": row[0]}
+                     for row in result]
+            return JsonResponse({"result": items})
+
+# def request_transfused_units(request):
+#     if request.method == "GET":
+#         transfusion_type = request.GET.get("transfusion_type")
+#         year_range = request.GET.get("year_range").split(",")
+#         filter_selection = request.GET.get("filter_selection")
+#         year_min = year_range[0]
+#         year_max = year_range[1]
+#         if filter_selection is None:
+#             filter_selection = []
+#         else:
+#             filter_selection = (
+#                 [] if filter_selection.split(",") == [""] else filter_selection.split(",")
+#             )
+
+#         if not transfusion_type or not year_range:
+#             HttpResponseBadRequest("transfusion_type, and year_range must be supplied.")
+
+#         extra_command = ""
+#         if len(filter_selection) > 0:
+#             extra_command = " AND ("
+#             for filter_string in filter_selection[:-1]:
+#                 extra_command += (
+#                     f" CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC='{filter_string}' OR"
+#                 )
+#             filter_string = filter_selection[-1]
+#             extra_command += (
+#                 f" CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC='{filter_string}')"
+#             )
+
+#         command_dict = {
+#             "PRBC_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS)",
+#             "FFP_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS)",
+#             "PLT_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS)",
+#             "CRYO_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS)",
+#             "CELL_SAVER_ML": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML)"
+#         }
+
+#         command = (
+#             f"SELECT transfused, di_case_id, YEAR, SURGEON_ID, ANESTHOLOGIST_ID FROM ( "
+#             f"SELECT {command_dict[transfusion_type]} transfused, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID di_case_id, "
+#             f"EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE) YEAR, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID SURGEON_ID, "
+#             f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID ANESTHOLOGIST_ID "
+#             f"FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
+#             f"INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
+#             f"ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID "
+#             f"{extra_command}) "
+#             f"WHERE CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_DATE BETWEEN "
+#             f"'01-JAN-{year_min}' AND '31-DEC-{year_max}' "
+#             f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE), CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID, "
+#             f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID "
+#             f") WHERE transfused>0"
+#         )
         
-        connection = make_connection()
-        cur = connection.cursor()
-        result = cur.execute(command)
+#         connection = make_connection()
+#         cur = connection.cursor()
+#         result = cur.execute(command)
         
-        items = [{"case_id": row[1], "transfused": row[0]}
-                 for row in result]
-        return JsonResponse({"result": items})
+#         items = [{"case_id": row[1], "transfused": row[0]}
+#                  for row in result]
+#         return JsonResponse({"result": items})
 
 def hemoglobin(request):
     if request.method == "GET":

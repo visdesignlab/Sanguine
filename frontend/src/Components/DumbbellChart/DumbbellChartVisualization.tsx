@@ -49,13 +49,13 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store,chartInde
     async function fetchChartData() {
       let transfused_dict = {} as any;
       const transfusedRes = await fetch(
-        `http://localhost:8000/api/request_transfused?transfusion_type=${yAxis}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`
+        `http://localhost:8000/api/request_transfuse_or_attribute?variable=${yAxis}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`
       );
       const transfusedDataResult = await transfusedRes.json();
       const temp_transfusion_data = transfusedDataResult.result;
       temp_transfusion_data.forEach((element: any) => {
         transfused_dict[element.case_id] = {
-          transfused: element.transfused
+          transfused: element.value
         };
       });
       const hemoRes = await fetch(`http://localhost:8000/api/hemoglobin`);

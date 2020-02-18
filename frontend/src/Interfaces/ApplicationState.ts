@@ -41,7 +41,8 @@ export interface LayoutElement{
   y: number,
   w: number,
   h: number,
-  // plot_type: string
+  plot_type: string,
+  aggregation?:string
 }
 
 export const defaultState: ApplicationState = {

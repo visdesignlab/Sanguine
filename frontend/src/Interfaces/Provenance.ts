@@ -19,7 +19,7 @@ interface AppProvenance{
       toggleDumbbell: (event: any, data: any) => void;
         filterSelectionChange: (event: any, data: any) => void;
         yearRangeChange: (data: any) => void;
-        addNewChart: (x: string, y: string, i: number) => void;
+        addNewChart: (x: string, y: string, i: number,type:string,aggregation?:string) => void;
       removeChart: (event: any, i: any) => void;
       updateCaseCount: (newCaseCount: number) => void;
       onLayoutchange: (data: any) => void;
@@ -102,7 +102,7 @@ export function setupProvenance(): AppProvenance{
         )
     }
 
-  const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number) => {
+  const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number,plot_type:string,aggregation?:string) => {
    // console.log('add')
         const newLayoutElement: LayoutElement = {
             x_axis_name: xAxisAttribute,
@@ -111,8 +111,12 @@ export function setupProvenance(): AppProvenance{
             w: 1,
           h: 1,
           x: 0,
-          y:Infinity
-        } 
+          y: Infinity,
+          plot_type:plot_type
+    } 
+    if (aggregation) {
+      newLayoutElement.aggregation = aggregation;
+    }
         provenance.applyAction("Add new chart",
             (state: ApplicationState) => {
                 state.layoutArray.push(newLayoutElement)
