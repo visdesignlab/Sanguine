@@ -21,9 +21,11 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       dumbbellSorted
     } = store!;
   //  const [procedureList, setProcedureList] = useState({ result: [] })
-    const [addMode, setAddMode] = useState(false);
+  const [addMode, setAddMode] = useState(false);
+  const [addingChartType,setAddingChartType] = useState(-1)
     const [xSelection, setXSelection] = useState("")
-    const [ySelection, setYSelection] = useState("")
+  const [ySelection, setYSelection] = useState("")
+  const [dumbbellAggregation, setDumbbellAggregation] = useState("")
     const [elementCounter,addToElementCounter]=useState(0)
     const sliderSettings = {
         start: [0, 5],
@@ -35,7 +37,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         }
     }
 
-    const y_axis_selection = [
+    const barChartValuesOptions = [
       {
         value: "PRBC_UNITS",
         key: "PRBC_UNITS",
@@ -62,28 +64,67 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         text: "Cell Salvage Volume (ml)"
       }
     ];
+  
+  const scatterXOptions = [
+    {
+      value: "PREOP_HEMO",
+      key: "PREOP_HEMO",
+      text:"Preoperative Hemoglobin Value"
+    },
+    {
+      value: "POSTOP_HEMO",
+      key: "POSTOP_HEMO",
+      text: "Postoperative Hemoglobin Value"
+    }
+  ]
+
+  const dumbbellValueOptions = [
+    { value: "HEMO_VALUE", key: "HEMO_VALUE", text: "Hemoglobin Value" }
+  ]
+
+  const dumbbellAggregationOptions = [
+    { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
+    { value: "YEAR", key: "YEAR", text: "Year" },
+    {
+      value: "ANESTHOLOGIST_ID",
+      key: "ANESTHOLOGIST_ID",
+      text: "Anesthologist ID"
+    },
+    { value: "None", key: "None", text: "None" },
+  ]
     
-    const x_axis_selection = [
+    const barChartAggregationOptions = [
       { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
       { value: "YEAR", key: "YEAR", text: "Year" },
       {
         value: "ANESTHOLOGIST_ID",
         key: "ANESTHOLOGIST_ID",
         text: "Anesthologist ID"
-      },
-      { value: "HEMO_VALUE", key: "HEMO_VALUE", text: "Hemoglobin Value" }
+      }
     ];
-
-    // const chart_types = [
-    //   { value: "bar", label: "Barchart" },
-    //   { value: "scatter", label: "Scatter Plot" },
-    //   { value: "dumbbell", label: "Dumbbell Plot" }
-    // ];
+  
+  const addOptions = [
+    [barChartValuesOptions, barChartAggregationOptions],
+     
+       [dumbbellValueOptions, barChartValuesOptions],
+      [scatterXOptions, barChartValuesOptions.concat(barChartAggregationOptions)]
+    
+  ]
+  const typeDiction = ["BAR", "DUMBBELL","SCATTER"]
+  // const addOptions = [{ key: "BAR", value: "BAR", text: "Customized Bar Chart" },
+  //   { key: "DUMBBELL", value: "DUMBBELL", text: "Dumbbell Chart" },
+  //   { key: "SCATTER", value: "SCATTER", text: "Scatter Plot" }
+  // ]
 
     
 
-    const addModeButtonHandler = () => {
-        setAddMode(true);
+    const addModeButtonHandler = (chartType:number) => {
+      setAddMode(true);
+      setAddingChartType(chartType)
+    }
+  
+  const dumbbellAggregationChangeHandler = (e: any, value: any)=>{
+      setDumbbellAggregation(value.value)
     }
 
     const xAxisChangeHandler = (e: any,value:any) => {
@@ -95,10 +136,11 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     }
 
     const confirmChartAddHandler = () => {
-        if (xSelection && ySelection) {
+        if (xSelection && ySelection &&addingChartType>-1) {
             addToElementCounter(elementCounter+1)
-            actions.addNewChart(xSelection, ySelection,elementCounter)
+          actions.addNewChart(xSelection, ySelection, elementCounter,typeDiction[addingChartType])
             setAddMode(false);
+            setAddingChartType(-1)
         }
         
     }
@@ -139,33 +181,50 @@ const UserControl: FC<Props> = ({ store }: Props) => {
           </Container>
         </Menu.Item>
         <Menu.Item>
-          <Button onClick={addModeButtonHandler} content={"Add"} />
+          {/* <Button onClick={addModeButtonHandler} content={"Add"} /> */}
+          <Dropdown button  text="Add" pointing>
+            <Dropdown.Menu>
+              <Dropdown.Item onClick={()=>addModeButtonHandler(0)}>Customized Bar Chart</Dropdown.Item>
+              <Dropdown.Item onClick={() => addModeButtonHandler(1)}>Dumbbell Chart</Dropdown.Item>
+              <Dropdown.Item onClick={() => addModeButtonHandler(2)}>Scatter Plot</Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown> 
+          
         </Menu.Item>
-        <Menu.Item>
+        {/* <Menu.Item>
                 <Checkbox toggle checked={dumbbellSorted} onClick={actions.toggleDumbbell}/>
           <label> Sort Dumbbell</label>
-        </Menu.Item>
+        </Menu.Item> */}
       </Menu>
     );
     
-    const addMenu = (
+    
+    const addBarChartMenu = (
       <Menu widths={4}>
         <Menu.Item>
           <Dropdown
-            placeholder="Select x axis attribute"
+            placeholder={addingChartType===2?"Select Y-axis Attribute":"Select Value to Show"}
             selection
-            options={x_axis_selection}
-            onChange={xAxisChangeHandler}
+            options={addingChartType>-1?addOptions[addingChartType][0]:[]}
+            onChange={yAxisChangeHandler}
           />
         </Menu.Item>
         <Menu.Item>
           <Dropdown
-            placeholder="Select y axis attribute"
+            placeholder={addingChartType === 0 ? "Select Aggregation" : "Select X-axis Attribute"}
             selection
-            options={y_axis_selection}
-            onChange={yAxisChangeHandler}
+            options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
+            onChange={xAxisChangeHandler}
           />
         </Menu.Item>
+        {addingChartType === 1 ? (<Menu.Item>
+          <Dropdown
+            placeholder={"Select Aggregation"}
+            selection
+            options={dumbbellAggregationOptions}
+            onChange={dumbbellAggregationChangeHandler}
+          />
+        </Menu.Item>):(<></>)}
         <Menu.Item>
           <Button.Group>
             <Button
@@ -178,6 +237,6 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         </Menu.Item>
       </Menu>
     );
-    return addMode ? addMenu : regularMenu;
+    return addMode ? addBarChartMenu : regularMenu;
 };
 export default inject('store')(observer(UserControl))

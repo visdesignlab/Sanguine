@@ -32,6 +32,7 @@ import { LayoutElement } from './Interfaces/ApplicationState';
 import { action } from 'mobx';
 import {actions} from './index'
 import { LineUpStringColumnDesc, LineUpCategoricalColumnDesc, LineUpNumberColumnDesc, LineUpSupportColumn, LineUpColumn} from 'lineupjsx';
+import ScatterPlotVisualization from './Components/Scatterplot/ScatterPlotVisualization';
 
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
@@ -66,7 +67,7 @@ const App: FC<Props> = ({ store }: Props) => {
     };
 
   const createElement = (layout: LayoutElement,index:number) => {
-    if (layout.x_axis_name === "HEMO_VALUE") {
+    if (layout.plot_type === "DUMBBELL") {
       return (
         <div key={layout.i} className={"parent-node" + layout.i}>
           <Button
@@ -80,13 +81,14 @@ const App: FC<Props> = ({ store }: Props) => {
             <Icon key={layout.i} name="close" />
           </Button>
           <DumbbellChartVisualization
-            yAxis={layout.y_axis_name}
+            yAxis={layout.x_axis_name}
             chartId={layout.i}
             chartIndex={index}
           />
         </div>
       );
     }
+    else if (layout.plot_type === "BAR"){
     return (
       <div
         //onClick={this.onClickBlock.bind(this, layoutE.i)}
@@ -109,20 +111,37 @@ const App: FC<Props> = ({ store }: Props) => {
           // class_name={"parent-node" + layoutE.i}
           chartId={layout.i}
           chartIndex={index}
-          // set_selection_handler={this.SetSelectionHandler}
 
-          //plot_type={layoutE.plot_type}
         />
-
-        {/* <span
-        className="remove"
-        style={removeStyle}
-        onClick={actions.removeChart(layout.i)}
-      >
-        x
-      </span> */}
       </div>
-    );
+      );
+    }
+    else {
+      return (<div
+        //onClick={this.onClickBlock.bind(this, layoutE.i)}
+        key={layout.i}
+        className={"parent-node" + layout.i}
+      // data-grid={layoutE}
+      >
+        <Button
+          icon
+          floated={"right"}
+          circular
+          size="mini"
+          onClick={actions.removeChart.bind(layout.i)}
+        >
+          <Icon key={layout.i} name="close" />
+        </Button>
+        <ScatterPlotVisualization
+          xAxis={layout.x_axis_name}
+          yAxis={layout.y_axis_name}
+          // class_name={"parent-node" + layoutE.i}
+          chartId={layout.i}
+          chartIndex={index}
+
+        />
+      </div>)
+    }
   }
   const arr: { a: number; d: string; cat: string; cat2: string; }[] = [];
   const cats = ['c1', 'c2', 'c3'];
@@ -168,7 +187,7 @@ const App: FC<Props> = ({ store }: Props) => {
         <Grid.Column width={3}>
           <SideBar></SideBar>
         </Grid.Column>
-        <Grid.Column width={9}>
+        <Grid.Column width={10}>
           <Tab panes={panes}
             //  renderActiveOnly={false}
           ></Tab>

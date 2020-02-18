@@ -24,8 +24,10 @@ urlpatterns = [
     path("api/get_attributes", views.get_attributes, name="index"),
     path("api/summarize_with_year", views.summarize_attribute_w_year, name="index"),
     path("api/hemoglobin", views.hemoglobin, name = "index"),
-    path("api/request_transfused", views.request_transfused_units, name = "index"),
+    path("api/request_transfuse_or_attribute",
+         views.request_blood_or_attribute_table, name="index"),
     path("api/fetch_individual", views.fetch_individual, name="index"),
     path("api/request_individual_specific", views.request_individual_specific, name = "index"),
     path("api/request_fetch_professional_set", views.fetch_professional_set, name = "index")
+
 ]
