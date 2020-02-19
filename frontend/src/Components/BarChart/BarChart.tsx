@@ -160,7 +160,7 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
                   onClick={() => {
                     actions.selectSet({ set_name: aggregatedBy, set_value: dataPoint.xVal })
                   }}
-                isSelected={decideIfSelected(dataPoint)}
+                isselected={decideIfSelected(dataPoint)}
               />}
             />
           );
@@ -176,9 +176,9 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
 export default inject("store")(observer(BarChart));
 
 interface BarProps{
-  isSelected: boolean;
+  isselected: boolean;
 }
 const Bar = styled(`rect`)<BarProps>`
-   fill:${props => (props.isSelected ? '#d98532' : '#20639B')}
+   fill:${props => (props.isselected ? '#d98532' : '#20639B')}
 `;
 

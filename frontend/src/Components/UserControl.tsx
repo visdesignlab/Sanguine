@@ -123,8 +123,13 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       setAddingChartType(chartType)
     }
   
-  const dumbbellAggregationChangeHandler = (e: any, value: any)=>{
+  const dumbbellAggregationChangeHandler = (e: any, value: any) => {
+    if (value.value === "None") {
+      setDumbbellAggregation("")
+    }
+    else {
       setDumbbellAggregation(value.value)
+    }
     }
 
     const xAxisChangeHandler = (e: any,value:any) => {
@@ -138,9 +143,10 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     const confirmChartAddHandler = () => {
         if (xSelection && ySelection &&addingChartType>-1) {
             addToElementCounter(elementCounter+1)
-          actions.addNewChart(xSelection, ySelection, elementCounter, typeDiction[addingChartType], dumbbellAggregation)
+              actions.addNewChart(xSelection, ySelection, elementCounter, typeDiction[addingChartType], dumbbellAggregation)
             setAddMode(false);
-            setAddingChartType(-1)
+          setAddingChartType(-1)
+          setDumbbellAggregation("");
         }
         
     }
@@ -191,10 +197,10 @@ const UserControl: FC<Props> = ({ store }: Props) => {
           </Dropdown> 
           
         </Menu.Item>
-        {/* <Menu.Item>
+        <Menu.Item>
                 <Checkbox toggle checked={dumbbellSorted} onClick={actions.toggleDumbbell}/>
           <label> Sort Dumbbell</label>
-        </Menu.Item> */}
+        </Menu.Item>
       </Menu>
     );
     

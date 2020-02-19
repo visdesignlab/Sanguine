@@ -21,6 +21,7 @@ import {
   axisLeft,
   ScaleLinear,
   ScaleOrdinal,
+  axisTop,
 } from "d3";
 import { DumbbellDataPoint, offset, AxisLabelDict, SelectSet } from "../../Interfaces/ApplicationState";
       
@@ -33,11 +34,12 @@ interface OwnProps{
   svg: React.RefObject<SVGSVGElement>
   yMax: number;
   xRange: { xMin: number, xMax: number };
+  aggregation?: string;
 }
 
 export type Props = OwnProps;
 
-const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax, xRange }: Props) => {
+const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax, xRange,aggregation }: Props) => {
 
   const { dumbbellSorted,currentSelectPatient,currentSelectSet }=store!;
   const svgSelection = select(svg.current);
@@ -46,54 +48,54 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
       Math.abs(a.startXVal - a.endXVal) - Math.abs(b.startXVal - b.endXVal)
   );
 
-  const [xScale, yScale] = useMemo(() => {
-    const xScale = scaleLinear()
+  const [testValueScale, valueScale] = useMemo(() => {
+    const testValueScale = scaleLinear()
       .domain([0.9 * xRange.xMin, 1.1 * xRange.xMax])
-      .range([
-        offset.left,
-        dimension.width - offset.right - offset.margin
-      ]);
+      .range([offset.top, dimension.height - offset.bottom]);
 
-    let yScale;
+    let valueScale;
     if (!dumbbellSorted) {
-     yScale = scaleLinear()
+     valueScale = scaleLinear()
       .domain([0, 1.1 * yMax])
-      .range([dimension.height - offset.top, offset.bottom]);
+      .range([offset.left, dimension.width - offset.right - offset.margin]);
     }
     else {
       const indices = range(0,data.length)
-      yScale = scaleOrdinal()
+      valueScale = scaleOrdinal()
         .domain(indices as any)
-       .range(range(dimension.height - offset.top, offset.bottom, -(dimension.height - offset.top - offset.bottom) / data.length));
+        .range(range(offset.left, dimension.width - offset.right - offset.margin, -(dimension.width - offset.left - offset.right) / data.length));
        // .range([dimension.height - offset.top, offset.bottom]);
       
     }
-    return [xScale, yScale];
+    return [testValueScale, valueScale];
   }, [dimension, data, yMax, xRange,dumbbellSorted]);
 
-  const xAxisLabel = axisBottom(xScale);
+  const testLabel = axisLeft(testValueScale);
   if (!dumbbellSorted){
-    const yAxisLabel = axisLeft(yScale as ScaleLinear<number, number>);
+    const yAxisLabel = axisTop(valueScale as ScaleLinear<number, number>);
+    svgSelection
+      .select(".axes")
+      .select(".y-axis")
+      .attr(
+        "transform",
+        `translate(0 ,${offset.top} )`
+      )
+      .attr('display',null)
+     
+      .call(yAxisLabel as any);
       svgSelection
-    .select(".axes")
-        .select(".y-axis")
-        .attr('display',null)
-    .attr("transform",
-      `translate(${offset.left} ,-${offset.bottom - offset.top} )`)
-        .call(yAxisLabel as any);
-            svgSelection
-              .select(".axes")
-              .select(".y-label")
-              .attr("display", null)
-              .attr("y", 0)
-              .attr("x", -0.5 * dimension.height + 1.5 * offset.bottom)
-              .attr("font-size", "11px")
-              .attr("text-anchor", "middle")
-              .attr("alignment-baseline", "hanging")
-              .attr("transform", "rotate(-90)")
-              .text(
-                AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
-              );
+        .select(".axes")
+        .select(".y-label")
+        .attr("display", null)
+        .attr("y", 0)
+        .attr("x", 0.5 * (dimension.width + offset.left))
+        .attr("font-size", "11px")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "hanging")
+        // .attr("transform", `translate(0 ,${offset.top}`)
+        .text(
+          AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
+        );
   }
   else {
      svgSelection
@@ -109,25 +111,29 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
 
   svgSelection.select('.axes')
     .select(".x-axis")
-    .attr("transform", `translate(0, ${(dimension.height - offset.bottom)})`)
-    .call(xAxisLabel as any);
+    .attr("transform", `translate(${offset.left}, 0)`)
+    .call(testLabel as any);
 
 
   
         svgSelection
           .select(".axes")
           .select(".x-label")
-          .attr("x", 0.5 * (dimension.width + offset.left))
-          .attr("y", dimension.height)
-          .attr("alignment-baseline", "baseline")
+          .attr("x", -0.5 * dimension.height + 1.5 * offset.bottom)
+          .attr("y", 0)
+          .attr("transform", "rotate(-90)")
+          .attr("alignment-baseline", "hanging")
           .attr("font-size", "11px")
           .attr("text-anchor", "middle")
           .text("Hemoglobin Value");
 
 
   const decideIfSelected = (d: DumbbellDataPoint) => {
-    if (currentSelectPatient) {
+    if (currentSelectPatient && d.patientID>0) {
       return currentSelectPatient.patientID===d.patientID
+    }
+    else if (aggregation && currentSelectPatient) {
+      return d[aggregation] === currentSelectPatient[aggregation]
     }
     else if (currentSelectSet) {
       return d[currentSelectSet.set_name]===currentSelectSet.set_value
@@ -137,7 +143,14 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
     }
   //  return true;
   }
-      
+    
+  const clickDumbbellHandler = (d: DumbbellDataPoint) => {
+    if (aggregation) {
+      actions.selectSet({set_name:aggregation,set_value:d[aggregation]})
+    } else {
+      actions.selectPatient(d)
+    }
+  }
     return (
       <>
         <g className="axes">
@@ -147,55 +160,55 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
           <text className="y-label" style={{ textAnchor: "end" }} />
         </g>
         <g className="chart-comp" >
-          <line x1={xScale(11)} x2={xScale(11)} y1={dimension.height-offset.bottom} y2={0} style={{ stroke: "#990D0D",strokeWidth:"2"}} />
+          <line x1={offset.left} x2={dimension.width - offset.right} y1={testValueScale(11)} y2={testValueScale(11)} style={{ stroke: "#990D0D",strokeWidth:"2"}} />
           {data.map((dataPoint,index) => {
-            const start = xScale(dataPoint.startXVal);
-            const end = xScale(dataPoint.endXVal);
+            const start = testValueScale(dataPoint.startXVal);
+            const end = testValueScale(dataPoint.endXVal);
             const returning = start > end ? end : start;
-            const rectwidth = Math.abs(end - start)
+            const rectDifference = Math.abs(end - start)
             return (
               <Popup
-                content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}`}
+                content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}
                 key={dataPoint.caseId}
                 trigger={
                   <DumbbellG 
                     dataPoint={dataPoint}
-                    transform={`translate(0,-${offset.bottom - offset.top})`}
+                    // transform={`translate(${offset.left},0)`}
                   >
                     <Rect
-                      x={returning}
+                      x={dumbbellSorted
+                        ? (valueScale as ScaleOrdinal<any, any>)(index)
+                        : (valueScale as ScaleLinear<number, number>)(
+                          dataPoint.yVal
+                        ) - 1}
                       y={
-                        dumbbellSorted
-                          ? (yScale as ScaleOrdinal<any, any>)(index)
-                          : (yScale as ScaleLinear<number, number>)(
-                              dataPoint.yVal
-                            ) - 1
+                        returning
                       }
-                      width={rectwidth}
+                      height={rectDifference}
                       isSelected={decideIfSelected(dataPoint)}
                     />
                     <Circle
-                      cx={xScale(dataPoint.startXVal)}
-                      cy={
-                        dumbbellSorted
-                          ? (yScale as ScaleOrdinal<any, any>)(index)
-                          : (yScale as ScaleLinear<number, number>)(
-                            dataPoint.yVal
-                          )}
-                      onClick={() => { actions.selectPatient(dataPoint) }}
+                      cx={dumbbellSorted
+                        ? (valueScale as ScaleOrdinal<any, any>)(index)
+                        : (valueScale as ScaleLinear<number, number>)(
+                          dataPoint.yVal
+                        )}
+                      cy={testValueScale(dataPoint.startXVal)
+                        }
+                      onClick={() => { clickDumbbellHandler(dataPoint) }}
                       isSelected={decideIfSelected(dataPoint)}
                     />
                     <Circle
-                      cx={xScale(dataPoint.endXVal)}
+                      cx={dumbbellSorted
+                        ? (valueScale as ScaleOrdinal<any, any>)(index)
+                        : (valueScale as ScaleLinear<number, number>)(
+                          dataPoint.yVal
+                        )}
                       cy={
-                        dumbbellSorted
-                          ? (yScale as ScaleOrdinal<any, any>)(index)
-                          : (yScale as ScaleLinear<number, number>)(
-                              dataPoint.yVal
-                            )
+                        testValueScale(dataPoint.endXVal)
                       }
                       onClick={() => {
-                        actions.selectPatient(dataPoint)
+                        clickDumbbellHandler(dataPoint)
                       }}
                       isSelected={decideIfSelected(dataPoint)}
                       
@@ -252,7 +265,7 @@ const Circle = styled(`circle`)<DotProps>`
 `;
 
 const Rect = styled(`rect`) <DotProps>`
- height:1.5px
+ width:1.5px
  opacity:50%
  fill:${props => (props.isSelected ? '#d98532' : '#20639B')}
 `;
