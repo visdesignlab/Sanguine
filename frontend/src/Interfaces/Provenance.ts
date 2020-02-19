@@ -105,15 +105,16 @@ export function setupProvenance(): AppProvenance{
   const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number,plot_type:string,aggregation?:string) => {
    // console.log('add')
         const newLayoutElement: LayoutElement = {
-            x_axis_name: xAxisAttribute,
-            y_axis_name: yAxisAttribute,  
+            aggregatedBy: xAxisAttribute,
+            valueToVisualize: yAxisAttribute,  
             i: index.toString(),
             w: 1,
           h: 1,
           x: 0,
           y: Infinity,
-          plot_type:plot_type
+          plot_type: plot_type,
     } 
+    console.log(aggregation)
     if (aggregation) {
       newLayoutElement.aggregation = aggregation;
     }

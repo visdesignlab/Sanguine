@@ -34,8 +34,8 @@ export interface ApplicationState {
 }
 
 export interface LayoutElement{
-  x_axis_name: string,
-  y_axis_name: string,
+  aggregatedBy: string,
+  valueToVisualize: string,
   i: string,
   x: number,
   y: number,
@@ -57,7 +57,7 @@ export const defaultState: ApplicationState = {
   currentSelectPatient: null
 };
 
-export const offset = { left: 70, bottom: 60, right: 10, top: 0, margin: 30 };
+export const offset = { left: 70, bottom: 35, right: 10, top: 40, margin: 30 };
 export const AxisLabelDict:any = {
   PRBC_UNITS: "Intraoperative RBCs Transfused",
   FFP_UNITS: "Intraoperative FFP Transfused",

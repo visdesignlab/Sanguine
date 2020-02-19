@@ -138,7 +138,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     const confirmChartAddHandler = () => {
         if (xSelection && ySelection &&addingChartType>-1) {
             addToElementCounter(elementCounter+1)
-          actions.addNewChart(xSelection, ySelection, elementCounter,typeDiction[addingChartType])
+          actions.addNewChart(xSelection, ySelection, elementCounter, typeDiction[addingChartType], dumbbellAggregation)
             setAddMode(false);
             setAddingChartType(-1)
         }

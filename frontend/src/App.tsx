@@ -51,12 +51,7 @@ const App: FC<Props> = ({ store }: Props) => {
     layoutArray
   } = store!;
 
-  const removeStyle = {
-    position: "absolute" as "absolute",
-    right: "2px",
-    top: 0,
-    cursor: "pointer"
-  };
+
 
   const colData = {
       lg: 2,
@@ -81,9 +76,10 @@ const App: FC<Props> = ({ store }: Props) => {
             <Icon key={layout.i} name="close" />
           </Button>
           <DumbbellChartVisualization
-            yAxis={layout.x_axis_name}
+            yAxis={layout.aggregatedBy}
             chartId={layout.i}
             chartIndex={index}
+            aggregatedOption={layout.aggregation}
           />
         </div>
       );
@@ -106,8 +102,8 @@ const App: FC<Props> = ({ store }: Props) => {
           <Icon key={layout.i} name="close" />
         </Button>
         <BarChartVisualization
-          xAxis={layout.x_axis_name}
-          yAxis={layout.y_axis_name}
+          aggregatedBy={layout.aggregatedBy}
+          valueToVisualize={layout.valueToVisualize}
           // class_name={"parent-node" + layoutE.i}
           chartId={layout.i}
           chartIndex={index}
@@ -133,8 +129,8 @@ const App: FC<Props> = ({ store }: Props) => {
           <Icon key={layout.i} name="close" />
         </Button>
         <ScatterPlotVisualization
-          xAxis={layout.x_axis_name}
-          yAxis={layout.y_axis_name}
+          xAxis={layout.aggregatedBy}
+          yAxis={layout.valueToVisualize}
           // class_name={"parent-node" + layoutE.i}
           chartId={layout.i}
           chartIndex={index}
