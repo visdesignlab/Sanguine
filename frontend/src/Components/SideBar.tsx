@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import { Menu,  Dropdown, Grid, Container,Message, List } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";
 import { scaleLinear } from "d3";
+import { actions } from "..";
 
 interface OwnProps{
     store?: Store;
@@ -13,24 +14,47 @@ export type Props = OwnProps;
 
 const SideBar: FC<Props> = ({ store }: Props) => { 
     const { totalCaseCount, actualYearRange, filterSelection } = store!;
-  const [procedureList, setProcedureList] = useState({ result: [] });
-  const[maxCaseCount, setMaxCaseCount] = useState(0)
+  const [procedureList, setProcedureList] = useState([]);
+  const [maxCaseCount, setMaxCaseCount] = useState(0);
+  const [itemSelected, setItemSelected] = useState<any[]>([]);
+  const [itemUnselected, setItemUnselected] = useState<any[]>([]);
+
+  
 
     async function fetchProcedureList() {
       const res = await fetch("http://localhost:8000/api/get_attributes");
       const data = await res.json();
-      setProcedureList(data);
+      const result = data.result
+      
       let tempMaxCaseCount = 0
-      data.result.forEach((d: any) => {
+      result.forEach((d: any) => {
         tempMaxCaseCount = d.count > tempMaxCaseCount ? d.count : tempMaxCaseCount;
       })
-      data.result.sort((a:any,b:any)=>b.count-a.count)
+      result.sort((a:any,b:any)=>b.count-a.count)
       setMaxCaseCount(tempMaxCaseCount)
+      setProcedureList(result);
+      setItemUnselected(result);
     }
 
     useEffect(() => {
       fetchProcedureList();
     }, []);
+  
+  useEffect(() => {
+    let newItemSelected: any[] = []
+    let newItemUnselected:any[]=[]
+    procedureList.forEach((d:any) => {
+      if (filterSelection.includes(d.value)) {
+        newItemSelected.push(d)
+      }
+      else {
+        newItemUnselected.push(d)
+      }
+    })
+    newItemSelected.sort((a: any, b: any) => b.count - a.count)
+    setItemSelected(newItemSelected)
+    setItemUnselected(newItemUnselected)
+  },[filterSelection])
   
   const [caseScale] = useMemo(() => {
     const caseScale = scaleLinear().domain([0, maxCaseCount]).range([0, 100])
@@ -57,11 +81,26 @@ const SideBar: FC<Props> = ({ store }: Props) => {
         </Grid.Row>
         <Grid.Row style={{padding:"10px"}}>
           <Container style={{ overflow: "auto",height:"80vh" }}>
-            <List relaxed >
-              {procedureList.result.map((listItem: any) => {
+            <List relaxed divided >
+              {itemSelected.map((listItem: any) => {
                 if (listItem.value) {
                   return (
-                    <ListIT style={{cursor:"pointer"}} onClick={() => { console.log(listItem.value)}}>
+                    <ListIT isSelected={true} style={{ cursor: "pointer" }} onClick={() => { actions.filterSelectionChange(listItem.value) }}>
+                      <List.Content floated="left" style={{ width: "60%" }}>
+                        {listItem.value.toLowerCase()}
+                      </List.Content>
+                      <List.Content floated="right" style={{ width: "30%" }}>
+                        <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={"10px"} fill={"#20639B"}></rect></SVG>
+                      </List.Content>
+                    </ListIT>
+                  )
+                }
+              })}
+              {itemSelected.length>0?(<List.Item/>):(<></>)}
+              {itemUnselected.map((listItem: any) => {
+                if (listItem.value ) {
+                  return (
+                    <ListIT isSelected={false} style={{cursor:"pointer"}} onClick={() => {actions.filterSelectionChange(listItem.value)}}>
                     <List.Content floated="left" style={{ width: "60%" }}>
                       {listItem.value.toLowerCase()}
                     </List.Content>
@@ -93,9 +132,11 @@ const SVG = styled.svg`
   height: 10px;
   width: 100px;
 `;
-
-const ListIT = styled(List.Item)`
-  background:none;
+interface ListITProps {
+  isSelected: boolean;
+}
+const ListIT = styled(List.Item)<ListITProps>`
+  background:${props => props.isSelected ? '#d98532':'none'};
   &:hover{
     background:#d0e4f5;
   }
