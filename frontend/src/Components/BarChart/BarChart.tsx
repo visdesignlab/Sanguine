@@ -1,9 +1,5 @@
 import React, {
   FC,
-  useEffect,
-  useRef,
-  useLayoutEffect,
-  useState,
   useMemo
 } from "react";
 import { actions } from "../..";
@@ -12,17 +8,15 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import {
   select,
-  selectAll,
   scaleLinear,
   scaleBand,
-    mouse,
   max,
-  axisBottom,
   axisLeft,
-  axisTop
+  axisTop,
+  interpolateBlues
 } from "d3";
 import {
-  SingularDataPoint,
+  BarChartDataPoint,
   offset,
   AxisLabelDict
 } from "../../Interfaces/ApplicationState";
@@ -34,7 +28,7 @@ interface OwnProps{
     // chartId: string;
     store?: Store;
     dimension: { width: number, height: number } 
-  data: SingularDataPoint[];
+  data: BarChartDataPoint[];
   svg: React.RefObject<SVGSVGElement>;
   yMax: number
   selectedVal:number|null
@@ -51,8 +45,10 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
       currentSelectSet
     } = store!;
   
-    const [aggregationScale, valueScale] = useMemo(() => {
+  const [aggregationScale, valueScale, caseScale] = useMemo(() => {
         // const yMax = max(data.map(d=>d.yVal))||0
+      const caseMax = max(data.map(d => d.caseCount))||0;
+      const caseScale = scaleLinear().domain([0,caseMax]).range([0,1])
         const xVals = data
             .map(function(dp) {
             return dp.xVal;
@@ -65,7 +61,7 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
                 .domain(xVals)
       .range([dimension.height - offset.bottom, offset.top])
                 .paddingInner(0.1);
-        return [aggregationScale, valueScale];
+        return [aggregationScale, valueScale,caseScale];
         },[dimension,data,yMax])
 
   const aggregationLabel = axisLeft(aggregationScale);
@@ -80,11 +76,7 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
               )
               .call(aggregationLabel as any)
               .selectAll("text")
-              // .attr("y", 0)
-              // .attr("x", 9)
-              // .attr("dy", ".35em")
-           //   .attr("transform", "rotate(90)")
-        //      .style("text-anchor", "start");
+              .attr("transform", `translate(-10,0)`)
 
             svgSelection
               .select(".axes")
@@ -124,7 +116,7 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
             
         );
   
-  const decideIfSelected = (d: SingularDataPoint) => {
+  const decideIfSelected = (d: BarChartDataPoint) => {
     if (selectedVal) {
       return selectedVal === d.xVal
     }
@@ -141,7 +133,18 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
         <g className="x-axis"></g>
         <g className="y-axis"></g>
         <text className="x-label" style={{ textAnchor: "end" }} />
-        <text className="y-label" style={{textAnchor:"end"}}/>
+        <text className="y-label" style={{ textAnchor: "end" }} />
+          {data.map((dataPoint) => {
+            return (<Popup
+              content={dataPoint.caseCount}
+              key={`CaseCount${dataPoint.xVal}`}
+              trigger={
+                <rect fill={interpolateBlues(caseScale(dataPoint.caseCount))}
+                  x={offset.left - 15}
+                  y={aggregationScale(dataPoint.xVal)}
+                  width={7}
+                  height={aggregationScale.bandwidth()} />
+            } />  )})}  
       </g>
         <g className="chart"
           transform={`translate(${offset.left},0)`}
@@ -178,3 +181,4 @@ interface BarProps{
 const Bar = styled(`rect`)<BarProps>`
    fill:${props => (props.isSelected ? '#d98532' : '#20639B')}
 `;
+

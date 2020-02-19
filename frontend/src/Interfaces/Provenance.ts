@@ -25,6 +25,7 @@ interface AppProvenance{
       onLayoutchange: (data: any) => void;
       selectPatient: (data: DumbbellDataPoint) => void;
       selectSet: (data: SelectSet) => void;
+      storeHemoData:(data:any)=>void
     }
 }
 let sameRow = 0
@@ -52,6 +53,10 @@ export function setupProvenance(): AppProvenance{
     provenance.addObserver(["layoutArray"], (state?: ApplicationState) => {
         store.layoutArray = state ? state.layoutArray : store.layoutArray;
     });
+  
+  provenance.addObserver(["hemoglobinDataSet"], async (state?: ApplicationState) => {
+    store.hemoglobinDataSet = state ? state.hemoglobinDataSet:store.hemoglobinDataSet
+  })
   
   provenance.addObserver(["dumbbellSorted"], (state?: ApplicationState) => {
     store.dumbbellSorted = state ? state.dumbbellSorted : store.dumbbellSorted;
@@ -250,6 +255,13 @@ export function setupProvenance(): AppProvenance{
       store.totalCaseCount = newCaseCount;
   //  }
   }
+  const storeHemoData = (data: any) => {
+    provenance.applyAction(`cache hemo data`,
+      (state: ApplicationState) => {
+      state.hemoglobinDataSet = data;
+      return state;
+    })
+  }
   
     const goForward = () => {
         provenance.goForwardOneStep();
@@ -275,7 +287,8 @@ export function setupProvenance(): AppProvenance{
         updateCaseCount,
         onLayoutchange,
         selectPatient,
-        selectSet
+        selectSet,
+        storeHemoData
       }
     };
 
