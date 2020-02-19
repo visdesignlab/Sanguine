@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { select, selectAll, scaleLinear, scaleBand, mouse, axisBottom, axisLeft } from "d3";
-import { SingularDataPoint } from '../../Interfaces/ApplicationState'
+import { BarChartDataPoint } from '../../Interfaces/ApplicationState'
 import BarChart from "./BarChart"
 
 interface OwnProps{
@@ -20,10 +20,11 @@ export type Props = OwnProps;
 const BarChartVisualization: FC<Props> = ({ aggregatedBy,valueToVisualize,chartId,store,chartIndex }: Props) => {
     const { layoutArray, filterSelection, perCaseSelected, currentSelectPatient,actualYearRange } = store!
     const svgRef = useRef<SVGSVGElement>(null);
-    const [data, setData] = useState({ result: [] });
-  const [yMax, setYMax] = useState(0);
+  const [data, setData] = useState<{ original: BarChartDataPoint[]; perCase: BarChartDataPoint[]; }>({ original: [],perCase:[] });
+  const [yMax, setYMax] = useState({original:0,perCase:0});
   const [selectedBar, setSelectedBarVal] = useState<number|null>(null);
   const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
+
   
 
     useLayoutEffect(() => {
@@ -50,31 +51,43 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy,valueToVisualize,chartI
       let caseCount = 0;
         if (dataResult) {
           let yMaxTemp = -1;
+          let perCaseYMaxTemp = -1
+          let perCaseData:BarChartDataPoint[] = [];
           let cast_data = (dataResult.result as any).map(function (ob: any) {
             if (ob.y_axis > 1000 && valueToVisualize === "PRBC_UNITS") {
               ob.y_axis-=999
             }
               caseCount += ob.case_count;
-              let y_val = perCaseSelected
-                ? ob.y_axis / ob.case_count
-                : ob.y_axis;
+              // let y_val = perCaseSelected
+              //   ? ob.y_axis / ob.case_count
+              //   : ob.y_axis;
+            const y_val = ob.y_axis;
+            const perCaseYVal = ob.y_axis / ob.case_count
             yMaxTemp = y_val > yMaxTemp ? y_val : yMaxTemp;
-
-              const new_ob: SingularDataPoint = {
+            perCaseYMaxTemp = perCaseYVal > perCaseYMaxTemp ? perCaseYVal : perCaseYMaxTemp;
+              const new_ob: BarChartDataPoint = {
                 xVal: ob.x_axis,
-                yVal: y_val
+                yVal: y_val,
+                caseCount: ob.case_count
               };
+            const perCaseOb: BarChartDataPoint = {
+              xVal: ob.x_axis,
+              yVal: y_val/ob.case_count,
+              caseCount:ob.case_count
+            }
+            perCaseData.push(perCaseOb)
               return new_ob;
             });
-            setData({result:cast_data});
-          setYMax(yMaxTemp);
+            setData({original:cast_data,perCase:perCaseData});
+          setYMax({original:yMaxTemp,perCase:perCaseYMaxTemp});
           actions.updateCaseCount(caseCount);
         }   
     }
 
     useEffect(() => {
         fetchChartData();
-    }, [perCaseSelected, filterSelection, actualYearRange]);
+    }, [filterSelection, actualYearRange]);
+
 
  
     //  return true;
@@ -103,11 +116,11 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy,valueToVisualize,chartI
         </text> */}
         <BarChart
           dimension={dimensions}
-          data={data.result}
+          data={perCaseSelected?data.perCase:data.original}
           svg={svgRef}
           aggregatedBy={aggregatedBy}
           valueToVisualize={valueToVisualize}
-          yMax={yMax}
+          yMax={perCaseSelected?yMax.perCase:yMax.original}
           selectedVal={selectedBar}
         />
       </SVG>

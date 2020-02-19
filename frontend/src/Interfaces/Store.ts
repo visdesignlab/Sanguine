@@ -21,6 +21,7 @@ export default class Store {
   @computed get actualYearRange() {
     return [this.yearRange[0]+2014,this.yearRange[1]+2014]
   }
+  @observable hemoglobinDataSet:any = defaultState.hemoglobinDataSet
 }
     
 

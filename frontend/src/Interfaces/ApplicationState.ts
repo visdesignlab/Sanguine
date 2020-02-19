@@ -3,9 +3,10 @@ export interface SelectSet {
   set_value: number;
 }
 
-export interface SingularDataPoint {
+export interface BarChartDataPoint {
   xVal: any;
   yVal: number;
+  caseCount: number;
 }
 
 export interface DumbbellDataPoint {
@@ -31,6 +32,7 @@ export interface ApplicationState {
   dumbbellSorted: boolean;
   currentSelectSet: SelectSet | null;
   currentSelectPatient: DumbbellDataPoint | null;
+  hemoglobinDataSet: any;
 }
 
 export interface LayoutElement{
@@ -54,10 +56,11 @@ export const defaultState: ApplicationState = {
   totalCaseCount: 0,
   dumbbellSorted: false,
   currentSelectSet: null,
-  currentSelectPatient: null
+  currentSelectPatient: null,
+  hemoglobinDataSet:[]
 };
 
-export const offset = { left: 70, bottom: 35, right: 10, top: 40, margin: 30 };
+export const offset = { left: 75, bottom: 35, right: 10, top: 40, margin: 30 };
 export const AxisLabelDict:any = {
   PRBC_UNITS: "Intraoperative RBCs Transfused",
   FFP_UNITS: "Intraoperative FFP Transfused",

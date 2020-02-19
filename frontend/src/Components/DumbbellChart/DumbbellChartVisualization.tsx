@@ -27,7 +27,8 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
   const {
     layoutArray,
     filterSelection,
-    actualYearRange
+    actualYearRange,
+    hemoglobinDataSet
     } = store!;
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -59,18 +60,18 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
           transfused: element.value
         };
       });
-      const hemoRes = await fetch(`http://localhost:8000/api/hemoglobin`);
-      const hemoDataResult = await hemoRes.json();
-      const hemo_data = hemoDataResult.result;
+      // const hemoRes = await fetch(`http://localhost:8000/api/hemoglobin`);
+      // const hemoDataResult = await hemoRes.json();
+     // const hemo_data = hemoDataResult.result;
       let tempYMax = 0;
       let tempXMin = Infinity;
       let tempXMax = 0;
     //  console.log(hemo_data);
-        if (hemo_data) {
+      if (hemoglobinDataSet) {
             //TODO:
             //How to solve the total case viewing potential discrepency?
             
-          let cast_data: DumbbellDataPoint[] = hemo_data.map((ob: any) => {
+        let cast_data: DumbbellDataPoint[] = hemoglobinDataSet.map((ob: any) => {
                 const begin_x = +ob.hemo[0];
                 const end_x = +ob.hemo[1];
                 let yAxisLabel_val;
@@ -157,7 +158,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
 
     useEffect(() => {
         fetchChartData();
-    }, [actualYearRange,filterSelection]);
+    }, [actualYearRange, filterSelection, hemoglobinDataSet]);
 
     
     

@@ -46,12 +46,12 @@ def get_attributes(request):
     if request.method == "GET":
         # Make the connection and execute the command
         connection = make_connection()
-        command = "SELECT DISTINCT PRIM_PROC_DESC FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE"
+        command = "SELECT DISTINCT PRIM_PROC_DESC, COUNT(DISTINCT DI_CASE_ID) FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE GROUP BY PRIM_PROC_DESC"
         cur = connection.cursor()
         result = cur.execute(command)
 
         # Return the result, the multi-selector component in React requires the below format
-        items = [{"key": row[0], "value": row[0],"text":row[0]} for row in result]
+        items = [{"value": row[0],"count":row[1]} for row in result]
         return JsonResponse({"result": items})
 
 def fetch_professional_set(request):

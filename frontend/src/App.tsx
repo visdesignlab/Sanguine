@@ -1,10 +1,10 @@
-import React, { FC } from 'react';
+import React, { FC ,useEffect} from 'react';
 import styled from 'styled-components';
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import './App.css';
 import UserControl from './Components/UserControl'
-import SideBar from './Components/SideBar'
+import SideBar from './SideBar'
 
 import BarChartVisualization from "./Components/BarChart/BarChartVisualization";
 import DumbbellChartVisualization from "./Components/DumbbellChart/DumbbellChartVisualization";
@@ -48,10 +48,24 @@ type Props = OwnProps;
 
 const App: FC<Props> = ({ store }: Props) => {
   const {
-    layoutArray
+    layoutArray,
+    hemoglobinDataSet
   } = store!;
 
-
+  async function cacheHemoData() {
+    const res = await fetch("http://localhost:8000/api/hemoglobin");
+    const data = await res.json();
+    const result = data.result;
+    actions.storeHemoData(result);
+ //   let tempMaxCaseCount = 0
+    // data.result.forEach((d: any) => {
+    //   tempMaxCaseCount = d.count > tempMaxCaseCount ? d.count : tempMaxCaseCount;
+    // })
+    // setMaxCaseCount(tempMaxCaseCount)
+  }
+  useEffect(() => {
+    cacheHemoData();
+  }, []);
 
   const colData = {
       lg: 2,
