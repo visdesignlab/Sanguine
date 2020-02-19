@@ -17,7 +17,7 @@ interface AppProvenance{
         selectChart: (newSelectedID: string) => void;
       togglePerCase: (event: any, data: any) => void;
       toggleDumbbell: (event: any, data: any) => void;
-        filterSelectionChange: (event: any, data: any) => void;
+        filterSelectionChange: (data: any) => void;
         yearRangeChange: (data: any) => void;
         addNewChart: (x: string, y: string, i: number,type:string,aggregation?:string) => void;
       removeChart: (event: any, i: any) => void;
@@ -28,7 +28,6 @@ interface AppProvenance{
       storeHemoData:(data:any)=>void
     }
 }
-let sameRow = 0
 export function setupProvenance(): AppProvenance{
     const provenance = initProvenance(defaultState, true);
     provenance.addGlobalObserver(() => {
@@ -197,11 +196,18 @@ export function setupProvenance(): AppProvenance{
     )
   }
 
-    const filterSelectionChange = (event: any, newFilterSelection: any) => {
+    const filterSelectionChange = (selectedFilterOption: any) => {
         provenance.applyAction(
-            `Change Filter Selection to ${newFilterSelection.value}`,
-            (state: ApplicationState) => {
-                state.filterSelection = newFilterSelection.value;
+            `Change Filter Selection to ${selectedFilterOption}`,
+          (state: ApplicationState) => {
+            if (state.filterSelection.includes(selectedFilterOption)) {
+              state.filterSelection=state.filterSelection.filter(d=>d!==selectedFilterOption)
+            } 
+            else {
+              state.filterSelection.push(selectedFilterOption)
+            }
+
+                //state.filterSelection = selectedFilterOption;
                 return state;
             }
         )
