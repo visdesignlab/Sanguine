@@ -118,7 +118,6 @@ export function setupProvenance(): AppProvenance{
           y: Infinity,
           plot_type: plot_type,
     } 
-    console.log(aggregation)
     if (aggregation) {
       newLayoutElement.aggregation = aggregation;
     }

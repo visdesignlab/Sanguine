@@ -66,7 +66,6 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
       let tempYMax = 0;
       let tempXMin = Infinity;
       let tempXMax = 0;
-    //  console.log(hemo_data);
       if (hemoglobinDataSet) {
             //TODO:
             //How to solve the total case viewing potential discrepency?
@@ -84,9 +83,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
                 if (yAxisLabel_val) {
                   if (!(yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
                     tempYMax = yAxisLabel_val > tempYMax ? yAxisLabel_val : tempYMax;
-
                   }
-
                   tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
                   tempXMin = end_x < tempXMin ? end_x : tempXMin;
                   tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
@@ -181,6 +178,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
           dimension={dimension}
           xRange={xRange}
           yMax={yMax}
+          aggregation={aggregatedOption}
         />
       </SVG>
     );}
