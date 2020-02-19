@@ -8,8 +8,8 @@ import { SingularDataPoint } from '../../Interfaces/ApplicationState'
 import BarChart from "./BarChart"
 
 interface OwnProps{
-    xAxis: string;
-    yAxis: string;
+    aggregatedBy: string;
+    valueToVisualize: string;
     chartId: string;
   store?: Store;
    chartIndex:number
@@ -17,7 +17,7 @@ interface OwnProps{
 
 export type Props = OwnProps;
 
-const BarChartVisualization: FC<Props> = ({ xAxis,yAxis,chartId,store,chartIndex }: Props) => {
+const BarChartVisualization: FC<Props> = ({ aggregatedBy,valueToVisualize,chartId,store,chartIndex }: Props) => {
     const { layoutArray, filterSelection, perCaseSelected, currentSelectPatient,actualYearRange } = store!
     const svgRef = useRef<SVGSVGElement>(null);
     const [data, setData] = useState({ result: [] });
@@ -37,7 +37,7 @@ const BarChartVisualization: FC<Props> = ({ xAxis,yAxis,chartId,store,chartIndex
   
   useEffect(() => {
     if (currentSelectPatient) {
-      setSelectedBarVal(currentSelectPatient[xAxis])
+      setSelectedBarVal(currentSelectPatient[aggregatedBy])
     }
     else {
       setSelectedBarVal(null);
@@ -45,13 +45,13 @@ const BarChartVisualization: FC<Props> = ({ xAxis,yAxis,chartId,store,chartIndex
   },[currentSelectPatient])
     
     async function fetchChartData() {
-      const res = await fetch(`http://localhost:8000/api/summarize_with_year?x_axis=${xAxis}&y_axis=${yAxis}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`);
+      const res = await fetch(`http://localhost:8000/api/summarize_with_year?x_axis=${aggregatedBy}&y_axis=${valueToVisualize}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`);
       const dataResult = await res.json();
       let caseCount = 0;
         if (dataResult) {
           let yMaxTemp = -1;
           let cast_data = (dataResult.result as any).map(function (ob: any) {
-            if (ob.y_axis > 1000 && yAxis === "PRBC_UNITS") {
+            if (ob.y_axis > 1000 && valueToVisualize === "PRBC_UNITS") {
               ob.y_axis-=999
             }
               caseCount += ob.case_count;
@@ -86,8 +86,8 @@ const BarChartVisualization: FC<Props> = ({ xAxis,yAxis,chartId,store,chartIndex
       // chartId={chartId}
       // data={data.result}
       // yMax={yMax}
-      // xAxisName={xAxis}
-      // yAxisName={yAxis}
+      // aggregatedByName={aggregatedBy}
+      // valueToVisualizeName={valueToVisualize}
       // />
 
       <SVG ref={svgRef}>
@@ -105,8 +105,8 @@ const BarChartVisualization: FC<Props> = ({ xAxis,yAxis,chartId,store,chartIndex
           dimension={dimensions}
           data={data.result}
           svg={svgRef}
-          xAxisName={xAxis}
-          yAxisName={yAxis}
+          aggregatedBy={aggregatedBy}
+          valueToVisualize={valueToVisualize}
           yMax={yMax}
           selectedVal={selectedBar}
         />

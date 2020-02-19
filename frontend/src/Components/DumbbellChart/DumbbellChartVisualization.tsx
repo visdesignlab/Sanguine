@@ -16,12 +16,13 @@ interface OwnProps{
     yAxis: string;
     chartId: string;
     store?: Store;
-     chartIndex:number
+  chartIndex: number;
+  aggregatedOption?: string;
 }
 
 export type Props = OwnProps;
 
-const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store,chartIndex }: Props) => {
+const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartId, store,chartIndex }: Props) => {
 
   const {
     layoutArray,
@@ -29,20 +30,20 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store,chartInde
     actualYearRange
     } = store!;
 
-    const svgRef = useRef<SVGSVGElement>(null);
-    const [data, setData] = useState({ result: [] });
-    const [dimension, setDimensions] = useState({ width: 0, height: 0 });
-    const [yMax, setYMax] = useState(0);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [data, setData] = useState<{ result: DumbbellDataPoint[] }>({ result: [] });
+  const [dimension, setDimensions] = useState({ width: 0, height: 0 });
+  const [yMax, setYMax] = useState(0);
   const [xRange, setXRange] = useState({ xMin: 0, xMax: Infinity });
 
-    useLayoutEffect(() => {
-        if (svgRef.current) {
-        setDimensions({
-            height: svgRef.current.clientHeight,
-            width: svgRef.current.clientWidth
-        });
-        }
-    }, [layoutArray[ chartIndex]]);
+  useLayoutEffect(() => {
+    if (svgRef.current) {
+      setDimensions({
+        height: svgRef.current.clientHeight,
+        width: svgRef.current.clientWidth
+      });
+    }
+  }, [layoutArray[chartIndex]]);
 
 
 
@@ -69,7 +70,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store,chartInde
             //TODO:
             //How to solve the total case viewing potential discrepency?
             
-            let cast_data = hemo_data.map((ob: any) => {
+          let cast_data: DumbbellDataPoint[] = hemo_data.map((ob: any) => {
                 const begin_x = +ob.hemo[0];
                 const end_x = +ob.hemo[1];
                 let yAxisLabel_val;
@@ -80,17 +81,17 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store,chartInde
               //  console.log(transfused_dict);
                 //This filter out anything that has empty value
                 if (yAxisLabel_val) {
-                    if (!(yAxisLabel_val > 100 && yAxis==="PRBC_UNITS")) {
-                        tempYMax = yAxisLabel_val > tempYMax ? yAxisLabel_val : tempYMax;
-                        
-                    }
-                    
-                    tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
-                    tempXMin = end_x < tempXMin ? end_x : tempXMin;
-                    tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
-                    tempXMax = end_x > tempXMax ? end_x : tempXMax;
+                  if (!(yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
+                    tempYMax = yAxisLabel_val > tempYMax ? yAxisLabel_val : tempYMax;
 
-                    let new_ob: DumbbellDataPoint = {
+                  }
+
+                  tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
+                  tempXMin = end_x < tempXMin ? end_x : tempXMin;
+                  tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
+                  tempXMax = end_x > tempXMax ? end_x : tempXMax;
+
+                  let new_ob: DumbbellDataPoint = {
                     startXVal: begin_x,
                     endXVal: end_x,
                     visitNum: ob.visit_id,
@@ -100,15 +101,53 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store,chartInde
                     ANESTHOLOGIST_ID: ob.anesth_id,
                     SURGEON_ID: ob.surgeon_id,
                     patientID: ob.patient_id
-                    };
-                    return new_ob;
+                  };
+                  return new_ob;
                 }
             });
             cast_data = cast_data.filter((d: any) => d);
-            let total_count = 0;
-            cast_data = cast_data.filter((d: DumbbellDataPoint) => { total_count += 1; return (d.startXVal - d.endXVal) > 0 })
-           // console.log(cast_data)
-            actions.updateCaseCount(total_count)
+            let total_count = cast_data.length;
+            //cast_data = cast_data.filter((d: DumbbellDataPoint) => { total_count += 1; return (d.startXVal - d.endXVal) > 0 })
+          
+
+          actions.updateCaseCount(total_count)
+          //console.log(aggregatedOption)
+          if (aggregatedOption) {
+            let counter = {} as { [key: number]: any }
+            cast_data.map((datapoint: DumbbellDataPoint) => {
+              
+              if (!counter[datapoint[aggregatedOption]]) {
+                counter[datapoint[aggregatedOption]] = { numerator: 1, startXVal: datapoint.startXVal, endXVal:datapoint.endXVal,yVal:datapoint.yVal}
+              }
+              else {
+               // const current = counter[datapoint[aggregatedOption]];
+                counter[datapoint[aggregatedOption]].startXVal += datapoint.startXVal
+                counter[datapoint[aggregatedOption]].endXVal += datapoint.endXVal
+                counter[datapoint[aggregatedOption]].yVal += datapoint.yVal
+                counter[datapoint[aggregatedOption]].numerator +=1
+              }
+            })
+            cast_data = []
+            console.log(counter)
+            for (let key of Object.keys(counter)) {
+              const keynum = parseInt(key)
+              //console.log(counter[keynum])
+              let new_ob: DumbbellDataPoint = {
+                startXVal: counter[keynum].startXVal / counter[keynum].numerator,
+                endXVal: counter[keynum].endXVal / counter[keynum].numerator,
+                visitNum: -1,
+                yVal: counter[keynum].yVal / counter[keynum].numerator,
+                caseId: -1,
+                YEAR: aggregatedOption==="YEAR"?keynum:-1,
+                ANESTHOLOGIST_ID: aggregatedOption === "ANESTHOLOGIST_ID" ? keynum : -1,
+                SURGEON_ID: aggregatedOption === "SURGEON_ID" ? keynum : -1,
+                patientID: -1
+              };
+              cast_data.push(new_ob)
+            };
+
+          }
+
             setData({ result: cast_data });
             setYMax(tempYMax);
             setXRange({ xMin: tempXMin, xMax: tempXMax });
