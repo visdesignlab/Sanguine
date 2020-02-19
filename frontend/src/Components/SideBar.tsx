@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState,useMemo } from "react";
-import Store from "./Interfaces/Store";
+import Store from "../Interfaces/Store";
 import styled from 'styled-components'
 import { Menu,  Dropdown, Grid, Container,Message, List } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";

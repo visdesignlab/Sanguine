@@ -4,7 +4,7 @@ import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import './App.css';
 import UserControl from './Components/UserControl'
-import SideBar from './SideBar'
+import SideBar from './Components/SideBar'
 
 import BarChartVisualization from "./Components/BarChart/BarChartVisualization";
 import DumbbellChartVisualization from "./Components/DumbbellChart/DumbbellChartVisualization";
