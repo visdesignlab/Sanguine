@@ -1,4 +1,4 @@
-import React, { FC ,useEffect} from 'react';
+import React, { FC, useEffect } from 'react';
 import styled from 'styled-components';
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
@@ -17,7 +17,7 @@ import DumbbellChartVisualization from "./Components/DumbbellChart/DumbbellChart
 // import DumbbellPlot from './Components/DumbbellPlot'
 import { Responsive as ResponsiveReactGridLayout } from "react-grid-layout";
 import {
-  Icon, Button, Tab, Container,Grid
+  Icon, Button, Tab, Container, Grid
 } from 'semantic-ui-react'
 import Store from './Interfaces/Store'
 // import LineUp from 'lineupjsx'
@@ -30,9 +30,10 @@ import * as LineUpJS from "lineupjsx";
 import { inject, observer } from 'mobx-react';
 import { LayoutElement } from './Interfaces/ApplicationState';
 import { action } from 'mobx';
-import {actions} from './index'
-import { LineUpStringColumnDesc, LineUpCategoricalColumnDesc, LineUpNumberColumnDesc, LineUpSupportColumn, LineUpColumn} from 'lineupjsx';
+import { actions } from './index'
+import { LineUpStringColumnDesc, LineUpCategoricalColumnDesc, LineUpNumberColumnDesc, LineUpSupportColumn, LineUpColumn } from 'lineupjsx';
 import ScatterPlotVisualization from './Components/Scatterplot/ScatterPlotVisualization';
+import DetailView from './Components/DetailView';
 
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
@@ -40,7 +41,7 @@ import ScatterPlotVisualization from './Components/Scatterplot/ScatterPlotVisual
 
 
 
-interface OwnProps{
+interface OwnProps {
   store?: Store;
 }
 
@@ -57,7 +58,7 @@ const App: FC<Props> = ({ store }: Props) => {
     const data = await res.json();
     const result = data.result;
     actions.storeHemoData(result);
- //   let tempMaxCaseCount = 0
+    //   let tempMaxCaseCount = 0
     // data.result.forEach((d: any) => {
     //   tempMaxCaseCount = d.count > tempMaxCaseCount ? d.count : tempMaxCaseCount;
     // })
@@ -68,27 +69,28 @@ const App: FC<Props> = ({ store }: Props) => {
   }, []);
 
   const colData = {
-      lg: 2,
-      md: 2,
-      sm: 2,
-      xs: 2,
-      xxs: 2
-    };
+    lg: 2,
+    md: 2,
+    sm: 2,
+    xs: 2,
+    xxs: 2
+  };
 
-  const createElement = (layout: LayoutElement,index:number) => {
+  const createElement = (layout: LayoutElement, index: number) => {
     if (layout.plot_type === "DUMBBELL") {
       return (
         <div key={layout.i} className={"parent-node" + layout.i}>
           <Button
-            icon
+            icon="close"
             floated={"right"}
             circular
+            compact
             size="mini"
             onClick={
               actions.removeChart.bind(layout.i)}
-          >
-            <Icon key={layout.i} name="close" />
-          </Button>
+          />
+          {/* <Icon key={layout.i} name="close" />
+          </Button> */}
           <DumbbellChartVisualization
             yAxis={layout.aggregatedBy}
             chartId={layout.i}
@@ -98,32 +100,33 @@ const App: FC<Props> = ({ store }: Props) => {
         </div>
       );
     }
-    else if (layout.plot_type === "BAR"){
-    return (
-      <div
-        //onClick={this.onClickBlock.bind(this, layoutE.i)}
-        key={layout.i}
-        className={"parent-node" + layout.i}
+    else if (layout.plot_type === "BAR") {
+      return (
+        <div
+          //onClick={this.onClickBlock.bind(this, layoutE.i)}
+          key={layout.i}
+          className={"parent-node" + layout.i}
         // data-grid={layoutE}
-      >
-        <Button
-          icon
-          floated={"right"}
-          circular
-          size="mini"
-          onClick={actions.removeChart.bind(layout.i)}
         >
-          <Icon key={layout.i} name="close" />
-        </Button>
-        <BarChartVisualization
-          aggregatedBy={layout.aggregatedBy}
-          valueToVisualize={layout.valueToVisualize}
-          // class_name={"parent-node" + layoutE.i}
-          chartId={layout.i}
-          chartIndex={index}
-
-        />
-      </div>
+          <Button
+            icon='close'
+            floated={"right"}
+            circular
+            compact
+            size="mini"
+            onClick={actions.removeChart.bind(layout.i)}
+          />
+          {/* <Icon key={layout.i} name="close" /> */}
+          {/* </Button> */}
+          <BarChartVisualization
+            aggregatedBy={layout.aggregatedBy}
+            valueToVisualize={layout.valueToVisualize}
+            // class_name={"parent-node" + layoutE.i}
+            chartId={layout.i}
+            chartIndex={index}
+            extraPair={layout.extraPair}
+          />
+        </div>
       );
     }
     else {
@@ -134,14 +137,15 @@ const App: FC<Props> = ({ store }: Props) => {
       // data-grid={layoutE}
       >
         <Button
-          icon
+          icon='close'
+          compact
           floated={"right"}
           circular
           size="mini"
           onClick={actions.removeChart.bind(layout.i)}
-        >
-          <Icon key={layout.i} name="close" />
-        </Button>
+        />
+        {/* <Icon key={layout.i} name="close" />
+        </Button> */}
         <ScatterPlotVisualization
           xAxis={layout.aggregatedBy}
           yAxis={layout.valueToVisualize}
@@ -183,10 +187,11 @@ const App: FC<Props> = ({ store }: Props) => {
       </ResponsiveReactGridLayout>
     </Container>
   },
-    {
-      menuItem: 'Tab 2', render: () =>
-        <div className={"okok"}>
-      <LineUpJS.LineUp data={arr}/></div>}]
+  {
+    menuItem: 'Tab 2', render: () =>
+      <div className={"okok"}>
+        <LineUpJS.LineUp data={arr} /></div>
+  }]
 
   return (
     <LayoutDiv>
@@ -199,11 +204,14 @@ const App: FC<Props> = ({ store }: Props) => {
         </Grid.Column>
         <Grid.Column width={10}>
           <Tab panes={panes}
-            //  renderActiveOnly={false}
+          //  renderActiveOnly={false}
           ></Tab>
-          
+        </Grid.Column>
+        <Grid.Column width={3}>
+          <DetailView/>
         </Grid.Column>
       </Grid>
+
     </LayoutDiv>
   );
 }
