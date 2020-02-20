@@ -9,6 +9,8 @@ export interface BarChartDataPoint {
   caseCount: number;
 }
 
+
+
 export interface DumbbellDataPoint {
   startXVal: number;
   endXVal: number;
@@ -44,7 +46,8 @@ export interface LayoutElement{
   w: number,
   h: number,
   plot_type: string,
-  aggregation?:string
+  aggregation?: string,
+  extraPair?:string[]
 }
 
 export const defaultState: ApplicationState = {
@@ -60,7 +63,7 @@ export const defaultState: ApplicationState = {
   hemoglobinDataSet:[]
 };
 
-export const offset = { left: 75, bottom: 35, right: 10, top: 40, margin: 30 };
+export const offset = { left: 85, bottom: 20, right: 10, top: 40, margin: 30 };
 export const AxisLabelDict:any = {
   PRBC_UNITS: "Intraoperative RBCs Transfused",
   FFP_UNITS: "Intraoperative FFP Transfused",
