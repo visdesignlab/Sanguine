@@ -25,14 +25,14 @@ def make_connection():
 # Read in the data dictionary
 def data_dictionary():
     # Instantiate mapping array
-    data_dictionary = {}
+    data_dict = {}
 
     with open("data_dictionary.csv", "r") as file:
         read_csv = csv.reader(file, delimiter=",")
         for row in read_csv:
-            data_dictionary[row[0]] = row[1]
+            data_dict[row[0]] = row[1]
 
-    return data_dictionary
+    return data_dict
 
 
 def index(request):
@@ -124,10 +124,11 @@ def fetch_individual(request):
         cur = connection.cursor()
         result = cur.execute(command)
 
-        data_dictionary = data_dictionary()
+        data_dict = data_dictionary()
 
         data = [
-            dict(zip([data_dictionary[key[0]] for key in cur.description], row))
+            dict(zip([data_dict[key[0]]
+                      for key in cur.description], row))
             for row in result
         ]
         return JsonResponse({"result": data})
