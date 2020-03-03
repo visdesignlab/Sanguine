@@ -11,6 +11,7 @@ import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { DumbbellDataPoint, SelectSet } from "../../Interfaces/ApplicationState"
 import DumbbellChart from "./DumbbellChart"
+import { Grid } from "semantic-ui-react";
 
 interface OwnProps{
     yAxis: string;
@@ -159,7 +160,9 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
 
     
     
-    return (
+  return (
+    <Grid style={{ height: "100%" }}>
+      <Grid.Column width={16}  >
       <SVG ref={svgRef}>
         {/* <text
           x="0"
@@ -180,7 +183,9 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
           yMax={yMax}
           aggregation={aggregatedOption}
         />
-      </SVG>
+        </SVG>
+      </Grid.Column>
+    </Grid>
     );}
 
 

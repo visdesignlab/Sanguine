@@ -14,7 +14,8 @@ import {
   max,
   axisLeft,
   axisTop,
-  interpolateBlues
+  interpolateBlues,
+  axisBottom
 } from "d3";
 import {
   BarChartDataPoint,
@@ -70,7 +71,7 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
   }, [dimension, data, yMax])
 
   const aggregationLabel = axisLeft(aggregationScale);
-  const yAxisLabel = axisTop(valueScale);
+  const yAxisLabel = axisBottom(valueScale);
 
   svgSelection
     .select(".axes")
@@ -88,7 +89,7 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
     .select(".y-axis")
     .attr(
       "transform",
-      `translate(0 ,${offset.top} )`
+      `translate(0 ,${dimension.height - offset.bottom})`
     )
     .call(yAxisLabel as any);
 
@@ -96,7 +97,7 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
     .select(".axes")
     .select(".x-label")
     .attr("x", 0.5 * (dimension.width + offset.left))
-    .attr("y", 0)
+    .attr("y", dimension.height - offset.bottom + 20)
     .attr("alignment-baseline", "hanging")
     .attr("font-size", "11px")
     .attr("text-anchor", "middle")

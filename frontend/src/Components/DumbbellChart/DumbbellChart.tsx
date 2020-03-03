@@ -87,7 +87,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
       .select(".axes")
       .select(".y-label")
       .attr("display", null)
-      .attr("y", 0)
+      .attr("y", dimension.height-offset.bottom+20)
       .attr("x", 0.5 * (dimension.width + offset.left))
       .attr("font-size", "11px")
       .attr("text-anchor", "middle")
@@ -173,7 +173,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
               trigger={
                 <DumbbellG
                   dataPoint={dataPoint}
-                // transform={`translate(${offset.left},0)`}
+                 transform={`translate(${offset.left},0)`}
                 >
                   <Rect
                     x={dumbbellSorted
@@ -219,20 +219,6 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
             />
           );
         })}
-      </g>
-      <g className=".circle-tooltip" style={{ display: "none" }}>
-        <rect
-          style={{ width: "30", height: "20", fill: "white", opacity: "0.5" }}
-        />
-        <text
-          x="15"
-          dy="1.2em"
-          style={{
-            textAnchor: "middle",
-            fontSize: "12px",
-            fontWeight: "bold"
-          }}
-        />
       </g>
     </>
   );
