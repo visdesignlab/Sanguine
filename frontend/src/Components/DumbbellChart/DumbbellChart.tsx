@@ -51,7 +51,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
   const [testValueScale, valueScale] = useMemo(() => {
     const testValueScale = scaleLinear()
       .domain([0.9 * xRange.xMin, 1.1 * xRange.xMax])
-      .range([offset.top, dimension.height - offset.bottom]);
+      .range([dimension.height - offset.bottom, offset.top]);
 
     let valueScale;
     if (!dumbbellSorted) {
@@ -72,13 +72,13 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
 
   const testLabel = axisLeft(testValueScale);
   if (!dumbbellSorted) {
-    const yAxisLabel = axisTop(valueScale as ScaleLinear<number, number>);
+    const yAxisLabel = axisBottom(valueScale as ScaleLinear<number, number>);
     svgSelection
       .select(".axes")
       .select(".y-axis")
       .attr(
         "transform",
-        `translate(0 ,${offset.top} )`
+        `translate(0 ,${dimension.height-offset.bottom} )`
       )
       .attr('display', null)
 
