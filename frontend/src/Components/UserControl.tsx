@@ -168,14 +168,14 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             </Button>
           </Button.Group>
         </Menu.Item>
-        <Menu.Item>
+        {/* <Menu.Item>
           <Checkbox
             toggle
             checked={perCaseSelected}
             onClick={actions.togglePerCase}
           />
           <label> Per Case Mode</label>
-        </Menu.Item>
+        </Menu.Item> */}
         <Menu.Item>
           <Container>
             <Slider

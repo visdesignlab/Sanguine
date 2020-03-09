@@ -86,11 +86,12 @@ const App: FC<Props> = ({ store }: Props) => {
             circular
             compact
             size="mini"
+            key={layout.i}
             onClick={
-              actions.removeChart.bind(layout.i)}
-          />
-          {/* <Icon key={layout.i} name="close" />
-          </Button> */}
+              actions.removeChart}
+          >
+          <Icon key={layout.i} name="close" />
+          </Button>
           <DumbbellChartVisualization
             yAxis={layout.aggregatedBy}
             chartId={layout.i}
@@ -114,10 +115,10 @@ const App: FC<Props> = ({ store }: Props) => {
             circular
             compact
             size="mini"
-            onClick={actions.removeChart.bind(layout.i)}
-          />
-          {/* <Icon key={layout.i} name="close" /> */}
-          {/* </Button> */}
+            onClick={actions.removeChart}
+          >
+          <Icon key={layout.i} name="close" /> 
+          </Button>
           <BarChartVisualization
             aggregatedBy={layout.aggregatedBy}
             valueToVisualize={layout.valueToVisualize}
@@ -142,10 +143,10 @@ const App: FC<Props> = ({ store }: Props) => {
           floated={"right"}
           circular
           size="mini"
-          onClick={actions.removeChart.bind(layout.i)}
-        />
-        {/* <Icon key={layout.i} name="close" />
-        </Button> */}
+          onClick={actions.removeChart}
+        >
+        <Icon key={layout.i} name="close" />
+        </Button>
         <ScatterPlotVisualization
           xAxis={layout.aggregatedBy}
           yAxis={layout.valueToVisualize}

@@ -34,9 +34,9 @@ export function setupProvenance(): AppProvenance {
   provenance.addGlobalObserver(() => {
     let isAtRoot = false;
     const currentNode = provenance.current();
-    //if (isStateNode(currentNode)) {
+    if (isStateNode(currentNode)) {
     isAtRoot = currentNode.id === provenance.root().id;
-    //}
+    }
     store.isAtRoot = isAtRoot;
     store.isAtLatest = provenance.current().children.length === 0;
   })
@@ -151,7 +151,7 @@ export function setupProvenance(): AppProvenance {
   }
 
   const removeChart = (event: any, child: any) => {
-    //    console.log(event,index)
+    console.log(event, child)
     const remove_index = child.children.key
     provenance.applyAction(
       `remove chart ${remove_index}`,

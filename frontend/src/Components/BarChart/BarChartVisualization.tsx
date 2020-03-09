@@ -7,7 +7,7 @@ import { BarChartDataPoint } from '../../Interfaces/ApplicationState'
 import BarChart from "./BarChart"
 import { Button, Icon, Table, Grid, Dropdown } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
-import { sum } from "d3";
+import { sum,max } from "d3";
 
 interface OwnProps {
   aggregatedBy: string;
@@ -29,6 +29,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
    }>({ original: []});
  
   const [yMax, setYMax] = useState({ original: 0, perCase: 0 });
+  // const [kdeMax,setKdeMax] = useState(0)
   const [selectedBar, setSelectedBarVal] = useState<number | null>(null);
   const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
   const [extraPairData, setExtraPairData] = useState({})
@@ -60,34 +61,22 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     const dataResult = await res.json();
     let caseCount = 0;
     if (dataResult) {
-      console.log(dataResult)
       let yMaxTemp = -1;
       let perCaseYMaxTemp = -1
      // let perCaseData: BarChartDataPoint[] = [];
       let cast_data = (dataResult.result as any).map(function (ob: any) {
-        // if (ob.y_axis > 1000 && valueToVisualize === "PRBC_UNITS") {
-        console.log(ob)
-        //This creates something like this :
-        /**
-         * [ { x: 0, y: 0.020833333333333332 },
-  { x: 0.9090909090909091, y: 0.0625 },
-  { x: 1.8181818181818181, y: 0.10416666666666667 },
-  { x: 2.727272727272727, y: 0.125 },
-  { x: 3.6363636363636362, y: 0.14583333333333334 },
-  { x: 4.545454545454545, y: 0.16666666666666666 },
-  { x: 5.454545454545454, y: 0.10416666666666667 },
-  { x: 6.363636363636363, y: 0.041666666666666664 },
-  { x: 7.2727272727272725, y: 0.08333333333333333 },
-  { x: 8.181818181818182, y: 0.10416666666666667 },
-  { x: 9.09090909090909, y: 0.041666666666666664 },
-  { x: 10, y: 0 } ]
-         */
-        
+
         const case_num = ob.valueToVisualize.length;
         const aggregateByAttr = ob.aggregatedBy;
         const total_val = sum(ob.valueToVisualize);
-        const pd = createpd(ob.valueToVisualize, { min: 0 });
-        
+        const maxY = parseFloat(max(ob.valueToVisualize)!);
+        yMaxTemp = yMaxTemp < maxY ? maxY : yMaxTemp;
+        let pd = createpd(ob.valueToVisualize, { min: 0.00001 });
+        pd = [{ x: 0, y: 0 }].concat(pd)
+        let reverse_pd = pd.map((pair: any) => {
+          return { x:pair.x, y:- pair.y}
+        }).reverse()
+        pd = pd.concat(reverse_pd)
         // console.log(pd)
         //   ob.y_axis -= 999
         // }
@@ -103,7 +92,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
           caseCount: case_num,
           aggregateAttribute: aggregateByAttr,
           totalVal: total_val,
-          kdeCal:pd
+          kdeCal: pd
         };
         // const perCaseOb: BarChartDataPoint = {
         //   xVal: ob.x_axis,
@@ -162,27 +151,28 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     // aggregatedByName={aggregatedBy}
     // valueToVisualizeName={valueToVisualize}
     // />
-    <Grid style={{ height: "100%" }} >
+    <Grid style={{ height: "100%" }}>
       <Grid.Column verticalAlign="middle">
-        {/* <Button
-            icon='plus'
-            circular
-            compact
-            size="mini"
-            floated='left'
-          // attached='left'
-          // onClick={actions.removeChart.bind(layout.i)}
-          /> */}
-        {/* <Icon name="plus" />
-          </Button> */}
-        <Dropdown simple item icon='plus' compact>
+        <Dropdown simple item icon="plus" compact>
           <Dropdown.Menu>
-            <Dropdown.Item onClick={() => { actions.changeExtraPair(chartId,"Hemoglobin")}}>Hemoglobin</Dropdown.Item>
-            <Dropdown.Item onClick={() => { actions.changeExtraPair(chartId, "Distribution")}}>Distribution</Dropdown.Item>
+            <Dropdown.Item
+              onClick={() => {
+                actions.changeExtraPair(chartId, "Hemoglobin");
+              }}
+            >
+              Hemoglobin
+            </Dropdown.Item>
+            <Dropdown.Item
+              onClick={() => {
+                actions.changeExtraPair(chartId, "Per Case Bar");
+              }}
+            >
+              Per Case Bar
+            </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
       </Grid.Column>
-      <Grid.Column width={15}  >
+      <Grid.Column width={15}>
         <SVG ref={svgRef}>
           {/* <text
           x="0"
@@ -196,7 +186,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
         </text> */}
           <BarChart
             dimension={dimensions}
-           // data={perCaseSelected ? data.perCase : data.original}
+            // data={perCaseSelected ? data.perCase : data.original}
             data={data.original}
             svg={svgRef}
             aggregatedBy={aggregatedBy}
@@ -207,7 +197,6 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
           />
         </SVG>
       </Grid.Column>
-
     </Grid>
   );
 }
