@@ -224,6 +224,9 @@ def summarize_attribute_w_year(request):
             result_val = 0
             if row[1]:
                 result_val = row[1]
+            #correct the one with 1000 + error
+            if result_val > 1000:
+                result_val -=999
             if row[0] not in result_dict:
                 result_dict[row[0]] = [result_val]
             else:
