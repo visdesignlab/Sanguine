@@ -22,6 +22,7 @@ import {
   ScaleLinear,
   ScaleOrdinal,
   axisTop,
+  scalePow,
 } from "d3";
 import { DumbbellDataPoint, offset, AxisLabelDict, SelectSet } from "../../Interfaces/ApplicationState";
 
@@ -41,7 +42,9 @@ export type Props = OwnProps;
 
 const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax, xRange, aggregation }: Props) => {
 
-  const { dumbbellSorted, currentSelectPatient, currentSelectSet } = store!;
+  const {
+    //dumbbellSorted,
+    currentSelectPatient, currentSelectSet } = store!;
   const svgSelection = select(svg.current);
   data = data.sort(
     (a, b) =>
@@ -52,26 +55,34 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
     const testValueScale = scaleLinear()
       .domain([0.9 * xRange.xMin, 1.1 * xRange.xMax])
       .range([dimension.height - offset.bottom, offset.top]);
+    
 
-    let valueScale;
-    if (!dumbbellSorted) {
-      valueScale = scaleLinear()
+   // let valueScale;
+    let valueScale = scalePow()
+        .exponent(0.5)
         .domain([0, 1.1 * yMax])
         .range([offset.left, dimension.width - offset.right - offset.margin]);
-    }
-    else {
-      const indices = range(0, data.length)
-      valueScale = scaleOrdinal()
-        .domain(indices as any)
-        .range(range(offset.left, dimension.width - offset.right - offset.margin, -(dimension.width - offset.left - offset.right) / data.length));
-      // .range([dimension.height - offset.top, offset.bottom]);
+    
+    // if (!dumbbellSorted) {
+    //   valueScale = scaleLinear()
+    //     .domain([0, 1.1 * yMax])
+    //     .range([offset.left, dimension.width - offset.right - offset.margin]);
+    // }
+    // else {
+    //   const indices = range(0, data.length)
+    //   valueScale = scaleOrdinal()
+    //     .domain(indices as any)
+    //     .range(range(offset.left, dimension.width - offset.right - offset.margin, -(dimension.width - offset.left - offset.right) / data.length));
+    //   // .range([dimension.height - offset.top, offset.bottom]);
 
-    }
+    // }
     return [testValueScale, valueScale];
-  }, [dimension, data, yMax, xRange, dumbbellSorted]);
+  }, [dimension, data, yMax, xRange,
+ //   dumbbellSorted
+  ]);
 
   const testLabel = axisLeft(testValueScale);
-  if (!dumbbellSorted) {
+  //if (!dumbbellSorted) {
     const yAxisLabel = axisBottom(valueScale as ScaleLinear<number, number>);
     svgSelection
       .select(".axes")
@@ -96,17 +107,17 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
       .text(
         AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
       );
-  }
-  else {
-    svgSelection
-      .select(".axes")
-      .select(".y-axis")
-      .attr("display", "none");
-    svgSelection
-      .select(".axes")
-      .select(".y-label")
-      .attr("display", "none");
-  }
+  //}
+  // else {
+  //   svgSelection
+  //     .select(".axes")
+  //     .select(".y-axis")
+  //     .attr("display", "none");
+  //   svgSelection
+  //     .select(".axes")
+  //     .select(".y-label")
+  //     .attr("display", "none");
+  //}
 
 
   svgSelection.select('.axes')
@@ -166,52 +177,45 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
           const end = testValueScale(dataPoint.endXVal);
           const returning = start > end ? end : start;
           const rectDifference = Math.abs(end - start)
+
+          const xVal =
+            valueScale(dataPoint.yVal) -
+            (Math.abs(dataPoint.startXVal - dataPoint.endXVal) / 18.0) *
+              (valueScale(dataPoint.yVal) - valueScale(dataPoint.yVal - 1)) +
+            Math.random() * 3;
+          
           return (
             <Popup
               content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}
               key={dataPoint.caseId}
               trigger={
-                <DumbbellG
-                  dataPoint={dataPoint}
-                >
+                <DumbbellG dataPoint={dataPoint}>
                   <Rect
-                    x={dumbbellSorted
-                      ? (valueScale as ScaleOrdinal<any, any>)(index)
-                      : (valueScale as ScaleLinear<number, number>)(
-                        dataPoint.yVal
-                      ) - 1}
-                    y={
-                      returning
+                    x={xVal-1
                     }
+                    y={returning}
                     height={rectDifference}
                     isSelected={decideIfSelected(dataPoint)}
                   />
                   <Circle
-                    cx={dumbbellSorted
-                      ? (valueScale as ScaleOrdinal<any, any>)(index)
-                      : (valueScale as ScaleLinear<number, number>)(
-                        dataPoint.yVal
-                      )}
-                    cy={testValueScale(dataPoint.startXVal)
+                    cx={
+                      xVal
                     }
-                    onClick={() => { clickDumbbellHandler(dataPoint) }}
+                    cy={testValueScale(dataPoint.startXVal)}
+                    onClick={() => {
+                      clickDumbbellHandler(dataPoint);
+                    }}
                     isSelected={decideIfSelected(dataPoint)}
                   />
                   <Circle
-                    cx={dumbbellSorted
-                      ? (valueScale as ScaleOrdinal<any, any>)(index)
-                      : (valueScale as ScaleLinear<number, number>)(
-                        dataPoint.yVal
-                      )}
-                    cy={
-                      testValueScale(dataPoint.endXVal)
+                    cx={
+                      xVal
                     }
+                    cy={testValueScale(dataPoint.endXVal)}
                     onClick={() => {
-                      clickDumbbellHandler(dataPoint)
+                      clickDumbbellHandler(dataPoint);
                     }}
                     isSelected={decideIfSelected(dataPoint)}
-
-
                   />
                 </DumbbellG>
               }

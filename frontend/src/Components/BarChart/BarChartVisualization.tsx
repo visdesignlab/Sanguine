@@ -21,7 +21,14 @@ interface OwnProps {
 export type Props = OwnProps;
 
 const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, chartId, store, chartIndex,extraPair }: Props) => {
-  const { layoutArray, filterSelection, perCaseSelected, currentSelectPatient, actualYearRange,hemoglobinDataSet } = store!
+  const {
+    layoutArray,
+    filterSelection,
+  //  perCaseSelected,
+    currentSelectPatient,
+    actualYearRange,
+    hemoglobinDataSet
+  } = store!;
   const svgRef = useRef<SVGSVGElement>(null);
  // const [data, setData] = useState<{ original: BarChartDataPoint[]; perCase: BarChartDataPoint[]; }>({ original: [], perCase: [] });
    const [data, setData] = useState<{
@@ -191,7 +198,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             svg={svgRef}
             aggregatedBy={aggregatedBy}
             valueToVisualize={valueToVisualize}
-            yMax={perCaseSelected ? yMax.perCase : yMax.original}
+            yMax={yMax.original}
             selectedVal={selectedBar}
             extraPairDataSet={extraPairData}
           />

@@ -16,9 +16,9 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     const {
       isAtRoot,
       isAtLatest,
-      perCaseSelected,
+    //  perCaseSelected,
       yearRange,
-      dumbbellSorted
+    //  dumbbellSorted
     } = store!;
   //  const [procedureList, setProcedureList] = useState({ result: [] })
   const [addMode, setAddMode] = useState(false);
@@ -197,10 +197,10 @@ const UserControl: FC<Props> = ({ store }: Props) => {
           </Dropdown> 
           
         </Menu.Item>
-        <Menu.Item>
+        {/* <Menu.Item>
                 <Checkbox toggle checked={dumbbellSorted} onClick={actions.toggleDumbbell}/>
           <label> Sort Dumbbell</label>
-        </Menu.Item>
+        </Menu.Item> */}
       </Menu>
     );
     

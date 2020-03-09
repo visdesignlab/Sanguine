@@ -47,7 +47,7 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
   const svgSelection = select(svg.current);
 
   const {
-    perCaseSelected,
+   // perCaseSelected,
     currentSelectSet
   } = store!;
 
@@ -124,8 +124,8 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
     .attr("text-anchor", "middle")
     //.attr("transform", "rotate(90)")
     .text(() => {
-      const trailing = perCaseSelected ? " / Case" : "";
-      return AxisLabelDict[valueToVisualize] ? AxisLabelDict[valueToVisualize] + trailing : valueToVisualize + trailing
+      //const trailing = perCaseSelected ? " / Case" : "";
+      return AxisLabelDict[valueToVisualize] ? AxisLabelDict[valueToVisualize]  : valueToVisualize 
     }
     );
 
