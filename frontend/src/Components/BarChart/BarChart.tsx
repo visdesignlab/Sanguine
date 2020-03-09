@@ -214,10 +214,15 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
                 //   isselected={decideIfSelected(dataPoint)}
                 // />
 
-                <path
+                <ViolinLine
                   d={lineFunction(dataPoint.kdeCal)!}
-                  stroke="#404040"
-                  fill="#404040"
+                  onClick={() => {
+                    actions.selectSet({
+                      set_name: aggregatedBy,
+                      set_value: dataPoint.aggregateAttribute
+                    });
+                  }}
+                  isselected={decideIfSelected(dataPoint)}
                   transform={`translate(0,${aggregationScale(
                     dataPoint.aggregateAttribute
                   )})`}
@@ -234,10 +239,11 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
 }
 export default inject("store")(observer(BarChart));
 
-interface BarProps {
+interface ViolinLineProp {
   isselected: boolean;
 }
-const Bar = styled(`rect`) <BarProps>`
-   fill:${props => (props.isselected ? '#d98532' : '#20639B')}
+const ViolinLine = styled(`path`)<ViolinLineProp>`
+  fill: ${props => (props.isselected ? "#d98532" : "#404040")};
+  stroke: ${props => (props.isselected ? "#d98532" : "#404040")};
 `;
 
