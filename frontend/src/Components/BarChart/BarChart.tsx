@@ -15,7 +15,8 @@ import {
   axisLeft,
   axisTop,
   interpolateBlues,
-  axisBottom
+  axisBottom,
+  interpolateGreys
 } from "d3";
 import {
   BarChartDataPoint,
@@ -54,7 +55,7 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
   const [aggregationScale, valueScale, caseScale] = useMemo(() => {
     // const yMax = max(data.map(d=>d.yVal))||0
     const caseMax = max(data.map(d => d.caseCount)) || 0;
-    const caseScale = scaleLinear().domain([0, caseMax]).range([0, 1])
+    const caseScale = scaleLinear().domain([0, caseMax]).range([0.2, 0.8])
     const xVals = data
       .map(function (dp) {
         return dp.xVal;
@@ -82,7 +83,7 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
     )
     .call(aggregationLabel as any)
     .selectAll("text")
-    .attr("transform", `translate(-10,0)`)
+    .attr("transform", `translate(-35,0)`)
 
   svgSelection
     .select(".axes")
@@ -108,18 +109,18 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
     }
     );
 
-  svgSelection
-    .select(".axes")
-    .select(".y-label")
-    .attr("y", 12)
-    .attr("x", -0.5 * dimension.height + 1.5 * offset.bottom)
-    .attr("font-size", "11px")
-    .attr("text-anchor", "middle")
-    .attr("alignment-baseline", "hanging")
-    .attr("transform", "rotate(-90)")
-    .text(
-      AxisLabelDict[aggregatedBy] ? AxisLabelDict[aggregatedBy] : aggregatedBy
-    );
+  // svgSelection
+  //   .select(".axes")
+  //   .select(".y-label")
+  //   .attr("y", 12)
+  //   .attr("x", -0.5 * dimension.height + 1.5 * offset.bottom)
+  //   .attr("font-size", "11px")
+  //   .attr("text-anchor", "middle")
+  //   .attr("alignment-baseline", "hanging")
+  //   .attr("transform", "rotate(-90)")
+  //   .text(
+  //     AxisLabelDict[aggregatedBy] ? AxisLabelDict[aggregatedBy] : aggregatedBy
+  //   );
 
   const decideIfSelected = (d: BarChartDataPoint) => {
     if (selectedVal) {
@@ -139,26 +140,34 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
         <g className="x-axis"></g>
         <g className="y-axis"></g>
         <text className="x-label" style={{ textAnchor: "end" }} />
-        <text className="y-label" style={{ textAnchor: "end" }} />
+        {/* <text className="y-label" style={{ textAnchor: "end" }} /> */}
 
-        {data.map((dataPoint) => {
-          return (<Popup
-            content={dataPoint.caseCount}
-            key={`CaseCount${dataPoint.xVal}`}
-            trigger={
-              <rect fill={interpolateBlues(caseScale(dataPoint.caseCount))}
-                x={offset.left - 15}
-                y={aggregationScale(dataPoint.xVal)}
-                width={7}
-                height={aggregationScale.bandwidth()} />
-            } />)
-        })}
+        {/* {data.map((dataPoint) => {
+          return (
+           
+          )
+        })} */}
       </g>
       <g className="chart"
         transform={`translate(${offset.left},0)`}
       >
         {data.map((dataPoint) => {
           return (
+            
+            [<rect fill={interpolateGreys(caseScale(dataPoint.caseCount))}
+              x={ - 40}
+              y={aggregationScale(dataPoint.xVal)}
+              width={35}
+              height={aggregationScale.bandwidth()} />,
+              <text
+                fill="white"
+                x={-22.5}
+                y={aggregationScale(dataPoint.xVal)!+0.5*aggregationScale.bandwidth()}
+                alignmentBaseline={"central"}
+                textAnchor={"middle"}
+              >
+                {dataPoint.caseCount}
+              </text>,
             <Popup content={dataPoint.yVal} key={dataPoint.xVal} trigger={
               <Bar
                 x={0}
@@ -170,7 +179,7 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
                 }}
                 isselected={decideIfSelected(dataPoint)}
               />}
-            />
+            />]
           );
         })}
       </g>
