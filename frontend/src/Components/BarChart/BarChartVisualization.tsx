@@ -3,7 +3,6 @@ import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { select, selectAll, scaleLinear, scaleBand, mouse, axisBottom, axisLeft } from "d3";
 import { BarChartDataPoint } from '../../Interfaces/ApplicationState'
 import BarChart from "./BarChart"
 import { Button, Icon, Table, Grid, Dropdown } from "semantic-ui-react";

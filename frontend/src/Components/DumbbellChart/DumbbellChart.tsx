@@ -173,7 +173,6 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
               trigger={
                 <DumbbellG
                   dataPoint={dataPoint}
-                 transform={`translate(${offset.left},0)`}
                 >
                   <Rect
                     x={dumbbellSorted

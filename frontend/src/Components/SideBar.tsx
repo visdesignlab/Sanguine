@@ -85,7 +85,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
               {itemSelected.map((listItem: any) => {
                 if (listItem.value) {
                   return (
-                    <ListIT isSelected={true} style={{ cursor: "pointer" }} onClick={() => { actions.filterSelectionChange(listItem.value) }}>
+                    <ListIT key={listItem.value} isSelected={true} style={{ cursor: "pointer" }} onClick={() => { actions.filterSelectionChange(listItem.value) }}>
                       <List.Content floated="left" style={{ width: "60%" }}>
                         {listItem.value.toLowerCase()}
                       </List.Content>
@@ -100,7 +100,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
               {itemUnselected.map((listItem: any) => {
                 if (listItem.value ) {
                   return (
-                    <ListIT isSelected={false} style={{cursor:"pointer"}} onClick={() => {actions.filterSelectionChange(listItem.value)}}>
+                    <ListIT key={listItem.value} isSelected={false} style={{cursor:"pointer"}} onClick={() => {actions.filterSelectionChange(listItem.value)}}>
                     <List.Content floated="left" style={{ width: "60%" }}>
                       {listItem.value.toLowerCase()}
                     </List.Content>
