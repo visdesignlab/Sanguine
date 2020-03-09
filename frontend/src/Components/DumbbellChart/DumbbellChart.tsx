@@ -180,9 +180,10 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
 
           const xVal =
             valueScale(dataPoint.yVal) -
-            (Math.abs(dataPoint.startXVal - dataPoint.endXVal) / 18.0) *
-              (valueScale(dataPoint.yVal) - valueScale(dataPoint.yVal - 1)) +
-            Math.random() * 3;
+            (Math.abs(dataPoint.startXVal - dataPoint.endXVal) / (xRange.xMax-xRange.xMin)) *
+              (valueScale(dataPoint.yVal) - valueScale(dataPoint.yVal - 1)) 
+              //+
+            // Math.random() * 3;
           
           return (
             <Popup
@@ -195,7 +196,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
                     }
                     y={returning}
                     height={rectDifference}
-                    isSelected={decideIfSelected(dataPoint)}
+                    isselected={decideIfSelected(dataPoint)}
                   />
                   <Circle
                     cx={
@@ -205,7 +206,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
                     onClick={() => {
                       clickDumbbellHandler(dataPoint);
                     }}
-                    isSelected={decideIfSelected(dataPoint)}
+                    isselected={decideIfSelected(dataPoint)}
                   />
                   <Circle
                     cx={
@@ -215,7 +216,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
                     onClick={() => {
                       clickDumbbellHandler(dataPoint);
                     }}
-                    isSelected={decideIfSelected(dataPoint)}
+                    isselected={decideIfSelected(dataPoint)}
                   />
                 </DumbbellG>
               }
@@ -234,7 +235,7 @@ interface DumbbellProps {
 }
 
 interface DotProps {
-  isSelected: boolean;
+  isselected: boolean;
 }
 
 // display: ${props =>
@@ -247,14 +248,14 @@ const DumbbellG = styled(`g`) <DumbbellProps>`
 `;
 
 
-
-const Circle = styled(`circle`) <DotProps>`
+const Circle = styled(`circle`)<DotProps>`
   r:4px
-  fill:${props => (props.isSelected ? '#d98532' : '#20639B')}
+  fill: ${props => (props.isselected ? "#d98532" : "#404040")};
+  opacity:0.8
 `;
 
 const Rect = styled(`rect`) <DotProps>`
  width:1.5px
  opacity:50%
- fill:${props => (props.isSelected ? '#d98532' : '#20639B')}
+ fill: ${props => (props.isselected ? "#d98532" : "#404040")};
 `;
