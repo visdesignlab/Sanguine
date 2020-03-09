@@ -34,9 +34,9 @@ export function setupProvenance(): AppProvenance {
   provenance.addGlobalObserver(() => {
     let isAtRoot = false;
     const currentNode = provenance.current();
-    if (isStateNode(currentNode)) {
+    //if (isStateNode(currentNode)) {
     isAtRoot = currentNode.id === provenance.root().id;
-    }
+    //}
     store.isAtRoot = isAtRoot;
     store.isAtLatest = provenance.current().children.length === 0;
   })
