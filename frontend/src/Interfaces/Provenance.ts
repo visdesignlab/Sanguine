@@ -15,8 +15,8 @@ interface AppProvenance {
     goBack: () => void;
     setLayoutArray: (newLayoutArray: LayoutElement[]) => void;
     selectChart: (newSelectedID: string) => void;
-    togglePerCase: (event: any, data: any) => void;
-    toggleDumbbell: (event: any, data: any) => void;
+    // togglePerCase: (event: any, data: any) => void;
+    // toggleDumbbell: (event: any, data: any) => void;
     filterSelectionChange: (data: any) => void;
     yearRangeChange: (data: any) => void;
     addNewChart: (x: string, y: string, i: number, type: string, aggregation?: string) => void;
@@ -58,15 +58,15 @@ export function setupProvenance(): AppProvenance {
     store.hemoglobinDataSet = state ? state.hemoglobinDataSet : store.hemoglobinDataSet
   })
 
-  provenance.addObserver(["dumbbellSorted"], (state?: ApplicationState) => {
-    store.dumbbellSorted = state ? state.dumbbellSorted : store.dumbbellSorted;
-  })
+  // provenance.addObserver(["dumbbellSorted"], (state?: ApplicationState) => {
+  //   store.dumbbellSorted = state ? state.dumbbellSorted : store.dumbbellSorted;
+  // })
 
-  provenance.addObserver(["perCaseSelected"], (state?: ApplicationState) => {
-    store.perCaseSelected = state
-      ? state.perCaseSelected
-      : store.perCaseSelected;
-  });
+  // provenance.addObserver(["perCaseSelected"], (state?: ApplicationState) => {
+  //   store.perCaseSelected = state
+  //     ? state.perCaseSelected
+  //     : store.perCaseSelected;
+  // });
 
   provenance.addObserver(["yearRange"], (state?: ApplicationState) => {
     store.yearRange = state
@@ -179,25 +179,25 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const togglePerCase = (event: any, perCaseSelected: any) => {
-    provenance.applyAction(
-      `Per Case ${perCaseSelected.checked}`,
-      (state: ApplicationState) => {
-        state.perCaseSelected = perCaseSelected.checked;
-        return state;
-      }
-    )
-  };
+  // const togglePerCase = (event: any, perCaseSelected: any) => {
+  //   provenance.applyAction(
+  //     `Per Case ${perCaseSelected.checked}`,
+  //     (state: ApplicationState) => {
+  //       state.perCaseSelected = perCaseSelected.checked;
+  //       return state;
+  //     }
+  //   )
+  // };
 
-  const toggleDumbbell = (event: any, dumbbellSorted: any) => {
-    provenance.applyAction(
-      `dumbbell sort ${dumbbellSorted}`,
-      (state: ApplicationState) => {
-        state.dumbbellSorted = dumbbellSorted.checked;
-        return state;
-      }
-    )
-  }
+  // const toggleDumbbell = (event: any, dumbbellSorted: any) => {
+  //   provenance.applyAction(
+  //     `dumbbell sort ${dumbbellSorted}`,
+  //     (state: ApplicationState) => {
+  //       state.dumbbellSorted = dumbbellSorted.checked;
+  //       return state;
+  //     }
+  //   )
+  // }
 
   const changeExtraPair = (chartID: string, newExtraPair: string) => {
     provenance.applyAction(
@@ -304,8 +304,8 @@ export function setupProvenance(): AppProvenance {
       goForward,
       setLayoutArray,
       selectChart,
-      togglePerCase,
-      toggleDumbbell,
+     // togglePerCase,
+     // toggleDumbbell,
       filterSelectionChange,
       yearRangeChange,
       addNewChart,
