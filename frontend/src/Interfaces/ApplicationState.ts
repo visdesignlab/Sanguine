@@ -4,8 +4,9 @@ export interface SelectSet {
 }
 
 export interface BarChartDataPoint {
-  xVal: any;
-  yVal: number;
+  aggregateAttribute: any;
+  kdeCal: any[];
+  totalVal: number;
   caseCount: number;
 }
 

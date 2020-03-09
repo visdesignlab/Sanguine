@@ -136,8 +136,8 @@ def fetch_individual(request):
 
 def summarize_attribute_w_year(request):
     if request.method == "GET":
-        x_axis = request.GET.get("x_axis")
-        y_axis = request.GET.get("y_axis")
+        aggregatedBy = request.GET.get("aggregatedBy")
+        valueToVisualize = request.GET.get("valueToVisualize")
         year_range = request.GET.get("year_range").split(",")
         filter_selection = request.GET.get("filter_selection")
         print(filter_selection)
@@ -149,9 +149,9 @@ def summarize_attribute_w_year(request):
             )
         print(filter_selection)
 
-
-        if not x_axis or not y_axis or not year_range:
-            HttpResponseBadRequest("x_axis, y_axis, and year_range must be supplied.")
+        if not aggregatedBy or not valueToVisualize or not year_range:
+            HttpResponseBadRequest(
+                "aggregatedBy, valueToVisualize, and year_range must be supplied.")
 
         year_min = year_range[0]
         year_max = year_range[1]
@@ -201,30 +201,42 @@ def summarize_attribute_w_year(request):
             )
 
         command = (
-            f"SELECT {command_dict[x_axis]}, {command_dict[y_axis]}, "
-            f"COUNT(DISTINCT {data_origin[x_axis]}.DI_CASE_ID) AS CASES_COUNT "
-            f"FROM {data_origin[x_axis]} "
-            f"INNER JOIN {data_origin[y_axis]} "
-            f"ON ({data_origin[x_axis]}.DI_CASE_ID = {data_origin[y_axis]}.DI_CASE_ID "
+            f"SELECT {command_dict[aggregatedBy]} aggregatedBy, {command_dict[valueToVisualize]} valueToVisualize, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID DI_CASE_ID "
+            # f"COUNT(DISTINCT {data_origin[aggregatedBy]}.DI_CASE_ID) AS CASES_COUNT "
+            f"FROM {data_origin[aggregatedBy]} "
+            f"INNER JOIN {data_origin[valueToVisualize]} "
+            f"ON ({data_origin[aggregatedBy]}.DI_CASE_ID = {data_origin[valueToVisualize]}.DI_CASE_ID "
             f"{extra_command}) "
-            f"WHERE {data_origin[x_axis]}.DI_CASE_DATE BETWEEN "
+            f"WHERE {data_origin[aggregatedBy]}.DI_CASE_DATE BETWEEN "
             f"'01-JAN-{year_min}' AND '31-DEC-{year_max}' "
-            f"GROUP BY {command_dict[x_axis]}"
+            f"GROUP BY {command_dict[aggregatedBy]}, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID"
         )
 
         cur = connection.cursor()
         result = cur.execute(command)
-        data_exchange = {
-            dict_for_exchange[x_axis].replace(" ", ""): "x_axis",
-            dict_for_exchange[y_axis].replace(" ", ""): "y_axis",
-            "CASES_COUNT": "case_count",
-        }
+        # data_exchange = {
+        #     dict_for_exchange[aggregatedBy].replace(" ", ""): "aggregatedBy",
+        #     dict_for_exchange[valueToVisualize].replace(" ", ""): "valueToVisualize",
+        #     "CASES_COUNT": "case_count",
+        # }
+        result_dict = {}
+        for row in result:
+            result_val = 0
+            if row[1]:
+                result_val = row[1]
+            if row[0] not in result_dict:
+                result_dict[row[0]] = [result_val]
+            else:
+                result_dict[row[0]] = result_dict[row[0]] + [result_val]
 
-        data = [
-            dict(zip([data_exchange[key[0]] for key in cur.description], row))
-            for row in result
-        ]
-        return JsonResponse({"result": data})
+        items = [{"aggregatedBy": key, "valueToVisualize": value}
+                 for key,value in result_dict.items()]
+        
+        # data = [
+        #     dict(zip([data_exchange[key[0]] for key in cur.description], row))
+        #     for row in result
+        # ]
+        return JsonResponse({"result": items})
 
 
 def request_individual_specific(request):

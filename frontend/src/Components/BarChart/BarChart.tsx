@@ -58,7 +58,7 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
     const caseScale = scaleLinear().domain([0, caseMax]).range([0.2, 0.8])
     const xVals = data
       .map(function (dp) {
-        return dp.xVal;
+        return dp.aggregateAttribute;
       })
       .sort();
     let valueScale = scaleLinear()
@@ -124,10 +124,13 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
 
   const decideIfSelected = (d: BarChartDataPoint) => {
     if (selectedVal) {
-      return selectedVal === d.xVal
+      return selectedVal === d.aggregateAttribute
     }
     else if (currentSelectSet) {
-      return currentSelectSet.set_name === aggregatedBy && currentSelectSet.set_value === d.xVal;
+      return (
+        currentSelectSet.set_name === aggregatedBy &&
+        currentSelectSet.set_value === d.aggregateAttribute
+      );
     }
     else {
       return false;
@@ -152,35 +155,47 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
         transform={`translate(${offset.left},0)`}
       >
         {data.map((dataPoint) => {
-          return (
-            
-            [<rect fill={interpolateGreys(caseScale(dataPoint.caseCount))}
-              x={ - 40}
-              y={aggregationScale(dataPoint.xVal)}
+          return [
+            <rect
+              fill={interpolateGreys(caseScale(dataPoint.caseCount))}
+              x={-40}
+              y={aggregationScale(dataPoint.aggregateAttribute)}
               width={35}
-              height={aggregationScale.bandwidth()} />,
-              <text
-                fill="white"
-                x={-22.5}
-                y={aggregationScale(dataPoint.xVal)!+0.5*aggregationScale.bandwidth()}
-                alignmentBaseline={"central"}
-                textAnchor={"middle"}
-              >
-                {dataPoint.caseCount}
-              </text>,
-            <Popup content={dataPoint.yVal} key={dataPoint.xVal} trigger={
-              <Bar
-                x={0}
-                y={aggregationScale(dataPoint.xVal)}
-                width={valueScale(dataPoint.yVal) - offset.left}
-                height={aggregationScale.bandwidth()}
-                onClick={() => {
-                  actions.selectSet({ set_name: aggregatedBy, set_value: dataPoint.xVal })
-                }}
-                isselected={decideIfSelected(dataPoint)}
-              />}
-            />]
-          );
+              height={aggregationScale.bandwidth()}
+            />,
+            <text
+              fill="white"
+              x={-22.5}
+              y={
+                aggregationScale(dataPoint.aggregateAttribute)! +
+                0.5 * aggregationScale.bandwidth()
+              }
+              alignmentBaseline={"central"}
+              textAnchor={"middle"}
+            >
+              {dataPoint.caseCount}
+            </text>,
+            <Popup
+              content={"SOMETHINGSOMETHING"}
+              key={dataPoint.aggregateAttribute}
+              trigger={
+                <Bar
+                  x={0}
+                  y={aggregationScale(dataPoint.aggregateAttribute)}
+                  //CHANGE TODO
+                  width={ - offset.left}
+                  height={aggregationScale.bandwidth()}
+                  onClick={() => {
+                    actions.selectSet({
+                      set_name: aggregatedBy,
+                      set_value: dataPoint.aggregateAttribute
+                    });
+                  }}
+                  isselected={decideIfSelected(dataPoint)}
+                />
+              }
+            />
+          ];
         })}
       </g>
 
