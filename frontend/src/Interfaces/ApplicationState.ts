@@ -8,6 +8,7 @@ export interface BarChartDataPoint {
   kdeCal: any[];
   totalVal: number;
   caseCount: number;
+  median: number;
 }
 
 

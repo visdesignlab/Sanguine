@@ -5,9 +5,9 @@ import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { BarChartDataPoint } from '../../Interfaces/ApplicationState'
 import BarChart from "./BarChart"
-import { Button, Icon, Table, Grid, Dropdown } from "semantic-ui-react";
+import { Button, Icon, Table, Grid, Dropdown, GridColumn } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
-import { sum,max } from "d3";
+import { sum,max, median, create } from "d3";
 
 interface OwnProps {
   aggregatedBy: string;
@@ -37,9 +37,10 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
  
   const [yMax, setYMax] = useState({ original: 0, perCase: 0 });
   // const [kdeMax,setKdeMax] = useState(0)
+ // const [medianVal, setMedian] = useState()
   const [selectedBar, setSelectedBarVal] = useState<number | null>(null);
   const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
-  const [extraPairData, setExtraPairData] = useState({})
+  const [extraPairData, setExtraPairData] = useState<any[]>([])
 
 
 
@@ -73,18 +74,32 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
      // let perCaseData: BarChartDataPoint[] = [];
       let cast_data = (dataResult.result as any).map(function (ob: any) {
 
-        const case_num = ob.valueToVisualize.length;
+        
+
+        const removed_zeros = ob.valueToVisualize.filter((d: number) => d > 0)
+        
+        //const case_num = ob.valueToVisualize.length;
+        const case_num = removed_zeros.length;
+
         const aggregateByAttr = ob.aggregatedBy;
-        const total_val = sum(ob.valueToVisualize);
+       
+       // const total_val = sum(ob.valueToVisualize);
+        const total_val = sum(removed_zeros);
+       
+       // const medianVal = median(ob.valueToVisualize);
+        const medianVal = median(removed_zeros);
+        
         const maxY = parseFloat(max(ob.valueToVisualize)!);
+
         yMaxTemp = yMaxTemp < maxY ? maxY : yMaxTemp;
-        let pd = createpd(ob.valueToVisualize, { min: 0.00001 });
+        // let pd = createpd(ob.valueToVisualize, { min: 0.00001 });
+        let pd = createpd(removed_zeros,{min:0});
         pd = [{ x: 0, y: 0 }].concat(pd)
         let reverse_pd = pd.map((pair: any) => {
           return { x:pair.x, y:- pair.y}
         }).reverse()
         pd = pd.concat(reverse_pd)
-        // console.log(pd)
+        // console.log(pd)ß
         //   ob.y_axis -= 999
         // }
         // caseCount += ob.case_count;
@@ -99,7 +114,8 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
           caseCount: case_num,
           aggregateAttribute: aggregateByAttr,
           totalVal: total_val,
-          kdeCal: pd
+          kdeCal: pd,
+          median:medianVal?medianVal:0
         };
         // const perCaseOb: BarChartDataPoint = {
         //   xVal: ob.x_axis,
@@ -110,7 +126,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
         return new_ob;
       });
       setData({ original: cast_data });
-      console.log(cast_data);
+      //setMedian(tempmedian);
       setYMax({ original: yMaxTemp, perCase: perCaseYMaxTemp });
       actions.updateCaseCount(caseCount);
     }
@@ -121,22 +137,34 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
   }, [filterSelection, actualYearRange]);
 
   const makeExtraPairData = () => {
-    let newExtraPairData = {} as any;
-    if(extraPair){extraPair.forEach((variable: string) => {
-      if (variable === "Hemoglobin") {
-        let newData = {} as any
-        data.original.map((dataPoint: BarChartDataPoint) => {
-          newData[dataPoint.aggregateAttribute]=[]
-        })
-        hemoglobinDataSet.map((ob: any) => {
-          console.log(ob[aggregatedBy])
-          if (newData[ob[aggregatedBy]]) {
-            newData[ob[aggregatedBy]].push([ob.hemo[0], ob.hemo[1]])
-          }
-        });
-        newExtraPairData["Hemoglobin"] = newData;
-      }
-    })}
+    let newExtraPairData:any[] = []
+    if (extraPair){
+      extraPair.forEach((variable: string) => {
+        switch (variable) {
+          case "Per Case Bar":
+            newExtraPairData.push({ name: "Per Case Bar", data: data.original, type: "BarChart" });
+            break;
+          case "Hemoglobin":
+            let newData = {} as any;
+            data.original.map((dataPoint: BarChartDataPoint) => {
+              newData[dataPoint.aggregateAttribute] = [];
+            });
+            hemoglobinDataSet.map((ob: any) => {
+              const begin = parseFloat(ob.HEMO[0]);
+              const end = parseFloat(ob.HEMO[1]);
+              if (newData[ob[aggregatedBy]]&& begin > 0 && end > 0) {
+                newData[ob[aggregatedBy]].push([begin,end]);
+              }
+            });
+            newExtraPairData.push({name:"Hemoglobin",data:newData, type:"Dumbbell"});
+            break;
+          default:
+            break;
+        }
+        }
+      )
+    }
+    console.log(newExtraPairData)
     setExtraPairData(newExtraPairData)
   }
 
@@ -148,7 +176,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
 
   //  return true;
 
-
+ 
 
   return (
     // <Bars
@@ -159,7 +187,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     // valueToVisualizeName={valueToVisualize}
     // />
     <Grid style={{ height: "100%" }}>
-      <Grid.Column verticalAlign="middle">
+      <Grid.Column verticalAlign="middle" width={1}>
         <Dropdown simple item icon="plus" compact>
           <Dropdown.Menu>
             <Dropdown.Item
@@ -179,7 +207,10 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
           </Dropdown.Menu>
         </Dropdown>
       </Grid.Column>
-      <Grid.Column width={15}>
+      {extraPairData.map((d)=>{
+        return <Grid.Column><SVG></SVG></Grid.Column>
+      })}
+      <Grid.Column width={(15-extraPairData.length) as any}>
         <SVG ref={svgRef}>
           {/* <text
           x="0"
@@ -200,7 +231,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             valueToVisualize={valueToVisualize}
             yMax={yMax.original}
             selectedVal={selectedBar}
-            extraPairDataSet={extraPairData}
+            //extraPairDataSet={extraPairData}
           />
         </SVG>
       </Grid.Column>

@@ -72,16 +72,16 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
             //How to solve the total case viewing potential discrepency?
             
         let cast_data: DumbbellDataPoint[] = hemoglobinDataSet.map((ob: any) => {
-                const begin_x = +ob.hemo[0];
-                const end_x = +ob.hemo[1];
+                const begin_x = +ob.HEMO[0];
+                const end_x = +ob.HEMO[1];
                 let yAxisLabel_val;
                 
-                if (transfused_dict[ob.case_id]) {
-                    yAxisLabel_val = transfused_dict[ob.case_id].transfused;
-                    };
+                if (transfused_dict[ob.CASE_ID]) {
+                  yAxisLabel_val = transfused_dict[ob.CASE_ID].transfused;
+                };
               //  console.log(transfused_dict);
                 //This filter out anything that has empty value
-                if (yAxisLabel_val) {
+                if (yAxisLabel_val && begin_x > 0 && end_x > 0) {
                   if (!(yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
                     tempYMax = yAxisLabel_val > tempYMax ? yAxisLabel_val : tempYMax;
                   }
@@ -93,15 +93,17 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
                   let new_ob: DumbbellDataPoint = {
                     startXVal: begin_x,
                     endXVal: end_x,
-                    visitNum: ob.visit_id,
+                    visitNum: ob.VISIT_ID,
                     yVal: yAxisLabel_val,
-                    caseId: ob.case_id,
-                    YEAR: ob.year,
-                    ANESTHOLOGIST_ID: ob.anesth_id,
-                    SURGEON_ID: ob.surgeon_id,
-                    patientID: ob.patient_id
+                    caseId: ob.CASE_ID,
+                    YEAR: ob.YEAR,
+                    ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
+                    SURGEON_ID: ob.SURGEON_ID,
+                    patientID: ob.PATIENT_ID
                   };
-                  return new_ob;
+                  //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
+                      return new_ob;
+                  //}
                 }
             });
             cast_data = cast_data.filter((d: any) => d);
