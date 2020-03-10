@@ -207,6 +207,7 @@ export function setupProvenance(): AppProvenance {
           if (d.i === chartID && d.extraPair) {
             if (!d.extraPair.includes(newExtraPair)){ 
               d.extraPair.push(newExtraPair)
+              console.log(d)
             }
           }
           return d

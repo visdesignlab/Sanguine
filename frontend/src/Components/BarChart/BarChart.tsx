@@ -35,14 +35,13 @@ interface OwnProps {
   dimension: { width: number, height: number }
   data: BarChartDataPoint[];
   svg: React.RefObject<SVGSVGElement>;
-  yMax: number
+  yMax: number;
   selectedVal: number | null;
-  extraPairDataSet: {}
 }
 
 export type Props = OwnProps;
 
-const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension, data, svg, yMax, selectedVal ,extraPairDataSet}: Props) => {
+const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension, data, svg, yMax, selectedVal}: Props) => {
 
   const svgSelection = select(svg.current);
 
@@ -51,11 +50,9 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
     currentSelectSet
   } = store!;
 
-  useEffect(() => {
-    console.log(extraPairDataSet)
-  }, [extraPairDataSet])
+
   
-  const [aggregationScale, valueScale, caseScale, kdeScale,lineFunction] = useMemo(() => {
+  const [aggregationScale, valueScale, caseScale,lineFunction] = useMemo(() => {
     
     const caseMax = max(data.map(d => d.caseCount)) || 0;
     const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
@@ -88,7 +85,7 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
     //   .curve(curveCardinal)
     //   .y((d: any) => kdeScale(d.y))
     //   .x((d: any) => valueScale(d.x) - offset.left);
-    return [aggregationScale, valueScale, caseScale,kdeScale,lineFunction];
+    return [aggregationScale, valueScale, caseScale,lineFunction];
   }, [dimension, data, yMax])
 
   const aggregationLabel = axisLeft(aggregationScale);
@@ -195,6 +192,7 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
             >
               {dataPoint.caseCount}
             </text>,
+
             <Popup
               content={dataPoint.totalVal}
               key={dataPoint.aggregateAttribute}
@@ -228,6 +226,17 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
                   )})`}
                 />
               }
+            />,
+            <line
+              x1={valueScale(dataPoint.median) - offset.left}
+              x2={valueScale(dataPoint.median) - offset.left}
+              y1={aggregationScale(dataPoint.aggregateAttribute)}
+              y2={
+                aggregationScale(dataPoint.aggregateAttribute)! +
+                aggregationScale.bandwidth()
+              }
+              stroke="#d98532"
+              strokeWidth="2px"
             />
           ];
         })}

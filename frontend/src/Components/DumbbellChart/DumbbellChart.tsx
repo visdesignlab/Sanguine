@@ -77,7 +77,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
 
     // }
     return [testValueScale, valueScale];
-  }, [dimension, data, yMax, xRange,
+  }, [dimension, data, yMax, xRange, 
  //   dumbbellSorted
   ]);
 
@@ -182,8 +182,8 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
             valueScale(dataPoint.yVal) -
             (Math.abs(dataPoint.startXVal - dataPoint.endXVal) / (xRange.xMax-xRange.xMin)) *
               (valueScale(dataPoint.yVal) - valueScale(dataPoint.yVal - 1)) 
-              //+
-            // Math.random() * 3;
+              -
+            Math.random() * 3;
           
           return (
             <Popup

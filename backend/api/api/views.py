@@ -533,12 +533,12 @@ def hemoglobin(request):
         cur = connection.cursor()
         result = cur.execute(command)
 
-        items = [{"case_id":row[1],
-                "visit_id": row[2],
-                "year":row[4],
-                "hemo": [row[-3], row[-1]],
-                "surgeon_id": row[9],
-                "anesth_id":row[10],
-                "patient_id":row[0]} for row in result]
+        items = [{"CASE_ID":row[1],
+                "VISIT_ID": row[2],
+                "YEAR":row[4],
+                "HEMO": [row[-3], row[-1]],
+                "SURGEON_ID": row[9],
+                "ANESTHOLOGIST_ID":row[10],
+                "PATIENT_ID":row[0]} for row in result]
 
         return JsonResponse({"result": items})

@@ -160,14 +160,14 @@ const App: FC<Props> = ({ store }: Props) => {
   }
   const arr: { a: number; d: string; cat: string; cat2: string; }[] = [];
   const cats = ['c1', 'c2', 'c3'];
-  for (let i = 0; i < 100; ++i) {
-    arr.push({
-      a: Math.random() * 10,
-      d: 'Row ' + i,
-      cat: cats[Math.floor(Math.random() * 3)],
-      cat2: cats[Math.floor(Math.random() * 3)]
-    })
-  }
+  // for (let i = 0; i < 100; ++i) {
+  //   arr.push({
+  //     a: Math.random() * 10,
+  //     d: 'Row ' + i,
+  //     cat: cats[Math.floor(Math.random() * 3)],
+  //     cat2: cats[Math.floor(Math.random() * 3)]
+  //   })
+  // }
   const panes = [{
     menuItem: 'Tab 1', render: () => <Container>
       <ResponsiveReactGridLayout
@@ -191,7 +191,7 @@ const App: FC<Props> = ({ store }: Props) => {
   {
     menuItem: 'Tab 2', render: () =>
       <div className={"okok"}>
-        <LineUpJS.LineUp data={arr} /></div>
+        <LineUpJS.LineUp data={hemoglobinDataSet} /></div>
   }]
 
   return (
