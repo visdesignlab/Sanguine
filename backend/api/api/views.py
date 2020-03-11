@@ -321,9 +321,12 @@ def request_transfused_units(request):
         )
 
         # Convert the filters to SQL
-        filter_selection_sql = [f" CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC='{filter_string}' OR" for filter_string in filter_selection]
-        filter_selection_sql[0] = filter_selection_sql[0].replace(" CLIN_DM", " AND (CLIN_DM")
-        filter_selection_sql[-1] = filter_selection_sql[-1].replace(" OR", ")")
+        if len(filter_selection) > 0:
+            filter_selection_sql = [f" CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC='{filter_string}' OR" for filter_string in filter_selection]
+            filter_selection_sql[0] = filter_selection_sql[0].replace(" CLIN_DM", " AND (CLIN_DM")
+            filter_selection_sql[-1] = filter_selection_sql[-1].replace(" OR", ")")
+        else: 
+            filter_selection_sql = []
         extra_command = "".join(filter_selection_sql)
 
         pat_id_filter = "" if not patient_id else f"AND CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_PAT_ID = '{patient_id}'"
