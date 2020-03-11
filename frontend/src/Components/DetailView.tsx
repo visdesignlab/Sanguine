@@ -15,22 +15,31 @@ interface OwnProps {
 export type Props = OwnProps;
 
 const DetailView: FC<Props> = ({ store }: Props) => {
-    const { currentSelectPatient } = store!
+    const { currentSelectPatient ,actualYearRange} = store!
 
     const [individualInfo, setIndividualInfo] = useState<any>(null)
 
 
     async function fetchIndividualInformaiton() {
         if (currentSelectPatient) {
-            const fetchResult = await fetch(`http://localhost:8000/api/fetch_individual?case_id=${currentSelectPatient.caseId}`)
+            const fetchResult = await fetch(`http://localhost:8000/api/fetch_patient?patient_id=${currentSelectPatient.patientID}`)
             const fetchResultJson = await fetchResult.json();
             const individualInfo = fetchResultJson.result[0];
             setIndividualInfo(individualInfo)
             console.log(individualInfo)
+            const fetchTransfused = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&year_range=${actualYearRange}&patient_id=${currentSelectPatient.patientID}`)
+            const fetchResultTran = await fetchTransfused.json();
+            const transfused_indo = fetchResultTran.result;
+            console.log(transfused_indo)
+            const fetchSurgery =await fetch(`http://localhost:8000/api/fetch_surgery?case_id=${currentSelectPatient.caseId}`)
+            const fetchSurgeryJson = await fetchSurgery.json();
+            const surgeryInfp = fetchSurgeryJson.result;
+            console.log(surgeryInfp)
         }
         else {
             setIndividualInfo(null)
         }
+
     }
     useEffect(() => {
         fetchIndividualInformaiton()
