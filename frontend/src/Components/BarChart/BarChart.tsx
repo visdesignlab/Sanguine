@@ -1,10 +1,7 @@
 import React, {
   FC,
-  useEffect,
-  useRef,
-  useLayoutEffect,
-  useState,
-  useMemo
+  useMemo,
+  useEffect
 } from "react";
 import { actions } from "../..";
 import Store from "../../Interfaces/Store";
@@ -12,168 +9,250 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import {
   select,
-  selectAll,
   scaleLinear,
   scaleBand,
-    mouse,
   max,
+  axisLeft,
+  axisTop,
+  interpolateBlues,
   axisBottom,
-  axisLeft
+  interpolateGreys,
+  line,
+  curveCardinal
 } from "d3";
 import {
-  SingularDataPoint,
+  BarChartDataPoint,
   offset,
   AxisLabelDict
 } from "../../Interfaces/ApplicationState";
-import {Popup} from 'semantic-ui-react'
+import { Popup, Button, Icon } from 'semantic-ui-react'
 
-interface OwnProps{
-    xAxisName: string;
-    yAxisName: string;
-    // chartId: string;
-    store?: Store;
-    dimension: { width: number, height: number } 
-  data: SingularDataPoint[];
+interface OwnProps {
+  aggregatedBy: string;
+  valueToVisualize: string;
+  // chartId: string;
+  store?: Store;
+  dimension: { width: number, height: number }
+  data: BarChartDataPoint[];
   svg: React.RefObject<SVGSVGElement>;
-  yMax: number
-  selectedVal:number|null
+  yMax: number;
+  selectedVal: number | null;
 }
 
 export type Props = OwnProps;
 
-const BarChart: FC<Props> = ({ store, xAxisName, yAxisName, dimension, data, svg,yMax ,selectedVal}: Props) => {
+const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension, data, svg, yMax, selectedVal}: Props) => {
 
-    const svgSelection = select(svg.current);
+  const svgSelection = select(svg.current);
+
+  const {
+   // perCaseSelected,
+    currentSelectSet
+  } = store!;
+
+
+  
+  const [aggregationScale, valueScale, caseScale,lineFunction] = useMemo(() => {
     
-    const {
-      perCaseSelected,
-      currentSelectSet
-    } = store!;
-  
-    const [xScale, yScale] = useMemo(() => {
-        // const yMax = max(data.map(d=>d.yVal))||0
-        const xVals = data
-            .map(function(dp) {
-            return dp.xVal;
-            })
-            .sort();
-        let yScale = scaleLinear()
-            .domain([0, 1.1 * yMax])
-            .range([dimension.height - offset.top, offset.bottom]);
-    let xScale = scaleBand()
-                .domain(xVals)
-                .range([offset.left, dimension.width - offset.right - offset.margin])
-                .paddingInner(0.1);
-        return [xScale, yScale];
-        },[dimension,data,yMax])
-   
+    const caseMax = max(data.map(d => d.caseCount)) || 0;
+    const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
+    let kdeMax = 0
+    const xVals = data
+      .map(function (dp) {
+        const max_temp = max(dp.kdeCal, d => d.y)
+        kdeMax = kdeMax > max_temp ? kdeMax : max_temp;
+        return dp.aggregateAttribute;
+      })
+      .sort();
+    
+    let valueScale = scaleLinear()
+      .domain([0, 1.1 * yMax])
+      .range([offset.left, dimension.width - offset.right - offset.margin]);
+    let aggregationScale = scaleBand()
+      .domain(xVals)
+      .range([dimension.height - offset.bottom, offset.top])
+      .paddingInner(0.1);
+    
+    const kdeScale = scaleLinear().domain([0, kdeMax]).range([0.5 * aggregationScale.bandwidth(), 0])
+   // const kdeReverseScale = scaleLinear().domain([0,kdeMax]).range([0.5*aggregationScale.bandwidth(),aggregationScale.bandwidth()])
+    
+    const lineFunction = line()
+      .curve(curveCardinal)
+      .y((d: any) => kdeScale(d.y))
+      .x((d: any) => valueScale(d.x) - offset.left);
+      
+    // const reverseLineFunction = line()
+    //   .curve(curveCardinal)
+    //   .y((d: any) => kdeScale(d.y))
+    //   .x((d: any) => valueScale(d.x) - offset.left);
+    return [aggregationScale, valueScale, caseScale,lineFunction];
+  }, [dimension, data, yMax])
 
+  const aggregationLabel = axisLeft(aggregationScale);
+  const yAxisLabel = axisBottom(valueScale);
 
+  svgSelection
+    .select(".axes")
+    .select(".x-axis")
+    .attr(
+      "transform",
+      `translate(${offset.left}, 0)`
+    )
+    .call(aggregationLabel as any)
+    .selectAll("text")
+    .attr("transform", `translate(-35,0)`)
 
-            const xAxisLabel = axisBottom(xScale);
-  const yAxisLabel = axisLeft(yScale);
-  
-            svgSelection
-              .select(".axes")
-              .select(".x-axis")
-              .attr(
-                "transform",
-                `translate(0, ${dimension.height - offset.bottom})`
-              )
-              .call(xAxisLabel as any)
-              .selectAll("text")
-              .attr("y", 0)
-              .attr("x", 9)
-              .attr("dy", ".35em")
-              .attr("transform", "rotate(90)")
-              .style("text-anchor", "start");
+  svgSelection
+    .select(".axes")
+    .select(".y-axis")
+    .attr(
+      "transform",
+      `translate(0 ,${dimension.height - offset.bottom})`
+    )
+    .call(yAxisLabel as any);
 
-            svgSelection
-              .select(".axes")
-              .select(".y-axis")
-              .attr(
-                "transform",
-                `translate(${offset.left} ,-${offset.bottom - offset.top} )`
-              )
-              .call(yAxisLabel as any);
+  svgSelection
+    .select(".axes")
+    .select(".x-label")
+    .attr("x", valueScale(yMax*0.5)+offset.left)
+    .attr("y", dimension.height - offset.bottom + 20)
+    .attr("alignment-baseline", "hanging")
+    .attr("font-size", "11px")
+    .attr("text-anchor", "middle")
+    //.attr("transform", "rotate(90)")
+    .text(() => {
+      //const trailing = perCaseSelected ? " / Case" : "";
+      return AxisLabelDict[valueToVisualize] ? AxisLabelDict[valueToVisualize]  : valueToVisualize 
+    }
+    );
 
-        svgSelection
-          .select(".axes")
-          .select(".x-label")
-          .attr("x", 0.5 * (dimension.width + offset.left))
-          .attr("y", dimension.height)
-          .attr("alignment-baseline", "baseline")
-          .attr("font-size", "11px")
-          .attr("text-anchor", "middle")
-          //.attr("transform", "rotate(90)")
-          .text(
-            AxisLabelDict[xAxisName] ? AxisLabelDict[xAxisName] : xAxisName
-          );
+  svgSelection
+    .select(".axes")
+    .select(".y-label")
+    .attr("y", dimension.height - offset.bottom + 20)
+    .attr("x", offset.left)
+    .attr("font-size", "11px")
+    .attr("text-anchor", "middle")
+    .attr("alignment-baseline", "hanging")
+    // .attr("transform", "rotate(-90)")
+    .text(
+      AxisLabelDict[aggregatedBy] ? AxisLabelDict[aggregatedBy] : aggregatedBy
+    );
 
-        svgSelection
-          .select(".axes")
-          .select(".y-label")
-          .attr("y", 0)
-          .attr("x", -0.5 * dimension.height + 1.5*offset.bottom)
-          .attr("font-size", "11px")
-          .attr("text-anchor", "middle")
-          .attr("alignment-baseline", "hanging")
-          .attr("transform", "rotate(-90)")
-          .text(() => {
-            const trailing = perCaseSelected ? " / Case" : "";
-            return AxisLabelDict[yAxisName]? AxisLabelDict[yAxisName]+trailing : yAxisName+trailing
-          }
-        );
-  
-  const decideIfSelected = (d: SingularDataPoint) => {
+  const decideIfSelected = (d: BarChartDataPoint) => {
     if (selectedVal) {
-      return selectedVal === d.xVal
+      return selectedVal === d.aggregateAttribute
     }
     else if (currentSelectSet) {
-      return currentSelectSet.set_name === xAxisName && currentSelectSet.set_value === d.xVal;
+      return (
+        currentSelectSet.set_name === aggregatedBy &&
+        currentSelectSet.set_value === d.aggregateAttribute
+      );
     }
     else {
       return false;
     }
   }
-    return (
+  return (
     <>
-    <g className="axes">
+      <line x1={1} x2={1} y1={offset.top} y2={dimension.height - offset.bottom} style={{ stroke: "#e5e5e5", strokeWidth: "1" }} />
+      <g className="axes">
         <g className="x-axis"></g>
         <g className="y-axis"></g>
         <text className="x-label" style={{ textAnchor: "end" }} />
-        <text className="y-label" style={{textAnchor:"end"}}/>
+        <text className="y-label" style={{ textAnchor: "end" }} />
+
+        {/* {data.map((dataPoint) => {
+          return (
+           
+          )
+        })} */}
       </g>
-            <g className="chart" transform={`translate(0,-${offset.bottom - offset.top})`}>
-          {data.map((dataPoint) => {
-            return (
-              <Popup content={dataPoint.yVal} key={dataPoint.xVal} trigger={
-                <Bar
-                  x={xScale(dataPoint.xVal)}
-                  y={yScale(dataPoint.yVal)}
-                  width={xScale.bandwidth()}
-                  height={dimension.height - yScale(dataPoint.yVal) - offset.top}
+      <g className="chart"
+        transform={`translate(${offset.left},0)`}
+      >
+        {data.map((dataPoint) => {
+          return [
+            <rect
+              fill={interpolateGreys(caseScale(dataPoint.caseCount))}
+              x={-40}
+              y={aggregationScale(dataPoint.aggregateAttribute)}
+              width={35}
+              height={aggregationScale.bandwidth()}
+            />,
+            <text
+              fill="white"
+              x={-22.5}
+              y={
+                aggregationScale(dataPoint.aggregateAttribute)! +
+                0.5 * aggregationScale.bandwidth()
+              }
+              alignmentBaseline={"central"}
+              textAnchor={"middle"}
+            >
+              {dataPoint.caseCount}
+            </text>,
+
+            <Popup
+              content={dataPoint.totalVal}
+              key={dataPoint.aggregateAttribute}
+              trigger={
+                // <Bar
+                //   x={0}
+                //   y={aggregationScale(dataPoint.aggregateAttribute)}
+                //   //CHANGE TODO
+                //   width={ - offset.left}
+                //   height={aggregationScale.bandwidth()}
+                //   onClick={() => {
+                //     actions.selectSet({
+                //       set_name: aggregatedBy,
+                //       set_value: dataPoint.aggregateAttribute
+                //     });
+                //   }}
+                //   isselected={decideIfSelected(dataPoint)}
+                // />
+
+                <ViolinLine
+                  d={lineFunction(dataPoint.kdeCal)!}
                   onClick={() => {
-                    actions.selectSet({ set_name: xAxisName, set_value: dataPoint.xVal })
+                    actions.selectSet({
+                      set_name: aggregatedBy,
+                      set_value: dataPoint.aggregateAttribute
+                    });
                   }}
-                isSelected={decideIfSelected(dataPoint)}
-              />}
+                  isselected={decideIfSelected(dataPoint)}
+                  transform={`translate(0,${aggregationScale(
+                    dataPoint.aggregateAttribute
+                  )})`}
+                />
+              }
+            />,
+            <line
+              x1={valueScale(dataPoint.median) - offset.left}
+              x2={valueScale(dataPoint.median) - offset.left}
+              y1={aggregationScale(dataPoint.aggregateAttribute)}
+              y2={
+                aggregationScale(dataPoint.aggregateAttribute)! +
+                aggregationScale.bandwidth()
+              }
+              stroke="#d98532"
+              strokeWidth="2px"
             />
-          );
+          ];
         })}
       </g>
-      <g className="rect-tooltip" style={{display:"none"}}>
-        <rect fill="white" style={{ opacity: "0.5", width: "30", height: "20" }} />
-        <text x="15" dy="1.2em" style={{textAnchor:"middle", fontSize:"12px",fontWeight:"bold"}}/>
-      </g>
-        </>
-    );
+
+
+    </>
+  );
 }
 export default inject("store")(observer(BarChart));
 
-interface BarProps{
-  isSelected: boolean;
+interface ViolinLineProp {
+  isselected: boolean;
 }
-const Bar = styled(`rect`)<BarProps>`
-   fill:${props => (props.isSelected ? '#d98532' : '#20639B')}
+const ViolinLine = styled(`path`)<ViolinLineProp>`
+  fill: ${props => (props.isselected ? "#d98532" : "#404040")};
+  stroke: ${props => (props.isselected ? "#d98532" : "#404040")};
 `;
+

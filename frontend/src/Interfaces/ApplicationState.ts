@@ -3,10 +3,15 @@ export interface SelectSet {
   set_value: number;
 }
 
-export interface SingularDataPoint {
-  xVal: any;
-  yVal: number;
+export interface BarChartDataPoint {
+  aggregateAttribute: any;
+  kdeCal: any[];
+  totalVal: number;
+  caseCount: number;
+  median: number;
 }
+
+
 
 export interface DumbbellDataPoint {
   startXVal: number;
@@ -31,17 +36,20 @@ export interface ApplicationState {
   dumbbellSorted: boolean;
   currentSelectSet: SelectSet | null;
   currentSelectPatient: DumbbellDataPoint | null;
+  hemoglobinDataSet: any;
 }
 
 export interface LayoutElement{
-  x_axis_name: string,
-  y_axis_name: string,
+  aggregatedBy: string,
+  valueToVisualize: string,
   i: string,
   x: number,
   y: number,
   w: number,
   h: number,
-  // plot_type: string
+  plot_type: string,
+  aggregation?: string,
+  extraPair?:string[]
 }
 
 export const defaultState: ApplicationState = {
@@ -53,10 +61,11 @@ export const defaultState: ApplicationState = {
   totalCaseCount: 0,
   dumbbellSorted: false,
   currentSelectSet: null,
-  currentSelectPatient: null
+  currentSelectPatient: null,
+  hemoglobinDataSet:[]
 };
 
-export const offset = { left: 70, bottom: 60, right: 10, top: 0, margin: 30 };
+export const offset = { left: 85, bottom: 40, right: 10, top: 40, margin: 30 };
 export const AxisLabelDict:any = {
   PRBC_UNITS: "Intraoperative RBCs Transfused",
   FFP_UNITS: "Intraoperative FFP Transfused",
