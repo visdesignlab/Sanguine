@@ -333,6 +333,7 @@ def request_transfused_units(request):
 
         # Setup the inner and outer selects
         outer_select = "PRBC_UNITS, FFP_UNITS, PLT_UNITS, CRYO_UNITS, CELL_SAVER_ML" if transfusion_type == "ALL_UNITS" else transfusion_type
+        limit = "" if transfusion_type == "ALL_UNITS" else f"WHERE {transfusion_type} > 0"
 
         # Define the full SQL statement
         command = (
@@ -348,12 +349,17 @@ def request_transfused_units(request):
             f"{pat_id_filter} "
             f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE), CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID, "
             f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID "
-            f") WHERE transfused>0"
+            f") {limit}"
         )
         
         # Execute the sql and get the results
         result = execute_sql(command)
-        items = [{"case_id": row[1], "transfused": row[0]}
+
+        if transfusion_type == "ALL_UNITS":
+            items = [{"case_id": row[5], "PRBC_UNITS": row[0], "FFP_UNITS": row[1], "PLT_UNITS": row[2], "CRYO_UNITS": row[3], "CELL_SAVER_ML": row[4]}
+                 for row in result]
+        else:
+            items = [{"case_id": row[1], "transfused": row[0]}
                  for row in result]
         return JsonResponse({"result": items})
 
