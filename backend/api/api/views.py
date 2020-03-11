@@ -253,21 +253,22 @@ def request_individual_specific(request):
 
 def request_transfused_units(request):
     if request.method == "GET":
+        # Get the values from the request
         transfusion_type = request.GET.get("transfusion_type")
         year_range = request.GET.get("year_range").split(",")
         filter_selection = request.GET.get("filter_selection")
-        year_min = year_range[0]
-        year_max = year_range[1]
-        if filter_selection is None:
-            filter_selection = []
-        else:
-            filter_selection = (
-                [] if filter_selection.split(",") == [""] else filter_selection.split(",")
-            )
+        patient_id = request.GET.get("patient_id")
 
+        # Check to make sure we have the required parameters
         if not transfusion_type or not year_range:
             HttpResponseBadRequest("transfusion_type, and year_range must be supplied.")
 
+        # Coerce the request parameters into a format that we want
+        year_min = year_range[0]
+        year_max = year_range[1]
+        filter_selection = [] if (filter_selection is None or filter_selection.split(",") == [""]) else filter_selection.split(",")
+
+        # Convert the filter selection to SQL
         extra_command = ""
         if len(filter_selection) > 0:
             extra_command = " AND ("
