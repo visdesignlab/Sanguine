@@ -264,6 +264,7 @@ def request_individual_specific(request):
         items = [{"result":row[0]} for row in result]
         return JsonResponse({"result": items})
 
+
 def request_transfused_units(request):
     if request.method == "GET":
         # Get the values from the request
@@ -302,6 +303,8 @@ def request_transfused_units(request):
         filter_selection_sql[0] = filter_selection_sql[0].replace(" CLIN_DM", " AND (CLIN_DM")
         filter_selection_sql[-1] = filter_selection_sql[-1].replace(" OR", ")")
         extra_command = "".join(filter_selection_sql)
+        
+        pat_id_filter = "" if not patient_id else f"AND CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_PAT_ID = '{patient_id}'"
 
         # Define the full SQL statement
         command = (
@@ -313,18 +316,19 @@ def request_transfused_units(request):
             f"INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
             f"ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID "
             f"{extra_command}) "
-            f"WHERE CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_DATE BETWEEN "
-            f"'01-JAN-{year_min}' AND '31-DEC-{year_max}' "
+            f"WHERE CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_DATE BETWEEN '01-JAN-{year_min}' AND '31-DEC-{year_max}' "
+            f"{pat_id_filter} "
             f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE), CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID, "
             f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID "
             f") WHERE transfused>0"
         )
         
+        # Execute the sql and get the results
         result = execute_sql(command)
-        
         items = [{"case_id": row[1], "transfused": row[0]}
                  for row in result]
         return JsonResponse({"result": items})
+
 
 def hemoglobin(request):
     if request.method == "GET":
@@ -436,7 +440,6 @@ def hemoglobin(request):
         )
 
         result = execute_sql(command)
-
         items = [{"CASE_ID":row[1],
                 "VISIT_ID": row[2],
                 "YEAR":row[4],
