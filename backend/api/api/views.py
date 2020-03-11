@@ -332,7 +332,7 @@ def request_transfused_units(request):
         pat_id_filter = "" if not patient_id else f"AND CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_PAT_ID = '{patient_id}'"
 
         # Setup the inner and outer selects
-        outer_select = "PRBC_UNITS, FFP_UNITS, PLT_UNITS, CRYO_UNITS, CELL_SAVER_ML" if transfusion_type == "ALL_UNITS" else outer_select = transfusion_type
+        outer_select = "PRBC_UNITS, FFP_UNITS, PLT_UNITS, CRYO_UNITS, CELL_SAVER_ML" if transfusion_type == "ALL_UNITS" else transfusion_type
 
         # Define the full SQL statement
         command = (
