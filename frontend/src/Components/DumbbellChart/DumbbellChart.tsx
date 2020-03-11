@@ -21,238 +21,241 @@ import {
   axisLeft,
   ScaleLinear,
   ScaleOrdinal,
+  axisTop,
+  scalePow,
 } from "d3";
 import { DumbbellDataPoint, offset, AxisLabelDict, SelectSet } from "../../Interfaces/ApplicationState";
-      
-interface OwnProps{
+
+interface OwnProps {
   yAxisName: string;
-    //chartId: string;
+  //chartId: string;
   store?: Store;
-  dimension: { width: number, height: number } 
+  dimension: { width: number, height: number }
   data: DumbbellDataPoint[];
   svg: React.RefObject<SVGSVGElement>
   yMax: number;
   xRange: { xMin: number, xMax: number };
+  aggregation?: string;
 }
 
 export type Props = OwnProps;
 
-const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax, xRange }: Props) => {
+const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax, xRange, aggregation }: Props) => {
 
-  const { dumbbellSorted,currentSelectPatient,currentSelectSet }=store!;
+  const {
+    //dumbbellSorted,
+    currentSelectPatient, currentSelectSet } = store!;
   const svgSelection = select(svg.current);
   data = data.sort(
     (a, b) =>
       Math.abs(a.startXVal - a.endXVal) - Math.abs(b.startXVal - b.endXVal)
   );
 
-  const [xScale, yScale] = useMemo(() => {
-    const xScale = scaleLinear()
+  const [testValueScale, valueScale] = useMemo(() => {
+    const testValueScale = scaleLinear()
       .domain([0.9 * xRange.xMin, 1.1 * xRange.xMax])
-      .range([
-        offset.left,
-        dimension.width - offset.right - offset.margin
-      ]);
+      .range([dimension.height - offset.bottom, offset.top]);
+    
 
-    let yScale;
-    if (!dumbbellSorted) {
-     yScale = scaleLinear()
-      .domain([0, 1.1 * yMax])
-      .range([dimension.height - offset.top, offset.bottom]);
-    }
-    else {
-      const indices = range(0,data.length)
-      yScale = scaleOrdinal()
-        .domain(indices as any)
-       .range(range(dimension.height - offset.top, offset.bottom, -(dimension.height - offset.top - offset.bottom) / data.length));
-       // .range([dimension.height - offset.top, offset.bottom]);
-      
-    }
-    return [xScale, yScale];
-  }, [dimension, data, yMax, xRange,dumbbellSorted]);
+   // let valueScale;
+    let valueScale = scalePow()
+        .exponent(0.5)
+        .domain([0, 1.1 * yMax])
+        .range([offset.left, dimension.width - offset.right - offset.margin]);
+    
+    // if (!dumbbellSorted) {
+    //   valueScale = scaleLinear()
+    //     .domain([0, 1.1 * yMax])
+    //     .range([offset.left, dimension.width - offset.right - offset.margin]);
+    // }
+    // else {
+    //   const indices = range(0, data.length)
+    //   valueScale = scaleOrdinal()
+    //     .domain(indices as any)
+    //     .range(range(offset.left, dimension.width - offset.right - offset.margin, -(dimension.width - offset.left - offset.right) / data.length));
+    //   // .range([dimension.height - offset.top, offset.bottom]);
 
-  const xAxisLabel = axisBottom(xScale);
-  if (!dumbbellSorted){
-    const yAxisLabel = axisLeft(yScale as ScaleLinear<number, number>);
-      svgSelection
-    .select(".axes")
-        .select(".y-axis")
-        .attr('display',null)
-    .attr("transform",
-      `translate(${offset.left} ,-${offset.bottom - offset.top} )`)
-        .call(yAxisLabel as any);
-            svgSelection
-              .select(".axes")
-              .select(".y-label")
-              .attr("display", null)
-              .attr("y", 0)
-              .attr("x", -0.5 * dimension.height + 1.5 * offset.bottom)
-              .attr("font-size", "11px")
-              .attr("text-anchor", "middle")
-              .attr("alignment-baseline", "hanging")
-              .attr("transform", "rotate(-90)")
-              .text(
-                AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
-              );
-  }
-  else {
-     svgSelection
-       .select(".axes")
-       .select(".y-axis")
-       .attr("display", "none");
+    // }
+    return [testValueScale, valueScale];
+  }, [dimension, data, yMax, xRange, 
+ //   dumbbellSorted
+  ]);
+
+  const testLabel = axisLeft(testValueScale);
+  //if (!dumbbellSorted) {
+    const yAxisLabel = axisBottom(valueScale as ScaleLinear<number, number>);
+    svgSelection
+      .select(".axes")
+      .select(".y-axis")
+      .attr(
+        "transform",
+        `translate(0 ,${dimension.height-offset.bottom} )`
+      )
+      .attr('display', null)
+
+      .call(yAxisLabel as any);
     svgSelection
       .select(".axes")
       .select(".y-label")
-      .attr("display", "none");
-  }
-  
+      .attr("display", null)
+      .attr("y", dimension.height-offset.bottom+20)
+      .attr("x", 0.5 * (dimension.width + offset.left))
+      .attr("font-size", "11px")
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "hanging")
+      // .attr("transform", `translate(0 ,${offset.top}`)
+      .text(
+        AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
+      );
+  //}
+  // else {
+  //   svgSelection
+  //     .select(".axes")
+  //     .select(".y-axis")
+  //     .attr("display", "none");
+  //   svgSelection
+  //     .select(".axes")
+  //     .select(".y-label")
+  //     .attr("display", "none");
+  //}
+
 
   svgSelection.select('.axes')
     .select(".x-axis")
-    .attr("transform", `translate(0, ${(dimension.height - offset.bottom)})`)
-    .call(xAxisLabel as any);
+    .attr("transform", `translate(${offset.left}, 0)`)
+    .call(testLabel as any);
 
 
-  
-        svgSelection
-          .select(".axes")
-          .select(".x-label")
-          .attr("x", 0.5 * (dimension.width + offset.left))
-          .attr("y", dimension.height)
-          .attr("alignment-baseline", "baseline")
-          .attr("font-size", "11px")
-          .attr("text-anchor", "middle")
-          .text("Hemoglobin Value");
+
+  svgSelection
+    .select(".axes")
+    .select(".x-label")
+    .attr("x", -0.5 * dimension.height + 1.5 * offset.bottom)
+    .attr("y", 0)
+    .attr("transform", "rotate(-90)")
+    .attr("alignment-baseline", "hanging")
+    .attr("font-size", "11px")
+    .attr("text-anchor", "middle")
+    .text("Hemoglobin Value");
 
 
   const decideIfSelected = (d: DumbbellDataPoint) => {
-    if (currentSelectPatient) {
-      return currentSelectPatient.patientID===d.patientID
+    if (currentSelectPatient && d.patientID > 0) {
+      return currentSelectPatient.patientID === d.patientID
+    }
+    else if (aggregation && currentSelectPatient) {
+      return d[aggregation] === currentSelectPatient[aggregation]
     }
     else if (currentSelectSet) {
-      return d[currentSelectSet.set_name]===currentSelectSet.set_value
+      return d[currentSelectSet.set_name] === currentSelectSet.set_value
     }
     else {
       return false;
     }
-  //  return true;
+    //  return true;
   }
-      
-    return (
-      <>
-        <g className="axes">
-          <g className="x-axis"></g>
-          <g className="y-axis"></g>
-          <text className="x-label" style={{ textAnchor: "end" }} />
-          <text className="y-label" style={{ textAnchor: "end" }} />
-        </g>
-        <g className="chart-comp" >
-          <line x1={xScale(11)} x2={xScale(11)} y1={dimension.height-offset.bottom} y2={0} style={{ stroke: "#990D0D",strokeWidth:"2"}} />
-          {data.map((dataPoint,index) => {
-            const start = xScale(dataPoint.startXVal);
-            const end = xScale(dataPoint.endXVal);
-            const returning = start > end ? end : start;
-            const rectwidth = Math.abs(end - start)
-            return (
-              <Popup
-                content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}`}
-                key={dataPoint.caseId}
-                trigger={
-                  <DumbbellG 
-                    dataPoint={dataPoint}
-                    transform={`translate(0,-${offset.bottom - offset.top})`}
-                  >
-                    <Rect
-                      x={returning}
-                      y={
-                        dumbbellSorted
-                          ? (yScale as ScaleOrdinal<any, any>)(index)
-                          : (yScale as ScaleLinear<number, number>)(
-                              dataPoint.yVal
-                            ) - 1
-                      }
-                      width={rectwidth}
-                      isSelected={decideIfSelected(dataPoint)}
-                    />
-                    <Circle
-                      cx={xScale(dataPoint.startXVal)}
-                      cy={
-                        dumbbellSorted
-                          ? (yScale as ScaleOrdinal<any, any>)(index)
-                          : (yScale as ScaleLinear<number, number>)(
-                            dataPoint.yVal
-                          )}
-                      onClick={() => { actions.selectPatient(dataPoint) }}
-                      isSelected={decideIfSelected(dataPoint)}
-                    />
-                    <Circle
-                      cx={xScale(dataPoint.endXVal)}
-                      cy={
-                        dumbbellSorted
-                          ? (yScale as ScaleOrdinal<any, any>)(index)
-                          : (yScale as ScaleLinear<number, number>)(
-                              dataPoint.yVal
-                            )
-                      }
-                      onClick={() => {
-                        actions.selectPatient(dataPoint)
-                      }}
-                      isSelected={decideIfSelected(dataPoint)}
-                      
-                      
-                    />
-                  </DumbbellG>
-                }
-              />
-            );
+
+  const clickDumbbellHandler = (d: DumbbellDataPoint) => {
+    if (aggregation) {
+      actions.selectSet({ set_name: aggregation, set_value: d[aggregation] })
+    } else {
+      actions.selectPatient(d)
+    }
+  }
+  return (
+    <>
+      <g className="axes">
+        <g className="x-axis"></g>
+        <g className="y-axis"></g>
+        <text className="x-label" style={{ textAnchor: "end" }} />
+        <text className="y-label" style={{ textAnchor: "end" }} />
+      </g>
+      <g className="chart-comp" >
+        <line x1={offset.left} x2={dimension.width - offset.right} y1={testValueScale(11)} y2={testValueScale(11)} style={{ stroke: "#990D0D", strokeWidth: "2" }} />
+        {data.map((dataPoint, index) => {
+          const start = testValueScale(dataPoint.startXVal);
+          const end = testValueScale(dataPoint.endXVal);
+          const returning = start > end ? end : start;
+          const rectDifference = Math.abs(end - start)
+
+          const xVal =
+            valueScale(dataPoint.yVal) -
+            (Math.abs(dataPoint.startXVal - dataPoint.endXVal) / (xRange.xMax-xRange.xMin)) *
+              (valueScale(dataPoint.yVal) - valueScale(dataPoint.yVal - 1)) 
+              -
+            Math.random() * 3;
+          
+          return (
+            <Popup
+              content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}
+              key={dataPoint.caseId}
+              trigger={
+                <DumbbellG dataPoint={dataPoint}>
+                  <Rect
+                    x={xVal-1
+                    }
+                    y={returning}
+                    height={rectDifference}
+                    isselected={decideIfSelected(dataPoint)}
+                  />
+                  <Circle
+                    cx={
+                      xVal
+                    }
+                    cy={testValueScale(dataPoint.startXVal)}
+                    onClick={() => {
+                      clickDumbbellHandler(dataPoint);
+                    }}
+                    isselected={decideIfSelected(dataPoint)}
+                  />
+                  <Circle
+                    cx={
+                      xVal
+                    }
+                    cy={testValueScale(dataPoint.endXVal)}
+                    onClick={() => {
+                      clickDumbbellHandler(dataPoint);
+                    }}
+                    isselected={decideIfSelected(dataPoint)}
+                  />
+                </DumbbellG>
+              }
+            />
+          );
         })}
-        </g>
-        <g className=".circle-tooltip" style={{ display: "none" }}>
-          <rect
-            style={{ width: "30", height: "20", fill: "white", opacity: "0.5" }}
-          />
-          <text
-            x="15"
-            dy="1.2em"
-            style={{
-              textAnchor: "middle",
-              fontSize: "12px",
-              fontWeight: "bold"
-            }}
-          />
-        </g>
-      </>
-    );
-  }
+      </g>
+    </>
+  );
+}
 
 export default inject("store")(observer(DumbbellChart));
 
-interface DumbbellProps{
+interface DumbbellProps {
   dataPoint: DumbbellDataPoint;
 }
 
-interface DotProps{
-  isSelected: boolean;
+interface DotProps {
+  isselected: boolean;
 }
 
-  // display: ${props =>
-  //   props.dataPoint.endXVal === 0 || props.dataPoint.startXVal === 0
-  //     ? "none"
-  //     : null} 
+// display: ${props =>
+//   props.dataPoint.endXVal === 0 || props.dataPoint.startXVal === 0
+//     ? "none"
+//     : null} 
 
-const DumbbellG = styled(`g`)<DumbbellProps>`
+const DumbbellG = styled(`g`) <DumbbellProps>`
 
 `;
-
 
 
 const Circle = styled(`circle`)<DotProps>`
   r:4px
-  fill:${props => (props.isSelected ?'#d98532':'#20639B')}
+  fill: ${props => (props.isselected ? "#d98532" : "#404040")};
+  opacity:0.8
 `;
 
 const Rect = styled(`rect`) <DotProps>`
- height:1.5px
+ width:1.5px
  opacity:50%
- fill:${props => (props.isSelected ? '#d98532' : '#20639B')}
+ fill: ${props => (props.isselected ? "#d98532" : "#404040")};
 `;
