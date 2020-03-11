@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect } from 'react';
 import styled from 'styled-components';
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
@@ -17,7 +17,7 @@ import DumbbellChartVisualization from "./Components/DumbbellChart/DumbbellChart
 // import DumbbellPlot from './Components/DumbbellPlot'
 import { Responsive as ResponsiveReactGridLayout } from "react-grid-layout";
 import {
-  Icon, Button, Tab, Container,Grid
+  Icon, Button, Tab, Container, Grid
 } from 'semantic-ui-react'
 import Store from './Interfaces/Store'
 // import LineUp from 'lineupjsx'
@@ -30,8 +30,10 @@ import * as LineUpJS from "lineupjsx";
 import { inject, observer } from 'mobx-react';
 import { LayoutElement } from './Interfaces/ApplicationState';
 import { action } from 'mobx';
-import {actions} from './index'
-import { LineUpStringColumnDesc, LineUpCategoricalColumnDesc, LineUpNumberColumnDesc, LineUpSupportColumn, LineUpColumn} from 'lineupjsx';
+import { actions } from './index'
+import { LineUpStringColumnDesc, LineUpCategoricalColumnDesc, LineUpNumberColumnDesc, LineUpSupportColumn, LineUpColumn } from 'lineupjsx';
+import ScatterPlotVisualization from './Components/Scatterplot/ScatterPlotVisualization';
+import DetailView from './Components/DetailView';
 
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
@@ -39,7 +41,7 @@ import { LineUpStringColumnDesc, LineUpCategoricalColumnDesc, LineUpNumberColumn
 
 
 
-interface OwnProps{
+interface OwnProps {
   store?: Store;
 }
 
@@ -47,93 +49,125 @@ type Props = OwnProps;
 
 const App: FC<Props> = ({ store }: Props) => {
   const {
-    layoutArray
+    layoutArray,
+    hemoglobinDataSet
   } = store!;
 
-  const removeStyle = {
-    position: "absolute" as "absolute",
-    right: "2px",
-    top: 0,
-    cursor: "pointer"
-  };
+  async function cacheHemoData() {
+    const res = await fetch("http://localhost:8000/api/hemoglobin");
+    const data = await res.json();
+    const result = data.result;
+    actions.storeHemoData(result);
+    //   let tempMaxCaseCount = 0
+    // data.result.forEach((d: any) => {
+    //   tempMaxCaseCount = d.count > tempMaxCaseCount ? d.count : tempMaxCaseCount;
+    // })
+    // setMaxCaseCount(tempMaxCaseCount)
+  }
+  useEffect(() => {
+    cacheHemoData();
+  }, []);
 
   const colData = {
-      lg: 2,
-      md: 2,
-      sm: 2,
-      xs: 2,
-      xxs: 2
-    };
+    lg: 2,
+    md: 2,
+    sm: 2,
+    xs: 2,
+    xxs: 2
+  };
 
-  const createElement = (layout: LayoutElement,index:number) => {
-    if (layout.x_axis_name === "HEMO_VALUE") {
+  const createElement = (layout: LayoutElement, index: number) => {
+    if (layout.plot_type === "DUMBBELL") {
       return (
         <div key={layout.i} className={"parent-node" + layout.i}>
           <Button
-            icon
+            icon="close"
             floated={"right"}
             circular
+            compact
             size="mini"
+            key={layout.i}
             onClick={
-              actions.removeChart.bind(layout.i)}
+              actions.removeChart}
           >
-            <Icon key={layout.i} name="close" />
+          <Icon key={layout.i} name="close" />
           </Button>
           <DumbbellChartVisualization
-            yAxis={layout.y_axis_name}
+            yAxis={layout.aggregatedBy}
             chartId={layout.i}
             chartIndex={index}
+            aggregatedOption={layout.aggregation}
           />
         </div>
       );
     }
-    return (
-      <div
+    else if (layout.plot_type === "BAR") {
+      return (
+        <div
+          //onClick={this.onClickBlock.bind(this, layoutE.i)}
+          key={layout.i}
+          className={"parent-node" + layout.i}
+        // data-grid={layoutE}
+        >
+          <Button
+            icon='close'
+            floated={"right"}
+            circular
+            compact
+            size="mini"
+            onClick={actions.removeChart}
+          >
+          <Icon key={layout.i} name="close" /> 
+          </Button>
+          <BarChartVisualization
+            aggregatedBy={layout.aggregatedBy}
+            valueToVisualize={layout.valueToVisualize}
+            // class_name={"parent-node" + layoutE.i}
+            chartId={layout.i}
+            chartIndex={index}
+            extraPair={layout.extraPair}
+          />
+        </div>
+      );
+    }
+    else {
+      return (<div
         //onClick={this.onClickBlock.bind(this, layoutE.i)}
         key={layout.i}
         className={"parent-node" + layout.i}
-        // data-grid={layoutE}
+      // data-grid={layoutE}
       >
         <Button
-          icon
+          icon='close'
+          compact
           floated={"right"}
           circular
           size="mini"
-          onClick={actions.removeChart.bind(layout.i)}
+          onClick={actions.removeChart}
         >
-          <Icon key={layout.i} name="close" />
+        <Icon key={layout.i} name="close" />
         </Button>
-        <BarChartVisualization
-          xAxis={layout.x_axis_name}
-          yAxis={layout.y_axis_name}
+        <ScatterPlotVisualization
+          xAxis={layout.aggregatedBy}
+          yAxis={layout.valueToVisualize}
           // class_name={"parent-node" + layoutE.i}
           chartId={layout.i}
           chartIndex={index}
-          // set_selection_handler={this.SetSelectionHandler}
 
-          //plot_type={layoutE.plot_type}
         />
-
-        {/* <span
-        className="remove"
-        style={removeStyle}
-        onClick={actions.removeChart(layout.i)}
-      >
-        x
-      </span> */}
-      </div>
-    );
+      </div>)
+    }
   }
   const arr: { a: number; d: string; cat: string; cat2: string; }[] = [];
   const cats = ['c1', 'c2', 'c3'];
-  for (let i = 0; i < 100; ++i) {
-    arr.push({
-      a: Math.random() * 10,
-      d: 'Row ' + i,
-      cat: cats[Math.floor(Math.random() * 3)],
-      cat2: cats[Math.floor(Math.random() * 3)]
-    })
-  }
+  // for (let i = 0; i < 100; ++i) {
+  //   arr.push({
+  //     a: Math.random() * 10,
+  //     d: 'Row ' + i,
+  //     cat: cats[Math.floor(Math.random() * 3)],
+  //     cat2: cats[Math.floor(Math.random() * 3)]
+  //   })
+  // }
   const panes = [{
     menuItem: 'Tab 1', render: () => <Container>
       <ResponsiveReactGridLayout
@@ -154,10 +188,11 @@ const App: FC<Props> = ({ store }: Props) => {
       </ResponsiveReactGridLayout>
     </Container>
   },
-    {
-      menuItem: 'Tab 2', render: () =>
-        <div className={"okok"}>
-      <LineUpJS.LineUp data={arr}/></div>}]
+  {
+    menuItem: 'Tab 2', render: () =>
+      <div className={"okok"}>
+        <LineUpJS.LineUp data={hemoglobinDataSet} /></div>
+  }]
 
   return (
     <LayoutDiv>
@@ -168,13 +203,16 @@ const App: FC<Props> = ({ store }: Props) => {
         <Grid.Column width={3}>
           <SideBar></SideBar>
         </Grid.Column>
-        <Grid.Column width={9}>
+        <Grid.Column width={10}>
           <Tab panes={panes}
-            //  renderActiveOnly={false}
+          //  renderActiveOnly={false}
           ></Tab>
-          
+        </Grid.Column>
+        <Grid.Column width={3}>
+          <DetailView/>
         </Grid.Column>
       </Grid>
+
     </LayoutDiv>
   );
 }
