@@ -104,9 +104,9 @@ def fetch_professional_set(request):
 
 
 
-def fetch_individual(request):
+def fetch_surgery(request):
     if request.method == "GET":
-        
+        # Get the values from the request
         case_id = request.GET.get('case_id')
 
         if not case_id:
@@ -114,21 +114,43 @@ def fetch_individual(request):
                 "case_id must be supplied.")
         
         command =(
-                f"SELECT info.DI_BIRTHDATE, info.GENDER_CODE, info.GENDER_DESC, "
-                f"info.RACE_CODE, info.RACE_DESC, info.ETHNICITY_CODE, info.ETHNICITY_DESC, "
-                f"info.DI_DEATH_DATE, surgery.DI_CASE_DATE, surgery.DI_SURGERY_START_DTM, "
+                f"SELECT surgery.DI_CASE_DATE, surgery.DI_SURGERY_START_DTM, "
                 f"surgery.DI_SURGERY_END_DTM, surgery.SURGERY_ELAP, surgery.SURGERY_TYPE_DESC, "
                 f"surgery.SURGEON_PROV_DWID, surgery.ANESTH_PROV_DWID, surgery.PRIM_PROC_DESC, "
                 f"surgery.POSTOP_ICU_LOS "
-                f"FROM CLIN_DM.BPU_CTS_DI_PATIENT info "
-                f"JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE surgery "
-                f"ON info.DI_PAT_ID = surgery.DI_PAT_ID "
+                f"FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE surgery "
                 f"WHERE surgery.DI_CASE_ID = {case_id}"
         )
+
         result = execute_sql(command)
-
         data_dict = data_dictionary()
+        data = [
+            dict(zip([data_dict[key[0]] for key in cur.description], row))
+            for row in result
+        ]
+        
+        return JsonResponse({"result": data})
 
+
+def fetch_patient(request):
+    if request.method == "GET":
+        # Get the values from the request
+        patient_id = request.GET.get('patient_id')
+
+        if not patient_id:
+            HttpResponseBadRequest(
+                "patient_id must be supplied.")
+        
+        command =(
+                f"SELECT info.DI_BIRTHDATE, info.GENDER_CODE, info.GENDER_DESC, "
+                f"info.RACE_CODE, info.RACE_DESC, info.ETHNICITY_CODE, info.ETHNICITY_DESC, "
+                f"info.DI_DEATH_DATE"
+                f"FROM CLIN_DM.BPU_CTS_DI_PATIENT info "
+                f"WHERE info.DI_PAT_ID = {patient_id}"
+        )
+
+        result = execute_sql(command)
+        data_dict = data_dictionary()
         data = [
             dict(zip([data_dict[key[0]] for key in cur.description], row))
             for row in result
