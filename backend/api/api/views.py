@@ -306,18 +306,18 @@ def request_transfused_units(request):
         
         # Define the SQL translation dictionary
         command_dict = {
-            "PRBC_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS)",
-            "FFP_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS)",
-            "PLT_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS)",
-            "CRYO_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS)",
-            "CELL_SAVER_ML": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML)"
+            "PRBC_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS) PRBC_UNITS",
+            "FFP_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS) FFP_UNITS",
+            "PLT_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS",
+            "CRYO_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS) CRYO_UNITS",
+            "CELL_SAVER_ML": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML) CELL_SAVER_ML"
         }
         command_dict["ALL_UNITS"] = (
-            f"({command_dict['PRBC_UNITS']} + "
-            f"{command_dict['FFP_UNITS']} + "
-            f"{command_dict['PLT_UNITS']} + "
-            f"{command_dict['CRYO_UNITS']} + "
-            f"{command_dict['CELL_SAVER_ML']})"
+            f"{command_dict['PRBC_UNITS']}, "
+            f"{command_dict['FFP_UNITS']}, "
+            f"{command_dict['PLT_UNITS']}, "
+            f"{command_dict['CRYO_UNITS']}, "
+            f"{command_dict['CELL_SAVER_ML']}"
         )
 
         # Convert the filters to SQL
@@ -331,10 +331,13 @@ def request_transfused_units(request):
 
         pat_id_filter = "" if not patient_id else f"AND CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_PAT_ID = '{patient_id}'"
 
+        # Setup the inner and outer selects
+        outer_select = "PRBC_UNITS, FFP_UNITS, PLT_UNITS, CRYO_UNITS, CELL_SAVER_ML" if transfusion_type == "ALL_UNITS" else outer_select = transfusion_type
+
         # Define the full SQL statement
         command = (
-            f"SELECT transfused, di_case_id, YEAR, SURGEON_ID, ANESTHOLOGIST_ID FROM ( "
-            f"SELECT {command_dict[transfusion_type]} transfused, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID di_case_id, "
+            f"SELECT {outer_select}, di_case_id, YEAR, SURGEON_ID, ANESTHOLOGIST_ID FROM ( "
+            f"SELECT {command_dict[transfusion_type]}, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID di_case_id, "
             f"EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE) YEAR, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID SURGEON_ID, "
             f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID ANESTHOLOGIST_ID "
             f"FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
