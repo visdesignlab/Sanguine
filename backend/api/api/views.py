@@ -125,7 +125,7 @@ def fetch_surgery(request):
         result = execute_sql(command)
         data_dict = data_dictionary()
         data = [
-            dict(zip([data_dict[key[0]] for key in cur.description], row))
+            dict(zip([data_dict[key[0]] for key in result.description], row))
             for row in result
         ]
         
@@ -144,7 +144,7 @@ def fetch_patient(request):
         command =(
                 f"SELECT info.DI_BIRTHDATE, info.GENDER_CODE, info.GENDER_DESC, "
                 f"info.RACE_CODE, info.RACE_DESC, info.ETHNICITY_CODE, info.ETHNICITY_DESC, "
-                f"info.DI_DEATH_DATE"
+                f"info.DI_DEATH_DATE "
                 f"FROM CLIN_DM.BPU_CTS_DI_PATIENT info "
                 f"WHERE info.DI_PAT_ID = {patient_id}"
         )
@@ -152,7 +152,7 @@ def fetch_patient(request):
         result = execute_sql(command)
         data_dict = data_dictionary()
         data = [
-            dict(zip([data_dict[key[0]] for key in cur.description], row))
+            dict(zip([data_dict[key[0]] for key in result.description], row))
             for row in result
         ]
         
