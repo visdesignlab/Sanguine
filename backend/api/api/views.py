@@ -127,10 +127,10 @@ def fetch_individual(request):
         data_dict = data_dictionary()
 
         data = [
-            dict(zip([data_dict[key[0]]
-                      for key in cur.description], row))
+            dict(zip([data_dict[key[0]] for key in cur.description], row))
             for row in result
         ]
+        
         return JsonResponse({"result": data})
 
 
