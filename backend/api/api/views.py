@@ -291,11 +291,11 @@ def request_transfused_units(request):
             "CELL_SAVER_ML": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML)"
         }
         command_dict["ALL_UNITS"] = (
-            f"{command_dict['PRBC_UNITS']} + "
+            f"({command_dict['PRBC_UNITS']} + "
             f"{command_dict['FFP_UNITS']} + "
             f"{command_dict['PLT_UNITS']} + "
             f"{command_dict['CRYO_UNITS']} + "
-            f"{command_dict['CELL_SAVER_ML']}"
+            f"{command_dict['CELL_SAVER_ML']})"
         )
 
         # Convert the filters to SQL
@@ -303,7 +303,7 @@ def request_transfused_units(request):
         filter_selection_sql[0] = filter_selection_sql[0].replace(" CLIN_DM", " AND (CLIN_DM")
         filter_selection_sql[-1] = filter_selection_sql[-1].replace(" OR", ")")
         extra_command = "".join(filter_selection_sql)
-        
+
         pat_id_filter = "" if not patient_id else f"AND CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_PAT_ID = '{patient_id}'"
 
         # Define the full SQL statement
