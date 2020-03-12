@@ -264,7 +264,7 @@ export function setupProvenance(): AppProvenance {
 
   const selectSet = (data: SelectSet) => {
     provenance.applyAction(`select set ${data.set_name} at ${data.set_value}`, (state: ApplicationState) => {
-      if (state.currentSelectSet && data === state.currentSelectSet) {
+      if (state.currentSelectSet && data.set_name === state.currentSelectSet.set_name && data.set_value === state.currentSelectSet.set_value) {
         state.currentSelectSet = null;
         state.currentSelectPatient = null;
       }
