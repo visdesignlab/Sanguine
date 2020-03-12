@@ -243,7 +243,10 @@ def summarize_attribute_w_year(request):
         #     "CASES_COUNT": "case_count",
         # }
         result_dict = {}
+        case_id_list = []
+        
         for row in result:
+            case_id_list += [row[2]]
             result_val = 0
             if row[1]:
                 result_val = row[1]
@@ -257,12 +260,14 @@ def summarize_attribute_w_year(request):
 
         items = [{"aggregatedBy": key, "valueToVisualize": value}
                  for key,value in result_dict.items()]
+        #case_id_list = [row[2] for row in result]
         
         # data = [
         #     dict(zip([data_exchange[key[0]] for key in cur.description], row))
         #     for row in result
         # ]
-        return JsonResponse({"result": items})
+        #print(case_id_list)
+        return JsonResponse({"result": items,"case_id_list":case_id_list})
 
 
 def request_individual_specific(request):
