@@ -70,7 +70,6 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     const dataResult = await res.json();
     let caseCount = 0;
     if (dataResult) {
-      console.log(dataResult)
       let yMaxTemp = -1;
       let perCaseYMaxTemp = -1
      // let perCaseData: BarChartDataPoint[] = [];
@@ -154,8 +153,19 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     if (extraPair){
       extraPair.forEach((variable: string) => {
         switch (variable) {
-          case "Per Case Bar":
-            newExtraPairData.push({ name: "Per Case Bar", data: data.original, type: "BarChart" });
+          case "Total Transfusion":
+            let newDataBar={} as any;
+            data.original.map((dataPoint:BarChartDataPoint)=>{
+              newDataBar[dataPoint.aggregateAttribute]=dataPoint.totalVal
+            })
+            newExtraPairData.push({ name: "Total", data: newDataBar, type: "BarChart" });
+            break;
+          case "Per Case Transfusion":
+            let newDataPerCase={} as any;
+            data.original.map((dataPoint:BarChartDataPoint)=>{
+              newDataPerCase[dataPoint.aggregateAttribute]=dataPoint.totalVal/dataPoint.caseCount
+            })
+            newExtraPairData.push({ name: "Per Case", data: newDataPerCase, type: "BarChart" });
             break;
           case "Hemoglobin":
             let newData = {} as any;
@@ -177,6 +187,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
         }
       )
     }
+    console.log(newExtraPairData)
     setExtraPairData(newExtraPairData)
   }
 
@@ -217,10 +228,17 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             </Dropdown.Item>
             <Dropdown.Item
               onClick={() => {
-                actions.changeExtraPair(chartId, "Per Case Bar");
+                actions.changeExtraPair(chartId, "Total Transfusion");
               }}
             >
-              Per Case Bar
+              Total Transfusion
+            </Dropdown.Item>
+            <Dropdown.Item
+              onClick={() => {
+                actions.changeExtraPair(chartId, "Per Case Transfusion");
+              }}
+            >
+              Per Case Transfusion
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
