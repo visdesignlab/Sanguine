@@ -5,7 +5,7 @@ import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { BarChartDataPoint } from '../../Interfaces/ApplicationState'
 import BarChart from "./BarChart"
-import { Button, Icon, Table, Grid, Dropdown, GridColumn } from "semantic-ui-react";
+import { Button, Icon, Table, Grid, Dropdown, GridColumn, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
 import { sum,max, median, create } from "d3";
 
@@ -15,7 +15,7 @@ interface OwnProps {
   chartId: string;
   store?: Store;
   chartIndex: number;
-  extraPair?:string[]
+  extraPair?:string[];
 }
 
 export type Props = OwnProps;
@@ -41,7 +41,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
   const [selectedBar, setSelectedBarVal] = useState<number | null>(null);
   const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
   const [extraPairData, setExtraPairData] = useState<any[]>([])
-
+  const [stripPlotMode, setStripMode] = useState(false);
 
 
   useLayoutEffect(() => {
@@ -172,6 +172,9 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     makeExtraPairData();
   }, [layoutArray]);
 
+  const toggleStripGraphMode=()=>{
+    setStripMode(!stripPlotMode)
+  }
 
 
   //  return true;
@@ -186,9 +189,12 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     // aggregatedByName={aggregatedBy}
     // valueToVisualizeName={valueToVisualize}
     // />
-    <Grid style={{ height: "100%" }}>
+    <Grid style={{ height: "100%" }} >
+      <Grid.Row >
       <Grid.Column verticalAlign="middle" width={1}>
-        <Dropdown simple item icon="plus" compact>
+        <Menu icon vertical compact size="mini" borderless secondary widths={2}>
+          <Menu.Item fitted>
+        <Dropdown basic item icon="plus" compact>
           <Dropdown.Menu>
             <Dropdown.Item
               onClick={() => {
@@ -206,11 +212,17 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
+        </Menu.Item >
+        <Menu.Item fitted onClick={toggleStripGraphMode}>
+              <Icon name="ellipsis horizontal"/>
+      
+          </Menu.Item>
+          </Menu>
       </Grid.Column>
-      {extraPairData.map((d)=>{
+      {/* {extraPairData.map((d)=>{
         return <Grid.Column><SVG></SVG></Grid.Column>
-      })}
-      <Grid.Column width={(15-extraPairData.length) as any}>
+      })} */}
+      <Grid.Column width={(15) as any}>
         <SVG ref={svgRef}>
           {/* <text
           x="0"
@@ -231,10 +243,12 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             valueToVisualize={valueToVisualize}
             yMax={yMax.original}
             selectedVal={selectedBar}
+            stripPlotMode = {stripPlotMode}
             //extraPairDataSet={extraPairData}
           />
         </SVG>
       </Grid.Column>
+      </Grid.Row>
     </Grid>
   );
 }
