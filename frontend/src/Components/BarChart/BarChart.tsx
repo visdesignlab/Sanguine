@@ -23,28 +23,31 @@ import {
 import {
   BarChartDataPoint,
   offset,
+  extraPairWidth,
   AxisLabelDict
 } from "../../Interfaces/ApplicationState";
 import { Popup, Button, Icon } from 'semantic-ui-react'
 import SingleViolinPlot from "./SingleViolinPlot";
 import SingleStripPlot from "./SingleStripPlot";
+import ExtraPairDumbbell from "./ExtraPairDumbbell";
 
 interface OwnProps {
   aggregatedBy: string;
   valueToVisualize: string;
   // chartId: string;
   store?: Store;
-  dimension: { width: number, height: number }
+  dimensionWhole: { width: number, height: number }
   data: BarChartDataPoint[];
   svg: React.RefObject<SVGSVGElement>;
   yMax: number;
   selectedVal: number | null;
   stripPlotMode:boolean;
+  extraPairDataSet:{name:string,data:any[], type:string}[];
 }
 
 export type Props = OwnProps;
 
-const BarChart: FC<Props> = ({ stripPlotMode,store, aggregatedBy, valueToVisualize, dimension, data, svg, yMax, selectedVal}: Props) => {
+const BarChart: FC<Props> = ({ extraPairDataSet,stripPlotMode,store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax, selectedVal}: Props) => {
 
   const svgSelection = select(svg.current);
 
@@ -53,12 +56,14 @@ const BarChart: FC<Props> = ({ stripPlotMode,store, aggregatedBy, valueToVisuali
     currentSelectSet
   } = store!;
 
-
   
-  const [aggregationScale, valueScale, caseScale,lineFunction] = useMemo(() => {
+  
+  const [dimension,aggregationScale, valueScale, caseScale,lineFunction] = useMemo(() => {
     
     const caseMax = max(data.map(d => d.caseCount)) || 0;
     const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
+    const dimension = {height:dimensionWhole.height,width:dimensionWhole.width-extraPairDataSet.length*extraPairWidth}
+    
     let kdeMax = 0
     const xVals = data
       .map(function (dp) {
@@ -88,8 +93,8 @@ const BarChart: FC<Props> = ({ stripPlotMode,store, aggregatedBy, valueToVisuali
     //   .curve(curveCardinal)
     //   .y((d: any) => kdeScale(d.y))
     //   .x((d: any) => valueScale(d.x) - offset.left);
-    return [aggregationScale, valueScale, caseScale,lineFunction];
-  }, [dimension, data, yMax])
+    return [dimension,aggregationScale, valueScale, caseScale,lineFunction];
+  }, [dimensionWhole, data, yMax,extraPairDataSet])
 
   const aggregationLabel = axisLeft(aggregationScale);
   const yAxisLabel = axisBottom(valueScale);
@@ -99,7 +104,7 @@ const BarChart: FC<Props> = ({ stripPlotMode,store, aggregatedBy, valueToVisuali
     .select(".x-axis")
     .attr(
       "transform",
-      `translate(${offset.left}, 0)`
+      `translate(${offset.left+extraPairDataSet.length*extraPairWidth}, 0)`
     )
     .call(aggregationLabel as any)
     .selectAll("text")
@@ -110,7 +115,7 @@ const BarChart: FC<Props> = ({ stripPlotMode,store, aggregatedBy, valueToVisuali
     .select(".y-axis")
     .attr(
       "transform",
-      `translate(0 ,${dimension.height - offset.bottom})`
+      `translate(${extraPairDataSet.length*extraPairWidth} ,${dimension.height - offset.bottom})`
     )
     .call(yAxisLabel as any);
 
@@ -122,7 +127,7 @@ const BarChart: FC<Props> = ({ stripPlotMode,store, aggregatedBy, valueToVisuali
     .attr("alignment-baseline", "hanging")
     .attr("font-size", "11px")
     .attr("text-anchor", "middle")
-    //.attr("transform", "rotate(90)")
+    .attr("transform", `translate(${extraPairDataSet.length*extraPairWidth},0)`)
     .text(() => {
       //const trailing = perCaseSelected ? " / Case" : "";
       return AxisLabelDict[valueToVisualize] ? AxisLabelDict[valueToVisualize]  : valueToVisualize 
@@ -137,7 +142,7 @@ const BarChart: FC<Props> = ({ stripPlotMode,store, aggregatedBy, valueToVisuali
     .attr("font-size", "11px")
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "hanging")
-    // .attr("transform", "rotate(-90)")
+    .attr("transform", `translate(${extraPairDataSet.length*extraPairWidth},0)`)
     .text(
       AxisLabelDict[aggregatedBy] ? AxisLabelDict[aggregatedBy] : aggregatedBy
     );
@@ -192,7 +197,7 @@ const BarChart: FC<Props> = ({ stripPlotMode,store, aggregatedBy, valueToVisuali
         <text className="y-label" style={{ textAnchor: "end" }} />
       </g>
       <g className="chart"
-        transform={`translate(${offset.left},0)`}
+        transform={`translate(${offset.left+extraPairDataSet.length*extraPairWidth},0)`}
       >
         {data.map((dataPoint) => {
           return outputSinglePlotElement(dataPoint).concat([
@@ -227,6 +232,13 @@ const BarChart: FC<Props> = ({ stripPlotMode,store, aggregatedBy, valueToVisuali
               strokeWidth="2px"
             />
           ]);
+        })}
+      </g>
+      <g className="extraPairChart">
+        {extraPairDataSet.map((pairData)=>{
+          if (pairData.type === "Dumbbell"){
+            return <ExtraPairDumbbell aggregatedScale={aggregationScale} dataSet={pairData.data}/>
+          }
         })}
       </g>
 

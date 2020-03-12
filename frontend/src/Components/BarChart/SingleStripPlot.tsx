@@ -3,14 +3,13 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import {inject, observer} from "mobx-react";
 import { BarChartDataPoint } from "../../Interfaces/ApplicationState";
-import { Popup } from "semantic-ui-react";
-import { actions } from "../..";
+// import { Popup } from "semantic-ui-react";
+// import { actions } from "../..";
 import { ScaleLinear } from "d3";
 
 interface OwnProps{
     dataPoint: BarChartDataPoint;
     isSelected: boolean;
-   
     aggregatedBy:string;
     howToTransform:string;
     store?: Store;
