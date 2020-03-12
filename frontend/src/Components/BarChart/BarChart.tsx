@@ -26,6 +26,8 @@ import {
   AxisLabelDict
 } from "../../Interfaces/ApplicationState";
 import { Popup, Button, Icon } from 'semantic-ui-react'
+import SingleViolinPlot from "./SingleViolinPlot";
+import SingleStripPlot from "./SingleStripPlot";
 
 interface OwnProps {
   aggregatedBy: string;
@@ -37,11 +39,12 @@ interface OwnProps {
   svg: React.RefObject<SVGSVGElement>;
   yMax: number;
   selectedVal: number | null;
+  stripPlotMode:boolean;
 }
 
 export type Props = OwnProps;
 
-const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension, data, svg, yMax, selectedVal}: Props) => {
+const BarChart: FC<Props> = ({ stripPlotMode,store, aggregatedBy, valueToVisualize, dimension, data, svg, yMax, selectedVal}: Props) => {
 
   const svgSelection = select(svg.current);
 
@@ -153,6 +156,32 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
       return false;
     }
   }
+
+  const outputSinglePlotElement = (dataPoint:BarChartDataPoint)=>{
+    if (stripPlotMode){
+      return ([<SingleStripPlot 
+        isSelected = {decideIfSelected(dataPoint)}
+        bandwidth={aggregationScale.bandwidth()}
+        valueScale = {valueScale}
+        aggregatedBy = {aggregatedBy} 
+        dataPoint={dataPoint}
+        howToTransform = {(`translate(-${offset.left},${aggregationScale(
+          dataPoint.aggregateAttribute
+        )})`).toString()}
+        />])
+    }else{
+      return (    [<SingleViolinPlot 
+        path = {lineFunction(dataPoint.kdeCal)!} 
+        dataPoint={dataPoint}
+        aggregatedBy = {aggregatedBy} 
+        isSelected={decideIfSelected(dataPoint)} 
+        howToTransform = {(`translate(0,${aggregationScale(
+          dataPoint.aggregateAttribute
+        )})`).toString()}
+        />])
+    }
+  }
+
   return (
     <>
       <line x1={1} x2={1} y1={offset.top} y2={dimension.height - offset.bottom} style={{ stroke: "#e5e5e5", strokeWidth: "1" }} />
@@ -161,18 +190,12 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
         <g className="y-axis"></g>
         <text className="x-label" style={{ textAnchor: "end" }} />
         <text className="y-label" style={{ textAnchor: "end" }} />
-
-        {/* {data.map((dataPoint) => {
-          return (
-           
-          )
-        })} */}
       </g>
       <g className="chart"
         transform={`translate(${offset.left},0)`}
       >
         {data.map((dataPoint) => {
-          return [
+          return outputSinglePlotElement(dataPoint).concat([
             <rect
               fill={interpolateGreys(caseScale(dataPoint.caseCount))}
               x={-40}
@@ -192,41 +215,6 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
             >
               {dataPoint.caseCount}
             </text>,
-
-            <Popup
-              content={dataPoint.totalVal}
-              key={dataPoint.aggregateAttribute}
-              trigger={
-                // <Bar
-                //   x={0}
-                //   y={aggregationScale(dataPoint.aggregateAttribute)}
-                //   //CHANGE TODO
-                //   width={ - offset.left}
-                //   height={aggregationScale.bandwidth()}
-                //   onClick={() => {
-                //     actions.selectSet({
-                //       set_name: aggregatedBy,
-                //       set_value: dataPoint.aggregateAttribute
-                //     });
-                //   }}
-                //   isselected={decideIfSelected(dataPoint)}
-                // />
-
-                <ViolinLine
-                  d={lineFunction(dataPoint.kdeCal)!}
-                  onClick={() => {
-                    actions.selectSet({
-                      set_name: aggregatedBy,
-                      set_value: dataPoint.aggregateAttribute
-                    });
-                  }}
-                  isselected={decideIfSelected(dataPoint)}
-                  transform={`translate(0,${aggregationScale(
-                    dataPoint.aggregateAttribute
-                  )})`}
-                />
-              }
-            />,
             <line
               x1={valueScale(dataPoint.median) - offset.left}
               x2={valueScale(dataPoint.median) - offset.left}
@@ -238,7 +226,7 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
               stroke="#d98532"
               strokeWidth="2px"
             />
-          ];
+          ]);
         })}
       </g>
 
@@ -248,11 +236,4 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
 }
 export default inject("store")(observer(BarChart));
 
-interface ViolinLineProp {
-  isselected: boolean;
-}
-const ViolinLine = styled(`path`)<ViolinLineProp>`
-  fill: ${props => (props.isselected ? "#d98532" : "#404040")};
-  stroke: ${props => (props.isselected ? "#d98532" : "#404040")};
-`;
 
