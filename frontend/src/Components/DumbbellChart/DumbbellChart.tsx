@@ -55,14 +55,14 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
     const testValueScale = scaleLinear()
       .domain([0.9 * xRange.xMin, 1.1 * xRange.xMax])
       .range([dimension.height - offset.bottom, offset.top]);
-    
 
-   // let valueScale;
+
+    // let valueScale;
     let valueScale = scalePow()
-        .exponent(0.5)
-        .domain([0, 1.1 * yMax])
-        .range([offset.left, dimension.width - offset.right - offset.margin]);
-    
+      .exponent(0.5)
+      .domain([0, 1.1 * yMax])
+      .range([offset.left, dimension.width - offset.right - offset.margin]);
+
     // if (!dumbbellSorted) {
     //   valueScale = scaleLinear()
     //     .domain([0, 1.1 * yMax])
@@ -77,36 +77,36 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
 
     // }
     return [testValueScale, valueScale];
-  }, [dimension, data, yMax, xRange, 
- //   dumbbellSorted
+  }, [dimension, data, yMax, xRange,
+    //   dumbbellSorted
   ]);
 
   const testLabel = axisLeft(testValueScale);
   //if (!dumbbellSorted) {
-    const yAxisLabel = axisBottom(valueScale as ScaleLinear<number, number>);
-    svgSelection
-      .select(".axes")
-      .select(".y-axis")
-      .attr(
-        "transform",
-        `translate(0 ,${dimension.height-offset.bottom} )`
-      )
-      .attr('display', null)
+  const yAxisLabel = axisBottom(valueScale as ScaleLinear<number, number>);
+  svgSelection
+    .select(".axes")
+    .select(".y-axis")
+    .attr(
+      "transform",
+      `translate(0 ,${dimension.height - offset.bottom} )`
+    )
+    .attr('display', null)
 
-      .call(yAxisLabel as any);
-    svgSelection
-      .select(".axes")
-      .select(".y-label")
-      .attr("display", null)
-      .attr("y", dimension.height-offset.bottom+20)
-      .attr("x", 0.5 * (dimension.width + offset.left))
-      .attr("font-size", "11px")
-      .attr("text-anchor", "middle")
-      .attr("alignment-baseline", "hanging")
-      // .attr("transform", `translate(0 ,${offset.top}`)
-      .text(
-        AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
-      );
+    .call(yAxisLabel as any);
+  svgSelection
+    .select(".axes")
+    .select(".y-label")
+    .attr("display", null)
+    .attr("y", dimension.height - offset.bottom + 20)
+    .attr("x", 0.5 * (dimension.width + offset.left))
+    .attr("font-size", "11px")
+    .attr("text-anchor", "middle")
+    .attr("alignment-baseline", "hanging")
+    // .attr("transform", `translate(0 ,${offset.top}`)
+    .text(
+      AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
+    );
   //}
   // else {
   //   svgSelection
@@ -140,8 +140,8 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
 
 
   const decideIfSelected = (d: DumbbellDataPoint) => {
-    if (currentSelectPatient && d.patientID > 0) {
-      return currentSelectPatient.patientID === d.patientID
+    if (currentSelectPatient && d.caseId > 0) {
+      return currentSelectPatient.caseId === d.caseId
     }
     else if (aggregation && currentSelectPatient) {
       return d[aggregation] === currentSelectPatient[aggregation]
@@ -180,11 +180,11 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
 
           const xVal =
             valueScale(dataPoint.yVal) -
-            (Math.abs(dataPoint.startXVal - dataPoint.endXVal) / (xRange.xMax-xRange.xMin)) *
-              (valueScale(dataPoint.yVal) - valueScale(dataPoint.yVal - 1)) 
-              -
+            (Math.abs(dataPoint.startXVal - dataPoint.endXVal) / (xRange.xMax - xRange.xMin)) *
+            (valueScale(dataPoint.yVal) - valueScale(dataPoint.yVal - 1))
+            -
             Math.random() * 3;
-          
+
           return (
             <Popup
               content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}
@@ -192,7 +192,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
               trigger={
                 <DumbbellG dataPoint={dataPoint}>
                   <Rect
-                    x={xVal-1
+                    x={xVal - 1
                     }
                     y={returning}
                     height={rectDifference}
@@ -248,7 +248,7 @@ const DumbbellG = styled(`g`) <DumbbellProps>`
 `;
 
 
-const Circle = styled(`circle`)<DotProps>`
+const Circle = styled(`circle`) <DotProps>`
   r:4px
   fill: ${props => (props.isselected ? "#d98532" : "#404040")};
   opacity:0.8
