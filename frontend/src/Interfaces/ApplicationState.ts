@@ -67,6 +67,9 @@ export const defaultState: ApplicationState = {
 };
 
 export const offset = { left: 85, bottom: 40, right: 10, top: 40, margin: 30 };
+export const extraPairWidth = 80
+export const extraPairPadding=5
+
 export const AxisLabelDict:any = {
   PRBC_UNITS: "Intraoperative RBCs Transfused",
   FFP_UNITS: "Intraoperative FFP Transfused",
