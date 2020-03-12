@@ -125,7 +125,7 @@ def fetch_surgery(request):
         result = execute_sql(command)
         data_dict = data_dictionary()
         data = [
-            dict(zip([data_dict[key[0]] for key in cur.description], row))
+            dict(zip([data_dict[key[0]] for key in result.description], row))
             for row in result
         ]
         
@@ -144,7 +144,7 @@ def fetch_patient(request):
         command =(
                 f"SELECT info.DI_BIRTHDATE, info.GENDER_CODE, info.GENDER_DESC, "
                 f"info.RACE_CODE, info.RACE_DESC, info.ETHNICITY_CODE, info.ETHNICITY_DESC, "
-                f"info.DI_DEATH_DATE"
+                f"info.DI_DEATH_DATE "
                 f"FROM CLIN_DM.BPU_CTS_DI_PATIENT info "
                 f"WHERE info.DI_PAT_ID = {patient_id}"
         )
@@ -152,7 +152,7 @@ def fetch_patient(request):
         result = execute_sql(command)
         data_dict = data_dictionary()
         data = [
-            dict(zip([data_dict[key[0]] for key in cur.description], row))
+            dict(zip([data_dict[key[0]] for key in result.description], row))
             for row in result
         ]
         
@@ -306,18 +306,18 @@ def request_transfused_units(request):
         
         # Define the SQL translation dictionary
         command_dict = {
-            "PRBC_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS)",
-            "FFP_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS)",
-            "PLT_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS)",
-            "CRYO_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS)",
-            "CELL_SAVER_ML": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML)"
+            "PRBC_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS) PRBC_UNITS",
+            "FFP_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS) FFP_UNITS",
+            "PLT_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS",
+            "CRYO_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS) CRYO_UNITS",
+            "CELL_SAVER_ML": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML) CELL_SAVER_ML"
         }
         command_dict["ALL_UNITS"] = (
-            f"({command_dict['PRBC_UNITS']} + "
-            f"{command_dict['FFP_UNITS']} + "
-            f"{command_dict['PLT_UNITS']} + "
-            f"{command_dict['CRYO_UNITS']} + "
-            f"{command_dict['CELL_SAVER_ML']})"
+            f"{command_dict['PRBC_UNITS']}, "
+            f"{command_dict['FFP_UNITS']}, "
+            f"{command_dict['PLT_UNITS']}, "
+            f"{command_dict['CRYO_UNITS']}, "
+            f"{command_dict['CELL_SAVER_ML']}"
         )
 
         # Convert the filters to SQL
@@ -331,10 +331,14 @@ def request_transfused_units(request):
 
         pat_id_filter = "" if not patient_id else f"AND CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_PAT_ID = '{patient_id}'"
 
+        # Setup the inner and outer selects
+        outer_select = "PRBC_UNITS, FFP_UNITS, PLT_UNITS, CRYO_UNITS, CELL_SAVER_ML" if transfusion_type == "ALL_UNITS" else transfusion_type
+        limit = "" if transfusion_type == "ALL_UNITS" else f"WHERE {transfusion_type} > 0"
+
         # Define the full SQL statement
         command = (
-            f"SELECT transfused, di_case_id, YEAR, SURGEON_ID, ANESTHOLOGIST_ID FROM ( "
-            f"SELECT {command_dict[transfusion_type]} transfused, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID di_case_id, "
+            f"SELECT {outer_select}, di_case_id, YEAR, SURGEON_ID, ANESTHOLOGIST_ID FROM ( "
+            f"SELECT {command_dict[transfusion_type]}, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID di_case_id, "
             f"EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE) YEAR, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID SURGEON_ID, "
             f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID ANESTHOLOGIST_ID "
             f"FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
@@ -345,12 +349,17 @@ def request_transfused_units(request):
             f"{pat_id_filter} "
             f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE), CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID, "
             f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID "
-            f") WHERE transfused>0"
+            f") {limit}"
         )
         
         # Execute the sql and get the results
         result = execute_sql(command)
-        items = [{"case_id": row[1], "transfused": row[0]}
+
+        if transfusion_type == "ALL_UNITS":
+            items = [{"case_id": row[5], "PRBC_UNITS": row[0], "FFP_UNITS": row[1], "PLT_UNITS": row[2], "CRYO_UNITS": row[3], "CELL_SAVER_ML": row[4]}
+                 for row in result]
+        else:
+            items = [{"case_id": row[1], "transfused": row[0]}
                  for row in result]
         return JsonResponse({"result": items})
 

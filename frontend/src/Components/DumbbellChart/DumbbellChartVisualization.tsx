@@ -52,13 +52,14 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
     async function fetchChartData() {
       let transfused_dict = {} as any;
       const transfusedRes = await fetch(
-        `http://localhost:8000/api/request_transfuse_or_attribute?variable=${yAxis}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`
+        `http://localhost:8000/api/request_transfused_units?transfusion_type=${yAxis}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`
       );
       const transfusedDataResult = await transfusedRes.json();
       const temp_transfusion_data = transfusedDataResult.result;
+      console.log(temp_transfusion_data)
       temp_transfusion_data.forEach((element: any) => {
         transfused_dict[element.case_id] = {
-          transfused: element.value
+          transfused: element.transfused
         };
       });
       // const hemoRes = await fetch(`http://localhost:8000/api/hemoglobin`);
