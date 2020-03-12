@@ -37,11 +37,12 @@ interface OwnProps {
   svg: React.RefObject<SVGSVGElement>;
   yMax: number;
   selectedVal: number | null;
+  stripPlotMode:boolean;
 }
 
 export type Props = OwnProps;
 
-const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension, data, svg, yMax, selectedVal}: Props) => {
+const BarChart: FC<Props> = ({ stripPlotMode,store, aggregatedBy, valueToVisualize, dimension, data, svg, yMax, selectedVal}: Props) => {
 
   const svgSelection = select(svg.current);
 
@@ -49,6 +50,10 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
    // perCaseSelected,
     currentSelectSet
   } = store!;
+
+  useEffect(()=>{
+    console.log(stripPlotMode);
+  },[stripPlotMode])
 
 
   
@@ -161,12 +166,6 @@ const BarChart: FC<Props> = ({ store, aggregatedBy, valueToVisualize, dimension,
         <g className="y-axis"></g>
         <text className="x-label" style={{ textAnchor: "end" }} />
         <text className="y-label" style={{ textAnchor: "end" }} />
-
-        {/* {data.map((dataPoint) => {
-          return (
-           
-          )
-        })} */}
       </g>
       <g className="chart"
         transform={`translate(${offset.left},0)`}
