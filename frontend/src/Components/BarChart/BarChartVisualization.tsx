@@ -115,7 +115,8 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
           aggregateAttribute: aggregateByAttr,
           totalVal: total_val,
           kdeCal: pd,
-          median:medianVal?medianVal:0
+          median:medianVal?medianVal:0,
+          actualDataPoints:ob.valueToVisualize
         };
         // const perCaseOb: BarChartDataPoint = {
         //   xVal: ob.x_axis,
