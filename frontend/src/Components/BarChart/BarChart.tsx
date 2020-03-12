@@ -24,12 +24,14 @@ import {
   BarChartDataPoint,
   offset,
   extraPairWidth,
+  extraPairPadding,
   AxisLabelDict
 } from "../../Interfaces/ApplicationState";
 import { Popup, Button, Icon } from 'semantic-ui-react'
 import SingleViolinPlot from "./SingleViolinPlot";
 import SingleStripPlot from "./SingleStripPlot";
 import ExtraPairDumbbell from "./ExtraPairDumbbell";
+import ExtraPairBar from "./ExtraPairBar";
 
 interface OwnProps {
   aggregatedBy: string;
@@ -62,7 +64,9 @@ const BarChart: FC<Props> = ({ extraPairDataSet,stripPlotMode,store, aggregatedB
     
     const caseMax = max(data.map(d => d.caseCount)) || 0;
     const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
-    const dimension = {height:dimensionWhole.height,width:dimensionWhole.width-extraPairDataSet.length*extraPairWidth}
+    const dimension = {
+      height: dimensionWhole.height,
+      width: dimensionWhole.width-extraPairDataSet.length*(extraPairWidth+extraPairPadding)}
     
     let kdeMax = 0
     const xVals = data
@@ -104,7 +108,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet,stripPlotMode,store, aggregatedB
     .select(".x-axis")
     .attr(
       "transform",
-      `translate(${offset.left+extraPairDataSet.length*extraPairWidth}, 0)`
+      `translate(${offset.left+extraPairDataSet.length*(extraPairWidth+extraPairPadding)}, 0)`
     )
     .call(aggregationLabel as any)
     .selectAll("text")
@@ -115,7 +119,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet,stripPlotMode,store, aggregatedB
     .select(".y-axis")
     .attr(
       "transform",
-      `translate(${extraPairDataSet.length*extraPairWidth} ,${dimension.height - offset.bottom})`
+      `translate(${extraPairDataSet.length*(extraPairWidth+extraPairPadding)} ,${dimension.height - offset.bottom})`
     )
     .call(yAxisLabel as any);
 
@@ -127,7 +131,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet,stripPlotMode,store, aggregatedB
     .attr("alignment-baseline", "hanging")
     .attr("font-size", "11px")
     .attr("text-anchor", "middle")
-    .attr("transform", `translate(${extraPairDataSet.length*extraPairWidth},0)`)
+    .attr("transform", `translate(${extraPairDataSet.length*(extraPairWidth+extraPairPadding)},0)`)
     .text(() => {
       //const trailing = perCaseSelected ? " / Case" : "";
       return AxisLabelDict[valueToVisualize] ? AxisLabelDict[valueToVisualize]  : valueToVisualize 
@@ -142,7 +146,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet,stripPlotMode,store, aggregatedB
     .attr("font-size", "11px")
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "hanging")
-    .attr("transform", `translate(${extraPairDataSet.length*extraPairWidth},0)`)
+    .attr("transform", `translate(${extraPairDataSet.length*(extraPairWidth+extraPairPadding)},0)`)
     .text(
       AxisLabelDict[aggregatedBy] ? AxisLabelDict[aggregatedBy] : aggregatedBy
     );
@@ -174,7 +178,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet,stripPlotMode,store, aggregatedB
           dataPoint.aggregateAttribute
         )})`).toString()}
         />])
-    }else{
+    } else{
       return (    [<SingleViolinPlot 
         path = {lineFunction(dataPoint.kdeCal)!} 
         dataPoint={dataPoint}
@@ -197,7 +201,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet,stripPlotMode,store, aggregatedB
         <text className="y-label" style={{ textAnchor: "end" }} />
       </g>
       <g className="chart"
-        transform={`translate(${offset.left+extraPairDataSet.length*extraPairWidth},0)`}
+        transform={`translate(${offset.left+extraPairDataSet.length*(extraPairWidth+extraPairPadding)},0)`}
       >
         {data.map((dataPoint) => {
           return outputSinglePlotElement(dataPoint).concat([
@@ -235,9 +239,25 @@ const BarChart: FC<Props> = ({ extraPairDataSet,stripPlotMode,store, aggregatedB
         })}
       </g>
       <g className="extraPairChart">
-        {extraPairDataSet.map((pairData)=>{
-          if (pairData.type === "Dumbbell"){
-            return <ExtraPairDumbbell aggregatedScale={aggregationScale} dataSet={pairData.data}/>
+        {extraPairDataSet.map((pairData,index)=>{
+          switch(pairData.type){
+            case "Dumbbell":
+              return (<g transform={`translate(${(extraPairWidth+extraPairPadding)*index},0)` }>
+                  <ExtraPairDumbbell aggregatedScale={aggregationScale} dataSet={pairData.data}/>,
+                    <ExtraPairText 
+                      x={extraPairWidth/2} 
+                      y={dimension.height - offset.bottom + 20} 
+                      >{pairData.name}</ExtraPairText>
+                </g>);
+              
+            case "BarChart":
+              return (<g transform={`translate(${(extraPairWidth+extraPairPadding)*index},0)`}>
+                  <ExtraPairBar aggregatedScale={aggregationScale} dataSet={pairData.data}/>
+                  <ExtraPairText 
+                      x={extraPairWidth/2} 
+                      y={dimension.height - offset.bottom + 20} 
+                      >{pairData.name}</ExtraPairText>
+                </g>);
           }
         })}
       </g>
@@ -248,4 +268,8 @@ const BarChart: FC<Props> = ({ extraPairDataSet,stripPlotMode,store, aggregatedB
 }
 export default inject("store")(observer(BarChart));
 
-
+const ExtraPairText=styled(`text`)`
+  font-size: 11px
+  text-anchor: middle
+  alignment-baseline:hanging
+`
