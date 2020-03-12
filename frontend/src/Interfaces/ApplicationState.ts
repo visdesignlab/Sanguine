@@ -6,6 +6,7 @@ export interface SelectSet {
 export interface BarChartDataPoint {
   aggregateAttribute: any;
   kdeCal: any[];
+  actualDataPoints:any[]
   totalVal: number;
   caseCount: number;
   median: number;
