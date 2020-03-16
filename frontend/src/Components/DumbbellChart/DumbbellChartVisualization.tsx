@@ -92,15 +92,18 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
           tempXMax = end_x > tempXMax ? end_x : tempXMax;
 
           let new_ob: DumbbellDataPoint = {
+            case: {
+              visitNum: ob.VISIT_ID, caseId: ob.CASE_ID,
+              YEAR: ob.YEAR,
+              ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
+              SURGEON_ID: ob.SURGEON_ID,
+              patientID: ob.PATIENT_ID
+            },
             startXVal: begin_x,
             endXVal: end_x,
-            visitNum: ob.VISIT_ID,
+
             yVal: yAxisLabel_val,
-            caseId: ob.CASE_ID,
-            YEAR: ob.YEAR,
-            ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
-            SURGEON_ID: ob.SURGEON_ID,
-            patientID: ob.PATIENT_ID
+
           };
           //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
           return new_ob;
@@ -118,15 +121,15 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
         let counter = {} as { [key: number]: any }
         cast_data.map((datapoint: DumbbellDataPoint) => {
 
-          if (!counter[datapoint[aggregatedOption]]) {
-            counter[datapoint[aggregatedOption]] = { numerator: 1, startXVal: datapoint.startXVal, endXVal: datapoint.endXVal, yVal: datapoint.yVal }
+          if (!counter[datapoint.case[aggregatedOption]]) {
+            counter[datapoint.case[aggregatedOption]] = { numerator: 1, startXVal: datapoint.startXVal, endXVal: datapoint.endXVal, yVal: datapoint.yVal }
           }
           else {
             // const current = counter[datapoint[aggregatedOption]];
-            counter[datapoint[aggregatedOption]].startXVal += datapoint.startXVal
-            counter[datapoint[aggregatedOption]].endXVal += datapoint.endXVal
-            counter[datapoint[aggregatedOption]].yVal += datapoint.yVal
-            counter[datapoint[aggregatedOption]].numerator += 1
+            counter[datapoint.case[aggregatedOption]].startXVal += datapoint.startXVal
+            counter[datapoint.case[aggregatedOption]].endXVal += datapoint.endXVal
+            counter[datapoint.case[aggregatedOption]].yVal += datapoint.yVal
+            counter[datapoint.case[aggregatedOption]].numerator += 1
           }
         })
         cast_data = []
@@ -137,13 +140,15 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
           let new_ob: DumbbellDataPoint = {
             startXVal: counter[keynum].startXVal / counter[keynum].numerator,
             endXVal: counter[keynum].endXVal / counter[keynum].numerator,
-            visitNum: -1,
+            case: {
+              visitNum: -1, caseId: -1,
+              YEAR: aggregatedOption === "YEAR" ? keynum : -1,
+              ANESTHOLOGIST_ID: aggregatedOption === "ANESTHOLOGIST_ID" ? keynum : -1,
+              SURGEON_ID: aggregatedOption === "SURGEON_ID" ? keynum : -1,
+              patientID: -1
+            },
             yVal: counter[keynum].yVal / counter[keynum].numerator,
-            caseId: -1,
-            YEAR: aggregatedOption === "YEAR" ? keynum : -1,
-            ANESTHOLOGIST_ID: aggregatedOption === "ANESTHOLOGIST_ID" ? keynum : -1,
-            SURGEON_ID: aggregatedOption === "SURGEON_ID" ? keynum : -1,
-            patientID: -1
+
           };
           cast_data.push(new_ob)
         };

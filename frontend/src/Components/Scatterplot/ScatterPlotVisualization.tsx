@@ -95,13 +95,17 @@ const ScatterPlotVisualization: FC<Props> = ({ yAxis, xAxis, chartIndex, store }
 
                     let new_ob: ScatterDataPoint = {
                         xVal: xValue,
-                        visitNum: ob.VISIT_ID,
+
                         yVal: yValue,
-                        caseId: ob.CASE_ID,
-                        YEAR: ob.YEAR,
-                        ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
-                        SURGEON_ID: ob.SURGEON_ID,
-                        patientID: ob.PATIENT_ID
+                        case: {
+                            visitNum: ob.VISIT_ID,
+                            caseId: ob.CASE_ID,
+                            YEAR: ob.YEAR,
+                            ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
+                            SURGEON_ID: ob.SURGEON_ID,
+                            patientID: ob.PATIENT_ID
+                        }
+
                     };
                     //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
                     return new_ob;

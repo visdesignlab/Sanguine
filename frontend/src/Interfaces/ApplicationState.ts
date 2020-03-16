@@ -11,9 +11,8 @@ export interface BarChartDataPoint {
   caseCount: number;
   median: number;
 }
-export interface ScatterDataPoint {
-  xVal: number;
-  yVal: number;
+
+export interface SingleCasePoint {
   visitNum: number;
   caseId: number;
   YEAR: number;
@@ -22,19 +21,17 @@ export interface ScatterDataPoint {
   patientID: number;
   [key: string]: number;
 }
-
+export interface ScatterDataPoint {
+  xVal: number;
+  yVal: number;
+  case: SingleCasePoint;
+}
 
 export interface DumbbellDataPoint {
   startXVal: number;
   endXVal: number;
   yVal: number;
-  visitNum: number;
-  caseId: number;
-  YEAR: number;
-  SURGEON_ID: number;
-  ANESTHOLOGIST_ID: number;
-  patientID: number;
-  [key: string]: number;
+  case: SingleCasePoint;
 }
 
 export interface ApplicationState {
@@ -46,7 +43,7 @@ export interface ApplicationState {
   totalCaseCount: number;
   dumbbellSorted: boolean;
   currentSelectSet: SelectSet | null;
-  currentSelectPatient: DumbbellDataPoint | null;
+  currentSelectPatient: SingleCasePoint | null;
   hemoglobinDataSet: any;
 }
 
