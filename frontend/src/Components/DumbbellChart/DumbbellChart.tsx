@@ -127,14 +127,15 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
 
 
   const decideIfSelected = (d: DumbbellDataPoint) => {
-    if (currentSelectPatient && d.caseId > 0) {
-      return currentSelectPatient.caseId === d.caseId
+
+    if (currentSelectPatient && d.case.caseId > 0) {
+      return currentSelectPatient.caseId === d.case.caseId
     }
     else if (aggregation && currentSelectPatient) {
-      return d[aggregation] === currentSelectPatient[aggregation]
+      return d.case[aggregation] === currentSelectPatient[aggregation]
     }
     else if (currentSelectSet) {
-      return d[currentSelectSet.set_name] === currentSelectSet.set_value
+      return d.case[currentSelectSet.set_name] === currentSelectSet.set_value
     }
     else {
       return false;
@@ -144,9 +145,9 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
 
   const clickDumbbellHandler = (d: DumbbellDataPoint) => {
     if (aggregation) {
-      actions.selectSet({ set_name: aggregation, set_value: d[aggregation] })
+      actions.selectSet({ set_name: aggregation, set_value: d.case[aggregation] })
     } else {
-      actions.selectPatient(d)
+      actions.selectPatient(d.case)
     }
   }
   return (
@@ -175,7 +176,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
           return (
             <Popup
               content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}
-              key={dataPoint.caseId}
+              key={dataPoint.case.caseId}
               trigger={
                 <DumbbellG dataPoint={dataPoint}>
                   <Rect

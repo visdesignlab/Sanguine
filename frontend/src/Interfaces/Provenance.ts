@@ -4,7 +4,8 @@ import {
   defaultState,
   LayoutElement,
   DumbbellDataPoint,
-  SelectSet
+  SelectSet,
+  SingleCasePoint
 } from "./ApplicationState";
 import { store } from './Store';
 
@@ -23,10 +24,10 @@ interface AppProvenance {
     removeChart: (event: any, i: any) => void;
     updateCaseCount: (newCaseCount: number) => void;
     onLayoutchange: (data: any) => void;
-    selectPatient: (data: DumbbellDataPoint) => void;
+    selectPatient: (data: SingleCasePoint) => void;
     selectSet: (data: SelectSet) => void;
     storeHemoData: (data: any) => void;
-    changeExtraPair:(chartID:string, newExtraPair:string)=>void
+    changeExtraPair: (chartID: string, newExtraPair: string) => void
   }
 }
 export function setupProvenance(): AppProvenance {
@@ -205,7 +206,7 @@ export function setupProvenance(): AppProvenance {
       (state: ApplicationState) => {
         state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
           if (d.i === chartID && d.extraPair) {
-            if (!d.extraPair.includes(newExtraPair)){ 
+            if (!d.extraPair.includes(newExtraPair)) {
               d.extraPair.push(newExtraPair)
               console.log(d)
             }
@@ -246,7 +247,7 @@ export function setupProvenance(): AppProvenance {
     );
   };
 
-  const selectPatient = (data: DumbbellDataPoint) => {
+  const selectPatient = (data: SingleCasePoint) => {
     provenance.applyAction(`select patient ${data.patientID}`, (state: ApplicationState) => {
 
       if (state.currentSelectPatient && data.patientID === state.currentSelectPatient.patientID) {
@@ -305,8 +306,8 @@ export function setupProvenance(): AppProvenance {
       goForward,
       setLayoutArray,
       selectChart,
-     // togglePerCase,
-     // toggleDumbbell,
+      // togglePerCase,
+      // toggleDumbbell,
       filterSelectionChange,
       yearRangeChange,
       addNewChart,

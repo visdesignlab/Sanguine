@@ -90,6 +90,23 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
         .attr("text-anchor", "middle")
         .text(AxisLabelDict[xAxisName] ? AxisLabelDict[xAxisName] : xAxisName);
 
+    const decideIfSelected = (d: ScatterDataPoint) => {
+        if (currentSelectPatient && d.case.caseId > 0) {
+            return currentSelectPatient.caseId === d.case.caseId
+        }
+        else if (currentSelectSet) {
+            return d.case[currentSelectSet.set_name] === currentSelectSet.set_value
+        }
+        else {
+            return false;
+        }
+        //  return true;
+    }
+
+    const clickDumbbellHandler = (d: ScatterDataPoint) => {
+        actions.selectPatient(d.case)
+    }
+
     return (<>
         <g className="axes">
             <g className="x-axis"></g>
@@ -106,7 +123,8 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
 
                     <Circle cx={xAxisScale(dataPoint.xVal)}
                         cy={yAxisScale(dataPoint.yVal)}
-                        isselected={false}
+                        isselected={decideIfSelected(dataPoint)}
+                        onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />
 
                 );
