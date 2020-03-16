@@ -6,12 +6,22 @@ export interface SelectSet {
 export interface BarChartDataPoint {
   aggregateAttribute: any;
   kdeCal: any[];
-  actualDataPoints:any[]
+  actualDataPoints: any[]
   totalVal: number;
   caseCount: number;
   median: number;
 }
-
+export interface ScatterDataPoint {
+  xVal: number;
+  yVal: number;
+  visitNum: number;
+  caseId: number;
+  YEAR: number;
+  SURGEON_ID: number;
+  ANESTHOLOGIST_ID: number;
+  patientID: number;
+  [key: string]: number;
+}
 
 
 export interface DumbbellDataPoint {
@@ -40,7 +50,7 @@ export interface ApplicationState {
   hemoglobinDataSet: any;
 }
 
-export interface LayoutElement{
+export interface LayoutElement {
   aggregatedBy: string,
   valueToVisualize: string,
   i: string,
@@ -50,7 +60,7 @@ export interface LayoutElement{
   h: number,
   plot_type: string,
   aggregation?: string,
-  extraPair?:string[]
+  extraPair?: string[]
 }
 
 export const defaultState: ApplicationState = {
@@ -63,14 +73,14 @@ export const defaultState: ApplicationState = {
   dumbbellSorted: false,
   currentSelectSet: null,
   currentSelectPatient: null,
-  hemoglobinDataSet:[]
+  hemoglobinDataSet: []
 };
 
 export const offset = { left: 85, bottom: 40, right: 10, top: 40, margin: 30 };
 export const extraPairWidth = 80
-export const extraPairPadding=5
+export const extraPairPadding = 5
 
-export const AxisLabelDict:any = {
+export const AxisLabelDict: any = {
   PRBC_UNITS: "Intraoperative RBCs Transfused",
   FFP_UNITS: "Intraoperative FFP Transfused",
   PLT_UNITS: "Intraoperative Platelets Transfused",
@@ -79,5 +89,7 @@ export const AxisLabelDict:any = {
   SURGEON_ID: "Surgeon ID",
   ANESTHOLOGIST_ID: "Anesthologist ID",
   YEAR: "Year",
-  HEMO_VALUE:"Hemoglobin Value"
+  HEMO_VALUE: "Hemoglobin Value",
+  PREOP_HEMO: "Preoperative Hemoglobin Value",
+  POSTOP_HEMO: "Postoperative Hemoglobin Value"
 };

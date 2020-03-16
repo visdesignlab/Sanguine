@@ -57,7 +57,9 @@ const DetailView: FC<Props> = ({ store }: Props) => {
             for (let [key, val] of Object.entries(individualInfo)) {
                 result.push(
                     <List.Item>
-                        <List.Header>{key}</List.Header>   {val}
+                        <List.Header>{key}</List.Header>
+                        {/* {val} */}
+                        x
                     </List.Item>)
             }
         }

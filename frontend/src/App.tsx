@@ -32,8 +32,9 @@ import { LayoutElement } from './Interfaces/ApplicationState';
 import { action } from 'mobx';
 import { actions } from './index'
 import { LineUpStringColumnDesc, LineUpCategoricalColumnDesc, LineUpNumberColumnDesc, LineUpSupportColumn, LineUpColumn } from 'lineupjsx';
-import ScatterPlotVisualization from './Components/Scatterplot/ScatterPlotVisualization';
+// import ScatterPlotVisualization from './Components/Scatterplot/ScatterPlotVisualization';
 import DetailView from './Components/DetailView';
+import ScatterPlotVisualization from './Components/Scatterplot/ScatterPlotVisualization';
 
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
@@ -90,7 +91,7 @@ const App: FC<Props> = ({ store }: Props) => {
             onClick={
               actions.removeChart}
           >
-          <Icon key={layout.i} name="close" />
+            <Icon key={layout.i} name="close" />
           </Button>
           <DumbbellChartVisualization
             yAxis={layout.aggregatedBy}
@@ -117,7 +118,7 @@ const App: FC<Props> = ({ store }: Props) => {
             size="mini"
             onClick={actions.removeChart}
           >
-          <Icon key={layout.i} name="close" /> 
+            <Icon key={layout.i} name="close" />
           </Button>
           <BarChartVisualization
             aggregatedBy={layout.aggregatedBy}
@@ -145,7 +146,7 @@ const App: FC<Props> = ({ store }: Props) => {
           size="mini"
           onClick={actions.removeChart}
         >
-        <Icon key={layout.i} name="close" />
+          <Icon key={layout.i} name="close" />
         </Button>
         <ScatterPlotVisualization
           xAxis={layout.aggregatedBy}
@@ -153,7 +154,6 @@ const App: FC<Props> = ({ store }: Props) => {
           // class_name={"parent-node" + layoutE.i}
           chartId={layout.i}
           chartIndex={index}
-
         />
       </div>)
     }
@@ -209,7 +209,7 @@ const App: FC<Props> = ({ store }: Props) => {
           ></Tab>
         </Grid.Column>
         <Grid.Column width={3}>
-          <DetailView/>
+          <DetailView />
         </Grid.Column>
       </Grid>
 
