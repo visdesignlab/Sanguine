@@ -107,19 +107,6 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
     .text(
       AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
     );
-  //}
-  // else {
-  //   svgSelection
-  //     .select(".axes")
-  //     .select(".y-axis")
-  //     .attr("display", "none");
-  //   svgSelection
-  //     .select(".axes")
-  //     .select(".y-label")
-  //     .attr("display", "none");
-  //}
-
-
   svgSelection.select('.axes')
     .select(".x-axis")
     .attr("transform", `translate(${offset.left}, 0)`)
