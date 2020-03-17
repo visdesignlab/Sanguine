@@ -11,7 +11,7 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint, offset, AxisLabelDict } from "../../Interfaces/ApplicationState";
-import { select, scaleLinear, axisLeft, axisBottom } from "d3";
+import { select, scaleLinear, axisLeft, axisBottom, brush, event } from "d3";
 
 interface OwnProps {
     yAxisName: string;
@@ -31,6 +31,7 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
 
     const { currentSelectPatient, currentSelectSet } = store!;
     const svgSelection = select(svg.current);
+    const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null)
 
     const [xAxisScale, yAxisScale] = useMemo(() => {
         const xAxisScale = scaleLinear()
@@ -45,6 +46,19 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
 
     const yAxisLabel = axisLeft(yAxisScale);
     const xAxisLabel = axisBottom(xAxisScale);
+
+    // useEffect(() => { console.log(brushLoc) }, [brushLoc])
+
+    const placeHolderBrush = () => { }
+
+    const updateBrush = () => {
+        updateBrushLoc(event.selection)
+    }
+
+    const brushDef = brush()
+        // .on("brush", updateBrush)
+        .on("end", updateBrush);
+    svgSelection.select(".brush-layer").call(brushDef as any);
 
     svgSelection
         .select(".axes")
@@ -107,22 +121,33 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
         actions.selectPatient(d.case)
     }
 
+    const decideIfBrushed = (cx: number, cy: number) => {
+        if (brushLoc) {
+            return cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]
+        }
+        return false;
+    }
+
     return (<>
         <g className="axes">
             <g className="x-axis"></g>
             <g className="y-axis"></g>
+
             <text className="x-label" style={{ textAnchor: "end" }} />
             <text className="y-label" style={{ textAnchor: "end" }} />
         </g>
         <g className="chart-comp" >
+            <g className="brush-layer" />
             {/* <line x1={offset.left} x2={dimension.width - offset.right} y1={testValueScale(11)} y2={testValueScale(11)} style={{ stroke: "#990D0D", strokeWidth: "2" }} /> */}
             {data.map((dataPoint, index) => {
-
+                const cx = xAxisScale(dataPoint.xVal)
+                const cy = yAxisScale(dataPoint.yVal)
 
                 return (
 
-                    <Circle cx={xAxisScale(dataPoint.xVal)}
-                        cy={yAxisScale(dataPoint.yVal)}
+                    <Circle cx={cx}
+                        cy={cy}
+                        fill={brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1] ? "pink" : "#404040"}
                         isselected={decideIfSelected(dataPoint)}
                         onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />
@@ -134,12 +159,12 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
 }
 
 export default inject("store")(observer(ScatterPlot));
-
+//fill: ${props => (props.isselected ? "#d98532" : "#404040")};
 interface DotProps {
     isselected: boolean;
 }
 const Circle = styled(`circle`) <DotProps>`
   r:4px
-  fill: ${props => (props.isselected ? "#d98532" : "#404040")};
+  
   opacity:0.8
 `;
