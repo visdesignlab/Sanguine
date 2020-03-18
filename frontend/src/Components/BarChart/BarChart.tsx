@@ -18,7 +18,7 @@ import {
   axisBottom,
   interpolateGreys,
   line,
-  curveCardinal
+  curveCatmullRom
 } from "d3";
 import {
   BarChartDataPoint,
@@ -95,12 +95,12 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     // const kdeReverseScale = scaleLinear().domain([0,kdeMax]).range([0.5*aggregationScale.bandwidth(),aggregationScale.bandwidth()])
 
     const lineFunction = line()
-      .curve(curveCardinal)
+      .curve(curveCatmullRom)
       .y((d: any) => kdeScale(d.y))
       .x((d: any) => valueScale(d.x) - offset.left);
 
     // const reverseLineFunction = line()
-    //   .curve(curveCardinal)
+    //   .curve(curveCatmullRom)
     //   .y((d: any) => kdeScale(d.y))
     //   .x((d: any) => valueScale(d.x) - offset.left);
     return [dimension, aggregationScale, valueScale, caseScale, lineFunction];
@@ -195,6 +195,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         )})`).toString()}
       />])
     }
+
   }
 
   return (
@@ -229,8 +230,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
               textAnchor={"middle"}
             >
               {dataPoint.caseCount}
-            </text>,
-            <line
+            </text>, <line
               x1={valueScale(dataPoint.median) - offset.left}
               x2={valueScale(dataPoint.median) - offset.left}
               y1={aggregationScale(dataPoint.aggregateAttribute)}
@@ -240,7 +240,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
               }
               stroke="#d98532"
               strokeWidth="2px"
-            />
+            />,
           ]);
         })}
       </g>

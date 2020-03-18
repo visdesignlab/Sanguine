@@ -93,8 +93,8 @@ export const AxisLabelDict: any = {
 };
 
 export const BloodProductCap: any = {
-  PRBC_UNITS: 10,
-  FFP_UNITS: 10,
+  PRBC_UNITS: 15,
+  FFP_UNITS: 15,
   CRYO_UNITS: 30,
   PLT_UNITS: 5,
   CELL_SAVER_ML: 5000

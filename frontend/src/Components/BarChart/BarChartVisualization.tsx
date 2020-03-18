@@ -100,8 +100,8 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
         //const case_num = removed_zeros.length;
         const total_val = sum(removed_zeros);
         const medianVal = median(removed_zeros);
-        let pd = createpd(removed_zeros, { width: 4, max: BloodProductCap[valueToVisualize] });
-
+        let pd = createpd(removed_zeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
+        console.log(pd)
         // const maxY = parseFloat(max(ob.valueToVisualize)!);
 
         // yMaxTemp = yMaxTemp < maxY ? maxY : yMaxTemp;
