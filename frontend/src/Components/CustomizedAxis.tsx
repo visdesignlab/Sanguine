@@ -54,7 +54,7 @@ const Line = styled(`line`)`
 `
 
 const LineBox = styled(`rect`)`
-    height: 10px
+    height: 13px
     y:0
     opacity:0.5
 `

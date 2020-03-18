@@ -10,6 +10,7 @@ export interface BarChartDataPoint {
   totalVal: number;
   caseCount: number;
   median: number;
+  zeroCaseNum: number;
 }
 
 export interface SingleCasePoint {
@@ -90,3 +91,11 @@ export const AxisLabelDict: any = {
   PREOP_HEMO: "Preoperative Hemoglobin Value",
   POSTOP_HEMO: "Postoperative Hemoglobin Value"
 };
+
+export const BloodProductCap: any = {
+  PRBC_UNITS: 10,
+  FFP_UNITS: 10,
+  CRYO_UNITS: 30,
+  PLT_UNITS: 5,
+  CELL_SAVER_ML: 5000
+}
