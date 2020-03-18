@@ -73,7 +73,7 @@ export const defaultState: ApplicationState = {
   hemoglobinDataSet: []
 };
 
-export const offset = { left: 85, bottom: 40, right: 10, top: 40, margin: 30 };
+export const offset = { left: 85, bottom: 40, right: 10, top: 40, margin: 20 };
 export const extraPairWidth = 80
 export const extraPairPadding = 5
 

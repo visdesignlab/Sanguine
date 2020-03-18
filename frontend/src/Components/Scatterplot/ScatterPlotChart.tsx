@@ -11,7 +11,8 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint, offset, AxisLabelDict } from "../../Interfaces/ApplicationState";
-import { select, scaleLinear, axisLeft, axisBottom, brush, event } from "d3";
+import { select, scaleLinear, axisLeft, axisBottom, brush, event, range, scaleOrdinal, ScaleOrdinal } from "d3";
+import CustomizedAxis from "../CustomizedAxis";
 
 interface OwnProps {
     yAxisName: string;
@@ -32,11 +33,44 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
     const { currentSelectPatient, currentSelectSet } = store!;
     const svgSelection = select(svg.current);
     const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null)
+    let numberList: { num: number, indexEnding: number }[] = [];
+    if (data.length > 0) {
+        data = data.sort(
+            (a, b) => {
+                if (a.xVal === b.xVal) {
+                    if (a.yVal < b.yVal) return -1;
+                    if (a.yVal > b.yVal) return 1;
+                } else {
+                    if (a.xVal > b.xVal) return 1;
+                    if (a.xVal < b.xVal) return -1;
+                }
+                return 0;
+            }
+        );
+
+
+
+        data.map((d, i) => {
+            if (i === data.length - 1) {
+                numberList.push({ num: d.xVal, indexEnding: i })
+            }
+            else if (d.xVal !== data[i + 1].xVal) {
+                numberList.push({ num: d.xVal, indexEnding: i })
+            }
+        })
+    }
 
     const [xAxisScale, yAxisScale] = useMemo(() => {
-        const xAxisScale = scaleLinear()
-            .domain([0.9 * xRange.xMin, 1.1 * xRange.xMax])
-            .range([offset.left, dimension.width - offset.right - offset.margin]);
+        const indices = range(0, data.length)
+        console.log(data.length, offset.left)
+        const xAxisScale = scaleOrdinal()
+            .domain(indices as any)
+            .range(range(offset.left, dimension.width - offset.right, (dimension.width - offset.left - offset.right) / (data.length + 1)));
+
+        // const xAxisScale = scaleLinear()
+        // .domain([0.9 * xRange.xMin, 1.1 * xRange.xMax])
+        // .range([offset.left, dimension.width - offset.right - offset.margin]);
+
         const yAxisScale = scaleLinear()
             .domain([0.9 * yRange.yMin, 1.1 * yRange.yMax])
             .range([dimension.height - offset.bottom, offset.top]);
@@ -45,7 +79,7 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
     }, [dimension, data, yRange, xRange,])
 
     const yAxisLabel = axisLeft(yAxisScale);
-    const xAxisLabel = axisBottom(xAxisScale);
+    //const xAxisLabel = axisBottom(xAxisScale);
 
     // useEffect(() => { console.log(brushLoc) }, [brushLoc])
 
@@ -84,13 +118,13 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
             AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
         );
 
-    svgSelection.select('.axes')
-        .select(".x-axis")
-        .attr(
-            "transform",
-            `translate(0 ,${dimension.height - offset.bottom} )`
-        )
-        .call(xAxisLabel as any);
+    // svgSelection.select('.axes')
+    //     .select(".x-axis")
+    //     .attr(
+    //         "transform",
+    //         `translate(0 ,${dimension.height - offset.bottom} )`
+    //     )
+    //     .call(xAxisLabel as any);
 
 
 
@@ -130,8 +164,10 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
 
     return (<>
         <g className="axes">
-            <g className="x-axis"></g>
             <g className="y-axis"></g>
+            <g className="x-axis" transform={`translate(0,${dimension.height - offset.bottom})`}>
+                <CustomizedAxis scale={xAxisScale as ScaleOrdinal<any, number>} numberList={numberList} />
+            </g>
 
             <text className="x-label" style={{ textAnchor: "end" }} />
             <text className="y-label" style={{ textAnchor: "end" }} />
@@ -140,7 +176,7 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
             <g className="brush-layer" />
             {/* <line x1={offset.left} x2={dimension.width - offset.right} y1={testValueScale(11)} y2={testValueScale(11)} style={{ stroke: "#990D0D", strokeWidth: "2" }} /> */}
             {data.map((dataPoint, index) => {
-                const cx = xAxisScale(dataPoint.xVal)
+                const cx = (xAxisScale as ScaleOrdinal<any, number>)(index)
                 const cy = yAxisScale(dataPoint.yVal)
 
                 return (
@@ -165,6 +201,5 @@ interface DotProps {
 }
 const Circle = styled(`circle`) <DotProps>`
   r:4px
-  
-  opacity:0.8
+  opacity:0.5
 `;

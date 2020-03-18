@@ -23,8 +23,10 @@ import {
   ScaleOrdinal,
   axisTop,
   scalePow,
+  ticks,
 } from "d3";
 import { DumbbellDataPoint, offset, AxisLabelDict, SelectSet } from "../../Interfaces/ApplicationState";
+import CustomizedAxis from "../CustomizedAxis";
 
 interface OwnProps {
   yAxisName: string;
@@ -46,10 +48,33 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
     //dumbbellSorted,
     currentSelectPatient, currentSelectSet } = store!;
   const svgSelection = select(svg.current);
-  data = data.sort(
-    (a, b) =>
-      Math.abs(a.startXVal - a.endXVal) - Math.abs(b.startXVal - b.endXVal)
-  );
+  let numberList: { num: number, indexEnding: number }[] = [];
+  if (data.length > 0) {
+    data = data.sort(
+      (a, b) => {
+        if (a.yVal === b.yVal) {
+          if (Math.min(a.startXVal, a.endXVal) > Math.min(b.startXVal, b.endXVal)) return 1;
+          if (Math.min(a.startXVal, a.endXVal) < Math.min(b.startXVal, b.endXVal)) return -1;
+        } else {
+          if (a.yVal > b.yVal) return 1;
+          if (a.yVal < b.yVal) return -1;
+        }
+        return 0;
+      }
+    );
+
+
+
+    data.map((d, i) => {
+      if (i === data.length - 1) {
+        numberList.push({ num: d.yVal, indexEnding: i })
+      }
+      else if (d.yVal !== data[i + 1].yVal) {
+        numberList.push({ num: d.yVal, indexEnding: i })
+      }
+    })
+  }
+  //console.log(data)
 
   const [testValueScale, valueScale] = useMemo(() => {
     const testValueScale = scaleLinear()
@@ -58,42 +83,36 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
 
 
     // let valueScale;
-    let valueScale = scalePow()
-      .exponent(0.5)
-      .domain([0, 1.1 * yMax])
-      .range([offset.left, dimension.width - offset.right - offset.margin]);
+    // let valueScale = scalePow()
+    //   .exponent(0.5)
+    //   .domain([0, 1.1 * yMax])
+    //   .range([offset.left, dimension.width - offset.right - offset.margin]);
 
-    // if (!dumbbellSorted) {
-    //   valueScale = scaleLinear()
-    //     .domain([0, 1.1 * yMax])
-    //     .range([offset.left, dimension.width - offset.right - offset.margin]);
-    // }
-    // else {
-    //   const indices = range(0, data.length)
-    //   valueScale = scaleOrdinal()
-    //     .domain(indices as any)
-    //     .range(range(offset.left, dimension.width - offset.right - offset.margin, -(dimension.width - offset.left - offset.right) / data.length));
-    //   // .range([dimension.height - offset.top, offset.bottom]);
+    const indices = range(0, data.length)
+    console.log(data.length, offset.left)
+    const valueScale = scaleOrdinal()
+      .domain(indices as any)
+      .range(range(offset.left, dimension.width - offset.right, (dimension.width - offset.left - offset.right) / (data.length + 1)));
+    // console.log(ticks(offset.left, dimension.width - offset.right - offset.margin, data.length))
+    // .range([offset.left, dimension.width - offset.right - offset.margin]);
 
-    // }
     return [testValueScale, valueScale];
   }, [dimension, data, yMax, xRange,
-    //   dumbbellSorted
   ]);
 
   const testLabel = axisLeft(testValueScale);
   //if (!dumbbellSorted) {
-  const yAxisLabel = axisBottom(valueScale as ScaleLinear<number, number>);
-  svgSelection
-    .select(".axes")
-    .select(".y-axis")
-    .attr(
-      "transform",
-      `translate(0 ,${dimension.height - offset.bottom} )`
-    )
-    .attr('display', null)
+  // const yAxisLabel = axisBottom(valueScale as ScaleOrdinal<number, number>);
+  // svgSelection
+  //   .select(".axes")
+  //   .select(".y-axis")
+  //   .attr(
+  //     "transform",
+  //     `translate(0 ,${dimension.height - offset.bottom} )`
+  //   )
+  //   .attr('display', null)
 
-    .call(yAxisLabel as any);
+  //   .call(yAxisLabel as any);
   svgSelection
     .select(".axes")
     .select(".y-label")
@@ -154,7 +173,9 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
     <>
       <g className="axes">
         <g className="x-axis"></g>
-        <g className="y-axis"></g>
+        <g className="y-axis" transform={`translate(0,${dimension.height - offset.bottom})`}>
+          <CustomizedAxis scale={valueScale as ScaleOrdinal<any, number>} numberList={numberList} />
+        </g>
         <text className="x-label" style={{ textAnchor: "end" }} />
         <text className="y-label" style={{ textAnchor: "end" }} />
       </g>
@@ -166,12 +187,12 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
           const returning = start > end ? end : start;
           const rectDifference = Math.abs(end - start)
 
-          const xVal =
-            valueScale(dataPoint.yVal) -
-            (Math.abs(dataPoint.startXVal - dataPoint.endXVal) / (xRange.xMax - xRange.xMin)) *
-            (valueScale(dataPoint.yVal) - valueScale(dataPoint.yVal - 1))
-            -
-            Math.random() * 3;
+          const xVal = (valueScale as ScaleOrdinal<any, number>)(index)
+          // valueScale(dataPoint.yVal) -
+          // (Math.abs(dataPoint.startXVal - dataPoint.endXVal) / (xRange.xMax - xRange.xMin)) *
+          // (valueScale(dataPoint.yVal) - valueScale(dataPoint.yVal - 1))
+          // -
+          // Math.random() * 3;
 
           return (
             <Popup
