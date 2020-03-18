@@ -153,14 +153,23 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
     else if (aggregation && currentSelectPatient) {
       return d.case[aggregation] === currentSelectPatient[aggregation]
     }
-    else if (currentSelectSet) {
-      return d.case[currentSelectSet.set_name] === currentSelectSet.set_value
-    }
+
     else {
       return false;
     }
     //  return true;
   }
+
+  const decideIfSurgeon = (d: DumbbellDataPoint) => {
+
+    if (currentSelectSet) {
+      return d.case[currentSelectSet.set_name] === currentSelectSet.set_value
+    }
+    return true;
+
+  }
+
+
 
   const clickDumbbellHandler = (d: DumbbellDataPoint) => {
     if (aggregation) {
@@ -199,7 +208,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
               content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}
               key={dataPoint.case.caseId}
               trigger={
-                <DumbbellG dataPoint={dataPoint}>
+                <DumbbellG surgeonselected={decideIfSurgeon(dataPoint)} dataPoint={dataPoint} >
                   <Rect
                     x={xVal - 1
                     }
@@ -241,6 +250,7 @@ export default inject("store")(observer(DumbbellChart));
 
 interface DumbbellProps {
   dataPoint: DumbbellDataPoint;
+  surgeonselected: boolean;
 }
 
 interface DotProps {
@@ -253,7 +263,7 @@ interface DotProps {
 //     : null} 
 
 const DumbbellG = styled(`g`) <DumbbellProps>`
-
+    visibility:${props => (props.surgeonselected ? "visible" : "hidden")}
 `;
 
 
