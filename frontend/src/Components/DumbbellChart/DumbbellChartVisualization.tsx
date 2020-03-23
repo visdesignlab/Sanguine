@@ -93,7 +93,8 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
 
           let new_ob: DumbbellDataPoint = {
             case: {
-              visitNum: ob.VISIT_ID, caseId: ob.CASE_ID,
+              visitNum: ob.VISIT_ID,
+              caseId: ob.CASE_ID,
               YEAR: ob.YEAR,
               ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
               SURGEON_ID: ob.SURGEON_ID,

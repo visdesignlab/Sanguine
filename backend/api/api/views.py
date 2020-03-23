@@ -361,7 +361,7 @@ def request_transfused_units(request):
         result = execute_sql(command)
 
         if transfusion_type == "ALL_UNITS":
-            items = [{"case_id": row[5], "PRBC_UNITS": row[0], "FFP_UNITS": row[1], "PLT_UNITS": row[2], "CRYO_UNITS": row[3], "CELL_SAVER_ML": row[4]}
+            items = [{"case_id": row[5], "PRBC_UNITS": row[0] if row[0] else 0 , "FFP_UNITS": row[1] if row[1] else 0 , "PLT_UNITS": row[2] if row[2] else 0 , "CRYO_UNITS": row[3] if row[3] else 0 , "CELL_SAVER_ML": row[4] if row[4] else 0 }
                  for row in result]
         else:
             items = [{"case_id": row[1], "transfused": row[0]}
