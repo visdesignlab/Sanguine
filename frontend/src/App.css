@@ -40,10 +40,10 @@
 .App-link {
   color: #09d3ac;
 }
-.okok>div{
+.lineup>div{
   display:flex;
   height:800px
 }
-.okok>div>div{
+.lineup>div>div{
   flex:1 1 auto;
 }
