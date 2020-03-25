@@ -134,7 +134,6 @@ export function setupProvenance(): AppProvenance {
   }
 
   const onLayoutchange = (data: any) => {
-    console.log(data)
     provenance.applyAction(
       `change layout to chart ${data.i}`,
       //We use index here because the layout array should always have the same order as the layoutlement array

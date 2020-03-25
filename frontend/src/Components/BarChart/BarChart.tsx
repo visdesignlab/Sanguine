@@ -1,7 +1,8 @@
 import React, {
   FC,
   useMemo,
-  useEffect
+  useEffect,
+  useState
 } from "react";
 import { actions } from "../..";
 import Store from "../../Interfaces/Store";
@@ -60,7 +61,15 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     currentSelectSet
   } = store!;
 
+  const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
 
+  useEffect(() => {
+    let totalWidth = 0
+    extraPairDataSet.forEach((d) => {
+      totalWidth += (extraPairWidth[d.type] + extraPairPadding)
+    })
+    setExtraPairTotlaWidth(totalWidth)
+  }, [extraPairDataSet])
 
   const [dimension, aggregationScale, valueScale, caseScale, lineFunction] = useMemo(() => {
 
@@ -68,7 +77,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
     const dimension = {
       height: dimensionWhole.height,
-      width: dimensionWhole.width - extraPairDataSet.length * (extraPairWidth + extraPairPadding)
+      width: dimensionWhole.width - extraPairTotalWidth
     }
 
     let kdeMax = 0
@@ -114,7 +123,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     .select(".x-axis")
     .attr(
       "transform",
-      `translate(${offset.left + extraPairDataSet.length * (extraPairWidth + extraPairPadding)}, 0)`
+      `translate(${offset.left + extraPairTotalWidth}, 0)`
     )
     .call(aggregationLabel as any)
     .selectAll("text")
@@ -125,7 +134,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     .select(".y-axis")
     .attr(
       "transform",
-      `translate(${extraPairDataSet.length * (extraPairWidth + extraPairPadding)} ,${dimension.height - offset.bottom})`
+      `translate(${extraPairTotalWidth} ,${dimension.height - offset.bottom})`
     )
     .call(yAxisLabel as any);
 
@@ -137,7 +146,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     .attr("alignment-baseline", "hanging")
     .attr("font-size", "11px")
     .attr("text-anchor", "middle")
-    .attr("transform", `translate(${extraPairDataSet.length * (extraPairWidth + extraPairPadding)},0)`)
+    .attr("transform", `translate(${extraPairTotalWidth},0)`)
     .text(() => {
       //const trailing = perCaseSelected ? " / Case" : "";
       return AxisLabelDict[valueToVisualize] ? AxisLabelDict[valueToVisualize] : valueToVisualize
@@ -152,7 +161,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     .attr("font-size", "11px")
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "hanging")
-    .attr("transform", `translate(${extraPairDataSet.length * (extraPairWidth + extraPairPadding)},0)`)
+    .attr("transform", `translate(${extraPairTotalWidth},0)`)
     .text(
       AxisLabelDict[aggregatedBy] ? AxisLabelDict[aggregatedBy] : aggregatedBy
     );
@@ -170,6 +179,46 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     else {
       return false;
     }
+  }
+
+  const generateExtraPairPlots = () => {
+    let transferedDistance = 0
+    let returningComponents: any = []
+    extraPairDataSet.map((pairData, index) => {
+      switch (pairData.type) {
+        case "Dumbbell":
+          transferedDistance += (extraPairWidth.Dumbbell + extraPairPadding)
+          returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Dumbbell)},0)`}>
+            <ExtraPairDumbbell aggregatedScale={aggregationScale} dataSet={pairData.data} />,
+            <ExtraPairText
+              x={extraPairWidth.Dumbbell / 2}
+              y={dimension.height - offset.bottom + 20}
+            >{pairData.name}</ExtraPairText>
+          </g>);
+          break;
+        case "BarChart":
+          transferedDistance += (extraPairWidth.BarChart + extraPairPadding)
+          returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.BarChart)},0)`}>
+            <ExtraPairBar aggregatedScale={aggregationScale} dataSet={pairData.data} />
+            <ExtraPairText
+              x={extraPairWidth.BarChart / 2}
+              y={dimension.height - offset.bottom + 20}
+            >{pairData.name}</ExtraPairText>
+          </g>);
+          break;
+        case "Basic":
+          transferedDistance += (extraPairWidth.Basic + extraPairPadding)
+          returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Basic)},0)`}>
+            <ExtraPairBasic aggregatedScale={aggregationScale} dataSet={pairData.data} />
+            <ExtraPairText
+              x={extraPairWidth.Basic / 2}
+              y={dimension.height - offset.bottom + 20}
+            >{pairData.name}</ExtraPairText>
+          </g>);
+          break;
+      }
+    })
+    return returningComponents
   }
 
   const outputSinglePlotElement = (dataPoint: BarChartDataPoint) => {
@@ -208,7 +257,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         <text className="y-label" style={{ textAnchor: "end" }} />
       </g>
       <g className="chart"
-        transform={`translate(${offset.left + extraPairDataSet.length * (extraPairWidth + extraPairPadding)},0)`}
+        transform={`translate(${offset.left + extraPairTotalWidth},0)`}
       >
         {data.map((dataPoint) => {
           return outputSinglePlotElement(dataPoint).concat([
@@ -245,36 +294,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         })}
       </g>
       <g className="extraPairChart">
-        {extraPairDataSet.map((pairData, index) => {
-          switch (pairData.type) {
-            case "Dumbbell":
-              return (<g transform={`translate(${(extraPairWidth + extraPairPadding) * index},0)`}>
-                <ExtraPairDumbbell aggregatedScale={aggregationScale} dataSet={pairData.data} />,
-                <ExtraPairText
-                  x={extraPairWidth / 2}
-                  y={dimension.height - offset.bottom + 20}
-                >{pairData.name}</ExtraPairText>
-              </g>);
-
-            case "BarChart":
-              return (<g transform={`translate(${(extraPairWidth + extraPairPadding) * index},0)`}>
-                <ExtraPairBar aggregatedScale={aggregationScale} dataSet={pairData.data} />
-                <ExtraPairText
-                  x={extraPairWidth / 2}
-                  y={dimension.height - offset.bottom + 20}
-                >{pairData.name}</ExtraPairText>
-              </g>);
-
-            case "Basic":
-              return (<g transform={`translate(${(extraPairWidth + extraPairPadding) * index},0)`}>
-                <ExtraPairBasic aggregatedScale={aggregationScale} dataSet={pairData.data} />
-                <ExtraPairText
-                  x={extraPairWidth / 2}
-                  y={dimension.height - offset.bottom + 20}
-                >{pairData.name}</ExtraPairText>
-              </g>);
-          }
-        })}
+        {generateExtraPairPlots()}
       </g>
 
 

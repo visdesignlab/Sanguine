@@ -36,11 +36,11 @@ const ExtraPairBasic: FC<Props> = ({ dataSet, aggregatedScale, store }: Props) =
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
                                 fill={interpolateGreys(valueScale(dataVal))}
                                 opacity={0.8}
-                                width={extraPairWidth}
+                                width={extraPairWidth.Basic}
                                 height={aggregatedScale.bandwidth()} />
                         } />,
 
-                    <text x={extraPairWidth * 0.5}
+                    <text x={extraPairWidth.Basic * 0.5}
                         y={
                             aggregatedScale(val)! +
                             0.5 * aggregatedScale.bandwidth()
