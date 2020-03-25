@@ -35,6 +35,18 @@ def data_dictionary():
     return data_dict
 
 
+def cpt():
+    # Instantiate mapping array
+    cpt = {}
+
+    with open("cpt_codes.csv", "r") as file:
+        read_csv = csv.reader(file, delimiter=",")
+        for row in read_csv:
+            cpt[row[0]] = row[1]
+
+    return cpt
+
+
 # Execute a command against the database
 def execute_sql(command):
     connection = make_connection()
@@ -52,8 +64,23 @@ def index(request):
 
 def get_attributes(request):
     if request.method == "GET":
+        cpt_codes = cpt()
+
         # Make the connection and execute the command
-        command = "SELECT DISTINCT PRIM_PROC_DESC, COUNT(DISTINCT DI_CASE_ID) FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE GROUP BY PRIM_PROC_DESC"
+        command = (
+            "SELECT "
+                "BLNG.CODE_DESC, count(DISTINCT SURG.DI_CASE_ID) "
+            "FROM CLIN_DM.BPU_CTS_DI_BILLING_CODES BLNG "
+            "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE SURG "
+                "ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) "
+                "AND (BLNG.DI_VISIT_NO = SURG.DI_VISIT_NO) "
+                "AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE) "
+            "WHERE "
+                "BLNG.CODE IN ( "
+                    f"{}"
+                ") "
+            "GROUP BY BLNG.CODE_DESC "
+        )
         result = execute_sql(command)
 
         # Return the result, the multi-selector component in React requires the below format
@@ -373,7 +400,6 @@ def hemoglobin(request):
     if request.method == "GET":
         command = (
             "WITH "
-
             "LAB_HB AS "
             "( "
             "SELECT "
