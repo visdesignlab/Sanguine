@@ -87,7 +87,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
 
         const case_num = ob.valueToVisualize.length;
         // const total_val = sum(ob.valueToVisualize);
-        // const medianVal = median(ob.valueToVisualize);
+        const medianVal = median(ob.valueToVisualize);
         // let pd = createpd(ob.valueToVisualize, { max: BloodProductCap[valueToVisualize], width: 4 });
 
         const removed_zeros = ob.valueToVisualize.filter((d: number) => {
@@ -99,7 +99,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
         })
         //const case_num = removed_zeros.length;
         const total_val = sum(removed_zeros);
-        const medianVal = median(removed_zeros);
+        //const medianVal = median(removed_zeros);
         let pd = createpd(removed_zeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
         console.log(pd)
         // const maxY = parseFloat(max(ob.valueToVisualize)!);

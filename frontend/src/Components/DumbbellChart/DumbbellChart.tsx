@@ -44,36 +44,58 @@ export type Props = OwnProps;
 
 const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax, xRange, aggregation }: Props) => {
 
+  const [averageForEachTransfused, setAverage] = useState<any>({})
+  const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([])
+  const [numberList, setNumberList] = useState<{ num: number, indexEnding: number }[]>([])
+
   const {
     //dumbbellSorted,
     currentSelectPatient, currentSelectSet } = store!;
   const svgSelection = select(svg.current);
-  let numberList: { num: number, indexEnding: number }[] = [];
-  if (data.length > 0) {
-    data = data.sort(
-      (a, b) => {
-        if (a.yVal === b.yVal) {
-          if (Math.min(a.startXVal, a.endXVal) > Math.min(b.startXVal, b.endXVal)) return 1;
-          if (Math.min(a.startXVal, a.endXVal) < Math.min(b.startXVal, b.endXVal)) return -1;
-        } else {
-          if (a.yVal > b.yVal) return 1;
-          if (a.yVal < b.yVal) return -1;
+
+  useEffect(() => {
+    let tempNumberList: { num: number, indexEnding: number }[] = []
+    if (data.length > 0) {
+      const tempSortedData = data.sort(
+        (a, b) => {
+          if (a.yVal === b.yVal) {
+            if (a.endXVal > b.endXVal) return 1;
+            if (a.endXVal < b.endXVal) return -1;
+          } else {
+            if (a.yVal > b.yVal) return 1;
+            if (a.yVal < b.yVal) return -1;
+          }
+          return 0;
         }
-        return 0;
-      }
-    );
+      );
+      let currentPreopSum = 0;
+      let currentPostopSum = 0;
+      let currentCounter = 0;
+      let averageDict: any = {}
+      tempSortedData.map((d, i) => {
 
+        if (i === tempSortedData.length - 1) {
+          tempNumberList.push({ num: d.yVal, indexEnding: i })
+          averageDict[d.yVal] = { averageStart: currentPreopSum / currentCounter, averageEnd: currentPostopSum / currentCounter }
+        }
+        else if (d.yVal !== tempSortedData[i + 1].yVal) {
+          tempNumberList.push({ num: d.yVal, indexEnding: i })
+          averageDict[(d.yVal).toString()] = { averageStart: currentPreopSum / currentCounter, averageEnd: currentPostopSum / currentCounter }
+          currentPostopSum = 0;
+          currentPreopSum = 0;
+          currentCounter = 0;
+        }
+        currentPreopSum += d.startXVal
+        currentPostopSum += d.endXVal
+        currentCounter += 1
+      })
+      setAverage(averageDict)
+      setSortedData(tempSortedData)
+      setNumberList(tempNumberList)
+    }
+  }, [data])
+  //let numberList: { num: number, indexEnding: number }[] = [];
 
-
-    data.map((d, i) => {
-      if (i === data.length - 1) {
-        numberList.push({ num: d.yVal, indexEnding: i })
-      }
-      else if (d.yVal !== data[i + 1].yVal) {
-        numberList.push({ num: d.yVal, indexEnding: i })
-      }
-    })
-  }
   //console.log(data)
 
   const [testValueScale, valueScale] = useMemo(() => {
@@ -89,7 +111,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
     //   .range([offset.left, dimension.width - offset.right - offset.margin]);
 
     const indices = range(0, data.length)
-    console.log(data.length, offset.left)
+
     const valueScale = scaleOrdinal()
       .domain(indices as any)
       .range(range(offset.left, dimension.width - offset.right, (dimension.width - offset.left - offset.right) / (data.length + 1)));
@@ -189,8 +211,10 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
         <text className="y-label" style={{ textAnchor: "end" }} />
       </g>
       <g className="chart-comp" >
-        <line x1={offset.left} x2={dimension.width - offset.right} y1={testValueScale(11)} y2={testValueScale(11)} style={{ stroke: "#990D0D", strokeWidth: "2" }} />
-        {data.map((dataPoint, index) => {
+        <line x1={offset.left} x2={dimension.width - offset.right} y1={testValueScale(11)} y2={testValueScale(11)} style={{ stroke: "#990D0D", strokeWidth: "2", strokeDasharray: "5,5" }} />
+
+
+        {sortedData.map((dataPoint, index) => {
           const start = testValueScale(dataPoint.startXVal);
           const end = testValueScale(dataPoint.endXVal);
           const returning = start > end ? end : start;
@@ -225,6 +249,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
                       clickDumbbellHandler(dataPoint);
                     }}
                     isselected={decideIfSelected(dataPoint)}
+                    ispreop={true}
                   />
                   <Circle
                     cx={
@@ -235,11 +260,23 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
                       clickDumbbellHandler(dataPoint);
                     }}
                     isselected={decideIfSelected(dataPoint)}
+                    ispreop={false}
                   />
                 </DumbbellG>
               }
             />
           );
+        })}
+        {numberList.map((numberOb, ind) => {
+          if (Object.keys(averageForEachTransfused).length > 0) {
+
+            const x1 = ind === 0 ? (valueScale as ScaleOrdinal<any, number>)(0) : (valueScale as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding + 1)
+            const x2 = (valueScale as ScaleOrdinal<any, number>)(numberOb.indexEnding)
+            const beginY = testValueScale(averageForEachTransfused[(numberOb.num).toString()].averageStart)
+            const endY = testValueScale(averageForEachTransfused[numberOb.num].averageEnd)
+            return ([<Line x1={x1} x2={x2} y1={beginY} y2={beginY} ispreop={true} />, <Line x1={x1} x2={x2} y1={endY} y2={endY} ispreop={false} />
+            ])
+          }
         })}
       </g>
     </>
@@ -255,8 +292,15 @@ interface DumbbellProps {
 
 interface DotProps {
   isselected: boolean;
+  ispreop: boolean;
+}
+interface RectProps {
+  isselected: boolean;
 }
 
+interface AverageLineProps {
+  ispreop: boolean;
+}
 // display: ${props =>
 //   props.dataPoint.endXVal === 0 || props.dataPoint.startXVal === 0
 //     ? "none"
@@ -269,12 +313,18 @@ const DumbbellG = styled(`g`) <DumbbellProps>`
 
 const Circle = styled(`circle`) <DotProps>`
   r:4px
-  fill: ${props => (props.isselected ? "#d98532" : "#404040")};
-  opacity:0.8
+  fill: ${props => (props.isselected ? "#d98532" : props.ispreop ? "#006200" : "#20639b")};
+  opacity:${props => props.isselected ? 1 : 0.5}
 `;
 
-const Rect = styled(`rect`) <DotProps>`
+const Rect = styled(`rect`) <RectProps>`
  width:1.5px
- opacity:50%
+ opacity:${props => props.isselected ? 1 : 0.5}
  fill: ${props => (props.isselected ? "#d98532" : "#404040")};
 `;
+
+const Line = styled(`line`) < AverageLineProps>`
+    stroke: ${props => (props.ispreop ? "#006200" : "#20639b")};
+    stroke-width:2px  
+    stroke-dasharray: 5,5
+    `

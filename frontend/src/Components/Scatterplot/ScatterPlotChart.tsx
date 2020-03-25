@@ -183,7 +183,7 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
 
                     <Circle cx={cx}
                         cy={cy}
-                        fill={brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1] ? "pink" : "#404040"}
+                        fill={brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1] ? "#d98532" : "#404040"}
                         isselected={decideIfSelected(dataPoint)}
                         onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />

@@ -221,7 +221,7 @@ const App: FC<Props> = ({ store }: Props) => {
           className="layout"
           cols={colData}
           rowHeight={300}
-          width={1200}
+          width={1300}
           //cols={2}
           //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
           layouts={{ md: layoutArray }}
