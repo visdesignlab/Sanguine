@@ -39,11 +39,12 @@ interface OwnProps {
   yMax: number;
   xRange: { xMin: number, xMax: number };
   aggregation?: string;
+  sortMode: string;
 }
 
 export type Props = OwnProps;
 
-const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax, xRange, aggregation }: Props) => {
+const DumbbellChart: FC<Props> = ({ sortMode, yAxisName, dimension, data, svg, store, yMax, xRange, aggregation }: Props) => {
 
   const [averageForEachTransfused, setAverage] = useState<any>({})
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([])
@@ -55,20 +56,56 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
   const svgSelection = select(svg.current);
 
   useEffect(() => {
-    let tempNumberList: { num: number, indexEnding: number }[] = []
+    let tempNumberList: { num: number, indexEnding: number }[] = [];
     if (data.length > 0) {
-      const tempSortedData = data.sort(
-        (a, b) => {
-          if (a.yVal === b.yVal) {
-            if (a.endXVal > b.endXVal) return 1;
-            if (a.endXVal < b.endXVal) return -1;
-          } else {
-            if (a.yVal > b.yVal) return 1;
-            if (a.yVal < b.yVal) return -1;
-          }
-          return 0;
-        }
-      );
+      let tempSortedData: DumbbellDataPoint[] = [];
+      switch (sortMode) {
+        case "Postop":
+          tempSortedData = data.sort(
+            (a, b) => {
+              if (a.yVal === b.yVal) {
+                if (a.endXVal > b.endXVal) return 1;
+                if (a.endXVal < b.endXVal) return -1;
+              } else {
+                if (a.yVal > b.yVal) return 1;
+                if (a.yVal < b.yVal) return -1;
+              }
+              return 0;
+            }
+          );
+          break;
+        case "Preop":
+          tempSortedData = data.sort(
+            (a, b) => {
+              if (a.yVal === b.yVal) {
+                if (a.startXVal > b.startXVal) return 1;
+                if (a.startXVal < b.startXVal) return -1;
+              } else {
+                if (a.yVal > b.yVal) return 1;
+                if (a.yVal < b.yVal) return -1;
+              }
+              return 0;
+            }
+          );
+          break;
+        case "Gap":
+          tempSortedData = data.sort(
+            (a, b) => {
+              if (a.yVal === b.yVal) {
+                if (Math.abs(a.endXVal - a.startXVal) > Math.abs(b.endXVal - b.startXVal)) return 1;
+                if (Math.abs(a.endXVal - a.startXVal) < Math.abs(b.endXVal - b.startXVal)) return -1;
+              } else {
+                if (a.yVal > b.yVal) return 1;
+                if (a.yVal < b.yVal) return -1;
+              }
+              return 0;
+            }
+          );
+          break;
+        default:
+          break;
+      }
+
       let currentPreopSum = 0;
       let currentPostopSum = 0;
       let currentCounter = 0;
@@ -94,7 +131,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
       setSortedData(tempSortedData)
       setNumberList(tempNumberList)
     }
-  }, [data])
+  }, [data, sortMode])
   //let numberList: { num: number, indexEnding: number }[] = [];
 
   //console.log(data)
