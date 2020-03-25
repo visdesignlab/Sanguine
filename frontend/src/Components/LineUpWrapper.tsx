@@ -37,7 +37,6 @@ const LineUpWrapper: FC<Props> = ({ store }: Props) => {
 
 
     const something = () => {
-        console.log(hemoglobinDataSet)
         if (hemoglobinDataSet) {
             return (<LineUp data={hemoglobinDataSet}>
                 <LineUpStringColumnDesc column="CASE_ID" label="CASE_ID" /> */}
