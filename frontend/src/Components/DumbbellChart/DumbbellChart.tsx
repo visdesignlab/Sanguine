@@ -27,6 +27,7 @@ import {
 } from "d3";
 import { DumbbellDataPoint, offset, AxisLabelDict, SelectSet } from "../../Interfaces/ApplicationState";
 import CustomizedAxis from "../CustomizedAxis";
+import { preop_color, basic_gray, highlight_color, postop_color } from "../../ColorProfile"
 
 interface OwnProps {
   yAxisName: string;
@@ -211,7 +212,7 @@ const DumbbellChart: FC<Props> = ({ yAxisName, dimension, data, svg, store, yMax
         <text className="y-label" style={{ textAnchor: "end" }} />
       </g>
       <g className="chart-comp" >
-        <line x1={offset.left} x2={dimension.width - offset.right} y1={testValueScale(11)} y2={testValueScale(11)} style={{ stroke: "#990D0D", strokeWidth: "2", strokeDasharray: "5,5" }} />
+        <line x1={offset.left} x2={dimension.width - offset.right} y1={testValueScale(11)} y2={testValueScale(11)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
 
 
         {sortedData.map((dataPoint, index) => {
@@ -313,18 +314,18 @@ const DumbbellG = styled(`g`) <DumbbellProps>`
 
 const Circle = styled(`circle`) <DotProps>`
   r:4px
-  fill: ${props => (props.isselected ? "#d98532" : props.ispreop ? "#006200" : "#20639b")};
+  fill: ${props => (props.isselected ? highlight_color : props.ispreop ? preop_color : postop_color)};
   opacity:${props => props.isselected ? 1 : 0.5}
 `;
 
 const Rect = styled(`rect`) <RectProps>`
  width:1.5px
  opacity:${props => props.isselected ? 1 : 0.5}
- fill: ${props => (props.isselected ? "#d98532" : "#404040")};
+ fill: ${props => (props.isselected ? highlight_color : basic_gray)};
 `;
 
 const Line = styled(`line`) < AverageLineProps>`
-    stroke: ${props => (props.ispreop ? "#006200" : "#20639b")};
+    stroke: ${props => (props.ispreop ? preop_color : postop_color)};
     stroke-width:2px  
     stroke-dasharray: 5,5
     `
