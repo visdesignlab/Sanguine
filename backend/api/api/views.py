@@ -87,7 +87,7 @@ def get_attributes(request):
         result = execute_sql(command)
 
         # Return the result, the multi-selector component in React requires the below format
-        items = [{"value": row[0],"count":row[1]} for row in result]
+        items = [{"value": f"{row[0]}_{row[1]}","count":row[2]} for row in result]
         return JsonResponse({"result": items})
 
 
