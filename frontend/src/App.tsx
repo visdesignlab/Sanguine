@@ -17,7 +17,7 @@ import DumbbellChartVisualization from "./Components/DumbbellChart/DumbbellChart
 // import DumbbellPlot from './Components/DumbbellPlot'
 import { Responsive as ResponsiveReactGridLayout } from "react-grid-layout";
 import {
-  Icon, Button, Tab, Container, Grid
+  Icon, Button, Tab, Container, Grid, GridColumn
 } from 'semantic-ui-react'
 import Store from './Interfaces/Store'
 // import LineUp from 'lineupjsx'
@@ -213,24 +213,29 @@ const App: FC<Props> = ({ store }: Props) => {
 
   const panes = [{
     menuItem: 'Tab 1', pane: <Tab.Pane>
-      <Container>
-        <ResponsiveReactGridLayout
-          onResizeStop={actions.onLayoutchange}
-          onDragStop={actions.onLayoutchange}
-          // onBreakpointChange={this._onBreakpointChange}
-          className="layout"
-          cols={colData}
-          rowHeight={300}
-          width={1300}
-          //cols={2}
-          //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-          layouts={{ md: layoutArray }}
-        >
-          {layoutArray.map((layoutE, i) => {
-            return createElement(layoutE, i);
-          })}
-        </ResponsiveReactGridLayout>
-      </Container>
+      <Grid>
+        <GridColumn width={13}>
+          <ResponsiveReactGridLayout
+            onResizeStop={actions.onLayoutchange}
+            onDragStop={actions.onLayoutchange}
+            // onBreakpointChange={this._onBreakpointChange}
+            className="layout"
+            cols={colData}
+            rowHeight={300}
+            width={1300}
+            //cols={2}
+            //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+            layouts={{ md: layoutArray }}
+          >
+            {layoutArray.map((layoutE, i) => {
+              return createElement(layoutE, i);
+            })}
+          </ResponsiveReactGridLayout>
+        </GridColumn>
+        <Grid.Column width={3}>
+          <DetailView />
+        </Grid.Column>
+      </Grid>
     </Tab.Pane>
   },
   {
@@ -249,14 +254,12 @@ const App: FC<Props> = ({ store }: Props) => {
         <Grid.Column width={3}>
           <SideBar></SideBar>
         </Grid.Column>
-        <Grid.Column width={10}>
+        <Grid.Column width={13}>
           <Tab panes={panes}
             renderActiveOnly={false}
           ></Tab>
         </Grid.Column>
-        <Grid.Column width={3}>
-          <DetailView />
-        </Grid.Column>
+
       </Grid>
     </LayoutDiv>
   );
