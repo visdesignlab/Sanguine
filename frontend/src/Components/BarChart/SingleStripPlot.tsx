@@ -6,6 +6,7 @@ import { BarChartDataPoint } from "../../Interfaces/ApplicationState";
 // import { Popup } from "semantic-ui-react";
 // import { actions } from "../..";
 import { ScaleLinear } from "d3";
+import { highlight_color, basic_gray } from "../../ColorProfile";
 
 interface OwnProps {
     dataPoint: BarChartDataPoint;
@@ -63,7 +64,7 @@ interface StripPlotProp {
 }
 const StripPlotCircle = styled(`circle`) <StripPlotProp>`
     r:2px
-    fill: ${props => (props.isselected ? "#d98532" : "#404040")};
-    stroke: ${props => (props.isselected ? "#d98532" : "#404040")};
+    fill: ${props => (props.isselected ? highlight_color : basic_gray)};
+    stroke: ${props => (props.isselected ? highlight_color : basic_gray)};
     opacity:0.6
   `;

@@ -5,6 +5,7 @@ import { inject, observer } from "mobx-react";
 import { BarChartDataPoint } from "../../Interfaces/ApplicationState";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
+import { highlight_color, basic_gray } from "../../ColorProfile";
 
 interface OwnProps {
   dataPoint: BarChartDataPoint;
@@ -43,6 +44,6 @@ interface ViolinLineProp {
   isselected: boolean;
 }
 const ViolinLine = styled(`path`) <ViolinLineProp>`
-    fill: ${props => (props.isselected ? "#d98532" : "#404040")};
-    stroke: ${props => (props.isselected ? "#d98532" : "#404040")};
+    fill: ${props => (props.isselected ? highlight_color : basic_gray)};
+    stroke: ${props => (props.isselected ? highlight_color : basic_gray)};
   `;
