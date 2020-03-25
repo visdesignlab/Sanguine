@@ -101,7 +101,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
         const total_val = sum(removed_zeros);
         //const medianVal = median(removed_zeros);
         let pd = createpd(removed_zeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
-        console.log(pd)
+
         // const maxY = parseFloat(max(ob.valueToVisualize)!);
 
         // yMaxTemp = yMaxTemp < maxY ? maxY : yMaxTemp;
@@ -180,7 +180,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             data.original.map((dataPoint: BarChartDataPoint) => {
               newData[dataPoint.aggregateAttribute] = dataPoint.zeroCaseNum / dataPoint.caseCount
             })
-            newExtraPairData.push({ name: "Zero Percentage", data: newData, type: "Basic" });
+            newExtraPairData.push({ name: "Zero %", data: newData, type: "Basic" });
             break;
           case "Hemoglobin":
             //let newData = {} as any;
@@ -202,7 +202,6 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
       }
       )
     }
-    console.log(newExtraPairData)
     setExtraPairData(newExtraPairData)
   }
 
