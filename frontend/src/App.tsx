@@ -59,7 +59,6 @@ const App: FC<Props> = ({ store }: Props) => {
     const resHemo = await fetch("http://localhost:8000/api/hemoglobin");
     const dataHemo = await resHemo.json();
     const resultHemo = dataHemo.result;
-    console.log(resultHemo)
     const resTrans = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&year_range=${[2014, 2019]}`)
     const dataTrans = await resTrans.json();
     const resultTrans = dataTrans.result;
