@@ -24,8 +24,9 @@ import {
   axisTop,
   scalePow,
   ticks,
+  median,
 } from "d3";
-import { DumbbellDataPoint, offset, AxisLabelDict, SelectSet } from "../../Interfaces/ApplicationState";
+import { DumbbellDataPoint, minimumOffset, AxisLabelDict, SelectSet } from "../../Interfaces/ApplicationState";
 import CustomizedAxis from "../CustomizedAxis";
 import { preop_color, basic_gray, highlight_color, postop_color } from "../../ColorProfile"
 
@@ -36,7 +37,7 @@ interface OwnProps {
   dimension: { width: number, height: number }
   data: DumbbellDataPoint[];
   svg: React.RefObject<SVGSVGElement>
-  yMax: number;
+  // yMax: number;
   xRange: { xMin: number, xMax: number };
   aggregation?: string;
   sortMode: string;
@@ -44,7 +45,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const DumbbellChart: FC<Props> = ({ sortMode, yAxisName, dimension, data, svg, store, yMax, xRange, aggregation }: Props) => {
+const DumbbellChart: FC<Props> = ({ sortMode, yAxisName, dimension, data, svg, store, xRange, aggregation }: Props) => {
 
   const [averageForEachTransfused, setAverage] = useState<any>({})
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([])
@@ -106,26 +107,25 @@ const DumbbellChart: FC<Props> = ({ sortMode, yAxisName, dimension, data, svg, s
           break;
       }
 
-      let currentPreopSum = 0;
-      let currentPostopSum = 0;
-      let currentCounter = 0;
+      let currentPreopSum: number[] = [];
+      let currentPostopSum: number[] = [];
+
       let averageDict: any = {}
       tempSortedData.map((d, i) => {
 
         if (i === tempSortedData.length - 1) {
           tempNumberList.push({ num: d.yVal, indexEnding: i })
-          averageDict[d.yVal] = { averageStart: currentPreopSum / currentCounter, averageEnd: currentPostopSum / currentCounter }
+          averageDict[d.yVal] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
         }
         else if (d.yVal !== tempSortedData[i + 1].yVal) {
           tempNumberList.push({ num: d.yVal, indexEnding: i })
-          averageDict[(d.yVal).toString()] = { averageStart: currentPreopSum / currentCounter, averageEnd: currentPostopSum / currentCounter }
-          currentPostopSum = 0;
-          currentPreopSum = 0;
-          currentCounter = 0;
+          averageDict[(d.yVal).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
+          currentPostopSum = [];
+          currentPreopSum = [];
+
         }
-        currentPreopSum += d.startXVal
-        currentPostopSum += d.endXVal
-        currentCounter += 1
+        currentPreopSum.push(d.startXVal)
+        currentPostopSum.push(d.endXVal)
       })
       setAverage(averageDict)
       setSortedData(tempSortedData)
@@ -139,25 +139,25 @@ const DumbbellChart: FC<Props> = ({ sortMode, yAxisName, dimension, data, svg, s
   const [testValueScale, valueScale] = useMemo(() => {
     const testValueScale = scaleLinear()
       .domain([0.9 * xRange.xMin, 1.1 * xRange.xMax])
-      .range([dimension.height - offset.bottom, offset.top]);
+      .range([dimension.height - minimumOffset.bottom, minimumOffset.top]);
 
 
     // let valueScale;
     // let valueScale = scalePow()
     //   .exponent(0.5)
     //   .domain([0, 1.1 * yMax])
-    //   .range([offset.left, dimension.width - offset.right - offset.margin]);
+    //   .range([minimumOffset.left, dimension.width - minimumOffset.right - minimumOffset.margin]);
 
     const indices = range(0, data.length)
 
     const valueScale = scaleOrdinal()
       .domain(indices as any)
-      .range(range(offset.left, dimension.width - offset.right, (dimension.width - offset.left - offset.right) / (data.length + 1)));
-    // console.log(ticks(offset.left, dimension.width - offset.right - offset.margin, data.length))
-    // .range([offset.left, dimension.width - offset.right - offset.margin]);
+      .range(range(minimumOffset.left, dimension.width - minimumOffset.right, (dimension.width - minimumOffset.left - minimumOffset.right) / (data.length + 1)));
+    // console.log(ticks(minimumOffset.left, dimension.width - minimumOffset.right - minimumOffset.margin, data.length))
+    // .range([minimumOffset.left, dimension.width - minimumOffset.right - minimumOffset.margin]);
 
     return [testValueScale, valueScale];
-  }, [dimension, data, yMax, xRange,
+  }, [dimension, data, xRange,
   ]);
 
   const testLabel = axisLeft(testValueScale);
@@ -168,7 +168,7 @@ const DumbbellChart: FC<Props> = ({ sortMode, yAxisName, dimension, data, svg, s
   //   .select(".y-axis")
   //   .attr(
   //     "transform",
-  //     `translate(0 ,${dimension.height - offset.bottom} )`
+  //     `translate(0 ,${dimension.height - minimumOffset.bottom} )`
   //   )
   //   .attr('display', null)
 
@@ -177,18 +177,18 @@ const DumbbellChart: FC<Props> = ({ sortMode, yAxisName, dimension, data, svg, s
     .select(".axes")
     .select(".y-label")
     .attr("display", null)
-    .attr("y", dimension.height - offset.bottom + 20)
-    .attr("x", 0.5 * (dimension.width + offset.left))
+    .attr("y", dimension.height - minimumOffset.bottom + 20)
+    .attr("x", 0.5 * (dimension.width + minimumOffset.left))
     .attr("font-size", "11px")
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "hanging")
-    // .attr("transform", `translate(0 ,${offset.top}`)
+    // .attr("transform", `translate(0 ,${minimumOffset.top}`)
     .text(
       AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
     );
   svgSelection.select('.axes')
     .select(".x-axis")
-    .attr("transform", `translate(${offset.left}, 0)`)
+    .attr("transform", `translate(${minimumOffset.left}, 0)`)
     .call(testLabel as any);
 
 
@@ -196,7 +196,7 @@ const DumbbellChart: FC<Props> = ({ sortMode, yAxisName, dimension, data, svg, s
   svgSelection
     .select(".axes")
     .select(".x-label")
-    .attr("x", -0.5 * dimension.height + 1.5 * offset.bottom)
+    .attr("x", -0.5 * dimension.height + 1.5 * minimumOffset.bottom)
     .attr("y", 0)
     .attr("transform", "rotate(-90)")
     .attr("alignment-baseline", "hanging")
@@ -242,14 +242,14 @@ const DumbbellChart: FC<Props> = ({ sortMode, yAxisName, dimension, data, svg, s
     <>
       <g className="axes">
         <g className="x-axis"></g>
-        <g className="y-axis" transform={`translate(0,${dimension.height - offset.bottom})`}>
+        <g className="y-axis" transform={`translate(0,${dimension.height - minimumOffset.bottom})`}>
           <CustomizedAxis scale={valueScale as ScaleOrdinal<any, number>} numberList={numberList} />
         </g>
         <text className="x-label" style={{ textAnchor: "end" }} />
         <text className="y-label" style={{ textAnchor: "end" }} />
       </g>
       <g className="chart-comp" >
-        <line x1={offset.left} x2={dimension.width - offset.right} y1={testValueScale(11)} y2={testValueScale(11)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
+        <line x1={minimumOffset.left} x2={dimension.width - minimumOffset.right} y1={testValueScale(13)} y2={testValueScale(13)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
 
 
         {sortedData.map((dataPoint, index) => {
@@ -363,6 +363,5 @@ const Rect = styled(`rect`) <RectProps>`
 
 const Line = styled(`line`) < AverageLineProps>`
     stroke: ${props => (props.ispreop ? preop_color : postop_color)};
-    stroke-width:2px  
-    stroke-dasharray: 5,5
+    stroke-width:3px  
     `
