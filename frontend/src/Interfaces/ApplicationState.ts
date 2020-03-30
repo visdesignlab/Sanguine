@@ -88,6 +88,7 @@ export const AxisLabelDict: any = {
   SURGEON_ID: "Surgeon ID",
   ANESTHOLOGIST_ID: "Anesthologist ID",
   YEAR: "Year",
+  QUARTER: "Quarter",
   HEMO_VALUE: "Hemoglobin Value",
   PREOP_HEMO: "Preoperative Hemoglobin Value",
   POSTOP_HEMO: "Postoperative Hemoglobin Value"

@@ -37,7 +37,7 @@ interface OwnProps {
   dimension: { width: number, height: number }
   data: DumbbellDataPoint[];
   svg: React.RefObject<SVGSVGElement>
-  yMax: number;
+  // yMax: number;
   xRange: { xMin: number, xMax: number };
   aggregation?: string;
   sortMode: string;
@@ -45,7 +45,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const DumbbellChart: FC<Props> = ({ sortMode, yAxisName, dimension, data, svg, store, yMax, xRange, aggregation }: Props) => {
+const DumbbellChart: FC<Props> = ({ sortMode, yAxisName, dimension, data, svg, store, xRange, aggregation }: Props) => {
 
   const [averageForEachTransfused, setAverage] = useState<any>({})
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([])
@@ -157,7 +157,7 @@ const DumbbellChart: FC<Props> = ({ sortMode, yAxisName, dimension, data, svg, s
     // .range([minimumOffset.left, dimension.width - minimumOffset.right - minimumOffset.margin]);
 
     return [testValueScale, valueScale];
-  }, [dimension, data, yMax, xRange,
+  }, [dimension, data, xRange,
   ]);
 
   const testLabel = axisLeft(testValueScale);
