@@ -82,7 +82,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     { value: "HEMO_VALUE", key: "HEMO_VALUE", text: "Hemoglobin Value" }
   ]
 
-  const dumbbellAggregationOptions = [
+  const dumbbellFacetOptions = [
     { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
     { value: "YEAR", key: "YEAR", text: "Year" },
     {
@@ -90,7 +90,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       key: "ANESTHOLOGIST_ID",
       text: "Anesthologist ID"
     },
-    { value: "None", key: "None", text: "None" },
+    { value: "QUARTER", key: "QUARTER", text: "Quarter" },
   ]
 
   const barChartAggregationOptions = [
@@ -106,7 +106,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const addOptions = [
     [barChartValuesOptions, barChartAggregationOptions],
 
-    [dumbbellValueOptions, barChartValuesOptions],
+    [dumbbellValueOptions, barChartValuesOptions.concat(dumbbellFacetOptions)],
     [scatterXOptions, barChartValuesOptions]
 
   ]
@@ -217,20 +217,20 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       </Menu.Item>
       <Menu.Item>
         <Dropdown
-          placeholder={addingChartType === 0 ? "Select Aggregation" : "Select X-axis Attribute"}
+          placeholder={addingChartType === 0 ? "Select Aggregation" : addingChartType === 1 ? "Facet by" : "Select X-axis Attribute"}
           selection
           options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
           onChange={xAxisChangeHandler}
         />
       </Menu.Item>
-      {addingChartType === 1 ? (<Menu.Item>
+      {/* {addingChartType === 1 ? (<Menu.Item>
         <Dropdown
           placeholder={"Select Aggregation"}
           selection
-          options={dumbbellAggregationOptions}
+          options={dumbbellFacetOptions}
           onChange={dumbbellAggregationChangeHandler}
         />
-      </Menu.Item>) : (<></>)}
+      </Menu.Item>) : (<></>)} */}
       <Menu.Item>
         <Button.Group>
           <Button
