@@ -368,6 +368,15 @@ def request_transfused_units(request):
                  for row in result]
         return JsonResponse({"result": items})
 
+def output_quarter (number):
+    if number >0 and number < 4:
+        return 1
+    elif number >3 and number < 7:
+        return 2
+    elif number > 6 and number < 10:
+        return 3
+    else:
+        return 4
 
 def hemoglobin(request):
     if request.method == "GET":
@@ -458,6 +467,7 @@ def hemoglobin(request):
             ",SC3.DI_VISIT_NO "
             ",SC3.DI_CASE_DATE "
             ",EXTRACT (YEAR from SC3.DI_CASE_DATE) YEAR "
+            ",EXTRACT (MONTH from SC3.DI_CASE_DATE) AS MONTH "
             ",SC3.DI_SURGERY_START_DTM "
             ",SC3.DI_SURGERY_END_DTM "
             ",SC3.SURGERY_ELAP "
@@ -482,9 +492,10 @@ def hemoglobin(request):
         items = [{"CASE_ID":row[1],
                 "VISIT_ID": row[2],
                 "YEAR":row[4],
+                "QUARTER": str(row[4])+"-"+str(output_quarter(row[5])),
                 "HEMO": [row[-3], row[-1]],
-                "SURGEON_ID": row[9],
-                "ANESTHOLOGIST_ID":row[10],
+                "SURGEON_ID": row[10],
+                "ANESTHOLOGIST_ID":row[11],
                 "PATIENT_ID":row[0]} for row in result]
 
         return JsonResponse({"result": items})

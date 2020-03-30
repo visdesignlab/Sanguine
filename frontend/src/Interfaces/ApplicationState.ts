@@ -75,6 +75,7 @@ export const defaultState: ApplicationState = {
 };
 
 export const offset = { left: 85, bottom: 40, right: 10, top: 40, margin: 20 };
+export const minimumOffset = { left: 35, bottom: 40, right: 10, top: 40, margin: 20 }
 export const extraPairWidth: any = { Dumbbell: 110, BarChart: 50, Basic: 30 }
 export const extraPairPadding = 5
 
@@ -87,6 +88,7 @@ export const AxisLabelDict: any = {
   SURGEON_ID: "Surgeon ID",
   ANESTHOLOGIST_ID: "Anesthologist ID",
   YEAR: "Year",
+  QUARTER: "Quarter",
   HEMO_VALUE: "Hemoglobin Value",
   PREOP_HEMO: "Preoperative Hemoglobin Value",
   POSTOP_HEMO: "Postoperative Hemoglobin Value"

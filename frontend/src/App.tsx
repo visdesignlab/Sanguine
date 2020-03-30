@@ -59,16 +59,23 @@ const App: FC<Props> = ({ store }: Props) => {
     const resHemo = await fetch("http://localhost:8000/api/hemoglobin");
     const dataHemo = await resHemo.json();
     const resultHemo = dataHemo.result;
-
+    console.log(resultHemo)
     const resTrans = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&year_range=${[2014, 2019]}`)
     const dataTrans = await resTrans.json();
     const resultTrans = dataTrans.result;
 
     let transfused_dict = {} as any;
     let result: {
-      CASE_ID: number, VISIT_ID: number,
-      PATIENT_ID: number, ANESTHOLOGIST_ID: number,
-      SURGEON_ID: number, YEAR: number, PRBC_UNITS: number, FFP_UNITS: number, PLT_UNITS: number,
+      CASE_ID: number,
+      VISIT_ID: number,
+      PATIENT_ID: number,
+      ANESTHOLOGIST_ID: number,
+      SURGEON_ID: number,
+      YEAR: number,
+      QUARTER: string,
+      PRBC_UNITS: number,
+      FFP_UNITS: number,
+      PLT_UNITS: number,
       CRYO_UNITS: number,
       CELL_SAVER_ML: number,
       HEMO: number[]
@@ -102,7 +109,8 @@ const App: FC<Props> = ({ store }: Props) => {
           PLT_UNITS: transfusedResult.PLT_UNITS,
           CRYO_UNITS: transfusedResult.CRYO_UNITS,
           CELL_SAVER_ML: transfusedResult.CELL_SAVER_ML,
-          HEMO: ob.HEMO
+          HEMO: ob.HEMO,
+          QUARTER: ob.QUARTER
         })
       }
     })
@@ -149,7 +157,7 @@ const App: FC<Props> = ({ store }: Props) => {
             yAxis={layout.aggregatedBy}
             chartId={layout.i}
             chartIndex={index}
-            aggregatedOption={layout.aggregation}
+          // aggregatedOption={layout.aggregation}
           />
         </div>
       );
