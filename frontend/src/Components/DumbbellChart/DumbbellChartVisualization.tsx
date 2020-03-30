@@ -199,9 +199,9 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
             </Menu.Item >
           </Menu> */}
           <Button.Group vertical size="mini">
-            <PreopButton basic onClick={() => { setSortMode("Preop") }}>Preop</PreopButton>
-            <PostopButton basic onClick={() => { setSortMode("Postop") }}>Postop</PostopButton>
-            <GapButton basic onClick={() => { setSortMode("Gap") }}>Gap</GapButton>
+            <PreopButton basic={sortMode !== "Preop"} onClick={() => { setSortMode("Preop") }}>Preop</PreopButton>
+            <PostopButton basic={sortMode !== "Postop"} onClick={() => { setSortMode("Postop") }}>Postop</PostopButton>
+            <GapButton basic={sortMode !== "Gap"} onClick={() => { setSortMode("Gap") }}>Gap</GapButton>
           </Button.Group>
         </Grid.Column>
         <Grid.Column width={14}  >
