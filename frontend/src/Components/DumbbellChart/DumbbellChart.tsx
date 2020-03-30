@@ -352,7 +352,7 @@ const DumbbellG = styled(`g`) <DumbbellProps>`
 const Circle = styled(`circle`) <DotProps>`
   r:4px
   fill: ${props => (props.isselected ? highlight_color : props.ispreop ? preop_color : postop_color)};
-  opacity:${props => props.isselected ? 1 : 0.5}
+  opacity:${props => props.isselected ? 1 : 0.8}
 `;
 
 const Rect = styled(`rect`) <RectProps>`

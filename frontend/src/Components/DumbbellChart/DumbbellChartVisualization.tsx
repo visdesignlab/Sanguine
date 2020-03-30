@@ -73,6 +73,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
     // const hemoDataResult = await hemoRes.json();
     // const hemo_data = hemoDataResult.result;
     //let tempYMax = 0;
+    console.log(transfused_dict)
     let tempXMin = Infinity;
     let tempXMax = 0;
     if (hemoglobinDataSet) {
@@ -89,7 +90,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
         };
         //  console.log(transfused_dict);
         //This filter out anything that has empty value
-        if (yAxisLabel_val && begin_x > 0 && end_x > 0) {
+        if (yAxisLabel_val !== undefined && begin_x > 0 && end_x > 0) {
           // if (!(yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
           //   tempYMax = yAxisLabel_val > tempYMax ? yAxisLabel_val : tempYMax;
           // }

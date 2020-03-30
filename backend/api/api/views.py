@@ -338,8 +338,8 @@ def request_transfused_units(request):
 
         # Setup the inner and outer selects
         outer_select = "PRBC_UNITS, FFP_UNITS, PLT_UNITS, CRYO_UNITS, CELL_SAVER_ML" if transfusion_type == "ALL_UNITS" else transfusion_type
-        limit = "" if transfusion_type == "ALL_UNITS" else f"WHERE {transfusion_type} > 0"
-
+        #limit = "" if transfusion_type == "ALL_UNITS" else f"WHERE {transfusion_type} > 0"
+        limit=""
         # Define the full SQL statement
         command = (
             f"SELECT {outer_select}, di_case_id, YEAR, SURGEON_ID, ANESTHOLOGIST_ID FROM ( "
@@ -364,7 +364,7 @@ def request_transfused_units(request):
             items = [{"case_id": row[5], "PRBC_UNITS": row[0] if row[0] else 0 , "FFP_UNITS": row[1] if row[1] else 0 , "PLT_UNITS": row[2] if row[2] else 0 , "CRYO_UNITS": row[3] if row[3] else 0 , "CELL_SAVER_ML": row[4] if row[4] else 0 }
                  for row in result]
         else:
-            items = [{"case_id": row[1], "transfused": row[0]}
+            items = [{"case_id": row[1], "transfused": row[0]if row[0] else 0}
                  for row in result]
         return JsonResponse({"result": items})
 
