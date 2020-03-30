@@ -9,7 +9,7 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { DumbbellDataPoint, SelectSet } from "../../Interfaces/ApplicationState"
+import { DumbbellDataPoint, SelectSet, BloodProductCap } from "../../Interfaces/ApplicationState"
 import DumbbellChart from "./DumbbellChart"
 import { Grid, Menu, Dropdown, Button } from "semantic-ui-react";
 import { preop_color, postop_color, basic_gray } from "../../ColorProfile";
@@ -36,7 +36,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
   const svgRef = useRef<SVGSVGElement>(null);
   const [data, setData] = useState<{ result: DumbbellDataPoint[] }>({ result: [] });
   const [dimension, setDimensions] = useState({ width: 0, height: 0 });
-  const [yMax, setYMax] = useState(0);
+  // const [yMax, setYMax] = useState(0);
   const [xRange, setXRange] = useState({ xMin: 0, xMax: Infinity });
   const [sortMode, setSortMode] = useState("Postop");
 
@@ -53,14 +53,16 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
 
   async function fetchChartData() {
     let transfused_dict = {} as any;
-    // if () {
-
-    // }
+    let requestingAxis = yAxis
+    if (!BloodProductCap[yAxis]) {
+      requestingAxis = "FFP_UNITS"
+    }
     const transfusedRes = await fetch(
-      `http://localhost:8000/api/request_transfused_units?transfusion_type=${yAxis}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`
+      `http://localhost:8000/api/request_transfused_units?transfusion_type=${requestingAxis}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`
     );
     const transfusedDataResult = await transfusedRes.json();
     const temp_transfusion_data = transfusedDataResult.result;
+
 
     temp_transfusion_data.forEach((element: any) => {
       transfused_dict[element.case_id] = {
@@ -70,7 +72,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
     // const hemoRes = await fetch(`http://localhost:8000/api/hemoglobin`);
     // const hemoDataResult = await hemoRes.json();
     // const hemo_data = hemoDataResult.result;
-    let tempYMax = 0;
+    //let tempYMax = 0;
     let tempXMin = Infinity;
     let tempXMax = 0;
     if (hemoglobinDataSet) {
@@ -83,14 +85,14 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
         let yAxisLabel_val;
 
         if (transfused_dict[ob.CASE_ID]) {
-          yAxisLabel_val = transfused_dict[ob.CASE_ID].transfused;
+          yAxisLabel_val = BloodProductCap[yAxis] ? transfused_dict[ob.CASE_ID].transfused : ob[yAxis];
         };
         //  console.log(transfused_dict);
         //This filter out anything that has empty value
         if (yAxisLabel_val && begin_x > 0 && end_x > 0) {
-          if (!(yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
-            tempYMax = yAxisLabel_val > tempYMax ? yAxisLabel_val : tempYMax;
-          }
+          // if (!(yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
+          //   tempYMax = yAxisLabel_val > tempYMax ? yAxisLabel_val : tempYMax;
+          // }
           tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
           tempXMin = end_x < tempXMin ? end_x : tempXMin;
           tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
@@ -101,6 +103,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
               visitNum: ob.VISIT_ID,
               caseId: ob.CASE_ID,
               YEAR: ob.YEAR,
+
               ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
               SURGEON_ID: ob.SURGEON_ID,
               patientID: ob.PATIENT_ID
@@ -162,7 +165,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
       // }
 
       setData({ result: cast_data });
-      setYMax(tempYMax);
+      // setYMax(tempYMax);
       setXRange({ xMin: tempXMin, xMax: tempXMax });
 
     }
@@ -219,7 +222,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
               data={data.result}
               dimension={dimension}
               xRange={xRange}
-              yMax={yMax}
+              // yMax={yMax}
               // aggregation={aggregatedOption}
               sortMode={sortMode}
             />
