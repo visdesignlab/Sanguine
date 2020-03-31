@@ -48,10 +48,10 @@ def cpt():
 
 
 # Execute a command against the database
-def execute_sql(command):
+def execute_sql(command, **kwargs):
     connection = make_connection()
     cur = connection.cursor()
-    result = cur.execute(command)
+    result = cur.execute(command, **kwargs)
     return result
 
 
@@ -77,14 +77,11 @@ def get_attributes(request):
                     "ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) "
                     "AND (BLNG.DI_VISIT_NO = SURG.DI_VISIT_NO) "
                     "AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE) "
-                "WHERE "
-                    "BLNG.CODE IN ( "
-                        f"{billing_codes}"
-                    ") "
+                "WHERE BLNG.CODE IN (:codes) "
             ") "
             "GROUP BY CODE_DESC, REDO"
         )
-        result = execute_sql(command)
+        result = execute_sql(command, codes = billing_codes)
 
         # Return the result, the multi-selector component in React requires the below format
         items = [{"value": f"{row[0]}_{row[1]}","count":row[2]} for row in result]
@@ -97,37 +94,36 @@ def fetch_professional_set(request):
         professional_id = request.GET.get('professional_id')
         
         if not profesional_type or not professional_id:
-            HttpResponseBadRequest(
-                "professional type and id must be supplied.")
+            HttpResponseBadRequest("professional type and id must be supplied.")
 
         if profesional_type == "ANESTHOLOGIST_ID":
             command = (
-                f"SELECT SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS) PRBC_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS) FFP_UNITS, "
-                f"SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS, "
-                f"SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS) CRYO_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML) CELL_SAVER_ML, "
-                f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID SURGEON_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC "
-                f"FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
-                f"INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
-                f"ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID) "
-                f"WHERE CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID = {professional_id}"
-                f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID,CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC"
+                "SELECT SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS) PRBC_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS) FFP_UNITS, "
+                "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS, "
+                "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS) CRYO_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML) CELL_SAVER_ML, "
+                "CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID SURGEON_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC "
+                "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
+                "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
+                "ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID) "
+                "WHERE CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID = :id"
+                "GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID,CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC"
             )
             partner = "SURGEON_ID"
         else:
             command = (
-                f"SELECT SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS) PRBC_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS) FFP_UNITS, "
-                f"SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS, "
-                f"SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS) CRYO_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML) CELL_SAVER_ML, "
-                f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID ANESTHOLOGIST_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC "
-                f"FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
-                f"INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
-                f"ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID) "
-                f"WHERE CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID = {professional_id}"
-                f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID,CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC"
+                "SELECT SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS) PRBC_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS) FFP_UNITS, "
+                "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS, "
+                "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS) CRYO_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML) CELL_SAVER_ML, "
+                "CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID ANESTHOLOGIST_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC "
+                "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
+                "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
+                "ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID) "
+                "WHERE CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID = :id"
+                "GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID,CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC"
             )
             partner = "ANESTHOLOGIST_ID"
 
-        result = execute_sql(command)
+        result = execute_sql(command, id = profesional_id)
         items = [{"PRBC_UNITS": row[0] if row[0] else 0, "FFP_UNITS": row[1] if row[1] else 0, "PLT_UNITS": row[2] if row[2] else 0, "CRYO_UNITS":row[3] if row[3] else 0, "CELL_SAVER_ML":row[4] if row[4] else 0, partner: row[5], "DI_CASE_ID":row[6], "DESC":row[7]}
                  for row in result]
         return JsonResponse({"result": items})
@@ -144,15 +140,15 @@ def fetch_surgery(request):
                 "case_id must be supplied.")
         
         command =(
-                f"SELECT surgery.DI_CASE_DATE, surgery.DI_SURGERY_START_DTM, "
-                f"surgery.DI_SURGERY_END_DTM, surgery.SURGERY_ELAP, surgery.SURGERY_TYPE_DESC, "
-                f"surgery.SURGEON_PROV_DWID, surgery.ANESTH_PROV_DWID, surgery.PRIM_PROC_DESC, "
-                f"surgery.POSTOP_ICU_LOS "
-                f"FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE surgery "
-                f"WHERE surgery.DI_CASE_ID = {case_id}"
+                "SELECT surgery.DI_CASE_DATE, surgery.DI_SURGERY_START_DTM, "
+                "surgery.DI_SURGERY_END_DTM, surgery.SURGERY_ELAP, surgery.SURGERY_TYPE_DESC, "
+                "surgery.SURGEON_PROV_DWID, surgery.ANESTH_PROV_DWID, surgery.PRIM_PROC_DESC, "
+                "surgery.POSTOP_ICU_LOS "
+                "FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE surgery "
+                "WHERE surgery.DI_CASE_ID = :id"
         )
 
-        result = execute_sql(command)
+        result = execute_sql(command, id = case_id)
         data_dict = data_dictionary()
         data = [
             dict(zip([data_dict[key[0]] for key in result.description], row))
@@ -172,14 +168,14 @@ def fetch_patient(request):
                 "patient_id must be supplied.")
         
         command =(
-                f"SELECT info.DI_BIRTHDATE, info.GENDER_CODE, info.GENDER_DESC, "
-                f"info.RACE_CODE, info.RACE_DESC, info.ETHNICITY_CODE, info.ETHNICITY_DESC, "
-                f"info.DI_DEATH_DATE "
-                f"FROM CLIN_DM.BPU_CTS_DI_PATIENT info "
-                f"WHERE info.DI_PAT_ID = {patient_id}"
+                "SELECT info.DI_BIRTHDATE, info.GENDER_CODE, info.GENDER_DESC, "
+                "info.RACE_CODE, info.RACE_DESC, info.ETHNICITY_CODE, info.ETHNICITY_DESC, "
+                "info.DI_DEATH_DATE "
+                "FROM CLIN_DM.BPU_CTS_DI_PATIENT info "
+                "WHERE info.DI_PAT_ID = :id"
         )
 
-        result = execute_sql(command)
+        result = execute_sql(command, id = patient_id)
         data_dict = data_dictionary()
         data = [
             dict(zip([data_dict[key[0]] for key in result.description], row))
@@ -191,87 +187,77 @@ def fetch_patient(request):
 
 def summarize_attribute_w_year(request):
     if request.method == "GET":
+        # Get the parameters from the query string
         aggregatedBy = request.GET.get("aggregatedBy")
         valueToVisualize = request.GET.get("valueToVisualize")
-        year_range = request.GET.get("year_range").split(",")
-        filter_selection = request.GET.get("filter_selection")
-        print(filter_selection)
-        if filter_selection is None:
-            filter_selection = []
-        else:
-            filter_selection = (
-                [] if filter_selection.split(",") == [""] else filter_selection.split(",")
-            )
-        print(filter_selection)
+        year_range = request.GET.get("year_range") or ""
+        filter_selection = request.GET.get("filter_selection") or ""
 
-        if not aggregatedBy or not valueToVisualize or not year_range:
-            HttpResponseBadRequest(
-                "aggregatedBy, valueToVisualize, and year_range must be supplied.")
+        # Parse the year_range and the filter selection
+        year_range = [s for s in year_range.split(",") if s.isdigit()]
+        filter_selection = filter_selection.split(",")
 
-        year_min = year_range[0]
-        year_max = year_range[1]
+        # Check the required parameters are there
+        if not (aggregatedBy and valueToVisualize and len(year_range) == 2):
+            HttpResponseBadRequest("aggregatedBy, valueToVisualize, and year_range must be supplied.")
 
-        command_dict = {
-            "YEAR": "EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE)",
-            "SURGEON_ID": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID",
-            "ANESTHOLOGIST_ID": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID",
-            "PRBC_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS)",
-            "FFP_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS)",
-            "PLT_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS)",
-            "CRYO_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS)",
-            "CELL_SAVER_ML": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML)"
-        }
-        data_origin = {
-            "YEAR": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE",
-            "PRBC_UNITS": "CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD",
-            "FFP_UNITS": "CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD",
-            "PLT_UNITS": "CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD",
-            "CRYO_UNITS": "CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD",
-            "CELL_SAVER_ML": "CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD",
-            "SURGEON_ID": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE",
-            "ANESTHOLOGIST_ID": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE",
-        }
-        dict_for_exchange = {
-            "YEAR": "EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE)",
-            "SURGEON_ID": "SURGEON_PROV_DWID",
-            "ANESTHOLOGIST_ID": "ANESTH_PROV_DWID",
-            "PRBC_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS)",
-            "FFP_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS)",
-            "PLT_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS)",
-            "CRYO_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS)",
-            "CELL_SAVER_ML": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML)"
+
+        # Check that the values supplied are valid possibilities
+        blood_products = [
+            "PRBC_UNITS",
+            "FFP_UNITS",
+            "PLT_UNITS",
+            "CRYO_UNITS",
+            "CELL_SAVER_ML"
+        ]
+        aggregates = {
+            "YEAR": "EXTRACT (YEAR FROM BLNGSURG.DI_CASE_DATE)",
+            "SURGEON_ID": "BLNGSURG.SURGEON_PROV_DWID",
+            "ANESTHOLOGIST_ID": "BLNGSURG.ANESTH_PROV_DWID",
         }
 
-        extra_command = ""
-        if len(filter_selection) > 0:
-            extra_command = " AND ("
-            for filter_string in filter_selection[:-1]:
-                extra_command += (
-                    f" CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC='{filter_string}' OR"
-                )
-            filter_string = filter_selection[-1]
-            extra_command += (
-                f" CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC='{filter_string}')"
-            )
+        if valueToVisualize not in blood_products:
+            HttpResponseBadRequest(f"valueToVisualize must be one of the following: {blood_products}")
 
+        if aggregatedBy not in aggregates.keys():
+            HttpResponseBadRequest(f"aggregatedBy must be one of the following: {list(aggregates.keys())}")
+
+        # Generate the CPT filter sql
+        filters = "','".join(filter_selection)
+        filters = f"'{filters}'"
+        filters = "AND BLNG.CODE_DESC IN (:filters) " if filters != "''" else ""
+
+
+        # Build the sql query
+        valueToVisualize = f"CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.{valueToVisualize}"
+        min_time = f'01-JAN-{year_range[0]}'
+        max_time = f'31-DEC-{year_range[1]}'
+        # Safe to use format strings since there are limited options for aggregatedBy and valueToVisualize
         command = (
-            f"SELECT {command_dict[aggregatedBy]} aggregatedBy, {command_dict[valueToVisualize]} valueToVisualize, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID DI_CASE_ID "
-            # f"COUNT(DISTINCT {data_origin[aggregatedBy]}.DI_CASE_ID) AS CASES_COUNT "
-            f"FROM {data_origin[aggregatedBy]} "
-            f"INNER JOIN {data_origin[valueToVisualize]} "
-            f"ON ({data_origin[aggregatedBy]}.DI_CASE_ID = {data_origin[valueToVisualize]}.DI_CASE_ID "
-            f"{extra_command}) "
-            f"WHERE {data_origin[aggregatedBy]}.DI_CASE_DATE BETWEEN "
-            f"'01-JAN-{year_min}' AND '31-DEC-{year_max}' "
-            f"GROUP BY {command_dict[aggregatedBy]}, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID"
+            "SELECT "
+                f"{aggregates[aggregatedBy]} aggregatedBy, "
+                f"SUM({valueToVisualize}) valueToVisualize, "
+                "BLNGSURG.DI_CASE_ID "
+            "FROM ( "
+                "SELECT "
+                    "SURG.DI_CASE_ID, "
+                    "SURG.DI_CASE_DATE "
+                "FROM CLIN_DM.BPU_CTS_DI_BILLING_CODES BLNG "
+                "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE SURG "
+                    "ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) AND (BLNG.DI_VISIT_NO = SURG.DI_VISIT_NO) AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE) "
+                f"WHERE SURG.DI_CASE_DATE BETWEEN :min_time AND :max_time {filters} "
+            ") BLNGSURG "
+            "INNER JOIN CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
+                "ON (BLNGSURG.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID) "
+            f"GROUP BY {aggregates[aggregatedBy]}, BLNGSURG.DI_CASE_ID"
         )
 
-        result = execute_sql(command)
-        # data_exchange = {
-        #     dict_for_exchange[aggregatedBy].replace(" ", ""): "aggregatedBy",
-        #     dict_for_exchange[valueToVisualize].replace(" ", ""): "valueToVisualize",
-        #     "CASES_COUNT": "case_count",
-        # }
+        result = execute_sql(
+            command, 
+            filters = filters
+            min_time = min_time,
+            max_time = max_time,
+        )
         result_dict = {}
         case_id_list = []
         
@@ -313,11 +299,11 @@ def request_individual_specific(request):
         }
         command = (
             f"SELECT {command_dict[attribute_to_retrieve]} "
-            f"FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
-            f"WHERE DI_CASE_ID = {case_id}"
+            "FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
+            "WHERE DI_CASE_ID = :id"
         )
-        print(command)
-        result = execute_sql(command)
+
+        result = execute_sql(command, id = case_id)
         items = [{"result":row[0]} for row in result]
         return JsonResponse({"result": items})
 
