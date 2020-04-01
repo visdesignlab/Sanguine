@@ -140,7 +140,7 @@ const App: FC<Props> = ({ store }: Props) => {
     if (layout.plot_type === "DUMBBELL") {
       return (
         <div key={layout.i} className={"parent-node" + layout.i}>
-          <Button
+          {/* <Button
             icon="close"
             floated={"right"}
             circular
@@ -151,7 +151,8 @@ const App: FC<Props> = ({ store }: Props) => {
               actions.removeChart}
           >
             <Icon key={layout.i} name="close" />
-          </Button>
+          </Button> */}
+          <Button icon="close" floated="right" circular compact size="mini" basic onClick={() => { actions.removeChart(layout.i) }} />
           <DumbbellChartVisualization
             yAxis={layout.aggregatedBy}
             chartId={layout.i}
@@ -169,7 +170,7 @@ const App: FC<Props> = ({ store }: Props) => {
           className={"parent-node" + layout.i}
         // data-grid={layoutE}
         >
-          <Button
+          {/* <Button
             icon='close'
             floated={"right"}
             circular
@@ -178,7 +179,8 @@ const App: FC<Props> = ({ store }: Props) => {
             onClick={actions.removeChart}
           >
             <Icon key={layout.i} name="close" />
-          </Button>
+          </Button> */}
+          <Button floated="right" icon="close" circular compact size="mini" basic onClick={() => { actions.removeChart(layout.i) }} />
           <BarChartVisualization
             aggregatedBy={layout.aggregatedBy}
             valueToVisualize={layout.valueToVisualize}
@@ -197,7 +199,7 @@ const App: FC<Props> = ({ store }: Props) => {
         className={"parent-node" + layout.i}
       // data-grid={layoutE}
       >
-        <Button
+        {/* <Button
           icon='close'
           compact
           floated={"right"}
@@ -206,7 +208,8 @@ const App: FC<Props> = ({ store }: Props) => {
           onClick={actions.removeChart}
         >
           <Icon key={layout.i} name="close" />
-        </Button>
+        </Button> */}
+        <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
         <ScatterPlotVisualization
           xAxis={layout.aggregatedBy}
           yAxis={layout.valueToVisualize}
@@ -219,7 +222,7 @@ const App: FC<Props> = ({ store }: Props) => {
   }
 
   const panes = [{
-    menuItem: 'Main', pane: <Tab.Pane>
+    menuItem: 'Main', pane: <Tab.Pane key="Main">
       <Grid>
         <GridColumn width={13}>
           <ResponsiveReactGridLayout
@@ -247,7 +250,7 @@ const App: FC<Props> = ({ store }: Props) => {
   },
   {
     menuItem: 'LineUp', pane:
-      <Tab.Pane>
+      <Tab.Pane key="LineUp">
         <div className={"lineup"}>
           <LineUpWrapper /></div></Tab.Pane>
   }]

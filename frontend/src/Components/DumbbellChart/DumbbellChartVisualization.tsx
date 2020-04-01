@@ -74,13 +74,12 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
     // const hemoDataResult = await hemoRes.json();
     // const hemo_data = hemoDataResult.result;
     //let tempYMax = 0;
-    console.log(transfused_dict)
     let tempXMin = Infinity;
     let tempXMax = 0;
     if (hemoglobinDataSet) {
       //TODO:
       //How to solve the total case viewing potential discrepency?
-
+      let existingCaseID = new Set();
       let cast_data: DumbbellDataPoint[] = hemoglobinDataSet.map((ob: any) => {
         const begin_x = +ob.HEMO[0];
         const end_x = +ob.HEMO[1];
@@ -91,10 +90,16 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
         };
         //  console.log(transfused_dict);
         //This filter out anything that has empty value
-        if (yAxisLabel_val !== undefined && begin_x > 0 && end_x > 0) {
+        if (yAxisLabel_val !== undefined && begin_x > 0 && end_x > 0 && !existingCaseID.has(ob.CASE_ID)) {
           // if (!(yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
           //   tempYMax = yAxisLabel_val > tempYMax ? yAxisLabel_val : tempYMax;
           // }
+          if ((yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
+            yAxisLabel_val -= 999
+          }
+          if ((yAxisLabel_val > 100 && yAxis === "PLT_UNITS")) {
+            yAxisLabel_val -= 245
+          }
           tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
           tempXMin = end_x < tempXMin ? end_x : tempXMin;
           tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
@@ -105,7 +110,6 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
               visitNum: ob.VISIT_ID,
               caseId: ob.CASE_ID,
               YEAR: ob.YEAR,
-
               ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
               SURGEON_ID: ob.SURGEON_ID,
               patientID: ob.PATIENT_ID
@@ -116,6 +120,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
             yVal: yAxisLabel_val,
 
           };
+          existingCaseID.add(ob.CASE_ID)
           //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
           return new_ob;
           //}
@@ -183,23 +188,6 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
     <Grid style={{ height: "100%" }}>
       <Grid.Row>
         <Grid.Column verticalAlign="middle" width={2}>
-          {/* <Menu icon vertical compact size="mini" borderless secondary widths={2}>
-            <Menu.Item fitted>
-              <Dropdown basic item icon="ellipsis horizontal" compact>
-                <Dropdown.Menu>
-                  <Dropdown.Item onClick={() => { setSortMode("Gap") }}>
-                    Gap Sort
-                </Dropdown.Item>
-                  <Dropdown.Item onClick={() => { setSortMode("Preop") }}>
-                    Preop Sort
-                </Dropdown.Item><Dropdown.Item onClick={() => { setSortMode("Postop") }}>
-                    Postop Sort
-                </Dropdown.Item>
-
-                </Dropdown.Menu>
-              </Dropdown>
-            </Menu.Item >
-          </Menu> */}
           <OptionsP>Show</OptionsP>
           <Button.Group vertical size="mini">
             <PreopButton basic={!showingAttr.preop} onClick={() => { setShowingAttr({ preop: !showingAttr.preop, postop: showingAttr.postop, gap: showingAttr.gap }) }} >Preop</PreopButton>
