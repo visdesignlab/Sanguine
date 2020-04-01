@@ -46,3 +46,4 @@ It should show as `(bloodvis)[uID@bloodvis]$`.
 3. Type `cd /uufs/chpc.utah.edu/common/HIPAA/IRB_00124248/bloodvis/bloodvis/frontend`
 4. Type `scl enable rh-nodejs10 bash`
 5. Type `npm install && npm start`
+6. Use `google-chrome --use-gl=swiftshader` to view this in chrome.
