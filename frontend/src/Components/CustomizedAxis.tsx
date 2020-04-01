@@ -34,11 +34,12 @@ const CustomizedAxis: FC<Props> = ({ numberList, store, scale }) => {
 
     return <>
         {numberList.map((numberOb, ind) => {
-            const x1 = ind === 0 ? scale(0) : scale(numberList[ind - 1].indexEnding + 1)
+            let x1 = ind === 0 ? scale(0) : (1 + scale(numberList[ind - 1].indexEnding + 1) - 0.5 * (scale(numberList[ind - 1].indexEnding + 1) - scale(numberList[ind - 1].indexEnding)))
+            let x2 = ind === numberList.length - 1 ? scale(numberOb.indexEnding) : (-1 + scale(numberOb.indexEnding) + 0.5 * (scale(numberOb.indexEnding + 1) - scale(numberOb.indexEnding)))
 
-            return ([<Line x1={x1} x2={scale(numberOb.indexEnding)} />,
-            <LineBox x={x1} width={scale(numberOb.indexEnding) - x1} fill={ind % 2 === 1 ? "#20639B" : "#d98532"} />,
-            <AxisText x={x1 + 0.5 * (scale(numberOb.indexEnding) - x1)}>{numberOb.num}</AxisText>
+            return ([<Line x1={x1} x2={x2} />,
+            <LineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? "#20639B" : "#d98532"} />,
+            <AxisText x={x1 + 0.5 * (x2 - x1)}>{numberOb.num}</AxisText>
             ])
         })}
     </>

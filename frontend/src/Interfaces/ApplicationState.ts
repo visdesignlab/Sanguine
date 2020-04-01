@@ -57,7 +57,7 @@ export interface LayoutElement {
   w: number,
   h: number,
   plot_type: string,
-  aggregation?: string,
+  //  aggregation?: string,
   extraPair?: string[]
 }
 
@@ -77,7 +77,8 @@ export const defaultState: ApplicationState = {
 export const offset = { left: 85, bottom: 40, right: 10, top: 40, margin: 20 };
 export const minimumOffset = { left: 35, bottom: 40, right: 10, top: 40, margin: 20 }
 export const extraPairWidth: any = { Dumbbell: 110, BarChart: 50, Basic: 30 }
-export const extraPairPadding = 5
+export const extraPairPadding = 5;
+export const minimumWidthScale = 18;
 
 export const AxisLabelDict: any = {
   PRBC_UNITS: "Intraoperative RBCs Transfused",
