@@ -57,7 +57,7 @@ export interface LayoutElement {
   w: number,
   h: number,
   plot_type: string,
-  aggregation?: string,
+  //  aggregation?: string,
   extraPair?: string[]
 }
 
