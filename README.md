@@ -45,4 +45,4 @@ It should show as `(bloodvis)[uID@bloodvis]$`.
 2. Type `ssh bloodvis` to go to the VM. Enter uID password when prompted.
 3. Type `cd /uufs/chpc.utah.edu/common/HIPAA/IRB_00124248/bloodvis/bloodvis/frontend`
 4. Type `scl enable rh-nodejs10 bash`
-5. Type `npm install && npm start
+5. Type `npm install && npm start`
