@@ -51,6 +51,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
   const [averageForEachTransfused, setAverage] = useState<any>({})
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([])
   const [numberList, setNumberList] = useState<{ num: number, indexEnding: number }[]>([])
+  const [datapointsDict, setDataPointDict] = useState<{ title: any, dataPointList: DumbbellDataPoint[] }[]>([])
 
   const {
     //dumbbellSorted,
@@ -59,6 +60,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
 
   useEffect(() => {
     let tempNumberList: { num: number, indexEnding: number }[] = [];
+    let tempDatapointsDict: { title: any, dataPointList: DumbbellDataPoint[] }[] = [];
     if (data.length > 0) {
       let tempSortedData: DumbbellDataPoint[] = [];
       switch (sortMode) {
@@ -110,26 +112,30 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
 
       let currentPreopSum: number[] = [];
       let currentPostopSum: number[] = [];
-
+      let dataPointList: DumbbellDataPoint[] = [];
       let averageDict: any = {}
       tempSortedData.map((d, i) => {
-
+        dataPointList.push(d)
         if (i === tempSortedData.length - 1) {
           tempNumberList.push({ num: d.yVal, indexEnding: i })
           averageDict[d.yVal] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
+          tempDatapointsDict.push({ title: d.yVal, dataPointList: dataPointList })
         }
         else if (d.yVal !== tempSortedData[i + 1].yVal) {
           tempNumberList.push({ num: d.yVal, indexEnding: i })
           averageDict[(d.yVal).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
+          tempDatapointsDict.push({ title: d.yVal, dataPointList: dataPointList })
           currentPostopSum = [];
           currentPreopSum = [];
-
+          dataPointList = [];
         }
         currentPreopSum.push(d.startXVal)
         currentPostopSum.push(d.endXVal)
+
       })
       setAverage(averageDict)
       setSortedData(tempSortedData)
+      setDataPointDict(tempDatapointsDict)
       setNumberList(tempNumberList)
     }
   }, [data, sortMode])
@@ -156,10 +162,9 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
       .range(range(minimumOffset.left, dimension.width - minimumOffset.right, (dimension.width - minimumOffset.left - minimumOffset.right) / (data.length + 1)));
     // console.log(ticks(minimumOffset.left, dimension.width - minimumOffset.right - minimumOffset.margin, data.length))
     // .range([minimumOffset.left, dimension.width - minimumOffset.right - minimumOffset.margin]);
-
+    console.log(datapointsDict)
     return [testValueScale, valueScale];
-  }, [dimension, data, xRange,
-  ]);
+  }, [dimension, data, xRange, datapointsDict]);
 
   const testLabel = axisLeft(testValueScale);
   //if (!dumbbellSorted) {
