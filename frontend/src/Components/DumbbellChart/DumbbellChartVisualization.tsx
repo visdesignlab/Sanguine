@@ -80,7 +80,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
     if (hemoglobinDataSet) {
       //TODO:
       //How to solve the total case viewing potential discrepency?
-
+      let existingCaseID = new Set();
       let cast_data: DumbbellDataPoint[] = hemoglobinDataSet.map((ob: any) => {
         const begin_x = +ob.HEMO[0];
         const end_x = +ob.HEMO[1];
@@ -91,7 +91,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
         };
         //  console.log(transfused_dict);
         //This filter out anything that has empty value
-        if (yAxisLabel_val !== undefined && begin_x > 0 && end_x > 0) {
+        if (yAxisLabel_val !== undefined && begin_x > 0 && end_x > 0 && !existingCaseID.has(ob.CASE_ID)) {
           // if (!(yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
           //   tempYMax = yAxisLabel_val > tempYMax ? yAxisLabel_val : tempYMax;
           // }
@@ -105,7 +105,6 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
               visitNum: ob.VISIT_ID,
               caseId: ob.CASE_ID,
               YEAR: ob.YEAR,
-
               ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
               SURGEON_ID: ob.SURGEON_ID,
               patientID: ob.PATIENT_ID
@@ -116,6 +115,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
             yVal: yAxisLabel_val,
 
           };
+          existingCaseID.add(ob.CASE_ID)
           //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
           return new_ob;
           //}
