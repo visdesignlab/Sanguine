@@ -26,7 +26,7 @@ import {
   ticks,
   median,
 } from "d3";
-import { DumbbellDataPoint, minimumOffset, AxisLabelDict, SelectSet } from "../../Interfaces/ApplicationState";
+import { DumbbellDataPoint, minimumOffset, AxisLabelDict, SelectSet, minimumWidthScale } from "../../Interfaces/ApplicationState";
 import CustomizedAxis from "../CustomizedAxis";
 import { preop_color, basic_gray, highlight_color, postop_color } from "../../ColorProfile"
 
@@ -51,7 +51,8 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
   const [averageForEachTransfused, setAverage] = useState<any>({})
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([])
   const [numberList, setNumberList] = useState<{ num: number, indexEnding: number }[]>([])
-  const [datapointsDict, setDataPointDict] = useState<{ title: any, dataPointList: DumbbellDataPoint[] }[]>([])
+  // const [scaleList, setScaleList] = useState < { title: any, scale:ScaleOrdinal<any, number>}[]>();
+  const [datapointsDict, setDataPointDict] = useState<{ title: any, length: number }[]>([])
 
   const {
     //dumbbellSorted,
@@ -60,7 +61,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
 
   useEffect(() => {
     let tempNumberList: { num: number, indexEnding: number }[] = [];
-    let tempDatapointsDict: { title: any, dataPointList: DumbbellDataPoint[] }[] = [];
+    let tempDatapointsDict: { title: any, length: number }[] = [];
     if (data.length > 0) {
       let tempSortedData: DumbbellDataPoint[] = [];
       switch (sortMode) {
@@ -112,25 +113,23 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
 
       let currentPreopSum: number[] = [];
       let currentPostopSum: number[] = [];
-      let dataPointList: DumbbellDataPoint[] = [];
       let averageDict: any = {}
       tempSortedData.map((d, i) => {
-        dataPointList.push(d)
+        currentPreopSum.push(d.startXVal)
+        currentPostopSum.push(d.endXVal)
         if (i === tempSortedData.length - 1) {
           tempNumberList.push({ num: d.yVal, indexEnding: i })
           averageDict[d.yVal] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
-          tempDatapointsDict.push({ title: d.yVal, dataPointList: dataPointList })
+          tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length })
         }
         else if (d.yVal !== tempSortedData[i + 1].yVal) {
           tempNumberList.push({ num: d.yVal, indexEnding: i })
           averageDict[(d.yVal).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
-          tempDatapointsDict.push({ title: d.yVal, dataPointList: dataPointList })
+          tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length })
           currentPostopSum = [];
           currentPreopSum = [];
-          dataPointList = [];
         }
-        currentPreopSum.push(d.startXVal)
-        currentPostopSum.push(d.endXVal)
+
 
       })
       setAverage(averageDict)
@@ -144,25 +143,64 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
   //console.log(data)
 
   const [testValueScale, valueScale] = useMemo(() => {
+    const widthAllowed = dimension.width - minimumOffset.left - minimumOffset.right;
     const testValueScale = scaleLinear()
       .domain([0.9 * xRange.xMin, 1.1 * xRange.xMax])
       .range([dimension.height - minimumOffset.bottom, minimumOffset.top]);
 
 
-    // let valueScale;
-    // let valueScale = scalePow()
-    //   .exponent(0.5)
-    //   .domain([0, 1.1 * yMax])
-    //   .range([minimumOffset.left, dimension.width - minimumOffset.right - minimumOffset.margin]);
+    let spacing: any = {};
+
+    if (minimumWidthScale * datapointsDict.length >= (widthAllowed)) {
+      datapointsDict.map(d => {
+        spacing[d.title] = minimumWidthScale;
+      })
+    }
+    else {
+      let numberOfTitlesUsingMinimumScale = 0;
+      let totalDataPointsNotUsingMinimumScale = 0;
+      datapointsDict.map(d => {
+        if ((d.length / sortedData.length) * widthAllowed < minimumWidthScale) {
+          spacing[d.title] = minimumWidthScale;
+          numberOfTitlesUsingMinimumScale += 1;
+        }
+        else {
+          totalDataPointsNotUsingMinimumScale += d.length
+        }
+      })
+      const spaceLeft = widthAllowed - numberOfTitlesUsingMinimumScale * minimumWidthScale;
+
+      datapointsDict.map(d => {
+        if (!spacing[d.title]) {
+          spacing[d.title] = spaceLeft * d.length / totalDataPointsNotUsingMinimumScale
+        }
+      })
+    }
+
+    let resultRange: number[] = [];
+    let currentLoc = minimumOffset.left;
+    datapointsDict.map(d => {
+      let calculatedRange = range(currentLoc, currentLoc + spacing[d.title], spacing[d.title] / (d.length + 1))
+      calculatedRange.splice(0, 1)
+      if (calculatedRange.length !== d.length) {
+        calculatedRange.splice(calculatedRange.length - 1, 1)
+      }
+      resultRange = resultRange.concat(calculatedRange)
+      currentLoc += spacing[d.title]
+
+    })
+
+
 
     const indices = range(0, data.length)
 
+    console.log(indices.length, resultRange.length, sortedData.length)
     const valueScale = scaleOrdinal()
       .domain(indices as any)
-      .range(range(minimumOffset.left, dimension.width - minimumOffset.right, (dimension.width - minimumOffset.left - minimumOffset.right) / (data.length + 1)));
+      .range(resultRange);
     // console.log(ticks(minimumOffset.left, dimension.width - minimumOffset.right - minimumOffset.margin, data.length))
     // .range([minimumOffset.left, dimension.width - minimumOffset.right - minimumOffset.margin]);
-    console.log(datapointsDict)
+
     return [testValueScale, valueScale];
   }, [dimension, data, xRange, datapointsDict]);
 
