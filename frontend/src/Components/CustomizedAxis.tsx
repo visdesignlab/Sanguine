@@ -39,7 +39,7 @@ const CustomizedAxis: FC<Props> = ({ numberList, store, scale }) => {
 
             return ([<Line x1={x1} x2={x2} />,
             <LineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? "#20639B" : "#d98532"} />,
-            <AxisText x={x1 + 0.5 * (scale(numberOb.indexEnding) - x1)}>{numberOb.num}</AxisText>
+            <AxisText x={x1 + 0.5 * (x2 - x1)}>{numberOb.num}</AxisText>
             ])
         })}
     </>

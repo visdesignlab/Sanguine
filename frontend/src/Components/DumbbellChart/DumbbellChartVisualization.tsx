@@ -94,6 +94,12 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
           // if (!(yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
           //   tempYMax = yAxisLabel_val > tempYMax ? yAxisLabel_val : tempYMax;
           // }
+          if ((yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
+            yAxisLabel_val -= 999
+          }
+          if ((yAxisLabel_val > 100 && yAxis === "PLT_UNITS")) {
+            yAxisLabel_val -= 245
+          }
           tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
           tempXMin = end_x < tempXMin ? end_x : tempXMin;
           tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
