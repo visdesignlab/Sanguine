@@ -21,7 +21,7 @@ interface AppProvenance {
     filterSelectionChange: (data: any) => void;
     yearRangeChange: (data: any) => void;
     addNewChart: (x: string, y: string, i: number, type: string, aggregation?: string) => void;
-    removeChart: (event: any, i: any) => void;
+    removeChart: (i: any) => void;
     updateCaseCount: (newCaseCount: number) => void;
     onLayoutchange: (data: any) => void;
     selectPatient: (data: SingleCasePoint) => void;
@@ -120,9 +120,9 @@ export function setupProvenance(): AppProvenance {
       y: Infinity,
       plot_type: plot_type,
     }
-    if (aggregation) {
-      newLayoutElement.aggregation = aggregation;
-    }
+    // if (aggregation) {
+    //   newLayoutElement.aggregation = aggregation;
+    // }
     if (plot_type === "BAR") {
       newLayoutElement.extraPair = [];
     }
@@ -150,9 +150,23 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const removeChart = (event: any, child: any) => {
-    console.log(event, child)
-    const remove_index = child.children.key
+  // const removeChart = (event: any, child: any) => {
+  //   console.log(event, child)
+  //   const remove_index = child.children.key
+  //   provenance.applyAction(
+  //     `remove chart ${remove_index}`,
+  //     (state: ApplicationState) => {
+  //       state.layoutArray = state.layoutArray.filter(
+  //         d => d.i !== remove_index
+  //       );
+  //       console.log(state)
+  //       return state;
+  //     }
+  //   );
+  // }
+  const removeChart = (i: string) => {
+    // console.log(event, child)
+    const remove_index = i
     provenance.applyAction(
       `remove chart ${remove_index}`,
       (state: ApplicationState) => {
