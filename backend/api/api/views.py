@@ -257,7 +257,7 @@ def summarize_attribute_w_year(request):
 
         result = execute_sql(
             command, 
-            filters = filters
+            filters = filters,
             min_time = min_time,
             max_time = max_time,
         )
