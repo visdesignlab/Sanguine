@@ -50,7 +50,7 @@ def cpt():
 def execute_sql(command, **kwargs):
     connection = make_connection()
     cur = connection.cursor()
-    result = cur.execute(command, **kwargs)
+    result = cur.execute(command, {**kwargs})
     return result
 
 
