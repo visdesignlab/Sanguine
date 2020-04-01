@@ -41,11 +41,12 @@ interface OwnProps {
   xRange: { xMin: number, xMax: number };
   aggregation?: string;
   sortMode: string;
+  showingAttr: { preop: boolean, postop: boolean, gap: boolean }
 }
 
 export type Props = OwnProps;
 
-const DumbbellChart: FC<Props> = ({ sortMode, yAxisName, dimension, data, svg, store, xRange, aggregation }: Props) => {
+const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension, data, svg, store, xRange, aggregation }: Props) => {
 
   const [averageForEachTransfused, setAverage] = useState<any>({})
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([])
@@ -277,6 +278,7 @@ const DumbbellChart: FC<Props> = ({ sortMode, yAxisName, dimension, data, svg, s
                     y={returning}
                     height={rectDifference}
                     isselected={decideIfSelected(dataPoint)}
+                    display={showingAttr.gap ? undefined : "none"}
                   />
                   <Circle
                     cx={
@@ -288,6 +290,7 @@ const DumbbellChart: FC<Props> = ({ sortMode, yAxisName, dimension, data, svg, s
                     }}
                     isselected={decideIfSelected(dataPoint)}
                     ispreop={true}
+                    display={showingAttr.preop ? undefined : "none"}
                   />
                   <Circle
                     cx={
@@ -299,6 +302,7 @@ const DumbbellChart: FC<Props> = ({ sortMode, yAxisName, dimension, data, svg, s
                     }}
                     isselected={decideIfSelected(dataPoint)}
                     ispreop={false}
+                    display={showingAttr.postop ? undefined : "none"}
                   />
                 </DumbbellG>
               }

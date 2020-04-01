@@ -39,6 +39,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
   // const [yMax, setYMax] = useState(0);
   const [xRange, setXRange] = useState({ xMin: 0, xMax: Infinity });
   const [sortMode, setSortMode] = useState("Postop");
+  const [showingAttr, setShowingAttr] = useState({ preop: true, postop: true, gap: true })
 
   useLayoutEffect(() => {
     if (svgRef.current) {
@@ -199,6 +200,13 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
               </Dropdown>
             </Menu.Item >
           </Menu> */}
+          <OptionsP>Show</OptionsP>
+          <Button.Group vertical size="mini">
+            <PreopButton basic={!showingAttr.preop} onClick={() => { setShowingAttr({ preop: !showingAttr.preop, postop: showingAttr.postop, gap: showingAttr.gap }) }} >Preop</PreopButton>
+            <PostopButton basic={!showingAttr.postop} onClick={() => { setShowingAttr({ preop: showingAttr.preop, postop: !showingAttr.postop, gap: showingAttr.gap }) }}>Postop</PostopButton>
+            <GapButton basic={!showingAttr.gap} onClick={() => { setShowingAttr({ preop: showingAttr.preop, postop: showingAttr.postop, gap: !showingAttr.gap }) }} >Gap</GapButton>
+          </Button.Group>
+          <OptionsP>Sort By</OptionsP>
           <Button.Group vertical size="mini">
             <PreopButton basic={sortMode !== "Preop"} onClick={() => { setSortMode("Preop") }}>Preop</PreopButton>
             <PostopButton basic={sortMode !== "Postop"} onClick={() => { setSortMode("Postop") }}>Postop</PostopButton>
@@ -226,6 +234,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
               // yMax={yMax}
               // aggregation={aggregatedOption}
               sortMode={sortMode}
+              showingAttr={showingAttr}
             />
           </SVG>
         </Grid.Column>
@@ -255,4 +264,10 @@ const PreopButton = styled(Button)`
 const GapButton = styled(Button)`
  &&&&&{color: ${basic_gray}!important;
         box-shadow: 0 0 0 1px ${basic_gray} inset!important;}
+`
+
+const OptionsP = styled.p`
+  margin-top:5px;
+  margin-bottom:5px;
+  margin-left:1px;
 `

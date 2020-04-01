@@ -52,7 +52,7 @@ type Props = OwnProps;
 const App: FC<Props> = ({ store }: Props) => {
   const {
     layoutArray,
-    hemoglobinDataSet
+    // hemoglobinDataSet
   } = store!;
 
   async function cacheHemoData() {
