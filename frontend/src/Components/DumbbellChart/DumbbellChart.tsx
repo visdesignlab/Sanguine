@@ -269,7 +269,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
           return (
             <Popup
               content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}
-              key={dataPoint.case.caseId}
+              key={`${dataPoint.case.visitNum}-${dataPoint.case.caseId}`}
               trigger={
                 <DumbbellG surgeonselected={decideIfSurgeon(dataPoint)} dataPoint={dataPoint} >
                   <Rect

@@ -222,7 +222,7 @@ const App: FC<Props> = ({ store }: Props) => {
   }
 
   const panes = [{
-    menuItem: 'Main', pane: <Tab.Pane>
+    menuItem: 'Main', pane: <Tab.Pane key="Main">
       <Grid>
         <GridColumn width={13}>
           <ResponsiveReactGridLayout
@@ -250,7 +250,7 @@ const App: FC<Props> = ({ store }: Props) => {
   },
   {
     menuItem: 'LineUp', pane:
-      <Tab.Pane>
+      <Tab.Pane key="LineUp">
         <div className={"lineup"}>
           <LineUpWrapper /></div></Tab.Pane>
   }]
