@@ -222,7 +222,7 @@ def summarize_attribute_w_year(request):
             HttpResponseBadRequest(f"aggregatedBy must be one of the following: {list(aggregates.keys())}")
 
         # Generate the CPT filter sql
-        if not filters:
+        if not filter_selection:
             cpt_codes = [list(a.values())[0] for a in cpt()]
             filters = "','".join(cpt_codes)
             filters = f"'{filters}'"
