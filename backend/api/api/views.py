@@ -222,47 +222,37 @@ def summarize_attribute_w_year(request):
             HttpResponseBadRequest(f"aggregatedBy must be one of the following: {list(aggregates.keys())}")
 
         # Generate the CPT filter sql
-        filters = "','".join(filter_selection)
-        filters = f"'{filters}'"
-        filters_sql = "AND BLNG.CODE_DESC IN (:filters) " if filters != "''" else ""
-
         if not filters:
             cpt_codes = [list(a.values())[0] for a in cpt()]
             filters = "','".join(cpt_codes)
             filters = f"'{filters}'"
-            filters_sql = "AND BLNG.CODE IN (:filters) "
+            filters_safe_sql = "WHERE CODE IN (:filters) "
+        else:
+            filters = "','".join(filter_selection)
+            filters = f"'{filters}'"
+            filters_safe_sql = "WHERE CODE_DESC IN (:filters) "
 
 
         # Build the sql query
-        valueToVisualize = f"CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.{valueToVisualize}"
         min_time = f'01-JAN-{year_range[0]}'
         max_time = f'31-DEC-{year_range[1]}'
         # Safe to use format strings since there are limited options for aggregatedBy and valueToVisualize
         command = (
-            "SELECT "
-                f"{aggregates[aggregatedBy]} aggregatedBy, "
-                f"SUM({valueToVisualize}) valueToVisualize, "
-                "BLNGSURG.DI_CASE_ID "
-            "FROM ( "
-                "SELECT "
-                    "SURG.DI_CASE_ID, "
-                    "SURG.DI_CASE_DATE, "
-                    "SURG.DI_VISIT_NO, "
-                    "SURG.SURGEON_PROV_DWID, "
-                    "SURG.ANESTH_PROV_DWID, "
-                    "SURG.DI_SURGERY_START_DTM, "
-                    "SURG.DI_SURGERY_END_DTM "
-                "FROM CLIN_DM.BPU_CTS_DI_BILLING_CODES BLNG "
-                "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE SURG "
-                    "ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) AND (BLNG.DI_VISIT_NO = SURG.DI_VISIT_NO) AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE) "
-                f"WHERE SURG.DI_CASE_DATE BETWEEN :min_time AND :max_time {filters_sql} "
-            ") BLNGSURG "
-            "INNER JOIN CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
-                "ON (BLNGSURG.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID) "
-                "AND (BLNGSURG.DI_VISIT_NO = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_VISIT_NO)"
-                "AND (BLNGSURG.DI_SURGERY_START_DTM = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_SURGERY_START_DTM)"
-                "AND (BLNGSURG.DI_SURGERY_END_DTM = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_SURGERY_END_DTM)"
-            f"GROUP BY {aggregates[aggregatedBy]}, BLNGSURG.DI_CASE_ID"
+            f"SELECT {aggregatedBy}, SUM({valueToVisualize}) "
+            "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD TRNSFSD "
+            "INNER JOIN ( "
+                "SELECT * "
+                "FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
+                "WHERE DI_CASE_ID IN ("
+                    "SELECT DI_CASE_ID "
+                    "FROM CLIN_DM.BPU_CTS_DI_BILLING_CODES BLNG "
+                    "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE SURG "
+                        "ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) AND (BLNG.DI_VISIT_NO = SURG.DI_VISIT_NO) AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE) "
+                    f"{filters_safe_sql}"
+                ")"
+            ") LIMITED_SURG ON LIMITED_SURG.DI_CASE_ID = TRNSFSD.DI_CASE_ID "
+            "WHERE SURG.DI_CASE_DATE BETWEEN :min_time AND :max_time "
+            f"GROUP BY {aggregatedBy}"
         )
 
         result = execute_sql(
