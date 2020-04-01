@@ -37,13 +37,12 @@ def data_dictionary():
 
 def cpt():
     # Instantiate mapping array
-    cpt = {}
-
+    cpt = []
     with open("cpt_codes.csv", "r") as file:
         read_csv = csv.reader(file, delimiter=",")
+        next(read_csv, None)
         for row in read_csv:
-            cpt[row[0]] = row[1]
-
+            cpt.append(dict([tuple(row)]))
     return cpt
 
 
@@ -225,7 +224,13 @@ def summarize_attribute_w_year(request):
         # Generate the CPT filter sql
         filters = "','".join(filter_selection)
         filters = f"'{filters}'"
-        filters = "AND BLNG.CODE_DESC IN (:filters) " if filters != "''" else ""
+        filters_sql = "AND BLNG.CODE_DESC IN (:filters) " if filters != "''" else ""
+
+        if not filters:
+            cpt_codes = [list(a.values())[0] for a in cpt()]
+            filters = "','".join(cpt_codes)
+            filters = f"'{filters}'"
+            filters_sql = "AND BLNG.CODE IN (:filters) "
 
 
         # Build the sql query
@@ -241,14 +246,22 @@ def summarize_attribute_w_year(request):
             "FROM ( "
                 "SELECT "
                     "SURG.DI_CASE_ID, "
-                    "SURG.DI_CASE_DATE "
+                    "SURG.DI_CASE_DATE, "
+                    "SURG.DI_VISIT_NO, "
+                    "SURG.SURGEON_PROV_DWID, "
+                    "SURG.ANESTH_PROV_DWID, "
+                    "SURG.DI_SURGERY_START_DTM, "
+                    "SURG.DI_SURGERY_END_DTM "
                 "FROM CLIN_DM.BPU_CTS_DI_BILLING_CODES BLNG "
                 "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE SURG "
                     "ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) AND (BLNG.DI_VISIT_NO = SURG.DI_VISIT_NO) AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE) "
-                f"WHERE SURG.DI_CASE_DATE BETWEEN :min_time AND :max_time {filters} "
+                f"WHERE SURG.DI_CASE_DATE BETWEEN :min_time AND :max_time {filters_sql} "
             ") BLNGSURG "
             "INNER JOIN CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
                 "ON (BLNGSURG.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID) "
+                "AND (BLNGSURG.DI_VISIT_NO = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_VISIT_NO)"
+                "AND (BLNGSURG.DI_SURGERY_START_DTM = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_SURGERY_START_DTM)"
+                "AND (BLNGSURG.DI_SURGERY_END_DTM = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_SURGERY_END_DTM)"
             f"GROUP BY {aggregates[aggregatedBy]}, BLNGSURG.DI_CASE_ID"
         )
 
