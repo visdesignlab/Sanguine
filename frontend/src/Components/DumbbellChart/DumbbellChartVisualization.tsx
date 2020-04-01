@@ -74,7 +74,6 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
     // const hemoDataResult = await hemoRes.json();
     // const hemo_data = hemoDataResult.result;
     //let tempYMax = 0;
-    console.log(transfused_dict)
     let tempXMin = Infinity;
     let tempXMax = 0;
     if (hemoglobinDataSet) {
@@ -183,23 +182,6 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
     <Grid style={{ height: "100%" }}>
       <Grid.Row>
         <Grid.Column verticalAlign="middle" width={2}>
-          {/* <Menu icon vertical compact size="mini" borderless secondary widths={2}>
-            <Menu.Item fitted>
-              <Dropdown basic item icon="ellipsis horizontal" compact>
-                <Dropdown.Menu>
-                  <Dropdown.Item onClick={() => { setSortMode("Gap") }}>
-                    Gap Sort
-                </Dropdown.Item>
-                  <Dropdown.Item onClick={() => { setSortMode("Preop") }}>
-                    Preop Sort
-                </Dropdown.Item><Dropdown.Item onClick={() => { setSortMode("Postop") }}>
-                    Postop Sort
-                </Dropdown.Item>
-
-                </Dropdown.Menu>
-              </Dropdown>
-            </Menu.Item >
-          </Menu> */}
           <OptionsP>Show</OptionsP>
           <Button.Group vertical size="mini">
             <PreopButton basic={!showingAttr.preop} onClick={() => { setShowingAttr({ preop: !showingAttr.preop, postop: showingAttr.postop, gap: showingAttr.gap }) }} >Preop</PreopButton>
