@@ -41,9 +41,17 @@ It should show as `(bloodvis)[uID@bloodvis]$`.
 
 ## Start the frontend
 
-1. Laucn a terminal.
+1. Launch a terminal.
 2. Type `ssh bloodvis` to go to the VM. Enter uID password when prompted.
 3. Type `cd /uufs/chpc.utah.edu/common/HIPAA/IRB_00124248/bloodvis/bloodvis/frontend`
 4. Type `scl enable rh-nodejs10 bash`
 5. Type `npm install && npm start`
-6. Use `google-chrome --use-gl=swiftshader` to view this in chrome.
+6. Close the firefox because that is a really old version and our tool does not work properly on there. 
+
+##Start Chrome on VM
+
+1. Launch a terminal
+2. Type `ssh bloodvis` to go to the VM. Enter uID password when prompted.
+3. Type `google-chrome --use-gl=swiftshader` to view this in chrome.
+4. Go to `localhost:3000` to view the visualization. 
+
