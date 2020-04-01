@@ -93,7 +93,7 @@ def fetch_professional_set(request):
         professional_id = request.GET.get('professional_id')
         
         if not profesional_type or not professional_id:
-            HttpResponseBadRequest("professional type and id must be supplied.")
+            return HttpResponseBadRequest("professional type and id must be supplied.")
 
         if profesional_type == "ANESTHOLOGIST_ID":
             command = (
@@ -135,8 +135,7 @@ def fetch_surgery(request):
         case_id = request.GET.get('case_id')
 
         if not case_id:
-            HttpResponseBadRequest(
-                "case_id must be supplied.")
+            return HttpResponseBadRequest("case_id must be supplied.")
         
         command =(
                 "SELECT surgery.DI_CASE_DATE, surgery.DI_SURGERY_START_DTM, "
@@ -163,8 +162,7 @@ def fetch_patient(request):
         patient_id = request.GET.get('patient_id')
 
         if not patient_id:
-            HttpResponseBadRequest(
-                "patient_id must be supplied.")
+            return HttpResponseBadRequest("patient_id must be supplied.")
         
         command =(
                 "SELECT info.DI_BIRTHDATE, info.GENDER_CODE, info.GENDER_DESC, "
@@ -198,7 +196,7 @@ def summarize_attribute_w_year(request):
 
         # Check the required parameters are there
         if not (aggregatedBy and valueToVisualize and len(year_range) == 2):
-            HttpResponseBadRequest("aggregatedBy, valueToVisualize, and year_range must be supplied.")
+            return HttpResponseBadRequest("aggregatedBy, valueToVisualize, and year_range must be supplied.")
 
 
         # Check that the values supplied are valid possibilities
@@ -216,10 +214,10 @@ def summarize_attribute_w_year(request):
         }
 
         if valueToVisualize not in blood_products:
-            HttpResponseBadRequest(f"valueToVisualize must be one of the following: {blood_products}")
+            return HttpResponseBadRequest(f"valueToVisualize must be one of the following: {blood_products}")
 
         if aggregatedBy not in aggregates.keys():
-            HttpResponseBadRequest(f"aggregatedBy must be one of the following: {list(aggregates.keys())}")
+            return HttpResponseBadRequest(f"aggregatedBy must be one of the following: {list(aggregates.keys())}")
 
         # Generate the CPT filter sql
         if not filter_selection:
@@ -294,7 +292,7 @@ def request_individual_specific(request):
         case_id = request.GET.get("case_id")
         attribute_to_retrieve = request.GET.get("attribute")
         if not case_id or attribute_to_retrieve:
-            HttpResponseBadRequest("case_id and attribute must be supplied")
+            return HttpResponseBadRequest("case_id and attribute must be supplied")
         command_dict = {
             "YEAR": "EXTRACT (YEAR FROM DI_CASE_DATE)",
             "SURGEON_ID": "SURGEON_PROV_DWID",
@@ -321,7 +319,7 @@ def request_transfused_units(request):
 
         # Check to make sure we have the required parameters
         if not transfusion_type or not year_range:
-            HttpResponseBadRequest("transfusion_type, and year_range must be supplied.")
+            return HttpResponseBadRequest("transfusion_type, and year_range must be supplied.")
 
         # Coerce the request parameters into a format that we want
         year_min = year_range[0]
