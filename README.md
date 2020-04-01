@@ -48,7 +48,7 @@ It should show as `(bloodvis)[uID@bloodvis]$`.
 5. Type `npm install && npm start`
 6. Close the firefox because that is a really old version and our tool does not work properly on there. 
 
-##Start Chrome on VM
+## Start Chrome on VM
 
 1. Launch a terminal
 2. Type `ssh bloodvis` to go to the VM. Enter uID password when prompted.
