@@ -267,12 +267,12 @@ def summarize_attribute_w_year(request):
 
         result_dict = {}
         for row in result:
-            result_val = row[1] if row[1] else 0
-            #correct the one with 1000 + error
-            if result_val > 1000:
-                result_val -=999
+            # result_val = row[1] if row[1] else 0
+            # #correct the one with 1000 + error
+            # if result_val > 1000:
+            #     result_val -=999
 
-            result_dict[row[0]] = result_val
+            result_dict[row[0]] = row[1]
 
         return JsonResponse(result_dict)
 
