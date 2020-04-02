@@ -260,12 +260,18 @@ def summarize_attribute_w_year(request):
         print(max_time)
         print(min_time)
 
-        result = execute_sql(
-            command, 
+        # result = execute_sql(
+            # command, 
+            # filters = filters,
+            # min_time = min_time,
+            # max_time = max_time
+        # )
+        connection = make_connection()
+        cur = connection.cursor()
+        result = cur.execute(command, 
             filters = filters,
             min_time = min_time,
-            max_time = max_time
-        )
+            max_time = max_time)
 
         print(result)
 
