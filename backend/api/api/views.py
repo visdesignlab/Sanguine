@@ -50,8 +50,7 @@ def cpt():
 def execute_sql(command, **kwargs):
     connection = make_connection()
     cur = connection.cursor()
-    print({**kwargs})
-    result = cur.execute(command, {**kwargs})
+    result = cur.execute(command, **kwargs)
     return result
 
 
@@ -209,9 +208,9 @@ def summarize_attribute_w_year(request):
             "CELL_SAVER_ML"
         ]
         aggregates = {
-            "YEAR": "EXTRACT (YEAR FROM BLNGSURG.DI_CASE_DATE)",
-            "SURGEON_ID": "BLNGSURG.SURGEON_PROV_DWID",
-            "ANESTHOLOGIST_ID": "BLNGSURG.ANESTH_PROV_DWID",
+            "YEAR": "EXTRACT (YEAR FROM DI_CASE_DATE)",
+            "SURGEON_ID": "SURGEON_PROV_DWID",
+            "ANESTHOLOGIST_ID": "ANESTH_PROV_DWID",
         }
 
         if valueToVisualize not in blood_products:
@@ -237,7 +236,7 @@ def summarize_attribute_w_year(request):
         max_time = f'31-DEC-{year_range[1]}'
         # Safe to use format strings since there are limited options for aggregatedBy and valueToVisualize
         command = (
-            f"SELECT {aggregatedBy}, SUM({valueToVisualize}) "
+            f"SELECT LIMITED_SURG.{aggregatedBy}, SUM({valueToVisualize}) "
             "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD TRNSFSD "
             "INNER JOIN ( "
                 "SELECT * "
@@ -250,7 +249,7 @@ def summarize_attribute_w_year(request):
                     f"{filters_safe_sql}"
                 ")"
             ") LIMITED_SURG ON LIMITED_SURG.DI_CASE_ID = TRNSFSD.DI_CASE_ID "
-            "WHERE SURG.DI_CASE_DATE BETWEEN :min_time AND :max_time "
+            "WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time "
             f"GROUP BY {aggregatedBy}"
         )
 
