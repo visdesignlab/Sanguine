@@ -274,9 +274,7 @@ def summarize_attribute_w_year(request):
 
             result_dict[row[0]] = result_val
 
-        items = [{"aggregatedBy": key, "valueToVisualize": value}
-                 for key,value in result_dict.items()]
-        return JsonResponse({"result": items})
+        return JsonResponse(result_dict)
 
 
 def request_individual_specific(request):
