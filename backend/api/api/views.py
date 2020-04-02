@@ -257,6 +257,8 @@ def summarize_attribute_w_year(request):
 
         print(command)
         print(filters)
+        print(max_time)
+        print(min_time)
 
         result = execute_sql(
             command, 
@@ -265,8 +267,11 @@ def summarize_attribute_w_year(request):
             max_time = max_time,
         )
 
+        print(result)
+
         result_dict = {}
         for row in result:
+            print(row)
             # result_val = row[1] if row[1] else 0
             # #correct the one with 1000 + error
             # if result_val > 1000:
