@@ -252,6 +252,7 @@ def summarize_attribute_w_year(request):
             "WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time "
             f"GROUP BY {aggregatedBy}"
         )
+        print(command)
 
         result = execute_sql(
             command, 
