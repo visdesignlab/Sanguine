@@ -209,8 +209,8 @@ def summarize_attribute_w_year(request):
         ]
         aggregates = {
             "YEAR": "EXTRACT (YEAR FROM LIMITED_SURG.DI_CASE_DATE)",
-            "SURGEON_ID": "SURGEON_PROV_DWID",
-            "ANESTHOLOGIST_ID": "ANESTH_PROV_DWID",
+            "SURGEON_ID": "LIMITED_SURG.SURGEON_PROV_DWID",
+            "ANESTHOLOGIST_ID": "LIMITED_SURG.ANESTH_PROV_DWID",
         }
 
         if valueToVisualize not in blood_products:
@@ -221,10 +221,11 @@ def summarize_attribute_w_year(request):
 
         # Generate the CPT filter sql
         if not filter_selection:
-            cpt_codes = [list(a.values())[0] for a in cpt()]
-            filters = "','".join(cpt_codes)
-            filters = f"'{filters}'"
-            filters_safe_sql = "WHERE CODE IN (:filters) "
+            # cpt_codes = [list(a.values())[0] for a in cpt()]
+            # filters = "','".join(cpt_codes)
+            # filters = f"'{filters}'"
+            # filters_safe_sql = "WHERE CODE IN (:filters) "
+            filters_safe_sql = ""
         else:
             filters = "','".join(filter_selection)
             filters = f"'{filters}'"
@@ -252,6 +253,8 @@ def summarize_attribute_w_year(request):
             "WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time "
             f"GROUP BY {aggregates[aggregatedBy]}"
         )
+
+        print(command)
 
         result = execute_sql(
             command, 
