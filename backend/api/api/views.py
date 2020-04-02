@@ -12,7 +12,6 @@ def make_connection():
         credential_data = json.load(credential)
         usr_name = credential_data["usr_name"]
         password = credential_data["password"]
-
     # Generate the connection
     dsn_tns = cx_Oracle.makedsn(
         "prodrac-scan.med.utah.edu",
@@ -47,11 +46,10 @@ def cpt():
 
 
 # Execute a command against the database
-def execute_sql(command, **kwargs):
+def execute_sql(command, *args, **kwargs):
     connection = make_connection()
     cur = connection.cursor()
-    return cur.execute(command, {**kwargs})
-     
+    return cur.execute(command, *args, **kwargs)
 
 
 def index(request):
@@ -220,17 +218,14 @@ def summarize_attribute_w_year(request):
             return HttpResponseBadRequest(f"aggregatedBy must be one of the following: {list(aggregates.keys())}")
 
         # Generate the CPT filter sql
-        print(filter_selection)
-        print(not filter_selection)
         if filter_selection != ['']:
-            filters = "','".join(filter_selection)
-            filters = f"'{filters}'"
-            filters_safe_sql = "WHERE CODE_DESC IN (:filters) "
+            filters = filter_selection
+            bindNames = [f":filters{str(i)}" for i in range(len(filters))]
+            filters_safe_sql = f"WHERE CODE_DESC IN ({','.join(bindNames)}) "
         else:
-            cpt_codes = [list(a.values())[0] for a in cpt()]
-            filters = "','".join(cpt_codes)
-            filters = f"'{filters}'"
-            filters_safe_sql = "WHERE CODE IN (:filters) "
+            filters = [list(a.values())[0] for a in cpt()]
+            bindNames = [f":filters{str(i)}" for i in range(len(filters))]
+            filters_safe_sql = f"WHERE CODE IN ({','.join(bindNames)}) "
 
 
         # Build the sql query
@@ -266,23 +261,14 @@ def summarize_attribute_w_year(request):
             # min_time = min_time,
             # max_time = max_time
         # )
-        connection = make_connection()
-        cur = connection.cursor()
-        result = cur.execute(command, 
-            filters = filters,
-            min_time = min_time,
-            max_time = max_time)
-
-        print(result)
+        result = execute_sql(
+            command, 
+            dict(zip(bindNames, filters), min_time = min_time, max_time = max_time)
+        )
 
         result_dict = {}
         for row in result:
             print(row)
-            # result_val = row[1] if row[1] else 0
-            # #correct the one with 1000 + error
-            # if result_val > 1000:
-            #     result_val -=999
-
             result_dict[row[0]] = row[1]
 
         return JsonResponse(result_dict)
