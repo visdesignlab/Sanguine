@@ -226,13 +226,11 @@ def summarize_attribute_w_year(request):
             filters = "','".join(filter_selection)
             filters = f"'{filters}'"
             filters_safe_sql = "WHERE CODE_DESC IN (:filters) "
-            
         else:
-            # cpt_codes = [list(a.values())[0] for a in cpt()]
-            # filters = "','".join(cpt_codes)
-            # filters = f"'{filters}'"
-            # filters_safe_sql = "WHERE CODE IN (:filters) "
-            filters_safe_sql = ""
+            cpt_codes = [list(a.values())[0] for a in cpt()]
+            filters = "','".join(cpt_codes)
+            filters = f"'{filters}'"
+            filters_safe_sql = "WHERE CODE IN (:filters) "
 
 
         # Build the sql query
@@ -265,8 +263,8 @@ def summarize_attribute_w_year(request):
             min_time = min_time,
             max_time = max_time,
         )
+
         result_dict = {}
-        
         for row in result:
             result_val = row[1] if row[1] else 0
             #correct the one with 1000 + error
