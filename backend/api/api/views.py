@@ -50,7 +50,8 @@ def cpt():
 def execute_sql(command, **kwargs):
     connection = make_connection()
     cur = connection.cursor()
-    return cur.execute(command, **kwargs)
+    return cur
+    # return cur.execute(command, {**kwargs})
      
 
 
@@ -266,6 +267,11 @@ def summarize_attribute_w_year(request):
             min_time = min_time,
             max_time = max_time,
         )
+
+        result = result.execute(command, 
+            filters = filters,
+            min_time = min_time,
+            max_time = max_time)
 
         print(result)
 
