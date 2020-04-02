@@ -208,7 +208,7 @@ def summarize_attribute_w_year(request):
             "CELL_SAVER_ML"
         ]
         aggregates = {
-            "YEAR": "EXTRACT (YEAR FROM DI_CASE_DATE)",
+            "YEAR": "EXTRACT (YEAR FROM LIMITED_SURG.DI_CASE_DATE)",
             "SURGEON_ID": "SURGEON_PROV_DWID",
             "ANESTHOLOGIST_ID": "ANESTH_PROV_DWID",
         }
@@ -236,7 +236,7 @@ def summarize_attribute_w_year(request):
         max_time = f'31-DEC-{year_range[1]}'
         # Safe to use format strings since there are limited options for aggregatedBy and valueToVisualize
         command = (
-            f"SELECT LIMITED_SURG.{aggregatedBy}, SUM({valueToVisualize}) "
+            f"SELECT {aggregates[aggregatedBy]}, SUM({valueToVisualize}) "
             "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD TRNSFSD "
             "INNER JOIN ( "
                 "SELECT * "
@@ -250,7 +250,7 @@ def summarize_attribute_w_year(request):
                 ")"
             ") LIMITED_SURG ON LIMITED_SURG.DI_CASE_ID = TRNSFSD.DI_CASE_ID "
             "WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time "
-            f"GROUP BY {aggregatedBy}"
+            f"GROUP BY {aggregates[aggregatedBy]}"
         )
         print(command)
 
