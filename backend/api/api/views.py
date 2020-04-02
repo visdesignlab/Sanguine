@@ -220,16 +220,19 @@ def summarize_attribute_w_year(request):
             return HttpResponseBadRequest(f"aggregatedBy must be one of the following: {list(aggregates.keys())}")
 
         # Generate the CPT filter sql
-        if not filter_selection:
+        print(filter_selection)
+        print(not filter_selection)
+        if filter_selection:
+            filters = "','".join(filter_selection)
+            filters = f"'{filters}'"
+            filters_safe_sql = "WHERE CODE_DESC IN (:filters) "
+            
+        else:
             # cpt_codes = [list(a.values())[0] for a in cpt()]
             # filters = "','".join(cpt_codes)
             # filters = f"'{filters}'"
             # filters_safe_sql = "WHERE CODE IN (:filters) "
             filters_safe_sql = ""
-        else:
-            filters = "','".join(filter_selection)
-            filters = f"'{filters}'"
-            filters_safe_sql = "WHERE CODE_DESC IN (:filters) "
 
 
         # Build the sql query
