@@ -252,7 +252,6 @@ def summarize_attribute_w_year(request):
             "WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time "
             f"GROUP BY {aggregates[aggregatedBy]}"
         )
-        print(command)
 
         result = execute_sql(
             command, 
@@ -261,31 +260,18 @@ def summarize_attribute_w_year(request):
             max_time = max_time,
         )
         result_dict = {}
-        case_id_list = []
         
         for row in result:
-            case_id_list += [row[2]]
-            result_val = 0
-            if row[1]:
-                result_val = row[1]
+            result_val = row[1] if row[1] else 0
             #correct the one with 1000 + error
             if result_val > 1000:
                 result_val -=999
-            if row[0] not in result_dict:
-                result_dict[row[0]] = [result_val]
-            else:
-                result_dict[row[0]] = result_dict[row[0]] + [result_val]
+
+            result_dict[row[0]] = result_val
 
         items = [{"aggregatedBy": key, "valueToVisualize": value}
                  for key,value in result_dict.items()]
-        #case_id_list = [row[2] for row in result]
-        
-        # data = [
-        #     dict(zip([data_exchange[key[0]] for key in cur.description], row))
-        #     for row in result
-        # ]
-        #print(case_id_list)
-        return JsonResponse({"result": items,"case_id_list":case_id_list})
+        return JsonResponse({"result": items})
 
 
 def request_individual_specific(request):
