@@ -222,7 +222,7 @@ def summarize_attribute_w_year(request):
         # Generate the CPT filter sql
         print(filter_selection)
         print(not filter_selection)
-        if filter_selection:
+        if filter_selection != ['']:
             filters = "','".join(filter_selection)
             filters = f"'{filters}'"
             filters_safe_sql = "WHERE CODE_DESC IN (:filters) "
