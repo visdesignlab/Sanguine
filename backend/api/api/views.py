@@ -61,8 +61,9 @@ def index(request):
 
 def get_attributes(request):
     if request.method == "GET":
-        cpt_codes = cpt()
-        billing_codes = ', '.join([f"'{str(x)}'" for x in cpt_codes.values() if x != 'code'])
+        filters = [list(a.values())[0] for a in cpt()]
+        bindNames = [f":filters{str(i)}" for i in range(len(filters))]
+        filters_safe_sql = f"WHERE BLNG.CODE IN ({','.join(bindNames)}) "
 
         # Make the connection and execute the command
         command = (
@@ -74,11 +75,14 @@ def get_attributes(request):
                     "ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) "
                     "AND (BLNG.DI_VISIT_NO = SURG.DI_VISIT_NO) "
                     "AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE) "
-                "WHERE BLNG.CODE IN (:codes) "
+                f"{filters_safe_sql}"
             ") "
             "GROUP BY CODE_DESC, REDO"
         )
-        result = execute_sql(command, codes = billing_codes)
+        result = execute_sql(
+            command, 
+            dict(zip(bindNames, filters))
+        )
 
         # Return the result, the multi-selector component in React requires the below format
         items = [{"value": f"{row[0]}_{row[1]}","count":row[2]} for row in result]
@@ -250,17 +254,6 @@ def summarize_attribute_w_year(request):
             f"GROUP BY {aggregates[aggregatedBy]}"
         )
 
-        print(command)
-        print(filters)
-        print(max_time)
-        print(min_time)
-
-        # result = execute_sql(
-            # command, 
-            # filters = filters,
-            # min_time = min_time,
-            # max_time = max_time
-        # )
         result = execute_sql(
             command, 
             dict(zip(bindNames, filters), min_time = min_time, max_time = max_time)
@@ -268,7 +261,6 @@ def summarize_attribute_w_year(request):
 
         result_dict = {}
         for row in result:
-            print(row)
             result_dict[row[0]] = row[1]
 
         return JsonResponse(result_dict)
@@ -301,7 +293,7 @@ def request_transfused_units(request):
         # Get the values from the request
         transfusion_type = request.GET.get("transfusion_type")
         year_range = request.GET.get("year_range").split(",")
-        filter_selection = request.GET.get("filter_selection")
+        filter_selection = request.GET.get("filter_selection") or ""
         patient_id = request.GET.get("patient_id")
 
         # Check to make sure we have the required parameters
@@ -311,7 +303,7 @@ def request_transfused_units(request):
         # Coerce the request parameters into a format that we want
         year_min = year_range[0]
         year_max = year_range[1]
-        filter_selection = [] if (filter_selection is None or filter_selection.split(",") == [""]) else filter_selection.split(",")
+        filter_selection = filter_selection.split(",")
         
         # Define the SQL translation dictionary
         command_dict = {
