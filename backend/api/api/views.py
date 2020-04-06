@@ -12,12 +12,14 @@ def make_connection():
         credential_data = json.load(credential)
         usr_name = credential_data["usr_name"]
         password = credential_data["password"]
+
     # Generate the connection
     dsn_tns = cx_Oracle.makedsn(
         "prodrac-scan.med.utah.edu",
         "1521",
         service_name="dwrac_som_analysts.med.utah.edu",
     )
+
     return cx_Oracle.connect(user=usr_name, password=password, dsn=dsn_tns)
 
 
@@ -37,20 +39,26 @@ def data_dictionary():
 def cpt():
     # Instantiate mapping array
     cpt = []
+
+    # Read in the cpt codes
     with open("cpt_codes.csv", "r") as file:
         read_csv = csv.reader(file, delimiter=",")
         next(read_csv, None)
         for row in read_csv:
             cpt.append(dict([tuple(row)]))
+
     return cpt
 
 
 # Execute a command against the database
+# *args passes through positional args
+# **kwargs passes through keyword arguments
 def execute_sql(command, *args, **kwargs):
     connection = make_connection()
     cur = connection.cursor()
     return cur.execute(command, *args, **kwargs)
 
+# Returns all values from raw results for a specified agg var
 def get_all_by_agg(result_dict, agg, variable):
     return [
         y for y in 
@@ -260,11 +268,13 @@ def summarize_attribute_w_year(request):
             f"WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time AND {valueToVisualize} IS NOT NULL "
         )
 
+        # Execute the query
         result = execute_sql(
             command, 
             dict(zip(bindNames, filters), min_time = min_time, max_time = max_time)
         )
 
+        # Get the raw data from the server
         result_dict = []
         for row in result:
             result_dict.append({
@@ -273,6 +283,7 @@ def summarize_attribute_w_year(request):
                 "caseID": row[2]
             })
 
+        # Manipulate the data into the right format
         aggregatedBys = list(set(map(lambda x: x["aggregatedBy"], result_dict)))
         cleaned = [
             {
@@ -281,8 +292,7 @@ def summarize_attribute_w_year(request):
                 "caseID": get_all_by_agg(result_dict, agg, "caseID")
             } for agg in aggregatedBys]
         
-
-        return JsonResponse(cleaned)
+        return JsonResponse(cleaned, safe = False)
 
 
 def request_individual_specific(request):
