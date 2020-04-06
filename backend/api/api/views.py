@@ -51,6 +51,13 @@ def execute_sql(command, *args, **kwargs):
     cur = connection.cursor()
     return cur.execute(command, *args, **kwargs)
 
+def get_all_by_agg(result_dict, agg, variable):
+    return [
+        y for y in 
+        list(map(lambda x: x[variable] if x["aggregatedBy"] == agg else None, result_dict))
+        if y is not None
+    ]
+
 
 def index(request):
     if request.method == "GET":
@@ -237,7 +244,7 @@ def summarize_attribute_w_year(request):
         max_time = f'31-DEC-{year_range[1]}'
         # Safe to use format strings since there are limited options for aggregatedBy and valueToVisualize
         command = (
-            f"SELECT {aggregates[aggregatedBy]}, {valueToVisualize}, COUNT(*) "
+            f"SELECT {aggregates[aggregatedBy]}, {valueToVisualize}, TRNSFSD.DI_CASE_ID "
             "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD TRNSFSD "
             "INNER JOIN ( "
                 "SELECT * "
@@ -251,7 +258,6 @@ def summarize_attribute_w_year(request):
                 ")"
             ") LIMITED_SURG ON LIMITED_SURG.DI_CASE_ID = TRNSFSD.DI_CASE_ID "
             f"WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time AND {valueToVisualize} IS NOT NULL "
-            f"GROUP BY {aggregates[aggregatedBy]}, {valueToVisualize}"
         )
 
         result = execute_sql(
@@ -259,16 +265,24 @@ def summarize_attribute_w_year(request):
             dict(zip(bindNames, filters), min_time = min_time, max_time = max_time)
         )
 
-        result_dict = {}
+        result_dict = []
         for row in result:
-            # Set the key if it doesn't exist
-            if not result_dict.get(row[0]):
-                result_dict[row[0]] = []
-            
-            # Append data together
-            result_dict[row[0]] += [row[1]] * row[2]
+            result_dict.append({
+                "aggregatedBy": row[0], 
+                "valueToVisualize": row[1], 
+                "caseID": row[2]
+            })
 
-        return JsonResponse(result_dict)
+        aggregatedBys = list(set(map(lambda x: x["aggregatedBy"], result_dict)))
+        cleaned = [
+            {
+                "aggregatedBy": agg, 
+                "valueToVisualize": get_all_by_agg(result_dict, agg, "valueToVisualize"),
+                "caseID": get_all_by_agg(result_dict, agg, "caseID")
+            } for agg in aggregatedBys]
+        
+
+        return JsonResponse(cleaned)
 
 
 def request_individual_specific(request):
