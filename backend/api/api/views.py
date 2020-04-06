@@ -82,9 +82,9 @@ def get_attributes(request):
 
         # Make the connection and execute the command
         command = (
-            "SELECT CODE_DESC, REDO, COUNT(*) FROM ("
+            "SELECT CODE_DESC, COUNT(*) FROM ("
                 "SELECT "
-                    "BLNG.*, SURG.*, CASE WHEN PRIM_PROC_DESC LIKE '%REDO%' THEN 1 ELSE 0 END AS REDO "
+                    "BLNG.*, SURG.*" # ,CASE WHEN PRIM_PROC_DESC LIKE '%REDO%' THEN 1 ELSE 0 END AS REDO "
                 "FROM CLIN_DM.BPU_CTS_DI_BILLING_CODES BLNG "
                 "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE SURG "
                     "ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) "
@@ -92,15 +92,16 @@ def get_attributes(request):
                     "AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE) "
                 f"{filters_safe_sql}"
             ") "
-            "GROUP BY CODE_DESC, REDO"
+            "GROUP BY CODE_DESC"
         )
+
         result = execute_sql(
             command, 
             dict(zip(bindNames, filters))
         )
 
         # Return the result, the multi-selector component in React requires the below format
-        items = [{"value": f"{row[0]}_{row[1]}","count":row[2]} for row in result]
+        items = [{"value": f"{row[0]}","count":row[1]} for row in result]
         return JsonResponse({"result": items})
 
 
@@ -265,7 +266,7 @@ def summarize_attribute_w_year(request):
                     f"{filters_safe_sql}"
                 ")"
             ") LIMITED_SURG ON LIMITED_SURG.DI_CASE_ID = TRNSFSD.DI_CASE_ID "
-            f"WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time AND {valueToVisualize} IS NOT NULL "
+            f"WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time"
         )
 
         # Execute the query
@@ -279,7 +280,7 @@ def summarize_attribute_w_year(request):
         for row in result:
             result_dict.append({
                 "aggregatedBy": row[0], 
-                "valueToVisualize": row[1], 
+                "valueToVisualize": row[1] or 0, 
                 "caseID": row[2]
             })
 
