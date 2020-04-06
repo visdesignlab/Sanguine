@@ -166,7 +166,7 @@ def fetch_patient(request):
         if not patient_id:
             return HttpResponseBadRequest("patient_id must be supplied.")
         
-        command =(
+        command = (
                 "SELECT info.DI_BIRTHDATE, info.GENDER_CODE, info.GENDER_DESC, "
                 "info.RACE_CODE, info.RACE_DESC, info.ETHNICITY_CODE, info.ETHNICITY_DESC, "
                 "info.DI_DEATH_DATE "
@@ -237,7 +237,7 @@ def summarize_attribute_w_year(request):
         max_time = f'31-DEC-{year_range[1]}'
         # Safe to use format strings since there are limited options for aggregatedBy and valueToVisualize
         command = (
-            f"SELECT {aggregates[aggregatedBy]}, SUM({valueToVisualize}) "
+            f"SELECT {aggregates[aggregatedBy]}, {valueToVisualize}, COUNT(*) "
             "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD TRNSFSD "
             "INNER JOIN ( "
                 "SELECT * "
@@ -250,8 +250,8 @@ def summarize_attribute_w_year(request):
                     f"{filters_safe_sql}"
                 ")"
             ") LIMITED_SURG ON LIMITED_SURG.DI_CASE_ID = TRNSFSD.DI_CASE_ID "
-            "WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time "
-            f"GROUP BY {aggregates[aggregatedBy]}"
+            f"WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time AND {valueToVisualize} IS NOT NULL "
+            f"GROUP BY {aggregates[aggregatedBy]}, {valueToVisualize}"
         )
 
         result = execute_sql(
@@ -261,7 +261,12 @@ def summarize_attribute_w_year(request):
 
         result_dict = {}
         for row in result:
-            result_dict[row[0]] = row[1]
+            # Set the key if it doesn't exist
+            if not result_dict.get(row[0]):
+                result_dict[row[0]] = []
+            
+            # Append data together
+            result_dict[row[0]] += [row[1]] * row[2]
 
         return JsonResponse(result_dict)
 
