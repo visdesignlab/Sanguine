@@ -9,7 +9,7 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { DumbbellDataPoint, SelectSet, BloodProductCap } from "../../Interfaces/ApplicationState"
+import { DumbbellDataPoint, SelectSet, BloodProductCap, dumbbellFacetOptions, barChartValuesOptions } from "../../Interfaces/ApplicationState"
 import DumbbellChart from "./DumbbellChart"
 import { Grid, Menu, Dropdown, Button } from "semantic-ui-react";
 import { preop_color, postop_color, basic_gray, secondary_gray } from "../../ColorProfile";
@@ -180,9 +180,11 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
 
   useEffect(() => {
     fetchChartData();
-  }, [actualYearRange, filterSelection, hemoglobinDataSet]);
+  }, [actualYearRange, filterSelection, hemoglobinDataSet, yAxis]);
 
-
+  const changeXVal = (e: any, value: any) => {
+    actions.changeChart(value.value, "HEMO_VALUE", chartId, "DUMBBELL")
+  }
 
   return (
     <Grid style={{ height: "100%" }}>
@@ -197,6 +199,18 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
             <PreopMenuItem name="Preop" active={sortMode === "Preop"} onClick={() => { setSortMode("Preop") }} />
             <PostopMenuItem name="Postop" active={sortMode === "Postop"} onClick={() => { setSortMode("Postop") }} />
             <GapMenuItem name="Gap" active={sortMode === "Gap"} onClick={() => { setSortMode("Gap") }} />
+            <Menu.Item fitted>
+              <Dropdown pointing basic item icon="edit" compact>
+                <Dropdown.Menu>
+                  <Dropdown.Item >
+                    <Dropdown text="Change Facet" options={dumbbellFacetOptions.concat(barChartValuesOptions)} onChange={changeXVal} />
+                  </Dropdown.Item>
+                  {/* <Dropdown.Item text="Change ">
+
+                  </Dropdown.Item> */}
+                </Dropdown.Menu>
+              </Dropdown>
+            </Menu.Item>
           </Menu>
           {/* <OptionsP>Show</OptionsP>
           <Button.Group vertical size="mini">

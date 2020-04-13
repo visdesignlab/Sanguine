@@ -27,7 +27,8 @@ interface AppProvenance {
     selectPatient: (data: SingleCasePoint) => void;
     selectSet: (data: SelectSet) => void;
     storeHemoData: (data: any) => void;
-    changeExtraPair: (chartID: string, newExtraPair: string) => void
+    changeExtraPair: (chartID: string, newExtraPair: string) => void;
+    changeChart: (x: string, y: string, i: string, type: string) => void;
   }
 }
 export function setupProvenance(): AppProvenance {
@@ -179,6 +180,23 @@ export function setupProvenance(): AppProvenance {
     );
   }
 
+  const changeChart = (x: string, y: string, i: string, type: string) => {
+    provenance.applyAction(
+      `change chart ${i}`,
+      (state: ApplicationState) => {
+        state.layoutArray = state.layoutArray.map(d => {
+          if (d.i === i) {
+            d.aggregatedBy = x;
+            d.valueToVisualize = y;
+
+          }
+          return d
+        })
+        return state
+      }
+    )
+  }
+
   const selectChart = (chartID: string) => {
     provenance.applyAction(
       `Selecting ${chartID}`,
@@ -319,7 +337,7 @@ export function setupProvenance(): AppProvenance {
       goForward,
       setLayoutArray,
       selectChart,
-      // togglePerCase,
+      changeChart,
       // toggleDumbbell,
       filterSelectionChange,
       yearRangeChange,
