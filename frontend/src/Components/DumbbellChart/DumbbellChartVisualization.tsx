@@ -12,7 +12,7 @@ import { actions } from "../..";
 import { DumbbellDataPoint, SelectSet, BloodProductCap } from "../../Interfaces/ApplicationState"
 import DumbbellChart from "./DumbbellChart"
 import { Grid, Menu, Dropdown, Button } from "semantic-ui-react";
-import { preop_color, postop_color, basic_gray } from "../../ColorProfile";
+import { preop_color, postop_color, basic_gray, secondary_gray } from "../../ColorProfile";
 
 interface OwnProps {
   yAxis: string;
@@ -188,7 +188,17 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
     <Grid style={{ height: "100%" }}>
       <Grid.Row>
         <Grid.Column verticalAlign="middle" width={2}>
-          <OptionsP>Show</OptionsP>
+          <Menu text compact size="mini" vertical>
+            <Menu.Item header>Show</Menu.Item>
+            <PreopMenuItem name="Preop" active={showingAttr.preop} onClick={() => { setShowingAttr({ preop: !showingAttr.preop, postop: showingAttr.postop, gap: showingAttr.gap }) }} />
+            <PostopMenuItem name="Postop" active={showingAttr.postop} onClick={() => { setShowingAttr({ preop: showingAttr.preop, postop: !showingAttr.postop, gap: showingAttr.gap }) }} />
+            <GapMenuItem name="Gap" active={showingAttr.gap} onClick={() => { setShowingAttr({ preop: showingAttr.preop, postop: showingAttr.postop, gap: !showingAttr.gap }) }} />
+            <Menu.Item header>Sort By</Menu.Item>
+            <PreopMenuItem name="Preop" active={sortMode === "Preop"} onClick={() => { setSortMode("Preop") }} />
+            <PostopMenuItem name="Postop" active={sortMode === "Postop"} onClick={() => { setSortMode("Postop") }} />
+            <GapMenuItem name="Gap" active={sortMode === "Gap"} onClick={() => { setSortMode("Gap") }} />
+          </Menu>
+          {/* <OptionsP>Show</OptionsP>
           <Button.Group vertical size="mini">
             <PreopButton basic={!showingAttr.preop} onClick={() => { setShowingAttr({ preop: !showingAttr.preop, postop: showingAttr.postop, gap: showingAttr.gap }) }} >Preop</PreopButton>
             <PostopButton basic={!showingAttr.postop} onClick={() => { setShowingAttr({ preop: showingAttr.preop, postop: !showingAttr.postop, gap: showingAttr.gap }) }}>Postop</PostopButton>
@@ -199,7 +209,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
             <PreopButton basic={sortMode !== "Preop"} onClick={() => { setSortMode("Preop") }}>Preop</PreopButton>
             <PostopButton basic={sortMode !== "Postop"} onClick={() => { setSortMode("Postop") }}>Postop</PostopButton>
             <GapButton basic={sortMode !== "Gap"} onClick={() => { setSortMode("Gap") }}>Gap</GapButton>
-          </Button.Group>
+          </Button.Group> */}
         </Grid.Column>
         <Grid.Column width={14}  >
           <SVG ref={svgRef}>
@@ -239,19 +249,21 @@ const SVG = styled.svg`
   width: 100%;
 `;
 
-const PostopButton = styled(Button)`
-  &&&&&{color: ${postop_color}!important;
-        box-shadow: 0 0 0 1px ${postop_color} inset!important;}
+interface ActiveProps {
+  active: boolean;
+}
+
+const PostopMenuItem = styled(Menu.Item) <ActiveProps>`
+  &&&&&{color: ${props => props.active ? postop_color : secondary_gray}!important;
+        }
 `
 
-const PreopButton = styled(Button)`
- &&&&&{color: ${preop_color}!important;
-        box-shadow: 0 0 0 1px ${preop_color} inset!important;}
+const PreopMenuItem = styled(Menu.Item) <ActiveProps>`
+ &&&&&{color: ${props => props.active ? preop_color : secondary_gray}!important;}
 `
 
-const GapButton = styled(Button)`
- &&&&&{color: ${basic_gray}!important;
-        box-shadow: 0 0 0 1px ${basic_gray} inset!important;}
+const GapMenuItem = styled(Menu.Item)`
+  &&&&&{color: ${props => props.active ? basic_gray : secondary_gray}!important;}
 `
 
 const OptionsP = styled.p`
