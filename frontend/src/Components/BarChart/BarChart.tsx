@@ -35,6 +35,7 @@ import SingleStripPlot from "./SingleStripPlot";
 import ExtraPairDumbbell from "./ExtraPairDumbbell";
 import ExtraPairBar from "./ExtraPairBar";
 import ExtraPairBasic from "./ExtraPairBasic";
+import ExtraPairViolin from "./ExtraPairViolin";
 
 interface OwnProps {
   aggregatedBy: string;
@@ -47,7 +48,7 @@ interface OwnProps {
   yMax: number;
   selectedVal: number | null;
   stripPlotMode: boolean;
-  extraPairDataSet: { name: string, data: any[], type: string }[];
+  extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number }[];
 }
 
 export type Props = OwnProps;
@@ -190,6 +191,16 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
           transferedDistance += (extraPairWidth.Dumbbell + extraPairPadding)
           returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Dumbbell)},0)`}>
             <ExtraPairDumbbell aggregatedScale={aggregationScale} dataSet={pairData.data} />,
+            <ExtraPairText
+              x={extraPairWidth.Dumbbell / 2}
+              y={dimension.height - offset.bottom + 20}
+            >{pairData.name}</ExtraPairText>
+          </g>);
+          break;
+        case "Violin":
+          transferedDistance += (extraPairWidth.Dumbbell + extraPairPadding)
+          returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Dumbbell)},0)`}>
+            <ExtraPairViolin aggregatedScale={aggregationScale} dataSet={pairData.data} kdeMax={pairData.kdeMax ? pairData.kdeMax : (0)} />,
             <ExtraPairText
               x={extraPairWidth.Dumbbell / 2}
               y={dimension.height - offset.bottom + 20}
