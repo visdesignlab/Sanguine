@@ -311,8 +311,10 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
               </Dropdown>
             </Menu.Item >
             <Menu.Item fitted onClick={toggleStripGraphMode}>
-              <Icon name="ellipsis horizontal" />
-
+              <Icon name="ellipsis vertical" />
+            </Menu.Item>
+            <Menu.Item>
+              <Icon name="edit" />
             </Menu.Item>
           </Menu>
         </Grid.Column>
