@@ -9,10 +9,10 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { DumbbellDataPoint, SelectSet, BloodProductCap } from "../../Interfaces/ApplicationState"
+import { DumbbellDataPoint, SelectSet, BloodProductCap, dumbbellFacetOptions, barChartValuesOptions } from "../../Interfaces/ApplicationState"
 import DumbbellChart from "./DumbbellChart"
 import { Grid, Menu, Dropdown, Button } from "semantic-ui-react";
-import { preop_color, postop_color, basic_gray } from "../../ColorProfile";
+import { preop_color, postop_color, basic_gray, secondary_gray } from "../../ColorProfile";
 
 interface OwnProps {
   yAxis: string;
@@ -30,7 +30,9 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
     layoutArray,
     filterSelection,
     actualYearRange,
-    hemoglobinDataSet
+    hemoglobinDataSet,
+    showZero,
+    currentOutputFilterSet
   } = store!;
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -88,91 +90,54 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
         if (transfused_dict[ob.CASE_ID]) {
           yAxisLabel_val = BloodProductCap[yAxis] ? transfused_dict[ob.CASE_ID].transfused : ob[yAxis];
         };
-        //  console.log(transfused_dict);
-        //This filter out anything that has empty value
         if (yAxisLabel_val !== undefined && begin_x > 0 && end_x > 0 && !existingCaseID.has(ob.CASE_ID)) {
-          // if (!(yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
-          //   tempYMax = yAxisLabel_val > tempYMax ? yAxisLabel_val : tempYMax;
-          // }
-          if ((yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
-            yAxisLabel_val -= 999
+          if ((showZero) || (!showZero && yAxisLabel_val > 0)) {
+            if ((yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
+              yAxisLabel_val -= 999
+            }
+            if ((yAxisLabel_val > 100 && yAxis === "PLT_UNITS")) {
+              yAxisLabel_val -= 245
+            }
+            let criteriaMet = true;
+            if (currentOutputFilterSet.length > 0) {
+              for (let selectSet of currentOutputFilterSet) {
+                if (!selectSet.set_value.includes(ob[selectSet.set_name])) {
+                  criteriaMet = false;
+                }
+              }
+            }
+
+            if (criteriaMet) {
+              tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
+              tempXMin = end_x < tempXMin ? end_x : tempXMin;
+              tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
+              tempXMax = end_x > tempXMax ? end_x : tempXMax;
+
+              let new_ob: DumbbellDataPoint = {
+                case: {
+                  visitNum: ob.VISIT_ID,
+                  caseId: ob.CASE_ID,
+                  YEAR: ob.YEAR,
+                  ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
+                  SURGEON_ID: ob.SURGEON_ID,
+                  patientID: ob.PATIENT_ID
+                },
+                startXVal: begin_x,
+                endXVal: end_x,
+
+                yVal: yAxisLabel_val,
+
+              };
+              existingCaseID.add(ob.CASE_ID)
+              //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
+              return new_ob;
+            }
           }
-          if ((yAxisLabel_val > 100 && yAxis === "PLT_UNITS")) {
-            yAxisLabel_val -= 245
-          }
-          tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
-          tempXMin = end_x < tempXMin ? end_x : tempXMin;
-          tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
-          tempXMax = end_x > tempXMax ? end_x : tempXMax;
-
-          let new_ob: DumbbellDataPoint = {
-            case: {
-              visitNum: ob.VISIT_ID,
-              caseId: ob.CASE_ID,
-              YEAR: ob.YEAR,
-              ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
-              SURGEON_ID: ob.SURGEON_ID,
-              patientID: ob.PATIENT_ID
-            },
-            startXVal: begin_x,
-            endXVal: end_x,
-
-            yVal: yAxisLabel_val,
-
-          };
-          existingCaseID.add(ob.CASE_ID)
-          //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
-          return new_ob;
           //}
         }
       });
       cast_data = cast_data.filter((d: any) => d);
-      let total_count = cast_data.length;
-      //cast_data = cast_data.filter((d: DumbbellDataPoint) => { total_count += 1; return (d.startXVal - d.endXVal) > 0 })
-
-
-      actions.updateCaseCount(total_count)
-      //console.log(aggregatedOption)
-      // if (aggregatedOption) {
-      //   let counter = {} as { [key: number]: any }
-      //   cast_data.map((datapoint: DumbbellDataPoint) => {
-
-      //     if (!counter[datapoint.case[aggregatedOption]]) {
-      //       counter[datapoint.case[aggregatedOption]] = { numerator: 1, startXVal: datapoint.startXVal, endXVal: datapoint.endXVal, yVal: datapoint.yVal }
-      //     }
-      //     else {
-      //       // const current = counter[datapoint[aggregatedOption]];
-      //       counter[datapoint.case[aggregatedOption]].startXVal += datapoint.startXVal
-      //       counter[datapoint.case[aggregatedOption]].endXVal += datapoint.endXVal
-      //       counter[datapoint.case[aggregatedOption]].yVal += datapoint.yVal
-      //       counter[datapoint.case[aggregatedOption]].numerator += 1
-      //     }
-      //   })
-      //   cast_data = []
-      //   console.log(counter)
-      //   for (let key of Object.keys(counter)) {
-      //     const keynum = parseInt(key)
-      //     //console.log(counter[keynum])
-      //     let new_ob: DumbbellDataPoint = {
-      //       startXVal: counter[keynum].startXVal / counter[keynum].numerator,
-      //       endXVal: counter[keynum].endXVal / counter[keynum].numerator,
-      //       case: {
-      //         visitNum: -1, caseId: -1,
-      //         YEAR: aggregatedOption === "YEAR" ? keynum : -1,
-      //         ANESTHOLOGIST_ID: aggregatedOption === "ANESTHOLOGIST_ID" ? keynum : -1,
-      //         SURGEON_ID: aggregatedOption === "SURGEON_ID" ? keynum : -1,
-      //         patientID: -1
-      //       },
-      //       yVal: counter[keynum].yVal / counter[keynum].numerator,
-
-      //     };
-      //     cast_data.push(new_ob)
-      //   };
-
-      // }
-
       setData({ result: cast_data });
-      // setYMax(tempYMax);
       setXRange({ xMin: tempXMin, xMax: tempXMax });
 
     }
@@ -180,15 +145,36 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
 
   useEffect(() => {
     fetchChartData();
-  }, [actualYearRange, filterSelection, hemoglobinDataSet]);
+  }, [actualYearRange, filterSelection, hemoglobinDataSet, yAxis, showZero, currentOutputFilterSet]);
 
-
+  const changeXVal = (e: any, value: any) => {
+    actions.changeChart(value.value, "HEMO_VALUE", chartId, "DUMBBELL")
+  }
 
   return (
     <Grid style={{ height: "100%" }}>
       <Grid.Row>
         <Grid.Column verticalAlign="middle" width={2}>
-          <OptionsP>Show</OptionsP>
+          <Menu text compact size="mini" vertical>
+            <Menu.Item header>Show</Menu.Item>
+            <Menu.Menu>
+              <PreopMenuItem name="Preop" active={showingAttr.preop} onClick={() => { setShowingAttr({ preop: !showingAttr.preop, postop: showingAttr.postop, gap: showingAttr.gap }) }} />
+              <PostopMenuItem name="Postop" active={showingAttr.postop} onClick={() => { setShowingAttr({ preop: showingAttr.preop, postop: !showingAttr.postop, gap: showingAttr.gap }) }} />
+              <GapMenuItem name="Gap" active={showingAttr.gap} onClick={() => { setShowingAttr({ preop: showingAttr.preop, postop: showingAttr.postop, gap: !showingAttr.gap }) }} />
+            </Menu.Menu>
+
+            <Menu.Item header>Sort By</Menu.Item>
+            <Menu.Menu>
+              <PreopMenuItem name="Preop" active={sortMode === "Preop"} onClick={() => { setSortMode("Preop") }} />
+              <PostopMenuItem name="Postop" active={sortMode === "Postop"} onClick={() => { setSortMode("Postop") }} />
+              <GapMenuItem name="Gap" active={sortMode === "Gap"} onClick={() => { setSortMode("Gap") }} />
+            </Menu.Menu>
+            <Menu.Item header>
+              <Dropdown text="Change Facet" pointing basic item icon="edit" compact options={dumbbellFacetOptions.concat(barChartValuesOptions)} onChange={changeXVal}>
+              </Dropdown>
+            </Menu.Item>
+          </Menu>
+          {/* <OptionsP>Show</OptionsP>
           <Button.Group vertical size="mini">
             <PreopButton basic={!showingAttr.preop} onClick={() => { setShowingAttr({ preop: !showingAttr.preop, postop: showingAttr.postop, gap: showingAttr.gap }) }} >Preop</PreopButton>
             <PostopButton basic={!showingAttr.postop} onClick={() => { setShowingAttr({ preop: showingAttr.preop, postop: !showingAttr.postop, gap: showingAttr.gap }) }}>Postop</PostopButton>
@@ -199,7 +185,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
             <PreopButton basic={sortMode !== "Preop"} onClick={() => { setSortMode("Preop") }}>Preop</PreopButton>
             <PostopButton basic={sortMode !== "Postop"} onClick={() => { setSortMode("Postop") }}>Postop</PostopButton>
             <GapButton basic={sortMode !== "Gap"} onClick={() => { setSortMode("Gap") }}>Gap</GapButton>
-          </Button.Group>
+          </Button.Group> */}
         </Grid.Column>
         <Grid.Column width={14}  >
           <SVG ref={svgRef}>
@@ -239,19 +225,21 @@ const SVG = styled.svg`
   width: 100%;
 `;
 
-const PostopButton = styled(Button)`
-  &&&&&{color: ${postop_color}!important;
-        box-shadow: 0 0 0 1px ${postop_color} inset!important;}
+interface ActiveProps {
+  active: boolean;
+}
+
+const PostopMenuItem = styled(Menu.Item) <ActiveProps>`
+  &&&&&{color: ${props => props.active ? postop_color : secondary_gray}!important;
+        }
 `
 
-const PreopButton = styled(Button)`
- &&&&&{color: ${preop_color}!important;
-        box-shadow: 0 0 0 1px ${preop_color} inset!important;}
+const PreopMenuItem = styled(Menu.Item) <ActiveProps>`
+ &&&&&{color: ${props => props.active ? preop_color : secondary_gray}!important;}
 `
 
-const GapButton = styled(Button)`
- &&&&&{color: ${basic_gray}!important;
-        box-shadow: 0 0 0 1px ${basic_gray} inset!important;}
+const GapMenuItem = styled(Menu.Item)`
+  &&&&&{color: ${props => props.active ? basic_gray : secondary_gray}!important;}
 `
 
 const OptionsP = styled.p`
