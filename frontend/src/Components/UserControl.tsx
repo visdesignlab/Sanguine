@@ -16,6 +16,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const {
     isAtRoot,
     isAtLatest,
+    showZero,
     //  perCaseSelected,
     yearRange,
     //  dumbbellSorted
@@ -105,7 +106,6 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
   const addOptions = [
     [barChartValuesOptions, barChartAggregationOptions],
-
     [dumbbellValueOptions, barChartValuesOptions.concat(dumbbellFacetOptions)],
     [scatterXOptions, barChartValuesOptions]
 
@@ -132,6 +132,8 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     }
   }
 
+
+
   const xAxisChangeHandler = (e: any, value: any) => {
     setXSelection(value.value)
   }
@@ -139,6 +141,8 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const yAxisChangeHandler = (e: any, value: any) => {
     setYSelection(value.value)
   }
+
+
 
   const confirmChartAddHandler = () => {
     if (xSelection && ySelection && addingChartType > -1) {
@@ -196,6 +200,13 @@ const UserControl: FC<Props> = ({ store }: Props) => {
           </Dropdown.Menu>
         </Dropdown>
 
+      </Menu.Item>
+      <Menu.Item>
+        <Checkbox
+          checked={showZero}
+          onClick={actions.toggleShowZero}
+          label={<label> Show Zero Transfused </label>}
+        />
       </Menu.Item>
       {/* <Menu.Item>
                 <Checkbox toggle checked={dumbbellSorted} onClick={actions.toggleDumbbell}/>

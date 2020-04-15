@@ -38,14 +38,15 @@ export interface DumbbellDataPoint {
 export interface ApplicationState {
   layoutArray: LayoutElement[];
   currentSelectedChart: string;
-  perCaseSelected: boolean;
+  // perCaseSelected: boolean;
   yearRange: number[];
   filterSelection: string[];
   totalCaseCount: number;
-  dumbbellSorted: boolean;
+  // dumbbellSorted: boolean;
   currentSelectSet: SelectSet | null;
   currentSelectPatient: SingleCasePoint | null;
   hemoglobinDataSet: any;
+  showZero: boolean;
 }
 
 export interface LayoutElement {
@@ -64,14 +65,15 @@ export interface LayoutElement {
 export const defaultState: ApplicationState = {
   layoutArray: [],
   currentSelectedChart: "-1",
-  perCaseSelected: false,
+  // perCaseSelected: false,
   yearRange: [0, 5],
   filterSelection: [],
   totalCaseCount: 0,
-  dumbbellSorted: false,
+  // dumbbellSorted: false,
   currentSelectSet: null,
   currentSelectPatient: null,
-  hemoglobinDataSet: []
+  hemoglobinDataSet: [],
+  showZero: true
 };
 
 export const offset = { left: 85, bottom: 40, right: 10, top: 40, margin: 20 };
