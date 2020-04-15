@@ -113,11 +113,11 @@ const ScatterPlotVisualization: FC<Props> = ({ yAxis, xAxis, chartIndex, store }
                 }
             });
             cast_data = cast_data.filter((d: any) => d);
-            let total_count = cast_data.length;
+            //   let total_count = cast_data.length;
             //cast_data = cast_data.filter((d: DumbbellDataPoint) => { total_count += 1; return (d.startXVal - d.endXVal) > 0 })
 
-
-            actions.updateCaseCount(total_count)
+            //
+            // actions.updateCaseCount(total_count)
             //console.log(aggregatedOption)
 
             setData({ result: cast_data });

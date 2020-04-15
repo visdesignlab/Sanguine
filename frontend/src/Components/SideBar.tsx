@@ -1,10 +1,11 @@
 import React, { FC, useEffect, useState, useMemo } from "react";
 import Store from "../Interfaces/Store";
 import styled from 'styled-components'
-import { Menu, Dropdown, Grid, Container, Message, List } from "semantic-ui-react";
+import { Menu, Dropdown, Grid, Container, Message, List, Button } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";
 import { scaleLinear } from "d3";
 import { actions } from "..";
+import { AxisLabelDict } from "../Interfaces/ApplicationState";
 
 interface OwnProps {
   store?: Store;
@@ -13,7 +14,12 @@ interface OwnProps {
 export type Props = OwnProps;
 
 const SideBar: FC<Props> = ({ store }: Props) => {
-  const { totalCaseCount, actualYearRange, filterSelection } = store!;
+  const {
+    // totalCaseCount, 
+    actualYearRange,
+    currentSelectSet,
+    currentOutputFilterSet,
+    filterSelection } = store!;
   const [procedureList, setProcedureList] = useState([]);
   const [maxCaseCount, setMaxCaseCount] = useState(0);
   const [itemSelected, setItemSelected] = useState<any[]>([]);
@@ -65,7 +71,6 @@ const SideBar: FC<Props> = ({ store }: Props) => {
   return (
     <Grid
       divided="vertically"
-
       verticalAlign={"middle"}
       padded
     >
@@ -73,14 +78,35 @@ const SideBar: FC<Props> = ({ store }: Props) => {
       <Grid.Row centered>
         <Message>
           <Message.Header>Current View</Message.Header>
-          <Message.Item>Case Count:{totalCaseCount}</Message.Item>
+
           <Message.Item>
             Selected Year Range: {actualYearRange[0]} - {actualYearRange[1]}
           </Message.Item>
+          {currentOutputFilterSet.map((selectSet) => {
+            return <Message.Item content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`} />
+          })}
         </Message>
       </Grid.Row>
+      <Grid.Row centered style={{ padding: "40px" }}>
+        <Container style={{ height: "30vh" }}>
+          <List>
+            <List.Header>Current Selected</List.Header>
+            {currentSelectSet.map((selectSet) => {
+              return <List.Item icon="caret right" content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
+            })}
+            <List.Item>
+              <Button disabled={!(currentSelectSet.length > 0)}
+                basic size="tiny" content="Create Filter" onClick={actions.currentOutputFilterSetChange}
+              />
+              <Button disabled={!(currentOutputFilterSet.length > 0)}
+                basic size="tiny" content="Clear Filter" onClick={actions.clearOutputFilterSet}
+              />
+            </List.Item>
+          </List>
+        </Container>
+      </Grid.Row>
       <Grid.Row style={{ padding: "10px" }}>
-        <Container style={{ overflow: "auto", height: "80vh" }}>
+        <Container style={{ overflow: "auto", height: "40vh" }}>
           <List relaxed divided >
             {itemSelected.map((listItem: any) => {
               if (listItem.value) {

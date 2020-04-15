@@ -144,6 +144,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
 
   const [testValueScale, valueScale] = useMemo(() => {
     const widthAllowed = dimension.width - minimumOffset.left - minimumOffset.right;
+
     const testValueScale = scaleLinear()
       .domain([0.9 * xRange.xMin, 1.1 * xRange.xMax])
       .range([dimension.height - minimumOffset.bottom, minimumOffset.top]);
@@ -253,35 +254,36 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
 
     if (currentSelectPatient && d.case.caseId > 0) {
       return currentSelectPatient.caseId === d.case.caseId
-    }
-    else if (aggregation && currentSelectPatient) {
-      return d.case[aggregation] === currentSelectPatient[aggregation]
-    }
-
-    else {
-      return false;
-    }
+    } return false;
+    // else if (currentSelectSet.length > 0) {
+    //   //let selectSet: SelectSet;
+    //   for (let selectSet of currentSelectSet) {
+    //     if (d.case[selectSet.set_name] === selectSet.set_value)
+    //       return true;
+    //   }
+    //   return false
+    // }
+    // else {
+    //   return false;
+    // }
     //  return true;
   }
 
-  const decideIfSurgeon = (d: DumbbellDataPoint) => {
+  // const decideIfSurgeon = (d: DumbbellDataPoint) => {
 
-    if (currentSelectSet) {
-      return d.case[currentSelectSet.set_name] === currentSelectSet.set_value
-    }
-    return true;
+  //   if (currentSelectSet) {
+  //     return d.case[currentSelectSet.set_name] === currentSelectSet.set_value
+  //   }
+  //   return true;
 
-  }
+  // }
 
 
 
   const clickDumbbellHandler = (d: DumbbellDataPoint) => {
-    if (aggregation) {
-      actions.selectSet({ set_name: aggregation, set_value: d.case[aggregation] })
-    } else {
-      actions.selectPatient(d.case)
-    }
+    actions.selectPatient(d.case)
   }
+
   return (
     <>
       <g className="axes">
@@ -314,7 +316,9 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
               content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}
               key={`${dataPoint.case.visitNum}-${dataPoint.case.caseId}`}
               trigger={
-                <DumbbellG surgeonselected={decideIfSurgeon(dataPoint)} dataPoint={dataPoint} >
+                <g >
+                  {/* // surgeonselected={decideIfSurgeon(dataPoint)} 
+              //  dataPoint={dataPoint} > */}
                   <Rect
                     x={xVal - 1
                     }
@@ -347,7 +351,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
                     ispreop={false}
                     display={showingAttr.postop ? undefined : "none"}
                   />
-                </DumbbellG>
+                </g>
               }
             />
           );
@@ -370,10 +374,10 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
 
 export default inject("store")(observer(DumbbellChart));
 
-interface DumbbellProps {
-  dataPoint: DumbbellDataPoint;
-  surgeonselected: boolean;
-}
+// interface DumbbellProps {
+//   dataPoint: DumbbellDataPoint;
+//   //surgeonselected: boolean;
+// }
 
 interface DotProps {
   isselected: boolean;
@@ -391,9 +395,9 @@ interface AverageLineProps {
 //     ? "none"
 //     : null} 
 
-const DumbbellG = styled(`g`) <DumbbellProps>`
-    visibility:${props => (props.surgeonselected ? "visible" : "hidden")}
-`;
+// const DumbbellG = styled(`g`) <DumbbellProps>`
+//     visibility:${props => (props.surgeonselected ? "visible" : "hidden")}
+// `;
 
 
 const Circle = styled(`circle`) <DotProps>`
