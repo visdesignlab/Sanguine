@@ -62,5 +62,12 @@ missing = clean_code_csv[clean_code_csv[["clean_name", "db_code_desc"]].isnull()
 missing["clean_name"] = missing.apply(lambda a: list(compress(basic_mapping.keys(), [str(a[0]) in x for x in basic_mapping.values()]))[0], axis = 1)
 clean_code_csv.update(missing)
 
+# Drop some more general codes so we can apply the slightly less general ones
+[basic_mapping.pop(x) for x in ["Common GI procedure", "General thoracic procedure", "Thoracic/Lung procedure", "Thoracic/cardiac procedure", "Previously valid aortic surgery code (expired 12/31/19)"]]
+
+missing = clean_code_csv[clean_code_csv["clean_name"].isnull()]
+missing["clean_name"] = missing.apply(lambda a: (list(compress(basic_mapping.keys(), [str(a[0]) in x for x in basic_mapping.values()])) or [""])[0], axis = 1)
+clean_code_csv.update(missing)
+
 # Write out the resulting file
 clean_code_csv.to_csv("cpt_codes_cleaned.csv", index = False)
