@@ -68,6 +68,19 @@ def get_all_by_agg(result_dict, agg, variable):
     ]
 
 
+def get_filters(filter_selection):
+    if filter_selection != [""]:
+        filters = filter_selection
+        bindNames = [f":filters{str(i)}" for i in range(len(filters))]
+        filters_safe_sql = f"WHERE CODE_DESC IN ({','.join(bindNames)}) "
+    else:
+        filters = [a[0] for a in cpt()]
+        bindNames = [f":filters{str(i)}" for i in range(len(filters))]
+        filters_safe_sql = f"WHERE CODE IN ({','.join(bindNames)}) "
+
+    return filters, bindNames, filters_safe_sql
+
+
 def index(request):
     if request.method == "GET":
         return HttpResponse(
@@ -77,9 +90,7 @@ def index(request):
 
 def get_attributes(request):
     if request.method == "GET":
-        filters = [list(a.values())[0] for a in cpt()]
-        bindNames = [f":filters{str(i)}" for i in range(len(filters))]
-        filters_safe_sql = f"WHERE BLNG.CODE IN ({','.join(bindNames)}) "
+        filters, bindNames, filters_safe_sql = get_filters([""])
 
         # Make the connection and execute the command
         command = (
@@ -145,7 +156,6 @@ def fetch_professional_set(request):
         items = [{"PRBC_UNITS": row[0] if row[0] else 0, "FFP_UNITS": row[1] if row[1] else 0, "PLT_UNITS": row[2] if row[2] else 0, "CRYO_UNITS":row[3] if row[3] else 0, "CELL_SAVER_ML":row[4] if row[4] else 0, partner: row[5], "DI_CASE_ID":row[6], "DESC":row[7]}
                  for row in result]
         return JsonResponse({"result": items})
-
 
 
 def fetch_surgery(request):
@@ -217,6 +227,9 @@ def summarize_attribute_w_year(request):
         if not (aggregatedBy and valueToVisualize and len(year_range) == 2):
             return HttpResponseBadRequest("aggregatedBy, valueToVisualize, and year_range must be supplied.")
 
+        # Coerce that params into a useable format
+        min_time = f'01-JAN-{year_range[0]}'
+        max_time = f'31-DEC-{year_range[1]}'
 
         # Check that the values supplied are valid possibilities
         blood_products = [
@@ -239,19 +252,9 @@ def summarize_attribute_w_year(request):
             return HttpResponseBadRequest(f"aggregatedBy must be one of the following: {list(aggregates.keys())}")
 
         # Generate the CPT filter sql
-        if filter_selection != ['']:
-            filters = filter_selection
-            bindNames = [f":filters{str(i)}" for i in range(len(filters))]
-            filters_safe_sql = f"WHERE CODE_DESC IN ({','.join(bindNames)}) "
-        else:
-            filters = [a[0] for a in cpt()]
-            bindNames = [f":filters{str(i)}" for i in range(len(filters))]
-            filters_safe_sql = f"WHERE CODE IN ({','.join(bindNames)}) "
-
+        filters, bindNames, filters_safe_sql = get_filters(filter_selection)
 
         # Build the sql query
-        min_time = f'01-JAN-{year_range[0]}'
-        max_time = f'31-DEC-{year_range[1]}'
         # Safe to use format strings since there are limited options for aggregatedBy and valueToVisualize
         command = (
             f"SELECT {aggregates[aggregatedBy]}, sum({valueToVisualize}), TRNSFSD.DI_CASE_ID "
@@ -324,43 +327,33 @@ def request_transfused_units(request):
     if request.method == "GET":
         # Get the values from the request
         transfusion_type = request.GET.get("transfusion_type")
-        year_range = request.GET.get("year_range").split(",")
-        filter_selection = request.GET.get("filter_selection") or ""
         patient_id = request.GET.get("patient_id")
+        year_range = request.GET.get("year_range") or ""
+        filter_selection = request.GET.get("filter_selection") or ""
+
+        # Parse the year_range and the filter selection
+        year_range = [s for s in year_range.split(",") if s.isdigit()]
+        filter_selection = filter_selection.split(",")
 
         # Check to make sure we have the required parameters
-        if not transfusion_type or not year_range:
-            return HttpResponseBadRequest("transfusion_type, and year_range must be supplied.")
+        if not (transfusion_type and len(year_range) == 2):
+            return HttpResponseBadRequest("transfusion_type and year_range must be supplied.")
 
         # Coerce the request parameters into a format that we want
-        year_min = year_range[0]
-        year_max = year_range[1]
-        filter_selection = filter_selection.split(",")
+        min_time = f'01-JAN-{year_range[0]}'
+        max_time = f'31-DEC-{year_range[1]}'
         
         # Define the SQL translation dictionary
-        command_dict = {
-            "PRBC_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS) PRBC_UNITS",
-            "FFP_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS) FFP_UNITS",
-            "PLT_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS",
-            "CRYO_UNITS": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS) CRYO_UNITS",
-            "CELL_SAVER_ML": "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML) CELL_SAVER_ML"
-        }
-        command_dict["ALL_UNITS"] = (
-            f"{command_dict['PRBC_UNITS']}, "
-            f"{command_dict['FFP_UNITS']}, "
-            f"{command_dict['PLT_UNITS']}, "
-            f"{command_dict['CRYO_UNITS']}, "
-            f"{command_dict['CELL_SAVER_ML']}"
-        )
+        blood_products = [
+            "PRBC_UNITS",
+            "FFP_UNITS",
+            "PLT_UNITS",
+            "CRYO_UNITS",
+            "CELL_SAVER_ML"
+        ]
 
         # Convert the filters to SQL
-        if len(filter_selection) > 0:
-            filter_selection_sql = [f" CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC='{filter_string}' OR" for filter_string in filter_selection]
-            filter_selection_sql[0] = filter_selection_sql[0].replace(" CLIN_DM", " AND (CLIN_DM")
-            filter_selection_sql[-1] = filter_selection_sql[-1].replace(" OR", ")")
-        else: 
-            filter_selection_sql = []
-        extra_command = "".join(filter_selection_sql)
+        filters, bindNames, filters_safe_sql = get_filters(filter_selection)
 
         pat_id_filter = "" if not patient_id else f"AND CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_PAT_ID = '{patient_id}'"
 
@@ -378,15 +371,38 @@ def request_transfused_units(request):
             f"INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
             f"ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID "
             f"{extra_command}) "
-            f"WHERE CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_DATE BETWEEN '01-JAN-{year_min}' AND '31-DEC-{year_max}' "
+            f"WHERE CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time "
             f"{pat_id_filter} "
             f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE), CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID, "
             f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID "
             f") {limit}"
         )
         
-        # Execute the sql and get the results
-        result = execute_sql(command)
+        # Execute the query
+        result = execute_sql(
+            command, 
+            dict(zip(bindNames, filters), min_time = min_time, max_time = max_time)
+        )
+
+        # Get the raw data from the server
+        result_dict = []
+        for row in result:
+            result_dict.append({
+                "aggregatedBy": row[0], 
+                "valueToVisualize": row[1] or 0, 
+                "caseID": row[2]
+            })
+
+        # Manipulate the data into the right format
+        # aggregatedBys = list(set(map(lambda x: x["aggregatedBy"], result_dict)))
+        # cleaned = [
+        #     {
+        #         "aggregatedBy": agg, 
+        #         "valueToVisualize": get_all_by_agg(result_dict, agg, "valueToVisualize"),
+        #         "caseID": list(set(get_all_by_agg(result_dict, agg, "caseID")))
+        #     } for agg in aggregatedBys]
+        
+        # return JsonResponse(cleaned, safe = False)
 
         if transfusion_type == "ALL_UNITS":
             items = [{"case_id": row[5], "PRBC_UNITS": row[0], "FFP_UNITS": row[1], "PLT_UNITS": row[2], "CRYO_UNITS": row[3], "CELL_SAVER_ML": row[4]}
