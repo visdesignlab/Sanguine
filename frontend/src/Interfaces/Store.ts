@@ -16,7 +16,7 @@ export default class Store {
   @observable showZero: boolean = defaultState.showZero;
   @observable yearRange: number[] = defaultState.yearRange;
   @observable filterSelection: string[] = defaultState.filterSelection;
-  @observable totalCaseCount: number = defaultState.totalCaseCount;
+  //@observable totalCaseCount: number = defaultState.totalCaseCount;
   // @observable dumbbellSorted: boolean = defaultState.dumbbellSorted;
   @observable currentSelectSet: SelectSet | null = defaultState.currentSelectSet;
   @observable currentSelectPatient: SingleCasePoint | null = defaultState.currentSelectPatient;

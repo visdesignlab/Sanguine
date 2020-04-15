@@ -41,7 +41,7 @@ export interface ApplicationState {
   // perCaseSelected: boolean;
   yearRange: number[];
   filterSelection: string[];
-  totalCaseCount: number;
+  // totalCaseCount: number;
   // dumbbellSorted: boolean;
   currentSelectSet: SelectSet | null;
   currentSelectPatient: SingleCasePoint | null;
@@ -68,7 +68,7 @@ export const defaultState: ApplicationState = {
   // perCaseSelected: false,
   yearRange: [0, 5],
   filterSelection: [],
-  totalCaseCount: 0,
+  // totalCaseCount: 0,
   // dumbbellSorted: false,
   currentSelectSet: null,
   currentSelectPatient: null,

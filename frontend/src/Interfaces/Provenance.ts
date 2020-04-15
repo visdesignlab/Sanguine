@@ -23,7 +23,7 @@ interface AppProvenance {
     yearRangeChange: (data: any) => void;
     addNewChart: (x: string, y: string, i: number, type: string, aggregation?: string) => void;
     removeChart: (i: any) => void;
-    updateCaseCount: (newCaseCount: number) => void;
+    // updateCaseCount: (newCaseCount: number) => void;
     onLayoutchange: (data: any) => void;
     selectPatient: (data: SingleCasePoint) => void;
     selectSet: (data: SelectSet) => void;
@@ -332,11 +332,11 @@ export function setupProvenance(): AppProvenance {
     })
   }
 
-  const updateCaseCount = (newCaseCount: number) => {
-    //  if (store.totalCaseCount < newCaseCount){
-    store.totalCaseCount = newCaseCount;
-    //  }
-  }
+  // const updateCaseCount = (newCaseCount: number) => {
+  //   //  if (store.totalCaseCount < newCaseCount){
+  //   store.totalCaseCount = newCaseCount;
+  //   //  }
+  // }
   const storeHemoData = (data: any) => {
     provenance.applyAction(`cache hemo data`,
       (state: ApplicationState) => {
@@ -367,7 +367,7 @@ export function setupProvenance(): AppProvenance {
       yearRangeChange,
       addNewChart,
       removeChart,
-      updateCaseCount,
+      //  updateCaseCount,
       onLayoutchange,
       selectPatient,
       selectSet,

@@ -13,7 +13,10 @@ interface OwnProps {
 export type Props = OwnProps;
 
 const SideBar: FC<Props> = ({ store }: Props) => {
-  const { totalCaseCount, actualYearRange, filterSelection } = store!;
+  const {
+    // totalCaseCount, 
+    actualYearRange,
+    filterSelection } = store!;
   const [procedureList, setProcedureList] = useState([]);
   const [maxCaseCount, setMaxCaseCount] = useState(0);
   const [itemSelected, setItemSelected] = useState<any[]>([]);
@@ -73,14 +76,19 @@ const SideBar: FC<Props> = ({ store }: Props) => {
       <Grid.Row centered>
         <Message>
           <Message.Header>Current View</Message.Header>
-          <Message.Item>Case Count:{totalCaseCount}</Message.Item>
+          {/* <Message.Item>Case Count:{totalCaseCount}</Message.Item> */}
           <Message.Item>
             Selected Year Range: {actualYearRange[0]} - {actualYearRange[1]}
           </Message.Item>
         </Message>
       </Grid.Row>
+      <Grid.Row>
+        <Container>
+
+        </Container>
+      </Grid.Row>
       <Grid.Row style={{ padding: "10px" }}>
-        <Container style={{ overflow: "auto", height: "80vh" }}>
+        <Container style={{ overflow: "auto", height: "40vh" }}>
           <List relaxed divided >
             {itemSelected.map((listItem: any) => {
               if (listItem.value) {
