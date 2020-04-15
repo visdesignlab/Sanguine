@@ -18,7 +18,7 @@ export default class Store {
   @observable filterSelection: string[] = defaultState.filterSelection;
   //@observable totalCaseCount: number = defaultState.totalCaseCount;
   // @observable dumbbellSorted: boolean = defaultState.dumbbellSorted;
-  @observable currentSelectSet: SelectSet | null = defaultState.currentSelectSet;
+  @observable currentSelectSet: SelectSet[] = defaultState.currentSelectSet;
   @observable currentSelectPatient: SingleCasePoint | null = defaultState.currentSelectPatient;
   @computed get actualYearRange() {
     return [this.yearRange[0] + 2014, this.yearRange[1] + 2014]

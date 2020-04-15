@@ -26,7 +26,7 @@ interface AppProvenance {
     // updateCaseCount: (newCaseCount: number) => void;
     onLayoutchange: (data: any) => void;
     selectPatient: (data: SingleCasePoint) => void;
-    selectSet: (data: SelectSet) => void;
+    selectSet: (data: SelectSet, shiftKeyPressed: boolean) => void;
     storeHemoData: (data: any) => void;
     changeExtraPair: (chartID: string, newExtraPair: string) => void;
     changeChart: (x: string, y: string, i: string, type: string) => void;
@@ -162,7 +162,7 @@ export function setupProvenance(): AppProvenance {
             state.layoutArray = [{
               aggregatedBy: "YEAR",
               valueToVisualize: "PRBC_UNITS",
-              i: "0",
+              i: "100",
               w: 1,
               h: 1,
               x: 0,
@@ -306,30 +306,42 @@ export function setupProvenance(): AppProvenance {
 
       if (state.currentSelectPatient && data.patientID === state.currentSelectPatient.patientID) {
         state.currentSelectPatient = null;
-        state.currentSelectSet = null;
+        state.currentSelectSet = [];
       }
 
       else {
         state.currentSelectPatient = data;
-        state.currentSelectSet = null;
+        state.currentSelectSet = [];
       }
       return state;
     })
   };
 
-  const selectSet = (data: SelectSet) => {
-    provenance.applyAction(`select set ${data.set_name} at ${data.set_value}`, (state: ApplicationState) => {
-      if (state.currentSelectSet && data.set_name === state.currentSelectSet.set_name && data.set_value === state.currentSelectSet.set_value) {
-        state.currentSelectSet = null;
-        state.currentSelectPatient = null;
-      }
-      else {
-        state.currentSelectSet = data;
-        state.currentSelectPatient = null;
-      }
-      console.log(state.currentSelectSet)
-      return state
-    })
+  const selectSet = (data: SelectSet, shiftKeyPressed: boolean) => {
+    provenance.applyAction(
+      `select set ${data.set_name} at ${data.set_value}`,
+      (state: ApplicationState) => {
+        if (!shiftKeyPressed) {
+          if (state.currentSelectSet.length === 1
+            && state.currentSelectSet[0].set_name === data.set_name
+            && state.currentSelectSet[0].set_value === data.set_value) {
+            state.currentSelectSet = []
+          } else {
+            state.currentSelectSet = [data]
+          }
+
+        }
+        else {
+
+          const temporarySetArray = state.currentSelectSet.filter(d => (!(d.set_value === data.set_value && d.set_name === data.set_name)))
+
+          state.currentSelectSet = temporarySetArray.length === state.currentSelectSet.length ? state.currentSelectSet.concat([data]) : temporarySetArray;
+
+        }
+
+
+        return state
+      })
   }
 
   // const updateCaseCount = (newCaseCount: number) => {

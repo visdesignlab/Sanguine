@@ -18,6 +18,8 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
+
+
 const SingleViolinPlot: FC<Props> = ({ howToTransform, dataPoint, aggregatedBy, isSelected, path, store }: Props) => {
   return (<Popup
     content={dataPoint.totalVal}
@@ -25,12 +27,16 @@ const SingleViolinPlot: FC<Props> = ({ howToTransform, dataPoint, aggregatedBy, 
     trigger={
       <ViolinLine
         d={path}
-        onClick={() => {
-          actions.selectSet({
-            set_name: aggregatedBy,
-            set_value: dataPoint.aggregateAttribute
-          });
+        onClick={(e) => {
+          actions.selectSet(
+            {
+              set_name: aggregatedBy,
+              set_value: dataPoint.aggregateAttribute
+            },
+            e.shiftKey
+          )
         }}
+
         isselected={isSelected}
         transform={howToTransform}
       />

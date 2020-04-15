@@ -38,7 +38,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
   const [yMax, setYMax] = useState({ original: 0, perCase: 0 });
   // const [kdeMax,setKdeMax] = useState(0)
   // const [medianVal, setMedian] = useState()
-  const [selectedBar, setSelectedBarVal] = useState<number | null>(null);
+  //  const [selectedBar, setSelectedBarVal] = useState<number | null>(null);
   const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
   const [extraPairData, setExtraPairData] = useState<{ name: string, data: any[], type: string }[]>([])
   const [stripPlotMode, setStripMode] = useState(false);
@@ -54,14 +54,14 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     }
   }, [layoutArray[chartIndex]]);
 
-  useEffect(() => {
-    if (currentSelectPatient) {
-      setSelectedBarVal(currentSelectPatient[aggregatedBy])
-    }
-    else {
-      setSelectedBarVal(null);
-    }
-  }, [currentSelectPatient])
+  // useEffect(() => {
+  //   if (currentSelectPatient) {
+  //     setSelectedBarVal(currentSelectPatient[aggregatedBy])
+  //   }
+  //   else {
+  //     setSelectedBarVal(null);
+  //   }
+  // }, [currentSelectPatient])
 
   async function fetchChartData() {
     const res = await fetch(
@@ -343,7 +343,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
               aggregatedBy={aggregatedBy}
               valueToVisualize={valueToVisualize}
               yMax={yMax.original}
-              selectedVal={selectedBar}
+              // selectedVal={selectedBar}
               stripPlotMode={stripPlotMode}
               extraPairDataSet={extraPairData}
             />

@@ -46,19 +46,20 @@ interface OwnProps {
   data: BarChartDataPoint[];
   svg: React.RefObject<SVGSVGElement>;
   yMax: number;
-  selectedVal: number | null;
+  //  selectedVal: number | null;
   stripPlotMode: boolean;
   extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number }[];
 }
 
 export type Props = OwnProps;
 
-const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax, selectedVal }: Props) => {
+const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax }: Props) => {
 
   const svgSelection = select(svg.current);
 
   const {
     // perCaseSelected,
+    currentSelectPatient,
     currentSelectSet
   } = store!;
 
@@ -168,19 +169,40 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     );
 
   const decideIfSelected = (d: BarChartDataPoint) => {
-    if (selectedVal) {
-      return selectedVal === d.aggregateAttribute
+    if (currentSelectPatient) {
+      return currentSelectPatient[aggregatedBy] === d.aggregateAttribute
     }
-    else if (currentSelectSet) {
-      return (
-        currentSelectSet.set_name === aggregatedBy &&
-        currentSelectSet.set_value === d.aggregateAttribute
-      );
+    else if (currentSelectSet.length > 0) {
+      //let selectSet: SelectSet;
+      for (let selectSet of currentSelectSet) {
+        if (aggregatedBy === selectSet.set_name && d.aggregateAttribute === selectSet.set_value)
+          return true;
+      }
+      return false;
     }
     else {
       return false;
     }
+    //  return true;
   }
+
+
+  // const decideIfSelected = (d: BarChartDataPoint) => {
+  //   if (selectedVal) {
+  //     return selectedVal === d.aggregateAttribute
+  //   }
+  //   else if (currentSelectSet.length > 0) {
+  //     //let selectSet: SelectSet;
+  //     for (let selectSet of currentSelectSet) {
+  //       if (d.case[selectSet.set_name] === selectSet.set_value)
+  //         return true;
+  //     }
+  //     return
+
+  //   else {
+  //     return false;
+  //   }
+  // }
 
   const generateExtraPairPlots = () => {
     let transferedDistance = 0
