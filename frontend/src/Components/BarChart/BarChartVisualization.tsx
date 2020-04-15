@@ -91,7 +91,6 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
         // let pd = createpd(ob.valueToVisualize, { max: BloodProductCap[valueToVisualize], width: 4 });
 
         let removed_zeros = ob.valueToVisualize;
-        console.log(showZero)
         if (!showZero) {
           removed_zeros = ob.valueToVisualize.filter((d: number) => {
             if (d > 0) {
