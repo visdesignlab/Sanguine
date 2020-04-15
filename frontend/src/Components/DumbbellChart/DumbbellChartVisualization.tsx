@@ -192,23 +192,20 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
         <Grid.Column verticalAlign="middle" width={2}>
           <Menu text compact size="mini" vertical>
             <Menu.Item header>Show</Menu.Item>
-            <PreopMenuItem name="Preop" active={showingAttr.preop} onClick={() => { setShowingAttr({ preop: !showingAttr.preop, postop: showingAttr.postop, gap: showingAttr.gap }) }} />
-            <PostopMenuItem name="Postop" active={showingAttr.postop} onClick={() => { setShowingAttr({ preop: showingAttr.preop, postop: !showingAttr.postop, gap: showingAttr.gap }) }} />
-            <GapMenuItem name="Gap" active={showingAttr.gap} onClick={() => { setShowingAttr({ preop: showingAttr.preop, postop: showingAttr.postop, gap: !showingAttr.gap }) }} />
-            <Menu.Item header>Sort By</Menu.Item>
-            <PreopMenuItem name="Preop" active={sortMode === "Preop"} onClick={() => { setSortMode("Preop") }} />
-            <PostopMenuItem name="Postop" active={sortMode === "Postop"} onClick={() => { setSortMode("Postop") }} />
-            <GapMenuItem name="Gap" active={sortMode === "Gap"} onClick={() => { setSortMode("Gap") }} />
-            <Menu.Item fitted>
-              <Dropdown pointing basic item icon="edit" compact>
-                <Dropdown.Menu>
-                  <Dropdown.Item >
-                    <Dropdown text="Change Facet" options={dumbbellFacetOptions.concat(barChartValuesOptions)} onChange={changeXVal} />
-                  </Dropdown.Item>
-                  {/* <Dropdown.Item text="Change ">
+            <Menu.Menu>
+              <PreopMenuItem name="Preop" active={showingAttr.preop} onClick={() => { setShowingAttr({ preop: !showingAttr.preop, postop: showingAttr.postop, gap: showingAttr.gap }) }} />
+              <PostopMenuItem name="Postop" active={showingAttr.postop} onClick={() => { setShowingAttr({ preop: showingAttr.preop, postop: !showingAttr.postop, gap: showingAttr.gap }) }} />
+              <GapMenuItem name="Gap" active={showingAttr.gap} onClick={() => { setShowingAttr({ preop: showingAttr.preop, postop: showingAttr.postop, gap: !showingAttr.gap }) }} />
+            </Menu.Menu>
 
-                  </Dropdown.Item> */}
-                </Dropdown.Menu>
+            <Menu.Item header>Sort By</Menu.Item>
+            <Menu.Menu>
+              <PreopMenuItem name="Preop" active={sortMode === "Preop"} onClick={() => { setSortMode("Preop") }} />
+              <PostopMenuItem name="Postop" active={sortMode === "Postop"} onClick={() => { setSortMode("Postop") }} />
+              <GapMenuItem name="Gap" active={sortMode === "Gap"} onClick={() => { setSortMode("Gap") }} />
+            </Menu.Menu>
+            <Menu.Item header>
+              <Dropdown text="Change Facet" pointing basic item icon="edit" compact options={dumbbellFacetOptions.concat(barChartValuesOptions)} onChange={changeXVal}>
               </Dropdown>
             </Menu.Item>
           </Menu>
