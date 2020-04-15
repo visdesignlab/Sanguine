@@ -31,7 +31,7 @@ const SingleViolinPlot: FC<Props> = ({ howToTransform, dataPoint, aggregatedBy, 
           actions.selectSet(
             {
               set_name: aggregatedBy,
-              set_value: dataPoint.aggregateAttribute
+              set_value: [dataPoint.aggregateAttribute]
             },
             e.shiftKey
           )

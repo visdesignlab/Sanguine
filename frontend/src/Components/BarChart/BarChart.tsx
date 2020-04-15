@@ -175,7 +175,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     else if (currentSelectSet.length > 0) {
       //let selectSet: SelectSet;
       for (let selectSet of currentSelectSet) {
-        if (aggregatedBy === selectSet.set_name && d.aggregateAttribute === selectSet.set_value)
+        if (aggregatedBy === selectSet.set_name && selectSet.set_value.includes(d.aggregateAttribute))
           return true;
       }
       return false;

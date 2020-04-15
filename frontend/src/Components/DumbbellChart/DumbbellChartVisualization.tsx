@@ -31,7 +31,8 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
     filterSelection,
     actualYearRange,
     hemoglobinDataSet,
-    showZero
+    showZero,
+    currentOutputFilterSet
   } = store!;
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -97,80 +98,46 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
             if ((yAxisLabel_val > 100 && yAxis === "PLT_UNITS")) {
               yAxisLabel_val -= 245
             }
-            tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
-            tempXMin = end_x < tempXMin ? end_x : tempXMin;
-            tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
-            tempXMax = end_x > tempXMax ? end_x : tempXMax;
+            let criteriaMet = true;
+            if (currentOutputFilterSet.length > 0) {
+              for (let selectSet of currentOutputFilterSet) {
+                if (!selectSet.set_value.includes(ob[selectSet.set_name])) {
+                  criteriaMet = false;
+                }
+              }
+            }
 
-            let new_ob: DumbbellDataPoint = {
-              case: {
-                visitNum: ob.VISIT_ID,
-                caseId: ob.CASE_ID,
-                YEAR: ob.YEAR,
-                ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
-                SURGEON_ID: ob.SURGEON_ID,
-                patientID: ob.PATIENT_ID
-              },
-              startXVal: begin_x,
-              endXVal: end_x,
+            if (criteriaMet) {
+              tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
+              tempXMin = end_x < tempXMin ? end_x : tempXMin;
+              tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
+              tempXMax = end_x > tempXMax ? end_x : tempXMax;
 
-              yVal: yAxisLabel_val,
+              let new_ob: DumbbellDataPoint = {
+                case: {
+                  visitNum: ob.VISIT_ID,
+                  caseId: ob.CASE_ID,
+                  YEAR: ob.YEAR,
+                  ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
+                  SURGEON_ID: ob.SURGEON_ID,
+                  patientID: ob.PATIENT_ID
+                },
+                startXVal: begin_x,
+                endXVal: end_x,
 
-            };
-            existingCaseID.add(ob.CASE_ID)
-            //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
-            return new_ob;
+                yVal: yAxisLabel_val,
+
+              };
+              existingCaseID.add(ob.CASE_ID)
+              //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
+              return new_ob;
+            }
           }
           //}
         }
       });
       cast_data = cast_data.filter((d: any) => d);
-      // let total_count = cast_data.length;
-      //cast_data = cast_data.filter((d: DumbbellDataPoint) => { total_count += 1; return (d.startXVal - d.endXVal) > 0 })
-
-
-      // actions.updateCaseCount(total_count)
-      //console.log(aggregatedOption)
-      // if (aggregatedOption) {
-      //   let counter = {} as { [key: number]: any }
-      //   cast_data.map((datapoint: DumbbellDataPoint) => {
-
-      //     if (!counter[datapoint.case[aggregatedOption]]) {
-      //       counter[datapoint.case[aggregatedOption]] = { numerator: 1, startXVal: datapoint.startXVal, endXVal: datapoint.endXVal, yVal: datapoint.yVal }
-      //     }
-      //     else {
-      //       // const current = counter[datapoint[aggregatedOption]];
-      //       counter[datapoint.case[aggregatedOption]].startXVal += datapoint.startXVal
-      //       counter[datapoint.case[aggregatedOption]].endXVal += datapoint.endXVal
-      //       counter[datapoint.case[aggregatedOption]].yVal += datapoint.yVal
-      //       counter[datapoint.case[aggregatedOption]].numerator += 1
-      //     }
-      //   })
-      //   cast_data = []
-      //   console.log(counter)
-      //   for (let key of Object.keys(counter)) {
-      //     const keynum = parseInt(key)
-      //     //console.log(counter[keynum])
-      //     let new_ob: DumbbellDataPoint = {
-      //       startXVal: counter[keynum].startXVal / counter[keynum].numerator,
-      //       endXVal: counter[keynum].endXVal / counter[keynum].numerator,
-      //       case: {
-      //         visitNum: -1, caseId: -1,
-      //         YEAR: aggregatedOption === "YEAR" ? keynum : -1,
-      //         ANESTHOLOGIST_ID: aggregatedOption === "ANESTHOLOGIST_ID" ? keynum : -1,
-      //         SURGEON_ID: aggregatedOption === "SURGEON_ID" ? keynum : -1,
-      //         patientID: -1
-      //       },
-      //       yVal: counter[keynum].yVal / counter[keynum].numerator,
-
-      //     };
-      //     cast_data.push(new_ob)
-      //   };
-
-      // }
-
       setData({ result: cast_data });
-      // setYMax(tempYMax);
       setXRange({ xMin: tempXMin, xMax: tempXMax });
 
     }
@@ -178,7 +145,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
 
   useEffect(() => {
     fetchChartData();
-  }, [actualYearRange, filterSelection, hemoglobinDataSet, yAxis, showZero]);
+  }, [actualYearRange, filterSelection, hemoglobinDataSet, yAxis, showZero, currentOutputFilterSet]);
 
   const changeXVal = (e: any, value: any) => {
     actions.changeChart(value.value, "HEMO_VALUE", chartId, "DUMBBELL")

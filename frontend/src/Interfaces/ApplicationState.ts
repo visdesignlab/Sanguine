@@ -1,6 +1,6 @@
 export interface SelectSet {
   set_name: string;
-  set_value: number;
+  set_value: number[];
 }
 
 export interface BarChartDataPoint {
