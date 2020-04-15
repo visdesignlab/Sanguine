@@ -39,13 +39,13 @@ def data_dictionary():
 def cpt():
     # Instantiate mapping array
     cpt = []
-
+    
     # Read in the cpt codes
-    with open("cpt_codes.csv", "r") as file:
+    with open("cpt_codes_cleaned.csv", "r") as file:
         read_csv = csv.reader(file, delimiter=",")
         next(read_csv, None)
         for row in read_csv:
-            cpt.append(dict([tuple(row)]))
+            cpt.append(tuple(row))
 
     return cpt
 
@@ -57,6 +57,7 @@ def execute_sql(command, *args, **kwargs):
     connection = make_connection()
     cur = connection.cursor()
     return cur.execute(command, *args, **kwargs)
+
 
 # Returns all values from raw results for a specified agg var
 def get_all_by_agg(result_dict, agg, variable):
@@ -243,7 +244,7 @@ def summarize_attribute_w_year(request):
             bindNames = [f":filters{str(i)}" for i in range(len(filters))]
             filters_safe_sql = f"WHERE CODE_DESC IN ({','.join(bindNames)}) "
         else:
-            filters = [list(a.values())[0] for a in cpt()]
+            filters = [a[0] for a in cpt()]
             bindNames = [f":filters{str(i)}" for i in range(len(filters))]
             filters_safe_sql = f"WHERE CODE IN ({','.join(bindNames)}) "
 
@@ -253,7 +254,7 @@ def summarize_attribute_w_year(request):
         max_time = f'31-DEC-{year_range[1]}'
         # Safe to use format strings since there are limited options for aggregatedBy and valueToVisualize
         command = (
-            f"SELECT {aggregates[aggregatedBy]}, {valueToVisualize}, TRNSFSD.DI_CASE_ID "
+            f"SELECT {aggregates[aggregatedBy]}, sum({valueToVisualize}), TRNSFSD.DI_CASE_ID "
             "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD TRNSFSD "
             "INNER JOIN ( "
                 "SELECT * "
@@ -266,7 +267,8 @@ def summarize_attribute_w_year(request):
                     f"{filters_safe_sql}"
                 ")"
             ") LIMITED_SURG ON LIMITED_SURG.DI_CASE_ID = TRNSFSD.DI_CASE_ID "
-            f"WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time"
+            f"WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time "
+            f"GROUP BY {aggregates[aggregatedBy]}, TRNSFSD.DI_CASE_ID"
         )
 
         # Execute the query
@@ -290,7 +292,7 @@ def summarize_attribute_w_year(request):
             {
                 "aggregatedBy": agg, 
                 "valueToVisualize": get_all_by_agg(result_dict, agg, "valueToVisualize"),
-                "caseID": get_all_by_agg(result_dict, agg, "caseID")
+                "caseID": list(set(get_all_by_agg(result_dict, agg, "caseID")))
             } for agg in aggregatedBys]
         
         return JsonResponse(cleaned, safe = False)
