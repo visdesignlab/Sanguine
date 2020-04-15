@@ -43,7 +43,8 @@ export interface ApplicationState {
   filterSelection: string[];
   // totalCaseCount: number;
   // dumbbellSorted: boolean;
-  currentSelectSet: SelectSet | null;
+  currentSelectSet: SelectSet[];
+  currentOutputFilterSet: SelectSet[];
   currentSelectPatient: SingleCasePoint | null;
   hemoglobinDataSet: any;
   showZero: boolean;
@@ -70,7 +71,8 @@ export const defaultState: ApplicationState = {
   filterSelection: [],
   // totalCaseCount: 0,
   // dumbbellSorted: false,
-  currentSelectSet: null,
+  currentOutputFilterSet: [],
+  currentSelectSet: [],
   currentSelectPatient: null,
   hemoglobinDataSet: [],
   showZero: true

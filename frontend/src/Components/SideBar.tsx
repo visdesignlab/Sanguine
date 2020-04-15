@@ -16,6 +16,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
   const {
     // totalCaseCount, 
     actualYearRange,
+    currentSelectSet,
     filterSelection } = store!;
   const [procedureList, setProcedureList] = useState([]);
   const [maxCaseCount, setMaxCaseCount] = useState(0);
@@ -68,7 +69,6 @@ const SideBar: FC<Props> = ({ store }: Props) => {
   return (
     <Grid
       divided="vertically"
-
       verticalAlign={"middle"}
       padded
     >
@@ -76,7 +76,10 @@ const SideBar: FC<Props> = ({ store }: Props) => {
       <Grid.Row centered>
         <Message>
           <Message.Header>Current View</Message.Header>
-          {/* <Message.Item>Case Count:{totalCaseCount}</Message.Item> */}
+
+          {currentSelectSet.map((selectSet) => {
+            return <Message.Item>{selectSet.set_name} - {selectSet.set_value}</Message.Item>
+          })}
           <Message.Item>
             Selected Year Range: {actualYearRange[0]} - {actualYearRange[1]}
           </Message.Item>
