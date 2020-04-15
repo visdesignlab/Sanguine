@@ -143,17 +143,18 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
         if (currentSelectPatient && d.case.caseId > 0) {
             return currentSelectPatient.caseId === d.case.caseId
         }
-        else if (currentSelectSet.length > 0) {
-            //let selectSet: SelectSet;
-            for (let selectSet of currentSelectSet) {
-                if (d.case[selectSet.set_name] === selectSet.set_value)
-                    return true;
-            }
-            return false;
-        }
-        else {
-            return false;
-        }
+        return false;
+        // else if (currentSelectSet.length > 0) {
+        //     //let selectSet: SelectSet;
+        //     for (let selectSet of currentSelectSet) {
+        //         if (d.case[selectSet.set_name] === selectSet.set_value)
+        //             return true;
+        //     }
+        //     return false;
+        // }
+        // else {
+        //     return false;
+        // }
         //  return true;
     }
 

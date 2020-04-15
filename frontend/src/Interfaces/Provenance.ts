@@ -20,6 +20,8 @@ interface AppProvenance {
     // togglePerCase: (event: any, data: any) => void;
     // toggleDumbbell: (event: any, data: any) => void;
     filterSelectionChange: (data: any) => void;
+    currentOutputFilterSetChange: () => void;
+    clearOutputFilterSet: () => void;
     yearRangeChange: (data: any) => void;
     addNewChart: (x: string, y: string, i: number, type: string, aggregation?: string) => void;
     removeChart: (i: any) => void;
@@ -99,6 +101,12 @@ export function setupProvenance(): AppProvenance {
       : store.currentSelectSet;
   });
 
+  provenance.addObserver(["currentOutputFilterSet"], (state?: ApplicationState) => {
+    store.currentOutputFilterSet = state
+      ? state.currentOutputFilterSet
+      : store.currentOutputFilterSet;
+  })
+
   provenance.done();
 
   const setLayoutArray = (layoutArray: LayoutElement[], skipProvenance: boolean = false) => {
@@ -159,18 +167,39 @@ export function setupProvenance(): AppProvenance {
         provenance.applyAction(
           `apply preset 1`,
           (state: ApplicationState) => {
-            state.layoutArray = [{
-              aggregatedBy: "YEAR",
-              valueToVisualize: "PRBC_UNITS",
-              i: "100",
-              w: 1,
-              h: 1,
-              x: 0,
-              y: Infinity,
-              plot_type: "BAR",
-              extraPair: []
-            }]
-            state.filterSelection = ["CORONARY ARTERY BYPASS GRAFT(S)"]
+            state.layoutArray = [
+              {
+                aggregatedBy: "YEAR",
+                valueToVisualize: "PRBC_UNITS",
+                i: "100",
+                w: 1,
+                h: 1,
+                x: 0,
+                y: Infinity,
+                plot_type: "BAR",
+                extraPair: []
+              },
+              {
+                aggregatedBy: "SURGEON_ID",
+                valueToVisualize: "PRBC_UNITS",
+                i: "99",
+                w: 1,
+                h: 1,
+                x: 0,
+                y: Infinity,
+                plot_type: "BAR",
+                extraPair: []
+              }, {
+                aggregatedBy: "PRBC_UNITS",
+                valueToVisualize: "HEMO_VALUE",
+                i: "98",
+                w: 1,
+                h: 1,
+                x: 0,
+                y: Infinity,
+                plot_type: "DUMBBELL"
+              }]
+            state.filterSelection = ["CORONARY ARTERY BYPASS GRAFT(S)", "STERNAL DEBRIDEMENT"]
             //TODO ADD PRESET STATE
             return state
           }
@@ -329,19 +358,47 @@ export function setupProvenance(): AppProvenance {
           } else {
             state.currentSelectSet = [data]
           }
-
         }
         else {
-
-          const temporarySetArray = state.currentSelectSet.filter(d => (!(d.set_value === data.set_value && d.set_name === data.set_name)))
-
-          state.currentSelectSet = temporarySetArray.length === state.currentSelectSet.length ? state.currentSelectSet.concat([data]) : temporarySetArray;
-
+          // const temporarySetArray = state.currentSelectSet.filter(d => (!(data.set_value.includes(d.set_value[0]) && d.set_name === data.set_name)))
+          // state.currentSelectSet = temporarySetArray.length === state.currentSelectSet.length ? state.currentSelectSet.concat([data]) : temporarySetArray;
+          const addingType = data.set_name;
+          const alreadyIn = state.currentSelectSet.filter(d => d.set_name === addingType).length > 0
+          if (!alreadyIn) {
+            state.currentSelectSet.push(data)
+          } else {
+            state.currentSelectSet = state.currentSelectSet.map((d) => {
+              if (d.set_name === addingType) {
+                d.set_value = d.set_value.includes(data.set_value[0]) ? d.set_value.filter(num => num !== d.set_value[0]) : d.set_value.concat(data.set_value)
+              }
+              return d
+            })
+          }
         }
-
-
+        console.log(state.currentSelectSet)
         return state
       })
+  }
+
+  const currentOutputFilterSetChange = () => {
+    provenance.applyAction(
+      `change output filter`,
+      (state: ApplicationState) => {
+        state.currentOutputFilterSet = state.currentSelectSet;
+        state.currentSelectSet = [];
+        return state;
+      }
+    )
+  }
+
+  const clearOutputFilterSet = () => {
+    provenance.applyAction(
+      `clear output filter`,
+      (state: ApplicationState) => {
+        state.currentOutputFilterSet = [];
+        return state;
+      }
+    )
   }
 
   // const updateCaseCount = (newCaseCount: number) => {
@@ -385,7 +442,9 @@ export function setupProvenance(): AppProvenance {
       selectSet,
       storeHemoData,
       changeExtraPair,
-      loadPreset
+      loadPreset,
+      currentOutputFilterSetChange,
+      clearOutputFilterSet
     }
   };
 

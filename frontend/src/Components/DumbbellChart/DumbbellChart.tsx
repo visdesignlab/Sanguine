@@ -144,6 +144,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
 
   const [testValueScale, valueScale] = useMemo(() => {
     const widthAllowed = dimension.width - minimumOffset.left - minimumOffset.right;
+
     const testValueScale = scaleLinear()
       .domain([0.9 * xRange.xMin, 1.1 * xRange.xMax])
       .range([dimension.height - minimumOffset.bottom, minimumOffset.top]);
@@ -253,18 +254,18 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
 
     if (currentSelectPatient && d.case.caseId > 0) {
       return currentSelectPatient.caseId === d.case.caseId
-    }
-    else if (currentSelectSet.length > 0) {
-      //let selectSet: SelectSet;
-      for (let selectSet of currentSelectSet) {
-        if (d.case[selectSet.set_name] === selectSet.set_value)
-          return true;
-      }
-      return false
-    }
-    else {
-      return false;
-    }
+    } return false;
+    // else if (currentSelectSet.length > 0) {
+    //   //let selectSet: SelectSet;
+    //   for (let selectSet of currentSelectSet) {
+    //     if (d.case[selectSet.set_name] === selectSet.set_value)
+    //       return true;
+    //   }
+    //   return false
+    // }
+    // else {
+    //   return false;
+    // }
     //  return true;
   }
 
