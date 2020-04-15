@@ -3,7 +3,6 @@ import {
   ApplicationState,
   defaultState,
   LayoutElement,
-  DumbbellDataPoint,
   SelectSet,
   SingleCasePoint
 } from "./ApplicationState";
@@ -16,6 +15,7 @@ interface AppProvenance {
     goBack: () => void;
     setLayoutArray: (newLayoutArray: LayoutElement[]) => void;
     selectChart: (newSelectedID: string) => void;
+    toggleShowZero: (event: any, data: any) => void;
     // togglePerCase: (event: any, data: any) => void;
     // toggleDumbbell: (event: any, data: any) => void;
     filterSelectionChange: (data: any) => void;
@@ -63,6 +63,10 @@ export function setupProvenance(): AppProvenance {
   // provenance.addObserver(["dumbbellSorted"], (state?: ApplicationState) => {
   //   store.dumbbellSorted = state ? state.dumbbellSorted : store.dumbbellSorted;
   // })
+
+  provenance.addObserver(['showZero'], (state?: ApplicationState) => {
+    store.showZero = state ? state.showZero : store.showZero;
+  })
 
   // provenance.addObserver(["perCaseSelected"], (state?: ApplicationState) => {
   //   store.perCaseSelected = state
@@ -221,6 +225,16 @@ export function setupProvenance(): AppProvenance {
   //   )
   // };
 
+  const toggleShowZero = (event: any, showZero: any) => {
+    provenance.applyAction(
+      `Per Case ${showZero}`,
+      (state: ApplicationState) => {
+        state.showZero = showZero.checked;
+        return state;
+      }
+    )
+  };
+
   // const toggleDumbbell = (event: any, dumbbellSorted: any) => {
   //   provenance.applyAction(
   //     `dumbbell sort ${dumbbellSorted}`,
@@ -338,6 +352,7 @@ export function setupProvenance(): AppProvenance {
       setLayoutArray,
       selectChart,
       changeChart,
+      toggleShowZero,
       // toggleDumbbell,
       filterSelectionChange,
       yearRangeChange,

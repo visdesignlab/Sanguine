@@ -13,6 +13,7 @@ export default class Store {
   @observable currentSelectedChart: string = defaultState.currentSelectedChart;
   @observable layoutArray: LayoutElement[] = defaultState.layoutArray;
   // @observable perCaseSelected: boolean = defaultState.perCaseSelected;
+  @observable showZero: boolean = defaultState.showZero;
   @observable yearRange: number[] = defaultState.yearRange;
   @observable filterSelection: string[] = defaultState.filterSelection;
   @observable totalCaseCount: number = defaultState.totalCaseCount;

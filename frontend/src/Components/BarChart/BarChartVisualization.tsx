@@ -24,7 +24,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
   const {
     layoutArray,
     filterSelection,
-    //  perCaseSelected,
+    showZero,
     currentSelectPatient,
     actualYearRange,
     hemoglobinDataSet
@@ -90,13 +90,17 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
         const medianVal = median(ob.valueToVisualize);
         // let pd = createpd(ob.valueToVisualize, { max: BloodProductCap[valueToVisualize], width: 4 });
 
-        const removed_zeros = ob.valueToVisualize.filter((d: number) => {
-          if (d > 0) {
-            return true;
-          }
-          zeroCaseNum += 1;
-          return false;
-        })
+        let removed_zeros = ob.valueToVisualize;
+        console.log(showZero)
+        if (!showZero) {
+          removed_zeros = ob.valueToVisualize.filter((d: number) => {
+            if (d > 0) {
+              return true;
+            }
+            zeroCaseNum += 1;
+            return false;
+          })
+        }
         //const case_num = removed_zeros.length;
         const total_val = sum(removed_zeros);
         //const medianVal = median(removed_zeros);
@@ -151,7 +155,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
   useEffect(() => {
     fetchChartData();
 
-  }, [filterSelection, actualYearRange]);
+  }, [filterSelection, actualYearRange, showZero]);
 
   // useEffect(()=>{console.log(caseIDList)},[caseIDList])
 

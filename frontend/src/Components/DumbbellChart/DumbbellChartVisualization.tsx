@@ -30,7 +30,8 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
     layoutArray,
     filterSelection,
     actualYearRange,
-    hemoglobinDataSet
+    hemoglobinDataSet,
+    showZero
   } = store!;
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -88,41 +89,38 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
         if (transfused_dict[ob.CASE_ID]) {
           yAxisLabel_val = BloodProductCap[yAxis] ? transfused_dict[ob.CASE_ID].transfused : ob[yAxis];
         };
-        //  console.log(transfused_dict);
-        //This filter out anything that has empty value
         if (yAxisLabel_val !== undefined && begin_x > 0 && end_x > 0 && !existingCaseID.has(ob.CASE_ID)) {
-          // if (!(yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
-          //   tempYMax = yAxisLabel_val > tempYMax ? yAxisLabel_val : tempYMax;
-          // }
-          if ((yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
-            yAxisLabel_val -= 999
+          if ((showZero) || (!showZero && yAxisLabel_val > 0)) {
+            if ((yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
+              yAxisLabel_val -= 999
+            }
+            if ((yAxisLabel_val > 100 && yAxis === "PLT_UNITS")) {
+              yAxisLabel_val -= 245
+            }
+            tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
+            tempXMin = end_x < tempXMin ? end_x : tempXMin;
+            tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
+            tempXMax = end_x > tempXMax ? end_x : tempXMax;
+
+            let new_ob: DumbbellDataPoint = {
+              case: {
+                visitNum: ob.VISIT_ID,
+                caseId: ob.CASE_ID,
+                YEAR: ob.YEAR,
+                ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
+                SURGEON_ID: ob.SURGEON_ID,
+                patientID: ob.PATIENT_ID
+              },
+              startXVal: begin_x,
+              endXVal: end_x,
+
+              yVal: yAxisLabel_val,
+
+            };
+            existingCaseID.add(ob.CASE_ID)
+            //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
+            return new_ob;
           }
-          if ((yAxisLabel_val > 100 && yAxis === "PLT_UNITS")) {
-            yAxisLabel_val -= 245
-          }
-          tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
-          tempXMin = end_x < tempXMin ? end_x : tempXMin;
-          tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
-          tempXMax = end_x > tempXMax ? end_x : tempXMax;
-
-          let new_ob: DumbbellDataPoint = {
-            case: {
-              visitNum: ob.VISIT_ID,
-              caseId: ob.CASE_ID,
-              YEAR: ob.YEAR,
-              ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
-              SURGEON_ID: ob.SURGEON_ID,
-              patientID: ob.PATIENT_ID
-            },
-            startXVal: begin_x,
-            endXVal: end_x,
-
-            yVal: yAxisLabel_val,
-
-          };
-          existingCaseID.add(ob.CASE_ID)
-          //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
-          return new_ob;
           //}
         }
       });
@@ -180,7 +178,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
 
   useEffect(() => {
     fetchChartData();
-  }, [actualYearRange, filterSelection, hemoglobinDataSet, yAxis]);
+  }, [actualYearRange, filterSelection, hemoglobinDataSet, yAxis, showZero]);
 
   const changeXVal = (e: any, value: any) => {
     actions.changeChart(value.value, "HEMO_VALUE", chartId, "DUMBBELL")
