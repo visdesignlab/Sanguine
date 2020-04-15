@@ -68,7 +68,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
       `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`
     );
     const dataResult = await res.json();
-    let caseCount = 0;
+    //  let caseCount = 0;
     if (dataResult) {
       let yMaxTemp = -1;
       let perCaseYMaxTemp = -1
@@ -146,7 +146,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
       setData({ original: cast_data });
       //setMedian(tempmedian);
       setYMax({ original: yMaxTemp, perCase: perCaseYMaxTemp });
-      actions.updateCaseCount(caseCount);
+      //  actions.updateCaseCount(caseCount);
 
     }
   }

@@ -261,9 +261,9 @@ const App: FC<Props> = ({ store }: Props) => {
         <UserControl />
       </Container>
       <Grid padded>
-        <Grid.Column width={3}>
+        <SpecialPaddingColumn width={3} >
           <SideBar></SideBar>
-        </Grid.Column>
+        </SpecialPaddingColumn>
         <Grid.Column width={13}>
           <Tab panes={panes}
             renderActiveOnly={false}
@@ -281,3 +281,7 @@ const LayoutDiv = styled.div`
   width: 100vw;
   height: 100vh;
 `;
+
+const SpecialPaddingColumn = styled(Grid.Column)`
+  &&&&&{padding-left:5px;}
+`
