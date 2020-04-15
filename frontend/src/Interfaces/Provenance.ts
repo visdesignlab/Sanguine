@@ -13,6 +13,7 @@ interface AppProvenance {
   actions: {
     goForward: () => void;
     goBack: () => void;
+    loadPreset: (num: number) => void;
     setLayoutArray: (newLayoutArray: LayoutElement[]) => void;
     selectChart: (newSelectedID: string) => void;
     toggleShowZero: (event: any, data: any) => void;
@@ -125,9 +126,6 @@ export function setupProvenance(): AppProvenance {
       y: Infinity,
       plot_type: plot_type,
     }
-    // if (aggregation) {
-    //   newLayoutElement.aggregation = aggregation;
-    // }
     if (plot_type === "BAR") {
       newLayoutElement.extraPair = [];
     }
@@ -155,20 +153,31 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  // const removeChart = (event: any, child: any) => {
-  //   console.log(event, child)
-  //   const remove_index = child.children.key
-  //   provenance.applyAction(
-  //     `remove chart ${remove_index}`,
-  //     (state: ApplicationState) => {
-  //       state.layoutArray = state.layoutArray.filter(
-  //         d => d.i !== remove_index
-  //       );
-  //       console.log(state)
-  //       return state;
-  //     }
-  //   );
-  // }
+  const loadPreset = (num: number) => {
+    switch (num) {
+      case 1:
+        provenance.applyAction(
+          `apply preset 1`,
+          (state: ApplicationState) => {
+            state.layoutArray = [{
+              aggregatedBy: "YEAR",
+              valueToVisualize: "PRBC_UNITS",
+              i: "0",
+              w: 1,
+              h: 1,
+              x: 0,
+              y: Infinity,
+              plot_type: "BAR",
+              extraPair: []
+            }]
+            state.filterSelection = ["CORONARY ARTERY BYPASS GRAFT(S)"]
+            //TODO ADD PRESET STATE
+            return state
+          }
+        )
+    }
+  };
+
   const removeChart = (i: string) => {
     // console.log(event, child)
     const remove_index = i
@@ -363,7 +372,8 @@ export function setupProvenance(): AppProvenance {
       selectPatient,
       selectSet,
       storeHemoData,
-      changeExtraPair
+      changeExtraPair,
+      loadPreset
     }
   };
 

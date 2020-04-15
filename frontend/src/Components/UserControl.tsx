@@ -208,6 +208,13 @@ const UserControl: FC<Props> = ({ store }: Props) => {
           label={<label> Show Zero Transfused </label>}
         />
       </Menu.Item>
+      <Menu.Item>
+        <Dropdown button text="Load Workspace" pointing>
+          <Dropdown.Menu>
+            <Dropdown.Item onClick={() => { actions.loadPreset(1) }}>Preset 1</Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
+      </Menu.Item>
       {/* <Menu.Item>
                 <Checkbox toggle checked={dumbbellSorted} onClick={actions.toggleDumbbell}/>
           <label> Sort Dumbbell</label>
@@ -234,6 +241,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
           onChange={xAxisChangeHandler}
         />
       </Menu.Item>
+
       {/* {addingChartType === 1 ? (<Menu.Item>
         <Dropdown
           placeholder={"Select Aggregation"}
