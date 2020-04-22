@@ -13,6 +13,14 @@ export interface BarChartDataPoint {
   zeroCaseNum: number;
 }
 
+export interface HeatMapDataPoint {
+  aggregateAttribute: any;
+  countDict: any;
+  totalVal: number;
+  caseCount: number;
+  zeroCaseNum: number;
+}
+
 export interface SingleCasePoint {
   visitNum: number;
   caseId: number;
@@ -94,6 +102,7 @@ export const AxisLabelDict: any = {
   ANESTHOLOGIST_ID: "Anesthologist ID",
   YEAR: "Year",
   QUARTER: "Quarter",
+  MONTH: "Month",
   HEMO_VALUE: "Hemoglobin Value",
   PREOP_HEMO: "Preoperative Hemoglobin Value",
   POSTOP_HEMO: "Postoperative Hemoglobin Value"
@@ -116,6 +125,7 @@ export const dumbbellFacetOptions = [
     text: "Anesthologist ID"
   },
   { value: "QUARTER", key: "QUARTER", text: "Quarter" },
+  { value: "MONTH", key: "MONTH", text: "Month" }
 ]
 
 export const barChartValuesOptions = [

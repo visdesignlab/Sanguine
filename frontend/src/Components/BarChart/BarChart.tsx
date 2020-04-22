@@ -141,9 +141,9 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     .call(yAxisLabel as any);
 
   svgSelection
-    .select(".axes")
+    // .select(".axes")
     .select(".x-label")
-    .attr("x", valueScale(BloodProductCap[valueToVisualize] * 0.5) + offset.left)
+    .attr("x", valueScale(BloodProductCap[valueToVisualize] * 0.5))
     .attr("y", dimension.height - offset.bottom + 20)
     .attr("alignment-baseline", "hanging")
     .attr("font-size", "11px")
@@ -156,10 +156,10 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     );
 
   svgSelection
-    .select(".axes")
+    //.select(".axes")
     .select(".y-label")
     .attr("y", dimension.height - offset.bottom + 20)
-    .attr("x", offset.left)
+    .attr("x", offset.left - 55)
     .attr("font-size", "11px")
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "hanging")
@@ -286,8 +286,8 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
       <g className="axes">
         <g className="x-axis"></g>
         <g className="y-axis"></g>
-        <text className="x-label" style={{ textAnchor: "end" }} />
-        <text className="y-label" style={{ textAnchor: "end" }} />
+        <text className="x-label" />
+        <text className="y-label" />
       </g>
       <g className="chart"
         transform={`translate(${offset.left + extraPairTotalWidth},0)`}
