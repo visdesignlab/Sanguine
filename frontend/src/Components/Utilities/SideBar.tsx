@@ -79,8 +79,18 @@ const SideBar: FC<Props> = ({ store }: Props) => {
       padded
     >
 
-      <Grid.Row centered>
-        <Message>
+      <Grid.Row centered style={{ padding: "40px" }}>
+        <Container style={{ height: "20vh" }}>
+          <List>
+
+            <List.Header>Current View</List.Header>
+            <List.Item icon="caret right" style={{ textAlign: "left" }} content={`Date Range: ${timeFormat("%Y-%m-%d")(rawDateRange[0])} - ${timeFormat("%Y-%m-%d")(rawDateRange[1])}`} />
+            {currentOutputFilterSet.map((selectSet) => {
+              return <List.Item icon="caret right" style={{ textAlign: "left" }} content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`} />
+            })}
+          </List>
+        </Container>
+        {/* <Message>
           <Message.Header>Current View</Message.Header>
 
           <Message.Item>
@@ -89,10 +99,10 @@ const SideBar: FC<Props> = ({ store }: Props) => {
           {currentOutputFilterSet.map((selectSet) => {
             return <Message.Item content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`} />
           })}
-        </Message>
+        </Message> */}
       </Grid.Row>
       <Grid.Row centered style={{ padding: "40px" }}>
-        <Container style={{ height: "30vh" }}>
+        <Container style={{ height: "20vh" }}>
           <List>
             <List.Header>Current Selected</List.Header>
             {currentSelectSet.map((selectSet) => {
