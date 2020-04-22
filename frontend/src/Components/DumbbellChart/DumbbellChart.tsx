@@ -27,7 +27,7 @@ import {
   median,
 } from "d3";
 import { DumbbellDataPoint, minimumOffset, AxisLabelDict, SelectSet, minimumWidthScale } from "../../Interfaces/ApplicationState";
-import CustomizedAxis from "../CustomizedAxis";
+import CustomizedAxis from "../Utilities/CustomizedAxis";
 import { preop_color, basic_gray, highlight_color, postop_color } from "../../ColorProfile"
 
 interface OwnProps {
