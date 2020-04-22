@@ -25,6 +25,7 @@ import {
   scalePow,
   ticks,
   median,
+  timeParse,
 } from "d3";
 import { DumbbellDataPoint, minimumOffset, AxisLabelDict, SelectSet, minimumWidthScale } from "../../Interfaces/ApplicationState";
 import CustomizedAxis from "../Utilities/CustomizedAxis";
@@ -39,14 +40,14 @@ interface OwnProps {
   svg: React.RefObject<SVGSVGElement>
   // yMax: number;
   xRange: { xMin: number, xMax: number };
-  aggregation?: string;
+  interventionDate?: Date;
   sortMode: string;
   showingAttr: { preop: boolean, postop: boolean, gap: boolean }
 }
 
 export type Props = OwnProps;
 
-const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension, data, svg, store, xRange, aggregation }: Props) => {
+const DumbbellChart: FC<Props> = ({ interventionDate, showingAttr, sortMode, yAxisName, dimension, data, svg, store, xRange }: Props) => {
 
   const [averageForEachTransfused, setAverage] = useState<any>({})
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([])
@@ -68,6 +69,17 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
         case "Postop":
           tempSortedData = data.sort(
             (a, b) => {
+              if (interventionDate) {
+                const intervDate = typeof interventionDate === "string" ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate;
+                if (a.case.DATE.getTime() < intervDate.getTime() &&
+                  b.case.DATE.getTime() > intervDate.getTime()) {
+                  return -1
+                }
+                else if (a.case.DATE.getTime() > intervDate.getTime() &&
+                  b.case.DATE.getTime() < intervDate.getTime()) {
+                  return 1
+                }
+              }
               if (a.yVal === b.yVal) {
                 if (a.endXVal > b.endXVal) return 1;
                 if (a.endXVal < b.endXVal) return -1;
@@ -134,6 +146,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
       })
       setAverage(averageDict)
       setSortedData(tempSortedData)
+      console.log(tempDatapointsDict)
       setDataPointDict(tempDatapointsDict)
       setNumberList(tempNumberList)
     }
@@ -153,16 +166,16 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
     let spacing: any = {};
 
     if (minimumWidthScale * datapointsDict.length >= (widthAllowed)) {
-      datapointsDict.map(d => {
-        spacing[d.title] = minimumWidthScale;
+      datapointsDict.map((d, i) => {
+        spacing[i] = minimumWidthScale;
       })
     }
     else {
       let numberOfTitlesUsingMinimumScale = 0;
       let totalDataPointsNotUsingMinimumScale = 0;
-      datapointsDict.map(d => {
+      datapointsDict.map((d, i) => {
         if ((d.length / sortedData.length) * widthAllowed < minimumWidthScale) {
-          spacing[d.title] = minimumWidthScale;
+          spacing[i] = minimumWidthScale;
           numberOfTitlesUsingMinimumScale += 1;
         }
         else {
@@ -171,23 +184,23 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
       })
       const spaceLeft = widthAllowed - numberOfTitlesUsingMinimumScale * minimumWidthScale;
 
-      datapointsDict.map(d => {
-        if (!spacing[d.title]) {
-          spacing[d.title] = spaceLeft * d.length / totalDataPointsNotUsingMinimumScale
+      datapointsDict.map((d, i) => {
+        if (!spacing[i]) {
+          spacing[i] = spaceLeft * d.length / totalDataPointsNotUsingMinimumScale
         }
       })
     }
 
     let resultRange: number[] = [];
     let currentLoc = minimumOffset.left;
-    datapointsDict.map(d => {
-      let calculatedRange = range(currentLoc, currentLoc + spacing[d.title], spacing[d.title] / (d.length + 1))
+    datapointsDict.map((d, i) => {
+      let calculatedRange = range(currentLoc, currentLoc + spacing[i], spacing[i] / (d.length + 1))
       calculatedRange.splice(0, 1)
       if (calculatedRange.length !== d.length) {
         calculatedRange.splice(calculatedRange.length - 1, 1)
       }
       resultRange = resultRange.concat(calculatedRange)
-      currentLoc += spacing[d.title]
+      currentLoc += spacing[i]
 
     })
 
@@ -206,18 +219,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
   }, [dimension, data, xRange, datapointsDict]);
 
   const testLabel = axisLeft(testValueScale);
-  //if (!dumbbellSorted) {
-  // const yAxisLabel = axisBottom(valueScale as ScaleOrdinal<number, number>);
-  // svgSelection
-  //   .select(".axes")
-  //   .select(".y-axis")
-  //   .attr(
-  //     "transform",
-  //     `translate(0 ,${dimension.height - minimumOffset.bottom} )`
-  //   )
-  //   .attr('display', null)
 
-  //   .call(yAxisLabel as any);
   svgSelection
     .select(".axes")
     .select(".y-label")
@@ -363,7 +365,14 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
             const x2 = (valueScale as ScaleOrdinal<any, number>)(numberOb.indexEnding)
             const beginY = testValueScale(averageForEachTransfused[(numberOb.num).toString()].averageStart)
             const endY = testValueScale(averageForEachTransfused[numberOb.num].averageEnd)
-            return ([<Line x1={x1} x2={x2} y1={beginY} y2={beginY} ispreop={true} />, <Line x1={x1} x2={x2} y1={endY} y2={endY} ispreop={false} />
+            const interval = ind === 0 ? 0 : (valueScale as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding)
+            let interventionLine;
+            if (ind >= 1 && numberOb.num <= numberList[ind - 1].num) {
+              interventionLine = <line x1={x1 - 0.5 * (x1 - interval)} x2={x1 - 0.5 * (x1 - interval)} y1={minimumOffset.top} y2={dimension.height - minimumOffset.bottom} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
+            }
+            return ([
+              <Line x1={x1} x2={x2} y1={beginY} y2={beginY} ispreop={true} />,
+              <Line x1={x1} x2={x2} y1={endY} y2={endY} ispreop={false} />, interventionLine
             ])
           }
         })}

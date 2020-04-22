@@ -84,7 +84,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
           <Message.Header>Current View</Message.Header>
 
           <Message.Item>
-            Selected Date Range: {timeFormat("%Y-%m-%d")(rawDateRange[0])} - {timeFormat("%Y-%m-%d")(rawDateRange[1])}
+            Date Range: {timeFormat("%Y-%m-%d")(rawDateRange[0])} - {timeFormat("%Y-%m-%d")(rawDateRange[1])}
           </Message.Item>
           {currentOutputFilterSet.map((selectSet) => {
             return <Message.Item content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`} />
@@ -96,7 +96,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
           <List>
             <List.Header>Current Selected</List.Header>
             {currentSelectSet.map((selectSet) => {
-              return <List.Item icon="caret right" content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
+              return <List.Item icon="caret right" style={{ textAlign: "left" }} content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
             })}
             <List.Item>
               <Button disabled={!(currentSelectSet.length > 0)}

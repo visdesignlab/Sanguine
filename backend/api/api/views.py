@@ -496,6 +496,7 @@ def hemoglobin(request):
                 "YEAR":row[4],
                 "QUARTER": str(row[4])[2:]+"/"+str(output_quarter(row[5])),
                 "MONTH":str(row[4])[2:]+"/"+str(row[5]),
+                "DATE":row[3],
                 "HEMO": [row[-3], row[-1]],
                 "SURGEON_ID": row[10],
                 "ANESTHOLOGIST_ID":row[11],

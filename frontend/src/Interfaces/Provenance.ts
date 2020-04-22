@@ -27,7 +27,7 @@ interface AppProvenance {
     // yearRangeChange: (data: any) => void;
     dateRangeChange: (data: any) => void;
 
-    addNewChart: (x: string, y: string, i: number, type: string, aggregation?: string) => void;
+    addNewChart: (x: string, y: string, i: number, type: string, interventionDate?: Date) => void;
     removeChart: (i: any) => void;
     // updateCaseCount: (newCaseCount: number) => void;
     onLayoutchange: (data: any) => void;
@@ -126,7 +126,7 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plot_type: string, aggregation?: string) => {
+  const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plot_type: string, interventionDate?: Date) => {
     // console.log('add')
     const newLayoutElement: LayoutElement = {
       aggregatedBy: xAxisAttribute,
@@ -141,9 +141,14 @@ export function setupProvenance(): AppProvenance {
     if (plot_type === "BAR") {
       newLayoutElement.extraPair = [];
     }
+    if (interventionDate) {
+      newLayoutElement.interventionDate = interventionDate
+    }
+
     provenance.applyAction("Add new chart",
       (state: ApplicationState) => {
         state.layoutArray.push(newLayoutElement)
+        console.log(state)
         return state;
       })
   }
@@ -238,6 +243,7 @@ export function setupProvenance(): AppProvenance {
           }
           return d
         })
+        console.log(state)
         return state
       }
     )
@@ -272,6 +278,7 @@ export function setupProvenance(): AppProvenance {
       `Per Case ${showZero}`,
       (state: ApplicationState) => {
         state.showZero = showZero.checked;
+        console.log(state)
         return state;
       }
     )
