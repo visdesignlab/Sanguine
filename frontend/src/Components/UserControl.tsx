@@ -5,6 +5,10 @@ import { Menu, Checkbox, Button, Dropdown, Container } from 'semantic-ui-react'
 import { inject, observer } from "mobx-react";
 import { actions } from '..'
 import { Slider } from 'react-semantic-ui-range';
+import SemanticDatePicker from 'react-semantic-ui-datepickers';
+import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
+import { timeFormat } from "d3";
+import { blood_red } from "../ColorProfile";
 
 interface OwnProps {
   store?: Store;
@@ -18,7 +22,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     isAtLatest,
     showZero,
     //  perCaseSelected,
-    yearRange,
+    //yearRange,
     //  dumbbellSorted
   } = store!;
   //  const [procedureList, setProcedureList] = useState({ result: [] })
@@ -28,15 +32,18 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const [ySelection, setYSelection] = useState("")
   const [dumbbellAggregation, setDumbbellAggregation] = useState("")
   const [elementCounter, addToElementCounter] = useState(0)
-  const sliderSettings = {
-    start: [0, 5],
-    min: 0,
-    max: 5,
-    step: 1,
-    onChange: (value: any) => {
-      actions.yearRangeChange(value)
+
+
+  const onDateChange = (event: any, data: any) => {
+    console.log(data.value)
+    if (data.value.length > 1) {
+
+      actions.dateRangeChange(data.value)
     }
   }
+
+
+
 
   const barChartValuesOptions = [
     {
@@ -113,10 +120,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
   ]
   const typeDiction = ["BAR", "DUMBBELL", "SCATTER", "HEATMAP"]
-  // const addOptions = [{ key: "BAR", value: "BAR", text: "Customized Bar Chart" },
-  //   { key: "DUMBBELL", value: "DUMBBELL", text: "Dumbbell Chart" },
-  //   { key: "SCATTER", value: "SCATTER", text: "Scatter Plot" }
-  // ]
+
 
 
 
@@ -161,8 +165,9 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     setAddMode(false);
   }
 
+
   const regularMenu = (
-    <Menu widths={6}>
+    <Menu widths={5}>
       <Menu.Item>
         <Button.Group>
           <Button primary disabled={isAtRoot} onClick={actions.goBack}>
@@ -174,27 +179,16 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             </Button>
         </Button.Group>
       </Menu.Item>
-      {/* <Menu.Item>
-          <Checkbox
-            toggle
-            checked={perCaseSelected}
-            onClick={actions.togglePerCase}
-          />
-          <label> Per Case Mode</label>
-        </Menu.Item> */}
+
       <Menu.Item>
         <Container>
-          <Slider
-            discrete
-            multiple
-            settings={sliderSettings}
-            value={yearRange}
-          />
+
+          <SemanticDatePicker placeholder={"2014-01-01 - 2019-12-31"} type="range" onChange={onDateChange} />
         </Container>
       </Menu.Item>
       <Menu.Item>
         {/* <Button onClick={addModeButtonHandler} content={"Add"} /> */}
-        <Dropdown button text="Add" pointing>
+        <Dropdown button text="Add" pointing style={{ background: blood_red, color: "white" }}>
           <Dropdown.Menu>
             <Dropdown.Item onClick={() => addModeButtonHandler(0)}>Customized Bar Chart</Dropdown.Item>
             <Dropdown.Item onClick={() => addModeButtonHandler(1)}>Dumbbell Chart</Dropdown.Item>

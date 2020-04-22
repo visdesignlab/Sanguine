@@ -47,7 +47,8 @@ export interface ApplicationState {
   layoutArray: LayoutElement[];
   currentSelectedChart: string;
   // perCaseSelected: boolean;
-  yearRange: number[];
+  // yearRange: number[];
+  rawDateRange: any;
   filterSelection: string[];
   // totalCaseCount: number;
   // dumbbellSorted: boolean;
@@ -75,7 +76,10 @@ export const defaultState: ApplicationState = {
   layoutArray: [],
   currentSelectedChart: "-1",
   // perCaseSelected: false,
-  yearRange: [0, 5],
+
+  // yearRange: [0, 5],
+  rawDateRange: [new Date(2014, 0, 1), new Date(2019, 11, 31)],
+
   filterSelection: [],
   // totalCaseCount: 0,
   // dumbbellSorted: false,
