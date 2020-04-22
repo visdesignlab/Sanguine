@@ -92,6 +92,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       text: "Anesthologist ID"
     },
     { value: "QUARTER", key: "QUARTER", text: "Quarter" },
+    { value: "MONTH", key: "MONTH", text: "Month" }
   ]
 
   const barChartAggregationOptions = [
@@ -107,10 +108,11 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const addOptions = [
     [barChartValuesOptions, barChartAggregationOptions],
     [dumbbellValueOptions, barChartValuesOptions.concat(dumbbellFacetOptions)],
-    [scatterXOptions, barChartValuesOptions]
+    [scatterXOptions, barChartValuesOptions],
+    [barChartValuesOptions, barChartAggregationOptions]
 
   ]
-  const typeDiction = ["BAR", "DUMBBELL", "SCATTER"]
+  const typeDiction = ["BAR", "DUMBBELL", "SCATTER", "HEATMAP"]
   // const addOptions = [{ key: "BAR", value: "BAR", text: "Customized Bar Chart" },
   //   { key: "DUMBBELL", value: "DUMBBELL", text: "Dumbbell Chart" },
   //   { key: "SCATTER", value: "SCATTER", text: "Scatter Plot" }
@@ -197,6 +199,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             <Dropdown.Item onClick={() => addModeButtonHandler(0)}>Customized Bar Chart</Dropdown.Item>
             <Dropdown.Item onClick={() => addModeButtonHandler(1)}>Dumbbell Chart</Dropdown.Item>
             <Dropdown.Item onClick={() => addModeButtonHandler(2)}>Scatter Plot</Dropdown.Item>
+            <Dropdown.Item onClick={() => addModeButtonHandler(3)}>Heat Map</Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
 

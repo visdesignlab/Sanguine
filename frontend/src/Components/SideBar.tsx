@@ -6,6 +6,7 @@ import { inject, observer } from "mobx-react";
 import { scaleLinear } from "d3";
 import { actions } from "..";
 import { AxisLabelDict } from "../Interfaces/ApplicationState";
+import { basic_gray } from "../ColorProfile";
 
 interface OwnProps {
   store?: Store;
@@ -116,7 +117,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
                       {listItem.value.toLowerCase()}
                     </List.Content>
                     <List.Content floated="right" style={{ width: "30%" }}>
-                      <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={"10px"} fill={"#20639B"}></rect></SVG>
+                      <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={"10px"} fill={basic_gray}></rect></SVG>
                     </List.Content>
                   </ListIT>
                 )
@@ -131,7 +132,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
                       {listItem.value.toLowerCase()}
                     </List.Content>
                     <List.Content floated="right" style={{ width: "30%" }}>
-                      <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={"10px"} fill={"#20639B"}></rect></SVG>
+                      <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={"10px"} fill={basic_gray}></rect></SVG>
                     </List.Content>
                   </ListIT>)
               }

@@ -19,6 +19,7 @@ import {
     line,
     ScaleOrdinal
 } from "d3";
+import { secondary_gray, basic_gray } from "../ColorProfile";
 
 interface OwnProps {
     scale: ScaleOrdinal<any, number>;
@@ -38,7 +39,7 @@ const CustomizedAxis: FC<Props> = ({ numberList, store, scale }) => {
             let x2 = ind === numberList.length - 1 ? scale(numberOb.indexEnding) : (-1 + scale(numberOb.indexEnding) + 0.5 * (scale(numberOb.indexEnding + 1) - scale(numberOb.indexEnding)))
 
             return ([<Line x1={x1} x2={x2} />,
-            <LineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? "#20639B" : "#d98532"} />,
+            <LineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? secondary_gray : basic_gray} />,
             <AxisText x={x1 + 0.5 * (x2 - x1)}>{numberOb.num}</AxisText>
             ])
         })}
@@ -57,7 +58,7 @@ const Line = styled(`line`)`
 const LineBox = styled(`rect`)`
     height: 13px
     y:0
-    opacity:0.5
+    opacity:0.75
 `
 const AxisText = styled(`text`)`
     fill:white

@@ -223,7 +223,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
     .select(".y-label")
     .attr("display", null)
     .attr("y", dimension.height - minimumOffset.bottom + 20)
-    .attr("x", 0.5 * (dimension.width + minimumOffset.left))
+    .attr("x", 0.5 * (dimension.width))
     .attr("font-size", "11px")
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "hanging")
@@ -241,7 +241,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
   svgSelection
     .select(".axes")
     .select(".x-label")
-    .attr("x", -0.5 * dimension.height + 1.5 * minimumOffset.bottom)
+    .attr("x", -0.5 * dimension.height)
     .attr("y", 0)
     .attr("transform", "rotate(-90)")
     .attr("alignment-baseline", "hanging")
@@ -291,8 +291,8 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
         <g className="y-axis" transform={`translate(0,${dimension.height - minimumOffset.bottom})`}>
           <CustomizedAxis scale={valueScale as ScaleOrdinal<any, number>} numberList={numberList} />
         </g>
-        <text className="x-label" style={{ textAnchor: "end" }} />
-        <text className="y-label" style={{ textAnchor: "end" }} />
+        <text className="x-label" />
+        <text className="y-label" />
       </g>
       <g className="chart-comp" >
         <line x1={minimumOffset.left} x2={dimension.width - minimumOffset.right} y1={testValueScale(13)} y2={testValueScale(13)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
