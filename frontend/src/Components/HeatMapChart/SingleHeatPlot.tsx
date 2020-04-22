@@ -7,6 +7,7 @@ import { HeatMapDataPoint } from "../../Interfaces/ApplicationState";
 // import { actions } from "../..";
 import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds } from "d3";
 import { highlight_color, basic_gray, blood_red } from "../../ColorProfile";
+import { Popup } from "semantic-ui-react";
 
 interface OwnProps {
     dataPoint: HeatMapDataPoint;
@@ -29,8 +30,9 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
                 const output = dataPoint.countDict[point] ? dataPoint.countDict[point] : 0
 
                 return (
-                    <HeatRect fill={interpolateReds(colorScale(output / dataPoint.caseCount))} x={valueScale(point)} transform={howToTransform}
-                        width={valueScale.bandwidth()} height={bandwidth} />
+                    <Popup content={output} key={dataPoint.aggregateAttribute + '-' + point} trigger={<HeatRect fill={interpolateReds(colorScale(output / dataPoint.caseCount))} x={valueScale(point)} transform={howToTransform}
+                        width={valueScale.bandwidth()} height={bandwidth} />} />
+
                     // <StripPlotCircle
                     //     isselected={isSelected}
                     //     cx={valueScale(point)}
