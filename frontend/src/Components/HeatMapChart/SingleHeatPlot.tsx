@@ -23,7 +23,7 @@ export type Props = OwnProps;
 
 const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggregatedBy, isSelected, valueScale, store }: Props) => {
     const colorScale = scaleLinear().domain([0, 1]).range([0, 1])
-    console.log(dataPoint)
+
     return (
         <>
             {valueScale.domain().map(point => {

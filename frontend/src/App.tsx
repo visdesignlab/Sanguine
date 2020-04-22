@@ -3,8 +3,8 @@ import styled from 'styled-components';
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import './App.css';
-import UserControl from './Components/UserControl'
-import SideBar from './Components/SideBar'
+import UserControl from './Components/Utilities/UserControl'
+import SideBar from './Components/Utilities/SideBar'
 
 import BarChartVisualization from "./Components/BarChart/BarChartVisualization";
 import DumbbellChartVisualization from "./Components/DumbbellChart/DumbbellChartVisualization";
@@ -33,7 +33,7 @@ import { action } from 'mobx';
 import { actions } from './index'
 import { LineUpStringColumnDesc, LineUpCategoricalColumnDesc, LineUpNumberColumnDesc, LineUpSupportColumn, LineUpColumn } from 'lineupjsx';
 // import ScatterPlotVisualization from './Components/Scatterplot/ScatterPlotVisualization';
-import DetailView from './Components/DetailView';
+import DetailView from './Components/Utilities/DetailView';
 import ScatterPlotVisualization from './Components/Scatterplot/ScatterPlotVisualization';
 import LineUpWrapper from './Components/LineUpWrapper';
 import HeatMapVisualization from './Components/HeatMapChart/HeatMapVisualization';

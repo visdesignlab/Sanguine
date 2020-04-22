@@ -3,7 +3,7 @@ import React, {
     useMemo,
     useEffect
 } from "react";
-import Store from "../Interfaces/Store";
+import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import {
@@ -19,7 +19,7 @@ import {
     line,
     ScaleOrdinal
 } from "d3";
-import { secondary_gray, basic_gray } from "../ColorProfile";
+import { secondary_gray, basic_gray } from "../../ColorProfile";
 
 interface OwnProps {
     scale: ScaleOrdinal<any, number>;

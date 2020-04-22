@@ -1,14 +1,14 @@
 import React, { FC, useEffect, useState } from "react";
-import Store from '../Interfaces/Store'
+import Store from '../../Interfaces/Store'
 // import {}
 import { Menu, Checkbox, Button, Dropdown, Container } from 'semantic-ui-react'
 import { inject, observer } from "mobx-react";
-import { actions } from '..'
+import { actions } from '../..'
 import { Slider } from 'react-semantic-ui-range';
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
 import { timeFormat } from "d3";
-import { blood_red } from "../ColorProfile";
+import { blood_red } from "../../ColorProfile";
 
 interface OwnProps {
   store?: Store;

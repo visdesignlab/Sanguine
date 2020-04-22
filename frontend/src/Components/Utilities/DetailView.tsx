@@ -5,7 +5,7 @@ import React, {
 } from "react";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
-import Store from "../Interfaces/Store";
+import Store from "../../Interfaces/Store";
 import { Message, List } from "semantic-ui-react";
 
 interface OwnProps {

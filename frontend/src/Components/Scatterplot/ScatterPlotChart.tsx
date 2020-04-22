@@ -12,7 +12,7 @@ import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint, offset, AxisLabelDict, SelectSet } from "../../Interfaces/ApplicationState";
 import { select, scaleLinear, axisLeft, axisBottom, brush, event, range, scaleOrdinal, ScaleOrdinal } from "d3";
-import CustomizedAxis from "../CustomizedAxis";
+import CustomizedAxis from "../Utilities/CustomizedAxis";
 import { highlight_color, basic_gray } from "../../ColorProfile";
 
 interface OwnProps {

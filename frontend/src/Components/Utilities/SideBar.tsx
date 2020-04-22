@@ -1,12 +1,12 @@
 import React, { FC, useEffect, useState, useMemo } from "react";
-import Store from "../Interfaces/Store";
+import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { Menu, Dropdown, Grid, Container, Message, List, Button } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat } from "d3";
-import { actions } from "..";
-import { AxisLabelDict } from "../Interfaces/ApplicationState";
-import { basic_gray } from "../ColorProfile";
+import { actions } from "../..";
+import { AxisLabelDict } from "../../Interfaces/ApplicationState";
+import { basic_gray } from "../../ColorProfile";
 
 interface OwnProps {
   store?: Store;
