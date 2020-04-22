@@ -25,15 +25,13 @@ interface OwnProps {
     scale: ScaleOrdinal<any, number>;
     store?: Store;
     numberList: { num: number, indexEnding: number }[]
-    // numberList:number[]
-    // indexList:number[]
-    // dimensionWhole: { width: number, height: number }
 }
 export type Props = OwnProps;
 
 const CustomizedAxis: FC<Props> = ({ numberList, store, scale }) => {
-
+    console.log(numberList)
     return <>
+
         {numberList.map((numberOb, ind) => {
             let x1 = ind === 0 ? scale(0) : (1 + scale(numberList[ind - 1].indexEnding + 1) - 0.5 * (scale(numberList[ind - 1].indexEnding + 1) - scale(numberList[ind - 1].indexEnding)))
             let x2 = ind === numberList.length - 1 ? scale(numberOb.indexEnding) : (-1 + scale(numberOb.indexEnding) + 0.5 * (scale(numberOb.indexEnding + 1) - scale(numberOb.indexEnding)))

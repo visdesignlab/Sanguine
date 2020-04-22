@@ -21,6 +21,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     isAtRoot,
     isAtLatest,
     showZero,
+    rawDateRange
     //  perCaseSelected,
     //yearRange,
     //  dumbbellSorted
@@ -30,7 +31,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const [addingChartType, setAddingChartType] = useState(-1)
   const [xSelection, setXSelection] = useState("")
   const [ySelection, setYSelection] = useState("")
-  const [dumbbellAggregation, setDumbbellAggregation] = useState("")
+  const [interventionDate, setInterventionDate] = useState<Date | undefined>(undefined)
   const [elementCounter, addToElementCounter] = useState(0)
 
 
@@ -38,7 +39,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     console.log(data.value)
     if (data.value.length > 1) {
 
-      actions.dateRangeChange(data.value)
+      actions.dateRangeChange(new Date(data.value))
     }
   }
 
@@ -129,12 +130,12 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     setAddingChartType(chartType)
   }
 
-  const dumbbellAggregationChangeHandler = (e: any, value: any) => {
+  const interventionHandler = (e: any, value: any) => {
     if (value.value === "None") {
-      setDumbbellAggregation("")
+      setInterventionDate(undefined)
     }
     else {
-      setDumbbellAggregation(value.value)
+      setInterventionDate(value.value)
     }
   }
 
@@ -153,10 +154,10 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const confirmChartAddHandler = () => {
     if (xSelection && ySelection && addingChartType > -1) {
       addToElementCounter(elementCounter + 1)
-      actions.addNewChart(xSelection, ySelection, elementCounter, typeDiction[addingChartType], dumbbellAggregation)
+      actions.addNewChart(xSelection, ySelection, elementCounter, typeDiction[addingChartType], interventionDate)
       setAddMode(false);
       setAddingChartType(-1)
-      setDumbbellAggregation("");
+      setInterventionDate(undefined);
     }
 
   }
@@ -239,14 +240,13 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         />
       </Menu.Item>
 
-      {/* {addingChartType === 1 ? (<Menu.Item>
-        <Dropdown
-          placeholder={"Select Aggregation"}
-          selection
-          options={dumbbellFacetOptions}
-          onChange={dumbbellAggregationChangeHandler}
-        />
-      </Menu.Item>) : (<></>)} */}
+      {addingChartType === 1 ? (<Menu.Item>
+        <SemanticDatePicker
+          placeholder={"Intervention"}
+          minDate={rawDateRange[0] as any}
+          maxDate={rawDateRange[1] as any}
+          onChange={interventionHandler} />
+      </Menu.Item>) : (<></>)}
       <Menu.Item>
         <Button.Group>
           <Button

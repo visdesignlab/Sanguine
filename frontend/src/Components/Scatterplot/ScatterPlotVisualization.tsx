@@ -103,7 +103,8 @@ const ScatterPlotVisualization: FC<Props> = ({ yAxis, xAxis, chartIndex, store }
                             YEAR: ob.YEAR,
                             ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
                             SURGEON_ID: ob.SURGEON_ID,
-                            patientID: ob.PATIENT_ID
+                            patientID: ob.PATIENT_ID,
+                            DATE: ob.DATE
                         }
 
                     };

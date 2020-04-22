@@ -28,7 +28,9 @@ export interface SingleCasePoint {
   SURGEON_ID: number;
   ANESTHOLOGIST_ID: number;
   patientID: number;
-  [key: string]: number;
+  DATE: Date;
+  [key: string]: number | Date;
+
 }
 export interface ScatterDataPoint {
   xVal: number;
@@ -41,6 +43,7 @@ export interface DumbbellDataPoint {
   endXVal: number;
   yVal: number;
   case: SingleCasePoint;
+
 }
 
 export interface ApplicationState {
@@ -69,7 +72,8 @@ export interface LayoutElement {
   h: number,
   plot_type: string,
   //  aggregation?: string,
-  extraPair?: string[]
+  extraPair?: string[],
+  interventionDate?: Date
 }
 
 export const defaultState: ApplicationState = {

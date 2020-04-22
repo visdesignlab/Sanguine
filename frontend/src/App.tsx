@@ -37,6 +37,7 @@ import DetailView from './Components/Utilities/DetailView';
 import ScatterPlotVisualization from './Components/Scatterplot/ScatterPlotVisualization';
 import LineUpWrapper from './Components/LineUpWrapper';
 import HeatMapVisualization from './Components/HeatMapChart/HeatMapVisualization';
+import { timeFormat, timeParse } from 'd3';
 
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
@@ -75,6 +76,7 @@ const App: FC<Props> = ({ store }: Props) => {
       YEAR: number,
       QUARTER: string,
       MONTH: string,
+      DATE: any,
       PRBC_UNITS: number,
       FFP_UNITS: number,
       PLT_UNITS: number,
@@ -113,13 +115,14 @@ const App: FC<Props> = ({ store }: Props) => {
           CELL_SAVER_ML: transfusedResult.CELL_SAVER_ML,
           HEMO: ob.HEMO,
           QUARTER: ob.QUARTER,
-          MONTH: ob.MONTH
+          MONTH: ob.MONTH,
+          DATE: timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)
         })
       }
     })
 
     result = result.filter((d: any) => d);
-
+    console.log(result)
     actions.storeHemoData(result);
     //   let tempMaxCaseCount = 0
     // data.result.forEach((d: any) => {
@@ -151,6 +154,7 @@ const App: FC<Props> = ({ store }: Props) => {
               yAxis={layout.aggregatedBy}
               chartId={layout.i}
               chartIndex={index}
+              interventionDate={layout.interventionDate}
             // aggregatedOption={layout.aggregation}
             />
           </div>
