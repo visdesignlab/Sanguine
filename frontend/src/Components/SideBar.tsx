@@ -3,7 +3,7 @@ import Store from "../Interfaces/Store";
 import styled from 'styled-components'
 import { Menu, Dropdown, Grid, Container, Message, List, Button } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";
-import { scaleLinear } from "d3";
+import { scaleLinear, timeFormat } from "d3";
 import { actions } from "..";
 import { AxisLabelDict } from "../Interfaces/ApplicationState";
 import { basic_gray } from "../ColorProfile";
@@ -17,7 +17,7 @@ export type Props = OwnProps;
 const SideBar: FC<Props> = ({ store }: Props) => {
   const {
     // totalCaseCount, 
-    actualYearRange,
+    rawDateRange,
     currentSelectSet,
     currentOutputFilterSet,
     filterSelection } = store!;
@@ -45,6 +45,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
 
   useEffect(() => {
     fetchProcedureList();
+    console.log(rawDateRange)
   }, []);
 
   useEffect(() => {
@@ -69,6 +70,8 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     return [caseScale];
   }, [maxCaseCount])
 
+
+
   return (
     <Grid
       divided="vertically"
@@ -81,7 +84,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
           <Message.Header>Current View</Message.Header>
 
           <Message.Item>
-            Selected Year Range: {actualYearRange[0]} - {actualYearRange[1]}
+            Selected Date Range: {timeFormat("%Y-%m-%d")(rawDateRange[0])} - {timeFormat("%Y-%m-%d")(rawDateRange[1])}
           </Message.Item>
           {currentOutputFilterSet.map((selectSet) => {
             return <Message.Item content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`} />

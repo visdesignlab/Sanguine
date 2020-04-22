@@ -29,8 +29,8 @@ const ScatterPlotVisualization: FC<Props> = ({ yAxis, xAxis, chartIndex, store }
         layoutArray,
         filterSelection,
         //  perCaseSelected,
-        currentSelectPatient,
-        actualYearRange,
+        dateRange,
+        //actualYearRange,
         hemoglobinDataSet
     } = store!;
     const svgRef = useRef<SVGSVGElement>(null);
@@ -52,7 +52,7 @@ const ScatterPlotVisualization: FC<Props> = ({ yAxis, xAxis, chartIndex, store }
         let transfused_dict = {} as any;
         console.log(xAxis, yAxis)
         const transfusedRes = await fetch(
-            `http://localhost:8000/api/request_transfused_units?transfusion_type=${xAxis}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`
+            `http://localhost:8000/api/request_transfused_units?transfusion_type=${xAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
         );
         const transfusedDataResult = await transfusedRes.json();
         const temp_transfusion_data = transfusedDataResult.result;
@@ -129,7 +129,7 @@ const ScatterPlotVisualization: FC<Props> = ({ yAxis, xAxis, chartIndex, store }
 
     useEffect(() => {
         fetchChartData();
-    }, [actualYearRange, filterSelection, hemoglobinDataSet]);
+    }, [dateRange, filterSelection, hemoglobinDataSet]);
 
     return (<Grid style={{ height: "100%" }}>
         <Grid.Column width={16}  >

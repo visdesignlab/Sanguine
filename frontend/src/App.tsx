@@ -53,6 +53,7 @@ type Props = OwnProps;
 const App: FC<Props> = ({ store }: Props) => {
   const {
     layoutArray,
+    dateRange
     // hemoglobinDataSet
   } = store!;
 
@@ -60,7 +61,7 @@ const App: FC<Props> = ({ store }: Props) => {
     const resHemo = await fetch("http://localhost:8000/api/hemoglobin");
     const dataHemo = await resHemo.json();
     const resultHemo = dataHemo.result;
-    const resTrans = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&year_range=${[2014, 2019]}`)
+    const resTrans = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}`)
     const dataTrans = await resTrans.json();
     const resultTrans = dataTrans.result;
 

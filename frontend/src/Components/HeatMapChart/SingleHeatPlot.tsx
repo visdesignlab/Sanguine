@@ -32,36 +32,9 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
                 return (
                     <Popup content={output} key={dataPoint.aggregateAttribute + '-' + point} trigger={<HeatRect fill={interpolateReds(colorScale(output / dataPoint.caseCount))} x={valueScale(point)} transform={howToTransform}
                         width={valueScale.bandwidth()} height={bandwidth} />} />
-
-                    // <StripPlotCircle
-                    //     isselected={isSelected}
-                    //     cx={valueScale(point)}
-                    //     cy={Math.random() * bandwidth}
-                    //     transform={howToTransform}
-                    // />
                 )
             })}
         </>)
-
-    // <Popup
-    //     content={dataPoint.totalVal}
-    //     key={dataPoint.aggregateAttribute}
-    //     trigger={
-
-    //   <ViolinLine
-    //     d={path}
-    //     onClick={() => {
-    //       actions.selectSet({
-    //         set_name: aggregatedBy,
-    //         set_value: dataPoint.aggregateAttribute
-    //       });
-    //     }}
-    //     isselected={isSelected}
-    //     transform={howToTransform}
-    //   />
-
-    //     }
-    //   />
 
 }
 

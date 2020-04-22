@@ -27,7 +27,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
         filterSelection,
         showZero,
         currentSelectPatient,
-        actualYearRange,
+        dateRange,
         hemoglobinDataSet
     } = store!;
     const svgRef = useRef<SVGSVGElement>(null);
@@ -66,7 +66,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
 
     async function fetchChartData() {
         const res = await fetch(
-            `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`
+            `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
         );
         const dataResult = await res.json();
         //  let caseCount = 0;
@@ -129,7 +129,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     useEffect(() => {
         fetchChartData();
 
-    }, [filterSelection, actualYearRange, showZero]);
+    }, [filterSelection, dateRange, showZero]);
 
 
     const makeExtraPairData = () => {

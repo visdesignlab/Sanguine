@@ -7,6 +7,7 @@ import {
   SingleCasePoint
 } from "./ApplicationState";
 import { store } from './Store';
+import { timeFormat } from 'd3';
 
 interface AppProvenance {
   provenance: Provenance<ApplicationState>;
@@ -22,7 +23,10 @@ interface AppProvenance {
     filterSelectionChange: (data: any) => void;
     currentOutputFilterSetChange: () => void;
     clearOutputFilterSet: () => void;
-    yearRangeChange: (data: any) => void;
+
+    // yearRangeChange: (data: any) => void;
+    dateRangeChange: (data: any) => void;
+
     addNewChart: (x: string, y: string, i: number, type: string, aggregation?: string) => void;
     removeChart: (i: any) => void;
     // updateCaseCount: (newCaseCount: number) => void;
@@ -71,17 +75,17 @@ export function setupProvenance(): AppProvenance {
     store.showZero = state ? state.showZero : store.showZero;
   })
 
-  // provenance.addObserver(["perCaseSelected"], (state?: ApplicationState) => {
-  //   store.perCaseSelected = state
-  //     ? state.perCaseSelected
-  //     : store.perCaseSelected;
-  // });
-
-  provenance.addObserver(["yearRange"], (state?: ApplicationState) => {
-    store.yearRange = state
-      ? state.yearRange
-      : store.yearRange;
+  provenance.addObserver(["rawDateRange"], (state?: ApplicationState) => {
+    store.rawDateRange = state
+      ? state.rawDateRange
+      : store.rawDateRange;
   })
+
+  // provenance.addObserver(["yearRange"], (state?: ApplicationState) => {
+  //   store.yearRange = state
+  //     ? state.yearRange
+  //     : store.yearRange;
+  // })
 
   provenance.addObserver(["filterSelection"], (state?: ApplicationState) => {
     store.filterSelection = state ? state.filterSelection : store.filterSelection
@@ -318,17 +322,32 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const yearRangeChange = (newYearRange: any) => {
+  // const yearRangeChange = (newYearRange: any) => {
+  //   provenance.applyAction(
+  //     `Change Year Range To ${newYearRange}`,
+  //     (state: ApplicationState) => {
+  //       if (newYearRange !== state.yearRange) {
+  //         state.yearRange = newYearRange;
+  //       }
+  //       return state;
+  //     }
+  //   );
+  // };
+
+  const dateRangeChange = (newDateRange: any) => {
     provenance.applyAction(
-      `Change Year Range To ${newYearRange}`,
+      `Change date range to ${newDateRange}`,
       (state: ApplicationState) => {
-        if (newYearRange !== state.yearRange) {
-          state.yearRange = newYearRange;
+        if (newDateRange !== state.rawDateRange) {
+          console.log(newDateRange)
+          state.rawDateRange = newDateRange
         }
         return state;
       }
-    );
-  };
+    )
+  }
+
+
 
   const selectPatient = (data: SingleCasePoint) => {
     provenance.applyAction(`select patient ${data.patientID}`, (state: ApplicationState) => {
@@ -433,7 +452,10 @@ export function setupProvenance(): AppProvenance {
       toggleShowZero,
       // toggleDumbbell,
       filterSelectionChange,
-      yearRangeChange,
+
+      //  yearRangeChange,
+      dateRangeChange,
+
       addNewChart,
       removeChart,
       //  updateCaseCount,
