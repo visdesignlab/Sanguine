@@ -21,9 +21,13 @@ class UtilUnitTestCase(TestCase):
         self.assertTrue(len(cpt_codes) > 0)
 
     def test_execute_sql(self):
-        # Test with None and kwargs
+        # Test with no args
+        result = utils.execute_sql("SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE LIMIT 10")
+        self.assertIsNotNone(result)
+        self.assertTrue(len(result.description) > 0)
+
+        # Test with args dict
         queries = [
-            ("SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE", None),
             ("SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE WHERE DI_PAT_ID = :bind", {"bind": 123}),
         ]
     
@@ -32,8 +36,8 @@ class UtilUnitTestCase(TestCase):
             self.assertIsNotNone(result)
             self.assertTrue(len(result.description) > 0)
 
-        # Test with positional args
-        result = utils.execute_sql("SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE WHERE DI_PAT_ID = :bind", 123)
+        # Test with positional kwargs
+        result = utils.execute_sql("SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE WHERE DI_PAT_ID = :bind", bind = 123)
         self.assertIsNotNone(result)
         self.assertTrue(len(result.description) > 0)
 
