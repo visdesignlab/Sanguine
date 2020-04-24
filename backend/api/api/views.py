@@ -6,6 +6,15 @@ from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 from api.utils import make_connection, data_dictionary, cpt, execute_sql, get_all_by_agg, get_filters
 
 
+DE_IDENT_FIELDS = {
+
+}
+
+IDENT_FIELDS = {
+    
+}
+
+
 def index(request):
     if request.method == "GET":
         return HttpResponse(
@@ -50,7 +59,7 @@ def fetch_professional_set(request):
         if not profesional_type or not professional_id:
             return HttpResponseBadRequest("professional type and id must be supplied.")
 
-        if profesional_type == "ANESTHOLOGIST_ID":
+        if profesional_type == "ANESTHESIOLOGIST_ID":
             command = (
                 "SELECT SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS) PRBC_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS) FFP_UNITS, "
                 "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS, "
@@ -68,14 +77,14 @@ def fetch_professional_set(request):
                 "SELECT SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS) PRBC_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS) FFP_UNITS, "
                 "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS, "
                 "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS) CRYO_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML) CELL_SAVER_ML, "
-                "CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID ANESTHOLOGIST_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC "
+                "CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID ANESTHESIOLOGIST_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC "
                 "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
                 "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
                 "ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID) "
                 "WHERE CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID = :id"
                 "GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID,CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC"
             )
-            partner = "ANESTHOLOGIST_ID"
+            partner = "ANESTHESIOLOGIST_ID"
 
         result = execute_sql(command, id = profesional_id)
         items = [{"PRBC_UNITS": row[0] if row[0] else 0, "FFP_UNITS": row[1] if row[1] else 0, "PLT_UNITS": row[2] if row[2] else 0, "CRYO_UNITS":row[3] if row[3] else 0, "CELL_SAVER_ML":row[4] if row[4] else 0, partner: row[5], "DI_CASE_ID":row[6], "DESC":row[7]}
@@ -170,7 +179,7 @@ def request_transfused_units(request):
         aggregates = {
             "YEAR": "EXTRACT (YEAR FROM LIMITED_SURG.DI_CASE_DATE)",
             "SURGEON_ID": "LIMITED_SURG.SURGEON_PROV_DWID",
-            "ANESTHOLOGIST_ID": "LIMITED_SURG.ANESTH_PROV_DWID",
+            "ANESTHESIOLOGIST_ID": "LIMITED_SURG.ANESTH_PROV_DWID",
         }
 
         if transfusion_type not in blood_products:
@@ -249,7 +258,7 @@ def request_individual_specific(request):
         command_dict = {
             "YEAR": "EXTRACT (YEAR FROM DI_CASE_DATE)",
             "SURGEON_ID": "SURGEON_PROV_DWID",
-            "ANESTHOLOGIST_ID": "ANESTH_PROV_DWID"
+            "ANESTHESIOLOGIST_ID": "ANESTH_PROV_DWID"
         }
 
         # Verify that the attribute_to_retrieve is in the command dict keys
@@ -272,10 +281,10 @@ def request_individual_specific(request):
 def to_be_removed(request):
         # Define the full SQL statement
         command = (
-            f"SELECT {outer_select}, di_case_id, YEAR, SURGEON_ID, ANESTHOLOGIST_ID FROM ( "
+            f"SELECT {outer_select}, di_case_id, YEAR, SURGEON_ID, ANESTHESIOLOGIST_ID FROM ( "
             f"SELECT {command_dict[transfusion_type]}, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID di_case_id, "
             f"EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE) YEAR, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID SURGEON_ID, "
-            f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID ANESTHOLOGIST_ID "
+            f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID ANESTHESIOLOGIST_ID "
             f"FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
             f"INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
             f"ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID "
@@ -432,7 +441,7 @@ def hemoglobin(request):
                 "YEAR":row[4],
                 "HEMO": [row[-3], row[-1]],
                 "SURGEON_ID": row[9],
-                "ANESTHOLOGIST_ID":row[10],
+                "ANESTHESIOLOGIST_ID":row[10],
                 "PATIENT_ID":row[0]} for row in result]
 
         return JsonResponse({"result": items})

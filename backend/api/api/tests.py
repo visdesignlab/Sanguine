@@ -126,7 +126,10 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
 
     def test_request_transfused_units_missing_transfusion_type(self):
         c = Client()
-        response = c.get("/api/request_transfused_units?year_range=2016,2017")
+        response = c.get(
+            "/api/request_transfused_units",
+            { "year_range": "2016,2017" },
+        )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.content.decode(),
@@ -135,7 +138,10 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
 
     def test_request_transfused_units_missing_year_range(self):
         c = Client()
-        response = c.get("/api/request_transfused_units?transfusion_type=PRBC_UNITS")
+        response = c.get(
+            "/api/request_transfused_units",
+            { "transfusion_type": "PRBC_UNITS" },
+        )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.content.decode(),
@@ -157,7 +163,13 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         ]
 
         for invalid_option in invalid_options:
-            response = c.get(f"/api/request_transfused_units?transfusion_type=PRBC_UNITS&year_range={invalid_option}")
+            response = c.get(
+                f"/api/request_transfused_units",
+                {
+                    "transfusion_type": "PRBC_UNITS", 
+                    "year_range": invalid_option,
+                },
+            )
             self.assertEqual(response.status_code, 400)
             self.assertEqual(
                 response.content.decode(),
@@ -168,12 +180,19 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         c = Client()
 
         invalid_options = [
+            "'PRBC_UNITS'"
             "invalid",
             None,
         ]
 
         for invalid_option in invalid_options:
-            response = c.get(f"/api/request_transfused_units?transfusion_type={invalid_option}&year_range=2016,2017")
+            response = c.get(
+                "/api/request_transfused_units",
+                {
+                    "transfusion_type": invalid_option, 
+                    "year_range": "2016,2017",
+                },
+            )
             self.assertEqual(response.status_code, 400)
             self.assertEqual(
                 response.content.decode(),
@@ -184,16 +203,94 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         c = Client()
 
         invalid_options = [
+            "'YEAR'"
             "invalid",
             None,
         ]
 
         for invalid_option in invalid_options:
             response = c.get(
-                f"/api/request_transfused_units?transfusion_type=PRBC_UNITS&year_range=2016,2017&aggregatedBy={invalid_option}"
+                "/api/request_transfused_units",
+                {
+                    "transfusion_type": "PRBC_UNITS", 
+                    "year_range": "2016,2017", 
+                    "aggregatedBy": invalid_option,
+                },
             )
             self.assertEqual(response.status_code, 400)
             self.assertEqual(
                 response.content.decode(),
-                "aggregatedBy must be one of the following: ['YEAR', 'SURGEON_ID', 'ANESTHOLOGIST_ID']",
+                "aggregatedBy must be one of the following: ['YEAR', 'SURGEON_ID', 'ANESTHESIOLOGIST_ID']",
             )
+
+    def test_request_transfused_units_valid_types(self):
+        c = Client()
+
+        valid_options = [
+            { # Minimum viable
+                "transfusion_type": "PRBC_UNITS", 
+                "year_range": "2016,2017", 
+            },
+            { # Different year_range
+                "transfusion_type": "PRBC_UNITS", 
+                "year_range": "2017,2018", 
+            },
+            { # Different transfusion_type (should test them all)
+                "transfusion_type": "ALL_UNITS", 
+                "year_range": "2016,2017", 
+            },
+            { # Add aggregation
+                "transfusion_type": "PRBC_UNITS", 
+                "year_range": "2016,2017", 
+                "aggregatedBy": "YEAR",
+            },
+            { # Add aggregation
+                "transfusion_type": "PRBC_UNITS", 
+                "year_range": "2016,2017", 
+                "aggregatedBy": "YEAR",
+            },
+            { # Different aggregation
+                "transfusion_type": "PRBC_UNITS", 
+                "year_range": "2016,2017", 
+                "aggregatedBy": "SURGEON_ID",
+            },
+            { # One patient ID
+                "transfusion_type": "PRBC_UNITS", 
+                "year_range": "2016,2017", 
+                "patient_ids": "123",
+            },
+            { # One multiple pats
+                "transfusion_type": "PRBC_UNITS", 
+                "year_range": "2016,2017", 
+                "patient_ids": "123,234,345",
+            },
+            { # One filter_selection
+                "transfusion_type": "PRBC_UNITS", 
+                "year_range": "2016,2017", 
+                "filter_selection": "123",
+            },
+            { # One multiple pats
+                "transfusion_type": "PRBC_UNITS", 
+                "year_range": "2016,2017", 
+                "filter_selection": "123,234,345",
+            },
+            { # One filter_selection
+                "transfusion_type": "PRBC_UNITS", 
+                "year_range": "2016,2017", 
+                "filter_selection": "123",
+            },
+            { # Full example
+                "transfusion_type": "PRBC_UNITS", 
+                "year_range": "2016,2017", 
+                "patient_ids": "123,234,345",
+                "filter_selection": "123,234,345",
+                "aggregatedBy": "YEAR",
+            },
+        ]
+
+        for valid_option in valid_options:
+            response = c.get(
+                "/api/request_transfused_units",
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 200)
