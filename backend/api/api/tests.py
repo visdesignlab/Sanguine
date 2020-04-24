@@ -1,4 +1,4 @@
-from django.test import TestCase, Client
+from django.test import TransactionTestCase, TestCase, Client
 import api.utils as utils
 
 
@@ -21,16 +21,21 @@ class UtilUnitTestCase(TestCase):
         self.assertTrue(len(cpt_codes) > 0)
 
     def test_execute_sql(self):
+        # Test with None and kwargs
         queries = [
             ("SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE", None),
             ("SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE WHERE DI_PAT_ID = :bind", {"bind": 123}),
-            ("SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE WHERE DI_PAT_ID = :bind", 123),
         ]
     
         for q, params in queries:
             result = utils.execute_sql(q, params)
             self.assertIsNotNone(result)
-            self.assertTrue(len(result) > 0)
+            self.assertTrue(len(result.description) > 0)
+
+        # Test with positional args
+        result = utils.execute_sql("SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE WHERE DI_PAT_ID = :bind", 123)
+        self.assertIsNotNone(result)
+        self.assertTrue(len(result.description) > 0)
 
     def test_get_all_by_agg(self):
         pass
@@ -83,7 +88,7 @@ class UtilUnitTestCase(TestCase):
                 filters, bind_names, filters_safe_sql = utils.get_filters(invalid_input)
         
 
-class APIIntegrationTestCase(TestCase):
+class APIIntegrationTestCase(TransactionTestCase):
     def sanity_check(self):
         self.assertEqual(1, 1)
 
@@ -107,7 +112,7 @@ class APIIntegrationTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
 
 
-class RequestTransfusedUnitsTestCase(TestCase):
+class RequestTransfusedUnitsTestCase(TransactionTestCase):
     def test_request_transfused_units_no_params(self):
         c = Client()
         response = c.get("/api/request_transfused_units")
