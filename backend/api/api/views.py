@@ -15,7 +15,7 @@ def index(request):
 
 def get_attributes(request):
     if request.method == "GET":
-        filters, bindNames, filters_safe_sql = get_filters([""])
+        filters, bind_names, filters_safe_sql = get_filters([""])
 
         # Make the connection and execute the command
         command = (
@@ -34,7 +34,7 @@ def get_attributes(request):
 
         result = execute_sql(
             command, 
-            dict(zip(bindNames, filters))
+            dict(zip(bind_names, filters))
         )
 
         # Return the result, the multi-selector component in React requires the below format
@@ -182,11 +182,11 @@ def request_transfused_units(request):
         transfusion_type = "PRBC_UNITS, FFP_UNITS, PLT_UNITS, CRYO_UNITS, CELL_SAVER_ML" if transfusion_type == "ALL_UNITS" else transfusion_type
 
         # Generate the CPT filter sql
-        filters, bindNames, filters_safe_sql = get_filters(filter_selection)
+        filters, bind_names, filters_safe_sql = get_filters(filter_selection)
 
         # Generate the patient filters
-        patBindNames = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
-        pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(patBindNames)}) " if patient_ids != [""] else ""
+        pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
+        pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [""] else ""
 
         # Build the sql query
         # Safe to use format strings since there are limited options for aggregatedBy and transfusion_type
@@ -211,7 +211,7 @@ def request_transfused_units(request):
         # Execute the query
         result = execute_sql(
             command, 
-            dict(zip(bindNames, filters), min_time = min_time, max_time = max_time)
+            dict(zip(bind_names, filters), min_time = min_time, max_time = max_time)
         )
 
         # Get the raw data from the server
