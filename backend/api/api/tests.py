@@ -13,12 +13,12 @@ class UtilUnitTestCase(TestCase):
     def test_data_dictionary(self):
         data_dict = utils.data_dictionary()
         self.assertIsNotNone(data_dict)
-        self.assertIsTrue(len(data_dict) > 0)
+        self.assertTrue(len(data_dict) > 0)
 
     def test_cpt(self):
         cpt_codes = utils.cpt()
         self.assertIsNotNone(cpt_codes)
-        self.assertIsTrue(len(cpt_codes) > 0)
+        self.assertTrue(len(cpt_codes) > 0)
 
     def test_execute_sql(self):
         queries = [
@@ -30,7 +30,7 @@ class UtilUnitTestCase(TestCase):
         for q, params in queries:
             result = utils.execute_sql(q, params)
             self.assertIsNotNone(result)
-            self.assertIsTrue(len(result) > 0)
+            self.assertTrue(len(result) > 0)
 
     def test_get_all_by_agg(self):
         pass
@@ -41,10 +41,10 @@ class UtilUnitTestCase(TestCase):
             ["1", "2"],
         ]
         for valid_input in valid_inputs:
-            bind_names = utils.get_bind_names(valid_inputs)
+            bind_names = utils.get_bind_names(valid_input)
             self.assertIsNotNone(bind_names)
-            self.assertIsInstanceOf(bind_names, list)
-            self.assertIsTrue(len(bind_names) == len(valid_input))
+            self.assertIsInstance(bind_names, list)
+            self.assertTrue(len(bind_names) == len(valid_input))
 
     def test_get_bind_names_invalid_inputs(self):
         invalid_inputs = [
@@ -54,7 +54,7 @@ class UtilUnitTestCase(TestCase):
         ]
         for invalid_input in invalid_inputs:
             with self.assertRaises(TypeError):
-                bind_names = utils.get_bind_names(invalid_inputs)
+                bind_names = utils.get_bind_names(invalid_input)
 
     def test_get_filters_valid_inputs(self):
         valid_inputs = [
@@ -62,15 +62,15 @@ class UtilUnitTestCase(TestCase):
             ["1", "2"],
         ]
         for valid_input in valid_inputs:
-            filters, bind_names, filters_safe_sql = utils.get_bind_names(valid_inputs)
+            filters, bind_names, filters_safe_sql = utils.get_filters(valid_input)
             self.assertIsNotNone(filters)
             self.assertIsNotNone(bind_names)
             self.assertIsNotNone(filters_safe_sql)
-            self.assertIsInstanceOf(filters, list)
-            self.assertIsInstanceOf(bind_names, list)
-            self.assertIsInstanceOf(filters_safe_sql, str)
-            self.assertIsTrue(len(filters) == len(bind_names))
-            self.assertIsTrue(len(filters_safe_sql) != 0)
+            self.assertIsInstance(filters, list)
+            self.assertIsInstance(bind_names, list)
+            self.assertIsInstance(filters_safe_sql, str)
+            self.assertTrue(len(filters) == len(bind_names))
+            self.assertTrue(len(filters_safe_sql) != 0)
 
     def test_get_filters_invalid_inputs(self):
         invalid_inputs = [
@@ -80,7 +80,7 @@ class UtilUnitTestCase(TestCase):
         ]
         for invalid_input in invalid_inputs:
             with self.assertRaises(TypeError):
-                filters, bind_names, filters_safe_sql = utils.get_bind_names(valid_inputs)
+                filters, bind_names, filters_safe_sql = utils.get_filters(invalid_input)
         
 
 class APIIntegrationTestCase(TestCase):
