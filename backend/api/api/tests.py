@@ -1,3 +1,5 @@
+# Util unit tests and API integration tests
+
 from django.test import TransactionTestCase, TestCase, Client
 import api.utils as utils
 
@@ -22,7 +24,7 @@ class UtilUnitTestCase(TestCase):
 
     def test_execute_sql(self):
         # Test with no args
-        result = utils.execute_sql("SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE LIMIT 10")
+        result = utils.execute_sql("SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE")
         self.assertIsNotNone(result)
         self.assertTrue(len(result.description) > 0)
 
