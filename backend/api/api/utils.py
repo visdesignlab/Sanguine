@@ -1,3 +1,5 @@
+import csv
+
 # Makes and returns the database connection object
 def make_connection():
     # Load credentials
@@ -62,13 +64,18 @@ def get_all_by_agg(result_dict, agg, variable):
 
 
 def get_filters(filter_selection):
-    if filter_selection != [""]:
-        filters = filter_selection
-        bindNames = [f":filters{str(i)}" for i in range(len(filters))]
-        filters_safe_sql = f"WHERE CODE_DESC IN ({','.join(bindNames)}) "
-    else:
+    # If no filers, get all cpt codes
+    if filter_selection == [""]:
         filters = [a[0] for a in cpt()]
-        bindNames = [f":filters{str(i)}" for i in range(len(filters))]
+        bindNames = get_bind_names(filters)
         filters_safe_sql = f"WHERE CODE IN ({','.join(bindNames)}) "
+    # Else get the CODE_DESCs from the query
+    else:
+        filters = filter_selection
+        bindNames = get_bind_names(filters)
+        filters_safe_sql = f"WHERE CODE_DESC IN ({','.join(bindNames)}) "
 
     return filters, bindNames, filters_safe_sql
+
+def get_bind_names(filters):
+    return [f":filters{str(i)}" for i in range(len(filters))]
