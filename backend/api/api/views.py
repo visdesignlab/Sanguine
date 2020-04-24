@@ -136,21 +136,23 @@ def fetch_patient(request):
         return JsonResponse({"result": data})
 
 
-def summarize_attribute_w_year(request):
+def request_transfused_units(request):
     if request.method == "GET":
         # Get the parameters from the query string
         aggregatedBy = request.GET.get("aggregatedBy")
-        valueToVisualize = request.GET.get("valueToVisualize")
+        transfusion_type = request.GET.get("transfusion_type")
+        patient_ids = request.GET.get("patient_id") or ""
         year_range = request.GET.get("year_range") or ""
         filter_selection = request.GET.get("filter_selection") or ""
 
         # Parse the year_range and the filter selection
+        patient_ids = patient_ids.split(",")
         year_range = [s for s in year_range.split(",") if s.isdigit()]
         filter_selection = filter_selection.split(",")
 
         # Check the required parameters are there
-        if not (aggregatedBy and valueToVisualize and len(year_range) == 2):
-            return HttpResponseBadRequest("aggregatedBy, valueToVisualize, and year_range must be supplied.")
+        if not (transfusion_type and len(year_range) == 2):
+            return HttpResponseBadRequest("transfusion_type and year_range must be supplied.")
 
         # Coerce that params into a useable format
         min_time = f'01-JAN-{year_range[0]}'
@@ -162,7 +164,8 @@ def summarize_attribute_w_year(request):
             "FFP_UNITS",
             "PLT_UNITS",
             "CRYO_UNITS",
-            "CELL_SAVER_ML"
+            "CELL_SAVER_ML",
+            "ALL_UNITS",
         ]
         aggregates = {
             "YEAR": "EXTRACT (YEAR FROM LIMITED_SURG.DI_CASE_DATE)",
@@ -170,19 +173,25 @@ def summarize_attribute_w_year(request):
             "ANESTHOLOGIST_ID": "LIMITED_SURG.ANESTH_PROV_DWID",
         }
 
-        if valueToVisualize not in blood_products:
-            return HttpResponseBadRequest(f"valueToVisualize must be one of the following: {blood_products}")
+        if transfusion_type not in blood_products:
+            return HttpResponseBadRequest(f"transfusion_type must be one of the following: {blood_products}")
 
-        if aggregatedBy not in aggregates.keys():
+        if aggregatedBy and aggregatedBy not in aggregates.keys():
             return HttpResponseBadRequest(f"aggregatedBy must be one of the following: {list(aggregates.keys())}")
+
+        transfusion_type = "PRBC_UNITS, FFP_UNITS, PLT_UNITS, CRYO_UNITS, CELL_SAVER_ML" if transfusion_type == "ALL_UNITS" else transfusion_type
 
         # Generate the CPT filter sql
         filters, bindNames, filters_safe_sql = get_filters(filter_selection)
 
+        # Generate the patient filters
+        patBindNames = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
+        pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(patBindNames)}) " if patient_ids != [""] else ""
+
         # Build the sql query
-        # Safe to use format strings since there are limited options for aggregatedBy and valueToVisualize
+        # Safe to use format strings since there are limited options for aggregatedBy and transfusion_type
         command = (
-            f"SELECT {aggregates[aggregatedBy]}, sum({valueToVisualize}), TRNSFSD.DI_CASE_ID "
+            f"SELECT {aggregates[aggregatedBy]}, sum({transfusion_type}), TRNSFSD.DI_CASE_ID "
             "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD TRNSFSD "
             "INNER JOIN ( "
                 "SELECT * "
@@ -192,7 +201,7 @@ def summarize_attribute_w_year(request):
                     "FROM CLIN_DM.BPU_CTS_DI_BILLING_CODES BLNG "
                     "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE SURG "
                         "ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) AND (BLNG.DI_VISIT_NO = SURG.DI_VISIT_NO) AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE) "
-                    f"{filters_safe_sql}"
+                    f"{filters_safe_sql} {pat_filters_safe_sql}"
                 ")"
             ") LIMITED_SURG ON LIMITED_SURG.DI_CASE_ID = TRNSFSD.DI_CASE_ID "
             f"WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time "
@@ -210,7 +219,7 @@ def summarize_attribute_w_year(request):
         for row in result:
             result_dict.append({
                 "aggregatedBy": row[0], 
-                "valueToVisualize": row[1] or 0, 
+                "transfusion_type": row[1] or 0, 
                 "caseID": row[2]
             })
 
@@ -219,7 +228,7 @@ def summarize_attribute_w_year(request):
         cleaned = [
             {
                 "aggregatedBy": agg, 
-                "valueToVisualize": get_all_by_agg(result_dict, agg, "valueToVisualize"),
+                "transfusion_type": get_all_by_agg(result_dict, agg, "transfusion_type"),
                 "caseID": list(set(get_all_by_agg(result_dict, agg, "caseID")))
             } for agg in aggregatedBys]
         
@@ -228,64 +237,39 @@ def summarize_attribute_w_year(request):
 
 def request_individual_specific(request):
     if request.method == "GET":
+        # Get request parameters
         case_id = request.GET.get("case_id")
         attribute_to_retrieve = request.GET.get("attribute")
+        
+        # Check we have the require attributes
         if not case_id or attribute_to_retrieve:
             return HttpResponseBadRequest("case_id and attribute must be supplied")
+        
+        # Define the command dict
         command_dict = {
             "YEAR": "EXTRACT (YEAR FROM DI_CASE_DATE)",
             "SURGEON_ID": "SURGEON_PROV_DWID",
             "ANESTHOLOGIST_ID": "ANESTH_PROV_DWID"
         }
+
+        # Verify that the attribute_to_retrieve is in the command dict keys
+        if not attribute_to_retrieve in command_dict.keys():
+            return HttpResponseBadRequest("case_id and attribute must be supplied")
+
+        # Define the command, safe to use format string since the command dict has safe values
         command = (
             f"SELECT {command_dict[attribute_to_retrieve]} "
             "FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
             "WHERE DI_CASE_ID = :id"
         )
 
+        # Execute the command and return the results
         result = execute_sql(command, id = case_id)
         items = [{"result":row[0]} for row in result]
         return JsonResponse({"result": items})
 
 
-def request_transfused_units(request):
-    if request.method == "GET":
-        # Get the values from the request
-        transfusion_type = request.GET.get("transfusion_type")
-        patient_id = request.GET.get("patient_id")
-        year_range = request.GET.get("year_range") or ""
-        filter_selection = request.GET.get("filter_selection") or ""
-
-        # Parse the year_range and the filter selection
-        year_range = [s for s in year_range.split(",") if s.isdigit()]
-        filter_selection = filter_selection.split(",")
-
-        # Check to make sure we have the required parameters
-        if not (transfusion_type and len(year_range) == 2):
-            return HttpResponseBadRequest("transfusion_type and year_range must be supplied.")
-
-        # Coerce the request parameters into a format that we want
-        min_time = f'01-JAN-{year_range[0]}'
-        max_time = f'31-DEC-{year_range[1]}'
-        
-        # Define the SQL translation dictionary
-        blood_products = [
-            "PRBC_UNITS",
-            "FFP_UNITS",
-            "PLT_UNITS",
-            "CRYO_UNITS",
-            "CELL_SAVER_ML"
-        ]
-
-        # Convert the filters to SQL
-        filters, bindNames, filters_safe_sql = get_filters(filter_selection)
-
-        pat_id_filter = "" if not patient_id else f"AND CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_PAT_ID = '{patient_id}'"
-
-        # Setup the inner and outer selects
-        outer_select = "PRBC_UNITS, FFP_UNITS, PLT_UNITS, CRYO_UNITS, CELL_SAVER_ML" if transfusion_type == "ALL_UNITS" else transfusion_type
-        limit = "" if transfusion_type == "ALL_UNITS" else f"WHERE {transfusion_type} > 0"
-
+def to_be_removed(request):
         # Define the full SQL statement
         command = (
             f"SELECT {outer_select}, di_case_id, YEAR, SURGEON_ID, ANESTHOLOGIST_ID FROM ( "
@@ -302,21 +286,6 @@ def request_transfused_units(request):
             f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID "
             f") {limit}"
         )
-        
-        # Execute the query
-        result = execute_sql(
-            command, 
-            dict(zip(bindNames, filters), min_time = min_time, max_time = max_time)
-        )
-
-        # Get the raw data from the server
-        result_dict = []
-        for row in result:
-            result_dict.append({
-                "aggregatedBy": row[0], 
-                "valueToVisualize": row[1] or 0, 
-                "caseID": row[2]
-            })
 
         # Manipulate the data into the right format
         # aggregatedBys = list(set(map(lambda x: x["aggregatedBy"], result_dict)))
