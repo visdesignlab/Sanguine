@@ -80,11 +80,11 @@ def get_filters(filter_selection):
     if filter_selection == [""]:
         filters = [a[0] for a in cpt()]
         bind_names = get_bind_names(filters)
-        filters_safe_sql = f"WHERE CODE IN ({','.join(bindNames)}) "
+        filters_safe_sql = f"WHERE CODE IN ({','.join(bind_names)}) "
     # Else get the CODE_DESCs from the query
     else:
         filters = filter_selection
         bind_names = get_bind_names(filters)
-        filters_safe_sql = f"WHERE CODE_DESC IN ({','.join(bindNames)}) "
+        filters_safe_sql = f"WHERE CODE_DESC IN ({','.join(bind_names)}) "
 
     return filters, bind_names, filters_safe_sql
