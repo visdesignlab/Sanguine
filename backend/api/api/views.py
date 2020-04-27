@@ -224,7 +224,7 @@ def request_transfused_units(request):
 
         # Update the transfusion type to SUM(var) and add make a group by if we are aggregating
         transfusion_type = f"SUM({transfusion_type}), {aggregates[aggregated_by]}" if aggregated_by else f"SUM({transfusion_type})"
-        group_by = f"GROUP BY TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID, {aggregates[aggregated_by]}" if aggregated_by else "GROUP BY TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID"
+        group_by = f"GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID, {aggregates[aggregated_by]}" if aggregated_by else "GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID"
 
         # Generate the CPT filter sql
         filters, bind_names, filters_safe_sql = get_filters(filter_selection)
@@ -236,7 +236,7 @@ def request_transfused_units(request):
         # Build the sql query
         # Safe to use format strings since there are limited options for aggregated_by and transfusion_type
         command = (
-            f"SELECT TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID, {transfusion_type} "
+            f"SELECT LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID, {transfusion_type} "
             "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD TRNSFSD "
             "INNER JOIN ( "
                 "SELECT * "
@@ -321,44 +321,6 @@ def request_individual_specific(request):
         return JsonResponse({"result": items})
     else:
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
-
-
-def to_be_removed(request):
-        # Define the full SQL statement
-        command = (
-            f"SELECT {outer_select}, di_case_id, YEAR, SURGEON_ID, ANESTHESIOLOGIST_ID FROM ( "
-            f"SELECT {command_dict[transfusion_type]}, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID di_case_id, "
-            f"EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE) YEAR, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID SURGEON_ID, "
-            f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID ANESTHESIOLOGIST_ID "
-            f"FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
-            f"INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
-            f"ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID "
-            f"{extra_command}) "
-            f"WHERE CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time "
-            f"{pat_id_filter} "
-            f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE), CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID, "
-            f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID "
-            f") {limit}"
-        )
-
-        # Manipulate the data into the right format
-        # aggregated_bys = list(set(map(lambda x: x["aggregated_by"], result_dict)))
-        # cleaned = [
-        #     {
-        #         "aggregated_by": agg, 
-        #         "valueToVisualize": get_all_by_agg(result_dict, agg, "valueToVisualize"),
-        #         "caseID": list(set(get_all_by_agg(result_dict, agg, "caseID")))
-        #     } for agg in aggregated_bys]
-        
-        # return JsonResponse(cleaned, safe = False)
-
-        if transfusion_type == "ALL_UNITS":
-            items = [{"case_id": row[5], "PRBC_UNITS": row[0], "FFP_UNITS": row[1], "PLT_UNITS": row[2], "CRYO_UNITS": row[3], "CELL_SAVER_ML": row[4]}
-                 for row in result]
-        else:
-            items = [{"case_id": row[1], "transfused": row[0]}
-                 for row in result]
-        return JsonResponse({"result": items})
 
 
 def test_results(request):
