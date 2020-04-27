@@ -223,7 +223,7 @@ def request_transfused_units(request):
         transfusion_type = "PRBC_UNITS,FFP_UNITS,PLT_UNITS,CRYO_UNITS,CELL_SAVER_ML" if transfusion_type == "ALL_UNITS" else transfusion_type
 
         # Update the transfusion type to SUM(var) and add make a group by if we are aggregating
-        transfusion_type = f"SUM({transfusion_type}), {aggregates[aggregated_by]}" if aggregated_by else transfusion_type
+        transfusion_type = f"SUM({transfusion_type}), {aggregates[aggregated_by]}" if aggregated_by else f"SUM({transfusion_type})"
         group_by = f"GROUP BY TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID, {aggregates[aggregated_by]}" if aggregated_by else "GROUP BY TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID"
 
         # Generate the CPT filter sql
