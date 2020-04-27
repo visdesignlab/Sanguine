@@ -231,7 +231,7 @@ def request_transfused_units(request):
 
         # Generate the patient filters
         pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
-        pat_filters_safe_sql = f"AND TRNSFSD.DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [""] else ""
+        pat_filters_safe_sql = f"AND TRNSFSD.DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
 
         # Build the sql query
         # Safe to use format strings since there are limited options for aggregatedBy and transfusion_type
