@@ -289,7 +289,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             { # Full example
                 "transfusion_type": "PRBC_UNITS", 
                 "year_range": "2016,2017", 
-                # "patient_ids": "123,234,345",
+                "patient_ids": "68175619, 14711172, 35383429",
                 "filter_selection": "REPLACE AORTIC VALVE PERQ FEMORAL ARTRY APPROACH,CORONARY ARTERY BYPASS 1 CORONARY VENOUS GRAFT",
                 "aggregated_by": "YEAR",
             },
