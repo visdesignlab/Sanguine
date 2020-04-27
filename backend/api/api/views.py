@@ -231,7 +231,7 @@ def request_transfused_units(request):
 
         # Generate the patient filters
         pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
-        pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [""] else ""
+        pat_filters_safe_sql = f"AND TRNSFSD.DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [""] else ""
 
         # Build the sql query
         # Safe to use format strings since there are limited options for aggregatedBy and transfusion_type
@@ -250,6 +250,7 @@ def request_transfused_units(request):
                 ")"
             ") LIMITED_SURG ON LIMITED_SURG.DI_CASE_ID = TRNSFSD.DI_CASE_ID "
             f"WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time "
+            f"{pat_filters_safe_sql} "
             f"{group_by}"
         )
 
