@@ -234,7 +234,7 @@ def request_transfused_units(request):
         pat_filters_safe_sql = f"AND TRNSFSD.DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
 
         # Build the sql query
-        # Safe to use format strings since there are limited options for aggregatedBy and transfusion_type
+        # Safe to use format strings since there are limited options for aggregated_by and transfusion_type
         command = (
             f"SELECT TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID, {transfusion_type} "
             "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD TRNSFSD "
@@ -271,14 +271,14 @@ def request_transfused_units(request):
             })
 
         # Manipulate the data into the right format
-        if aggregatedBy:
-            aggregatedBys = list(set(map(lambda x: x["aggregatedBy"], result_dict)))
+        if aggregated_by:
+            aggregated_bys = list(set(map(lambda x: x["aggregated_by"], result_dict)))
             cleaned = [
                 {
-                    "aggregatedBy": agg, 
+                    "aggregated_by": agg, 
                     "transfused_units": get_all_by_agg(result_dict, agg, "transfused_units"),
                     "case_id": list(set(get_all_by_agg(result_dict, agg, "case_id")))
-                } for agg in aggregatedBys]
+                } for agg in aggregated_bys]
         else:
             cleaned = result_dict
         
@@ -342,13 +342,13 @@ def to_be_removed(request):
         )
 
         # Manipulate the data into the right format
-        # aggregatedBys = list(set(map(lambda x: x["aggregatedBy"], result_dict)))
+        # aggregated_bys = list(set(map(lambda x: x["aggregated_by"], result_dict)))
         # cleaned = [
         #     {
-        #         "aggregatedBy": agg, 
+        #         "aggregated_by": agg, 
         #         "valueToVisualize": get_all_by_agg(result_dict, agg, "valueToVisualize"),
         #         "caseID": list(set(get_all_by_agg(result_dict, agg, "caseID")))
-        #     } for agg in aggregatedBys]
+        #     } for agg in aggregated_bys]
         
         # return JsonResponse(cleaned, safe = False)
 

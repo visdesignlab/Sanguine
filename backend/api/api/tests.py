@@ -214,13 +214,13 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
                 {
                     "transfusion_type": "PRBC_UNITS", 
                     "year_range": "2016,2017", 
-                    "aggregatedBy": invalid_option,
+                    "aggregated_by": invalid_option,
                 },
             )
             self.assertEqual(response.status_code, 400)
             self.assertEqual(
                 response.content.decode(),
-                "aggregatedBy must be one of the following: ['YEAR', 'SURGEON_ID', 'ANESTHESIOLOGIST_ID']",
+                "aggregated_by must be one of the following: ['YEAR', 'SURGEON_ID', 'ANESTHESIOLOGIST_ID']",
             )
 
     def test_request_transfused_units_invalid_all_units_with_agg(self):
@@ -231,7 +231,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             {
                 "transfusion_type": "ALL_UNITS", 
                 "year_range": "2016,2017", 
-                "aggregatedBy": "YEAR",
+                "aggregated_by": "YEAR",
             },
         )
         self.assertEqual(response.status_code, 400)
@@ -259,12 +259,12 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             { # Add aggregation
                 "transfusion_type": "PRBC_UNITS", 
                 "year_range": "2016,2017", 
-                "aggregatedBy": "YEAR",
+                "aggregated_by": "YEAR",
             },
             { # Different aggregation
                 "transfusion_type": "PRBC_UNITS", 
                 "year_range": "2016,2017", 
-                "aggregatedBy": "SURGEON_ID",
+                "aggregated_by": "SURGEON_ID",
             },
             { # One patient ID
                 "transfusion_type": "PRBC_UNITS", 
@@ -291,7 +291,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
                 "year_range": "2016,2017", 
                 # "patient_ids": "123,234,345",
                 "filter_selection": "REPLACE AORTIC VALVE PERQ FEMORAL ARTRY APPROACH,CORONARY ARTERY BYPASS 1 CORONARY VENOUS GRAFT",
-                "aggregatedBy": "YEAR",
+                "aggregated_by": "YEAR",
             },
         ]
 

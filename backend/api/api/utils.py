@@ -61,7 +61,7 @@ def execute_sql(command, *args, **kwargs):
 def get_all_by_agg(result_dict, agg, variable):
     return [
         y for y in 
-        list(map(lambda x: x[variable] if x["aggregatedBy"] == agg else None, result_dict))
+        list(map(lambda x: x[variable] if x["aggregated_by"] == agg else None, result_dict))
         if y is not None
     ]
 
