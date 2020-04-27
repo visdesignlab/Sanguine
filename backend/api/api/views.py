@@ -2,17 +2,32 @@ import json
 import cx_Oracle
 import csv
 
-from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
+from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed
 from api.utils import make_connection, data_dictionary, cpt, execute_sql, get_all_by_agg, get_filters
 
 
 DE_IDENT_FIELDS = {
-
+    "patient_id": "DI_PAT_ID",
+    "visit_no": "DI_VISIT_NO",
+    "case_date": "DI_CASE_DATE",
+    "procedure_dtm": "DI_PROC_DTM",
 }
 
 IDENT_FIELDS = {
-    
+
 }
+
+DE_IDENT_TABLES = {
+    "billing_codes": "CLIN_DM.BPU_CTS_DI_BILLING_CODES",
+    "surgery_case": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE",
+}
+
+IDENT_TABLES = {
+
+}
+
+FIELDS_IN_USE = DE_IDENT_FIELDS
+TABLES_IN_USE = DE_IDENT_TABLES
 
 
 def index(request):
@@ -20,6 +35,8 @@ def index(request):
         return HttpResponse(
             "Bloodvis API endpoint. Please use the client application to access the data here."
         )
+    else:
+        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
 def get_attributes(request):
@@ -31,11 +48,11 @@ def get_attributes(request):
             "SELECT CODE_DESC, COUNT(*) FROM ("
                 "SELECT "
                     "BLNG.*, SURG.*" # ,CASE WHEN PRIM_PROC_DESC LIKE '%REDO%' THEN 1 ELSE 0 END AS REDO "
-                "FROM CLIN_DM.BPU_CTS_DI_BILLING_CODES BLNG "
-                "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE SURG "
-                    "ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) "
-                    "AND (BLNG.DI_VISIT_NO = SURG.DI_VISIT_NO) "
-                    "AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE) "
+                f"FROM {TABLES_IN_USE.get('billing_codes')} BLNG "
+                f"INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG "
+                    f"ON (BLNG.{FIELDS_IN_USE.get('patient_id')} = SURG.{FIELDS_IN_USE.get('patient_id')}) "
+                    f"AND (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')}) "
+                    f"AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')}) "
                 f"{filters_safe_sql}"
             ") "
             "GROUP BY CODE_DESC"
@@ -49,6 +66,8 @@ def get_attributes(request):
         # Return the result, the multi-selector component in React requires the below format
         items = [{"value": f"{row[0]}","count":row[1]} for row in result]
         return JsonResponse({"result": items})
+    else:
+        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
 def fetch_professional_set(request):
@@ -90,6 +109,8 @@ def fetch_professional_set(request):
         items = [{"PRBC_UNITS": row[0] if row[0] else 0, "FFP_UNITS": row[1] if row[1] else 0, "PLT_UNITS": row[2] if row[2] else 0, "CRYO_UNITS":row[3] if row[3] else 0, "CELL_SAVER_ML":row[4] if row[4] else 0, partner: row[5], "DI_CASE_ID":row[6], "DESC":row[7]}
                  for row in result]
         return JsonResponse({"result": items})
+    else:
+        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
 def fetch_surgery(request):
@@ -100,7 +121,7 @@ def fetch_surgery(request):
         if not case_id:
             return HttpResponseBadRequest("case_id must be supplied.")
         
-        command =(
+        command = (
                 "SELECT surgery.DI_CASE_DATE, surgery.DI_SURGERY_START_DTM, "
                 "surgery.DI_SURGERY_END_DTM, surgery.SURGERY_ELAP, surgery.SURGERY_TYPE_DESC, "
                 "surgery.SURGEON_PROV_DWID, surgery.ANESTH_PROV_DWID, surgery.PRIM_PROC_DESC, "
@@ -117,6 +138,8 @@ def fetch_surgery(request):
         ]
         
         return JsonResponse({"result": data})
+    else:
+        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
 def fetch_patient(request):
@@ -143,6 +166,8 @@ def fetch_patient(request):
         ]
         
         return JsonResponse({"result": data})
+    else:
+        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
 def request_transfused_units(request):
@@ -242,6 +267,8 @@ def request_transfused_units(request):
             } for agg in aggregatedBys]
         
         return JsonResponse(cleaned, safe = False)
+    else:
+        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
 def request_individual_specific(request):
@@ -276,6 +303,8 @@ def request_individual_specific(request):
         result = execute_sql(command, id = case_id)
         items = [{"result":row[0]} for row in result]
         return JsonResponse({"result": items})
+    else:
+        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
 def to_be_removed(request):
@@ -325,6 +354,8 @@ def test_results(request):
             HttpResponseBadRequest("You must supply case_ids")
 
         case_ids = case_ids.split(",")
+    else:
+        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
 def hemoglobin(request):
@@ -445,3 +476,5 @@ def hemoglobin(request):
                 "PATIENT_ID":row[0]} for row in result]
 
         return JsonResponse({"result": items})
+    else:
+        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")

@@ -244,11 +244,6 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
                 "year_range": "2016,2017", 
                 "aggregatedBy": "YEAR",
             },
-            { # Add aggregation
-                "transfusion_type": "PRBC_UNITS", 
-                "year_range": "2016,2017", 
-                "aggregatedBy": "YEAR",
-            },
             { # Different aggregation
                 "transfusion_type": "PRBC_UNITS", 
                 "year_range": "2016,2017", 
@@ -269,15 +264,10 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
                 "year_range": "2016,2017", 
                 "filter_selection": "123",
             },
-            { # One multiple pats
+            { # Multiple filter_selection
                 "transfusion_type": "PRBC_UNITS", 
                 "year_range": "2016,2017", 
                 "filter_selection": "123,234,345",
-            },
-            { # One filter_selection
-                "transfusion_type": "PRBC_UNITS", 
-                "year_range": "2016,2017", 
-                "filter_selection": "123",
             },
             { # Full example
                 "transfusion_type": "PRBC_UNITS", 
