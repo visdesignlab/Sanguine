@@ -223,6 +223,23 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
                 "aggregatedBy must be one of the following: ['YEAR', 'SURGEON_ID', 'ANESTHESIOLOGIST_ID']",
             )
 
+    def test_request_transfused_units_invalid_all_units_with_agg(self):
+        c = Client()
+
+        response = c.get(
+            "/api/request_transfused_units",
+            {
+                "transfusion_type": "ALL_UNITS", 
+                "year_range": "2016,2017", 
+                "aggregatedBy": "YEAR",
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.content.decode(),
+            "Requesting ALL_UNITS with an aggregation is unsupported, please query each unit type individually."
+        )
+
     def test_request_transfused_units_valid_types(self):
         c = Client()
 
@@ -252,28 +269,28 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             { # One patient ID
                 "transfusion_type": "PRBC_UNITS", 
                 "year_range": "2016,2017", 
-                "patient_ids": "123",
+                "patient_ids": "585148403",
             },
             { # One multiple pats
                 "transfusion_type": "PRBC_UNITS", 
                 "year_range": "2016,2017", 
-                "patient_ids": "123,234,345",
+                "patient_ids": "585148403,81015617",
             },
             { # One filter_selection
                 "transfusion_type": "PRBC_UNITS", 
                 "year_range": "2016,2017", 
-                "filter_selection": "123",
+                "filter_selection": "REPLACE AORTIC VALVE PERQ FEMORAL ARTRY APPROACH",
             },
             { # Multiple filter_selection
                 "transfusion_type": "PRBC_UNITS", 
                 "year_range": "2016,2017", 
-                "filter_selection": "123,234,345",
+                "filter_selection": "REPLACE AORTIC VALVE PERQ FEMORAL ARTRY APPROACH,CORONARY ARTERY BYPASS 1 CORONARY VENOUS GRAFT",
             },
             { # Full example
                 "transfusion_type": "PRBC_UNITS", 
                 "year_range": "2016,2017", 
-                "patient_ids": "123,234,345",
-                "filter_selection": "123,234,345",
+                # "patient_ids": "123,234,345",
+                "filter_selection": "REPLACE AORTIC VALVE PERQ FEMORAL ARTRY APPROACH,CORONARY ARTERY BYPASS 1 CORONARY VENOUS GRAFT",
                 "aggregatedBy": "YEAR",
             },
         ]
@@ -284,3 +301,4 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
                 valid_option,
             )
             self.assertEqual(response.status_code, 200)
+

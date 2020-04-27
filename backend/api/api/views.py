@@ -11,6 +11,8 @@ DE_IDENT_FIELDS = {
     "visit_no": "DI_VISIT_NO",
     "case_date": "DI_CASE_DATE",
     "procedure_dtm": "DI_PROC_DTM",
+    "surgeon_id": "SURGEON_PROV_DWID",
+    "anest_id": "ANESTH_PROV_DWID",
 }
 
 IDENT_FIELDS = {
@@ -173,7 +175,7 @@ def fetch_patient(request):
 def request_transfused_units(request):
     if request.method == "GET":
         # Get the parameters from the query string
-        aggregatedBy = request.GET.get("aggregatedBy")
+        aggregated_by = request.GET.get("aggregated_by")
         transfusion_type = request.GET.get("transfusion_type")
         patient_ids = request.GET.get("patient_id") or ""
         year_range = request.GET.get("year_range") or ""
@@ -202,18 +204,27 @@ def request_transfused_units(request):
             "ALL_UNITS",
         ]
         aggregates = {
-            "YEAR": "EXTRACT (YEAR FROM LIMITED_SURG.DI_CASE_DATE)",
-            "SURGEON_ID": "LIMITED_SURG.SURGEON_PROV_DWID",
-            "ANESTHESIOLOGIST_ID": "LIMITED_SURG.ANESTH_PROV_DWID",
+            "YEAR": f"EXTRACT (YEAR FROM LIMITED_SURG.{FIELDS_IN_USE.get('case_date')})",
+            "SURGEON_ID": f"LIMITED_SURG.{FIELDS_IN_USE.get('surgeon_id')}",
+            "ANESTHESIOLOGIST_ID": f"LIMITED_SURG.{FIELDS_IN_USE.get('anest_id')}",
         }
 
+        # Check that the params are valid
         if transfusion_type not in blood_products:
             return HttpResponseBadRequest(f"transfusion_type must be one of the following: {blood_products}")
 
-        if aggregatedBy and aggregatedBy not in aggregates.keys():
-            return HttpResponseBadRequest(f"aggregatedBy must be one of the following: {list(aggregates.keys())}")
+        if aggregated_by and (aggregated_by not in aggregates.keys()):
+            return HttpResponseBadRequest(f"If you use aggregated_by, it must be one of the following: {list(aggregates.keys())}")
 
-        transfusion_type = "PRBC_UNITS, FFP_UNITS, PLT_UNITS, CRYO_UNITS, CELL_SAVER_ML" if transfusion_type == "ALL_UNITS" else transfusion_type
+        if aggregated_by and transfusion_type == "ALL_UNITS":
+            return HttpResponseBadRequest("Requesting ALL_UNITS with an aggregation is unsupported, please query each unit type individually.")
+
+        # Update the transfusion type to something more sql friendly if "ALL_UNITS"
+        transfusion_type = "PRBC_UNITS,FFP_UNITS,PLT_UNITS,CRYO_UNITS,CELL_SAVER_ML" if transfusion_type == "ALL_UNITS" else transfusion_type
+
+        # Update the transfusion type to SUM(var) and add make a group by if we are aggregating
+        transfusion_type = f"SUM({transfusion_type})" if aggregated_by else transfusion_type
+        group_by = "GROUP BY TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID" if aggregated_by else ""
 
         # Generate the CPT filter sql
         filters, bind_names, filters_safe_sql = get_filters(filter_selection)
@@ -225,7 +236,7 @@ def request_transfused_units(request):
         # Build the sql query
         # Safe to use format strings since there are limited options for aggregatedBy and transfusion_type
         command = (
-            f"SELECT {aggregates[aggregatedBy]}, sum({transfusion_type}), TRNSFSD.DI_CASE_ID "
+            f"SELECT TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID, {transfusion_type} "
             "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD TRNSFSD "
             "INNER JOIN ( "
                 "SELECT * "
@@ -235,36 +246,40 @@ def request_transfused_units(request):
                     "FROM CLIN_DM.BPU_CTS_DI_BILLING_CODES BLNG "
                     "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE SURG "
                         "ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) AND (BLNG.DI_VISIT_NO = SURG.DI_VISIT_NO) AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE) "
-                    f"{filters_safe_sql} {pat_filters_safe_sql}"
+                    f"{filters_safe_sql}"
                 ")"
             ") LIMITED_SURG ON LIMITED_SURG.DI_CASE_ID = TRNSFSD.DI_CASE_ID "
             f"WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time "
-            f"GROUP BY {aggregates[aggregatedBy]}, TRNSFSD.DI_CASE_ID"
+            f"{group_by}"
         )
 
         # Execute the query
         result = execute_sql(
             command, 
-            dict(zip(bind_names, filters), min_time = min_time, max_time = max_time)
+            dict(zip(bind_names, filters), zip(pat_bind_names, patient_ids), min_time = min_time, max_time = max_time)
         )
 
         # Get the raw data from the server
         result_dict = []
         for row in result:
             result_dict.append({
-                "aggregatedBy": row[0], 
-                "transfusion_type": row[1] or 0, 
-                "caseID": row[2]
+                "pat_id": row[0],
+                "case_id": row[1],
+                "transfused_units": row[2] if transfusion_type in blood_products else (row[2:7]),
+                "aggregated_by": None if not aggregated_by else row[3] #aggregated_by and ALL_UNITS never happen together
             })
 
         # Manipulate the data into the right format
-        aggregatedBys = list(set(map(lambda x: x["aggregatedBy"], result_dict)))
-        cleaned = [
-            {
-                "aggregatedBy": agg, 
-                "transfusion_type": get_all_by_agg(result_dict, agg, "transfusion_type"),
-                "caseID": list(set(get_all_by_agg(result_dict, agg, "caseID")))
-            } for agg in aggregatedBys]
+        if aggregatedBy:
+            aggregatedBys = list(set(map(lambda x: x["aggregatedBy"], result_dict)))
+            cleaned = [
+                {
+                    "aggregatedBy": agg, 
+                    "transfused_units": get_all_by_agg(result_dict, agg, "transfused_units"),
+                    "case_id": list(set(get_all_by_agg(result_dict, agg, "case_id")))
+                } for agg in aggregatedBys]
+        else:
+            cleaned = result_dict
         
         return JsonResponse(cleaned, safe = False)
     else:
