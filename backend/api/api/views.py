@@ -182,7 +182,7 @@ def request_transfused_units(request):
         filter_selection = request.GET.get("filter_selection") or ""
 
         # Parse the year_range and the filter selection
-        patient_ids = patient_ids.split(",")
+        patient_ids = patient_ids.split(",") if patient_ids else []
         year_range = [s for s in year_range.split(",") if s.isdigit()]
         filter_selection = filter_selection.split(",")
 
