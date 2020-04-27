@@ -256,7 +256,7 @@ def request_transfused_units(request):
         # Execute the query
         result = execute_sql(
             command, 
-            dict(zip(bind_names, filters), zip(pat_bind_names, patient_ids), min_time = min_time, max_time = max_time)
+            dict(zip(bind_names + pat_bind_names, filters + patient_ids), min_time = min_time, max_time = max_time)
         )
 
         # Get the raw data from the server
