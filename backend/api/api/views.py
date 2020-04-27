@@ -177,7 +177,7 @@ def request_transfused_units(request):
         # Get the parameters from the query string
         aggregated_by = request.GET.get("aggregated_by")
         transfusion_type = request.GET.get("transfusion_type")
-        patient_ids = request.GET.get("patient_id") or ""
+        patient_ids = request.GET.get("patient_ids") or ""
         year_range = request.GET.get("year_range") or ""
         filter_selection = request.GET.get("filter_selection") or ""
 
@@ -224,7 +224,7 @@ def request_transfused_units(request):
 
         # Update the transfusion type to SUM(var) and add make a group by if we are aggregating
         transfusion_type = f"SUM({transfusion_type}), {aggregates[aggregated_by]}" if aggregated_by else transfusion_type
-        group_by = f"GROUP BY TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID, {aggregates[aggregated_by]}" if aggregated_by else ""
+        group_by = f"GROUP BY TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID, {aggregates[aggregated_by]}" if aggregated_by else "GROUP BY TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID"
 
         # Generate the CPT filter sql
         filters, bind_names, filters_safe_sql = get_filters(filter_selection)
