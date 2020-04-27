@@ -269,10 +269,12 @@ def request_transfused_units(request):
         result_dict = []
         for row in result:
             result_dict.append({
-                "pat_id": row[0],
-                "case_id": row[1],
-                "transfused_units": (row[2:7]) if transfusion_type == "PRBC_UNITS,FFP_UNITS,PLT_UNITS,CRYO_UNITS,CELL_SAVER_ML" else (row[2] or 0),
-                "aggregated_by": None if not aggregated_by else row[3] #aggregated_by and ALL_UNITS never happen together
+                "surgeon_id": row[0],
+                "anest_id": row[1],
+                "pat_id": row[2],
+                "case_id": row[3],
+                "transfused_units": (row[4:9]) if transfusion_type == "PRBC_UNITS,FFP_UNITS,PLT_UNITS,CRYO_UNITS,CELL_SAVER_ML" else (row[4] or 0),
+                "aggregated_by": None if not aggregated_by else row[5] #aggregated_by and ALL_UNITS never happen together
             })
 
         # Manipulate the data into the right format
