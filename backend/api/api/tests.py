@@ -220,7 +220,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             self.assertEqual(response.status_code, 400)
             self.assertEqual(
                 response.content.decode(),
-                "aggregated_by must be one of the following: ['YEAR', 'SURGEON_ID', 'ANESTHESIOLOGIST_ID']",
+                "If you use aggregated_by, it must be one of the following: ['YEAR', 'SURGEON_ID', 'ANESTHESIOLOGIST_ID']",
             )
 
     def test_request_transfused_units_invalid_all_units_with_agg(self):
