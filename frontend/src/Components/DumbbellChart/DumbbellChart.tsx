@@ -298,6 +298,7 @@ const DumbbellChart: FC<Props> = ({ interventionDate, showingAttr, sortMode, yAx
       </g>
       <g className="chart-comp" >
         <line x1={minimumOffset.left} x2={dimension.width - minimumOffset.right} y1={testValueScale(13)} y2={testValueScale(13)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
+        <line x1={minimumOffset.left} x2={dimension.width - minimumOffset.right} y1={testValueScale(7.5)} y2={testValueScale(7.5)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
 
 
         {sortedData.map((dataPoint, index) => {
