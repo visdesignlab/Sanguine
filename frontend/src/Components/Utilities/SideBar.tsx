@@ -86,20 +86,14 @@ const SideBar: FC<Props> = ({ store }: Props) => {
             <List.Header>Current View</List.Header>
             <List.Item icon="caret right" style={{ textAlign: "left" }} content={`Date Range: ${timeFormat("%Y-%m-%d")(rawDateRange[0])} - ${timeFormat("%Y-%m-%d")(rawDateRange[1])}`} />
             {currentOutputFilterSet.map((selectSet) => {
-              return <List.Item icon="caret right" style={{ textAlign: "left" }} content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`} />
+              return <List.Item
+                icon="caret right"
+                style={{ textAlign: "left" }}
+                content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`} />
             })}
           </List>
         </Container>
-        {/* <Message>
-          <Message.Header>Current View</Message.Header>
 
-          <Message.Item>
-            Date Range: {timeFormat("%Y-%m-%d")(rawDateRange[0])} - {timeFormat("%Y-%m-%d")(rawDateRange[1])}
-          </Message.Item>
-          {currentOutputFilterSet.map((selectSet) => {
-            return <Message.Item content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`} />
-          })}
-        </Message> */}
       </Grid.Row>
       <Grid.Row centered style={{ padding: "40px" }}>
         <Container style={{ height: "20vh" }}>
