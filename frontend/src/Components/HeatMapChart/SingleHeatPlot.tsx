@@ -6,7 +6,7 @@ import { HeatMapDataPoint } from "../../Interfaces/ApplicationState";
 // import { Popup } from "semantic-ui-react";
 // import { actions } from "../..";
 import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds } from "d3";
-import { highlight_color, basic_gray, blood_red } from "../../ColorProfile";
+import { highlight_orange, basic_gray, blood_red } from "../../ColorProfile";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
 

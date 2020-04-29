@@ -60,7 +60,8 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
   const {
     // perCaseSelected,
     currentSelectPatient,
-    currentSelectSet
+    currentSelectSet,
+    currentOutputFilterSet
   } = store!;
 
   const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
@@ -186,6 +187,14 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     //  return true;
   }
 
+  const decideIfFiltered = (d: BarChartDataPoint) => {
+    for (let filterSet of currentOutputFilterSet) {
+      if (aggregatedBy === filterSet.set_name && filterSet.set_value.includes(d.aggregateAttribute))
+        return true
+    }
+    return false;
+  }
+
 
   // const decideIfSelected = (d: BarChartDataPoint) => {
   //   if (selectedVal) {
@@ -272,6 +281,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         dataPoint={dataPoint}
         aggregatedBy={aggregatedBy}
         isSelected={decideIfSelected(dataPoint)}
+        isFiltered={decideIfFiltered(dataPoint)}
         howToTransform={(`translate(0,${aggregationScale(
           dataPoint.aggregateAttribute
         )})`).toString()}
