@@ -32,10 +32,8 @@ import {
 import { Popup, Button, Icon } from 'semantic-ui-react'
 import SingleViolinPlot from "./SingleViolinPlot";
 import SingleStripPlot from "./SingleStripPlot";
-import ExtraPairDumbbell from "./ExtraPairDumbbell";
-import ExtraPairBar from "./ExtraPairBar";
-import ExtraPairBasic from "./ExtraPairBasic";
-import ExtraPairViolin from "./ExtraPairViolin";
+
+import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
 
 interface OwnProps {
   aggregatedBy: string;
@@ -213,64 +211,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
   //   }
   // }
 
-  const generateExtraPairPlots = () => {
-    let transferedDistance = 0
-    let returningComponents: any = []
-    extraPairDataSet.map((pairData, index) => {
-      switch (pairData.type) {
-        case "Dumbbell":
-          transferedDistance += (extraPairWidth.Dumbbell + extraPairPadding)
-          returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Dumbbell)},0)`}>
-            <ExtraPairDumbbell aggregatedScale={aggregationScale} dataSet={pairData.data} />,
-            <ExtraPairText
-              x={extraPairWidth.Dumbbell / 2}
-              y={dimension.height - offset.bottom + 20}
-              onClick={() => actions.removeExtraPair(chartId, pairData.name)}
-            >{pairData.name}</ExtraPairText>
-          </g>);
-          break;
-        case "Violin":
-          transferedDistance += (extraPairWidth.Dumbbell + extraPairPadding)
-          returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Dumbbell)},0)`}>
-            <ExtraPairViolin
-              aggregatedScale={aggregationScale}
-              dataSet={pairData.data}
-              kdeMax={pairData.kdeMax ? pairData.kdeMax : (0)}
-              name={pairData.name}
-              medianSet={pairData.medianSet ? pairData.medianSet : 0} />,
-            <ExtraPairText
-              x={extraPairWidth.Dumbbell / 2}
-              y={dimension.height - offset.bottom + 20}
-              onClick={() => actions.removeExtraPair(chartId, pairData.name)}
-            >{pairData.name}, {pairData.name === "Preop Hemo" ? 13 : 7.5}</ExtraPairText>
-          </g>);
-          break;
-        case "BarChart":
-          transferedDistance += (extraPairWidth.BarChart + extraPairPadding)
-          returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.BarChart)},0)`}>
-            <ExtraPairBar aggregatedScale={aggregationScale} dataSet={pairData.data} />
-            <ExtraPairText
-              x={extraPairWidth.BarChart / 2}
-              y={dimension.height - offset.bottom + 20}
-              onClick={() => actions.removeExtraPair(chartId, pairData.name)}
-            >{pairData.name}</ExtraPairText>
-          </g>);
-          break;
-        case "Basic":
-          transferedDistance += (extraPairWidth.Basic + extraPairPadding)
-          returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Basic)},0)`}>
-            <ExtraPairBasic aggregatedScale={aggregationScale} dataSet={pairData.data} />
-            <ExtraPairText
-              x={extraPairWidth.Basic / 2}
-              y={dimension.height - offset.bottom + 20}
-              onClick={() => actions.removeExtraPair(chartId, pairData.name)}
-            >{pairData.name}</ExtraPairText>
-          </g>);
-          break;
-      }
-    })
-    return returningComponents
-  }
+
 
   const outputSinglePlotElement = (dataPoint: BarChartDataPoint) => {
     if (stripPlotMode) {
@@ -346,7 +287,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         })}
       </g>
       <g className="extraPairChart">
-        {generateExtraPairPlots()}
+        <ExtraPairPlotGenerator aggregationScale={aggregationScale} extraPairDataSet={extraPairDataSet} dimension={dimension} chartId={chartId} />
       </g>
 
 

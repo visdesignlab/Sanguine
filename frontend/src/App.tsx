@@ -211,6 +211,7 @@ const App: FC<Props> = ({ store }: Props) => {
             // class_name={"parent-node" + layoutE.i}
             chartId={layout.i}
             chartIndex={index}
+            extraPair={layout.extraPair}
           />
         </div>)
 

@@ -140,7 +140,7 @@ export function setupProvenance(): AppProvenance {
       y: Infinity,
       plot_type: plot_type,
     }
-    if (plot_type === "BAR") {
+    if (plot_type === "BAR" || plot_type === "HEATMAP") {
       newLayoutElement.extraPair = [];
     }
     if (interventionDate) {

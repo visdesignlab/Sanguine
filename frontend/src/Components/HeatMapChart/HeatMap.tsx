@@ -35,13 +35,9 @@ import {
     minimumOffset
 } from "../../Interfaces/ApplicationState";
 import { Popup, Button, Icon } from 'semantic-ui-react'
-// import SingleViolinPlot from "./SingleViolinPlot";
-// import SingleStripPlot from "./SingleStripPlot";
-import ExtraPairDumbbell from "../BarChart/ExtraPairDumbbell";
-import ExtraPairBar from "../BarChart/ExtraPairBar";
-import ExtraPairBasic from "../BarChart/ExtraPairBasic";
-import ExtraPairViolin from "../BarChart/ExtraPairViolin";
+
 import SingleHeatPlot from "./SingleHeatPlot";
+import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
 
 interface OwnProps {
     aggregatedBy: string;
@@ -194,64 +190,6 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     //   }
     // }
 
-    const generateExtraPairPlots = () => {
-        let transferedDistance = 0
-        let returningComponents: any = []
-        extraPairDataSet.map((pairData, index) => {
-            switch (pairData.type) {
-                case "Dumbbell":
-                    transferedDistance += (extraPairWidth.Dumbbell + extraPairPadding)
-                    returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Dumbbell)},0)`}>
-                        <ExtraPairDumbbell aggregatedScale={aggregationScale} dataSet={pairData.data} />,
-            <ExtraPairText
-                            x={extraPairWidth.Dumbbell / 2}
-                            y={dimension.height - offset.bottom + 20}
-                            onClick={() => actions.removeExtraPair(chartId, pairData.name)}
-                        >{pairData.name}</ExtraPairText>
-                    </g>);
-                    break;
-                case "Violin":
-                    transferedDistance += (extraPairWidth.Dumbbell + extraPairPadding)
-                    returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Dumbbell)},0)`}>
-                        <ExtraPairViolin
-                            medianSet={pairData.medianSet}
-                            aggregatedScale={aggregationScale}
-                            dataSet={pairData.data}
-                            name={pairData.name}
-                            kdeMax={pairData.kdeMax ? pairData.kdeMax : (0)} />,
-            <ExtraPairText
-                            x={extraPairWidth.Dumbbell / 2}
-                            y={dimension.height - offset.bottom + 20}
-                            onClick={() => actions.removeExtraPair(chartId, pairData.name)}
-                        >{pairData.name}</ExtraPairText>
-                    </g>);
-                    break;
-                case "BarChart":
-                    transferedDistance += (extraPairWidth.BarChart + extraPairPadding)
-                    returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.BarChart)},0)`}>
-                        <ExtraPairBar aggregatedScale={aggregationScale} dataSet={pairData.data} />
-                        <ExtraPairText
-                            x={extraPairWidth.BarChart / 2}
-                            y={dimension.height - offset.bottom + 20}
-                            onClick={() => actions.removeExtraPair(chartId, pairData.name)}
-                        >{pairData.name}</ExtraPairText>
-                    </g>);
-                    break;
-                case "Basic":
-                    transferedDistance += (extraPairWidth.Basic + extraPairPadding)
-                    returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Basic)},0)`}>
-                        <ExtraPairBasic aggregatedScale={aggregationScale} dataSet={pairData.data} />
-                        <ExtraPairText
-                            x={extraPairWidth.Basic / 2}
-                            y={dimension.height - offset.bottom + 20}
-                            onClick={() => actions.removeExtraPair(chartId, pairData.name)}
-                        >{pairData.name}</ExtraPairText>
-                    </g>);
-                    break;
-            }
-        })
-        return returningComponents
-    }
 
     const outputSinglePlotElement = (dataPoint: HeatMapDataPoint) => {
 
@@ -306,7 +244,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                 })}
             </g>
             <g className="extraPairChart">
-                {generateExtraPairPlots()}
+                <ExtraPairPlotGenerator extraPairDataSet={extraPairDataSet} chartId={chartId} aggregationScale={aggregationScale} dimension={dimension} />
             </g>
 
 
@@ -315,9 +253,3 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
 }
 export default inject("store")(observer(HeatMap));
 
-const ExtraPairText = styled(`text`)`
-  font-size: 11px
-  text-anchor: middle
-  alignment-baseline:hanging
-  cursor:pointer
-`
