@@ -39,7 +39,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     console.log(data.value)
     if (data.value.length > 1) {
 
-      actions.dateRangeChange(new Date(data.value))
+      actions.dateRangeChange([new Date(data.value[0]), new Date(data.value[1])])
     }
   }
 
