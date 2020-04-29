@@ -5,11 +5,12 @@ import { inject, observer } from "mobx-react";
 import { BarChartDataPoint } from "../../Interfaces/ApplicationState";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
-import { highlight_color, basic_gray } from "../../ColorProfile";
+import { highlight_orange, basic_gray, highlight_blue } from "../../ColorProfile";
 
 interface OwnProps {
   dataPoint: BarChartDataPoint;
   isSelected: boolean;
+  isFiltered: boolean;
   path: string;
   aggregatedBy: string;
   howToTransform: string;
@@ -20,7 +21,7 @@ export type Props = OwnProps;
 
 
 
-const SingleViolinPlot: FC<Props> = ({ howToTransform, dataPoint, aggregatedBy, isSelected, path, store }: Props) => {
+const SingleViolinPlot: FC<Props> = ({ howToTransform, isFiltered, dataPoint, aggregatedBy, isSelected, path, store }: Props) => {
   return (<Popup
     content={dataPoint.totalVal}
     key={dataPoint.aggregateAttribute}
@@ -38,6 +39,7 @@ const SingleViolinPlot: FC<Props> = ({ howToTransform, dataPoint, aggregatedBy, 
         }}
 
         isselected={isSelected}
+        isfiltered={isFiltered}
         transform={howToTransform}
       />
     }
@@ -48,8 +50,9 @@ export default inject("store")(observer(SingleViolinPlot));
 
 interface ViolinLineProp {
   isselected: boolean;
+  isfiltered: boolean;
 }
 const ViolinLine = styled(`path`) <ViolinLineProp>`
-    fill: ${props => (props.isselected ? highlight_color : basic_gray)};
-    stroke: ${props => (props.isselected ? highlight_color : basic_gray)};
+    fill: ${props => (props.isfiltered ? highlight_orange : basic_gray)};
+    stroke: ${props => (props.isselected ? highlight_blue : basic_gray)};
   `;

@@ -29,7 +29,7 @@ import {
 } from "d3";
 import { DumbbellDataPoint, minimumOffset, AxisLabelDict, SelectSet, minimumWidthScale } from "../../Interfaces/ApplicationState";
 import CustomizedAxis from "../Utilities/CustomizedAxis";
-import { preop_color, basic_gray, highlight_color, postop_color } from "../../ColorProfile"
+import { preop_color, basic_gray, highlight_orange, postop_color } from "../../ColorProfile"
 
 interface OwnProps {
   yAxisName: string;
@@ -412,14 +412,14 @@ interface AverageLineProps {
 
 const Circle = styled(`circle`) <DotProps>`
   r:4px
-  fill: ${props => (props.isselected ? highlight_color : props.ispreop ? preop_color : postop_color)};
+  fill: ${props => (props.isselected ? highlight_orange : props.ispreop ? preop_color : postop_color)};
   opacity:${props => props.isselected ? 1 : 0.8}
 `;
 
 const Rect = styled(`rect`) <RectProps>`
  width:1.5px
  opacity:${props => props.isselected ? 1 : 0.5}
- fill: ${props => (props.isselected ? highlight_color : basic_gray)};
+ fill: ${props => (props.isselected ? highlight_orange : basic_gray)};
 `;
 
 const Line = styled(`line`) < AverageLineProps>`

@@ -13,7 +13,7 @@ import { actions } from "../..";
 import { ScatterDataPoint, offset, AxisLabelDict, SelectSet } from "../../Interfaces/ApplicationState";
 import { select, scaleLinear, axisLeft, axisBottom, brush, event, range, scaleOrdinal, ScaleOrdinal } from "d3";
 import CustomizedAxis from "../Utilities/CustomizedAxis";
-import { highlight_color, basic_gray } from "../../ColorProfile";
+import { highlight_orange, basic_gray } from "../../ColorProfile";
 
 interface OwnProps {
     yAxisName: string;
@@ -190,7 +190,7 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
 
                     <Circle cx={cx}
                         cy={cy}
-                        fill={brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1] ? highlight_color : basic_gray}
+                        fill={brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1] ? highlight_orange : basic_gray}
                         isselected={decideIfSelected(dataPoint)}
                         onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />
