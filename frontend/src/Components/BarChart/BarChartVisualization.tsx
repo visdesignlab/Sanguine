@@ -164,6 +164,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     if (extraPair) {
       extraPair.forEach((variable: string) => {
         let newData = {} as any;
+        let medianData = {} as any;
         let kdeMax = 0;
         switch (variable) {
           case "Total Transfusion":
@@ -188,20 +189,21 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             newExtraPairData.push({ name: "Zero %", data: newData, type: "Basic" });
             break;
           case "Preop Hemoglobin":
-            //let newData = {} as any;
+
             data.original.map((dataPoint: BarChartDataPoint) => {
               newData[dataPoint.aggregateAttribute] = [];
             });
             hemoglobinDataSet.map((ob: any) => {
               const begin = parseFloat(ob.HEMO[0]);
-              // const end = parseFloat(ob.HEMO[1]);
               if (newData[ob[aggregatedBy]] && begin > 0 && caseIDList[ob.CASE_ID]) {
                 newData[ob[aggregatedBy]].push(begin);
               }
             });
 
             for (let prop in newData) {
+              medianData[prop] = median(newData[prop])
               let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
+
               pd = [{ x: 0, y: 0 }].concat(pd)
               let reverse_pd = pd.map((pair: any) => {
                 kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
@@ -209,8 +211,9 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
               }).reverse()
               pd = pd.concat(reverse_pd)
               newData[prop] = pd
+
             }
-            newExtraPairData.push({ name: "Preop Hemo", data: newData, type: "Violin", kdeMax: kdeMax });
+            newExtraPairData.push({ name: "Preop Hemo", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
             break;
           case "Postop Hemoglobin":
             //let newData = {} as any;
@@ -226,6 +229,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             });
 
             for (let prop in newData) {
+              medianData[prop] = median(newData[prop])
               let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
               pd = [{ x: 0, y: 0 }].concat(pd)
               let reverse_pd = pd.map((pair: any) => {
@@ -234,9 +238,10 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
               }).reverse()
               pd = pd.concat(reverse_pd)
               newData[prop] = pd
+
             }
 
-            newExtraPairData.push({ name: "Postop Hemo", data: newData, type: "Violin", kdeMax: kdeMax });
+            newExtraPairData.push({ name: "Postop Hemo", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
             break;
           default:
             break;

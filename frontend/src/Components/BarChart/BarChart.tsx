@@ -48,7 +48,7 @@ interface OwnProps {
   yMax: number;
   //  selectedVal: number | null;
   stripPlotMode: boolean;
-  extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number }[];
+  extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];
 }
 
 export type Props = OwnProps;
@@ -231,11 +231,16 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         case "Violin":
           transferedDistance += (extraPairWidth.Dumbbell + extraPairPadding)
           returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Dumbbell)},0)`}>
-            <ExtraPairViolin aggregatedScale={aggregationScale} dataSet={pairData.data} kdeMax={pairData.kdeMax ? pairData.kdeMax : (0)} />,
+            <ExtraPairViolin
+              aggregatedScale={aggregationScale}
+              dataSet={pairData.data}
+              kdeMax={pairData.kdeMax ? pairData.kdeMax : (0)}
+              name={pairData.name}
+              medianSet={pairData.medianSet ? pairData.medianSet : 0} />,
             <ExtraPairText
               x={extraPairWidth.Dumbbell / 2}
               y={dimension.height - offset.bottom + 20}
-            >{pairData.name}</ExtraPairText>
+            >{pairData.name}, {pairData.name === "Preop Hemo" ? 13 : 7.5}</ExtraPairText>
           </g>);
           break;
         case "BarChart":
