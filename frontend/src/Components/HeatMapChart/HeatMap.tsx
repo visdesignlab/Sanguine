@@ -54,7 +54,7 @@ interface OwnProps {
     yMax: number;
     //  selectedVal: number | null;
     stripPlotMode: boolean;
-    extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number }[];
+    extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];
 }
 
 export type Props = OwnProps;
@@ -212,7 +212,12 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregated
                 case "Violin":
                     transferedDistance += (extraPairWidth.Dumbbell + extraPairPadding)
                     returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Dumbbell)},0)`}>
-                        <ExtraPairViolin aggregatedScale={aggregationScale} dataSet={pairData.data} kdeMax={pairData.kdeMax ? pairData.kdeMax : (0)} />,
+                        <ExtraPairViolin
+                            medianSet={pairData.medianSet}
+                            aggregatedScale={aggregationScale}
+                            dataSet={pairData.data}
+                            name={pairData.name}
+                            kdeMax={pairData.kdeMax ? pairData.kdeMax : (0)} />,
             <ExtraPairText
                             x={extraPairWidth.Dumbbell / 2}
                             y={dimension.height - offset.bottom + 20}
