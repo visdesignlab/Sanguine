@@ -40,7 +40,7 @@ import ExtraPairViolin from "./ExtraPairViolin";
 interface OwnProps {
   aggregatedBy: string;
   valueToVisualize: string;
-  // chartId: string;
+  chartId: string;
   store?: Store;
   dimensionWhole: { width: number, height: number }
   data: BarChartDataPoint[];
@@ -53,7 +53,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax }: Props) => {
+const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax, chartId }: Props) => {
 
   const svgSelection = select(svg.current);
 
@@ -225,6 +225,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
             <ExtraPairText
               x={extraPairWidth.Dumbbell / 2}
               y={dimension.height - offset.bottom + 20}
+              onClick={() => actions.removeExtraPair(chartId, pairData.name)}
             >{pairData.name}</ExtraPairText>
           </g>);
           break;
@@ -240,6 +241,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
             <ExtraPairText
               x={extraPairWidth.Dumbbell / 2}
               y={dimension.height - offset.bottom + 20}
+              onClick={() => actions.removeExtraPair(chartId, pairData.name)}
             >{pairData.name}, {pairData.name === "Preop Hemo" ? 13 : 7.5}</ExtraPairText>
           </g>);
           break;
@@ -250,6 +252,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
             <ExtraPairText
               x={extraPairWidth.BarChart / 2}
               y={dimension.height - offset.bottom + 20}
+              onClick={() => actions.removeExtraPair(chartId, pairData.name)}
             >{pairData.name}</ExtraPairText>
           </g>);
           break;
@@ -260,6 +263,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
             <ExtraPairText
               x={extraPairWidth.Basic / 2}
               y={dimension.height - offset.bottom + 20}
+              onClick={() => actions.removeExtraPair(chartId, pairData.name)}
             >{pairData.name}</ExtraPairText>
           </g>);
           break;
@@ -355,4 +359,5 @@ const ExtraPairText = styled(`text`)`
   font-size: 11px
   text-anchor: middle
   alignment-baseline:hanging
+  cursor:pointer
 `

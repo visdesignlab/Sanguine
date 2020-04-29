@@ -188,7 +188,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             })
             newExtraPairData.push({ name: "Zero %", data: newData, type: "Basic" });
             break;
-          case "Preop Hemoglobin":
+          case "Preop Hemo":
 
             data.original.map((dataPoint: BarChartDataPoint) => {
               newData[dataPoint.aggregateAttribute] = [];
@@ -215,7 +215,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             }
             newExtraPairData.push({ name: "Preop Hemo", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
             break;
-          case "Postop Hemoglobin":
+          case "Postop Hemo":
             //let newData = {} as any;
             data.original.map((dataPoint: BarChartDataPoint) => {
               newData[dataPoint.aggregateAttribute] = [];
@@ -282,14 +282,14 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                 <Dropdown.Menu>
                   <Dropdown.Item
                     onClick={() => {
-                      actions.changeExtraPair(chartId, "Preop Hemoglobin");
+                      actions.changeExtraPair(chartId, "Preop Hemo");
                     }}
                   >
                     Preop Hemoglobin
             </Dropdown.Item>
                   <Dropdown.Item
                     onClick={() => {
-                      actions.changeExtraPair(chartId, "Postop Hemoglobin");
+                      actions.changeExtraPair(chartId, "Postop Hemo");
                     }}
                   >
                     Postop Hemoglobin
@@ -343,6 +343,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
           chart # ${chartId}
         </text> */}
             <BarChart
+              chartId={chartId}
               dimensionWhole={dimensions}
               data={data.original}
               svg={svgRef}

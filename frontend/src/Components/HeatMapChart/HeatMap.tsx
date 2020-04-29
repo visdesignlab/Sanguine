@@ -46,20 +46,20 @@ import SingleHeatPlot from "./SingleHeatPlot";
 interface OwnProps {
     aggregatedBy: string;
     valueToVisualize: string;
-    // chartId: string;
+    chartId: string;
     store?: Store;
     dimensionWhole: { width: number, height: number }
     data: HeatMapDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
     yMax: number;
     //  selectedVal: number | null;
-    stripPlotMode: boolean;
+    // stripPlotMode: boolean;
     extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];
 }
 
 export type Props = OwnProps;
 
-const HeatMap: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax }: Props) => {
+const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax }: Props) => {
 
     const svgSelection = select(svg.current);
 
@@ -206,6 +206,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregated
             <ExtraPairText
                             x={extraPairWidth.Dumbbell / 2}
                             y={dimension.height - offset.bottom + 20}
+                            onClick={() => actions.removeExtraPair(chartId, pairData.name)}
                         >{pairData.name}</ExtraPairText>
                     </g>);
                     break;
@@ -221,6 +222,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregated
             <ExtraPairText
                             x={extraPairWidth.Dumbbell / 2}
                             y={dimension.height - offset.bottom + 20}
+                            onClick={() => actions.removeExtraPair(chartId, pairData.name)}
                         >{pairData.name}</ExtraPairText>
                     </g>);
                     break;
@@ -231,6 +233,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregated
                         <ExtraPairText
                             x={extraPairWidth.BarChart / 2}
                             y={dimension.height - offset.bottom + 20}
+                            onClick={() => actions.removeExtraPair(chartId, pairData.name)}
                         >{pairData.name}</ExtraPairText>
                     </g>);
                     break;
@@ -241,6 +244,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregated
                         <ExtraPairText
                             x={extraPairWidth.Basic / 2}
                             y={dimension.height - offset.bottom + 20}
+                            onClick={() => actions.removeExtraPair(chartId, pairData.name)}
                         >{pairData.name}</ExtraPairText>
                     </g>);
                     break;
@@ -315,4 +319,5 @@ const ExtraPairText = styled(`text`)`
   font-size: 11px
   text-anchor: middle
   alignment-baseline:hanging
+  cursor:pointer
 `

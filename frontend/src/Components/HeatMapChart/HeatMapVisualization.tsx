@@ -160,7 +160,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                         })
                         newExtraPairData.push({ name: "Zero %", data: newData, type: "Basic" });
                         break;
-                    case "Preop Hemoglobin":
+                    case "Preop Hemo":
                         //let newData = {} as any;
                         data.original.map((dataPoint: HeatMapDataPoint) => {
                             newData[dataPoint.aggregateAttribute] = [];
@@ -185,7 +185,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                         }
                         newExtraPairData.push({ name: "Preop Hemo", data: newData, type: "Violin", kdeMax: kdeMax });
                         break;
-                    case "Postop Hemoglobin":
+                    case "Postop Hemo":
                         //let newData = {} as any;
                         data.original.map((dataPoint: HeatMapDataPoint) => {
                             newData[dataPoint.aggregateAttribute] = [];
@@ -318,7 +318,8 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                             valueToVisualize={valueToVisualize}
                             yMax={yMax.original}
                             // selectedVal={selectedBar}
-                            stripPlotMode={stripPlotMode}
+                            chartId={chartId}
+                            // stripPlotMode={stripPlotMode}
                             extraPairDataSet={extraPairData}
                         />
                     </SVG>
