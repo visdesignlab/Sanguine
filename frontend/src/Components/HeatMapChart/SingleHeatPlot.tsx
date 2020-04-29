@@ -6,7 +6,7 @@ import { HeatMapDataPoint } from "../../Interfaces/ApplicationState";
 // import { Popup } from "semantic-ui-react";
 // import { actions } from "../..";
 import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds } from "d3";
-import { highlight_orange, basic_gray, blood_red } from "../../ColorProfile";
+import { highlight_orange, basic_gray, blood_red, highlight_blue } from "../../ColorProfile";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
 
@@ -14,6 +14,7 @@ interface OwnProps {
     dataPoint: HeatMapDataPoint;
     isSelected: boolean;
     aggregatedBy: string;
+    isFiltered: boolean;
     howToTransform: string;
     store?: Store;
     valueScale: ScaleBand<any>;
@@ -22,7 +23,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggregatedBy, isSelected, valueScale, store }: Props) => {
+const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggregatedBy, isSelected, valueScale, store, isFiltered }: Props) => {
     const colorScale = scaleLinear().domain([0, 1]).range([0.1, 1])
 
     return (
@@ -40,6 +41,8 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
                                 transform={howToTransform}
                                 width={valueScale.bandwidth()}
                                 height={bandwidth}
+                                isselected={isSelected}
+                                isfiltered={isFiltered}
                                 onClick={(e) => {
                                     actions.selectSet(
                                         {
@@ -59,9 +62,14 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
 
 export default inject("store")(observer(SingleHeatPlot));
 
+interface HeatRectProp {
+    isselected: boolean;
+    isfiltered: boolean;
+}
 
-
-const HeatRect = styled(`rect`)`
+const HeatRect = styled(`rect`) <HeatRectProp>`
     y:0;
-    opacity:0.6
+    opacity:0.6;
+    stroke: ${props => (props.isselected ? highlight_blue : (props.isfiltered ? highlight_orange : "none"))};
+    stroke-width:3;
   `;

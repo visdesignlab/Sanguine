@@ -62,6 +62,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     const {
         // perCaseSelected,
         currentSelectPatient,
+        currentOutputFilterSet,
         currentSelectSet
     } = store!;
 
@@ -171,6 +172,13 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         }
         //  return true;
     }
+    const decideIfFiltered = (d: HeatMapDataPoint) => {
+        for (let filterSet of currentOutputFilterSet) {
+            if (aggregatedBy === filterSet.set_name && filterSet.set_value.includes(d.aggregateAttribute))
+                return true
+        }
+        return false;
+    }
 
 
     // const decideIfSelected = (d: BarChartDataPoint) => {
@@ -195,6 +203,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
 
         return ([<SingleHeatPlot
             isSelected={decideIfSelected(dataPoint)}
+            isFiltered={decideIfFiltered(dataPoint)}
             bandwidth={aggregationScale.bandwidth()}
             valueScale={valueScale as ScaleBand<any>}
             aggregatedBy={aggregatedBy}

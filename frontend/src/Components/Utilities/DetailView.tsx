@@ -7,6 +7,7 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import Store from "../../Interfaces/Store";
 import { Message, List } from "semantic-ui-react";
+import { HIPAA_Sensitive } from "../../Interfaces/ApplicationState";
 
 interface OwnProps {
     store?: Store;
@@ -55,12 +56,15 @@ const DetailView: FC<Props> = ({ store }: Props) => {
         if (individualInfo) {
 
             for (let [key, val] of Object.entries(individualInfo)) {
-                result.push(
-                    <List.Item>
-                        <List.Header>{key}</List.Header>
-                        {/* {val} */}
-                        x
-                    </List.Item>)
+                if (!HIPAA_Sensitive.has(key)) {
+                    result.push(
+
+                        <List.Item>
+                            <List.Header>{key}</List.Header>
+                            {val}
+                        </List.Item>)
+                }
+
             }
         }
         return result
@@ -75,3 +79,4 @@ const DetailView: FC<Props> = ({ store }: Props) => {
 }
 
 export default inject("store")(observer(DetailView));
+
