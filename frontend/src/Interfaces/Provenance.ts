@@ -35,6 +35,7 @@ interface AppProvenance {
     selectSet: (data: SelectSet, shiftKeyPressed: boolean) => void;
     storeHemoData: (data: any) => void;
     changeExtraPair: (chartID: string, newExtraPair: string) => void;
+    removeExtraPair: (chartID: string, removeingPair: string) => void;
     changeChart: (x: string, y: string, i: string, type: string) => void;
   }
 }
@@ -127,7 +128,7 @@ export function setupProvenance(): AppProvenance {
   }
 
   const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plot_type: string, interventionDate?: Date) => {
-    // console.log('add')
+
     const newLayoutElement: LayoutElement = {
       aggregatedBy: xAxisAttribute,
       valueToVisualize: yAxisAttribute,
@@ -263,15 +264,7 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  // const togglePerCase = (event: any, perCaseSelected: any) => {
-  //   provenance.applyAction(
-  //     `Per Case ${perCaseSelected.checked}`,
-  //     (state: ApplicationState) => {
-  //       state.perCaseSelected = perCaseSelected.checked;
-  //       return state;
-  //     }
-  //   )
-  // };
+
 
   const toggleShowZero = (event: any, showZero: any) => {
     provenance.applyAction(
@@ -284,15 +277,7 @@ export function setupProvenance(): AppProvenance {
     )
   };
 
-  // const toggleDumbbell = (event: any, dumbbellSorted: any) => {
-  //   provenance.applyAction(
-  //     `dumbbell sort ${dumbbellSorted}`,
-  //     (state: ApplicationState) => {
-  //       state.dumbbellSorted = dumbbellSorted.checked;
-  //       return state;
-  //     }
-  //   )
-  // }
+
 
   const changeExtraPair = (chartID: string, newExtraPair: string) => {
     provenance.applyAction(
@@ -307,6 +292,26 @@ export function setupProvenance(): AppProvenance {
           }
           return d
         })
+        return state;
+      }
+    )
+  }
+
+  const removeExtraPair = (chartID: string, removeingPair: string) => {
+    provenance.applyAction(
+      `removing extra pair of ${chartID}`,
+      (state: ApplicationState) => {
+        //  console.log(removeingPair, chartID, state)
+        state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
+          if (d.i === chartID && d.extraPair) {
+            d.extraPair = d.extraPair.filter((l) => {
+
+              return (l !== removeingPair)
+            })
+          }
+          return d
+        })
+        //   console.log(state)
         return state;
       }
     )
@@ -329,17 +334,7 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  // const yearRangeChange = (newYearRange: any) => {
-  //   provenance.applyAction(
-  //     `Change Year Range To ${newYearRange}`,
-  //     (state: ApplicationState) => {
-  //       if (newYearRange !== state.yearRange) {
-  //         state.yearRange = newYearRange;
-  //       }
-  //       return state;
-  //     }
-  //   );
-  // };
+
 
   const dateRangeChange = (newDateRange: any) => {
     provenance.applyAction(
@@ -471,6 +466,7 @@ export function setupProvenance(): AppProvenance {
       selectSet,
       storeHemoData,
       changeExtraPair,
+      removeExtraPair,
       loadPreset,
       currentOutputFilterSetChange,
       clearOutputFilterSet
