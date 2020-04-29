@@ -138,6 +138,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             extraPair.forEach((variable: string) => {
                 let newData = {} as any;
                 let kdeMax = 0;
+                let medianData = {} as any;
                 switch (variable) {
                     case "Total Transfusion":
                         //let newDataBar = {} as any;
@@ -174,6 +175,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                         });
 
                         for (let prop in newData) {
+                            medianData[prop] = median(newData[prop])
                             let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
                             pd = [{ x: 0, y: 0 }].concat(pd)
                             let reverse_pd = pd.map((pair: any) => {
@@ -183,7 +185,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                             pd = pd.concat(reverse_pd)
                             newData[prop] = pd
                         }
-                        newExtraPairData.push({ name: "Preop Hemo", data: newData, type: "Violin", kdeMax: kdeMax });
+                        newExtraPairData.push({ name: "Preop Hemo", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
                         break;
                     case "Postop Hemo":
                         //let newData = {} as any;
@@ -199,6 +201,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                         });
 
                         for (let prop in newData) {
+                            medianData[prop] = median(newData[prop])
                             let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
                             pd = [{ x: 0, y: 0 }].concat(pd)
                             let reverse_pd = pd.map((pair: any) => {
@@ -209,7 +212,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                             newData[prop] = pd
                         }
 
-                        newExtraPairData.push({ name: "Postop Hemo", data: newData, type: "Violin", kdeMax: kdeMax });
+                        newExtraPairData.push({ name: "Postop Hemo", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
                         break;
                     default:
                         break;
@@ -222,6 +225,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
 
     useMemo(() => {
         makeExtraPairData();
+        console.log(extraPairData)
     }, [layoutArray, data, hemoglobinDataSet]);
 
     const toggleStripGraphMode = () => {
@@ -250,14 +254,14 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                                 <Dropdown.Menu>
                                     <Dropdown.Item
                                         onClick={() => {
-                                            actions.changeExtraPair(chartId, "Preop Hemoglobin");
+                                            actions.changeExtraPair(chartId, "Preop Hemo");
                                         }}
                                     >
                                         Preop Hemoglobin
                                     </Dropdown.Item>
                                     <Dropdown.Item
                                         onClick={() => {
-                                            actions.changeExtraPair(chartId, "Postop Hemoglobin");
+                                            actions.changeExtraPair(chartId, "Postop Hemo");
                                         }}
                                     >
                                         Postop Hemoglobin
@@ -295,21 +299,8 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                         </Menu.Item>
                     </Menu>
                 </Grid.Column>
-                {/* {extraPairData.map((d)=>{
-        return <Grid.Column><SVG></SVG></Grid.Column>
-      })} */}
                 <Grid.Column width={(15) as any}>
                     <SVG ref={svgRef}>
-                        {/* <text
-          x="0"
-          y="0"
-          style={{
-            fontSize: "10px",
-            alignmentBaseline: "hanging"
-          }}
-        >
-          chart # ${chartId}
-        </text> */}
                         <HeatMap
                             dimensionWhole={dimensions}
                             data={data.original}
