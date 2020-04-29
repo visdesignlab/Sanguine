@@ -6,7 +6,7 @@ import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat } from "d3";
 import { actions } from "../..";
 import { AxisLabelDict } from "../../Interfaces/ApplicationState";
-import { basic_gray } from "../../ColorProfile";
+import { basic_gray, highlight_orange } from "../../ColorProfile";
 
 interface OwnProps {
   store?: Store;
@@ -86,9 +86,9 @@ const SideBar: FC<Props> = ({ store }: Props) => {
             <List.Header>Current View</List.Header>
             <List.Item icon="caret right" style={{ textAlign: "left" }} content={`Date Range: ${timeFormat("%Y-%m-%d")(rawDateRange[0])} - ${timeFormat("%Y-%m-%d")(rawDateRange[1])}`} />
             {currentOutputFilterSet.map((selectSet) => {
-              return <List.Item
+              return <FilterListIT
                 icon="caret right"
-                style={{ textAlign: "left" }}
+                onClick={() => { actions.clearOutputFilterSet(selectSet.set_name) }}
                 content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`} />
             })}
           </List>
@@ -100,14 +100,14 @@ const SideBar: FC<Props> = ({ store }: Props) => {
           <List>
             <List.Header>Current Selected</List.Header>
             {currentSelectSet.map((selectSet) => {
-              return <List.Item icon="caret right" style={{ textAlign: "left" }} content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
+              return <FilterListIT icon="caret right" onClick={() => { actions.clearSelectSet(selectSet.set_name) }} content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
             })}
             <List.Item>
               <Button disabled={!(currentSelectSet.length > 0)}
                 basic size="tiny" content="Create Filter" onClick={actions.currentOutputFilterSetChange}
               />
               <Button disabled={!(currentOutputFilterSet.length > 0)}
-                basic size="tiny" content="Clear Filter" onClick={actions.clearOutputFilterSet}
+                basic size="tiny" content="Clear Filter" onClick={() => { actions.clearOutputFilterSet() }}
               />
             </List.Item>
           </List>
@@ -173,5 +173,13 @@ const ListIT = styled(List.Item) <ListITProps>`
   background:${props => props.isSelected ? '#ffdbb8' : 'none'};
   &:hover{
     background:#d0e4f5;
+  }
+`
+
+const FilterListIT = styled(List.Item)`
+  text-align: left;
+  cursor: pointer;
+  &:hover{
+    text-shadow: 2px 2px 5px ${highlight_orange};
   }
 `

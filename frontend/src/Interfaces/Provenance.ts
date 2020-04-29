@@ -22,7 +22,8 @@ interface AppProvenance {
     // toggleDumbbell: (event: any, data: any) => void;
     filterSelectionChange: (data: any) => void;
     currentOutputFilterSetChange: () => void;
-    clearOutputFilterSet: () => void;
+    clearOutputFilterSet: (target?: string) => void;
+    clearSelectSet: (target?: string) => void;
 
     // yearRangeChange: (data: any) => void;
     dateRangeChange: (data: any) => void;
@@ -401,6 +402,16 @@ export function setupProvenance(): AppProvenance {
       })
   }
 
+  const clearSelectSet = (target?: string) => {
+    provenance.applyAction(
+      `delete select set`,
+      (state: ApplicationState) => {
+        state.currentSelectSet = state.currentSelectSet.filter(d => d.set_name !== target)
+        return state;
+      }
+    )
+  }
+
   const currentOutputFilterSetChange = () => {
     provenance.applyAction(
       `change output filter`,
@@ -412,11 +423,15 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const clearOutputFilterSet = () => {
+  const clearOutputFilterSet = (target?: string) => {
     provenance.applyAction(
       `clear output filter`,
       (state: ApplicationState) => {
-        state.currentOutputFilterSet = [];
+        if (!target) {
+          state.currentOutputFilterSet = [];
+        } else {
+          state.currentOutputFilterSet = state.currentOutputFilterSet.filter(d => d.set_name !== target)
+        }
         return state;
       }
     )
@@ -469,6 +484,7 @@ export function setupProvenance(): AppProvenance {
       removeExtraPair,
       loadPreset,
       currentOutputFilterSetChange,
+      clearSelectSet,
       clearOutputFilterSet
     }
   };
