@@ -163,3 +163,13 @@ export const barChartValuesOptions = [
     text: "Cell Salvage Volume (ml)"
   }
 ];
+
+
+export const HIPAA_Sensitive = new Set([
+  "Gender (M/F)",
+  "Gender (Male/Female)",
+  "Race Code",
+  "Race Description",
+  "Ethnicity Code",
+  "Ethnicity Description",
+  "Date of Birth"])
