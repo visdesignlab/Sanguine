@@ -22,7 +22,7 @@ interface OwnProps {
 export type Props = OwnProps;
 
 const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggregatedBy, isSelected, valueScale, store }: Props) => {
-    const colorScale = scaleLinear().domain([0, 1]).range([0, 1])
+    const colorScale = scaleLinear().domain([0, 1]).range([0.1, 1])
 
     return (
         <>
@@ -30,8 +30,15 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
                 const output = dataPoint.countDict[point] ? dataPoint.countDict[point] : 0
 
                 return (
-                    <Popup content={output} key={dataPoint.aggregateAttribute + '-' + point} trigger={<HeatRect fill={interpolateReds(colorScale(output / dataPoint.caseCount))} x={valueScale(point)} transform={howToTransform}
-                        width={valueScale.bandwidth()} height={bandwidth} />} />
+                    [<Popup content={output}
+                        key={dataPoint.aggregateAttribute + '-' + point}
+                        trigger={
+                            <HeatRect
+                                fill={output === 0 ? "white" : interpolateReds(colorScale(output / dataPoint.caseCount))}
+                                x={valueScale(point)}
+                                transform={howToTransform}
+                                width={valueScale.bandwidth()} height={bandwidth} />} />,
+                    <line transform={howToTransform} strokeWidth={0.5} stroke={basic_gray} opacity={output === 0 ? 1 : 0} y1={0.5 * bandwidth} y2={0.5 * bandwidth} x1={valueScale(point)! + 0.35 * valueScale.bandwidth()} x2={valueScale(point)! + 0.65 * valueScale.bandwidth()} />]
                 )
             })}
         </>)
