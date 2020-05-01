@@ -88,11 +88,15 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         const xVals = data
             .map(dp => dp.aggregateAttribute)
             .sort();
-
-
-
+        let outputRange
+        if (valueToVisualize === "CELL_SAVER_ML") {
+            outputRange = range(0, BloodProductCap[valueToVisualize] + 100, 100)
+        } else {
+            outputRange = range(0, BloodProductCap[valueToVisualize] + 1)
+        }
+        //console.log(data)
         let valueScale = scaleBand()
-            .domain(range(0, BloodProductCap[valueToVisualize]) as any)
+            .domain(outputRange as any)
             .range([offset.left, dimension.width - offset.right - offset.margin])
             .paddingInner(0.01);
 
