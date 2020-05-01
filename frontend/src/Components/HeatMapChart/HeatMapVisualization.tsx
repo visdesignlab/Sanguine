@@ -82,27 +82,49 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             setCaseIDList(caseDictionary)
             let cast_data = (dataResult.result as any).map(function (ob: any) {
                 let zeroCaseNum = 0;
-
-
                 const aggregateByAttr = ob.aggregatedBy;
 
                 const case_num = ob.valueToVisualize.length;
 
 
                 let outputResult = ob.valueToVisualize;
-
-                //const case_num = removed_zeros.length;
                 const total_val = sum(outputResult);
 
                 let countDict = {} as any
-                outputResult.map((d: any) => {
-                    if (!countDict[d]) {
-                        countDict[d] = 1
-                    } else {
-                        countDict[d] += 1
+                const cap = BloodProductCap[valueToVisualize]
+
+                if (valueToVisualize === "CELL_SAVER_ML") {
+                    for (let i = 0; i <= cap; i += 100) {
+                        countDict[i] = 0
                     }
+                } else {
+                    for (let i = 0; i <= cap; i++) {
+                        countDict[i] = 0
+                    }
+                }
+                console.log(outputResult)
+                outputResult.map((d: any) => {
+                    if (valueToVisualize === "CELL_SAVER_ML") {
+                        const roundedAnswer = Math.floor(d / 100) * 100
+                        if (roundedAnswer > cap) {
+                            countDict[cap] += 1
+                        }
+                        else if (countDict[roundedAnswer]) {
+                            countDict[roundedAnswer] += 1
+                        }
+                    } else {
+                        if (d > cap) {
+                            countDict[cap] += 1
+                        } else {
+                            countDict[d] += 1
+                        }
+                    }
+                    // if (!countDict[d]) {
+                    //     countDict[d] = 1
+                    // } else {
+                    //     countDict[d] += 1
+                    // }
                 })
-                //console.log(countDict)
 
                 const new_ob: HeatMapDataPoint = {
                     caseCount: case_num,
@@ -111,12 +133,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                     countDict: countDict,
                     zeroCaseNum: zeroCaseNum
                 };
-                // const perCaseOb: BarChartDataPoint = {
-                //   xVal: ob.x_axis,
-                //   yVal: y_val / ob.case_count,
-                //   caseCount: ob.case_count
-                // }
-                // perCaseData.push(perCaseOb)
+
                 return new_ob;
             });
             setData({ original: cast_data });

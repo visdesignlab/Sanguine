@@ -117,11 +117,11 @@ export const AxisLabelDict: any = {
 };
 
 export const BloodProductCap: any = {
-  PRBC_UNITS: 8,
-  FFP_UNITS: 15,
-  CRYO_UNITS: 30,
-  PLT_UNITS: 5,
-  CELL_SAVER_ML: 5000
+  PRBC_UNITS: 10,
+  FFP_UNITS: 10,
+  CRYO_UNITS: 10,
+  PLT_UNITS: 10,
+  CELL_SAVER_ML: 1000
 }
 
 export const dumbbellFacetOptions = [
@@ -172,4 +172,5 @@ export const HIPAA_Sensitive = new Set([
   "Race Description",
   "Ethnicity Code",
   "Ethnicity Description",
+  "Date of Death",
   "Date of Birth"])
