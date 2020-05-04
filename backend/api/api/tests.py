@@ -293,6 +293,13 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
                 "filter_selection": "REPLACE AORTIC VALVE PERQ FEMORAL ARTRY APPROACH,CORONARY ARTERY BYPASS 1 CORONARY VENOUS GRAFT",
                 "aggregated_by": "YEAR",
             },
+            { # Full example ALL_UNITS
+                "transfusion_type": "ALL_UNITS", 
+                "year_range": "2016,2017", 
+                "patient_ids": "68175619,14711172,35383429",
+                "filter_selection": "REPLACE AORTIC VALVE PERQ FEMORAL ARTRY APPROACH,CORONARY ARTERY BYPASS 1 CORONARY VENOUS GRAFT",
+                "aggregated_by": "YEAR",
+            },
         ]
 
         for valid_option in valid_options:
