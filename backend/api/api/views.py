@@ -225,11 +225,14 @@ def request_transfused_units(request):
         # Update the transfusion type to SUM(var) and add make a group by if we are aggregating
         if transfusion_type != "PRBC_UNITS,FFP_UNITS,PLT_UNITS,CRYO_UNITS,CELL_SAVER_ML":
             transfusion_type = f"SUM({transfusion_type}), {aggregates[aggregated_by]}" if aggregated_by else f"SUM({transfusion_type})"
-            group_by = (f"GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID, {aggregates[aggregated_by]}" 
-                if aggregated_by 
-                else "GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID")
         else:
-            group_by = ""
+            transfusion_type = f"SUM(PRBC_UNITS),SUM(FFP_UNITS),SUM(PLT_UNITS),SUM(CRYO_UNITS),SUM(CELL_SAVER_ML),{aggregates[aggregated_by]}" 
+                if aggregated_by 
+                else "SUM(PRBC_UNITS),SUM(FFP_UNITS),SUM(PLT_UNITS),SUM(CRYO_UNITS),SUM(CELL_SAVER_ML)"
+            
+        group_by = (f"GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID, {aggregates[aggregated_by]}" 
+            if aggregated_by 
+            else "GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID")
 
         # Generate the CPT filter sql
         filters, bind_names, filters_safe_sql = get_filters(filter_selection)
