@@ -276,7 +276,7 @@ def request_transfused_units(request):
                 "anest_id": row[1],
                 "pat_id": row[2],
                 "case_id": row[3],
-                "transfused_units": (row[4:9]) if transfusion_type == "PRBC_UNITS,FFP_UNITS,PLT_UNITS,CRYO_UNITS,CELL_SAVER_ML" else (row[4] or 0),
+                "transfused_units": (row[4:9]) if ("PRBC_UNITS" in transfusion_type and "FFP_UNITS" in transfusion_type) else (row[4] or 0),
                 "aggregated_by": None if not aggregated_by else row[5] #aggregated_by and ALL_UNITS never happen together
             })
 
