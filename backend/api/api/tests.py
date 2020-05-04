@@ -271,10 +271,20 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
                 "year_range": "2016,2017", 
                 "patient_ids": "585148403",
             },
-            { # One multiple pats
+            { # Multiple pats
                 "transfusion_type": "PRBC_UNITS", 
                 "year_range": "2016,2017", 
                 "patient_ids": "585148403,81015617,632559101",
+            },
+            { # One patient ID
+                "transfusion_type": "PRBC_UNITS", 
+                "year_range": "2016,2017", 
+                "case_ids": "85103152",
+            },
+            { # One multiple pats
+                "transfusion_type": "PRBC_UNITS", 
+                "year_range": "2016,2017", 
+                "case_ids": "85103152,74712769",
             },
             { # One filter_selection
                 "transfusion_type": "PRBC_UNITS", 
@@ -290,6 +300,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
                 "transfusion_type": "PRBC_UNITS", 
                 "year_range": "2016,2017", 
                 "patient_ids": "68175619,14711172,35383429,632559101",
+                "case_ids": "85103152",
                 "filter_selection": "REPLACE AORTIC VALVE PERQ FEMORAL ARTRY APPROACH,CORONARY ARTERY BYPASS 1 CORONARY VENOUS GRAFT",
                 "aggregated_by": "YEAR",
             },
@@ -297,6 +308,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
                 "transfusion_type": "ALL_UNITS", 
                 "year_range": "2016,2017", 
                 "patient_ids": "68175619,14711172,35383429,632559101",
+                "case_ids": "85103152",
                 "filter_selection": "REPLACE AORTIC VALVE PERQ FEMORAL ARTRY APPROACH,CORONARY ARTERY BYPASS 1 CORONARY VENOUS GRAFT",
             },
         ]

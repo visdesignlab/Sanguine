@@ -178,11 +178,13 @@ def request_transfused_units(request):
         aggregated_by = request.GET.get("aggregated_by")
         transfusion_type = request.GET.get("transfusion_type")
         patient_ids = request.GET.get("patient_ids") or ""
+        case_ids = request.GET.get("case_ids") or ""
         year_range = request.GET.get("year_range") or ""
         filter_selection = request.GET.get("filter_selection") or ""
 
         # Parse the year_range and the filter selection
         patient_ids = patient_ids.split(",") if patient_ids else []
+        case_ids = case_ids.split(",") if case_ids else []
         year_range = [s for s in year_range.split(",") if s.isdigit()]
         filter_selection = filter_selection.split(",")
 
@@ -241,6 +243,10 @@ def request_transfused_units(request):
         pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
         pat_filters_safe_sql = f"AND TRNSFSD.DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
 
+        # Generate case id filters
+        case_bind_names = [f":case_id{str(i)}" for i in range(len(case_ids))]
+        case_filters_safe_sql = f"AND TRNSFSD.DI_CASE_ID IN ({','.join(case_bind_names)}) " if case_ids != [] else ""
+
         # Build the sql query
         # Safe to use format strings since there are limited options for aggregated_by and transfusion_type
         command = (
@@ -258,14 +264,18 @@ def request_transfused_units(request):
                 ")"
             ") LIMITED_SURG ON LIMITED_SURG.DI_CASE_ID = TRNSFSD.DI_CASE_ID "
             f"WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time "
-            f"{pat_filters_safe_sql} "
+            f"{pat_filters_safe_sql} {case_filters_safe_sql}"
             f"{group_by}"
         )
 
         # Execute the query
         result = execute_sql(
             command, 
-            dict(zip(bind_names + pat_bind_names, filters + patient_ids), min_time = min_time, max_time = max_time)
+            dict(
+                zip(bind_names + pat_bind_names + case_bind_names, filters + patient_ids + case_ids), 
+                min_time = min_time, 
+                max_time = max_time
+            )
         )
 
         # Get the raw data from the server
