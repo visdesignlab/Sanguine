@@ -27,6 +27,6 @@ urlpatterns = [
     path("api/fetch_surgery", views.fetch_surgery, name="index"),
     path("api/fetch_patient", views.fetch_patient, name="index"),
     path("api/request_individual_specific", views.request_individual_specific, name = "index"),
-    path("api/request_fetch_professional_set", views.fetch_professional_set, name = "index")
-    path("api/risk_score", views.risk_score, name = "risk_score")
+    path("api/request_fetch_professional_set", views.fetch_professional_set, name = "index"),
+    path("api/risk_score", views.risk_score, name = "risk_score"),
 ]
