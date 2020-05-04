@@ -320,3 +320,23 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             )
             self.assertEqual(response.status_code, 200)
 
+class RiskScoreTestCase(TransactionTestCase):
+    def test_risk_score_no_params(self):
+        c = Client()
+        response = c.get("/api/risk_score")
+        self.assertEqual(response.status_code, 400)
+
+    def test_risk_score_valid_types(self):
+        c = Client()
+
+        valid_options = [
+            {"patient_ids": "880078673"},
+            {"patient_ids": "880078673,865124568"},
+        ]
+
+        for valid_option in valid_options:
+            response = c.get(
+                "/api/risk_score",
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 200)

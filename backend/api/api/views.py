@@ -356,6 +356,48 @@ def test_results(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+# Takes in a patient_id and, returns their APR_DRG information
+def risk_score(request):
+    if request.method == "GET":
+        patient_ids = request.GET.get("patient_ids") or ""
+
+        # Parse the ids
+        patient_ids = patient_ids.split(",") if patient_ids else []
+
+        if not patient_ids:
+            return HttpResponseBadRequest("patient_ids must be supplied")
+
+        # Generate the patient filters
+        pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
+        pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
+
+        # Defined the sql command
+        command = f"""
+        SELECT DI_PAT_ID, DI_VISIT_NO, APR_DRG_WEIGHT, APR_DRG_CODE, APR_DRG_DESC, APR_DRG_ROM, APR_DRG_SOI
+        FROM CLIN_DM.BPU_CTS_DI_VISIT 
+        WHERE 1=1 {pat_filters_safe_sql}
+        """
+        
+        result = execute_sql(
+            command, 
+            zip(pat_bind_names, patient_ids)
+        )
+
+        result_list = []
+        for row in result:
+            result_list.append({
+                "pat_id": row[0],
+                "visit_no": row[1],
+                "apr_drg_weight": row[2],
+                "apr_drg_code": row[3],
+                "apr_drg_desc": row[4],
+                "apr_drg_rom": row[5],
+                "apr_drg_soi": row[6],
+            })
+
+        return JsonResponse(result_list, safe = False)
+
+
 def hemoglobin(request):
     if request.method == "GET":
         command = (
