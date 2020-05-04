@@ -380,7 +380,7 @@ def risk_score(request):
         
         result = execute_sql(
             command, 
-            zip(pat_bind_names, patient_ids)
+            dict(zip(pat_bind_names, patient_ids))
         )
 
         result_list = []
