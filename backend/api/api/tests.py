@@ -123,40 +123,40 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
 
     def setUp(self):
         # Setup run before every test method.
-        c = Client()
+        self.c = Client()
 
     def tearDown(self):
         # Clean up run after every test method.
         pass
 
     def test_request_transfused_units_no_params(self):
-        response = c.get(self.endpoint)
+        response = self.c.get(self.endpoint)
         self.assertEqual(response.status_code, 400)
 
     def test_risk_score_unsupported_methods(self):
-        response = c.post(self.endpoint)
+        response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 405)
         
-        response = c.head(self.endpoint)
+        response = self.c.head(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
-        response = c.options(self.endpoint)
+        response = self.c.options(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
-        response = c.put(self.endpoint)
+        response = self.c.put(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
-        response = c.patch(self.endpoint)
+        response = self.c.patch(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
-        response = c.delete(self.endpoint)
+        response = self.c.delete(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
-        response = c.trace(self.endpoint)
+        response = self.c.trace(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
     def test_request_transfused_units_missing_transfusion_type(self):
-        response = c.get(
+        response = self.c.get(
             self.endpoint,
             { "year_range": "2016,2017" },
         )
@@ -167,7 +167,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         )
 
     def test_request_transfused_units_missing_year_range(self):
-        response = c.get(
+        response = self.c.get(
             self.endpoint,
             { "transfusion_type": "PRBC_UNITS" },
         )
@@ -190,7 +190,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         ]
 
         for invalid_option in invalid_options:
-            response = c.get(
+            response = self.c.get(
                 self.endpoint,
                 {
                     "transfusion_type": "PRBC_UNITS", 
@@ -211,7 +211,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         ]
 
         for invalid_option in invalid_options:
-            response = c.get(
+            response = self.c.get(
                 self.endpoint,
                 {
                     "transfusion_type": invalid_option, 
@@ -232,7 +232,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         ]
 
         for invalid_option in invalid_options:
-            response = c.get(
+            response = self.c.get(
                 self.endpoint,
                 {
                     "transfusion_type": "PRBC_UNITS", 
@@ -247,7 +247,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             )
 
     def test_request_transfused_units_invalid_all_units_with_agg(self):
-        response = c.get(
+        response = self.c.get(
             self.endpoint,
             {
                 "transfusion_type": "ALL_UNITS", 
@@ -333,11 +333,12 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         ]
 
         for valid_option in valid_options:
-            response = c.get(
+            response = self.c.get(
                 self.endpoint,
                 valid_option,
             )
             self.assertEqual(response.status_code, 200)
+
 
 class RiskScoreTestCase(TransactionTestCase):
     endpoint = "/api/risk_score"
@@ -351,29 +352,29 @@ class RiskScoreTestCase(TransactionTestCase):
         pass
 
     def test_risk_score_unsupported_methods(self):
-        response = c.post(self.endpoint)
+        response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 405)
         
-        response = c.head(self.endpoint)
+        response = self.c.head(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
-        response = c.options(self.endpoint)
+        response = self.c.options(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
-        response = c.put(self.endpoint)
+        response = self.c.put(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
-        response = c.patch(self.endpoint)
+        response = self.c.patch(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
-        response = c.delete(self.endpoint)
+        response = self.c.delete(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
-        response = c.trace(self.endpoint)
+        response = self.c.trace(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
     def test_risk_score_no_params(self):
-        response = c.get(self.endpoint)
+        response = self.c.get(self.endpoint)
         self.assertEqual(response.status_code, 400)
 
     def test_risk_score_valid_types(self):
@@ -383,7 +384,7 @@ class RiskScoreTestCase(TransactionTestCase):
         ]
 
         for valid_option in valid_options:
-            response = c.get(
+            response = self.c.get(
                 "/api/risk_score",
                 valid_option,
             )
