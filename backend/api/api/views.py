@@ -22,6 +22,7 @@ IDENT_FIELDS = {
 DE_IDENT_TABLES = {
     "billing_codes": "CLIN_DM.BPU_CTS_DI_BILLING_CODES",
     "surgery_case": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE",
+    "visit": "CLIN_DM.BPU_CTS_DI_VISIT",
 }
 
 IDENT_TABLES = {
@@ -82,28 +83,28 @@ def fetch_professional_set(request):
 
         if profesional_type == "ANESTHESIOLOGIST_ID":
             command = (
-                "SELECT SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS) PRBC_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS) FFP_UNITS, "
-                "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS, "
-                "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS) CRYO_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML) CELL_SAVER_ML, "
-                "CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID SURGEON_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC "
-                "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
-                "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
-                "ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID) "
-                "WHERE CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID = :id"
-                "GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID,CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC"
+                """SELECT SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS) PRBC_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS) FFP_UNITS,
+                SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS,
+                SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS) CRYO_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML) CELL_SAVER_ML,
+                CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID SURGEON_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC
+                FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD
+                INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE
+                ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID)
+                WHERE CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID = :id
+                GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID,CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC"""
             )
             partner = "SURGEON_ID"
         else:
             command = (
-                "SELECT SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS) PRBC_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS) FFP_UNITS, "
-                "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS, "
-                "SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS) CRYO_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML) CELL_SAVER_ML, "
-                "CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID ANESTHESIOLOGIST_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC "
-                "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD "
-                "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
-                "ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID) "
-                "WHERE CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID = :id"
-                "GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID,CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC"
+                """SELECT SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PRBC_UNITS) PRBC_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.FFP_UNITS) FFP_UNITS,
+                SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.PLT_UNITS) PLT_UNITS,
+                SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CRYO_UNITS) CRYO_UNITS, SUM(CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.CELL_SAVER_ML) CELL_SAVER_ML,
+                CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID ANESTHESIOLOGIST_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC
+                FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD
+                INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE
+                ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID)
+                WHERE CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID = :id
+                GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID,CLIN_DM.BPU_CTS_DI_SURGERY_CASE.PRIM_PROC_DESC"""
             )
             partner = "ANESTHESIOLOGIST_ID"
 
@@ -399,6 +400,45 @@ def risk_score(request):
     else:
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
+
+def patient_outcomes(request):
+    if request.method == "GET":
+        patient_ids = request.GET.get("patient_ids") or ""
+
+        # Parse the ids
+        patient_ids = patient_ids.split(",") if patient_ids else []
+
+        if not patient_ids:
+            return HttpResponseBadRequest("patient_ids must be supplied")
+
+        # Generate the patient filters
+        pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
+        pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
+
+        # Defined the sql command
+        command = f"""
+        SELECT DI_PAT_ID, DI_VISIT_NO, TOTAL_VENT_MINS > 1440, PAT_EXPIRED
+        FROM CLIN_DM.BPU_CTS_DI_VISIT 
+        WHERE 1=1 {pat_filters_safe_sql}
+        """
+        
+        result = execute_sql(
+            command, 
+            dict(zip(pat_bind_names, patient_ids))
+        )
+
+        result_list = []
+        for row in result:
+            result_list.append({
+                "pat_id": row[0],
+                "visit_no": row[1],
+                "gr_than_1440_vent": row[2],
+                "patient_death": row[3],
+            })
+
+        return JsonResponse(result_list, safe = False)
+    else:
+        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 def hemoglobin(request):
     if request.method == "GET":

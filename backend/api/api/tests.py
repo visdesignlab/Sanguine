@@ -94,7 +94,7 @@ class UtilUnitTestCase(TestCase):
                 filters, bind_names, filters_safe_sql = utils.get_filters(invalid_input)
         
 
-class APIIntegrationTestCase(TransactionTestCase):
+class NoParamRoutesTestCase(TransactionTestCase):
     def sanity_check(self):
         self.assertEqual(1, 1)
 
@@ -342,6 +342,57 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
 
 class RiskScoreTestCase(TransactionTestCase):
     endpoint = "/api/risk_score"
+
+    def setUp(self):
+        # Setup run before every test method.
+        self.c = Client()
+
+    def tearDown(self):
+        # Clean up run after every test method.
+        pass
+
+    def test_risk_score_unsupported_methods(self):
+        response = self.c.post(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+        
+        response = self.c.head(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.options(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.put(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.patch(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.delete(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.trace(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+    def test_risk_score_no_params(self):
+        response = self.c.get(self.endpoint)
+        self.assertEqual(response.status_code, 400)
+
+    def test_risk_score_valid_types(self):
+        valid_options = [
+            {"patient_ids": "880078673"},
+            {"patient_ids": "880078673,865124568"},
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.get(
+                "/api/risk_score",
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 200)
+
+
+class PatientOutcomesTestCase(TransactionTestCase):
+    endpoint = "/api/patient_outcomes"
 
     def setUp(self):
         # Setup run before every test method.
