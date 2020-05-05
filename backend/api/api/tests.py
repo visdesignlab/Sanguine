@@ -345,7 +345,7 @@ class RiskScoreTestCase(TransactionTestCase):
 
     def setUp(self):
         # Setup run before every test method.
-        c = Client()
+        self.c = Client()
 
     def tearDown(self):
         # Clean up run after every test method.
