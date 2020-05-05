@@ -87,7 +87,7 @@ def fetch_professional_set(request):
         if not (professional_type and professional_id):
             return HttpResponseBadRequest("professional_type and professional_id must be supplied.")
 
-        if not (professional_type in allowed_types)
+        if not (professional_type in allowed_types):
             return HttpResponseBadRequest(f"professional_type must be one of the following: {allowed_types}.")
 
         partner = FIELDS_IN_USE.get('surgeon_id') if professional_type == "ANESTHESIOLOGIST_ID" else FIELDS_IN_USE.get('anest_id')
