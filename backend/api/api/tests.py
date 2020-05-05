@@ -126,10 +126,6 @@ class RequestProfessionalSetTestCase(TransactionTestCase):
         # Setup run before every test method.
         self.c = Client()
 
-    def tearDown(self):
-        # Clean up run after every test method.
-        pass
-
     def test_request_professional_set_unsupported_methods(self):
         response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 405)
@@ -223,16 +219,116 @@ class RequestProfessionalSetTestCase(TransactionTestCase):
             self.assertEqual(response.status_code, 200)
 
 
+class RequestSurgeryTestCase(TransactionTestCase):
+    endpoint = "/api/fetch_surgery"
+
+    def setUp(self):
+        # Setup run before every test method.
+        self.c = Client()
+
+    def test_request_surgery_unsupported_methods(self):
+        response = self.c.post(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+        
+        response = self.c.head(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.options(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.put(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.patch(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.delete(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.trace(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+    def test_request_surgery_no_params(self):
+        response = self.c.get(self.endpoint)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.content.decode(),
+            "case_id must be supplied.",
+        )
+
+    def test_request_surgery_valid_types(self):
+        valid_options = [
+            {
+                "case_id": "56520625",
+            },
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.get(
+                self.endpoint,
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 200)
+
+
+class RequestPatientTestCase(TransactionTestCase):
+    endpoint = "/api/fetch_patient"
+
+    def setUp(self):
+        # Setup run before every test method.
+        self.c = Client()
+
+    def test_request_patient_unsupported_methods(self):
+        response = self.c.post(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+        
+        response = self.c.head(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.options(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.put(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.patch(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.delete(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.trace(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+    def test_request_patient_no_params(self):
+        response = self.c.get(self.endpoint)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.content.decode(),
+            "patient_id must be supplied.",
+        )
+
+    def test_request_patient_valid_types(self):
+        valid_options = [
+            {
+                "case_id": "119801570",
+            },
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.get(
+                self.endpoint,
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 200)
+
+
 class RequestTransfusedUnitsTestCase(TransactionTestCase):
     endpoint = "/api/request_transfused_units"
 
     def setUp(self):
         # Setup run before every test method.
         self.c = Client()
-
-    def tearDown(self):
-        # Clean up run after every test method.
-        pass
 
     def test_request_transfused_units_no_params(self):
         response = self.c.get(self.endpoint)
@@ -445,16 +541,16 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             self.assertEqual(response.status_code, 200)
 
 
+class RequestIndividualSpecificTestCase(TransactionTestCase):
+    pass
+
+
 class RiskScoreTestCase(TransactionTestCase):
     endpoint = "/api/risk_score"
 
     def setUp(self):
         # Setup run before every test method.
         self.c = Client()
-
-    def tearDown(self):
-        # Clean up run after every test method.
-        pass
 
     def test_risk_score_unsupported_methods(self):
         response = self.c.post(self.endpoint)
@@ -502,10 +598,6 @@ class PatientOutcomesTestCase(TransactionTestCase):
     def setUp(self):
         # Setup run before every test method.
         self.c = Client()
-
-    def tearDown(self):
-        # Clean up run after every test method.
-        pass
 
     def test_risk_score_unsupported_methods(self):
         response = self.c.post(self.endpoint)

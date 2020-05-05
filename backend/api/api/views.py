@@ -8,11 +8,15 @@ from api.utils import make_connection, data_dictionary, cpt, execute_sql, get_al
 
 DE_IDENT_FIELDS = {
     "anest_id": "ANESTH_PROV_DWID",
+    "birth_date": "DI_BIRTHDATE",
     "case_date": "DI_CASE_DATE",
     "case_id": "DI_CASE_ID",
+    "death_date": "DI_DEATH_DATE",
     "patient_id": "DI_PAT_ID",
     "procedure_dtm": "DI_PROC_DTM",
     "surgeon_id": "SURGEON_PROV_DWID",
+    "surgery_end_time": "DI_SURGERY_END_DTM",
+    "surgery_start_time": "DI_SURGERY_START_DTM",
     "visit_no": "DI_VISIT_NO",
 }
 
@@ -23,6 +27,7 @@ IDENT_FIELDS = {
 DE_IDENT_TABLES = {
     "billing_codes": "CLIN_DM.BPU_CTS_DI_BILLING_CODES",
     "intra_op_trnsfsd": "CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD",
+    "patient": "CLIN_DM.BPU_CTS_DI_PATIENT",
     "surgery_case": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE",
     "visit": "CLIN_DM.BPU_CTS_DI_VISIT",
 }
@@ -142,14 +147,21 @@ def fetch_surgery(request):
         if not case_id:
             return HttpResponseBadRequest("case_id must be supplied.")
         
-        command = (
-                "SELECT surgery.DI_CASE_DATE, surgery.DI_SURGERY_START_DTM, "
-                "surgery.DI_SURGERY_END_DTM, surgery.SURGERY_ELAP, surgery.SURGERY_TYPE_DESC, "
-                "surgery.SURGEON_PROV_DWID, surgery.ANESTH_PROV_DWID, surgery.PRIM_PROC_DESC, "
-                "surgery.POSTOP_ICU_LOS "
-                "FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE surgery "
-                "WHERE surgery.DI_CASE_ID = :id"
-        )
+        command = f"""
+        SELECT 
+            SURG.{FIELDS_IN_USE.get('case_date')},
+            SURG.{FIELDS_IN_USE.get('surgery_start_time')},
+            SURG.{FIELDS_IN_USE.get('surgery_end_time')},
+            SURG.SURGERY_ELAP,
+            SURG.SURGERY_TYPE_DESC,
+            SURG.{FIELDS_IN_USE.get('surgeon_id')},
+            SURG.{FIELDS_IN_USE.get('anest_id')},
+            SURG.PRIM_PROC_DESC,
+            SURG.POSTOP_ICU_LOS
+        FROM 
+            {TABLES_IN_USE.get('surgery_case')} SURG
+        WHERE SURG.{FIELDS_IN_USE.get('case_id')} = :id
+        """
 
         result = execute_sql(command, id = case_id)
         data_dict = data_dictionary()
@@ -171,13 +183,20 @@ def fetch_patient(request):
         if not patient_id:
             return HttpResponseBadRequest("patient_id must be supplied.")
         
-        command = (
-                "SELECT info.DI_BIRTHDATE, info.GENDER_CODE, info.GENDER_DESC, "
-                "info.RACE_CODE, info.RACE_DESC, info.ETHNICITY_CODE, info.ETHNICITY_DESC, "
-                "info.DI_DEATH_DATE "
-                "FROM CLIN_DM.BPU_CTS_DI_PATIENT info "
-                "WHERE info.DI_PAT_ID = :id"
-        )
+        command = f"""
+        SELECT 
+            PATIENT.{FIELDS_IN_USE.get('birth_date')},
+            PATIENT.GENDER_CODE,
+            PATIENT.GENDER_DESC,
+            PATIENT.RACE_CODE,
+            PATIENT.RACE_DESC,
+            PATIENT.ETHNICITY_CODE,
+            PATIENT.ETHNICITY_DESC,
+            PATIENT.{FIELDS_IN_USE.get('death_date')}
+        FROM 
+            {TABLES_IN_USE.get('patient')} PATIENT
+        WHERE PATIENT.{FIELDS_IN_USE.get('patient_id')} = :id
+        """
 
         result = execute_sql(command, id = patient_id)
         data_dict = data_dictionary()
@@ -472,6 +491,7 @@ def patient_outcomes(request):
         return JsonResponse(result_list, safe = False)
     else:
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
+
 
 def hemoglobin(request):
     if request.method == "GET":
