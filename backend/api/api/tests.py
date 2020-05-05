@@ -95,12 +95,15 @@ class UtilUnitTestCase(TestCase):
         
 
 class NoParamRoutesTestCase(TransactionTestCase):
+    def setUp(self):
+        # Setup run before every test method.
+        self.c = Client()
+
     def sanity_check(self):
         self.assertEqual(1, 1)
 
     def test_get_api_root(self):
-        c = Client()
-        response = c.get("/api/")
+        response = self.c.get("/api/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.content.decode(),
@@ -108,13 +111,11 @@ class NoParamRoutesTestCase(TransactionTestCase):
         )
 
     def test_get_attributes(self):
-        c = Client()
-        response = c.get("/api/get_attributes")
+        response = self.c.get("/api/get_attributes")
         self.assertEqual(response.status_code, 200)
 
     def test_hemoglobin(self):
-        c = Client()
-        response = c.get("/api/hemoglobin")
+        response = self.c.get("/api/hemoglobin")
         self.assertEqual(response.status_code, 200)
 
 
@@ -385,7 +386,7 @@ class RiskScoreTestCase(TransactionTestCase):
 
         for valid_option in valid_options:
             response = self.c.get(
-                "/api/risk_score",
+                self.endpoint,
                 valid_option,
             )
             self.assertEqual(response.status_code, 200)
@@ -436,7 +437,7 @@ class PatientOutcomesTestCase(TransactionTestCase):
 
         for valid_option in valid_options:
             response = self.c.get(
-                "/api/risk_score",
+                self.endpoint,
                 valid_option,
             )
             self.assertEqual(response.status_code, 200)
