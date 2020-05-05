@@ -48,13 +48,14 @@ def get_attributes(request):
         filters, bind_names, filters_safe_sql = get_filters([""])
 
         # Make the connection and execute the command
+        # ,CASE WHEN PRIM_PROC_DESC LIKE '%REDO%' THEN 1 ELSE 0 END AS REDO
         command = f"""
             SELECT
                 CODE_DESC,
                 COUNT(*)
             FROM (
                 SELECT
-                    BLNG.*, SURG.* # ,CASE WHEN PRIM_PROC_DESC LIKE '%REDO%' THEN 1 ELSE 0 END AS REDO
+                    BLNG.*, SURG.*
                 FROM {TABLES_IN_USE.get('billing_codes')} BLNG
                 INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
                     ON (BLNG.{FIELDS_IN_USE.get('patient_id')} = SURG.{FIELDS_IN_USE.get('patient_id')})
