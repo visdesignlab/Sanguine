@@ -119,15 +119,45 @@ class APIIntegrationTestCase(TransactionTestCase):
 
 
 class RequestTransfusedUnitsTestCase(TransactionTestCase):
-    def test_request_transfused_units_no_params(self):
+    endpoint = "/api/request_transfused_units"
+
+    def setUp(self):
+        # Setup run before every test method.
         c = Client()
-        response = c.get("/api/request_transfused_units")
+
+    def tearDown(self):
+        # Clean up run after every test method.
+        pass
+
+    def test_request_transfused_units_no_params(self):
+        response = c.get(self.endpoint)
         self.assertEqual(response.status_code, 400)
 
+    def test_risk_score_unsupported_methods(self):
+        response = c.post(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+        
+        response = c.head(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = c.options(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = c.put(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = c.patch(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = c.delete(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = c.trace(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
     def test_request_transfused_units_missing_transfusion_type(self):
-        c = Client()
         response = c.get(
-            "/api/request_transfused_units",
+            self.endpoint,
             { "year_range": "2016,2017" },
         )
         self.assertEqual(response.status_code, 400)
@@ -137,9 +167,8 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         )
 
     def test_request_transfused_units_missing_year_range(self):
-        c = Client()
         response = c.get(
-            "/api/request_transfused_units",
+            self.endpoint,
             { "transfusion_type": "PRBC_UNITS" },
         )
         self.assertEqual(response.status_code, 400)
@@ -149,8 +178,6 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         )
 
     def test_request_transfused_units_invalid_year_ranges(self):
-        c = Client()
-
         invalid_options = [
             "2016",
             ",2016",
@@ -164,7 +191,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
 
         for invalid_option in invalid_options:
             response = c.get(
-                f"/api/request_transfused_units",
+                self.endpoint,
                 {
                     "transfusion_type": "PRBC_UNITS", 
                     "year_range": invalid_option,
@@ -177,8 +204,6 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             )
 
     def test_request_transfused_units_invalid_transfusion_types(self):
-        c = Client()
-
         invalid_options = [
             "'PRBC_UNITS'"
             "invalid",
@@ -187,7 +212,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
 
         for invalid_option in invalid_options:
             response = c.get(
-                "/api/request_transfused_units",
+                self.endpoint,
                 {
                     "transfusion_type": invalid_option, 
                     "year_range": "2016,2017",
@@ -200,8 +225,6 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             )
 
     def test_request_transfused_units_invalid_aggregate_types(self):
-        c = Client()
-
         invalid_options = [
             "'YEAR'"
             "invalid",
@@ -210,7 +233,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
 
         for invalid_option in invalid_options:
             response = c.get(
-                "/api/request_transfused_units",
+                self.endpoint,
                 {
                     "transfusion_type": "PRBC_UNITS", 
                     "year_range": "2016,2017", 
@@ -224,10 +247,8 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             )
 
     def test_request_transfused_units_invalid_all_units_with_agg(self):
-        c = Client()
-
         response = c.get(
-            "/api/request_transfused_units",
+            self.endpoint,
             {
                 "transfusion_type": "ALL_UNITS", 
                 "year_range": "2016,2017", 
@@ -241,8 +262,6 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         )
 
     def test_request_transfused_units_valid_types(self):
-        c = Client()
-
         valid_options = [
             { # Minimum viable
                 "transfusion_type": "PRBC_UNITS", 
@@ -315,20 +334,49 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
 
         for valid_option in valid_options:
             response = c.get(
-                "/api/request_transfused_units",
+                self.endpoint,
                 valid_option,
             )
             self.assertEqual(response.status_code, 200)
 
 class RiskScoreTestCase(TransactionTestCase):
-    def test_risk_score_no_params(self):
+    endpoint = "/api/risk_score"
+
+    def setUp(self):
+        # Setup run before every test method.
         c = Client()
-        response = c.get("/api/risk_score")
+
+    def tearDown(self):
+        # Clean up run after every test method.
+        pass
+
+    def test_risk_score_unsupported_methods(self):
+        response = c.post(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+        
+        response = c.head(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = c.options(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = c.put(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = c.patch(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = c.delete(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = c.trace(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+    def test_risk_score_no_params(self):
+        response = c.get(self.endpoint)
         self.assertEqual(response.status_code, 400)
 
     def test_risk_score_valid_types(self):
-        c = Client()
-
         valid_options = [
             {"patient_ids": "880078673"},
             {"patient_ids": "880078673,865124568"},

@@ -396,6 +396,8 @@ def risk_score(request):
             })
 
         return JsonResponse(result_list, safe = False)
+    else:
+        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
 def hemoglobin(request):
