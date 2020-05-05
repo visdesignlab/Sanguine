@@ -161,7 +161,6 @@ class RequestProfessionalSetTestCase(TransactionTestCase):
             self.endpoint,
             {
                 "professional_type": "SURGEON_ID", 
-                "professional_id": None,
             },
         )
         self.assertEqual(response.status_code, 400)
@@ -174,7 +173,6 @@ class RequestProfessionalSetTestCase(TransactionTestCase):
         response = self.c.get(
             self.endpoint,
             {
-                "professional_type": None, 
                 "professional_id": "810989",
             },
         )

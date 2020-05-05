@@ -9,6 +9,7 @@ from api.utils import make_connection, data_dictionary, cpt, execute_sql, get_al
 DE_IDENT_FIELDS = {
     "anest_id": "ANESTH_PROV_DWID",
     "case_date": "DI_CASE_DATE",
+    "case_id": "DI_CASE_ID",
     "patient_id": "DI_PAT_ID",
     "procedure_dtm": "DI_PROC_DTM",
     "surgeon_id": "SURGEON_PROV_DWID",
