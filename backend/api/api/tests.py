@@ -311,7 +311,7 @@ class RequestPatientTestCase(TransactionTestCase):
     def test_request_patient_valid_types(self):
         valid_options = [
             {
-                "case_id": "119801570",
+                "patient_id": "119801570",
             },
         ]
 
