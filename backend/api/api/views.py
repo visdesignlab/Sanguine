@@ -375,7 +375,7 @@ def risk_score(request):
         # Defined the sql command
         command = f"""
         SELECT DI_PAT_ID, DI_VISIT_NO, APR_DRG_WEIGHT, APR_DRG_CODE, APR_DRG_DESC, APR_DRG_ROM, APR_DRG_SOI
-        FROM CLIN_DM.BPU_CTS_DI_VISIT 
+        FROM CLIN_DM.BPU_CTS_DI_VISIT
         WHERE 1=1 {pat_filters_safe_sql}
         """
         
@@ -417,9 +417,15 @@ def patient_outcomes(request):
 
         # Defined the sql command
         command = f"""
-        SELECT DI_PAT_ID, DI_VISIT_NO, TOTAL_VENT_MINS > 1440, PAT_EXPIRED
-        FROM CLIN_DM.BPU_CTS_DI_VISIT 
-        WHERE 1=1 {pat_filters_safe_sql}
+        SELECT
+            DI_PAT_ID,
+            DI_VISIT_NO,
+            CASE WHEN TOTAL_VENT_MINS > 1440 THEN 1 ELSE 0 END AS VENT_1440,
+            CASE WHEN PAT_EXPIRED = 'Y' THEN 1 ELSE 0 END AS PAT_DEATH
+        FROM
+            CLIN_DM.BPU_CTS_DI_VISIT
+        WHERE 1=1
+            {pat_filters_safe_sql}
         """
         
         result = execute_sql(
