@@ -69,7 +69,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
       `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
     );
     const dataResult = await res.json();
-    //  let caseCount = 0;
+    let caseCount = 0;
     if (dataResult) {
       let yMaxTemp = -1;
       let perCaseYMaxTemp = -1
@@ -87,6 +87,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
         const aggregateByAttr = ob.aggregatedBy;
 
         const case_num = ob.valueToVisualize.length;
+        caseCount += case_num
         // const total_val = sum(ob.valueToVisualize);
         const medianVal = median(ob.valueToVisualize);
         // let pd = createpd(ob.valueToVisualize, { max: BloodProductCap[valueToVisualize], width: 4 });
@@ -147,7 +148,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
       setData({ original: cast_data });
       //setMedian(tempmedian);
       setYMax({ original: yMaxTemp, perCase: perCaseYMaxTemp });
-      //  actions.updateCaseCount(caseCount);
+      actions.updateCaseCount("AGGREGATED", caseCount);
 
     }
   }

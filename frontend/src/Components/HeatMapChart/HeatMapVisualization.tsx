@@ -69,7 +69,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
         );
         const dataResult = await res.json();
-        //  let caseCount = 0;
+        let caseCount = 0;
         if (dataResult) {
             let yMaxTemp = -1;
             let perCaseYMaxTemp = -1
@@ -85,7 +85,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                 const aggregateByAttr = ob.aggregatedBy;
 
                 const case_num = ob.valueToVisualize.length;
-
+                caseCount += case_num
 
                 let outputResult = ob.valueToVisualize;
                 const total_val = sum(outputResult);
@@ -102,7 +102,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                         countDict[i] = 0
                     }
                 }
-                console.log(outputResult, countDict)
+
                 outputResult.map((d: any) => {
                     if (valueToVisualize === "CELL_SAVER_ML") {
                         const roundedAnswer = Math.floor(d / 100) * 100
@@ -137,6 +137,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                 return new_ob;
             });
             setData({ original: cast_data });
+            actions.updateCaseCount("AGGREGATED", caseCount)
             setYMax({ original: yMaxTemp, perCase: perCaseYMaxTemp });
 
 
@@ -242,7 +243,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
 
     useMemo(() => {
         makeExtraPairData();
-        console.log(extraPairData)
+        //console.log(extraPairData)
     }, [layoutArray, data, hemoglobinDataSet]);
 
     const toggleStripGraphMode = () => {
