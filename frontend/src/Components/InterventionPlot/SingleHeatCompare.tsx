@@ -28,6 +28,7 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
 
     return (
         <>
+
             {valueScale.domain().map(point => {
                 const preOutput = dataPoint.preCountDict[point] ? dataPoint.preCountDict[point] : 0;
 
@@ -80,7 +81,9 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                     <line transform={howToTransform} strokeWidth={0.5} stroke={basic_gray} opacity={preOutput === 0 ? 1 : 0} y1={0.25 * bandwidth} y2={0.25 * bandwidth} x1={valueScale(point)! + 0.35 * valueScale.bandwidth()} x2={valueScale(point)! + 0.65 * valueScale.bandwidth()} />,
                     <line transform={howToTransform} strokeWidth={0.5} stroke={basic_gray} opacity={postOutput === 0 ? 1 : 0} y1={0.75 * bandwidth} y2={0.75 * bandwidth} x1={valueScale(point)! + 0.35 * valueScale.bandwidth()} x2={valueScale(point)! + 0.65 * valueScale.bandwidth()} />]
                 )
-            })}
+            })},
+            <line transform={howToTransform} x1={valueScale(0)} x2={valueScale.range()[1]} y1={bandwidth * 0.5} y2={bandwidth * 0.5}
+                stroke="white" />
         </>)
 
 }

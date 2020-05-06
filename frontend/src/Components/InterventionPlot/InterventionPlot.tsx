@@ -40,6 +40,7 @@ import { Popup, Button, Icon } from 'semantic-ui-react'
 //import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
 import { secondary_gray, third_gray } from "../../ColorProfile";
 import SingleHeatCompare from "./SingleHeatCompare";
+import SingleViolinCompare from "./SingleViolinCompare";
 
 interface OwnProps {
     aggregatedBy: string;
@@ -71,7 +72,7 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
 
 
 
-    const [dimension, aggregationScale, valueScale, caseScale] = useMemo(() => {
+    const [dimension, aggregationScale, valueScale, caseScale, lineFunction] = useMemo(() => {
 
         const caseMax = max(data.map(d => (d.preCaseCount + d.postCaseCount))) || 0;
         const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
@@ -80,8 +81,14 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
             width: dimensionWhole.width
         }
 
+        let kdeMax = 0
         const xVals = data
-            .map(dp => dp.aggregateAttribute)
+
+            .map(dp => {
+                const max_temp = max([max(dp.preInKdeCal, d => d.y), max(dp.postInKdeCal, d => d.y)])
+                kdeMax = kdeMax > max_temp ? kdeMax : max_temp;
+                return dp.aggregateAttribute
+            })
             .sort();
         let outputRange
         if (valueToVisualize === "CELL_SAVER_ML") {
@@ -95,12 +102,29 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
             .range([offset.left, dimension.width - offset.right - offset.margin])
             .paddingInner(0.01);
 
+
+        let linearValueScale = scaleLinear()
+            .domain([0, BloodProductCap[valueToVisualize]])
+            .range([offset.left, dimension.width - offset.right - offset.margin]);
+
         let aggregationScale = scaleBand()
             .domain(xVals)
             .range([dimension.height - offset.bottom, offset.top])
             .paddingInner(0.1);
 
-        return [dimension, aggregationScale, valueScale, caseScale];
+
+
+
+        const kdeScale = scaleLinear()
+            .domain([0, kdeMax])
+            .range([0.25 * aggregationScale.bandwidth(), 0])
+
+        const lineFunction = line()
+            .curve(curveCatmullRom)
+            .y((d: any) => kdeScale(d.y))
+            .x((d: any) => linearValueScale(d.x) - offset.left);
+
+        return [dimension, aggregationScale, valueScale, caseScale, lineFunction];
     }, [dimensionWhole, data, yMax])
 
     const aggregationLabel = axisLeft(aggregationScale);
@@ -216,7 +240,18 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
 
         }
         else {
-            return ([<></>])
+            return ([<SingleViolinCompare
+                preIntPath={lineFunction(dataPoint.preInKdeCal)!}
+                postIntPath={lineFunction(dataPoint.postInKdeCal)!}
+                dataPoint={dataPoint}
+                aggregatedBy={aggregatedBy}
+                isSelected={decideIfSelected(dataPoint)}
+                isFiltered={decideIfFiltered(dataPoint)}
+                preIntHowToTransform={(`translate(0,${aggregationScale(
+                    dataPoint.aggregateAttribute
+                )})`).toString()}
+                postIntHowToTransform={(`translate(0,${aggregationScale(dataPoint.aggregateAttribute)! + aggregationScale.bandwidth() * 0.5})`).toString()}
+            />])
         }
 
     }

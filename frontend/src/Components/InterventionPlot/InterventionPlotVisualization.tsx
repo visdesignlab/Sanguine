@@ -7,7 +7,7 @@ import { InterventionDataPoint, BloodProductCap } from '../../Interfaces/Applica
 
 import { Button, Icon, Table, Grid, Dropdown, GridColumn, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
-import { sum, max, median, create, timeFormat } from "d3";
+import { sum, max, median, create, timeFormat, timeParse } from "d3";
 import InterventionPlot from "./InterventionPlot";
 
 interface OwnProps {
@@ -39,7 +39,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
     const [yMax, setYMax] = useState({ original: 0, perCase: 0 });
 
     const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
-    const [extraPairData, setExtraPairData] = useState<{ name: string, data: any[], type: string }[]>([])
+    // const [extraPairData, setExtraPairData] = useState<{ name: string, data: any[], type: string }[]>([])
 
     // const [caseIDList, setCaseIDList] = useState<any>(null)
 
@@ -54,13 +54,30 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
     }, [layoutArray[chartIndex]]);
 
     useEffect(() => {
-        if (interventionDate.getTime() < rawDateRange[0].getTime() || interventionDate.getTime() > rawDateRange[1].getTime()) {
-            actions.removeChart(chartId)
+
+        try {
+            if (interventionDate.getTime() < rawDateRange[0].getTime() || interventionDate.getTime() > rawDateRange[1].getTime()) {
+                actions.removeChart(chartId)
+            }
+        } catch (e) {
+            if (e instanceof TypeError) {
+                console.log(interventionDate, typeof interventionDate, rawDateRange)
+                const castInterventionDate = (typeof interventionDate === "string") ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate
+                const castRawDateRange0 = (typeof rawDateRange[0] === "string") ? timeParse("%Y-%m-%dT%H:%M:%SZ")(rawDateRange[0])! : rawDateRange[0]
+                const castRawDateRange1 = (typeof rawDateRange[1] === "string") ? timeParse("%Y-%m-%dT%H:%M:%SZ")(rawDateRange[1])! : rawDateRange[1]
+                console.log(castInterventionDate, castRawDateRange1, castRawDateRange0)
+                if (castInterventionDate.getTime() < castRawDateRange0.getTime() || castInterventionDate.getTime() > castRawDateRange1.getTime()) {
+                    actions.removeChart(chartId)
+                }
+
+            }
+
         }
     }, [rawDateRange])
 
 
     async function fetchChartData() {
+
         const preIntervention = await fetch(
             `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${[dateRange[0], timeFormat("%d-%b-%Y")(interventionDate)]}&filter_selection=${filterSelection.toString()}`
         );
@@ -233,7 +250,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                 })
                 let found = false;
                 cast_data = cast_data.map((d: InterventionDataPoint) => {
-                    console.log(d)
+
                     if (d.aggregateAttribute === postIntOb.aggregatedBy) {
                         found = true;
                         d.postCountDict = postCountDict;
@@ -265,7 +282,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                     cast_data.push(new_ob)
                 }
             })
-            console.log(cast_data)
+
             setData(cast_data);
             setYMax({ original: yMaxTemp, perCase: perCaseYMaxTemp });
 

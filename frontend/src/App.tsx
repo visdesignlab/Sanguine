@@ -77,7 +77,7 @@ const App: FC<Props> = ({ store }: Props) => {
       YEAR: number,
       QUARTER: string,
       MONTH: string,
-      DATE: any,
+      DATE: Date | null,
       PRBC_UNITS: number,
       FFP_UNITS: number,
       PLT_UNITS: number,
@@ -226,8 +226,6 @@ const App: FC<Props> = ({ store }: Props) => {
             chartIndex={index}
             interventionDate={layout.interventionDate!}
             interventionPlotType={layout.interventionType!} />
-
-
         </div>)
 
     }

@@ -28,6 +28,8 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
 
     return (
         <>
+
+
             {valueScale.domain().map(point => {
                 const output = dataPoint.countDict[point] ? dataPoint.countDict[point] : 0
 
