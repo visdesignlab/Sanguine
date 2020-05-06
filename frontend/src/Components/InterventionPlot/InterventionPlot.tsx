@@ -52,6 +52,7 @@ interface OwnProps {
     svg: React.RefObject<SVGSVGElement>;
     yMax: number;
     plotType: string;
+    interventionDate: string;
     //  selectedVal: number | null;
     // stripPlotMode: boolean;
     //extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];
@@ -59,7 +60,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax }: Props) => {
+const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax }: Props) => {
 
     const svgSelection = select(svg.current);
 
@@ -264,6 +265,7 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
 
     }
 
+
     return (
         <>
             <line x1={1} x2={1} y1={offset.top} y2={dimension.height - offset.bottom} style={{ stroke: "#e5e5e5", strokeWidth: "1" }} />
@@ -306,6 +308,14 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
                     fill={third_gray}>
                     100%
                 </text>
+                <text
+                    x={0.5 * dimension.width}
+                    y={0}
+                    alignmentBaseline="hanging"
+                    textAnchor="middle"
+                    fontSize="13px"
+                    fill={third_gray}
+                >Intervention: {interventionDate}</text>
             </g>
 
             <g className="chart"
