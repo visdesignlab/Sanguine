@@ -29,7 +29,7 @@ const SingleViolinCompare: FC<Props> = ({ postIntHowToTransform, preIntHowToTran
         <>
             [<Popup
                 content={dataPoint.totalVal}
-                key={dataPoint.aggregateAttribute}
+                key={`Pre${dataPoint.aggregateAttribute}`}
                 trigger={
                     <ViolinLine
                         d={preIntPath}
@@ -49,7 +49,7 @@ const SingleViolinCompare: FC<Props> = ({ postIntHowToTransform, preIntHowToTran
                     />} />,
             <Popup
                 content={dataPoint.totalVal}
-                key={dataPoint.aggregateAttribute}
+                key={`Post${dataPoint.aggregateAttribute}`}
                 trigger={
                     <ViolinLine
                         d={postIntPath}

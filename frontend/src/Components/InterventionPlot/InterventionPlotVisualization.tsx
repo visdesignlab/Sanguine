@@ -77,14 +77,15 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
 
 
     async function fetchChartData() {
+        const castInterventionDate = (typeof interventionDate === "string") ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate
 
         const preIntervention = await fetch(
-            `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${[dateRange[0], timeFormat("%d-%b-%Y")(interventionDate)]}&filter_selection=${filterSelection.toString()}`
+            `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${[dateRange[0], timeFormat("%d-%b-%Y")(castInterventionDate)]}&filter_selection=${filterSelection.toString()}`
         );
         const preInterventiondataResult = await preIntervention.json();
 
         const postIntervention = await fetch(
-            `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${[timeFormat("%d-%b-%Y")(interventionDate), dateRange[1]]}&filter_selection=${filterSelection.toString()}`
+            `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${[timeFormat("%d-%b-%Y")(castInterventionDate), dateRange[1]]}&filter_selection=${filterSelection.toString()}`
         )
         const postInterventionResult = await postIntervention.json();
         //  let caseCount = 0;

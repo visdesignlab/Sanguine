@@ -72,7 +72,7 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
 
 
 
-    const [dimension, aggregationScale, valueScale, caseScale, lineFunction] = useMemo(() => {
+    const [dimension, aggregationScale, valueScale, caseScale, lineFunction, linearValueScale] = useMemo(() => {
 
         const caseMax = max(data.map(d => (d.preCaseCount + d.postCaseCount))) || 0;
         const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
@@ -124,11 +124,11 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
             .y((d: any) => kdeScale(d.y))
             .x((d: any) => linearValueScale(d.x) - offset.left);
 
-        return [dimension, aggregationScale, valueScale, caseScale, lineFunction];
+        return [dimension, aggregationScale, valueScale, caseScale, lineFunction, linearValueScale];
     }, [dimensionWhole, data, yMax])
 
     const aggregationLabel = axisLeft(aggregationScale);
-    const valueLabel = axisBottom(valueScale);
+    const valueLabel = plotType === "HEATMAP" ? axisBottom(valueScale).tickFormat(d => d === BloodProductCap[valueToVisualize] ? `${d}+` : d) : axisBottom(linearValueScale);
 
     svgSelection
         .select(".axes")
@@ -149,6 +149,14 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
             `translate(0 ,${dimension.height - offset.bottom})`
         )
         .call(valueLabel as any);
+
+    if (plotType === "HEATMAP") {
+        svgSelection
+            .select(".axes")
+            .select(".y-axis")
+            .call(g => g.select(".domain").remove())
+            .call(g => g.selectAll(".tick").selectAll("line").remove());
+    }
 
     svgSelection
         // .select(".axes")
@@ -265,7 +273,8 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
                 <text className="x-label" />
                 <text className="y-label" />
             </g>
-            <g className="legend">
+
+            <g className="legend" display={plotType === "HEATMAP" ? "" : "None"}>
                 <defs>
                     <linearGradient id="gradient1" x1="0" x2="1" y1="0" y2="0" colorInterpolation="CIE-LCHab">
                         <stop offset="0%" stopColor={interpolateReds(0.1)} />
@@ -298,6 +307,7 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
                     100%
                 </text>
             </g>
+
             <g className="chart"
                 transform={`translate(${offset.left},0)`}
             >
