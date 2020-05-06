@@ -359,15 +359,15 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
     def test_request_transfused_units_missing_transfusion_type(self):
         response = self.c.get(
             self.endpoint,
-            { "year_range": "2016,2017" },
+            { "date_range": "01-JAN-2016,31-DEC-2017" },
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.content.decode(),
-            "transfusion_type and year_range must be supplied."
+            "transfusion_type and date_range must be supplied."
         )
 
-    def test_request_transfused_units_missing_year_range(self):
+    def test_request_transfused_units_missing_date_range(self):
         response = self.c.get(
             self.endpoint,
             { "transfusion_type": "PRBC_UNITS" },
@@ -375,12 +375,13 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.content.decode(),
-            "transfusion_type and year_range must be supplied.",
+            "transfusion_type and date_range must be supplied.",
         )
 
-    def test_request_transfused_units_invalid_year_ranges(self):
+    def test_request_transfused_units_invalid_date_ranges(self):
         invalid_options = [
             "2016",
+            "2016,",
             ",2016",
             "2016,2017,2018",
             ",",
@@ -395,13 +396,13 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
                 self.endpoint,
                 {
                     "transfusion_type": "PRBC_UNITS", 
-                    "year_range": invalid_option,
+                    "date_range": invalid_option,
                 },
             )
             self.assertEqual(response.status_code, 400)
             self.assertEqual(
                 response.content.decode(),
-                "transfusion_type and year_range must be supplied.",
+                "transfusion_type and date_range must be supplied.",
             )
 
     def test_request_transfused_units_invalid_transfusion_types(self):
@@ -416,7 +417,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
                 self.endpoint,
                 {
                     "transfusion_type": invalid_option, 
-                    "year_range": "2016,2017",
+                    "date_range": "01-JAN-2016,31-DEC-2017" ,
                 },
             )
             self.assertEqual(response.status_code, 400)
@@ -437,7 +438,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
                 self.endpoint,
                 {
                     "transfusion_type": "PRBC_UNITS", 
-                    "year_range": "2016,2017", 
+                    "date_range": "01-JAN-2016,31-DEC-2017" , 
                     "aggregated_by": invalid_option,
                 },
             )
@@ -452,7 +453,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             self.endpoint,
             {
                 "transfusion_type": "ALL_UNITS", 
-                "year_range": "2016,2017", 
+                "date_range": "01-JAN-2016,31-DEC-2017" , 
                 "aggregated_by": "YEAR",
             },
         )
@@ -466,59 +467,59 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         valid_options = [
             { # Minimum viable
                 "transfusion_type": "PRBC_UNITS", 
-                "year_range": "2016,2017", 
+                "date_range": "01-JAN-2016,31-DEC-2017" , 
             },
-            { # Different year_range
+            { # Different date_range
                 "transfusion_type": "PRBC_UNITS", 
-                "year_range": "2017,2018", 
+                "date_range": "01-JAN-2017,31-DEC-2018" , 
             },
             { # Different transfusion_type (should test them all)
                 "transfusion_type": "ALL_UNITS", 
-                "year_range": "2016,2017", 
+                "date_range": "01-JAN-2016,31-DEC-2017" , 
             },
             { # Add aggregation
                 "transfusion_type": "PRBC_UNITS", 
-                "year_range": "2016,2017", 
+                "date_range": "01-JAN-2016,31-DEC-2017" , 
                 "aggregated_by": "YEAR",
             },
             { # Different aggregation
                 "transfusion_type": "PRBC_UNITS", 
-                "year_range": "2016,2017", 
+                "date_range": "01-JAN-2016,31-DEC-2017" , 
                 "aggregated_by": "SURGEON_ID",
             },
             { # One patient ID
                 "transfusion_type": "PRBC_UNITS", 
-                "year_range": "2016,2017", 
+                "date_range": "01-JAN-2016,31-DEC-2017" , 
                 "patient_ids": "585148403",
             },
             { # Multiple pats
                 "transfusion_type": "PRBC_UNITS", 
-                "year_range": "2016,2017", 
+                "date_range": "01-JAN-2016,31-DEC-2017" , 
                 "patient_ids": "585148403,81015617,632559101",
             },
             { # One patient ID
                 "transfusion_type": "PRBC_UNITS", 
-                "year_range": "2016,2017", 
+                "date_range": "01-JAN-2016,31-DEC-2017" , 
                 "case_ids": "85103152",
             },
             { # One multiple pats
                 "transfusion_type": "PRBC_UNITS", 
-                "year_range": "2016,2017", 
+                "date_range": "01-JAN-2016,31-DEC-2017" , 
                 "case_ids": "85103152,74712769",
             },
             { # One filter_selection
                 "transfusion_type": "PRBC_UNITS", 
-                "year_range": "2016,2017", 
+                "date_range": "01-JAN-2016,31-DEC-2017" , 
                 "filter_selection": "REPLACE AORTIC VALVE PERQ FEMORAL ARTRY APPROACH",
             },
             { # Multiple filter_selection
                 "transfusion_type": "PRBC_UNITS", 
-                "year_range": "2016,2017", 
+                "date_range": "01-JAN-2016,31-DEC-2017" , 
                 "filter_selection": "REPLACE AORTIC VALVE PERQ FEMORAL ARTRY APPROACH,CORONARY ARTERY BYPASS 1 CORONARY VENOUS GRAFT",
             },
             { # Full example
                 "transfusion_type": "PRBC_UNITS", 
-                "year_range": "2016,2017", 
+                "date_range": "01-JAN-2016,31-DEC-2017" , 
                 "patient_ids": "68175619,14711172,35383429,632559101",
                 "case_ids": "85103152",
                 "filter_selection": "REPLACE AORTIC VALVE PERQ FEMORAL ARTRY APPROACH,CORONARY ARTERY BYPASS 1 CORONARY VENOUS GRAFT",
@@ -526,7 +527,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             },
             { # Full example ALL_UNITS - no agg
                 "transfusion_type": "ALL_UNITS", 
-                "year_range": "2016,2017", 
+                "date_range": "01-JAN-2016,31-DEC-2017" , 
                 "patient_ids": "68175619,14711172,35383429,632559101",
                 "case_ids": "85103152",
                 "filter_selection": "REPLACE AORTIC VALVE PERQ FEMORAL ARTRY APPROACH,CORONARY ARTERY BYPASS 1 CORONARY VENOUS GRAFT",
