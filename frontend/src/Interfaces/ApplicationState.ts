@@ -69,7 +69,8 @@ export interface ApplicationState {
   // yearRange: number[];
   rawDateRange: Date[];
   filterSelection: string[];
-  // totalCaseCount: number;
+  totalAggregatedCaseCount: number;
+  totalIndividualCaseCount: number;
   // dumbbellSorted: boolean;
   currentSelectSet: SelectSet[];
   currentOutputFilterSet: SelectSet[];
@@ -102,7 +103,8 @@ export const defaultState: ApplicationState = {
   rawDateRange: [new Date(2014, 0, 1), new Date(2019, 11, 31)],
 
   filterSelection: [],
-  // totalCaseCount: 0,
+  totalAggregatedCaseCount: 0,
+  totalIndividualCaseCount: 0,
   // dumbbellSorted: false,
   currentOutputFilterSet: [],
   currentSelectSet: [],
@@ -151,6 +153,22 @@ export const dumbbellFacetOptions = [
   },
   { value: "QUARTER", key: "QUARTER", text: "Quarter" },
   { value: "MONTH", key: "MONTH", text: "Month" }
+]
+
+export const barChartAggregationOptions = [
+  { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
+  { value: "YEAR", key: "YEAR", text: "Year" },
+  {
+    value: "ANESTHOLOGIST_ID",
+    key: "ANESTHOLOGIST_ID",
+    text: "Anesthologist ID"
+  }
+];
+
+export const interventionChartType = [
+  { value: "HEATMAP", key: "HEATMAP", text: "Heat Map" },
+  { value: "VIOLIN", key: "VIOLIN", text: "Violin Plot" }
+
 ]
 
 export const barChartValuesOptions = [

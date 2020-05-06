@@ -3,7 +3,7 @@ import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { HeatMapDataPoint, BloodProductCap } from '../../Interfaces/ApplicationState'
+import { HeatMapDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions } from '../../Interfaces/ApplicationState'
 
 import { Button, Icon, Table, Grid, Dropdown, GridColumn, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
@@ -69,7 +69,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
         );
         const dataResult = await res.json();
-        //  let caseCount = 0;
+        let caseCount = 0;
         if (dataResult) {
             let yMaxTemp = -1;
             let perCaseYMaxTemp = -1
@@ -85,7 +85,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                 const aggregateByAttr = ob.aggregatedBy;
 
                 const case_num = ob.valueToVisualize.length;
-
+                caseCount += case_num
 
                 let outputResult = ob.valueToVisualize;
                 const total_val = sum(outputResult);
@@ -102,14 +102,14 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                         countDict[i] = 0
                     }
                 }
-                console.log(outputResult)
+
                 outputResult.map((d: any) => {
                     if (valueToVisualize === "CELL_SAVER_ML") {
                         const roundedAnswer = Math.floor(d / 100) * 100
                         if (roundedAnswer > cap) {
                             countDict[cap] += 1
                         }
-                        else if (countDict[roundedAnswer]) {
+                        else {
                             countDict[roundedAnswer] += 1
                         }
                     } else {
@@ -137,6 +137,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                 return new_ob;
             });
             setData({ original: cast_data });
+            actions.updateCaseCount("AGGREGATED", caseCount)
             setYMax({ original: yMaxTemp, perCase: perCaseYMaxTemp });
 
 
@@ -146,7 +147,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     useEffect(() => {
         fetchChartData();
 
-    }, [filterSelection, dateRange, showZero]);
+    }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize]);
 
 
     const makeExtraPairData = () => {
@@ -242,11 +243,18 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
 
     useMemo(() => {
         makeExtraPairData();
-        console.log(extraPairData)
+        //console.log(extraPairData)
     }, [layoutArray, data, hemoglobinDataSet]);
 
     const toggleStripGraphMode = () => {
         setStripMode(!stripPlotMode)
+    }
+
+    const changeAggregation = (e: any, value: any) => {
+        actions.changeChart(value.value, valueToVisualize, chartId, "HEATMAP")
+    }
+    const changeValue = (e: any, value: any) => {
+        actions.changeChart(aggregatedBy, value.value, chartId, "HEATMAP")
     }
 
 
@@ -311,8 +319,13 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                         <Menu.Item fitted onClick={toggleStripGraphMode}>
                             <Icon name="ellipsis vertical" />
                         </Menu.Item>
-                        <Menu.Item>
-                            <Icon name="edit" />
+                        <Menu.Item header>
+                            <Dropdown pointing basic item icon="edit" compact >
+                                <Dropdown.Menu>
+                                    <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
+                                    <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue}></Dropdown>
+                                </Dropdown.Menu>
+                            </Dropdown>
                         </Menu.Item>
                     </Menu>
                 </Grid.Column>

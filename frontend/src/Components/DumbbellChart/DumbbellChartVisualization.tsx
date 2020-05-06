@@ -77,6 +77,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
     // const hemoDataResult = await hemoRes.json();
     // const hemo_data = hemoDataResult.result;
     //let tempYMax = 0;
+    let caseCount = 0;
     let tempXMin = Infinity;
     let tempXMax = 0;
     if (hemoglobinDataSet) {
@@ -131,7 +132,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
 
               };
               existingCaseID.add(ob.CASE_ID)
-              //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
+              caseCount++
               return new_ob;
             }
           }
@@ -139,6 +140,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
         }
       });
       cast_data = cast_data.filter((d: any) => d);
+      actions.updateCaseCount("INDIVIDUAL", caseCount)
       setData({ result: cast_data });
       setXRange({ xMin: tempXMin, xMax: tempXMax });
 

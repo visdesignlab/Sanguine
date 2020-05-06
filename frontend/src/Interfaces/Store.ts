@@ -19,8 +19,12 @@ export default class Store {
 
   @observable rawDateRange: Date[] = defaultState.rawDateRange;
 
+
+
   @observable filterSelection: string[] = defaultState.filterSelection;
-  //@observable totalCaseCount: number = defaultState.totalCaseCount;
+  @observable totalAggregatedCaseCount: number = defaultState.totalAggregatedCaseCount;
+  @observable totalIndividualCaseCount: number = defaultState.totalIndividualCaseCount
+
   // @observable dumbbellSorted: boolean = defaultState.dumbbellSorted;
   @observable currentSelectSet: SelectSet[] = defaultState.currentSelectSet;
   @observable currentSelectPatient: SingleCasePoint | null = defaultState.currentSelectPatient;

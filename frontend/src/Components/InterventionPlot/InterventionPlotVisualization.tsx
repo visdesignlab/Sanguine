@@ -3,7 +3,7 @@ import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { InterventionDataPoint, BloodProductCap } from '../../Interfaces/ApplicationState'
+import { InterventionDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType } from '../../Interfaces/ApplicationState'
 
 import { Button, Icon, Table, Grid, Dropdown, GridColumn, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
@@ -77,17 +77,18 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
 
 
     async function fetchChartData() {
+        const castInterventionDate = (typeof interventionDate === "string") ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate
 
         const preIntervention = await fetch(
-            `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${[dateRange[0], timeFormat("%d-%b-%Y")(interventionDate)]}&filter_selection=${filterSelection.toString()}`
+            `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${[dateRange[0], timeFormat("%d-%b-%Y")(castInterventionDate)]}&filter_selection=${filterSelection.toString()}`
         );
         const preInterventiondataResult = await preIntervention.json();
 
         const postIntervention = await fetch(
-            `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${[timeFormat("%d-%b-%Y")(interventionDate), dateRange[1]]}&filter_selection=${filterSelection.toString()}`
+            `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${[timeFormat("%d-%b-%Y")(castInterventionDate), dateRange[1]]}&filter_selection=${filterSelection.toString()}`
         )
         const postInterventionResult = await postIntervention.json();
-        //  let caseCount = 0;
+        let caseCount = 0;
         if (preInterventiondataResult && postInterventionResult) {
             let yMaxTemp = -1;
             let perCaseYMaxTemp = -1
@@ -104,7 +105,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
 
                 const preIntMed = median(preIntOb.valueToVisualize);
 
-                // const total_val = sum(ob.valueToVisualize);
+                caseCount += case_num;
 
 
                 let preRemovedZeros = preIntOb.valueToVisualize;
@@ -154,7 +155,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                         if (roundedAnswer > cap) {
                             preCountDict[cap] += 1
                         }
-                        else if (preCountDict[roundedAnswer]) {
+                        else {
                             preCountDict[roundedAnswer] += 1
                         }
                     } else {
@@ -204,6 +205,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                 }
 
                 const total_val = sum(postRemovedZeros);
+                caseCount += case_num
 
                 let postIntPD = createpd(postRemovedZeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
 
@@ -236,7 +238,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                         if (roundedAnswer > cap) {
                             postCountDict[cap] += 1
                         }
-                        else if (postCountDict[roundedAnswer]) {
+                        else {
                             postCountDict[roundedAnswer] += 1
                         }
                     } else {
@@ -284,6 +286,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
             })
 
             setData(cast_data);
+            actions.updateCaseCount("AGGREGATED", caseCount)
             setYMax({ original: yMaxTemp, perCase: perCaseYMaxTemp });
 
         }
@@ -292,11 +295,20 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
     useEffect(() => {
         fetchChartData();
 
-    }, [filterSelection, dateRange, showZero]);
+    }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize]);
 
 
 
+    const changeAggregation = (e: any, value: any) => {
+        actions.changeChart(value.value, valueToVisualize, chartId, "INTERVENTION")
+    }
+    const changeValue = (e: any, value: any) => {
+        actions.changeChart(aggregatedBy, value.value, chartId, "INTERVENTION")
+    }
 
+    const changeType = (e: any, value: any) => {
+        actions.changeChart(aggregatedBy, valueToVisualize, chartId, "INTERVENTION", value.value)
+    }
 
     return (
 
@@ -305,7 +317,13 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                 <Grid.Column verticalAlign="middle" width={1}>
                     <Menu icon vertical compact size="mini" borderless secondary widths={2}>
                         <Menu.Item>
-                            <Icon name="edit" />
+                            <Dropdown pointing basic item icon="edit" compact >
+                                <Dropdown.Menu>
+                                    <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
+                                    <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue}></Dropdown>
+                                    <Dropdown text="Change Type" pointing basic item compact options={interventionChartType} onChange={changeType}></Dropdown>
+                                </Dropdown.Menu>
+                            </Dropdown>
                         </Menu.Item>
                     </Menu>
                 </Grid.Column>
@@ -316,6 +334,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                     <SVG ref={svgRef}>
 
                         <InterventionPlot
+                            interventionDate={timeFormat("%Y-%m-%d")((typeof interventionDate === "string") ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate)}
                             chartId={chartId}
                             dimensionWhole={dimensions}
                             data={data}
