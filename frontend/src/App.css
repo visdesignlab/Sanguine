@@ -1,3 +1,5 @@
+
+
 .App {
   text-align: center;
 }
@@ -10,40 +12,13 @@
   color:black;
 }
 
-
-/* .App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-} */
-
-/* .canvas-1{
-  padding-top: 10px;
-  padding-bottom: 10px;
-} */
-/* .canvas-2{
-  float:left;
-  margin-top:10%;
-  width: 40%;
-  height:80%;
-  padding-top: 5%;
-  padding-left: 5%;
-} */
-
-
-
 .App-link {
   color: #09d3ac;
 }
-.okok>div{
+.lineup>div{
   display:flex;
   height:800px
 }
-.okok>div>div{
+.lineup>div>div{
   flex:1 1 auto;
 }

@@ -32,8 +32,10 @@ import { LayoutElement } from './Interfaces/ApplicationState';
 import { action } from 'mobx';
 import { actions } from './index'
 import { LineUpStringColumnDesc, LineUpCategoricalColumnDesc, LineUpNumberColumnDesc, LineUpSupportColumn, LineUpColumn } from 'lineupjsx';
-import ScatterPlotVisualization from './Components/Scatterplot/ScatterPlotVisualization';
+// import ScatterPlotVisualization from './Components/Scatterplot/ScatterPlotVisualization';
 import DetailView from './Components/DetailView';
+import ScatterPlotVisualization from './Components/Scatterplot/ScatterPlotVisualization';
+import LineUpWrapper from './Components/LineUpWrapper';
 
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
@@ -54,9 +56,59 @@ const App: FC<Props> = ({ store }: Props) => {
   } = store!;
 
   async function cacheHemoData() {
-    const res = await fetch("http://localhost:8000/api/hemoglobin");
-    const data = await res.json();
-    const result = data.result;
+    const resHemo = await fetch("http://localhost:8000/api/hemoglobin");
+    const dataHemo = await resHemo.json();
+    const resultHemo = dataHemo.result;
+
+    const resTrans = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&year_range=${[2014, 2019]}`)
+    const dataTrans = await resTrans.json();
+    const resultTrans = dataTrans.result;
+
+    let transfused_dict = {} as any;
+    let result: {
+      CASE_ID: number, VISIT_ID: number,
+      PATIENT_ID: number, ANESTHOLOGIST_ID: number,
+      SURGEON_ID: number, YEAR: number, PRBC_UNITS: number, FFP_UNITS: number, PLT_UNITS: number,
+      CRYO_UNITS: number,
+      CELL_SAVER_ML: number,
+      HEMO: number[]
+    }[] = [];
+
+
+
+    resultTrans.forEach((element: any) => {
+      transfused_dict[element.case_id] = {
+        PRBC_UNITS: element.PRBC_UNITS,
+        FFP_UNITS: element.FFP_UNITS,
+        PLT_UNITS: element.PLT_UNITS,
+        CRYO_UNITS: element.CRYO_UNITS,
+        CELL_SAVER_ML: element.CELL_SAVER_ML
+      };
+    });
+
+
+    resultHemo.map((ob: any) => {
+      if (transfused_dict[ob.CASE_ID]) {
+        const transfusedResult = transfused_dict[ob.CASE_ID]
+        result.push({
+          CASE_ID: ob.CASE_ID,
+          VISIT_ID: ob.VISIT_ID,
+          PATIENT_ID: ob.PATIENT_ID,
+          ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
+          SURGEON_ID: ob.SURGEON_ID,
+          YEAR: ob.YEAR,
+          PRBC_UNITS: transfusedResult.PRBC_UNITS,
+          FFP_UNITS: transfusedResult.FFP_UNITS,
+          PLT_UNITS: transfusedResult.PLT_UNITS,
+          CRYO_UNITS: transfusedResult.CRYO_UNITS,
+          CELL_SAVER_ML: transfusedResult.CELL_SAVER_ML,
+          HEMO: ob.HEMO
+        })
+      }
+    })
+
+    result = result.filter((d: any) => d);
+
     actions.storeHemoData(result);
     //   let tempMaxCaseCount = 0
     // data.result.forEach((d: any) => {
@@ -64,6 +116,7 @@ const App: FC<Props> = ({ store }: Props) => {
     // })
     // setMaxCaseCount(tempMaxCaseCount)
   }
+
   useEffect(() => {
     cacheHemoData();
   }, []);
@@ -90,7 +143,7 @@ const App: FC<Props> = ({ store }: Props) => {
             onClick={
               actions.removeChart}
           >
-          <Icon key={layout.i} name="close" />
+            <Icon key={layout.i} name="close" />
           </Button>
           <DumbbellChartVisualization
             yAxis={layout.aggregatedBy}
@@ -117,7 +170,7 @@ const App: FC<Props> = ({ store }: Props) => {
             size="mini"
             onClick={actions.removeChart}
           >
-          <Icon key={layout.i} name="close" /> 
+            <Icon key={layout.i} name="close" />
           </Button>
           <BarChartVisualization
             aggregatedBy={layout.aggregatedBy}
@@ -145,7 +198,7 @@ const App: FC<Props> = ({ store }: Props) => {
           size="mini"
           onClick={actions.removeChart}
         >
-        <Icon key={layout.i} name="close" />
+          <Icon key={layout.i} name="close" />
         </Button>
         <ScatterPlotVisualization
           xAxis={layout.aggregatedBy}
@@ -153,45 +206,38 @@ const App: FC<Props> = ({ store }: Props) => {
           // class_name={"parent-node" + layoutE.i}
           chartId={layout.i}
           chartIndex={index}
-
         />
       </div>)
     }
   }
-  const arr: { a: number; d: string; cat: string; cat2: string; }[] = [];
-  const cats = ['c1', 'c2', 'c3'];
-  // for (let i = 0; i < 100; ++i) {
-  //   arr.push({
-  //     a: Math.random() * 10,
-  //     d: 'Row ' + i,
-  //     cat: cats[Math.floor(Math.random() * 3)],
-  //     cat2: cats[Math.floor(Math.random() * 3)]
-  //   })
-  // }
+
   const panes = [{
-    menuItem: 'Tab 1', render: () => <Container>
-      <ResponsiveReactGridLayout
-        onResizeStop={actions.onLayoutchange}
-        onDragStop={actions.onLayoutchange}
-        // onBreakpointChange={this._onBreakpointChange}
-        className="layout"
-        cols={colData}
-        rowHeight={300}
-        width={1200}
-        //cols={2}
-        //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-        layouts={{ md: layoutArray }}
-      >
-        {layoutArray.map((layoutE, i) => {
-          return createElement(layoutE, i);
-        })}
-      </ResponsiveReactGridLayout>
-    </Container>
+    menuItem: 'Tab 1', pane: <Tab.Pane>
+      <Container>
+        <ResponsiveReactGridLayout
+          onResizeStop={actions.onLayoutchange}
+          onDragStop={actions.onLayoutchange}
+          // onBreakpointChange={this._onBreakpointChange}
+          className="layout"
+          cols={colData}
+          rowHeight={300}
+          width={1300}
+          //cols={2}
+          //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+          layouts={{ md: layoutArray }}
+        >
+          {layoutArray.map((layoutE, i) => {
+            return createElement(layoutE, i);
+          })}
+        </ResponsiveReactGridLayout>
+      </Container>
+    </Tab.Pane>
   },
   {
-    menuItem: 'Tab 2', render: () =>
-      <div className={"okok"}>
-        <LineUpJS.LineUp data={hemoglobinDataSet} /></div>
+    menuItem: 'Tab 2', pane:
+      <Tab.Pane>
+        <div className={"lineup"}>
+          <LineUpWrapper /></div></Tab.Pane>
   }]
 
   return (
@@ -205,14 +251,13 @@ const App: FC<Props> = ({ store }: Props) => {
         </Grid.Column>
         <Grid.Column width={10}>
           <Tab panes={panes}
-          //  renderActiveOnly={false}
+            renderActiveOnly={false}
           ></Tab>
         </Grid.Column>
         <Grid.Column width={3}>
-          <DetailView/>
+          <DetailView />
         </Grid.Column>
       </Grid>
-
     </LayoutDiv>
   );
 }

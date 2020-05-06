@@ -11,7 +11,7 @@ import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { DumbbellDataPoint, SelectSet } from "../../Interfaces/ApplicationState"
 import DumbbellChart from "./DumbbellChart"
-import { Grid } from "semantic-ui-react";
+import { Grid, Menu, Dropdown } from "semantic-ui-react";
 
 interface OwnProps {
   yAxis: string;
@@ -37,6 +37,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
   const [dimension, setDimensions] = useState({ width: 0, height: 0 });
   const [yMax, setYMax] = useState(0);
   const [xRange, setXRange] = useState({ xMin: 0, xMax: Infinity });
+  const [sortMode, setSortMode] = useState("Postop");
 
   useLayoutEffect(() => {
     if (svgRef.current) {
@@ -95,15 +96,19 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
           tempXMax = end_x > tempXMax ? end_x : tempXMax;
 
           let new_ob: DumbbellDataPoint = {
+            case: {
+              visitNum: ob.VISIT_ID,
+              caseId: ob.CASE_ID,
+              YEAR: ob.YEAR,
+              ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
+              SURGEON_ID: ob.SURGEON_ID,
+              patientID: ob.PATIENT_ID
+            },
             startXVal: begin_x,
             endXVal: end_x,
-            visitNum: ob.VISIT_ID,
+
             yVal: yAxisLabel_val,
-            caseId: ob.CASE_ID,
-            YEAR: ob.YEAR,
-            ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
-            SURGEON_ID: ob.SURGEON_ID,
-            patientID: ob.PATIENT_ID
+
           };
           //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
           return new_ob;
@@ -121,15 +126,15 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
         let counter = {} as { [key: number]: any }
         cast_data.map((datapoint: DumbbellDataPoint) => {
 
-          if (!counter[datapoint[aggregatedOption]]) {
-            counter[datapoint[aggregatedOption]] = { numerator: 1, startXVal: datapoint.startXVal, endXVal: datapoint.endXVal, yVal: datapoint.yVal }
+          if (!counter[datapoint.case[aggregatedOption]]) {
+            counter[datapoint.case[aggregatedOption]] = { numerator: 1, startXVal: datapoint.startXVal, endXVal: datapoint.endXVal, yVal: datapoint.yVal }
           }
           else {
             // const current = counter[datapoint[aggregatedOption]];
-            counter[datapoint[aggregatedOption]].startXVal += datapoint.startXVal
-            counter[datapoint[aggregatedOption]].endXVal += datapoint.endXVal
-            counter[datapoint[aggregatedOption]].yVal += datapoint.yVal
-            counter[datapoint[aggregatedOption]].numerator += 1
+            counter[datapoint.case[aggregatedOption]].startXVal += datapoint.startXVal
+            counter[datapoint.case[aggregatedOption]].endXVal += datapoint.endXVal
+            counter[datapoint.case[aggregatedOption]].yVal += datapoint.yVal
+            counter[datapoint.case[aggregatedOption]].numerator += 1
           }
         })
         cast_data = []
@@ -140,13 +145,15 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
           let new_ob: DumbbellDataPoint = {
             startXVal: counter[keynum].startXVal / counter[keynum].numerator,
             endXVal: counter[keynum].endXVal / counter[keynum].numerator,
-            visitNum: -1,
+            case: {
+              visitNum: -1, caseId: -1,
+              YEAR: aggregatedOption === "YEAR" ? keynum : -1,
+              ANESTHOLOGIST_ID: aggregatedOption === "ANESTHOLOGIST_ID" ? keynum : -1,
+              SURGEON_ID: aggregatedOption === "SURGEON_ID" ? keynum : -1,
+              patientID: -1
+            },
             yVal: counter[keynum].yVal / counter[keynum].numerator,
-            caseId: -1,
-            YEAR: aggregatedOption === "YEAR" ? keynum : -1,
-            ANESTHOLOGIST_ID: aggregatedOption === "ANESTHOLOGIST_ID" ? keynum : -1,
-            SURGEON_ID: aggregatedOption === "SURGEON_ID" ? keynum : -1,
-            patientID: -1
+
           };
           cast_data.push(new_ob)
         };
@@ -168,9 +175,29 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
 
   return (
     <Grid style={{ height: "100%" }}>
-      <Grid.Column width={16}  >
-        <SVG ref={svgRef}>
-          {/* <text
+      <Grid.Row>
+        <Grid.Column verticalAlign="middle" width={1}>
+          <Menu icon vertical compact size="mini" borderless secondary widths={2}>
+            <Menu.Item fitted>
+              <Dropdown basic item icon="ellipsis horizontal" compact>
+                <Dropdown.Menu>
+                  <Dropdown.Item onClick={() => { setSortMode("Gap") }}>
+                    Gap Sort
+                </Dropdown.Item>
+                  <Dropdown.Item onClick={() => { setSortMode("Preop") }}>
+                    Preop Sort
+                </Dropdown.Item><Dropdown.Item onClick={() => { setSortMode("Postop") }}>
+                    Postop Sort
+                </Dropdown.Item>
+
+                </Dropdown.Menu>
+              </Dropdown>
+            </Menu.Item >
+          </Menu>
+        </Grid.Column>
+        <Grid.Column width={15}  >
+          <SVG ref={svgRef}>
+            {/* <text
           x="0"
           y="0"
           style={{
@@ -180,17 +207,19 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, aggregatedOption, chartI
         >
           chart # ${chartId}
         </text> */}
-          <DumbbellChart
-            svg={svgRef}
-            yAxisName={yAxis}
-            data={data.result}
-            dimension={dimension}
-            xRange={xRange}
-            yMax={yMax}
-            aggregation={aggregatedOption}
-          />
-        </SVG>
-      </Grid.Column>
+            <DumbbellChart
+              svg={svgRef}
+              yAxisName={yAxis}
+              data={data.result}
+              dimension={dimension}
+              xRange={xRange}
+              yMax={yMax}
+              aggregation={aggregatedOption}
+              sortMode={sortMode}
+            />
+          </SVG>
+        </Grid.Column>
+      </Grid.Row>
     </Grid>
   );
 }

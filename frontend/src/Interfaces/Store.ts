@@ -3,7 +3,8 @@ import {
   defaultState,
   LayoutElement,
   SelectSet,
-  DumbbellDataPoint
+  DumbbellDataPoint,
+  SingleCasePoint
 } from "./ApplicationState";
 
 export default class Store {
@@ -17,12 +18,12 @@ export default class Store {
   @observable totalCaseCount: number = defaultState.totalCaseCount;
   // @observable dumbbellSorted: boolean = defaultState.dumbbellSorted;
   @observable currentSelectSet: SelectSet | null = defaultState.currentSelectSet;
-  @observable currentSelectPatient: DumbbellDataPoint|null = defaultState.currentSelectPatient;
+  @observable currentSelectPatient: SingleCasePoint | null = defaultState.currentSelectPatient;
   @computed get actualYearRange() {
-    return [this.yearRange[0]+2014,this.yearRange[1]+2014]
+    return [this.yearRange[0] + 2014, this.yearRange[1] + 2014]
   }
-  @observable hemoglobinDataSet:any = defaultState.hemoglobinDataSet
+  @observable hemoglobinDataSet: any = defaultState.hemoglobinDataSet
 }
-    
+
 
 export const store = new Store()

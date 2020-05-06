@@ -29,9 +29,8 @@ const DetailView: FC<Props> = ({ store }: Props) => {
             console.log(individualInfo)
             const fetchTransfused = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&year_range=${actualYearRange}&patient_ids=${currentSelectPatient.patientID}`)
             const fetchResultTran = await fetchTransfused.json();
-            console.log(fetchResultTran)
-            let transfused_info = fetchResultTran.filter((d: { case_id: number; }) => d.case_id === currentSelectPatient.caseId)[0];
-            delete transfused_info.case_id
+            let transfused_info = fetchResultTran.result.filter((d: { case_id: number; }) => d.case_id === currentSelectPatient.caseId)[0];
+            // delete transfused_info.case_id
             //console.log(transfused_info)
             const fetchSurgery = await fetch(`http://localhost:8000/api/fetch_surgery?case_id=${currentSelectPatient.caseId}`)
             const fetchSurgeryJson = await fetchSurgery.json();
@@ -58,7 +57,9 @@ const DetailView: FC<Props> = ({ store }: Props) => {
             for (let [key, val] of Object.entries(individualInfo)) {
                 result.push(
                     <List.Item>
-                        <List.Header>{key}</List.Header>   {val}
+                        <List.Header>{key}</List.Header>
+                        {/* {val} */}
+                        x
                     </List.Item>)
             }
         }
