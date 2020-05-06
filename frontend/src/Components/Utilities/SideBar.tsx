@@ -1,10 +1,12 @@
 import React, { FC, useEffect, useState, useMemo } from "react";
-import Store from "../Interfaces/Store";
+import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
-import { Menu, Dropdown, Grid, Container, Message, List } from "semantic-ui-react";
+import { Menu, Dropdown, Grid, Container, Message, List, Button } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";
-import { scaleLinear } from "d3";
-import { actions } from "..";
+import { scaleLinear, timeFormat } from "d3";
+import { actions } from "../..";
+import { AxisLabelDict } from "../../Interfaces/ApplicationState";
+import { basic_gray, highlight_orange } from "../../ColorProfile";
 
 interface OwnProps {
   store?: Store;
@@ -13,7 +15,14 @@ interface OwnProps {
 export type Props = OwnProps;
 
 const SideBar: FC<Props> = ({ store }: Props) => {
-  const { totalCaseCount, actualYearRange, filterSelection } = store!;
+  const {
+    // totalCaseCount, 
+    totalAggregatedCaseCount,
+    totalIndividualCaseCount,
+    rawDateRange,
+    currentSelectSet,
+    currentOutputFilterSet,
+    filterSelection } = store!;
   const [procedureList, setProcedureList] = useState([]);
   const [maxCaseCount, setMaxCaseCount] = useState(0);
   const [itemSelected, setItemSelected] = useState<any[]>([]);
@@ -38,6 +47,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
 
   useEffect(() => {
     fetchProcedureList();
+    console.log(rawDateRange)
   }, []);
 
   useEffect(() => {
@@ -62,25 +72,62 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     return [caseScale];
   }, [maxCaseCount])
 
+
+
   return (
     <Grid
       divided="vertically"
-
       verticalAlign={"middle"}
       padded
     >
 
-      <Grid.Row centered>
-        <Message>
-          <Message.Header>Current View</Message.Header>
-          <Message.Item>Case Count:{totalCaseCount}</Message.Item>
-          <Message.Item>
-            Selected Year Range: {actualYearRange[0]} - {actualYearRange[1]}
-          </Message.Item>
-        </Message>
+      <Grid.Row centered style={{ padding: "40px" }}>
+        <Container style={{ height: "20vh" }}>
+          <List>
+
+            <List.Header>Current View</List.Header>
+            <List.Item
+              icon="caret right"
+              style={{ textAlign: "left" }}
+              content={`Date Range: ${timeFormat("%Y-%m-%d")(rawDateRange[0])} - ${timeFormat("%Y-%m-%d")(rawDateRange[1])}`} />
+            <List.Item
+              icon="caret right"
+              style={{ textAlign: "left" }}
+              content={`Aggregated Case: ${totalAggregatedCaseCount}`} />
+            <List.Item
+              icon="caret right"
+              style={{ textAlign: "left" }}
+              content={`Individual Case: ${totalIndividualCaseCount}`} />
+            {currentOutputFilterSet.map((selectSet) => {
+              return <FilterListIT
+                icon="caret right"
+                onClick={() => { actions.clearOutputFilterSet(selectSet.set_name) }}
+                content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`} />
+            })}
+          </List>
+        </Container>
+
+      </Grid.Row>
+      <Grid.Row centered style={{ padding: "40px" }}>
+        <Container style={{ height: "20vh" }}>
+          <List>
+            <List.Header>Current Selected</List.Header>
+            {currentSelectSet.map((selectSet) => {
+              return <FilterListIT icon="caret right" onClick={() => { actions.clearSelectSet(selectSet.set_name) }} content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
+            })}
+            <List.Item>
+              <Button disabled={!(currentSelectSet.length > 0)}
+                basic size="tiny" content="Create Filter" onClick={actions.currentOutputFilterSetChange}
+              />
+              <Button disabled={!(currentOutputFilterSet.length > 0)}
+                basic size="tiny" content="Clear Filter" onClick={() => { actions.clearOutputFilterSet() }}
+              />
+            </List.Item>
+          </List>
+        </Container>
       </Grid.Row>
       <Grid.Row style={{ padding: "10px" }}>
-        <Container style={{ overflow: "auto", height: "80vh" }}>
+        <Container style={{ overflow: "auto", height: "40vh" }}>
           <List relaxed divided >
             {itemSelected.map((listItem: any) => {
               if (listItem.value) {
@@ -90,7 +137,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
                       {listItem.value.toLowerCase()}
                     </List.Content>
                     <List.Content floated="right" style={{ width: "30%" }}>
-                      <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={"10px"} fill={"#20639B"}></rect></SVG>
+                      <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={"10px"} fill={basic_gray}></rect></SVG>
                     </List.Content>
                   </ListIT>
                 )
@@ -105,7 +152,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
                       {listItem.value.toLowerCase()}
                     </List.Content>
                     <List.Content floated="right" style={{ width: "30%" }}>
-                      <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={"10px"} fill={"#20639B"}></rect></SVG>
+                      <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={"10px"} fill={basic_gray}></rect></SVG>
                     </List.Content>
                   </ListIT>)
               }
@@ -139,5 +186,13 @@ const ListIT = styled(List.Item) <ListITProps>`
   background:${props => props.isSelected ? '#ffdbb8' : 'none'};
   &:hover{
     background:#d0e4f5;
+  }
+`
+
+const FilterListIT = styled(List.Item)`
+  text-align: left;
+  cursor: pointer;
+  &:hover{
+    text-shadow: 2px 2px 5px ${highlight_orange};
   }
 `

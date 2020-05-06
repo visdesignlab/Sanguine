@@ -1,10 +1,15 @@
 import React, { FC, useEffect, useState } from "react";
-import Store from '../Interfaces/Store'
+import Store from '../../Interfaces/Store'
 // import {}
 import { Menu, Checkbox, Button, Dropdown, Container } from 'semantic-ui-react'
 import { inject, observer } from "mobx-react";
-import { actions } from '..'
+import { actions } from '../..'
 import { Slider } from 'react-semantic-ui-range';
+import SemanticDatePicker from 'react-semantic-ui-datepickers';
+import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
+import { timeFormat } from "d3";
+import { blood_red } from "../../ColorProfile";
+import { barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions, interventionChartType } from "../../Interfaces/ApplicationState";
 
 interface OwnProps {
   store?: Store;
@@ -16,8 +21,10 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const {
     isAtRoot,
     isAtLatest,
+    showZero,
+    rawDateRange,
     //  perCaseSelected,
-    yearRange,
+    //yearRange,
     //  dumbbellSorted
   } = store!;
   //  const [procedureList, setProcedureList] = useState({ result: [] })
@@ -25,45 +32,22 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const [addingChartType, setAddingChartType] = useState(-1)
   const [xSelection, setXSelection] = useState("")
   const [ySelection, setYSelection] = useState("")
-  const [dumbbellAggregation, setDumbbellAggregation] = useState("")
+  const [interventionDate, setInterventionDate] = useState<Date | undefined>(undefined)
   const [elementCounter, addToElementCounter] = useState(0)
-  const sliderSettings = {
-    start: [0, 5],
-    min: 0,
-    max: 5,
-    step: 1,
-    onChange: (value: any) => {
-      actions.yearRangeChange(value)
+  const [interventionPlotType, setInterventionPlotType] = useState<string | undefined>(undefined)
+
+
+  const onDateChange = (event: any, data: any) => {
+    console.log(data.value)
+    if (data.value.length > 1) {
+
+      actions.dateRangeChange([new Date(data.value[0]), new Date(data.value[1])])
     }
   }
 
-  const barChartValuesOptions = [
-    {
-      value: "PRBC_UNITS",
-      key: "PRBC_UNITS",
-      text: "Intraoperative RBCs Transfused"
-    },
-    {
-      value: "FFP_UNITS",
-      key: "FFP_UNITS",
-      text: "Intraoperative FFP Transfused"
-    },
-    {
-      value: "PLT_UNITS",
-      key: "PLT_UNITS",
-      text: "Intraoperative Platelets Transfused"
-    },
-    {
-      value: "CRYO_UNITS",
-      key: "CRYO_UNITS",
-      text: "Intraoperative Cryo Transfused"
-    },
-    {
-      value: "CELL_SAVER_ML",
-      key: "CELL_SAVER_ML",
-      text: "Cell Salvage Volume (ml)"
-    }
-  ];
+
+
+
 
   const scatterXOptions = [
     {
@@ -82,39 +66,20 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     { value: "HEMO_VALUE", key: "HEMO_VALUE", text: "Hemoglobin Value" }
   ]
 
-  const dumbbellAggregationOptions = [
-    { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
-    { value: "YEAR", key: "YEAR", text: "Year" },
-    {
-      value: "ANESTHOLOGIST_ID",
-      key: "ANESTHOLOGIST_ID",
-      text: "Anesthologist ID"
-    },
-    { value: "None", key: "None", text: "None" },
-  ]
 
-  const barChartAggregationOptions = [
-    { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
-    { value: "YEAR", key: "YEAR", text: "Year" },
-    {
-      value: "ANESTHOLOGIST_ID",
-      key: "ANESTHOLOGIST_ID",
-      text: "Anesthologist ID"
-    }
-  ];
+
+
 
   const addOptions = [
     [barChartValuesOptions, barChartAggregationOptions],
-
-    [dumbbellValueOptions, barChartValuesOptions],
-    [scatterXOptions, barChartValuesOptions]
+    [dumbbellValueOptions, barChartValuesOptions.concat(dumbbellFacetOptions)],
+    [scatterXOptions, barChartValuesOptions],
+    [barChartValuesOptions, barChartAggregationOptions],
+    [barChartValuesOptions, barChartAggregationOptions]
 
   ]
-  const typeDiction = ["BAR", "DUMBBELL", "SCATTER"]
-  // const addOptions = [{ key: "BAR", value: "BAR", text: "Customized Bar Chart" },
-  //   { key: "DUMBBELL", value: "DUMBBELL", text: "Dumbbell Chart" },
-  //   { key: "SCATTER", value: "SCATTER", text: "Scatter Plot" }
-  // ]
+  const typeDiction = ["BAR", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION"]
+
 
 
 
@@ -123,14 +88,16 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     setAddingChartType(chartType)
   }
 
-  const dumbbellAggregationChangeHandler = (e: any, value: any) => {
+  const interventionHandler = (e: any, value: any) => {
     if (value.value === "None") {
-      setDumbbellAggregation("")
+      setInterventionDate(undefined)
     }
     else {
-      setDumbbellAggregation(value.value)
+      setInterventionDate(value.value)
     }
   }
+
+
 
   const xAxisChangeHandler = (e: any, value: any) => {
     setXSelection(value.value)
@@ -140,13 +107,19 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     setYSelection(value.value)
   }
 
+  const interventionPlotHandler = (e: any, value: any) => {
+    setInterventionPlotType(value.value)
+  }
+
+
   const confirmChartAddHandler = () => {
     if (xSelection && ySelection && addingChartType > -1) {
       addToElementCounter(elementCounter + 1)
-      actions.addNewChart(xSelection, ySelection, elementCounter, typeDiction[addingChartType], dumbbellAggregation)
+      actions.addNewChart(xSelection, ySelection, elementCounter, typeDiction[addingChartType], interventionDate, interventionPlotType)
       setAddMode(false);
       setAddingChartType(-1)
-      setDumbbellAggregation("");
+      setInterventionDate(undefined);
+      setInterventionPlotType(undefined);
     }
 
   }
@@ -155,8 +128,9 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     setAddMode(false);
   }
 
+
   const regularMenu = (
-    <Menu widths={6}>
+    <Menu widths={5}>
       <Menu.Item>
         <Button.Group>
           <Button primary disabled={isAtRoot} onClick={actions.goBack}>
@@ -168,34 +142,39 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             </Button>
         </Button.Group>
       </Menu.Item>
-      {/* <Menu.Item>
-          <Checkbox
-            toggle
-            checked={perCaseSelected}
-            onClick={actions.togglePerCase}
-          />
-          <label> Per Case Mode</label>
-        </Menu.Item> */}
+
       <Menu.Item>
         <Container>
-          <Slider
-            discrete
-            multiple
-            settings={sliderSettings}
-            value={yearRange}
-          />
+
+          <SemanticDatePicker placeholder={`${timeFormat("%Y-%m-%d")(rawDateRange[0])} - ${timeFormat("%Y-%m-%d")(rawDateRange[1])}`} type="range" onChange={onDateChange} />
         </Container>
       </Menu.Item>
       <Menu.Item>
         {/* <Button onClick={addModeButtonHandler} content={"Add"} /> */}
-        <Dropdown button text="Add" pointing>
+        <Dropdown button text="Add" pointing style={{ background: blood_red, color: "white" }}>
           <Dropdown.Menu>
             <Dropdown.Item onClick={() => addModeButtonHandler(0)}>Customized Bar Chart</Dropdown.Item>
             <Dropdown.Item onClick={() => addModeButtonHandler(1)}>Dumbbell Chart</Dropdown.Item>
             <Dropdown.Item onClick={() => addModeButtonHandler(2)}>Scatter Plot</Dropdown.Item>
+            <Dropdown.Item onClick={() => addModeButtonHandler(3)}>Heat Map</Dropdown.Item>
+            <Dropdown.Item onClick={() => addModeButtonHandler(4)}>Intervention Plot</Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
 
+      </Menu.Item>
+      <Menu.Item>
+        <Checkbox
+          checked={showZero}
+          onClick={actions.toggleShowZero}
+          label={<label> Show Zero Transfused </label>}
+        />
+      </Menu.Item>
+      <Menu.Item>
+        <Dropdown button text="Load Workspace" pointing>
+          <Dropdown.Menu>
+            <Dropdown.Item onClick={() => { actions.loadPreset(1) }}>Preset 1</Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
       </Menu.Item>
       {/* <Menu.Item>
                 <Checkbox toggle checked={dumbbellSorted} onClick={actions.toggleDumbbell}/>
@@ -205,8 +184,9 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   );
 
 
+
   const addBarChartMenu = (
-    <Menu widths={4}>
+    <Menu widths={5}>
       <Menu.Item>
         <Dropdown
           placeholder={addingChartType === 2 ? "Select Y-axis Attribute" : "Select Value to Show"}
@@ -217,20 +197,26 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       </Menu.Item>
       <Menu.Item>
         <Dropdown
-          placeholder={addingChartType === 0 ? "Select Aggregation" : "Select X-axis Attribute"}
+          placeholder={addingChartType === 0 ? "Select Aggregation" : addingChartType === 1 ? "Facet by" : "Select X-axis Attribute"}
           selection
           options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
           onChange={xAxisChangeHandler}
         />
       </Menu.Item>
-      {addingChartType === 1 ? (<Menu.Item>
-        <Dropdown
-          placeholder={"Select Aggregation"}
-          selection
-          options={dumbbellAggregationOptions}
-          onChange={dumbbellAggregationChangeHandler}
-        />
-      </Menu.Item>) : (<></>)}
+
+      {addingChartType === 4 ? (
+        [<Menu.Item>
+          <SemanticDatePicker
+            placeholder={"Intervention"}
+            minDate={rawDateRange[0] as any}
+            maxDate={rawDateRange[1] as any}
+            onChange={interventionHandler} />
+        </Menu.Item>,
+
+        <Menu.Item>
+          <Dropdown placeholder={"Plot Type"} selection options={interventionChartType} onChange={interventionPlotHandler}></Dropdown>
+        </Menu.Item>]) : (<></>)}
+
       <Menu.Item>
         <Button.Group>
           <Button

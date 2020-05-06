@@ -1,8 +1,24 @@
 export interface SelectSet {
   set_name: string;
-  set_value: number;
+  set_value: number[];
 }
 
+
+export interface InterventionDataPoint {
+  aggregateAttribute: any;
+  preInKdeCal: any[];
+  postInKdeCal: any[];
+  totalVal: number;
+
+  preCaseCount: number;
+  postCaseCount: number;
+
+  preInMedian: number;
+  postInMedian: number;
+  preCountDict: any;
+  postCountDict: any;
+  zeroCaseNum: number;
+}
 export interface BarChartDataPoint {
   aggregateAttribute: any;
   kdeCal: any[];
@@ -13,6 +29,14 @@ export interface BarChartDataPoint {
   zeroCaseNum: number;
 }
 
+export interface HeatMapDataPoint {
+  aggregateAttribute: any;
+  countDict: any;
+  totalVal: number;
+  caseCount: number;
+  zeroCaseNum: number;
+}
+
 export interface SingleCasePoint {
   visitNum: number;
   caseId: number;
@@ -20,7 +44,9 @@ export interface SingleCasePoint {
   SURGEON_ID: number;
   ANESTHOLOGIST_ID: number;
   patientID: number;
-  [key: string]: number;
+  DATE: Date;
+  [key: string]: number | Date;
+
 }
 export interface ScatterDataPoint {
   xVal: number;
@@ -33,19 +59,24 @@ export interface DumbbellDataPoint {
   endXVal: number;
   yVal: number;
   case: SingleCasePoint;
+
 }
 
 export interface ApplicationState {
   layoutArray: LayoutElement[];
   currentSelectedChart: string;
-  perCaseSelected: boolean;
-  yearRange: number[];
+  // perCaseSelected: boolean;
+  // yearRange: number[];
+  rawDateRange: Date[];
   filterSelection: string[];
-  totalCaseCount: number;
-  dumbbellSorted: boolean;
-  currentSelectSet: SelectSet | null;
+  totalAggregatedCaseCount: number;
+  totalIndividualCaseCount: number;
+  // dumbbellSorted: boolean;
+  currentSelectSet: SelectSet[];
+  currentOutputFilterSet: SelectSet[];
   currentSelectPatient: SingleCasePoint | null;
   hemoglobinDataSet: any;
+  showZero: boolean;
 }
 
 export interface LayoutElement {
@@ -57,26 +88,36 @@ export interface LayoutElement {
   w: number,
   h: number,
   plot_type: string,
-  aggregation?: string,
-  extraPair?: string[]
+  //  aggregation?: string,
+  extraPair?: string[],
+  interventionDate?: Date,
+  interventionType?: string
 }
 
 export const defaultState: ApplicationState = {
   layoutArray: [],
   currentSelectedChart: "-1",
-  perCaseSelected: false,
-  yearRange: [0, 5],
+  // perCaseSelected: false,
+
+  // yearRange: [0, 5],
+  rawDateRange: [new Date(2014, 0, 1), new Date(2019, 11, 31)],
+
   filterSelection: [],
-  totalCaseCount: 0,
-  dumbbellSorted: false,
-  currentSelectSet: null,
+  totalAggregatedCaseCount: 0,
+  totalIndividualCaseCount: 0,
+  // dumbbellSorted: false,
+  currentOutputFilterSet: [],
+  currentSelectSet: [],
   currentSelectPatient: null,
-  hemoglobinDataSet: []
+  hemoglobinDataSet: [],
+  showZero: true
 };
 
 export const offset = { left: 85, bottom: 40, right: 10, top: 40, margin: 20 };
-export const extraPairWidth = 80
-export const extraPairPadding = 5
+export const minimumOffset = { left: 35, bottom: 40, right: 10, top: 40, margin: 20 }
+export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 30 }
+export const extraPairPadding = 5;
+export const minimumWidthScale = 18;
 
 export const AxisLabelDict: any = {
   PRBC_UNITS: "Intraoperative RBCs Transfused",
@@ -87,15 +128,84 @@ export const AxisLabelDict: any = {
   SURGEON_ID: "Surgeon ID",
   ANESTHOLOGIST_ID: "Anesthologist ID",
   YEAR: "Year",
+  QUARTER: "Quarter",
+  MONTH: "Month",
   HEMO_VALUE: "Hemoglobin Value",
   PREOP_HEMO: "Preoperative Hemoglobin Value",
   POSTOP_HEMO: "Postoperative Hemoglobin Value"
 };
 
 export const BloodProductCap: any = {
-  PRBC_UNITS: 8,
-  FFP_UNITS: 15,
-  CRYO_UNITS: 30,
-  PLT_UNITS: 5,
-  CELL_SAVER_ML: 5000
+  PRBC_UNITS: 5,
+  FFP_UNITS: 10,
+  CRYO_UNITS: 10,
+  PLT_UNITS: 10,
+  CELL_SAVER_ML: 1000
 }
+
+export const dumbbellFacetOptions = [
+  { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
+  { value: "YEAR", key: "YEAR", text: "Year" },
+  {
+    value: "ANESTHOLOGIST_ID",
+    key: "ANESTHOLOGIST_ID",
+    text: "Anesthologist ID"
+  },
+  { value: "QUARTER", key: "QUARTER", text: "Quarter" },
+  { value: "MONTH", key: "MONTH", text: "Month" }
+]
+
+export const barChartAggregationOptions = [
+  { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
+  { value: "YEAR", key: "YEAR", text: "Year" },
+  {
+    value: "ANESTHOLOGIST_ID",
+    key: "ANESTHOLOGIST_ID",
+    text: "Anesthologist ID"
+  }
+];
+
+export const interventionChartType = [
+  { value: "HEATMAP", key: "HEATMAP", text: "Heat Map" },
+  { value: "VIOLIN", key: "VIOLIN", text: "Violin Plot" }
+
+]
+
+export const barChartValuesOptions = [
+  {
+    value: "PRBC_UNITS",
+    key: "PRBC_UNITS",
+    text: "Intraoperative RBCs Transfused"
+  },
+  {
+    value: "FFP_UNITS",
+    key: "FFP_UNITS",
+    text: "Intraoperative FFP Transfused"
+  },
+  {
+    value: "PLT_UNITS",
+    key: "PLT_UNITS",
+    text: "Intraoperative Platelets Transfused"
+  },
+  {
+    value: "CRYO_UNITS",
+    key: "CRYO_UNITS",
+    text: "Intraoperative Cryo Transfused"
+  },
+  {
+    value: "CELL_SAVER_ML",
+    key: "CELL_SAVER_ML",
+    text: "Cell Salvage Volume (ml)"
+  }
+];
+
+
+export const HIPAA_Sensitive = new Set([
+  "Gender (M/F)",
+  "Gender (Male/Female)",
+  "Race Code",
+  "Race Description",
+  "Ethnicity Code",
+  "Ethnicity Description",
+  "Date of Death",
+  "Date of Birth"])

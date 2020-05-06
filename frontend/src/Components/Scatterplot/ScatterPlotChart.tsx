@@ -10,10 +10,10 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { ScatterDataPoint, offset, AxisLabelDict } from "../../Interfaces/ApplicationState";
+import { ScatterDataPoint, offset, AxisLabelDict, SelectSet } from "../../Interfaces/ApplicationState";
 import { select, scaleLinear, axisLeft, axisBottom, brush, event, range, scaleOrdinal, ScaleOrdinal } from "d3";
-import CustomizedAxis from "../CustomizedAxis";
-import { highlight_color, basic_gray } from "../../ColorProfile";
+import CustomizedAxis from "../Utilities/CustomizedAxis";
+import { highlight_orange, basic_gray } from "../../ColorProfile";
 
 interface OwnProps {
     yAxisName: string;
@@ -143,12 +143,18 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
         if (currentSelectPatient && d.case.caseId > 0) {
             return currentSelectPatient.caseId === d.case.caseId
         }
-        else if (currentSelectSet) {
-            return d.case[currentSelectSet.set_name] === currentSelectSet.set_value
-        }
-        else {
-            return false;
-        }
+        return false;
+        // else if (currentSelectSet.length > 0) {
+        //     //let selectSet: SelectSet;
+        //     for (let selectSet of currentSelectSet) {
+        //         if (d.case[selectSet.set_name] === selectSet.set_value)
+        //             return true;
+        //     }
+        //     return false;
+        // }
+        // else {
+        //     return false;
+        // }
         //  return true;
     }
 
@@ -184,7 +190,7 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
 
                     <Circle cx={cx}
                         cy={cy}
-                        fill={brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1] ? highlight_color : basic_gray}
+                        fill={brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1] ? highlight_orange : basic_gray}
                         isselected={decideIfSelected(dataPoint)}
                         onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />
