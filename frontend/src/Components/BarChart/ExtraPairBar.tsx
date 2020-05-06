@@ -18,7 +18,7 @@ export type Props = OwnProps;
 const ExtraPairBar: FC<Props> = ({ dataSet, aggregatedScale, store }: Props) => {
     const [valueScale] = useMemo(() => {
 
-        const valueScale = scaleLinear().domain([0, max(Object.values(dataSet))]).range([0, extraPairWidth])
+        const valueScale = scaleLinear().domain([0, max(Object.values(dataSet))]).range([0, extraPairWidth.BarChart])
 
         return [valueScale];
     }, [dataSet, aggregatedScale])

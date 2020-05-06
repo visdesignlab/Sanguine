@@ -217,22 +217,22 @@ def request_transfused_units(request):
         transfusion_type = request.GET.get("transfusion_type")
         patient_ids = request.GET.get("patient_ids") or ""
         case_ids = request.GET.get("case_ids") or ""
-        year_range = request.GET.get("year_range") or ""
+        date_range = request.GET.get("date_range") or ""
         filter_selection = request.GET.get("filter_selection") or ""
 
-        # Parse the year_range and the filter selection
+        # Parse the date_range and the filter selection
         patient_ids = patient_ids.split(",") if patient_ids else []
         case_ids = case_ids.split(",") if case_ids else []
-        year_range = [s for s in year_range.split(",") if s.isdigit()]
+        date_range = [s for s in date_range.split(",") if s.isdigit()]
         filter_selection = filter_selection.split(",")
 
         # Check the required parameters are there
-        if not (transfusion_type and len(year_range) == 2):
-            return HttpResponseBadRequest("transfusion_type and year_range must be supplied.")
+        if not (transfusion_type and len(date_range) == 2):
+            return HttpResponseBadRequest("transfusion_type and date_range must be supplied.")
 
         # Coerce that params into a useable format
-        min_time = f'01-JAN-{year_range[0]}'
-        max_time = f'31-DEC-{year_range[1]}'
+        min_time = date_range[0]
+        max_time = date_range[1]
 
         # Check that the values supplied are valid possibilities
         blood_products = [
@@ -492,6 +492,15 @@ def patient_outcomes(request):
     else:
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
+def output_quarter (number):
+    if number >0 and number < 4:
+        return 1
+    elif number >3 and number < 7:
+        return 2
+    elif number > 6 and number < 10:
+        return 3
+    else:
+        return 4
 
 def hemoglobin(request):
     if request.method == "GET":
@@ -581,6 +590,7 @@ def hemoglobin(request):
             SC3.DI_VISIT_NO,
             SC3.DI_CASE_DATE,
             EXTRACT (YEAR from SC3.DI_CASE_DATE) YEAR,
+            EXTRACT (MONTH from SC3.DI_CASE_DATE) AS MONTH,
             SC3.DI_SURGERY_START_DTM,
             SC3.DI_SURGERY_END_DTM,
             SC3.SURGERY_ELAP,
@@ -606,9 +616,12 @@ def hemoglobin(request):
         items = [{"CASE_ID":row[1],
                 "VISIT_ID": row[2],
                 "YEAR":row[4],
+                "QUARTER": str(row[4])[2:]+"/"+str(output_quarter(row[5])),
+                "MONTH":str(row[4])[2:]+"/"+str(row[5]),
+                "DATE":row[3],
                 "HEMO": [row[-3], row[-1]],
-                "SURGEON_ID": row[9],
-                "ANESTHESIOLOGIST_ID":row[10],
+                "SURGEON_ID": row[10],
+                "ANESTHOLOGIST_ID":row[11],
                 "PATIENT_ID":row[0]} for row in result]
 
         return JsonResponse({"result": items})
