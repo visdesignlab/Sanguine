@@ -3,7 +3,7 @@ import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { BarChartDataPoint } from '../../Interfaces/ApplicationState'
+import { BarChartDataPoint, BloodProductCap } from '../../Interfaces/ApplicationState'
 import BarChart from "./BarChart"
 import { Button, Icon, Table, Grid, Dropdown, GridColumn, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
@@ -74,30 +74,38 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
       let yMaxTemp = -1;
       let perCaseYMaxTemp = -1
       // let perCaseData: BarChartDataPoint[] = [];
-      const caseList = dataResult.case_id;
-      // let caseDictionary = {} as any;
-      // caseList.map((singleId: any) => {
-      //   caseDictionary[singleId] = true;
-      // })
-      // setCaseIDList(caseDictionary)
-      let cast_data = (dataResult as any).map(function (ob: any) {
+      const caseList = dataResult.case_id_list;
+      let caseDictionary = {} as any;
+      caseList.map((singleId: any) => {
+        caseDictionary[singleId] = true;
+      })
+      setCaseIDList(caseDictionary)
+      let cast_data = (dataResult.result as any).map(function (ob: any) {
+        let zeroCaseNum = 0;
 
-        const aggregateByAttr = ob.aggregated_by;
 
-        const case_num = ob.transfused_units.length;
-        const total_val = sum(ob.transfused_units);
-        const medianVal = median(ob.transfused_units);
-        let pd = createpd(ob.transfused_units, { min: 0.00001 });
+        const aggregateByAttr = ob.aggregatedBy;
 
-        // const removed_zeros = ob.valueToVisualize.filter((d: number) => d > 0)
-        // const case_num = removed_zeros.length;
-        // const total_val = sum(removed_zeros);
-        // const medianVal = median(removed_zeros);
-        // let pd = createpd(removed_zeros,{min:0});
+        const case_num = ob.valueToVisualize.length;
+        // const total_val = sum(ob.valueToVisualize);
+        const medianVal = median(ob.valueToVisualize);
+        // let pd = createpd(ob.valueToVisualize, { max: BloodProductCap[valueToVisualize], width: 4 });
 
-        const maxY = parseFloat(max(ob.transfused_units)!);
+        const removed_zeros = ob.valueToVisualize.filter((d: number) => {
+          if (d > 0) {
+            return true;
+          }
+          zeroCaseNum += 1;
+          return false;
+        })
+        //const case_num = removed_zeros.length;
+        const total_val = sum(removed_zeros);
+        //const medianVal = median(removed_zeros);
+        let pd = createpd(removed_zeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
+        console.log(pd)
+        // const maxY = parseFloat(max(ob.valueToVisualize)!);
 
-        yMaxTemp = yMaxTemp < maxY ? maxY : yMaxTemp;
+        // yMaxTemp = yMaxTemp < maxY ? maxY : yMaxTemp;
 
 
         pd = [{ x: 0, y: 0 }].concat(pd)
@@ -105,7 +113,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
           return { x: pair.x, y: - pair.y }
         }).reverse()
         pd = pd.concat(reverse_pd)
-        // console.log(pd)ß
+        // console.log(pd)
         //   ob.y_axis -= 999
         // }
         // caseCount += ob.case_count;
@@ -122,7 +130,8 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
           totalVal: total_val,
           kdeCal: pd,
           median: medianVal ? medianVal : 0,
-          actualDataPoints: ob.transfused_units
+          actualDataPoints: ob.valueToVisualize,
+          zeroCaseNum: zeroCaseNum
         };
         // const perCaseOb: BarChartDataPoint = {
         //   xVal: ob.x_axis,
@@ -151,23 +160,31 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     let newExtraPairData: any[] = []
     if (extraPair) {
       extraPair.forEach((variable: string) => {
+        let newData = {} as any;
         switch (variable) {
           case "Total Transfusion":
-            let newDataBar = {} as any;
+            //let newDataBar = {} as any;
             data.original.map((dataPoint: BarChartDataPoint) => {
-              newDataBar[dataPoint.aggregateAttribute] = dataPoint.totalVal
+              newData[dataPoint.aggregateAttribute] = dataPoint.totalVal
             })
-            newExtraPairData.push({ name: "Total", data: newDataBar, type: "BarChart" });
+            newExtraPairData.push({ name: "Total", data: newData, type: "BarChart" });
             break;
           case "Per Case Transfusion":
-            let newDataPerCase = {} as any;
+            // let newDataPerCase = {} as any;
             data.original.map((dataPoint: BarChartDataPoint) => {
-              newDataPerCase[dataPoint.aggregateAttribute] = dataPoint.totalVal / dataPoint.caseCount
+              newData[dataPoint.aggregateAttribute] = dataPoint.totalVal / dataPoint.caseCount
             })
-            newExtraPairData.push({ name: "Per Case", data: newDataPerCase, type: "BarChart" });
+            newExtraPairData.push({ name: "Per Case", data: newData, type: "BarChart" });
+            break;
+          case "Zero Transfusion Cases":
+            //let newDataPerCase = {} as any;
+            data.original.map((dataPoint: BarChartDataPoint) => {
+              newData[dataPoint.aggregateAttribute] = dataPoint.zeroCaseNum / dataPoint.caseCount
+            })
+            newExtraPairData.push({ name: "Zero Percentage", data: newData, type: "Basic" });
             break;
           case "Hemoglobin":
-            let newData = {} as any;
+            //let newData = {} as any;
             data.original.map((dataPoint: BarChartDataPoint) => {
               newData[dataPoint.aggregateAttribute] = [];
             });
@@ -239,6 +256,14 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                   >
                     Per Case Transfusion
             </Dropdown.Item>
+                  <Dropdown.Item
+                    onClick={() => {
+                      actions.changeExtraPair(chartId, "Zero Transfusion Cases");
+                    }}
+                  >
+                    Zero Transfusion Cases
+            </Dropdown.Item>
+
                 </Dropdown.Menu>
               </Dropdown>
             </Menu.Item >
@@ -265,7 +290,10 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
         </text> */}
             <BarChart
               dimensionWhole={dimensions}
+<<<<<<< HEAD
               // data={perCaseSelected ? data.perCase : data.original}
+=======
+>>>>>>> master
               data={data.original}
               svg={svgRef}
               aggregatedBy={aggregatedBy}

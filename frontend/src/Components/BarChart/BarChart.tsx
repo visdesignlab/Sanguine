@@ -18,20 +18,22 @@ import {
   axisBottom,
   interpolateGreys,
   line,
-  curveCardinal
+  curveCatmullRom
 } from "d3";
 import {
   BarChartDataPoint,
   offset,
   extraPairWidth,
   extraPairPadding,
-  AxisLabelDict
+  AxisLabelDict,
+  BloodProductCap
 } from "../../Interfaces/ApplicationState";
 import { Popup, Button, Icon } from 'semantic-ui-react'
 import SingleViolinPlot from "./SingleViolinPlot";
 import SingleStripPlot from "./SingleStripPlot";
 import ExtraPairDumbbell from "./ExtraPairDumbbell";
 import ExtraPairBar from "./ExtraPairBar";
+import ExtraPairBasic from "./ExtraPairBasic";
 
 interface OwnProps {
   aggregatedBy: string;
@@ -61,7 +63,6 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
 
 
   const [dimension, aggregationScale, valueScale, caseScale, lineFunction] = useMemo(() => {
-    console.log(data)
     const caseMax = max(data.map(d => d.caseCount)) || 0;
     const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
     const dimension = {
@@ -79,23 +80,25 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
       .sort();
 
     let valueScale = scaleLinear()
-      .domain([0, 1.1 * yMax])
+      .domain([0, BloodProductCap[valueToVisualize]])
       .range([offset.left, dimension.width - offset.right - offset.margin]);
     let aggregationScale = scaleBand()
       .domain(xVals)
       .range([dimension.height - offset.bottom, offset.top])
       .paddingInner(0.1);
 
-    const kdeScale = scaleLinear().domain([0, kdeMax]).range([0.5 * aggregationScale.bandwidth(), 0])
+    const kdeScale = scaleLinear()
+      .domain([0, kdeMax])
+      .range([0.5 * aggregationScale.bandwidth(), 0])
     // const kdeReverseScale = scaleLinear().domain([0,kdeMax]).range([0.5*aggregationScale.bandwidth(),aggregationScale.bandwidth()])
 
     const lineFunction = line()
-      .curve(curveCardinal)
+      .curve(curveCatmullRom)
       .y((d: any) => kdeScale(d.y))
       .x((d: any) => valueScale(d.x) - offset.left);
 
     // const reverseLineFunction = line()
-    //   .curve(curveCardinal)
+    //   .curve(curveCatmullRom)
     //   .y((d: any) => kdeScale(d.y))
     //   .x((d: any) => valueScale(d.x) - offset.left);
     return [dimension, aggregationScale, valueScale, caseScale, lineFunction];
@@ -127,7 +130,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
   svgSelection
     .select(".axes")
     .select(".x-label")
-    .attr("x", valueScale(yMax * 0.5) + offset.left)
+    .attr("x", valueScale(BloodProductCap[valueToVisualize] * 0.5) + offset.left)
     .attr("y", dimension.height - offset.bottom + 20)
     .attr("alignment-baseline", "hanging")
     .attr("font-size", "11px")
@@ -190,6 +193,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         )})`).toString()}
       />])
     }
+
   }
 
   return (
@@ -224,8 +228,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
               textAnchor={"middle"}
             >
               {dataPoint.caseCount}
-            </text>,
-            <line
+            </text>, <line
               x1={valueScale(dataPoint.median) - offset.left}
               x2={valueScale(dataPoint.median) - offset.left}
               y1={aggregationScale(dataPoint.aggregateAttribute)}
@@ -235,7 +238,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
               }
               stroke="#d98532"
               strokeWidth="2px"
-            />
+            />,
           ]);
         })}
       </g>
@@ -254,6 +257,15 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
             case "BarChart":
               return (<g transform={`translate(${(extraPairWidth + extraPairPadding) * index},0)`}>
                 <ExtraPairBar aggregatedScale={aggregationScale} dataSet={pairData.data} />
+                <ExtraPairText
+                  x={extraPairWidth / 2}
+                  y={dimension.height - offset.bottom + 20}
+                >{pairData.name}</ExtraPairText>
+              </g>);
+
+            case "Basic":
+              return (<g transform={`translate(${(extraPairWidth + extraPairPadding) * index},0)`}>
+                <ExtraPairBasic aggregatedScale={aggregationScale} dataSet={pairData.data} />
                 <ExtraPairText
                   x={extraPairWidth / 2}
                   y={dimension.height - offset.bottom + 20}
