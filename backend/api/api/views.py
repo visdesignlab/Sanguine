@@ -223,7 +223,7 @@ def request_transfused_units(request):
         # Parse the date_range and the filter selection
         patient_ids = patient_ids.split(",") if patient_ids else []
         case_ids = case_ids.split(",") if case_ids else []
-        date_range = [s for s in date_range.split(",") if s.isdigit()]
+        date_range = [s for s in date_range.split(",")]
         filter_selection = filter_selection.split(",")
 
         # Check the required parameters are there
@@ -492,6 +492,7 @@ def patient_outcomes(request):
     else:
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
+
 def output_quarter (number):
     if number >0 and number < 4:
         return 1
@@ -501,6 +502,7 @@ def output_quarter (number):
         return 3
     else:
         return 4
+
 
 def hemoglobin(request):
     if request.method == "GET":
