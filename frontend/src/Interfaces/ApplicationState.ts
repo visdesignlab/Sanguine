@@ -3,6 +3,22 @@ export interface SelectSet {
   set_value: number[];
 }
 
+
+export interface InterventionDataPoint {
+  aggregateAttribute: any;
+  preInKdeCal: any[];
+  postInKdeCal: any[];
+  totalVal: number;
+
+  preCaseCount: number;
+  postCaseCount: number;
+
+  preInMedian: number;
+  postInMedian: number;
+  preCountDict: any;
+  postCountDict: any;
+  zeroCaseNum: number;
+}
 export interface BarChartDataPoint {
   aggregateAttribute: any;
   kdeCal: any[];
@@ -13,6 +29,14 @@ export interface BarChartDataPoint {
   zeroCaseNum: number;
 }
 
+export interface HeatMapDataPoint {
+  aggregateAttribute: any;
+  countDict: any;
+  totalVal: number;
+  caseCount: number;
+  zeroCaseNum: number;
+}
+
 export interface SingleCasePoint {
   visitNum: number;
   caseId: number;
@@ -20,7 +44,9 @@ export interface SingleCasePoint {
   SURGEON_ID: number;
   ANESTHOLOGIST_ID: number;
   patientID: number;
-  [key: string]: number;
+  DATE: Date;
+  [key: string]: number | Date;
+
 }
 export interface ScatterDataPoint {
   xVal: number;
@@ -33,13 +59,15 @@ export interface DumbbellDataPoint {
   endXVal: number;
   yVal: number;
   case: SingleCasePoint;
+
 }
 
 export interface ApplicationState {
   layoutArray: LayoutElement[];
   currentSelectedChart: string;
   // perCaseSelected: boolean;
-  yearRange: number[];
+  // yearRange: number[];
+  rawDateRange: Date[];
   filterSelection: string[];
   // totalCaseCount: number;
   // dumbbellSorted: boolean;
@@ -60,14 +88,19 @@ export interface LayoutElement {
   h: number,
   plot_type: string,
   //  aggregation?: string,
-  extraPair?: string[]
+  extraPair?: string[],
+  interventionDate?: Date,
+  interventionType?: string
 }
 
 export const defaultState: ApplicationState = {
   layoutArray: [],
   currentSelectedChart: "-1",
   // perCaseSelected: false,
-  yearRange: [0, 5],
+
+  // yearRange: [0, 5],
+  rawDateRange: [new Date(2014, 0, 1), new Date(2019, 11, 31)],
+
   filterSelection: [],
   // totalCaseCount: 0,
   // dumbbellSorted: false,
@@ -94,17 +127,18 @@ export const AxisLabelDict: any = {
   ANESTHOLOGIST_ID: "Anesthologist ID",
   YEAR: "Year",
   QUARTER: "Quarter",
+  MONTH: "Month",
   HEMO_VALUE: "Hemoglobin Value",
   PREOP_HEMO: "Preoperative Hemoglobin Value",
   POSTOP_HEMO: "Postoperative Hemoglobin Value"
 };
 
 export const BloodProductCap: any = {
-  PRBC_UNITS: 8,
-  FFP_UNITS: 15,
-  CRYO_UNITS: 30,
-  PLT_UNITS: 5,
-  CELL_SAVER_ML: 5000
+  PRBC_UNITS: 5,
+  FFP_UNITS: 10,
+  CRYO_UNITS: 10,
+  PLT_UNITS: 10,
+  CELL_SAVER_ML: 1000
 }
 
 export const dumbbellFacetOptions = [
@@ -116,6 +150,7 @@ export const dumbbellFacetOptions = [
     text: "Anesthologist ID"
   },
   { value: "QUARTER", key: "QUARTER", text: "Quarter" },
+  { value: "MONTH", key: "MONTH", text: "Month" }
 ]
 
 export const barChartValuesOptions = [
@@ -145,3 +180,14 @@ export const barChartValuesOptions = [
     text: "Cell Salvage Volume (ml)"
   }
 ];
+
+
+export const HIPAA_Sensitive = new Set([
+  "Gender (M/F)",
+  "Gender (Male/Female)",
+  "Race Code",
+  "Race Description",
+  "Ethnicity Code",
+  "Ethnicity Description",
+  "Date of Death",
+  "Date of Birth"])

@@ -32,15 +32,13 @@ import {
 import { Popup, Button, Icon } from 'semantic-ui-react'
 import SingleViolinPlot from "./SingleViolinPlot";
 import SingleStripPlot from "./SingleStripPlot";
-import ExtraPairDumbbell from "./ExtraPairDumbbell";
-import ExtraPairBar from "./ExtraPairBar";
-import ExtraPairBasic from "./ExtraPairBasic";
-import ExtraPairViolin from "./ExtraPairViolin";
+
+import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
 
 interface OwnProps {
   aggregatedBy: string;
   valueToVisualize: string;
-  // chartId: string;
+  chartId: string;
   store?: Store;
   dimensionWhole: { width: number, height: number }
   data: BarChartDataPoint[];
@@ -48,19 +46,20 @@ interface OwnProps {
   yMax: number;
   //  selectedVal: number | null;
   stripPlotMode: boolean;
-  extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number }[];
+  extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];
 }
 
 export type Props = OwnProps;
 
-const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax }: Props) => {
+const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax, chartId }: Props) => {
 
   const svgSelection = select(svg.current);
 
   const {
     // perCaseSelected,
     currentSelectPatient,
-    currentSelectSet
+    currentSelectSet,
+    currentOutputFilterSet
   } = store!;
 
   const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
@@ -95,6 +94,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     let valueScale = scaleLinear()
       .domain([0, BloodProductCap[valueToVisualize]])
       .range([offset.left, dimension.width - offset.right - offset.margin]);
+
     let aggregationScale = scaleBand()
       .domain(xVals)
       .range([dimension.height - offset.bottom, offset.top])
@@ -141,9 +141,9 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     .call(yAxisLabel as any);
 
   svgSelection
-    .select(".axes")
+    // .select(".axes")
     .select(".x-label")
-    .attr("x", valueScale(BloodProductCap[valueToVisualize] * 0.5) + offset.left)
+    .attr("x", valueScale(BloodProductCap[valueToVisualize] * 0.5))
     .attr("y", dimension.height - offset.bottom + 20)
     .attr("alignment-baseline", "hanging")
     .attr("font-size", "11px")
@@ -156,10 +156,10 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     );
 
   svgSelection
-    .select(".axes")
+    //.select(".axes")
     .select(".y-label")
     .attr("y", dimension.height - offset.bottom + 20)
-    .attr("x", offset.left)
+    .attr("x", offset.left - 55)
     .attr("font-size", "11px")
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "hanging")
@@ -186,6 +186,14 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     //  return true;
   }
 
+  const decideIfFiltered = (d: BarChartDataPoint) => {
+    for (let filterSet of currentOutputFilterSet) {
+      if (aggregatedBy === filterSet.set_name && filterSet.set_value.includes(d.aggregateAttribute))
+        return true
+    }
+    return false;
+  }
+
 
   // const decideIfSelected = (d: BarChartDataPoint) => {
   //   if (selectedVal) {
@@ -204,55 +212,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
   //   }
   // }
 
-  const generateExtraPairPlots = () => {
-    let transferedDistance = 0
-    let returningComponents: any = []
-    extraPairDataSet.map((pairData, index) => {
-      switch (pairData.type) {
-        case "Dumbbell":
-          transferedDistance += (extraPairWidth.Dumbbell + extraPairPadding)
-          returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Dumbbell)},0)`}>
-            <ExtraPairDumbbell aggregatedScale={aggregationScale} dataSet={pairData.data} />,
-            <ExtraPairText
-              x={extraPairWidth.Dumbbell / 2}
-              y={dimension.height - offset.bottom + 20}
-            >{pairData.name}</ExtraPairText>
-          </g>);
-          break;
-        case "Violin":
-          transferedDistance += (extraPairWidth.Dumbbell + extraPairPadding)
-          returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Dumbbell)},0)`}>
-            <ExtraPairViolin aggregatedScale={aggregationScale} dataSet={pairData.data} kdeMax={pairData.kdeMax ? pairData.kdeMax : (0)} />,
-            <ExtraPairText
-              x={extraPairWidth.Dumbbell / 2}
-              y={dimension.height - offset.bottom + 20}
-            >{pairData.name}</ExtraPairText>
-          </g>);
-          break;
-        case "BarChart":
-          transferedDistance += (extraPairWidth.BarChart + extraPairPadding)
-          returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.BarChart)},0)`}>
-            <ExtraPairBar aggregatedScale={aggregationScale} dataSet={pairData.data} />
-            <ExtraPairText
-              x={extraPairWidth.BarChart / 2}
-              y={dimension.height - offset.bottom + 20}
-            >{pairData.name}</ExtraPairText>
-          </g>);
-          break;
-        case "Basic":
-          transferedDistance += (extraPairWidth.Basic + extraPairPadding)
-          returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Basic)},0)`}>
-            <ExtraPairBasic aggregatedScale={aggregationScale} dataSet={pairData.data} />
-            <ExtraPairText
-              x={extraPairWidth.Basic / 2}
-              y={dimension.height - offset.bottom + 20}
-            >{pairData.name}</ExtraPairText>
-          </g>);
-          break;
-      }
-    })
-    return returningComponents
-  }
+
 
   const outputSinglePlotElement = (dataPoint: BarChartDataPoint) => {
     if (stripPlotMode) {
@@ -272,6 +232,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         dataPoint={dataPoint}
         aggregatedBy={aggregatedBy}
         isSelected={decideIfSelected(dataPoint)}
+        isFiltered={decideIfFiltered(dataPoint)}
         howToTransform={(`translate(0,${aggregationScale(
           dataPoint.aggregateAttribute
         )})`).toString()}
@@ -286,8 +247,8 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
       <g className="axes">
         <g className="x-axis"></g>
         <g className="y-axis"></g>
-        <text className="x-label" style={{ textAnchor: "end" }} />
-        <text className="y-label" style={{ textAnchor: "end" }} />
+        <text className="x-label" />
+        <text className="y-label" />
       </g>
       <g className="chart"
         transform={`translate(${offset.left + extraPairTotalWidth},0)`}
@@ -327,7 +288,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         })}
       </g>
       <g className="extraPairChart">
-        {generateExtraPairPlots()}
+        <ExtraPairPlotGenerator aggregationScale={aggregationScale} extraPairDataSet={extraPairDataSet} dimension={dimension} chartId={chartId} />
       </g>
 
 
@@ -340,4 +301,5 @@ const ExtraPairText = styled(`text`)`
   font-size: 11px
   text-anchor: middle
   alignment-baseline:hanging
+  cursor:pointer
 `

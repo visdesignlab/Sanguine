@@ -5,8 +5,9 @@ import React, {
 } from "react";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
-import Store from "../Interfaces/Store";
+import Store from "../../Interfaces/Store";
 import { Message, List } from "semantic-ui-react";
+import { HIPAA_Sensitive } from "../../Interfaces/ApplicationState";
 
 interface OwnProps {
     store?: Store;
@@ -15,7 +16,7 @@ interface OwnProps {
 export type Props = OwnProps;
 
 const DetailView: FC<Props> = ({ store }: Props) => {
-    const { currentSelectPatient, actualYearRange } = store!
+    const { currentSelectPatient, dateRange } = store!
 
     const [individualInfo, setIndividualInfo] = useState<any>(null)
 
@@ -27,7 +28,7 @@ const DetailView: FC<Props> = ({ store }: Props) => {
             const individualInfo = fetchResultJson.result[0];
 
             console.log(individualInfo)
-            const fetchTransfused = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&year_range=${actualYearRange}&patient_id=${currentSelectPatient.patientID}`)
+            const fetchTransfused = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}&patient_id=${currentSelectPatient.patientID}`)
             const fetchResultTran = await fetchTransfused.json();
             let transfused_info = fetchResultTran.result.filter((d: { case_id: number; }) => d.case_id === currentSelectPatient.caseId)[0];
             // delete transfused_info.case_id
@@ -55,12 +56,15 @@ const DetailView: FC<Props> = ({ store }: Props) => {
         if (individualInfo) {
 
             for (let [key, val] of Object.entries(individualInfo)) {
-                result.push(
-                    <List.Item>
-                        <List.Header>{key}</List.Header>
-                        {/* {val} */}
-                        x
-                    </List.Item>)
+                if (!HIPAA_Sensitive.has(key)) {
+                    result.push(
+
+                        <List.Item>
+                            <List.Header>{key}</List.Header>
+                            {val}
+                        </List.Item>)
+                }
+
             }
         }
         return result
@@ -75,3 +79,4 @@ const DetailView: FC<Props> = ({ store }: Props) => {
 }
 
 export default inject("store")(observer(DetailView));
+

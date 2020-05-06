@@ -7,6 +7,7 @@ import {
   SingleCasePoint
 } from "./ApplicationState";
 import { store } from './Store';
+import { timeFormat } from 'd3';
 
 interface AppProvenance {
   provenance: Provenance<ApplicationState>;
@@ -21,9 +22,13 @@ interface AppProvenance {
     // toggleDumbbell: (event: any, data: any) => void;
     filterSelectionChange: (data: any) => void;
     currentOutputFilterSetChange: () => void;
-    clearOutputFilterSet: () => void;
-    yearRangeChange: (data: any) => void;
-    addNewChart: (x: string, y: string, i: number, type: string, aggregation?: string) => void;
+    clearOutputFilterSet: (target?: string) => void;
+    clearSelectSet: (target?: string) => void;
+
+    // yearRangeChange: (data: any) => void;
+    dateRangeChange: (data: any) => void;
+
+    addNewChart: (x: string, y: string, i: number, type: string, interventionDate?: Date, interventionChartType?: string) => void;
     removeChart: (i: any) => void;
     // updateCaseCount: (newCaseCount: number) => void;
     onLayoutchange: (data: any) => void;
@@ -31,6 +36,7 @@ interface AppProvenance {
     selectSet: (data: SelectSet, shiftKeyPressed: boolean) => void;
     storeHemoData: (data: any) => void;
     changeExtraPair: (chartID: string, newExtraPair: string) => void;
+    removeExtraPair: (chartID: string, removeingPair: string) => void;
     changeChart: (x: string, y: string, i: string, type: string) => void;
   }
 }
@@ -71,17 +77,17 @@ export function setupProvenance(): AppProvenance {
     store.showZero = state ? state.showZero : store.showZero;
   })
 
-  // provenance.addObserver(["perCaseSelected"], (state?: ApplicationState) => {
-  //   store.perCaseSelected = state
-  //     ? state.perCaseSelected
-  //     : store.perCaseSelected;
-  // });
-
-  provenance.addObserver(["yearRange"], (state?: ApplicationState) => {
-    store.yearRange = state
-      ? state.yearRange
-      : store.yearRange;
+  provenance.addObserver(["rawDateRange"], (state?: ApplicationState) => {
+    store.rawDateRange = state
+      ? state.rawDateRange
+      : store.rawDateRange;
   })
+
+  // provenance.addObserver(["yearRange"], (state?: ApplicationState) => {
+  //   store.yearRange = state
+  //     ? state.yearRange
+  //     : store.yearRange;
+  // })
 
   provenance.addObserver(["filterSelection"], (state?: ApplicationState) => {
     store.filterSelection = state ? state.filterSelection : store.filterSelection
@@ -122,8 +128,8 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plot_type: string, aggregation?: string) => {
-    // console.log('add')
+  const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plot_type: string, interventionDate?: Date, interventionChartType?: string) => {
+
     const newLayoutElement: LayoutElement = {
       aggregatedBy: xAxisAttribute,
       valueToVisualize: yAxisAttribute,
@@ -134,12 +140,21 @@ export function setupProvenance(): AppProvenance {
       y: Infinity,
       plot_type: plot_type,
     }
-    if (plot_type === "BAR") {
+    if (plot_type === "BAR" || plot_type === "HEATMAP") {
       newLayoutElement.extraPair = [];
     }
+    if (interventionDate) {
+      newLayoutElement.interventionDate = interventionDate
+    }
+    if (plot_type === "INTERVENTION" && interventionDate) {
+      newLayoutElement.interventionDate = interventionDate;
+      newLayoutElement.interventionType = interventionChartType ? interventionChartType : "HEATMAP";
+    }
+
     provenance.applyAction("Add new chart",
       (state: ApplicationState) => {
         state.layoutArray.push(newLayoutElement)
+        console.log(state)
         return state;
       })
   }
@@ -234,6 +249,7 @@ export function setupProvenance(): AppProvenance {
           }
           return d
         })
+        console.log(state)
         return state
       }
     )
@@ -253,35 +269,20 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  // const togglePerCase = (event: any, perCaseSelected: any) => {
-  //   provenance.applyAction(
-  //     `Per Case ${perCaseSelected.checked}`,
-  //     (state: ApplicationState) => {
-  //       state.perCaseSelected = perCaseSelected.checked;
-  //       return state;
-  //     }
-  //   )
-  // };
+
 
   const toggleShowZero = (event: any, showZero: any) => {
     provenance.applyAction(
       `Per Case ${showZero}`,
       (state: ApplicationState) => {
         state.showZero = showZero.checked;
+        console.log(state)
         return state;
       }
     )
   };
 
-  // const toggleDumbbell = (event: any, dumbbellSorted: any) => {
-  //   provenance.applyAction(
-  //     `dumbbell sort ${dumbbellSorted}`,
-  //     (state: ApplicationState) => {
-  //       state.dumbbellSorted = dumbbellSorted.checked;
-  //       return state;
-  //     }
-  //   )
-  // }
+
 
   const changeExtraPair = (chartID: string, newExtraPair: string) => {
     provenance.applyAction(
@@ -296,6 +297,26 @@ export function setupProvenance(): AppProvenance {
           }
           return d
         })
+        return state;
+      }
+    )
+  }
+
+  const removeExtraPair = (chartID: string, removeingPair: string) => {
+    provenance.applyAction(
+      `removing extra pair of ${chartID}`,
+      (state: ApplicationState) => {
+        //  console.log(removeingPair, chartID, state)
+        state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
+          if (d.i === chartID && d.extraPair) {
+            d.extraPair = d.extraPair.filter((l) => {
+
+              return (l !== removeingPair)
+            })
+          }
+          return d
+        })
+        //   console.log(state)
         return state;
       }
     )
@@ -318,17 +339,22 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const yearRangeChange = (newYearRange: any) => {
+
+
+  const dateRangeChange = (newDateRange: any) => {
     provenance.applyAction(
-      `Change Year Range To ${newYearRange}`,
+      `Change date range to ${newDateRange}`,
       (state: ApplicationState) => {
-        if (newYearRange !== state.yearRange) {
-          state.yearRange = newYearRange;
+        if (newDateRange !== state.rawDateRange) {
+          console.log(newDateRange)
+          state.rawDateRange = newDateRange
         }
         return state;
       }
-    );
-  };
+    )
+  }
+
+
 
   const selectPatient = (data: SingleCasePoint) => {
     provenance.applyAction(`select patient ${data.patientID}`, (state: ApplicationState) => {
@@ -380,6 +406,16 @@ export function setupProvenance(): AppProvenance {
       })
   }
 
+  const clearSelectSet = (target?: string) => {
+    provenance.applyAction(
+      `delete select set`,
+      (state: ApplicationState) => {
+        state.currentSelectSet = state.currentSelectSet.filter(d => d.set_name !== target)
+        return state;
+      }
+    )
+  }
+
   const currentOutputFilterSetChange = () => {
     provenance.applyAction(
       `change output filter`,
@@ -391,11 +427,15 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const clearOutputFilterSet = () => {
+  const clearOutputFilterSet = (target?: string) => {
     provenance.applyAction(
       `clear output filter`,
       (state: ApplicationState) => {
-        state.currentOutputFilterSet = [];
+        if (!target) {
+          state.currentOutputFilterSet = [];
+        } else {
+          state.currentOutputFilterSet = state.currentOutputFilterSet.filter(d => d.set_name !== target)
+        }
         return state;
       }
     )
@@ -433,7 +473,10 @@ export function setupProvenance(): AppProvenance {
       toggleShowZero,
       // toggleDumbbell,
       filterSelectionChange,
-      yearRangeChange,
+
+      //  yearRangeChange,
+      dateRangeChange,
+
       addNewChart,
       removeChart,
       //  updateCaseCount,
@@ -442,8 +485,10 @@ export function setupProvenance(): AppProvenance {
       selectSet,
       storeHemoData,
       changeExtraPair,
+      removeExtraPair,
       loadPreset,
       currentOutputFilterSetChange,
+      clearSelectSet,
       clearOutputFilterSet
     }
   };
