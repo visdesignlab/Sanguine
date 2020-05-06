@@ -52,6 +52,7 @@ interface OwnProps {
     svg: React.RefObject<SVGSVGElement>;
     yMax: number;
     plotType: string;
+    interventionDate: string;
     //  selectedVal: number | null;
     // stripPlotMode: boolean;
     //extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];
@@ -59,7 +60,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax }: Props) => {
+const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax }: Props) => {
 
     const svgSelection = select(svg.current);
 
@@ -72,7 +73,7 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
 
 
 
-    const [dimension, aggregationScale, valueScale, caseScale, lineFunction] = useMemo(() => {
+    const [dimension, aggregationScale, valueScale, caseScale, lineFunction, linearValueScale] = useMemo(() => {
 
         const caseMax = max(data.map(d => (d.preCaseCount + d.postCaseCount))) || 0;
         const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
@@ -124,11 +125,11 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
             .y((d: any) => kdeScale(d.y))
             .x((d: any) => linearValueScale(d.x) - offset.left);
 
-        return [dimension, aggregationScale, valueScale, caseScale, lineFunction];
+        return [dimension, aggregationScale, valueScale, caseScale, lineFunction, linearValueScale];
     }, [dimensionWhole, data, yMax])
 
     const aggregationLabel = axisLeft(aggregationScale);
-    const valueLabel = axisBottom(valueScale);
+    const valueLabel = plotType === "HEATMAP" ? axisBottom(valueScale).tickFormat(d => d === BloodProductCap[valueToVisualize] ? `${d}+` : d) : axisBottom(linearValueScale);
 
     svgSelection
         .select(".axes")
@@ -149,6 +150,14 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
             `translate(0 ,${dimension.height - offset.bottom})`
         )
         .call(valueLabel as any);
+
+    if (plotType === "HEATMAP") {
+        svgSelection
+            .select(".axes")
+            .select(".y-axis")
+            .call(g => g.select(".domain").remove())
+            .call(g => g.selectAll(".tick").selectAll("line").remove());
+    }
 
     svgSelection
         // .select(".axes")
@@ -256,6 +265,7 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
 
     }
 
+
     return (
         <>
             <line x1={1} x2={1} y1={offset.top} y2={dimension.height - offset.bottom} style={{ stroke: "#e5e5e5", strokeWidth: "1" }} />
@@ -265,7 +275,8 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
                 <text className="x-label" />
                 <text className="y-label" />
             </g>
-            <g className="legend">
+
+            <g className="legend" display={plotType === "HEATMAP" ? "" : "None"}>
                 <defs>
                     <linearGradient id="gradient1" x1="0" x2="1" y1="0" y2="0" colorInterpolation="CIE-LCHab">
                         <stop offset="0%" stopColor={interpolateReds(0.1)} />
@@ -297,19 +308,32 @@ const InterventionPlot: FC<Props> = ({ plotType, store, aggregatedBy, valueToVis
                     fill={third_gray}>
                     100%
                 </text>
+                <text
+                    x={0.5 * dimension.width}
+                    y={0}
+                    alignmentBaseline="hanging"
+                    textAnchor="middle"
+                    fontSize="13px"
+                    fill={third_gray}
+                >Intervention: {interventionDate}</text>
             </g>
+
             <g className="chart"
                 transform={`translate(${offset.left},0)`}
             >
                 {data.map((dataPoint) => {
                     return outputSinglePlotElement(dataPoint).concat([
                         <rect
-                            fill={interpolateGreys(caseScale(dataPoint.preCaseCount + dataPoint.postCaseCount))}
+                            fill={interpolateGreys(caseScale(dataPoint.preCaseCount))}
                             x={-40}
                             y={aggregationScale(dataPoint.aggregateAttribute)}
                             width={35}
-                            height={aggregationScale.bandwidth()}
+                            height={aggregationScale.bandwidth() * 0.5}
                         />,
+                        <rect fill={interpolateGreys(caseScale(dataPoint.postCaseCount))}
+                            x={-40}
+                            y={aggregationScale(dataPoint.aggregateAttribute)! + aggregationScale.bandwidth() * 0.5} width={35}
+                            height={aggregationScale.bandwidth() * 0.5} />,
                         <text
                             fill="white"
                             x={-22.5}

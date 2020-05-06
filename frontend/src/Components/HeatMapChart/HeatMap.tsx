@@ -80,6 +80,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
 
     const [dimension, aggregationScale, valueScale, caseScale] = useMemo(() => {
 
+
         const caseMax = max(data.map(d => d.caseCount)) || 0;
         const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
         const dimension = {
@@ -96,6 +97,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         } else {
             outputRange = range(0, BloodProductCap[valueToVisualize] + 1)
         }
+
         //console.log(data)
         let valueScale = scaleBand()
             .domain(outputRange as any)
@@ -111,7 +113,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     }, [dimensionWhole, data, yMax, extraPairDataSet])
 
     const aggregationLabel = axisLeft(aggregationScale);
-    const valueLabel = axisBottom(valueScale);
+    const valueLabel = axisBottom(valueScale).tickFormat(d => d === BloodProductCap[valueToVisualize] ? `${d}+` : d);
 
     svgSelection
         .select(".axes")
@@ -131,7 +133,9 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             "transform",
             `translate(${extraPairTotalWidth} ,${dimension.height - offset.bottom})`
         )
-        .call(valueLabel as any);
+        .call(valueLabel as any)
+        .call(g => g.select(".domain").remove())
+        .call(g => g.selectAll(".tick").selectAll("line").remove());
 
     svgSelection
         // .select(".axes")
@@ -185,24 +189,6 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         }
         return false;
     }
-
-
-    // const decideIfSelected = (d: BarChartDataPoint) => {
-    //   if (selectedVal) {
-    //     return selectedVal === d.aggregateAttribute
-    //   }
-    //   else if (currentSelectSet.length > 0) {
-    //     //let selectSet: SelectSet;
-    //     for (let selectSet of currentSelectSet) {
-    //       if (d.case[selectSet.set_name] === selectSet.set_value)
-    //         return true;
-    //     }
-    //     return
-
-    //   else {
-    //     return false;
-    //   }
-    // }
 
 
     const outputSinglePlotElement = (dataPoint: HeatMapDataPoint) => {

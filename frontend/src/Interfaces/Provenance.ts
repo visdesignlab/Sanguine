@@ -30,14 +30,14 @@ interface AppProvenance {
 
     addNewChart: (x: string, y: string, i: number, type: string, interventionDate?: Date, interventionChartType?: string) => void;
     removeChart: (i: any) => void;
-    // updateCaseCount: (newCaseCount: number) => void;
+    updateCaseCount: (mode: string, newCaseCount: number) => void;
     onLayoutchange: (data: any) => void;
     selectPatient: (data: SingleCasePoint) => void;
     selectSet: (data: SelectSet, shiftKeyPressed: boolean) => void;
     storeHemoData: (data: any) => void;
     changeExtraPair: (chartID: string, newExtraPair: string) => void;
     removeExtraPair: (chartID: string, removeingPair: string) => void;
-    changeChart: (x: string, y: string, i: string, type: string) => void;
+    changeChart: (x: string, y: string, i: string, type: string, interventionType?: string) => void;
   }
 }
 export function setupProvenance(): AppProvenance {
@@ -83,11 +83,18 @@ export function setupProvenance(): AppProvenance {
       : store.rawDateRange;
   })
 
-  // provenance.addObserver(["yearRange"], (state?: ApplicationState) => {
-  //   store.yearRange = state
-  //     ? state.yearRange
-  //     : store.yearRange;
-  // })
+
+
+  provenance.addObserver(["totalAggregatedCaseCount"], (state?: ApplicationState) => {
+    store.totalAggregatedCaseCount = state
+      ? state.totalAggregatedCaseCount
+      : store.totalAggregatedCaseCount;
+  })
+  provenance.addObserver(["totalIndividualCaseCount"], (state?: ApplicationState) => {
+    store.totalIndividualCaseCount = state
+      ? state.totalIndividualCaseCount
+      : store.totalIndividualCaseCount;
+  })
 
   provenance.addObserver(["filterSelection"], (state?: ApplicationState) => {
     store.filterSelection = state ? state.filterSelection : store.filterSelection
@@ -237,7 +244,7 @@ export function setupProvenance(): AppProvenance {
     );
   }
 
-  const changeChart = (x: string, y: string, i: string, type: string) => {
+  const changeChart = (x: string, y: string, i: string, type: string, interventionType?: string) => {
     provenance.applyAction(
       `change chart ${i}`,
       (state: ApplicationState) => {
@@ -245,7 +252,9 @@ export function setupProvenance(): AppProvenance {
           if (d.i === i) {
             d.aggregatedBy = x;
             d.valueToVisualize = y;
-
+            if (interventionType) {
+              d.interventionType = interventionType;
+            }
           }
           return d
         })
@@ -441,11 +450,22 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  // const updateCaseCount = (newCaseCount: number) => {
-  //   //  if (store.totalCaseCount < newCaseCount){
-  //   store.totalCaseCount = newCaseCount;
-  //   //  }
-  // }
+  const updateCaseCount = (mode: string, newCaseCount: number) => {
+    provenance.applyAction(
+      `change output filter`,
+      (state: ApplicationState) => {
+        if (mode === "INDIVIDUAL") {
+          state.totalIndividualCaseCount = newCaseCount;
+        }
+        else if (mode === "AGGREGATED") {
+          state.totalAggregatedCaseCount = newCaseCount;
+        }
+        return state;
+      }
+    )
+  }
+
+
   const storeHemoData = (data: any) => {
     provenance.applyAction(`cache hemo data`,
       (state: ApplicationState) => {
@@ -479,7 +499,7 @@ export function setupProvenance(): AppProvenance {
 
       addNewChart,
       removeChart,
-      //  updateCaseCount,
+      updateCaseCount,
       onLayoutchange,
       selectPatient,
       selectSet,
