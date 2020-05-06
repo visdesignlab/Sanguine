@@ -9,6 +9,7 @@ import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
 import { timeFormat } from "d3";
 import { blood_red } from "../../ColorProfile";
+import { barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions, interventionChartType } from "../../Interfaces/ApplicationState";
 
 interface OwnProps {
   store?: Store;
@@ -47,33 +48,6 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
 
 
-  const barChartValuesOptions = [
-    {
-      value: "PRBC_UNITS",
-      key: "PRBC_UNITS",
-      text: "Intraoperative RBCs Transfused"
-    },
-    {
-      value: "FFP_UNITS",
-      key: "FFP_UNITS",
-      text: "Intraoperative FFP Transfused"
-    },
-    {
-      value: "PLT_UNITS",
-      key: "PLT_UNITS",
-      text: "Intraoperative Platelets Transfused"
-    },
-    {
-      value: "CRYO_UNITS",
-      key: "CRYO_UNITS",
-      text: "Intraoperative Cryo Transfused"
-    },
-    {
-      value: "CELL_SAVER_ML",
-      key: "CELL_SAVER_ML",
-      text: "Cell Salvage Volume (ml)"
-    }
-  ];
 
   const scatterXOptions = [
     {
@@ -92,33 +66,9 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     { value: "HEMO_VALUE", key: "HEMO_VALUE", text: "Hemoglobin Value" }
   ]
 
-  const dumbbellFacetOptions = [
-    { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
-    { value: "YEAR", key: "YEAR", text: "Year" },
-    {
-      value: "ANESTHOLOGIST_ID",
-      key: "ANESTHOLOGIST_ID",
-      text: "Anesthologist ID"
-    },
-    { value: "QUARTER", key: "QUARTER", text: "Quarter" },
-    { value: "MONTH", key: "MONTH", text: "Month" }
-  ]
 
-  const barChartAggregationOptions = [
-    { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
-    { value: "YEAR", key: "YEAR", text: "Year" },
-    {
-      value: "ANESTHOLOGIST_ID",
-      key: "ANESTHOLOGIST_ID",
-      text: "Anesthologist ID"
-    }
-  ];
 
-  const interventionChartType = [
-    { value: "HEATMAP", key: "HEATMAP", text: "Heat Map" },
-    { value: "VIOLIN", key: "VIOLIN", text: "Violin Plot" }
 
-  ]
 
   const addOptions = [
     [barChartValuesOptions, barChartAggregationOptions],

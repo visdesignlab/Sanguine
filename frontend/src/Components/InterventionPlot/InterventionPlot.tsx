@@ -324,12 +324,16 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
                 {data.map((dataPoint) => {
                     return outputSinglePlotElement(dataPoint).concat([
                         <rect
-                            fill={interpolateGreys(caseScale(dataPoint.preCaseCount + dataPoint.postCaseCount))}
+                            fill={interpolateGreys(caseScale(dataPoint.preCaseCount))}
                             x={-40}
                             y={aggregationScale(dataPoint.aggregateAttribute)}
                             width={35}
-                            height={aggregationScale.bandwidth()}
+                            height={aggregationScale.bandwidth() * 0.5}
                         />,
+                        <rect fill={interpolateGreys(caseScale(dataPoint.postCaseCount))}
+                            x={-40}
+                            y={aggregationScale(dataPoint.aggregateAttribute)! + aggregationScale.bandwidth() * 0.5} width={35}
+                            height={aggregationScale.bandwidth() * 0.5} />,
                         <text
                             fill="white"
                             x={-22.5}

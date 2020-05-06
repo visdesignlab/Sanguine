@@ -3,7 +3,7 @@ import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { InterventionDataPoint, BloodProductCap } from '../../Interfaces/ApplicationState'
+import { InterventionDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType } from '../../Interfaces/ApplicationState'
 
 import { Button, Icon, Table, Grid, Dropdown, GridColumn, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
@@ -295,11 +295,20 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
     useEffect(() => {
         fetchChartData();
 
-    }, [filterSelection, dateRange, showZero]);
+    }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize]);
 
 
 
+    const changeAggregation = (e: any, value: any) => {
+        actions.changeChart(value.value, valueToVisualize, chartId, "INTERVENTION")
+    }
+    const changeValue = (e: any, value: any) => {
+        actions.changeChart(aggregatedBy, value.value, chartId, "INTERVENTION")
+    }
 
+    const changeType = (e: any, value: any) => {
+        actions.changeChart(aggregatedBy, valueToVisualize, chartId, "INTERVENTION", value.value)
+    }
 
     return (
 
@@ -308,7 +317,13 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                 <Grid.Column verticalAlign="middle" width={1}>
                     <Menu icon vertical compact size="mini" borderless secondary widths={2}>
                         <Menu.Item>
-                            <Icon name="edit" />
+                            <Dropdown pointing basic item icon="edit" compact >
+                                <Dropdown.Menu>
+                                    <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
+                                    <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue}></Dropdown>
+                                    <Dropdown text="Change Type" pointing basic item compact options={interventionChartType} onChange={changeType}></Dropdown>
+                                </Dropdown.Menu>
+                            </Dropdown>
                         </Menu.Item>
                     </Menu>
                 </Grid.Column>
