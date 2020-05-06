@@ -154,7 +154,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                         if (roundedAnswer > cap) {
                             preCountDict[cap] += 1
                         }
-                        else if (preCountDict[roundedAnswer]) {
+                        else {
                             preCountDict[roundedAnswer] += 1
                         }
                     } else {
@@ -236,7 +236,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                         if (roundedAnswer > cap) {
                             postCountDict[cap] += 1
                         }
-                        else if (postCountDict[roundedAnswer]) {
+                        else {
                             postCountDict[roundedAnswer] += 1
                         }
                     } else {
