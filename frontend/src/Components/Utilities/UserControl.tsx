@@ -33,6 +33,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const [ySelection, setYSelection] = useState("")
   const [interventionDate, setInterventionDate] = useState<Date | undefined>(undefined)
   const [elementCounter, addToElementCounter] = useState(0)
+  const [interventionPlotType, setInterventionPlotType] = useState<string | undefined>(undefined)
 
 
   const onDateChange = (event: any, data: any) => {
@@ -113,14 +114,21 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     }
   ];
 
+  const interventionChartType = [
+    { value: "HEATMAP", key: "HEATMAP", text: "Heat Map" },
+    { value: "VIOLIN", key: "VIOLIN", text: "Violin Plot" }
+
+  ]
+
   const addOptions = [
     [barChartValuesOptions, barChartAggregationOptions],
     [dumbbellValueOptions, barChartValuesOptions.concat(dumbbellFacetOptions)],
     [scatterXOptions, barChartValuesOptions],
+    [barChartValuesOptions, barChartAggregationOptions],
     [barChartValuesOptions, barChartAggregationOptions]
 
   ]
-  const typeDiction = ["BAR", "DUMBBELL", "SCATTER", "HEATMAP"]
+  const typeDiction = ["BAR", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION"]
 
 
 
@@ -149,15 +157,19 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     setYSelection(value.value)
   }
 
+  const interventionPlotHandler = (e: any, value: any) => {
+    setInterventionPlotType(value.value)
+  }
 
 
   const confirmChartAddHandler = () => {
     if (xSelection && ySelection && addingChartType > -1) {
       addToElementCounter(elementCounter + 1)
-      actions.addNewChart(xSelection, ySelection, elementCounter, typeDiction[addingChartType], interventionDate)
+      actions.addNewChart(xSelection, ySelection, elementCounter, typeDiction[addingChartType], interventionDate, interventionPlotType)
       setAddMode(false);
       setAddingChartType(-1)
       setInterventionDate(undefined);
+      setInterventionPlotType(undefined);
     }
 
   }
@@ -195,6 +207,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             <Dropdown.Item onClick={() => addModeButtonHandler(1)}>Dumbbell Chart</Dropdown.Item>
             <Dropdown.Item onClick={() => addModeButtonHandler(2)}>Scatter Plot</Dropdown.Item>
             <Dropdown.Item onClick={() => addModeButtonHandler(3)}>Heat Map</Dropdown.Item>
+            <Dropdown.Item onClick={() => addModeButtonHandler(4)}>Intervention Plot</Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
 
@@ -221,8 +234,9 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   );
 
 
+
   const addBarChartMenu = (
-    <Menu widths={4}>
+    <Menu widths={5}>
       <Menu.Item>
         <Dropdown
           placeholder={addingChartType === 2 ? "Select Y-axis Attribute" : "Select Value to Show"}
@@ -240,13 +254,19 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         />
       </Menu.Item>
 
-      {addingChartType === 1 ? (<Menu.Item>
-        <SemanticDatePicker
-          placeholder={"Intervention"}
-          minDate={rawDateRange[0] as any}
-          maxDate={rawDateRange[1] as any}
-          onChange={interventionHandler} />
-      </Menu.Item>) : (<></>)}
+      {addingChartType === 4 ? (
+        [<Menu.Item>
+          <SemanticDatePicker
+            placeholder={"Intervention"}
+            minDate={rawDateRange[0] as any}
+            maxDate={rawDateRange[1] as any}
+            onChange={interventionHandler} />
+        </Menu.Item>,
+
+        <Menu.Item>
+          <Dropdown placeholder={"Plot Type"} selection options={interventionChartType} onChange={interventionPlotHandler}></Dropdown>
+        </Menu.Item>]) : (<></>)}
+
       <Menu.Item>
         <Button.Group>
           <Button

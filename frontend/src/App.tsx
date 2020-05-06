@@ -38,6 +38,7 @@ import ScatterPlotVisualization from './Components/Scatterplot/ScatterPlotVisual
 import LineUpWrapper from './Components/LineUpWrapper';
 import HeatMapVisualization from './Components/HeatMapChart/HeatMapVisualization';
 import { timeFormat, timeParse } from 'd3';
+import InterventionPlotVisualization from './Components/InterventionPlot/InterventionPlotVisualization';
 
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
@@ -214,7 +215,20 @@ const App: FC<Props> = ({ store }: Props) => {
             extraPair={layout.extraPair}
           />
         </div>)
+      case "INTERVENTION":
+        return (<div key={layout.i}
+          className={"parent-node" + layout.i}>
+          <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
+          <InterventionPlotVisualization
+            aggregatedBy={layout.aggregatedBy}
+            valueToVisualize={layout.valueToVisualize}
+            chartId={layout.i}
+            chartIndex={index}
+            interventionDate={layout.interventionDate!}
+            interventionPlotType={layout.interventionType!} />
 
+
+        </div>)
 
     }
 

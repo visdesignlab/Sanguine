@@ -28,7 +28,7 @@ interface AppProvenance {
     // yearRangeChange: (data: any) => void;
     dateRangeChange: (data: any) => void;
 
-    addNewChart: (x: string, y: string, i: number, type: string, interventionDate?: Date) => void;
+    addNewChart: (x: string, y: string, i: number, type: string, interventionDate?: Date, interventionChartType?: string) => void;
     removeChart: (i: any) => void;
     // updateCaseCount: (newCaseCount: number) => void;
     onLayoutchange: (data: any) => void;
@@ -128,7 +128,7 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plot_type: string, interventionDate?: Date) => {
+  const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plot_type: string, interventionDate?: Date, interventionChartType?: string) => {
 
     const newLayoutElement: LayoutElement = {
       aggregatedBy: xAxisAttribute,
@@ -145,6 +145,10 @@ export function setupProvenance(): AppProvenance {
     }
     if (interventionDate) {
       newLayoutElement.interventionDate = interventionDate
+    }
+    if (plot_type === "INTERVENTION" && interventionDate) {
+      newLayoutElement.interventionDate = interventionDate;
+      newLayoutElement.interventionType = interventionChartType ? interventionChartType : "HEATMAP";
     }
 
     provenance.applyAction("Add new chart",
