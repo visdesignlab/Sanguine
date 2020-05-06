@@ -319,6 +319,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                     <SVG ref={svgRef}>
 
                         <InterventionPlot
+                            interventionDate={timeFormat("%Y-%m-%d")((typeof interventionDate === "string") ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate)}
                             chartId={chartId}
                             dimensionWhole={dimensions}
                             data={data}
