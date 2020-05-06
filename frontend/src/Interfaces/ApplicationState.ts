@@ -67,7 +67,7 @@ export interface ApplicationState {
   currentSelectedChart: string;
   // perCaseSelected: boolean;
   // yearRange: number[];
-  rawDateRange: any;
+  rawDateRange: Date[];
   filterSelection: string[];
   // totalCaseCount: number;
   // dumbbellSorted: boolean;

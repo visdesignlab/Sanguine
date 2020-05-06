@@ -17,7 +17,7 @@ export default class Store {
   @observable showZero: boolean = defaultState.showZero;
   //@observable yearRange: number[] = defaultState.yearRange;
 
-  @observable rawDateRange: any[] = defaultState.rawDateRange;
+  @observable rawDateRange: Date[] = defaultState.rawDateRange;
 
   @observable filterSelection: string[] = defaultState.filterSelection;
   //@observable totalCaseCount: number = defaultState.totalCaseCount;

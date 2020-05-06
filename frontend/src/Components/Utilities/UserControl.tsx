@@ -21,7 +21,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     isAtRoot,
     isAtLatest,
     showZero,
-    rawDateRange
+    rawDateRange,
     //  perCaseSelected,
     //yearRange,
     //  dumbbellSorted
@@ -196,7 +196,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       <Menu.Item>
         <Container>
 
-          <SemanticDatePicker placeholder={"2014-01-01 - 2019-12-31"} type="range" onChange={onDateChange} />
+          <SemanticDatePicker placeholder={`${timeFormat("%Y-%m-%d")(rawDateRange[0])} - ${timeFormat("%Y-%m-%d")(rawDateRange[1])}`} type="range" onChange={onDateChange} />
         </Container>
       </Menu.Item>
       <Menu.Item>

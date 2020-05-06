@@ -94,6 +94,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     let valueScale = scaleLinear()
       .domain([0, BloodProductCap[valueToVisualize]])
       .range([offset.left, dimension.width - offset.right - offset.margin]);
+
     let aggregationScale = scaleBand()
       .domain(xVals)
       .range([dimension.height - offset.bottom, offset.top])
