@@ -3,8 +3,8 @@ import styled from 'styled-components';
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import './App.css';
-import UserControl from './Components/UserControl'
-import SideBar from './Components/SideBar'
+import UserControl from './Components/Utilities/UserControl'
+import SideBar from './Components/Utilities/SideBar'
 
 import BarChartVisualization from "./Components/BarChart/BarChartVisualization";
 import DumbbellChartVisualization from "./Components/DumbbellChart/DumbbellChartVisualization";
@@ -33,9 +33,12 @@ import { action } from 'mobx';
 import { actions } from './index'
 import { LineUpStringColumnDesc, LineUpCategoricalColumnDesc, LineUpNumberColumnDesc, LineUpSupportColumn, LineUpColumn } from 'lineupjsx';
 // import ScatterPlotVisualization from './Components/Scatterplot/ScatterPlotVisualization';
-import DetailView from './Components/DetailView';
+import DetailView from './Components/Utilities/DetailView';
 import ScatterPlotVisualization from './Components/Scatterplot/ScatterPlotVisualization';
 import LineUpWrapper from './Components/LineUpWrapper';
+import HeatMapVisualization from './Components/HeatMapChart/HeatMapVisualization';
+import { timeFormat, timeParse } from 'd3';
+import InterventionPlotVisualization from './Components/InterventionPlot/InterventionPlotVisualization';
 
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
@@ -52,6 +55,7 @@ type Props = OwnProps;
 const App: FC<Props> = ({ store }: Props) => {
   const {
     layoutArray,
+    dateRange
     // hemoglobinDataSet
   } = store!;
 
@@ -59,7 +63,7 @@ const App: FC<Props> = ({ store }: Props) => {
     const resHemo = await fetch("http://localhost:8000/api/hemoglobin");
     const dataHemo = await resHemo.json();
     const resultHemo = dataHemo.result;
-    const resTrans = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&year_range=${[2014, 2019]}`)
+    const resTrans = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}`)
     const dataTrans = await resTrans.json();
     const resultTrans = dataTrans.result;
 
@@ -72,6 +76,8 @@ const App: FC<Props> = ({ store }: Props) => {
       SURGEON_ID: number,
       YEAR: number,
       QUARTER: string,
+      MONTH: string,
+      DATE: Date | null,
       PRBC_UNITS: number,
       FFP_UNITS: number,
       PLT_UNITS: number,
@@ -109,13 +115,15 @@ const App: FC<Props> = ({ store }: Props) => {
           CRYO_UNITS: transfusedResult.CRYO_UNITS,
           CELL_SAVER_ML: transfusedResult.CELL_SAVER_ML,
           HEMO: ob.HEMO,
-          QUARTER: ob.QUARTER
+          QUARTER: ob.QUARTER,
+          MONTH: ob.MONTH,
+          DATE: timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)
         })
       }
     })
 
     result = result.filter((d: any) => d);
-
+    console.log(result)
     actions.storeHemoData(result);
     //   let tempMaxCaseCount = 0
     // data.result.forEach((d: any) => {
@@ -137,51 +145,68 @@ const App: FC<Props> = ({ store }: Props) => {
   };
 
   const createElement = (layout: LayoutElement, index: number) => {
-    if (layout.plot_type === "DUMBBELL") {
-      return (
-        <div key={layout.i} className={"parent-node" + layout.i}>
-          {/* <Button
-            icon="close"
-            floated={"right"}
-            circular
-            compact
-            size="mini"
+    switch (layout.plot_type) {
+      case "DUMBBELL":
+        return (
+          <div key={layout.i} className={"parent-node" + layout.i}>
+
+            <Button icon="close" floated="right" circular compact size="mini" basic onClick={() => { actions.removeChart(layout.i) }} />
+            <DumbbellChartVisualization
+              yAxis={layout.aggregatedBy}
+              chartId={layout.i}
+              chartIndex={index}
+              interventionDate={layout.interventionDate}
+            // aggregatedOption={layout.aggregation}
+            />
+          </div>
+        );
+      case "BAR":
+        return (
+          <div
+            //onClick={this.onClickBlock.bind(this, layoutE.i)}
             key={layout.i}
-            onClick={
-              actions.removeChart}
+            className={"parent-node" + layout.i}
+          // data-grid={layoutE}
           >
-            <Icon key={layout.i} name="close" />
-          </Button> */}
-          <Button icon="close" floated="right" circular compact size="mini" basic onClick={() => { actions.removeChart(layout.i) }} />
-          <DumbbellChartVisualization
-            yAxis={layout.aggregatedBy}
-            chartId={layout.i}
-            chartIndex={index}
-          // aggregatedOption={layout.aggregation}
-          />
-        </div>
-      );
-    }
-    else if (layout.plot_type === "BAR") {
-      return (
-        <div
+
+            <Button floated="right" icon="close" circular compact size="mini" basic onClick={() => { actions.removeChart(layout.i) }} />
+            <BarChartVisualization
+              aggregatedBy={layout.aggregatedBy}
+              valueToVisualize={layout.valueToVisualize}
+              // class_name={"parent-node" + layoutE.i}
+              chartId={layout.i}
+              chartIndex={index}
+              extraPair={layout.extraPair}
+            />
+          </div>
+        );
+      case "SCATTER":
+        return (<div
           //onClick={this.onClickBlock.bind(this, layoutE.i)}
           key={layout.i}
           className={"parent-node" + layout.i}
         // data-grid={layoutE}
         >
-          {/* <Button
-            icon='close'
-            floated={"right"}
-            circular
-            compact
-            size="mini"
-            onClick={actions.removeChart}
-          >
-            <Icon key={layout.i} name="close" />
-          </Button> */}
-          <Button floated="right" icon="close" circular compact size="mini" basic onClick={() => { actions.removeChart(layout.i) }} />
-          <BarChartVisualization
+
+          <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
+          <ScatterPlotVisualization
+            xAxis={layout.aggregatedBy}
+            yAxis={layout.valueToVisualize}
+            // class_name={"parent-node" + layoutE.i}
+            chartId={layout.i}
+            chartIndex={index}
+          />
+        </div>)
+      case "HEATMAP":
+        return (<div
+          //onClick={this.onClickBlock.bind(this, layoutE.i)}
+          key={layout.i}
+          className={"parent-node" + layout.i}
+        // data-grid={layoutE}
+        >
+
+          <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
+          <HeatMapVisualization
             aggregatedBy={layout.aggregatedBy}
             valueToVisualize={layout.valueToVisualize}
             // class_name={"parent-node" + layoutE.i}
@@ -189,36 +214,22 @@ const App: FC<Props> = ({ store }: Props) => {
             chartIndex={index}
             extraPair={layout.extraPair}
           />
-        </div>
-      );
+        </div>)
+      case "INTERVENTION":
+        return (<div key={layout.i}
+          className={"parent-node" + layout.i}>
+          <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
+          <InterventionPlotVisualization
+            aggregatedBy={layout.aggregatedBy}
+            valueToVisualize={layout.valueToVisualize}
+            chartId={layout.i}
+            chartIndex={index}
+            interventionDate={layout.interventionDate!}
+            interventionPlotType={layout.interventionType!} />
+        </div>)
+
     }
-    else {
-      return (<div
-        //onClick={this.onClickBlock.bind(this, layoutE.i)}
-        key={layout.i}
-        className={"parent-node" + layout.i}
-      // data-grid={layoutE}
-      >
-        {/* <Button
-          icon='close'
-          compact
-          floated={"right"}
-          circular
-          size="mini"
-          onClick={actions.removeChart}
-        >
-          <Icon key={layout.i} name="close" />
-        </Button> */}
-        <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
-        <ScatterPlotVisualization
-          xAxis={layout.aggregatedBy}
-          yAxis={layout.valueToVisualize}
-          // class_name={"parent-node" + layoutE.i}
-          chartId={layout.i}
-          chartIndex={index}
-        />
-      </div>)
-    }
+
   }
 
   const panes = [{

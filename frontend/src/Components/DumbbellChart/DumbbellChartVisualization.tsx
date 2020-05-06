@@ -12,25 +12,26 @@ import { actions } from "../..";
 import { DumbbellDataPoint, SelectSet, BloodProductCap, dumbbellFacetOptions, barChartValuesOptions } from "../../Interfaces/ApplicationState"
 import DumbbellChart from "./DumbbellChart"
 import { Grid, Menu, Dropdown, Button } from "semantic-ui-react";
-import { preop_color, postop_color, basic_gray, secondary_gray } from "../../ColorProfile";
+import { preop_color, postop_color, basic_gray, third_gray } from "../../ColorProfile";
 
 interface OwnProps {
   yAxis: string;
   chartId: string;
   store?: Store;
   chartIndex: number;
-  //  aggregatedOption?: string;
+  interventionDate?: Date;
 }
 
 export type Props = OwnProps;
 
-const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartIndex }: Props) => {
+const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartIndex, interventionDate }: Props) => {
 
   const {
     layoutArray,
     filterSelection,
-    actualYearRange,
+    //actualYearRange,
     hemoglobinDataSet,
+    dateRange,
     showZero,
     currentOutputFilterSet
   } = store!;
@@ -61,7 +62,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
       requestingAxis = "FFP_UNITS"
     }
     const transfusedRes = await fetch(
-      `http://localhost:8000/api/request_transfused_units?transfusion_type=${requestingAxis}&year_range=${actualYearRange}&filter_selection=${filterSelection.toString()}`
+      `http://localhost:8000/api/request_transfused_units?transfusion_type=${requestingAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
     );
     const transfusedDataResult = await transfusedRes.json();
     const temp_transfusion_data = transfusedDataResult.result;
@@ -120,7 +121,8 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
                   YEAR: ob.YEAR,
                   ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
                   SURGEON_ID: ob.SURGEON_ID,
-                  patientID: ob.PATIENT_ID
+                  patientID: ob.PATIENT_ID,
+                  DATE: ob.DATE
                 },
                 startXVal: begin_x,
                 endXVal: end_x,
@@ -145,7 +147,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
 
   useEffect(() => {
     fetchChartData();
-  }, [actualYearRange, filterSelection, hemoglobinDataSet, yAxis, showZero, currentOutputFilterSet]);
+  }, [dateRange, filterSelection, hemoglobinDataSet, yAxis, showZero, currentOutputFilterSet]);
 
   const changeXVal = (e: any, value: any) => {
     actions.changeChart(value.value, "HEMO_VALUE", chartId, "DUMBBELL")
@@ -158,16 +160,20 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
           <Menu text compact size="mini" vertical>
             <Menu.Item header>Show</Menu.Item>
             <Menu.Menu>
-              <PreopMenuItem name="Preop" active={showingAttr.preop} onClick={() => { setShowingAttr({ preop: !showingAttr.preop, postop: showingAttr.postop, gap: showingAttr.gap }) }} />
-              <PostopMenuItem name="Postop" active={showingAttr.postop} onClick={() => { setShowingAttr({ preop: showingAttr.preop, postop: !showingAttr.postop, gap: showingAttr.gap }) }} />
-              <GapMenuItem name="Gap" active={showingAttr.gap} onClick={() => { setShowingAttr({ preop: showingAttr.preop, postop: showingAttr.postop, gap: !showingAttr.gap }) }} />
+              <Button.Group vertical size="mini">
+                <PreopButton basic={!showingAttr.preop} onClick={() => { setShowingAttr({ preop: !showingAttr.preop, postop: showingAttr.postop, gap: showingAttr.gap }) }} >Preop</PreopButton>
+                <PostopButton basic={!showingAttr.postop} onClick={() => { setShowingAttr({ preop: showingAttr.preop, postop: !showingAttr.postop, gap: showingAttr.gap }) }}>Postop</PostopButton>
+                <GapButton basic={!showingAttr.gap} onClick={() => { setShowingAttr({ preop: showingAttr.preop, postop: showingAttr.postop, gap: !showingAttr.gap }) }} >Gap</GapButton>
+              </Button.Group>
             </Menu.Menu>
 
             <Menu.Item header>Sort By</Menu.Item>
             <Menu.Menu>
-              <PreopMenuItem name="Preop" active={sortMode === "Preop"} onClick={() => { setSortMode("Preop") }} />
-              <PostopMenuItem name="Postop" active={sortMode === "Postop"} onClick={() => { setSortMode("Postop") }} />
-              <GapMenuItem name="Gap" active={sortMode === "Gap"} onClick={() => { setSortMode("Gap") }} />
+              <Button.Group vertical size="mini">
+                <PreopButton basic={sortMode !== "Preop"} onClick={() => { setSortMode("Preop") }}>Preop</PreopButton>
+                <PostopButton basic={sortMode !== "Postop"} onClick={() => { setSortMode("Postop") }}>Postop</PostopButton>
+                <GapButton basic={sortMode !== "Gap"} onClick={() => { setSortMode("Gap") }}>Gap</GapButton>
+              </Button.Group>
             </Menu.Menu>
             <Menu.Item header>
               <Dropdown text="Change Facet" pointing basic item icon="edit" compact options={dumbbellFacetOptions.concat(barChartValuesOptions)} onChange={changeXVal}>
@@ -207,6 +213,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
               xRange={xRange}
               // yMax={yMax}
               // aggregation={aggregatedOption}
+              interventionDate={interventionDate}
               sortMode={sortMode}
               showingAttr={showingAttr}
             />
@@ -230,17 +237,30 @@ interface ActiveProps {
 }
 
 const PostopMenuItem = styled(Menu.Item) <ActiveProps>`
-  &&&&&{color: ${props => props.active ? postop_color : secondary_gray}!important;
+  &&&&&{color: ${props => props.active ? postop_color : third_gray}!important;
         }
 `
 
 const PreopMenuItem = styled(Menu.Item) <ActiveProps>`
- &&&&&{color: ${props => props.active ? preop_color : secondary_gray}!important;}
+ &&&&&{color: ${props => props.active ? preop_color : third_gray}!important;}
 `
 
 const GapMenuItem = styled(Menu.Item)`
-  &&&&&{color: ${props => props.active ? basic_gray : secondary_gray}!important;}
+  &&&&&{color: ${props => props.active ? basic_gray : third_gray}!important;}
 `
+const GapButton = styled(Button)`
+  &&&&& {color: ${basic_gray}!important;
+box - shadow: 0 0 0 1px ${basic_gray} inset!important;}`
+
+
+const PostopButton = styled(Button)`
+   &&&&& {color: ${postop_color}!important;
+box - shadow: 0 0 0 1px ${postop_color} inset!important;}`
+
+const PreopButton = styled(Button)`
+  &&&&& { color: ${ preop_color} !important;
+box - shadow: 0 0 0 1px ${ preop_color} inset!important;}`
+
 
 const OptionsP = styled.p`
   margin-top:5px;

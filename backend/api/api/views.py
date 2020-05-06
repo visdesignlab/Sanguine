@@ -163,7 +163,8 @@ def summarize_attribute_w_year(request):
     if request.method == "GET":
         aggregatedBy = request.GET.get("aggregatedBy")
         valueToVisualize = request.GET.get("valueToVisualize")
-        year_range = request.GET.get("year_range").split(",")
+       # year_range = request.GET.get("year_range").split(",")
+        date_range = request.GET.get("date_range").split(",")
         filter_selection = request.GET.get("filter_selection")
         print(filter_selection)
         if filter_selection is None:
@@ -174,12 +175,12 @@ def summarize_attribute_w_year(request):
             )
         print(filter_selection)
 
-        if not aggregatedBy or not valueToVisualize or not year_range:
+        if not aggregatedBy or not valueToVisualize or not date_range:
             HttpResponseBadRequest(
-                "aggregatedBy, valueToVisualize, and year_range must be supplied.")
+                "aggregatedBy, valueToVisualize, and date_range must be supplied.")
 
-        year_min = year_range[0]
-        year_max = year_range[1]
+        date_min = date_range[0]
+        date_max = date_range[1]
 
         command_dict = {
             "YEAR": "EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE)",
@@ -232,7 +233,7 @@ def summarize_attribute_w_year(request):
             f"ON ({data_origin[aggregatedBy]}.DI_CASE_ID = {data_origin[valueToVisualize]}.DI_CASE_ID "
             f"{extra_command}) "
             f"WHERE {data_origin[aggregatedBy]}.DI_CASE_DATE BETWEEN "
-            f"'01-JAN-{year_min}' AND '31-DEC-{year_max}' "
+            f"'{date_min}' AND '{date_max}' "
             f"GROUP BY {command_dict[aggregatedBy]}, CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID"
         )
 
@@ -296,17 +297,18 @@ def request_transfused_units(request):
     if request.method == "GET":
         # Get the values from the request
         transfusion_type = request.GET.get("transfusion_type")
-        year_range = request.GET.get("year_range").split(",")
+       # year_range = request.GET.get("year_range").split(",")
+        date_range = request.GET.get("date_range").split(",")
         filter_selection = request.GET.get("filter_selection")
         patient_id = request.GET.get("patient_id")
 
         # Check to make sure we have the required parameters
-        if not transfusion_type or not year_range:
-            HttpResponseBadRequest("transfusion_type, and year_range must be supplied.")
+        if not transfusion_type or not date_range:
+            HttpResponseBadRequest("transfusion_type, and date_range must be supplied.")
 
         # Coerce the request parameters into a format that we want
-        year_min = year_range[0]
-        year_max = year_range[1]
+        date_min = date_range[0]
+        date_max = date_range[1]
         filter_selection = [] if (filter_selection is None or filter_selection.split(",") == [""]) else filter_selection.split(",")
         
         # Define the SQL translation dictionary
@@ -350,7 +352,7 @@ def request_transfused_units(request):
             f"INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
             f"ON (CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID = CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_ID "
             f"{extra_command}) "
-            f"WHERE CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_DATE BETWEEN '01-JAN-{year_min}' AND '31-DEC-{year_max}' "
+            f"WHERE CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD.DI_CASE_DATE BETWEEN '{date_min}' AND '{date_max}' "
             f"{pat_id_filter} "
             f"GROUP BY CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_ID, EXTRACT (YEAR FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE.DI_CASE_DATE), CLIN_DM.BPU_CTS_DI_SURGERY_CASE.SURGEON_PROV_DWID, "
             f"CLIN_DM.BPU_CTS_DI_SURGERY_CASE.ANESTH_PROV_DWID "
@@ -493,6 +495,8 @@ def hemoglobin(request):
                 "VISIT_ID": row[2],
                 "YEAR":row[4],
                 "QUARTER": str(row[4])[2:]+"/"+str(output_quarter(row[5])),
+                "MONTH":str(row[4])[2:]+"/"+str(row[5]),
+                "DATE":row[3],
                 "HEMO": [row[-3], row[-1]],
                 "SURGEON_ID": row[10],
                 "ANESTHOLOGIST_ID":row[11],
