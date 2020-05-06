@@ -3,6 +3,22 @@ export interface SelectSet {
   set_value: number[];
 }
 
+
+export interface InterventionDataPoint {
+  aggregateAttribute: any;
+  preInKdeCal: any[];
+  postInKdeCal: any[];
+  totalVal: number;
+
+  preCaseCount: number;
+  postCaseCount: number;
+
+  preInMedian: number;
+  postInMedian: number;
+  preCountDict: any;
+  postCountDict: any;
+  zeroCaseNum: number;
+}
 export interface BarChartDataPoint {
   aggregateAttribute: any;
   kdeCal: any[];
@@ -73,7 +89,8 @@ export interface LayoutElement {
   plot_type: string,
   //  aggregation?: string,
   extraPair?: string[],
-  interventionDate?: Date
+  interventionDate?: Date,
+  interventionType?: string
 }
 
 export const defaultState: ApplicationState = {
@@ -117,7 +134,7 @@ export const AxisLabelDict: any = {
 };
 
 export const BloodProductCap: any = {
-  PRBC_UNITS: 10,
+  PRBC_UNITS: 5,
   FFP_UNITS: 10,
   CRYO_UNITS: 10,
   PLT_UNITS: 10,
