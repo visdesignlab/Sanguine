@@ -56,7 +56,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScale,
                         x={extraPairWidth.Dumbbell / 2}
                         y={dimension.height - offset.bottom + 20}
                         onClick={() => actions.removeExtraPair(chartId, pairData.name)}
-                    >{pairData.name}</ExtraPairText>
+                    >{`${pairData.name}, ${pairData.name === "Preop Hemo" ? 13 : 7.5}`}</ExtraPairText>
                 </g>);
                 break;
             case "BarChart":

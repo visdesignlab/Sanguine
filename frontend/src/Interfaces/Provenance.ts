@@ -37,7 +37,7 @@ interface AppProvenance {
     storeHemoData: (data: any) => void;
     changeExtraPair: (chartID: string, newExtraPair: string) => void;
     removeExtraPair: (chartID: string, removeingPair: string) => void;
-    changeChart: (x: string, y: string, i: string, type: string) => void;
+    changeChart: (x: string, y: string, i: string, type: string, interventionType?: string) => void;
   }
 }
 export function setupProvenance(): AppProvenance {
@@ -244,7 +244,7 @@ export function setupProvenance(): AppProvenance {
     );
   }
 
-  const changeChart = (x: string, y: string, i: string, type: string) => {
+  const changeChart = (x: string, y: string, i: string, type: string, interventionType?: string) => {
     provenance.applyAction(
       `change chart ${i}`,
       (state: ApplicationState) => {
@@ -252,7 +252,9 @@ export function setupProvenance(): AppProvenance {
           if (d.i === i) {
             d.aggregatedBy = x;
             d.valueToVisualize = y;
-
+            if (interventionType) {
+              d.interventionType = interventionType;
+            }
           }
           return d
         })

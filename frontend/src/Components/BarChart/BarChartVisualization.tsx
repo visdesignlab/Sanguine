@@ -3,7 +3,7 @@ import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { BarChartDataPoint, BloodProductCap } from '../../Interfaces/ApplicationState'
+import { BarChartDataPoint, BloodProductCap, barChartValuesOptions, barChartAggregationOptions } from '../../Interfaces/ApplicationState'
 import BarChart from "./BarChart"
 import { Button, Icon, Table, Grid, Dropdown, GridColumn, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
@@ -156,7 +156,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
   useEffect(() => {
     fetchChartData();
 
-  }, [filterSelection, dateRange, showZero]);
+  }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize]);
 
   // useEffect(()=>{console.log(caseIDList)},[caseIDList])
 
@@ -261,6 +261,12 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     setStripMode(!stripPlotMode)
   }
 
+  const changeAggregation = (e: any, value: any) => {
+    actions.changeChart(value.value, valueToVisualize, chartId, "BAR")
+  }
+  const changeValue = (e: any, value: any) => {
+    actions.changeChart(aggregatedBy, value.value, chartId, "BAR")
+  }
 
   //  return true;
 
@@ -324,7 +330,12 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
               <Icon name="ellipsis vertical" />
             </Menu.Item>
             <Menu.Item>
-              <Icon name="edit" />
+              <Dropdown pointing basic item icon="edit" compact >
+                <Dropdown.Menu>
+                  <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
+                  <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue}></Dropdown>
+                </Dropdown.Menu>
+              </Dropdown>
             </Menu.Item>
           </Menu>
         </Grid.Column>

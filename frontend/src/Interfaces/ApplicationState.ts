@@ -155,6 +155,22 @@ export const dumbbellFacetOptions = [
   { value: "MONTH", key: "MONTH", text: "Month" }
 ]
 
+export const barChartAggregationOptions = [
+  { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
+  { value: "YEAR", key: "YEAR", text: "Year" },
+  {
+    value: "ANESTHOLOGIST_ID",
+    key: "ANESTHOLOGIST_ID",
+    text: "Anesthologist ID"
+  }
+];
+
+export const interventionChartType = [
+  { value: "HEATMAP", key: "HEATMAP", text: "Heat Map" },
+  { value: "VIOLIN", key: "VIOLIN", text: "Violin Plot" }
+
+]
+
 export const barChartValuesOptions = [
   {
     value: "PRBC_UNITS",
