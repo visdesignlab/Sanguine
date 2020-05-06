@@ -17,6 +17,8 @@ export type Props = OwnProps;
 const SideBar: FC<Props> = ({ store }: Props) => {
   const {
     // totalCaseCount, 
+    totalAggregatedCaseCount,
+    totalIndividualCaseCount,
     rawDateRange,
     currentSelectSet,
     currentOutputFilterSet,
@@ -84,7 +86,18 @@ const SideBar: FC<Props> = ({ store }: Props) => {
           <List>
 
             <List.Header>Current View</List.Header>
-            <List.Item icon="caret right" style={{ textAlign: "left" }} content={`Date Range: ${timeFormat("%Y-%m-%d")(rawDateRange[0])} - ${timeFormat("%Y-%m-%d")(rawDateRange[1])}`} />
+            <List.Item
+              icon="caret right"
+              style={{ textAlign: "left" }}
+              content={`Date Range: ${timeFormat("%Y-%m-%d")(rawDateRange[0])} - ${timeFormat("%Y-%m-%d")(rawDateRange[1])}`} />
+            <List.Item
+              icon="caret right"
+              style={{ textAlign: "left" }}
+              content={`Aggregated Case: ${totalAggregatedCaseCount}`} />
+            <List.Item
+              icon="caret right"
+              style={{ textAlign: "left" }}
+              content={`Individual Case: ${totalIndividualCaseCount}`} />
             {currentOutputFilterSet.map((selectSet) => {
               return <FilterListIT
                 icon="caret right"

@@ -69,7 +69,8 @@ export interface ApplicationState {
   // yearRange: number[];
   rawDateRange: Date[];
   filterSelection: string[];
-  // totalCaseCount: number;
+  totalAggregatedCaseCount: number;
+  totalIndividualCaseCount: number;
   // dumbbellSorted: boolean;
   currentSelectSet: SelectSet[];
   currentOutputFilterSet: SelectSet[];
@@ -102,7 +103,8 @@ export const defaultState: ApplicationState = {
   rawDateRange: [new Date(2014, 0, 1), new Date(2019, 11, 31)],
 
   filterSelection: [],
-  // totalCaseCount: 0,
+  totalAggregatedCaseCount: 0,
+  totalIndividualCaseCount: 0,
   // dumbbellSorted: false,
   currentOutputFilterSet: [],
   currentSelectSet: [],

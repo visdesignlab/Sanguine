@@ -88,7 +88,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
             `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${[timeFormat("%d-%b-%Y")(castInterventionDate), dateRange[1]]}&filter_selection=${filterSelection.toString()}`
         )
         const postInterventionResult = await postIntervention.json();
-        //  let caseCount = 0;
+        let caseCount = 0;
         if (preInterventiondataResult && postInterventionResult) {
             let yMaxTemp = -1;
             let perCaseYMaxTemp = -1
@@ -105,7 +105,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
 
                 const preIntMed = median(preIntOb.valueToVisualize);
 
-                // const total_val = sum(ob.valueToVisualize);
+                caseCount += case_num;
 
 
                 let preRemovedZeros = preIntOb.valueToVisualize;
@@ -205,6 +205,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                 }
 
                 const total_val = sum(postRemovedZeros);
+                caseCount += case_num
 
                 let postIntPD = createpd(postRemovedZeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
 
@@ -285,6 +286,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
             })
 
             setData(cast_data);
+            actions.updateCaseCount("AGGREGATED", caseCount)
             setYMax({ original: yMaxTemp, perCase: perCaseYMaxTemp });
 
         }
