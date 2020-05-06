@@ -102,14 +102,14 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                         countDict[i] = 0
                     }
                 }
-                console.log(outputResult)
+                console.log(outputResult, countDict)
                 outputResult.map((d: any) => {
                     if (valueToVisualize === "CELL_SAVER_ML") {
                         const roundedAnswer = Math.floor(d / 100) * 100
                         if (roundedAnswer > cap) {
                             countDict[cap] += 1
                         }
-                        else if (countDict[roundedAnswer]) {
+                        else {
                             countDict[roundedAnswer] += 1
                         }
                     } else {
