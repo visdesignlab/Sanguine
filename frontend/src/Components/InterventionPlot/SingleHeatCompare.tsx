@@ -36,7 +36,7 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
 
                 return (
                     [<Popup content={preOutput}
-                        key={dataPoint.aggregateAttribute + '-' + point}
+                        key={`Pre${dataPoint.aggregateAttribute} - ${point}`}
                         trigger={
                             <HeatRect
                                 fill={preOutput === 0 ? "white" : interpolateReds(colorScale(preOutput / dataPoint.preCaseCount))}
@@ -57,7 +57,7 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                                     )
                                 }} />}
                     />, <Popup content={postOutput}
-                        key={dataPoint.aggregateAttribute + '-' + point}
+                        key={`Post${dataPoint.aggregateAttribute} - ${point}`}
                         trigger={
                             <HeatRect
                                 fill={postOutput === 0 ? "white" : interpolateReds(colorScale(postOutput / dataPoint.postCaseCount))}
