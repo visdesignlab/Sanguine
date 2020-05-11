@@ -493,17 +493,6 @@ def patient_outcomes(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
-# def output_quarter (number):
-#     if number >0 and number < 4:
-#         return 1
-#     elif number >3 and number < 7:
-#         return 2
-#     elif number > 6 and number < 10:
-#         return 3
-#     else:
-#         return 4
-
-
 def hemoglobin(request):
     if request.method == "GET":
         command = """

@@ -75,27 +75,28 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
       let yMaxTemp = -1;
       let perCaseYMaxTemp = -1
       // let perCaseData: BarChartDataPoint[] = [];
-      const caseList = dataResult.case_id_list;
-      let caseDictionary = {} as any;
-      caseList.map((singleId: any) => {
-        caseDictionary[singleId] = true;
-      })
-      setCaseIDList(caseDictionary)
-      let cast_data = (dataResult.result as any).map(function (ob: any) {
+      // const caseList = dataResult.case_id_list;
+      // let caseDictionary = {} as any;
+      // caseList.map((singleId: any) => {
+      //   caseDictionary[singleId] = true;
+      // })
+      // setCaseIDList(caseDictionary)
+      console.log(dataResult)
+      let cast_data = (dataResult as any).map(function (ob: any) {
         let zeroCaseNum = 0;
 
 
-        const aggregateByAttr = ob.aggregatedBy;
+        const aggregateByAttr = ob.aggregated_by;
 
-        const case_num = ob.valueToVisualize.length;
+        const case_num = ob.transfused_units.length;
         caseCount += case_num
         // const total_val = sum(ob.valueToVisualize);
-        const medianVal = median(ob.valueToVisualize);
+        const medianVal = median(ob.transfused_units);
         // let pd = createpd(ob.valueToVisualize, { max: BloodProductCap[valueToVisualize], width: 4 });
 
-        let removed_zeros = ob.valueToVisualize;
+        let removed_zeros = ob.transfused_units;
         if (!showZero) {
-          removed_zeros = ob.valueToVisualize.filter((d: number) => {
+          removed_zeros = ob.transfused_units.filter((d: number) => {
             if (d > 0) {
               return true;
             }
@@ -135,7 +136,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
           totalVal: total_val,
           kdeCal: pd,
           median: medianVal ? medianVal : 0,
-          actualDataPoints: ob.valueToVisualize,
+          actualDataPoints: ob.transfused_units,
           zeroCaseNum: zeroCaseNum
         };
         // const perCaseOb: BarChartDataPoint = {
