@@ -53,27 +53,11 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
         }
     }, [layoutArray[chartIndex]]);
 
-    // useEffect(() => {
-
-    //     try {
-    //         if (interventionDate.getTime() < rawDateRange[0].getTime() || interventionDate.getTime() > rawDateRange[1].getTime()) {
-    //             actions.removeChart(chartId)
-    //         }
-    //     } catch (e) {
-    //         if (e instanceof TypeError) {
-    //             console.log(interventionDate, typeof interventionDate, rawDateRange)
-    //             const castInterventionDate = (typeof interventionDate === "string") ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate
-    //             const castRawDateRange0 = (typeof rawDateRange[0] === "string") ? timeParse("%Y-%m-%dT%H:%M:%SZ")(rawDateRange[0])! : rawDateRange[0]
-    //             const castRawDateRange1 = (typeof rawDateRange[1] === "string") ? timeParse("%Y-%m-%dT%H:%M:%SZ")(rawDateRange[1])! : rawDateRange[1]
-    //             console.log(castInterventionDate, castRawDateRange1, castRawDateRange0)
-    //             if (castInterventionDate.getTime() < castRawDateRange0.getTime() || castInterventionDate.getTime() > castRawDateRange1.getTime()) {
-    //                 actions.removeChart(chartId)
-    //             }
-
-    //         }
-
-    //     }
-    // }, [rawDateRange])
+    useEffect(() => {
+        if (new Date(interventionDate).getTime() < new Date(rawDateRange[0]).getTime() || new Date(interventionDate).getTime() > new Date(rawDateRange[1]).getTime()) {
+            actions.removeChart(chartId)
+        }
+    }, [rawDateRange])
 
 
     async function fetchChartData() {

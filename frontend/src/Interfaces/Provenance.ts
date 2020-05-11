@@ -34,7 +34,7 @@ interface AppProvenance {
     onLayoutchange: (data: any) => void;
     selectPatient: (data: SingleCasePoint) => void;
     selectSet: (data: SelectSet, shiftKeyPressed: boolean) => void;
-    storeHemoData: (data: any) => void;
+    // storeHemoData: (data: any) => void;
     changeExtraPair: (chartID: string, newExtraPair: string) => void;
     removeExtraPair: (chartID: string, removeingPair: string) => void;
     changeChart: (x: string, y: string, i: string, type: string, interventionType?: string) => void;
@@ -65,9 +65,9 @@ export function setupProvenance(): AppProvenance {
     store.layoutArray = state ? state.layoutArray : store.layoutArray;
   });
 
-  provenance.addObserver(["hemoglobinDataSet"], async (state?: ApplicationState) => {
-    store.hemoglobinDataSet = state ? state.hemoglobinDataSet : store.hemoglobinDataSet
-  })
+  // provenance.addObserver(["hemoglobinDataSet"], async (state?: ApplicationState) => {
+  //   store.hemoglobinDataSet = state ? state.hemoglobinDataSet : store.hemoglobinDataSet
+  // })
 
   // provenance.addObserver(["dumbbellSorted"], (state?: ApplicationState) => {
   //   store.dumbbellSorted = state ? state.dumbbellSorted : store.dumbbellSorted;
@@ -466,13 +466,13 @@ export function setupProvenance(): AppProvenance {
   }
 
 
-  const storeHemoData = (data: any) => {
-    provenance.applyAction(`cache hemo data`,
-      (state: ApplicationState) => {
-        state.hemoglobinDataSet = data;
-        return state;
-      })
-  }
+  // const storeHemoData = (data: any) => {
+  //   provenance.applyAction(`cache hemo data`,
+  //     (state: ApplicationState) => {
+  //       state.hemoglobinDataSet = data;
+  //       return state;
+  //     })
+  // }
 
   const goForward = () => {
     provenance.goForwardOneStep();
@@ -503,7 +503,7 @@ export function setupProvenance(): AppProvenance {
       onLayoutchange,
       selectPatient,
       selectSet,
-      storeHemoData,
+      //  storeHemoData,
       changeExtraPair,
       removeExtraPair,
       loadPreset,
