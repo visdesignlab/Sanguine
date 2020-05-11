@@ -19,7 +19,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     // totalCaseCount, 
     totalAggregatedCaseCount,
     totalIndividualCaseCount,
-    dateRange,
+    rawDateRange,
     currentSelectSet,
     currentOutputFilterSet,
     filterSelection } = store!;
@@ -89,7 +89,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
             <List.Item
               icon="caret right"
               style={{ textAlign: "left" }}
-              content={`Date Range: ${dateRange[0]} - ${dateRange[1]}`} />
+              content={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} ~ ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} />
             <List.Item
               icon="caret right"
               style={{ textAlign: "left" }}

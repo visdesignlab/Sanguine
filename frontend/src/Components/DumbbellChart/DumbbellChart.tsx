@@ -27,7 +27,7 @@ import {
   median,
   timeParse,
 } from "d3";
-import { DumbbellDataPoint, minimumOffset, AxisLabelDict, SelectSet, minimumWidthScale } from "../../Interfaces/ApplicationState";
+import { DumbbellDataPoint, offset, AxisLabelDict, SelectSet, minimumWidthScale } from "../../Interfaces/ApplicationState";
 import CustomizedAxis from "../Utilities/CustomizedAxis";
 import { preop_color, basic_gray, highlight_orange, postop_color } from "../../ColorProfile"
 
@@ -55,6 +55,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
   // const [scaleList, setScaleList] = useState < { title: any, scale:ScaleOrdinal<any, number>}[]>();
   const [datapointsDict, setDataPointDict] = useState<{ title: any, length: number }[]>([])
 
+  const currentOffset = offset.minimum;
   const {
     //dumbbellSorted,
     currentSelectPatient, currentSelectSet } = store!;
@@ -156,11 +157,11 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
   //console.log(data)
 
   const [testValueScale, valueScale] = useMemo(() => {
-    const widthAllowed = dimension.width - minimumOffset.left - minimumOffset.right;
+    const widthAllowed = dimension.width - currentOffset.left - currentOffset.right;
 
     const testValueScale = scaleLinear()
       .domain([0.9 * xRange.xMin, 1.1 * xRange.xMax])
-      .range([dimension.height - minimumOffset.bottom, minimumOffset.top]);
+      .range([dimension.height - currentOffset.bottom, currentOffset.top]);
 
 
     let spacing: any = {};
@@ -192,7 +193,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
     }
 
     let resultRange: number[] = [];
-    let currentLoc = minimumOffset.left;
+    let currentLoc = currentOffset.left;
     datapointsDict.map((d, i) => {
       let calculatedRange = range(currentLoc, currentLoc + spacing[i], spacing[i] / (d.length + 1))
       calculatedRange.splice(0, 1)
@@ -212,8 +213,8 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
     const valueScale = scaleOrdinal()
       .domain(indices as any)
       .range(resultRange);
-    // console.log(ticks(minimumOffset.left, dimension.width - minimumOffset.right - minimumOffset.margin, data.length))
-    // .range([minimumOffset.left, dimension.width - minimumOffset.right - minimumOffset.margin]);
+    // console.log(ticks(currentOffset.left, dimension.width - currentOffset.right - currentOffset.margin, data.length))
+    // .range([currentOffset.left, dimension.width - currentOffset.right - currentOffset.margin]);
 
     return [testValueScale, valueScale];
   }, [dimension, data, xRange, datapointsDict]);
@@ -224,18 +225,18 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
     .select(".axes")
     .select(".y-label")
     .attr("display", null)
-    .attr("y", dimension.height - minimumOffset.bottom + 20)
+    .attr("y", dimension.height - currentOffset.bottom + 20)
     .attr("x", 0.5 * (dimension.width))
     .attr("font-size", "11px")
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "hanging")
-    // .attr("transform", `translate(0 ,${minimumOffset.top}`)
+    // .attr("transform", `translate(0 ,${currentOffset.top}`)
     .text(
       AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
     );
   svgSelection.select('.axes')
     .select(".x-axis")
-    .attr("transform", `translate(${minimumOffset.left}, 0)`)
+    .attr("transform", `translate(${currentOffset.left}, 0)`)
     .call(testLabel as any);
 
 
@@ -290,15 +291,15 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
     <>
       <g className="axes">
         <g className="x-axis"></g>
-        <g className="y-axis" transform={`translate(0,${dimension.height - minimumOffset.bottom})`}>
+        <g className="y-axis" transform={`translate(0,${dimension.height - currentOffset.bottom})`}>
           <CustomizedAxis scale={valueScale as ScaleOrdinal<any, number>} numberList={numberList} />
         </g>
         <text className="x-label" />
         <text className="y-label" />
       </g>
       <g className="chart-comp" >
-        <line x1={minimumOffset.left} x2={dimension.width - minimumOffset.right} y1={testValueScale(13)} y2={testValueScale(13)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
-        <line x1={minimumOffset.left} x2={dimension.width - minimumOffset.right} y1={testValueScale(7.5)} y2={testValueScale(7.5)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
+        <line x1={currentOffset.left} x2={dimension.width - currentOffset.right} y1={testValueScale(13)} y2={testValueScale(13)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
+        <line x1={currentOffset.left} x2={dimension.width - currentOffset.right} y1={testValueScale(7.5)} y2={testValueScale(7.5)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
 
 
         {sortedData.map((dataPoint, index) => {
@@ -369,7 +370,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
             const interval = ind === 0 ? 0 : (valueScale as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding)
             let interventionLine;
             if (ind >= 1 && numberOb.num <= numberList[ind - 1].num) {
-              interventionLine = <line x1={x1 - 0.5 * (x1 - interval)} x2={x1 - 0.5 * (x1 - interval)} y1={minimumOffset.top} y2={dimension.height - minimumOffset.bottom} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
+              interventionLine = <line x1={x1 - 0.5 * (x1 - interval)} x2={x1 - 0.5 * (x1 - interval)} y1={currentOffset.top} y2={dimension.height - currentOffset.bottom} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
             }
             return ([
               <Line x1={x1} x2={x2} y1={beginY} y2={beginY} ispreop={true} />,
