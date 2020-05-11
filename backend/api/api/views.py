@@ -493,6 +493,9 @@ def patient_outcomes(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+
+
+
 def hemoglobin(request):
     if request.method == "GET":
         command = """

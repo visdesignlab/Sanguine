@@ -83,8 +83,6 @@ export function setupProvenance(): AppProvenance {
       : store.rawDateRange;
   })
 
-
-
   provenance.addObserver(["totalAggregatedCaseCount"], (state?: ApplicationState) => {
     store.totalAggregatedCaseCount = state
       ? state.totalAggregatedCaseCount
