@@ -73,14 +73,17 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
         if (dataResult) {
             let yMaxTemp = -1;
             let perCaseYMaxTemp = -1
-            // let perCaseData: BarChartDataPoint[] = [];
+
             // const caseList = dataResult.case_id_list;
-            // let caseDictionary = {} as any;
-            // caseList.map((singleId: any) => {
-            //     caseDictionary[singleId] = true;
-            // })
-            // setCaseIDList(caseDictionary)
+            let caseDictionary = {} as any;
+
+            //console.log(dataResult)
             let cast_data = (dataResult as any).map(function (ob: any) {
+
+                ob.case_id.map((singleId: any) => {
+                    caseDictionary[singleId] = true;
+                })
+
                 let zeroCaseNum = 0;
                 const aggregateByAttr = ob.aggregated_by;
 
@@ -143,6 +146,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                 return new_ob;
             });
             setData({ original: cast_data });
+            setCaseIDList(caseDictionary)
             actions.updateCaseCount("AGGREGATED", caseCount)
             setYMax({ original: yMaxTemp, perCase: perCaseYMaxTemp });
 
