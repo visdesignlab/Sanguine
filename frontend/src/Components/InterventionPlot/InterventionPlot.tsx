@@ -38,7 +38,7 @@ import { Popup, Button, Icon } from 'semantic-ui-react'
 //import SingleHeatPlot from "./SingleHeatPlot";
 
 //import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
-import { secondary_gray, third_gray } from "../../ColorProfile";
+import { secondary_gray, third_gray, preop_color, postop_color } from "../../ColorProfile";
 import SingleHeatCompare from "./SingleHeatCompare";
 import SingleViolinCompare from "./SingleViolinCompare";
 
@@ -141,7 +141,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
         )
         .call(aggregationLabel as any)
         .selectAll("text")
-        .attr("transform", `translate(-35,0)`)
+        .attr("transform", `translate(-45,0)`)
 
     svgSelection
         .select(".axes")
@@ -214,24 +214,6 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
     }
 
 
-    // const decideIfSelected = (d: BarChartDataPoint) => {
-    //   if (selectedVal) {
-    //     return selectedVal === d.aggregateAttribute
-    //   }
-    //   else if (currentSelectSet.length > 0) {
-    //     //let selectSet: SelectSet;
-    //     for (let selectSet of currentSelectSet) {
-    //       if (d.case[selectSet.set_name] === selectSet.set_value)
-    //         return true;
-    //     }
-    //     return
-
-    //   else {
-    //     return false;
-    //   }
-    // }
-
-
     const outputSinglePlotElement = (dataPoint: InterventionDataPoint) => {
 
         if (plotType === "HEATMAP") {
@@ -270,7 +252,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
         if (aggregationScale.bandwidth() > 40) {
             return ([<text
                 fill="white"
-                x={-22.5}
+                x={-32.5}
                 y={
                     aggregationScale(dataPoint.aggregateAttribute)! +
                     0.25 * aggregationScale.bandwidth()
@@ -281,7 +263,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
                 {dataPoint.preCaseCount}
             </text>, <text
                 fill="white"
-                x={-22.5}
+                x={-32.5}
                 y={
                     aggregationScale(dataPoint.aggregateAttribute)! +
                     0.75 * aggregationScale.bandwidth()
@@ -294,7 +276,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
         } else {
             return ([<text
                 fill="white"
-                x={-22.5}
+                x={-32.5}
                 y={
                     aggregationScale(dataPoint.aggregateAttribute)! +
                     0.5 * aggregationScale.bandwidth()
@@ -328,19 +310,34 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
                     </linearGradient>
                 </defs>
                 <rect
-                    x={0.7 * dimension.width}
+                    x={0.5 * dimension.width}
                     y={0}
                     width={0.2 * dimension.width}
                     height={10}
                     fill="url(#gradient1)" />
-                <text
-                    x={0.7 * dimension.width}
+
+                <rect x={0.9 * dimension.width}
+                    y={0}
+                    width={10}
+                    height={10}
+                    fill={preop_color}
+                    opacity={0.65} />
+
+                <rect x={0.9 * dimension.width}
                     y={10}
+                    width={10}
+                    height={10}
+                    fill={postop_color}
+                    opacity={0.65} />
+
+                <text
+                    x={0.9 * dimension.width}
+                    y={0}
                     alignmentBaseline={"hanging"}
-                    textAnchor={"start"}
+                    textAnchor={"end"}
                     fontSize="11px"
                     fill={third_gray}>
-                    0%
+                    Pre Intervine
                 </text>
                 <text
                     x={0.9 * dimension.width}
@@ -349,11 +346,30 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
                     textAnchor={"end"}
                     fontSize="11px"
                     fill={third_gray}>
+                    Post Intervine
+                </text>
+
+                <text
+                    x={0.5 * dimension.width}
+                    y={10}
+                    alignmentBaseline={"hanging"}
+                    textAnchor={"end"}
+                    fontSize="11px"
+                    fill={third_gray}>
+                    0%
+                </text>
+                <text
+                    x={0.7 * dimension.width}
+                    y={10}
+                    alignmentBaseline={"hanging"}
+                    textAnchor={"end"}
+                    fontSize="11px"
+                    fill={third_gray}>
                     100%
                 </text>
                 <text
-                    x={0.5 * dimension.width}
-                    y={0}
+                    x={0.25 * dimension.width}
+                    y={5}
                     alignmentBaseline="hanging"
                     textAnchor="middle"
                     fontSize="13px"
@@ -366,19 +382,32 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
             >
                 {data.map((dataPoint) => {
                     return outputSinglePlotElement(dataPoint)
-
                         .concat([
                             <rect
                                 fill={interpolateGreys(caseScale(dataPoint.preCaseCount))}
-                                x={-40}
+                                x={-50}
                                 y={aggregationScale(dataPoint.aggregateAttribute)}
                                 width={35}
                                 height={aggregationScale.bandwidth() * 0.5}
                             />,
                             <rect fill={interpolateGreys(caseScale(dataPoint.postCaseCount))}
-                                x={-40}
+                                x={-50}
                                 y={aggregationScale(dataPoint.aggregateAttribute)! + aggregationScale.bandwidth() * 0.5} width={35}
                                 height={aggregationScale.bandwidth() * 0.5} />,
+                            <rect
+                                fill={preop_color}
+                                x={-15}
+                                y={aggregationScale(dataPoint.aggregateAttribute)}
+                                width={10}
+                                opacity={0.65}
+                                height={aggregationScale.bandwidth() * 0.47}
+                            />,
+                            <rect fill={postop_color}
+                                x={-15}
+                                y={aggregationScale(dataPoint.aggregateAttribute)! + aggregationScale.bandwidth() * 0.5}
+                                width={10}
+                                opacity={0.65}
+                                height={aggregationScale.bandwidth() * 0.47} />
 
 
 

@@ -39,10 +39,6 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
     const [yMax, setYMax] = useState({ original: 0, perCase: 0 });
 
     const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
-    // const [extraPairData, setExtraPairData] = useState<{ name: string, data: any[], type: string }[]>([])
-
-    // const [caseIDList, setCaseIDList] = useState<any>(null)
-
 
     useLayoutEffect(() => {
         if (svgRef.current) {
@@ -81,8 +77,6 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
             console.log(preInterventiondataResult, postInterventionResult)
             let cast_data = (preInterventiondataResult as any).map(function (preIntOb: any) {
                 let zeroCaseNum = 0;
-
-
 
                 const aggregateByAttr = preIntOb.aggregated_by;
 
