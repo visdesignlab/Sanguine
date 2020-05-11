@@ -24,14 +24,14 @@ import {
     range,
     ScaleOrdinal,
     ScaleBand,
-    interpolateReds
+    interpolateReds,
+    timeFormat
 } from "d3";
 import {
     InterventionDataPoint,
-    offset,
     AxisLabelDict,
     BloodProductCap,
-    minimumOffset
+    offset
 } from "../../Interfaces/ApplicationState";
 import { Popup, Button, Icon } from 'semantic-ui-react'
 
@@ -71,7 +71,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
         currentSelectSet
     } = store!;
 
-
+    const currentOffset = offset.intervention;
 
     const [dimension, aggregationScale, valueScale, caseScale, lineFunction, linearValueScale] = useMemo(() => {
 
@@ -81,6 +81,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
             height: dimensionWhole.height,
             width: dimensionWhole.width
         }
+
 
         let kdeMax = 0
         const xVals = data
@@ -100,17 +101,17 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
         //console.log(data)
         let valueScale = scaleBand()
             .domain(outputRange as any)
-            .range([offset.left, dimension.width - offset.right - offset.margin])
+            .range([currentOffset.left, dimension.width - currentOffset.right - currentOffset.margin])
             .paddingInner(0.01);
 
 
         let linearValueScale = scaleLinear()
             .domain([0, BloodProductCap[valueToVisualize]])
-            .range([offset.left, dimension.width - offset.right - offset.margin]);
+            .range([currentOffset.left, dimension.width - currentOffset.right - currentOffset.margin]);
 
         let aggregationScale = scaleBand()
             .domain(xVals)
-            .range([dimension.height - offset.bottom, offset.top])
+            .range([dimension.height - currentOffset.bottom, currentOffset.top])
             .paddingInner(0.1);
 
 
@@ -123,7 +124,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
         const lineFunction = line()
             .curve(curveCatmullRom)
             .y((d: any) => kdeScale(d.y))
-            .x((d: any) => linearValueScale(d.x) - offset.left);
+            .x((d: any) => linearValueScale(d.x) - currentOffset.left);
 
         return [dimension, aggregationScale, valueScale, caseScale, lineFunction, linearValueScale];
     }, [dimensionWhole, data, yMax])
@@ -136,7 +137,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
         .select(".x-axis")
         .attr(
             "transform",
-            `translate(${offset.left}, 0)`
+            `translate(${currentOffset.left}, 0)`
         )
         .call(aggregationLabel as any)
         .selectAll("text")
@@ -147,7 +148,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
         .select(".y-axis")
         .attr(
             "transform",
-            `translate(0 ,${dimension.height - offset.bottom})`
+            `translate(0 ,${dimension.height - currentOffset.bottom})`
         )
         .call(valueLabel as any);
 
@@ -163,7 +164,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
         // .select(".axes")
         .select(".x-label")
         .attr("x", dimension.width * 0.5)
-        .attr("y", dimension.height - offset.bottom + 20)
+        .attr("y", dimension.height - currentOffset.bottom + 20)
         .attr("alignment-baseline", "hanging")
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
@@ -177,8 +178,8 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
     svgSelection
         //.select(".axes")
         .select(".y-label")
-        .attr("y", dimension.height - offset.bottom + 20)
-        .attr("x", offset.left - 55)
+        .attr("y", dimension.height - currentOffset.bottom + 20)
+        .attr("x", currentOffset.left - 55)
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
@@ -241,7 +242,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
                 valueScale={valueScale as ScaleBand<any>}
                 aggregatedBy={aggregatedBy}
                 dataPoint={dataPoint}
-                howToTransform={(`translate(-${offset.left},${aggregationScale(
+                howToTransform={(`translate(-${currentOffset.left},${aggregationScale(
                     dataPoint.aggregateAttribute
                 )})`).toString()}
             />])
@@ -310,7 +311,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
 
     return (
         <>
-            <line x1={1} x2={1} y1={offset.top} y2={dimension.height - offset.bottom} style={{ stroke: "#e5e5e5", strokeWidth: "1" }} />
+            <line x1={1} x2={1} y1={currentOffset.top} y2={dimension.height - currentOffset.bottom} style={{ stroke: "#e5e5e5", strokeWidth: "1" }} />
             <g className="axes">
                 <g className="x-axis"></g>
                 <g className="y-axis"></g>
@@ -357,11 +358,11 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
                     textAnchor="middle"
                     fontSize="13px"
                     fill={third_gray}
-                >Intervention: {interventionDate}</text>
+                >Intervention: {timeFormat("%Y-%m-%d")(new Date(interventionDate))}</text>
             </g>
 
             <g className="chart"
-                transform={`translate(${offset.left},0)`}
+                transform={`translate(${currentOffset.left},0)`}
             >
                 {data.map((dataPoint) => {
                     return outputSinglePlotElement(dataPoint)

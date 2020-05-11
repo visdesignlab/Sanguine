@@ -108,8 +108,16 @@ export const defaultState: ApplicationState = {
   showZero: true
 };
 
-export const offset = { left: 85, bottom: 40, right: 10, top: 40, margin: 20 };
-export const minimumOffset = { left: 35, bottom: 40, right: 10, top: 40, margin: 20 }
+export const offset = {
+  regular: { left: 85, bottom: 40, right: 10, top: 40, margin: 20 },
+  minimum: { left: 35, bottom: 40, right: 10, top: 40, margin: 20 },
+  intervention: { left: 95, bottom: 40, right: 10, top: 40, margin: 20 }
+
+};
+
+
+
+//export const minimumOffset = 
 export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 30 }
 export const extraPairPadding = 5;
 export const minimumWidthScale = 18;
