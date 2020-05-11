@@ -265,6 +265,48 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
 
     }
 
+    const outputTextElement = (dataPoint: InterventionDataPoint) => {
+        if (aggregationScale.bandwidth() > 40) {
+            return ([<text
+                fill="white"
+                x={-22.5}
+                y={
+                    aggregationScale(dataPoint.aggregateAttribute)! +
+                    0.25 * aggregationScale.bandwidth()
+                }
+                alignmentBaseline={"central"}
+                textAnchor={"middle"}
+            >
+                {dataPoint.preCaseCount}
+            </text>, <text
+                fill="white"
+                x={-22.5}
+                y={
+                    aggregationScale(dataPoint.aggregateAttribute)! +
+                    0.75 * aggregationScale.bandwidth()
+                }
+                alignmentBaseline={"central"}
+                textAnchor={"middle"}
+            >
+                {dataPoint.postCaseCount}
+            </text>])
+        } else {
+            return ([<text
+                fill="white"
+                x={-22.5}
+                y={
+                    aggregationScale(dataPoint.aggregateAttribute)! +
+                    0.5 * aggregationScale.bandwidth()
+                }
+                alignmentBaseline={"central"}
+                textAnchor={"middle"}
+            >
+                {dataPoint.preCaseCount + dataPoint.postCaseCount}
+            </text>])
+        }
+
+    }
+
 
     return (
         <>
@@ -322,31 +364,24 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
                 transform={`translate(${offset.left},0)`}
             >
                 {data.map((dataPoint) => {
-                    return outputSinglePlotElement(dataPoint).concat([
-                        <rect
-                            fill={interpolateGreys(caseScale(dataPoint.preCaseCount))}
-                            x={-40}
-                            y={aggregationScale(dataPoint.aggregateAttribute)}
-                            width={35}
-                            height={aggregationScale.bandwidth() * 0.5}
-                        />,
-                        <rect fill={interpolateGreys(caseScale(dataPoint.postCaseCount))}
-                            x={-40}
-                            y={aggregationScale(dataPoint.aggregateAttribute)! + aggregationScale.bandwidth() * 0.5} width={35}
-                            height={aggregationScale.bandwidth() * 0.5} />,
-                        <text
-                            fill="white"
-                            x={-22.5}
-                            y={
-                                aggregationScale(dataPoint.aggregateAttribute)! +
-                                0.5 * aggregationScale.bandwidth()
-                            }
-                            alignmentBaseline={"central"}
-                            textAnchor={"middle"}
-                        >
-                            {dataPoint.preCaseCount + dataPoint.postCaseCount}
-                        </text>,
-                    ]);
+                    return outputSinglePlotElement(dataPoint)
+
+                        .concat([
+                            <rect
+                                fill={interpolateGreys(caseScale(dataPoint.preCaseCount))}
+                                x={-40}
+                                y={aggregationScale(dataPoint.aggregateAttribute)}
+                                width={35}
+                                height={aggregationScale.bandwidth() * 0.5}
+                            />,
+                            <rect fill={interpolateGreys(caseScale(dataPoint.postCaseCount))}
+                                x={-40}
+                                y={aggregationScale(dataPoint.aggregateAttribute)! + aggregationScale.bandwidth() * 0.5} width={35}
+                                height={aggregationScale.bandwidth() * 0.5} />,
+
+
+
+                        ].concat(outputTextElement(dataPoint)));
                 })}
             </g>
 
