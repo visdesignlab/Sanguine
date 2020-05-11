@@ -52,7 +52,7 @@ interface OwnProps {
     svg: React.RefObject<SVGSVGElement>;
     yMax: number;
     plotType: string;
-    interventionDate: string;
+    interventionDate: number;
     //  selectedVal: number | null;
     // stripPlotMode: boolean;
     //extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];

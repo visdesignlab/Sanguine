@@ -19,7 +19,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     // totalCaseCount, 
     totalAggregatedCaseCount,
     totalIndividualCaseCount,
-    rawDateRange,
+    dateRange,
     currentSelectSet,
     currentOutputFilterSet,
     filterSelection } = store!;
@@ -47,7 +47,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
 
   useEffect(() => {
     fetchProcedureList();
-    console.log(rawDateRange)
+    //  console.log(rawDateRange)
   }, []);
 
   useEffect(() => {
@@ -89,7 +89,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
             <List.Item
               icon="caret right"
               style={{ textAlign: "left" }}
-              content={`Date Range: ${timeFormat("%Y-%m-%d")(rawDateRange[0])} - ${timeFormat("%Y-%m-%d")(rawDateRange[1])}`} />
+              content={`Date Range: ${dateRange[0]} - ${dateRange[1]}`} />
             <List.Item
               icon="caret right"
               style={{ textAlign: "left" }}

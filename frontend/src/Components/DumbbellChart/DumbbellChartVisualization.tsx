@@ -19,12 +19,12 @@ interface OwnProps {
   chartId: string;
   store?: Store;
   chartIndex: number;
-  interventionDate?: Date;
+  // interventionDate?: number;
 }
 
 export type Props = OwnProps;
 
-const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartIndex, interventionDate }: Props) => {
+const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartIndex }: Props) => {
 
   const {
     layoutArray,
@@ -217,7 +217,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
               xRange={xRange}
               // yMax={yMax}
               // aggregation={aggregatedOption}
-              interventionDate={interventionDate}
+              //interventionDate={interventionDate}
               sortMode={sortMode}
               showingAttr={showingAttr}
             />

@@ -40,14 +40,14 @@ interface OwnProps {
   svg: React.RefObject<SVGSVGElement>
   // yMax: number;
   xRange: { xMin: number, xMax: number };
-  interventionDate?: Date;
+  // interventionDate?: string;
   sortMode: string;
   showingAttr: { preop: boolean, postop: boolean, gap: boolean }
 }
 
 export type Props = OwnProps;
 
-const DumbbellChart: FC<Props> = ({ interventionDate, showingAttr, sortMode, yAxisName, dimension, data, svg, store, xRange }: Props) => {
+const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension, data, svg, store, xRange }: Props) => {
 
   const [averageForEachTransfused, setAverage] = useState<any>({})
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([])
@@ -69,17 +69,17 @@ const DumbbellChart: FC<Props> = ({ interventionDate, showingAttr, sortMode, yAx
         case "Postop":
           tempSortedData = data.sort(
             (a, b) => {
-              if (interventionDate) {
-                const intervDate = typeof interventionDate === "string" ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate;
-                if (a.case.DATE.getTime() < intervDate.getTime() &&
-                  b.case.DATE.getTime() > intervDate.getTime()) {
-                  return -1
-                }
-                else if (a.case.DATE.getTime() > intervDate.getTime() &&
-                  b.case.DATE.getTime() < intervDate.getTime()) {
-                  return 1
-                }
-              }
+              // if (interventionDate) {
+              //   const intervDate = typeof interventionDate === "string" ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate;
+              //   if (a.case.DATE.getTime() < intervDate.getTime() &&
+              //     b.case.DATE.getTime() > intervDate.getTime()) {
+              //     return -1
+              //   }
+              //   else if (a.case.DATE.getTime() > intervDate.getTime() &&
+              //     b.case.DATE.getTime() < intervDate.getTime()) {
+              //     return 1
+              //   }
+              // }
               if (a.yVal === b.yVal) {
                 if (a.endXVal > b.endXVal) return 1;
                 if (a.endXVal < b.endXVal) return -1;

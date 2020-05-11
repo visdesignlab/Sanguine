@@ -37,9 +37,6 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     }>({ original: [] });
 
     const [yMax, setYMax] = useState({ original: 0, perCase: 0 });
-    // const [kdeMax,setKdeMax] = useState(0)
-    // const [medianVal, setMedian] = useState()
-    //  const [selectedBar, setSelectedBarVal] = useState<number | null>(null);
     const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
     const [extraPairData, setExtraPairData] = useState<{ name: string, data: any[], type: string }[]>([])
     const [stripPlotMode, setStripMode] = useState(false);
@@ -254,7 +251,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     useMemo(() => {
         makeExtraPairData();
         //console.log(extraPairData)
-    }, [layoutArray, data, hemoglobinDataSet]);
+    }, [layoutArray[chartIndex], data, hemoglobinDataSet]);
 
     const toggleStripGraphMode = () => {
         setStripMode(!stripPlotMode)
