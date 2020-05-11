@@ -147,7 +147,7 @@ export function setupProvenance(): AppProvenance {
       y: Infinity,
       plot_type: plot_type,
     }
-    if (plot_type === "BAR" || plot_type === "HEATMAP") {
+    if (plot_type === "VIOLIN" || plot_type === "HEATMAP") {
       newLayoutElement.extraPair = [];
     }
     if (interventionDate) {
@@ -198,7 +198,7 @@ export function setupProvenance(): AppProvenance {
                 h: 1,
                 x: 0,
                 y: Infinity,
-                plot_type: "BAR",
+                plot_type: "VIOLIN",
                 extraPair: []
               },
               {
@@ -209,7 +209,7 @@ export function setupProvenance(): AppProvenance {
                 h: 1,
                 x: 0,
                 y: Infinity,
-                plot_type: "BAR",
+                plot_type: "VIOLIN",
                 extraPair: []
               }, {
                 aggregatedBy: "PRBC_UNITS",
@@ -252,6 +252,7 @@ export function setupProvenance(): AppProvenance {
           if (d.i === i) {
             d.aggregatedBy = x;
             d.valueToVisualize = y;
+            d.plot_type = type;
             if (interventionType) {
               d.interventionType = interventionType;
             }

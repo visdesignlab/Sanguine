@@ -3,7 +3,7 @@ import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { HeatMapDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions } from '../../Interfaces/ApplicationState'
+import { HeatMapDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType } from '../../Interfaces/ApplicationState'
 
 import { Button, Icon, Table, Grid, Dropdown, GridColumn, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
@@ -265,6 +265,10 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
         actions.changeChart(aggregatedBy, value.value, chartId, "HEATMAP")
     }
 
+    const changePlotType = (e: any, value: any) => {
+        actions.changeChart(aggregatedBy, valueToVisualize, chartId, value.value)
+    }
+
 
     //  return true;
 
@@ -330,8 +334,9 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                         <Menu.Item header>
                             <Dropdown pointing basic item icon="edit" compact >
                                 <Dropdown.Menu>
-                                    <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
-                                    <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue}></Dropdown>
+                                    <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation} />
+                                    <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue} />
+                                    <Dropdown text="Change Plot Type" pointing basic item compact options={interventionChartType} onChange={changePlotType} />
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item>

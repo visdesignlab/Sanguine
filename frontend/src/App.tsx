@@ -164,7 +164,7 @@ const App: FC<Props> = ({ store }: Props) => {
             />
           </div>
         );
-      case "BAR":
+      case "VIOLIN":
         return (
           <div
             //onClick={this.onClickBlock.bind(this, layoutE.i)}

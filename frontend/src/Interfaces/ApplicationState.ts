@@ -171,8 +171,8 @@ export const barChartAggregationOptions = [
 export const interventionChartType = [
   { value: "HEATMAP", key: "HEATMAP", text: "Heat Map" },
   { value: "VIOLIN", key: "VIOLIN", text: "Violin Plot" }
-
 ]
+
 
 export const barChartValuesOptions = [
   {
