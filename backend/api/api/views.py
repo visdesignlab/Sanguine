@@ -335,7 +335,8 @@ def request_transfused_units(request):
                 {
                     "aggregated_by": agg, 
                     "transfused_units": get_all_by_agg(result_dict, agg, "transfused_units"),
-                    "case_id": list(set(get_all_by_agg(result_dict, agg, "case_id")))
+                    "case_id": list(set(get_all_by_agg(result_dict, agg, "case_id"))),
+                    "pat_id": list(set(get_all_by_agg(result_dict, agg, "pat_id"))),
                 } for agg in aggregated_bys]
         else:
             cleaned = result_dict
