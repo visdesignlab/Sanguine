@@ -88,6 +88,17 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                 caseCount += case_num
 
                 let outputResult = ob.transfused_units;
+                if (!showZero) {
+                    outputResult = outputResult.filter((d: number) => {
+                        if (d > 0) {
+                            return true;
+                        }
+                        zeroCaseNum += 1;
+                        return false;
+                    })
+                } else {
+                    zeroCaseNum = outputResult.filter((d: number) => d === 0).length
+                }
                 const total_val = sum(outputResult);
 
                 let countDict = {} as any
@@ -119,11 +130,6 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                             countDict[d] += 1
                         }
                     }
-                    // if (!countDict[d]) {
-                    //     countDict[d] = 1
-                    // } else {
-                    //     countDict[d] += 1
-                    // }
                 })
 
                 const new_ob: HeatMapDataPoint = {

@@ -24,6 +24,7 @@ interface OwnProps {
 export type Props = OwnProps;
 
 const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggregatedBy, isSelected, valueScale, store, isFiltered }: Props) => {
+    const { showZero } = store!;
     const colorScale = scaleLinear().domain([0, 1]).range([0.1, 1])
 
     return (
@@ -32,13 +33,13 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
 
             {valueScale.domain().map(point => {
                 const output = dataPoint.countDict[point] ? dataPoint.countDict[point] : 0
-
+                const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum
                 return (
                     [<Popup content={output}
                         key={dataPoint.aggregateAttribute + '-' + point}
                         trigger={
                             <HeatRect
-                                fill={output === 0 ? "white" : interpolateReds(colorScale(output / dataPoint.caseCount))}
+                                fill={output === 0 ? "white" : interpolateReds(colorScale(output / caseCount))}
                                 x={valueScale(point)}
                                 transform={howToTransform}
                                 width={valueScale.bandwidth()}

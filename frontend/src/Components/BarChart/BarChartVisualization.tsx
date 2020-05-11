@@ -103,6 +103,8 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             zeroCaseNum += 1;
             return false;
           })
+        } else {
+          zeroCaseNum = removed_zeros.filter((d: number) => d === 0).length
         }
         //const case_num = removed_zeros.length;
         const total_val = sum(removed_zeros);
