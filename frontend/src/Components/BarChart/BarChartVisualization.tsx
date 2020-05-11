@@ -71,7 +71,7 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
     );
     const dataResult = await res.json();
     let caseCount = 0;
-    //console.log(dataResult)
+    console.log(dataResult)
     if (dataResult) {
       let yMaxTemp = -1;
       let perCaseYMaxTemp = -1
@@ -153,7 +153,7 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
       setData({ original: cast_data });
       setCaseIDList(caseDictionary)
       setYMax({ original: yMaxTemp, perCase: perCaseYMaxTemp });
-      actions.updateCaseCount("AGGREGATED", caseCount);
+      //actions.updateCaseCount("AGGREGATED", caseCount);
 
     }
   }

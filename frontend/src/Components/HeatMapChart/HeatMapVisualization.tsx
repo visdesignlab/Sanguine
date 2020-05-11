@@ -27,7 +27,6 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
         layoutArray,
         filterSelection,
         showZero,
-        currentSelectPatient,
         dateRange,
 
     } = store!;
