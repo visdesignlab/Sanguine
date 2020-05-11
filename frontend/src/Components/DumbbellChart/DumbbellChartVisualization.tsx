@@ -19,18 +19,19 @@ interface OwnProps {
   chartId: string;
   store?: Store;
   chartIndex: number;
+  hemoglobinDataSet: any;
   // interventionDate?: number;
 }
 
 export type Props = OwnProps;
 
-const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartIndex }: Props) => {
+const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartIndex, hemoglobinDataSet }: Props) => {
 
   const {
     layoutArray,
     filterSelection,
     //actualYearRange,
-    hemoglobinDataSet,
+
     dateRange,
     showZero,
     currentOutputFilterSet

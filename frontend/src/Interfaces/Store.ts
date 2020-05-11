@@ -32,17 +32,11 @@ export default class Store {
   //   return [this.yearRange[0] + 2014, this.yearRange[1] + 2014]
   // }
   @computed get dateRange() {
-    console.log(this.rawDateRange)
     return [timeFormat("%d-%b-%Y")(new Date(this.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(this.rawDateRange[1]))]
-    // if (this.rawDateRange[0] && this.rawDateRange[1]) {
 
-    // }
-    // else {
-
-    //   return [timeFormat("%d-%b-%Y")(new Date(2014, 0, 1)), timeFormat("%d-%b-%Y")(new Date(2019, 11, 31))]
-    // }
   }
-  @observable hemoglobinDataSet: any = defaultState.hemoglobinDataSet;
+  //@observable hemoglobinDataSet: any = defaultState.hemoglobinDataSet;
+
   @observable currentOutputFilterSet: SelectSet[] = defaultState.currentOutputFilterSet;
 
 }

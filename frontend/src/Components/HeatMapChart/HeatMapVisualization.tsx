@@ -17,18 +17,19 @@ interface OwnProps {
     store?: Store;
     chartIndex: number;
     extraPair?: string[];
+    hemoglobinDataSet: any;
 }
 
 export type Props = OwnProps;
 
-const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, chartId, store, chartIndex, extraPair }: Props) => {
+const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, valueToVisualize, chartId, store, chartIndex, extraPair }: Props) => {
     const {
         layoutArray,
         filterSelection,
         showZero,
         currentSelectPatient,
         dateRange,
-        hemoglobinDataSet
+
     } = store!;
     const svgRef = useRef<SVGSVGElement>(null);
     // const [data, setData] = useState<{ original: BarChartDataPoint[]; perCase: BarChartDataPoint[]; }>({ original: [], perCase: [] });

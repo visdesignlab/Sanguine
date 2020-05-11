@@ -75,7 +75,7 @@ export interface ApplicationState {
   currentSelectSet: SelectSet[];
   currentOutputFilterSet: SelectSet[];
   currentSelectPatient: SingleCasePoint | null;
-  hemoglobinDataSet: any;
+  //hemoglobinDataSet: any;
   showZero: boolean;
 }
 
@@ -104,7 +104,7 @@ export const defaultState: ApplicationState = {
   currentOutputFilterSet: [],
   currentSelectSet: [],
   currentSelectPatient: null,
-  hemoglobinDataSet: [],
+  //hemoglobinDataSet: [],
   showZero: true
 };
 
