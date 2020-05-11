@@ -66,7 +66,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
 
     async function fetchChartData() {
         const res = await fetch(
-            `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
+            `http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
         );
         const dataResult = await res.json();
         let caseCount = 0;
@@ -74,20 +74,20 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             let yMaxTemp = -1;
             let perCaseYMaxTemp = -1
             // let perCaseData: BarChartDataPoint[] = [];
-            const caseList = dataResult.case_id_list;
-            let caseDictionary = {} as any;
-            caseList.map((singleId: any) => {
-                caseDictionary[singleId] = true;
-            })
-            setCaseIDList(caseDictionary)
-            let cast_data = (dataResult.result as any).map(function (ob: any) {
+            // const caseList = dataResult.case_id_list;
+            // let caseDictionary = {} as any;
+            // caseList.map((singleId: any) => {
+            //     caseDictionary[singleId] = true;
+            // })
+            // setCaseIDList(caseDictionary)
+            let cast_data = (dataResult as any).map(function (ob: any) {
                 let zeroCaseNum = 0;
-                const aggregateByAttr = ob.aggregatedBy;
+                const aggregateByAttr = ob.aggregated_by;
 
-                const case_num = ob.valueToVisualize.length;
+                const case_num = ob.transfused_units.length;
                 caseCount += case_num
 
-                let outputResult = ob.valueToVisualize;
+                let outputResult = ob.transfused_units;
                 const total_val = sum(outputResult);
 
                 let countDict = {} as any
