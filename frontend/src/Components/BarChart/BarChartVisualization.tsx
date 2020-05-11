@@ -66,7 +66,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
 
   async function fetchChartData() {
     const res = await fetch(
-      `http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${date_range}&filter_selection=${filterSelection.toString()}`
+      `http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
     );
     const dataResult = await res.json();
     let caseCount = 0;
@@ -358,10 +358,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
             <BarChart
               chartId={chartId}
               dimensionWhole={dimensions}
-<<<<<<< HEAD
-              // data={perCaseSelected ? data.perCase : data.original}
-=======
->>>>>>> master
+
               data={data.original}
               svg={svgRef}
               aggregatedBy={aggregatedBy}

@@ -65,8 +65,8 @@ const App: FC<Props> = ({ store }: Props) => {
     const resultHemo = dataHemo.result;
     const resTrans = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}`)
     const dataTrans = await resTrans.json();
-    const resultTrans = dataTrans.result;
-
+    //const resultTrans = dataTrans.result;
+    console.log(dataHemo, dataTrans)
     let transfused_dict = {} as any;
     let result: {
       CASE_ID: number,
@@ -88,7 +88,7 @@ const App: FC<Props> = ({ store }: Props) => {
 
 
 
-    resultTrans.forEach((element: any) => {
+    dataTrans.forEach((element: any) => {
       transfused_dict[element.case_id] = {
         PRBC_UNITS: element.PRBC_UNITS,
         FFP_UNITS: element.FFP_UNITS,
