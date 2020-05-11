@@ -49,8 +49,7 @@ interface OwnProps {
     data: HeatMapDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
     yMax: number;
-    //  selectedVal: number | null;
-    // stripPlotMode: boolean;
+
     extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];
 }
 

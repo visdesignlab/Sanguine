@@ -191,26 +191,6 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     return false;
   }
 
-
-  // const decideIfSelected = (d: BarChartDataPoint) => {
-  //   if (selectedVal) {
-  //     return selectedVal === d.aggregateAttribute
-  //   }
-  //   else if (currentSelectSet.length > 0) {
-  //     //let selectSet: SelectSet;
-  //     for (let selectSet of currentSelectSet) {
-  //       if (d.case[selectSet.set_name] === selectSet.set_value)
-  //         return true;
-  //     }
-  //     return
-
-  //   else {
-  //     return false;
-  //   }
-  // }
-
-
-
   const outputSinglePlotElement = (dataPoint: BarChartDataPoint) => {
     if (stripPlotMode) {
       return ([<SingleStripPlot
@@ -235,7 +215,6 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         )})`).toString()}
       />])
     }
-
   }
 
   return (

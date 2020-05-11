@@ -81,7 +81,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     [barChartValuesOptions, barChartAggregationOptions]
 
   ]
-  const typeDiction = ["BAR", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION"]
+  const typeDiction = ["VIOLIN", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION"]
 
 
 
@@ -156,7 +156,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         {/* <Button onClick={addModeButtonHandler} content={"Add"} /> */}
         <Dropdown button text="Add" pointing style={{ background: blood_red, color: "white" }}>
           <Dropdown.Menu>
-            <Dropdown.Item onClick={() => addModeButtonHandler(0)}>Customized Bar Chart</Dropdown.Item>
+            <Dropdown.Item onClick={() => addModeButtonHandler(0)}>Violin Plot</Dropdown.Item>
             <Dropdown.Item onClick={() => addModeButtonHandler(1)}>Dumbbell Chart</Dropdown.Item>
             <Dropdown.Item onClick={() => addModeButtonHandler(2)}>Scatter Plot</Dropdown.Item>
             <Dropdown.Item onClick={() => addModeButtonHandler(3)}>Heat Map</Dropdown.Item>
