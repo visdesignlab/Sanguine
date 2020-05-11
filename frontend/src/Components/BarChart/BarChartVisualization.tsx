@@ -259,7 +259,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
 
   useMemo(() => {
     makeExtraPairData();
-  }, [layoutArray, data, hemoglobinDataSet]);
+  }, [layoutArray[chartIndex], data, hemoglobinDataSet]);
 
   const toggleStripGraphMode = () => {
     setStripMode(!stripPlotMode)

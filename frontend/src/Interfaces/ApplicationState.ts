@@ -67,7 +67,7 @@ export interface ApplicationState {
   currentSelectedChart: string;
   // perCaseSelected: boolean;
   // yearRange: number[];
-  rawDateRange: Date[];
+  rawDateRange: number[];
   filterSelection: string[];
   totalAggregatedCaseCount: number;
   totalIndividualCaseCount: number;
@@ -90,22 +90,17 @@ export interface LayoutElement {
   plot_type: string,
   //  aggregation?: string,
   extraPair?: string[],
-  interventionDate?: Date,
+  interventionDate?: number,
   interventionType?: string
 }
 
 export const defaultState: ApplicationState = {
   layoutArray: [],
   currentSelectedChart: "-1",
-  // perCaseSelected: false,
-
-  // yearRange: [0, 5],
-  rawDateRange: [new Date(2014, 0, 1), new Date(2019, 11, 31)],
-
+  rawDateRange: [new Date(2014, 0, 1).getTime(), new Date(2019, 11, 31).getTime()],
   filterSelection: [],
   totalAggregatedCaseCount: 0,
   totalIndividualCaseCount: 0,
-  // dumbbellSorted: false,
   currentOutputFilterSet: [],
   currentSelectSet: [],
   currentSelectPatient: null,

@@ -34,7 +34,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const [addingChartType, setAddingChartType] = useState(-1)
   const [xSelection, setXSelection] = useState("")
   const [ySelection, setYSelection] = useState("")
-  const [interventionDate, setInterventionDate] = useState<Date | undefined>(undefined)
+  const [interventionDate, setInterventionDate] = useState<number | undefined>(undefined)
   const [elementCounter, addToElementCounter] = useState(0)
   const [interventionPlotType, setInterventionPlotType] = useState<string | undefined>(undefined)
   const [shareUrl, setShareUrl] = useState(window.location.href)
@@ -44,7 +44,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     console.log(data.value)
     if (data.value.length > 1) {
 
-      actions.dateRangeChange([new Date(data.value[0]), new Date(data.value[1])])
+      actions.dateRangeChange([data.value[0], data.value[1]])
     }
   }
 
@@ -96,7 +96,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       setInterventionDate(undefined)
     }
     else {
-      setInterventionDate(value.value)
+      setInterventionDate(value.value.getTime())
     }
   }
 
@@ -149,7 +149,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       <Menu.Item>
         <Container>
 
-          <SemanticDatePicker placeholder={`${timeFormat("%Y-%m-%d")(rawDateRange[0])} - ${timeFormat("%Y-%m-%d")(rawDateRange[1])}`} type="range" onChange={onDateChange} />
+          <SemanticDatePicker placeholder={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} - ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} type="range" onChange={onDateChange} />
         </Container>
       </Menu.Item>
       <Menu.Item>
@@ -189,7 +189,8 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             <Button
               onClick={() =>
                 setShareUrl(
-                  `${window.location.href}#${provenance.exportState(true)}`,
+                  //Kiran says there is a bug with the exportState, so using exportState(false) for now
+                  `${window.location.href}#${provenance.exportState(false)}`,
                 )
               }
               icon

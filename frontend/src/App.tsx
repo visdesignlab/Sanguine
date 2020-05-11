@@ -155,7 +155,7 @@ const App: FC<Props> = ({ store }: Props) => {
               yAxis={layout.aggregatedBy}
               chartId={layout.i}
               chartIndex={index}
-              interventionDate={layout.interventionDate}
+            //     interventionDate={layout.interventionDate}
             // aggregatedOption={layout.aggregation}
             />
           </div>

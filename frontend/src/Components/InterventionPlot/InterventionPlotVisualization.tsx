@@ -16,7 +16,7 @@ interface OwnProps {
     chartId: string;
     store?: Store;
     chartIndex: number;
-    interventionDate: Date;
+    interventionDate: number;
     interventionPlotType: string;
 }
 
@@ -53,39 +53,40 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
         }
     }, [layoutArray[chartIndex]]);
 
-    useEffect(() => {
+    // useEffect(() => {
 
-        try {
-            if (interventionDate.getTime() < rawDateRange[0].getTime() || interventionDate.getTime() > rawDateRange[1].getTime()) {
-                actions.removeChart(chartId)
-            }
-        } catch (e) {
-            if (e instanceof TypeError) {
-                console.log(interventionDate, typeof interventionDate, rawDateRange)
-                const castInterventionDate = (typeof interventionDate === "string") ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate
-                const castRawDateRange0 = (typeof rawDateRange[0] === "string") ? timeParse("%Y-%m-%dT%H:%M:%SZ")(rawDateRange[0])! : rawDateRange[0]
-                const castRawDateRange1 = (typeof rawDateRange[1] === "string") ? timeParse("%Y-%m-%dT%H:%M:%SZ")(rawDateRange[1])! : rawDateRange[1]
-                console.log(castInterventionDate, castRawDateRange1, castRawDateRange0)
-                if (castInterventionDate.getTime() < castRawDateRange0.getTime() || castInterventionDate.getTime() > castRawDateRange1.getTime()) {
-                    actions.removeChart(chartId)
-                }
+    //     try {
+    //         if (interventionDate.getTime() < rawDateRange[0].getTime() || interventionDate.getTime() > rawDateRange[1].getTime()) {
+    //             actions.removeChart(chartId)
+    //         }
+    //     } catch (e) {
+    //         if (e instanceof TypeError) {
+    //             console.log(interventionDate, typeof interventionDate, rawDateRange)
+    //             const castInterventionDate = (typeof interventionDate === "string") ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate
+    //             const castRawDateRange0 = (typeof rawDateRange[0] === "string") ? timeParse("%Y-%m-%dT%H:%M:%SZ")(rawDateRange[0])! : rawDateRange[0]
+    //             const castRawDateRange1 = (typeof rawDateRange[1] === "string") ? timeParse("%Y-%m-%dT%H:%M:%SZ")(rawDateRange[1])! : rawDateRange[1]
+    //             console.log(castInterventionDate, castRawDateRange1, castRawDateRange0)
+    //             if (castInterventionDate.getTime() < castRawDateRange0.getTime() || castInterventionDate.getTime() > castRawDateRange1.getTime()) {
+    //                 actions.removeChart(chartId)
+    //             }
 
-            }
+    //         }
 
-        }
-    }, [rawDateRange])
+    //     }
+    // }, [rawDateRange])
 
 
     async function fetchChartData() {
-        const castInterventionDate = (typeof interventionDate === "string") ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate
+        // console.log()
+        // const castInterventionDate = (typeof interventionDate === "string") ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate
 
         const preIntervention = await fetch(
-            `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${[dateRange[0], timeFormat("%d-%b-%Y")(castInterventionDate)]}&filter_selection=${filterSelection.toString()}`
+            `http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${[dateRange[0], timeFormat("%d-%b-%Y")(new Date(interventionDate))]}&filter_selection=${filterSelection.toString()}`
         );
         const preInterventiondataResult = await preIntervention.json();
 
         const postIntervention = await fetch(
-            `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${[timeFormat("%d-%b-%Y")(castInterventionDate), dateRange[1]]}&filter_selection=${filterSelection.toString()}`
+            `http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${[timeFormat("%d-%b-%Y")(new Date(interventionDate)), dateRange[1]]}&filter_selection=${filterSelection.toString()}`
         )
         const postInterventionResult = await postIntervention.json();
         let caseCount = 0;
@@ -94,21 +95,21 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
             let perCaseYMaxTemp = -1
             //let cast_data = InterventionData
             console.log(preInterventiondataResult, postInterventionResult)
-            let cast_data = (preInterventiondataResult.result as any).map(function (preIntOb: any) {
+            let cast_data = (preInterventiondataResult as any).map(function (preIntOb: any) {
                 let zeroCaseNum = 0;
 
 
 
-                const aggregateByAttr = preIntOb.aggregatedBy;
+                const aggregateByAttr = preIntOb.aggregated_by;
 
-                const case_num = preIntOb.valueToVisualize.length;
+                const case_num = preIntOb.transfused_units.length;
 
-                const preIntMed = median(preIntOb.valueToVisualize);
+                const preIntMed = median(preIntOb.transfused_units);
 
                 caseCount += case_num;
 
 
-                let preRemovedZeros = preIntOb.valueToVisualize;
+                let preRemovedZeros = preIntOb.transfused_units;
 
 
                 if (!showZero) {
@@ -149,7 +150,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                     }
                 }
 
-                preIntOb.valueToVisualize.map((d: any) => {
+                preIntOb.transfused_units.map((d: any) => {
                     if (valueToVisualize === "CELL_SAVER_ML") {
                         const roundedAnswer = Math.floor(d / 100) * 100
                         if (roundedAnswer > cap) {
@@ -188,11 +189,11 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
             console.log(cast_data);
 
 
-            (postInterventionResult.result as any).map((postIntOb: any) => {
+            (postInterventionResult as any).map((postIntOb: any) => {
 
-                const postIntMed = median(postIntOb.valueToVisualize);
-                const case_num = postIntOb.valueToVisualize.length;
-                let postRemovedZeros = postIntOb.valueToVisualize;
+                const postIntMed = median(postIntOb.transfused_units);
+                const case_num = postIntOb.transfused_units.length;
+                let postRemovedZeros = postIntOb.transfused_units;
                 let zeroCaseNum = 0;
                 if (!showZero) {
                     postRemovedZeros = postRemovedZeros.filter((d: number) => {
@@ -232,7 +233,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                     }
                 }
 
-                postIntOb.valueToVisualize.map((d: any) => {
+                postIntOb.transfused_units.map((d: any) => {
                     if (valueToVisualize === "CELL_SAVER_ML") {
                         const roundedAnswer = Math.floor(d / 100) * 100
                         if (roundedAnswer > cap) {
@@ -253,7 +254,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                 let found = false;
                 cast_data = cast_data.map((d: InterventionDataPoint) => {
 
-                    if (d.aggregateAttribute === postIntOb.aggregatedBy) {
+                    if (d.aggregateAttribute === postIntOb.aggregated_by) {
                         found = true;
                         d.postCountDict = postCountDict;
                         d.postInKdeCal = postIntPD;
@@ -271,7 +272,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                     const new_ob: InterventionDataPoint = {
                         postCaseCount: case_num,
                         preCaseCount: 0,
-                        aggregateAttribute: postIntOb.aggregatedBy,
+                        aggregateAttribute: postIntOb.aggregated_by,
                         totalVal: total_val,
                         preInKdeCal: [],
                         postInKdeCal: postIntPD,
@@ -334,7 +335,7 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                     <SVG ref={svgRef}>
 
                         <InterventionPlot
-                            interventionDate={timeFormat("%Y-%m-%d")((typeof interventionDate === "string") ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate)}
+                            interventionDate={interventionDate}
                             chartId={chartId}
                             dimensionWhole={dimensions}
                             data={data}

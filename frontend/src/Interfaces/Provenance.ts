@@ -28,7 +28,7 @@ interface AppProvenance {
     // yearRangeChange: (data: any) => void;
     dateRangeChange: (data: any) => void;
 
-    addNewChart: (x: string, y: string, i: number, type: string, interventionDate?: Date, interventionChartType?: string) => void;
+    addNewChart: (x: string, y: string, i: number, type: string, interventionDate?: number, interventionChartType?: string) => void;
     removeChart: (i: any) => void;
     updateCaseCount: (mode: string, newCaseCount: number) => void;
     onLayoutchange: (data: any) => void;
@@ -135,7 +135,7 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plot_type: string, interventionDate?: Date, interventionChartType?: string) => {
+  const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plot_type: string, interventionDate?: number, interventionChartType?: string) => {
 
     const newLayoutElement: LayoutElement = {
       aggregatedBy: xAxisAttribute,
