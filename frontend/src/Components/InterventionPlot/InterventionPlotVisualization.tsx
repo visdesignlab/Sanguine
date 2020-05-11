@@ -265,7 +265,8 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
             })
 
             setData(cast_data);
-            actions.updateCaseCount("AGGREGATED", caseCount)
+            // actions.updateCaseCount("AGGREGATED", caseCount)
+            store!.totalAggregatedCaseCount = caseCount
             setYMax({ original: yMaxTemp, perCase: perCaseYMaxTemp });
 
         }

@@ -144,9 +144,9 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
             });
             setData({ original: cast_data });
             setCaseIDList(caseDictionary)
-            actions.updateCaseCount("AGGREGATED", caseCount)
+            // actions.updateCaseCount("AGGREGATED", caseCount)
             setYMax({ original: yMaxTemp, perCase: perCaseYMaxTemp });
-
+            store!.totalAggregatedCaseCount = caseCount;
 
         }
     }
