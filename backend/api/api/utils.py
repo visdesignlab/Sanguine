@@ -88,3 +88,13 @@ def get_filters(filter_selection):
         filters_safe_sql = f"WHERE CODE_DESC IN ({','.join(bind_names)}) "
 
     return filters, bind_names, filters_safe_sql
+
+def output_quarter (number):
+    if number >0 and number < 4:
+        return 1
+    elif number >3 and number < 7:
+        return 2
+    elif number > 6 and number < 10:
+        return 3
+    else:
+        return 4
