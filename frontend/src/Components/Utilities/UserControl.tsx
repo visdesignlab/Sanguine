@@ -197,7 +197,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
               labelPosition="left"
               primary>
               <Icon name="share alternate"></Icon>
-                   Share current state with url
+                   Share
                  </Button>
           }>
           <Modal.Header>
