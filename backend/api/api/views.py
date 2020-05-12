@@ -75,7 +75,7 @@ def get_attributes(request):
                     AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
                 {filters_safe_sql}
             )
-            GROUP BY CODE_DESC
+            GROUP BY CODE
         """
 
         result = execute_sql(
