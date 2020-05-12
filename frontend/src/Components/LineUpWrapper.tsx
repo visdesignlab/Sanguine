@@ -7,15 +7,15 @@ import Store from "../Interfaces/Store";
 import { LineUpStringColumnDesc, LineUp, LineUpCategoricalColumnDesc, LineUpColumn, LineUpNumberColumnDesc } from "lineupjsx";
 import { BloodProductCap } from "../Interfaces/ApplicationState";
 
-interface OwnProps { store?: Store; }
+interface OwnProps {
+    hemoglobinDataSet: any;
+    store?: Store;
+}
 
 export type Props = OwnProps;
 
-const LineUpWrapper: FC<Props> = ({ store }: Props) => {
+const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
 
-    const {
-        hemoglobinDataSet
-    } = store!;
 
     const [distinctCategories, setCatgories] = useState<{ surgeons: any[], anesth: any[], patient: any[] }>({ surgeons: [], anesth: [], patient: [] })
 

@@ -28,13 +28,13 @@ interface AppProvenance {
     // yearRangeChange: (data: any) => void;
     dateRangeChange: (data: any) => void;
 
-    addNewChart: (x: string, y: string, i: number, type: string, interventionDate?: Date, interventionChartType?: string) => void;
+    addNewChart: (x: string, y: string, i: number, type: string, interventionDate?: number, interventionChartType?: string) => void;
     removeChart: (i: any) => void;
     updateCaseCount: (mode: string, newCaseCount: number) => void;
     onLayoutchange: (data: any) => void;
     selectPatient: (data: SingleCasePoint) => void;
     selectSet: (data: SelectSet, shiftKeyPressed: boolean) => void;
-    storeHemoData: (data: any) => void;
+    // storeHemoData: (data: any) => void;
     changeExtraPair: (chartID: string, newExtraPair: string) => void;
     removeExtraPair: (chartID: string, removeingPair: string) => void;
     changeChart: (x: string, y: string, i: string, type: string, interventionType?: string) => void;
@@ -65,9 +65,9 @@ export function setupProvenance(): AppProvenance {
     store.layoutArray = state ? state.layoutArray : store.layoutArray;
   });
 
-  provenance.addObserver(["hemoglobinDataSet"], async (state?: ApplicationState) => {
-    store.hemoglobinDataSet = state ? state.hemoglobinDataSet : store.hemoglobinDataSet
-  })
+  // provenance.addObserver(["hemoglobinDataSet"], async (state?: ApplicationState) => {
+  //   store.hemoglobinDataSet = state ? state.hemoglobinDataSet : store.hemoglobinDataSet
+  // })
 
   // provenance.addObserver(["dumbbellSorted"], (state?: ApplicationState) => {
   //   store.dumbbellSorted = state ? state.dumbbellSorted : store.dumbbellSorted;
@@ -82,8 +82,6 @@ export function setupProvenance(): AppProvenance {
       ? state.rawDateRange
       : store.rawDateRange;
   })
-
-
 
   provenance.addObserver(["totalAggregatedCaseCount"], (state?: ApplicationState) => {
     store.totalAggregatedCaseCount = state
@@ -135,7 +133,7 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plot_type: string, interventionDate?: Date, interventionChartType?: string) => {
+  const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plot_type: string, interventionDate?: number, interventionChartType?: string) => {
 
     const newLayoutElement: LayoutElement = {
       aggregatedBy: xAxisAttribute,
@@ -147,7 +145,7 @@ export function setupProvenance(): AppProvenance {
       y: Infinity,
       plot_type: plot_type,
     }
-    if (plot_type === "BAR" || plot_type === "HEATMAP") {
+    if (plot_type === "VIOLIN" || plot_type === "HEATMAP") {
       newLayoutElement.extraPair = [];
     }
     if (interventionDate) {
@@ -198,7 +196,7 @@ export function setupProvenance(): AppProvenance {
                 h: 1,
                 x: 0,
                 y: Infinity,
-                plot_type: "BAR",
+                plot_type: "VIOLIN",
                 extraPair: []
               },
               {
@@ -209,7 +207,7 @@ export function setupProvenance(): AppProvenance {
                 h: 1,
                 x: 0,
                 y: Infinity,
-                plot_type: "BAR",
+                plot_type: "VIOLIN",
                 extraPair: []
               }, {
                 aggregatedBy: "PRBC_UNITS",
@@ -252,6 +250,7 @@ export function setupProvenance(): AppProvenance {
           if (d.i === i) {
             d.aggregatedBy = x;
             d.valueToVisualize = y;
+            d.plot_type = type;
             if (interventionType) {
               d.interventionType = interventionType;
             }
@@ -466,13 +465,13 @@ export function setupProvenance(): AppProvenance {
   }
 
 
-  const storeHemoData = (data: any) => {
-    provenance.applyAction(`cache hemo data`,
-      (state: ApplicationState) => {
-        state.hemoglobinDataSet = data;
-        return state;
-      })
-  }
+  // const storeHemoData = (data: any) => {
+  //   provenance.applyAction(`cache hemo data`,
+  //     (state: ApplicationState) => {
+  //       state.hemoglobinDataSet = data;
+  //       return state;
+  //     })
+  // }
 
   const goForward = () => {
     provenance.goForwardOneStep();
@@ -503,7 +502,7 @@ export function setupProvenance(): AppProvenance {
       onLayoutchange,
       selectPatient,
       selectSet,
-      storeHemoData,
+      //  storeHemoData,
       changeExtraPair,
       removeExtraPair,
       loadPreset,

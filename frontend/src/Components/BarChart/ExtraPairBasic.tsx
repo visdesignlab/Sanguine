@@ -45,6 +45,7 @@ const ExtraPairBasic: FC<Props> = ({ dataSet, aggregatedScale, store }: Props) =
                             aggregatedScale(val)! +
                             0.5 * aggregatedScale.bandwidth()
                         }
+                        fill="white"
                         alignmentBaseline={"central"}
                         textAnchor={"middle"}>{format(".0%")(dataVal)}</text>]
 

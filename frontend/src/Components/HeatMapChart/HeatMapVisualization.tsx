@@ -3,7 +3,7 @@ import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { HeatMapDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions } from '../../Interfaces/ApplicationState'
+import { HeatMapDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType } from '../../Interfaces/ApplicationState'
 
 import { Button, Icon, Table, Grid, Dropdown, GridColumn, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
@@ -17,18 +17,18 @@ interface OwnProps {
     store?: Store;
     chartIndex: number;
     extraPair?: string[];
+    hemoglobinDataSet: any;
 }
 
 export type Props = OwnProps;
 
-const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, chartId, store, chartIndex, extraPair }: Props) => {
+const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, valueToVisualize, chartId, store, chartIndex, extraPair }: Props) => {
     const {
         layoutArray,
         filterSelection,
         showZero,
-        currentSelectPatient,
         dateRange,
-        hemoglobinDataSet
+
     } = store!;
     const svgRef = useRef<SVGSVGElement>(null);
     // const [data, setData] = useState<{ original: BarChartDataPoint[]; perCase: BarChartDataPoint[]; }>({ original: [], perCase: [] });
@@ -37,9 +37,6 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     }>({ original: [] });
 
     const [yMax, setYMax] = useState({ original: 0, perCase: 0 });
-    // const [kdeMax,setKdeMax] = useState(0)
-    // const [medianVal, setMedian] = useState()
-    //  const [selectedBar, setSelectedBarVal] = useState<number | null>(null);
     const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
     const [extraPairData, setExtraPairData] = useState<{ name: string, data: any[], type: string }[]>([])
     const [stripPlotMode, setStripMode] = useState(false);
@@ -66,28 +63,42 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
 
     async function fetchChartData() {
         const res = await fetch(
-            `http://localhost:8000/api/summarize_with_year?aggregatedBy=${aggregatedBy}&valueToVisualize=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
+            `http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
         );
         const dataResult = await res.json();
         let caseCount = 0;
         if (dataResult) {
             let yMaxTemp = -1;
             let perCaseYMaxTemp = -1
-            // let perCaseData: BarChartDataPoint[] = [];
-            const caseList = dataResult.case_id_list;
-            let caseDictionary = {} as any;
-            caseList.map((singleId: any) => {
-                caseDictionary[singleId] = true;
-            })
-            setCaseIDList(caseDictionary)
-            let cast_data = (dataResult.result as any).map(function (ob: any) {
-                let zeroCaseNum = 0;
-                const aggregateByAttr = ob.aggregatedBy;
 
-                const case_num = ob.valueToVisualize.length;
+            // const caseList = dataResult.case_id_list;
+            let caseDictionary = {} as any;
+
+            //console.log(dataResult)
+            let cast_data = (dataResult as any).map(function (ob: any) {
+
+                ob.case_id.map((singleId: any) => {
+                    caseDictionary[singleId] = true;
+                })
+
+                let zeroCaseNum = 0;
+                const aggregateByAttr = ob.aggregated_by;
+
+                const case_num = ob.transfused_units.length;
                 caseCount += case_num
 
-                let outputResult = ob.valueToVisualize;
+                let outputResult = ob.transfused_units;
+                if (!showZero) {
+                    outputResult = outputResult.filter((d: number) => {
+                        if (d > 0) {
+                            return true;
+                        }
+                        zeroCaseNum += 1;
+                        return false;
+                    })
+                } else {
+                    zeroCaseNum = outputResult.filter((d: number) => d === 0).length
+                }
                 const total_val = sum(outputResult);
 
                 let countDict = {} as any
@@ -119,11 +130,6 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                             countDict[d] += 1
                         }
                     }
-                    // if (!countDict[d]) {
-                    //     countDict[d] = 1
-                    // } else {
-                    //     countDict[d] += 1
-                    // }
                 })
 
                 const new_ob: HeatMapDataPoint = {
@@ -137,9 +143,10 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                 return new_ob;
             });
             setData({ original: cast_data });
-            actions.updateCaseCount("AGGREGATED", caseCount)
+            setCaseIDList(caseDictionary)
+            // actions.updateCaseCount("AGGREGATED", caseCount)
             setYMax({ original: yMaxTemp, perCase: perCaseYMaxTemp });
-
+            store!.totalAggregatedCaseCount = caseCount;
 
         }
     }
@@ -244,7 +251,7 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     useMemo(() => {
         makeExtraPairData();
         //console.log(extraPairData)
-    }, [layoutArray, data, hemoglobinDataSet]);
+    }, [layoutArray[chartIndex], data, hemoglobinDataSet]);
 
     const toggleStripGraphMode = () => {
         setStripMode(!stripPlotMode)
@@ -255,6 +262,10 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
     }
     const changeValue = (e: any, value: any) => {
         actions.changeChart(aggregatedBy, value.value, chartId, "HEATMAP")
+    }
+
+    const changePlotType = (e: any, value: any) => {
+        actions.changeChart(aggregatedBy, valueToVisualize, chartId, value.value)
     }
 
 
@@ -322,8 +333,9 @@ const BarChartVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, char
                         <Menu.Item header>
                             <Dropdown pointing basic item icon="edit" compact >
                                 <Dropdown.Menu>
-                                    <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
-                                    <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue}></Dropdown>
+                                    <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation} />
+                                    <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue} />
+                                    <Dropdown text="Change Plot Type" pointing basic item compact options={interventionChartType} onChange={changePlotType} />
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item>

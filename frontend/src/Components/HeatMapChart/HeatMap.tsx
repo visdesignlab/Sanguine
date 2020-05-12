@@ -32,8 +32,7 @@ import {
     extraPairWidth,
     extraPairPadding,
     AxisLabelDict,
-    BloodProductCap,
-    minimumOffset
+    BloodProductCap
 } from "../../Interfaces/ApplicationState";
 import { Popup, Button, Icon } from 'semantic-ui-react'
 
@@ -50,8 +49,7 @@ interface OwnProps {
     data: HeatMapDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
     yMax: number;
-    //  selectedVal: number | null;
-    // stripPlotMode: boolean;
+
     extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];
 }
 
@@ -67,6 +65,8 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         currentOutputFilterSet,
         currentSelectSet
     } = store!;
+
+    const currentOffset = offset.regular;
 
     const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
 
@@ -101,12 +101,12 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         //console.log(data)
         let valueScale = scaleBand()
             .domain(outputRange as any)
-            .range([offset.left, dimension.width - offset.right - offset.margin])
+            .range([currentOffset.left, dimension.width - currentOffset.right - currentOffset.margin])
             .paddingInner(0.01);
 
         let aggregationScale = scaleBand()
             .domain(xVals)
-            .range([dimension.height - offset.bottom, offset.top])
+            .range([dimension.height - currentOffset.bottom, currentOffset.top])
             .paddingInner(0.1);
 
         return [dimension, aggregationScale, valueScale, caseScale];
@@ -120,7 +120,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         .select(".x-axis")
         .attr(
             "transform",
-            `translate(${offset.left + extraPairTotalWidth}, 0)`
+            `translate(${currentOffset.left + extraPairTotalWidth}, 0)`
         )
         .call(aggregationLabel as any)
         .selectAll("text")
@@ -131,7 +131,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         .select(".y-axis")
         .attr(
             "transform",
-            `translate(${extraPairTotalWidth} ,${dimension.height - offset.bottom})`
+            `translate(${extraPairTotalWidth} ,${dimension.height - currentOffset.bottom})`
         )
         .call(valueLabel as any)
         .call(g => g.select(".domain").remove())
@@ -141,7 +141,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         // .select(".axes")
         .select(".x-label")
         .attr("x", dimension.width * 0.5)
-        .attr("y", dimension.height - offset.bottom + 20)
+        .attr("y", dimension.height - currentOffset.bottom + 20)
         .attr("alignment-baseline", "hanging")
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
@@ -155,8 +155,8 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     svgSelection
         //.select(".axes")
         .select(".y-label")
-        .attr("y", dimension.height - offset.bottom + 20)
-        .attr("x", offset.left - 55)
+        .attr("y", dimension.height - currentOffset.bottom + 20)
+        .attr("x", currentOffset.left - 55)
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
@@ -200,7 +200,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             valueScale={valueScale as ScaleBand<any>}
             aggregatedBy={aggregatedBy}
             dataPoint={dataPoint}
-            howToTransform={(`translate(-${offset.left},${aggregationScale(
+            howToTransform={(`translate(-${currentOffset.left},${aggregationScale(
                 dataPoint.aggregateAttribute
             )})`).toString()}
         />])
@@ -210,7 +210,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
 
     return (
         <>
-            <line x1={1} x2={1} y1={offset.top} y2={dimension.height - offset.bottom} style={{ stroke: "#e5e5e5", strokeWidth: "1" }} />
+            <line x1={1} x2={1} y1={currentOffset.top} y2={dimension.height - currentOffset.bottom} style={{ stroke: "#e5e5e5", strokeWidth: "1" }} />
             <g className="axes">
                 <g className="x-axis"></g>
                 <g className="y-axis"></g>
@@ -251,7 +251,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                 </text>
             </g>
             <g className="chart"
-                transform={`translate(${offset.left + extraPairTotalWidth},0)`}
+                transform={`translate(${currentOffset.left + extraPairTotalWidth},0)`}
             >
                 {data.map((dataPoint) => {
                     return outputSinglePlotElement(dataPoint).concat([

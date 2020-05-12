@@ -1,4 +1,4 @@
-import React, { FC, useEffect } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
@@ -59,14 +59,16 @@ const App: FC<Props> = ({ store }: Props) => {
     // hemoglobinDataSet
   } = store!;
 
+  const [hemoData, setHemoData] = useState<any>(undefined)
+
   async function cacheHemoData() {
     const resHemo = await fetch("http://localhost:8000/api/hemoglobin");
     const dataHemo = await resHemo.json();
     const resultHemo = dataHemo.result;
     const resTrans = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}`)
     const dataTrans = await resTrans.json();
-    const resultTrans = dataTrans.result;
-
+    //const resultTrans = dataTrans.result;
+    console.log(dataHemo, dataTrans)
     let transfused_dict = {} as any;
     let result: {
       CASE_ID: number,
@@ -88,7 +90,7 @@ const App: FC<Props> = ({ store }: Props) => {
 
 
 
-    resultTrans.forEach((element: any) => {
+    dataTrans.forEach((element: any) => {
       transfused_dict[element.case_id] = {
         PRBC_UNITS: element.PRBC_UNITS,
         FFP_UNITS: element.FFP_UNITS,
@@ -124,7 +126,8 @@ const App: FC<Props> = ({ store }: Props) => {
 
     result = result.filter((d: any) => d);
     console.log(result)
-    actions.storeHemoData(result);
+    setHemoData(result)
+    //actions.storeHemoData(result);
     //   let tempMaxCaseCount = 0
     // data.result.forEach((d: any) => {
     //   tempMaxCaseCount = d.count > tempMaxCaseCount ? d.count : tempMaxCaseCount;
@@ -155,12 +158,13 @@ const App: FC<Props> = ({ store }: Props) => {
               yAxis={layout.aggregatedBy}
               chartId={layout.i}
               chartIndex={index}
-              interventionDate={layout.interventionDate}
+              hemoglobinDataSet={hemoData}
+            //     interventionDate={layout.interventionDate}
             // aggregatedOption={layout.aggregation}
             />
           </div>
         );
-      case "BAR":
+      case "VIOLIN":
         return (
           <div
             //onClick={this.onClickBlock.bind(this, layoutE.i)}
@@ -171,6 +175,7 @@ const App: FC<Props> = ({ store }: Props) => {
 
             <Button floated="right" icon="close" circular compact size="mini" basic onClick={() => { actions.removeChart(layout.i) }} />
             <BarChartVisualization
+              hemoglobinDataSet={hemoData}
               aggregatedBy={layout.aggregatedBy}
               valueToVisualize={layout.valueToVisualize}
               // class_name={"parent-node" + layoutE.i}
@@ -192,6 +197,7 @@ const App: FC<Props> = ({ store }: Props) => {
           <ScatterPlotVisualization
             xAxis={layout.aggregatedBy}
             yAxis={layout.valueToVisualize}
+            hemoglobinDataSet={hemoData}
             // class_name={"parent-node" + layoutE.i}
             chartId={layout.i}
             chartIndex={index}
@@ -207,6 +213,7 @@ const App: FC<Props> = ({ store }: Props) => {
 
           <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
           <HeatMapVisualization
+            hemoglobinDataSet={hemoData}
             aggregatedBy={layout.aggregatedBy}
             valueToVisualize={layout.valueToVisualize}
             // class_name={"parent-node" + layoutE.i}
@@ -263,7 +270,7 @@ const App: FC<Props> = ({ store }: Props) => {
     menuItem: 'LineUp', pane:
       <Tab.Pane key="LineUp">
         <div className={"lineup"}>
-          <LineUpWrapper /></div></Tab.Pane>
+          <LineUpWrapper hemoglobinDataSet={hemoData} /></div></Tab.Pane>
   }]
 
   return (
