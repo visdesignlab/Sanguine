@@ -84,8 +84,9 @@ def get_attributes(request):
         )
 
         # Return the result, the multi-selector component in React requires the below format
-        items = [{"value": [x[2] for x in cpt() if x[0] == str(row[0])][0],"count":row[1]} for row in result]
+        items = [{[x[2] for x in cpt() if x[0] == str(row[0])][0]: row[1]} for row in result]
         items = dict(reduce(add, map(Counter, items)))
+        items = [{"value": k, "count": v} for k, v in items.items()]
         return JsonResponse({"result": items})
     else:
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
