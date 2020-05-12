@@ -2,5 +2,6 @@ credential.json
 data.json
 api/db.sqlite3
 api/static
+api/api/migrations
 *.DS_Store
 *.coverage
