@@ -3,7 +3,7 @@ import cx_Oracle
 import csv
 
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed
-from api.utils import make_connection, data_dictionary, cpt, execute_sql, get_all_by_agg, get_filters
+from api.utils import make_connection, data_dictionary, execute_sql, get_all_by_agg, get_filters
 
 
 DE_IDENT_FIELDS = {
