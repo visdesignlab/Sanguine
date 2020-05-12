@@ -31,4 +31,5 @@ urlpatterns = [
     path("api/request_fetch_professional_set", views.fetch_professional_set, name = "request_fetch_professional_set"),
     path("api/risk_score", views.risk_score, name = "risk_score"),
     path("api/patient_outcomes", views.patient_outcomes, name = "patient_outcomes"),
+    path("api/state", views.state, name = "state"),
 ]
