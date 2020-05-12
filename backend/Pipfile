@@ -15,6 +15,7 @@ django-cors-headers = "*"
 coverage = "*"
 
 [scripts]
+collectstatic = "python api/manage.py collectstatic"
 coverage-report = "coverage report"
 coverage-test = "coverage run --source='./api' api/manage.py test api"
 serve = "python api/manage.py runserver"
