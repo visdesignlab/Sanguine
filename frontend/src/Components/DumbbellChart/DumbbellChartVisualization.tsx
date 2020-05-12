@@ -19,18 +19,19 @@ interface OwnProps {
   chartId: string;
   store?: Store;
   chartIndex: number;
-  interventionDate?: Date;
+  hemoglobinDataSet: any;
+  // interventionDate?: number;
 }
 
 export type Props = OwnProps;
 
-const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartIndex, interventionDate }: Props) => {
+const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartIndex, hemoglobinDataSet }: Props) => {
 
   const {
     layoutArray,
     filterSelection,
     //actualYearRange,
-    hemoglobinDataSet,
+
     dateRange,
     showZero,
     currentOutputFilterSet
@@ -142,7 +143,8 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
         }
       });
       cast_data = cast_data.filter((d: any) => d);
-      actions.updateCaseCount("INDIVIDUAL", caseCount)
+      // actions.updateCaseCount("INDIVIDUAL", caseCount)
+      store!.totalIndividualCaseCount = caseCount;
       setData({ result: cast_data });
       setXRange({ xMin: tempXMin, xMax: tempXMax });
 
@@ -217,7 +219,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
               xRange={xRange}
               // yMax={yMax}
               // aggregation={aggregatedOption}
-              interventionDate={interventionDate}
+              //interventionDate={interventionDate}
               sortMode={sortMode}
               showingAttr={showingAttr}
             />

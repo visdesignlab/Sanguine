@@ -26,6 +26,7 @@ export type Props = OwnProps;
 
 const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScale, chartId, dimension }: Props) => {
 
+    const currentOffset = offset.regular;
 
     let transferedDistance = 0
     let returningComponents: any = []
@@ -38,7 +39,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScale,
                     <ExtraPairDumbbell aggregatedScale={aggregationScale} dataSet={pairData.data} />,
                         <ExtraPairText
                         x={extraPairWidth.Dumbbell / 2}
-                        y={dimension.height - offset.bottom + 20}
+                        y={dimension.height - currentOffset.bottom + 20}
                         onClick={() => actions.removeExtraPair(chartId, pairData.name)}
                     >{pairData.name}</ExtraPairText>
                 </g>);
@@ -54,7 +55,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScale,
                         kdeMax={pairData.kdeMax ? pairData.kdeMax : (0)} />,
                         <ExtraPairText
                         x={extraPairWidth.Dumbbell / 2}
-                        y={dimension.height - offset.bottom + 20}
+                        y={dimension.height - currentOffset.bottom + 20}
                         onClick={() => actions.removeExtraPair(chartId, pairData.name)}
                     >{`${pairData.name}, ${pairData.name === "Preop Hemo" ? 13 : 7.5}`}</ExtraPairText>
                 </g>);
@@ -65,7 +66,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScale,
                     <ExtraPairBar aggregatedScale={aggregationScale} dataSet={pairData.data} />
                     <ExtraPairText
                         x={extraPairWidth.BarChart / 2}
-                        y={dimension.height - offset.bottom + 20}
+                        y={dimension.height - currentOffset.bottom + 20}
                         onClick={() => actions.removeExtraPair(chartId, pairData.name)}
                     >{pairData.name}</ExtraPairText>
                 </g>);
@@ -76,7 +77,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScale,
                     <ExtraPairBasic aggregatedScale={aggregationScale} dataSet={pairData.data} />
                     <ExtraPairText
                         x={extraPairWidth.Basic / 2}
-                        y={dimension.height - offset.bottom + 20}
+                        y={dimension.height - currentOffset.bottom + 20}
                         onClick={() => actions.removeExtraPair(chartId, pairData.name)}
                     >{pairData.name}</ExtraPairText>
                 </g>);

@@ -67,7 +67,7 @@ export interface ApplicationState {
   currentSelectedChart: string;
   // perCaseSelected: boolean;
   // yearRange: number[];
-  rawDateRange: Date[];
+  rawDateRange: number[];
   filterSelection: string[];
   totalAggregatedCaseCount: number;
   totalIndividualCaseCount: number;
@@ -75,7 +75,7 @@ export interface ApplicationState {
   currentSelectSet: SelectSet[];
   currentOutputFilterSet: SelectSet[];
   currentSelectPatient: SingleCasePoint | null;
-  hemoglobinDataSet: any;
+  //hemoglobinDataSet: any;
   showZero: boolean;
 }
 
@@ -90,31 +90,34 @@ export interface LayoutElement {
   plot_type: string,
   //  aggregation?: string,
   extraPair?: string[],
-  interventionDate?: Date,
+  interventionDate?: number,
   interventionType?: string
 }
 
 export const defaultState: ApplicationState = {
   layoutArray: [],
   currentSelectedChart: "-1",
-  // perCaseSelected: false,
-
-  // yearRange: [0, 5],
-  rawDateRange: [new Date(2014, 0, 1), new Date(2019, 11, 31)],
-
+  rawDateRange: [new Date(2014, 0, 1).getTime(), new Date(2019, 11, 31).getTime()],
   filterSelection: [],
   totalAggregatedCaseCount: 0,
   totalIndividualCaseCount: 0,
-  // dumbbellSorted: false,
   currentOutputFilterSet: [],
   currentSelectSet: [],
   currentSelectPatient: null,
-  hemoglobinDataSet: [],
+  //hemoglobinDataSet: [],
   showZero: true
 };
 
-export const offset = { left: 85, bottom: 40, right: 10, top: 40, margin: 20 };
-export const minimumOffset = { left: 35, bottom: 40, right: 10, top: 40, margin: 20 }
+export const offset = {
+  regular: { left: 85, bottom: 40, right: 10, top: 40, margin: 20 },
+  minimum: { left: 35, bottom: 40, right: 10, top: 40, margin: 20 },
+  intervention: { left: 95, bottom: 40, right: 10, top: 40, margin: 20 }
+
+};
+
+
+
+//export const minimumOffset = 
 export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 30 }
 export const extraPairPadding = 5;
 export const minimumWidthScale = 18;
@@ -168,8 +171,8 @@ export const barChartAggregationOptions = [
 export const interventionChartType = [
   { value: "HEATMAP", key: "HEATMAP", text: "Heat Map" },
   { value: "VIOLIN", key: "VIOLIN", text: "Violin Plot" }
-
 ]
+
 
 export const barChartValuesOptions = [
   {
