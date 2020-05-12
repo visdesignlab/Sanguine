@@ -31,6 +31,7 @@ export type Props = OwnProps;
 
 const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisName, yAxisName, store }: Props) => {
 
+    const currentOffset = offset.regular;
     const { currentSelectPatient, currentSelectSet } = store!;
     const svgSelection = select(svg.current);
     const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null)
@@ -63,18 +64,18 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
 
     const [xAxisScale, yAxisScale] = useMemo(() => {
         const indices = range(0, data.length)
-        console.log(data.length, offset.left)
+        console.log(data.length, currentOffset.left)
         const xAxisScale = scaleOrdinal()
             .domain(indices as any)
-            .range(range(offset.left, dimension.width - offset.right, (dimension.width - offset.left - offset.right) / (data.length + 1)));
+            .range(range(currentOffset.left, dimension.width - currentOffset.right, (dimension.width - currentOffset.left - currentOffset.right) / (data.length + 1)));
 
         // const xAxisScale = scaleLinear()
         // .domain([0.9 * xRange.xMin, 1.1 * xRange.xMax])
-        // .range([offset.left, dimension.width - offset.right - offset.margin]);
+        // .range([currentOffset.left, dimension.width - currentOffset.right - currentOffset.margin]);
 
         const yAxisScale = scaleLinear()
             .domain([0.9 * yRange.yMin, 1.1 * yRange.yMax])
-            .range([dimension.height - offset.bottom, offset.top]);
+            .range([dimension.height - currentOffset.bottom, currentOffset.top]);
 
         return [xAxisScale, yAxisScale];
     }, [dimension, data, yRange, xRange,])
@@ -98,7 +99,7 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
     svgSelection
         .select(".axes")
         .select(".y-axis")
-        .attr("transform", `translate(${offset.left}, 0)`)
+        .attr("transform", `translate(${currentOffset.left}, 0)`)
 
         .attr('display', null)
 
@@ -108,13 +109,13 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
         .select(".axes")
         .select(".y-label")
         .attr("display", null)
-        .attr("x", -0.5 * dimension.height + 1.5 * offset.bottom)
+        .attr("x", -0.5 * dimension.height + 1.5 * currentOffset.bottom)
         .attr("y", 0)
         .attr("transform", "rotate(-90)")
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
-        // .attr("transform", `translate(0 ,${offset.top}`)
+        // .attr("transform", `translate(0 ,${currentOffset.top}`)
         .text(
             AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
         );
@@ -123,7 +124,7 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
     //     .select(".x-axis")
     //     .attr(
     //         "transform",
-    //         `translate(0 ,${dimension.height - offset.bottom} )`
+    //         `translate(0 ,${dimension.height - currentOffset.bottom} )`
     //     )
     //     .call(xAxisLabel as any);
 
@@ -132,8 +133,8 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
     svgSelection
         .select(".axes")
         .select(".x-label")
-        .attr("y", dimension.height - offset.bottom + 20)
-        .attr("x", 0.5 * (dimension.width + offset.left))
+        .attr("y", dimension.height - currentOffset.bottom + 20)
+        .attr("x", 0.5 * (dimension.width + currentOffset.left))
         .attr("alignment-baseline", "hanging")
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
@@ -172,7 +173,7 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
     return (<>
         <g className="axes">
             <g className="y-axis"></g>
-            <g className="x-axis" transform={`translate(0,${dimension.height - offset.bottom})`}>
+            <g className="x-axis" transform={`translate(0,${dimension.height - currentOffset.bottom})`}>
                 <CustomizedAxis scale={xAxisScale as ScaleOrdinal<any, number>} numberList={numberList} />
             </g>
 
@@ -181,7 +182,7 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
         </g>
         <g className="chart-comp" >
             <g className="brush-layer" />
-            {/* <line x1={offset.left} x2={dimension.width - offset.right} y1={testValueScale(11)} y2={testValueScale(11)} style={{ stroke: "#990D0D", strokeWidth: "2" }} /> */}
+            {/* <line x1={currentOffset.left} x2={dimension.width - currentOffset.right} y1={testValueScale(11)} y2={testValueScale(11)} style={{ stroke: "#990D0D", strokeWidth: "2" }} /> */}
             {data.map((dataPoint, index) => {
                 const cx = (xAxisScale as ScaleOrdinal<any, number>)(index)
                 const cy = yAxisScale(dataPoint.yVal)

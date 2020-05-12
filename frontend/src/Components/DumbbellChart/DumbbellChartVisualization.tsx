@@ -19,18 +19,19 @@ interface OwnProps {
   chartId: string;
   store?: Store;
   chartIndex: number;
-  interventionDate?: Date;
+  hemoglobinDataSet: any;
+  // interventionDate?: number;
 }
 
 export type Props = OwnProps;
 
-const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartIndex, interventionDate }: Props) => {
+const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartIndex, hemoglobinDataSet }: Props) => {
 
   const {
     layoutArray,
     filterSelection,
     //actualYearRange,
-    hemoglobinDataSet,
+
     dateRange,
     showZero,
     currentOutputFilterSet
@@ -64,15 +65,17 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
     const transfusedRes = await fetch(
       `http://localhost:8000/api/request_transfused_units?transfusion_type=${requestingAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
     );
-    const transfusedDataResult = await transfusedRes.json();
-    const temp_transfusion_data = transfusedDataResult.result;
-
-
+    const temp_transfusion_data = await transfusedRes.json();
+    //const temp_transfusion_data = transfusedDataResult.result;
+    console.log(temp_transfusion_data)
+    let caseIDSet = new Set()
     temp_transfusion_data.forEach((element: any) => {
+      caseIDSet.add(element.case_id)
       transfused_dict[element.case_id] = {
-        transfused: element.transfused
+        transfused: element.transfused_units
       };
     });
+    console.log(caseIDSet.size)
     // const hemoRes = await fetch(`http://localhost:8000/api/hemoglobin`);
     // const hemoDataResult = await hemoRes.json();
     // const hemo_data = hemoDataResult.result;
@@ -140,7 +143,8 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
         }
       });
       cast_data = cast_data.filter((d: any) => d);
-      actions.updateCaseCount("INDIVIDUAL", caseCount)
+      // actions.updateCaseCount("INDIVIDUAL", caseCount)
+      store!.totalIndividualCaseCount = caseCount;
       setData({ result: cast_data });
       setXRange({ xMin: tempXMin, xMax: tempXMax });
 
@@ -215,7 +219,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
               xRange={xRange}
               // yMax={yMax}
               // aggregation={aggregatedOption}
-              interventionDate={interventionDate}
+              //interventionDate={interventionDate}
               sortMode={sortMode}
               showingAttr={showingAttr}
             />

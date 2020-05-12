@@ -1,15 +1,16 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useEffect, useState, useRef } from "react";
 import Store from '../../Interfaces/Store'
 // import {}
-import { Menu, Checkbox, Button, Dropdown, Container } from 'semantic-ui-react'
+import { Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment } from 'semantic-ui-react'
 import { inject, observer } from "mobx-react";
-import { actions } from '../..'
+import { actions, provenance } from '../..'
 import { Slider } from 'react-semantic-ui-range';
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
 import { timeFormat } from "d3";
 import { blood_red } from "../../ColorProfile";
 import { barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions, interventionChartType } from "../../Interfaces/ApplicationState";
+import ClipboardJS from 'clipboard';
 
 interface OwnProps {
   store?: Store;
@@ -28,20 +29,22 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     //  dumbbellSorted
   } = store!;
   //  const [procedureList, setProcedureList] = useState({ result: [] })
+  const urlRef = useRef(null);
   const [addMode, setAddMode] = useState(false);
   const [addingChartType, setAddingChartType] = useState(-1)
   const [xSelection, setXSelection] = useState("")
   const [ySelection, setYSelection] = useState("")
-  const [interventionDate, setInterventionDate] = useState<Date | undefined>(undefined)
+  const [interventionDate, setInterventionDate] = useState<number | undefined>(undefined)
   const [elementCounter, addToElementCounter] = useState(0)
   const [interventionPlotType, setInterventionPlotType] = useState<string | undefined>(undefined)
+  const [shareUrl, setShareUrl] = useState(window.location.href)
 
-
+  new ClipboardJS(`.copy-clipboard`);
   const onDateChange = (event: any, data: any) => {
     console.log(data.value)
     if (data.value.length > 1) {
 
-      actions.dateRangeChange([new Date(data.value[0]), new Date(data.value[1])])
+      actions.dateRangeChange([data.value[0], data.value[1]])
     }
   }
 
@@ -78,7 +81,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     [barChartValuesOptions, barChartAggregationOptions]
 
   ]
-  const typeDiction = ["BAR", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION"]
+  const typeDiction = ["VIOLIN", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION"]
 
 
 
@@ -93,7 +96,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       setInterventionDate(undefined)
     }
     else {
-      setInterventionDate(value.value)
+      setInterventionDate(value.value.getTime())
     }
   }
 
@@ -130,7 +133,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
 
   const regularMenu = (
-    <Menu widths={5}>
+    <Menu widths={6}>
       <Menu.Item>
         <Button.Group>
           <Button primary disabled={isAtRoot} onClick={actions.goBack}>
@@ -146,14 +149,14 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       <Menu.Item>
         <Container>
 
-          <SemanticDatePicker placeholder={`${timeFormat("%Y-%m-%d")(rawDateRange[0])} - ${timeFormat("%Y-%m-%d")(rawDateRange[1])}`} type="range" onChange={onDateChange} />
+          <SemanticDatePicker placeholder={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} - ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} type="range" onChange={onDateChange} />
         </Container>
       </Menu.Item>
       <Menu.Item>
         {/* <Button onClick={addModeButtonHandler} content={"Add"} /> */}
         <Dropdown button text="Add" pointing style={{ background: blood_red, color: "white" }}>
           <Dropdown.Menu>
-            <Dropdown.Item onClick={() => addModeButtonHandler(0)}>Customized Bar Chart</Dropdown.Item>
+            <Dropdown.Item onClick={() => addModeButtonHandler(0)}>Violin Plot</Dropdown.Item>
             <Dropdown.Item onClick={() => addModeButtonHandler(1)}>Dumbbell Chart</Dropdown.Item>
             <Dropdown.Item onClick={() => addModeButtonHandler(2)}>Scatter Plot</Dropdown.Item>
             <Dropdown.Item onClick={() => addModeButtonHandler(3)}>Heat Map</Dropdown.Item>
@@ -180,6 +183,46 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 <Checkbox toggle checked={dumbbellSorted} onClick={actions.toggleDumbbell}/>
           <label> Sort Dumbbell</label>
         </Menu.Item> */}
+      <Menu.Item>
+        <Modal
+          trigger={
+            <Button
+              onClick={() =>
+                setShareUrl(
+                  //Kiran says there is a bug with the exportState, so using exportState(false) for now
+                  `${window.location.href}#${provenance.exportState(false)}`,
+                )
+              }
+              icon
+              labelPosition="left"
+              primary>
+              <Icon name="share alternate"></Icon>
+                   Share
+                 </Button>
+          }>
+          <Modal.Header>
+            Use the following URL to share your state
+               </Modal.Header>
+          <Modal.Content scrolling>
+            <Message info>Length of URL: {shareUrl.length}</Message>
+            <Segment
+              ref={urlRef}
+              textAlign="justified"
+              style={{ wordWrap: 'anywhere' }}>
+              {shareUrl}
+            </Segment>
+          </Modal.Content>
+          <Modal.Actions>
+            <Button
+              icon
+              className="copy-clipboard"
+              data-clipboard-text={shareUrl}>
+              <Icon name="copy"></Icon>
+                   Copy
+                 </Button>
+          </Modal.Actions>
+        </Modal>
+      </Menu.Item>
     </Menu>
   );
 

@@ -1,4 +1,5 @@
 credential.json
 data.json
 api/db.sqlite3
-Pipfile.lock
+*.DS_Store
+*.coverage

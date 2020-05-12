@@ -7,7 +7,7 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import Store from "../../Interfaces/Store";
 import { Message, List } from "semantic-ui-react";
-import { HIPAA_Sensitive } from "../../Interfaces/ApplicationState";
+import { HIPAA_Sensitive, AxisLabelDict } from "../../Interfaces/ApplicationState";
 
 interface OwnProps {
     store?: Store;
@@ -28,17 +28,29 @@ const DetailView: FC<Props> = ({ store }: Props) => {
             const individualInfo = fetchResultJson.result[0];
 
             console.log(individualInfo)
-            const fetchTransfused = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}&patient_id=${currentSelectPatient.patientID}`)
+            const fetchTransfused = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}&case_ids=${currentSelectPatient.caseId}`)
             const fetchResultTran = await fetchTransfused.json();
-            let transfused_info = fetchResultTran.result.filter((d: { case_id: number; }) => d.case_id === currentSelectPatient.caseId)[0];
+            console.log(fetchResultTran)
+            const transfusedInfo = fetchResultTran[0].transfused_units;
+            const transfusionResult = {
+                PRBC_UNITS: transfusedInfo[0],
+                FFP_UNITS: transfusedInfo[1],
+                PLT_UNITS: transfusedInfo[2],
+                CRYO_UNITS: transfusedInfo[3],
+                CELL_SAVER_ML: transfusedInfo[4]
+            }
+
             // delete transfused_info.case_id
             //console.log(transfused_info)
+
+
+
             const fetchSurgery = await fetch(`http://localhost:8000/api/fetch_surgery?case_id=${currentSelectPatient.caseId}`)
             const fetchSurgeryJson = await fetchSurgery.json();
             const surgeryInfo = fetchSurgeryJson.result[0];
             console.log(surgeryInfo)
             let final_result = Object.assign(individualInfo, surgeryInfo)
-            final_result = Object.assign(final_result, transfused_info)
+            final_result = Object.assign(final_result, transfusionResult)
             setIndividualInfo(final_result)
         }
         else {
@@ -60,7 +72,7 @@ const DetailView: FC<Props> = ({ store }: Props) => {
                     result.push(
 
                         <List.Item>
-                            <List.Header>{key}</List.Header>
+                            <List.Header>{AxisLabelDict[key] ? AxisLabelDict[key] : key}</List.Header>
                             {val}
                         </List.Item>)
                 }
