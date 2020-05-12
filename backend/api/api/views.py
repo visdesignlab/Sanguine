@@ -2,8 +2,11 @@ import json
 import cx_Oracle
 import csv
 
+from collections import Counter
+from functools import reduce
+from operator import add
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed
-from api.utils import make_connection, data_dictionary, execute_sql, get_all_by_agg, get_filters, output_quarter
+from api.utils import make_connection, data_dictionary, cpt, execute_sql, get_all_by_agg, get_filters, output_quarter
 
 
 DE_IDENT_FIELDS = {
@@ -51,13 +54,16 @@ def index(request):
 
 def get_attributes(request):
     if request.method == "GET":
-        filters, bind_names, filters_safe_sql = get_filters([""])
+        # Get the list of allowed filter_selection names from the cpt function 
+        allowed_names = list(set([a[2] for a in cpt()]))
+
+        filters, bind_names, filters_safe_sql = get_filters(allowed_names)
 
         # Make the connection and execute the command
         # ,CASE WHEN PRIM_PROC_DESC LIKE '%REDO%' THEN 1 ELSE 0 END AS REDO
         command = f"""
             SELECT
-                CODE_DESC,
+                CODE,
                 COUNT(*)
             FROM (
                 SELECT
@@ -78,7 +84,8 @@ def get_attributes(request):
         )
 
         # Return the result, the multi-selector component in React requires the below format
-        items = [{"value": f"{row[0]}","count":row[1]} for row in result]
+        items = [{"value": [x[2] for x in cpt() if x[0] == str(row[0]),"count":row[1]} for row in result]
+        items = dict(reduce(add, map(Counter, items)))
         return JsonResponse({"result": items})
     else:
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
