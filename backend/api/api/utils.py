@@ -37,7 +37,7 @@ def data_dictionary():
 def cpt():
     # Instantiate mapping array
     cpt = []
-    
+
     # Read in the cpt codes
     with open("cpt_codes_cleaned.csv", "r") as file:
         read_csv = csv.reader(file, delimiter=",")
@@ -74,17 +74,15 @@ def get_bind_names(filters):
 
 def get_filters(filter_selection):
     if not isinstance(filter_selection, list):
-        raise TypeError("get_bind_names was not passed a list")
+        raise TypeError("get_filters was not passed a list")
 
     # If no filers, get all cpt codes
     if filter_selection == [""]:
         filters = [a[0] for a in cpt()]
-        bind_names = get_bind_names(filters)
-        filters_safe_sql = f"WHERE CODE IN ({','.join(bind_names)}) "
-    # Else get the CODE_DESCs from the query
     else:
-        filters = filter_selection
-        bind_names = get_bind_names(filters)
-        filters_safe_sql = f"WHERE CODE_DESC IN ({','.join(bind_names)}) "
+        filters = [a[0] for a in cpt() if a[2] in filter_selection]
+    
+    bind_names = get_bind_names(filters)
+    filters_safe_sql = f"WHERE CODE IN ({','.join(bind_names)}) "
 
     return filters, bind_names, filters_safe_sql
