@@ -17,7 +17,7 @@ export default class Store {
   @observable showZero: boolean = defaultState.showZero;
   //@observable yearRange: number[] = defaultState.yearRange;
 
-  @observable rawDateRange: Date[] = defaultState.rawDateRange;
+  @observable rawDateRange: number[] = defaultState.rawDateRange;
 
 
 
@@ -32,9 +32,11 @@ export default class Store {
   //   return [this.yearRange[0] + 2014, this.yearRange[1] + 2014]
   // }
   @computed get dateRange() {
-    return [timeFormat("%d-%b-%Y")(this.rawDateRange[0]), timeFormat("%d-%b-%Y")(this.rawDateRange[1])]
+    return [timeFormat("%d-%b-%Y")(new Date(this.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(this.rawDateRange[1]))]
+
   }
-  @observable hemoglobinDataSet: any = defaultState.hemoglobinDataSet;
+  //@observable hemoglobinDataSet: any = defaultState.hemoglobinDataSet;
+
   @observable currentOutputFilterSet: SelectSet[] = defaultState.currentOutputFilterSet;
 
 }

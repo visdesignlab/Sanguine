@@ -19,19 +19,20 @@ interface OwnProps {
     chartId: string;
     store?: Store;
     chartIndex: number;
+    hemoglobinDataSet: any;
     // aggregatedOption?: string;
 }
 
 export type Props = OwnProps;
 
-const ScatterPlotVisualization: FC<Props> = ({ yAxis, xAxis, chartIndex, store }: Props) => {
+const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, chartIndex, store }: Props) => {
     const {
         layoutArray,
         filterSelection,
         //  perCaseSelected,
         dateRange,
         //actualYearRange,
-        hemoglobinDataSet
+
     } = store!;
     const svgRef = useRef<SVGSVGElement>(null);
     const [dimension, setDimensions] = useState({ width: 0, height: 0 });
