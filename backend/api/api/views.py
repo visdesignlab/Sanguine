@@ -3,7 +3,7 @@ import cx_Oracle
 import csv
 
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed
-from api.utils import make_connection, data_dictionary, cpt, execute_sql, get_all_by_agg, get_filters
+from api.utils import make_connection, data_dictionary, cpt, execute_sql, get_all_by_agg, get_filters,output_quarter
 
 
 DE_IDENT_FIELDS = {
@@ -494,15 +494,7 @@ def patient_outcomes(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
-def output_quarter (number):
-    if number >0 and number < 4:
-        return 1
-    elif number >3 and number < 7:
-        return 2
-    elif number > 6 and number < 10:
-        return 3
-    else:
-        return 4
+
 
 
 def hemoglobin(request):
