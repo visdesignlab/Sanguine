@@ -27,6 +27,7 @@ export interface BarChartDataPoint {
   caseCount: number;
   median: number;
   zeroCaseNum: number;
+  patienIDList: number[];
 }
 
 export interface HeatMapDataPoint {
@@ -35,6 +36,7 @@ export interface HeatMapDataPoint {
   totalVal: number;
   caseCount: number;
   zeroCaseNum: number;
+  patientIDList: number[];
 }
 
 export interface SingleCasePoint {
@@ -115,10 +117,20 @@ export const offset = {
 
 };
 
-
+export const extraPairOptions = [
+  { title: "Preop Hemoglobin", value: "Preop Hemo" },
+  { title: "Postop Hemoglobin", value: "Postop Hemo" },
+  { title: "Total Transfusion", value: "Total Transfusion" },
+  { title: "Per Case Transfusion", value: "Per Case" },
+  { title: "Zero Transfusion Cases", value: "Zero Transfusion" },
+  { title: "Risk of Mortality", value: "ROM" },
+  { title: "Severity of Illness", value: "SOI" },
+  { title: "Mortality Rate", value: "Mortality" },
+  { title: "Ventilation Rate", value: "Vent" }
+]
 
 //export const minimumOffset = 
-export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 30 }
+export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 30, Outcomes: 30 }
 export const extraPairPadding = 5;
 export const minimumWidthScale = 18;
 

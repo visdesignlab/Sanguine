@@ -5,6 +5,7 @@ import { inject, observer } from "mobx-react";
 import { ScaleBand, scaleOrdinal, range, scaleLinear, ScaleOrdinal, max, format, interpolateGreys } from "d3";
 import { extraPairWidth } from "../../Interfaces/ApplicationState"
 import { Popup } from "semantic-ui-react";
+import { secondary_gray } from "../../ColorProfile";
 
 interface OwnProps {
     dataSet: any[];
@@ -17,7 +18,7 @@ export type Props = OwnProps;
 
 const ExtraPairBasic: FC<Props> = ({ dataSet, aggregatedScale, store }: Props) => {
     const [valueScale] = useMemo(() => {
-
+        console.log(dataSet)
         const valueScale = scaleLinear().domain([0, 1]).range([0.25, 0.8])
 
         return [valueScale];
@@ -26,6 +27,7 @@ const ExtraPairBasic: FC<Props> = ({ dataSet, aggregatedScale, store }: Props) =
     return (
         <>
             {Object.entries(dataSet).map(([val, dataVal]) => {
+                console.log(val, dataVal)
                 return (
                     [<Popup
                         content={format(".4r")(dataVal)}
@@ -34,7 +36,8 @@ const ExtraPairBasic: FC<Props> = ({ dataSet, aggregatedScale, store }: Props) =
                                 x={0}
                                 y={aggregatedScale(val)}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
-                                fill={interpolateGreys(valueScale(dataVal))}
+                                // fill={interpolateGreys(valueScale(dataVal))}
+                                fill={secondary_gray}
                                 opacity={0.8}
                                 width={extraPairWidth.Basic}
                                 height={aggregatedScale.bandwidth()} />
@@ -48,7 +51,6 @@ const ExtraPairBasic: FC<Props> = ({ dataSet, aggregatedScale, store }: Props) =
                         fill="white"
                         alignmentBaseline={"central"}
                         textAnchor={"middle"}>{format(".0%")(dataVal)}</text>]
-
 
 
                 )

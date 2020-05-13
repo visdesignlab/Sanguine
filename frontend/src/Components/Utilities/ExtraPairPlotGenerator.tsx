@@ -14,6 +14,7 @@ import ExtraPairBar from "../BarChart/ExtraPairBar";
 import ExtraPairBasic from "../BarChart/ExtraPairBasic";
 import { ScaleBand } from "d3";
 import styled from "styled-components";
+import ExtraPairOutcomes from "../BarChart/ExtraPairOutcomes";
 
 interface OwnProps {
     extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];
@@ -75,6 +76,18 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScale,
                 transferedDistance += (extraPairWidth.Basic + extraPairPadding)
                 returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Basic)},0)`}>
                     <ExtraPairBasic aggregatedScale={aggregationScale} dataSet={pairData.data} />
+                    <ExtraPairText
+                        x={extraPairWidth.Basic / 2}
+                        y={dimension.height - currentOffset.bottom + 20}
+                        onClick={() => actions.removeExtraPair(chartId, pairData.name)}
+                    >{pairData.name}</ExtraPairText>
+                </g>);
+                break;
+
+            case "Outcomes":
+                transferedDistance += (extraPairWidth.Basic + extraPairPadding)
+                returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Basic)},0)`}>
+                    <ExtraPairOutcomes aggregatedScale={aggregationScale} dataSet={pairData.data} outcomeName={pairData.name} />
                     <ExtraPairText
                         x={extraPairWidth.Basic / 2}
                         y={dimension.height - currentOffset.bottom + 20}
