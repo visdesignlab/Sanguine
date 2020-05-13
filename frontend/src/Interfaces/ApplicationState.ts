@@ -8,8 +8,8 @@ export interface InterventionDataPoint {
   aggregateAttribute: any;
   preInKdeCal: any[];
   postInKdeCal: any[];
-  totalVal: number;
-
+  preTotalVal: number;
+  postTotalVal: number;
   preCaseCount: number;
   postCaseCount: number;
 
@@ -17,7 +17,10 @@ export interface InterventionDataPoint {
   postInMedian: number;
   preCountDict: any;
   postCountDict: any;
-  zeroCaseNum: number;
+  preZeroCaseNum: number;
+  postZeroCaseNum: number;
+  prePatienIDList: number[];
+  postPatienIDList: number[];
 }
 export interface BarChartDataPoint {
   aggregateAttribute: any;
@@ -147,7 +150,10 @@ export const AxisLabelDict: any = {
   MONTH: "Month",
   HEMO_VALUE: "Hemoglobin Value",
   PREOP_HEMO: "Preoperative Hemoglobin Value",
-  POSTOP_HEMO: "Postoperative Hemoglobin Value"
+  POSTOP_HEMO: "Postoperative Hemoglobin Value",
+  ROM: "Risk of Mortality",
+  SOI: "Severity of Illness",
+  Vent: "Ventilator Over 1440 min"
 };
 
 export const BloodProductCap: any = {

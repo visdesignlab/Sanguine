@@ -32,7 +32,9 @@ import {
     AxisLabelDict,
     BloodProductCap,
     offset,
-    CELL_SAVER_TICKS
+    CELL_SAVER_TICKS,
+    extraPairWidth,
+    extraPairPadding
 } from "../../Interfaces/ApplicationState";
 import { Popup, Button, Icon } from 'semantic-ui-react'
 
@@ -42,6 +44,8 @@ import { Popup, Button, Icon } from 'semantic-ui-react'
 import { secondary_gray, third_gray, preop_color, postop_color } from "../../ColorProfile";
 import SingleHeatCompare from "./SingleHeatCompare";
 import SingleViolinCompare from "./SingleViolinCompare";
+import InterventionExtraPairGenerator from "../Utilities/InterventionExtraPairGenerator";
+
 
 interface OwnProps {
     aggregatedBy: string;
@@ -56,12 +60,22 @@ interface OwnProps {
     interventionDate: number;
     //  selectedVal: number | null;
     // stripPlotMode: boolean;
-    //extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];
+    extraPairDataSet: {
+        name: string,
+        totalIntData: any[],
+        preIntData: any[],
+        postIntData: any[],
+        type: string,
+        kdeMax?: number,
+        totalMedianSet?: any,
+        preMedianSet?: any,
+        postMedianSet?: any
+    }[];
 }
 
 export type Props = OwnProps;
 
-const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax }: Props) => {
+const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, interventionDate, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax }: Props) => {
 
     const svgSelection = select(svg.current);
 
@@ -73,6 +87,15 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
     } = store!;
 
     const currentOffset = offset.intervention;
+    const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
+
+    useEffect(() => {
+        let totalWidth = 0
+        extraPairDataSet.forEach((d) => {
+            totalWidth += (extraPairWidth[d.type] + extraPairPadding)
+        })
+        setExtraPairTotlaWidth(totalWidth)
+    }, [extraPairDataSet])
 
     const [dimension, aggregationScale, valueScale, caseScale, lineFunction, linearValueScale] = useMemo(() => {
 
@@ -80,7 +103,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
         const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
         const dimension = {
             height: dimensionWhole.height,
-            width: dimensionWhole.width
+            width: dimensionWhole.width - extraPairTotalWidth
         }
 
 
@@ -138,7 +161,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
         .select(".x-axis")
         .attr(
             "transform",
-            `translate(${currentOffset.left}, 0)`
+            `translate(${currentOffset.left + extraPairTotalWidth}, 0)`
         )
         .call(aggregationLabel as any)
         .selectAll("text")
@@ -149,7 +172,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
         .select(".y-axis")
         .attr(
             "transform",
-            `translate(0 ,${dimension.height - currentOffset.bottom})`
+            `translate(${extraPairTotalWidth} ,${dimension.height - currentOffset.bottom})`
         )
         .call(valueLabel as any);
 
@@ -169,7 +192,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
         .attr("alignment-baseline", "hanging")
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
-        // .attr("transform", `translate(${extraPairTotalWidth},0)`)
+        .attr("transform", `translate(${extraPairTotalWidth},0)`)
         .text(() => {
             //const trailing = perCaseSelected ? " / Case" : "";
             return AxisLabelDict[valueToVisualize] ? AxisLabelDict[valueToVisualize] : valueToVisualize
@@ -184,7 +207,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
-        // .attr("transform", `translate(${extraPairTotalWidth},0)`)
+        .attr("transform", `translate(${extraPairTotalWidth},0)`)
         .text(
             AxisLabelDict[aggregatedBy] ? AxisLabelDict[aggregatedBy] : aggregatedBy
         );
@@ -379,7 +402,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
             </g>
 
             <g className="chart"
-                transform={`translate(${currentOffset.left},0)`}
+                transform={`translate(${currentOffset.left + extraPairTotalWidth},0)`}
             >
                 {data.map((dataPoint) => {
                     return outputSinglePlotElement(dataPoint)
@@ -414,6 +437,9 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
 
                         ].concat(outputTextElement(dataPoint)));
                 })}
+            </g>
+            <g className="extraPairChart">
+                <InterventionExtraPairGenerator extraPairDataSet={extraPairDataSet} chartId={chartId} aggregationScale={aggregationScale} dimension={dimension} />
             </g>
 
 
