@@ -32,7 +32,8 @@ import {
     extraPairWidth,
     extraPairPadding,
     AxisLabelDict,
-    BloodProductCap
+    BloodProductCap,
+    CELL_SAVER_TICKS
 } from "../../Interfaces/ApplicationState";
 import { Popup, Button, Icon } from 'semantic-ui-react'
 
@@ -93,7 +94,8 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             .sort();
         let outputRange
         if (valueToVisualize === "CELL_SAVER_ML") {
-            outputRange = range(0, BloodProductCap[valueToVisualize] + 100, 100)
+            outputRange = [-1].concat(range(0, BloodProductCap[valueToVisualize] + 100, 100))
+
         } else {
             outputRange = range(0, BloodProductCap[valueToVisualize] + 1)
         }
@@ -113,7 +115,8 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     }, [dimensionWhole, data, yMax, extraPairDataSet])
 
     const aggregationLabel = axisLeft(aggregationScale);
-    const valueLabel = axisBottom(valueScale).tickFormat(d => d === BloodProductCap[valueToVisualize] ? `${d}+` : d);
+
+    const valueLabel = axisBottom(valueScale).tickFormat((d, i) => valueToVisualize === "CELL_SAVER_ML" ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[valueToVisualize] ? `${d}+` : d));
 
     svgSelection
         .select(".axes")

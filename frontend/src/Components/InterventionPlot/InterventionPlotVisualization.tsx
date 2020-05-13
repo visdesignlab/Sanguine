@@ -117,6 +117,8 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                 const cap = BloodProductCap[valueToVisualize]
 
                 if (valueToVisualize === "CELL_SAVER_ML") {
+                    preCountDict[-1] = 0;
+                    postCountDict[-1] = 0
                     for (let i = 0; i <= cap; i += 100) {
                         preCountDict[i] = 0
                         postCountDict[i] = 0
@@ -131,7 +133,10 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                 preIntOb.transfused_units.map((d: any) => {
                     if (valueToVisualize === "CELL_SAVER_ML") {
                         const roundedAnswer = Math.floor(d / 100) * 100
-                        if (roundedAnswer > cap) {
+                        if (d === 0) {
+                            preCountDict[-1] += 1
+                        }
+                        else if (roundedAnswer > cap) {
                             preCountDict[cap] += 1
                         }
                         else {
@@ -200,6 +205,8 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                 const cap = BloodProductCap[valueToVisualize]
 
                 if (valueToVisualize === "CELL_SAVER_ML") {
+                    preCountDict[-1] = 0;
+                    postCountDict[-1] = 0
                     for (let i = 0; i <= cap; i += 100) {
                         preCountDict[i] = 0
                         postCountDict[i] = 0
@@ -214,7 +221,10 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                 postIntOb.transfused_units.map((d: any) => {
                     if (valueToVisualize === "CELL_SAVER_ML") {
                         const roundedAnswer = Math.floor(d / 100) * 100
-                        if (roundedAnswer > cap) {
+                        if (d === 0) {
+                            postCountDict[-1] += 1
+                        }
+                        else if (roundedAnswer > cap) {
                             postCountDict[cap] += 1
                         }
                         else {
