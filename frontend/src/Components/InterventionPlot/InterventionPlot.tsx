@@ -31,7 +31,8 @@ import {
     InterventionDataPoint,
     AxisLabelDict,
     BloodProductCap,
-    offset
+    offset,
+    CELL_SAVER_TICKS
 } from "../../Interfaces/ApplicationState";
 import { Popup, Button, Icon } from 'semantic-ui-react'
 
@@ -94,7 +95,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
             .sort();
         let outputRange
         if (valueToVisualize === "CELL_SAVER_ML") {
-            outputRange = range(0, BloodProductCap[valueToVisualize] + 100, 100)
+            outputRange = [-1].concat(range(0, BloodProductCap[valueToVisualize] + 100, 100))
         } else {
             outputRange = range(0, BloodProductCap[valueToVisualize] + 1)
         }
@@ -130,7 +131,7 @@ const InterventionPlot: FC<Props> = ({ plotType, interventionDate, store, aggreg
     }, [dimensionWhole, data, yMax])
 
     const aggregationLabel = axisLeft(aggregationScale);
-    const valueLabel = plotType === "HEATMAP" ? axisBottom(valueScale).tickFormat(d => d === BloodProductCap[valueToVisualize] ? `${d}+` : d) : axisBottom(linearValueScale);
+    const valueLabel = plotType === "HEATMAP" ? axisBottom(valueScale).tickFormat((d, i) => valueToVisualize === "CELL_SAVER_ML" ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[valueToVisualize] ? `${d}+` : d)) : axisBottom(linearValueScale);
 
     svgSelection
         .select(".axes")

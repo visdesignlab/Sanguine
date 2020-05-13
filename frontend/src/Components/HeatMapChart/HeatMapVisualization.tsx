@@ -102,6 +102,7 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                 const cap = BloodProductCap[valueToVisualize]
 
                 if (valueToVisualize === "CELL_SAVER_ML") {
+                    countDict[-1] = 0
                     for (let i = 0; i <= cap; i += 100) {
                         countDict[i] = 0
                     }
@@ -114,7 +115,10 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                 outputResult.map((d: any) => {
                     if (valueToVisualize === "CELL_SAVER_ML") {
                         const roundedAnswer = Math.floor(d / 100) * 100
-                        if (roundedAnswer > cap) {
+                        if (d === 0) {
+                            countDict[-1] += 1
+                        }
+                        else if (roundedAnswer > cap) {
                             countDict[cap] += 1
                         }
                         else {
