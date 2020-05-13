@@ -2,8 +2,11 @@ import json
 import cx_Oracle
 import csv
 
+from collections import Counter
+from functools import reduce
+from operator import add
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed
-from api.utils import make_connection, data_dictionary, cpt, execute_sql, get_all_by_agg, get_filters,output_quarter
+from api.utils import make_connection, data_dictionary, cpt, execute_sql, get_all_by_agg, get_filters, output_quarter
 
 
 DE_IDENT_FIELDS = {
@@ -51,13 +54,16 @@ def index(request):
 
 def get_attributes(request):
     if request.method == "GET":
-        filters, bind_names, filters_safe_sql = get_filters([""])
+        # Get the list of allowed filter_selection names from the cpt function 
+        allowed_names = list(set([a[2] for a in cpt()]))
+
+        filters, bind_names, filters_safe_sql = get_filters(allowed_names)
 
         # Make the connection and execute the command
         # ,CASE WHEN PRIM_PROC_DESC LIKE '%REDO%' THEN 1 ELSE 0 END AS REDO
         command = f"""
             SELECT
-                CODE_DESC,
+                CODE,
                 COUNT(*)
             FROM (
                 SELECT
@@ -69,7 +75,7 @@ def get_attributes(request):
                     AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
                 {filters_safe_sql}
             )
-            GROUP BY CODE_DESC
+            GROUP BY CODE
         """
 
         result = execute_sql(
@@ -78,7 +84,9 @@ def get_attributes(request):
         )
 
         # Return the result, the multi-selector component in React requires the below format
-        items = [{"value": f"{row[0]}","count":row[1]} for row in result]
+        items = [{[x[2] for x in cpt() if x[0] == str(row[0])][0]: row[1]} for row in result]
+        items = dict(reduce(add, map(Counter, items)))
+        items = [{"value": k, "count": v} for k, v in items.items()]
         return JsonResponse({"result": items})
     else:
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
@@ -287,24 +295,30 @@ def request_transfused_units(request):
 
         # Build the sql query
         # Safe to use format strings since there are limited options for aggregated_by and transfusion_type
-        command = (
-            f"SELECT LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID, {transfusion_type} "
-            "FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD TRNSFSD "
-            "INNER JOIN ( "
-                "SELECT * "
-                "FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
-                "WHERE DI_CASE_ID IN ("
-                    "SELECT DI_CASE_ID "
-                    "FROM CLIN_DM.BPU_CTS_DI_BILLING_CODES BLNG "
-                    "INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE SURG "
-                        "ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) AND (BLNG.DI_VISIT_NO = SURG.DI_VISIT_NO) AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE) "
-                    f"{filters_safe_sql}"
-                ")"
-            ") LIMITED_SURG ON LIMITED_SURG.DI_CASE_ID = TRNSFSD.DI_CASE_ID "
-            f"WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time "
-            f"{pat_filters_safe_sql} {case_filters_safe_sql}"
-            f"{group_by}"
-        )
+        command = f"""
+        SELECT 
+            LIMITED_SURG.SURGEON_PROV_DWID, 
+            LIMITED_SURG.ANESTH_PROV_DWID, 
+            TRNSFSD.DI_PAT_ID, 
+            TRNSFSD.DI_CASE_ID, 
+            {transfusion_type}
+        FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD TRNSFSD
+        INNER JOIN ( 
+            SELECT * 
+            FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE 
+            WHERE DI_CASE_ID IN (
+                SELECT DI_CASE_ID 
+                FROM CLIN_DM.BPU_CTS_DI_BILLING_CODES BLNG 
+                INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE SURG 
+                    ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) AND (BLNG.DI_VISIT_NO = SURG.DI_VISIT_NO) AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE) 
+                {filters_safe_sql}
+            )
+        ) LIMITED_SURG 
+            ON LIMITED_SURG.DI_CASE_ID = TRNSFSD.DI_CASE_ID
+        WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time 
+        {pat_filters_safe_sql} {case_filters_safe_sql}
+        {group_by}
+        """
 
         # Execute the query
         result = execute_sql(
@@ -368,11 +382,11 @@ def request_individual_specific(request):
             return HttpResponseBadRequest("case_id and attribute must be supplied")
 
         # Define the command, safe to use format string since the command dict has safe values
-        command = (
-            f"SELECT {command_dict[attribute_to_retrieve]} "
-            "FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE "
-            "WHERE DI_CASE_ID = :id"
-        )
+        command = f"""
+        SELECT {command_dict[attribute_to_retrieve]}
+        FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE
+        WHERE DI_CASE_ID = :id
+        """
 
         # Execute the command and return the results
         result = execute_sql(command, id = case_id)
