@@ -24,6 +24,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     isAtLatest,
     showZero,
     rawDateRange,
+    nextAddingIndex
     //  perCaseSelected,
     //yearRange,
     //  dumbbellSorted
@@ -35,7 +36,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const [xSelection, setXSelection] = useState("")
   const [ySelection, setYSelection] = useState("")
   const [interventionDate, setInterventionDate] = useState<number | undefined>(undefined)
-  const [elementCounter, addToElementCounter] = useState(0)
+  // const [elementCounter, addToElementCounter] = useState(0)
   const [interventionPlotType, setInterventionPlotType] = useState<string | undefined>(undefined)
   const [shareUrl, setShareUrl] = useState(window.location.href)
 
@@ -117,8 +118,8 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
   const confirmChartAddHandler = () => {
     if (xSelection && ySelection && addingChartType > -1) {
-      addToElementCounter(elementCounter + 1)
-      actions.addNewChart(xSelection, ySelection, elementCounter, typeDiction[addingChartType], interventionDate, interventionPlotType)
+      // addToElementCounter(elementCounter + 1)
+      actions.addNewChart(xSelection, ySelection, nextAddingIndex, typeDiction[addingChartType], interventionDate, interventionPlotType)
       setAddMode(false);
       setAddingChartType(-1)
       setInterventionDate(undefined);

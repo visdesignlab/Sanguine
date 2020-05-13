@@ -20,7 +20,6 @@ export default class Store {
   @observable rawDateRange: number[] = defaultState.rawDateRange;
 
 
-
   @observable filterSelection: string[] = defaultState.filterSelection;
   @observable totalAggregatedCaseCount: number = defaultState.totalAggregatedCaseCount;
   @observable totalIndividualCaseCount: number = defaultState.totalIndividualCaseCount
@@ -36,7 +35,9 @@ export default class Store {
 
   }
   //@observable hemoglobinDataSet: any = defaultState.hemoglobinDataSet;
-
+  @computed get nextAddingIndex() {
+    return this.layoutArray.length
+  }
   @observable currentOutputFilterSet: SelectSet[] = defaultState.currentOutputFilterSet;
 
 }
