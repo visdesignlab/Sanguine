@@ -119,7 +119,7 @@ const App: FC<Props> = ({ store }: Props) => {
           HEMO: ob.HEMO,
           QUARTER: ob.QUARTER,
           MONTH: ob.MONTH,
-          DATE: timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)
+          DATE: ob.DATE
         })
       }
     })
@@ -227,6 +227,8 @@ const App: FC<Props> = ({ store }: Props) => {
           className={"parent-node" + layout.i}>
           <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
           <InterventionPlotVisualization
+            extraPair={layout.extraPair}
+            hemoglobinDataSet={hemoData}
             aggregatedBy={layout.aggregatedBy}
             valueToVisualize={layout.valueToVisualize}
             chartId={layout.i}

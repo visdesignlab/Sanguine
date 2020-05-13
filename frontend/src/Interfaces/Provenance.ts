@@ -145,7 +145,7 @@ export function setupProvenance(): AppProvenance {
       y: Infinity,
       plot_type: plot_type,
     }
-    if (plot_type === "VIOLIN" || plot_type === "HEATMAP") {
+    if (plot_type === "VIOLIN" || plot_type === "HEATMAP" || plot_type === "INTERVENTION") {
       newLayoutElement.extraPair = [];
     }
     if (interventionDate) {

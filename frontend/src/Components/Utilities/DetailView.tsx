@@ -27,30 +27,37 @@ const DetailView: FC<Props> = ({ store }: Props) => {
             const fetchResultJson = await fetchResult.json();
             const individualInfo = fetchResultJson.result[0];
 
-            console.log(individualInfo)
+            //    console.log(individualInfo)
             const fetchTransfused = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}&case_ids=${currentSelectPatient.caseId}`)
             const fetchResultTran = await fetchTransfused.json();
-            console.log(fetchResultTran)
+            //  console.log(fetchResultTran)
             const transfusedInfo = fetchResultTran[0].transfused_units;
             const transfusionResult = {
-                PRBC_UNITS: transfusedInfo[0],
-                FFP_UNITS: transfusedInfo[1],
-                PLT_UNITS: transfusedInfo[2],
-                CRYO_UNITS: transfusedInfo[3],
-                CELL_SAVER_ML: transfusedInfo[4]
+                PRBC_UNITS: transfusedInfo[0] || 0,
+                FFP_UNITS: transfusedInfo[1] || 0,
+                PLT_UNITS: transfusedInfo[2] || 0,
+                CRYO_UNITS: transfusedInfo[3] || 0,
+                CELL_SAVER_ML: transfusedInfo[4] || 0
             }
-
-            // delete transfused_info.case_id
-            //console.log(transfused_info)
-
-
 
             const fetchSurgery = await fetch(`http://localhost:8000/api/fetch_surgery?case_id=${currentSelectPatient.caseId}`)
             const fetchSurgeryJson = await fetchSurgery.json();
             const surgeryInfo = fetchSurgeryJson.result[0];
-            console.log(surgeryInfo)
+
+            const fetchRisk = await fetch(`http://localhost:8000/api/risk_score?patient_ids=${currentSelectPatient.patientID}`)
+            const fetchRiskJson = await fetchRisk.json();
+            const riskInfo = { ROM: fetchRiskJson[0].apr_drg_rom, SOI: fetchRiskJson[0].apr_drg_soi }
+
+            const fetchOutcome = await fetch(`http://localhost:8000/api/patient_outcomes?patient_ids=${currentSelectPatient.patientID}`)
+            const fetchOutcomeJson = await fetchOutcome.json();
+            const outcomeInfo = { Mortality: fetchOutcomeJson[0].patient_death === 0 ? "Yes" : "No", Vent: fetchOutcomeJson[0].gr_than_1440_vent === 0 ? "Yes" : "No" }
+
+            //  console.log(surgeryInfo)
             let final_result = Object.assign(individualInfo, surgeryInfo)
             final_result = Object.assign(final_result, transfusionResult)
+            final_result = Object.assign(final_result, riskInfo)
+            final_result = Object.assign(final_result, outcomeInfo)
+
             setIndividualInfo(final_result)
         }
         else {

@@ -142,7 +142,6 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                     countDict: countDict,
                     zeroCaseNum: zeroCaseNum,
                     patientIDList: ob.pat_id
-
                 };
 
                 return new_ob;
@@ -158,9 +157,7 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
 
     useEffect(() => {
         fetchChartData();
-
     }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize]);
-
 
     const makeExtraPairData = () => {
         let newExtraPairData: any[] = []
