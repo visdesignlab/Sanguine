@@ -134,7 +134,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
                 return (
                   <ListIT key={listItem.value} isSelected={true} style={{ cursor: "pointer" }} onClick={() => { actions.filterSelectionChange(listItem.value) }}>
                     <List.Content floated="left" style={{ width: "60%" }}>
-                      {listItem.value.toLowerCase()}
+                      {listItem.value}
                     </List.Content>
                     <List.Content floated="right" style={{ width: "30%" }}>
                       <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={"10px"} fill={basic_gray}></rect></SVG>
@@ -149,7 +149,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
                 return (
                   <ListIT key={listItem.value} isSelected={false} style={{ cursor: "pointer" }} onClick={() => { actions.filterSelectionChange(listItem.value) }}>
                     <List.Content floated="left" style={{ width: "60%" }}>
-                      {listItem.value.toLowerCase()}
+                      {listItem.value}
                     </List.Content>
                     <List.Content floated="right" style={{ width: "30%" }}>
                       <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={"10px"} fill={basic_gray}></rect></SVG>
