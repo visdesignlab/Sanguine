@@ -340,6 +340,26 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                     height={10}
                     fill="url(#gradient1)" />
 
+                <text
+                    x={0.5 * dimension.width}
+                    y={10}
+                    alignmentBaseline={"hanging"}
+                    textAnchor={"end"}
+                    fontSize="11px"
+                    fill={third_gray}>
+                    0%
+                </text>
+                <text
+                    x={0.7 * dimension.width}
+                    y={10}
+                    alignmentBaseline={"hanging"}
+                    textAnchor={"end"}
+                    fontSize="11px"
+                    fill={third_gray}>
+                    100%
+                </text>
+            </g>
+            <g>
                 <rect x={0.9 * dimension.width}
                     y={0}
                     width={10}
@@ -371,25 +391,6 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                     fontSize="11px"
                     fill={third_gray}>
                     Post Intervine
-                </text>
-
-                <text
-                    x={0.5 * dimension.width}
-                    y={10}
-                    alignmentBaseline={"hanging"}
-                    textAnchor={"end"}
-                    fontSize="11px"
-                    fill={third_gray}>
-                    0%
-                </text>
-                <text
-                    x={0.7 * dimension.width}
-                    y={10}
-                    alignmentBaseline={"hanging"}
-                    textAnchor={"end"}
-                    fontSize="11px"
-                    fill={third_gray}>
-                    100%
                 </text>
                 <text
                     x={0.25 * dimension.width}
