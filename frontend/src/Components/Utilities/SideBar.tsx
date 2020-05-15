@@ -6,7 +6,7 @@ import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat } from "d3";
 import { actions } from "../..";
 import { AxisLabelDict } from "../../Interfaces/ApplicationState";
-import { basic_gray, highlight_orange } from "../../ColorProfile";
+import { basic_gray, highlight_orange, third_gray, secondary_gray } from "../../ColorProfile";
 
 interface OwnProps {
   store?: Store;
@@ -67,7 +67,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
   }, [filterSelection])
 
   const [caseScale] = useMemo(() => {
-    const caseScale = scaleLinear().domain([0, maxCaseCount]).range([0, 100])
+    const caseScale = scaleLinear().domain([0, maxCaseCount]).range([0, 90])
 
     return [caseScale];
   }, [maxCaseCount])
@@ -129,7 +129,18 @@ const SideBar: FC<Props> = ({ store }: Props) => {
       <Grid.Row style={{ padding: "20px" }}>
         <Container style={{ overflow: "auto", height: "40vh" }}>
           <List relaxed divided >
-            <List.Header>Procedures</List.Header>
+            <List.Item key={"filter-header"} style={{ background: "#dff9ec" }}>
+              <List.Content floated="left" style={{ width: "60%" }}>
+                Procedures
+              </List.Content>
+              <List.Content floated="right" style={{ width: "30%" }}>
+                <SVG>
+                  <rect x={0} y={0} width={caseScale.range()[1]} height={13} fill={secondary_gray} />
+                  <text x={0} y={13} textAnchor="start" alignmentBaseline="baseline" fill="white">0</text>
+                  <text x={caseScale.range()[1]} y={13} textAnchor="end" alignmentBaseline="baseline" fill="white">{caseScale.domain()[1]}</text>
+                </SVG>
+              </List.Content>
+            </List.Item>
             {itemSelected.map((listItem: any) => {
               if (listItem.value) {
                 return (
@@ -138,7 +149,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
                       {listItem.value}
                     </List.Content>
                     <List.Content floated="right" style={{ width: "30%" }}>
-                      <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={"10px"} fill={basic_gray}></rect></SVG>
+                      <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={13} fill={secondary_gray}></rect></SVG>
                     </List.Content>
                   </ListIT>
                 )
@@ -153,7 +164,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
                       {listItem.value}
                     </List.Content>
                     <List.Content floated="right" style={{ width: "30%" }}>
-                      <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={"10px"} fill={basic_gray}></rect></SVG>
+                      <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={13} fill={secondary_gray}></rect></SVG>
                     </List.Content>
                   </ListIT>)
               }
@@ -177,7 +188,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
 export default inject("store")(observer(SideBar));
 
 const SVG = styled.svg`
-  height: 10px;
+  height: 15px;
   width: 100px;
 `;
 interface ListITProps {
