@@ -17,7 +17,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const ExtraPairBar: FC<Props> = ({ preDataSet, postDataSet, totalDataSet, aggregatedScale, store }: Props) => {
+const ExtraPairBarInt: FC<Props> = ({ preDataSet, postDataSet, totalDataSet, aggregatedScale, store }: Props) => {
     const [valueScale] = useMemo(() => {
 
         const valueScale = scaleLinear().domain([0, max(Object.values(totalDataSet))]).range([0, extraPairWidth.BarChart])
@@ -25,13 +25,68 @@ const ExtraPairBar: FC<Props> = ({ preDataSet, postDataSet, totalDataSet, aggreg
         return [valueScale];
     }, [totalDataSet, aggregatedScale])
 
+    const generateOutput = () => {
+        let output = [];
+        if (aggregatedScale.bandwidth() > 40) {
+            output = Object.entries(preDataSet).map(([val, dataVal]) => {
+                return (
+                    <Popup
+                        content={format(".4r")(dataVal)}
+                        trigger={
+                            <rect
+                                x={0}
+                                y={aggregatedScale(val)}
+                                fill={"#404040"}
+                                opacity={0.8}
+                                width={valueScale(dataVal)}
+                                height={aggregatedScale.bandwidth() * 0.5} />
+                        } />
+                )
+            })
+
+            output = output.concat(Object.entries(postDataSet).map(([val, dataVal]) => {
+                return (
+                    <Popup
+                        content={format(".4r")(dataVal)}
+                        trigger={
+                            <rect
+                                x={0}
+                                y={aggregatedScale(val)! + 0.5 * aggregatedScale.bandwidth()}
+                                fill={"#404040"}
+                                opacity={0.8}
+                                width={valueScale(dataVal)}
+                                height={aggregatedScale.bandwidth() * 0.5} />
+                        } />
+                )
+            }))
+
+        }
+        else {
+            output = Object.entries(totalDataSet).map(([val, dataVal]) => {
+                return (
+                    <Popup
+                        content={format(".4r")(dataVal)}
+                        trigger={
+                            <rect
+                                x={0}
+                                y={aggregatedScale(val)}
+                                fill={"#404040"}
+                                opacity={0.8}
+                                width={valueScale(dataVal)}
+                                height={aggregatedScale.bandwidth()} />
+                        } />
+                )
+            })
+        }
+        return output;
+    }
 
 
     return (
         <>
-
+            {generateOutput()}
         </>
     )
 }
 
-export default inject("store")(observer(ExtraPairBar));
+export default inject("store")(observer(ExtraPairBarInt));

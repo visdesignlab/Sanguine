@@ -9,20 +9,26 @@ import { create as createpd } from "pdfast";
 import { Popup } from "semantic-ui-react";
 
 interface OwnProps {
-    dataSet: any[];
+    totalData: any[];
+    preIntData: any[];
+    postIntData: any[];
     aggregatedScale: ScaleBand<string>;
     store?: Store;
-    medianSet: any;
+
+    totalMedianSet: any;
+    preMedianSet: any;
+    postMedianSet: any;
+
     kdeMax: number;
     name: string;
 }
 
 export type Props = OwnProps;
 
-const ExtraPairViolin: FC<Props> = ({ dataSet, aggregatedScale, kdeMax, medianSet, name }: Props) => {
-    const [lineFunction, valueScale] = useMemo(() => {
+const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, totalMedianSet, aggregatedScale, kdeMax, preMedianSet, postMedianSet, name }: Props) => {
+    const [lineFunction, valueScale, halfLineFunction] = useMemo(() => {
         let maxIndices = 0;
-        Object.values(dataSet).map((array) => {
+        Object.values(totalData).map((array) => {
             maxIndices = array.length > maxIndices ? array.length : maxIndices
         })
         // const indices = range(0, maxIndices) as number[]
@@ -38,18 +44,61 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregatedScale, kdeMax, medianSe
             .y((d: any) => kdeScale(d.y) + 0.5 * aggregatedScale.bandwidth())
             .x((d: any) => valueScale(d.x));
 
-        return [lineFunction, valueScale];
-    }, [dataSet, aggregatedScale])
+        const halfLineFunction = line()
+            .curve(curveCatmullRom)
+            .y((d: any) => kdeScale(d.y) * 0.5 + 0.25 * aggregatedScale.bandwidth())
+            .x((d: any) => valueScale(d.x))
 
-    return (
-        <>
-            {Object.entries(dataSet).map(([val, dataArray]) => {
+        return [lineFunction, valueScale, halfLineFunction];
+    }, [totalData, aggregatedScale])
+
+
+    const generateOutput = () => {
+        let output = []
+        if (aggregatedScale.bandwidth() > 40) {
+            output = Object.entries(preIntData).map(([val, dataArray]) => {
 
                 // const sortedArray = dataArray.sort((a: any, b: any) =>
                 //     Math.abs(a[1] - a[0]) - Math.abs(b[1] - b[0]))
                 //console.log(`translate(0,${aggregatedScale(val)!}`)
                 return ([
-                    <Popup content={`median ${format(".2f")(medianSet[val])}`} key={`violin-${val}`} trigger={
+                    <Popup content={`median ${format(".2f")(preMedianSet[val])}`} key={`violin-${val}`} trigger={
+                        <ViolinLine
+                            d={halfLineFunction(dataArray)!}
+                            transform={`translate(0,${aggregatedScale(val)!})`}
+                        />} />,
+
+                    <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} x1={valueScale(name === "Preop Hemo" ? 13 : 7.5)} x2={valueScale(name === "Preop Hemo" ? 13 : 7.5)} y1={aggregatedScale(val)!} y2={aggregatedScale(val)! + aggregatedScale.bandwidth()} />]
+                )
+
+
+            })
+
+            output = output.concat(output = Object.entries(postIntData).map(([val, dataArray]) => {
+
+                // const sortedArray = dataArray.sort((a: any, b: any) =>
+                //     Math.abs(a[1] - a[0]) - Math.abs(b[1] - b[0]))
+                //console.log(`translate(0,${aggregatedScale(val)!}`)
+                return ([
+                    <Popup content={`median ${format(".2f")(postMedianSet[val])}`} key={`violin-${val}`} trigger={
+                        <ViolinLine
+                            d={halfLineFunction(dataArray)!}
+                            transform={`translate(0,${aggregatedScale(val)! + 0.75 * aggregatedScale.bandwidth()})`}
+                        />} />,
+
+                    <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} x1={valueScale(name === "Preop Hemo" ? 13 : 7.5)} x2={valueScale(name === "Preop Hemo" ? 13 : 7.5)} y1={aggregatedScale(val)!} y2={aggregatedScale(val)! + aggregatedScale.bandwidth()} />]
+                )
+
+
+            }))
+        } else {
+            output = Object.entries(totalData).map(([val, dataArray]) => {
+
+                // const sortedArray = dataArray.sort((a: any, b: any) =>
+                //     Math.abs(a[1] - a[0]) - Math.abs(b[1] - b[0]))
+                //console.log(`translate(0,${aggregatedScale(val)!}`)
+                return ([
+                    <Popup content={`median ${format(".2f")(totalMedianSet[val])}`} key={`violin-${val}`} trigger={
                         <ViolinLine
                             d={lineFunction(dataArray)!}
                             transform={`translate(0,${aggregatedScale(val)!})`}
@@ -59,7 +108,14 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregatedScale, kdeMax, medianSe
                 )
 
 
-            })}
+            })
+        }
+
+        return output;
+    }
+    return (
+        <>
+            {generateOutput()}
         </>
     )
 }
@@ -80,4 +136,4 @@ const ViolinLine = styled(`path`)`
   `;
 
 
-export default inject("store")(observer(ExtraPairViolin));
+export default inject("store")(observer(ExtraPairViolinInt));
