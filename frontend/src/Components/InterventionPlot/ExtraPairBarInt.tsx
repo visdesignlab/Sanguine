@@ -18,15 +18,15 @@ interface OwnProps {
 export type Props = OwnProps;
 
 const ExtraPairBarInt: FC<Props> = ({ preDataSet, postDataSet, totalDataSet, aggregatedScale, store }: Props) => {
-    const [valueScale] = useMemo(() => {
+    const [valueScale, halfValueScale] = useMemo(() => {
 
         const valueScale = scaleLinear().domain([0, max(Object.values(totalDataSet))]).range([0, extraPairWidth.BarChart])
-
-        return [valueScale];
+        const halfValueScale = scaleLinear().domain([0, max(Object.values(preDataSet).concat(Object.values(postDataSet)))]).range([0, extraPairWidth.BarChart])
+        return [valueScale, halfValueScale];
     }, [totalDataSet, aggregatedScale])
 
     const generateOutput = () => {
-        let output = [];
+        let output: any[] = [];
         if (aggregatedScale.bandwidth() > 40) {
             output = Object.entries(preDataSet).map(([val, dataVal]) => {
                 return (
@@ -38,7 +38,7 @@ const ExtraPairBarInt: FC<Props> = ({ preDataSet, postDataSet, totalDataSet, agg
                                 y={aggregatedScale(val)}
                                 fill={"#404040"}
                                 opacity={0.8}
-                                width={valueScale(dataVal)}
+                                width={halfValueScale(dataVal)}
                                 height={aggregatedScale.bandwidth() * 0.5} />
                         } />
                 )
@@ -46,7 +46,7 @@ const ExtraPairBarInt: FC<Props> = ({ preDataSet, postDataSet, totalDataSet, agg
 
             output = output.concat(Object.entries(postDataSet).map(([val, dataVal]) => {
                 return (
-                    <Popup
+                    [<Popup
                         content={format(".4r")(dataVal)}
                         trigger={
                             <rect
@@ -54,9 +54,10 @@ const ExtraPairBarInt: FC<Props> = ({ preDataSet, postDataSet, totalDataSet, agg
                                 y={aggregatedScale(val)! + 0.5 * aggregatedScale.bandwidth()}
                                 fill={"#404040"}
                                 opacity={0.8}
-                                width={valueScale(dataVal)}
+                                width={halfValueScale(dataVal)}
                                 height={aggregatedScale.bandwidth() * 0.5} />
-                        } />
+                        } />,
+                    <line x1={0} x2={extraPairWidth.BarChart} stroke="white" y1={aggregatedScale(val)! + 0.5 * aggregatedScale.bandwidth()} y2={aggregatedScale(val)! + 0.5 * aggregatedScale.bandwidth()} />]
                 )
             }))
 
