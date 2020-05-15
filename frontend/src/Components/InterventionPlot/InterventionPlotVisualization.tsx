@@ -474,9 +474,11 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                         });
                         break;
 
-                    case "Preop Hemo":
+                    case "Postop Hemo":
                         data.map((dataPoint: InterventionDataPoint) => {
                             newData[dataPoint.aggregateAttribute] = [];
+                            preIntData[dataPoint.aggregateAttribute] = [];
+                            postIntData[dataPoint.aggregateAttribute] = [];
                         });
                         hemoglobinDataSet.map((ob: any) => {
                             const end = parseFloat(ob.HEMO[1]);
@@ -528,7 +530,7 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                         }
 
                         newExtraPairData.push({
-                            name: "Preop Hemo",
+                            name: "Postop Hemo",
                             preIntData: preIntData,
                             postIntData: postIntData,
                             totalIntData: newData,

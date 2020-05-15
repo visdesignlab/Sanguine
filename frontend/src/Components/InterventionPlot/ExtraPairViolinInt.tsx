@@ -38,6 +38,10 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
         const kdeScale = scaleLinear()
             .domain([-kdeMax, kdeMax])
             .range([-0.5 * aggregatedScale.bandwidth(), 0.5 * aggregatedScale.bandwidth()])
+
+        const halfKDEScale = scaleLinear()
+            .domain([-kdeMax, kdeMax])
+            .range([-0.25 * aggregatedScale.bandwidth(), 0.25 * aggregatedScale.bandwidth()])
         //console.log(kdeMdataax)
         const lineFunction = line()
             .curve(curveCatmullRom)
@@ -46,7 +50,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
 
         const halfLineFunction = line()
             .curve(curveCatmullRom)
-            .y((d: any) => kdeScale(d.y) * 0.5 + 0.25 * aggregatedScale.bandwidth())
+            .y((d: any) => halfKDEScale(d.y) + 0.25 * aggregatedScale.bandwidth())
             .x((d: any) => valueScale(d.x))
 
         return [lineFunction, valueScale, halfLineFunction];
@@ -80,13 +84,11 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
                 //     Math.abs(a[1] - a[0]) - Math.abs(b[1] - b[0]))
                 //console.log(`translate(0,${aggregatedScale(val)!}`)
                 return ([
-                    <Popup content={`median ${format(".2f")(postMedianSet[val])}`} key={`violin-${val}`} trigger={
+                    <Popup content={`median ${format(".2f")(postMedianSet[val])}`} key={`violin-${val}-pre`} trigger={
                         <ViolinLine
                             d={halfLineFunction(dataArray)!}
-                            transform={`translate(0,${aggregatedScale(val)! + 0.75 * aggregatedScale.bandwidth()})`}
-                        />} />,
-
-                    <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} x1={valueScale(name === "Preop Hemo" ? 13 : 7.5)} x2={valueScale(name === "Preop Hemo" ? 13 : 7.5)} y1={aggregatedScale(val)!} y2={aggregatedScale(val)! + aggregatedScale.bandwidth()} />]
+                            transform={`translate(0,${aggregatedScale(val)! + 0.5 * aggregatedScale.bandwidth()})`}
+                        />} />]
                 )
 
 
@@ -98,7 +100,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
                 //     Math.abs(a[1] - a[0]) - Math.abs(b[1] - b[0]))
                 //console.log(`translate(0,${aggregatedScale(val)!}`)
                 return ([
-                    <Popup content={`median ${format(".2f")(totalMedianSet[val])}`} key={`violin-${val}`} trigger={
+                    <Popup content={`median ${format(".2f")(totalMedianSet[val])}`} key={`violin-${val}-post`} trigger={
                         <ViolinLine
                             d={lineFunction(dataArray)!}
                             transform={`translate(0,${aggregatedScale(val)!})`}
@@ -123,12 +125,6 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
 interface DotProps {
     ispreop: boolean;
 }
-
-const Circle = styled(`circle`) <DotProps>`
-  r:2
-  fill: ${props => (props.ispreop ? preop_color : postop_color)};
-  opacity: 0.5
-`;
 
 const ViolinLine = styled(`path`)`
     fill: ${basic_gray};
