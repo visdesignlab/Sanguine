@@ -68,7 +68,7 @@ const App: FC<Props> = ({ store }: Props) => {
     const resTrans = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}`)
     const dataTrans = await resTrans.json();
     //const resultTrans = dataTrans.result;
-    console.log(dataHemo, dataTrans)
+    // console.log(dataHemo, dataTrans)
     let transfused_dict = {} as any;
     let result: {
       CASE_ID: number,
@@ -125,7 +125,7 @@ const App: FC<Props> = ({ store }: Props) => {
     })
 
     result = result.filter((d: any) => d);
-    console.log(result)
+    //console.log(result)
     setHemoData(result)
     //actions.storeHemoData(result);
     //   let tempMaxCaseCount = 0
