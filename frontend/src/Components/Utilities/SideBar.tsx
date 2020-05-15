@@ -85,7 +85,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
         <Container style={{ height: "20vh" }}>
           <List>
 
-            <List.Header style={{ textAlign: "left" }}>Current View</List.Header>
+            <List.Header style={{ textAlign: "left" }}><b>Current View</b></List.Header>
             <List.Item
               icon="caret right"
               style={{ textAlign: "left" }}
@@ -111,7 +111,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
       <Grid.Row centered style={{ padding: "20px" }}>
         <Container style={{ height: "20vh" }}>
           <List>
-            <List.Header style={{ textAlign: "left" }}>Current Selected</List.Header>
+            <List.Header style={{ textAlign: "left" }}><b>Current Selected</b></List.Header>
             {currentSelectSet.map((selectSet) => {
               return <FilterListIT icon="caret right" onClick={() => { actions.clearSelectSet(selectSet.set_name) }} content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
             })}
@@ -131,7 +131,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
           <List relaxed divided >
             <List.Item key={"filter-header"} style={{ background: "#dff9ec" }}>
               <List.Content floated="left" style={{ width: "60%" }}>
-                Procedures
+                <b>Procedures</b>
               </List.Content>
               <List.Content floated="right" style={{ width: "30%" }}>
                 <SVG>
