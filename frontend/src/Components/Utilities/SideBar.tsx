@@ -81,11 +81,11 @@ const SideBar: FC<Props> = ({ store }: Props) => {
       padded
     >
 
-      <Grid.Row centered style={{ padding: "40px" }}>
+      <Grid.Row centered style={{ padding: "20px" }}>
         <Container style={{ height: "20vh" }}>
           <List>
 
-            <List.Header>Current View</List.Header>
+            <List.Header style={{ textAlign: "left" }}>Current View</List.Header>
             <List.Item
               icon="caret right"
               style={{ textAlign: "left" }}
@@ -108,10 +108,10 @@ const SideBar: FC<Props> = ({ store }: Props) => {
         </Container>
 
       </Grid.Row>
-      <Grid.Row centered style={{ padding: "40px" }}>
+      <Grid.Row centered style={{ padding: "20px" }}>
         <Container style={{ height: "20vh" }}>
           <List>
-            <List.Header>Current Selected</List.Header>
+            <List.Header style={{ textAlign: "left" }}>Current Selected</List.Header>
             {currentSelectSet.map((selectSet) => {
               return <FilterListIT icon="caret right" onClick={() => { actions.clearSelectSet(selectSet.set_name) }} content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
             })}
@@ -126,9 +126,10 @@ const SideBar: FC<Props> = ({ store }: Props) => {
           </List>
         </Container>
       </Grid.Row>
-      <Grid.Row style={{ padding: "10px" }}>
+      <Grid.Row style={{ padding: "20px" }}>
         <Container style={{ overflow: "auto", height: "40vh" }}>
           <List relaxed divided >
+            <List.Header>Procedures</List.Header>
             {itemSelected.map((listItem: any) => {
               if (listItem.value) {
                 return (
