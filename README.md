@@ -1,6 +1,12 @@
-# Run BloodVis through CHPC
+# BloodVis Visualization Project 
 
-To use this, make sure you are on a campus network (Any network should be fine as long as it is part of the campus). If off-campus, use a VPN that ends in utah.edu
+This project is a collaboeration between VDL and ARUP at University of Utah. We visualize blood usage in cardiac surgeries and associated attributes. Through this interactive visualization tool, we hope to offer clinical practioners better overall view on the use of blood, achieving better patient outcome. 
+
+![Interface image](https://github.com/visdesignlab/bloodvis/blob/master/images/interface.png)
+
+# Run BloodVis through CHPC (An account with CHPC is required)
+
+To use this, make sure you are on a campus network (Any network should be fine as long as it is part of the campus). If off-campus, use a VPN that ends in utah.edu 
 
 ## Start a remote desktop session
 
