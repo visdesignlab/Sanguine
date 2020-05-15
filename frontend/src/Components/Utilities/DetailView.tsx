@@ -73,14 +73,14 @@ const DetailView: FC<Props> = ({ store }: Props) => {
     const generate_List_Items = () => {
         let result = [];
         if (individualInfo) {
-
+            result.push(<List.Header><b style={{}}>Selected Patient</b></List.Header>)
             for (let [key, val] of Object.entries(individualInfo)) {
                 if (!HIPAA_Sensitive.has(key)) {
                     result.push(
 
                         <List.Item>
-                            <List.Header>{AxisLabelDict[key] ? AxisLabelDict[key] : key}</List.Header>
-                            {val}
+                            <List.Content>{AxisLabelDict[key] ? AxisLabelDict[key] : key}</List.Content>
+                            <List.Description>{val as string}</List.Description>
                         </List.Item>)
                 }
 
@@ -89,13 +89,13 @@ const DetailView: FC<Props> = ({ store }: Props) => {
         return result
     }
     return (
-        <Message>
-            <Message.Header>Selected Patient</Message.Header>
-            <List>
-                {generate_List_Items()}
-            </List>
-        </Message>)
+
+        <List>
+
+            {generate_List_Items()}
+        </List>)
 }
+
 
 export default inject("store")(observer(DetailView));
 
