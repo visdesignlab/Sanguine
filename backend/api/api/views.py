@@ -278,9 +278,9 @@ def request_transfused_units(request):
                 if aggregated_by 
                 else "SUM(PRBC_UNITS),SUM(FFP_UNITS),SUM(PLT_UNITS),SUM(CRYO_UNITS),SUM(CELL_SAVER_ML)")
             
-        group_by = (f"GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID, {aggregates[aggregated_by]}" 
+        group_by = (f"GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, LIMITED_SURG.DI_PAT_ID, LIMITED_SURG.DI_CASE_ID, {aggregates[aggregated_by]}" 
             if aggregated_by 
-            else "GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, TRNSFSD.DI_PAT_ID, TRNSFSD.DI_CASE_ID")
+            else "GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, LIMITED_SURG.DI_PAT_ID, TRNSLIMITED_SURGFSD.DI_CASE_ID")
 
         # Generate the CPT filter sql
         filters, bind_names, filters_safe_sql = get_filters(filter_selection)
@@ -299,11 +299,11 @@ def request_transfused_units(request):
         SELECT 
             LIMITED_SURG.SURGEON_PROV_DWID, 
             LIMITED_SURG.ANESTH_PROV_DWID, 
-            TRNSFSD.DI_PAT_ID, 
-            TRNSFSD.DI_CASE_ID, 
+            LIMITED_SURG.DI_PAT_ID, 
+            LIMITED_SURG.DI_CASE_ID, 
             {transfusion_type}
         FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD TRNSFSD
-        INNER JOIN ( 
+        RIGHT JOIN ( 
             SELECT * 
             FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE 
             WHERE DI_CASE_ID IN (
