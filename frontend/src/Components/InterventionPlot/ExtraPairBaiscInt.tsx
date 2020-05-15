@@ -30,7 +30,6 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, preIntData, postIntData, aggr
         let output = [];
         if (aggregatedScale.bandwidth() > 40) {
             output = Object.entries(preIntData).map(([val, dataVal]) => {
-                console.log(val, dataVal)
                 return (
                     [<Popup
                         content={format(".4r")(dataVal)}

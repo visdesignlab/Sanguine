@@ -72,13 +72,17 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
                             transform={`translate(0,${aggregatedScale(val)!})`}
                         />} />,
 
-                    <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} x1={valueScale(name === "Preop Hemo" ? 13 : 7.5)} x2={valueScale(name === "Preop Hemo" ? 13 : 7.5)} y1={aggregatedScale(val)!} y2={aggregatedScale(val)! + aggregatedScale.bandwidth()} />]
+                    <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }}
+                        x1={valueScale(name === "Preop Hemo" ? 13 : 7.5)}
+                        x2={valueScale(name === "Preop Hemo" ? 13 : 7.5)}
+                        y1={aggregatedScale(val)!}
+                        y2={aggregatedScale(val)! + aggregatedScale.bandwidth()} />]
                 )
 
 
             })
 
-            output = output.concat(output = Object.entries(postIntData).map(([val, dataArray]) => {
+            output = output.concat(Object.entries(postIntData).map(([val, dataArray]) => {
 
                 // const sortedArray = dataArray.sort((a: any, b: any) =>
                 //     Math.abs(a[1] - a[0]) - Math.abs(b[1] - b[0]))
