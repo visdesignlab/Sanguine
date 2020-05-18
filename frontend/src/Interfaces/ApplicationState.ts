@@ -231,4 +231,21 @@ export const HIPAA_Sensitive = new Set([
   "Ethnicity Code",
   "Ethnicity Description",
   "Date of Death",
-  "Date of Birth"])
+  "Date of Birth",
+  "Surgery Date",
+  "Surgery Start Time",
+  "Surgery End Time"
+])
+
+export const Accronym = {
+  CABG: "Coronary Artery Bypass Grafting",
+  TAVR: "Transcatheter Aortic Valve Replacement",
+  VAD: "Ventricular Assist Devices",
+  AVR: "Aortic Valve Replacement",
+  ECMO: "Extracorporeal Membrane Oxygenation",
+  MVR: "Mitral Valve Repair",
+  EGD: "Esophagogastroduodenoscopy",
+  VATS: "Video-assisted Thoracoscopic Surgery",
+  TVR: "Tricuspid Valve Repair",
+  PVR: "Proliferative Vitreoretinopathy"
+}

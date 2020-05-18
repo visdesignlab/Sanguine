@@ -5,7 +5,7 @@ import { Menu, Dropdown, Grid, Container, Message, List, Button } from "semantic
 import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat } from "d3";
 import { actions } from "../..";
-import { AxisLabelDict } from "../../Interfaces/ApplicationState";
+import { AxisLabelDict, Accronym } from "../../Interfaces/ApplicationState";
 import { basic_gray, highlight_orange, third_gray, secondary_gray } from "../../ColorProfile";
 
 interface OwnProps {
@@ -98,6 +98,14 @@ const SideBar: FC<Props> = ({ store }: Props) => {
               icon="caret right"
               style={{ textAlign: "left" }}
               content={`Individual Case: ${totalIndividualCaseCount}`} />
+
+            <List.Item icon="caret right" style={{ textAlign: "left" }}
+              content={filterSelection.map((d) => {
+                if ((Accronym as any)[d]) {
+                  return (<div className="tooltip">{d}<span className="tooltiptext">{(Accronym as any)[d]}</span></div>)
+                }
+              })} />
+
             {currentOutputFilterSet.map((selectSet) => {
               return <FilterListIT
                 icon="caret right"
