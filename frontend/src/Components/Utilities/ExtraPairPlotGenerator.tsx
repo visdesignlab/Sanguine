@@ -2,7 +2,8 @@ import React, {
     FC,
     useMemo,
     useEffect,
-    useState
+    useState,
+    memo
 } from "react";
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
