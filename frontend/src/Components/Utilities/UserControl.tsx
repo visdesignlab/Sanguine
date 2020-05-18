@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState, useRef } from "react";
+import React, { FC, useEffect, useState, useRef, useMemo } from "react";
 import Store from '../../Interfaces/Store'
 // import {}
 import { Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment } from 'semantic-ui-react'
@@ -87,33 +87,44 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
 
 
-  const addModeButtonHandler = (chartType: number) => {
-    setAddMode(true);
-    setAddingChartType(chartType)
-  }
 
-  const interventionHandler = (e: any, value: any) => {
-    if (value.value === "None") {
-      setInterventionDate(undefined)
+
+  const [addModeButtonHandler, interventionHandler, xAxisChangeHandler, yAxisChangeHandler, interventionPlotHandler] = useMemo(() => {
+
+    const addModeButtonHandler = (chartType: number) => {
+      setAddMode(true);
+      setAddingChartType(chartType)
     }
-    else {
-      setInterventionDate(value.value.getTime())
+
+    const interventionHandler = (e: any, value: any) => {
+      if (value.value === "None") {
+        setInterventionDate(undefined)
+      }
+      else {
+        setInterventionDate(value.value.getTime())
+      }
     }
-  }
+    const xAxisChangeHandler = (e: any, value: any) => {
+      setXSelection(value.value)
+    }
+
+    const yAxisChangeHandler = (e: any, value: any) => {
+      setYSelection(value.value)
+    }
+
+    const interventionPlotHandler = (e: any, value: any) => {
+      setInterventionPlotType(value.value)
+    }
+
+    return [addModeButtonHandler, interventionHandler, xAxisChangeHandler, yAxisChangeHandler, interventionPlotHandler]
+  }, [])
 
 
 
-  const xAxisChangeHandler = (e: any, value: any) => {
-    setXSelection(value.value)
-  }
 
-  const yAxisChangeHandler = (e: any, value: any) => {
-    setYSelection(value.value)
-  }
 
-  const interventionPlotHandler = (e: any, value: any) => {
-    setInterventionPlotType(value.value)
-  }
+
+
 
 
   const confirmChartAddHandler = () => {
