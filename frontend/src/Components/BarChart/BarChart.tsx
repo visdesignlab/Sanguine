@@ -65,6 +65,8 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
 
   const currentOffset = offset.regular;
   const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
+  const [aggregationScaleDomain, setAggregationScaleDomain] = useState("")
+  const [aggregationScaleRange, setAggregationScaleRange] = useState("")
 
   useEffect(() => {
     let totalWidth = 0
@@ -72,12 +74,23 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
       totalWidth += (extraPairWidth[d.type] + extraPairPadding)
     })
     setExtraPairTotlaWidth(totalWidth)
+
   }, [extraPairDataSet])
+
+  useEffect(() => {
+    const xVals = data
+      .map(function (dp) {
+        return dp.aggregateAttribute;
+      })
+      .sort();
+    const range = [height - currentOffset.bottom, currentOffset.top]
+    setAggregationScaleDomain(JSON.stringify(xVals))
+    setAggregationScaleRange(JSON.stringify(range))
+  }, [data, height])
 
   const aggregationScale = useCallback(() => {
     const xVals = data
       .map(function (dp) {
-
         return dp.aggregateAttribute;
       })
       .sort();
@@ -85,7 +98,6 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
       .domain(xVals)
       .range([height - currentOffset.bottom, currentOffset.top])
       .paddingInner(0.1);
-
     return aggregationScale
   }, [height, data]);
 
@@ -119,7 +131,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
       .x((d: any) => valueScale()(d.x) - currentOffset.left);
 
     return lineFunction
-  }, [data])
+  }, [data, valueScale()])
 
 
 
@@ -273,7 +285,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         })}
       </g>
       <g className="extraPairChart">
-        <ExtraPairPlotGenerator aggregationScale={aggregationScale()} extraPairDataSet={extraPairDataSet} height={height} chartId={chartId} />
+        <ExtraPairPlotGenerator aggregationScaleDomain={aggregationScaleDomain} aggregationScaleRange={aggregationScaleRange} extraPairDataSet={extraPairDataSet} height={height} chartId={chartId} />
       </g>
 
 
