@@ -62,7 +62,9 @@ const SideBar: FC<Props> = ({ store }: Props) => {
       }
     })
     newItemSelected.sort((a: any, b: any) => b.count - a.count)
-    setItemSelected(newItemSelected)
+    if (JSON.stringify(newItemSelected) !== JSON.stringify(itemSelected)) {
+      setItemSelected(newItemSelected)
+    }
     setItemUnselected(newItemUnselected)
   }, [filterSelection])
 
@@ -98,6 +100,18 @@ const SideBar: FC<Props> = ({ store }: Props) => {
               icon="caret right"
               style={{ textAlign: "left" }}
               content={`Individual Case: ${totalIndividualCaseCount}`} />
+
+            <List.Item icon="caret right" style={{ textAlign: "left" }}
+            // content={filterSelection.map((d) => {
+            //   if ((Accronym as any)[d]) {
+            //     return (
+            //       <div className="tooltip">{d}
+            //         <span className="tooltiptext">{(Accronym as any)[d]}</span>
+            //       </div>)
+            //   }
+            // })} \
+            />
+
             {currentOutputFilterSet.map((selectSet) => {
               return <FilterListIT
                 icon="caret right"
