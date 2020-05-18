@@ -9,7 +9,7 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { DumbbellDataPoint, SelectSet, BloodProductCap, dumbbellFacetOptions, barChartValuesOptions } from "../../Interfaces/ApplicationState"
+import { DumbbellDataPoint, SelectSet, BloodProductCap, dumbbellFacetOptions, barChartValuesOptions, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState"
 import DumbbellChart from "./DumbbellChart"
 import { Grid, Menu, Dropdown, Button } from "semantic-ui-react";
 import { preop_color, postop_color, basic_gray, third_gray } from "../../ColorProfile";
@@ -38,8 +38,10 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
   } = store!;
 
   const svgRef = useRef<SVGSVGElement>(null);
-  const [data, setData] = useState<{ result: DumbbellDataPoint[] }>({ result: [] });
-  const [dimension, setDimensions] = useState({ width: 0, height: 0 });
+  const [data, setData] = useState<DumbbellDataPoint[]>([]);
+  const [dimensionWidth, setDimensionWidth] = useState(0)
+  const [dimensionHeight, setDimensionHeight] = useState(0)
+  //  const [dimension, setDimensions] = useState({ width: 0, height: 0 });
   // const [yMax, setYMax] = useState(0);
   const [xRange, setXRange] = useState({ xMin: 0, xMax: Infinity });
   const [sortMode, setSortMode] = useState("Postop");
@@ -47,10 +49,9 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
 
   useLayoutEffect(() => {
     if (svgRef.current) {
-      setDimensions({
-        height: svgRef.current.clientHeight,
-        width: svgRef.current.clientWidth
-      });
+      setDimensionWidth(svgRef.current.clientWidth);
+      setDimensionHeight(svgRef.current.clientHeight)
+
     }
   }, [layoutArray[chartIndex]]);
 
@@ -145,8 +146,10 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
       cast_data = cast_data.filter((d: any) => d);
       // actions.updateCaseCount("INDIVIDUAL", caseCount)
       store!.totalIndividualCaseCount = caseCount;
-      setData({ result: cast_data });
-      setXRange({ xMin: tempXMin, xMax: tempXMax });
+      stateUpdateWrapperUseJSON(data, cast_data, setData)
+      stateUpdateWrapperUseJSON(xRange, { xMin: tempXMin, xMax: tempXMax }, setXRange)
+      //  setData({ result: cast_data });
+      //  setXRange({ xMin: tempXMin, xMax: tempXMax });
 
     }
   }
@@ -214,8 +217,9 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
             <DumbbellChart
               svg={svgRef}
               yAxisName={yAxis}
-              data={data.result}
-              dimension={dimension}
+              data={data}
+              dimensionHeight={dimensionHeight}
+              dimensionWidth={dimensionWidth}
               xRange={xRange}
               // yMax={yMax}
               // aggregation={aggregatedOption}
