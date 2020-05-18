@@ -74,7 +74,25 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     return [caseScale];
   }, [maxCaseCount])
 
-
+  const generateSurgery = () => {
+    console.log("a")
+    let output: any[] = []
+    filterSelection.map((d, i) => {
+      const stringArray = d.split(" ")
+      console.log(stringArray)
+      stringArray.map((word, index) => {
+        if ((Accronym as any)[word]) {
+          output.push((<div className="tooltip" style={{ cursor: "help" }}>{word}<span className="tooltiptext">{`${(Accronym as any)[word]}`}</span></div>))
+        } else {
+          output.push((<span>{`${index !== 0 ? " " : ""}${word}${index !== stringArray.length - 1 ? " " : ""}`}</span>))
+        }
+      })
+      if (i !== filterSelection.length - 1) {
+        output.push((<span>, </span>))
+      }
+    })
+    return output
+  }
 
   return (
     <Grid
@@ -102,12 +120,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
               content={`Individual Case: ${totalIndividualCaseCount}`} />
 
             <List.Item icon="caret right" style={{ textAlign: "left" }}
-
-              content={filterSelection.map((d) => {
-                if ((Accronym as any)[d]) {
-                  return (<div className="tooltip">{d}<span className="tooltiptext">{(Accronym as any)[d]}</span></div>)
-                }
-              })} />
+              content={generateSurgery()} />
 
 
 
