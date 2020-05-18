@@ -74,50 +74,57 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     setExtraPairTotlaWidth(totalWidth)
   }, [extraPairDataSet])
 
-  const [calculatedWidth, aggregationScale, valueScale, caseScale, lineFunction] = useMemo(() => {
-    const caseMax = max(data.map(d => d.caseCount)) || 0;
-    const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
-
-    const calculatedWidth = width - extraPairTotalWidth
-
-
-    let kdeMax = 0
+  const aggregationScale = useCallback(() => {
     const xVals = data
       .map(function (dp) {
-        const max_temp = max(dp.kdeCal, d => d.y)
-        kdeMax = kdeMax > max_temp ? kdeMax : max_temp;
+
         return dp.aggregateAttribute;
       })
       .sort();
-
-    let valueScale = scaleLinear()
-      .domain([0, BloodProductCap[valueToVisualize]])
-      .range([currentOffset.left, calculatedWidth - currentOffset.right - currentOffset.margin]);
-
-    let aggregationScale = scaleBand()
+    const aggregationScale = scaleBand()
       .domain(xVals)
       .range([height - currentOffset.bottom, currentOffset.top])
       .paddingInner(0.1);
 
+    return aggregationScale
+  }, [height, data]);
+
+  const valueScale = useCallback(() => {
+    const valueScale = scaleLinear()
+      .domain([0, BloodProductCap[valueToVisualize]])
+      .range([currentOffset.left, width - extraPairTotalWidth - currentOffset.right - currentOffset.margin]);
+    return valueScale
+  }, [width])
+
+  const caseScale = useCallback(() => {
+    const caseMax = max(data.map(d => d.caseCount)) || 0;
+    const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
+    return caseScale
+  }, [data])
+
+  const lineFunction = useCallback(() => {
+    let kdeMax = 0
+    data.map(function (dp) {
+      const max_temp = max(dp.kdeCal, d => d.y)
+      kdeMax = kdeMax > max_temp ? kdeMax : max_temp;
+    })
     const kdeScale = scaleLinear()
       .domain([0, kdeMax])
-      .range([0.5 * aggregationScale.bandwidth(), 0])
+      .range([0.5 * aggregationScale().bandwidth(), 0])
     // const kdeReverseScale = scaleLinear().domain([0,kdeMax]).range([0.5*aggregationScale.bandwidth(),aggregationScale.bandwidth()])
 
     const lineFunction = line()
       .curve(curveCatmullRom)
       .y((d: any) => kdeScale(d.y))
-      .x((d: any) => valueScale(d.x) - currentOffset.left);
+      .x((d: any) => valueScale()(d.x) - currentOffset.left);
 
-    // const reverseLineFunction = line()
-    //   .curve(curveCatmullRom)
-    //   .y((d: any) => kdeScale(d.y))
-    //   .x((d: any) => valueScale(d.x) - currentOffset.left);
-    return [calculatedWidth, aggregationScale, valueScale, caseScale, lineFunction];
-  }, [width, height, data, yMax, extraPairDataSet])
+    return lineFunction
+  }, [data])
 
-  const aggregationLabel = axisLeft(aggregationScale);
-  const yAxisLabel = axisBottom(valueScale);
+
+
+  const aggregationLabel = axisLeft(aggregationScale());
+  const yAxisLabel = axisBottom(valueScale());
 
   svgSelection
     .select(".axes")
@@ -142,7 +149,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
   svgSelection
     // .select(".axes")
     .select(".x-label")
-    .attr("x", valueScale(BloodProductCap[valueToVisualize] * 0.5))
+    .attr("x", valueScale()(BloodProductCap[valueToVisualize] * 0.5))
     .attr("y", height - currentOffset.bottom + 20)
     .attr("alignment-baseline", "hanging")
     .attr("font-size", "11px")
@@ -197,22 +204,22 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     if (stripPlotMode) {
       return ([<SingleStripPlot
         isSelected={decideIfSelected(dataPoint)}
-        bandwidth={aggregationScale.bandwidth()}
-        valueScale={valueScale}
+        bandwidth={aggregationScale().bandwidth()}
+        valueScale={valueScale()}
         aggregatedBy={aggregatedBy}
         dataPoint={dataPoint}
-        howToTransform={(`translate(-${currentOffset.left},${aggregationScale(
+        howToTransform={(`translate(-${currentOffset.left},${aggregationScale()(
           dataPoint.aggregateAttribute
         )})`).toString()}
       />])
     } else {
       return ([<SingleViolinPlot
-        path={lineFunction(dataPoint.kdeCal)!}
+        path={lineFunction()(dataPoint.kdeCal)!}
         dataPoint={dataPoint}
         aggregatedBy={aggregatedBy}
         isSelected={decideIfSelected(dataPoint)}
         isFiltered={decideIfFiltered(dataPoint)}
-        howToTransform={(`translate(0,${aggregationScale(
+        howToTransform={(`translate(0,${aggregationScale()(
           dataPoint.aggregateAttribute
         )})`).toString()}
       />])
@@ -234,30 +241,30 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         {data.map((dataPoint) => {
           return outputSinglePlotElement(dataPoint).concat([
             <rect
-              fill={interpolateGreys(caseScale(dataPoint.caseCount))}
+              fill={interpolateGreys(caseScale()(dataPoint.caseCount))}
               x={-40}
-              y={aggregationScale(dataPoint.aggregateAttribute)}
+              y={aggregationScale()(dataPoint.aggregateAttribute)}
               width={35}
-              height={aggregationScale.bandwidth()}
+              height={aggregationScale().bandwidth()}
             />,
             <text
               fill="white"
               x={-22.5}
               y={
-                aggregationScale(dataPoint.aggregateAttribute)! +
-                0.5 * aggregationScale.bandwidth()
+                aggregationScale()(dataPoint.aggregateAttribute)! +
+                0.5 * aggregationScale().bandwidth()
               }
               alignmentBaseline={"central"}
               textAnchor={"middle"}
             >
               {dataPoint.caseCount}
             </text>, <line
-              x1={valueScale(dataPoint.median) - currentOffset.left}
-              x2={valueScale(dataPoint.median) - currentOffset.left}
-              y1={aggregationScale(dataPoint.aggregateAttribute)}
+              x1={valueScale()(dataPoint.median) - currentOffset.left}
+              x2={valueScale()(dataPoint.median) - currentOffset.left}
+              y1={aggregationScale()(dataPoint.aggregateAttribute)}
               y2={
-                aggregationScale(dataPoint.aggregateAttribute)! +
-                aggregationScale.bandwidth()
+                aggregationScale()(dataPoint.aggregateAttribute)! +
+                aggregationScale().bandwidth()
               }
               stroke="#d98532"
               strokeWidth="2px"
@@ -266,7 +273,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         })}
       </g>
       <g className="extraPairChart">
-        <ExtraPairPlotGenerator aggregationScale={aggregationScale} extraPairDataSet={extraPairDataSet} height={height} chartId={chartId} />
+        <ExtraPairPlotGenerator aggregationScale={aggregationScale()} extraPairDataSet={extraPairDataSet} height={height} chartId={chartId} />
       </g>
 
 
