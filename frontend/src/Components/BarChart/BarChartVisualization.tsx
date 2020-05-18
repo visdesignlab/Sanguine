@@ -273,12 +273,17 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
         }
       })
     }
-    setExtraPairData(newExtraPairData)
+    if (JSON.stringify(newExtraPairData) !== JSON.stringify(extraPairData)) {
+      setExtraPairData(newExtraPairData)
+    }
   }
 
-  useMemo(() => {
+  //TODO change this to useMemo
+  useEffect(() => {
     makeExtraPairData();
   }, [layoutArray[chartIndex], data, hemoglobinDataSet]);
+
+
 
   const toggleStripGraphMode = () => {
     setStripMode(!stripPlotMode)
