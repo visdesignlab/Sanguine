@@ -3,7 +3,7 @@ import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { HeatMapDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType } from '../../Interfaces/ApplicationState'
+import { HeatMapDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions } from '../../Interfaces/ApplicationState'
 
 import { Button, Icon, Table, Grid, Dropdown, GridColumn, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
@@ -32,11 +32,9 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
     } = store!;
     const svgRef = useRef<SVGSVGElement>(null);
     // const [data, setData] = useState<{ original: BarChartDataPoint[]; perCase: BarChartDataPoint[]; }>({ original: [], perCase: [] });
-    const [data, setData] = useState<{
-        original: HeatMapDataPoint[]
-    }>({ original: [] });
+    const [data, setData] = useState<HeatMapDataPoint[]>([]);
 
-    const [yMax, setYMax] = useState({ original: 0, perCase: 0 });
+    const [yMax, setYMax] = useState(0);
     const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
     const [extraPairData, setExtraPairData] = useState<{ name: string, data: any[], type: string }[]>([])
     const [stripPlotMode, setStripMode] = useState(false);
@@ -69,7 +67,6 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
         let caseCount = 0;
         if (dataResult) {
             let yMaxTemp = -1;
-            let perCaseYMaxTemp = -1
 
             // const caseList = dataResult.case_id_list;
             let caseDictionary = {} as any;
@@ -105,6 +102,7 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                 const cap = BloodProductCap[valueToVisualize]
 
                 if (valueToVisualize === "CELL_SAVER_ML") {
+                    countDict[-1] = 0
                     for (let i = 0; i <= cap; i += 100) {
                         countDict[i] = 0
                     }
@@ -117,7 +115,10 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                 outputResult.map((d: any) => {
                     if (valueToVisualize === "CELL_SAVER_ML") {
                         const roundedAnswer = Math.floor(d / 100) * 100
-                        if (roundedAnswer > cap) {
+                        if (d === 0) {
+                            countDict[-1] += 1
+                        }
+                        else if (roundedAnswer > cap) {
                             countDict[cap] += 1
                         }
                         else {
@@ -132,20 +133,23 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                     }
                 })
 
+
+
                 const new_ob: HeatMapDataPoint = {
                     caseCount: case_num,
                     aggregateAttribute: aggregateByAttr,
                     totalVal: total_val,
                     countDict: countDict,
-                    zeroCaseNum: zeroCaseNum
+                    zeroCaseNum: zeroCaseNum,
+                    patientIDList: ob.pat_id
                 };
 
                 return new_ob;
             });
-            setData({ original: cast_data });
+            setData(cast_data);
             setCaseIDList(caseDictionary)
             // actions.updateCaseCount("AGGREGATED", caseCount)
-            setYMax({ original: yMaxTemp, perCase: perCaseYMaxTemp });
+            setYMax(yMaxTemp);
             store!.totalAggregatedCaseCount = caseCount;
 
         }
@@ -153,9 +157,7 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
 
     useEffect(() => {
         fetchChartData();
-
     }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize]);
-
 
     const makeExtraPairData = () => {
         let newExtraPairData: any[] = []
@@ -167,54 +169,75 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                 switch (variable) {
                     case "Total Transfusion":
                         //let newDataBar = {} as any;
-                        data.original.map((dataPoint: HeatMapDataPoint) => {
-                            newData[dataPoint.aggregateAttribute] = dataPoint.totalVal
-                        })
+                        data.map((dataPoint: HeatMapDataPoint) => {
+                            newData[dataPoint.aggregateAttribute] = dataPoint.totalVal;
+                        });
                         newExtraPairData.push({ name: "Total", data: newData, type: "BarChart" });
                         break;
-                    case "Per Case Transfusion":
+                    case "Per Case":
                         // let newDataPerCase = {} as any;
-                        data.original.map((dataPoint: HeatMapDataPoint) => {
-                            newData[dataPoint.aggregateAttribute] = dataPoint.totalVal / dataPoint.caseCount
-                        })
+                        data.map((dataPoint: HeatMapDataPoint) => {
+                            newData[dataPoint.aggregateAttribute] = dataPoint.totalVal / dataPoint.caseCount;
+                        });
                         newExtraPairData.push({ name: "Per Case", data: newData, type: "BarChart" });
                         break;
-                    case "Zero Transfusion Cases":
+                    case "Zero Transfusion":
                         //let newDataPerCase = {} as any;
-                        data.original.map((dataPoint: HeatMapDataPoint) => {
-                            newData[dataPoint.aggregateAttribute] = dataPoint.zeroCaseNum / dataPoint.caseCount
-                        })
+                        data.map((dataPoint: HeatMapDataPoint) => {
+                            newData[dataPoint.aggregateAttribute] = dataPoint.zeroCaseNum / dataPoint.caseCount;
+                        });
                         newExtraPairData.push({ name: "Zero %", data: newData, type: "Basic" });
                         break;
+                    case "ROM":
+                        data.map(async (dataPoint: HeatMapDataPoint) => {
+                            newData[dataPoint.aggregateAttribute] = dataPoint.patientIDList;
+                        });
+                        newExtraPairData.push({ name: "ROM", data: newData, type: "Outcomes" });
+                        break;
+                    case "SOI":
+                        data.map(async (dataPoint: HeatMapDataPoint) => {
+                            newData[dataPoint.aggregateAttribute] = dataPoint.patientIDList;
+                        });
+                        newExtraPairData.push({ name: "SOI", data: newData, type: "Outcomes" });
+                        break;
+                    case "Mortality":
+                        data.map(async (dataPoint: HeatMapDataPoint) => {
+                            newData[dataPoint.aggregateAttribute] = dataPoint.patientIDList;
+                        });
+                        newExtraPairData.push({ name: "Mortality", data: newData, type: "Outcomes" });
+                        break;
+                    case "Vent":
+                        data.map(async (dataPoint: HeatMapDataPoint) => {
+                            newData[dataPoint.aggregateAttribute] = dataPoint.patientIDList;
+                        });
+                        newExtraPairData.push({ name: "Vent", data: newData, type: "Outcomes" });
+                        break;
                     case "Preop Hemo":
-                        //let newData = {} as any;
-                        data.original.map((dataPoint: HeatMapDataPoint) => {
+                        data.map((dataPoint: HeatMapDataPoint) => {
                             newData[dataPoint.aggregateAttribute] = [];
                         });
                         hemoglobinDataSet.map((ob: any) => {
                             const begin = parseFloat(ob.HEMO[0]);
-                            // const end = parseFloat(ob.HEMO[1]);
                             if (newData[ob[aggregatedBy]] && begin > 0 && caseIDList[ob.CASE_ID]) {
                                 newData[ob[aggregatedBy]].push(begin);
                             }
                         });
-
                         for (let prop in newData) {
-                            medianData[prop] = median(newData[prop])
+                            medianData[prop] = median(newData[prop]);
                             let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
-                            pd = [{ x: 0, y: 0 }].concat(pd)
+                            pd = [{ x: 0, y: 0 }].concat(pd);
                             let reverse_pd = pd.map((pair: any) => {
                                 kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
-                                return { x: pair.x, y: - pair.y }
-                            }).reverse()
-                            pd = pd.concat(reverse_pd)
-                            newData[prop] = pd
+                                return { x: pair.x, y: -pair.y };
+                            }).reverse();
+                            pd = pd.concat(reverse_pd);
+                            newData[prop] = pd;
                         }
                         newExtraPairData.push({ name: "Preop Hemo", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
                         break;
                     case "Postop Hemo":
                         //let newData = {} as any;
-                        data.original.map((dataPoint: HeatMapDataPoint) => {
+                        data.map((dataPoint: HeatMapDataPoint) => {
                             newData[dataPoint.aggregateAttribute] = [];
                         });
                         hemoglobinDataSet.map((ob: any) => {
@@ -224,19 +247,17 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                                 newData[ob[aggregatedBy]].push(end);
                             }
                         });
-
                         for (let prop in newData) {
-                            medianData[prop] = median(newData[prop])
+                            medianData[prop] = median(newData[prop]);
                             let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
-                            pd = [{ x: 0, y: 0 }].concat(pd)
+                            pd = [{ x: 0, y: 0 }].concat(pd);
                             let reverse_pd = pd.map((pair: any) => {
                                 kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
-                                return { x: pair.x, y: - pair.y }
-                            }).reverse()
-                            pd = pd.concat(reverse_pd)
-                            newData[prop] = pd
+                                return { x: pair.x, y: -pair.y };
+                            }).reverse();
+                            pd = pd.concat(reverse_pd);
+                            newData[prop] = pd;
                         }
-
                         newExtraPairData.push({ name: "Postop Hemo", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
                         break;
                     default:
@@ -288,42 +309,19 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                         <Menu.Item fitted>
                             <Dropdown basic item icon="plus" compact>
                                 <Dropdown.Menu>
-                                    <Dropdown.Item
-                                        onClick={() => {
-                                            actions.changeExtraPair(chartId, "Preop Hemo");
-                                        }}
-                                    >
-                                        Preop Hemoglobin
-                                    </Dropdown.Item>
-                                    <Dropdown.Item
-                                        onClick={() => {
-                                            actions.changeExtraPair(chartId, "Postop Hemo");
-                                        }}
-                                    >
-                                        Postop Hemoglobin
-                                    </Dropdown.Item>
-                                    <Dropdown.Item
-                                        onClick={() => {
-                                            actions.changeExtraPair(chartId, "Total Transfusion");
-                                        }}
-                                    >
-                                        Total Transfusion
-                                    </Dropdown.Item>
-                                    <Dropdown.Item
-                                        onClick={() => {
-                                            actions.changeExtraPair(chartId, "Per Case Transfusion");
-                                        }}
-                                    >
-                                        Per Case Transfusion
-                                    </Dropdown.Item>
-                                    <Dropdown.Item
-                                        onClick={() => {
-                                            actions.changeExtraPair(chartId, "Zero Transfusion Cases");
-                                        }}
-                                    >
-                                        Zero Transfusion Cases
-                                    </Dropdown.Item>
-
+                                    {
+                                        extraPairOptions.map((d: { value: string; title: string }) => {
+                                            return (
+                                                <Dropdown.Item
+                                                    onClick={() => {
+                                                        actions.changeExtraPair(chartId, d.value);
+                                                    }}
+                                                >
+                                                    {d.title}
+                                                </Dropdown.Item>
+                                            )
+                                        })
+                                    }
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item >
@@ -345,11 +343,11 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                     <SVG ref={svgRef}>
                         <HeatMap
                             dimensionWhole={dimensions}
-                            data={data.original}
+                            data={data}
                             svg={svgRef}
                             aggregatedBy={aggregatedBy}
                             valueToVisualize={valueToVisualize}
-                            yMax={yMax.original}
+                            yMax={yMax}
                             // selectedVal={selectedBar}
                             chartId={chartId}
                             // stripPlotMode={stripPlotMode}

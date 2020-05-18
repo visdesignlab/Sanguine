@@ -145,7 +145,7 @@ export function setupProvenance(): AppProvenance {
       y: Infinity,
       plot_type: plot_type,
     }
-    if (plot_type === "VIOLIN" || plot_type === "HEATMAP") {
+    if (plot_type === "VIOLIN" || plot_type === "HEATMAP" || plot_type === "INTERVENTION") {
       newLayoutElement.extraPair = [];
     }
     if (interventionDate) {
@@ -191,7 +191,7 @@ export function setupProvenance(): AppProvenance {
               {
                 aggregatedBy: "YEAR",
                 valueToVisualize: "PRBC_UNITS",
-                i: "100",
+                i: "0",
                 w: 1,
                 h: 1,
                 x: 0,
@@ -202,7 +202,7 @@ export function setupProvenance(): AppProvenance {
               {
                 aggregatedBy: "SURGEON_ID",
                 valueToVisualize: "PRBC_UNITS",
-                i: "99",
+                i: "1",
                 w: 1,
                 h: 1,
                 x: 0,
@@ -212,14 +212,14 @@ export function setupProvenance(): AppProvenance {
               }, {
                 aggregatedBy: "PRBC_UNITS",
                 valueToVisualize: "HEMO_VALUE",
-                i: "98",
+                i: "2",
                 w: 1,
                 h: 1,
                 x: 0,
                 y: Infinity,
                 plot_type: "DUMBBELL"
               }]
-            state.filterSelection = ["CORONARY ARTERY BYPASS GRAFT(S)", "STERNAL DEBRIDEMENT"]
+            state.filterSelection = ["CABG", "TAVR"]
             //TODO ADD PRESET STATE
             return state
           }

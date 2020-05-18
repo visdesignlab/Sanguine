@@ -1,24 +1,36 @@
+
 import React, {
     FC,
     useMemo,
     useEffect,
-    useState,
-    memo
+    useState
 } from "react";
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { extraPairWidth, extraPairPadding, offset } from "../../Interfaces/ApplicationState";
 import ExtraPairDumbbell from "../BarChart/ExtraPairDumbbell";
 import { actions } from "../..";
-import ExtraPairViolin from "../BarChart/ExtraPairViolin";
-import ExtraPairBar from "../BarChart/ExtraPairBar";
-import ExtraPairBasic from "../BarChart/ExtraPairBasic";
+// import ExtraPairViolin from "../BarChart/ExtraPairViolin";
+// import ExtraPairBar from "../BarChart/ExtraPairBar";
+import ExtraPairBasicInt from "../InterventionPlot/ExtraPairBaiscInt";
 import { ScaleBand } from "d3";
 import styled from "styled-components";
-import ExtraPairOutcomes from "../BarChart/ExtraPairOutcomes";
+import ExtraPairBarInt from "../InterventionPlot/ExtraPairBarInt";
+import ExtraPairViolinInt from "../InterventionPlot/ExtraPairViolinInt";
+//import ExtraPairOutcomes from "../BarChart/ExtraPairOutcomes";
 
 interface OwnProps {
-    extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];
+    extraPairDataSet: {
+        name: string,
+        totalIntData: any[],
+        preIntData: any[],
+        postIntData: any[],
+        type: string,
+        kdeMax?: number,
+        totalMedianSet?: any,
+        preMedianSet?: any,
+        postMedianSet?: any
+    }[];
     aggregationScale: ScaleBand<string>
     chartId: string;
     dimension: { height: number, width: number }
@@ -26,7 +38,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScale, chartId, dimension }: Props) => {
+const InterventionExtraPairGenerator: FC<Props> = ({ extraPairDataSet, aggregationScale, chartId, dimension }: Props) => {
 
     const currentOffset = offset.regular;
 
@@ -35,24 +47,17 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScale,
     console.log(extraPairDataSet)
     extraPairDataSet.map((pairData, index) => {
         switch (pairData.type) {
-            case "Dumbbell":
-                transferedDistance += (extraPairWidth.Dumbbell + extraPairPadding)
-                returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Dumbbell)},0)`}>
-                    <ExtraPairDumbbell aggregatedScale={aggregationScale} dataSet={pairData.data} />,
-                        <ExtraPairText
-                        x={extraPairWidth.Dumbbell / 2}
-                        y={dimension.height - currentOffset.bottom + 20}
-                        onClick={() => actions.removeExtraPair(chartId, pairData.name)}
-                    >{pairData.name}</ExtraPairText>
-                </g>);
-                break;
             case "Violin":
                 transferedDistance += (extraPairWidth.Dumbbell + extraPairPadding)
                 returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Dumbbell)},0)`}>
-                    <ExtraPairViolin
-                        medianSet={pairData.medianSet}
+                    <ExtraPairViolinInt
+                        postMedianSet={pairData.postMedianSet}
+                        preMedianSet={pairData.preMedianSet}
+                        totalMedianSet={pairData.totalMedianSet}
+                        preIntData={pairData.preIntData}
+                        postIntData={pairData.postIntData}
+                        totalData={pairData.totalIntData}
                         aggregatedScale={aggregationScale}
-                        dataSet={pairData.data}
                         name={pairData.name}
                         kdeMax={pairData.kdeMax ? pairData.kdeMax : (0)} />,
                         <ExtraPairText
@@ -65,7 +70,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScale,
             case "BarChart":
                 transferedDistance += (extraPairWidth.BarChart + extraPairPadding)
                 returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.BarChart)},0)`}>
-                    <ExtraPairBar aggregatedScale={aggregationScale} dataSet={pairData.data} />
+                    <ExtraPairBarInt aggregatedScale={aggregationScale} preDataSet={pairData.preIntData} postDataSet={pairData.postIntData} totalDataSet={pairData.totalIntData} />
                     <ExtraPairText
                         x={extraPairWidth.BarChart / 2}
                         y={dimension.height - currentOffset.bottom + 20}
@@ -76,7 +81,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScale,
             case "Basic":
                 transferedDistance += (extraPairWidth.Basic + extraPairPadding)
                 returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Basic)},0)`}>
-                    <ExtraPairBasic aggregatedScale={aggregationScale} dataSet={pairData.data} />
+                    <ExtraPairBasicInt aggregatedScale={aggregationScale} preIntData={pairData.preIntData} postIntData={pairData.postIntData} totalData={pairData.totalIntData} />
                     <ExtraPairText
                         x={extraPairWidth.Basic / 2}
                         y={dimension.height - currentOffset.bottom + 20}
@@ -85,17 +90,17 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScale,
                 </g>);
                 break;
 
-            case "Outcomes":
-                transferedDistance += (extraPairWidth.Basic + extraPairPadding)
-                returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Basic)},0)`}>
-                    <ExtraPairOutcomes aggregatedScale={aggregationScale} dataSet={pairData.data} outcomeName={pairData.name} />
-                    <ExtraPairText
-                        x={extraPairWidth.Basic / 2}
-                        y={dimension.height - currentOffset.bottom + 20}
-                        onClick={() => actions.removeExtraPair(chartId, pairData.name)}
-                    >{pairData.name}</ExtraPairText>
-                </g>);
-                break;
+            // case "Outcomes":
+            //     transferedDistance += (extraPairWidth.Basic + extraPairPadding)
+            //     returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Basic)},0)`}>
+            //         <ExtraPairOutcomes aggregatedScale={aggregationScale} dataSet={pairData.data} outcomeName={pairData.name} />
+            //         <ExtraPairText
+            //             x={extraPairWidth.Basic / 2}
+            //             y={dimension.height - currentOffset.bottom + 20}
+            //             onClick={() => actions.removeExtraPair(chartId, pairData.name)}
+            //         >{pairData.name}</ExtraPairText>
+            //     </g>);
+            //     break;
         }
     })
     return returningComponents
@@ -103,7 +108,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScale,
 
 }
 
-export default inject("store")(observer(ExtraPairPlotGenerator));
+export default inject("store")(observer(InterventionExtraPairGenerator));
 
 const ExtraPairText = styled(`text`)`
   font-size: 11px

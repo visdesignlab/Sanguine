@@ -68,7 +68,7 @@ const App: FC<Props> = ({ store }: Props) => {
     const resTrans = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}`)
     const dataTrans = await resTrans.json();
     //const resultTrans = dataTrans.result;
-    console.log(dataHemo, dataTrans)
+    // console.log(dataHemo, dataTrans)
     let transfused_dict = {} as any;
     let result: {
       CASE_ID: number,
@@ -119,13 +119,13 @@ const App: FC<Props> = ({ store }: Props) => {
           HEMO: ob.HEMO,
           QUARTER: ob.QUARTER,
           MONTH: ob.MONTH,
-          DATE: timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)
+          DATE: ob.DATE
         })
       }
     })
 
     result = result.filter((d: any) => d);
-    console.log(result)
+    //console.log(result)
     setHemoData(result)
     //actions.storeHemoData(result);
     //   let tempMaxCaseCount = 0
@@ -227,6 +227,8 @@ const App: FC<Props> = ({ store }: Props) => {
           className={"parent-node" + layout.i}>
           <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
           <InterventionPlotVisualization
+            extraPair={layout.extraPair}
+            hemoglobinDataSet={hemoData}
             aggregatedBy={layout.aggregatedBy}
             valueToVisualize={layout.valueToVisualize}
             chartId={layout.i}
