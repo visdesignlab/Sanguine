@@ -75,11 +75,9 @@ const SideBar: FC<Props> = ({ store }: Props) => {
   }, [maxCaseCount])
 
   const generateSurgery = () => {
-    console.log("a")
     let output: any[] = []
     filterSelection.map((d, i) => {
       const stringArray = d.split(" ")
-      console.log(stringArray)
       stringArray.map((word, index) => {
         if ((Accronym as any)[word]) {
           output.push((<div className="tooltip" style={{ cursor: "help" }}>{word}<span className="tooltiptext">{`${(Accronym as any)[word]}`}</span></div>))
