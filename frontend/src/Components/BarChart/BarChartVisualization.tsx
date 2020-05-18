@@ -3,7 +3,7 @@ import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { BarChartDataPoint, BloodProductCap, barChartValuesOptions, barChartAggregationOptions, interventionChartType, extraPairOptions } from '../../Interfaces/ApplicationState'
+import { BarChartDataPoint, BloodProductCap, barChartValuesOptions, barChartAggregationOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON } from '../../Interfaces/ApplicationState'
 import BarChart from "./BarChart"
 import { Button, Icon, Table, Grid, Dropdown, GridColumn, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
@@ -41,7 +41,9 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
   // const [kdeMax,setKdeMax] = useState(0)
   // const [medianVal, setMedian] = useState()
   //  const [selectedBar, setSelectedBarVal] = useState<number | null>(null);
-  const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
+  const [dimensionHeight, setDimensionHeight] = useState(0)
+  const [dimensionWidth, setDimensionWidth] = useState(0)
+  // const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
   const [extraPairData, setExtraPairData] = useState<{ name: string, data: any[], type: string }[]>([])
   const [stripPlotMode, setStripMode] = useState(false);
   const [caseIDList, setCaseIDList] = useState<any>(null)
@@ -49,10 +51,9 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
 
   useLayoutEffect(() => {
     if (svgRef.current) {
-      setDimensions({
-        height: svgRef.current.clientHeight,
-        width: svgRef.current.clientWidth
-      });
+      setDimensionHeight(svgRef.current.clientHeight);
+      setDimensionWidth(svgRef.current.clientWidth)
+
     }
   }, [layoutArray[chartIndex]]);
 
@@ -151,7 +152,8 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
         // perCaseData.push(perCaseOb)
         return new_ob;
       });
-      setData(cast_data);
+      stateUpdateWrapperUseJSON(data, cast_data, setData)
+      //setData(cast_data);
       setCaseIDList(caseDictionary)
       setYMax(yMaxTemp);
       //actions.updateCaseCount("AGGREGATED", caseCount);
@@ -273,9 +275,8 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
         }
       })
     }
-    if (JSON.stringify(newExtraPairData) !== JSON.stringify(extraPairData)) {
-      setExtraPairData(newExtraPairData)
-    }
+    stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
+
   }
 
   //TODO change this to useMemo
@@ -366,8 +367,8 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
         </text> */}
             <BarChart
               chartId={chartId}
-              dimensionWhole={dimensions}
-
+              width={dimensionWidth}
+              height={dimensionHeight}
               data={data}
               svg={svgRef}
               aggregatedBy={aggregatedBy}

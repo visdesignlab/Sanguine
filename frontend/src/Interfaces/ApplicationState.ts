@@ -250,7 +250,7 @@ export const Accronym = {
   PVR: "Proliferative Vitreoretinopathy"
 }
 
-export const stateUpdateWrapperUseJSON = (oldState: any, newState: any, updateFunction: (value: React.SetStateAction<any[]>) => void) => {
+export const stateUpdateWrapperUseJSON = (oldState: any, newState: any, updateFunction: (value: React.SetStateAction<any>) => void) => {
   if (JSON.stringify(oldState) !== JSON.stringify(newState)) {
     updateFunction(newState)
   }
