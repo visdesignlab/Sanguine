@@ -2,7 +2,8 @@ import React, {
   FC,
   useMemo,
   useEffect,
-  useState
+  useState,
+  useCallback
 } from "react";
 import { actions } from "../..";
 import Store from "../../Interfaces/Store";
@@ -38,7 +39,9 @@ interface OwnProps {
   valueToVisualize: string;
   chartId: string;
   store?: Store;
-  dimensionWhole: { width: number, height: number }
+  width: number,
+  height: number,
+  // dimensionWhole: { width: number, height: number }
   data: BarChartDataPoint[];
   svg: React.RefObject<SVGSVGElement>;
   yMax: number;
@@ -49,7 +52,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax, chartId }: Props) => {
+const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregatedBy, valueToVisualize, width, height, data, svg, yMax, chartId }: Props) => {
 
   const svgSelection = select(svg.current);
 
@@ -71,13 +74,12 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     setExtraPairTotlaWidth(totalWidth)
   }, [extraPairDataSet])
 
-  const [dimension, aggregationScale, valueScale, caseScale, lineFunction] = useMemo(() => {
+  const [calculatedWidth, aggregationScale, valueScale, caseScale, lineFunction] = useMemo(() => {
     const caseMax = max(data.map(d => d.caseCount)) || 0;
     const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
-    const dimension = {
-      height: dimensionWhole.height,
-      width: dimensionWhole.width - extraPairTotalWidth
-    }
+
+    const calculatedWidth = width - extraPairTotalWidth
+
 
     let kdeMax = 0
     const xVals = data
@@ -90,11 +92,11 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
 
     let valueScale = scaleLinear()
       .domain([0, BloodProductCap[valueToVisualize]])
-      .range([currentOffset.left, dimension.width - currentOffset.right - currentOffset.margin]);
+      .range([currentOffset.left, calculatedWidth - currentOffset.right - currentOffset.margin]);
 
     let aggregationScale = scaleBand()
       .domain(xVals)
-      .range([dimension.height - currentOffset.bottom, currentOffset.top])
+      .range([height - currentOffset.bottom, currentOffset.top])
       .paddingInner(0.1);
 
     const kdeScale = scaleLinear()
@@ -111,8 +113,8 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     //   .curve(curveCatmullRom)
     //   .y((d: any) => kdeScale(d.y))
     //   .x((d: any) => valueScale(d.x) - currentOffset.left);
-    return [dimension, aggregationScale, valueScale, caseScale, lineFunction];
-  }, [dimensionWhole, data, yMax, extraPairDataSet])
+    return [calculatedWidth, aggregationScale, valueScale, caseScale, lineFunction];
+  }, [width, height, data, yMax, extraPairDataSet])
 
   const aggregationLabel = axisLeft(aggregationScale);
   const yAxisLabel = axisBottom(valueScale);
@@ -133,7 +135,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     .select(".y-axis")
     .attr(
       "transform",
-      `translate(${extraPairTotalWidth} ,${dimension.height - currentOffset.bottom})`
+      `translate(${extraPairTotalWidth} ,${height - currentOffset.bottom})`
     )
     .call(yAxisLabel as any);
 
@@ -141,7 +143,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     // .select(".axes")
     .select(".x-label")
     .attr("x", valueScale(BloodProductCap[valueToVisualize] * 0.5))
-    .attr("y", dimension.height - currentOffset.bottom + 20)
+    .attr("y", height - currentOffset.bottom + 20)
     .attr("alignment-baseline", "hanging")
     .attr("font-size", "11px")
     .attr("text-anchor", "middle")
@@ -155,7 +157,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
   svgSelection
     //.select(".axes")
     .select(".y-label")
-    .attr("y", dimension.height - currentOffset.bottom + 20)
+    .attr("y", height - currentOffset.bottom + 20)
     .attr("x", currentOffset.left - 55)
     .attr("font-size", "11px")
     .attr("text-anchor", "middle")
@@ -219,7 +221,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
 
   return (
     <>
-      <line x1={1} x2={1} y1={currentOffset.top} y2={dimension.height - currentOffset.bottom} style={{ stroke: "#e5e5e5", strokeWidth: "1" }} />
+      <line x1={1} x2={1} y1={currentOffset.top} y2={height - currentOffset.bottom} style={{ stroke: "#e5e5e5", strokeWidth: "1" }} />
       <g className="axes">
         <g className="x-axis"></g>
         <g className="y-axis"></g>
@@ -264,7 +266,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         })}
       </g>
       <g className="extraPairChart">
-        <ExtraPairPlotGenerator aggregationScale={aggregationScale} extraPairDataSet={extraPairDataSet} dimension={dimension} chartId={chartId} />
+        <ExtraPairPlotGenerator aggregationScale={aggregationScale} extraPairDataSet={extraPairDataSet} height={height} chartId={chartId} />
       </g>
 
 
