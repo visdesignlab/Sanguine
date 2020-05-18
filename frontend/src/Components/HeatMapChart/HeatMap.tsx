@@ -281,7 +281,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                 })}
             </g>
             <g className="extraPairChart">
-                <ExtraPairPlotGenerator extraPairDataSet={extraPairDataSet} chartId={chartId} aggregationScale={aggregationScale} height={dimension.height} />
+                {/* <ExtraPairPlotGenerator extraPairDataSet={extraPairDataSet} chartId={chartId} aggregationScale={aggregationScale} height={dimension.height} /> */}
             </g>
 
 
