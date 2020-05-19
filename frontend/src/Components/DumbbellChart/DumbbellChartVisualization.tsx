@@ -43,7 +43,9 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
   const [dimensionHeight, setDimensionHeight] = useState(0)
   //  const [dimension, setDimensions] = useState({ width: 0, height: 0 });
   // const [yMax, setYMax] = useState(0);
-  const [xRange, setXRange] = useState({ xMin: 0, xMax: Infinity });
+  // const [xRange, setXRange] = useState({ xMin: 0, xMax: Infinity });
+  const [xMin, setXMin] = useState(Infinity);
+  const [xMax, setXMax] = useState(0)
   const [sortMode, setSortMode] = useState("Postop");
   const [showingAttr, setShowingAttr] = useState({ preop: true, postop: true, gap: true })
 
@@ -147,7 +149,9 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
       // actions.updateCaseCount("INDIVIDUAL", caseCount)
       store!.totalIndividualCaseCount = caseCount;
       stateUpdateWrapperUseJSON(data, cast_data, setData)
-      stateUpdateWrapperUseJSON(xRange, { xMin: tempXMin, xMax: tempXMax }, setXRange)
+      setXMin(tempXMin)
+      setXMax(tempXMax)
+      // stateUpdateWrapperUseJSON(xRange, { xMin: tempXMin, xMax: tempXMax }, setXRange)
       //  setData({ result: cast_data });
       //  setXRange({ xMin: tempXMin, xMax: tempXMax });
 
@@ -220,7 +224,8 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
               data={data}
               dimensionHeight={dimensionHeight}
               dimensionWidth={dimensionWidth}
-              xRange={xRange}
+              xMin={xMin}
+              xMax={xMax}
               // yMax={yMax}
               // aggregation={aggregatedOption}
               //interventionDate={interventionDate}
