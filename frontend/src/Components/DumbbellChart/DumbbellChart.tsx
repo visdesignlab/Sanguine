@@ -4,7 +4,8 @@ import React, {
   useRef,
   useLayoutEffect,
   useState,
-  useMemo
+  useMemo,
+  useCallback
 } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
@@ -27,7 +28,7 @@ import {
   median,
   timeParse,
 } from "d3";
-import { DumbbellDataPoint, offset, AxisLabelDict, SelectSet, minimumWidthScale } from "../../Interfaces/ApplicationState";
+import { DumbbellDataPoint, offset, AxisLabelDict, SelectSet, minimumWidthScale, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState";
 import CustomizedAxis from "../Utilities/CustomizedAxis";
 import { preop_color, basic_gray, highlight_orange, postop_color } from "../../ColorProfile"
 
@@ -41,7 +42,9 @@ interface OwnProps {
   data: DumbbellDataPoint[];
   svg: React.RefObject<SVGSVGElement>
   // yMax: number;
-  xRange: { xMin: number, xMax: number };
+  xMin: number,
+  xMax: number
+  // xRange: { xMin: number, xMax: number };
   // interventionDate?: string;
   sortMode: string;
   showingAttr: { preop: boolean, postop: boolean, gap: boolean }
@@ -49,7 +52,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionHeight, dimensionWidth, data, svg, store, xRange }: Props) => {
+const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionHeight, dimensionWidth, data, svg, store, xMin, xMax }: Props) => {
 
   const [averageForEachTransfused, setAverage] = useState<any>({})
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([])
@@ -147,24 +150,29 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
 
 
       })
-      setAverage(averageDict)
-      setSortedData(tempSortedData)
-      console.log(tempDatapointsDict)
-      setDataPointDict(tempDatapointsDict)
-      setNumberList(tempNumberList)
+      stateUpdateWrapperUseJSON(averageForEachTransfused, averageDict, setAverage)
+      stateUpdateWrapperUseJSON(sortedData, tempSortedData, setSortedData)
+      stateUpdateWrapperUseJSON(datapointsDict, tempDatapointsDict, setDataPointDict)
+      stateUpdateWrapperUseJSON(numberList, tempNumberList, setNumberList)
+      //  setAverage(averageDict)
+      // setSortedData(tempSortedData)
+      //console.log(tempDatapointsDict)
+      // setDataPointDict(tempDatapointsDict)
+      // setNumberList(tempNumberList)
     }
   }, [data, sortMode])
   //let numberList: { num: number, indexEnding: number }[] = [];
 
+  const testValueScale = useCallback(() => {
+    const testValueScale = scaleLinear()
+      .domain([0.9 * xMin, 1.1 * xMax])
+      .range([dimensionHeight - currentOffset.bottom, currentOffset.top]);
+    return testValueScale
+  }, [xMin, xMax, dimensionHeight])
   //console.log(data)
 
-  const [testValueScale, valueScale] = useMemo(() => {
+  const valueScale = useCallback(() => {
     const widthAllowed = dimensionWidth - currentOffset.left - currentOffset.right;
-
-    const testValueScale = scaleLinear()
-      .domain([0.9 * xRange.xMin, 1.1 * xRange.xMax])
-      .range([dimensionHeight - currentOffset.bottom, currentOffset.top]);
-
 
     let spacing: any = {};
 
@@ -214,10 +222,10 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
     // console.log(ticks(currentOffset.left, dimension.width - currentOffset.right - currentOffset.margin, data.length))
     // .range([currentOffset.left, dimension.width - currentOffset.right - currentOffset.margin]);
 
-    return [testValueScale, valueScale];
-  }, [dimensionHeight, dimensionWidth, data, xRange, datapointsDict]);
+    return valueScale;
+  }, [dimensionWidth, data, datapointsDict]);
 
-  const testLabel = axisLeft(testValueScale);
+  const testLabel = axisLeft(testValueScale());
 
   svgSelection
     .select(".axes")
@@ -290,23 +298,23 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
       <g className="axes">
         <g className="x-axis"></g>
         <g className="y-axis" transform={`translate(0,${dimensionHeight - currentOffset.bottom})`}>
-          <CustomizedAxis scale={valueScale as ScaleOrdinal<any, number>} numberList={numberList} />
+          <CustomizedAxis scale={valueScale() as ScaleOrdinal<any, number>} numberList={numberList} />
         </g>
         <text className="x-label" />
         <text className="y-label" />
       </g>
       <g className="chart-comp" >
-        <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale(13)} y2={testValueScale(13)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
-        <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale(7.5)} y2={testValueScale(7.5)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
+        <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(13)} y2={testValueScale()(13)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
+        <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(7.5)} y2={testValueScale()(7.5)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
 
 
         {sortedData.map((dataPoint, index) => {
-          const start = testValueScale(dataPoint.startXVal);
-          const end = testValueScale(dataPoint.endXVal);
+          const start = testValueScale()(dataPoint.startXVal);
+          const end = testValueScale()(dataPoint.endXVal);
           const returning = start > end ? end : start;
           const rectDifference = Math.abs(end - start)
 
-          const xVal = (valueScale as ScaleOrdinal<any, number>)(index)
+          const xVal = (valueScale() as ScaleOrdinal<any, number>)(index)
           // valueScale(dataPoint.yVal) -
           // (Math.abs(dataPoint.startXVal - dataPoint.endXVal) / (xRange.xMax - xRange.xMin)) *
           // (valueScale(dataPoint.yVal) - valueScale(dataPoint.yVal - 1))
@@ -333,7 +341,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
                     cx={
                       xVal
                     }
-                    cy={testValueScale(dataPoint.startXVal)}
+                    cy={testValueScale()(dataPoint.startXVal)}
                     onClick={() => {
                       clickDumbbellHandler(dataPoint);
                     }}
@@ -345,7 +353,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
                     cx={
                       xVal
                     }
-                    cy={testValueScale(dataPoint.endXVal)}
+                    cy={testValueScale()(dataPoint.endXVal)}
                     onClick={() => {
                       clickDumbbellHandler(dataPoint);
                     }}
@@ -361,11 +369,11 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
         {numberList.map((numberOb, ind) => {
           if (Object.keys(averageForEachTransfused).length > 0) {
 
-            const x1 = ind === 0 ? (valueScale as ScaleOrdinal<any, number>)(0) : (valueScale as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding + 1)
-            const x2 = (valueScale as ScaleOrdinal<any, number>)(numberOb.indexEnding)
-            const beginY = testValueScale(averageForEachTransfused[(numberOb.num).toString()].averageStart)
-            const endY = testValueScale(averageForEachTransfused[numberOb.num].averageEnd)
-            const interval = ind === 0 ? 0 : (valueScale as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding)
+            const x1 = ind === 0 ? (valueScale() as ScaleOrdinal<any, number>)(0) : (valueScale() as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding + 1)
+            const x2 = (valueScale() as ScaleOrdinal<any, number>)(numberOb.indexEnding)
+            const beginY = testValueScale()(averageForEachTransfused[(numberOb.num).toString()].averageStart)
+            const endY = testValueScale()(averageForEachTransfused[numberOb.num].averageEnd)
+            const interval = ind === 0 ? 0 : (valueScale() as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding)
             let interventionLine;
             if (ind >= 1 && numberOb.num <= numberList[ind - 1].num) {
               interventionLine = <line x1={x1 - 0.5 * (x1 - interval)} x2={x1 - 0.5 * (x1 - interval)} y1={currentOffset.top} y2={dimensionHeight - currentOffset.bottom} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
