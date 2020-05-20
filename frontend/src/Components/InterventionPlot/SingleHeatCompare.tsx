@@ -1,11 +1,11 @@
-import React, { FC, useEffect } from "react";
+import React, { FC, useEffect, useCallback } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { InterventionDataPoint } from "../../Interfaces/ApplicationState";
 // import { Popup } from "semantic-ui-react";
 // import { actions } from "../..";
-import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds } from "d3";
+import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds, scaleBand } from "d3";
 import { highlight_orange, basic_gray, blood_red, highlight_blue } from "../../ColorProfile";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
@@ -17,19 +17,26 @@ interface OwnProps {
     isFiltered: boolean;
     howToTransform: string;
     store?: Store;
-    valueScale: ScaleBand<any>;
+    // valueScale: ScaleBand<any>;
+    valueScaleDomain: string;
+    valueScaleRange: string;
     bandwidth: number;
 }
 
 export type Props = OwnProps;
 
-const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggregatedBy, isSelected, valueScale, store, isFiltered }: Props) => {
+const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggregatedBy, isSelected, valueScaleDomain, valueScaleRange, store, isFiltered }: Props) => {
     const colorScale = scaleLinear().domain([0, 1]).range([0.1, 1])
+
+    const valueScale = useCallback(() => {
+        const valueScale = scaleBand().domain(JSON.parse(valueScaleDomain)).range(JSON.parse(valueScaleRange)).paddingInner(0.01);
+        return valueScale
+    }, [valueScaleDomain, valueScaleRange])
 
     return (
         <>
 
-            {valueScale.domain().map(point => {
+            {valueScale().domain().map(point => {
                 const preOutput = dataPoint.preCountDict[point] ? dataPoint.preCountDict[point] : 0;
 
                 const postOutput = dataPoint.postCountDict[point] ? dataPoint.postCountDict[point] : 0;
@@ -40,10 +47,10 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                         trigger={
                             <HeatRect
                                 fill={preOutput === 0 ? "white" : interpolateReds(colorScale(preOutput / dataPoint.preCaseCount))}
-                                x={valueScale(point)}
+                                x={valueScale()(point)}
                                 y={0}
                                 transform={howToTransform}
-                                width={valueScale.bandwidth()}
+                                width={valueScale().bandwidth()}
                                 height={bandwidth * 0.5}
                                 isselected={isSelected}
                                 isfiltered={isFiltered}
@@ -61,10 +68,10 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                         trigger={
                             <HeatRect
                                 fill={postOutput === 0 ? "white" : interpolateReds(colorScale(postOutput / dataPoint.postCaseCount))}
-                                x={valueScale(point)}
+                                x={valueScale()(point)}
                                 y={bandwidth * 0.5}
                                 transform={howToTransform}
-                                width={valueScale.bandwidth()}
+                                width={valueScale().bandwidth()}
                                 height={bandwidth * 0.5}
                                 isselected={isSelected}
                                 isfiltered={isFiltered}
@@ -78,11 +85,27 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                                     )
                                 }} />}
                     />,
-                    <line transform={howToTransform} strokeWidth={0.5} stroke={basic_gray} opacity={preOutput === 0 ? 1 : 0} y1={0.25 * bandwidth} y2={0.25 * bandwidth} x1={valueScale(point)! + 0.35 * valueScale.bandwidth()} x2={valueScale(point)! + 0.65 * valueScale.bandwidth()} />,
-                    <line transform={howToTransform} strokeWidth={0.5} stroke={basic_gray} opacity={postOutput === 0 ? 1 : 0} y1={0.75 * bandwidth} y2={0.75 * bandwidth} x1={valueScale(point)! + 0.35 * valueScale.bandwidth()} x2={valueScale(point)! + 0.65 * valueScale.bandwidth()} />]
+                    <line
+                        transform={howToTransform}
+                        strokeWidth={0.5}
+                        stroke={basic_gray}
+                        opacity={preOutput === 0 ? 1 : 0}
+                        y1={0.25 * bandwidth}
+                        y2={0.25 * bandwidth}
+                        x1={valueScale()(point)! + 0.35 * valueScale().bandwidth()}
+                        x2={valueScale()(point)! + 0.65 * valueScale().bandwidth()} />,
+                    <line
+                        transform={howToTransform}
+                        strokeWidth={0.5}
+                        stroke={basic_gray}
+                        opacity={postOutput === 0 ? 1 : 0}
+                        y1={0.75 * bandwidth}
+                        y2={0.75 * bandwidth}
+                        x1={valueScale()(point)! + 0.35 * valueScale().bandwidth()}
+                        x2={valueScale()(point)! + 0.65 * valueScale().bandwidth()} />]
                 )
             })},
-            <line transform={howToTransform} x1={valueScale.range()[0]} x2={valueScale.range()[1]} y1={bandwidth * 0.5} y2={bandwidth * 0.5}
+            <line transform={howToTransform} x1={valueScale().range()[0]} x2={valueScale().range()[1]} y1={bandwidth * 0.5} y2={bandwidth * 0.5}
                 stroke="white" />
         </>)
 

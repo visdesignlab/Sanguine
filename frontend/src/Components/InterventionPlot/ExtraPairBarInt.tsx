@@ -1,8 +1,8 @@
-import React, { FC, useEffect, useMemo } from "react";
+import React, { FC, useEffect, useMemo, useCallback } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
-import { ScaleBand, scaleOrdinal, range, scaleLinear, ScaleOrdinal, max, format } from "d3";
+import { ScaleBand, scaleOrdinal, range, scaleLinear, ScaleOrdinal, max, format, scaleBand } from "d3";
 import { extraPairWidth } from "../../Interfaces/ApplicationState"
 import { Popup } from "semantic-ui-react";
 
@@ -10,24 +10,31 @@ interface OwnProps {
     preDataSet: any[];
     postDataSet: any[];
     totalDataSet: any[];
-    aggregatedScale: ScaleBand<string>;
+    //  aggregatedScale: ScaleBand<string>;
+    aggregationScaleDomain: string;
+    aggregationScaleRange: string;
     //yMax:number;
     store?: Store;
 }
 
 export type Props = OwnProps;
 
-const ExtraPairBarInt: FC<Props> = ({ preDataSet, postDataSet, totalDataSet, aggregatedScale, store }: Props) => {
+const ExtraPairBarInt: FC<Props> = ({ preDataSet, postDataSet, totalDataSet, aggregationScaleRange, aggregationScaleDomain, store }: Props) => {
     const [valueScale, halfValueScale] = useMemo(() => {
 
         const valueScale = scaleLinear().domain([0, max(Object.values(totalDataSet))]).range([0, extraPairWidth.BarChart])
         const halfValueScale = scaleLinear().domain([0, max(Object.values(preDataSet).concat(Object.values(postDataSet)))]).range([0, extraPairWidth.BarChart])
         return [valueScale, halfValueScale];
-    }, [totalDataSet, aggregatedScale])
+    }, [totalDataSet])
+
+    const aggregatedScale = useCallback(() => {
+        const aggregatedScale = scaleBand().domain(JSON.parse(aggregationScaleDomain)).range(JSON.parse(aggregationScaleRange)).paddingInner(0.1);
+        return aggregatedScale
+    }, [aggregationScaleDomain, aggregationScaleRange])
 
     const generateOutput = () => {
         let output: any[] = [];
-        if (aggregatedScale.bandwidth() > 40) {
+        if (aggregatedScale().bandwidth() > 40) {
             output = Object.entries(preDataSet).map(([val, dataVal]) => {
                 return (
                     <Popup
@@ -35,11 +42,11 @@ const ExtraPairBarInt: FC<Props> = ({ preDataSet, postDataSet, totalDataSet, agg
                         trigger={
                             <rect
                                 x={0}
-                                y={aggregatedScale(val)}
+                                y={aggregatedScale()(val)}
                                 fill={"#404040"}
                                 opacity={0.8}
                                 width={halfValueScale(dataVal)}
-                                height={aggregatedScale.bandwidth() * 0.5} />
+                                height={aggregatedScale().bandwidth() * 0.5} />
                         } />
                 )
             })
@@ -51,13 +58,13 @@ const ExtraPairBarInt: FC<Props> = ({ preDataSet, postDataSet, totalDataSet, agg
                         trigger={
                             <rect
                                 x={0}
-                                y={aggregatedScale(val)! + 0.5 * aggregatedScale.bandwidth()}
+                                y={aggregatedScale()(val)! + 0.5 * aggregatedScale().bandwidth()}
                                 fill={"#404040"}
                                 opacity={0.8}
                                 width={halfValueScale(dataVal)}
-                                height={aggregatedScale.bandwidth() * 0.5} />
+                                height={aggregatedScale().bandwidth() * 0.5} />
                         } />,
-                    <line x1={0} x2={extraPairWidth.BarChart} stroke="white" y1={aggregatedScale(val)! + 0.5 * aggregatedScale.bandwidth()} y2={aggregatedScale(val)! + 0.5 * aggregatedScale.bandwidth()} />]
+                    <line x1={0} x2={extraPairWidth.BarChart} stroke="white" y1={aggregatedScale()(val)! + 0.5 * aggregatedScale().bandwidth()} y2={aggregatedScale()(val)! + 0.5 * aggregatedScale().bandwidth()} />]
                 )
             }))
 
@@ -70,11 +77,11 @@ const ExtraPairBarInt: FC<Props> = ({ preDataSet, postDataSet, totalDataSet, agg
                         trigger={
                             <rect
                                 x={0}
-                                y={aggregatedScale(val)}
+                                y={aggregatedScale()(val)}
                                 fill={"#404040"}
                                 opacity={0.8}
                                 width={valueScale(dataVal)}
-                                height={aggregatedScale.bandwidth()} />
+                                height={aggregatedScale().bandwidth()} />
                         } />
                 )
             })

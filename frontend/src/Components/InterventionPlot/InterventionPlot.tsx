@@ -2,7 +2,8 @@ import React, {
     FC,
     useMemo,
     useEffect,
-    useState
+    useState,
+    useCallback
 } from "react";
 import { actions } from "../..";
 import Store from "../../Interfaces/Store";
@@ -34,7 +35,8 @@ import {
     offset,
     CELL_SAVER_TICKS,
     extraPairWidth,
-    extraPairPadding
+    extraPairPadding,
+    stateUpdateWrapperUseJSON
 } from "../../Interfaces/ApplicationState";
 import { Popup, Button, Icon } from 'semantic-ui-react'
 
@@ -52,7 +54,9 @@ interface OwnProps {
     valueToVisualize: string;
     chartId: string;
     store?: Store;
-    dimensionWhole: { width: number, height: number }
+    // dimensionWhole: { width: number, height: number }
+    dimensionWidth: number,
+    dimensionHeight: number;
     data: InterventionDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
     yMax: number;
@@ -75,7 +79,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, interventionDate, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax }: Props) => {
+const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, interventionDate, store, aggregatedBy, valueToVisualize, dimensionHeight, dimensionWidth, data, svg, yMax }: Props) => {
 
     const svgSelection = select(svg.current);
 
@@ -87,7 +91,10 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
     } = store!;
 
     const currentOffset = offset.intervention;
-    const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
+    const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0);
+    const [kdeMax, setKdeMax] = useState(0);
+    const [xVals, setXVals] = useState([]);
+    const [caseMax, setCaseMax] = useState(0)
 
     useEffect(() => {
         let totalWidth = 0
@@ -97,25 +104,30 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
         setExtraPairTotlaWidth(totalWidth)
     }, [extraPairDataSet])
 
-    const [dimension, aggregationScale, valueScale, caseScale, lineFunction, linearValueScale] = useMemo(() => {
-
-        const caseMax = max(data.map(d => (d.preCaseCount + d.postCaseCount))) || 0;
-        const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
-        const dimension = {
-            height: dimensionWhole.height,
-            width: dimensionWhole.width - extraPairTotalWidth
-        }
-
-
-        let kdeMax = 0
-        const xVals = data
-
-            .map(dp => {
-                const max_temp = max([max(dp.preInKdeCal, d => d.y), max(dp.postInKdeCal, d => d.y)])
-                kdeMax = kdeMax > max_temp ? kdeMax : max_temp;
-                return dp.aggregateAttribute
-            })
+    useEffect(() => {
+        let newkdeMax = 0
+        let newCaseMax = 0;
+        const newXvals = data.map(dp => {
+            newCaseMax = newCaseMax > (dp.preCaseCount + dp.postCaseCount) ? newCaseMax : (dp.preCaseCount + dp.postCaseCount);
+            const max_temp = max([max(dp.preInKdeCal, d => d.y), max(dp.postInKdeCal, d => d.y)])
+            newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
+            return dp.aggregateAttribute
+        })
             .sort();
+        stateUpdateWrapperUseJSON(xVals, newXvals, setXVals);
+        setKdeMax(newkdeMax);
+        setCaseMax(newCaseMax)
+    }, [data])
+
+    const aggregationScale = useCallback(() => {
+        let aggregationScale = scaleBand()
+            .domain(xVals)
+            .range([dimensionHeight - currentOffset.bottom, currentOffset.top])
+            .paddingInner(0.1);
+        return aggregationScale
+    }, [xVals, dimensionHeight])
+
+    const valueScale = useCallback(() => {
         let outputRange
         if (valueToVisualize === "CELL_SAVER_ML") {
             outputRange = [-1].concat(range(0, BloodProductCap[valueToVisualize] + 100, 100))
@@ -125,36 +137,39 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
         //console.log(data)
         let valueScale = scaleBand()
             .domain(outputRange as any)
-            .range([currentOffset.left, dimension.width - currentOffset.right - currentOffset.margin])
+            .range([currentOffset.left, (dimensionWidth - extraPairTotalWidth) - currentOffset.right - currentOffset.margin])
             .paddingInner(0.01);
+        return valueScale
+    }, [dimensionWidth, extraPairTotalWidth])
 
+    const caseScale = useCallback(() => {
+        const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8]);
+        return caseScale
+    }, [caseMax])
 
+    const linearValueScale = useCallback(() => {
         let linearValueScale = scaleLinear()
             .domain([0, BloodProductCap[valueToVisualize]])
-            .range([currentOffset.left, dimension.width - currentOffset.right - currentOffset.margin]);
+            .range([currentOffset.left, (dimensionWidth - extraPairTotalWidth) - currentOffset.right - currentOffset.margin]);
 
-        let aggregationScale = scaleBand()
-            .domain(xVals)
-            .range([dimension.height - currentOffset.bottom, currentOffset.top])
-            .paddingInner(0.1);
+        return linearValueScale;
+    }, [extraPairTotalWidth, dimensionWidth])
 
-
-
-
+    const lineFunction = useCallback(() => {
         const kdeScale = scaleLinear()
             .domain([0, kdeMax])
-            .range([0.25 * aggregationScale.bandwidth(), 0])
-
+            .range([0.25 * aggregationScale().bandwidth(), 0])
         const lineFunction = line()
             .curve(curveCatmullRom)
             .y((d: any) => kdeScale(d.y))
-            .x((d: any) => linearValueScale(d.x) - currentOffset.left);
+            .x((d: any) => linearValueScale()(d.x) - currentOffset.left);
+        return lineFunction
 
-        return [dimension, aggregationScale, valueScale, caseScale, lineFunction, linearValueScale];
-    }, [dimensionWhole, data, yMax])
+    }, [kdeMax, aggregationScale()])
 
-    const aggregationLabel = axisLeft(aggregationScale);
-    const valueLabel = plotType === "HEATMAP" ? axisBottom(valueScale).tickFormat((d, i) => valueToVisualize === "CELL_SAVER_ML" ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[valueToVisualize] ? `${d}+` : d)) : axisBottom(linearValueScale);
+    const aggregationLabel = axisLeft(aggregationScale());
+
+    const valueLabel = plotType === "HEATMAP" ? axisBottom(valueScale()).tickFormat((d, i) => valueToVisualize === "CELL_SAVER_ML" ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[valueToVisualize] ? `${d}+` : d)) : axisBottom(linearValueScale());
 
     svgSelection
         .select(".axes")
@@ -172,7 +187,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
         .select(".y-axis")
         .attr(
             "transform",
-            `translate(${extraPairTotalWidth} ,${dimension.height - currentOffset.bottom})`
+            `translate(${extraPairTotalWidth} ,${dimensionHeight - currentOffset.bottom})`
         )
         .call(valueLabel as any);
 
@@ -187,8 +202,8 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
     svgSelection
         // .select(".axes")
         .select(".x-label")
-        .attr("x", dimension.width * 0.5)
-        .attr("y", dimension.height - currentOffset.bottom + 20)
+        .attr("x", (dimensionWidth - extraPairTotalWidth) * 0.5)
+        .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("alignment-baseline", "hanging")
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
@@ -202,7 +217,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
     svgSelection
         //.select(".axes")
         .select(".y-label")
-        .attr("y", dimension.height - currentOffset.bottom + 20)
+        .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("x", currentOffset.left - 55)
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
@@ -244,11 +259,12 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
             return ([<SingleHeatCompare
                 isSelected={decideIfSelected(dataPoint)}
                 isFiltered={decideIfFiltered(dataPoint)}
-                bandwidth={aggregationScale.bandwidth()}
-                valueScale={valueScale as ScaleBand<any>}
+                bandwidth={aggregationScale().bandwidth()}
+                valueScaleDomain={JSON.stringify(valueScale().domain())}
+                valueScaleRange={JSON.stringify(valueScale().range())}
                 aggregatedBy={aggregatedBy}
                 dataPoint={dataPoint}
-                howToTransform={(`translate(-${currentOffset.left},${aggregationScale(
+                howToTransform={(`translate(-${currentOffset.left},${aggregationScale()(
                     dataPoint.aggregateAttribute
                 )})`).toString()}
             />])
@@ -257,29 +273,29 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
         }
         else {
             return ([<SingleViolinCompare
-                preIntPath={lineFunction(dataPoint.preInKdeCal)!}
-                postIntPath={lineFunction(dataPoint.postInKdeCal)!}
+                preIntPath={lineFunction()(dataPoint.preInKdeCal)!}
+                postIntPath={lineFunction()(dataPoint.postInKdeCal)!}
                 dataPoint={dataPoint}
                 aggregatedBy={aggregatedBy}
                 isSelected={decideIfSelected(dataPoint)}
                 isFiltered={decideIfFiltered(dataPoint)}
-                preIntHowToTransform={(`translate(0,${aggregationScale(
+                preIntHowToTransform={(`translate(0,${aggregationScale()(
                     dataPoint.aggregateAttribute
                 )})`).toString()}
-                postIntHowToTransform={(`translate(0,${aggregationScale(dataPoint.aggregateAttribute)! + aggregationScale.bandwidth() * 0.5})`).toString()}
+                postIntHowToTransform={(`translate(0,${aggregationScale()(dataPoint.aggregateAttribute)! + aggregationScale().bandwidth() * 0.5})`).toString()}
             />])
         }
 
     }
 
     const outputTextElement = (dataPoint: InterventionDataPoint) => {
-        if (aggregationScale.bandwidth() > 40) {
+        if (aggregationScale().bandwidth() > 40) {
             return ([<text
                 fill="white"
                 x={-32.5}
                 y={
-                    aggregationScale(dataPoint.aggregateAttribute)! +
-                    0.25 * aggregationScale.bandwidth()
+                    aggregationScale()(dataPoint.aggregateAttribute)! +
+                    0.25 * aggregationScale().bandwidth()
                 }
                 alignmentBaseline={"central"}
                 textAnchor={"middle"}
@@ -289,8 +305,8 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                 fill="white"
                 x={-32.5}
                 y={
-                    aggregationScale(dataPoint.aggregateAttribute)! +
-                    0.75 * aggregationScale.bandwidth()
+                    aggregationScale()(dataPoint.aggregateAttribute)! +
+                    0.75 * aggregationScale().bandwidth()
                 }
                 alignmentBaseline={"central"}
                 textAnchor={"middle"}
@@ -302,8 +318,8 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                 fill="white"
                 x={-32.5}
                 y={
-                    aggregationScale(dataPoint.aggregateAttribute)! +
-                    0.5 * aggregationScale.bandwidth()
+                    aggregationScale()(dataPoint.aggregateAttribute)! +
+                    0.5 * aggregationScale().bandwidth()
                 }
                 alignmentBaseline={"central"}
                 textAnchor={"middle"}
@@ -317,7 +333,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
 
     return (
         <>
-            <line x1={1} x2={1} y1={currentOffset.top} y2={dimension.height - currentOffset.bottom} style={{ stroke: "#e5e5e5", strokeWidth: "1" }} />
+            <line x1={1} x2={1} y1={currentOffset.top} y2={dimensionHeight - currentOffset.bottom} style={{ stroke: "#e5e5e5", strokeWidth: "1" }} />
             <g className="axes">
                 <g className="x-axis"></g>
                 <g className="y-axis"></g>
@@ -334,14 +350,14 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                     </linearGradient>
                 </defs>
                 <rect
-                    x={0.5 * dimension.width}
+                    x={0.5 * (dimensionWidth - extraPairTotalWidth)}
                     y={0}
-                    width={0.2 * dimension.width}
+                    width={0.2 * (dimensionWidth - extraPairTotalWidth)}
                     height={10}
                     fill="url(#gradient1)" />
 
                 <text
-                    x={0.5 * dimension.width}
+                    x={0.5 * (dimensionWidth - extraPairTotalWidth)}
                     y={10}
                     alignmentBaseline={"hanging"}
                     textAnchor={"end"}
@@ -350,7 +366,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                     0%
                 </text>
                 <text
-                    x={0.7 * dimension.width}
+                    x={0.7 * (dimensionWidth - extraPairTotalWidth)}
                     y={10}
                     alignmentBaseline={"hanging"}
                     textAnchor={"end"}
@@ -360,14 +376,14 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                 </text>
             </g>
             <g>
-                <rect x={0.9 * dimension.width}
+                <rect x={0.9 * (dimensionWidth - extraPairTotalWidth)}
                     y={0}
                     width={10}
                     height={10}
                     fill={preop_color}
                     opacity={0.65} />
 
-                <rect x={0.9 * dimension.width}
+                <rect x={0.9 * (dimensionWidth - extraPairTotalWidth)}
                     y={10}
                     width={10}
                     height={10}
@@ -375,7 +391,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                     opacity={0.65} />
 
                 <text
-                    x={0.9 * dimension.width}
+                    x={0.9 * (dimensionWidth - extraPairTotalWidth)}
                     y={0}
                     alignmentBaseline={"hanging"}
                     textAnchor={"end"}
@@ -384,7 +400,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                     Pre Intervine
                 </text>
                 <text
-                    x={0.9 * dimension.width}
+                    x={0.9 * (dimensionWidth - extraPairTotalWidth)}
                     y={10}
                     alignmentBaseline={"hanging"}
                     textAnchor={"end"}
@@ -393,7 +409,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                     Post Intervine
                 </text>
                 <text
-                    x={0.25 * dimension.width}
+                    x={0.25 * (dimensionWidth - extraPairTotalWidth)}
                     y={5}
                     alignmentBaseline="hanging"
                     textAnchor="middle"
@@ -409,30 +425,30 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                     return outputSinglePlotElement(dataPoint)
                         .concat([
                             <rect
-                                fill={interpolateGreys(caseScale(dataPoint.preCaseCount))}
+                                fill={interpolateGreys(caseScale()(dataPoint.preCaseCount))}
                                 x={-50}
-                                y={aggregationScale(dataPoint.aggregateAttribute)}
+                                y={aggregationScale()(dataPoint.aggregateAttribute)}
                                 width={35}
-                                height={aggregationScale.bandwidth() * 0.5}
+                                height={aggregationScale().bandwidth() * 0.5}
                             />,
-                            <rect fill={interpolateGreys(caseScale(dataPoint.postCaseCount))}
+                            <rect fill={interpolateGreys(caseScale()(dataPoint.postCaseCount))}
                                 x={-50}
-                                y={aggregationScale(dataPoint.aggregateAttribute)! + aggregationScale.bandwidth() * 0.5} width={35}
-                                height={aggregationScale.bandwidth() * 0.5} />,
+                                y={aggregationScale()(dataPoint.aggregateAttribute)! + aggregationScale().bandwidth() * 0.5} width={35}
+                                height={aggregationScale().bandwidth() * 0.5} />,
                             <rect
                                 fill={preop_color}
                                 x={-15}
-                                y={aggregationScale(dataPoint.aggregateAttribute)}
+                                y={aggregationScale()(dataPoint.aggregateAttribute)}
                                 width={10}
                                 opacity={0.65}
-                                height={aggregationScale.bandwidth() * 0.47}
+                                height={aggregationScale().bandwidth() * 0.47}
                             />,
                             <rect fill={postop_color}
                                 x={-15}
-                                y={aggregationScale(dataPoint.aggregateAttribute)! + aggregationScale.bandwidth() * 0.5}
+                                y={aggregationScale()(dataPoint.aggregateAttribute)! + aggregationScale().bandwidth() * 0.5}
                                 width={10}
                                 opacity={0.65}
-                                height={aggregationScale.bandwidth() * 0.47} />
+                                height={aggregationScale().bandwidth() * 0.47} />
 
 
 
@@ -440,7 +456,10 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                 })}
             </g>
             <g className="extraPairChart">
-                <InterventionExtraPairGenerator extraPairDataSet={extraPairDataSet} chartId={chartId} aggregationScale={aggregationScale} dimension={dimension} />
+                <InterventionExtraPairGenerator
+                    extraPairDataSet={extraPairDataSet} chartId={chartId}
+                    aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
+                    aggregationScaleRange={JSON.stringify(aggregationScale().range())} height={dimensionHeight} />
             </g>
 
 

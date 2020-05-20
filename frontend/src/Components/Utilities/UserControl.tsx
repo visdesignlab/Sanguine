@@ -92,6 +92,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     setAddingChartType(chartType)
   }
 
+
   const interventionHandler = (e: any, value: any) => {
     if (value.value === "None") {
       setInterventionDate(undefined)

@@ -1,11 +1,11 @@
-import React, { FC, useEffect, useState, useMemo } from "react";
+import React, { FC, useEffect, useState, useMemo, useCallback } from "react";
 import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { Menu, Dropdown, Grid, Container, Message, List, Button } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat } from "d3";
 import { actions } from "../..";
-import { AxisLabelDict, Accronym } from "../../Interfaces/ApplicationState";
+import { AxisLabelDict, Accronym, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState";
 import { basic_gray, highlight_orange, third_gray, secondary_gray } from "../../ColorProfile";
 
 interface OwnProps {
@@ -23,7 +23,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     currentSelectSet,
     currentOutputFilterSet,
     filterSelection } = store!;
-  const [procedureList, setProcedureList] = useState([]);
+  const [procedureList, setProcedureList] = useState<any[]>([]);
   const [maxCaseCount, setMaxCaseCount] = useState(0);
   const [itemSelected, setItemSelected] = useState<any[]>([]);
   const [itemUnselected, setItemUnselected] = useState<any[]>([]);
@@ -41,7 +41,8 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     })
     result.sort((a: any, b: any) => b.count - a.count)
     setMaxCaseCount(tempMaxCaseCount)
-    setProcedureList(result);
+    stateUpdateWrapperUseJSON(procedureList, result, setProcedureList)
+    //setProcedureList(result);
     setItemUnselected(result);
   }
 
@@ -62,16 +63,15 @@ const SideBar: FC<Props> = ({ store }: Props) => {
       }
     })
     newItemSelected.sort((a: any, b: any) => b.count - a.count)
-    if (JSON.stringify(newItemSelected) !== JSON.stringify(itemSelected)) {
-      setItemSelected(newItemSelected)
-    }
-    setItemUnselected(newItemUnselected)
+    stateUpdateWrapperUseJSON(itemSelected, newItemSelected, setItemSelected)
+
+    stateUpdateWrapperUseJSON(itemUnselected, newItemUnselected, setItemUnselected)
   }, [filterSelection])
 
-  const [caseScale] = useMemo(() => {
+  const caseScale = useCallback(() => {
     const caseScale = scaleLinear().domain([0, maxCaseCount]).range([0, 90])
 
-    return [caseScale];
+    return caseScale;
   }, [maxCaseCount])
 
   const generateSurgery = () => {
@@ -159,9 +159,9 @@ const SideBar: FC<Props> = ({ store }: Props) => {
               </List.Content>
               <List.Content floated="right" style={{ width: "30%" }}>
                 <SVG>
-                  <rect x={0} y={0} width={caseScale.range()[1]} height={13} fill={secondary_gray} />
+                  <rect x={0} y={0} width={caseScale().range()[1]} height={13} fill={secondary_gray} />
                   <text x={0} y={13} textAnchor="start" alignmentBaseline="baseline" fill="white">0</text>
-                  <text x={caseScale.range()[1]} y={13} textAnchor="end" alignmentBaseline="baseline" fill="white">{caseScale.domain()[1]}</text>
+                  <text x={caseScale().range()[1]} y={13} textAnchor="end" alignmentBaseline="baseline" fill="white">{caseScale().domain()[1]}</text>
                 </SVG>
               </List.Content>
             </List.Item>
@@ -173,7 +173,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
                       {listItem.value}
                     </List.Content>
                     <List.Content floated="right" style={{ width: "30%" }}>
-                      <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={13} fill={secondary_gray}></rect></SVG>
+                      <SVG><rect x={0} y={0} width={caseScale()(listItem.count)} height={13} fill={secondary_gray}></rect></SVG>
                     </List.Content>
                   </ListIT>
                 )
@@ -188,7 +188,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
                       {listItem.value}
                     </List.Content>
                     <List.Content floated="right" style={{ width: "30%" }}>
-                      <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={13} fill={secondary_gray}></rect></SVG>
+                      <SVG><rect x={0} y={0} width={caseScale()(listItem.count)} height={13} fill={secondary_gray}></rect></SVG>
                     </List.Content>
                   </ListIT>)
               }

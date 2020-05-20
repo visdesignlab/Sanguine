@@ -7,7 +7,7 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import Store from "../../Interfaces/Store";
 import { Message, List } from "semantic-ui-react";
-import { HIPAA_Sensitive, AxisLabelDict } from "../../Interfaces/ApplicationState";
+import { HIPAA_Sensitive, AxisLabelDict, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState";
 
 interface OwnProps {
     store?: Store;
@@ -25,7 +25,7 @@ const DetailView: FC<Props> = ({ store }: Props) => {
         if (currentSelectPatient) {
             const fetchResult = await fetch(`http://localhost:8000/api/fetch_patient?patient_id=${currentSelectPatient.patientID}`)
             const fetchResultJson = await fetchResult.json();
-            const individualInfo = fetchResultJson.result[0];
+            const individualInfoJSON = fetchResultJson.result[0];
 
             //    console.log(individualInfo)
             const fetchTransfused = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}&case_ids=${currentSelectPatient.caseId}`)
@@ -53,15 +53,16 @@ const DetailView: FC<Props> = ({ store }: Props) => {
             const outcomeInfo = { Mortality: fetchOutcomeJson[0].patient_death === 0 ? "Yes" : "No", Vent: fetchOutcomeJson[0].gr_than_1440_vent === 0 ? "Yes" : "No" }
 
             //  console.log(surgeryInfo)
-            let final_result = Object.assign(individualInfo, surgeryInfo)
+            let final_result = Object.assign(individualInfoJSON, surgeryInfo)
             final_result = Object.assign(final_result, transfusionResult)
             final_result = Object.assign(final_result, riskInfo)
             final_result = Object.assign(final_result, outcomeInfo)
 
-            setIndividualInfo(final_result)
+            stateUpdateWrapperUseJSON(individualInfo, final_result, setIndividualInfo)
+            //  setIndividualInfo(final_result)
         }
         else {
-            setIndividualInfo(null)
+            stateUpdateWrapperUseJSON(individualInfo, null, setIndividualInfo)
         }
 
     }
