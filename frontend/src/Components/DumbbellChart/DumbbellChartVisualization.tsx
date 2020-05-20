@@ -148,7 +148,9 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
       cast_data = cast_data.filter((d: any) => d);
       // actions.updateCaseCount("INDIVIDUAL", caseCount)
       store!.totalIndividualCaseCount = caseCount;
+      console.log("compare start")
       stateUpdateWrapperUseJSON(data, cast_data, setData)
+      console.log("compare end")
       setXMin(tempXMin)
       setXMax(tempXMax)
       // stateUpdateWrapperUseJSON(xRange, { xMin: tempXMin, xMax: tempXMax }, setXRange)

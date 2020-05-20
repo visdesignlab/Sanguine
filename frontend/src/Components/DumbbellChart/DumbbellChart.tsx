@@ -59,6 +59,8 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
   const [numberList, setNumberList] = useState<{ num: number, indexEnding: number }[]>([])
   // const [scaleList, setScaleList] = useState < { title: any, scale:ScaleOrdinal<any, number>}[]>();
   const [datapointsDict, setDataPointDict] = useState<{ title: any, length: number }[]>([])
+  const [resultRange, setResultRange] = useState<number[]>([])
+  const [indicies, setIndicies] = useState([])
 
   const currentOffset = offset.minimum;
   const {
@@ -147,31 +149,17 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
           currentPostopSum = [];
           currentPreopSum = [];
         }
-
-
       })
+      const newindices = range(0, data.length)
+      stateUpdateWrapperUseJSON(indicies, newindices, setIndicies)
       stateUpdateWrapperUseJSON(averageForEachTransfused, averageDict, setAverage)
       stateUpdateWrapperUseJSON(sortedData, tempSortedData, setSortedData)
       stateUpdateWrapperUseJSON(datapointsDict, tempDatapointsDict, setDataPointDict)
       stateUpdateWrapperUseJSON(numberList, tempNumberList, setNumberList)
-      //  setAverage(averageDict)
-      // setSortedData(tempSortedData)
-      //console.log(tempDatapointsDict)
-      // setDataPointDict(tempDatapointsDict)
-      // setNumberList(tempNumberList)
     }
   }, [data, sortMode])
-  //let numberList: { num: number, indexEnding: number }[] = [];
 
-  const testValueScale = useCallback(() => {
-    const testValueScale = scaleLinear()
-      .domain([0.9 * xMin, 1.1 * xMax])
-      .range([dimensionHeight - currentOffset.bottom, currentOffset.top]);
-    return testValueScale
-  }, [xMin, xMax, dimensionHeight])
-  //console.log(data)
-
-  const valueScale = useCallback(() => {
+  useEffect(() => {
     const widthAllowed = dimensionWidth - currentOffset.left - currentOffset.right;
 
     let spacing: any = {};
@@ -201,8 +189,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
         }
       })
     }
-
-    let resultRange: number[] = [];
+    let newResultRange: number[] = [];
     let currentLoc = currentOffset.left;
     datapointsDict.map((d, i) => {
       let calculatedRange = range(currentLoc, currentLoc + spacing[i], spacing[i] / (d.length + 1))
@@ -210,20 +197,30 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
       if (calculatedRange.length !== d.length) {
         calculatedRange.splice(calculatedRange.length - 1, 1)
       }
-      resultRange = resultRange.concat(calculatedRange)
+      newResultRange = newResultRange.concat(calculatedRange)
       currentLoc += spacing[i]
-
+      stateUpdateWrapperUseJSON(resultRange, newResultRange, setResultRange)
     })
+  }, [datapointsDict, dimensionWidth])
 
-    const indices = range(0, data.length)
+
+
+  const testValueScale = useCallback(() => {
+    const testValueScale = scaleLinear()
+      .domain([0.9 * xMin, 1.1 * xMax])
+      .range([dimensionHeight - currentOffset.bottom, currentOffset.top]);
+    return testValueScale
+  }, [xMin, xMax, dimensionHeight])
+  //console.log(data)
+
+  //TODO this need to be shrinked.
+  const valueScale = useCallback(() => {
     const valueScale = scaleOrdinal()
-      .domain(indices as any)
+      .domain(indicies as any)
       .range(resultRange);
-    // console.log(ticks(currentOffset.left, dimension.width - currentOffset.right - currentOffset.margin, data.length))
-    // .range([currentOffset.left, dimension.width - currentOffset.right - currentOffset.margin]);
-
     return valueScale;
-  }, [dimensionWidth, data, datapointsDict]);
+
+  }, [indicies, resultRange]);
 
   const testLabel = axisLeft(testValueScale());
 
@@ -264,18 +261,6 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
     if (currentSelectPatient && d.case.caseId > 0) {
       return currentSelectPatient.caseId === d.case.caseId
     } return false;
-    // else if (currentSelectSet.length > 0) {
-    //   //let selectSet: SelectSet;
-    //   for (let selectSet of currentSelectSet) {
-    //     if (d.case[selectSet.set_name] === selectSet.set_value)
-    //       return true;
-    //   }
-    //   return false
-    // }
-    // else {
-    //   return false;
-    // }
-    //  return true;
   }
 
   // const decideIfSurgeon = (d: DumbbellDataPoint) => {
