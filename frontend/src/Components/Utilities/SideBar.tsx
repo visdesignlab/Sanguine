@@ -75,20 +75,24 @@ const SideBar: FC<Props> = ({ store }: Props) => {
   }, [maxCaseCount])
 
   const generateSurgery = () => {
-    let output: any[] = []
-    filterSelection.map((d, i) => {
-      const stringArray = d.split(" ")
-      stringArray.map((word, index) => {
-        if ((Accronym as any)[word]) {
-          output.push((<div className="tooltip" style={{ cursor: "help" }}>{word}<span className="tooltiptext">{`${(Accronym as any)[word]}`}</span></div>))
-        } else {
-          output.push((<span>{`${index !== 0 ? " " : ""}${word}${index !== stringArray.length - 1 ? " " : ""}`}</span>))
+    let output: any[] = [<span>Procedures: </span>]
+    if (filterSelection.length === 0) {
+      output.push(<span>All</span>);
+    } else {
+      filterSelection.map((d, i) => {
+        const stringArray = d.split(" ")
+        stringArray.map((word, index) => {
+          if ((Accronym as any)[word]) {
+            output.push((<div className="tooltip" style={{ cursor: "help" }}>{word}<span className="tooltiptext">{`${(Accronym as any)[word]}`}</span></div>))
+          } else {
+            output.push((<span>{`${index !== 0 ? " " : ""}${word}${index !== stringArray.length - 1 ? " " : ""}`}</span>))
+          }
+        })
+        if (i !== filterSelection.length - 1) {
+          output.push((<span>, </span>))
         }
       })
-      if (i !== filterSelection.length - 1) {
-        output.push((<span>, </span>))
-      }
-    })
+    }
     return output
   }
 
@@ -101,30 +105,32 @@ const SideBar: FC<Props> = ({ store }: Props) => {
 
       <Grid.Row centered style={{ padding: "20px" }}>
         <Container style={{ height: "20vh" }}>
-          <List>
+          <List bulleted>
 
             <List.Header style={{ textAlign: "left" }}><b>Current View</b></List.Header>
             <List.Item
-              icon="caret right"
+              //icon="circle"
               style={{ textAlign: "left" }}
               content={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} ~ ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} />
             <List.Item
-              icon="caret right"
+              //   icon="caret right"
               style={{ textAlign: "left" }}
               content={`Aggregated Case: ${totalAggregatedCaseCount}`} />
             <List.Item
-              icon="caret right"
+              //  icon="caret right"
               style={{ textAlign: "left" }}
               content={`Individual Case: ${totalIndividualCaseCount}`} />
 
-            <List.Item icon="caret right" style={{ textAlign: "left" }}
+            <List.Item
+              //icon="caret right" 
+              style={{ textAlign: "left" }}
               content={generateSurgery()} />
 
 
 
             {currentOutputFilterSet.map((selectSet) => {
               return <FilterListIT
-                icon="caret right"
+                //icon="caret right"
                 onClick={() => { actions.clearOutputFilterSet(selectSet.set_name) }}
                 content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`} />
             })}
@@ -134,20 +140,20 @@ const SideBar: FC<Props> = ({ store }: Props) => {
       </Grid.Row>
       <Grid.Row centered style={{ padding: "20px" }}>
         <Container style={{ height: "20vh" }}>
-          <List>
+          <List bulleted>
             <List.Header style={{ textAlign: "left" }}><b>Current Selected</b></List.Header>
             {currentSelectSet.map((selectSet) => {
-              return <FilterListIT icon="caret right" onClick={() => { actions.clearSelectSet(selectSet.set_name) }} content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
+              return <FilterListIT
+                //icon="caret right" 
+                onClick={() => { actions.clearSelectSet(selectSet.set_name) }} content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
             })}
-            <List.Item>
-              <Button disabled={!(currentSelectSet.length > 0)}
-                basic size="tiny" content="Create Filter" onClick={actions.currentOutputFilterSetChange}
-              />
-              <Button disabled={!(currentOutputFilterSet.length > 0)}
-                basic size="tiny" content="Clear Filter" onClick={() => { actions.clearOutputFilterSet() }}
-              />
-            </List.Item>
           </List>
+          <Button disabled={!(currentSelectSet.length > 0)}
+            basic size="tiny" content="Create Filter" onClick={actions.currentOutputFilterSetChange}
+          />
+          <Button disabled={!(currentOutputFilterSet.length > 0)}
+            basic size="tiny" content="Clear Filter" onClick={() => { actions.clearOutputFilterSet() }}
+          />
         </Container>
       </Grid.Row>
       <Grid.Row style={{ padding: "20px" }}>
