@@ -94,7 +94,7 @@ export interface LayoutElement {
   h: number,
   plot_type: string,
   //  aggregation?: string,
-  extraPair?: string[],
+  extraPair?: string,
   interventionDate?: number,
   interventionType?: string
 }
