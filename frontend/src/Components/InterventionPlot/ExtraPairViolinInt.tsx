@@ -1,8 +1,8 @@
-import React, { FC, useEffect, useMemo } from "react";
+import React, { FC, useEffect, useMemo, useCallback } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
-import { ScaleBand, scaleOrdinal, range, scaleLinear, ScaleOrdinal, line, curveCatmullRom, median, format } from "d3";
+import { ScaleBand, scaleOrdinal, range, scaleLinear, ScaleOrdinal, line, curveCatmullRom, median, format, scaleBand } from "d3";
 import { extraPairWidth, offset } from "../../Interfaces/ApplicationState"
 import { preop_color, postop_color, basic_gray } from "../../ColorProfile";
 import { create as createpd } from "pdfast";
@@ -12,7 +12,12 @@ interface OwnProps {
     totalData: any[];
     preIntData: any[];
     postIntData: any[];
-    aggregatedScale: ScaleBand<string>;
+
+    // aggregatedScale: ScaleBand<string>;
+
+    aggregationScaleDomain: string;
+    aggregationScaleRange: string;
+
     store?: Store;
 
     totalMedianSet: any;
@@ -25,7 +30,13 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, totalMedianSet, aggregatedScale, kdeMax, preMedianSet, postMedianSet, name }: Props) => {
+const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, totalMedianSet, aggregationScaleRange, aggregationScaleDomain, kdeMax, preMedianSet, postMedianSet, name }: Props) => {
+
+    const aggregatedScale = useCallback(() => {
+        const aggregatedScale = scaleBand().domain(JSON.parse(aggregationScaleDomain)).range(JSON.parse(aggregationScaleRange)).paddingInner(0.1);
+        return aggregatedScale
+    }, [aggregationScaleDomain, aggregationScaleRange])
+
     const [lineFunction, valueScale, halfLineFunction] = useMemo(() => {
         let maxIndices = 0;
         Object.values(totalData).map((array) => {
@@ -37,29 +48,29 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
 
         const kdeScale = scaleLinear()
             .domain([-kdeMax, kdeMax])
-            .range([-0.5 * aggregatedScale.bandwidth(), 0.5 * aggregatedScale.bandwidth()])
+            .range([-0.5 * aggregatedScale().bandwidth(), 0.5 * aggregatedScale().bandwidth()])
 
         const halfKDEScale = scaleLinear()
             .domain([-kdeMax, kdeMax])
-            .range([-0.25 * aggregatedScale.bandwidth(), 0.25 * aggregatedScale.bandwidth()])
+            .range([-0.25 * aggregatedScale().bandwidth(), 0.25 * aggregatedScale().bandwidth()])
         //console.log(kdeMdataax)
         const lineFunction = line()
             .curve(curveCatmullRom)
-            .y((d: any) => kdeScale(d.y) + 0.5 * aggregatedScale.bandwidth())
+            .y((d: any) => kdeScale(d.y) + 0.5 * aggregatedScale().bandwidth())
             .x((d: any) => valueScale(d.x));
 
         const halfLineFunction = line()
             .curve(curveCatmullRom)
-            .y((d: any) => halfKDEScale(d.y) + 0.25 * aggregatedScale.bandwidth())
+            .y((d: any) => halfKDEScale(d.y) + 0.25 * aggregatedScale().bandwidth())
             .x((d: any) => valueScale(d.x))
 
         return [lineFunction, valueScale, halfLineFunction];
-    }, [totalData, aggregatedScale])
+    }, [totalData, aggregatedScale()])
 
 
     const generateOutput = () => {
         let output = []
-        if (aggregatedScale.bandwidth() > 40) {
+        if (aggregatedScale().bandwidth() > 40) {
             output = Object.entries(preIntData).map(([val, dataArray]) => {
 
                 // const sortedArray = dataArray.sort((a: any, b: any) =>
@@ -69,14 +80,14 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
                     <Popup content={`median ${format(".2f")(preMedianSet[val])}`} key={`violin-${val}`} trigger={
                         <ViolinLine
                             d={halfLineFunction(dataArray)!}
-                            transform={`translate(0,${aggregatedScale(val)!})`}
+                            transform={`translate(0,${aggregatedScale()(val)!})`}
                         />} />,
 
                     <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }}
                         x1={valueScale(name === "Preop Hemo" ? 13 : 7.5)}
                         x2={valueScale(name === "Preop Hemo" ? 13 : 7.5)}
-                        y1={aggregatedScale(val)!}
-                        y2={aggregatedScale(val)! + aggregatedScale.bandwidth()} />]
+                        y1={aggregatedScale()(val)!}
+                        y2={aggregatedScale()(val)! + aggregatedScale().bandwidth()} />]
                 )
 
 
@@ -91,7 +102,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
                     <Popup content={`median ${format(".2f")(postMedianSet[val])}`} key={`violin-${val}-pre`} trigger={
                         <ViolinLine
                             d={halfLineFunction(dataArray)!}
-                            transform={`translate(0,${aggregatedScale(val)! + 0.5 * aggregatedScale.bandwidth()})`}
+                            transform={`translate(0,${aggregatedScale()(val)! + 0.5 * aggregatedScale().bandwidth()})`}
                         />} />]
                 )
 
@@ -107,10 +118,14 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
                     <Popup content={`median ${format(".2f")(totalMedianSet[val])}`} key={`violin-${val}-post`} trigger={
                         <ViolinLine
                             d={lineFunction(dataArray)!}
-                            transform={`translate(0,${aggregatedScale(val)!})`}
+                            transform={`translate(0,${aggregatedScale()(val)!})`}
                         />} />,
 
-                    <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} x1={valueScale(name === "Preop Hemo" ? 13 : 7.5)} x2={valueScale(name === "Preop Hemo" ? 13 : 7.5)} y1={aggregatedScale(val)!} y2={aggregatedScale(val)! + aggregatedScale.bandwidth()} />]
+                    <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }}
+                        x1={valueScale(name === "Preop Hemo" ? 13 : 7.5)}
+                        x2={valueScale(name === "Preop Hemo" ? 13 : 7.5)}
+                        y1={aggregatedScale()(val)!}
+                        y2={aggregatedScale()(val)! + aggregatedScale().bandwidth()} />]
                 )
 
 

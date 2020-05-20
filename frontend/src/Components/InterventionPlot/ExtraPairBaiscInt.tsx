@@ -1,8 +1,8 @@
-import React, { FC, useEffect, useMemo } from "react";
+import React, { FC, useEffect, useMemo, useCallback } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
-import { ScaleBand, scaleOrdinal, range, scaleLinear, ScaleOrdinal, max, format, interpolateGreys } from "d3";
+import { ScaleBand, scaleOrdinal, range, scaleLinear, ScaleOrdinal, max, format, interpolateGreys, scaleBand } from "d3";
 import { extraPairWidth } from "../../Interfaces/ApplicationState"
 import { Popup } from "semantic-ui-react";
 import { secondary_gray } from "../../ColorProfile";
@@ -11,14 +11,16 @@ interface OwnProps {
     totalData: any[];
     preIntData: any[];
     postIntData: any[];
-    aggregatedScale: ScaleBand<string>;
+    //  aggregatedScale: ScaleBand<string>;
+    aggregationScaleDomain: string;
+    aggregationScaleRange: string;
     //yMax:number;
     store?: Store;
 }
 
 export type Props = OwnProps;
 
-const ExtraPairBasicInt: FC<Props> = ({ totalData, preIntData, postIntData, aggregatedScale, store }: Props) => {
+const ExtraPairBasicInt: FC<Props> = ({ totalData, preIntData, postIntData, aggregationScaleRange, aggregationScaleDomain, store }: Props) => {
     // const [valueScale] = useMemo(() => {
     //     //console.log(dataSet)
     //     const valueScale = scaleLinear().domain([0, 1]).range([0.25, 0.8])
@@ -26,9 +28,14 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, preIntData, postIntData, aggr
     //     return [valueScale];
     // }, [])
 
+    const aggregatedScale = useCallback(() => {
+        const aggregatedScale = scaleBand().domain(JSON.parse(aggregationScaleDomain)).range(JSON.parse(aggregationScaleRange)).paddingInner(0.1);
+        return aggregatedScale
+    }, [aggregationScaleDomain, aggregationScaleRange])
+
     const outputText = () => {
         let output = [];
-        if (aggregatedScale.bandwidth() > 40) {
+        if (aggregatedScale().bandwidth() > 40) {
             output = Object.entries(preIntData).map(([val, dataVal]) => {
                 return (
                     [<Popup
@@ -36,19 +43,19 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, preIntData, postIntData, aggr
                         trigger={
                             <rect
                                 x={0}
-                                y={aggregatedScale(val)}
+                                y={aggregatedScale()(val)}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
                                 // fill={interpolateGreys(valueScale(dataVal))}
                                 fill={secondary_gray}
                                 opacity={0.8}
                                 width={extraPairWidth.Basic}
-                                height={aggregatedScale.bandwidth() * 0.5} />
+                                height={aggregatedScale().bandwidth() * 0.5} />
                         } />,
 
                     <text x={extraPairWidth.Basic * 0.5}
                         y={
-                            aggregatedScale(val)! +
-                            0.25 * aggregatedScale.bandwidth()
+                            aggregatedScale()(val)! +
+                            0.25 * aggregatedScale().bandwidth()
                         }
                         fill="white"
                         alignmentBaseline={"central"}
@@ -63,19 +70,19 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, preIntData, postIntData, aggr
                         trigger={
                             <rect
                                 x={0}
-                                y={aggregatedScale(val)! + 0.5 * aggregatedScale.bandwidth()}
+                                y={aggregatedScale()(val)! + 0.5 * aggregatedScale().bandwidth()}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
                                 // fill={interpolateGreys(valueScale(dataVal))}
                                 fill={secondary_gray}
                                 opacity={0.8}
                                 width={extraPairWidth.Basic}
-                                height={aggregatedScale.bandwidth() * 0.5} />
+                                height={aggregatedScale().bandwidth() * 0.5} />
                         } />,
 
                     <text x={extraPairWidth.Basic * 0.5}
                         y={
-                            aggregatedScale(val)! +
-                            0.75 * aggregatedScale.bandwidth()
+                            aggregatedScale()(val)! +
+                            0.75 * aggregatedScale().bandwidth()
                         }
                         fill="white"
                         alignmentBaseline={"central"}
@@ -93,19 +100,19 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, preIntData, postIntData, aggr
                         trigger={
                             <rect
                                 x={0}
-                                y={aggregatedScale(val)}
+                                y={aggregatedScale()(val)}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
                                 // fill={interpolateGreys(valueScale(dataVal))}
                                 fill={secondary_gray}
                                 opacity={0.8}
                                 width={extraPairWidth.Basic}
-                                height={aggregatedScale.bandwidth()} />
+                                height={aggregatedScale().bandwidth()} />
                         } />,
 
                     <text x={extraPairWidth.Basic * 0.5}
                         y={
-                            aggregatedScale(val)! +
-                            0.5 * aggregatedScale.bandwidth()
+                            aggregatedScale()(val)! +
+                            0.5 * aggregatedScale().bandwidth()
                         }
                         fill="white"
                         alignmentBaseline={"central"}
