@@ -1,11 +1,11 @@
-import React, { FC, useEffect } from "react";
+import React, { FC, useEffect, useCallback } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { HeatMapDataPoint } from "../../Interfaces/ApplicationState";
 // import { Popup } from "semantic-ui-react";
 // import { actions } from "../..";
-import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds } from "d3";
+import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds, scaleBand } from "d3";
 import { highlight_orange, basic_gray, blood_red, highlight_blue } from "../../ColorProfile";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
@@ -17,21 +17,32 @@ interface OwnProps {
     isFiltered: boolean;
     howToTransform: string;
     store?: Store;
-    valueScale: ScaleBand<any>;
+    // valueScale: ScaleBand<any>;
+    valueScaleDomain: string;
+    valueScaleRange: string
     bandwidth: number;
 }
 
 export type Props = OwnProps;
 
-const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggregatedBy, isSelected, valueScale, store, isFiltered }: Props) => {
+const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggregatedBy, isSelected, valueScaleDomain, valueScaleRange, store, isFiltered }: Props) => {
     const { showZero } = store!;
-    const colorScale = scaleLinear().domain([0, 1]).range([0.1, 1])
+    const colorScale = scaleLinear().domain([0, 1]).range([0.1, 1]);
+    const valueScale = useCallback(() => {
+        const domain = JSON.parse(valueScaleDomain);
+        const range = JSON.parse(valueScaleRange);
+        let valueScale = scaleBand()
+            .domain(domain)
+            .range(range)
+            .paddingInner(0.01);
+        return valueScale
+    }, [valueScaleDomain, valueScaleRange])
 
     return (
         <>
 
 
-            {valueScale.domain().map(point => {
+            {valueScale().domain().map(point => {
                 const output = dataPoint.countDict[point] ? dataPoint.countDict[point] : 0
                 const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum
                 return (
@@ -40,9 +51,9 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
                         trigger={
                             <HeatRect
                                 fill={output === 0 ? "white" : interpolateReds(colorScale(output / caseCount))}
-                                x={valueScale(point)}
+                                x={valueScale()(point)}
                                 transform={howToTransform}
-                                width={valueScale.bandwidth()}
+                                width={valueScale().bandwidth()}
                                 height={bandwidth}
                                 isselected={isSelected}
                                 isfiltered={isFiltered}
@@ -56,7 +67,14 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
                                     )
                                 }} />}
                     />,
-                    <line transform={howToTransform} strokeWidth={0.5} stroke={basic_gray} opacity={output === 0 ? 1 : 0} y1={0.5 * bandwidth} y2={0.5 * bandwidth} x1={valueScale(point)! + 0.35 * valueScale.bandwidth()} x2={valueScale(point)! + 0.65 * valueScale.bandwidth()} />]
+                    <line transform={howToTransform}
+                        strokeWidth={0.5}
+                        stroke={basic_gray}
+                        opacity={output === 0 ? 1 : 0}
+                        y1={0.5 * bandwidth}
+                        y2={0.5 * bandwidth}
+                        x1={valueScale()(point)! + 0.35 * valueScale().bandwidth()}
+                        x2={valueScale()(point)! + 0.65 * valueScale().bandwidth()} />]
                 )
             })}
         </>)

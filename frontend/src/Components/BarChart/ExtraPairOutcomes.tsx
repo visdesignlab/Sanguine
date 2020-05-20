@@ -1,8 +1,8 @@
-import React, { FC, useEffect, useMemo, useState } from "react";
+import React, { FC, useEffect, useMemo, useState, useCallback } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
-import { ScaleBand, scaleOrdinal, range, scaleLinear, ScaleOrdinal, max, format, interpolateGreys, mean } from "d3";
+import { ScaleBand, scaleOrdinal, range, scaleLinear, ScaleOrdinal, max, format, interpolateGreys, mean, scaleBand } from "d3";
 import { extraPairWidth } from "../../Interfaces/ApplicationState"
 import { Popup } from "semantic-ui-react";
 import { secondary_gray } from "../../ColorProfile";
@@ -10,15 +10,24 @@ import { secondary_gray } from "../../ColorProfile";
 interface OwnProps {
     outcomeName: string;
     dataSet: any[];
-    aggregatedScale: ScaleBand<string>;
+    aggregationScaleDomain: string;
+    aggregationScaleRange: string;
     //yMax:number;
     store?: Store;
 }
 
 export type Props = OwnProps;
 
-const ExtraPairOutcomes: FC<Props> = ({ outcomeName, dataSet, aggregatedScale, store }: Props) => {
+const ExtraPairOutcomes: FC<Props> = ({ outcomeName, dataSet, aggregationScaleDomain, aggregationScaleRange, store }: Props) => {
     const [dataOutput, setDataOtuput] = useState<{ aggregation: any, outcome: number }[]>([])
+
+
+    const aggregationScale = useCallback(() => {
+        const domain = JSON.parse(aggregationScaleDomain);
+        const range = JSON.parse(aggregationScaleRange);
+        const aggregationScale = scaleBand().domain(domain).range(range)
+        return aggregationScale
+    }, [aggregationScaleDomain, aggregationScaleRange])
 
     async function fetchChartData() {
         let dataResult: { aggregation: any, outcome: number }[] = []
@@ -81,19 +90,19 @@ const ExtraPairOutcomes: FC<Props> = ({ outcomeName, dataSet, aggregatedScale, s
                         trigger={
                             <rect
                                 x={0}
-                                y={aggregatedScale(d.aggregation)}
+                                y={aggregationScale()(d.aggregation)}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
                                 // fill={interpolateGreys(valueScale(dataVal))}
                                 fill={secondary_gray}
                                 opacity={0.8}
                                 width={extraPairWidth.Basic}
-                                height={aggregatedScale.bandwidth()} />
+                                height={aggregationScale().bandwidth()} />
                         } />,
 
                     <text x={extraPairWidth.Basic * 0.5}
                         y={
-                            aggregatedScale(d.aggregation)! +
-                            0.5 * aggregatedScale.bandwidth()
+                            aggregationScale()(d.aggregation)! +
+                            0.5 * aggregationScale().bandwidth()
                         }
                         fill="white"
                         alignmentBaseline={"central"}

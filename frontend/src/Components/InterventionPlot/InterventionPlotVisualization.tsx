@@ -3,7 +3,7 @@ import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { InterventionDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions } from '../../Interfaces/ApplicationState'
+import { InterventionDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON } from '../../Interfaces/ApplicationState'
 
 import { Grid, Dropdown, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
@@ -18,7 +18,7 @@ interface OwnProps {
     chartIndex: number;
     interventionDate: number;
     interventionPlotType: string;
-    extraPair?: string[];
+    extraPair?: string;
     hemoglobinDataSet: any;
 }
 
@@ -50,18 +50,29 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
 
     const [data, setData] = useState<InterventionDataPoint[]>([]);
 
-    const [yMax, setYMax] = useState({ original: 0, perCase: 0 });
+    const [yMax, setYMax] = useState(0);
 
-    const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
+    // const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
+
+    const [width, setWidth] = useState(0)
+    const [height, setHeight] = useState(0)
 
     const [caseIDList, setCaseIDList] = useState<any>(null)
+    const [extraPairArray, setExtraPairArray] = useState([]);
+
+
+    useEffect(() => {
+        if (extraPair) { stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray) }
+    }, [extraPair])
 
     useLayoutEffect(() => {
         if (svgRef.current) {
-            setDimensions({
-                height: svgRef.current.clientHeight,
-                width: svgRef.current.clientWidth
-            });
+            // setDimensions({
+            //     height: svgRef.current.clientHeight,
+            //     width: svgRef.current.clientWidth
+            // });
+            setWidth(svgRef.current.clientWidth);
+            setHeight(svgRef.current.clientHeight);
         }
     }, [layoutArray[chartIndex]]);
 
@@ -312,11 +323,14 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                     cast_data.push(new_ob)
                 }
             })
-            setData(cast_data);
-            setCaseIDList(caseDictionary)
+
+            stateUpdateWrapperUseJSON(data, cast_data, setData)
+            stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList)
+            // setData(cast_data);
+            // setCaseIDList(caseDictionary)
             // actions.updateCaseCount("AGGREGATED", caseCount)
             store!.totalAggregatedCaseCount = caseCount
-            setYMax({ original: yMaxTemp, perCase: perCaseYMaxTemp });
+            setYMax(yMaxTemp);
         }
     }
 
@@ -328,8 +342,8 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
     //{ name: string,totalIntData:any[], preIntData: any[], postIntData: any[], type: string, kdeMax?: number, medianSet?: any }
     const makeExtraPairData = () => {
         let newExtraPairData: any[] = []
-        if (extraPair) {
-            extraPair.forEach((variable: string) => {
+        if (extraPairArray.length > 0) {
+            extraPairArray.forEach((variable: string) => {
                 let newData = {} as any;
                 let preIntData = {} as any;
                 let postIntData = {} as any;
@@ -548,13 +562,14 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
             }
             )
         }
-        setExtraPairData(newExtraPairData)
+        stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
+        //  setExtraPairData(newExtraPairData)
     }
 
     useMemo(() => {
         makeExtraPairData();
         //console.log(extraPairData)
-    }, [layoutArray[chartIndex], data, hemoglobinDataSet]);
+    }, [extraPairArray, data, hemoglobinDataSet]);
 
     const changeAggregation = (e: any, value: any) => {
         actions.changeChart(value.value, valueToVisualize, chartId, "INTERVENTION")
@@ -610,12 +625,14 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                         <InterventionPlot
                             interventionDate={interventionDate}
                             chartId={chartId}
-                            dimensionWhole={dimensions}
+                            //dimensionWhole={dimensions}
+                            dimensionWidth={width}
+                            dimensionHeight={height}
                             data={data}
                             svg={svgRef}
                             aggregatedBy={aggregatedBy}
                             valueToVisualize={valueToVisualize}
-                            yMax={yMax.original}
+                            yMax={yMax}
                             plotType={interventionPlotType}
                             extraPairDataSet={extraPairData}
                         />

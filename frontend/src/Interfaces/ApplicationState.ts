@@ -94,7 +94,7 @@ export interface LayoutElement {
   h: number,
   plot_type: string,
   //  aggregation?: string,
-  extraPair?: string[],
+  extraPair?: string,
   interventionDate?: number,
   interventionType?: string
 }
@@ -248,4 +248,10 @@ export const Accronym = {
   VATS: "Video-assisted Thoracoscopic Surgery",
   TVR: "Tricuspid Valve Repair",
   PVR: "Proliferative Vitreoretinopathy"
+}
+
+export const stateUpdateWrapperUseJSON = (oldState: any, newState: any, updateFunction: (value: React.SetStateAction<any>) => void) => {
+  if (JSON.stringify(oldState) !== JSON.stringify(newState)) {
+    updateFunction(newState)
+  }
 }
