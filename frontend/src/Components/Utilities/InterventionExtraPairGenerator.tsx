@@ -31,14 +31,19 @@ interface OwnProps {
         preMedianSet?: any,
         postMedianSet?: any
     }[];
-    aggregationScale: ScaleBand<string>
+
+    // aggregationScale: ScaleBand<string>
+    aggregationScaleDomain: string;
+    aggregationScaleRange: string;
+
     chartId: string;
-    dimension: { height: number, width: number }
+    // dimension: { height: number, width: number }
+    height: number;
 }
 
 export type Props = OwnProps;
 
-const InterventionExtraPairGenerator: FC<Props> = ({ extraPairDataSet, aggregationScale, chartId, dimension }: Props) => {
+const InterventionExtraPairGenerator: FC<Props> = ({ extraPairDataSet, aggregationScaleDomain, aggregationScaleRange, chartId, height }: Props) => {
 
     const currentOffset = offset.regular;
 
@@ -57,12 +62,14 @@ const InterventionExtraPairGenerator: FC<Props> = ({ extraPairDataSet, aggregati
                         preIntData={pairData.preIntData}
                         postIntData={pairData.postIntData}
                         totalData={pairData.totalIntData}
-                        aggregatedScale={aggregationScale}
+                        // aggregatedScale={aggregationScale}
+                        aggregationScaleDomain={aggregationScaleDomain}
+                        aggregationScaleRange={aggregationScaleRange}
                         name={pairData.name}
                         kdeMax={pairData.kdeMax ? pairData.kdeMax : (0)} />,
                         <ExtraPairText
                         x={extraPairWidth.Dumbbell / 2}
-                        y={dimension.height - currentOffset.bottom + 20}
+                        y={height - currentOffset.bottom + 20}
                         onClick={() => actions.removeExtraPair(chartId, pairData.name)}
                     >{`${pairData.name}, ${pairData.name === "Preop Hemo" ? 13 : 7.5}`}</ExtraPairText>
                 </g>);
@@ -70,10 +77,15 @@ const InterventionExtraPairGenerator: FC<Props> = ({ extraPairDataSet, aggregati
             case "BarChart":
                 transferedDistance += (extraPairWidth.BarChart + extraPairPadding)
                 returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.BarChart)},0)`}>
-                    <ExtraPairBarInt aggregatedScale={aggregationScale} preDataSet={pairData.preIntData} postDataSet={pairData.postIntData} totalDataSet={pairData.totalIntData} />
+                    <ExtraPairBarInt
+                        aggregationScaleDomain={aggregationScaleDomain}
+                        aggregationScaleRange={aggregationScaleRange}
+                        preDataSet={pairData.preIntData}
+                        postDataSet={pairData.postIntData}
+                        totalDataSet={pairData.totalIntData} />
                     <ExtraPairText
                         x={extraPairWidth.BarChart / 2}
-                        y={dimension.height - currentOffset.bottom + 20}
+                        y={height - currentOffset.bottom + 20}
                         onClick={() => actions.removeExtraPair(chartId, pairData.name)}
                     >{pairData.name}</ExtraPairText>
                 </g>);
@@ -81,10 +93,11 @@ const InterventionExtraPairGenerator: FC<Props> = ({ extraPairDataSet, aggregati
             case "Basic":
                 transferedDistance += (extraPairWidth.Basic + extraPairPadding)
                 returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Basic)},0)`}>
-                    <ExtraPairBasicInt aggregatedScale={aggregationScale} preIntData={pairData.preIntData} postIntData={pairData.postIntData} totalData={pairData.totalIntData} />
+                    <ExtraPairBasicInt aggregationScaleDomain={aggregationScaleDomain}
+                        aggregationScaleRange={aggregationScaleRange} preIntData={pairData.preIntData} postIntData={pairData.postIntData} totalData={pairData.totalIntData} />
                     <ExtraPairText
                         x={extraPairWidth.Basic / 2}
-                        y={dimension.height - currentOffset.bottom + 20}
+                        y={height - currentOffset.bottom + 20}
                         onClick={() => actions.removeExtraPair(chartId, pairData.name)}
                     >{pairData.name}</ExtraPairText>
                 </g>);

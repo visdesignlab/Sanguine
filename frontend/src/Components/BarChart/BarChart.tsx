@@ -26,7 +26,8 @@ import {
   extraPairWidth,
   extraPairPadding,
   AxisLabelDict,
-  BloodProductCap
+  BloodProductCap,
+  stateUpdateWrapperUseJSON
 } from "../../Interfaces/ApplicationState";
 import { Popup, Button, Icon } from 'semantic-ui-react'
 import SingleViolinPlot from "./SingleViolinPlot";
@@ -65,8 +66,11 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
 
   const currentOffset = offset.regular;
   const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
-  const [aggregationScaleDomain, setAggregationScaleDomain] = useState("")
+  // const [aggregationScaleDomain, setAggregationScaleDomain] = useState("")
   const [aggregationScaleRange, setAggregationScaleRange] = useState("")
+  const [xVals, setXVals] = useState([]);
+  const [kdeMax, setKdeMax] = useState(0);
+  const [caseMax, setCaseMax] = useState(0);
 
   useEffect(() => {
     let totalWidth = 0
@@ -78,28 +82,32 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
   }, [extraPairDataSet])
 
   useEffect(() => {
-    const xVals = data
+    let newkdeMax = 0;
+    let newcaseMax = 0;
+    const newXVals = data
       .map(function (dp) {
+        newcaseMax = dp.caseCount > caseMax ? dp.caseCount : caseMax;
+        const max_temp = max(dp.kdeCal, d => d.y)
+        newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
         return dp.aggregateAttribute;
       })
       .sort();
     const range = [height - currentOffset.bottom, currentOffset.top]
-    setAggregationScaleDomain(JSON.stringify(xVals))
+    stateUpdateWrapperUseJSON(xVals, newXVals, setXVals)
+    // setAggregationScaleDomain(JSON.stringify(xVals))
     setAggregationScaleRange(JSON.stringify(range))
+    setKdeMax(newkdeMax)
+    setCaseMax(newcaseMax)
+
   }, [data, height])
 
   const aggregationScale = useCallback(() => {
-    const xVals = data
-      .map(function (dp) {
-        return dp.aggregateAttribute;
-      })
-      .sort();
     const aggregationScale = scaleBand()
       .domain(xVals)
       .range([height - currentOffset.bottom, currentOffset.top])
       .paddingInner(0.1);
     return aggregationScale
-  }, [height, data]);
+  }, [height, xVals]);
 
   const valueScale = useCallback(() => {
     const valueScale = scaleLinear()
@@ -109,17 +117,13 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
   }, [width])
 
   const caseScale = useCallback(() => {
-    const caseMax = max(data.map(d => d.caseCount)) || 0;
+    //const caseMax = max(data.map(d => d.caseCount)) || 0;
     const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
     return caseScale
-  }, [data])
+  }, [caseMax])
 
   const lineFunction = useCallback(() => {
-    let kdeMax = 0
-    data.map(function (dp) {
-      const max_temp = max(dp.kdeCal, d => d.y)
-      kdeMax = kdeMax > max_temp ? kdeMax : max_temp;
-    })
+
     const kdeScale = scaleLinear()
       .domain([0, kdeMax])
       .range([0.5 * aggregationScale().bandwidth(), 0])
@@ -131,7 +135,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
       .x((d: any) => valueScale()(d.x) - currentOffset.left);
 
     return lineFunction
-  }, [data, valueScale()])
+  }, [kdeMax, valueScale()])
 
 
 
@@ -285,7 +289,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         })}
       </g>
       <g className="extraPairChart">
-        <ExtraPairPlotGenerator aggregationScaleDomain={aggregationScaleDomain} aggregationScaleRange={aggregationScaleRange} extraPairDataSet={extraPairDataSet} height={height} chartId={chartId} />
+        <ExtraPairPlotGenerator aggregationScaleDomain={JSON.stringify(xVals)} aggregationScaleRange={aggregationScaleRange} extraPairDataSet={extraPairDataSet} height={height} chartId={chartId} />
       </g>
 
 

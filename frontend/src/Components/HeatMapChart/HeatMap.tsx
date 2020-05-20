@@ -34,7 +34,8 @@ import {
     extraPairPadding,
     AxisLabelDict,
     BloodProductCap,
-    CELL_SAVER_TICKS
+    CELL_SAVER_TICKS,
+    stateUpdateWrapperUseJSON
 } from "../../Interfaces/ApplicationState";
 import { Popup, Button, Icon } from 'semantic-ui-react'
 
@@ -73,6 +74,8 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     const currentOffset = offset.regular;
 
     const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
+    const [xVals, setXVals] = useState<any[]>([]);
+    const [caseMax, setCaseMax] = useState(0);
 
 
     useEffect(() => {
@@ -82,6 +85,20 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         })
         setExtraPairTotlaWidth(totalWidth)
     }, [extraPairDataSet])
+
+    useEffect(() => {
+        let newCaseMax = 0
+        const tempxVals = data
+            .map((dp) => {
+                newCaseMax = newCaseMax > dp.caseCount ? newCaseMax : dp.caseCount
+                return dp.aggregateAttribute
+            })
+            .sort();
+        // setXVals(tempxVals);
+        stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
+        setCaseMax(newCaseMax)
+        console.log("sorted")
+    }, [data])
 
     const valueScale = useCallback(() => {
         let outputRange
@@ -100,27 +117,20 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         return valueScale
     }, [dimensionWidth, extraPairTotalWidth]);
 
-    const aggregationScale = useCallback(() => {
-        const xVals = data
-            .map(dp => dp.aggregateAttribute)
-            .sort();
 
+    const aggregationScale = useCallback(() => {
         let aggregationScale = scaleBand()
             .domain(xVals)
             .range([dimensionHeight - currentOffset.bottom, currentOffset.top])
             .paddingInner(0.1);
-
         return aggregationScale
-    }, [dimensionHeight, data])
+    }, [dimensionHeight, xVals])
 
     const caseScale = useCallback(() => {
-
-
-        const caseMax = max(data.map(d => d.caseCount)) || 0;
+        // const caseMax = max(data.map(d => d.caseCount)) || 0;
         const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
-
         return caseScale;
-    }, [data])
+    }, [caseMax])
 
     const aggregationLabel = axisLeft(aggregationScale());
 
