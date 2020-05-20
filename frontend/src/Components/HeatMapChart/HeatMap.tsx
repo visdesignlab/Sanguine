@@ -2,7 +2,8 @@ import React, {
     FC,
     useMemo,
     useEffect,
-    useState
+    useState,
+    useCallback
 } from "react";
 import { actions } from "../..";
 import Store from "../../Interfaces/Store";
@@ -46,7 +47,9 @@ interface OwnProps {
     valueToVisualize: string;
     chartId: string;
     store?: Store;
-    dimensionWhole: { width: number, height: number }
+    //dimensionWhole: { width: number, height: number }
+    dimensionWidth: number,
+    dimensionHeight: number,
     data: HeatMapDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
     yMax: number;
@@ -56,7 +59,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, valueToVisualize, dimensionWhole, data, svg, yMax }: Props) => {
+const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, valueToVisualize, dimensionHeight, dimensionWidth, data, svg, yMax }: Props) => {
 
     const svgSelection = select(svg.current);
 
@@ -71,6 +74,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
 
     const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
 
+
     useEffect(() => {
         let totalWidth = 0
         extraPairDataSet.forEach((d) => {
@@ -79,19 +83,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         setExtraPairTotlaWidth(totalWidth)
     }, [extraPairDataSet])
 
-    const [dimension, aggregationScale, valueScale, caseScale] = useMemo(() => {
-
-
-        const caseMax = max(data.map(d => d.caseCount)) || 0;
-        const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
-        const dimension = {
-            height: dimensionWhole.height,
-            width: dimensionWhole.width - extraPairTotalWidth
-        }
-
-        const xVals = data
-            .map(dp => dp.aggregateAttribute)
-            .sort();
+    const valueScale = useCallback(() => {
         let outputRange
         if (valueToVisualize === "CELL_SAVER_ML") {
             outputRange = [-1].concat(range(0, BloodProductCap[valueToVisualize] + 100, 100))
@@ -100,23 +92,39 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             outputRange = range(0, BloodProductCap[valueToVisualize] + 1)
         }
 
-        //console.log(data)
         let valueScale = scaleBand()
             .domain(outputRange as any)
-            .range([currentOffset.left, dimension.width - currentOffset.right - currentOffset.margin])
+            .range([currentOffset.left, dimensionWidth - extraPairTotalWidth - currentOffset.right - currentOffset.margin])
             .paddingInner(0.01);
+
+        return valueScale
+    }, [dimensionWidth, extraPairTotalWidth]);
+
+    const aggregationScale = useCallback(() => {
+        const xVals = data
+            .map(dp => dp.aggregateAttribute)
+            .sort();
 
         let aggregationScale = scaleBand()
             .domain(xVals)
-            .range([dimension.height - currentOffset.bottom, currentOffset.top])
+            .range([dimensionHeight - currentOffset.bottom, currentOffset.top])
             .paddingInner(0.1);
 
-        return [dimension, aggregationScale, valueScale, caseScale];
-    }, [dimensionWhole, data, yMax, extraPairDataSet])
+        return aggregationScale
+    }, [dimensionHeight, data])
 
-    const aggregationLabel = axisLeft(aggregationScale);
+    const caseScale = useCallback(() => {
 
-    const valueLabel = axisBottom(valueScale).tickFormat((d, i) => valueToVisualize === "CELL_SAVER_ML" ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[valueToVisualize] ? `${d}+` : d));
+
+        const caseMax = max(data.map(d => d.caseCount)) || 0;
+        const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
+
+        return caseScale;
+    }, [data])
+
+    const aggregationLabel = axisLeft(aggregationScale());
+
+    const valueLabel = axisBottom(valueScale()).tickFormat((d, i) => valueToVisualize === "CELL_SAVER_ML" ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[valueToVisualize] ? `${d}+` : d));
 
     svgSelection
         .select(".axes")
@@ -134,7 +142,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         .select(".y-axis")
         .attr(
             "transform",
-            `translate(${extraPairTotalWidth} ,${dimension.height - currentOffset.bottom})`
+            `translate(${extraPairTotalWidth} ,${dimensionHeight - currentOffset.bottom})`
         )
         .call(valueLabel as any)
         .call(g => g.select(".domain").remove())
@@ -143,8 +151,8 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     svgSelection
         // .select(".axes")
         .select(".x-label")
-        .attr("x", dimension.width * 0.5)
-        .attr("y", dimension.height - currentOffset.bottom + 20)
+        .attr("x", (dimensionWidth - extraPairTotalWidth) * 0.5)
+        .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("alignment-baseline", "hanging")
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
@@ -158,7 +166,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     svgSelection
         //.select(".axes")
         .select(".y-label")
-        .attr("y", dimension.height - currentOffset.bottom + 20)
+        .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("x", currentOffset.left - 55)
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
@@ -199,11 +207,13 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         return ([<SingleHeatPlot
             isSelected={decideIfSelected(dataPoint)}
             isFiltered={decideIfFiltered(dataPoint)}
-            bandwidth={aggregationScale.bandwidth()}
-            valueScale={valueScale as ScaleBand<any>}
+            bandwidth={aggregationScale().bandwidth()}
+            valueScaleDomain={JSON.stringify(valueScale().domain())}
+            valueScaleRange={JSON.stringify(valueScale().range())}
+            //            valueScale={valueScale as ScaleBand<any>}
             aggregatedBy={aggregatedBy}
             dataPoint={dataPoint}
-            howToTransform={(`translate(-${currentOffset.left},${aggregationScale(
+            howToTransform={(`translate(-${currentOffset.left},${aggregationScale()(
                 dataPoint.aggregateAttribute
             )})`).toString()}
         />])
@@ -213,7 +223,11 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
 
     return (
         <>
-            <line x1={1} x2={1} y1={currentOffset.top} y2={dimension.height - currentOffset.bottom} style={{ stroke: "#e5e5e5", strokeWidth: "1" }} />
+            <line x1={1}
+                x2={1}
+                y1={currentOffset.top}
+                y2={dimensionHeight - currentOffset.bottom}
+                style={{ stroke: "#e5e5e5", strokeWidth: "1" }} />
             <g className="axes">
                 <g className="x-axis"></g>
                 <g className="y-axis"></g>
@@ -229,13 +243,13 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                     </linearGradient>
                 </defs>
                 <rect
-                    x={0.7 * dimension.width}
+                    x={0.7 * (dimensionWidth - extraPairTotalWidth)}
                     y={0}
-                    width={0.2 * dimension.width}
+                    width={0.2 * (dimensionWidth - extraPairTotalWidth)}
                     height={10}
                     fill="url(#gradient1)" />
                 <text
-                    x={0.7 * dimension.width}
+                    x={0.7 * (dimensionWidth - extraPairTotalWidth)}
                     y={10}
                     alignmentBaseline={"hanging"}
                     textAnchor={"start"}
@@ -244,7 +258,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                     0%
                 </text>
                 <text
-                    x={0.9 * dimension.width}
+                    x={0.9 * (dimensionWidth - extraPairTotalWidth)}
                     y={10}
                     alignmentBaseline={"hanging"}
                     textAnchor={"end"}
@@ -259,18 +273,18 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                 {data.map((dataPoint) => {
                     return outputSinglePlotElement(dataPoint).concat([
                         <rect
-                            fill={interpolateGreys(caseScale(dataPoint.caseCount))}
+                            fill={interpolateGreys(caseScale()(dataPoint.caseCount))}
                             x={-40}
-                            y={aggregationScale(dataPoint.aggregateAttribute)}
+                            y={aggregationScale()(dataPoint.aggregateAttribute)}
                             width={35}
-                            height={aggregationScale.bandwidth()}
+                            height={aggregationScale().bandwidth()}
                         />,
                         <text
                             fill="white"
                             x={-22.5}
                             y={
-                                aggregationScale(dataPoint.aggregateAttribute)! +
-                                0.5 * aggregationScale.bandwidth()
+                                aggregationScale()(dataPoint.aggregateAttribute)! +
+                                0.5 * aggregationScale().bandwidth()
                             }
                             alignmentBaseline={"central"}
                             textAnchor={"middle"}
@@ -281,7 +295,12 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                 })}
             </g>
             <g className="extraPairChart">
-                {/* <ExtraPairPlotGenerator extraPairDataSet={extraPairDataSet} chartId={chartId} aggregationScale={aggregationScale} height={dimension.height} /> */}
+                <ExtraPairPlotGenerator
+                    extraPairDataSet={extraPairDataSet}
+                    chartId={chartId}
+                    aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
+                    aggregationScaleRange={JSON.stringify(aggregationScale().range())}
+                    height={dimensionHeight} />
             </g>
 
 

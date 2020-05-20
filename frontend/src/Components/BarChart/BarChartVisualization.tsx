@@ -154,7 +154,8 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
       });
       stateUpdateWrapperUseJSON(data, cast_data, setData)
       //setData(cast_data);
-      setCaseIDList(caseDictionary)
+
+      stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList)
       setYMax(yMaxTemp);
       //actions.updateCaseCount("AGGREGATED", caseCount);
       store!.totalAggregatedCaseCount = caseCount;

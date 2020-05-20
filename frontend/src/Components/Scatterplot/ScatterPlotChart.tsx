@@ -174,7 +174,7 @@ const ScatterPlot: FC<Props> = ({ yRange, xRange, svg, data, dimension, xAxisNam
         <g className="axes">
             <g className="y-axis"></g>
             <g className="x-axis" transform={`translate(0,${dimension.height - currentOffset.bottom})`}>
-                <CustomizedAxis scale={xAxisScale as ScaleOrdinal<any, number>} numberList={numberList} />
+                <CustomizedAxis scaleDomain={JSON.stringify(xAxisScale.domain())} scaleRange={JSON.stringify(xAxisScale.range())} numberList={numberList} />
             </g>
 
             <text className="x-label" style={{ textAnchor: "end" }} />

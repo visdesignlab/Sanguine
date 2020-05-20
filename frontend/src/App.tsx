@@ -202,7 +202,8 @@ const App: FC<Props> = ({ store }: Props) => {
             chartId={layout.i}
             chartIndex={index}
           />
-        </div>)
+        </div>);
+
       case "HEATMAP":
         return (<div
           //onClick={this.onClickBlock.bind(this, layoutE.i)}
@@ -221,7 +222,8 @@ const App: FC<Props> = ({ store }: Props) => {
             chartIndex={index}
             extraPair={layout.extraPair}
           />
-        </div>)
+        </div>);
+
       case "INTERVENTION":
         return (<div key={layout.i}
           className={"parent-node" + layout.i}>
@@ -235,7 +237,7 @@ const App: FC<Props> = ({ store }: Props) => {
             chartIndex={index}
             interventionDate={layout.interventionDate!}
             interventionPlotType={layout.interventionType!} />
-        </div>)
+        </div>);
 
     }
 

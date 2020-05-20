@@ -298,7 +298,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
       <g className="axes">
         <g className="x-axis"></g>
         <g className="y-axis" transform={`translate(0,${dimensionHeight - currentOffset.bottom})`}>
-          <CustomizedAxis scale={valueScale() as ScaleOrdinal<any, number>} numberList={numberList} />
+          <CustomizedAxis scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} />
         </g>
         <text className="x-label" />
         <text className="y-label" />
