@@ -7,7 +7,7 @@ import {
   SingleCasePoint
 } from "./ApplicationState";
 import { store } from './Store';
-import { timeFormat } from 'd3';
+import { timeFormat, json } from 'd3';
 
 interface AppProvenance {
   provenance: Provenance<ApplicationState>;
@@ -146,7 +146,7 @@ export function setupProvenance(): AppProvenance {
       plot_type: plot_type,
     }
     if (plot_type === "VIOLIN" || plot_type === "HEATMAP" || plot_type === "INTERVENTION") {
-      newLayoutElement.extraPair = [];
+      newLayoutElement.extraPair = JSON.stringify([]);
     }
     if (interventionDate) {
       newLayoutElement.interventionDate = interventionDate
@@ -197,7 +197,7 @@ export function setupProvenance(): AppProvenance {
                 x: 0,
                 y: Infinity,
                 plot_type: "VIOLIN",
-                extraPair: []
+                extraPair: JSON.stringify([])
               },
               {
                 aggregatedBy: "SURGEON_ID",
@@ -208,7 +208,7 @@ export function setupProvenance(): AppProvenance {
                 x: 0,
                 y: Infinity,
                 plot_type: "VIOLIN",
-                extraPair: []
+                extraPair: JSON.stringify([])
               }, {
                 aggregatedBy: "PRBC_UNITS",
                 valueToVisualize: "HEMO_VALUE",
@@ -299,7 +299,9 @@ export function setupProvenance(): AppProvenance {
         state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
           if (d.i === chartID && d.extraPair) {
             if (!d.extraPair.includes(newExtraPair)) {
-              d.extraPair.push(newExtraPair)
+              let originalArray = JSON.parse(d.extraPair);
+              originalArray.push(newExtraPair);
+              d.extraPair = JSON.stringify(originalArray)
               console.log(d)
             }
           }
@@ -317,10 +319,12 @@ export function setupProvenance(): AppProvenance {
         //  console.log(removeingPair, chartID, state)
         state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
           if (d.i === chartID && d.extraPair) {
-            d.extraPair = d.extraPair.filter((l) => {
+            let originalArray = JSON.parse(d.extraPair);
 
+            let newArray = (originalArray.filter((l: string) => {
               return (l !== removeingPair)
-            })
+            }))
+            d.extraPair = JSON.stringify(newArray)
           }
           return d
         })

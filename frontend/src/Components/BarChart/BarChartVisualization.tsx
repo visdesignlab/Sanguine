@@ -15,7 +15,7 @@ interface OwnProps {
   chartId: string;
   store?: Store;
   chartIndex: number;
-  extraPair?: string[];
+  extraPair?: string;
   hemoglobinDataSet: any;
 }
 
@@ -47,6 +47,11 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
   const [extraPairData, setExtraPairData] = useState<{ name: string, data: any[], type: string }[]>([])
   const [stripPlotMode, setStripMode] = useState(false);
   const [caseIDList, setCaseIDList] = useState<any>(null)
+  const [extraPairArray, setExtraPairArray] = useState([])
+
+  useEffect(() => {
+    if (extraPair) { stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray) }
+  }, [extraPair])
 
 
   useLayoutEffect(() => {
@@ -75,7 +80,7 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
     console.log(dataResult)
     if (dataResult) {
       let yMaxTemp = -1;
-      let perCaseYMaxTemp = -1
+      //let perCaseYMaxTemp = -1
       // let perCaseData: BarChartDataPoint[] = [];
       // const caseList = dataResult.case_id_list;
       let caseDictionary = {} as any;
@@ -172,8 +177,8 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
 
   async function makeExtraPairData() {
     let newExtraPairData: any[] = []
-    if (extraPair) {
-      extraPair.forEach(async (variable: string) => {
+    if (extraPairArray.length > 0) {
+      extraPairArray.forEach(async (variable: string) => {
         let newData = {} as any;
         let medianData = {} as any;
         let kdeMax = 0;
@@ -283,7 +288,7 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
   //TODO change this to useMemo
   useEffect(() => {
     makeExtraPairData();
-  }, [layoutArray[chartIndex], data, hemoglobinDataSet]);
+  }, [extraPairArray, data, hemoglobinDataSet]);
 
 
 
