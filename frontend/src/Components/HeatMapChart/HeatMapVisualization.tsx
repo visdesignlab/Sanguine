@@ -3,7 +3,7 @@ import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { HeatMapDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions } from '../../Interfaces/ApplicationState'
+import { HeatMapDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON } from '../../Interfaces/ApplicationState'
 
 import { Button, Icon, Table, Grid, Dropdown, GridColumn, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
@@ -35,7 +35,9 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
     const [data, setData] = useState<HeatMapDataPoint[]>([]);
 
     const [yMax, setYMax] = useState(0);
-    const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
+    const [width, setWidth] = useState(0);
+    const [height, setHeight] = useState(0)
+    //const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
     const [extraPairData, setExtraPairData] = useState<{ name: string, data: any[], type: string }[]>([])
     const [stripPlotMode, setStripMode] = useState(false);
     const [caseIDList, setCaseIDList] = useState<any>(null)
@@ -43,10 +45,8 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
 
     useLayoutEffect(() => {
         if (svgRef.current) {
-            setDimensions({
-                height: svgRef.current.clientHeight,
-                width: svgRef.current.clientWidth
-            });
+            setWidth(svgRef.current.clientWidth);
+            setHeight(svgRef.current.clientHeight)
         }
     }, [layoutArray[chartIndex]]);
 
@@ -266,7 +266,8 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
             }
             )
         }
-        setExtraPairData(newExtraPairData)
+        stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
+        // setExtraPairData(newExtraPairData)
     }
 
     useMemo(() => {
@@ -342,7 +343,8 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                 <Grid.Column width={(15) as any}>
                     <SVG ref={svgRef}>
                         <HeatMap
-                            dimensionWhole={dimensions}
+                            dimensionHeight={height}
+                            dimensionWidth={width}
                             data={data}
                             svg={svgRef}
                             aggregatedBy={aggregatedBy}
