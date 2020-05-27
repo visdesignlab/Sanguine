@@ -60,7 +60,8 @@ const App: FC<Props> = ({ store }: Props) => {
     // hemoglobinDataSet
   } = store!;
 
-  const [hemoData, setHemoData] = useState<any>(undefined)
+  const [hemoData, setHemoData] = useState<any>([])
+  const [caseIDToIndicis, setCaseIDToIndicis] = useState<any>({})
 
   async function cacheHemoData() {
     const resHemo = await fetch("http://localhost:8000/api/hemoglobin");
@@ -71,6 +72,7 @@ const App: FC<Props> = ({ store }: Props) => {
     //const resultTrans = dataTrans.result;
     // console.log(dataHemo, dataTrans)
     let transfused_dict = {} as any;
+    // let caseIDReference = {} as any;
     let result: {
       CASE_ID: number,
       VISIT_ID: number,
@@ -90,7 +92,6 @@ const App: FC<Props> = ({ store }: Props) => {
     }[] = [];
 
 
-    console.log(dataTrans)
     dataTrans.forEach((element: any) => {
       transfused_dict[element.case_id] = {
         PRBC_UNITS: element.transfused_units[0] || 0,
@@ -102,9 +103,11 @@ const App: FC<Props> = ({ store }: Props) => {
     });
 
 
-    resultHemo.map((ob: any) => {
+    resultHemo.map((ob: any, index: number) => {
       if (transfused_dict[ob.CASE_ID]) {
-        const transfusedResult = transfused_dict[ob.CASE_ID]
+        const transfusedResult = transfused_dict[ob.CASE_ID];
+
+
         result.push({
           CASE_ID: ob.CASE_ID,
           VISIT_ID: ob.VISIT_ID,
@@ -126,8 +129,10 @@ const App: FC<Props> = ({ store }: Props) => {
     })
 
     result = result.filter((d: any) => d);
+    console.log("hemo data done")
     //console.log(result)
     setHemoData(result)
+    //setCaseIDToIndicis(caseIDReference);
     //actions.storeHemoData(result);
     //   let tempMaxCaseCount = 0
     // data.result.forEach((d: any) => {

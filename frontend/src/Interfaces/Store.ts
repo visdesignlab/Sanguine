@@ -40,6 +40,9 @@ export default class Store {
   }
   @observable currentOutputFilterSet: SelectSet[] = defaultState.currentOutputFilterSet;
 
+  @observable currentSelectPatientGroup: number[] = defaultState.currentSelectPatientGroup;
+
+
 }
 
 
