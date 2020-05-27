@@ -12,7 +12,6 @@ export interface InterventionDataPoint {
   postTotalVal: number;
   preCaseCount: number;
   postCaseCount: number;
-
   preInMedian: number;
   postInMedian: number;
   preCountDict: any;
@@ -22,6 +21,7 @@ export interface InterventionDataPoint {
   prePatienIDList: number[];
   postPatienIDList: number[];
 }
+
 export interface BarChartDataPoint {
   aggregateAttribute: any;
   kdeCal: any[];
@@ -82,6 +82,7 @@ export interface ApplicationState {
   currentSelectPatient: SingleCasePoint | null;
   //hemoglobinDataSet: any;
   showZero: boolean;
+  currentSelectPatientGroup: number[]
 }
 
 export interface LayoutElement {
@@ -110,7 +111,8 @@ export const defaultState: ApplicationState = {
   currentSelectSet: [],
   currentSelectPatient: null,
   //hemoglobinDataSet: [],
-  showZero: true
+  showZero: true,
+  currentSelectPatientGroup: []
 };
 
 export const offset = {

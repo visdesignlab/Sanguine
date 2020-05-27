@@ -9,9 +9,9 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
+import { ScatterDataPoint, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState";
 import { Grid } from "semantic-ui-react";
-import ScatterPlotChart from "./ScatterPlotChart";
+import ScatterPlotChart from "./ScatterPlot";
 
 interface OwnProps {
     yAxis: string;
@@ -35,17 +35,20 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
 
     } = store!;
     const svgRef = useRef<SVGSVGElement>(null);
-    const [dimension, setDimensions] = useState({ width: 0, height: 0 });
-    const [data, setData] = useState<{ result: ScatterDataPoint[] }>({ result: [] });
-    const [yRange, setYRange] = useState({ yMin: 0, yMax: Infinity });
-    const [xRange, setXRange] = useState({ xMin: 0, xMax: Infinity });
+    const [width, setWidth] = useState(0);
+    const [height, setHeight] = useState(0);
+    const [data, setData] = useState<ScatterDataPoint[]>([]);
+    const [xMin, setXMin] = useState(0);
+    const [xMax, setXMax] = useState(0);
+    const [yMin, setYMin] = useState(0);
+    const [yMax, setYMax] = useState(0);
+    // const [yRange, setYRange] = useState({ yMin: 0, yMax: Infinity });
+    // const [xRange, setXRange] = useState({ xMin: 0, xMax: Infinity });
 
     useLayoutEffect(() => {
         if (svgRef.current) {
-            setDimensions({
-                height: svgRef.current.clientHeight,
-                width: svgRef.current.clientWidth
-            });
+            setWidth(svgRef.current.clientWidth);
+            setHeight(svgRef.current.clientHeight)
         }
     }, [layoutArray[chartIndex]]);
 
@@ -56,16 +59,13 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
             `http://localhost:8000/api/request_transfused_units?transfusion_type=${xAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
         );
         const transfusedDataResult = await transfusedRes.json();
-        const temp_transfusion_data = transfusedDataResult.result;
-
-        temp_transfusion_data.forEach((element: any) => {
+        console.log(transfusedDataResult)
+        transfusedDataResult.forEach((element: any) => {
             transfused_dict[element.case_id] = {
-                transfused: element.transfused
+                transfused: element.transfused_units
             };
         });
-        // const hemoRes = await fetch(`http://localhost:8000/api/hemoglobin`);
-        // const hemoDataResult = await hemoRes.json();
-        // const hemo_data = hemoDataResult.result;
+
         let tempYMax = 0;
         let tempYMin = Infinity;
         let tempXMin = Infinity;
@@ -115,23 +115,27 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
                 }
             });
             cast_data = cast_data.filter((d: any) => d);
+            console.log(cast_data)
             //   let total_count = cast_data.length;
             //cast_data = cast_data.filter((d: DumbbellDataPoint) => { total_count += 1; return (d.startXVal - d.endXVal) > 0 })
 
             //
             // actions.updateCaseCount(total_count)
             //console.log(aggregatedOption)
-
-            setData({ result: cast_data });
-            setYRange({ yMin: tempYMin, yMax: tempYMax });
-            setXRange({ xMin: tempXMin, xMax: tempXMax });
+            stateUpdateWrapperUseJSON(data, cast_data, setData);
+            setXMax(tempXMax);
+            setXMin(tempXMin);
+            setYMax(tempYMax);
+            setYMin(tempYMin)
+            // setYRange({ yMin: tempYMin, yMax: tempYMax });
+            // setXRange({ xMin: tempXMin, xMax: tempXMax });
 
         }
     }
 
     useEffect(() => {
         fetchChartData();
-    }, [dateRange, filterSelection, hemoglobinDataSet]);
+    }, [dateRange, filterSelection, hemoglobinDataSet, yAxis, xAxis]);
 
     return (<Grid style={{ height: "100%" }}>
         <Grid.Column width={16}  >
@@ -150,10 +154,13 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
                     svg={svgRef}
                     yAxisName={yAxis}
                     xAxisName={xAxis}
-                    data={data.result}
-                    dimension={dimension}
-                    xRange={xRange}
-                    yRange={yRange}
+                    data={data}
+                    width={width}
+                    height={height}
+                    xMax={xMax}
+                    xMin={xMin}
+                    yMax={yMax}
+                    yMin={yMin}
 
                 />
             </SVG>

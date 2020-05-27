@@ -37,6 +37,8 @@ interface AppProvenance {
     // storeHemoData: (data: any) => void;
     changeExtraPair: (chartID: string, newExtraPair: string) => void;
     removeExtraPair: (chartID: string, removeingPair: string) => void;
+
+    updateSelectedPatientGroup: (caseList: number[]) => void;
     changeChart: (x: string, y: string, i: string, type: string, interventionType?: string) => void;
   }
 }
@@ -60,6 +62,10 @@ export function setupProvenance(): AppProvenance {
         : store.currentSelectedChart;
     }
   );
+
+  provenance.addObserver(["currentSelectPatientGroup"], (state?: ApplicationState) => {
+    store.currentSelectPatientGroup = state ? state.currentSelectPatientGroup : store.currentSelectPatientGroup;
+  })
 
   provenance.addObserver(["layoutArray"], (state?: ApplicationState) => {
     store.layoutArray = state ? state.layoutArray : store.layoutArray;
@@ -290,6 +296,17 @@ export function setupProvenance(): AppProvenance {
     )
   };
 
+  const updateSelectedPatientGroup = (caseList: number[]) => {
+    provenance.applyAction(
+      `Update Selected Patients Group`,
+      (state: ApplicationState) => {
+        state.currentSelectPatientGroup = caseList;
+        console.log(caseList)
+        return state;
+      }
+    )
+  };
+
 
 
   const changeExtraPair = (chartID: string, newExtraPair: string) => {
@@ -506,7 +523,8 @@ export function setupProvenance(): AppProvenance {
       onLayoutchange,
       selectPatient,
       selectSet,
-      //  storeHemoData,
+      updateSelectedPatientGroup,
+
       changeExtraPair,
       removeExtraPair,
       loadPreset,

@@ -99,9 +99,8 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
         let caseCount = 0;
         if (preInterventiondataResult && postInterventionResult) {
             let yMaxTemp = -1;
-            let perCaseYMaxTemp = -1
             //let cast_data = InterventionData
-            console.log(preInterventiondataResult, postInterventionResult)
+
             let caseDictionary = {} as any
             let cast_data = (preInterventiondataResult as any).map(function (preIntOb: any) {
 
@@ -110,16 +109,8 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                 })
 
                 let zeroCaseNum = 0;
-
                 const aggregateByAttr = preIntOb.aggregated_by;
-
-
-
                 const preIntMed = median(preIntOb.transfused_units);
-
-
-
-
                 let preRemovedZeros = preIntOb.transfused_units;
 
 

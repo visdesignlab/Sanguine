@@ -138,9 +138,6 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                         }
                     }
                 })
-
-
-
                 const new_ob: HeatMapDataPoint = {
                     caseCount: case_num,
                     aggregateAttribute: aggregateByAttr,
@@ -152,8 +149,10 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
 
                 return new_ob;
             });
-            setData(cast_data);
-            setCaseIDList(caseDictionary)
+            // setData(cast_data);
+            stateUpdateWrapperUseJSON(data, cast_data, setData)
+            stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList);
+            //            setCaseIDList(caseDictionary)
             // actions.updateCaseCount("AGGREGATED", caseCount)
             setYMax(yMaxTemp);
             store!.totalAggregatedCaseCount = caseCount;
