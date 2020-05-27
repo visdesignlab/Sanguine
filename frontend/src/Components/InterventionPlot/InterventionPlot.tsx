@@ -125,7 +125,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
             .range([dimensionHeight - currentOffset.bottom, currentOffset.top])
             .paddingInner(0.1);
         return aggregationScale
-    }, [xVals, dimensionHeight])
+    }, [xVals, dimensionHeight, aggregatedBy])
 
     const valueScale = useCallback(() => {
         let outputRange
@@ -140,7 +140,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
             .range([currentOffset.left, (dimensionWidth - extraPairTotalWidth) - currentOffset.right - currentOffset.margin])
             .paddingInner(0.01);
         return valueScale
-    }, [dimensionWidth, extraPairTotalWidth])
+    }, [dimensionWidth, extraPairTotalWidth, valueToVisualize])
 
     const caseScale = useCallback(() => {
         const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8]);
@@ -153,7 +153,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
             .range([currentOffset.left, (dimensionWidth - extraPairTotalWidth) - currentOffset.right - currentOffset.margin]);
 
         return linearValueScale;
-    }, [extraPairTotalWidth, dimensionWidth])
+    }, [extraPairTotalWidth, dimensionWidth, valueToVisualize])
 
     const lineFunction = useCallback(() => {
         const kdeScale = scaleLinear()

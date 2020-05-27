@@ -210,7 +210,7 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                 return new_ob;
             });
 
-            console.log(cast_data);
+            //     console.log(cast_data);
 
 
             (postInterventionResult as any).map((postIntOb: any) => {
@@ -242,7 +242,7 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
 
                 let postIntPD = createpd(postRemovedZeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
 
-                console.log(postRemovedZeros)
+                //    console.log(postRemovedZeros)
                 postIntPD = [{ x: 0, y: 0 }].concat(postIntPD)
                 let reversePostPD = postIntPD.map((pair: any) => {
                     return { x: pair.x, y: - pair.y }
