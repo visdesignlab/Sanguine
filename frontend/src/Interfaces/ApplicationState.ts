@@ -82,7 +82,8 @@ export interface ApplicationState {
   currentSelectPatient: SingleCasePoint | null;
   //hemoglobinDataSet: any;
   showZero: boolean;
-  currentSelectPatientGroup: number[]
+  currentSelectPatientGroup: number[];
+  nextAddingIndex: number;
 }
 
 export interface LayoutElement {
@@ -110,7 +111,7 @@ export const defaultState: ApplicationState = {
   currentOutputFilterSet: [],
   currentSelectSet: [],
   currentSelectPatient: null,
-  //hemoglobinDataSet: [],
+  nextAddingIndex: 0,
   showZero: true,
   currentSelectPatientGroup: []
 };

@@ -4,7 +4,8 @@ import React, {
     useRef,
     useLayoutEffect,
     useState,
-    useMemo
+    useMemo,
+    useCallback
 } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
@@ -45,8 +46,8 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
     useEffect(() => {
         let caseList: number[] = [];
         data.map((d) => {
-            const cx = (xAxisScale)(d.xVal)
-            const cy = yAxisScale(d.yVal)
+            const cx = (xAxisScale())(d.xVal)
+            const cy = yAxisScale()(d.yVal)
             if (brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
                 caseList.push(d.case.caseId)
             }
@@ -80,26 +81,29 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
     // })
     // }
 
-    const [xAxisScale, yAxisScale] = useMemo(() => {
-        const indices = range(0, data.length)
-        console.log(data.length, currentOffset.left)
-        // const xAxisScale = scaleOrdinal()
-        //     .domain(indices as any)
-        //     .range(range(currentOffset.left, width - currentOffset.right, (width - currentOffset.left - currentOffset.right) / (data.length + 1)));
-
+    const xAxisScale = useCallback(() => {
         const xAxisScale = scaleLinear()
             .domain([0.9 * xMin, 1.1 * xMax])
             .range([currentOffset.left, width - currentOffset.right - currentOffset.margin]);
+        return xAxisScale
+    }, [xMax, xMin, width])
+
+    const yAxisScale = useCallback(() => {
+        // const indices = range(0, data.length)
+        // console.log(data.length, currentOffset.left)
+        // const xAxisScale = scaleOrdinal()
+        //     .domain(indices as any)
+        //     .range(range(currentOffset.left, width - currentOffset.right, (width - currentOffset.left - currentOffset.right) / (data.length + 1)));
 
         const yAxisScale = scaleLinear()
             .domain([0.9 * yMin, 1.1 * yMax])
             .range([height - currentOffset.bottom, currentOffset.top]);
 
-        return [xAxisScale, yAxisScale];
-    }, [data, yMax, xMax])
+        return yAxisScale;
+    }, [yMax, xMax, height])
 
-    const yAxisLabel = axisLeft(yAxisScale);
-    const xAxisLabel = axisBottom(xAxisScale);
+    const yAxisLabel = axisLeft(yAxisScale());
+    const xAxisLabel = axisBottom(xAxisScale());
 
     // useEffect(() => { console.log(brushLoc) }, [brushLoc])
 
@@ -179,14 +183,6 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         actions.selectPatient(d.case)
     }
 
-    const decideIfBrushed = (cx: number, cy: number) => {
-        if (brushLoc) {
-            return cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]
-        }
-        return false;
-    }
-
-
 
     return (<>
         <g className="axes">
@@ -202,9 +198,9 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         <g className="chart-comp" >
             <g className="brush-layer" />
             {/* <line x1={currentOffset.left} x2={dimension.width - currentOffset.right} y1={testValueScale(11)} y2={testValueScale(11)} style={{ stroke: "#990D0D", strokeWidth: "2" }} /> */}
-            {data.map((dataPoint, index) => {
-                const cx = (xAxisScale)(dataPoint.xVal)
-                const cy = yAxisScale(dataPoint.yVal)
+            {data.map((dataPoint) => {
+                const cx = (xAxisScale())(dataPoint.xVal)
+                const cy = yAxisScale()(dataPoint.yVal)
 
                 return (
 
