@@ -115,7 +115,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             .paddingInner(0.01);
 
         return valueScale
-    }, [dimensionWidth, extraPairTotalWidth]);
+    }, [dimensionWidth, extraPairTotalWidth, valueToVisualize]);
 
 
     const aggregationScale = useCallback(() => {
@@ -124,7 +124,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             .range([dimensionHeight - currentOffset.bottom, currentOffset.top])
             .paddingInner(0.1);
         return aggregationScale
-    }, [dimensionHeight, xVals])
+    }, [dimensionHeight, xVals, aggregatedBy])
 
     const caseScale = useCallback(() => {
         // const caseMax = max(data.map(d => d.caseCount)) || 0;
