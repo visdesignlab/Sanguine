@@ -49,7 +49,6 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
     const generateLineUp = () => {
         if (hemoglobinDataSet) {
             // const patientId = currentSelectPatient ? currentSelectPatient.caseId : 1
-            console.log(hemoglobinDataSet, caseIDReference)
             return (<LineUp data={hemoglobinDataSet} selection={outputSelectedGroup()}>
                 <LineUpStringColumnDesc column="CASE_ID" label="CASE_ID" /> */}
                 <LineUpCategoricalColumnDesc column="PATIENT_ID" categories={distinctCategories.patient} />

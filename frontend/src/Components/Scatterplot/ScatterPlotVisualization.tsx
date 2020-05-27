@@ -31,6 +31,7 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
         filterSelection,
         //  perCaseSelected,
         dateRange,
+        showZero
         //actualYearRange,
 
     } = store!;
@@ -54,15 +55,13 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
 
     async function fetchChartData() {
         let transfused_dict = {} as any;
-        console.log(xAxis, yAxis)
         const transfusedRes = await fetch(
             `http://localhost:8000/api/request_transfused_units?transfusion_type=${xAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
         );
         const transfusedDataResult = await transfusedRes.json();
-        console.log(transfusedDataResult)
         transfusedDataResult.forEach((element: any) => {
             transfused_dict[element.case_id] = {
-                transfused: element.transfused_units
+                transfused: element.transfused_units || 0
             };
         });
 
@@ -82,11 +81,9 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
                 };
                 //  console.log(transfused_dict);
                 //This filter out anything that has empty value
-                if (xValue && yValue > 0) {
+                if ((yValue && showZero && transfused_dict[ob.CASE_ID]) || (!showZero && yValue && xValue > 0)) {
                     if (!(xValue > 100 && xAxis === "PRBC_UNITS")) {
                         tempXMin = xValue < tempXMin ? xValue : tempXMin;
-                        // tempXMin = end_x < tempXMin ? end_x : tempXMin;
-                        // tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
                         tempXMax = xValue > tempXMax ? xValue : tempXMax;
                     }
                     tempYMin = yValue < tempYMin ? yValue : tempYMin;
@@ -96,7 +93,6 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
 
                     let new_ob: ScatterDataPoint = {
                         xVal: xValue,
-
                         yVal: yValue,
                         case: {
                             visitNum: ob.VISIT_ID,
@@ -115,12 +111,11 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
                 }
             });
             cast_data = cast_data.filter((d: any) => d);
-            console.log(cast_data)
-            //   let total_count = cast_data.length;
+            //let total_count = cast_data.length;
             //cast_data = cast_data.filter((d: DumbbellDataPoint) => { total_count += 1; return (d.startXVal - d.endXVal) > 0 })
 
             //
-            // actions.updateCaseCount(total_count)
+            actions.updateCaseCount("INDIVIDUAL", cast_data.length)
             //console.log(aggregatedOption)
             stateUpdateWrapperUseJSON(data, cast_data, setData);
             setXMax(tempXMax);
@@ -135,7 +130,7 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
 
     useEffect(() => {
         fetchChartData();
-    }, [dateRange, filterSelection, hemoglobinDataSet, yAxis, xAxis]);
+    }, [dateRange, filterSelection, showZero, hemoglobinDataSet, yAxis, xAxis]);
 
     return (<Grid style={{ height: "100%" }}>
         <Grid.Column width={16}  >

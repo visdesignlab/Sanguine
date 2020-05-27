@@ -7,7 +7,7 @@ import {
   SingleCasePoint
 } from "./ApplicationState";
 import { store } from './Store';
-import { timeFormat, json } from 'd3';
+import { timeFormat, json, scaleDiverging } from 'd3';
 
 interface AppProvenance {
   provenance: Provenance<ApplicationState>;
@@ -75,9 +75,9 @@ export function setupProvenance(): AppProvenance {
   //   store.hemoglobinDataSet = state ? state.hemoglobinDataSet : store.hemoglobinDataSet
   // })
 
-  // provenance.addObserver(["dumbbellSorted"], (state?: ApplicationState) => {
-  //   store.dumbbellSorted = state ? state.dumbbellSorted : store.dumbbellSorted;
-  // })
+  provenance.addObserver(["nextAddingIndex"], (state?: ApplicationState) => {
+    store.nextAddingIndex = state ? state.nextAddingIndex : store.nextAddingIndex;
+  })
 
   provenance.addObserver(['showZero'], (state?: ApplicationState) => {
     store.showZero = state ? state.showZero : store.showZero;
@@ -165,7 +165,7 @@ export function setupProvenance(): AppProvenance {
     provenance.applyAction("Add new chart",
       (state: ApplicationState) => {
         state.layoutArray.push(newLayoutElement)
-        console.log(state)
+        state.nextAddingIndex += 1
         return state;
       })
   }
@@ -226,7 +226,7 @@ export function setupProvenance(): AppProvenance {
                 plot_type: "DUMBBELL"
               }]
             state.filterSelection = ["CABG", "TAVR"]
-            //TODO ADD PRESET STATE
+            state.nextAddingIndex = 3;
             return state
           }
         )
