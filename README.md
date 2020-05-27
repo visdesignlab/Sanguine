@@ -51,8 +51,9 @@ It should show as `(bloodvis)[uID@bloodvis]$`.
 2. Type `ssh bloodvis` to go to the VM. Enter uID password when prompted.
 3. Type `cd /uufs/chpc.utah.edu/common/HIPAA/IRB_00124248/bloodvis/bloodvis/frontend`
 4. Type `scl enable rh-nodejs10 bash`
-5. Type `npm install && npm start`
-6. Close the firefox because that is a really old version and our tool does not work properly on there. 
+5. Type `git pull`
+6. Type `npm install && npm start`
+7. Close the firefox because that is a really old version and our tool does not work properly on there. 
 
 ## Start Chrome on VM
 
