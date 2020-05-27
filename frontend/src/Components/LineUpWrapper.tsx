@@ -17,6 +17,7 @@ export type Props = OwnProps;
 const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
 
 
+    const { currentSelectPatient } = store!
     const [distinctCategories, setCatgories] = useState<{ surgeons: any[], anesth: any[], patient: any[] }>({ surgeons: [], anesth: [], patient: [] })
 
     useEffect(() => {
@@ -36,9 +37,10 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
     }, [hemoglobinDataSet])
 
 
-    const something = () => {
+    const generateLineUp = () => {
         if (hemoglobinDataSet) {
-            return (<LineUp data={hemoglobinDataSet}>
+            const patientId = currentSelectPatient ? currentSelectPatient.caseId : 1
+            return (<LineUp data={hemoglobinDataSet} selection={[1]}>
                 <LineUpStringColumnDesc column="CASE_ID" label="CASE_ID" /> */}
                 <LineUpCategoricalColumnDesc column="PATIENT_ID" categories={distinctCategories.patient} />
                 <LineUpCategoricalColumnDesc column="SURGEON_ID" categories={distinctCategories.surgeons} />
@@ -59,7 +61,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
 
     //     <LineUpCategoricalColumnDesc column="SURGEON_ID" categories={distinctCategories.surgeons} />
     // </LineUp>;
-    return <>{something()}</>
+    return <>{generateLineUp()}</>
 }
 
 export default inject("store")(observer(LineUpWrapper))
