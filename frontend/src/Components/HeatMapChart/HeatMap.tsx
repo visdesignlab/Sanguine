@@ -65,7 +65,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     const svgSelection = select(svg.current);
 
     const {
-        // perCaseSelected,
+        showZero,
         currentSelectPatient,
         currentOutputFilterSet,
         currentSelectSet
@@ -76,6 +76,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
     const [xVals, setXVals] = useState<any[]>([]);
     const [caseMax, setCaseMax] = useState(0);
+    const [zeroMax, setZeroMax] = useState(0);
 
 
     useEffect(() => {
@@ -88,17 +89,25 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
 
     useEffect(() => {
         let newCaseMax = 0
+        let zeroTransfusedMax = 0;
         const tempxVals = data
             .map((dp) => {
                 newCaseMax = newCaseMax > dp.caseCount ? newCaseMax : dp.caseCount
+                zeroTransfusedMax = zeroTransfusedMax > dp.zeroCaseNum ? zeroTransfusedMax : dp.zeroCaseNum
                 return dp.aggregateAttribute
             })
             .sort();
         // setXVals(tempxVals);
         stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
         setCaseMax(newCaseMax)
-        console.log("sorted")
+        setZeroMax(zeroTransfusedMax)
+        // console.log("sorted")
     }, [data])
+
+    // const zeroGrayScale = useCallback(()=>{
+    //     const zeroGrayScale = scaleLinear().domain([0,zeroMax]).range([0.25,0.8])
+    //     return zeroGrayScale
+    // },[zeroMax])
 
     const valueScale = useCallback(() => {
         let outputRange
@@ -226,6 +235,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             howToTransform={(`translate(-${currentOffset.left},${aggregationScale()(
                 dataPoint.aggregateAttribute
             )})`).toString()}
+            zeroMax={zeroMax}
         />])
 
 
