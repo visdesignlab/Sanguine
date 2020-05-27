@@ -12,7 +12,6 @@ export interface InterventionDataPoint {
   postTotalVal: number;
   preCaseCount: number;
   postCaseCount: number;
-
   preInMedian: number;
   postInMedian: number;
   preCountDict: any;
@@ -22,6 +21,7 @@ export interface InterventionDataPoint {
   prePatienIDList: number[];
   postPatienIDList: number[];
 }
+
 export interface BarChartDataPoint {
   aggregateAttribute: any;
   kdeCal: any[];
@@ -82,6 +82,8 @@ export interface ApplicationState {
   currentSelectPatient: SingleCasePoint | null;
   //hemoglobinDataSet: any;
   showZero: boolean;
+  currentSelectPatientGroup: number[];
+  nextAddingIndex: number;
 }
 
 export interface LayoutElement {
@@ -109,8 +111,9 @@ export const defaultState: ApplicationState = {
   currentOutputFilterSet: [],
   currentSelectSet: [],
   currentSelectPatient: null,
-  //hemoglobinDataSet: [],
-  showZero: true
+  nextAddingIndex: 0,
+  showZero: true,
+  currentSelectPatientGroup: []
 };
 
 export const offset = {
@@ -126,14 +129,14 @@ export const extraPairOptions = [
   { title: "Total Transfusion", value: "Total Transfusion" },
   { title: "Per Case Transfusion", value: "Per Case" },
   { title: "Zero Transfusion Cases", value: "Zero Transfusion" },
-  { title: "Risk of Mortality", value: "ROM" },
-  { title: "Severity of Illness", value: "SOI" },
+  { title: "Risk Score", value: "RISK" },
+  // { title: "Severity of Illness", value: "SOI" },
   { title: "Mortality Rate", value: "Mortality" },
   { title: "Ventilation Rate", value: "Vent" }
 ]
 
 //export const minimumOffset = 
-export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 30, Outcomes: 30 }
+export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 30, Outcomes: 35 }
 export const extraPairPadding = 5;
 export const minimumWidthScale = 18;
 
