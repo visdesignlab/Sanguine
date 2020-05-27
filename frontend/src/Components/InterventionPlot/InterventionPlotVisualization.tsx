@@ -113,11 +113,11 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
 
                 const aggregateByAttr = preIntOb.aggregated_by;
 
-                const case_num = preIntOb.transfused_units.length;
+
 
                 const preIntMed = median(preIntOb.transfused_units);
 
-                caseCount += case_num;
+
 
 
                 let preRemovedZeros = preIntOb.transfused_units;
@@ -136,6 +136,8 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                 }
                 //const case_num = removed_zeros.length;
                 const total_val = sum(preRemovedZeros);
+                const case_num = preRemovedZeros.length;
+                caseCount += case_num;
                 //const medianVal = median(removed_zeros);
 
                 let preIntPD = createpd(preRemovedZeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
@@ -165,7 +167,7 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                     }
                 }
 
-                preIntOb.transfused_units.map((d: any) => {
+                preRemovedZeros.map((d: any) => {
                     if (valueToVisualize === "CELL_SAVER_ML") {
                         const roundedAnswer = Math.floor(d / 100) * 100
                         if (d === 0) {
@@ -214,7 +216,7 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
             (postInterventionResult as any).map((postIntOb: any) => {
 
                 const postIntMed = median(postIntOb.transfused_units);
-                const case_num = postIntOb.transfused_units.length;
+
                 let postRemovedZeros = postIntOb.transfused_units;
                 let zeroCaseNum = 0;
 
@@ -235,10 +237,12 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                 }
 
                 const total_val = sum(postRemovedZeros);
+                const case_num = postRemovedZeros.length;
                 caseCount += case_num
 
                 let postIntPD = createpd(postRemovedZeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
 
+                console.log(postRemovedZeros)
                 postIntPD = [{ x: 0, y: 0 }].concat(postIntPD)
                 let reversePostPD = postIntPD.map((pair: any) => {
                     return { x: pair.x, y: - pair.y }
@@ -264,7 +268,7 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                     }
                 }
 
-                postIntOb.transfused_units.map((d: any) => {
+                postRemovedZeros.map((d: any) => {
                     if (valueToVisualize === "CELL_SAVER_ML") {
                         const roundedAnswer = Math.floor(d / 100) * 100
                         if (d === 0) {
