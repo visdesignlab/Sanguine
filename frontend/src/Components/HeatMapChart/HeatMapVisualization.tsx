@@ -91,17 +91,17 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                 caseCount += case_num
 
                 let outputResult = ob.transfused_units;
-                if (!showZero) {
-                    outputResult = outputResult.filter((d: number) => {
-                        if (d > 0) {
-                            return true;
-                        }
-                        zeroCaseNum += 1;
-                        return false;
-                    })
-                } else {
-                    zeroCaseNum = outputResult.filter((d: number) => d === 0).length
-                }
+                // if (!showZero) {
+                //     outputResult = outputResult.filter((d: number) => {
+                //         if (d > 0) {
+                //             return true;
+                //         }
+                //         zeroCaseNum += 1;
+                //         return false;
+                //     })
+                // } else {
+                zeroCaseNum = outputResult.filter((d: number) => d === 0).length
+                // }
                 const total_val = sum(outputResult);
 
                 let countDict = {} as any
