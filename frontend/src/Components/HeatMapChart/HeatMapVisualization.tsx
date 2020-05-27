@@ -91,17 +91,17 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                 caseCount += case_num
 
                 let outputResult = ob.transfused_units;
-                if (!showZero) {
-                    outputResult = outputResult.filter((d: number) => {
-                        if (d > 0) {
-                            return true;
-                        }
-                        zeroCaseNum += 1;
-                        return false;
-                    })
-                } else {
-                    zeroCaseNum = outputResult.filter((d: number) => d === 0).length
-                }
+                // if (!showZero) {
+                //     outputResult = outputResult.filter((d: number) => {
+                //         if (d > 0) {
+                //             return true;
+                //         }
+                //         zeroCaseNum += 1;
+                //         return false;
+                //     })
+                // } else {
+                zeroCaseNum = outputResult.filter((d: number) => d === 0).length
+                // }
                 const total_val = sum(outputResult);
 
                 let countDict = {} as any
@@ -138,9 +138,6 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                         }
                     }
                 })
-
-
-
                 const new_ob: HeatMapDataPoint = {
                     caseCount: case_num,
                     aggregateAttribute: aggregateByAttr,
@@ -152,8 +149,10 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
 
                 return new_ob;
             });
-            setData(cast_data);
-            setCaseIDList(caseDictionary)
+            // setData(cast_data);
+            stateUpdateWrapperUseJSON(data, cast_data, setData)
+            stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList);
+            //            setCaseIDList(caseDictionary)
             // actions.updateCaseCount("AGGREGATED", caseCount)
             setYMax(yMaxTemp);
             store!.totalAggregatedCaseCount = caseCount;
@@ -194,18 +193,18 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                         });
                         newExtraPairData.push({ name: "Zero %", data: newData, type: "Basic" });
                         break;
-                    case "ROM":
+                    case "RISK":
                         data.map(async (dataPoint: HeatMapDataPoint) => {
                             newData[dataPoint.aggregateAttribute] = dataPoint.patientIDList;
                         });
-                        newExtraPairData.push({ name: "ROM", data: newData, type: "Outcomes" });
+                        newExtraPairData.push({ name: "RISK", data: newData, type: "Outcomes" });
                         break;
-                    case "SOI":
-                        data.map(async (dataPoint: HeatMapDataPoint) => {
-                            newData[dataPoint.aggregateAttribute] = dataPoint.patientIDList;
-                        });
-                        newExtraPairData.push({ name: "SOI", data: newData, type: "Outcomes" });
-                        break;
+                    // case "SOI":
+                    //     data.map(async (dataPoint: HeatMapDataPoint) => {
+                    //         newData[dataPoint.aggregateAttribute] = dataPoint.patientIDList;
+                    //     });
+                    //     newExtraPairData.push({ name: "SOI", data: newData, type: "Outcomes" });
+                    //     break;
                     case "Mortality":
                         data.map(async (dataPoint: HeatMapDataPoint) => {
                             newData[dataPoint.aggregateAttribute] = dataPoint.patientIDList;

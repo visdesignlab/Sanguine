@@ -35,10 +35,14 @@ export default class Store {
 
   }
   //@observable hemoglobinDataSet: any = defaultState.hemoglobinDataSet;
-  @computed get nextAddingIndex() {
-    return this.layoutArray.length
-  }
+  // @computed get nextAddingIndex() {
+  //   return this.layoutArray.length
+  // }
+  @observable nextAddingIndex: number = defaultState.nextAddingIndex;
   @observable currentOutputFilterSet: SelectSet[] = defaultState.currentOutputFilterSet;
+
+  @observable currentSelectPatientGroup: number[] = defaultState.currentSelectPatientGroup;
+
 
 }
 

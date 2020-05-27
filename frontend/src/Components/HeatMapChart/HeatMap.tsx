@@ -41,7 +41,7 @@ import { Popup, Button, Icon } from 'semantic-ui-react'
 
 import SingleHeatPlot from "./SingleHeatPlot";
 import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
-import { secondary_gray, third_gray } from "../../ColorProfile";
+import { secondary_gray, third_gray, greyScaleRange } from "../../ColorProfile";
 
 interface OwnProps {
     aggregatedBy: string;
@@ -65,7 +65,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     const svgSelection = select(svg.current);
 
     const {
-        // perCaseSelected,
+        showZero,
         currentSelectPatient,
         currentOutputFilterSet,
         currentSelectSet
@@ -76,6 +76,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
     const [xVals, setXVals] = useState<any[]>([]);
     const [caseMax, setCaseMax] = useState(0);
+    //  const [zeroMax, setZeroMax] = useState(0);
 
 
     useEffect(() => {
@@ -88,17 +89,24 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
 
     useEffect(() => {
         let newCaseMax = 0
+        // let zeroTransfusedMax = 0;
         const tempxVals = data
             .map((dp) => {
                 newCaseMax = newCaseMax > dp.caseCount ? newCaseMax : dp.caseCount
+                // zeroTransfusedMax = zeroTransfusedMax > dp.zeroCaseNum ? zeroTransfusedMax : dp.zeroCaseNum
                 return dp.aggregateAttribute
             })
             .sort();
         // setXVals(tempxVals);
         stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
         setCaseMax(newCaseMax)
-        console.log("sorted")
+        // console.log("sorted")
     }, [data])
+
+    // const zeroGrayScale = useCallback(()=>{
+    //     const zeroGrayScale = scaleLinear().domain([0,zeroMax]).range([0.25,0.8])
+    //     return zeroGrayScale
+    // },[zeroMax])
 
     const valueScale = useCallback(() => {
         let outputRange
@@ -115,7 +123,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             .paddingInner(0.01);
 
         return valueScale
-    }, [dimensionWidth, extraPairTotalWidth]);
+    }, [dimensionWidth, extraPairTotalWidth, valueToVisualize]);
 
 
     const aggregationScale = useCallback(() => {
@@ -124,11 +132,11 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             .range([dimensionHeight - currentOffset.bottom, currentOffset.top])
             .paddingInner(0.1);
         return aggregationScale
-    }, [dimensionHeight, xVals])
+    }, [dimensionHeight, xVals, aggregatedBy])
 
     const caseScale = useCallback(() => {
         // const caseMax = max(data.map(d => d.caseCount)) || 0;
-        const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
+        const caseScale = scaleLinear().domain([0, caseMax]).range(greyScaleRange)
         return caseScale;
     }, [caseMax])
 
@@ -226,6 +234,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             howToTransform={(`translate(-${currentOffset.left},${aggregationScale()(
                 dataPoint.aggregateAttribute
             )})`).toString()}
+
         />])
 
 
@@ -298,6 +307,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                             }
                             alignmentBaseline={"central"}
                             textAnchor={"middle"}
+                            fontSize="12px"
                         >
                             {dataPoint.caseCount}
                         </text>,

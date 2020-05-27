@@ -5,8 +5,8 @@ import { inject, observer } from "mobx-react";
 import { HeatMapDataPoint } from "../../Interfaces/ApplicationState";
 // import { Popup } from "semantic-ui-react";
 // import { actions } from "../..";
-import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds, scaleBand } from "d3";
-import { highlight_orange, basic_gray, blood_red, highlight_blue } from "../../ColorProfile";
+import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds, scaleBand, interpolateGreys } from "d3";
+import { highlight_orange, basic_gray, blood_red, highlight_blue, greyScaleRange } from "../../ColorProfile";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
 
@@ -21,6 +21,7 @@ interface OwnProps {
     valueScaleDomain: string;
     valueScaleRange: string
     bandwidth: number;
+    //  zeroMax: number;
 }
 
 export type Props = OwnProps;
@@ -28,6 +29,8 @@ export type Props = OwnProps;
 const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggregatedBy, isSelected, valueScaleDomain, valueScaleRange, store, isFiltered }: Props) => {
     const { showZero } = store!;
     const colorScale = scaleLinear().domain([0, 1]).range([0.1, 1]);
+    const greyScale = scaleLinear().domain([0, 1]).range(greyScaleRange)
+
     const valueScale = useCallback(() => {
         const domain = JSON.parse(valueScaleDomain);
         const range = JSON.parse(valueScaleRange);
@@ -40,17 +43,20 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
 
     return (
         <>
-
-
             {valueScale().domain().map(point => {
                 const output = dataPoint.countDict[point] ? dataPoint.countDict[point] : 0
                 const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum
+                let colorFill = output === 0 ? "white" : interpolateReds(colorScale(output / caseCount))
+                if (!showZero && point as any === 0) {
+                    colorFill = output === 0 ? "white" : interpolateGreys(greyScale(output / (dataPoint.caseCount)))
+                }
+
                 return (
                     [<Popup content={output}
                         key={dataPoint.aggregateAttribute + '-' + point}
                         trigger={
                             <HeatRect
-                                fill={output === 0 ? "white" : interpolateReds(colorScale(output / caseCount))}
+                                fill={colorFill}
                                 x={valueScale()(point)}
                                 transform={howToTransform}
                                 width={valueScale().bandwidth()}

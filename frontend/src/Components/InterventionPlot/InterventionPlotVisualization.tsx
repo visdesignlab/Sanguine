@@ -99,9 +99,8 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
         let caseCount = 0;
         if (preInterventiondataResult && postInterventionResult) {
             let yMaxTemp = -1;
-            let perCaseYMaxTemp = -1
             //let cast_data = InterventionData
-            console.log(preInterventiondataResult, postInterventionResult)
+
             let caseDictionary = {} as any
             let cast_data = (preInterventiondataResult as any).map(function (preIntOb: any) {
 
@@ -110,16 +109,8 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                 })
 
                 let zeroCaseNum = 0;
-
                 const aggregateByAttr = preIntOb.aggregated_by;
-
-                const case_num = preIntOb.transfused_units.length;
-
                 const preIntMed = median(preIntOb.transfused_units);
-
-                caseCount += case_num;
-
-
                 let preRemovedZeros = preIntOb.transfused_units;
 
 
@@ -136,6 +127,8 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                 }
                 //const case_num = removed_zeros.length;
                 const total_val = sum(preRemovedZeros);
+                const case_num = preIntOb.transfused_units.length;
+                caseCount += case_num;
                 //const medianVal = median(removed_zeros);
 
                 let preIntPD = createpd(preRemovedZeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
@@ -208,13 +201,13 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                 return new_ob;
             });
 
-            console.log(cast_data);
+            //     console.log(cast_data);
 
 
             (postInterventionResult as any).map((postIntOb: any) => {
 
                 const postIntMed = median(postIntOb.transfused_units);
-                const case_num = postIntOb.transfused_units.length;
+
                 let postRemovedZeros = postIntOb.transfused_units;
                 let zeroCaseNum = 0;
 
@@ -235,10 +228,12 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                 }
 
                 const total_val = sum(postRemovedZeros);
+                const case_num = postIntOb.transfused_units.length;
                 caseCount += case_num
 
                 let postIntPD = createpd(postRemovedZeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
 
+                //    console.log(postRemovedZeros)
                 postIntPD = [{ x: 0, y: 0 }].concat(postIntPD)
                 let reversePostPD = postIntPD.map((pair: any) => {
                     return { x: pair.x, y: - pair.y }
@@ -336,7 +331,7 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
 
     useEffect(() => {
         fetchChartData();
-    }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize]);
+    }, [filterSelection, dateRange, aggregatedBy, showZero, valueToVisualize]);
 
 
     //{ name: string,totalIntData:any[], preIntData: any[], postIntData: any[], type: string, kdeMax?: number, medianSet?: any }

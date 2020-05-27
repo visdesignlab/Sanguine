@@ -43,7 +43,7 @@ import { Popup, Button, Icon } from 'semantic-ui-react'
 //import SingleHeatPlot from "./SingleHeatPlot";
 
 //import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
-import { secondary_gray, third_gray, preop_color, postop_color } from "../../ColorProfile";
+import { secondary_gray, third_gray, preop_color, postop_color, greyScaleRange } from "../../ColorProfile";
 import SingleHeatCompare from "./SingleHeatCompare";
 import SingleViolinCompare from "./SingleViolinCompare";
 import InterventionExtraPairGenerator from "../Utilities/InterventionExtraPairGenerator";
@@ -95,6 +95,8 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
     const [kdeMax, setKdeMax] = useState(0);
     const [xVals, setXVals] = useState([]);
     const [caseMax, setCaseMax] = useState(0)
+    // const [preZeroMax, setPreZeroMax] = useState(0)
+    // const [postZeroMax,setPostZeroMax] = useState(0)
 
     useEffect(() => {
         let totalWidth = 0
@@ -107,8 +109,10 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
     useEffect(() => {
         let newkdeMax = 0
         let newCaseMax = 0;
+        let newZeroMax = 0;
         const newXvals = data.map(dp => {
             newCaseMax = newCaseMax > (dp.preCaseCount + dp.postCaseCount) ? newCaseMax : (dp.preCaseCount + dp.postCaseCount);
+            newZeroMax = newZeroMax > (dp.postZeroCaseNum + dp.preZeroCaseNum) ? newCaseMax : (dp.postZeroCaseNum + dp.preZeroCaseNum);
             const max_temp = max([max(dp.preInKdeCal, d => d.y), max(dp.postInKdeCal, d => d.y)])
             newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
             return dp.aggregateAttribute
@@ -116,7 +120,8 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
             .sort();
         stateUpdateWrapperUseJSON(xVals, newXvals, setXVals);
         setKdeMax(newkdeMax);
-        setCaseMax(newCaseMax)
+        setCaseMax(newCaseMax);
+
     }, [data])
 
     const aggregationScale = useCallback(() => {
@@ -125,7 +130,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
             .range([dimensionHeight - currentOffset.bottom, currentOffset.top])
             .paddingInner(0.1);
         return aggregationScale
-    }, [xVals, dimensionHeight])
+    }, [xVals, dimensionHeight, aggregatedBy])
 
     const valueScale = useCallback(() => {
         let outputRange
@@ -140,10 +145,10 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
             .range([currentOffset.left, (dimensionWidth - extraPairTotalWidth) - currentOffset.right - currentOffset.margin])
             .paddingInner(0.01);
         return valueScale
-    }, [dimensionWidth, extraPairTotalWidth])
+    }, [dimensionWidth, extraPairTotalWidth, valueToVisualize])
 
     const caseScale = useCallback(() => {
-        const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8]);
+        const caseScale = scaleLinear().domain([0, caseMax]).range(greyScaleRange);
         return caseScale
     }, [caseMax])
 
@@ -153,7 +158,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
             .range([currentOffset.left, (dimensionWidth - extraPairTotalWidth) - currentOffset.right - currentOffset.margin]);
 
         return linearValueScale;
-    }, [extraPairTotalWidth, dimensionWidth])
+    }, [extraPairTotalWidth, dimensionWidth, valueToVisualize])
 
     const lineFunction = useCallback(() => {
         const kdeScale = scaleLinear()
@@ -299,6 +304,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                 }
                 alignmentBaseline={"central"}
                 textAnchor={"middle"}
+                fontSize="12px"
             >
                 {dataPoint.preCaseCount}
             </text>, <text
@@ -310,6 +316,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                 }
                 alignmentBaseline={"central"}
                 textAnchor={"middle"}
+                fontSize="12px"
             >
                 {dataPoint.postCaseCount}
             </text>])
@@ -323,6 +330,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                 }
                 alignmentBaseline={"central"}
                 textAnchor={"middle"}
+                fontSize="12px"
             >
                 {dataPoint.preCaseCount + dataPoint.postCaseCount}
             </text>])

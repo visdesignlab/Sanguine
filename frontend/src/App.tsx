@@ -39,6 +39,7 @@ import LineUpWrapper from './Components/LineUpWrapper';
 import HeatMapVisualization from './Components/HeatMapChart/HeatMapVisualization';
 import { timeFormat, timeParse } from 'd3';
 import InterventionPlotVisualization from './Components/InterventionPlot/InterventionPlotVisualization';
+import PatientComparisonWrapper from './Components/PatientComparisonWrapper';
 
 //const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
@@ -59,7 +60,8 @@ const App: FC<Props> = ({ store }: Props) => {
     // hemoglobinDataSet
   } = store!;
 
-  const [hemoData, setHemoData] = useState<any>(undefined)
+  const [hemoData, setHemoData] = useState<any>([])
+  const [caseIDToIndicis, setCaseIDToIndicis] = useState<any>({})
 
   async function cacheHemoData() {
     const resHemo = await fetch("http://localhost:8000/api/hemoglobin");
@@ -70,6 +72,7 @@ const App: FC<Props> = ({ store }: Props) => {
     //const resultTrans = dataTrans.result;
     // console.log(dataHemo, dataTrans)
     let transfused_dict = {} as any;
+    // let caseIDReference = {} as any;
     let result: {
       CASE_ID: number,
       VISIT_ID: number,
@@ -89,21 +92,22 @@ const App: FC<Props> = ({ store }: Props) => {
     }[] = [];
 
 
-
     dataTrans.forEach((element: any) => {
       transfused_dict[element.case_id] = {
-        PRBC_UNITS: element.PRBC_UNITS,
-        FFP_UNITS: element.FFP_UNITS,
-        PLT_UNITS: element.PLT_UNITS,
-        CRYO_UNITS: element.CRYO_UNITS,
-        CELL_SAVER_ML: element.CELL_SAVER_ML
+        PRBC_UNITS: element.transfused_units[0] || 0,
+        FFP_UNITS: element.transfused_units[1] || 0,
+        PLT_UNITS: element.transfused_units[2] || 0,
+        CRYO_UNITS: element.transfused_units[3] || 0,
+        CELL_SAVER_ML: element.transfused_units[4] || 0
       };
     });
 
 
-    resultHemo.map((ob: any) => {
+    resultHemo.map((ob: any, index: number) => {
       if (transfused_dict[ob.CASE_ID]) {
-        const transfusedResult = transfused_dict[ob.CASE_ID]
+        const transfusedResult = transfused_dict[ob.CASE_ID];
+
+
         result.push({
           CASE_ID: ob.CASE_ID,
           VISIT_ID: ob.VISIT_ID,
@@ -125,8 +129,10 @@ const App: FC<Props> = ({ store }: Props) => {
     })
 
     result = result.filter((d: any) => d);
+    console.log("hemo data done")
     //console.log(result)
     setHemoData(result)
+    //setCaseIDToIndicis(caseIDReference);
     //actions.storeHemoData(result);
     //   let tempMaxCaseCount = 0
     // data.result.forEach((d: any) => {
@@ -275,6 +281,13 @@ const App: FC<Props> = ({ store }: Props) => {
       <Tab.Pane key="LineUp">
         <div className={"lineup"}>
           <LineUpWrapper hemoglobinDataSet={hemoData} /></div></Tab.Pane>
+  }, {
+    menuItem: 'Selected Patients',
+    pane:
+      <Tab.Pane key="Patients">
+        <PatientComparisonWrapper></PatientComparisonWrapper>
+
+      </Tab.Pane>
   }]
 
   return (
