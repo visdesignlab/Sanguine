@@ -95,6 +95,8 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
     const [kdeMax, setKdeMax] = useState(0);
     const [xVals, setXVals] = useState([]);
     const [caseMax, setCaseMax] = useState(0)
+    // const [preZeroMax, setPreZeroMax] = useState(0)
+    // const [postZeroMax,setPostZeroMax] = useState(0)
 
     useEffect(() => {
         let totalWidth = 0
@@ -107,8 +109,10 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
     useEffect(() => {
         let newkdeMax = 0
         let newCaseMax = 0;
+        let newZeroMax = 0;
         const newXvals = data.map(dp => {
             newCaseMax = newCaseMax > (dp.preCaseCount + dp.postCaseCount) ? newCaseMax : (dp.preCaseCount + dp.postCaseCount);
+            newZeroMax = newZeroMax > (dp.postZeroCaseNum + dp.preZeroCaseNum) ? newCaseMax : (dp.postZeroCaseNum + dp.preZeroCaseNum);
             const max_temp = max([max(dp.preInKdeCal, d => d.y), max(dp.postInKdeCal, d => d.y)])
             newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
             return dp.aggregateAttribute
@@ -116,7 +120,8 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
             .sort();
         stateUpdateWrapperUseJSON(xVals, newXvals, setXVals);
         setKdeMax(newkdeMax);
-        setCaseMax(newCaseMax)
+        setCaseMax(newCaseMax);
+
     }, [data])
 
     const aggregationScale = useCallback(() => {

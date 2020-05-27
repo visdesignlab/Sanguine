@@ -5,7 +5,7 @@ import { inject, observer } from "mobx-react";
 import { InterventionDataPoint } from "../../Interfaces/ApplicationState";
 // import { Popup } from "semantic-ui-react";
 // import { actions } from "../..";
-import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds, scaleBand } from "d3";
+import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds, scaleBand, interpolateGreys } from "d3";
 import { highlight_orange, basic_gray, blood_red, highlight_blue } from "../../ColorProfile";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
@@ -26,6 +26,8 @@ interface OwnProps {
 export type Props = OwnProps;
 
 const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggregatedBy, isSelected, valueScaleDomain, valueScaleRange, store, isFiltered }: Props) => {
+
+    const { showZero } = store!;
     const colorScale = scaleLinear().domain([0, 1]).range([0.1, 1])
 
     const valueScale = useCallback(() => {
@@ -41,12 +43,22 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
 
                 const postOutput = dataPoint.postCountDict[point] ? dataPoint.postCountDict[point] : 0;
 
+                const preCaseCount = showZero ? dataPoint.preCaseCount : dataPoint.preCaseCount - dataPoint.preZeroCaseNum;
+                const postCaseCount = showZero ? dataPoint.postCaseCount : dataPoint.postCaseCount - dataPoint.postZeroCaseNum;
+
+                let preFill = preOutput === 0 ? "white" : interpolateReds(colorScale(preOutput / preCaseCount))
+                let postFill = postOutput === 0 ? "white" : interpolateReds(colorScale(postOutput / postCaseCount))
+                if (!showZero && point as any === 0) {
+                    preFill = preOutput === 0 ? "white" : interpolateGreys(preOutput / dataPoint.preCaseCount);
+                    postFill = postOutput === 0 ? "white" : interpolateGreys(postOutput / dataPoint.postCaseCount)
+                }
+
                 return (
                     [<Popup content={preOutput}
                         key={`Pre${dataPoint.aggregateAttribute} - ${point}`}
                         trigger={
                             <HeatRect
-                                fill={preOutput === 0 ? "white" : interpolateReds(colorScale(preOutput / dataPoint.preCaseCount))}
+                                fill={preFill}
                                 x={valueScale()(point)}
                                 y={0}
                                 transform={howToTransform}
@@ -67,7 +79,7 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                         key={`Post${dataPoint.aggregateAttribute} - ${point}`}
                         trigger={
                             <HeatRect
-                                fill={postOutput === 0 ? "white" : interpolateReds(colorScale(postOutput / dataPoint.postCaseCount))}
+                                fill={postFill}
                                 x={valueScale()(point)}
                                 y={bandwidth * 0.5}
                                 transform={howToTransform}

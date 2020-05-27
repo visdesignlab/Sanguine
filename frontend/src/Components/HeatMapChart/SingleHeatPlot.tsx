@@ -21,12 +21,12 @@ interface OwnProps {
     valueScaleDomain: string;
     valueScaleRange: string
     bandwidth: number;
-    zeroMax: number;
+    //  zeroMax: number;
 }
 
 export type Props = OwnProps;
 
-const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggregatedBy, isSelected, valueScaleDomain, valueScaleRange, store, isFiltered, zeroMax }: Props) => {
+const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggregatedBy, isSelected, valueScaleDomain, valueScaleRange, store, isFiltered }: Props) => {
     const { showZero } = store!;
     const colorScale = scaleLinear().domain([0, 1]).range([0.1, 1]);
 
@@ -42,14 +42,12 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
 
     return (
         <>
-
-
             {valueScale().domain().map(point => {
                 const output = dataPoint.countDict[point] ? dataPoint.countDict[point] : 0
                 const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum
                 let colorFill = output === 0 ? "white" : interpolateReds(colorScale(output / caseCount))
-                if (!showZero) {
-                    colorFill = point as any === 0 ? interpolateGreys(colorScale(output / zeroMax)) : colorFill
+                if (!showZero && point as any === 0) {
+                    colorFill = output === 0 ? "white" : interpolateGreys(colorScale(output / (dataPoint.caseCount)))
                 }
 
                 return (
