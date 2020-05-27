@@ -5,7 +5,7 @@ import { inject, observer } from "mobx-react";
 import { ScaleBand, scaleOrdinal, range, scaleLinear, ScaleOrdinal, max, format, interpolateGreys, scaleBand } from "d3";
 import { extraPairWidth } from "../../Interfaces/ApplicationState"
 import { Popup } from "semantic-ui-react";
-import { secondary_gray } from "../../ColorProfile";
+import { secondary_gray, greyScaleRange } from "../../ColorProfile";
 
 interface OwnProps {
     dataSet: any[];
@@ -28,7 +28,7 @@ const ExtraPairBasic: FC<Props> = ({ dataSet, aggregationScaleRange, aggregation
 
     const [valueScale] = useMemo(() => {
         console.log(dataSet)
-        const valueScale = scaleLinear().domain([0, 1]).range([0.25, 0.8])
+        const valueScale = scaleLinear().domain([0, 1]).range(greyScaleRange)
 
         return [valueScale];
     }, [dataSet])
@@ -59,6 +59,7 @@ const ExtraPairBasic: FC<Props> = ({ dataSet, aggregationScaleRange, aggregation
                         }
                         fill="white"
                         alignmentBaseline={"central"}
+                        fontSize="12px"
                         textAnchor={"middle"}>{format(".0%")(dataVal)}</text>]
 
 

@@ -112,15 +112,15 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScaleD
                 break;
 
             case "Outcomes":
-                transferedDistance += (extraPairWidth.Basic + extraPairPadding)
-                returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Basic)},0)`}>
+                transferedDistance += (extraPairWidth.Outcomes + extraPairPadding)
+                returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Outcomes)},0)`}>
                     <ExtraPairOutcomes
                         aggregationScaleDomain={aggregationScaleDomain}
                         aggregationScaleRange={aggregationScaleRange}
                         dataSet={pairData.data}
                         outcomeName={pairData.name} />
                     <ExtraPairText
-                        x={extraPairWidth.Basic / 2}
+                        x={extraPairWidth.Outcomes / 2}
                         y={height - currentOffset.bottom + 20}
                         onClick={() => actions.removeExtraPair(chartId, pairData.name)}
                     >{pairData.name}</ExtraPairText>

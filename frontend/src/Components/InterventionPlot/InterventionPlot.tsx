@@ -43,7 +43,7 @@ import { Popup, Button, Icon } from 'semantic-ui-react'
 //import SingleHeatPlot from "./SingleHeatPlot";
 
 //import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
-import { secondary_gray, third_gray, preop_color, postop_color } from "../../ColorProfile";
+import { secondary_gray, third_gray, preop_color, postop_color, greyScaleRange } from "../../ColorProfile";
 import SingleHeatCompare from "./SingleHeatCompare";
 import SingleViolinCompare from "./SingleViolinCompare";
 import InterventionExtraPairGenerator from "../Utilities/InterventionExtraPairGenerator";
@@ -148,7 +148,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
     }, [dimensionWidth, extraPairTotalWidth, valueToVisualize])
 
     const caseScale = useCallback(() => {
-        const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8]);
+        const caseScale = scaleLinear().domain([0, caseMax]).range(greyScaleRange);
         return caseScale
     }, [caseMax])
 
@@ -304,6 +304,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                 }
                 alignmentBaseline={"central"}
                 textAnchor={"middle"}
+                fontSize="12px"
             >
                 {dataPoint.preCaseCount}
             </text>, <text
@@ -315,6 +316,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                 }
                 alignmentBaseline={"central"}
                 textAnchor={"middle"}
+                fontSize="12px"
             >
                 {dataPoint.postCaseCount}
             </text>])
@@ -328,6 +330,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                 }
                 alignmentBaseline={"central"}
                 textAnchor={"middle"}
+                fontSize="12px"
             >
                 {dataPoint.preCaseCount + dataPoint.postCaseCount}
             </text>])

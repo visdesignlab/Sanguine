@@ -6,7 +6,7 @@ import { InterventionDataPoint } from "../../Interfaces/ApplicationState";
 // import { Popup } from "semantic-ui-react";
 // import { actions } from "../..";
 import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds, scaleBand, interpolateGreys } from "d3";
-import { highlight_orange, basic_gray, blood_red, highlight_blue } from "../../ColorProfile";
+import { highlight_orange, basic_gray, blood_red, highlight_blue, greyScaleRange } from "../../ColorProfile";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
 
@@ -29,6 +29,7 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
 
     const { showZero } = store!;
     const colorScale = scaleLinear().domain([0, 1]).range([0.1, 1])
+    const greyScale = scaleLinear().domain([0, 1]).range(greyScaleRange)
 
     const valueScale = useCallback(() => {
         const valueScale = scaleBand().domain(JSON.parse(valueScaleDomain)).range(JSON.parse(valueScaleRange)).paddingInner(0.01);
@@ -49,8 +50,8 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                 let preFill = preOutput === 0 ? "white" : interpolateReds(colorScale(preOutput / preCaseCount))
                 let postFill = postOutput === 0 ? "white" : interpolateReds(colorScale(postOutput / postCaseCount))
                 if (!showZero && point as any === 0) {
-                    preFill = preOutput === 0 ? "white" : interpolateGreys(preOutput / dataPoint.preCaseCount);
-                    postFill = postOutput === 0 ? "white" : interpolateGreys(postOutput / dataPoint.postCaseCount)
+                    preFill = preOutput === 0 ? "white" : interpolateGreys(greyScale(preOutput / dataPoint.preCaseCount));
+                    postFill = postOutput === 0 ? "white" : interpolateGreys(greyScale(postOutput / dataPoint.postCaseCount))
                 }
 
                 return (
