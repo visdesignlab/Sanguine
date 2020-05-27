@@ -194,18 +194,18 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
                         });
                         newExtraPairData.push({ name: "Zero %", data: newData, type: "Basic" });
                         break;
-                    case "ROM":
+                    case "RISK":
                         data.map(async (dataPoint: HeatMapDataPoint) => {
                             newData[dataPoint.aggregateAttribute] = dataPoint.patientIDList;
                         });
-                        newExtraPairData.push({ name: "ROM", data: newData, type: "Outcomes" });
+                        newExtraPairData.push({ name: "RISK", data: newData, type: "Outcomes" });
                         break;
-                    case "SOI":
-                        data.map(async (dataPoint: HeatMapDataPoint) => {
-                            newData[dataPoint.aggregateAttribute] = dataPoint.patientIDList;
-                        });
-                        newExtraPairData.push({ name: "SOI", data: newData, type: "Outcomes" });
-                        break;
+                    // case "SOI":
+                    //     data.map(async (dataPoint: HeatMapDataPoint) => {
+                    //         newData[dataPoint.aggregateAttribute] = dataPoint.patientIDList;
+                    //     });
+                    //     newExtraPairData.push({ name: "SOI", data: newData, type: "Outcomes" });
+                    //     break;
                     case "Mortality":
                         data.map(async (dataPoint: HeatMapDataPoint) => {
                             newData[dataPoint.aggregateAttribute] = dataPoint.patientIDList;

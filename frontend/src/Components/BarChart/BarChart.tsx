@@ -34,6 +34,7 @@ import SingleViolinPlot from "./SingleViolinPlot";
 import SingleStripPlot from "./SingleStripPlot";
 
 import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
+import { greyScaleRange } from "../../ColorProfile";
 
 interface OwnProps {
   aggregatedBy: string;
@@ -118,7 +119,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
 
   const caseScale = useCallback(() => {
     //const caseMax = max(data.map(d => d.caseCount)) || 0;
-    const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
+    const caseScale = scaleLinear().domain([0, caseMax]).range(greyScaleRange)
     return caseScale
   }, [caseMax])
 
@@ -272,6 +273,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
               }
               alignmentBaseline={"central"}
               textAnchor={"middle"}
+              fontSize="12px"
             >
               {dataPoint.caseCount}
             </text>, <line

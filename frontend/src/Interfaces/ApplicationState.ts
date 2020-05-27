@@ -126,14 +126,14 @@ export const extraPairOptions = [
   { title: "Total Transfusion", value: "Total Transfusion" },
   { title: "Per Case Transfusion", value: "Per Case" },
   { title: "Zero Transfusion Cases", value: "Zero Transfusion" },
-  { title: "Risk of Mortality", value: "ROM" },
-  { title: "Severity of Illness", value: "SOI" },
+  { title: "Risk Score", value: "RISK" },
+  // { title: "Severity of Illness", value: "SOI" },
   { title: "Mortality Rate", value: "Mortality" },
   { title: "Ventilation Rate", value: "Vent" }
 ]
 
 //export const minimumOffset = 
-export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 30, Outcomes: 30 }
+export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 30, Outcomes: 35 }
 export const extraPairPadding = 5;
 export const minimumWidthScale = 18;
 

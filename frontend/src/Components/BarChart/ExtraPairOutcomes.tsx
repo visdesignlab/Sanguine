@@ -5,7 +5,7 @@ import { inject, observer } from "mobx-react";
 import { ScaleBand, scaleOrdinal, range, scaleLinear, ScaleOrdinal, max, format, interpolateGreys, mean, scaleBand } from "d3";
 import { extraPairWidth } from "../../Interfaces/ApplicationState"
 import { Popup } from "semantic-ui-react";
-import { secondary_gray } from "../../ColorProfile";
+import { secondary_gray, greyScaleRange } from "../../ColorProfile";
 
 interface OwnProps {
     outcomeName: string;
@@ -29,6 +29,16 @@ const ExtraPairOutcomes: FC<Props> = ({ outcomeName, dataSet, aggregationScaleDo
         return aggregationScale
     }, [aggregationScaleDomain, aggregationScaleRange])
 
+    const outcomeScale = useCallback(() => {
+        let outcomeScale;
+        if (outcomeName === "RISK") {
+            outcomeScale = scaleLinear().domain([0, 30]).range(greyScaleRange)
+        } else {
+            outcomeScale = scaleLinear().domain([0, 1]).range(greyScaleRange)
+        }
+        return outcomeScale
+    }, [outcomeName])
+
     async function fetchChartData() {
         let dataResult: { aggregation: any, outcome: number }[] = []
 
@@ -40,15 +50,10 @@ const ExtraPairOutcomes: FC<Props> = ({ outcomeName, dataSet, aggregationScaleDo
             let patientOutcomeResult;
             let meanOutput;
             switch (outcomeName) {
-                case "ROM":
+                case "RISK":
                     patientOutcome = await fetch(`http://localhost:8000/api/risk_score?patient_ids=${patientIDArray[i]}`)
                     patientOutcomeResult = await patientOutcome.json();
-                    meanOutput = mean(patientOutcomeResult.map((d: any) => parseFloat(d.apr_drg_rom)));
-                    break;
-                case "SOI":
-                    patientOutcome = await fetch(`http://localhost:8000/api/risk_score?patient_ids=${patientIDArray[i]}`)
-                    patientOutcomeResult = await patientOutcome.json();
-                    meanOutput = mean(patientOutcomeResult.map((d: any) => parseFloat(d.apr_drg_soi)));
+                    meanOutput = mean(patientOutcomeResult.map((d: any) => parseFloat(d.apr_drg_weight)));
                     break;
                 case "Vent":
                     patientOutcome = await fetch(`http://localhost:8000/api/patient_outcomes?patient_ids=${patientIDArray[i]}`)
@@ -93,20 +98,21 @@ const ExtraPairOutcomes: FC<Props> = ({ outcomeName, dataSet, aggregationScaleDo
                                 y={aggregationScale()(d.aggregation)}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
                                 // fill={interpolateGreys(valueScale(dataVal))}
-                                fill={secondary_gray}
+                                fill={interpolateGreys(outcomeScale()(d.outcome || 0))}
                                 opacity={0.8}
-                                width={extraPairWidth.Basic}
+                                width={extraPairWidth.Outcomes}
                                 height={aggregationScale().bandwidth()} />
                         } />,
 
-                    <text x={extraPairWidth.Basic * 0.5}
+                    <text x={extraPairWidth.Outcomes * 0.5}
                         y={
                             aggregationScale()(d.aggregation)! +
                             0.5 * aggregationScale().bandwidth()
                         }
                         fill="white"
                         alignmentBaseline={"central"}
-                        textAnchor={"middle"}>{format(".2f")(d.outcome)}</text>]
+                        textAnchor={"middle"}
+                        fontSize="12px">{format(".2f")(d.outcome)}</text>]
 
 
                 )

@@ -41,7 +41,7 @@ import { Popup, Button, Icon } from 'semantic-ui-react'
 
 import SingleHeatPlot from "./SingleHeatPlot";
 import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
-import { secondary_gray, third_gray } from "../../ColorProfile";
+import { secondary_gray, third_gray, greyScaleRange } from "../../ColorProfile";
 
 interface OwnProps {
     aggregatedBy: string;
@@ -136,7 +136,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
 
     const caseScale = useCallback(() => {
         // const caseMax = max(data.map(d => d.caseCount)) || 0;
-        const caseScale = scaleLinear().domain([0, caseMax]).range([0.25, 0.8])
+        const caseScale = scaleLinear().domain([0, caseMax]).range(greyScaleRange)
         return caseScale;
     }, [caseMax])
 
@@ -307,6 +307,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                             }
                             alignmentBaseline={"central"}
                             textAnchor={"middle"}
+                            fontSize="12px"
                         >
                             {dataPoint.caseCount}
                         </text>,

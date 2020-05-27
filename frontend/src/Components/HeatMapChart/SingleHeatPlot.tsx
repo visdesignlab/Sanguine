@@ -6,7 +6,7 @@ import { HeatMapDataPoint } from "../../Interfaces/ApplicationState";
 // import { Popup } from "semantic-ui-react";
 // import { actions } from "../..";
 import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds, scaleBand, interpolateGreys } from "d3";
-import { highlight_orange, basic_gray, blood_red, highlight_blue } from "../../ColorProfile";
+import { highlight_orange, basic_gray, blood_red, highlight_blue, greyScaleRange } from "../../ColorProfile";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
 
@@ -29,6 +29,7 @@ export type Props = OwnProps;
 const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggregatedBy, isSelected, valueScaleDomain, valueScaleRange, store, isFiltered }: Props) => {
     const { showZero } = store!;
     const colorScale = scaleLinear().domain([0, 1]).range([0.1, 1]);
+    const greyScale = scaleLinear().domain([0, 1]).range(greyScaleRange)
 
     const valueScale = useCallback(() => {
         const domain = JSON.parse(valueScaleDomain);
@@ -47,7 +48,7 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
                 const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum
                 let colorFill = output === 0 ? "white" : interpolateReds(colorScale(output / caseCount))
                 if (!showZero && point as any === 0) {
-                    colorFill = output === 0 ? "white" : interpolateGreys(colorScale(output / (dataPoint.caseCount)))
+                    colorFill = output === 0 ? "white" : interpolateGreys(greyScale(output / (dataPoint.caseCount)))
                 }
 
                 return (
