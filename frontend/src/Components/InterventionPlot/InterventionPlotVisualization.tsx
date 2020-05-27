@@ -136,7 +136,7 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                 }
                 //const case_num = removed_zeros.length;
                 const total_val = sum(preRemovedZeros);
-                const case_num = preRemovedZeros.length;
+                const case_num = preIntOb.transfused_units.length;
                 caseCount += case_num;
                 //const medianVal = median(removed_zeros);
 
@@ -167,7 +167,7 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                     }
                 }
 
-                preRemovedZeros.map((d: any) => {
+                preIntOb.transfused_units.map((d: any) => {
                     if (valueToVisualize === "CELL_SAVER_ML") {
                         const roundedAnswer = Math.floor(d / 100) * 100
                         if (d === 0) {
@@ -237,7 +237,7 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                 }
 
                 const total_val = sum(postRemovedZeros);
-                const case_num = postRemovedZeros.length;
+                const case_num = postIntOb.transfused_units.length;
                 caseCount += case_num
 
                 let postIntPD = createpd(postRemovedZeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
@@ -268,7 +268,7 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                     }
                 }
 
-                postRemovedZeros.map((d: any) => {
+                postIntOb.transfused_units.map((d: any) => {
                     if (valueToVisualize === "CELL_SAVER_ML") {
                         const roundedAnswer = Math.floor(d / 100) * 100
                         if (d === 0) {
@@ -340,7 +340,7 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
 
     useEffect(() => {
         fetchChartData();
-    }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize]);
+    }, [filterSelection, dateRange, aggregatedBy, showZero, valueToVisualize]);
 
 
     //{ name: string,totalIntData:any[], preIntData: any[], postIntData: any[], type: string, kdeMax?: number, medianSet?: any }

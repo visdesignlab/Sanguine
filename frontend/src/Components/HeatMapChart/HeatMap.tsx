@@ -76,7 +76,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
     const [xVals, setXVals] = useState<any[]>([]);
     const [caseMax, setCaseMax] = useState(0);
-    const [zeroMax, setZeroMax] = useState(0);
+    //  const [zeroMax, setZeroMax] = useState(0);
 
 
     useEffect(() => {
@@ -89,18 +89,17 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
 
     useEffect(() => {
         let newCaseMax = 0
-        let zeroTransfusedMax = 0;
+        // let zeroTransfusedMax = 0;
         const tempxVals = data
             .map((dp) => {
                 newCaseMax = newCaseMax > dp.caseCount ? newCaseMax : dp.caseCount
-                zeroTransfusedMax = zeroTransfusedMax > dp.zeroCaseNum ? zeroTransfusedMax : dp.zeroCaseNum
+                // zeroTransfusedMax = zeroTransfusedMax > dp.zeroCaseNum ? zeroTransfusedMax : dp.zeroCaseNum
                 return dp.aggregateAttribute
             })
             .sort();
         // setXVals(tempxVals);
         stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
         setCaseMax(newCaseMax)
-        setZeroMax(zeroTransfusedMax)
         // console.log("sorted")
     }, [data])
 
@@ -235,7 +234,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             howToTransform={(`translate(-${currentOffset.left},${aggregationScale()(
                 dataPoint.aggregateAttribute
             )})`).toString()}
-            zeroMax={zeroMax}
+
         />])
 
 
