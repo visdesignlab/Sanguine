@@ -5,7 +5,7 @@ import { inject, observer } from "mobx-react";
 import { HeatMapDataPoint } from "../../Interfaces/ApplicationState";
 // import { Popup } from "semantic-ui-react";
 // import { actions } from "../..";
-import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds, scaleBand, interpolateGreys } from "d3";
+import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds, scaleBand, interpolateGreys, format } from "d3";
 import { highlight_orange, basic_gray, blood_red, highlight_blue, greyScaleRange } from "../../ColorProfile";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
@@ -21,6 +21,7 @@ interface OwnProps {
     valueScaleDomain: string;
     valueScaleRange: string
     bandwidth: number;
+    //  isSinglePatientSelect: boolean;
     //  zeroMax: number;
 }
 
@@ -46,13 +47,15 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
             {valueScale().domain().map(point => {
                 const output = dataPoint.countDict[point] ? dataPoint.countDict[point] : 0
                 const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum
+                // let content = output/caseCount
                 let colorFill = output === 0 ? "white" : interpolateReds(colorScale(output / caseCount))
                 if (!showZero && point as any === 0) {
                     colorFill = output === 0 ? "white" : interpolateGreys(greyScale(output / (dataPoint.caseCount)))
+                    /// content = output/dataPoint.caseCount
                 }
 
                 return (
-                    [<Popup content={output}
+                    [<Popup content={format(".0%")(output / dataPoint.caseCount)}
                         key={dataPoint.aggregateAttribute + '-' + point}
                         trigger={
                             <HeatRect
@@ -97,6 +100,6 @@ interface HeatRectProp {
 const HeatRect = styled(`rect`) <HeatRectProp>`
     y:0;
     opacity:0.6;
-    stroke: ${props => (props.isselected ? highlight_blue : (props.isfiltered ? highlight_orange : "none"))};
-    stroke-width:3;
+    stroke: ${props => (props.isselected ? highlight_orange : (props.isfiltered ? highlight_blue : "none"))};
+    stroke-width:2;
   `;

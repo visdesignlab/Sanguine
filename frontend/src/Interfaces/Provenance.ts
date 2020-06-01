@@ -16,7 +16,7 @@ interface AppProvenance {
     goBack: () => void;
     loadPreset: (num: number) => void;
     setLayoutArray: (newLayoutArray: LayoutElement[]) => void;
-    selectChart: (newSelectedID: string) => void;
+    // selectChart: (newSelectedID: string) => void;
     toggleShowZero: (event: any, data: any) => void;
     // togglePerCase: (event: any, data: any) => void;
     // toggleDumbbell: (event: any, data: any) => void;
@@ -32,7 +32,7 @@ interface AppProvenance {
     removeChart: (i: any) => void;
     updateCaseCount: (mode: string, newCaseCount: number) => void;
     onLayoutchange: (data: any) => void;
-    selectPatient: (data: SingleCasePoint) => void;
+    selectPatient: (data: SingleCasePoint | null) => void;
     selectSet: (data: SelectSet, shiftKeyPressed: boolean) => void;
     // storeHemoData: (data: any) => void;
     changeExtraPair: (chartID: string, newExtraPair: string) => void;
@@ -54,14 +54,14 @@ export function setupProvenance(): AppProvenance {
     store.isAtLatest = provenance.current().children.length === 0;
   })
 
-  provenance.addObserver(
-    ["currentSelectedChart"],
-    (state?: ApplicationState) => {
-      store.currentSelectedChart = state
-        ? state.currentSelectedChart
-        : store.currentSelectedChart;
-    }
-  );
+  // provenance.addObserver(
+  //   ["currentSelectedChart"],
+  //   (state?: ApplicationState) => {
+  //     store.currentSelectedChart = state
+  //       ? state.currentSelectedChart
+  //       : store.currentSelectedChart;
+  //   }
+  // );
 
   provenance.addObserver(["currentSelectPatientGroup"], (state?: ApplicationState) => {
     store.currentSelectPatientGroup = state ? state.currentSelectPatientGroup : store.currentSelectPatientGroup;
@@ -269,19 +269,19 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const selectChart = (chartID: string) => {
-    provenance.applyAction(
-      `Selecting ${chartID}`,
-      (state: ApplicationState) => {
-        if (state.currentSelectedChart === chartID) {
-          state.currentSelectedChart = "-1";
-        } else {
-          state.currentSelectedChart = chartID;
-        }
-        return state;
-      }
-    )
-  }
+  // const selectChart = (chartID: string) => {
+  //   provenance.applyAction(
+  //     `Selecting ${chartID}`,
+  //     (state: ApplicationState) => {
+  //       if (state.currentSelectedChart === chartID) {
+  //         state.currentSelectedChart = "-1";
+  //       } else {
+  //         state.currentSelectedChart = chartID;
+  //       }
+  //       return state;
+  //     }
+  //   )
+  // }
 
 
 
@@ -301,7 +301,7 @@ export function setupProvenance(): AppProvenance {
       `Update Selected Patients Group`,
       (state: ApplicationState) => {
         state.currentSelectPatientGroup = caseList;
-        console.log(caseList)
+
         return state;
       }
     )
@@ -385,12 +385,15 @@ export function setupProvenance(): AppProvenance {
 
 
 
-  const selectPatient = (data: SingleCasePoint) => {
-    provenance.applyAction(`select patient ${data.patientID}`, (state: ApplicationState) => {
+  const selectPatient = (data: SingleCasePoint | null) => {
+    provenance.applyAction(`select patient `, (state: ApplicationState) => {
 
-      if (state.currentSelectPatient && data.patientID === state.currentSelectPatient.patientID) {
+      if (data && state.currentSelectPatient && data.patientID === state.currentSelectPatient.patientID) {
         state.currentSelectPatient = null;
         state.currentSelectSet = [];
+      }
+      else if (!data) {
+        state.currentSelectPatient = null;
       }
 
       else {
@@ -451,6 +454,7 @@ export function setupProvenance(): AppProvenance {
       (state: ApplicationState) => {
         state.currentOutputFilterSet = state.currentSelectSet;
         state.currentSelectSet = [];
+        state.currentSelectPatient = null;
         return state;
       }
     )
@@ -508,7 +512,7 @@ export function setupProvenance(): AppProvenance {
       goBack,
       goForward,
       setLayoutArray,
-      selectChart,
+      //selectChart,
       changeChart,
       toggleShowZero,
       // toggleDumbbell,

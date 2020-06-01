@@ -192,10 +192,10 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     );
 
   const decideIfSelected = (d: BarChartDataPoint) => {
-    if (currentSelectPatient) {
-      return currentSelectPatient[aggregatedBy] === d.aggregateAttribute
-    }
-    else if (currentSelectSet.length > 0) {
+    // if (currentSelectPatient && currentSelectPatient[aggregatedBy] === d.aggregateAttribute) {
+    //   return true;
+    // }
+    if (currentSelectSet.length > 0) {
       //let selectSet: SelectSet;
       for (let selectSet of currentSelectSet) {
         if (aggregatedBy === selectSet.set_name && selectSet.set_value.includes(d.aggregateAttribute))
@@ -217,6 +217,14 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     return false;
   }
 
+  const decideSinglePatientSelect = (d: BarChartDataPoint) => {
+    if (currentSelectPatient) {
+      return currentSelectPatient[aggregatedBy] === d.aggregateAttribute;
+    } else {
+      return false;
+    }
+  }
+
   const outputSinglePlotElement = (dataPoint: BarChartDataPoint) => {
     if (stripPlotMode) {
       return ([<SingleStripPlot
@@ -232,6 +240,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     } else {
       return ([<SingleViolinPlot
         path={lineFunction()(dataPoint.kdeCal)!}
+        isSinglePatientSelect={decideSinglePatientSelect(dataPoint)}
         dataPoint={dataPoint}
         aggregatedBy={aggregatedBy}
         isSelected={decideIfSelected(dataPoint)}
