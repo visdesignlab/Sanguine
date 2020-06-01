@@ -134,6 +134,6 @@ interface HeatRectProp {
 const HeatRect = styled(`rect`) <HeatRectProp>`
     
     opacity:0.6;
-    stroke: ${props => (props.isselected ? highlight_blue : (props.isfiltered ? highlight_orange : "none"))};
+    stroke: ${props => (props.isselected ? highlight_orange : (props.isfiltered ? highlight_blue : "none"))};
     stroke-width:3;
   `;
