@@ -206,8 +206,9 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
 
                     <Circle cx={cx}
                         cy={cy}
-                        fill={brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1] ? highlight_orange : basic_gray}
+                        // fill={ ? highlight_orange : basic_gray}
                         isselected={decideIfSelected(dataPoint)}
+                        isbrushed={(brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) || false}
                         onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />
 
@@ -218,11 +219,12 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
 }
 
 export default inject("store")(observer(ScatterPlot));
-//fill: ${props => (props.isselected ? "#d98532" : "#404040")};
 interface DotProps {
     isselected: boolean;
+    isbrushed: boolean
 }
 const Circle = styled(`circle`) <DotProps>`
   r:4px
-  opacity:0.5
+  opacity:${props => props.isselected ? 1 : 0.5}
+  fill:${props => (props.isbrushed || props.isselected ? highlight_orange : basic_gray)}
 `;
