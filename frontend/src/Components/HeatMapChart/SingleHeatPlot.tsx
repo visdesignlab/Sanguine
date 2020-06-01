@@ -47,13 +47,15 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
             {valueScale().domain().map(point => {
                 const output = dataPoint.countDict[point] ? dataPoint.countDict[point] : 0
                 const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum
+                // let content = output/caseCount
                 let colorFill = output === 0 ? "white" : interpolateReds(colorScale(output / caseCount))
                 if (!showZero && point as any === 0) {
                     colorFill = output === 0 ? "white" : interpolateGreys(greyScale(output / (dataPoint.caseCount)))
+                    /// content = output/dataPoint.caseCount
                 }
 
                 return (
-                    [<Popup content={format(".0%")(output / caseCount)}
+                    [<Popup content={format(".0%")(output / dataPoint.caseCount)}
                         key={dataPoint.aggregateAttribute + '-' + point}
                         trigger={
                             <HeatRect
