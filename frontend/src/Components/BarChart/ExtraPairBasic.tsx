@@ -22,7 +22,7 @@ const ExtraPairBasic: FC<Props> = ({ dataSet, aggregationScaleRange, aggregation
     const aggregationScale = useCallback(() => {
         const domain = JSON.parse(aggregationScaleDomain);
         const range = JSON.parse(aggregationScaleRange);
-        const aggregationScale = scaleBand().domain(domain).range(range)
+        const aggregationScale = scaleBand().domain(domain).range(range).paddingInner(0.1);
         return aggregationScale
     }, [aggregationScaleDomain, aggregationScaleRange])
 
@@ -46,13 +46,13 @@ const ExtraPairBasic: FC<Props> = ({ dataSet, aggregationScaleRange, aggregation
                 // console.log(val, dataVal)
                 return (
                     [<Popup
-                        content={format(".4r")(dataVal)}
+                        content={(dataVal.number)}
                         trigger={
                             <rect
                                 x={0}
                                 y={aggregationScale()(val)}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
-                                fill={interpolateGreys(valueScale(dataVal))}
+                                fill={interpolateGreys(valueScale(dataVal.percentage))}
                                 //fill={secondary_gray}
                                 opacity={0.8}
                                 width={extraPairWidth.Basic}
@@ -67,7 +67,7 @@ const ExtraPairBasic: FC<Props> = ({ dataSet, aggregationScaleRange, aggregation
                         fill="white"
                         alignmentBaseline={"central"}
                         fontSize="12px"
-                        textAnchor={"middle"}>{format(".0%")(dataVal)}</text>]
+                        textAnchor={"middle"}>{format(".0%")(dataVal.percentage)}</text>]
 
 
                 )
