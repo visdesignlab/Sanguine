@@ -43,7 +43,7 @@ import { Popup, Button, Icon } from 'semantic-ui-react'
 //import SingleHeatPlot from "./SingleHeatPlot";
 
 //import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
-import { secondary_gray, third_gray, preop_color, postop_color, greyScaleRange } from "../../ColorProfile";
+import { secondary_gray, third_gray, preop_color, postop_color, greyScaleRange, highlight_orange } from "../../ColorProfile";
 import SingleHeatCompare from "./SingleHeatCompare";
 import SingleViolinCompare from "./SingleViolinCompare";
 import InterventionExtraPairGenerator from "../Utilities/InterventionExtraPairGenerator";
@@ -233,10 +233,10 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
         );
 
     const decideIfSelected = (d: InterventionDataPoint) => {
-        if (currentSelectPatient) {
-            return currentSelectPatient[aggregatedBy] === d.aggregateAttribute
-        }
-        else if (currentSelectSet.length > 0) {
+        // if (currentSelectPatient && currentSelectPatient[aggregatedBy] === d.aggregateAttribute) {
+        //   return true;
+        // }
+        if (currentSelectSet.length > 0) {
             //let selectSet: SelectSet;
             for (let selectSet of currentSelectSet) {
                 if (aggregatedBy === selectSet.set_name && selectSet.set_value.includes(d.aggregateAttribute))
@@ -249,12 +249,21 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
         }
         //  return true;
     }
+
     const decideIfFiltered = (d: InterventionDataPoint) => {
         for (let filterSet of currentOutputFilterSet) {
             if (aggregatedBy === filterSet.set_name && filterSet.set_value.includes(d.aggregateAttribute))
                 return true
         }
         return false;
+    }
+
+    const decideSinglePatientSelect = (d: InterventionDataPoint) => {
+        if (currentSelectPatient) {
+            return currentSelectPatient[aggregatedBy] === d.aggregateAttribute;
+        } else {
+            return false;
+        }
     }
 
 
@@ -432,6 +441,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                 {data.map((dataPoint) => {
                     return outputSinglePlotElement(dataPoint)
                         .concat([
+
                             <rect
                                 fill={interpolateGreys(caseScale()(dataPoint.preCaseCount))}
                                 x={-50}
@@ -456,7 +466,10 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                                 y={aggregationScale()(dataPoint.aggregateAttribute)! + aggregationScale().bandwidth() * 0.5}
                                 width={10}
                                 opacity={0.65}
-                                height={aggregationScale().bandwidth() * 0.47} />
+                                height={aggregationScale().bandwidth() * 0.47} />,
+                            <rect x={-50} y={aggregationScale()(dataPoint.aggregateAttribute)} width={35} fill="none" height={aggregationScale().bandwidth()}
+                                stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
+                                strokeWidth={2} />
 
 
 
