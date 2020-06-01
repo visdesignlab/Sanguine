@@ -49,7 +49,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
     const generateLineUp = () => {
         if (hemoglobinDataSet) {
             // const patientId = currentSelectPatient ? currentSelectPatient.caseId : 1
-            return (<LineUp data={hemoglobinDataSet} selection={outputSelectedGroup()}>
+            return (<LineUp data={hemoglobinDataSet} selection={outputSelectedGroup()} >
                 <LineUpStringColumnDesc column="CASE_ID" label="CASE_ID" /> */}
                 <LineUpCategoricalColumnDesc column="PATIENT_ID" categories={distinctCategories.patient} />
                 <LineUpCategoricalColumnDesc column="SURGEON_ID" categories={distinctCategories.surgeons} />

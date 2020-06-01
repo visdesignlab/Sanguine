@@ -16,7 +16,7 @@ interface AppProvenance {
     goBack: () => void;
     loadPreset: (num: number) => void;
     setLayoutArray: (newLayoutArray: LayoutElement[]) => void;
-    selectChart: (newSelectedID: string) => void;
+    // selectChart: (newSelectedID: string) => void;
     toggleShowZero: (event: any, data: any) => void;
     // togglePerCase: (event: any, data: any) => void;
     // toggleDumbbell: (event: any, data: any) => void;
@@ -54,14 +54,14 @@ export function setupProvenance(): AppProvenance {
     store.isAtLatest = provenance.current().children.length === 0;
   })
 
-  provenance.addObserver(
-    ["currentSelectedChart"],
-    (state?: ApplicationState) => {
-      store.currentSelectedChart = state
-        ? state.currentSelectedChart
-        : store.currentSelectedChart;
-    }
-  );
+  // provenance.addObserver(
+  //   ["currentSelectedChart"],
+  //   (state?: ApplicationState) => {
+  //     store.currentSelectedChart = state
+  //       ? state.currentSelectedChart
+  //       : store.currentSelectedChart;
+  //   }
+  // );
 
   provenance.addObserver(["currentSelectPatientGroup"], (state?: ApplicationState) => {
     store.currentSelectPatientGroup = state ? state.currentSelectPatientGroup : store.currentSelectPatientGroup;
@@ -269,19 +269,19 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const selectChart = (chartID: string) => {
-    provenance.applyAction(
-      `Selecting ${chartID}`,
-      (state: ApplicationState) => {
-        if (state.currentSelectedChart === chartID) {
-          state.currentSelectedChart = "-1";
-        } else {
-          state.currentSelectedChart = chartID;
-        }
-        return state;
-      }
-    )
-  }
+  // const selectChart = (chartID: string) => {
+  //   provenance.applyAction(
+  //     `Selecting ${chartID}`,
+  //     (state: ApplicationState) => {
+  //       if (state.currentSelectedChart === chartID) {
+  //         state.currentSelectedChart = "-1";
+  //       } else {
+  //         state.currentSelectedChart = chartID;
+  //       }
+  //       return state;
+  //     }
+  //   )
+  // }
 
 
 
@@ -508,7 +508,7 @@ export function setupProvenance(): AppProvenance {
       goBack,
       goForward,
       setLayoutArray,
-      selectChart,
+      //selectChart,
       changeChart,
       toggleShowZero,
       // toggleDumbbell,
