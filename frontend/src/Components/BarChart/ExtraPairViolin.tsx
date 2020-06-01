@@ -26,7 +26,7 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
     const aggregationScale = useCallback(() => {
         const domain = JSON.parse(aggregationScaleDomain);
         const range = JSON.parse(aggregationScaleRange);
-        const aggregationScale = scaleBand().domain(domain).range(range)
+        const aggregationScale = scaleBand().domain(domain).range(range).paddingInner(0.1);
         return aggregationScale
     }, [aggregationScaleDomain, aggregationScaleRange])
 
