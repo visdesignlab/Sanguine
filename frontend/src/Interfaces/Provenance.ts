@@ -301,7 +301,7 @@ export function setupProvenance(): AppProvenance {
       `Update Selected Patients Group`,
       (state: ApplicationState) => {
         state.currentSelectPatientGroup = caseList;
-        console.log(caseList)
+
         return state;
       }
     )

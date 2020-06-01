@@ -51,7 +51,6 @@ export interface SingleCasePoint {
   patientID: number;
   DATE: Date;
   [key: string]: number | Date;
-
 }
 export interface ScatterDataPoint {
   xVal: number;

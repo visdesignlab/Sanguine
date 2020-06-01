@@ -39,7 +39,7 @@ export type Props = OwnProps;
 const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yMin, xAxisName, yAxisName, store }: Props) => {
 
     const currentOffset = offset.regular;
-    const { currentSelectPatient, currentSelectSet } = store!;
+    const { currentSelectPatient, currentSelectPatientGroup } = store!;
     const svgSelection = select(svg.current);
     const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null)
 
@@ -208,7 +208,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
                         cy={cy}
                         // fill={ ? highlight_orange : basic_gray}
                         isselected={decideIfSelected(dataPoint)}
-                        isbrushed={(brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) || false}
+                        isbrushed={(brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) || (currentSelectPatientGroup.includes(dataPoint.case.caseId))}
                         onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />
 
