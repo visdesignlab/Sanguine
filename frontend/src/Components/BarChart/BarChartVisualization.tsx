@@ -200,7 +200,7 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
           case "Zero Transfusion":
             //let newDataPerCase = {} as any;
             data.map((dataPoint: BarChartDataPoint) => {
-              newData[dataPoint.aggregateAttribute] = dataPoint.zeroCaseNum / dataPoint.caseCount;
+              newData[dataPoint.aggregateAttribute] = { number: dataPoint.zeroCaseNum, percentage: dataPoint.zeroCaseNum / dataPoint.caseCount };
             });
             newExtraPairData.push({ name: "Zero %", data: newData, type: "Basic" });
             break;
