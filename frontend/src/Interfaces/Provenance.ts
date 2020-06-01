@@ -451,6 +451,7 @@ export function setupProvenance(): AppProvenance {
       (state: ApplicationState) => {
         state.currentOutputFilterSet = state.currentSelectSet;
         state.currentSelectSet = [];
+        state.currentSelectPatient = null;
         return state;
       }
     )

@@ -21,6 +21,7 @@ interface OwnProps {
     valueScaleDomain: string;
     valueScaleRange: string
     bandwidth: number;
+    //  isSinglePatientSelect: boolean;
     //  zeroMax: number;
 }
 
@@ -97,6 +98,6 @@ interface HeatRectProp {
 const HeatRect = styled(`rect`) <HeatRectProp>`
     y:0;
     opacity:0.6;
-    stroke: ${props => (props.isselected ? highlight_blue : (props.isfiltered ? highlight_orange : "none"))};
-    stroke-width:3;
+    stroke: ${props => (props.isselected ? highlight_orange : (props.isfiltered ? highlight_blue : "none"))};
+    stroke-width:2;
   `;
