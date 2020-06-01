@@ -25,9 +25,6 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     showZero,
     rawDateRange,
     nextAddingIndex
-    //  perCaseSelected,
-    //yearRange,
-    //  dumbbellSorted
   } = store!;
   //  const [procedureList, setProcedureList] = useState({ result: [] })
   const urlRef = useRef(null);

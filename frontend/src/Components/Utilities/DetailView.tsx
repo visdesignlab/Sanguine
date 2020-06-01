@@ -6,8 +6,9 @@ import React, {
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import Store from "../../Interfaces/Store";
-import { Message, List } from "semantic-ui-react";
+import { Message, List, Container, Button } from "semantic-ui-react";
 import { HIPAA_Sensitive, AxisLabelDict, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState";
+import { actions } from "../..";
 
 interface OwnProps {
     store?: Store;
@@ -89,12 +90,20 @@ const DetailView: FC<Props> = ({ store }: Props) => {
         }
         return result
     }
+
+
+
+
     return (
+        <Container>
+            <div style={{ visibility: individualInfo ? "visible" : "hidden" }}>
+                <Button floated="right" icon="close" circular compact size="mini" basic onClick={() => { actions.selectPatient(null) }} /></div>
+            <List>
 
-        <List>
-
-            {generate_List_Items()}
-        </List>)
+                {generate_List_Items()}
+            </List>
+        </Container>
+    )
 }
 
 

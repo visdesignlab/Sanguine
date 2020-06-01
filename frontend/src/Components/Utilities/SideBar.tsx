@@ -22,6 +22,8 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     rawDateRange,
     currentSelectSet,
     currentOutputFilterSet,
+    currentSelectPatientGroup,
+    currentSelectPatient,
     filterSelection } = store!;
   const [procedureList, setProcedureList] = useState<any[]>([]);
   const [maxCaseCount, setMaxCaseCount] = useState(0);
@@ -96,6 +98,14 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     return output
   }
 
+  const generatePatientSelection = () => {
+    let output: any[] = []
+    if (currentSelectPatientGroup.length > 0) {
+      output.push(<List.Item style={{ textAlign: "left" }} content={`${currentSelectPatientGroup.length} patients selected in LineUp`} />)
+    }
+    return output
+  }
+
   return (
     <Grid
       divided="vertically"
@@ -125,7 +135,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
               //icon="caret right" 
               style={{ textAlign: "left" }}
               content={generateSurgery()} />
-
+            {generatePatientSelection()}
 
 
             {currentOutputFilterSet.map((selectSet) => {

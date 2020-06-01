@@ -354,7 +354,7 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                             preIntData[dataPoint.aggregateAttribute] = dataPoint.preTotalVal;
                             postIntData[dataPoint.aggregateAttribute] = dataPoint.postTotalVal;
                         });
-                        newExtraPairData.push({ name: "Total Transfusion", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "BarChart" });
+                        newExtraPairData.push({ name: "Total", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "BarChart" });
                         break;
 
                     case "Per Case":

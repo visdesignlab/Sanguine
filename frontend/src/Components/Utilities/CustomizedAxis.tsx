@@ -27,14 +27,12 @@ interface OwnProps {
     //  scale: ScaleOrdinal<any, number>;
     scaleDomain: string;
     scaleRange: string;
-    store?: Store;
+    //  store?: Store;
     numberList: { num: number, indexEnding: number }[]
 }
 export type Props = OwnProps;
 
-const CustomizedAxis: FC<Props> = ({ numberList, store, scaleDomain, scaleRange }) => {
-    console.log(numberList)
-
+const CustomizedAxis: FC<Props> = ({ numberList, scaleDomain, scaleRange }) => {
 
     const scale = useCallback(() => {
         const domain = JSON.parse(scaleDomain);

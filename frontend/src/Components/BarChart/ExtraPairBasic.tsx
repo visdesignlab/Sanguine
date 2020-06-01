@@ -22,31 +22,38 @@ const ExtraPairBasic: FC<Props> = ({ dataSet, aggregationScaleRange, aggregation
     const aggregationScale = useCallback(() => {
         const domain = JSON.parse(aggregationScaleDomain);
         const range = JSON.parse(aggregationScaleRange);
-        const aggregationScale = scaleBand().domain(domain).range(range)
+        const aggregationScale = scaleBand().domain(domain).range(range).paddingInner(0.1);
         return aggregationScale
     }, [aggregationScaleDomain, aggregationScaleRange])
 
-    const [valueScale] = useMemo(() => {
-        console.log(dataSet)
-        const valueScale = scaleLinear().domain([0, 1]).range(greyScaleRange)
+    // const [valueScale] = useMemo(() => {
+    //    // console.log(dataSet)
+    //     const valueScale = scaleLinear().domain([0, 1]).range(greyScaleRange)
 
-        return [valueScale];
-    }, [dataSet])
+    //     return [valueScale];
+    // }, [dataSet])
+
+    const valueScale = scaleLinear().domain([0, 1]).range(greyScaleRange)
+
+    // const valueScale = useCallback(()=>{
+
+    // })
+
 
     return (
         <>
             {Object.entries(dataSet).map(([val, dataVal]) => {
-                console.log(val, dataVal)
+                // console.log(val, dataVal)
                 return (
                     [<Popup
-                        content={format(".4r")(dataVal)}
+                        content={(dataVal.number)}
                         trigger={
                             <rect
                                 x={0}
                                 y={aggregationScale()(val)}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
-                                // fill={interpolateGreys(valueScale(dataVal))}
-                                fill={secondary_gray}
+                                fill={interpolateGreys(valueScale(dataVal.percentage))}
+                                //fill={secondary_gray}
                                 opacity={0.8}
                                 width={extraPairWidth.Basic}
                                 height={aggregationScale().bandwidth()} />
@@ -60,7 +67,7 @@ const ExtraPairBasic: FC<Props> = ({ dataSet, aggregationScaleRange, aggregation
                         fill="white"
                         alignmentBaseline={"central"}
                         fontSize="12px"
-                        textAnchor={"middle"}>{format(".0%")(dataVal)}</text>]
+                        textAnchor={"middle"}>{format(".0%")(dataVal.percentage)}</text>]
 
 
                 )
