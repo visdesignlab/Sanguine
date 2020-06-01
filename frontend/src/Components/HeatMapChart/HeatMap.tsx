@@ -249,6 +249,29 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
 
     }
 
+    const outputGradientLegend = () => {
+        if (!showZero) {
+            return [<rect
+                x={0.7 * (dimensionWidth - extraPairTotalWidth)}
+                y={0}
+                width={0.2 * (dimensionWidth - extraPairTotalWidth)}
+                height={7.5}
+                fill="url(#gradient1)" />, <rect
+                x={0.7 * (dimensionWidth - extraPairTotalWidth)}
+                y={7.5}
+                width={0.2 * (dimensionWidth - extraPairTotalWidth)}
+                height={7.5}
+                fill="url(#gradient2)" />]
+        } else {
+            return <rect
+                x={0.7 * (dimensionWidth - extraPairTotalWidth)}
+                y={0}
+                width={0.2 * (dimensionWidth - extraPairTotalWidth)}
+                height={15}
+                fill="url(#gradient1)" />
+        }
+    }
+
     return (
         <>
             <line x1={1}
@@ -269,16 +292,16 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                         <stop offset="50%" stopColor={interpolateReds(0.55)} />
                         <stop offset="100%" stopColor={interpolateReds(1)} />
                     </linearGradient>
+                    <linearGradient id="gradient2" x1="0" x2="1" y1="0" y2="0" colorInterpolation="CIE-LCHab">
+                        <stop offset="0%" stopColor={interpolateGreys(0.25)} />
+                        <stop offset="50%" stopColor={interpolateGreys(0.525)} />
+                        <stop offset="100%" stopColor={interpolateGreys(0.8)} />
+                    </linearGradient>
                 </defs>
-                <rect
-                    x={0.7 * (dimensionWidth - extraPairTotalWidth)}
-                    y={0}
-                    width={0.2 * (dimensionWidth - extraPairTotalWidth)}
-                    height={10}
-                    fill="url(#gradient1)" />
+                {outputGradientLegend()}
                 <text
                     x={0.7 * (dimensionWidth - extraPairTotalWidth)}
-                    y={10}
+                    y={15}
                     alignmentBaseline={"hanging"}
                     textAnchor={"start"}
                     fontSize="11px"
@@ -287,7 +310,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                 </text>
                 <text
                     x={0.9 * (dimensionWidth - extraPairTotalWidth)}
-                    y={10}
+                    y={15}
                     alignmentBaseline={"hanging"}
                     textAnchor={"end"}
                     fontSize="11px"
