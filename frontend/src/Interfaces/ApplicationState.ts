@@ -69,7 +69,7 @@ export interface DumbbellDataPoint {
 
 export interface ApplicationState {
   layoutArray: LayoutElement[];
-  currentSelectedChart: string;
+  //  currentSelectedChart: string;
   // perCaseSelected: boolean;
   // yearRange: number[];
   rawDateRange: number[];
@@ -103,7 +103,7 @@ export interface LayoutElement {
 
 export const defaultState: ApplicationState = {
   layoutArray: [],
-  currentSelectedChart: "-1",
+  // currentSelectedChart: "-1",
   rawDateRange: [new Date(2014, 0, 1).getTime(), new Date(2019, 11, 31).getTime()],
   filterSelection: [],
   totalAggregatedCaseCount: 0,
