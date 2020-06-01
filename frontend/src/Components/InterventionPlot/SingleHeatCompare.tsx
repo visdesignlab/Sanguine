@@ -5,7 +5,7 @@ import { inject, observer } from "mobx-react";
 import { InterventionDataPoint } from "../../Interfaces/ApplicationState";
 // import { Popup } from "semantic-ui-react";
 // import { actions } from "../..";
-import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds, scaleBand, interpolateGreys } from "d3";
+import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds, scaleBand, interpolateGreys, format } from "d3";
 import { highlight_orange, basic_gray, blood_red, highlight_blue, greyScaleRange } from "../../ColorProfile";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
@@ -55,7 +55,7 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                 }
 
                 return (
-                    [<Popup content={preOutput}
+                    [<Popup content={format(".0%")(preOutput / dataPoint.preCaseCount)}
                         key={`Pre${dataPoint.aggregateAttribute} - ${point}`}
                         trigger={
                             <HeatRect
@@ -76,7 +76,7 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                                         e.shiftKey
                                     )
                                 }} />}
-                    />, <Popup content={postOutput}
+                    />, <Popup content={format(".0%")(postOutput / dataPoint.postCaseCount)}
                         key={`Post${dataPoint.aggregateAttribute} - ${point}`}
                         trigger={
                             <HeatRect
