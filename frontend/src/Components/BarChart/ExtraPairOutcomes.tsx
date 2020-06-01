@@ -25,7 +25,7 @@ const ExtraPairOutcomes: FC<Props> = ({ outcomeName, dataSet, aggregationScaleDo
     const aggregationScale = useCallback(() => {
         const domain = JSON.parse(aggregationScaleDomain);
         const range = JSON.parse(aggregationScaleRange);
-        const aggregationScale = scaleBand().domain(domain).range(range)
+        const aggregationScale = scaleBand().domain(domain).range(range).paddingInner(0.1);
         return aggregationScale
     }, [aggregationScaleDomain, aggregationScaleRange])
 
