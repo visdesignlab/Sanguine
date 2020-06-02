@@ -2,7 +2,9 @@ import React, { FC, useState } from 'react';
 import Store from './Interfaces/Store';
 import { inject, observer } from 'mobx-react';
 import { Form, Button } from 'semantic-ui-react';
+import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
 import $ from 'jquery';
+import { render } from 'react-dom';
 
 interface OwnProps {
     store?: Store
@@ -13,6 +15,7 @@ type Props = OwnProps;
 const Logins: FC<Props> = ({ store }: Props) => {
     // const username = useFormInput('');
     // const password = useFormInput('');
+    const { isLoggedIn } = store!
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -34,53 +37,40 @@ const Logins: FC<Props> = ({ store }: Props) => {
         return cookieValue;
     }
 
-    // handle button click of login form
-    // const handleLogin = () => {
-    //     props.history.push('/dashboard');
-    // }
-
-    // const useFormInput = initialValue => {
-    //     const [value, setValue] = useState(initialValue);
-
-    //     const handleChange = (e) => {
-    //         setValue(e.target.value);
-    //     }
-    //     return {
-    //         value,
-    //         onChange: handleChange
-    //     }
-    // }
-
 
     const handleLogin = () => {
-        setError(null)
-        setLoading(true)
-        var csrftoken = getCookie('csrftoken');
+        // setError(null)
+        // setLoading(true)
+        // var csrftoken = getCookie('csrftoken');
 
-        //const requestOptions = ;
-        fetch(`http://localhost:8000/accounts/login/`, {
-            method: 'POST',
-            credentials: "include",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken || '',
-                "Access-Control-Allow-Origin": '*'
-            },
-            body: JSON.stringify({ username: username, password: password })
+        // //const requestOptions = ;
+        // fetch(`http://localhost:8000/accounts/login/`, {
+        //     method: 'POST',
+        //     credentials: "include",
+        //     headers: {
+        //         'Accept': 'application/json',
+        //         'Content-Type': 'application/json',
+        //         'X-CSRFToken': csrftoken || '',
+        //         "Access-Control-Allow-Origin": '*'
+        //     },
+        //     body: JSON.stringify({ username: username, password: password })
 
-        })
-            .then(response => response.json())
-            .then(data => { console.log(data) }).catch(error => {
-                setLoading(false);
-                console.log(error)
-                if (error.response.status === 401) setError(error.response.data.message);
-                else setError("something went wrong")
-            })
+        // })
+        //     .then(response => response.json())
+        //     .then(data => { console.log(data); return <Redirect to="/dashboard" /> }).catch(error => {
+        //         setLoading(false);
+        //         console.log(error)
+        //         if (error.response.status === 401) setError(error.response.data.message);
+        //         else setError("something went wrong")
+        //     })
+        console.log("fasd")
+        store!.isLoggedIn = true;
+
+
     }
 
     return (
-        <div>
+        isLoggedIn ? <Redirect to="/dashboard" /> : <div>
             Login
             <Form onSubmit={() => handleLogin()}>
                 <Form.Group>
@@ -97,7 +87,7 @@ const Logins: FC<Props> = ({ store }: Props) => {
                 </Form.Group>
 
             </Form>
-        </div>
+        </div >
     );
 }
 
