@@ -43,6 +43,8 @@ export default class Store {
 
   @observable currentSelectPatientGroup: number[] = defaultState.currentSelectPatientGroup;
 
+  @observable isLoggedIn: boolean = false;
+
 
 }
 
