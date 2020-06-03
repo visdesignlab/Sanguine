@@ -63,4 +63,5 @@ It should show as `(bloodvis)[uID@bloodvis]$`.
 2. Type `ssh bloodvis -Y` to go to the VM. Enter uID password when prompted.
 3. Type `google-chrome --use-gl=swiftshader` to view this in chrome.
 4. Go to `localhost:3000` to view the visualization. 
+5. The App requires an account. Please contact us for access. 
 
