@@ -65,12 +65,10 @@ const Logins: FC<Props> = ({ store }: Props) => {
             body: `csrfmiddlewaretoken=${csrftoken}&username=${username}&password=${password}`
 
         })
-            .then(response => response)
+            .then(response => { console.log(response); return response })
             .then(data => {
                 if (data.redirected) {
                     store!.isLoggedIn = true;
-                } else {
-
                 }
                 console.log(data)
 
@@ -78,8 +76,8 @@ const Logins: FC<Props> = ({ store }: Props) => {
             .catch(error => {
                 setLoading(false);
                 console.log(error)
-                if (error.response.status === 401) setError(error.response.data.message);
-                else setError("something went wrong")
+                // if (error.response.status === 401) setError(error.response.data.message);
+                // else setError("something went wrong")
             })
 
     }
