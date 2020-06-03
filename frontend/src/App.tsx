@@ -1,8 +1,8 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useEffect, useState, Component } from 'react';
 import Store from './Interfaces/Store'
 import { inject, observer } from 'mobx-react';
 import Dashboard from './Dashboard';
-import { BrowserRouter, Switch, Route, NavLink } from 'react-router-dom'
+import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
 
 import Login from './LogIn'
 import Home from './Home'
@@ -14,7 +14,7 @@ interface OwnProps {
 type Props = OwnProps;
 
 const App: FC<Props> = ({ store }: Props) => {
-
+  const { isLoggedIn } = store!
 
 
   return (
@@ -22,7 +22,10 @@ const App: FC<Props> = ({ store }: Props) => {
       <Switch>
         {/* <Route exact path='/' component={Home} /> */}
         <Route exact path='/' component={Login} />
-        <Route path='/dashboard' component={Dashboard} />
+        <Route exact path='/dashboard' render={() => {
+          if (isLoggedIn) return <Dashboard />
+          else return <Redirect to="/" />
+        }} />
       </Switch></BrowserRouter>
 
     // <Login />
