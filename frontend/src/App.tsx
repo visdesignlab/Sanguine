@@ -22,9 +22,9 @@ const App: FC<Props> = ({ store }: Props) => {
         {/* <Route exact path='/' component={Home} /> */}
         <Route exact path='/' component={Login} />
         <Route exact path='/dashboard' render={() => {
-          // if (isLoggedIn) return <Dashboard />
-          // else return <Redirect to="/" />
-          return <Dashboard />
+          if (isLoggedIn) return <Dashboard />
+          else return <Redirect to="/" />
+          // return <Dashboard />
         }} />
       </Switch></BrowserRouter>
 

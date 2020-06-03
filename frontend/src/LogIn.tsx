@@ -5,6 +5,7 @@ import { Form, Button, Container, Header, Message, Image } from 'semantic-ui-rea
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
 import $ from 'jquery';
 import { render } from 'react-dom';
+import { getCookie } from './Interfaces/UserManagement';
 
 
 interface OwnProps {
@@ -23,20 +24,7 @@ const Logins: FC<Props> = ({ store }: Props) => {
     const [username, setUserName] = useState<string | null>(null)
     const [password, setPassWord] = useState<string | null>(null)
 
-    function getCookie(name: string) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = cookies[i];
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
+
 
 
 
@@ -51,6 +39,7 @@ const Logins: FC<Props> = ({ store }: Props) => {
         })
         var csrftoken = getCookie('csrftoken');
         console.log(csrftoken)
+        //store!.csrftoken = csrftoken
 
         // Post the log in data to the site with the cookie
         fetch(`http://localhost:8000/accounts/login/`, {

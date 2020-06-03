@@ -1,16 +1,17 @@
 import React, { FC, useEffect, useState, useRef } from "react";
 import Store from '../../Interfaces/Store'
 // import {}
-import { Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment, DropdownProps } from 'semantic-ui-react'
+import { Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment, DropdownProps, Form, DropdownMenu } from 'semantic-ui-react'
 import { inject, observer } from "mobx-react";
 import { actions, provenance } from '../..'
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
 import { timeFormat } from "d3";
 import { blood_red } from "../../ColorProfile";
-import { barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions, interventionChartType, presetOptions } from "../../Interfaces/ApplicationState";
+import { barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions, interventionChartType, presetOptions, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState";
 import ClipboardJS from 'clipboard';
 import { NavLink } from 'react-router-dom'
+import { getCookie } from "../../Interfaces/UserManagement";
 interface OwnProps {
   store?: Store;
 }
@@ -36,6 +37,9 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const [interventionPlotType, setInterventionPlotType] = useState<string | undefined>(undefined)
   const [shareUrl, setShareUrl] = useState(window.location.href);
   const [openModal, setOpenModal] = useState(false);
+  const [openSaveState, setOpenSaveState] = useState(false)
+  const [stateName, setStateName] = useState("")
+  const [listOfSavedState, setListOfSavedState] = useState<string[]>([])
 
   new ClipboardJS(`.copy-clipboard`);
   const onDateChange = (event: any, data: any) => {
@@ -46,8 +50,24 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     }
   }
 
+  async function fetchSavedStates() {
+    const res = await fetch(`http://localhost:8000/api/state`)
+    const result = await res.json()
+    if (result) {
+      const resultList = result.map((d: any[]) => d[1])
+      stateUpdateWrapperUseJSON(listOfSavedState, resultList, setListOfSavedState)
+    }
+  }
 
+  useEffect(() => {
+    fetchSavedStates()
+  }, [])
 
+  const loadSavedState = async (name: string) => {
+    const res = await (fetch(`http://localhost:8000/api/state?name=${name}`))
+    const result = await res.json()
+    provenance.importState(result.definition)
+  }
 
 
   const scatterXOptions = [
@@ -98,8 +118,6 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       setInterventionDate(value.value.getTime())
     }
   }
-
-
 
   const xAxisChangeHandler = (e: any, value: any) => {
     setXSelection(value.value)
@@ -176,12 +194,13 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         <Dropdown button text="Save, Share and Load">
           <Dropdown.Menu>
             <Dropdown.Item>
-              <Dropdown selectOnBlur={false} text="Presets" onChange={(e, d: any) => { actions.loadPreset(d.value) }} options={presetOptions} />
-              <Dropdown.Menu>
-                {presetOptions.map((d: { value: number, text: string }) => {
-                  return (<Dropdown.Item onClick={() => { actions.loadPreset(d.value) }} content={d.text} />)
-                })}
-              </Dropdown.Menu>
+              <Dropdown selectOnBlur={false} text="Presets" >
+                <Dropdown.Menu>
+                  {presetOptions.map((d: { value: number, text: string }) => {
+                    return (<Dropdown.Item onClick={() => { actions.loadPreset(d.value) }} content={d.text} />)
+                  })}
+                </Dropdown.Menu>
+              </Dropdown>
             </Dropdown.Item>
 
             <Dropdown.Item icon="share alternate"
@@ -194,10 +213,62 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 setOpenModal(true)
               }}
             />
+            <Dropdown.Item icon="save" content="Save State"
+              onClick={() => { setOpenSaveState(true) }} />
+            <Dropdown.Item>
+              <Dropdown selectOnBlur={false} text="Saved"  >
+                <Dropdown.Menu>
+                  {listOfSavedState.map((d) => {
+                    return (<Dropdown.Item onClick={() => { loadSavedState(d) }} content={d} />)
+                  })}
+                </Dropdown.Menu>
+              </Dropdown>
+
+            </Dropdown.Item>
+
           </Dropdown.Menu>
 
 
+
         </Dropdown>
+
+        {/* Modal for Saving State, has a form input */}
+        <Modal open={openSaveState} closeOnEscape={false} closeOnDimmerClick={false}>
+          <Modal.Header content="Save the current state" />
+          <Modal.Content>
+            <Form>
+              <Form.Input label="Name of State" onChange={(e, d) => { setStateName(d.value) }} />
+            </Form>
+          </Modal.Content>
+          <Modal.Actions>
+            <Button disabled={stateName.length === 0} content="Save" positive onClick={() => {
+              fetch(`http://localhost:8000/accounts/login/`, {
+                method: 'GET',
+                credentials: 'include',
+              })
+              var csrftoken = getCookie('csrftoken');
+
+              fetch(`http://localhost:8000/api/state`, {
+                method: 'POST',
+                credentials: "include",
+                headers: {
+                  'Accept': 'application/x-www-form-urlencoded',
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'X-CSRFToken': csrftoken || '',
+                  "Access-Control-Allow-Origin": 'http://localhost:3000',
+                  "Access-Control-Allow-Credentials": "true",
+                },
+                body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&definition=${provenance.exportState(false)}`
+              })
+                .then(() => { fetchSavedStates() })
+              setOpenSaveState(false)
+              setStateName("")
+            }} />
+            <Button content="Cancel" onClick={() => { setOpenSaveState(false) }} />
+          </Modal.Actions>
+        </Modal>
+
+        {/* Modal for sharing state.   */}
         <Modal
           open={openModal}
           onClose={() => { setOpenModal(false) }}
@@ -221,9 +292,10 @@ const UserControl: FC<Props> = ({ store }: Props) => {
               data-clipboard-text={shareUrl}>
               <Icon name="copy"></Icon>
                    Copy
-                 </Button>
+            </Button>
           </Modal.Actions>
         </Modal>
+
       </Menu.Item>
       <Menu.Item>
         <NavLink component={Button} to="/" onClick={() => { store!.isLoggedIn = false; }} >
