@@ -168,6 +168,9 @@ export const BloodProductCap: any = {
 
 export const CELL_SAVER_TICKS = ["0", "0-1h", "1h-2h", "2h-3h", "3h-4h", "4h-5h", "5h-6h", "6h-7h", "7h-8h", "8h-9h", "9h-1k", "1k+"]
 
+export const presetOptions = [{ value: 1, key: 1, text: "Preset 1" }]
+
+
 export const dumbbellFacetOptions = [
   { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
   { value: "YEAR", key: "YEAR", text: "Year" },
