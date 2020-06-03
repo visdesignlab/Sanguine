@@ -1,10 +1,11 @@
 import React, { FC, useState } from 'react';
 import Store from './Interfaces/Store';
 import { inject, observer } from 'mobx-react';
-import { Form, Button } from 'semantic-ui-react';
+import { Form, Button, Container, Header, Message } from 'semantic-ui-react';
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
 import $ from 'jquery';
 import { render } from 'react-dom';
+
 
 interface OwnProps {
     store?: Store
@@ -16,7 +17,7 @@ const Logins: FC<Props> = ({ store }: Props) => {
     // const username = useFormInput('');
     // const password = useFormInput('');
     const { isLoggedIn } = store!
-    const [error, setError] = useState<string | null>(null);
+    const [hideErrorMessage, setError] = useState<boolean>(true);
     const [loading, setLoading] = useState(false);
 
     const [username, setUserName] = useState<string | null>(null)
@@ -40,7 +41,7 @@ const Logins: FC<Props> = ({ store }: Props) => {
 
 
     const handleLogin = async () => {
-        setError(null)
+        setError(true)
         setLoading(true)
 
         // Get the csrf cookie by visiting the site
@@ -69,12 +70,16 @@ const Logins: FC<Props> = ({ store }: Props) => {
             .then(data => {
                 if (data.redirected) {
                     store!.isLoggedIn = true;
+                } else {
+                    setUserName("")
+                    setPassWord("")
+                    setError(false)
+
                 }
-                console.log(data)
 
             })
             .catch(error => {
-                setLoading(false);
+
                 console.log(error)
                 // if (error.response.status === 401) setError(error.response.data.message);
                 // else setError("something went wrong")
@@ -83,24 +88,32 @@ const Logins: FC<Props> = ({ store }: Props) => {
     }
 
     return (
-        isLoggedIn ? <Redirect to="/dashboard" /> : <div>
-            Login
-            <Form onSubmit={() => handleLogin()}>
-                <Form.Group>
-                    <Form.Field>
-                        <Form.Input label="Username" required onChange={(e, d) => { setUserName(d.value) }} />
-                        {/* <label>Username</label>
-                            <input placeholder='Username' /> */}
-                    </Form.Field>
-                    <Form.Field>
-                        <Form.Input required label="Password" type="password" onChange={(e, d) => { setPassWord(d.value) }}>
-                        </Form.Input>
-                    </Form.Field>
-                    <Form.Button content="Login" />
-                </Form.Group>
+        isLoggedIn ?
+            <Redirect to="/dashboard" /> :
+            (
+                <Container>
+                    <Header as='h1'>Welcome to BloodVis</Header>
+                    <Header as='h3'>Log in</Header>
+                    <Form onSubmit={() => handleLogin()}>
+                        <Form.Input
+                            label="Username"
+                            value={username}
+                            required
+                            onChange={(e, d) => { setUserName(d.value) }} />
 
-            </Form>
-        </div >
+                        <Form.Input
+                            required
+                            label="Password"
+                            value={password}
+                            type="password"
+                            onChange={(e, d) => { setPassWord(d.value) }} />
+
+                        <Form.Button content="Login" />
+                    </Form>
+                    <Message hidden={hideErrorMessage} icon="user x" content="Log in failed. Please check your username and password."></Message>
+                </Container>
+            )
+
     );
 }
 

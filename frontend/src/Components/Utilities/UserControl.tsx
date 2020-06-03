@@ -224,9 +224,8 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       </Menu.Item>
       <Menu.Item>
         <NavLink component={Button} to="/" onClick={() => { store!.isLoggedIn = false; }} >
-
           Log Out
-          </NavLink>
+        </NavLink>
       </Menu.Item>
     </Menu>
   );
