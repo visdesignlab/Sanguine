@@ -10,7 +10,7 @@ pylint = "*"
 cx-oracle = "*"
 flask = "*"
 flask-cors = "*"
-django = "==2.1.*"
+django = "==2.2.*"
 django-cors-headers = "*"
 coverage = "*"
 
