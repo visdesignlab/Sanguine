@@ -222,6 +222,8 @@ def fetch_patient(request):
 
 
 def request_transfused_units(request):
+    return JsonResponse("hello", safe = False)
+
     if request.method == "GET":
         # Get the parameters from the query string
         aggregated_by = request.GET.get("aggregated_by")
@@ -512,6 +514,7 @@ def patient_outcomes(request):
 
 
 def hemoglobin(request):
+    return JsonResponse("hello", safe = False)
     if request.method == "GET":
         command = """
         WITH
@@ -651,7 +654,6 @@ def state(request):
             return JsonResponse(model_to_dict(result))
 
         else:
-            pass
             # Get the names of all the state objects
             states = State.objects.all().values_list()
             # Return the names as a list
