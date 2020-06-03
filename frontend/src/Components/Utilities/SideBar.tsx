@@ -1,12 +1,12 @@
-import React, { FC, useEffect, useState, useMemo } from "react";
+import React, { FC, useEffect, useState, useMemo, useCallback } from "react";
 import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { Menu, Dropdown, Grid, Container, Message, List, Button } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat } from "d3";
 import { actions } from "../..";
-import { AxisLabelDict } from "../../Interfaces/ApplicationState";
-import { basic_gray, highlight_orange } from "../../ColorProfile";
+import { AxisLabelDict, Accronym, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState";
+import { basic_gray, highlight_orange, third_gray, secondary_gray } from "../../ColorProfile";
 
 interface OwnProps {
   store?: Store;
@@ -22,8 +22,10 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     rawDateRange,
     currentSelectSet,
     currentOutputFilterSet,
+    currentSelectPatientGroup,
+    currentSelectPatient,
     filterSelection } = store!;
-  const [procedureList, setProcedureList] = useState([]);
+  const [procedureList, setProcedureList] = useState<any[]>([]);
   const [maxCaseCount, setMaxCaseCount] = useState(0);
   const [itemSelected, setItemSelected] = useState<any[]>([]);
   const [itemUnselected, setItemUnselected] = useState<any[]>([]);
@@ -41,7 +43,8 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     })
     result.sort((a: any, b: any) => b.count - a.count)
     setMaxCaseCount(tempMaxCaseCount)
-    setProcedureList(result);
+    stateUpdateWrapperUseJSON(procedureList, result, setProcedureList)
+    //setProcedureList(result);
     setItemUnselected(result);
   }
 
@@ -62,17 +65,46 @@ const SideBar: FC<Props> = ({ store }: Props) => {
       }
     })
     newItemSelected.sort((a: any, b: any) => b.count - a.count)
-    setItemSelected(newItemSelected)
-    setItemUnselected(newItemUnselected)
+    stateUpdateWrapperUseJSON(itemSelected, newItemSelected, setItemSelected)
+
+    stateUpdateWrapperUseJSON(itemUnselected, newItemUnselected, setItemUnselected)
   }, [filterSelection])
 
-  const [caseScale] = useMemo(() => {
-    const caseScale = scaleLinear().domain([0, maxCaseCount]).range([0, 100])
+  const caseScale = useCallback(() => {
+    const caseScale = scaleLinear().domain([0, maxCaseCount]).range([0, 90])
 
-    return [caseScale];
+    return caseScale;
   }, [maxCaseCount])
 
+  const generateSurgery = () => {
+    let output: any[] = [<span>Procedures: </span>]
+    if (filterSelection.length === 0) {
+      output.push(<span>All</span>);
+    } else {
+      filterSelection.map((d, i) => {
+        const stringArray = d.split(" ")
+        stringArray.map((word, index) => {
+          if ((Accronym as any)[word]) {
+            output.push((<div className="tooltip" style={{ cursor: "help" }}>{word}<span className="tooltiptext">{`${(Accronym as any)[word]}`}</span></div>))
+          } else {
+            output.push((<span>{`${index !== 0 ? " " : ""}${word}${index !== stringArray.length - 1 ? " " : ""}`}</span>))
+          }
+        })
+        if (i !== filterSelection.length - 1) {
+          output.push((<span>, </span>))
+        }
+      })
+    }
+    return output
+  }
 
+  const generatePatientSelection = () => {
+    let output: any[] = []
+    if (currentSelectPatientGroup.length > 0) {
+      output.push(<List.Item style={{ textAlign: "left" }} content={`${currentSelectPatientGroup.length} patients selected in LineUp`} />)
+    }
+    return output
+  }
 
   return (
     <Grid
@@ -81,26 +113,34 @@ const SideBar: FC<Props> = ({ store }: Props) => {
       padded
     >
 
-      <Grid.Row centered style={{ padding: "40px" }}>
+      <Grid.Row centered style={{ padding: "20px" }}>
         <Container style={{ height: "20vh" }}>
-          <List>
+          <List bulleted>
 
-            <List.Header>Current View</List.Header>
+            <List.Header style={{ textAlign: "left" }}><b>Current View</b></List.Header>
             <List.Item
-              icon="caret right"
+              //icon="circle"
               style={{ textAlign: "left" }}
               content={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} ~ ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} />
             <List.Item
-              icon="caret right"
+              //   icon="caret right"
               style={{ textAlign: "left" }}
               content={`Aggregated Case: ${totalAggregatedCaseCount}`} />
             <List.Item
-              icon="caret right"
+              //  icon="caret right"
               style={{ textAlign: "left" }}
               content={`Individual Case: ${totalIndividualCaseCount}`} />
+
+            <List.Item
+              //icon="caret right" 
+              style={{ textAlign: "left" }}
+              content={generateSurgery()} />
+            {generatePatientSelection()}
+
+
             {currentOutputFilterSet.map((selectSet) => {
               return <FilterListIT
-                icon="caret right"
+                //icon="caret right"
                 onClick={() => { actions.clearOutputFilterSet(selectSet.set_name) }}
                 content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`} />
             })}
@@ -108,36 +148,48 @@ const SideBar: FC<Props> = ({ store }: Props) => {
         </Container>
 
       </Grid.Row>
-      <Grid.Row centered style={{ padding: "40px" }}>
+      <Grid.Row centered style={{ padding: "20px" }}>
         <Container style={{ height: "20vh" }}>
-          <List>
-            <List.Header>Current Selected</List.Header>
+          <List bulleted>
+            <List.Header style={{ textAlign: "left" }}><b>Current Selected</b></List.Header>
             {currentSelectSet.map((selectSet) => {
-              return <FilterListIT icon="caret right" onClick={() => { actions.clearSelectSet(selectSet.set_name) }} content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
+              return <FilterListIT
+                //icon="caret right" 
+                onClick={() => { actions.clearSelectSet(selectSet.set_name) }} content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
             })}
-            <List.Item>
-              <Button disabled={!(currentSelectSet.length > 0)}
-                basic size="tiny" content="Create Filter" onClick={actions.currentOutputFilterSetChange}
-              />
-              <Button disabled={!(currentOutputFilterSet.length > 0)}
-                basic size="tiny" content="Clear Filter" onClick={() => { actions.clearOutputFilterSet() }}
-              />
-            </List.Item>
           </List>
+          <Button disabled={!(currentSelectSet.length > 0)}
+            basic size="tiny" content="Create Filter" onClick={actions.currentOutputFilterSetChange}
+          />
+          <Button disabled={!(currentOutputFilterSet.length > 0)}
+            basic size="tiny" content="Clear Filter" onClick={() => { actions.clearOutputFilterSet() }}
+          />
         </Container>
       </Grid.Row>
-      <Grid.Row style={{ padding: "10px" }}>
+      <Grid.Row style={{ padding: "20px" }}>
         <Container style={{ overflow: "auto", height: "40vh" }}>
           <List relaxed divided >
+            <List.Item key={"filter-header"} style={{ background: "#dff9ec" }}>
+              <List.Content floated="left" style={{ width: "60%" }}>
+                <b>Procedures</b>
+              </List.Content>
+              <List.Content floated="right" style={{ width: "30%" }}>
+                <SVG>
+                  <rect x={0} y={0} width={caseScale().range()[1]} height={13} fill={secondary_gray} />
+                  <text x={0} y={13} textAnchor="start" alignmentBaseline="baseline" fill="white">0</text>
+                  <text x={caseScale().range()[1]} y={13} textAnchor="end" alignmentBaseline="baseline" fill="white">{caseScale().domain()[1]}</text>
+                </SVG>
+              </List.Content>
+            </List.Item>
             {itemSelected.map((listItem: any) => {
               if (listItem.value) {
                 return (
                   <ListIT key={listItem.value} isSelected={true} style={{ cursor: "pointer" }} onClick={() => { actions.filterSelectionChange(listItem.value) }}>
                     <List.Content floated="left" style={{ width: "60%" }}>
-                      {listItem.value.toLowerCase()}
+                      {listItem.value}
                     </List.Content>
                     <List.Content floated="right" style={{ width: "30%" }}>
-                      <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={"10px"} fill={basic_gray}></rect></SVG>
+                      <SVG><rect x={0} y={0} width={caseScale()(listItem.count)} height={13} fill={secondary_gray}></rect></SVG>
                     </List.Content>
                   </ListIT>
                 )
@@ -149,10 +201,10 @@ const SideBar: FC<Props> = ({ store }: Props) => {
                 return (
                   <ListIT key={listItem.value} isSelected={false} style={{ cursor: "pointer" }} onClick={() => { actions.filterSelectionChange(listItem.value) }}>
                     <List.Content floated="left" style={{ width: "60%" }}>
-                      {listItem.value.toLowerCase()}
+                      {listItem.value}
                     </List.Content>
                     <List.Content floated="right" style={{ width: "30%" }}>
-                      <SVG><rect x={0} y={0} width={caseScale(listItem.count)} height={"10px"} fill={basic_gray}></rect></SVG>
+                      <SVG><rect x={0} y={0} width={caseScale()(listItem.count)} height={13} fill={secondary_gray}></rect></SVG>
                     </List.Content>
                   </ListIT>)
               }
@@ -176,7 +228,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
 export default inject("store")(observer(SideBar));
 
 const SVG = styled.svg`
-  height: 10px;
+  height: 15px;
   width: 100px;
 `;
 interface ListITProps {

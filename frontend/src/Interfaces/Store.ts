@@ -11,14 +11,13 @@ import { timeFormat } from 'd3';
 export default class Store {
   @observable isAtRoot: boolean = true;
   @observable isAtLatest: boolean = true;
-  @observable currentSelectedChart: string = defaultState.currentSelectedChart;
+  //  @observable currentSelectedChart: string = defaultState.currentSelectedChart;
   @observable layoutArray: LayoutElement[] = defaultState.layoutArray;
   // @observable perCaseSelected: boolean = defaultState.perCaseSelected;
   @observable showZero: boolean = defaultState.showZero;
   //@observable yearRange: number[] = defaultState.yearRange;
 
   @observable rawDateRange: number[] = defaultState.rawDateRange;
-
 
 
   @observable filterSelection: string[] = defaultState.filterSelection;
@@ -36,8 +35,14 @@ export default class Store {
 
   }
   //@observable hemoglobinDataSet: any = defaultState.hemoglobinDataSet;
-
+  // @computed get nextAddingIndex() {
+  //   return this.layoutArray.length
+  // }
+  @observable nextAddingIndex: number = defaultState.nextAddingIndex;
   @observable currentOutputFilterSet: SelectSet[] = defaultState.currentOutputFilterSet;
+
+  @observable currentSelectPatientGroup: number[] = defaultState.currentSelectPatientGroup;
+
 
 }
 

@@ -3,11 +3,11 @@ import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { InterventionDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType } from '../../Interfaces/ApplicationState'
+import { InterventionDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON } from '../../Interfaces/ApplicationState'
 
-import { Button, Icon, Table, Grid, Dropdown, GridColumn, Menu } from "semantic-ui-react";
+import { Grid, Dropdown, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
-import { sum, max, median, create, timeFormat, timeParse } from "d3";
+import { sum, median, timeFormat, timeParse } from "d3";
 import InterventionPlot from "./InterventionPlot";
 
 interface OwnProps {
@@ -18,11 +18,13 @@ interface OwnProps {
     chartIndex: number;
     interventionDate: number;
     interventionPlotType: string;
+    extraPair?: string;
+    hemoglobinDataSet: any;
 }
 
 export type Props = OwnProps;
 
-const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisualize, chartId, store, chartIndex, interventionDate, interventionPlotType }: Props) => {
+const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair, aggregatedBy, valueToVisualize, chartId, store, chartIndex, interventionDate, interventionPlotType }: Props) => {
     const {
         layoutArray,
         filterSelection,
@@ -34,18 +36,43 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
 
     const svgRef = useRef<SVGSVGElement>(null);
 
+    const [extraPairData, setExtraPairData] = useState<{
+        name: string,
+        totalIntData: any[],
+        preIntData: any[],
+        postIntData: any[],
+        type: string,
+        kdeMax?: number,
+        totalMedianSet?: any,
+        preMedianSet?: any,
+        postMedianSet?: any
+    }[]>([])
+
     const [data, setData] = useState<InterventionDataPoint[]>([]);
 
-    const [yMax, setYMax] = useState({ original: 0, perCase: 0 });
+    const [yMax, setYMax] = useState(0);
 
-    const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
+    // const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
+
+    const [width, setWidth] = useState(0)
+    const [height, setHeight] = useState(0)
+
+    const [caseIDList, setCaseIDList] = useState<any>(null)
+    const [extraPairArray, setExtraPairArray] = useState([]);
+
+
+    useEffect(() => {
+        if (extraPair) { stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray) }
+    }, [extraPair])
 
     useLayoutEffect(() => {
         if (svgRef.current) {
-            setDimensions({
-                height: svgRef.current.clientHeight,
-                width: svgRef.current.clientWidth
-            });
+            // setDimensions({
+            //     height: svgRef.current.clientHeight,
+            //     width: svgRef.current.clientWidth
+            // });
+            setWidth(svgRef.current.clientWidth);
+            setHeight(svgRef.current.clientHeight);
         }
     }, [layoutArray[chartIndex]]);
 
@@ -72,21 +99,18 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
         let caseCount = 0;
         if (preInterventiondataResult && postInterventionResult) {
             let yMaxTemp = -1;
-            let perCaseYMaxTemp = -1
             //let cast_data = InterventionData
-            console.log(preInterventiondataResult, postInterventionResult)
+
+            let caseDictionary = {} as any
             let cast_data = (preInterventiondataResult as any).map(function (preIntOb: any) {
+
+                preIntOb.case_id.map((singleId: any) => {
+                    caseDictionary[singleId] = true;
+                })
+
                 let zeroCaseNum = 0;
-
                 const aggregateByAttr = preIntOb.aggregated_by;
-
-                const case_num = preIntOb.transfused_units.length;
-
                 const preIntMed = median(preIntOb.transfused_units);
-
-                caseCount += case_num;
-
-
                 let preRemovedZeros = preIntOb.transfused_units;
 
 
@@ -98,9 +122,13 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                         zeroCaseNum += 1;
                         return false;
                     })
+                } else {
+                    zeroCaseNum = preRemovedZeros.filter((d: number) => d === 0).length
                 }
                 //const case_num = removed_zeros.length;
                 const total_val = sum(preRemovedZeros);
+                const case_num = preIntOb.transfused_units.length;
+                caseCount += case_num;
                 //const medianVal = median(removed_zeros);
 
                 let preIntPD = createpd(preRemovedZeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
@@ -117,6 +145,8 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                 const cap = BloodProductCap[valueToVisualize]
 
                 if (valueToVisualize === "CELL_SAVER_ML") {
+                    preCountDict[-1] = 0;
+                    postCountDict[-1] = 0
                     for (let i = 0; i <= cap; i += 100) {
                         preCountDict[i] = 0
                         postCountDict[i] = 0
@@ -131,7 +161,10 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                 preIntOb.transfused_units.map((d: any) => {
                     if (valueToVisualize === "CELL_SAVER_ML") {
                         const roundedAnswer = Math.floor(d / 100) * 100
-                        if (roundedAnswer > cap) {
+                        if (d === 0) {
+                            preCountDict[-1] += 1
+                        }
+                        else if (roundedAnswer > cap) {
                             preCountDict[cap] += 1
                         }
                         else {
@@ -151,28 +184,37 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                     preCaseCount: case_num,
                     postCaseCount: 0,
                     aggregateAttribute: aggregateByAttr,
-                    totalVal: total_val,
+                    preTotalVal: total_val,
+                    postTotalVal: 0,
                     preInKdeCal: preIntPD,
                     postInKdeCal: [],
                     preInMedian: preIntMed ? preIntMed : 0,
                     postInMedian: 0,
                     preCountDict: preCountDict,
                     postCountDict: postCountDict,
-                    zeroCaseNum: zeroCaseNum
+                    preZeroCaseNum: zeroCaseNum,
+                    postZeroCaseNum: 0,
+                    prePatienIDList: preIntOb.pat_id,
+                    postPatienIDList: []
                 };
 
                 return new_ob;
             });
 
-            console.log(cast_data);
+            //     console.log(cast_data);
 
 
             (postInterventionResult as any).map((postIntOb: any) => {
 
                 const postIntMed = median(postIntOb.transfused_units);
-                const case_num = postIntOb.transfused_units.length;
+
                 let postRemovedZeros = postIntOb.transfused_units;
                 let zeroCaseNum = 0;
+
+                postIntOb.case_id.map((singleId: any) => {
+                    caseDictionary[singleId] = true;
+                })
+
                 if (!showZero) {
                     postRemovedZeros = postRemovedZeros.filter((d: number) => {
                         if (d > 0) {
@@ -181,13 +223,17 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                         zeroCaseNum += 1;
                         return false;
                     })
+                } else {
+                    zeroCaseNum = postRemovedZeros.filter((d: number) => d === 0).length
                 }
 
                 const total_val = sum(postRemovedZeros);
+                const case_num = postIntOb.transfused_units.length;
                 caseCount += case_num
 
                 let postIntPD = createpd(postRemovedZeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
 
+                //    console.log(postRemovedZeros)
                 postIntPD = [{ x: 0, y: 0 }].concat(postIntPD)
                 let reversePostPD = postIntPD.map((pair: any) => {
                     return { x: pair.x, y: - pair.y }
@@ -200,6 +246,8 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                 const cap = BloodProductCap[valueToVisualize]
 
                 if (valueToVisualize === "CELL_SAVER_ML") {
+                    preCountDict[-1] = 0;
+                    postCountDict[-1] = 0
                     for (let i = 0; i <= cap; i += 100) {
                         preCountDict[i] = 0
                         postCountDict[i] = 0
@@ -214,7 +262,10 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                 postIntOb.transfused_units.map((d: any) => {
                     if (valueToVisualize === "CELL_SAVER_ML") {
                         const roundedAnswer = Math.floor(d / 100) * 100
-                        if (roundedAnswer > cap) {
+                        if (d === 0) {
+                            postCountDict[-1] += 1
+                        }
+                        else if (roundedAnswer > cap) {
                             postCountDict[cap] += 1
                         }
                         else {
@@ -237,9 +288,10 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                         d.postCountDict = postCountDict;
                         d.postInKdeCal = postIntPD;
                         d.postInMedian = postIntMed ? postIntMed : 0;
-                        d.zeroCaseNum += zeroCaseNum;
+                        d.postZeroCaseNum = zeroCaseNum;
                         d.postCaseCount = case_num
-                        d.totalVal += total_val
+                        d.postTotalVal = total_val
+                        d.postPatienIDList = postIntOb.pat_id
                         return d;
                     }
                     else {
@@ -251,33 +303,268 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                         postCaseCount: case_num,
                         preCaseCount: 0,
                         aggregateAttribute: postIntOb.aggregated_by,
-                        totalVal: total_val,
+                        postTotalVal: total_val, preTotalVal: 0,
                         preInKdeCal: [],
                         postInKdeCal: postIntPD,
                         preInMedian: 0,
                         postInMedian: postIntMed ? postIntMed : 0,
                         preCountDict: preCountDict,
                         postCountDict: postCountDict,
-                        zeroCaseNum: zeroCaseNum
+                        postZeroCaseNum: zeroCaseNum,
+                        preZeroCaseNum: 0,
+                        prePatienIDList: [],
+                        postPatienIDList: postIntOb.pat_id
                     };
                     cast_data.push(new_ob)
                 }
             })
 
-            setData(cast_data);
+            stateUpdateWrapperUseJSON(data, cast_data, setData)
+            stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList)
+            // setData(cast_data);
+            // setCaseIDList(caseDictionary)
             // actions.updateCaseCount("AGGREGATED", caseCount)
             store!.totalAggregatedCaseCount = caseCount
-            setYMax({ original: yMaxTemp, perCase: perCaseYMaxTemp });
-
+            setYMax(yMaxTemp);
         }
     }
 
     useEffect(() => {
         fetchChartData();
+    }, [filterSelection, dateRange, aggregatedBy, showZero, valueToVisualize]);
 
-    }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize]);
 
+    //{ name: string,totalIntData:any[], preIntData: any[], postIntData: any[], type: string, kdeMax?: number, medianSet?: any }
+    const makeExtraPairData = () => {
+        let newExtraPairData: any[] = []
+        if (extraPairArray.length > 0) {
+            extraPairArray.forEach((variable: string) => {
+                let newData = {} as any;
+                let preIntData = {} as any;
+                let postIntData = {} as any;
+                let kdeMax = 0;
+                let postMedianData = {} as any;
+                let preMedianData = {} as any;
+                let medianData = {} as any;
+                switch (variable) {
+                    case "Total Transfusion":
+                        //let newDataBar = {} as any;
+                        data.map((dataPoint: InterventionDataPoint) => {
+                            newData[dataPoint.aggregateAttribute] = dataPoint.preTotalVal + dataPoint.postTotalVal;
+                            preIntData[dataPoint.aggregateAttribute] = dataPoint.preTotalVal;
+                            postIntData[dataPoint.aggregateAttribute] = dataPoint.postTotalVal;
+                        });
+                        newExtraPairData.push({ name: "Total", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "BarChart" });
+                        break;
 
+                    case "Per Case":
+                        // let newDataPerCase = {} as any;
+                        data.map((dataPoint: InterventionDataPoint) => {
+                            newData[dataPoint.aggregateAttribute] = (dataPoint.preTotalVal + dataPoint.postTotalVal) / (dataPoint.preCaseCount + dataPoint.postCaseCount);
+                            preIntData[dataPoint.aggregateAttribute] = dataPoint.preTotalVal / dataPoint.preCaseCount;
+                            postIntData[dataPoint.aggregateAttribute] = dataPoint.postTotalVal / dataPoint.postCaseCount;
+
+                        });
+                        newExtraPairData.push({ name: "Per Case", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "BarChart" });
+                        break;
+
+                    case "Zero Transfusion":
+                        //let newDataPerCase = {} as any;
+                        // console.log(data)
+                        data.map((dataPoint: InterventionDataPoint) => {
+                            newData[dataPoint.aggregateAttribute] = (dataPoint.preZeroCaseNum + dataPoint.postZeroCaseNum) / (dataPoint.preCaseCount + dataPoint.postCaseCount);
+                            preIntData[dataPoint.aggregateAttribute] = dataPoint.preZeroCaseNum / dataPoint.preCaseCount;
+                            postIntData[dataPoint.aggregateAttribute] = dataPoint.postZeroCaseNum / dataPoint.postCaseCount;
+                        });
+                        newExtraPairData.push({ name: "Zero %", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
+                        break;
+
+                    case "ROM":
+                        data.map(async (dataPoint: InterventionDataPoint) => {
+                            newData[dataPoint.aggregateAttribute] = dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList);
+                            preIntData[dataPoint.aggregateAttribute] = dataPoint.prePatienIDList;
+                            postIntData[dataPoint.aggregateAttribute] = dataPoint.postPatienIDList;
+                        });
+                        newExtraPairData.push({ name: "ROM", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
+                        break;
+
+                    case "SOI":
+                        data.map(async (dataPoint: InterventionDataPoint) => {
+                            newData[dataPoint.aggregateAttribute] = dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList);
+                            preIntData[dataPoint.aggregateAttribute] = dataPoint.prePatienIDList;
+                            postIntData[dataPoint.aggregateAttribute] = dataPoint.postPatienIDList;
+                        });
+                        newExtraPairData.push({ name: "SOI", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
+                        break;
+
+                    case "Mortality":
+                        data.map(async (dataPoint: InterventionDataPoint) => {
+                            newData[dataPoint.aggregateAttribute] = dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList);
+                            preIntData[dataPoint.aggregateAttribute] = dataPoint.prePatienIDList;
+                            postIntData[dataPoint.aggregateAttribute] = dataPoint.postPatienIDList;
+                        });
+                        newExtraPairData.push({ name: "Mortality", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
+                        break;
+
+                    case "Vent":
+                        data.map(async (dataPoint: InterventionDataPoint) => {
+                            newData[dataPoint.aggregateAttribute] = dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList);
+                            preIntData[dataPoint.aggregateAttribute] = dataPoint.prePatienIDList;
+                            postIntData[dataPoint.aggregateAttribute] = dataPoint.postPatienIDList;
+                        });
+                        newExtraPairData.push({ name: "Vent", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
+                        break;
+
+                    case "Preop Hemo":
+                        data.map((dataPoint: InterventionDataPoint) => {
+                            newData[dataPoint.aggregateAttribute] = [];
+                            preIntData[dataPoint.aggregateAttribute] = [];
+                            postIntData[dataPoint.aggregateAttribute] = [];
+                        });
+                        hemoglobinDataSet.map((ob: any) => {
+                            const begin = parseFloat(ob.HEMO[0]);
+                            if (newData[ob[aggregatedBy]] && begin > 0 && caseIDList[ob.CASE_ID]) {
+
+                                newData[ob[aggregatedBy]].push(begin);
+
+                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() < interventionDate) {
+                                    preIntData[ob[aggregatedBy]].push(begin);
+                                }
+
+                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() > interventionDate) {
+                                    postIntData[ob[aggregatedBy]].push(begin);
+                                }
+                            }
+                        });
+
+                        for (let prop in newData) {
+                            medianData[prop] = median(newData[prop]) || 0;
+                            preMedianData[prop] = median(preIntData[prop]) || 0;
+                            postMedianData[prop] = median(postIntData[prop]) || 0;
+
+                            let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
+                            pd = [{ x: 0, y: 0 }].concat(pd);
+                            let reverse_pd = pd.map((pair: any) => {
+                                kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                                return { x: pair.x, y: -pair.y };
+                            }).reverse();
+                            pd = pd.concat(reverse_pd);
+                            newData[prop] = pd;
+
+                            pd = createpd(preIntData[prop], { width: 2, min: 0, max: 18 });
+                            pd = [{ x: 0, y: 0 }].concat(pd);
+                            reverse_pd = pd.map((pair: any) => {
+                                kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                                return { x: pair.x, y: -pair.y };
+                            }).reverse();
+                            pd = pd.concat(reverse_pd);
+                            preIntData[prop] = pd;
+
+                            pd = createpd(postIntData[prop], { width: 2, min: 0, max: 18 });
+                            pd = [{ x: 0, y: 0 }].concat(pd);
+                            reverse_pd = pd.map((pair: any) => {
+                                kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                                return { x: pair.x, y: -pair.y };
+                            }).reverse();
+                            pd = pd.concat(reverse_pd);
+                            postIntData[prop] = pd;
+                        }
+
+                        newExtraPairData.push({
+                            name: "Preop Hemo",
+                            preIntData: preIntData,
+                            postIntData: postIntData,
+                            totalIntData: newData,
+                            type: "Violin",
+                            kdeMax: kdeMax,
+                            totalMedianSet: medianData,
+                            preMedianSet: preMedianData,
+                            postMedianSet: postMedianData
+                        });
+                        break;
+
+                    case "Postop Hemo":
+                        data.map((dataPoint: InterventionDataPoint) => {
+                            newData[dataPoint.aggregateAttribute] = [];
+                            preIntData[dataPoint.aggregateAttribute] = [];
+                            postIntData[dataPoint.aggregateAttribute] = [];
+                        });
+                        hemoglobinDataSet.map((ob: any) => {
+                            const end = parseFloat(ob.HEMO[1]);
+                            if (newData[ob[aggregatedBy]] && end > 0 && caseIDList[ob.CASE_ID]) {
+
+                                newData[ob[aggregatedBy]].push(end);
+
+                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() < interventionDate) {
+                                    preIntData[ob[aggregatedBy]].push(end);
+                                }
+
+                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() > interventionDate) {
+                                    postIntData[ob[aggregatedBy]].push(end);
+                                }
+                            }
+                        });
+
+                        for (let prop in newData) {
+                            medianData[prop] = median(newData[prop]);
+                            preMedianData[prop] = median(preIntData[prop]);
+                            postMedianData[prop] = median(postIntData[prop])
+
+                            let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
+                            pd = [{ x: 0, y: 0 }].concat(pd);
+                            let reverse_pd = pd.map((pair: any) => {
+                                kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                                return { x: pair.x, y: -pair.y };
+                            }).reverse();
+                            pd = pd.concat(reverse_pd);
+                            newData[prop] = pd;
+
+                            pd = createpd(preIntData[prop], { width: 2, min: 0, max: 18 });
+                            pd = [{ x: 0, y: 0 }].concat(pd);
+                            reverse_pd = pd.map((pair: any) => {
+                                kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                                return { x: pair.x, y: -pair.y };
+                            }).reverse();
+                            pd = pd.concat(reverse_pd);
+                            preIntData[prop] = pd;
+
+                            pd = createpd(postIntData[prop], { width: 2, min: 0, max: 18 });
+                            pd = [{ x: 0, y: 0 }].concat(pd);
+                            reverse_pd = pd.map((pair: any) => {
+                                kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                                return { x: pair.x, y: -pair.y };
+                            }).reverse();
+                            pd = pd.concat(reverse_pd);
+                            postIntData[prop] = pd;
+                        }
+
+                        newExtraPairData.push({
+                            name: "Postop Hemo",
+                            preIntData: preIntData,
+                            postIntData: postIntData,
+                            totalIntData: newData,
+                            type: "Violin",
+                            kdeMax: kdeMax,
+                            totalMedianSet: medianData,
+                            preMedianSet: preMedianData,
+                            postMedianSet: postMedianData
+                        });
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+            )
+        }
+        stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
+        //  setExtraPairData(newExtraPairData)
+    }
+
+    useMemo(() => {
+        makeExtraPairData();
+        //console.log(extraPairData)
+    }, [extraPairArray, data, hemoglobinDataSet]);
 
     const changeAggregation = (e: any, value: any) => {
         actions.changeChart(value.value, valueToVisualize, chartId, "INTERVENTION")
@@ -296,6 +583,26 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
             <Grid.Row >
                 <Grid.Column verticalAlign="middle" width={1}>
                     <Menu icon vertical compact size="mini" borderless secondary widths={2}>
+                        <Menu.Item fitted>
+                            <Dropdown basic item icon="plus" compact>
+                                <Dropdown.Menu>
+                                    {
+                                        extraPairOptions.map((d: { value: string; title: string }) => {
+                                            return (
+                                                <Dropdown.Item
+                                                    onClick={() => {
+                                                        actions.changeExtraPair(chartId, d.value);
+                                                    }}
+                                                >
+                                                    {d.title}
+                                                </Dropdown.Item>
+                                            )
+                                        })
+                                    }
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        </Menu.Item >
+
                         <Menu.Item>
                             <Dropdown pointing basic item icon="edit" compact >
                                 <Dropdown.Menu>
@@ -307,22 +614,22 @@ const InterventionPlotVisualization: FC<Props> = ({ aggregatedBy, valueToVisuali
                         </Menu.Item>
                     </Menu>
                 </Grid.Column>
-                {/* {extraPairData.map((d)=>{
-        return <Grid.Column><SVG></SVG></Grid.Column>
-      })} */}
                 <Grid.Column width={(15) as any}>
                     <SVG ref={svgRef}>
 
                         <InterventionPlot
                             interventionDate={interventionDate}
                             chartId={chartId}
-                            dimensionWhole={dimensions}
+                            //dimensionWhole={dimensions}
+                            dimensionWidth={width}
+                            dimensionHeight={height}
                             data={data}
                             svg={svgRef}
                             aggregatedBy={aggregatedBy}
                             valueToVisualize={valueToVisualize}
-                            yMax={yMax.original}
+                            yMax={yMax}
                             plotType={interventionPlotType}
+                            extraPairDataSet={extraPairData}
                         />
                     </SVG>
                 </Grid.Column>
