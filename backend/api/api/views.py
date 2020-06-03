@@ -412,7 +412,6 @@ def test_results(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
-# Takes in a patient_id and, returns their APR_DRG information
 def risk_score(request):
     if request.method == "GET":
         patient_ids = request.GET.get("patient_ids") or ""
@@ -651,9 +650,9 @@ def state(request):
             return JsonResponse(model_to_dict(result))
 
         else:
-            pass
             # Get the names of all the state objects
             states = State.objects.all().values_list()
+
             # Return the names as a list
             return JsonResponse(list(states), safe = False)
     
@@ -662,17 +661,20 @@ def state(request):
         name = request.POST.get("name")
         definition = request.POST.get("definition")
 
+        # Create and save the new State object
         new_state = State(name = name, definition = definition)
         new_state.save()
 
         return HttpResponse("state object created", 200)
 
     elif request.method == "PUT":
+        # Get the required information from the request body
         put = ast.literal_eval(request.body.decode())
         old_name = put.get("old_name")
         new_name = put.get("new_name")
         new_definition = put.get("new_definition")
 
+        # Update the State object and save
         result = State.objects.get(name = old_name)
         result.name = new_name
         result.definition = new_definition
@@ -681,9 +683,11 @@ def state(request):
         return HttpResponse("state object updated", 200)
 
     elif request.method == "DELETE":
+        # Get the required information from the request body
         delete = ast.literal_eval(request.body.decode())
         name = delete.get("name")
 
+        # Delete the matching State obejct
         result = State.objects.get(name = name)
         result.delete()
 
