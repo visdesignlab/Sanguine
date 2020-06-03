@@ -117,6 +117,23 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT= os.path.join(BASE_DIR, 'static/')
 
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000',
+]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'access-control-allow-credentials',
+    'access-control-allow-origin',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 LOGIN_REDIRECT_URL = '/api'
