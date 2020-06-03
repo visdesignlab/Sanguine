@@ -324,7 +324,7 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
         <Grid.Column verticalAlign="middle" width={1}>
           <Menu icon vertical compact size="mini" borderless secondary widths={2}>
             <Menu.Item fitted>
-              <Dropdown basic item icon="plus" compact>
+              <Dropdown selectOnBlur={false} basic item icon="plus" compact>
                 <Dropdown.Menu>
                   {
                     extraPairOptions.map((d: { value: string; title: string }) => {
@@ -346,7 +346,7 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
               <Icon name="ellipsis vertical" />
             </Menu.Item>
             <Menu.Item>
-              <Dropdown pointing basic item icon="edit" compact >
+              <Dropdown selectOnBlur={false} pointing basic item icon="edit" compact >
                 <Dropdown.Menu>
                   <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
                   <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue}></Dropdown>

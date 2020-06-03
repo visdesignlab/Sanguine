@@ -94,10 +94,6 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
         ;
     }
 
-    // return <LineUp data={hemoglobinDataSet} defaultRanking>
-
-    //     <LineUpCategoricalColumnDesc column="SURGEON_ID" categories={distinctCategories.surgeons} />
-    // </LineUp>;
     return <>{generateLineUp()}</>
 }
 
