@@ -27,7 +27,7 @@ const Logins: FC<Props> = ({ store }: Props) => {
         if (document.cookie && document.cookie !== '') {
             var cookies = document.cookie.split(';');
             for (var i = 0; i < cookies.length; i++) {
-                var cookie = jQuery.trim(cookies[i]);
+                var cookie = cookies[i];
                 if (cookie.substring(0, name.length + 1) === (name + '=')) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;
@@ -38,34 +38,49 @@ const Logins: FC<Props> = ({ store }: Props) => {
     }
 
 
-    const handleLogin = () => {
-        // setError(null)
-        // setLoading(true)
-        // var csrftoken = getCookie('csrftoken');
 
-        // //const requestOptions = ;
-        // fetch(`http://localhost:8000/accounts/login/`, {
-        //     method: 'POST',
-        //     credentials: "include",
-        //     headers: {
-        //         'Accept': 'application/json',
-        //         'Content-Type': 'application/json',
-        //         'X-CSRFToken': csrftoken || '',
-        //         "Access-Control-Allow-Origin": '*'
-        //     },
-        //     body: JSON.stringify({ username: username, password: password })
+    const handleLogin = async () => {
+        setError(null)
+        setLoading(true)
 
-        // })
-        //     .then(response => response.json())
-        //     .then(data => { console.log(data); return <Redirect to="/dashboard" /> }).catch(error => {
-        //         setLoading(false);
-        //         console.log(error)
-        //         if (error.response.status === 401) setError(error.response.data.message);
-        //         else setError("something went wrong")
-        //     })
-        console.log("fasd")
-        store!.isLoggedIn = true;
+        // Get the csrf cookie by visiting the site
+        fetch(`http://localhost:8000/accounts/login/`, {
+            method: 'GET',
+            credentials: 'include',
+        })
+        var csrftoken = getCookie('csrftoken');
+        console.log(csrftoken)
 
+        // Post the log in data to the site with the cookie
+        fetch(`http://localhost:8000/accounts/login/`, {
+            method: 'POST',
+            credentials: "include",
+            headers: {
+                'Accept': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrftoken || '',
+                "Access-Control-Allow-Origin": 'http://localhost:3000',
+                "Access-Control-Allow-Credentials": "true",
+            },
+            body: `csrfmiddlewaretoken=${csrftoken}&username=${username}&password=${password}`
+
+        })
+            .then(response => response)
+            .then(data => {
+                if (data.redirected) {
+                    store!.isLoggedIn = true;
+                } else {
+
+                }
+                console.log(data)
+
+            })
+            .catch(error => {
+                setLoading(false);
+                console.log(error)
+                if (error.response.status === 401) setError(error.response.data.message);
+                else setError("something went wrong")
+            })
 
     }
 
