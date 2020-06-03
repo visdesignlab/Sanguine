@@ -191,7 +191,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
               </Button.Group>
             </Menu.Menu>
             <Menu.Item header>
-              <Dropdown text="Change Facet" pointing basic item icon="edit" compact options={dumbbellFacetOptions.concat(barChartValuesOptions)} onChange={changeXVal}>
+              <Dropdown selectOnBlur={false} text="Change Facet" pointing basic item icon="edit" compact options={dumbbellFacetOptions.concat(barChartValuesOptions)} onChange={changeXVal}>
               </Dropdown>
             </Menu.Item>
           </Menu>
