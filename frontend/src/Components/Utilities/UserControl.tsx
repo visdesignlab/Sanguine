@@ -1,15 +1,14 @@
 import React, { FC, useEffect, useState, useRef } from "react";
 import Store from '../../Interfaces/Store'
 // import {}
-import { Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment } from 'semantic-ui-react'
+import { Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment, DropdownProps } from 'semantic-ui-react'
 import { inject, observer } from "mobx-react";
 import { actions, provenance } from '../..'
-import { Slider } from 'react-semantic-ui-range';
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
 import { timeFormat } from "d3";
 import { blood_red } from "../../ColorProfile";
-import { barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions, interventionChartType } from "../../Interfaces/ApplicationState";
+import { barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions, interventionChartType, presetOptions } from "../../Interfaces/ApplicationState";
 import ClipboardJS from 'clipboard';
 import { NavLink } from 'react-router-dom'
 interface OwnProps {
@@ -35,7 +34,8 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const [interventionDate, setInterventionDate] = useState<number | undefined>(undefined)
   // const [elementCounter, addToElementCounter] = useState(0)
   const [interventionPlotType, setInterventionPlotType] = useState<string | undefined>(undefined)
-  const [shareUrl, setShareUrl] = useState(window.location.href)
+  const [shareUrl, setShareUrl] = useState(window.location.href);
+  const [openModal, setOpenModal] = useState(false);
 
   new ClipboardJS(`.copy-clipboard`);
   const onDateChange = (event: any, data: any) => {
@@ -132,7 +132,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
 
   const regularMenu = (
-    <Menu widths={7}>
+    <Menu widths={6}>
       <Menu.Item>
         <Button.Group>
           <Button primary disabled={isAtRoot} onClick={actions.goBack}>
@@ -171,34 +171,37 @@ const UserControl: FC<Props> = ({ store }: Props) => {
           label={<label> Show Zero Transfused </label>}
         />
       </Menu.Item>
+
       <Menu.Item>
-        <Dropdown button text="Load Workspace" pointing>
+        <Dropdown button text="Save, Share and Load">
           <Dropdown.Menu>
-            <Dropdown.Item onClick={() => { actions.loadPreset(1) }}>Preset 1</Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
-      </Menu.Item>
-      {/* <Menu.Item>
-                <Checkbox toggle checked={dumbbellSorted} onClick={actions.toggleDumbbell}/>
-          <label> Sort Dumbbell</label>
-        </Menu.Item> */}
-      <Menu.Item>
-        <Modal
-          trigger={
-            <Button
-              onClick={() =>
+            <Dropdown.Item>
+              <Dropdown selectOnBlur={false} text="Presets" onChange={(e, d: any) => { actions.loadPreset(d.value) }} options={presetOptions} />
+              <Dropdown.Menu>
+                {presetOptions.map((d: { value: number, text: string }) => {
+                  return (<Dropdown.Item onClick={() => { actions.loadPreset(d.value) }} content={d.text} />)
+                })}
+              </Dropdown.Menu>
+            </Dropdown.Item>
+
+            <Dropdown.Item icon="share alternate"
+              content="Share"
+              onClick={() => {
                 setShareUrl(
                   //Kiran says there is a bug with the exportState, so using exportState(false) for now
                   `${window.location.href}#${provenance.exportState(false)}`,
-                )
-              }
-              icon
-              labelPosition="left"
-              primary>
-              <Icon name="share alternate"></Icon>
-                   Share
-                 </Button>
-          }>
+                );
+                setOpenModal(true)
+              }}
+            />
+          </Dropdown.Menu>
+
+
+        </Dropdown>
+        <Modal
+          open={openModal}
+          onClose={() => { setOpenModal(false) }}
+        >
           <Modal.Header>
             Use the following URL to share your state
                </Modal.Header>

@@ -5,7 +5,6 @@ import Dashboard from './Dashboard';
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
 
 import Login from './LogIn'
-import Home from './Home'
 
 interface OwnProps {
   store?: Store;
@@ -23,8 +22,9 @@ const App: FC<Props> = ({ store }: Props) => {
         {/* <Route exact path='/' component={Home} /> */}
         <Route exact path='/' component={Login} />
         <Route exact path='/dashboard' render={() => {
-          if (isLoggedIn) return <Dashboard />
-          else return <Redirect to="/" />
+          // if (isLoggedIn) return <Dashboard />
+          // else return <Redirect to="/" />
+          return <Dashboard />
         }} />
       </Switch></BrowserRouter>
 
