@@ -16,7 +16,8 @@ import UserControl from './Components/Utilities/UserControl';
 import SideBar from './Components/Utilities/SideBar';
 import styled from 'styled-components';
 import { Responsive as ResponsiveReactGridLayout } from "react-grid-layout";
-
+import './App.css'
+import 'react-grid-layout/css/styles.css'
 interface OwnProps {
     store?: Store
 }

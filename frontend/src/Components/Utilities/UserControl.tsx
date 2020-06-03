@@ -1,14 +1,14 @@
 import React, { FC, useEffect, useState, useRef } from "react";
 import Store from '../../Interfaces/Store'
 // import {}
-import { Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment, DropdownProps, Form, DropdownMenu } from 'semantic-ui-react'
+import { Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment, DropdownProps, Form, DropdownMenu, List } from 'semantic-ui-react'
 import { inject, observer } from "mobx-react";
 import { actions, provenance } from '../..'
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
 import { timeFormat } from "d3";
 import { blood_red } from "../../ColorProfile";
-import { barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions, interventionChartType, presetOptions, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState";
+import { barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions, interventionChartType, presetOptions, stateUpdateWrapperUseJSON, dumbbellValueOptions, scatterXOptions, typeDiction } from "../../Interfaces/ApplicationState";
 import ClipboardJS from 'clipboard';
 import { NavLink } from 'react-router-dom'
 import { getCookie } from "../../Interfaces/UserManagement";
@@ -26,7 +26,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     rawDateRange,
     nextAddingIndex
   } = store!;
-  //  const [procedureList, setProcedureList] = useState({ result: [] })
+
   const urlRef = useRef(null);
   const [addMode, setAddMode] = useState(false);
   const [addingChartType, setAddingChartType] = useState(-1)
@@ -36,10 +36,14 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   // const [elementCounter, addToElementCounter] = useState(0)
   const [interventionPlotType, setInterventionPlotType] = useState<string | undefined>(undefined)
   const [shareUrl, setShareUrl] = useState(window.location.href);
-  const [openModal, setOpenModal] = useState(false);
-  const [openSaveState, setOpenSaveState] = useState(false)
+  const [openShareModal, setOpenShareModal] = useState(false);
+  const [openSaveStateModal, setOpenSaveStateModal] = useState(false)
   const [stateName, setStateName] = useState("")
   const [listOfSavedState, setListOfSavedState] = useState<string[]>([])
+  const [openManageStateModal, setOpenManageStateModal] = useState(false)
+
+
+
 
   new ClipboardJS(`.copy-clipboard`);
   const onDateChange = (event: any, data: any) => {
@@ -70,45 +74,19 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   }
 
 
-  const scatterXOptions = [
-    {
-      value: "PREOP_HEMO",
-      key: "PREOP_HEMO",
-      text: "Preoperative Hemoglobin Value"
-    },
-    {
-      value: "POSTOP_HEMO",
-      key: "POSTOP_HEMO",
-      text: "Postoperative Hemoglobin Value"
-    }
-  ]
-
-  const dumbbellValueOptions = [
-    { value: "HEMO_VALUE", key: "HEMO_VALUE", text: "Hemoglobin Value" }
-  ]
-
-
-
-
-
   const addOptions = [
     [barChartValuesOptions, barChartAggregationOptions],
     [dumbbellValueOptions, barChartValuesOptions.concat(dumbbellFacetOptions)],
     [scatterXOptions, barChartValuesOptions],
     [barChartValuesOptions, barChartAggregationOptions],
     [barChartValuesOptions, barChartAggregationOptions]
-
   ]
-  const typeDiction = ["VIOLIN", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION"]
-
-
 
 
   const addModeButtonHandler = (chartType: number) => {
     setAddMode(true);
     setAddingChartType(chartType)
   }
-
 
   const interventionHandler = (e: any, value: any) => {
     if (value.value === "None") {
@@ -141,12 +119,21 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       setInterventionDate(undefined);
       setInterventionPlotType(undefined);
     }
-
   }
 
   const cancelChartAddHandler = () => {
     setAddMode(false);
   }
+
+  const simulateAPIClick = () => {
+    fetch(`http://localhost:8000/accounts/login/`, {
+      method: 'GET',
+      credentials: 'include',
+    })
+    var csrftoken = getCookie('csrftoken');
+    return csrftoken
+  }
+
 
 
   const regularMenu = (
@@ -202,19 +189,6 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 </Dropdown.Menu>
               </Dropdown>
             </Dropdown.Item>
-
-            <Dropdown.Item icon="share alternate"
-              content="Share"
-              onClick={() => {
-                setShareUrl(
-                  //Kiran says there is a bug with the exportState, so using exportState(false) for now
-                  `${window.location.href}#${provenance.exportState(false)}`,
-                );
-                setOpenModal(true)
-              }}
-            />
-            <Dropdown.Item icon="save" content="Save State"
-              onClick={() => { setOpenSaveState(true) }} />
             <Dropdown.Item>
               <Dropdown selectOnBlur={false} text="Saved"  >
                 <Dropdown.Menu>
@@ -226,14 +200,72 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
             </Dropdown.Item>
 
+            <Dropdown.Item icon="share alternate"
+              content="Share"
+              onClick={() => {
+                setShareUrl(
+                  //Kiran says there is a bug with the exportState, so using exportState(false) for now
+                  `${window.location.href}#${provenance.exportState(false)}`,
+                );
+                setOpenShareModal(true)
+              }}
+            />
+            <Dropdown.Item icon="save" content="Save State"
+              onClick={() => { setOpenSaveStateModal(true) }} />
+
+            <Dropdown.Item icon="setting" content="Manage Saved States"
+              onClick={() => {
+                setOpenManageStateModal(true)
+              }}
+            />
+
+
           </Dropdown.Menu>
-
-
-
         </Dropdown>
 
+        {/* Modal for Manage State */}
+        <Modal open={openManageStateModal} closeOnEscape={false} closeOnDimmerClick={false}>
+          <Modal.Header content="Manage Saved States" />
+          <Modal.Content>
+            <List divided verticalAlign="middle">
+              {listOfSavedState.map((d) => {
+                return (<List.Item>
+                  <List.Content floated="right">
+                    <Button onClick={() => {
+                      const csrftoken = simulateAPIClick()
+                      //TODO What is the correct form of this?
+                      fetch(`http://localhost:8000/api/state`, {
+                        method: 'DELETE',
+                        credentials: "include",
+                        headers: {
+                          'Accept': 'application/x-www-form-urlencoded',
+                          'Content-Type': 'application/x-www-form-urlencoded',
+                          'X-CSRFToken': csrftoken || '',
+                          "Access-Control-Allow-Origin": 'http://localhost:3000',
+                          "Access-Control-Allow-Credentials": "true",
+                        },
+                        body: JSON.stringify({ name: d })
+                      }).then(() => { fetchSavedStates() })
+                    }}
+                      content="Delete" />
+                  </List.Content>
+                  <List.Content verticalAlign="middle" content={d} />
+                </List.Item>)
+              })}
+
+            </List>
+          </Modal.Content>
+          <Modal.Actions>
+            <Button
+              content="Save"
+              positive
+              onClick={() => { setOpenManageStateModal(false) }} />
+          </Modal.Actions>
+
+        </Modal>
+
         {/* Modal for Saving State, has a form input */}
-        <Modal open={openSaveState} closeOnEscape={false} closeOnDimmerClick={false}>
+        <Modal open={openSaveStateModal} closeOnEscape={false} closeOnDimmerClick={false}>
           <Modal.Header content="Save the current state" />
           <Modal.Content>
             <Form>
@@ -242,36 +274,40 @@ const UserControl: FC<Props> = ({ store }: Props) => {
           </Modal.Content>
           <Modal.Actions>
             <Button disabled={stateName.length === 0} content="Save" positive onClick={() => {
-              fetch(`http://localhost:8000/accounts/login/`, {
-                method: 'GET',
-                credentials: 'include',
-              })
-              var csrftoken = getCookie('csrftoken');
-
-              fetch(`http://localhost:8000/api/state`, {
-                method: 'POST',
-                credentials: "include",
-                headers: {
-                  'Accept': 'application/x-www-form-urlencoded',
-                  'Content-Type': 'application/x-www-form-urlencoded',
-                  'X-CSRFToken': csrftoken || '',
-                  "Access-Control-Allow-Origin": 'http://localhost:3000',
-                  "Access-Control-Allow-Credentials": "true",
-                },
-                body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&definition=${provenance.exportState(false)}`
-              })
-                .then(() => { fetchSavedStates() })
-              setOpenSaveState(false)
+              // fetch(`http://localhost:8000/accounts/login/`, {
+              //   method: 'GET',
+              //   credentials: 'include',
+              // })
+              // var csrftoken = getCookie('csrftoken');
+              const csrftoken = simulateAPIClick()
+              if (listOfSavedState.includes(stateName)) {
+                //Write a PUT request instead of POST because 
+              } else {
+                fetch(`http://localhost:8000/api/state`, {
+                  method: 'POST',
+                  credentials: "include",
+                  headers: {
+                    'Accept': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrftoken || '',
+                    "Access-Control-Allow-Origin": 'http://localhost:3000',
+                    "Access-Control-Allow-Credentials": "true",
+                  },
+                  body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&definition=${provenance.exportState(false)}`
+                })
+                  .then(() => { fetchSavedStates() })
+              }
+              setOpenSaveStateModal(false)
               setStateName("")
             }} />
-            <Button content="Cancel" onClick={() => { setOpenSaveState(false) }} />
+            <Button content="Cancel" onClick={() => { setOpenSaveStateModal(false) }} />
           </Modal.Actions>
         </Modal>
 
         {/* Modal for sharing state.   */}
         <Modal
-          open={openModal}
-          onClose={() => { setOpenModal(false) }}
+          open={openShareModal}
+          onClose={() => { setOpenShareModal(false) }}
         >
           <Modal.Header>
             Use the following URL to share your state
@@ -304,8 +340,6 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       </Menu.Item>
     </Menu>
   );
-
-
 
   const addBarChartMenu = (
     <Menu widths={5}>
