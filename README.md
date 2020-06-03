@@ -1,6 +1,12 @@
-# Run BloodVis through CHPC
+# BloodVis Visualization Project 
 
-To use this, make sure you are on a campus network (Any network should be fine as long as it is part of the campus). If off-campus, use a VPN that ends in utah.edu
+This project is a collaboeration between VDL and ARUP at University of Utah. We visualize blood usage in cardiac surgeries and associated attributes. Through this interactive visualization tool, we hope to offer clinical practioners better overall view on the use of blood, achieving better patient outcome. 
+
+![Interface image](https://github.com/visdesignlab/bloodvis/blob/master/images/interface.png)
+
+# Run BloodVis through CHPC (An account with CHPC is required)
+
+To use this, make sure you are on a campus network (Any network should be fine as long as it is part of the campus). If off-campus, use a VPN that ends in utah.edu 
 
 ## Start a remote desktop session
 
@@ -45,9 +51,11 @@ It should show as `(bloodvis)[uID@bloodvis]$`.
 2. Type `ssh bloodvis` to go to the VM. Enter uID password when prompted.
 3. Type `cd /uufs/chpc.utah.edu/common/HIPAA/IRB_00124248/bloodvis/bloodvis/frontend`
 4. Type `scl enable rh-nodejs10 bash`
-5. Type `npm start`
+5. Type `git pull`
+6. Type `npm start`
     - _NOTE_: You may have to run `npm install` if `npm start` raises errors.
-6. Close the firefox because that is a really old version and our tool does not work properly on there. 
+7. Close the firefox because that is a really old version and our tool does not work properly on there. 
+
 
 ## Start Chrome on VM
 

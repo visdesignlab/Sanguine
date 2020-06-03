@@ -4,7 +4,8 @@ import React, {
   useRef,
   useLayoutEffect,
   useState,
-  useMemo
+  useMemo,
+  useCallback
 } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
@@ -27,7 +28,7 @@ import {
   median,
   timeParse,
 } from "d3";
-import { DumbbellDataPoint, offset, AxisLabelDict, SelectSet, minimumWidthScale } from "../../Interfaces/ApplicationState";
+import { DumbbellDataPoint, offset, AxisLabelDict, SelectSet, minimumWidthScale, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState";
 import CustomizedAxis from "../Utilities/CustomizedAxis";
 import { preop_color, basic_gray, highlight_orange, postop_color } from "../../ColorProfile"
 
@@ -35,11 +36,15 @@ interface OwnProps {
   yAxisName: string;
   //chartId: string;
   store?: Store;
-  dimension: { width: number, height: number }
+  dimensionWidth: number,
+  dimensionHeight: number,
+  // dimension: { width: number, height: number }
   data: DumbbellDataPoint[];
   svg: React.RefObject<SVGSVGElement>
   // yMax: number;
-  xRange: { xMin: number, xMax: number };
+  xMin: number,
+  xMax: number
+  // xRange: { xMin: number, xMax: number };
   // interventionDate?: string;
   sortMode: string;
   showingAttr: { preop: boolean, postop: boolean, gap: boolean }
@@ -47,18 +52,20 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension, data, svg, store, xRange }: Props) => {
+const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionHeight, dimensionWidth, data, svg, store, xMin, xMax }: Props) => {
 
   const [averageForEachTransfused, setAverage] = useState<any>({})
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([])
   const [numberList, setNumberList] = useState<{ num: number, indexEnding: number }[]>([])
   // const [scaleList, setScaleList] = useState < { title: any, scale:ScaleOrdinal<any, number>}[]>();
   const [datapointsDict, setDataPointDict] = useState<{ title: any, length: number }[]>([])
+  const [resultRange, setResultRange] = useState<number[]>([])
+  const [indicies, setIndicies] = useState([])
 
   const currentOffset = offset.minimum;
   const {
     //dumbbellSorted,
-    currentSelectPatient, currentSelectSet } = store!;
+    currentSelectPatient, currentSelectPatientGroup } = store!;
   const svgSelection = select(svg.current);
 
   useEffect(() => {
@@ -142,27 +149,18 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
           currentPostopSum = [];
           currentPreopSum = [];
         }
-
-
       })
-      setAverage(averageDict)
-      setSortedData(tempSortedData)
-      console.log(tempDatapointsDict)
-      setDataPointDict(tempDatapointsDict)
-      setNumberList(tempNumberList)
+      const newindices = range(0, data.length)
+      stateUpdateWrapperUseJSON(indicies, newindices, setIndicies)
+      stateUpdateWrapperUseJSON(averageForEachTransfused, averageDict, setAverage)
+      stateUpdateWrapperUseJSON(sortedData, tempSortedData, setSortedData)
+      stateUpdateWrapperUseJSON(datapointsDict, tempDatapointsDict, setDataPointDict)
+      stateUpdateWrapperUseJSON(numberList, tempNumberList, setNumberList)
     }
   }, [data, sortMode])
-  //let numberList: { num: number, indexEnding: number }[] = [];
 
-  //console.log(data)
-
-  const [testValueScale, valueScale] = useMemo(() => {
-    const widthAllowed = dimension.width - currentOffset.left - currentOffset.right;
-
-    const testValueScale = scaleLinear()
-      .domain([0.9 * xRange.xMin, 1.1 * xRange.xMax])
-      .range([dimension.height - currentOffset.bottom, currentOffset.top]);
-
+  useEffect(() => {
+    const widthAllowed = dimensionWidth - currentOffset.left - currentOffset.right;
 
     let spacing: any = {};
 
@@ -191,8 +189,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
         }
       })
     }
-
-    let resultRange: number[] = [];
+    let newResultRange: number[] = [];
     let currentLoc = currentOffset.left;
     datapointsDict.map((d, i) => {
       let calculatedRange = range(currentLoc, currentLoc + spacing[i], spacing[i] / (d.length + 1))
@@ -200,33 +197,39 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
       if (calculatedRange.length !== d.length) {
         calculatedRange.splice(calculatedRange.length - 1, 1)
       }
-      resultRange = resultRange.concat(calculatedRange)
+      newResultRange = newResultRange.concat(calculatedRange)
       currentLoc += spacing[i]
-
+      stateUpdateWrapperUseJSON(resultRange, newResultRange, setResultRange)
     })
+  }, [datapointsDict, dimensionWidth])
 
 
 
-    const indices = range(0, data.length)
+  const testValueScale = useCallback(() => {
+    const testValueScale = scaleLinear()
+      .domain([0.9 * xMin, 1.1 * xMax])
+      .range([dimensionHeight - currentOffset.bottom, currentOffset.top]);
+    return testValueScale
+  }, [xMin, xMax, dimensionHeight])
+  //console.log(data)
 
-    console.log(indices.length, resultRange.length, sortedData.length)
+  //TODO this need to be shrinked.
+  const valueScale = useCallback(() => {
     const valueScale = scaleOrdinal()
-      .domain(indices as any)
+      .domain(indicies as any)
       .range(resultRange);
-    // console.log(ticks(currentOffset.left, dimension.width - currentOffset.right - currentOffset.margin, data.length))
-    // .range([currentOffset.left, dimension.width - currentOffset.right - currentOffset.margin]);
+    return valueScale;
 
-    return [testValueScale, valueScale];
-  }, [dimension, data, xRange, datapointsDict]);
+  }, [indicies, resultRange]);
 
-  const testLabel = axisLeft(testValueScale);
+  const testLabel = axisLeft(testValueScale());
 
   svgSelection
     .select(".axes")
     .select(".y-label")
     .attr("display", null)
-    .attr("y", dimension.height - currentOffset.bottom + 20)
-    .attr("x", 0.5 * (dimension.width))
+    .attr("y", dimensionHeight - currentOffset.bottom + 20)
+    .attr("x", 0.5 * (dimensionWidth))
     .attr("font-size", "11px")
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "hanging")
@@ -244,7 +247,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
   svgSelection
     .select(".axes")
     .select(".x-label")
-    .attr("x", -0.5 * dimension.height)
+    .attr("x", -0.5 * dimensionHeight)
     .attr("y", 0)
     .attr("transform", "rotate(-90)")
     .attr("alignment-baseline", "hanging")
@@ -258,18 +261,10 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
     if (currentSelectPatient && d.case.caseId > 0) {
       return currentSelectPatient.caseId === d.case.caseId
     } return false;
-    // else if (currentSelectSet.length > 0) {
-    //   //let selectSet: SelectSet;
-    //   for (let selectSet of currentSelectSet) {
-    //     if (d.case[selectSet.set_name] === selectSet.set_value)
-    //       return true;
-    //   }
-    //   return false
-    // }
-    // else {
-    //   return false;
-    // }
-    //  return true;
+  }
+
+  const decideIfBrushed = (d: DumbbellDataPoint) => {
+    return currentSelectPatientGroup.includes(d.case.caseId);
   }
 
   // const decideIfSurgeon = (d: DumbbellDataPoint) => {
@@ -283,6 +278,8 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
 
 
 
+
+
   const clickDumbbellHandler = (d: DumbbellDataPoint) => {
     actions.selectPatient(d.case)
   }
@@ -291,24 +288,24 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
     <>
       <g className="axes">
         <g className="x-axis"></g>
-        <g className="y-axis" transform={`translate(0,${dimension.height - currentOffset.bottom})`}>
-          <CustomizedAxis scale={valueScale as ScaleOrdinal<any, number>} numberList={numberList} />
+        <g className="y-axis" transform={`translate(0,${dimensionHeight - currentOffset.bottom})`}>
+          <CustomizedAxis scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} />
         </g>
         <text className="x-label" />
         <text className="y-label" />
       </g>
       <g className="chart-comp" >
-        <line x1={currentOffset.left} x2={dimension.width - currentOffset.right} y1={testValueScale(13)} y2={testValueScale(13)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
-        <line x1={currentOffset.left} x2={dimension.width - currentOffset.right} y1={testValueScale(7.5)} y2={testValueScale(7.5)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
+        <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(13)} y2={testValueScale()(13)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
+        <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(7.5)} y2={testValueScale()(7.5)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
 
 
         {sortedData.map((dataPoint, index) => {
-          const start = testValueScale(dataPoint.startXVal);
-          const end = testValueScale(dataPoint.endXVal);
+          const start = testValueScale()(dataPoint.startXVal);
+          const end = testValueScale()(dataPoint.endXVal);
           const returning = start > end ? end : start;
           const rectDifference = Math.abs(end - start)
 
-          const xVal = (valueScale as ScaleOrdinal<any, number>)(index)
+          const xVal = (valueScale() as ScaleOrdinal<any, number>)(index)
           // valueScale(dataPoint.yVal) -
           // (Math.abs(dataPoint.startXVal - dataPoint.endXVal) / (xRange.xMax - xRange.xMin)) *
           // (valueScale(dataPoint.yVal) - valueScale(dataPoint.yVal - 1))
@@ -328,18 +325,19 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
                     }
                     y={returning}
                     height={rectDifference}
-                    isselected={decideIfSelected(dataPoint)}
+                    isselected={decideIfSelected(dataPoint) || decideIfBrushed(dataPoint)}
                     display={showingAttr.gap ? undefined : "none"}
                   />
                   <Circle
                     cx={
                       xVal
                     }
-                    cy={testValueScale(dataPoint.startXVal)}
+                    cy={testValueScale()(dataPoint.startXVal)}
                     onClick={() => {
                       clickDumbbellHandler(dataPoint);
                     }}
                     isselected={decideIfSelected(dataPoint)}
+                    isbrushed={decideIfBrushed(dataPoint)}
                     ispreop={true}
                     display={showingAttr.preop ? undefined : "none"}
                   />
@@ -347,11 +345,12 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
                     cx={
                       xVal
                     }
-                    cy={testValueScale(dataPoint.endXVal)}
+                    cy={testValueScale()(dataPoint.endXVal)}
                     onClick={() => {
                       clickDumbbellHandler(dataPoint);
                     }}
                     isselected={decideIfSelected(dataPoint)}
+                    isbrushed={decideIfBrushed(dataPoint)}
                     ispreop={false}
                     display={showingAttr.postop ? undefined : "none"}
                   />
@@ -363,14 +362,14 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimension,
         {numberList.map((numberOb, ind) => {
           if (Object.keys(averageForEachTransfused).length > 0) {
 
-            const x1 = ind === 0 ? (valueScale as ScaleOrdinal<any, number>)(0) : (valueScale as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding + 1)
-            const x2 = (valueScale as ScaleOrdinal<any, number>)(numberOb.indexEnding)
-            const beginY = testValueScale(averageForEachTransfused[(numberOb.num).toString()].averageStart)
-            const endY = testValueScale(averageForEachTransfused[numberOb.num].averageEnd)
-            const interval = ind === 0 ? 0 : (valueScale as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding)
+            const x1 = ind === 0 ? (valueScale() as ScaleOrdinal<any, number>)(0) : (valueScale() as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding + 1)
+            const x2 = (valueScale() as ScaleOrdinal<any, number>)(numberOb.indexEnding)
+            const beginY = testValueScale()(averageForEachTransfused[(numberOb.num).toString()].averageStart)
+            const endY = testValueScale()(averageForEachTransfused[numberOb.num].averageEnd)
+            const interval = ind === 0 ? 0 : (valueScale() as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding)
             let interventionLine;
             if (ind >= 1 && numberOb.num <= numberList[ind - 1].num) {
-              interventionLine = <line x1={x1 - 0.5 * (x1 - interval)} x2={x1 - 0.5 * (x1 - interval)} y1={currentOffset.top} y2={dimension.height - currentOffset.bottom} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
+              interventionLine = <line x1={x1 - 0.5 * (x1 - interval)} x2={x1 - 0.5 * (x1 - interval)} y1={currentOffset.top} y2={dimensionHeight - currentOffset.bottom} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
             }
             return ([
               <Line x1={x1} x2={x2} y1={beginY} y2={beginY} ispreop={true} />,
@@ -392,6 +391,7 @@ export default inject("store")(observer(DumbbellChart));
 
 interface DotProps {
   isselected: boolean;
+  isbrushed: boolean;
   ispreop: boolean;
 }
 interface RectProps {
@@ -415,6 +415,8 @@ const Circle = styled(`circle`) <DotProps>`
   r:4px
   fill: ${props => (props.isselected ? highlight_orange : props.ispreop ? preop_color : postop_color)};
   opacity:${props => props.isselected ? 1 : 0.8}
+  stroke:${props => (props.isbrushed ? highlight_orange : "none")}
+  stroke-width:2px;
 `;
 
 const Rect = styled(`rect`) <RectProps>`

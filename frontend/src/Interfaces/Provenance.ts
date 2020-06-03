@@ -7,7 +7,7 @@ import {
   SingleCasePoint
 } from "./ApplicationState";
 import { store } from './Store';
-import { timeFormat } from 'd3';
+import { timeFormat, json, scaleDiverging } from 'd3';
 
 interface AppProvenance {
   provenance: Provenance<ApplicationState>;
@@ -16,7 +16,7 @@ interface AppProvenance {
     goBack: () => void;
     loadPreset: (num: number) => void;
     setLayoutArray: (newLayoutArray: LayoutElement[]) => void;
-    selectChart: (newSelectedID: string) => void;
+    // selectChart: (newSelectedID: string) => void;
     toggleShowZero: (event: any, data: any) => void;
     // togglePerCase: (event: any, data: any) => void;
     // toggleDumbbell: (event: any, data: any) => void;
@@ -32,11 +32,13 @@ interface AppProvenance {
     removeChart: (i: any) => void;
     updateCaseCount: (mode: string, newCaseCount: number) => void;
     onLayoutchange: (data: any) => void;
-    selectPatient: (data: SingleCasePoint) => void;
+    selectPatient: (data: SingleCasePoint | null) => void;
     selectSet: (data: SelectSet, shiftKeyPressed: boolean) => void;
     // storeHemoData: (data: any) => void;
     changeExtraPair: (chartID: string, newExtraPair: string) => void;
     removeExtraPair: (chartID: string, removeingPair: string) => void;
+
+    updateSelectedPatientGroup: (caseList: number[]) => void;
     changeChart: (x: string, y: string, i: string, type: string, interventionType?: string) => void;
   }
 }
@@ -52,14 +54,18 @@ export function setupProvenance(): AppProvenance {
     store.isAtLatest = provenance.current().children.length === 0;
   })
 
-  provenance.addObserver(
-    ["currentSelectedChart"],
-    (state?: ApplicationState) => {
-      store.currentSelectedChart = state
-        ? state.currentSelectedChart
-        : store.currentSelectedChart;
-    }
-  );
+  // provenance.addObserver(
+  //   ["currentSelectedChart"],
+  //   (state?: ApplicationState) => {
+  //     store.currentSelectedChart = state
+  //       ? state.currentSelectedChart
+  //       : store.currentSelectedChart;
+  //   }
+  // );
+
+  provenance.addObserver(["currentSelectPatientGroup"], (state?: ApplicationState) => {
+    store.currentSelectPatientGroup = state ? state.currentSelectPatientGroup : store.currentSelectPatientGroup;
+  })
 
   provenance.addObserver(["layoutArray"], (state?: ApplicationState) => {
     store.layoutArray = state ? state.layoutArray : store.layoutArray;
@@ -69,9 +75,9 @@ export function setupProvenance(): AppProvenance {
   //   store.hemoglobinDataSet = state ? state.hemoglobinDataSet : store.hemoglobinDataSet
   // })
 
-  // provenance.addObserver(["dumbbellSorted"], (state?: ApplicationState) => {
-  //   store.dumbbellSorted = state ? state.dumbbellSorted : store.dumbbellSorted;
-  // })
+  provenance.addObserver(["nextAddingIndex"], (state?: ApplicationState) => {
+    store.nextAddingIndex = state ? state.nextAddingIndex : store.nextAddingIndex;
+  })
 
   provenance.addObserver(['showZero'], (state?: ApplicationState) => {
     store.showZero = state ? state.showZero : store.showZero;
@@ -145,8 +151,8 @@ export function setupProvenance(): AppProvenance {
       y: Infinity,
       plot_type: plot_type,
     }
-    if (plot_type === "VIOLIN" || plot_type === "HEATMAP") {
-      newLayoutElement.extraPair = [];
+    if (plot_type === "VIOLIN" || plot_type === "HEATMAP" || plot_type === "INTERVENTION") {
+      newLayoutElement.extraPair = JSON.stringify([]);
     }
     if (interventionDate) {
       newLayoutElement.interventionDate = interventionDate
@@ -159,7 +165,7 @@ export function setupProvenance(): AppProvenance {
     provenance.applyAction("Add new chart",
       (state: ApplicationState) => {
         state.layoutArray.push(newLayoutElement)
-        console.log(state)
+        state.nextAddingIndex += 1
         return state;
       })
   }
@@ -191,36 +197,36 @@ export function setupProvenance(): AppProvenance {
               {
                 aggregatedBy: "YEAR",
                 valueToVisualize: "PRBC_UNITS",
-                i: "100",
+                i: "0",
                 w: 1,
                 h: 1,
                 x: 0,
                 y: Infinity,
                 plot_type: "VIOLIN",
-                extraPair: []
+                extraPair: JSON.stringify([])
               },
               {
                 aggregatedBy: "SURGEON_ID",
                 valueToVisualize: "PRBC_UNITS",
-                i: "99",
+                i: "1",
                 w: 1,
                 h: 1,
                 x: 0,
                 y: Infinity,
                 plot_type: "VIOLIN",
-                extraPair: []
+                extraPair: JSON.stringify([])
               }, {
                 aggregatedBy: "PRBC_UNITS",
                 valueToVisualize: "HEMO_VALUE",
-                i: "98",
+                i: "2",
                 w: 1,
                 h: 1,
                 x: 0,
                 y: Infinity,
                 plot_type: "DUMBBELL"
               }]
-            state.filterSelection = ["CORONARY ARTERY BYPASS GRAFT(S)", "STERNAL DEBRIDEMENT"]
-            //TODO ADD PRESET STATE
+            state.filterSelection = ["CABG", "TAVR"]
+            state.nextAddingIndex = 3;
             return state
           }
         )
@@ -263,19 +269,19 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const selectChart = (chartID: string) => {
-    provenance.applyAction(
-      `Selecting ${chartID}`,
-      (state: ApplicationState) => {
-        if (state.currentSelectedChart === chartID) {
-          state.currentSelectedChart = "-1";
-        } else {
-          state.currentSelectedChart = chartID;
-        }
-        return state;
-      }
-    )
-  }
+  // const selectChart = (chartID: string) => {
+  //   provenance.applyAction(
+  //     `Selecting ${chartID}`,
+  //     (state: ApplicationState) => {
+  //       if (state.currentSelectedChart === chartID) {
+  //         state.currentSelectedChart = "-1";
+  //       } else {
+  //         state.currentSelectedChart = chartID;
+  //       }
+  //       return state;
+  //     }
+  //   )
+  // }
 
 
 
@@ -290,6 +296,17 @@ export function setupProvenance(): AppProvenance {
     )
   };
 
+  const updateSelectedPatientGroup = (caseList: number[]) => {
+    provenance.applyAction(
+      `Update Selected Patients Group`,
+      (state: ApplicationState) => {
+        state.currentSelectPatientGroup = caseList;
+
+        return state;
+      }
+    )
+  };
+
 
 
   const changeExtraPair = (chartID: string, newExtraPair: string) => {
@@ -299,7 +316,9 @@ export function setupProvenance(): AppProvenance {
         state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
           if (d.i === chartID && d.extraPair) {
             if (!d.extraPair.includes(newExtraPair)) {
-              d.extraPair.push(newExtraPair)
+              let originalArray = JSON.parse(d.extraPair);
+              originalArray.push(newExtraPair);
+              d.extraPair = JSON.stringify(originalArray)
               console.log(d)
             }
           }
@@ -317,10 +336,12 @@ export function setupProvenance(): AppProvenance {
         //  console.log(removeingPair, chartID, state)
         state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
           if (d.i === chartID && d.extraPair) {
-            d.extraPair = d.extraPair.filter((l) => {
+            let originalArray = JSON.parse(d.extraPair);
 
+            let newArray = (originalArray.filter((l: string) => {
               return (l !== removeingPair)
-            })
+            }))
+            d.extraPair = JSON.stringify(newArray)
           }
           return d
         })
@@ -364,12 +385,15 @@ export function setupProvenance(): AppProvenance {
 
 
 
-  const selectPatient = (data: SingleCasePoint) => {
-    provenance.applyAction(`select patient ${data.patientID}`, (state: ApplicationState) => {
+  const selectPatient = (data: SingleCasePoint | null) => {
+    provenance.applyAction(`select patient `, (state: ApplicationState) => {
 
-      if (state.currentSelectPatient && data.patientID === state.currentSelectPatient.patientID) {
+      if (data && state.currentSelectPatient && data.patientID === state.currentSelectPatient.patientID) {
         state.currentSelectPatient = null;
         state.currentSelectSet = [];
+      }
+      else if (!data) {
+        state.currentSelectPatient = null;
       }
 
       else {
@@ -430,6 +454,7 @@ export function setupProvenance(): AppProvenance {
       (state: ApplicationState) => {
         state.currentOutputFilterSet = state.currentSelectSet;
         state.currentSelectSet = [];
+        state.currentSelectPatient = null;
         return state;
       }
     )
@@ -487,7 +512,7 @@ export function setupProvenance(): AppProvenance {
       goBack,
       goForward,
       setLayoutArray,
-      selectChart,
+      //selectChart,
       changeChart,
       toggleShowZero,
       // toggleDumbbell,
@@ -502,7 +527,8 @@ export function setupProvenance(): AppProvenance {
       onLayoutchange,
       selectPatient,
       selectSet,
-      //  storeHemoData,
+      updateSelectedPatientGroup,
+
       changeExtraPair,
       removeExtraPair,
       loadPreset,

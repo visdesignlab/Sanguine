@@ -15,13 +15,14 @@ interface OwnProps {
   aggregatedBy: string;
   howToTransform: string;
   store?: Store;
+  isSinglePatientSelect: boolean;
 }
 
 export type Props = OwnProps;
 
 
 
-const SingleViolinPlot: FC<Props> = ({ howToTransform, isFiltered, dataPoint, aggregatedBy, isSelected, path, store }: Props) => {
+const SingleViolinPlot: FC<Props> = ({ howToTransform, isFiltered, isSinglePatientSelect, dataPoint, aggregatedBy, isSelected, path, store }: Props) => {
   return (<Popup
     content={dataPoint.totalVal}
     key={dataPoint.aggregateAttribute}
@@ -40,6 +41,7 @@ const SingleViolinPlot: FC<Props> = ({ howToTransform, isFiltered, dataPoint, ag
 
         isselected={isSelected}
         isfiltered={isFiltered}
+        issinglepatientselected={isSinglePatientSelect}
         transform={howToTransform}
       />
     }
@@ -51,8 +53,9 @@ export default inject("store")(observer(SingleViolinPlot));
 interface ViolinLineProp {
   isselected: boolean;
   isfiltered: boolean;
+  issinglepatientselected: boolean;
 }
 const ViolinLine = styled(`path`) <ViolinLineProp>`
-    stroke:${props => (props.isselected ? highlight_blue : (props.isfiltered ? highlight_orange : third_gray))};
-    fill: ${props => (props.isselected ? highlight_blue : (props.isfiltered ? highlight_orange : third_gray))};
+    stroke:${props => (props.issinglepatientselected ? highlight_orange : third_gray)};
+    fill: ${props => (props.isselected ? highlight_orange : (props.isfiltered ? highlight_blue : third_gray))};
   `;
