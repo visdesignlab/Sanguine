@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react';
 import Store from './Interfaces/Store';
 import { inject, observer } from 'mobx-react';
-import { Form, Button, Container, Header, Message } from 'semantic-ui-react';
+import { Form, Button, Container, Header, Message, Image } from 'semantic-ui-react';
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
 import $ from 'jquery';
 import { render } from 'react-dom';
@@ -91,11 +91,18 @@ const Logins: FC<Props> = ({ store }: Props) => {
         isLoggedIn ?
             <Redirect to="/dashboard" /> :
             (
-                <Container>
+                <Container style={{ padding: 50 }}>
                     <Header as='h1'>Welcome to BloodVis</Header>
+                    <Image size="small"
+                        as='a'
+                        target="_blank"
+                        src="https://raw.githubusercontent.com/visdesignlab/visdesignlab.github.io/master/assets/images/logos/vdl.png"
+                        href="https://vdl.sci.utah.edu"
+                    />
                     <Header as='h3'>Log in</Header>
                     <Form onSubmit={() => handleLogin()}>
                         <Form.Input
+                            width={10}
                             label="Username"
                             value={username}
                             required
@@ -103,6 +110,7 @@ const Logins: FC<Props> = ({ store }: Props) => {
 
                         <Form.Input
                             required
+                            width={10}
                             label="Password"
                             value={password}
                             type="password"
