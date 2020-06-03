@@ -24,7 +24,7 @@ const Logins: FC<Props> = ({ store }: Props) => {
         if (document.cookie && document.cookie !== '') {
             var cookies = document.cookie.split(';');
             for (var i = 0; i < cookies.length; i++) {
-                var cookie = jQuery.trim(cookies[i]);
+                var cookie = cookies[i];
                 if (cookie.substring(0, name.length + 1) === (name + '=')) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;
@@ -52,25 +52,33 @@ const Logins: FC<Props> = ({ store }: Props) => {
     // }
 
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
         setError(null)
         setLoading(true)
+        
+        // Get the csrf cookie by visiting the site
+        fetch(`http://localhost:8000/accounts/login/`, {
+            method: 'GET',
+            credentials: 'include',
+        })
         var csrftoken = getCookie('csrftoken');
+        console.log(csrftoken)
 
-        //const requestOptions = ;
+        // Post the log in data to the site with the cookie
         fetch(`http://localhost:8000/accounts/login/`, {
             method: 'POST',
             credentials: "include",
             headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
+                'Accept': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/x-www-form-urlencoded',
                 'X-CSRFToken': csrftoken || '',
-                "Access-Control-Allow-Origin": '*'
+                "Access-Control-Allow-Origin": 'http://localhost:3000',
+                "Access-Control-Allow-Credentials": "true",
             },
-            body: JSON.stringify({ username: username, password: password })
+            body: `csrfmiddlewaretoken=${csrftoken}&username=${username}&password=${password}`
 
         })
-            .then(response => response.json())
+            .then(response => response)
             .then(data => { console.log(data) }).catch(error => {
                 setLoading(false);
                 console.log(error)
