@@ -1,13 +1,11 @@
 # Util unit tests and API integration tests
+import ast
 
 from django.test import TransactionTestCase, TestCase, Client
 import api.utils as utils
 
 
 class UtilUnitTestCase(TestCase):
-    def sanity_check(self):
-        self.assertEqual(1, 1)
-
     def test_make_connection(self):
         con = utils.make_connection()
         self.assertIsNotNone(con)
@@ -96,11 +94,7 @@ class UtilUnitTestCase(TestCase):
 
 class NoParamRoutesTestCase(TransactionTestCase):
     def setUp(self):
-        # Setup run before every test method.
         self.c = Client()
-
-    def sanity_check(self):
-        self.assertEqual(1, 1)
 
     def test_get_api_root(self):
         response = self.c.get("/api/")
@@ -123,7 +117,6 @@ class RequestProfessionalSetTestCase(TransactionTestCase):
     endpoint = "/api/request_fetch_professional_set"
 
     def setUp(self):
-        # Setup run before every test method.
         self.c = Client()
 
     def test_request_professional_set_unsupported_methods(self):
@@ -223,7 +216,6 @@ class RequestSurgeryTestCase(TransactionTestCase):
     endpoint = "/api/fetch_surgery"
 
     def setUp(self):
-        # Setup run before every test method.
         self.c = Client()
 
     def test_request_surgery_unsupported_methods(self):
@@ -275,7 +267,6 @@ class RequestPatientTestCase(TransactionTestCase):
     endpoint = "/api/fetch_patient"
 
     def setUp(self):
-        # Setup run before every test method.
         self.c = Client()
 
     def test_request_patient_unsupported_methods(self):
@@ -327,7 +318,6 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
     endpoint = "/api/request_transfused_units"
 
     def setUp(self):
-        # Setup run before every test method.
         self.c = Client()
 
     def test_request_transfused_units_no_params(self):
@@ -550,7 +540,6 @@ class RiskScoreTestCase(TransactionTestCase):
     endpoint = "/api/risk_score"
 
     def setUp(self):
-        # Setup run before every test method.
         self.c = Client()
 
     def test_risk_score_unsupported_methods(self):
@@ -597,7 +586,6 @@ class PatientOutcomesTestCase(TransactionTestCase):
     endpoint = "/api/patient_outcomes"
 
     def setUp(self):
-        # Setup run before every test method.
         self.c = Client()
 
     def test_risk_score_unsupported_methods(self):
@@ -638,3 +626,116 @@ class PatientOutcomesTestCase(TransactionTestCase):
                 valid_option,
             )
             self.assertEqual(response.status_code, 200)
+
+
+class StateTestCase(TransactionTestCase):
+    endpoint = "/api/state"
+
+    def setUp(self):
+        self.c = Client()
+
+    def test_state_unsupported_methods(self):
+        response = self.c.head(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.options(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.patch(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.trace(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+    def test_state_post_valid_types(self):
+        valid_options = [
+            {"name": "test1", "definition": "this is a really long text string. this is a really long text string. "},
+            {"name": "test 2", "definition": "{'type': 'example json object', 'prop': 'value', 'list': []}"},
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.post(
+                self.endpoint,
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content.decode(), "state object created")
+
+    def test_state_get_valid_types(self):
+        # Post an example
+        valid_options = [
+            {"name": "test1", "definition": "this is a really long text string. this is a really long text string. "},
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.post(
+                self.endpoint,
+                valid_option,
+            )
+
+        # Get that data back
+        valid_options = [
+            {},
+            {"name": "test1"},
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.get(
+                self.endpoint,
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 200)
+
+    def test_state_update_valid_types(self):
+        # Make a valid state
+        valid_option = {"name": "test1", "definition": "{'type': 'example json object', 'prop': 'value', 'list': []}"}
+        response = self.c.post(self.endpoint, valid_option)
+
+        # Update that state changing definition, and then definition and name
+        valid_options = [
+            {"old_name": "test1", "new_name": "test1", "new_definition": "update1"},
+            {"old_name": "test1", "new_name": "test2", "new_definition": "update2"},
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.put(
+                self.endpoint,
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content.decode(), "state object updated")
+
+            response = self.c.get(
+                self.endpoint,
+                {"name": valid_option["new_name"]}
+            )
+            self.assertEqual(ast.literal_eval(response.content.decode())["definition"], valid_option["new_definition"])
+            self.assertEqual(ast.literal_eval(response.content.decode())["name"], valid_option["new_name"])
+
+    def test_state_delete_valid_types(self):
+        # Make a valid state
+        valid_option = {"name": "test1", "definition": "{'type': 'example json object', 'prop': 'value', 'list': []}"}
+        response = self.c.post(self.endpoint, valid_option)
+
+        # Delete that state 
+        valid_options = [
+            {"name": "test1"}
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.delete(
+                self.endpoint,
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content.decode(), "state object deleted")
+
+            response = self.c.get(
+                self.endpoint,
+                {}
+            )
+            self.assertEqual(ast.literal_eval(response.content.decode()),[])
+
+
+class LoginLogoutFlowTestCase(TransactionTestCase):
+    pass

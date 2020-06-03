@@ -15,7 +15,10 @@ django-cors-headers = "*"
 coverage = "*"
 
 [scripts]
+collectstatic = "python api/manage.py collectstatic"
 coverage-report = "coverage report"
 coverage-test = "coverage run --source='./api' api/manage.py test api"
+makemigrations = "python api/manage.py makemigrations api"
+migrate = "python api/manage.py migrate"
 serve = "python api/manage.py runserver"
 test = "python -c 'import os; os.system(\"pipenv run coverage-test ; pipenv run coverage-report\")'"
