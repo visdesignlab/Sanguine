@@ -15,7 +15,7 @@ interface AppProvenance {
     goForward: () => void;
     goBack: () => void;
     loadPreset: (num: number) => void;
-    setLayoutArray: (newLayoutArray: LayoutElement[]) => void;
+    // setLayoutArray: (newLayoutArray: LayoutElement[]) => void;
     // selectChart: (newSelectedID: string) => void;
     toggleShowZero: (event: any, data: any) => void;
     // togglePerCase: (event: any, data: any) => void;
@@ -126,18 +126,18 @@ export function setupProvenance(): AppProvenance {
 
   provenance.done();
 
-  const setLayoutArray = (layoutArray: LayoutElement[], skipProvenance: boolean = false) => {
-    if (skipProvenance) {
-      return
-    }
-    provenance.applyAction(
-      "Setting Layout Array",
-      (state: ApplicationState) => {
-        state.layoutArray = layoutArray;
-        return state;
-      }
-    )
-  }
+  // const setLayoutArray = (layoutArray: LayoutElement[], skipProvenance: boolean = false) => {
+  //   if (skipProvenance) {
+  //     return
+  //   }
+  //   provenance.applyAction(
+  //     "Setting Layout Array",
+  //     (state: ApplicationState) => {
+  //       state.layoutArray = layoutArray;
+  //       return state;
+  //     }
+  //   )
+  // }
 
   const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plot_type: string, interventionDate?: number, interventionChartType?: string) => {
 
@@ -175,13 +175,22 @@ export function setupProvenance(): AppProvenance {
       `change layout to chart ${data.i}`,
       //We use index here because the layout array should always have the same order as the layoutlement array
       (state: ApplicationState) => {
-        state.layoutArray = state.layoutArray.map((d, i) => {
-          d.w = data[i].w;
-          d.h = data[i].h;
-          d.x = data[i].x;
-          d.y = data[i].y;
-          return d
+        data.map((gridLayout: any) => {
+          let match = state.layoutArray.filter(d => d.i === gridLayout.i)[0]
+          match.w = gridLayout.w;
+          match.h = gridLayout.h;
+          match.x = gridLayout.x;
+          match.y = gridLayout.y;
         })
+        // state.layoutArray = state.layoutArray.map((d, i) => {
+        //   d.w = data[i].w;
+        //   d.h = data[i].h;
+        //   d.x = data[i].x;
+        //   d.y = data[i].y;
+        //   return d
+        // })
+        state.layoutArray = JSON.parse(JSON.stringify(state.layoutArray))
+        console.log(state.layoutArray, data)
         return state;
       }
     )
@@ -511,7 +520,7 @@ export function setupProvenance(): AppProvenance {
     actions: {
       goBack,
       goForward,
-      setLayoutArray,
+      // setLayoutArray,
       //selectChart,
       changeChart,
       toggleShowZero,
