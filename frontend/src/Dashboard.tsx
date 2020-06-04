@@ -15,7 +15,7 @@ import PatientComparisonWrapper from './Components/PatientComparisonWrapper';
 import UserControl from './Components/Utilities/UserControl';
 import SideBar from './Components/Utilities/SideBar';
 import styled from 'styled-components';
-import { Responsive as ResponsiveReactGridLayout } from "react-grid-layout";
+import { Responsive, WidthProvider } from "react-grid-layout";
 import './App.css'
 import 'react-grid-layout/css/styles.css'
 interface OwnProps {
@@ -28,6 +28,8 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
     const { layoutArray, dateRange } = store!;
 
     const [hemoData, setHemoData] = useState<any>([])
+
+    //  const ReactGridLayout = WidthProvider(Responsive)
 
     async function cacheHemoData() {
         const resHemo = await fetch("http://localhost:8000/api/hemoglobin");
@@ -206,13 +208,21 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
         xxs: 2
     };
 
+    const generateGrid = () => {
+        let output = layoutArray.map(d => ({ w: d.w, h: d.h, x: d.x, y: d.y, i: d.i }))
+        const newStuff = output.map(d => ({ ...d }))
+        console.log(newStuff)
+        return newStuff
+    }
+
     const panes = [{
         menuItem: 'Main', pane: <Tab.Pane key="Main">
             <Grid>
                 <GridColumn width={13}>
-                    <ResponsiveReactGridLayout
+                    <Responsive
                         onResizeStop={actions.onLayoutchange}
                         onDragStop={actions.onLayoutchange}
+                        // onLayoutChange={actions.onLayoutchange}
                         // onBreakpointChange={this._onBreakpointChange}
                         className="layout"
                         cols={colData}
@@ -220,12 +230,13 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                         width={1300}
                         //cols={2}
                         //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-                        layouts={{ md: layoutArray }}
+
+                        layouts={{ md: generateGrid() }}
                     >
                         {layoutArray.map((layoutE, i) => {
                             return createElement(layoutE, i);
                         })}
-                    </ResponsiveReactGridLayout>
+                    </Responsive>
                 </GridColumn>
                 <Grid.Column width={3}>
                     <DetailView />
