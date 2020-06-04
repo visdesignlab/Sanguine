@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useState, useRef } from "react";
 import Store from '../../Interfaces/Store'
 // import {}
-import { Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment, DropdownProps, Form, DropdownMenu, List } from 'semantic-ui-react'
+import { Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment, DropdownProps, Form, DropdownMenu, List, Input } from 'semantic-ui-react'
 import { inject, observer } from "mobx-react";
 import { actions, provenance } from '../..'
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
@@ -178,7 +178,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       </Menu.Item>
 
       <Menu.Item>
-        <Dropdown button text="Save, Share and Load">
+        <Dropdown button text="State Management">
           <Dropdown.Menu>
             <Dropdown.Item>
               <Dropdown selectOnBlur={false} text="Presets" >
@@ -274,14 +274,21 @@ const UserControl: FC<Props> = ({ store }: Props) => {
           </Modal.Content>
           <Modal.Actions>
             <Button disabled={stateName.length === 0} content="Save" positive onClick={() => {
-              // fetch(`http://localhost:8000/accounts/login/`, {
-              //   method: 'GET',
-              //   credentials: 'include',
-              // })
-              // var csrftoken = getCookie('csrftoken');
+
               const csrftoken = simulateAPIClick()
               if (listOfSavedState.includes(stateName)) {
-                //Write a PUT request instead of POST because 
+                fetch(`http://localhost:8000/api/state`, {
+                  method: `PUT`,
+                  credentials: "include",
+                  headers: {
+                    'Accept': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrftoken || '',
+                    "Access-Control-Allow-Origin": 'http://localhost:3000',
+                    "Access-Control-Allow-Credentials": "true",
+                  },
+                  body: JSON.stringify({ old_name: stateName, new_name: stateName, new_definition: provenance.exportState(false) })
+                })
               } else {
                 fetch(`http://localhost:8000/api/state`, {
                   method: 'POST',
