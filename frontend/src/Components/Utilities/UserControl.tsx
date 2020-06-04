@@ -41,7 +41,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const [stateName, setStateName] = useState("")
   const [listOfSavedState, setListOfSavedState] = useState<string[]>([])
   const [openManageStateModal, setOpenManageStateModal] = useState(false)
-
+  const [openRenameStateModal, setRenameStateModal] = useState(false)
 
 
 
@@ -218,13 +218,12 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 setOpenManageStateModal(true)
               }}
             />
-
-
           </Dropdown.Menu>
         </Dropdown>
 
+
         {/* Modal for Manage State */}
-        <Modal open={openManageStateModal} closeOnEscape={false} closeOnDimmerClick={false}>
+        <Modal open={openManageStateModal} >
           <Modal.Header content="Manage Saved States" />
           <Modal.Content>
             <List divided verticalAlign="middle">
@@ -233,7 +232,6 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                   <List.Content floated="right">
                     <Button onClick={() => {
                       const csrftoken = simulateAPIClick()
-                      //TODO What is the correct form of this?
                       fetch(`http://localhost:8000/api/state`, {
                         method: 'DELETE',
                         credentials: "include",
@@ -257,8 +255,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
           </Modal.Content>
           <Modal.Actions>
             <Button
-              content="Save"
-              positive
+              content="Close"
               onClick={() => { setOpenManageStateModal(false) }} />
           </Modal.Actions>
 
