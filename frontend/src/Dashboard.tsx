@@ -231,7 +231,7 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                         //cols={2}
                         //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
 
-                        layouts={{ md: generateGrid() }}
+                        layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
                     >
                         {layoutArray.map((layoutE, i) => {
                             return createElement(layoutE, i);
@@ -242,7 +242,7 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                     <DetailView />
                 </Grid.Column>
             </Grid>
-        </Tab.Pane>
+        </Tab.Pane >
     },
     {
         menuItem: 'LineUp', pane:
