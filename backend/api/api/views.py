@@ -318,7 +318,7 @@ def request_transfused_units(request):
             )
         ) LIMITED_SURG 
             ON LIMITED_SURG.DI_CASE_ID = TRNSFSD.DI_CASE_ID
-        WHERE TRNSFSD.DI_CASE_DATE BETWEEN :min_time AND :max_time 
+        WHERE LIMITED_SURG.DI_CASE_DATE BETWEEN :min_time AND :max_time 
         {pat_filters_safe_sql} {case_filters_safe_sql}
         {group_by}
         """
