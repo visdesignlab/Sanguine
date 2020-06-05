@@ -5,10 +5,9 @@ import React, {
 } from "react";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
-import Store from "../../Interfaces/Store";
-import { Message, List, Container, Button } from "semantic-ui-react";
-import { HIPAA_Sensitive, AxisLabelDict, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState";
-import { actions } from "../..";
+import Store from "../Interfaces/Store";
+import { Message, List } from "semantic-ui-react";
+import { HIPAA_Sensitive, AxisLabelDict, stateUpdateWrapperUseJSON } from "../Interfaces/ApplicationState";
 
 interface OwnProps {
     store?: Store;
@@ -16,7 +15,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const DetailView: FC<Props> = ({ store }: Props) => {
+const PatientComparisonWraper: FC<Props> = ({ store }: Props) => {
     const { currentSelectPatient, dateRange } = store!
 
     const [individualInfo, setIndividualInfo] = useState<any>(null)
@@ -90,22 +89,14 @@ const DetailView: FC<Props> = ({ store }: Props) => {
         }
         return result
     }
-
-
-
-
     return (
-        <Container>
-            <div style={{ visibility: individualInfo ? "visible" : "hidden" }}>
-                <Button floated="right" icon="close" circular compact size="mini" basic onClick={() => { actions.selectPatient(null) }} /></div>
-            <List>
 
-                {generate_List_Items()}
-            </List>
-        </Container>
-    )
+        <List>
+
+            {generate_List_Items()}
+        </List>)
 }
 
 
-export default inject("store")(observer(DetailView));
+export default inject("store")(observer(PatientComparisonWraper));
 
