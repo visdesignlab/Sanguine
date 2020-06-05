@@ -29,7 +29,7 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
         layoutArray,
         filterSelection,
         showZero,
-        currentSelectPatient,
+        currentSelectPatientGroup,
         rawDateRange,
         dateRange
     } = store!;
@@ -88,12 +88,12 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
         // const castInterventionDate = (typeof interventionDate === "string") ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate
 
         const preIntervention = await fetch(
-            `http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${[dateRange[0], timeFormat("%d-%b-%Y")(new Date(interventionDate))]}&filter_selection=${filterSelection.toString()}`
+            `http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${[dateRange[0], timeFormat("%d-%b-%Y")(new Date(interventionDate))]}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`
         );
         const preInterventiondataResult = await preIntervention.json();
 
         const postIntervention = await fetch(
-            `http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${[timeFormat("%d-%b-%Y")(new Date(interventionDate)), dateRange[1]]}&filter_selection=${filterSelection.toString()}`
+            `http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${[timeFormat("%d-%b-%Y")(new Date(interventionDate)), dateRange[1]]}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`
         )
         const postInterventionResult = await postIntervention.json();
         let caseCount = 0;
@@ -331,7 +331,7 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
 
     useEffect(() => {
         fetchChartData();
-    }, [filterSelection, dateRange, aggregatedBy, showZero, valueToVisualize]);
+    }, [filterSelection, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroup]);
 
 
     //{ name: string,totalIntData:any[], preIntData: any[], postIntData: any[], type: string, kdeMax?: number, medianSet?: any }

@@ -26,7 +26,7 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
     layoutArray,
     filterSelection,
     showZero,
-    currentSelectPatient,
+    currentSelectPatientGroup,
     // actualYearRange,
     dateRange,
 
@@ -73,7 +73,7 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
 
   async function fetchChartData() {
     const res = await fetch(
-      `http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
+      `http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`
     );
     const dataResult = await res.json();
     let caseCount = 0;
@@ -171,7 +171,7 @@ const BarChartVisualization: FC<Props> = ({ hemoglobinDataSet, aggregatedBy, val
   useEffect(() => {
     fetchChartData();
 
-  }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize]);
+  }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroup]);
 
   // useEffect(()=>{console.log(caseIDList)},[caseIDList])
 

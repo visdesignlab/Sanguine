@@ -52,7 +52,11 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
                 caseList.push(d.case.caseId)
             }
         })
-        actions.updateSelectedPatientGroup(caseList)
+        if (caseList.length > 1000) {
+            updateBrushLoc(null)
+        } else {
+            actions.updateSelectedPatientGroup(caseList)
+        }
     }, [brushLoc])
     //  let numberList: { num: number, indexEnding: number }[] = [];
     // if (data.length > 0) {

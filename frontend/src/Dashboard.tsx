@@ -211,7 +211,6 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
     const generateGrid = () => {
         let output = layoutArray.map(d => ({ w: d.w, h: d.h, x: d.x, y: d.y, i: d.i }))
         const newStuff = output.map(d => ({ ...d }))
-        console.log(newStuff)
         return newStuff
     }
 

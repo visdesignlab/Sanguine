@@ -190,7 +190,6 @@ export function setupProvenance(): AppProvenance {
         //   return d
         // })
         state.layoutArray = JSON.parse(JSON.stringify(state.layoutArray))
-        console.log(state.layoutArray, data)
         return state;
       }
     )
