@@ -8,17 +8,20 @@ export interface InterventionDataPoint {
   aggregateAttribute: any;
   preInKdeCal: any[];
   postInKdeCal: any[];
-  totalVal: number;
-
+  preTotalVal: number;
+  postTotalVal: number;
   preCaseCount: number;
   postCaseCount: number;
-
   preInMedian: number;
   postInMedian: number;
   preCountDict: any;
   postCountDict: any;
-  zeroCaseNum: number;
+  preZeroCaseNum: number;
+  postZeroCaseNum: number;
+  prePatienIDList: number[];
+  postPatienIDList: number[];
 }
+
 export interface BarChartDataPoint {
   aggregateAttribute: any;
   kdeCal: any[];
@@ -27,6 +30,7 @@ export interface BarChartDataPoint {
   caseCount: number;
   median: number;
   zeroCaseNum: number;
+  patienIDList: number[];
 }
 
 export interface HeatMapDataPoint {
@@ -35,6 +39,7 @@ export interface HeatMapDataPoint {
   totalVal: number;
   caseCount: number;
   zeroCaseNum: number;
+  patientIDList: number[];
 }
 
 export interface SingleCasePoint {
@@ -46,7 +51,6 @@ export interface SingleCasePoint {
   patientID: number;
   DATE: Date;
   [key: string]: number | Date;
-
 }
 export interface ScatterDataPoint {
   xVal: number;
@@ -64,7 +68,7 @@ export interface DumbbellDataPoint {
 
 export interface ApplicationState {
   layoutArray: LayoutElement[];
-  currentSelectedChart: string;
+  //  currentSelectedChart: string;
   // perCaseSelected: boolean;
   // yearRange: number[];
   rawDateRange: number[];
@@ -77,6 +81,8 @@ export interface ApplicationState {
   currentSelectPatient: SingleCasePoint | null;
   //hemoglobinDataSet: any;
   showZero: boolean;
+  currentSelectPatientGroup: number[];
+  nextAddingIndex: number;
 }
 
 export interface LayoutElement {
@@ -89,14 +95,14 @@ export interface LayoutElement {
   h: number,
   plot_type: string,
   //  aggregation?: string,
-  extraPair?: string[],
+  extraPair?: string,
   interventionDate?: number,
   interventionType?: string
 }
 
 export const defaultState: ApplicationState = {
   layoutArray: [],
-  currentSelectedChart: "-1",
+  // currentSelectedChart: "-1",
   rawDateRange: [new Date(2014, 0, 1).getTime(), new Date(2019, 11, 31).getTime()],
   filterSelection: [],
   totalAggregatedCaseCount: 0,
@@ -104,8 +110,9 @@ export const defaultState: ApplicationState = {
   currentOutputFilterSet: [],
   currentSelectSet: [],
   currentSelectPatient: null,
-  //hemoglobinDataSet: [],
-  showZero: true
+  nextAddingIndex: 0,
+  showZero: true,
+  currentSelectPatientGroup: []
 };
 
 export const offset = {
@@ -115,10 +122,20 @@ export const offset = {
 
 };
 
-
+export const extraPairOptions = [
+  { title: "Preop Hemoglobin", value: "Preop Hemo" },
+  { title: "Postop Hemoglobin", value: "Postop Hemo" },
+  { title: "Total Transfusion", value: "Total Transfusion" },
+  { title: "Per Case Transfusion", value: "Per Case" },
+  { title: "Zero Transfusion Cases", value: "Zero Transfusion" },
+  { title: "Risk Score", value: "RISK" },
+  // { title: "Severity of Illness", value: "SOI" },
+  { title: "Mortality Rate", value: "Mortality" },
+  { title: "Ventilation Rate", value: "Vent" }
+]
 
 //export const minimumOffset = 
-export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 30 }
+export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 30, Outcomes: 35 }
 export const extraPairPadding = 5;
 export const minimumWidthScale = 18;
 
@@ -135,7 +152,10 @@ export const AxisLabelDict: any = {
   MONTH: "Month",
   HEMO_VALUE: "Hemoglobin Value",
   PREOP_HEMO: "Preoperative Hemoglobin Value",
-  POSTOP_HEMO: "Postoperative Hemoglobin Value"
+  POSTOP_HEMO: "Postoperative Hemoglobin Value",
+  ROM: "Risk of Mortality",
+  SOI: "Severity of Illness",
+  Vent: "Ventilator Over 1440 min"
 };
 
 export const BloodProductCap: any = {
@@ -145,6 +165,30 @@ export const BloodProductCap: any = {
   PLT_UNITS: 10,
   CELL_SAVER_ML: 1000
 }
+
+export const CELL_SAVER_TICKS = ["0", "0-1h", "1h-2h", "2h-3h", "3h-4h", "4h-5h", "5h-6h", "6h-7h", "7h-8h", "8h-9h", "9h-1k", "1k+"]
+
+export const presetOptions = [{ value: 1, key: 1, text: "Preset 1" }]
+
+
+export const scatterXOptions = [
+  {
+    value: "PREOP_HEMO",
+    key: "PREOP_HEMO",
+    text: "Preoperative Hemoglobin Value"
+  },
+  {
+    value: "POSTOP_HEMO",
+    key: "POSTOP_HEMO",
+    text: "Postoperative Hemoglobin Value"
+  }
+]
+
+export const typeDiction = ["VIOLIN", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION"]
+
+export const dumbbellValueOptions = [
+  { value: "HEMO_VALUE", key: "HEMO_VALUE", text: "Hemoglobin Value" }
+]
 
 export const dumbbellFacetOptions = [
   { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
@@ -211,4 +255,28 @@ export const HIPAA_Sensitive = new Set([
   "Ethnicity Code",
   "Ethnicity Description",
   "Date of Death",
-  "Date of Birth"])
+  "Date of Birth",
+  "Surgery Date",
+  "Surgery Start Time",
+  "Surgery End Time"
+])
+
+export const Accronym = {
+  CABG: "Coronary Artery Bypass Grafting",
+  TAVR: "Transcatheter Aortic Valve Replacement",
+  VAD: "Ventricular Assist Devices",
+  AVR: "Aortic Valve Replacement",
+  ECMO: "Extracorporeal Membrane Oxygenation",
+  MVR: "Mitral Valve Repair",
+  EGD: "Esophagogastroduodenoscopy",
+  VATS: "Video-assisted Thoracoscopic Surgery",
+  TVR: "Tricuspid Valve Repair",
+  PVR: "Proliferative Vitreoretinopathy"
+}
+
+export const stateUpdateWrapperUseJSON = (oldState: any, newState: any, updateFunction: (value: React.SetStateAction<any>) => void) => {
+  if (JSON.stringify(oldState) !== JSON.stringify(newState)) {
+    updateFunction(newState)
+  }
+}
+

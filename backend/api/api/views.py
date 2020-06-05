@@ -1,12 +1,15 @@
-import json
+import ast
 import cx_Oracle
 import csv
+import json
 
 from collections import Counter
 from functools import reduce
 from operator import add
-from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed
+from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed, QueryDict
+from django.forms.models import model_to_dict
 from api.utils import make_connection, data_dictionary, cpt, execute_sql, get_all_by_agg, get_filters, output_quarter
+from api.models import State
 
 
 DE_IDENT_FIELDS = {
@@ -409,7 +412,6 @@ def test_results(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
-# Takes in a patient_id and, returns their APR_DRG information
 def risk_score(request):
     if request.method == "GET":
         patient_ids = request.GET.get("patient_ids") or ""
@@ -506,9 +508,6 @@ def patient_outcomes(request):
         return JsonResponse(result_list, safe = False)
     else:
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
-
-
-
 
 
 def hemoglobin(request):
@@ -636,3 +635,63 @@ def hemoglobin(request):
         return JsonResponse({"result": items})
     else:
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
+
+
+def state(request):
+    if request.method == "GET":
+        # Get the name from the querystring
+        name = request.GET.get("name")
+
+        if name:
+            # Get the object from the database
+            result = State.objects.get(name = name)
+
+            # Return the json for the state
+            return JsonResponse(model_to_dict(result))
+
+        else:
+            # Get the names of all the state objects
+            states = State.objects.all().values_list()
+
+            # Return the names as a list
+            return JsonResponse(list(states), safe = False)
+    
+    elif request.method == "POST":
+        # Get the name and definition from the request
+        name = request.POST.get("name")
+        definition = request.POST.get("definition")
+
+        # Create and save the new State object
+        new_state = State(name = name, definition = definition)
+        new_state.save()
+
+        return HttpResponse("state object created", 200)
+
+    elif request.method == "PUT":
+        # Get the required information from the request body
+        put = ast.literal_eval(request.body.decode())
+        old_name = put.get("old_name")
+        new_name = put.get("new_name")
+        new_definition = put.get("new_definition")
+
+        # Update the State object and save
+        result = State.objects.get(name = old_name)
+        result.name = new_name
+        result.definition = new_definition
+        result.save()
+
+        return HttpResponse("state object updated", 200)
+
+    elif request.method == "DELETE":
+        # Get the required information from the request body
+        delete = ast.literal_eval(request.body.decode())
+        name = delete.get("name")
+
+        # Delete the matching State obejct
+        result = State.objects.get(name = name)
+        result.delete()
+
+        return HttpResponse("state object deleted", 200)
+
+    else: 
+        return HttpResponseNotAllowed(["GET", "POST", "PUT", "DELETE"], "Method Not Allowed")

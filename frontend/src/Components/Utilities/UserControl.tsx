@@ -1,17 +1,17 @@
 import React, { FC, useEffect, useState, useRef } from "react";
 import Store from '../../Interfaces/Store'
 // import {}
-import { Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment } from 'semantic-ui-react'
+import { Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment, DropdownProps, Form, DropdownMenu, List, Input } from 'semantic-ui-react'
 import { inject, observer } from "mobx-react";
 import { actions, provenance } from '../..'
-import { Slider } from 'react-semantic-ui-range';
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
 import { timeFormat } from "d3";
 import { blood_red } from "../../ColorProfile";
-import { barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions, interventionChartType } from "../../Interfaces/ApplicationState";
+import { barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions, interventionChartType, presetOptions, stateUpdateWrapperUseJSON, dumbbellValueOptions, scatterXOptions, typeDiction } from "../../Interfaces/ApplicationState";
 import ClipboardJS from 'clipboard';
-
+import { NavLink } from 'react-router-dom'
+import { getCookie } from "../../Interfaces/UserManagement";
 interface OwnProps {
   store?: Store;
 }
@@ -24,20 +24,26 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     isAtLatest,
     showZero,
     rawDateRange,
-    //  perCaseSelected,
-    //yearRange,
-    //  dumbbellSorted
+    nextAddingIndex
   } = store!;
-  //  const [procedureList, setProcedureList] = useState({ result: [] })
+
   const urlRef = useRef(null);
   const [addMode, setAddMode] = useState(false);
   const [addingChartType, setAddingChartType] = useState(-1)
   const [xSelection, setXSelection] = useState("")
   const [ySelection, setYSelection] = useState("")
   const [interventionDate, setInterventionDate] = useState<number | undefined>(undefined)
-  const [elementCounter, addToElementCounter] = useState(0)
+  // const [elementCounter, addToElementCounter] = useState(0)
   const [interventionPlotType, setInterventionPlotType] = useState<string | undefined>(undefined)
-  const [shareUrl, setShareUrl] = useState(window.location.href)
+  const [shareUrl, setShareUrl] = useState(window.location.href);
+  const [openShareModal, setOpenShareModal] = useState(false);
+  const [openSaveStateModal, setOpenSaveStateModal] = useState(false)
+  const [stateName, setStateName] = useState("")
+  const [listOfSavedState, setListOfSavedState] = useState<string[]>([])
+  const [openManageStateModal, setOpenManageStateModal] = useState(false)
+  const [openRenameStateModal, setRenameStateModal] = useState(false)
+
+
 
   new ClipboardJS(`.copy-clipboard`);
   const onDateChange = (event: any, data: any) => {
@@ -48,29 +54,24 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     }
   }
 
-
-
-
-
-  const scatterXOptions = [
-    {
-      value: "PREOP_HEMO",
-      key: "PREOP_HEMO",
-      text: "Preoperative Hemoglobin Value"
-    },
-    {
-      value: "POSTOP_HEMO",
-      key: "POSTOP_HEMO",
-      text: "Postoperative Hemoglobin Value"
+  async function fetchSavedStates() {
+    const res = await fetch(`http://localhost:8000/api/state`)
+    const result = await res.json()
+    if (result) {
+      const resultList = result.map((d: any[]) => d[1])
+      stateUpdateWrapperUseJSON(listOfSavedState, resultList, setListOfSavedState)
     }
-  ]
+  }
 
-  const dumbbellValueOptions = [
-    { value: "HEMO_VALUE", key: "HEMO_VALUE", text: "Hemoglobin Value" }
-  ]
+  useEffect(() => {
+    fetchSavedStates()
+  }, [])
 
-
-
+  const loadSavedState = async (name: string) => {
+    const res = await (fetch(`http://localhost:8000/api/state?name=${name}`))
+    const result = await res.json()
+    provenance.importState(result.definition)
+  }
 
 
   const addOptions = [
@@ -79,11 +80,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     [scatterXOptions, barChartValuesOptions],
     [barChartValuesOptions, barChartAggregationOptions],
     [barChartValuesOptions, barChartAggregationOptions]
-
   ]
-  const typeDiction = ["VIOLIN", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION"]
-
-
 
 
   const addModeButtonHandler = (chartType: number) => {
@@ -100,8 +97,6 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     }
   }
 
-
-
   const xAxisChangeHandler = (e: any, value: any) => {
     setXSelection(value.value)
   }
@@ -117,19 +112,28 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
   const confirmChartAddHandler = () => {
     if (xSelection && ySelection && addingChartType > -1) {
-      addToElementCounter(elementCounter + 1)
-      actions.addNewChart(xSelection, ySelection, elementCounter, typeDiction[addingChartType], interventionDate, interventionPlotType)
+      // addToElementCounter(elementCounter + 1)
+      actions.addNewChart(xSelection, ySelection, nextAddingIndex, typeDiction[addingChartType], interventionDate, interventionPlotType)
       setAddMode(false);
       setAddingChartType(-1)
       setInterventionDate(undefined);
       setInterventionPlotType(undefined);
     }
-
   }
 
   const cancelChartAddHandler = () => {
     setAddMode(false);
   }
+
+  const simulateAPIClick = () => {
+    fetch(`http://localhost:8000/accounts/login/`, {
+      method: 'GET',
+      credentials: 'include',
+    })
+    var csrftoken = getCookie('csrftoken');
+    return csrftoken
+  }
+
 
 
   const regularMenu = (
@@ -172,34 +176,143 @@ const UserControl: FC<Props> = ({ store }: Props) => {
           label={<label> Show Zero Transfused </label>}
         />
       </Menu.Item>
+
       <Menu.Item>
-        <Dropdown button text="Load Workspace" pointing>
+        <Dropdown button text="State Management">
           <Dropdown.Menu>
-            <Dropdown.Item onClick={() => { actions.loadPreset(1) }}>Preset 1</Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
-      </Menu.Item>
-      {/* <Menu.Item>
-                <Checkbox toggle checked={dumbbellSorted} onClick={actions.toggleDumbbell}/>
-          <label> Sort Dumbbell</label>
-        </Menu.Item> */}
-      <Menu.Item>
-        <Modal
-          trigger={
-            <Button
-              onClick={() =>
+            <Dropdown.Item>
+              <Dropdown selectOnBlur={false} text="Presets" >
+                <Dropdown.Menu>
+                  {presetOptions.map((d: { value: number, text: string }) => {
+                    return (<Dropdown.Item onClick={() => { actions.loadPreset(d.value) }} content={d.text} />)
+                  })}
+                </Dropdown.Menu>
+              </Dropdown>
+            </Dropdown.Item>
+            <Dropdown.Item>
+              <Dropdown selectOnBlur={false} text="Saved"  >
+                <Dropdown.Menu>
+                  {listOfSavedState.map((d) => {
+                    return (<Dropdown.Item onClick={() => { loadSavedState(d) }} content={d} />)
+                  })}
+                </Dropdown.Menu>
+              </Dropdown>
+
+            </Dropdown.Item>
+
+            <Dropdown.Item icon="share alternate"
+              content="Share"
+              onClick={() => {
                 setShareUrl(
                   //Kiran says there is a bug with the exportState, so using exportState(false) for now
                   `${window.location.href}#${provenance.exportState(false)}`,
-                )
+                );
+                setOpenShareModal(true)
+              }}
+            />
+            <Dropdown.Item icon="save" content="Save State"
+              onClick={() => { setOpenSaveStateModal(true) }} />
+
+            <Dropdown.Item icon="setting" content="Manage Saved States"
+              onClick={() => {
+                setOpenManageStateModal(true)
+              }}
+            />
+          </Dropdown.Menu>
+        </Dropdown>
+
+
+        {/* Modal for Manage State */}
+        <Modal open={openManageStateModal} >
+          <Modal.Header content="Manage Saved States" />
+          <Modal.Content>
+            <List divided verticalAlign="middle">
+              {listOfSavedState.map((d) => {
+                return (<List.Item>
+                  <List.Content floated="right">
+                    <Button onClick={() => {
+                      const csrftoken = simulateAPIClick()
+                      fetch(`http://localhost:8000/api/state`, {
+                        method: 'DELETE',
+                        credentials: "include",
+                        headers: {
+                          'Accept': 'application/x-www-form-urlencoded',
+                          'Content-Type': 'application/x-www-form-urlencoded',
+                          'X-CSRFToken': csrftoken || '',
+                          "Access-Control-Allow-Origin": 'http://localhost:3000',
+                          "Access-Control-Allow-Credentials": "true",
+                        },
+                        body: JSON.stringify({ name: d })
+                      }).then(() => { fetchSavedStates() })
+                    }}
+                      content="Delete" />
+                  </List.Content>
+                  <List.Content verticalAlign="middle" content={d} />
+                </List.Item>)
+              })}
+
+            </List>
+          </Modal.Content>
+          <Modal.Actions>
+            <Button
+              content="Close"
+              onClick={() => { setOpenManageStateModal(false) }} />
+          </Modal.Actions>
+
+        </Modal>
+
+        {/* Modal for Saving State, has a form input */}
+        <Modal open={openSaveStateModal} closeOnEscape={false} closeOnDimmerClick={false}>
+          <Modal.Header content="Save the current state" />
+          <Modal.Content>
+            <Form>
+              <Form.Input label="Name of State" onChange={(e, d) => { setStateName(d.value) }} />
+            </Form>
+          </Modal.Content>
+          <Modal.Actions>
+            <Button disabled={stateName.length === 0} content="Save" positive onClick={() => {
+
+              const csrftoken = simulateAPIClick()
+              if (listOfSavedState.includes(stateName)) {
+                fetch(`http://localhost:8000/api/state`, {
+                  method: `PUT`,
+                  credentials: "include",
+                  headers: {
+                    'Accept': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrftoken || '',
+                    "Access-Control-Allow-Origin": 'http://localhost:3000',
+                    "Access-Control-Allow-Credentials": "true",
+                  },
+                  body: JSON.stringify({ old_name: stateName, new_name: stateName, new_definition: provenance.exportState(false) })
+                })
+              } else {
+                fetch(`http://localhost:8000/api/state`, {
+                  method: 'POST',
+                  credentials: "include",
+                  headers: {
+                    'Accept': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrftoken || '',
+                    "Access-Control-Allow-Origin": 'http://localhost:3000',
+                    "Access-Control-Allow-Credentials": "true",
+                  },
+                  body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&definition=${provenance.exportState(false)}`
+                })
+                  .then(() => { fetchSavedStates() })
               }
-              icon
-              labelPosition="left"
-              primary>
-              <Icon name="share alternate"></Icon>
-                   Share
-                 </Button>
-          }>
+              setOpenSaveStateModal(false)
+              setStateName("")
+            }} />
+            <Button content="Cancel" onClick={() => { setOpenSaveStateModal(false) }} />
+          </Modal.Actions>
+        </Modal>
+
+        {/* Modal for sharing state.   */}
+        <Modal
+          open={openShareModal}
+          onClose={() => { setOpenShareModal(false) }}
+        >
           <Modal.Header>
             Use the following URL to share your state
                </Modal.Header>
@@ -219,14 +332,18 @@ const UserControl: FC<Props> = ({ store }: Props) => {
               data-clipboard-text={shareUrl}>
               <Icon name="copy"></Icon>
                    Copy
-                 </Button>
+            </Button>
           </Modal.Actions>
         </Modal>
+
+      </Menu.Item>
+      <Menu.Item>
+        <NavLink component={Button} to="/" onClick={() => { store!.isLoggedIn = false; }} >
+          Log Out
+        </NavLink>
       </Menu.Item>
     </Menu>
   );
-
-
 
   const addBarChartMenu = (
     <Menu widths={5}>
