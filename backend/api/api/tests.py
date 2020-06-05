@@ -500,19 +500,19 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             { # One filter_selection
                 "transfusion_type": "PRBC_UNITS", 
                 "date_range": "01-JAN-2016,31-DEC-2017", 
-                "filter_selection": "MUSCULOSKELETAL THORACIC PROCEDURE",
+                "filter_selection": "Musculoskeletal Thoracic Procedure",
             },
             { # Multiple filter_selection
                 "transfusion_type": "PRBC_UNITS", 
                 "date_range": "01-JAN-2016,31-DEC-2017", 
-                "filter_selection": "MUSCULOSKELETAL THORACIC PROCEDURE,THORACOTOMY/LUNG PROCEDURE",
+                "filter_selection": "Musculoskeletal Thoracic Procedure,Thoracotomy/Lung Procedure",
             },
             { # Full example
                 "transfusion_type": "PRBC_UNITS", 
                 "date_range": "01-JAN-2016,31-DEC-2017", 
                 "patient_ids": "68175619,14711172,35383429,632559101",
                 "case_ids": "85103152",
-                "filter_selection": "MUSCULOSKELETAL THORACIC PROCEDURE,THORACOTOMY/LUNG PROCEDURE",
+                "filter_selection": "Musculoskeletal Thoracic Procedure,Thoracotomy/Lung Procedure",
                 "aggregated_by": "YEAR",
             },
             { # Full example ALL_UNITS - no agg
@@ -520,7 +520,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
                 "date_range": "01-JAN-2016,31-DEC-2017", 
                 "patient_ids": "68175619,14711172,35383429,632559101",
                 "case_ids": "85103152",
-                "filter_selection": "MUSCULOSKELETAL THORACIC PROCEDURE,THORACOTOMY/LUNG PROCEDURE",
+                "filter_selection": "Musculoskeletal Thoracic Procedure,Thoracotomy/Lung Procedure",
             },
         ]
 
