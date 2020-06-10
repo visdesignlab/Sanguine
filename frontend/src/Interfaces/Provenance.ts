@@ -25,6 +25,8 @@ interface AppProvenance {
     clearOutputFilterSet: (target?: string) => void;
     clearSelectSet: (target?: string) => void;
 
+    changeNotation: (chartID: string, notation: string) => void;
+
     // yearRangeChange: (data: any) => void;
     dateRangeChange: (data: any) => void;
 
@@ -150,6 +152,7 @@ export function setupProvenance(): AppProvenance {
       x: 0,
       y: Infinity,
       plot_type: plot_type,
+      notation: ""
     }
     if (plot_type === "VIOLIN" || plot_type === "HEATMAP" || plot_type === "INTERVENTION") {
       newLayoutElement.extraPair = JSON.stringify([]);
@@ -211,6 +214,7 @@ export function setupProvenance(): AppProvenance {
                 x: 0,
                 y: Infinity,
                 plot_type: "VIOLIN",
+                notation: "",
                 extraPair: JSON.stringify([])
               },
               {
@@ -221,6 +225,7 @@ export function setupProvenance(): AppProvenance {
                 h: 1,
                 x: 0,
                 y: Infinity,
+                notation: "",
                 plot_type: "VIOLIN",
                 extraPair: JSON.stringify([])
               }, {
@@ -230,6 +235,7 @@ export function setupProvenance(): AppProvenance {
                 w: 1,
                 h: 1,
                 x: 0,
+                notation: "",
                 y: Infinity,
                 plot_type: "DUMBBELL"
               }]
@@ -275,6 +281,19 @@ export function setupProvenance(): AppProvenance {
         return state
       }
     )
+  }
+
+  const changeNotation = (chartID: string, notation: string) => {
+    provenance.applyAction(`Change notation ${chartID}`,
+      (state: ApplicationState) => {
+        state.layoutArray = state.layoutArray.map(d => {
+          if (d.i === chartID) {
+            d.notation = notation;
+          }
+          return d;
+        })
+        return state
+      })
   }
 
   // const selectChart = (chartID: string) => {
@@ -528,6 +547,7 @@ export function setupProvenance(): AppProvenance {
 
       //  yearRangeChange,
       dateRangeChange,
+      changeNotation,
 
       addNewChart,
       removeChart,
