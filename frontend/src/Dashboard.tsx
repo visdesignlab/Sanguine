@@ -116,6 +116,7 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                             chartId={layout.i}
                             chartIndex={index}
                             hemoglobinDataSet={hemoData}
+                            notation={layout.notation}
                         //     interventionDate={layout.interventionDate}
                         // aggregatedOption={layout.aggregation}
                         />
@@ -139,6 +140,7 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                             chartId={layout.i}
                             chartIndex={index}
                             extraPair={layout.extraPair}
+                            notation={layout.notation}
                         />
                     </div>
                 );
@@ -158,6 +160,8 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                         // class_name={"parent-node" + layoutE.i}
                         chartId={layout.i}
                         chartIndex={index}
+
+                        notation={layout.notation}
                     />
                 </div>);
 
@@ -178,6 +182,7 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                         chartId={layout.i}
                         chartIndex={index}
                         extraPair={layout.extraPair}
+                        notation={layout.notation}
                     />
                 </div>);
 
@@ -193,7 +198,8 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                         chartId={layout.i}
                         chartIndex={index}
                         interventionDate={layout.interventionDate!}
-                        interventionPlotType={layout.interventionType!} />
+                        interventionPlotType={layout.interventionType!}
+                        notation={layout.notation} />
                 </div>);
 
         }
@@ -225,7 +231,7 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                         // onBreakpointChange={this._onBreakpointChange}
                         className="layout"
                         cols={colData}
-                        rowHeight={300}
+                        rowHeight={500}
                         width={1300}
                         //cols={2}
                         //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}

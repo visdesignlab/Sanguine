@@ -9,8 +9,8 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { ScatterDataPoint, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState";
-import { Grid } from "semantic-ui-react";
+import { ScatterDataPoint, stateUpdateWrapperUseJSON, scatterYOptions, barChartValuesOptions, ChartSVG } from "../../Interfaces/ApplicationState";
+import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import ScatterPlotChart from "./ScatterPlot";
 
 interface OwnProps {
@@ -19,13 +19,14 @@ interface OwnProps {
     chartId: string;
     store?: Store;
     chartIndex: number;
+    notation: string;
     hemoglobinDataSet: any;
     // aggregatedOption?: string;
 }
 
 export type Props = OwnProps;
 
-const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, chartIndex, store }: Props) => {
+const ScatterPlotVisualization: FC<Props> = ({ notation, chartId, hemoglobinDataSet, yAxis, xAxis, chartIndex, store }: Props) => {
     const {
         layoutArray,
         filterSelection,
@@ -43,8 +44,8 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
     const [xMax, setXMax] = useState(0);
     const [yMin, setYMin] = useState(0);
     const [yMax, setYMax] = useState(0);
-    // const [yRange, setYRange] = useState({ yMin: 0, yMax: Infinity });
-    // const [xRange, setXRange] = useState({ xMin: 0, xMax: Infinity });
+    const [openNotationModal, setOpenNotationModal] = useState(false)
+    const [notationInput, setNotationInput] = useState(notation)
 
     useLayoutEffect(() => {
         if (svgRef.current) {
@@ -132,10 +133,70 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
         fetchChartData();
     }, [dateRange, filterSelection, showZero, hemoglobinDataSet, yAxis, xAxis]);
 
-    return (<Grid style={{ height: "100%" }}>
-        <Grid.Column width={16}  >
-            <SVG ref={svgRef}>
-                {/* <text
+    const changeYAxis = (e: any, value: any) => {
+
+        actions.changeChart(xAxis, value.value, chartId, "SCATTER")
+    }
+    const changeXAxis = (e: any, value: any) => {
+        actions.changeChart(value.value, yAxis, chartId, "SCATTER")
+    }
+
+    return (
+
+        <Grid style={{ height: "100%" }}>
+            <Grid.Row >
+                <Grid.Column verticalAlign="middle" width={1}>
+                    <Menu icon vertical compact size="mini" borderless secondary widths={2}>
+
+                        <Menu.Item header>
+                            <Dropdown selectOnBlur={false} pointing basic item icon="settings" compact >
+                                <Dropdown.Menu>
+                                    <Dropdown text="Change X-Axis" pointing basic item compact options={barChartValuesOptions} onChange={changeXAxis} />
+                                    <Dropdown text="Change Y-Axis" pointing basic item compact options={scatterYOptions} onChange={changeYAxis} />
+
+
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        </Menu.Item>
+                        <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
+                            <Icon name="edit" />
+                        </Menu.Item>
+
+                        {/* Modal for annotation. */}
+                        <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
+                            <Modal.Header>
+                                Set the annotation for chart
+              </Modal.Header>
+                            <Modal.Content>
+                                <Form>
+                                    <Form.TextArea autoFocus
+                                        value={notationInput}
+                                        label="Notation"
+                                        onChange={(e, d) => {
+                                            if (typeof d.value === "number") {
+                                                setNotationInput((d.value).toString() || "")
+                                            } else {
+                                                setNotationInput(d.value || "")
+                                            }
+                                        }
+                                        }
+                                    />
+                                </Form>
+                            </Modal.Content>
+                            <Modal.Actions>
+                                <Button content="Save" positive onClick={() => { setOpenNotationModal(false); actions.changeNotation(chartId, notationInput); }} />
+                                <Button content="Cancel" onClick={() => { setOpenNotationModal(false) }} />
+                            </Modal.Actions>
+                        </Modal>
+
+
+
+
+                    </Menu>
+                </Grid.Column>
+                <Grid.Column width={15}  >
+                    <ChartSVG ref={svgRef}>
+                        {/* <text
           x="0"
           y="0"
           style={{
@@ -145,27 +206,26 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
         >
           chart # ${chartId}
         </text> */}
-                <ScatterPlotChart
-                    svg={svgRef}
-                    yAxisName={yAxis}
-                    xAxisName={xAxis}
-                    data={data}
-                    width={width}
-                    height={height}
-                    xMax={xMax}
-                    xMin={xMin}
-                    yMax={yMax}
-                    yMin={yMin}
+                        <ScatterPlotChart
+                            svg={svgRef}
+                            yAxisName={yAxis}
+                            xAxisName={xAxis}
+                            data={data}
+                            width={width}
+                            height={height}
+                            xMax={xMax}
+                            xMin={xMin}
+                            yMax={yMax}
+                            yMin={yMin}
 
-                />
-            </SVG>
-        </Grid.Column>
-    </Grid>)
+                        />
+                    </ChartSVG>
+
+                    <Message hidden={notation.length === 0} color="green">{notation}</Message>
+
+                </Grid.Column>
+            </Grid.Row>
+        </Grid>)
 }
 
 export default inject("store")(observer(ScatterPlotVisualization));
-
-const SVG = styled.svg`
-  height: 100%;
-  width: 100%;
-`;

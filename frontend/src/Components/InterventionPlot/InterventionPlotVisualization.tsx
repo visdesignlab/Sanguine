@@ -3,9 +3,9 @@ import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { InterventionDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON } from '../../Interfaces/ApplicationState'
+import { InterventionDataPoint, BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON, ChartSVG } from '../../Interfaces/ApplicationState'
 
-import { Grid, Dropdown, Menu } from "semantic-ui-react";
+import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
 import { sum, median, timeFormat, timeParse } from "d3";
 import InterventionPlot from "./InterventionPlot";
@@ -20,11 +20,12 @@ interface OwnProps {
     interventionPlotType: string;
     extraPair?: string;
     hemoglobinDataSet: any;
+    notation: string;
 }
 
 export type Props = OwnProps;
 
-const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair, aggregatedBy, valueToVisualize, chartId, store, chartIndex, interventionDate, interventionPlotType }: Props) => {
+const InterventionPlotVisualization: FC<Props> = ({ notation, hemoglobinDataSet, extraPair, aggregatedBy, valueToVisualize, chartId, store, chartIndex, interventionDate, interventionPlotType }: Props) => {
     const {
         layoutArray,
         filterSelection,
@@ -59,6 +60,9 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
 
     const [caseIDList, setCaseIDList] = useState<any>(null)
     const [extraPairArray, setExtraPairArray] = useState([]);
+
+    const [openNotationModal, setOpenNotationModal] = useState(false)
+    const [notationInput, setNotationInput] = useState(notation)
 
 
     useEffect(() => {
@@ -604,7 +608,7 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                         </Menu.Item >
 
                         <Menu.Item>
-                            <Dropdown selectOnBlur={false} pointing basic item icon="edit" compact >
+                            <Dropdown selectOnBlur={false} pointing basic item icon="settings" compact >
                                 <Dropdown.Menu>
                                     <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
                                     <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue}></Dropdown>
@@ -612,10 +616,42 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item>
+
+                        <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
+                            <Icon name="edit" />
+                        </Menu.Item>
+
+                        {/* Modal for annotation. */}
+                        <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
+                            <Modal.Header>
+                                Set the annotation for chart
+              </Modal.Header>
+                            <Modal.Content>
+                                <Form>
+                                    <Form.TextArea autoFocus
+                                        value={notationInput}
+                                        label="Notation"
+                                        onChange={(e, d) => {
+                                            if (typeof d.value === "number") {
+                                                setNotationInput((d.value).toString() || "")
+                                            } else {
+                                                setNotationInput(d.value || "")
+                                            }
+                                        }
+                                        }
+                                    />
+                                </Form>
+                            </Modal.Content>
+                            <Modal.Actions>
+                                <Button content="Save" positive onClick={() => { setOpenNotationModal(false); actions.changeNotation(chartId, notationInput); }} />
+                                <Button content="Cancel" onClick={() => { setOpenNotationModal(false) }} />
+                            </Modal.Actions>
+                        </Modal>
+
                     </Menu>
                 </Grid.Column>
                 <Grid.Column width={(15) as any}>
-                    <SVG ref={svgRef}>
+                    <ChartSVG ref={svgRef}>
 
                         <InterventionPlot
                             interventionDate={interventionDate}
@@ -631,8 +667,12 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
                             plotType={interventionPlotType}
                             extraPairDataSet={extraPairData}
                         />
-                    </SVG>
+                    </ChartSVG>
+
+                    <Message hidden={notation.length === 0} color="green">{notation}</Message>
+
                 </Grid.Column>
+
             </Grid.Row>
         </Grid>
     );
@@ -641,7 +681,3 @@ const InterventionPlotVisualization: FC<Props> = ({ hemoglobinDataSet, extraPair
 
 export default inject("store")(observer(InterventionPlotVisualization));
 
-const SVG = styled.svg`
-  height: 100%;
-  width: 100%;
-`;
