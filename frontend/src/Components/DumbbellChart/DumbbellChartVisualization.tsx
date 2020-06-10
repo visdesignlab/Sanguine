@@ -74,7 +74,7 @@ const DumbbellChartVisualization: FC<Props> = ({ notation, yAxis, chartId, store
     );
     const temp_transfusion_data = await transfusedRes.json();
     //const temp_transfusion_data = transfusedDataResult.result;
-    console.log(temp_transfusion_data)
+    //console.log(temp_transfusion_data)
     let caseIDSet = new Set()
     temp_transfusion_data.forEach((element: any) => {
       caseIDSet.add(element.case_id)
