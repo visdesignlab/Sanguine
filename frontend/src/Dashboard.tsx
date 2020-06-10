@@ -2,7 +2,7 @@ import React, { FC, useState, useEffect } from 'react';
 import { inject, observer } from 'mobx-react';
 import Store from './Interfaces/Store';
 import { LayoutElement } from './Interfaces/ApplicationState';
-import { Button, Tab, Grid, GridColumn, Container } from 'semantic-ui-react';
+import { Button, Tab, Grid, GridColumn, Container, Modal, Message, Icon } from 'semantic-ui-react';
 import { actions } from '.';
 import DumbbellChartVisualization from './Components/DumbbellChart/DumbbellChartVisualization';
 import BarChartVisualization from './Components/BarChart/BarChartVisualization';
@@ -15,9 +15,10 @@ import PatientComparisonWrapper from './Components/PatientComparisonWrapper';
 import UserControl from './Components/Utilities/UserControl';
 import SideBar from './Components/Utilities/SideBar';
 import styled from 'styled-components';
-import { Responsive, WidthProvider } from "react-grid-layout";
+import { Responsive } from "react-grid-layout";
 import './App.css'
 import 'react-grid-layout/css/styles.css'
+
 interface OwnProps {
     store?: Store
 }
@@ -29,7 +30,7 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
 
     const [hemoData, setHemoData] = useState<any>([])
 
-    //  const ReactGridLayout = WidthProvider(Responsive)
+    const [loadingModalOpen, setloadingModalOpen] = useState(true)
 
     async function cacheHemoData() {
         const resHemo = await fetch("http://localhost:8000/api/hemoglobin");
@@ -37,10 +38,8 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
         const resultHemo = dataHemo.result;
         const resTrans = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}`)
         const dataTrans = await resTrans.json();
-        //const resultTrans = dataTrans.result;
-        // console.log(dataHemo, dataTrans)
         let transfused_dict = {} as any;
-        // let caseIDReference = {} as any;
+
         let result: {
             CASE_ID: number,
             VISIT_ID: number,
@@ -96,6 +95,7 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
         result = result.filter((d: any) => d);
         console.log("hemo data done")
         setHemoData(result)
+        setloadingModalOpen(false)
 
     }
 
@@ -279,7 +279,19 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                 </Grid.Column>
 
             </Grid>
+            <Modal open={loadingModalOpen} closeOnEscape={false}
+                closeOnDimmerClick={false}>
+                <Message icon>
+                    <Icon name='circle notched' loading />
+                    <Message.Content>
+                        <Message.Header>Just one second</Message.Header>
+                        We are fetching required data.
+                        </Message.Content>
+                </Message>
+
+            </Modal>
         </LayoutDiv>
+
     );
 
 }
