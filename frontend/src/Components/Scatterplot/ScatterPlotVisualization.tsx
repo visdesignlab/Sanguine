@@ -31,6 +31,7 @@ const ScatterPlotVisualization: FC<Props> = ({ notation, chartId, hemoglobinData
     const {
         layoutArray,
         filterSelection,
+        currentOutputFilterSet,
         //  perCaseSelected,
         dateRange,
         showZero
@@ -84,32 +85,49 @@ const ScatterPlotVisualization: FC<Props> = ({ notation, chartId, hemoglobinData
                 //  console.log(transfused_dict);
                 //This filter out anything that has empty value
                 if ((yValue && showZero && transfused_dict[ob.CASE_ID]) || (!showZero && yValue && xValue > 0)) {
-                    if (!(xValue > 100 && xAxis === "PRBC_UNITS")) {
+
+                    if ((xValue > 100 && xAxis === "PRBC_UNITS")) {
+                        xValue -= 999
+                    }
+                    if ((xValue > 100 && xAxis === "PLT_UNITS")) {
+                        xValue -= 245
+                    }
+
+                    let criteriaMet = true;
+                    if (currentOutputFilterSet.length > 0) {
+                        for (let selectSet of currentOutputFilterSet) {
+                            if (!selectSet.set_value.includes(ob[selectSet.set_name])) {
+                                criteriaMet = false;
+                            }
+                        }
+                    }
+
+                    if (criteriaMet) {
+
+
+                        tempYMin = yValue < tempYMin ? yValue : tempYMin;
+                        tempYMax = yValue > tempYMax ? yValue : tempYMax;
                         tempXMin = xValue < tempXMin ? xValue : tempXMin;
                         tempXMax = xValue > tempXMax ? xValue : tempXMax;
+
+                        let new_ob: ScatterDataPoint = {
+                            xVal: xValue,
+                            yVal: yValue,
+                            case: {
+                                visitNum: ob.VISIT_ID,
+                                caseId: ob.CASE_ID,
+                                YEAR: ob.YEAR,
+                                ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
+                                SURGEON_ID: ob.SURGEON_ID,
+                                patientID: ob.PATIENT_ID,
+                                DATE: ob.DATE
+                            }
+
+                        };
+                        //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
+                        return new_ob;
+                        //}
                     }
-                    tempYMin = yValue < tempYMin ? yValue : tempYMin;
-                    // tempXMin = end_x < tempXMin ? end_x : tempXMin;
-                    // tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
-                    tempYMax = yValue > tempYMax ? yValue : tempYMax;
-
-                    let new_ob: ScatterDataPoint = {
-                        xVal: xValue,
-                        yVal: yValue,
-                        case: {
-                            visitNum: ob.VISIT_ID,
-                            caseId: ob.CASE_ID,
-                            YEAR: ob.YEAR,
-                            ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
-                            SURGEON_ID: ob.SURGEON_ID,
-                            patientID: ob.PATIENT_ID,
-                            DATE: ob.DATE
-                        }
-
-                    };
-                    //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
-                    return new_ob;
-                    //}
                 }
             });
             cast_data = cast_data.filter((d: any) => d);
@@ -130,7 +148,7 @@ const ScatterPlotVisualization: FC<Props> = ({ notation, chartId, hemoglobinData
 
     useEffect(() => {
         fetchChartData();
-    }, [dateRange, filterSelection, showZero, hemoglobinDataSet, yAxis, xAxis]);
+    }, [dateRange, filterSelection, showZero, hemoglobinDataSet, yAxis, xAxis, currentOutputFilterSet]);
 
     const changeYAxis = (e: any, value: any) => {
 
