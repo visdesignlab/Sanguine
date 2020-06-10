@@ -1,20 +1,18 @@
 import React, {
     FC,
     useEffect,
-    useRef,
-    useLayoutEffect,
     useState,
-    useMemo,
     useCallback
 } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { ScatterDataPoint, offset, AxisLabelDict, SelectSet } from "../../Interfaces/ApplicationState";
-import { select, scaleLinear, axisLeft, axisBottom, brush, event, range, scaleOrdinal, ScaleOrdinal } from "d3";
+import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
+import { offset, AxisLabelDict } from "../../PresetsProfile"
+import { select, scaleLinear, axisLeft, axisBottom, brush, event } from "d3";
 //import CustomizedAxis from "../Utilities/CustomizedAxis";
-import { highlight_orange, basic_gray } from "../../ColorProfile";
+import { highlight_orange, basic_gray } from "../../PresetsProfile";
 
 interface OwnProps {
     yAxisName: string;

@@ -1,27 +1,15 @@
 import React, {
     FC,
-    useMemo,
-    useEffect,
     useCallback
 } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import {
-    select,
-    scaleLinear,
-    scaleBand,
-    max,
-    axisLeft,
-    axisTop,
-    interpolateBlues,
-    axisBottom,
-    interpolateGreys,
-    line,
     ScaleOrdinal,
     scaleOrdinal
 } from "d3";
-import { secondary_gray, basic_gray } from "../../ColorProfile";
+import { secondary_gray, basic_gray } from "../../PresetsProfile";
 
 interface OwnProps {
     //  scale: ScaleOrdinal<any, number>;

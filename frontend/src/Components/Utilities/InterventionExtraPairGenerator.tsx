@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
-import { extraPairWidth, extraPairPadding, offset } from "../../Interfaces/ApplicationState";
+import { extraPairWidth, extraPairPadding, offset } from "../../PresetsProfile";
 import ExtraPairDumbbell from "../BarChart/ExtraPairDumbbell";
 import { actions } from "../..";
 // import ExtraPairViolin from "../BarChart/ExtraPairViolin";

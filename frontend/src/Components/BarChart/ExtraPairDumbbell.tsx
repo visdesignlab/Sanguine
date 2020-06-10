@@ -3,8 +3,8 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { ScaleBand, scaleOrdinal, range, scaleLinear, ScaleOrdinal } from "d3";
-import { extraPairWidth } from "../../Interfaces/ApplicationState"
-import { preop_color, postop_color } from "../../ColorProfile";
+import { extraPairWidth } from "../../PresetsProfile"
+import { preop_color, postop_color } from "../../PresetsProfile";
 
 interface OwnProps {
     dataSet: any[];

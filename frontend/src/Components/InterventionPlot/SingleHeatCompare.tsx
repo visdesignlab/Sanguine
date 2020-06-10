@@ -6,7 +6,7 @@ import { InterventionDataPoint } from "../../Interfaces/ApplicationState";
 // import { Popup } from "semantic-ui-react";
 // import { actions } from "../..";
 import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds, scaleBand, interpolateGreys, format } from "d3";
-import { highlight_orange, basic_gray, blood_red, highlight_blue, greyScaleRange } from "../../ColorProfile";
+import { highlight_orange, basic_gray, blood_red, highlight_blue, greyScaleRange } from "../../PresetsProfile";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
 

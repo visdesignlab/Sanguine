@@ -7,11 +7,11 @@ import { actions, provenance } from '../..'
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
 import { timeFormat } from "d3";
-import { blood_red } from "../../ColorProfile";
+import { blood_red } from "../../PresetsProfile";
 import {
   barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions,
   interventionChartType, presetOptions, stateUpdateWrapperUseJSON, dumbbellValueOptions, scatterYOptions, typeDiction
-} from "../../Interfaces/ApplicationState";
+} from "../../PresetsProfile";
 import ClipboardJS from 'clipboard';
 import { NavLink } from 'react-router-dom'
 import { getCookie } from "../../Interfaces/UserManagement";

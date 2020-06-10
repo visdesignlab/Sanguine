@@ -3,7 +3,8 @@ import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { BarChartDataPoint, BloodProductCap, barChartValuesOptions, barChartAggregationOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON, ChartSVG } from '../../Interfaces/ApplicationState'
+import { BarChartDataPoint } from '../../Interfaces/ApplicationState'
+import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON, ChartSVG } from "../../PresetsProfile"
 import BarChart from "./BarChart"
 import { Button, Icon, Table, Grid, Dropdown, GridColumn, Menu, Container, Modal, Input, Form, Message } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
