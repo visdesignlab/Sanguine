@@ -5,8 +5,8 @@ import { Menu, Dropdown, Grid, Container, Message, List, Button } from "semantic
 import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat } from "d3";
 import { actions } from "../..";
-import { AxisLabelDict, Accronym, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState";
-import { basic_gray, highlight_orange, third_gray, secondary_gray } from "../../ColorProfile";
+import { AxisLabelDict, Accronym, stateUpdateWrapperUseJSON } from "../../PresetsProfile";
+import { basic_gray, highlight_orange, third_gray, secondary_gray } from "../../PresetsProfile";
 
 interface OwnProps {
   store?: Store;

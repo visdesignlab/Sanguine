@@ -9,10 +9,11 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { DumbbellDataPoint, BloodProductCap, dumbbellFacetOptions, barChartValuesOptions, stateUpdateWrapperUseJSON, ChartSVG } from "../../Interfaces/ApplicationState"
+import { DumbbellDataPoint } from "../../Interfaces/ApplicationState"
+import { BloodProductCap, dumbbellFacetOptions, barChartValuesOptions, stateUpdateWrapperUseJSON, ChartSVG } from "../../PresetsProfile"
 import DumbbellChart from "./DumbbellChart"
 import { Grid, Menu, Dropdown, Button, Icon, Modal, Form, Message } from "semantic-ui-react";
-import { preop_color, postop_color, basic_gray, third_gray } from "../../ColorProfile";
+import { preop_color, postop_color, basic_gray, third_gray } from "../../PresetsProfile";
 
 interface OwnProps {
   yAxis: string;

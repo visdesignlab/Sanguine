@@ -5,7 +5,7 @@ import Store from "../Interfaces/Store";
 
 //import * as LineUpJS from "lineupjsx";
 import { LineUpStringColumnDesc, LineUp, LineUpCategoricalColumnDesc, LineUpColumn, LineUpNumberColumnDesc } from "lineupjsx";
-import { BloodProductCap, stateUpdateWrapperUseJSON } from "../Interfaces/ApplicationState";
+import { BloodProductCap, stateUpdateWrapperUseJSON } from "../PresetsProfile";
 import { actions } from "..";
 
 interface OwnProps {

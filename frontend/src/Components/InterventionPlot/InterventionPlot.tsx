@@ -29,7 +29,9 @@ import {
     timeFormat
 } from "d3";
 import {
-    InterventionDataPoint,
+    InterventionDataPoint
+} from "../../Interfaces/ApplicationState";
+import {
     AxisLabelDict,
     BloodProductCap,
     offset,
@@ -37,13 +39,12 @@ import {
     extraPairWidth,
     extraPairPadding,
     stateUpdateWrapperUseJSON
-} from "../../Interfaces/ApplicationState";
-import { Popup, Button, Icon } from 'semantic-ui-react'
+} from "../../PresetsProfile"
 
 //import SingleHeatPlot from "./SingleHeatPlot";
 
 //import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
-import { secondary_gray, third_gray, preop_color, postop_color, greyScaleRange, highlight_orange } from "../../ColorProfile";
+import { secondary_gray, third_gray, preop_color, postop_color, greyScaleRange, highlight_orange } from "../../PresetsProfile";
 import SingleHeatCompare from "./SingleHeatCompare";
 import SingleViolinCompare from "./SingleViolinCompare";
 import InterventionExtraPairGenerator from "../Utilities/InterventionExtraPairGenerator";

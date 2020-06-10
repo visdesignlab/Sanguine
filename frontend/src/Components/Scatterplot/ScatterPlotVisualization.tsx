@@ -9,7 +9,8 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { ScatterDataPoint, stateUpdateWrapperUseJSON, scatterYOptions, barChartValuesOptions, ChartSVG } from "../../Interfaces/ApplicationState";
+import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
+import { stateUpdateWrapperUseJSON, scatterYOptions, barChartValuesOptions, ChartSVG } from "../../PresetsProfile"
 import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import ScatterPlotChart from "./ScatterPlot";
 
@@ -122,9 +123,7 @@ const ScatterPlotVisualization: FC<Props> = ({ notation, chartId, hemoglobinData
             setXMax(tempXMax);
             setXMin(tempXMin);
             setYMax(tempYMax);
-            setYMin(tempYMin)
-            // setYRange({ yMin: tempYMin, yMax: tempYMax });
-            // setXRange({ xMin: tempXMin, xMax: tempXMax });
+            setYMin(tempYMin);
 
         }
     }

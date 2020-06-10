@@ -3,7 +3,7 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { ScaleBand, scaleOrdinal, range, scaleLinear, ScaleOrdinal, max, format, scaleBand } from "d3";
-import { extraPairWidth } from "../../Interfaces/ApplicationState"
+import { extraPairWidth } from "../../PresetsProfile"
 import { Popup } from "semantic-ui-react";
 
 interface OwnProps {

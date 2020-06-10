@@ -5,30 +5,22 @@ import React, {
     useState,
     useCallback
 } from "react";
-import { actions } from "../..";
 import Store from "../../Interfaces/Store";
-import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import {
     select,
     scaleLinear,
     scaleBand,
-    max,
     axisLeft,
-    axisTop,
-    interpolateBlues,
     axisBottom,
     interpolateGreys,
-    line,
-    curveCatmullRom,
-    scaleOrdinal,
     range,
-    ScaleOrdinal,
-    ScaleBand,
     interpolateReds
 } from "d3";
 import {
-    HeatMapDataPoint,
+    HeatMapDataPoint
+} from "../../Interfaces/ApplicationState";
+import {
     offset,
     extraPairWidth,
     extraPairPadding,
@@ -36,12 +28,11 @@ import {
     BloodProductCap,
     CELL_SAVER_TICKS,
     stateUpdateWrapperUseJSON
-} from "../../Interfaces/ApplicationState";
-import { Popup, Button, Icon } from 'semantic-ui-react'
+} from "../../PresetsProfile"
 
 import SingleHeatPlot from "./SingleHeatPlot";
 import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
-import { secondary_gray, third_gray, greyScaleRange, highlight_orange } from "../../ColorProfile";
+import { third_gray, greyScaleRange, highlight_orange } from "../../PresetsProfile";
 
 interface OwnProps {
     aggregatedBy: string;
