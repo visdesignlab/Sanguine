@@ -19,11 +19,12 @@ interface OwnProps {
   extraPair?: string;
   hemoglobinDataSet: any;
   notation: string;
+  w: number
 }
 
 export type Props = OwnProps;
 
-const BarChartVisualization: FC<Props> = ({ notation, hemoglobinDataSet, aggregatedBy, valueToVisualize, chartId, store, chartIndex, extraPair }: Props) => {
+const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggregatedBy, valueToVisualize, chartId, store, chartIndex, extraPair }: Props) => {
   const {
     layoutArray,
     filterSelection,
@@ -61,8 +62,8 @@ const BarChartVisualization: FC<Props> = ({ notation, hemoglobinDataSet, aggrega
   useLayoutEffect(() => {
     if (svgRef.current) {
       setDimensionHeight(svgRef.current.clientHeight);
-      setDimensionWidth(svgRef.current.clientWidth)
-
+      // setDimensionWidth(svgRef.current.clientWidth)
+      setDimensionWidth(w === 1 ? 542.28 : 1146.97)
     }
   }, [layoutArray[chartIndex]]);
 

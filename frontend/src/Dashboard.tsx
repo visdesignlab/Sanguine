@@ -15,7 +15,7 @@ import PatientComparisonWrapper from './Components/PatientComparisonWrapper';
 import UserControl from './Components/Utilities/UserControl';
 import SideBar from './Components/Utilities/SideBar';
 import styled from 'styled-components';
-import { Responsive } from "react-grid-layout";
+import { Responsive, WidthProvider } from "react-grid-layout";
 import './App.css'
 import 'react-grid-layout/css/styles.css'
 
@@ -113,6 +113,7 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                         <Button icon="close" floated="right" circular compact size="mini" basic onClick={() => { actions.removeChart(layout.i) }} />
                         <DumbbellChartVisualization
                             yAxis={layout.aggregatedBy}
+                            w={layout.w}
                             chartId={layout.i}
                             chartIndex={index}
                             hemoglobinDataSet={hemoData}
@@ -134,6 +135,7 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                         <Button floated="right" icon="close" circular compact size="mini" basic onClick={() => { actions.removeChart(layout.i) }} />
                         <BarChartVisualization
                             hemoglobinDataSet={hemoData}
+                            w={layout.w}
                             aggregatedBy={layout.aggregatedBy}
                             valueToVisualize={layout.valueToVisualize}
                             // class_name={"parent-node" + layoutE.i}
@@ -155,6 +157,7 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                     <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
                     <ScatterPlotVisualization
                         xAxis={layout.aggregatedBy}
+                        w={layout.w}
                         yAxis={layout.valueToVisualize}
                         hemoglobinDataSet={hemoData}
                         // class_name={"parent-node" + layoutE.i}
@@ -176,6 +179,7 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                     <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
                     <HeatMapVisualization
                         hemoglobinDataSet={hemoData}
+                        w={layout.w}
                         aggregatedBy={layout.aggregatedBy}
                         valueToVisualize={layout.valueToVisualize}
                         // class_name={"parent-node" + layoutE.i}
@@ -192,6 +196,7 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                     <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
                     <InterventionPlotVisualization
                         extraPair={layout.extraPair}
+                        w={layout.w}
                         hemoglobinDataSet={hemoData}
                         aggregatedBy={layout.aggregatedBy}
                         valueToVisualize={layout.valueToVisualize}

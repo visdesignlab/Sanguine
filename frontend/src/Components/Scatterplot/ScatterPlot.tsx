@@ -102,7 +102,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
             .range([height - currentOffset.bottom, currentOffset.top]);
 
         return yAxisScale;
-    }, [yMax, xMax, height])
+    }, [yMax, yMin, height])
 
     const yAxisLabel = axisLeft(yAxisScale());
     const xAxisLabel = axisBottom(xAxisScale());
@@ -201,7 +201,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
             <g className="brush-layer" />
             {/* <line x1={currentOffset.left} x2={dimension.width - currentOffset.right} y1={testValueScale(11)} y2={testValueScale(11)} style={{ stroke: "#990D0D", strokeWidth: "2" }} /> */}
             {data.map((dataPoint) => {
-                const cx = (xAxisScale())(dataPoint.xVal)
+                const cx = xAxisScale()(dataPoint.xVal)
                 const cy = yAxisScale()(dataPoint.yVal)
 
                 return (
