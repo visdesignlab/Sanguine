@@ -22,12 +22,13 @@ interface OwnProps {
     chartIndex: number;
     notation: string;
     hemoglobinDataSet: any;
+    w: number;
     // aggregatedOption?: string;
 }
 
 export type Props = OwnProps;
 
-const ScatterPlotVisualization: FC<Props> = ({ notation, chartId, hemoglobinDataSet, yAxis, xAxis, chartIndex, store }: Props) => {
+const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinDataSet, yAxis, xAxis, chartIndex, store }: Props) => {
     const {
         layoutArray,
         filterSelection,
@@ -51,7 +52,8 @@ const ScatterPlotVisualization: FC<Props> = ({ notation, chartId, hemoglobinData
 
     useLayoutEffect(() => {
         if (svgRef.current) {
-            setWidth(svgRef.current.clientWidth);
+            // setWidth(svgRef.current.clientWidth);
+            setWidth(w === 1 ? 542.28 : 1146.97)
             setHeight(svgRef.current.clientHeight)
         }
     }, [layoutArray[chartIndex]]);

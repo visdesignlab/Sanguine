@@ -22,12 +22,13 @@ interface OwnProps {
   chartIndex: number;
   hemoglobinDataSet: any;
   notation: string;
+  w: number;
   // interventionDate?: number;
 }
 
 export type Props = OwnProps;
 
-const DumbbellChartVisualization: FC<Props> = ({ notation, yAxis, chartId, store, chartIndex, hemoglobinDataSet }: Props) => {
+const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, store, chartIndex, hemoglobinDataSet }: Props) => {
 
   const {
     layoutArray,
@@ -55,7 +56,8 @@ const DumbbellChartVisualization: FC<Props> = ({ notation, yAxis, chartId, store
 
   useLayoutEffect(() => {
     if (svgRef.current) {
-      setDimensionWidth(svgRef.current.clientWidth);
+      //   setDimensionWidth(svgRef.current.clientWidth);
+      setDimensionWidth(w === 1 ? 542.28 : 1146.97)
       setDimensionHeight(svgRef.current.clientHeight)
 
     }

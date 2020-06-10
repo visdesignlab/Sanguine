@@ -21,11 +21,12 @@ interface OwnProps {
     extraPair?: string;
     hemoglobinDataSet: any;
     notation: string;
+    w: number
 }
 
 export type Props = OwnProps;
 
-const InterventionPlotVisualization: FC<Props> = ({ notation, hemoglobinDataSet, extraPair, aggregatedBy, valueToVisualize, chartId, store, chartIndex, interventionDate, interventionPlotType }: Props) => {
+const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, extraPair, aggregatedBy, valueToVisualize, chartId, store, chartIndex, interventionDate, interventionPlotType }: Props) => {
     const {
         layoutArray,
         filterSelection,
@@ -75,7 +76,8 @@ const InterventionPlotVisualization: FC<Props> = ({ notation, hemoglobinDataSet,
             //     height: svgRef.current.clientHeight,
             //     width: svgRef.current.clientWidth
             // });
-            setWidth(svgRef.current.clientWidth);
+            // setWidth(svgRef.current.clientWidth);
+            setWidth(w === 1 ? 542.28 : 1146.97)
             setHeight(svgRef.current.clientHeight);
         }
     }, [layoutArray[chartIndex]]);
