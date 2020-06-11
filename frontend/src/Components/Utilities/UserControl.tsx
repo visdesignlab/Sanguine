@@ -13,7 +13,7 @@ import {
   interventionChartType, presetOptions, stateUpdateWrapperUseJSON, dumbbellValueOptions, scatterYOptions, typeDiction
 } from "../../PresetsProfile";
 import ClipboardJS from 'clipboard';
-import { NavLink } from 'react-router-dom'
+import { NavLink, Redirect } from 'react-router-dom'
 import { getCookie } from "../../Interfaces/UserManagement";
 interface OwnProps {
   store?: Store;
@@ -140,7 +140,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
 
   const regularMenu = (
-    <Menu widths={6}>
+    <Menu widths={7}>
       <Menu.Item>
         <Button.Group>
           <Button primary disabled={isAtRoot} onClick={actions.goBack}>
@@ -342,15 +342,14 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       </Menu.Item>
 
       <Menu.Item>
-        <NavLink component={Button} to="/preview">
-          Preview Mode
-        </NavLink>
+        <Button content="Preview Mode" onClick={() => { store!.previewMode = true }} />
       </Menu.Item>
 
       <Menu.Item>
         <NavLink component={Button} to="/" onClick={() => { store!.isLoggedIn = false; }} >
           Log Out
         </NavLink>
+
       </Menu.Item>
     </Menu>
   );
