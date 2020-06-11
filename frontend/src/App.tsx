@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect, useState, Component } from 'react';
 import Store from './Interfaces/Store'
 import { inject, observer } from 'mobx-react';
 import Dashboard from './Dashboard';
@@ -14,7 +14,7 @@ interface OwnProps {
 type Props = OwnProps;
 
 const App: FC<Props> = ({ store }: Props) => {
-  const { isLoggedIn } = store!
+  const { isLoggedIn, previewMode } = store!
 
 
   return (
@@ -25,12 +25,15 @@ const App: FC<Props> = ({ store }: Props) => {
         <Route exact path='/dashboard' render={() => {
           // if (isLoggedIn) return <Dashboard />
           // else return <Redirect to="/" />
-          return <Dashboard />
-        }} />
-        <Route exact path='/preview' render={() => {
-          return <Preview />
+          if (previewMode) {
+            return <Preview />
+          }
+          else {
+            return <Dashboard />
+          }
         }} />
         <Route path='/' component={Login} />
+        {/* <Route exact path='/preview' render={()=>{}}/> */}
       </Switch></BrowserRouter>
 
     // <Login />
