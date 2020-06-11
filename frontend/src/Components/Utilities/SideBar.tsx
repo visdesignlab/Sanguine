@@ -39,16 +39,24 @@ const SideBar: FC<Props> = ({ store }: Props) => {
 
     //TODO this needs to check if the filterSelection is not empty
 
-    let tempMaxCaseCount = 0
-
+    let tempMaxCaseCount = 0;
+    let tempItemUnselected: any[] = [];
+    let tempItemSelected: any[] = [];
     result.forEach((d: any) => {
       tempMaxCaseCount = d.count > tempMaxCaseCount ? d.count : tempMaxCaseCount;
+      if (filterSelection.includes(d.value)) {
+        tempItemSelected.push(d)
+      } else {
+        tempItemUnselected.push(d)
+      }
     })
-    result.sort((a: any, b: any) => b.count - a.count)
+    tempItemSelected.sort((a: any, b: any) => b.count - a.count)
+    tempItemUnselected.sort((a: any, b: any) => b.count - a.count)
     setMaxCaseCount(tempMaxCaseCount)
     stateUpdateWrapperUseJSON(procedureList, result, setProcedureList)
     //setProcedureList(result);
-    setItemUnselected(result);
+    setItemUnselected(tempItemUnselected);
+    setItemSelected(tempItemSelected)
   }
 
   useEffect(() => {
