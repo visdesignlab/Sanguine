@@ -44,6 +44,8 @@ export default class Store {
   @observable currentSelectPatientGroup: number[] = defaultState.currentSelectPatientGroup;
 
   @observable isLoggedIn: boolean = false;
+  @observable previewMode: boolean = false;
+  @observable loadingModalOpen: boolean = true;
   // @observable csrftoken: string | null = ""
 
 }

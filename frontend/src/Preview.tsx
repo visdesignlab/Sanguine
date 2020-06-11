@@ -1,27 +1,34 @@
 import React, { FC, useState, useEffect } from 'react';
 import { inject, observer } from 'mobx-react';
 import Store from './Interfaces/Store';
-import { Grid, Container, Modal, Message, Icon } from 'semantic-ui-react';
-import UserControl from './Components/Utilities/UserControl';
+import { Button, Grid, Container, Modal, Message, Icon, Menu, Checkbox } from 'semantic-ui-react';
+import { actions, provenance } from '.';
+
 import SideBar from './Components/Utilities/SideBar';
 import styled from 'styled-components';
+
 import './App.css'
 //import 'react-grid-layout/css/styles.css'
+import { NavLink } from 'react-router-dom';
 import LayoutGenerator from './LayoutGenerator';
-
+import { timeFormat } from 'd3';
 
 interface OwnProps {
     store?: Store
     hemoData: any
+
 }
 type Props = OwnProps;
 
-const Dashboard: FC<Props> = ({ hemoData, store }: Props) => {
+const Preview: FC<Props> = ({ store, hemoData }: Props) => {
 
-    const { loadingModalOpen } = store!;
+    const { showZero, loadingModalOpen } = store!;
+
     // const [hemoData, setHemoData] = useState<any>([])
 
     // const [loadingModalOpen, setloadingModalOpen] = useState(true)
+
+
 
     // async function cacheHemoData() {
     //     const resHemo = await fetch("http://localhost:8000/api/hemoglobin");
@@ -87,18 +94,35 @@ const Dashboard: FC<Props> = ({ hemoData, store }: Props) => {
     //     console.log("hemo data done")
     //     setHemoData(result)
     //     setloadingModalOpen(false)
-
     // }
 
     // useEffect(() => {
     //     cacheHemoData();
     // }, []);
 
-
     return (
         <LayoutDiv>
             <Container fluid>
-                <UserControl />
+                <Menu widths={3}>
+                    <Menu.Item>
+                        <Checkbox
+                            checked={showZero}
+                            onClick={actions.toggleShowZero}
+                            label={<label> Show Zero Transfused </label>}
+                        />
+                    </Menu.Item>
+                    <Menu.Item>
+                        {/* <NavLink component={Button} to="/dashboard" >
+                            Customize Mode
+                </NavLink> */}
+                        <Button content="Customize Mode" onClick={() => { store!.previewMode = false }} />
+                    </Menu.Item>
+                    <Menu.Item>
+                        <NavLink component={Button} to="/" onClick={() => { store!.isLoggedIn = false; }} >
+                            Log Out
+                    </NavLink>
+                    </Menu.Item>
+                </Menu>
             </Container>
             <Grid padded>
                 <SpecialPaddingColumn width={3} >
@@ -126,7 +150,7 @@ const Dashboard: FC<Props> = ({ hemoData, store }: Props) => {
 
 }
 
-export default inject('store')(observer(Dashboard))
+export default inject('store')(observer(Preview))
 const LayoutDiv = styled.div`
   width: 100vw;
   height: 100vh;
