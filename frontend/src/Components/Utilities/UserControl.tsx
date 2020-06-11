@@ -187,7 +187,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
               <Dropdown selectOnBlur={false} text="Presets" >
                 <Dropdown.Menu>
                   {presetOptions.map((d: { value: number, text: string }) => {
-                    return (<Dropdown.Item onClick={() => { actions.loadPreset(d.value) }} content={d.text} />)
+                    return (<Dropdown.Item key={d.text} onClick={() => { actions.loadPreset(d.value) }} content={d.text} />)
                   })}
                 </Dropdown.Menu>
               </Dropdown>
@@ -231,7 +231,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
           <Modal.Content>
             <List divided verticalAlign="middle">
               {listOfSavedState.map((d) => {
-                return (<List.Item>
+                return (<List.Item key={d}>
                   <List.Content floated="right">
                     <Button onClick={() => {
                       const csrftoken = simulateAPIClick()
@@ -323,7 +323,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             <Message info>Length of URL: {shareUrl.length}</Message>
             <Segment
               ref={urlRef}
-              textAlign="justified"
+              //   textAlign="justified"
               style={{ wordWrap: 'anywhere' }}>
               {shareUrl}
             </Segment>

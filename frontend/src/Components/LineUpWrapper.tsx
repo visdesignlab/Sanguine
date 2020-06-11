@@ -56,7 +56,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
     const generateLineUp = () => {
         if (hemoglobinDataSet) {
             // const patientId = currentSelectPatient ? currentSelectPatient.caseId : 1
-            return (<LineUp data={hemoglobinDataSet} selection={outputSelectedGroup()}
+            return (<LineUp data={hemoglobinDataSet} selection={outputSelectedGroup()} filterGlobally
                 onSelectionChanged={(e: number[]) => {
                     if (e.length === 1) {
 
