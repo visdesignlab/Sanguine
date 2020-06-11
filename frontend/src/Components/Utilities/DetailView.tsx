@@ -7,7 +7,7 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import Store from "../../Interfaces/Store";
 import { Message, List, Container, Button } from "semantic-ui-react";
-import { HIPAA_Sensitive, AxisLabelDict, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState";
+import { HIPAA_Sensitive, AxisLabelDict, stateUpdateWrapperUseJSON } from "../../PresetsProfile";
 import { actions } from "../..";
 
 interface OwnProps {

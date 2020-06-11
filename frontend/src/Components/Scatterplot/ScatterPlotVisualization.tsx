@@ -9,8 +9,9 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { ScatterDataPoint, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState";
-import { Grid } from "semantic-ui-react";
+import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
+import { stateUpdateWrapperUseJSON, scatterYOptions, barChartValuesOptions, ChartSVG } from "../../PresetsProfile"
+import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import ScatterPlotChart from "./ScatterPlot";
 
 interface OwnProps {
@@ -19,16 +20,19 @@ interface OwnProps {
     chartId: string;
     store?: Store;
     chartIndex: number;
+    notation: string;
     hemoglobinDataSet: any;
+    w: number;
     // aggregatedOption?: string;
 }
 
 export type Props = OwnProps;
 
-const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, chartIndex, store }: Props) => {
+const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinDataSet, yAxis, xAxis, chartIndex, store }: Props) => {
     const {
         layoutArray,
         filterSelection,
+        currentOutputFilterSet,
         //  perCaseSelected,
         dateRange,
         showZero
@@ -43,12 +47,13 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
     const [xMax, setXMax] = useState(0);
     const [yMin, setYMin] = useState(0);
     const [yMax, setYMax] = useState(0);
-    // const [yRange, setYRange] = useState({ yMin: 0, yMax: Infinity });
-    // const [xRange, setXRange] = useState({ xMin: 0, xMax: Infinity });
+    const [openNotationModal, setOpenNotationModal] = useState(false)
+    const [notationInput, setNotationInput] = useState(notation)
 
     useLayoutEffect(() => {
         if (svgRef.current) {
-            setWidth(svgRef.current.clientWidth);
+            // setWidth(svgRef.current.clientWidth);
+            setWidth(w === 1 ? 542.28 : 1146.97)
             setHeight(svgRef.current.clientHeight)
         }
     }, [layoutArray[chartIndex]]);
@@ -82,32 +87,49 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
                 //  console.log(transfused_dict);
                 //This filter out anything that has empty value
                 if ((yValue && showZero && transfused_dict[ob.CASE_ID]) || (!showZero && yValue && xValue > 0)) {
-                    if (!(xValue > 100 && xAxis === "PRBC_UNITS")) {
+
+                    if ((xValue > 100 && xAxis === "PRBC_UNITS")) {
+                        xValue -= 999
+                    }
+                    if ((xValue > 100 && xAxis === "PLT_UNITS")) {
+                        xValue -= 245
+                    }
+
+                    let criteriaMet = true;
+                    if (currentOutputFilterSet.length > 0) {
+                        for (let selectSet of currentOutputFilterSet) {
+                            if (!selectSet.set_value.includes(ob[selectSet.set_name])) {
+                                criteriaMet = false;
+                            }
+                        }
+                    }
+
+                    if (criteriaMet) {
+
+
+                        tempYMin = yValue < tempYMin ? yValue : tempYMin;
+                        tempYMax = yValue > tempYMax ? yValue : tempYMax;
                         tempXMin = xValue < tempXMin ? xValue : tempXMin;
                         tempXMax = xValue > tempXMax ? xValue : tempXMax;
+
+                        let new_ob: ScatterDataPoint = {
+                            xVal: xValue,
+                            yVal: yValue,
+                            case: {
+                                visitNum: ob.VISIT_ID,
+                                caseId: ob.CASE_ID,
+                                YEAR: ob.YEAR,
+                                ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
+                                SURGEON_ID: ob.SURGEON_ID,
+                                patientID: ob.PATIENT_ID,
+                                DATE: ob.DATE
+                            }
+
+                        };
+                        //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
+                        return new_ob;
+                        //}
                     }
-                    tempYMin = yValue < tempYMin ? yValue : tempYMin;
-                    // tempXMin = end_x < tempXMin ? end_x : tempXMin;
-                    // tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
-                    tempYMax = yValue > tempYMax ? yValue : tempYMax;
-
-                    let new_ob: ScatterDataPoint = {
-                        xVal: xValue,
-                        yVal: yValue,
-                        case: {
-                            visitNum: ob.VISIT_ID,
-                            caseId: ob.CASE_ID,
-                            YEAR: ob.YEAR,
-                            ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
-                            SURGEON_ID: ob.SURGEON_ID,
-                            patientID: ob.PATIENT_ID,
-                            DATE: ob.DATE
-                        }
-
-                    };
-                    //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
-                    return new_ob;
-                    //}
                 }
             });
             cast_data = cast_data.filter((d: any) => d);
@@ -121,21 +143,79 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
             setXMax(tempXMax);
             setXMin(tempXMin);
             setYMax(tempYMax);
-            setYMin(tempYMin)
-            // setYRange({ yMin: tempYMin, yMax: tempYMax });
-            // setXRange({ xMin: tempXMin, xMax: tempXMax });
+            setYMin(tempYMin);
 
         }
     }
 
     useEffect(() => {
         fetchChartData();
-    }, [dateRange, filterSelection, showZero, hemoglobinDataSet, yAxis, xAxis]);
+    }, [dateRange, filterSelection, showZero, hemoglobinDataSet, yAxis, xAxis, currentOutputFilterSet]);
 
-    return (<Grid style={{ height: "100%" }}>
-        <Grid.Column width={16}  >
-            <SVG ref={svgRef}>
-                {/* <text
+    const changeYAxis = (e: any, value: any) => {
+
+        actions.changeChart(xAxis, value.value, chartId, "SCATTER")
+    }
+    const changeXAxis = (e: any, value: any) => {
+        actions.changeChart(value.value, yAxis, chartId, "SCATTER")
+    }
+
+    return (
+
+        <Grid style={{ height: "100%" }}>
+            <Grid.Row >
+                <Grid.Column verticalAlign="middle" width={1}>
+                    <Menu icon vertical compact size="mini" borderless secondary widths={2}>
+
+                        <Menu.Item header>
+                            <Dropdown selectOnBlur={false} pointing basic item icon="settings" compact >
+                                <Dropdown.Menu>
+                                    <Dropdown text="Change X-Axis" pointing basic item compact options={barChartValuesOptions} onChange={changeXAxis} />
+                                    <Dropdown text="Change Y-Axis" pointing basic item compact options={scatterYOptions} onChange={changeYAxis} />
+
+
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        </Menu.Item>
+                        <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
+                            <Icon name="edit" />
+                        </Menu.Item>
+
+                        {/* Modal for annotation. */}
+                        <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
+                            <Modal.Header>
+                                Set the annotation for chart
+              </Modal.Header>
+                            <Modal.Content>
+                                <Form>
+                                    <Form.TextArea autoFocus
+                                        value={notationInput}
+                                        label="Notation"
+                                        onChange={(e, d) => {
+                                            if (typeof d.value === "number") {
+                                                setNotationInput((d.value).toString() || "")
+                                            } else {
+                                                setNotationInput(d.value || "")
+                                            }
+                                        }
+                                        }
+                                    />
+                                </Form>
+                            </Modal.Content>
+                            <Modal.Actions>
+                                <Button content="Save" positive onClick={() => { setOpenNotationModal(false); actions.changeNotation(chartId, notationInput); }} />
+                                <Button content="Cancel" onClick={() => { setOpenNotationModal(false) }} />
+                            </Modal.Actions>
+                        </Modal>
+
+
+
+
+                    </Menu>
+                </Grid.Column>
+                <Grid.Column width={15}  >
+                    <ChartSVG ref={svgRef}>
+                        {/* <text
           x="0"
           y="0"
           style={{
@@ -145,27 +225,26 @@ const ScatterPlotVisualization: FC<Props> = ({ hemoglobinDataSet, yAxis, xAxis, 
         >
           chart # ${chartId}
         </text> */}
-                <ScatterPlotChart
-                    svg={svgRef}
-                    yAxisName={yAxis}
-                    xAxisName={xAxis}
-                    data={data}
-                    width={width}
-                    height={height}
-                    xMax={xMax}
-                    xMin={xMin}
-                    yMax={yMax}
-                    yMin={yMin}
+                        <ScatterPlotChart
+                            svg={svgRef}
+                            yAxisName={yAxis}
+                            xAxisName={xAxis}
+                            data={data}
+                            width={width}
+                            height={height}
+                            xMax={xMax}
+                            xMin={xMin}
+                            yMax={yMax}
+                            yMin={yMin}
 
-                />
-            </SVG>
-        </Grid.Column>
-    </Grid>)
+                        />
+                    </ChartSVG>
+
+                    <Message hidden={notation.length === 0} color="green">{notation}</Message>
+
+                </Grid.Column>
+            </Grid.Row>
+        </Grid>)
 }
 
 export default inject("store")(observer(ScatterPlotVisualization));
-
-const SVG = styled.svg`
-  height: 100%;
-  width: 100%;
-`;

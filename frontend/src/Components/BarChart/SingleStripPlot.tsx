@@ -6,7 +6,7 @@ import { BarChartDataPoint } from "../../Interfaces/ApplicationState";
 // import { Popup } from "semantic-ui-react";
 // import { actions } from "../..";
 import { ScaleLinear } from "d3";
-import { highlight_orange, basic_gray } from "../../ColorProfile";
+import { highlight_orange, basic_gray } from "../../PresetsProfile";
 
 interface OwnProps {
     dataPoint: BarChartDataPoint;

@@ -5,7 +5,6 @@ import React, {
   useState,
   useCallback
 } from "react";
-import { actions } from "../..";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
@@ -21,20 +20,21 @@ import {
   curveCatmullRom
 } from "d3";
 import {
-  BarChartDataPoint,
+  BarChartDataPoint
+} from "../../Interfaces/ApplicationState";
+import {
   offset,
   extraPairWidth,
   extraPairPadding,
   AxisLabelDict,
   BloodProductCap,
   stateUpdateWrapperUseJSON
-} from "../../Interfaces/ApplicationState";
-import { Popup, Button, Icon } from 'semantic-ui-react'
+} from "../../PresetsProfile"
 import SingleViolinPlot from "./SingleViolinPlot";
 import SingleStripPlot from "./SingleStripPlot";
 
 import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
-import { greyScaleRange } from "../../ColorProfile";
+import { greyScaleRange } from "../../PresetsProfile";
 
 interface OwnProps {
   aggregatedBy: string;

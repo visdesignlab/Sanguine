@@ -1,9 +1,0 @@
-export const preop_color = "#209b58"
-export const postop_color = "#20639b"
-export const highlight_orange = "#d98532"
-export const basic_gray = "#404040"
-export const third_gray = "#a2a2a2"
-export const secondary_gray = "#666666"
-export const blood_red = "#b10000"
-export const highlight_blue = "#32d9d9"
-export const greyScaleRange = [0.25, 0.8]

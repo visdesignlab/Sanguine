@@ -4,8 +4,8 @@ import { inject, observer } from "mobx-react";
 import Store from "../Interfaces/Store";
 
 //import * as LineUpJS from "lineupjsx";
-import { LineUpStringColumnDesc, LineUp, LineUpCategoricalColumnDesc, LineUpColumn, LineUpNumberColumnDesc } from "lineupjsx";
-import { BloodProductCap, stateUpdateWrapperUseJSON } from "../Interfaces/ApplicationState";
+import { LineUpStringColumnDesc, LineUp, LineUpCategoricalColumnDesc, LineUpNumberColumnDesc } from "lineupjsx";
+import { BloodProductCap, stateUpdateWrapperUseJSON } from "../PresetsProfile";
 import { actions } from "..";
 
 interface OwnProps {
@@ -38,11 +38,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                 caseIDArray.push(ob.CASE_ID)
             })
             stateUpdateWrapperUseJSON(distinctCategories, { surgeons: (Array.from(distinctSurgeons)), anesth: Array.from(distinctAnesth), patient: Array.from(distinctPatient) }, setCatgories)
-            // setCatgories()
             stateUpdateWrapperUseJSON(caseIDReference, caseIDDict, setCaseIDList)
-            //  setCaseIDList(caseIDDict)
-            //   stateUpdateWrapperUseJSON(caseIDArray)
-            //     setCaseIDArray(caseIDArray)
 
 
         }

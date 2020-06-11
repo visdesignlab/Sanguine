@@ -2,7 +2,7 @@ import React, { FC, useState, useEffect } from 'react';
 import { inject, observer } from 'mobx-react';
 import Store from './Interfaces/Store';
 import { LayoutElement } from './Interfaces/ApplicationState';
-import { Button, Tab, Grid, GridColumn, Container } from 'semantic-ui-react';
+import { Button, Tab, Grid, GridColumn, Container, Modal, Message, Icon } from 'semantic-ui-react';
 import { actions } from '.';
 import DumbbellChartVisualization from './Components/DumbbellChart/DumbbellChartVisualization';
 import BarChartVisualization from './Components/BarChart/BarChartVisualization';
@@ -15,9 +15,10 @@ import PatientComparisonWrapper from './Components/PatientComparisonWrapper';
 import UserControl from './Components/Utilities/UserControl';
 import SideBar from './Components/Utilities/SideBar';
 import styled from 'styled-components';
-import { Responsive as ResponsiveReactGridLayout } from "react-grid-layout";
+import { Responsive, WidthProvider } from "react-grid-layout";
 import './App.css'
 import 'react-grid-layout/css/styles.css'
+
 interface OwnProps {
     store?: Store
 }
@@ -29,16 +30,16 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
 
     const [hemoData, setHemoData] = useState<any>([])
 
+    const [loadingModalOpen, setloadingModalOpen] = useState(true)
+
     async function cacheHemoData() {
         const resHemo = await fetch("http://localhost:8000/api/hemoglobin");
         const dataHemo = await resHemo.json();
         const resultHemo = dataHemo.result;
         const resTrans = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}`)
         const dataTrans = await resTrans.json();
-        //const resultTrans = dataTrans.result;
-        // console.log(dataHemo, dataTrans)
         let transfused_dict = {} as any;
-        // let caseIDReference = {} as any;
+
         let result: {
             CASE_ID: number,
             VISIT_ID: number,
@@ -94,6 +95,7 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
         result = result.filter((d: any) => d);
         console.log("hemo data done")
         setHemoData(result)
+        setloadingModalOpen(false)
 
     }
 
@@ -111,9 +113,11 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                         <Button icon="close" floated="right" circular compact size="mini" basic onClick={() => { actions.removeChart(layout.i) }} />
                         <DumbbellChartVisualization
                             yAxis={layout.aggregatedBy}
+                            w={layout.w}
                             chartId={layout.i}
                             chartIndex={index}
                             hemoglobinDataSet={hemoData}
+                            notation={layout.notation}
                         //     interventionDate={layout.interventionDate}
                         // aggregatedOption={layout.aggregation}
                         />
@@ -131,12 +135,14 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                         <Button floated="right" icon="close" circular compact size="mini" basic onClick={() => { actions.removeChart(layout.i) }} />
                         <BarChartVisualization
                             hemoglobinDataSet={hemoData}
+                            w={layout.w}
                             aggregatedBy={layout.aggregatedBy}
                             valueToVisualize={layout.valueToVisualize}
                             // class_name={"parent-node" + layoutE.i}
                             chartId={layout.i}
                             chartIndex={index}
                             extraPair={layout.extraPair}
+                            notation={layout.notation}
                         />
                     </div>
                 );
@@ -151,11 +157,14 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                     <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
                     <ScatterPlotVisualization
                         xAxis={layout.aggregatedBy}
+                        w={layout.w}
                         yAxis={layout.valueToVisualize}
                         hemoglobinDataSet={hemoData}
                         // class_name={"parent-node" + layoutE.i}
                         chartId={layout.i}
                         chartIndex={index}
+
+                        notation={layout.notation}
                     />
                 </div>);
 
@@ -170,12 +179,14 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                     <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
                     <HeatMapVisualization
                         hemoglobinDataSet={hemoData}
+                        w={layout.w}
                         aggregatedBy={layout.aggregatedBy}
                         valueToVisualize={layout.valueToVisualize}
                         // class_name={"parent-node" + layoutE.i}
                         chartId={layout.i}
                         chartIndex={index}
                         extraPair={layout.extraPair}
+                        notation={layout.notation}
                     />
                 </div>);
 
@@ -185,13 +196,15 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                     <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
                     <InterventionPlotVisualization
                         extraPair={layout.extraPair}
+                        w={layout.w}
                         hemoglobinDataSet={hemoData}
                         aggregatedBy={layout.aggregatedBy}
                         valueToVisualize={layout.valueToVisualize}
                         chartId={layout.i}
                         chartIndex={index}
                         interventionDate={layout.interventionDate!}
-                        interventionPlotType={layout.interventionType!} />
+                        interventionPlotType={layout.interventionType!}
+                        notation={layout.notation} />
                 </div>);
 
         }
@@ -206,32 +219,40 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
         xxs: 2
     };
 
+    const generateGrid = () => {
+        let output = layoutArray.map(d => ({ w: d.w, h: d.h, x: d.x, y: d.y, i: d.i }))
+        const newStuff = output.map(d => ({ ...d }))
+        return newStuff
+    }
+
     const panes = [{
         menuItem: 'Main', pane: <Tab.Pane key="Main">
             <Grid>
                 <GridColumn width={13}>
-                    <ResponsiveReactGridLayout
+                    <Responsive
                         onResizeStop={actions.onLayoutchange}
                         onDragStop={actions.onLayoutchange}
+                        // onLayoutChange={actions.onLayoutchange}
                         // onBreakpointChange={this._onBreakpointChange}
                         className="layout"
                         cols={colData}
-                        rowHeight={300}
+                        rowHeight={500}
                         width={1300}
                         //cols={2}
                         //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-                        layouts={{ md: layoutArray }}
+
+                        layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
                     >
                         {layoutArray.map((layoutE, i) => {
                             return createElement(layoutE, i);
                         })}
-                    </ResponsiveReactGridLayout>
+                    </Responsive>
                 </GridColumn>
                 <Grid.Column width={3}>
                     <DetailView />
                 </Grid.Column>
             </Grid>
-        </Tab.Pane>
+        </Tab.Pane >
     },
     {
         menuItem: 'LineUp', pane:
@@ -263,7 +284,19 @@ const Dashboard: FC<Props> = ({ store }: Props) => {
                 </Grid.Column>
 
             </Grid>
+            <Modal open={loadingModalOpen} closeOnEscape={false}
+                closeOnDimmerClick={false}>
+                <Message icon>
+                    <Icon name='circle notched' loading />
+                    <Message.Content>
+                        <Message.Header>Just one second</Message.Header>
+                        We are fetching required data.
+                        </Message.Content>
+                </Message>
+
+            </Modal>
         </LayoutDiv>
+
     );
 
 }

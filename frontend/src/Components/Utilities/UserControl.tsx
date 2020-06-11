@@ -1,14 +1,17 @@
 import React, { FC, useEffect, useState, useRef } from "react";
 import Store from '../../Interfaces/Store'
 // import {}
-import { Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment, DropdownProps, Form, DropdownMenu, List, Input } from 'semantic-ui-react'
+import { Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment, Form, List } from 'semantic-ui-react'
 import { inject, observer } from "mobx-react";
 import { actions, provenance } from '../..'
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
 import { timeFormat } from "d3";
-import { blood_red } from "../../ColorProfile";
-import { barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions, interventionChartType, presetOptions, stateUpdateWrapperUseJSON, dumbbellValueOptions, scatterXOptions, typeDiction } from "../../Interfaces/ApplicationState";
+import { blood_red } from "../../PresetsProfile";
+import {
+  barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions,
+  interventionChartType, presetOptions, stateUpdateWrapperUseJSON, dumbbellValueOptions, scatterYOptions, typeDiction
+} from "../../PresetsProfile";
 import ClipboardJS from 'clipboard';
 import { NavLink } from 'react-router-dom'
 import { getCookie } from "../../Interfaces/UserManagement";
@@ -77,7 +80,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const addOptions = [
     [barChartValuesOptions, barChartAggregationOptions],
     [dumbbellValueOptions, barChartValuesOptions.concat(dumbbellFacetOptions)],
-    [scatterXOptions, barChartValuesOptions],
+    [scatterYOptions, barChartValuesOptions],
     [barChartValuesOptions, barChartAggregationOptions],
     [barChartValuesOptions, barChartAggregationOptions]
   ]
