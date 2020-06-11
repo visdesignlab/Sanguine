@@ -23,7 +23,6 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     currentSelectSet,
     currentOutputFilterSet,
     currentSelectPatientGroup,
-    currentSelectPatient,
     filterSelection } = store!;
   const [procedureList, setProcedureList] = useState<any[]>([]);
   const [maxCaseCount, setMaxCaseCount] = useState(0);
@@ -37,7 +36,6 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     const data = await res.json();
     const result = data.result
 
-    //TODO this needs to check if the filterSelection is not empty
 
     let tempMaxCaseCount = 0;
     let tempItemUnselected: any[] = [];

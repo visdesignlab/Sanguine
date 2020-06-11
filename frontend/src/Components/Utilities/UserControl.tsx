@@ -340,6 +340,13 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         </Modal>
 
       </Menu.Item>
+
+      <Menu.Item>
+        <NavLink component={Button} to="/preview">
+          Preview Mode
+        </NavLink>
+      </Menu.Item>
+
       <Menu.Item>
         <NavLink component={Button} to="/" onClick={() => { store!.isLoggedIn = false; }} >
           Log Out
