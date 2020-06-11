@@ -15,7 +15,7 @@ interface AppProvenance {
     goForward: () => void;
     goBack: () => void;
     loadPreset: (num: number) => void;
-    setLayoutArray: (newLayoutArray: LayoutElement[]) => void;
+    // setLayoutArray: (newLayoutArray: LayoutElement[]) => void;
     // selectChart: (newSelectedID: string) => void;
     toggleShowZero: (event: any, data: any) => void;
     // togglePerCase: (event: any, data: any) => void;
@@ -24,6 +24,8 @@ interface AppProvenance {
     currentOutputFilterSetChange: () => void;
     clearOutputFilterSet: (target?: string) => void;
     clearSelectSet: (target?: string) => void;
+
+    changeNotation: (chartID: string, notation: string) => void;
 
     // yearRangeChange: (data: any) => void;
     dateRangeChange: (data: any) => void;
@@ -126,18 +128,18 @@ export function setupProvenance(): AppProvenance {
 
   provenance.done();
 
-  const setLayoutArray = (layoutArray: LayoutElement[], skipProvenance: boolean = false) => {
-    if (skipProvenance) {
-      return
-    }
-    provenance.applyAction(
-      "Setting Layout Array",
-      (state: ApplicationState) => {
-        state.layoutArray = layoutArray;
-        return state;
-      }
-    )
-  }
+  // const setLayoutArray = (layoutArray: LayoutElement[], skipProvenance: boolean = false) => {
+  //   if (skipProvenance) {
+  //     return
+  //   }
+  //   provenance.applyAction(
+  //     "Setting Layout Array",
+  //     (state: ApplicationState) => {
+  //       state.layoutArray = layoutArray;
+  //       return state;
+  //     }
+  //   )
+  // }
 
   const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plot_type: string, interventionDate?: number, interventionChartType?: string) => {
 
@@ -150,6 +152,7 @@ export function setupProvenance(): AppProvenance {
       x: 0,
       y: Infinity,
       plot_type: plot_type,
+      notation: ""
     }
     if (plot_type === "VIOLIN" || plot_type === "HEATMAP" || plot_type === "INTERVENTION") {
       newLayoutElement.extraPair = JSON.stringify([]);
@@ -175,13 +178,21 @@ export function setupProvenance(): AppProvenance {
       `change layout to chart ${data.i}`,
       //We use index here because the layout array should always have the same order as the layoutlement array
       (state: ApplicationState) => {
-        state.layoutArray = state.layoutArray.map((d, i) => {
-          d.w = data[i].w;
-          d.h = data[i].h;
-          d.x = data[i].x;
-          d.y = data[i].y;
-          return d
+        data.map((gridLayout: any) => {
+          let match = state.layoutArray.filter(d => d.i === gridLayout.i)[0]
+          match.w = gridLayout.w;
+          match.h = gridLayout.h;
+          match.x = gridLayout.x;
+          match.y = gridLayout.y;
         })
+        // state.layoutArray = state.layoutArray.map((d, i) => {
+        //   d.w = data[i].w;
+        //   d.h = data[i].h;
+        //   d.x = data[i].x;
+        //   d.y = data[i].y;
+        //   return d
+        // })
+        state.layoutArray = JSON.parse(JSON.stringify(state.layoutArray))
         return state;
       }
     )
@@ -203,6 +214,7 @@ export function setupProvenance(): AppProvenance {
                 x: 0,
                 y: Infinity,
                 plot_type: "VIOLIN",
+                notation: "",
                 extraPair: JSON.stringify([])
               },
               {
@@ -213,6 +225,7 @@ export function setupProvenance(): AppProvenance {
                 h: 1,
                 x: 0,
                 y: Infinity,
+                notation: "",
                 plot_type: "VIOLIN",
                 extraPair: JSON.stringify([])
               }, {
@@ -222,6 +235,7 @@ export function setupProvenance(): AppProvenance {
                 w: 1,
                 h: 1,
                 x: 0,
+                notation: "",
                 y: Infinity,
                 plot_type: "DUMBBELL"
               }]
@@ -267,6 +281,19 @@ export function setupProvenance(): AppProvenance {
         return state
       }
     )
+  }
+
+  const changeNotation = (chartID: string, notation: string) => {
+    provenance.applyAction(`Change notation ${chartID}`,
+      (state: ApplicationState) => {
+        state.layoutArray = state.layoutArray.map(d => {
+          if (d.i === chartID) {
+            d.notation = notation;
+          }
+          return d;
+        })
+        return state
+      })
   }
 
   // const selectChart = (chartID: string) => {
@@ -511,7 +538,7 @@ export function setupProvenance(): AppProvenance {
     actions: {
       goBack,
       goForward,
-      setLayoutArray,
+      // setLayoutArray,
       //selectChart,
       changeChart,
       toggleShowZero,
@@ -520,6 +547,7 @@ export function setupProvenance(): AppProvenance {
 
       //  yearRangeChange,
       dateRangeChange,
+      changeNotation,
 
       addNewChart,
       removeChart,

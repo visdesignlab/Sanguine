@@ -1,27 +1,15 @@
 import React, {
     FC,
-    useMemo,
-    useEffect,
     useCallback
 } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import {
-    select,
-    scaleLinear,
-    scaleBand,
-    max,
-    axisLeft,
-    axisTop,
-    interpolateBlues,
-    axisBottom,
-    interpolateGreys,
-    line,
     ScaleOrdinal,
     scaleOrdinal
 } from "d3";
-import { secondary_gray, basic_gray } from "../../ColorProfile";
+import { secondary_gray, basic_gray } from "../../PresetsProfile";
 
 interface OwnProps {
     //  scale: ScaleOrdinal<any, number>;
@@ -49,11 +37,12 @@ const CustomizedAxis: FC<Props> = ({ numberList, scaleDomain, scaleRange }) => {
         {numberList.map((numberOb, ind) => {
             let x1 = ind === 0 ? (scale() as ScaleOrdinal<any, number>)(0) : (1 + (scale() as ScaleOrdinal<any, number>)((numberList[ind - 1].indexEnding + 1)) - 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding)))
             let x2 = ind === numberList.length - 1 ? (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding) : (-1 + (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding) + 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding)))
-
-            return ([<Line x1={x1} x2={x2} />,
-            <LineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? secondary_gray : basic_gray} />,
-            <AxisText x={x1 + 0.5 * (x2 - x1)}>{numberOb.num}</AxisText>
-            ])
+            if (x1 && x2) {
+                return ([<Line x1={x1} x2={x2} />,
+                <LineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? secondary_gray : basic_gray} />,
+                <AxisText x={x1 + 0.5 * (x2 - x1)}>{numberOb.num}</AxisText>
+                ])
+            }
         })}
     </>
 }

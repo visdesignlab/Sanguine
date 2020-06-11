@@ -1,20 +1,18 @@
 import React, {
     FC,
     useEffect,
-    useRef,
-    useLayoutEffect,
     useState,
-    useMemo,
     useCallback
 } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { ScatterDataPoint, offset, AxisLabelDict, SelectSet } from "../../Interfaces/ApplicationState";
-import { select, scaleLinear, axisLeft, axisBottom, brush, event, range, scaleOrdinal, ScaleOrdinal } from "d3";
+import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
+import { offset, AxisLabelDict } from "../../PresetsProfile"
+import { select, scaleLinear, axisLeft, axisBottom, brush, event } from "d3";
 //import CustomizedAxis from "../Utilities/CustomizedAxis";
-import { highlight_orange, basic_gray } from "../../ColorProfile";
+import { highlight_orange, basic_gray } from "../../PresetsProfile";
 
 interface OwnProps {
     yAxisName: string;
@@ -52,7 +50,11 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
                 caseList.push(d.case.caseId)
             }
         })
-        actions.updateSelectedPatientGroup(caseList)
+        if (caseList.length > 1000) {
+            updateBrushLoc(null)
+        } else {
+            actions.updateSelectedPatientGroup(caseList)
+        }
     }, [brushLoc])
     //  let numberList: { num: number, indexEnding: number }[] = [];
     // if (data.length > 0) {
@@ -100,7 +102,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
             .range([height - currentOffset.bottom, currentOffset.top]);
 
         return yAxisScale;
-    }, [yMax, xMax, height])
+    }, [yMax, yMin, height])
 
     const yAxisLabel = axisLeft(yAxisScale());
     const xAxisLabel = axisBottom(xAxisScale());
@@ -199,7 +201,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
             <g className="brush-layer" />
             {/* <line x1={currentOffset.left} x2={dimension.width - currentOffset.right} y1={testValueScale(11)} y2={testValueScale(11)} style={{ stroke: "#990D0D", strokeWidth: "2" }} /> */}
             {data.map((dataPoint) => {
-                const cx = (xAxisScale())(dataPoint.xVal)
+                const cx = xAxisScale()(dataPoint.xVal)
                 const cy = yAxisScale()(dataPoint.yVal)
 
                 return (

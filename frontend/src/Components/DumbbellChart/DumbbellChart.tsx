@@ -28,9 +28,10 @@ import {
   median,
   timeParse,
 } from "d3";
-import { DumbbellDataPoint, offset, AxisLabelDict, SelectSet, minimumWidthScale, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState";
+import { DumbbellDataPoint } from "../../Interfaces/ApplicationState";
+import { offset, AxisLabelDict, minimumWidthScale, stateUpdateWrapperUseJSON } from "../../PresetsProfile"
 import CustomizedAxis from "../Utilities/CustomizedAxis";
-import { preop_color, basic_gray, highlight_orange, postop_color } from "../../ColorProfile"
+import { preop_color, basic_gray, highlight_orange, postop_color } from "../../PresetsProfile"
 
 interface OwnProps {
   yAxisName: string;
@@ -311,53 +312,54 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
           // (valueScale(dataPoint.yVal) - valueScale(dataPoint.yVal - 1))
           // -
           // Math.random() * 3;
-
-          return (
-            <Popup
-              content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}
-              key={`${dataPoint.case.visitNum}-${dataPoint.case.caseId}`}
-              trigger={
-                <g >
-                  {/* // surgeonselected={decideIfSurgeon(dataPoint)} 
+          if (xVal) {
+            return (
+              <Popup
+                content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}
+                key={`${dataPoint.case.visitNum}-${dataPoint.case.caseId}`}
+                trigger={
+                  <g >
+                    {/* // surgeonselected={decideIfSurgeon(dataPoint)} 
               //  dataPoint={dataPoint} > */}
-                  <Rect
-                    x={xVal - 1
-                    }
-                    y={returning}
-                    height={rectDifference}
-                    isselected={decideIfSelected(dataPoint) || decideIfBrushed(dataPoint)}
-                    display={showingAttr.gap ? undefined : "none"}
-                  />
-                  <Circle
-                    cx={
-                      xVal
-                    }
-                    cy={testValueScale()(dataPoint.startXVal)}
-                    onClick={() => {
-                      clickDumbbellHandler(dataPoint);
-                    }}
-                    isselected={decideIfSelected(dataPoint)}
-                    isbrushed={decideIfBrushed(dataPoint)}
-                    ispreop={true}
-                    display={showingAttr.preop ? undefined : "none"}
-                  />
-                  <Circle
-                    cx={
-                      xVal
-                    }
-                    cy={testValueScale()(dataPoint.endXVal)}
-                    onClick={() => {
-                      clickDumbbellHandler(dataPoint);
-                    }}
-                    isselected={decideIfSelected(dataPoint)}
-                    isbrushed={decideIfBrushed(dataPoint)}
-                    ispreop={false}
-                    display={showingAttr.postop ? undefined : "none"}
-                  />
-                </g>
-              }
-            />
-          );
+                    <Rect
+                      x={xVal - 1
+                      }
+                      y={returning}
+                      height={rectDifference}
+                      isselected={decideIfSelected(dataPoint) || decideIfBrushed(dataPoint)}
+                      display={showingAttr.gap ? undefined : "none"}
+                    />
+                    <Circle
+                      cx={
+                        xVal
+                      }
+                      cy={testValueScale()(dataPoint.startXVal)}
+                      onClick={() => {
+                        clickDumbbellHandler(dataPoint);
+                      }}
+                      isselected={decideIfSelected(dataPoint)}
+                      isbrushed={decideIfBrushed(dataPoint)}
+                      ispreop={true}
+                      display={showingAttr.preop ? undefined : "none"}
+                    />
+                    <Circle
+                      cx={
+                        xVal
+                      }
+                      cy={testValueScale()(dataPoint.endXVal)}
+                      onClick={() => {
+                        clickDumbbellHandler(dataPoint);
+                      }}
+                      isselected={decideIfSelected(dataPoint)}
+                      isbrushed={decideIfBrushed(dataPoint)}
+                      ispreop={false}
+                      display={showingAttr.postop ? undefined : "none"}
+                    />
+                  </g>
+                }
+              />
+            );
+          }
         })}
         {numberList.map((numberOb, ind) => {
           if (Object.keys(averageForEachTransfused).length > 0) {
@@ -371,10 +373,12 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
             if (ind >= 1 && numberOb.num <= numberList[ind - 1].num) {
               interventionLine = <line x1={x1 - 0.5 * (x1 - interval)} x2={x1 - 0.5 * (x1 - interval)} y1={currentOffset.top} y2={dimensionHeight - currentOffset.bottom} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
             }
-            return ([
-              <Line x1={x1} x2={x2} y1={beginY} y2={beginY} ispreop={true} />,
-              <Line x1={x1} x2={x2} y1={endY} y2={endY} ispreop={false} />, interventionLine
-            ])
+            if (x1 && x2) {
+              return ([
+                <Line x1={x1} x2={x2} y1={beginY} y2={beginY} ispreop={true} />,
+                <Line x1={x1} x2={x2} y1={endY} y2={endY} ispreop={false} />, interventionLine
+              ])
+            }
           }
         })}
       </g>

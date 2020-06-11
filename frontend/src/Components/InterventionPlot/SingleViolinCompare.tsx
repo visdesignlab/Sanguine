@@ -5,7 +5,7 @@ import { inject, observer } from "mobx-react";
 import { InterventionDataPoint } from "../../Interfaces/ApplicationState";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
-import { highlight_orange, basic_gray, highlight_blue, third_gray } from "../../ColorProfile";
+import { highlight_orange, basic_gray, highlight_blue, third_gray } from "../../PresetsProfile";
 
 interface OwnProps {
     dataPoint: InterventionDataPoint;

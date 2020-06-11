@@ -9,10 +9,11 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { DumbbellDataPoint, SelectSet, BloodProductCap, dumbbellFacetOptions, barChartValuesOptions, stateUpdateWrapperUseJSON } from "../../Interfaces/ApplicationState"
+import { DumbbellDataPoint } from "../../Interfaces/ApplicationState"
+import { BloodProductCap, dumbbellFacetOptions, barChartValuesOptions, stateUpdateWrapperUseJSON, ChartSVG } from "../../PresetsProfile"
 import DumbbellChart from "./DumbbellChart"
-import { Grid, Menu, Dropdown, Button } from "semantic-ui-react";
-import { preop_color, postop_color, basic_gray, third_gray } from "../../ColorProfile";
+import { Grid, Menu, Dropdown, Button, Icon, Modal, Form, Message } from "semantic-ui-react";
+import { preop_color, postop_color, basic_gray, third_gray } from "../../PresetsProfile";
 
 interface OwnProps {
   yAxis: string;
@@ -20,12 +21,14 @@ interface OwnProps {
   store?: Store;
   chartIndex: number;
   hemoglobinDataSet: any;
+  notation: string;
+  w: number;
   // interventionDate?: number;
 }
 
 export type Props = OwnProps;
 
-const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartIndex, hemoglobinDataSet }: Props) => {
+const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, store, chartIndex, hemoglobinDataSet }: Props) => {
 
   const {
     layoutArray,
@@ -47,11 +50,14 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
   const [xMin, setXMin] = useState(Infinity);
   const [xMax, setXMax] = useState(0)
   const [sortMode, setSortMode] = useState("Postop");
+  const [openNotationModal, setOpenNotationModal] = useState(false)
+  const [notationInput, setNotationInput] = useState(notation)
   const [showingAttr, setShowingAttr] = useState({ preop: true, postop: true, gap: true })
 
   useLayoutEffect(() => {
     if (svgRef.current) {
-      setDimensionWidth(svgRef.current.clientWidth);
+      //   setDimensionWidth(svgRef.current.clientWidth);
+      setDimensionWidth(w === 1 ? 542.28 : 1146.97)
       setDimensionHeight(svgRef.current.clientHeight)
 
     }
@@ -70,7 +76,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
     );
     const temp_transfusion_data = await transfusedRes.json();
     //const temp_transfusion_data = transfusedDataResult.result;
-    console.log(temp_transfusion_data)
+    //console.log(temp_transfusion_data)
     let caseIDSet = new Set()
     temp_transfusion_data.forEach((element: any) => {
       caseIDSet.add(element.case_id)
@@ -190,10 +196,45 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
                 <GapButton basic={sortMode !== "Gap"} onClick={() => { setSortMode("Gap") }}>Gap</GapButton>
               </Button.Group>
             </Menu.Menu>
+
             <Menu.Item header>
-              <Dropdown selectOnBlur={false} text="Change Facet" pointing basic item icon="edit" compact options={dumbbellFacetOptions.concat(barChartValuesOptions)} onChange={changeXVal}>
+              <Dropdown selectOnBlur={false} pointing basic item icon="settings"
+                compact options={dumbbellFacetOptions.concat(barChartValuesOptions)} onChange={changeXVal}>
               </Dropdown>
             </Menu.Item>
+
+            <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
+              <Icon name="edit" />
+            </Menu.Item>
+
+            {/* Modal for annotation. */}
+            <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
+              <Modal.Header>
+                Set the annotation for chart
+              </Modal.Header>
+              <Modal.Content>
+                <Form>
+                  <Form.TextArea autoFocus
+                    value={notationInput}
+                    label="Notation"
+                    onChange={(e, d) => {
+                      if (typeof d.value === "number") {
+                        setNotationInput((d.value).toString() || "")
+                      } else {
+                        setNotationInput(d.value || "")
+                      }
+                    }
+                    }
+                  />
+                </Form>
+              </Modal.Content>
+              <Modal.Actions>
+                <Button content="Save" positive onClick={() => { setOpenNotationModal(false); actions.changeNotation(chartId, notationInput); }} />
+                <Button content="Cancel" onClick={() => { setOpenNotationModal(false) }} />
+              </Modal.Actions>
+            </Modal>
+
+
           </Menu>
           {/* <OptionsP>Show</OptionsP>
           <Button.Group vertical size="mini">
@@ -209,7 +250,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
           </Button.Group> */}
         </Grid.Column>
         <Grid.Column width={14}  >
-          <SVG ref={svgRef}>
+          <ChartSVG ref={svgRef}>
             {/* <text
           x="0"
           y="0"
@@ -234,7 +275,10 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
               sortMode={sortMode}
               showingAttr={showingAttr}
             />
-          </SVG>
+          </ChartSVG>
+
+          <Message hidden={notation.length === 0} color="green">{notation}</Message>
+
         </Grid.Column>
       </Grid.Row>
     </Grid>
@@ -244,10 +288,7 @@ const DumbbellChartVisualization: FC<Props> = ({ yAxis, chartId, store, chartInd
 
 export default inject("store")(observer(DumbbellChartVisualization));
 
-const SVG = styled.svg`
-  height: 100%;
-  width: 100%;
-`;
+
 
 interface ActiveProps {
   active: boolean;
