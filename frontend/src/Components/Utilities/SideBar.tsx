@@ -40,6 +40,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     //TODO this needs to check if the filterSelection is not empty
 
     let tempMaxCaseCount = 0
+
     result.forEach((d: any) => {
       tempMaxCaseCount = d.count > tempMaxCaseCount ? d.count : tempMaxCaseCount;
     })

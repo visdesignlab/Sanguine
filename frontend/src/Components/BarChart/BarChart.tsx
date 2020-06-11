@@ -87,7 +87,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     let newcaseMax = 0;
     const newXVals = data
       .map(function (dp) {
-        newcaseMax = dp.caseCount > caseMax ? dp.caseCount : caseMax;
+        newcaseMax = dp.caseCount > newcaseMax ? dp.caseCount : newcaseMax;
         const max_temp = max(dp.kdeCal, d => d.y)
         newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
         return dp.aggregateAttribute;
