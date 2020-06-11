@@ -107,7 +107,6 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
     const yAxisLabel = axisLeft(yAxisScale());
     const xAxisLabel = axisBottom(xAxisScale());
 
-    // useEffect(() => { console.log(brushLoc) }, [brushLoc])
 
     const updateBrush = () => {
         updateBrushLoc(event.selection)
@@ -185,6 +184,39 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         actions.selectPatient(d.case)
     }
 
+    const generateScatterDots = () => {
+        let selectedPatients: any[] = [];
+        //let unselectedPatients = [];
+        let unselectedPatients = data.map((dataPoint) => {
+            const cx = xAxisScale()(dataPoint.xVal)
+            const cy = yAxisScale()(dataPoint.yVal)
+            const isSelected = decideIfSelected(dataPoint)
+            const isBrushed = (brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1])
+                || (currentSelectPatientGroup.includes(dataPoint.case.caseId));
+            if (isSelected || isBrushed) {
+                selectedPatients.push(<Circle cx={cx}
+                    cy={cy}
+                    // fill={ ? highlight_orange : basic_gray}
+                    isselected={isSelected}
+                    isbrushed={isBrushed}
+                    onClick={() => { clickDumbbellHandler(dataPoint) }}
+                />)
+            } else {
+                return (
+                    <Circle cx={cx}
+                        cy={cy}
+                        // fill={ ? highlight_orange : basic_gray}
+                        isselected={isSelected}
+                        isbrushed={isBrushed}
+                        onClick={() => { clickDumbbellHandler(dataPoint) }}
+                    />
+
+                );
+            }
+        })
+        return unselectedPatients.concat(selectedPatients)
+    }
+
 
     return (<>
         <g className="axes">
@@ -198,24 +230,10 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
             <text className="y-label" style={{ textAnchor: "end" }} />
         </g>
         <g className="chart-comp" >
-            <g className="brush-layer" />
+
             {/* <line x1={currentOffset.left} x2={dimension.width - currentOffset.right} y1={testValueScale(11)} y2={testValueScale(11)} style={{ stroke: "#990D0D", strokeWidth: "2" }} /> */}
-            {data.map((dataPoint) => {
-                const cx = xAxisScale()(dataPoint.xVal)
-                const cy = yAxisScale()(dataPoint.yVal)
-
-                return (
-
-                    <Circle cx={cx}
-                        cy={cy}
-                        // fill={ ? highlight_orange : basic_gray}
-                        isselected={decideIfSelected(dataPoint)}
-                        isbrushed={(brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) || (currentSelectPatientGroup.includes(dataPoint.case.caseId))}
-                        onClick={() => { clickDumbbellHandler(dataPoint) }}
-                    />
-
-                );
-            })}
+            {generateScatterDots()}
+            <g className="brush-layer" />
         </g>
     </>)
 }

@@ -37,6 +37,8 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     const data = await res.json();
     const result = data.result
 
+    //TODO this needs to check if the filterSelection is not empty
+
     let tempMaxCaseCount = 0
     result.forEach((d: any) => {
       tempMaxCaseCount = d.count > tempMaxCaseCount ? d.count : tempMaxCaseCount;
@@ -101,7 +103,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
   const generatePatientSelection = () => {
     let output: any[] = []
     if (currentSelectPatientGroup.length > 0) {
-      output.push(<List.Item style={{ textAlign: "left" }} content={`${currentSelectPatientGroup.length} patients selected in LineUp`} />)
+      output.push(<List.Item key={"Patient Circled"} style={{ textAlign: "left" }} content={`${currentSelectPatientGroup.length} patients selected in LineUp`} />)
     }
     return output
   }
@@ -118,20 +120,21 @@ const SideBar: FC<Props> = ({ store }: Props) => {
           <List bulleted>
 
             <List.Header style={{ textAlign: "left" }}><b>Current View</b></List.Header>
-            <List.Item
+            <List.Item key="Date"
               //icon="circle"
               style={{ textAlign: "left" }}
               content={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} ~ ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} />
-            <List.Item
+            <List.Item key="AggreCaseCount"
               //   icon="caret right"
               style={{ textAlign: "left" }}
               content={`Aggregated Case: ${totalAggregatedCaseCount}`} />
-            <List.Item
+            <List.Item key="IndiCaseCount"
               //  icon="caret right"
               style={{ textAlign: "left" }}
               content={`Individual Case: ${totalIndividualCaseCount}`} />
 
             <List.Item
+              key="SurgeryList"
               //icon="caret right" 
               style={{ textAlign: "left" }}
               content={generateSurgery()} />
@@ -141,6 +144,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
             {currentOutputFilterSet.map((selectSet) => {
               return <FilterListIT
                 //icon="caret right"
+                key={`${selectSet.set_name}selected`}
                 onClick={() => { actions.clearOutputFilterSet(selectSet.set_name) }}
                 content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`} />
             })}
@@ -155,7 +159,9 @@ const SideBar: FC<Props> = ({ store }: Props) => {
             {currentSelectSet.map((selectSet) => {
               return <FilterListIT
                 //icon="caret right" 
-                onClick={() => { actions.clearSelectSet(selectSet.set_name) }} content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
+                key={`${selectSet.set_name}currentselecting`}
+                onClick={() => { actions.clearSelectSet(selectSet.set_name) }}
+                content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
             })}
           </List>
           <Button disabled={!(currentSelectSet.length > 0)}
@@ -166,6 +172,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
           />
         </Container>
       </Grid.Row>
+
       <Grid.Row style={{ padding: "20px" }}>
         <Container style={{ overflow: "auto", height: "40vh" }}>
           <List relaxed divided >
