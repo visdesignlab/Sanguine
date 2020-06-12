@@ -130,8 +130,8 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         .select(".axes")
         .select(".y-label")
         .attr("display", null)
-        .attr("x", -0.5 * height + 1.5 * currentOffset.bottom)
-        .attr("y", 0)
+        .attr("x", -0.5 * height)
+        .attr("y", currentOffset.margin)
         .attr("transform", "rotate(-90)")
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
@@ -155,7 +155,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         .select(".axes")
         .select(".x-label")
         .attr("y", height - currentOffset.bottom + 20)
-        .attr("x", 0.5 * (width + currentOffset.left))
+        .attr("x", 0.5 * width + currentOffset.margin)
         .attr("alignment-baseline", "hanging")
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
@@ -226,8 +226,8 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
             {/* <CustomizedAxis scaleDomain={JSON.stringify(xAxisScale.domain())} scaleRange={JSON.stringify(xAxisScale.range())} numberList={numberList} /> */}
             {/* </g> */}
 
-            <text className="x-label" style={{ textAnchor: "end" }} />
-            <text className="y-label" style={{ textAnchor: "end" }} />
+            <text className="x-label" />
+            <text className="y-label" />
         </g>
         <g className="chart-comp" >
 
