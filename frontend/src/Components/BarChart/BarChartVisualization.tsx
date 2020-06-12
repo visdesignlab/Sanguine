@@ -422,7 +422,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
             />
           </ChartSVG>
           {/* <Container>{notation}</Container> */}
-          <Message hidden={notation.length === 0} color="green">{notation}</Message>
+          <Message hidden={notation.length === 0} >{notation}</Message>
 
         </Grid.Column>
       </Grid.Row>

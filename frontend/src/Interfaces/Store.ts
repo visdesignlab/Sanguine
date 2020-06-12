@@ -45,7 +45,7 @@ export default class Store {
 
   @observable isLoggedIn: boolean = false;
   @observable previewMode: boolean = false;
-  @observable loadingModalOpen: boolean = true;
+  @observable loadingModalOpen: boolean = false;
   // @observable csrftoken: string | null = ""
 
 }

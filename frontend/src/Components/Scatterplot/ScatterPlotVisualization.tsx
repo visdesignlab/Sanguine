@@ -240,7 +240,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                         />
                     </ChartSVG>
 
-                    <Message hidden={notation.length === 0} color="green">{notation}</Message>
+                    <Message hidden={notation.length === 0} >{notation}</Message>
 
                 </Grid.Column>
             </Grid.Row>
