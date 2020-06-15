@@ -109,7 +109,6 @@ const App: FC<Props> = ({ store }: Props) => {
         <Route path='/' component={Login} />
 
       </Switch></BrowserRouter>
-
     // <Login />
     // <Dashboard hemoData={hemoData} />
   );
