@@ -182,7 +182,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
     {
         menuItem: 'LineUp', pane:
             <Tab.Pane key="LineUp">
-                <div className={"lineup"}>
+                <div className={"lineup"} id={"lineup-wrapper"}>
                     <LineUpWrapper hemoglobinDataSet={hemoData} /></div></Tab.Pane>
     }, {
         menuItem: 'Selected Patients',
