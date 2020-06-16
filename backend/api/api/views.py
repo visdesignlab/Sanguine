@@ -67,7 +67,7 @@ def get_attributes(request):
         command = f"""
             SELECT
                 CODE,
-                COUNT(UNIQUE(DI_CASE_ID))
+                DI_CASE_ID
             FROM (
                 SELECT
                     BLNG.*, SURG.*
@@ -78,7 +78,6 @@ def get_attributes(request):
                     AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
                 {filters_safe_sql}
             )
-            GROUP BY CODE
         """
 
         result = execute_sql(
