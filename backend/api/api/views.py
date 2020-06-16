@@ -67,7 +67,7 @@ def get_attributes(request):
         command = f"""
             SELECT
                 CODE,
-                COUNT(*)
+                COUNT(UNIQUE(SURG.DI_CASE_ID))
             FROM (
                 SELECT
                     BLNG.*, SURG.*
