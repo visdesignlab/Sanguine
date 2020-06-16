@@ -67,7 +67,7 @@ def get_attributes(request):
         command = f"""
             SELECT
                 CODE,
-                COUNT(*)
+                DI_CASE_ID
             FROM (
                 SELECT
                     BLNG.*, SURG.*
@@ -78,7 +78,6 @@ def get_attributes(request):
                     AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
                 {filters_safe_sql}
             )
-            GROUP BY CODE
         """
 
         result = execute_sql(
@@ -87,8 +86,17 @@ def get_attributes(request):
         )
 
         # Return the result, the multi-selector component in React requires the below format
-        items = [{[x[2] for x in cpt() if x[0] == str(row[0])][0]: row[1]} for row in result]
-        items = dict(reduce(add, map(Counter, items)))
+        items = [
+            {
+                "procedure": [x[2] for x in cpt() if x[0] == str(row[0])][0],
+                "id": row[1]
+            } for row in result
+        ]
+        # Remove duplicated dicts (stops the double counting)
+        items = [dict(t) for t in {tuple(d.items()) for d in items}]
+
+        # Count the number of occurrences of each type of procedure
+        items = dict(Counter(i["procedure"] for i in items))
         items = [{"value": k, "count": v} for k, v in items.items()]
         return JsonResponse({"result": items})
     else:
