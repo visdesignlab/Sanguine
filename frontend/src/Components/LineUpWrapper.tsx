@@ -131,9 +131,13 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                         .column(LineUpJS.buildNumberColumn("CELL_SAVER_ML", [0, BloodProductCap.CELL_SAVER_ML]))
                         .build(node);
                     lineup.data.getFirstRanking().on("filterChanged", (previous, current) => {
-                        console.log(previous, current); // filter settings
-                        console.log(lineup.data); // DataProvider
-                        console.log(lineup.data.getFirstRanking()); // First ranking
+                        const filter_output = lineup.data.getFirstRanking().getGroups()[0].order
+
+                        const caseIDList = filter_output.map(v => hemoglobinDataSet[v].CASE_ID)
+                        actions.updateSelectedPatientGroup(caseIDList)
+                        // console.log(previous, current); // filter settings
+                        // console.log(lineup.data); // DataProvider
+                        // console.log(lineup.data.getFirstRanking().getGroups()[0].order); // First ranking
                     });
                 }
             }
