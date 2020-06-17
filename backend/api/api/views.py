@@ -55,6 +55,7 @@ def index(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@login_required
 def get_attributes(request):
     if request.method == "GET":
         # Get the list of allowed filter_selection names from the cpt function 
@@ -103,6 +104,7 @@ def get_attributes(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@login_required
 def fetch_professional_set(request):
     if request.method == "GET":
         allowed_types = ["SURGEON_ID", "ANESTHESIOLOGIST_ID"]
@@ -158,6 +160,7 @@ def fetch_professional_set(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@login_required
 def fetch_surgery(request):
     if request.method == "GET":
         # Get the values from the request
@@ -194,6 +197,7 @@ def fetch_surgery(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@login_required
 def fetch_patient(request):
     if request.method == "GET":
         # Get the values from the request
@@ -229,6 +233,7 @@ def fetch_patient(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@login_required
 def request_transfused_units(request):
     if request.method == "GET":
         # Get the required parameters from the query string
@@ -373,6 +378,7 @@ def request_transfused_units(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@login_required
 def test_results(request):
     if request.method == "GET":
         case_ids = request.GET.get("case_ids") or ""
@@ -386,6 +392,7 @@ def test_results(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@login_required
 def risk_score(request):
     if request.method == "GET":
         patient_ids = request.GET.get("patient_ids") or ""
@@ -438,6 +445,7 @@ def risk_score(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@login_required
 def patient_outcomes(request):
     if request.method == "GET":
         patient_ids = request.GET.get("patient_ids") or ""
@@ -484,6 +492,7 @@ def patient_outcomes(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@login_required
 def hemoglobin(request):
     if request.method == "GET":
         command = """
@@ -611,6 +620,7 @@ def hemoglobin(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@login_required
 def state(request):
     if request.method == "GET":
         # Get the name from the querystring
