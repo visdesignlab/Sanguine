@@ -231,12 +231,14 @@ def fetch_patient(request):
 
 def request_transfused_units(request):
     if request.method == "GET":
-        # Get the parameters from the query string
-        aggregated_by = request.GET.get("aggregated_by")
+        # Get the required parameters from the query string
         transfusion_type = request.GET.get("transfusion_type")
+        date_range = request.GET.get("date_range") or ""
+
+        # Get the optional parameters from the query string
+        aggregated_by = request.GET.get("aggregated_by")
         patient_ids = request.GET.get("patient_ids") or ""
         case_ids = request.GET.get("case_ids") or ""
-        date_range = request.GET.get("date_range") or ""
         filter_selection = request.GET.get("filter_selection") or ""
 
         # Parse the date_range and the filter selection
