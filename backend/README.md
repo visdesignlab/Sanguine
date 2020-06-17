@@ -11,9 +11,9 @@ An API server for the Bloodvis application.
 
 ## Development Environment Quick Start
 
-This API uses pipenv and django to serve up the dynamically queried data. To install all the needed packages please make sure you have pipenv installed globally.  If you need instructions for setting it up, check [here](https://pipenv.pypa.io/en/latest/install/#installing-pipenv). Once  pipenv is installed, you can set up a virtual environment and install all python dependencies with `pipenv install`.
+This API uses pipenv and django to serve up the dynamically queried data. To install all the needed packages, please make sure you have pipenv installed globally.  If you need instructions for setting it up, check [here](https://pipenv.pypa.io/en/latest/install/#installing-pipenv). Once  pipenv is installed, you can set up a virtual environment and install all python dependencies with `pipenv install`.
 
-Once pipenv has finished setting up, run `pipenv serve` to run a local development server at http://127.0.0.1:8000/.
+Once pipenv has finished setting up, run `pipenv run serve` to run a local development server at http://127.0.0.1:8000/.
 
 **NOTE**: You will need access to the University of Utah health records database with a VPN to query any data.
 
@@ -75,7 +75,7 @@ There are several routes set up for accessing the patient and surgery data. Here
   - Parameters:
     - Required:  
         `transfusion_type`: A blood product to look up. Must be one of: PRBC_UNITS, FFP_UNITS, PLT_UNITS, CRYO_UNITS, CELL_SAVER_ML, or ALL_UNITS.  
-        `date_range`: A comma separated list of 2 dates in oracle db date format
+        `date_range`: A comma separated list of 2 dates in oracle db date format.
     - Optional:  
         `aggregated_by`: One of YEAR, SURGEON_ID, ANESTHESIOLOGIST_ID.  
         `patient_ids`: A comma separated list of patient ids.  
@@ -141,7 +141,7 @@ TODO: This method may be used, Haihan will update when she decides to use or del
   - Allowed Methods: `GET`
   - Parameters:  
     `patient_ids`: A comma separated list of patient ids.  
-  - Description: WIP. Takes patient ids as input. Currently returns 2 values, whether a patient has died or not and if they spent 1440 minutes on a ventilator (24 hours)
+  - Description: WIP. Takes patient ids as input. Currently returns 2 values, whether a patient has died or not and if they spent 1440 minutes on a ventilator (24 hours).
   - Example:
     ```
     curl '127.0.0.1:8000/api/patient_outcomes?patient_ids=68175619,14711172,35383429,632559101'
