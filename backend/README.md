@@ -117,15 +117,6 @@ There are several routes set up for accessing the model data. Here are the names
     curl '127.0.0.1:8000/api/fetch_patient?patient_id=68175619'
     ```
 
-- Name: `/api/request_individual_specific`
-  - Allowed Methods: `GET`
-  - Parameters: `None`
-  - Description: Base API endpoint. Returns text and a 200 to verify everything is working. Doesn't return data.
-  - Example:
-    ```
-    curl '127.0.0.1:8000/api/request_individual_specific'
-    ```
-
 - Name: `/api/request_fetch_professional_set`
   - Allowed Methods: `GET`
   - Parameters: `None`
