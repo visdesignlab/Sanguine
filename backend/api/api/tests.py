@@ -368,32 +368,35 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             "transfusion_type and date_range must be supplied.",
         )
 
-    # def test_request_transfused_units_invalid_date_ranges(self):
-    #     invalid_options = [
-    #         "2016",
-    #         "2016,",
-    #         ",2016",
-    #         "2016,2017,2018",
-    #         ",",
-    #         # "a,b", # Should fail but doesn't TODO
-    #         "a,",
-    #         ",b",
-    #         None,
-    #     ]
+    def test_request_transfused_units_invalid_date_ranges(self):
+        invalid_options = [
+            "2016",
+            "2016,",
+            ",2016",
+            "2016,2017,2018",
+            ",",
+            "a,b",
+            "a,",
+            ",b",
+            None,
+            "01-MST-2021",
+            "1-APR-2020",
+            "31-FEB-2020"
+        ]
 
-    #     for invalid_option in invalid_options:
-    #         response = self.c.get(
-    #             self.endpoint,
-    #             {
-    #                 "transfusion_type": "PRBC_UNITS", 
-    #                 "date_range": invalid_option,
-    #             },
-    #         )
-    #         self.assertEqual(response.status_code, 400)
-    #         self.assertEqual(
-    #             response.content.decode(),
-    #             "transfusion_type and date_range must be supplied.",
-    #         )
+        for invalid_option in invalid_options:
+            response = self.c.get(
+                self.endpoint,
+                {
+                    "transfusion_type": "PRBC_UNITS", 
+                    "date_range": invalid_option,
+                },
+            )
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(
+                response.content.decode(),
+                "date_range is improperly formatted. It must look like: 09-JAN-2019,31-DEC-2020",
+            )
 
     def test_request_transfused_units_invalid_transfusion_types(self):
         invalid_options = [
