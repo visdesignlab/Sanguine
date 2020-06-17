@@ -231,12 +231,14 @@ def fetch_patient(request):
 
 def request_transfused_units(request):
     if request.method == "GET":
-        # Get the parameters from the query string
-        aggregated_by = request.GET.get("aggregated_by")
+        # Get the required parameters from the query string
         transfusion_type = request.GET.get("transfusion_type")
+        date_range = request.GET.get("date_range") or ""
+
+        # Get the optional parameters from the query string
+        aggregated_by = request.GET.get("aggregated_by")
         patient_ids = request.GET.get("patient_ids") or ""
         case_ids = request.GET.get("case_ids") or ""
-        date_range = request.GET.get("date_range") or ""
         filter_selection = request.GET.get("filter_selection") or ""
 
         # Parse the date_range and the filter selection
@@ -367,42 +369,6 @@ def request_transfused_units(request):
             cleaned = result_dict
         
         return JsonResponse(cleaned, safe = False)
-    else:
-        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
-
-
-def request_individual_specific(request):
-    if request.method == "GET":
-        # Get request parameters
-        case_id = request.GET.get("case_id")
-        attribute_to_retrieve = request.GET.get("attribute")
-        
-        # Check we have the require attributes
-        if not case_id or attribute_to_retrieve:
-            return HttpResponseBadRequest("case_id and attribute must be supplied")
-        
-        # Define the command dict
-        command_dict = {
-            "YEAR": "EXTRACT (YEAR FROM DI_CASE_DATE)",
-            "SURGEON_ID": "SURGEON_PROV_DWID",
-            "ANESTHESIOLOGIST_ID": "ANESTH_PROV_DWID"
-        }
-
-        # Verify that the attribute_to_retrieve is in the command dict keys
-        if not attribute_to_retrieve in command_dict.keys():
-            return HttpResponseBadRequest("case_id and attribute must be supplied")
-
-        # Define the command, safe to use format string since the command dict has safe values
-        command = f"""
-        SELECT {command_dict[attribute_to_retrieve]}
-        FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE
-        WHERE DI_CASE_ID = :id
-        """
-
-        # Execute the command and return the results
-        result = execute_sql(command, id = case_id)
-        items = [{"result":row[0]} for row in result]
-        return JsonResponse({"result": items})
     else:
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
