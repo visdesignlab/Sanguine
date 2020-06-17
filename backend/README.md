@@ -55,7 +55,7 @@ There are several routes set up for accessing the model data. Here are the names
 - Name: `/api/get_attributes`
   - Allowed Methods: `GET`
   - Parameters: `None`
-  - Description: Base API endpoint. Returns text and a 200 to verify everything is working. Doesn't return data.
+  - Description: Gets all the procedure names and their frequency.
   - Example:
     ```
     curl '127.0.0.1:8000/api/get_attributes'
@@ -64,19 +64,35 @@ There are several routes set up for accessing the model data. Here are the names
 - Name: `/api/hemoglobin`
   - Allowed Methods: `GET`
   - Parameters: `None`
-  - Description: Base API endpoint. Returns text and a 200 to verify everything is working. Doesn't return data.
+  - Description: Returns pre and post operative hemoglobin values for all patients.
   - Example:
     ```
-    curl '127.0.0.1:8000/api/get_attributes'
+    curl '127.0.0.1:8000/api/hemoglobin'
     ```
 
 - Name: `/api/request_transfused_units`
   - Allowed Methods: `GET`
-  - Parameters: `None`
+  - Parameters:
+    - aggregated_by: One of YEAR, SURGEON_ID, ANESTHESIOLOGIST_ID.
+    - transfusion_type: A blood product to look up. Must be one of: PRBC_UNITS, FFP_UNITS, PLT_UNITS, CRYO_UNITS, CELL_SAVER_ML, or ALL_UNITS.
+    - patient_ids: A comma separated list of patient ids.
+    - case_ids: A comma separated list of case ids.
+    - date_range: A comma separated list of 2 dates in oracle db date format (e.g. 13-JAN-2020)
+    - filter_selection: A comma separated list of procedures to filter by.
   - Description: Base API endpoint. Returns text and a 200 to verify everything is working. Doesn't return data.
   - Example:
     ```
-    curl '127.0.0.1:8000/api/get_attributes'
+    # Minimal example
+    curl '127.0.0.1:8000/api/request_transfused_units?transfusion_type=PRBC_UNITS&date_range=01-JAN-2016,31-DEC-2017'
+    
+    # Full example
+    curl '127.0.0.1:8000/api/request_transfused_units?
+      aggregated_by=YEAR&
+      transfusion_type=PRBC_UNITS&
+      patient_ids=68175619,14711172,35383429,632559101&
+      case_ids=85103152&
+      date_range=01-JAN-2016,31-DEC-2017&
+      filter_selection=Musculoskeletal Thoracic Procedure,Thoracotomy/Lung Procedure'
     ```
 
 - Name: `/api/fetch_surgery`
@@ -85,7 +101,7 @@ There are several routes set up for accessing the model data. Here are the names
   - Description: Base API endpoint. Returns text and a 200 to verify everything is working. Doesn't return data.
   - Example:
     ```
-    curl '127.0.0.1:8000/api/get_attributes'
+    curl '127.0.0.1:8000/api/fetch_surgery'
     ```
 
 - Name: `/api/fetch_patient`
@@ -94,7 +110,7 @@ There are several routes set up for accessing the model data. Here are the names
   - Description: Base API endpoint. Returns text and a 200 to verify everything is working. Doesn't return data.
   - Example:
     ```
-    curl '127.0.0.1:8000/api/get_attributes'
+    curl '127.0.0.1:8000/api/fetch_patient'
     ```
 
 - Name: `/api/request_individual_specific`
@@ -103,7 +119,7 @@ There are several routes set up for accessing the model data. Here are the names
   - Description: Base API endpoint. Returns text and a 200 to verify everything is working. Doesn't return data.
   - Example:
     ```
-    curl '127.0.0.1:8000/api/get_attributes'
+    curl '127.0.0.1:8000/api/request_individual_specific'
     ```
 
 - Name: `/api/request_fetch_professional_set`
@@ -112,7 +128,7 @@ There are several routes set up for accessing the model data. Here are the names
   - Description: Base API endpoint. Returns text and a 200 to verify everything is working. Doesn't return data.
   - Example:
     ```
-    curl '127.0.0.1:8000/api/get_attributes'
+    curl '127.0.0.1:8000/api/request_fetch_professional_set'
     ```
 
 - Name: `/api/risk_score`
@@ -121,7 +137,7 @@ There are several routes set up for accessing the model data. Here are the names
   - Description: Base API endpoint. Returns text and a 200 to verify everything is working. Doesn't return data.
   - Example:
     ```
-    curl '127.0.0.1:8000/api/get_attributes'
+    curl '127.0.0.1:8000/api/risk_score'
     ```
 
 - Name: `/api/patient_outcomes`
@@ -130,7 +146,7 @@ There are several routes set up for accessing the model data. Here are the names
   - Description: Base API endpoint. Returns text and a 200 to verify everything is working. Doesn't return data.
   - Example:
     ```
-    curl '127.0.0.1:8000/api/get_attributes'
+    curl '127.0.0.1:8000/api/patient_outcomes'
     ```
 
 - Name: `/api/state`
@@ -139,7 +155,7 @@ There are several routes set up for accessing the model data. Here are the names
   - Description: Base API endpoint. Returns text and a 200 to verify everything is working. Doesn't return data.
   - Example:
     ```
-    curl '127.0.0.1:8000/api/get_attributes'
+    curl '127.0.0.1:8000/api/state'
     ```
 
 
