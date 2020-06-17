@@ -75,7 +75,7 @@ There are several routes set up for accessing the patient and surgery data. Here
   - Parameters:
     - Required:  
         `transfusion_type`: A blood product to look up. Must be one of: PRBC_UNITS, FFP_UNITS, PLT_UNITS, CRYO_UNITS, CELL_SAVER_ML, or ALL_UNITS.  
-        `date_range`: A comma separated list of 2 dates in oracle db date format (e.g. 13-JAN-2020)
+        `date_range`: A comma separated list of 2 dates in oracle db date format
     - Optional:  
         `aggregated_by`: One of YEAR, SURGEON_ID, ANESTHESIOLOGIST_ID.  
         `patient_ids`: A comma separated list of patient ids.  
