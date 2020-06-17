@@ -354,7 +354,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.content.decode(),
-            "transfusion_type and date_range must be supplied."
+            "transfusion_type must be supplied."
         )
 
     def test_request_transfused_units_missing_date_range(self):
@@ -365,7 +365,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.content.decode(),
-            "transfusion_type and date_range must be supplied.",
+            "date_range is improperly formatted. It must look like: 09-JAN-2019,31-DEC-2020",
         )
 
     def test_request_transfused_units_invalid_date_ranges(self):
