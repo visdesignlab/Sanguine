@@ -256,7 +256,7 @@ def request_transfused_units(request):
 
         # Check the required parameters are there
         if not (transfusion_type):
-            return HttpResponseBadRequest("transfusion_type")
+            return HttpResponseBadRequest("transfusion_type must be supplied.")
 
         # Validate the dates
         if not (validate_dates(date_range) and len(date_range) == 2):
