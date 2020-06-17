@@ -11,11 +11,11 @@ An API server for the Bloodvis application.
 
 ## Development Environment Quick Start
 
-This API uses pipenv and django to serve up the dynamically queried data. To install all the needed packages please make sure you have pipenv installed globally.  If you need instructions for setting it up, check [here](https://pipenv.pypa.io/en/latest/install/#installing-pipenv). Once  `pipenv` is installed, you can set up a virtual environment and install all python dependencies with `pipenv install`.
+This API uses pipenv and django to serve up the dynamically queried data. To install all the needed packages please make sure you have pipenv installed globally.  If you need instructions for setting it up, check [here](https://pipenv.pypa.io/en/latest/install/#installing-pipenv). Once  pipenv is installed, you can set up a virtual environment and install all python dependencies with `pipenv install`.
 
-Once `pipenv` is set up and the .env file is set correctly, run `pipenv serve` to run a local development server at http://127.0.0.1:8000/.
+Once pipenv has finished setting up, run `pipenv serve` to run a local development server at http://127.0.0.1:8000/.
 
-**NOTE**: You will need access to the University of Utah health records database with a VPN
+**NOTE**: You will need access to the University of Utah health records database with a VPN to query any data.
 
 ## Deploying In Production
 
@@ -23,9 +23,9 @@ Not yet applicable.
 
 ## Route Documentation 
 
-There are several routes set up for accessing the patient and surgery data. Here are the names, allowed methods, parameters, and descriptions:
+There are several routes set up for accessing the patient and surgery data. Here are the names, allowed methods, parameters, descriptions, and examples:
 
-- Name: `/admin`
+- Name: `/admin` (From [django admin module](https://docs.djangoproject.com/en/2.2/ref/contrib/admin/))
   - Allowed Methods: `GET`
   - Parameters: `None`
   - Description: Access through a browser to manage users.
@@ -34,8 +34,8 @@ There are several routes set up for accessing the patient and surgery data. Here
     curl '127.0.0.1:8000/admin'
     ```
 
-- Name: `/accounts/*`
-  - Allowed Methods: `POST, GET`
+- Name: `/accounts/*` (From [django auth module](https://docs.djangoproject.com/en/2.2/topics/auth/))
+  - Allowed Methods: `POST, GET, PUT, DELETE` 
   - Parameters: `None`
   - Description: Manage your own account, reset passwords, login, logout, etc.s
   - Example:
@@ -43,7 +43,7 @@ There are several routes set up for accessing the patient and surgery data. Here
     curl '127.0.0.1:8000/accounts/{login,logout,etc.}'
     ```
 
-- Name: `/api`
+- Name: `/api` 
   - Allowed Methods: `GET`
   - Parameters: `None`
   - Description: Base API endpoint. Returns text and a 200 to verify everything is working. Doesn't return data.
@@ -99,7 +99,7 @@ There are several routes set up for accessing the patient and surgery data. Here
 
 - Name: `/api/fetch_surgery`
   - Allowed Methods: `GET`
-  - Parameters:
+  - Parameters:  
     `case_id`: A case id.  
   - Description: Returns a lot of information for one surgery case. This route gives case date, case start time, case end time, case elapsed time, case type description, surgeon id, anesthesiologist id, case procedure description, and ICU length of stay.
   - Example:
@@ -109,7 +109,7 @@ There are several routes set up for accessing the patient and surgery data. Here
 
 - Name: `/api/fetch_patient`
   - Allowed Methods: `GET`
-  - Parameters:
+  - Parameters:  
     `patient_id`: A case id.  
   - Description: Returns a lot of information for one patient. This route gives birth date, gender code, gender description, race code, race description, ethnicity code, ethnicity description, and death date.
   - Example:
@@ -117,7 +117,7 @@ There are several routes set up for accessing the patient and surgery data. Here
     curl '127.0.0.1:8000/api/fetch_patient?patient_id=68175619'
     ```
 
-TODO: Is this method used at all?
+TODO: This method may be used, Haihan will update when she decides to use or delete this endpoint.
 - Name: `/api/request_fetch_professional_set`
   - Allowed Methods: `GET`
   - Parameters: `None`
