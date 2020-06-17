@@ -378,7 +378,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             "a,b",
             "a,",
             ",b",
-            None,
+            "",
             "01-MST-2021",
             "1-APR-2020",
             "31-FEB-2020"
@@ -402,7 +402,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         invalid_options = [
             "'PRBC_UNITS'"
             "invalid",
-            None,
+            "",
         ]
 
         for invalid_option in invalid_options:
@@ -423,7 +423,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         invalid_options = [
             "'YEAR'"
             "invalid",
-            None,
+            "",
         ]
 
         for invalid_option in invalid_options:
