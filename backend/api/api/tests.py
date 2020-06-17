@@ -532,10 +532,6 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             self.assertEqual(response.status_code, 200)
 
 
-class RequestIndividualSpecificTestCase(TransactionTestCase):
-    pass
-
-
 class RiskScoreTestCase(TransactionTestCase):
     endpoint = "/api/risk_score"
 
