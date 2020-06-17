@@ -402,7 +402,6 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         invalid_options = [
             "'PRBC_UNITS'"
             "invalid",
-            "",
         ]
 
         for invalid_option in invalid_options:
@@ -423,7 +422,6 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
         invalid_options = [
             "'YEAR'"
             "invalid",
-            "",
         ]
 
         for invalid_option in invalid_options:
