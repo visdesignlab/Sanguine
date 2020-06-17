@@ -23,7 +23,7 @@ Not yet applicable.
 
 ## Route Documentation 
 
-There are several routes set up for accessing the model data. Here are the names, allowed methods, parameters, and descriptions:
+There are several routes set up for accessing the patient and surgery data. Here are the names, allowed methods, parameters, and descriptions:
 
 - Name: `/admin`
   - Allowed Methods: `GET`
@@ -117,6 +117,7 @@ There are several routes set up for accessing the model data. Here are the names
     curl '127.0.0.1:8000/api/fetch_patient?patient_id=68175619'
     ```
 
+TODO: Is this method used at all?
 - Name: `/api/request_fetch_professional_set`
   - Allowed Methods: `GET`
   - Parameters: `None`
@@ -128,29 +129,49 @@ There are several routes set up for accessing the model data. Here are the names
 
 - Name: `/api/risk_score`
   - Allowed Methods: `GET`
-  - Parameters: `None`
-  - Description: Base API endpoint. Returns text and a 200 to verify everything is working. Doesn't return data.
+  - Parameters:  
+    `patient_ids`: A comma separated list of patient ids.  
+  - Description: Takes patient ids and returns a list of APR_DRG values such as overall risk of mortality.
   - Example:
     ```
-    curl '127.0.0.1:8000/api/risk_score'
+    curl '127.0.0.1:8000/api/risk_score?patient_ids=68175619,14711172,35383429,632559101'
     ```
 
 - Name: `/api/patient_outcomes`
   - Allowed Methods: `GET`
-  - Parameters: `None`
-  - Description: Base API endpoint. Returns text and a 200 to verify everything is working. Doesn't return data.
+  - Parameters:  
+    `patient_ids`: A comma separated list of patient ids.  
+  - Description: WIP. Takes patient ids as input. Currently returns 2 values, whether a patient has died or not and if they spent 1440 minutes on a ventilator (24 hours)
   - Example:
     ```
-    curl '127.0.0.1:8000/api/patient_outcomes'
+    curl '127.0.0.1:8000/api/patient_outcomes?patient_ids=68175619,14711172,35383429,632559101'
     ```
 
 - Name: `/api/state`
-  - Allowed Methods: `GET`
-  - Parameters: `None`
-  - Description: Base API endpoint. Returns text and a 200 to verify everything is working. Doesn't return data.
+  - Allowed Methods: `GET. POST, PUT, DELETE`
+  - Parameters:  
+    `name`: The name of the state object.  
+    `definition`: The state definition, usually the string from our provenance library.
+  - Description: Handles state saving into a database on the backend. A GET will retrieve the state object by name. A POST creates a state object. A PUT updates a state object. Finally, a DELETE will delete a state object. The required parameters for each type of request are documented in the examples.
   - Example:
     ```
-    curl '127.0.0.1:8000/api/state'
+    # GET
+    curl -X GET '127.0.0.1:8000/api/state?name=example_state'
+
+    # POST
+    curl -X POST '127.0.0.1:8000/api/state' \ 
+      -H "Content-Type: application/json" \
+      -d '{"name": "example_state", "definition": "foo"}'
+    
+    # PUT
+    curl -X PUT '127.0.0.1:8000/api/state' \ 
+      -H "Content-Type: application/json" \
+      -d '{"old_name": "example_state", "new_name": "a_new_state", "definition": "foo"}'
+    
+    # DELETE
+    curl -X DELETE '127.0.0.1:8000/api/state' \ 
+      -H "Content-Type: application/json" \
+      -d '{"name": "example_state"}'
     ```
 
 ## Testing
