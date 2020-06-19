@@ -1,12 +1,10 @@
-import React, { FC, useEffect, useCallback } from "react";
+import React, { FC, useCallback } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { HeatMapDataPoint } from "../../Interfaces/ApplicationState";
-// import { Popup } from "semantic-ui-react";
-// import { actions } from "../..";
-import { ScaleLinear, ScaleOrdinal, ScaleBand, scaleLinear, interpolateReds, scaleBand, interpolateGreys, format } from "d3";
-import { highlight_orange, basic_gray, blood_red, highlight_blue, greyScaleRange } from "../../PresetsProfile";
+import { scaleLinear, interpolateReds, scaleBand, interpolateGreys, format } from "d3";
+import { highlight_orange, basic_gray, highlight_blue, greyScaleRange } from "../../PresetsProfile";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
 

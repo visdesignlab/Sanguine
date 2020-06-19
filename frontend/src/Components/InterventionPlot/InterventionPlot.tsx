@@ -1,13 +1,10 @@
 import React, {
     FC,
-    useMemo,
     useEffect,
     useState,
     useCallback
 } from "react";
-import { actions } from "../..";
 import Store from "../../Interfaces/Store";
-import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import {
     select,
@@ -15,16 +12,11 @@ import {
     scaleBand,
     max,
     axisLeft,
-    axisTop,
-    interpolateBlues,
     axisBottom,
     interpolateGreys,
     line,
     curveCatmullRom,
-    scaleOrdinal,
     range,
-    ScaleOrdinal,
-    ScaleBand,
     interpolateReds,
     timeFormat
 } from "d3";
@@ -44,7 +36,7 @@ import {
 //import SingleHeatPlot from "./SingleHeatPlot";
 
 //import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
-import { secondary_gray, third_gray, preop_color, postop_color, greyScaleRange, highlight_orange } from "../../PresetsProfile";
+import { third_gray, preop_color, postop_color, greyScaleRange, highlight_orange } from "../../PresetsProfile";
 import SingleHeatCompare from "./SingleHeatCompare";
 import SingleViolinCompare from "./SingleViolinCompare";
 import InterventionExtraPairGenerator from "../Utilities/InterventionExtraPairGenerator";

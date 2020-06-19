@@ -14,7 +14,7 @@ import BarChartVisualization from "./Components/BarChart/BarChartVisualization";
 import ScatterPlotVisualization from "./Components/Scatterplot/ScatterPlotVisualization";
 import HeatMapVisualization from "./Components/HeatMapChart/HeatMapVisualization";
 import InterventionPlotVisualization from "./Components/InterventionPlot/InterventionPlotVisualization";
-import { Responsive, WidthProvider } from "react-grid-layout";
+import { Responsive } from "react-grid-layout";
 import 'react-grid-layout/css/styles.css'
 interface OwnProps {
     hemoData: any;

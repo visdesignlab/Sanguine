@@ -1,12 +1,12 @@
-import React, { FC, useEffect, useState, useMemo, useCallback } from "react";
+import React, { FC, useEffect, useState, useCallback } from "react";
 import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
-import { Menu, Dropdown, Grid, Container, Message, List, Button } from "semantic-ui-react";
+import { Grid, Container, List, Button } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat } from "d3";
 import { actions } from "../..";
 import { AxisLabelDict, Accronym, stateUpdateWrapperUseJSON } from "../../PresetsProfile";
-import { basic_gray, highlight_orange, third_gray, secondary_gray } from "../../PresetsProfile";
+import { highlight_orange, secondary_gray } from "../../PresetsProfile";
 
 interface OwnProps {
   store?: Store;
@@ -36,7 +36,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     const data = await res.json();
     const result = data.result
 
-
+    console.log(result)
     let tempMaxCaseCount = 0;
     let tempItemUnselected: any[] = [];
     let tempItemSelected: any[] = [];
@@ -74,6 +74,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
       }
     })
     newItemSelected.sort((a: any, b: any) => b.count - a.count)
+    newItemUnselected.sort((a: any, b: any) => b.count - a.count)
     stateUpdateWrapperUseJSON(itemSelected, newItemSelected, setItemSelected)
 
     stateUpdateWrapperUseJSON(itemUnselected, newItemUnselected, setItemUnselected)

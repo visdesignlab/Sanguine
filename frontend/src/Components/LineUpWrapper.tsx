@@ -1,5 +1,4 @@
-import React, { FC, useEffect, useState, useRef, createRef } from "react";
-import styled from "styled-components";
+import React, { FC, useEffect, useState, useRef } from "react";
 import { inject, observer } from "mobx-react";
 import Store from "../Interfaces/Store";
 
@@ -110,6 +109,9 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
     //         cat2: cats[Math.floor(Math.random() * 3)]
     //     })
     // }
+
+    //TODO make the line up side bar on the main instead of on a seperate tab. 
+    //
 
     useEffect(() => {
         $(document).ready(function () {

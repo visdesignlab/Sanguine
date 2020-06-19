@@ -1,4 +1,4 @@
-import { Provenance, initProvenance, isStateNode, } from '@visdesignlab/provenance-lib-core'
+import { Provenance, initProvenance } from '@visdesignlab/provenance-lib-core'
 import {
   ApplicationState,
   defaultState,
@@ -7,7 +7,6 @@ import {
   SingleCasePoint
 } from "./ApplicationState";
 import { store } from './Store';
-import { timeFormat, json, scaleDiverging } from 'd3';
 
 interface AppProvenance {
   provenance: Provenance<ApplicationState>;
