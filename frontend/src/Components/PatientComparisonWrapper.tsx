@@ -3,10 +3,9 @@ import React, {
     useState,
     useEffect
 } from "react";
-import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import Store from "../Interfaces/Store";
-import { Message, List } from "semantic-ui-react";
+import { List } from "semantic-ui-react";
 import { HIPAA_Sensitive, AxisLabelDict, stateUpdateWrapperUseJSON } from "../PresetsProfile";
 
 interface OwnProps {

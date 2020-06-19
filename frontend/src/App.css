@@ -15,17 +15,15 @@
 .App-link {
   color: #09d3ac;
 }
-/* .lineup>div{
-  
-}
+
 .lineup>div>div{
   flex:1 1 auto;
-} */
+} 
 
-/* .lineup>div{
+.lineup>div{
   display:flex;
   height:800px
-} */
+}
 
 #lineup-wrapper{
 /* display:flex; */

@@ -1,14 +1,13 @@
-import React, { FC, useEffect, useRef, useLayoutEffect, useState, useMemo } from "react";
+import React, { FC, useEffect, useRef, useLayoutEffect, useState } from "react";
 import Store from "../../Interfaces/Store";
-import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { BarChartDataPoint } from '../../Interfaces/ApplicationState'
 import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON, ChartSVG } from "../../PresetsProfile"
 import BarChart from "./BarChart"
-import { Button, Icon, Table, Grid, Dropdown, GridColumn, Menu, Container, Modal, Input, Form, Message } from "semantic-ui-react";
+import { Button, Icon, Grid, Dropdown, Menu, Modal, Form, Message } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
-import { sum, max, median, create, mean } from "d3";
+import { sum, median } from "d3";
 
 interface OwnProps {
   aggregatedBy: string;

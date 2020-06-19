@@ -1,10 +1,7 @@
 import React, {
   FC,
   useEffect,
-  useRef,
-  useLayoutEffect,
   useState,
-  useMemo,
   useCallback
 } from "react";
 import Store from "../../Interfaces/Store";
@@ -17,16 +14,9 @@ import {
   range,
   scaleLinear,
   scaleOrdinal,
-  mouse,
-  axisBottom,
   axisLeft,
-  ScaleLinear,
   ScaleOrdinal,
-  axisTop,
-  scalePow,
-  ticks,
   median,
-  timeParse,
 } from "d3";
 import { DumbbellDataPoint } from "../../Interfaces/ApplicationState";
 import { offset, AxisLabelDict, minimumWidthScale, stateUpdateWrapperUseJSON } from "../../PresetsProfile"
