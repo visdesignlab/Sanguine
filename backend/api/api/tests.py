@@ -2,6 +2,7 @@
 import ast
 
 from django.test import TransactionTestCase, TestCase, Client
+from django.contrib.auth.models import User
 import api.utils as utils
 
 
@@ -92,11 +93,46 @@ class UtilUnitTestCase(TestCase):
                 filters, bind_names, filters_safe_sql = utils.get_filters(invalid_input)
         
 
-class NoParamRoutesTestCase(TransactionTestCase):
+class LoginLogoutFlowTestCase(TestCase):
     def setUp(self):
         self.c = Client()
 
-    def test_get_api_root(self):
+    def test_login_logout(self):
+        test_user = User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
+        logged_in_test_user = self.c.login(username = 'test_user', password = 'test_password')
+        self.assertTrue(logged_in_test_user)
+
+        self.c.logout()
+
+
+class NoParamRoutesTestCaseLoggedOut(TransactionTestCase):
+    def setUp(self):
+        self.c = Client()
+
+    def test_get_api_root_logged_out(self):
+        response = self.c.get("/api/")
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(
+            response.content.decode(),
+            "Bloodvis API endpoint. Please use the client application to access the data here.",
+        )
+
+    def test_get_attributes_logged_out(self):
+        response = self.c.get("/api/get_attributes")
+        self.assertEqual(response.status_code, 401)
+
+    def test_hemoglobin_logged_out(self):
+        response = self.c.get("/api/hemoglobin")
+        self.assertEqual(response.status_code, 401)
+
+
+class NoParamRoutesTestCaseLoggedIn(TransactionTestCase):
+    def setUp(self):
+        self.c = Client()
+        User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
+        self.c.login(username = 'test_user', password = 'test_password')
+
+    def test_get_api_root_logged_in(self):
         response = self.c.get("/api/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -104,11 +140,11 @@ class NoParamRoutesTestCase(TransactionTestCase):
             "Bloodvis API endpoint. Please use the client application to access the data here.",
         )
 
-    def test_get_attributes(self):
+    def test_get_attributes_logged_in(self):
         response = self.c.get("/api/get_attributes")
         self.assertEqual(response.status_code, 200)
 
-    def test_hemoglobin(self):
+    def test_hemoglobin_logged_in(self):
         response = self.c.get("/api/hemoglobin")
         self.assertEqual(response.status_code, 200)
 
@@ -731,7 +767,3 @@ class StateTestCase(TransactionTestCase):
                 {}
             )
             self.assertEqual(ast.literal_eval(response.content.decode()),[])
-
-
-class LoginLogoutFlowTestCase(TransactionTestCase):
-    pass
