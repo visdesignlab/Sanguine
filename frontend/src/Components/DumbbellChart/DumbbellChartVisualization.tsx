@@ -33,7 +33,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
   const {
     layoutArray,
     filterSelection,
-    //actualYearRange,
+    currentSelectPatientGroup,
 
     dateRange,
     showZero,
@@ -72,7 +72,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
       requestingAxis = "FFP_UNITS"
     }
     const transfusedRes = await fetch(
-      `http://localhost:8000/api/request_transfused_units?transfusion_type=${requestingAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
+      `http://localhost:8000/api/request_transfused_units?transfusion_type=${requestingAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`
     );
     const temp_transfusion_data = await transfusedRes.json();
     //const temp_transfusion_data = transfusedDataResult.result;
@@ -168,7 +168,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
 
   useEffect(() => {
     fetchChartData();
-  }, [dateRange, filterSelection, hemoglobinDataSet, yAxis, showZero, currentOutputFilterSet]);
+  }, [dateRange, filterSelection, hemoglobinDataSet, yAxis, showZero, currentOutputFilterSet, currentSelectPatientGroup]);
 
   const changeXVal = (e: any, value: any) => {
     actions.changeChart(value.value, "HEMO_VALUE", chartId, "DUMBBELL")

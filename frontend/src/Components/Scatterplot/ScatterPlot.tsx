@@ -37,59 +37,14 @@ export type Props = OwnProps;
 const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yMin, xAxisName, yAxisName, store }: Props) => {
 
     const currentOffset = offset.regular;
-    const { currentSelectPatient, currentSelectPatientGroup } = store!;
+    const { currentSelectPatient, currentSelectPatientGroup, currentOutputFilterSet } = store!;
     const svgSelection = select(svg.current);
     const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null)
     const [isFirstRender, updateIsFirstRender] = useState(true)
 
-    useEffect(() => {
-        if (isFirstRender) {
-            updateIsFirstRender(false)
-        }
-        else {
-            let caseList: number[] = [];
-            data.map((dataPoint) => {
-                //  const cx = (xAxisScale())(d.xVal as any) || 0
-                const cx = xAxisName === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
-                const cy = yAxisScale()(dataPoint.yVal)
-                if (brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
-                    caseList.push(dataPoint.case.caseId)
-                    console.log(dataPoint)
-                }
-            })
-            if (caseList.length > 1000) {
-                updateBrushLoc(null)
-            } else {
-                actions.updateSelectedPatientGroup(caseList)
-            }
-        }
-    }, [brushLoc])
-    //  let numberList: { num: number, indexEnding: number }[] = [];
-    // if (data.length > 0) {
-    //     data = data.sort(
-    //         (a, b) => {
-    //             if (a.xVal === b.xVal) {
-    //                 if (a.yVal < b.yVal) return -1;
-    //                 if (a.yVal > b.yVal) return 1;
-    //             } else {
-    //                 if (a.xVal > b.xVal) return 1;
-    //                 if (a.xVal < b.xVal) return -1;
-    //             }
-    //             return 0;
-    //         }
-    //     );
-
-
-
-    // data.map((d, i) => {
-    //     if (i === data.length - 1) {
-    //         numberList.push({ num: d.xVal, indexEnding: i })
-    //     }
-    //     else if (d.xVal !== data[i + 1].xVal) {
-    //         numberList.push({ num: d.xVal, indexEnding: i })
-    //     }
-    // })
-    // }
+    const updateBrush = () => {
+        updateBrushLoc(event.selection)
+    }
 
     const xAxisScale = useCallback(() => {
         let xAxisScale: any;
@@ -121,18 +76,74 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         return yAxisScale;
     }, [yMax, yMin, height])
 
+    const brushDef = brush()
+        .extent([[xAxisScale().range()[0], yAxisScale().range()[1]], [xAxisScale().range()[1], yAxisScale().range()[0]]])
+        .on("end", updateBrush)
+        ;
+    svgSelection.select(".brush-layer").call(brushDef as any);
+
+    useEffect(() => {
+        if (isFirstRender) {
+            updateIsFirstRender(false)
+
+        }
+        else {
+            let caseList: number[] = [];
+            data.map((dataPoint) => {
+                //  const cx = (xAxisScale())(d.xVal as any) || 0
+                const cx = xAxisName === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
+                const cy = yAxisScale()(dataPoint.yVal)
+                if (brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
+                    caseList.push(dataPoint.case.caseId)
+                }
+            })
+            if (caseList.length > 1000) {
+                updateBrushLoc(null)
+            } else {
+                actions.updateSelectedPatientGroup(caseList)
+            }
+        }
+    }, [brushLoc])
+
+    useEffect(() => {
+        brushDef.move(svgSelection.select(".brush-layer"), null)
+    }, [currentOutputFilterSet])
+    //  let numberList: { num: number, indexEnding: number }[] = [];
+    // if (data.length > 0) {
+    //     data = data.sort(
+    //         (a, b) => {
+    //             if (a.xVal === b.xVal) {
+    //                 if (a.yVal < b.yVal) return -1;
+    //                 if (a.yVal > b.yVal) return 1;
+    //             } else {
+    //                 if (a.xVal > b.xVal) return 1;
+    //                 if (a.xVal < b.xVal) return -1;
+    //             }
+    //             return 0;
+    //         }
+    //     );
+
+
+
+    // data.map((d, i) => {
+    //     if (i === data.length - 1) {
+    //         numberList.push({ num: d.xVal, indexEnding: i })
+    //     }
+    //     else if (d.xVal !== data[i + 1].xVal) {
+    //         numberList.push({ num: d.xVal, indexEnding: i })
+    //     }
+    // })
+    // }
+
+
+
     const yAxisLabel = axisLeft(yAxisScale());
     const xAxisLabel = axisBottom(xAxisScale() as any);
 
 
-    const updateBrush = () => {
-        updateBrushLoc(event.selection)
-    }
 
-    const brushDef = brush()
-        // .on("brush", updateBrush)
-        .on("end", updateBrush);
-    svgSelection.select(".brush-layer").call(brushDef as any);
+
+
 
     svgSelection
         .select(".axes")
