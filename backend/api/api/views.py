@@ -4,12 +4,19 @@ import csv
 import json
 
 from collections import Counter
-from functools import reduce
-from operator import add
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed, QueryDict
 from django.forms.models import model_to_dict
 from django.contrib.auth.decorators import login_required
-from api.utils import make_connection, data_dictionary, cpt, execute_sql, get_all_by_agg, get_filters, output_quarter
+from api.utils import (
+    make_connection, 
+    data_dictionary, 
+    cpt, 
+    execute_sql, 
+    get_all_by_agg, 
+    get_filters, 
+    output_quarter, 
+    validate_dates
+)
 from api.models import State
 
 
@@ -254,8 +261,12 @@ def request_transfused_units(request):
         filter_selection = filter_selection.split(",")
 
         # Check the required parameters are there
-        if not (transfusion_type and len(date_range) == 2):
-            return HttpResponseBadRequest("transfusion_type and date_range must be supplied.")
+        if not (transfusion_type):
+            return HttpResponseBadRequest("transfusion_type must be supplied.")
+
+        # Validate the dates
+        if not (validate_dates(date_range) and len(date_range) == 2):
+            return HttpResponseBadRequest("date_range is improperly formatted. It must look like: 09-JAN-2019,31-DEC-2020")
 
         # Coerce that params into a useable format
         min_time = date_range[0]
