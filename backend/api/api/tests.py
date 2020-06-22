@@ -109,7 +109,7 @@ class NoParamRoutesTestCaseLoggedOut(TransactionTestCase):
     def setUp(self):
         self.c = Client()
 
-    def test_get_api_root_logged_out(self):
+    def test_get_api_root(self):
         response = self.c.get("/api/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -117,11 +117,11 @@ class NoParamRoutesTestCaseLoggedOut(TransactionTestCase):
             "Bloodvis API endpoint. Please use the client application to access the data here.",
         )
 
-    def test_get_attributes_logged_out(self):
+    def test_get_attributes(self):
         response = self.c.get("/api/get_attributes")
         self.assertEqual(response.status_code, 302)
 
-    def test_hemoglobin_logged_out(self):
+    def test_hemoglobin(self):
         response = self.c.get("/api/hemoglobin")
         self.assertEqual(response.status_code, 302)
 
@@ -132,7 +132,7 @@ class NoParamRoutesTestCaseLoggedIn(TransactionTestCase):
         User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
         self.c.login(username = 'test_user', password = 'test_password')
 
-    def test_get_api_root_logged_in(self):
+    def test_get_api_root(self):
         response = self.c.get("/api/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -140,11 +140,11 @@ class NoParamRoutesTestCaseLoggedIn(TransactionTestCase):
             "Bloodvis API endpoint. Please use the client application to access the data here.",
         )
 
-    def test_get_attributes_logged_in(self):
+    def test_get_attributes(self):
         response = self.c.get("/api/get_attributes")
         self.assertEqual(response.status_code, 200)
 
-    def test_hemoglobin_logged_in(self):
+    def test_hemoglobin(self):
         response = self.c.get("/api/hemoglobin")
         self.assertEqual(response.status_code, 200)
 
@@ -608,10 +608,6 @@ class RequestTransfusedUnitsTestCaseLoggedOut(TransactionTestCase):
                 },
             )
             self.assertEqual(response.status_code, 302)
-            self.assertEqual(
-                response.content.decode(),
-                "date_range is improperly formatted. It must look like: 09-JAN-2019,31-DEC-2020",
-            )
 
     def test_request_transfused_units_invalid_transfusion_types(self):
         invalid_options = [
