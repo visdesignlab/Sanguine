@@ -27,7 +27,6 @@ urlpatterns = [
     path("api/request_transfused_units",views.request_transfused_units, name="request_transfused_units"),
     path("api/fetch_surgery", views.fetch_surgery, name="fetch_surgery"),
     path("api/fetch_patient", views.fetch_patient, name="fetch_patient"),
-    path("api/request_fetch_professional_set", views.fetch_professional_set, name = "request_fetch_professional_set"),
     path("api/risk_score", views.risk_score, name = "risk_score"),
     path("api/patient_outcomes", views.patient_outcomes, name = "patient_outcomes"),
     path("api/state", views.state, name = "state"),
