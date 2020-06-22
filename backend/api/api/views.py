@@ -8,6 +8,7 @@ from functools import reduce
 from operator import add
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed, QueryDict
 from django.forms.models import model_to_dict
+from django.contrib.auth.decorators import login_required
 from api.utils import make_connection, data_dictionary, cpt, execute_sql, get_all_by_agg, get_filters, output_quarter
 from api.models import State
 
