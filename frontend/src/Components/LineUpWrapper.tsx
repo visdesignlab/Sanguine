@@ -116,7 +116,6 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
     useEffect(() => {
         $(document).ready(function () {
             const node = document.getElementById("lineup-wrapper")
-            console.log(node)
             if (node && hemoglobinDataSet.length > 0 && distinctCategories.surgeons.length > 0) {
                 if (!(node.getElementsByClassName("lu-side-panel").length > 0)) {
                     const lineup = LineUpJS.builder(hemoglobinDataSet)
