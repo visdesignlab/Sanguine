@@ -111,7 +111,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
   const generatePatientSelection = () => {
     let output: any[] = []
     if (currentSelectPatientGroup.length > 0) {
-      output.push(<List.Item key={"Patient Circled"} style={{ textAlign: "left" }} content={`${currentSelectPatientGroup.length} patients selected in LineUp`} />)
+      output.push(<List.Item key={"Patient Circled"} style={{ textAlign: "left" }} content={`${currentSelectPatientGroup.length} patients selected`} />)
     }
     return output
   }

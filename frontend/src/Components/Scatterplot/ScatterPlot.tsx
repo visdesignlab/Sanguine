@@ -40,22 +40,28 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
     const { currentSelectPatient, currentSelectPatientGroup } = store!;
     const svgSelection = select(svg.current);
     const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null)
+    const [isFirstRender, updateIsFirstRender] = useState(true)
 
     useEffect(() => {
-        let caseList: number[] = [];
-        data.map((dataPoint) => {
-            //  const cx = (xAxisScale())(d.xVal as any) || 0
-            const cx = xAxisName === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
-            const cy = yAxisScale()(dataPoint.yVal)
-            if (brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
-                caseList.push(dataPoint.case.caseId)
-                console.log(dataPoint)
+        if (isFirstRender) {
+            updateIsFirstRender(false)
+        }
+        else {
+            let caseList: number[] = [];
+            data.map((dataPoint) => {
+                //  const cx = (xAxisScale())(d.xVal as any) || 0
+                const cx = xAxisName === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
+                const cy = yAxisScale()(dataPoint.yVal)
+                if (brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
+                    caseList.push(dataPoint.case.caseId)
+                    console.log(dataPoint)
+                }
+            })
+            if (caseList.length > 1000) {
+                updateBrushLoc(null)
+            } else {
+                actions.updateSelectedPatientGroup(caseList)
             }
-        })
-        if (caseList.length > 1000) {
-            updateBrushLoc(null)
-        } else {
-            actions.updateSelectedPatientGroup(caseList)
         }
     }, [brushLoc])
     //  let numberList: { num: number, indexEnding: number }[] = [];
