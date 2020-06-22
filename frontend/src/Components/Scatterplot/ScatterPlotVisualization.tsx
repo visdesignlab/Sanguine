@@ -9,9 +9,10 @@ import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
-import { stateUpdateWrapperUseJSON, scatterYOptions, barChartValuesOptions, ChartSVG } from "../../PresetsProfile"
+import { stateUpdateWrapperUseJSON, scatterYOptions, barChartValuesOptions, ChartSVG, offset } from "../../PresetsProfile"
 import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import ScatterPlotChart from "./ScatterPlot";
+import { scaleLinear, scaleBand, range, ScaleLinear, ScaleBand } from "d3";
 
 interface OwnProps {
     yAxis: string;
@@ -38,13 +39,15 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
         //actualYearRange,
 
     } = store!;
+    const currentOffset = offset.regular;
     const svgRef = useRef<SVGSVGElement>(null);
-    const [width, setWidth] = useState(0);
+    const [width, setWidth] = useState(w === 1 ? 542.28 : 1146.97);
     const [height, setHeight] = useState(0);
     const [data, setData] = useState<ScatterDataPoint[]>([]);
     const [xMin, setXMin] = useState(0);
     const [xMax, setXMax] = useState(0);
     const [yMin, setYMin] = useState(0);
+
     const [yMax, setYMax] = useState(0);
     const [openNotationModal, setOpenNotationModal] = useState(false)
     const [notationInput, setNotationInput] = useState(notation)
@@ -114,6 +117,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                         let new_ob: ScatterDataPoint = {
                             xVal: xValue,
                             yVal: yValue,
+                            randomFactor: Math.random(),
                             case: {
                                 visitNum: ob.VISIT_ID,
                                 caseId: ob.CASE_ID,
@@ -131,10 +135,27 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                     }
                 }
             });
-            cast_data = cast_data.filter((d: any) => d);
-            //let total_count = cast_data.length;
-            //cast_data = cast_data.filter((d: DumbbellDataPoint) => { total_count += 1; return (d.startXVal - d.endXVal) > 0 })
 
+            // let xAxisScale: any;
+            // if (xAxis === "CELL_SAVER_ML") {
+            //     xAxisScale = scaleLinear()
+            //         .domain([0.9 * tempXMin, 1.1 * tempXMax])
+            //         .range([currentOffset.left, width - currentOffset.right - currentOffset.margin]);
+            // } else {
+            //     xAxisScale = scaleBand()
+            //         .domain(range(0, tempXMax) as any)
+            //         .range([currentOffset.left, width - currentOffset.right - currentOffset.margin])
+            // }
+            // console.log((xAxisScale).bandwidth(), xAxisScale.range(), xAxisScale.domain())
+            // cast_data = cast_data.filter((d: ScatterDataPoint | undefined) => {
+            //     if (d) {
+            //         d.xLoc = xAxis === "CELL_SAVER_ML" ? xAxisScale(d.xVal) || 0 : (xAxisScale(d.xVal) || 0) + Math.random() * xAxisScale.bandwidth();
+            //         return d
+            //     }
+            // });
+            //let total_count = cast_data.length;
+            cast_data = cast_data.filter((d: any) => d)
+            // console.log(cast_data)
             //
             actions.updateCaseCount("INDIVIDUAL", cast_data.length)
             //console.log(aggregatedOption)
@@ -143,9 +164,10 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
             setXMin(tempXMin);
             setYMax(tempYMax);
             setYMin(tempYMin);
-
         }
     }
+
+    //TODO reorganize this, seperate out data request and the randomization process. 
 
     useEffect(() => {
         fetchChartData();

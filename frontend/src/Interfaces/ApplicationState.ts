@@ -55,6 +55,7 @@ export interface SingleCasePoint {
 export interface ScatterDataPoint {
   xVal: number;
   yVal: number;
+  randomFactor: number;
   case: SingleCasePoint;
 }
 

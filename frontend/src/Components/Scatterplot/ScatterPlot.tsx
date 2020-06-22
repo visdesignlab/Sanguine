@@ -10,7 +10,7 @@ import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
 import { offset, AxisLabelDict } from "../../PresetsProfile"
-import { select, scaleLinear, axisLeft, axisBottom, brush, event } from "d3";
+import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range } from "d3";
 //import CustomizedAxis from "../Utilities/CustomizedAxis";
 import { highlight_orange, basic_gray } from "../../PresetsProfile";
 
@@ -43,11 +43,13 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
 
     useEffect(() => {
         let caseList: number[] = [];
-        data.map((d) => {
-            const cx = (xAxisScale())(d.xVal)
-            const cy = yAxisScale()(d.yVal)
+        data.map((dataPoint) => {
+            //  const cx = (xAxisScale())(d.xVal as any) || 0
+            const cx = xAxisName === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
+            const cy = yAxisScale()(dataPoint.yVal)
             if (brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
-                caseList.push(d.case.caseId)
+                caseList.push(dataPoint.case.caseId)
+                console.log(dataPoint)
             }
         })
         if (caseList.length > 1000) {
@@ -84,9 +86,18 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
     // }
 
     const xAxisScale = useCallback(() => {
-        const xAxisScale = scaleLinear()
-            .domain([0.9 * xMin, 1.1 * xMax])
-            .range([currentOffset.left, width - currentOffset.right - currentOffset.margin]);
+        let xAxisScale: any;
+        if (xAxisName === "CELL_SAVER_ML") {
+            xAxisScale = scaleLinear()
+                .domain([0.9 * xMin, 1.1 * xMax])
+                .range([currentOffset.left, width - currentOffset.right - currentOffset.margin]);
+        } else {
+            xAxisScale = scaleBand()
+                .domain(range(0, xMax + 1) as any)
+                .range([currentOffset.left, width - currentOffset.right - currentOffset.margin])
+                .padding(0.2)
+
+        }
         return xAxisScale
     }, [xMax, xMin, width])
 
@@ -105,7 +116,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
     }, [yMax, yMin, height])
 
     const yAxisLabel = axisLeft(yAxisScale());
-    const xAxisLabel = axisBottom(xAxisScale());
+    const xAxisLabel = axisBottom(xAxisScale() as any);
 
 
     const updateBrush = () => {
@@ -188,19 +199,21 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         let selectedPatients: any[] = [];
         //let unselectedPatients = [];
         let unselectedPatients = data.map((dataPoint) => {
-            const cx = xAxisScale()(dataPoint.xVal)
+            const cx = xAxisName === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
+            // const cx = dataPoint.xLoc;
             const cy = yAxisScale()(dataPoint.yVal)
             const isSelected = decideIfSelected(dataPoint)
             const isBrushed = (brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1])
                 || (currentSelectPatientGroup.includes(dataPoint.case.caseId));
             if (isSelected || isBrushed) {
-                selectedPatients.push(<Circle cx={cx}
-                    cy={cy}
-                    // fill={ ? highlight_orange : basic_gray}
-                    isselected={isSelected}
-                    isbrushed={isBrushed}
-                    onClick={() => { clickDumbbellHandler(dataPoint) }}
-                />)
+                selectedPatients.push(
+                    <Circle cx={cx}
+                        cy={cy}
+                        // fill={ ? highlight_orange : basic_gray}
+                        isselected={isSelected}
+                        isbrushed={isBrushed}
+                        onClick={() => { clickDumbbellHandler(dataPoint) }}
+                    />)
             } else {
                 return (
                     <Circle cx={cx}
