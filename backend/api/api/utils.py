@@ -2,6 +2,7 @@ import csv
 import cx_Oracle
 import json
 
+from datetime import datetime
 
 # Makes and returns the database connection object
 def make_connection():
@@ -96,3 +97,15 @@ def output_quarter (number):
         return 3
     else:
         return 4
+
+def validate_dates(date_array):
+    checked_dates = [validate_one_date_string(x) for x in date_array]
+    return all(checked_dates)
+
+def validate_one_date_string(date):
+    DATE_FORMAT = "%d-%b-%Y"
+    try:
+        datetime.strptime(date, DATE_FORMAT)
+        return True
+    except:
+        return False
