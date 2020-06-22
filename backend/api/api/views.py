@@ -2,11 +2,15 @@ import ast
 import cx_Oracle
 import csv
 import json
+import os
 
 from collections import Counter
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed, QueryDict
 from django.forms.models import model_to_dict
 from django.contrib.auth.decorators import login_required
+
+from api.decorators import conditional_login_required
+from api.models import State
 from api.utils import (
     make_connection, 
     data_dictionary, 
@@ -17,7 +21,6 @@ from api.utils import (
     output_quarter, 
     validate_dates
 )
-from api.models import State
 
 
 DE_IDENT_FIELDS = {
@@ -63,7 +66,7 @@ def index(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
-@login_required
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def get_attributes(request):
     if request.method == "GET":
         # Get the list of allowed filter_selection names from the cpt function 
@@ -112,7 +115,7 @@ def get_attributes(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
-@login_required
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def fetch_professional_set(request):
     if request.method == "GET":
         allowed_types = ["SURGEON_ID", "ANESTHESIOLOGIST_ID"]
@@ -168,7 +171,7 @@ def fetch_professional_set(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
-@login_required
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def fetch_surgery(request):
     if request.method == "GET":
         # Get the values from the request
@@ -205,7 +208,7 @@ def fetch_surgery(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
-@login_required
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def fetch_patient(request):
     if request.method == "GET":
         # Get the values from the request
@@ -241,7 +244,7 @@ def fetch_patient(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
-@login_required
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def request_transfused_units(request):
     if request.method == "GET":
         # Get the required parameters from the query string
@@ -390,7 +393,7 @@ def request_transfused_units(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
-@login_required
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def test_results(request):
     if request.method == "GET":
         case_ids = request.GET.get("case_ids") or ""
@@ -404,7 +407,7 @@ def test_results(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
-@login_required
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def risk_score(request):
     if request.method == "GET":
         patient_ids = request.GET.get("patient_ids") or ""
@@ -457,7 +460,7 @@ def risk_score(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
-@login_required
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def patient_outcomes(request):
     if request.method == "GET":
         patient_ids = request.GET.get("patient_ids") or ""
@@ -504,7 +507,7 @@ def patient_outcomes(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
-@login_required
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def hemoglobin(request):
     if request.method == "GET":
         command = """
@@ -632,7 +635,7 @@ def hemoglobin(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
-@login_required
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def state(request):
     if request.method == "GET":
         # Get the name from the querystring
