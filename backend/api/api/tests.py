@@ -2,6 +2,7 @@
 import ast
 
 from django.test import TransactionTestCase, TestCase, Client
+from django.contrib.auth.models import User
 import api.utils as utils
 
 
@@ -92,9 +93,44 @@ class UtilUnitTestCase(TestCase):
                 filters, bind_names, filters_safe_sql = utils.get_filters(invalid_input)
         
 
-class NoParamRoutesTestCase(TransactionTestCase):
+class LoginLogoutFlowTestCase(TestCase):
     def setUp(self):
         self.c = Client()
+
+    def test_login_logout(self):
+        test_user = User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
+        logged_in_test_user = self.c.login(username = 'test_user', password = 'test_password')
+        self.assertTrue(logged_in_test_user)
+
+        self.c.logout()
+
+
+class NoParamRoutesTestCaseLoggedOut(TransactionTestCase):
+    def setUp(self):
+        self.c = Client()
+
+    def test_get_api_root(self):
+        response = self.c.get("/api/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.content.decode(),
+            "Bloodvis API endpoint. Please use the client application to access the data here.",
+        )
+
+    def test_get_attributes(self):
+        response = self.c.get("/api/get_attributes")
+        self.assertEqual(response.status_code, 302)
+
+    def test_hemoglobin(self):
+        response = self.c.get("/api/hemoglobin")
+        self.assertEqual(response.status_code, 302)
+
+
+class NoParamRoutesTestCaseLoggedIn(TransactionTestCase):
+    def setUp(self):
+        self.c = Client()
+        User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
+        self.c.login(username = 'test_user', password = 'test_password')
 
     def test_get_api_root(self):
         response = self.c.get("/api/")
@@ -113,94 +149,42 @@ class NoParamRoutesTestCase(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
 
 
-class RequestProfessionalSetTestCase(TransactionTestCase):
-    endpoint = "/api/request_fetch_professional_set"
+class RequestSurgeryTestCaseLoggedOut(TransactionTestCase):
+    endpoint = "/api/fetch_surgery"
 
     def setUp(self):
         self.c = Client()
 
-    def test_request_professional_set_unsupported_methods(self):
+    def test_request_surgery_unsupported_methods(self):
         response = self.c.post(self.endpoint)
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, 302)
         
         response = self.c.head(self.endpoint)
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, 302)
 
         response = self.c.options(self.endpoint)
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, 302)
 
         response = self.c.put(self.endpoint)
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, 302)
 
         response = self.c.patch(self.endpoint)
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, 302)
 
         response = self.c.delete(self.endpoint)
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, 302)
 
         response = self.c.trace(self.endpoint)
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, 302)
 
-    def test_request_professional_set_no_params(self):
+    def test_request_surgery_no_params(self):
         response = self.c.get(self.endpoint)
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 302)
 
-    def test_request_professional_set_missing_id(self):
-        response = self.c.get(
-            self.endpoint,
-            {
-                "professional_type": "SURGEON_ID", 
-            },
-        )
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.content.decode(),
-            "professional_type and professional_id must be supplied.",
-            )
-
-    def test_request_professional_set_missing_type(self):
-        response = self.c.get(
-            self.endpoint,
-            {
-                "professional_id": "810989",
-            },
-        )
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.content.decode(),
-            "professional_type and professional_id must be supplied.",
-        )
-
-    def test_request_professional_set_invalid_prof_type(self):
-        invalid_options = [
-            "BROKEN",
-            "lowercase",
-            "PRBC_UNITS",
-        ]
-
-        for invalid_option in invalid_options:
-            response = self.c.get(
-                self.endpoint,
-                {
-                    "professional_type": invalid_option, 
-                    "professional_id": "810989",
-                },
-            )
-            self.assertEqual(response.status_code, 400)
-            self.assertEqual(
-                response.content.decode(),
-                "professional_type must be one of the following: ['SURGEON_ID', 'ANESTHESIOLOGIST_ID'].",
-            )
-
-    def test_request_professional_set_valid_types(self):
+    def test_request_surgery_valid_types(self):
         valid_options = [
             {
-                "professional_type": "SURGEON_ID",
-                "professional_id": "810989",
-            },
-            {
-                "professional_type": "ANESTHESIOLOGIST_ID",
-                "professional_id": "280274",
+                "case_id": "56520625",
             },
         ]
 
@@ -209,14 +193,16 @@ class RequestProfessionalSetTestCase(TransactionTestCase):
                 self.endpoint,
                 valid_option,
             )
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 302)
 
 
-class RequestSurgeryTestCase(TransactionTestCase):
+class RequestSurgeryTestCaseLoggedIn(TransactionTestCase):
     endpoint = "/api/fetch_surgery"
 
     def setUp(self):
         self.c = Client()
+        User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
+        self.c.login(username = 'test_user', password = 'test_password')
 
     def test_request_surgery_unsupported_methods(self):
         response = self.c.post(self.endpoint)
@@ -263,11 +249,60 @@ class RequestSurgeryTestCase(TransactionTestCase):
             self.assertEqual(response.status_code, 200)
 
 
-class RequestPatientTestCase(TransactionTestCase):
+class RequestPatientTestCaseLoggedOut(TransactionTestCase):
     endpoint = "/api/fetch_patient"
 
     def setUp(self):
         self.c = Client()
+
+    def test_request_patient_unsupported_methods(self):
+        response = self.c.post(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+        
+        response = self.c.head(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.options(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.put(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.patch(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.delete(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.trace(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+    def test_request_patient_no_params(self):
+        response = self.c.get(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+    def test_request_patient_valid_types(self):
+        valid_options = [
+            {
+                "patient_id": "119801570",
+            },
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.get(
+                self.endpoint,
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 302)
+
+
+class RequestPatientTestCaseLoggedIn(TransactionTestCase):
+    endpoint = "/api/fetch_patient"
+
+    def setUp(self):
+        self.c = Client()
+        User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
+        self.c.login(username = 'test_user', password = 'test_password')
 
     def test_request_patient_unsupported_methods(self):
         response = self.c.post(self.endpoint)
@@ -314,11 +349,208 @@ class RequestPatientTestCase(TransactionTestCase):
             self.assertEqual(response.status_code, 200)
 
 
-class RequestTransfusedUnitsTestCase(TransactionTestCase):
+class RequestTransfusedUnitsTestCaseLoggedOut(TransactionTestCase):
     endpoint = "/api/request_transfused_units"
 
     def setUp(self):
         self.c = Client()
+
+    def test_request_transfused_units_no_params(self):
+        response = self.c.get(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+    def test_risk_score_unsupported_methods(self):
+        response = self.c.post(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+        
+        response = self.c.head(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.options(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.put(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.patch(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.delete(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.trace(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+    def test_request_transfused_units_missing_transfusion_type(self):
+        response = self.c.get(
+            self.endpoint,
+            { "date_range": "01-JAN-2016,31-DEC-2017" },
+        )
+        self.assertEqual(response.status_code, 302)
+
+    def test_request_transfused_units_missing_date_range(self):
+        response = self.c.get(
+            self.endpoint,
+            { "transfusion_type": "PRBC_UNITS" },
+        )
+        self.assertEqual(response.status_code, 302)
+
+    def test_request_transfused_units_invalid_date_ranges(self):
+        invalid_options = [
+            "2016",
+            "2016,",
+            ",2016",
+            "2016,2017,2018",
+            ",",
+            "a,b",
+            "a,",
+            ",b",
+            "",
+            "01-MST-2021",
+            "1-APR-2020",
+            "31-FEB-2020"
+        ]
+
+        for invalid_option in invalid_options:
+            response = self.c.get(
+                self.endpoint,
+                {
+                    "transfusion_type": "PRBC_UNITS", 
+                    "date_range": invalid_option,
+                },
+            )
+            self.assertEqual(response.status_code, 302)
+
+    def test_request_transfused_units_invalid_transfusion_types(self):
+        invalid_options = [
+            "'PRBC_UNITS'"
+            "invalid",
+        ]
+
+        for invalid_option in invalid_options:
+            response = self.c.get(
+                self.endpoint,
+                {
+                    "transfusion_type": invalid_option, 
+                    "date_range": "01-JAN-2016,31-DEC-2017",
+                },
+            )
+            self.assertEqual(response.status_code, 302)
+
+    def test_request_transfused_units_invalid_aggregate_types(self):
+        invalid_options = [
+            "'YEAR'"
+            "invalid",
+        ]
+
+        for invalid_option in invalid_options:
+            response = self.c.get(
+                self.endpoint,
+                {
+                    "transfusion_type": "PRBC_UNITS", 
+                    "date_range": "01-JAN-2016,31-DEC-2017", 
+                    "aggregated_by": invalid_option,
+                },
+            )
+            self.assertEqual(response.status_code, 302)
+
+    def test_request_transfused_units_invalid_all_units_with_agg(self):
+        response = self.c.get(
+            self.endpoint,
+            {
+                "transfusion_type": "ALL_UNITS", 
+                "date_range": "01-JAN-2016,31-DEC-2017", 
+                "aggregated_by": "YEAR",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+
+    def test_request_transfused_units_valid_types(self):
+        valid_options = [
+            { # Minimum viable
+                "transfusion_type": "PRBC_UNITS", 
+                "date_range": "01-JAN-2016,31-DEC-2017", 
+            },
+            { # Different date_range
+                "transfusion_type": "PRBC_UNITS", 
+                "date_range": "01-JAN-2017,31-DEC-2018", 
+            },
+            { # Different transfusion_type (should test them all)
+                "transfusion_type": "ALL_UNITS", 
+                "date_range": "01-JAN-2016,31-DEC-2017", 
+            },
+            { # Add aggregation
+                "transfusion_type": "PRBC_UNITS", 
+                "date_range": "01-JAN-2016,31-DEC-2017", 
+                "aggregated_by": "YEAR",
+            },
+            { # Different aggregation
+                "transfusion_type": "PRBC_UNITS", 
+                "date_range": "01-JAN-2016,31-DEC-2017", 
+                "aggregated_by": "SURGEON_ID",
+            },
+            { # One patient ID
+                "transfusion_type": "PRBC_UNITS", 
+                "date_range": "01-JAN-2016,31-DEC-2017", 
+                "patient_ids": "585148403",
+            },
+            { # Multiple pats
+                "transfusion_type": "PRBC_UNITS", 
+                "date_range": "01-JAN-2016,31-DEC-2017", 
+                "patient_ids": "585148403,81015617,632559101",
+            },
+            { # One patient ID
+                "transfusion_type": "PRBC_UNITS", 
+                "date_range": "01-JAN-2016,31-DEC-2017", 
+                "case_ids": "85103152",
+            },
+            { # One multiple pats
+                "transfusion_type": "PRBC_UNITS", 
+                "date_range": "01-JAN-2016,31-DEC-2017", 
+                "case_ids": "85103152,74712769",
+            },
+            { # One filter_selection
+                "transfusion_type": "PRBC_UNITS", 
+                "date_range": "01-JAN-2016,31-DEC-2017", 
+                "filter_selection": "Musculoskeletal Thoracic Procedure",
+            },
+            { # Multiple filter_selection
+                "transfusion_type": "PRBC_UNITS", 
+                "date_range": "01-JAN-2016,31-DEC-2017", 
+                "filter_selection": "Musculoskeletal Thoracic Procedure,Thoracotomy/Lung Procedure",
+            },
+            { # Full example
+                "transfusion_type": "PRBC_UNITS", 
+                "date_range": "01-JAN-2016,31-DEC-2017", 
+                "patient_ids": "68175619,14711172,35383429,632559101",
+                "case_ids": "85103152",
+                "filter_selection": "Musculoskeletal Thoracic Procedure,Thoracotomy/Lung Procedure",
+                "aggregated_by": "YEAR",
+            },
+            { # Full example ALL_UNITS - no agg
+                "transfusion_type": "ALL_UNITS", 
+                "date_range": "01-JAN-2016,31-DEC-2017", 
+                "patient_ids": "68175619,14711172,35383429,632559101",
+                "case_ids": "85103152",
+                "filter_selection": "Musculoskeletal Thoracic Procedure,Thoracotomy/Lung Procedure",
+            },
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.get(
+                self.endpoint,
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 302)
+
+
+class RequestTransfusedUnitsTestCaseLoggedIn(TransactionTestCase):
+    endpoint = "/api/request_transfused_units"
+
+    def setUp(self):
+        self.c = Client()
+        User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
+        self.c.login(username = 'test_user', password = 'test_password')
 
     def test_request_transfused_units_no_params(self):
         response = self.c.get(self.endpoint)
@@ -533,7 +765,7 @@ class RequestTransfusedUnitsTestCase(TransactionTestCase):
             self.assertEqual(response.status_code, 200)
 
 
-class RiskScoreTestCase(TransactionTestCase):
+class RiskScoreTestCaseLoggedOut(TransactionTestCase):
     endpoint = "/api/risk_score"
 
     def setUp(self):
@@ -541,29 +773,29 @@ class RiskScoreTestCase(TransactionTestCase):
 
     def test_risk_score_unsupported_methods(self):
         response = self.c.post(self.endpoint)
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, 302)
         
         response = self.c.head(self.endpoint)
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, 302)
 
         response = self.c.options(self.endpoint)
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, 302)
 
         response = self.c.put(self.endpoint)
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, 302)
 
         response = self.c.patch(self.endpoint)
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, 302)
 
         response = self.c.delete(self.endpoint)
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, 302)
 
         response = self.c.trace(self.endpoint)
-        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.status_code, 302)
 
     def test_risk_score_no_params(self):
         response = self.c.get(self.endpoint)
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 302)
 
     def test_risk_score_valid_types(self):
         valid_options = [
@@ -576,14 +808,16 @@ class RiskScoreTestCase(TransactionTestCase):
                 self.endpoint,
                 valid_option,
             )
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 302)
 
 
-class PatientOutcomesTestCase(TransactionTestCase):
-    endpoint = "/api/patient_outcomes"
+class RiskScoreTestCaseLoggedIn(TransactionTestCase):
+    endpoint = "/api/risk_score"
 
     def setUp(self):
         self.c = Client()
+        User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
+        self.c.login(username = 'test_user', password = 'test_password')
 
     def test_risk_score_unsupported_methods(self):
         response = self.c.post(self.endpoint)
@@ -625,11 +859,200 @@ class PatientOutcomesTestCase(TransactionTestCase):
             self.assertEqual(response.status_code, 200)
 
 
-class StateTestCase(TransactionTestCase):
+class PatientOutcomesTestCaseLoggedOut(TransactionTestCase):
+    endpoint = "/api/patient_outcomes"
+
+    def setUp(self):
+        self.c = Client()
+
+    def test_risk_score_unsupported_methods(self):
+        response = self.c.post(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+        
+        response = self.c.head(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.options(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.put(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.patch(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.delete(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.trace(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+    def test_risk_score_no_params(self):
+        response = self.c.get(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+    def test_risk_score_valid_types(self):
+        valid_options = [
+            {"patient_ids": "880078673"},
+            {"patient_ids": "880078673,865124568"},
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.get(
+                self.endpoint,
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 302)
+
+
+class PatientOutcomesTestCaseLoggedIn(TransactionTestCase):
+    endpoint = "/api/patient_outcomes"
+
+    def setUp(self):
+        self.c = Client()
+        User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
+        self.c.login(username = 'test_user', password = 'test_password')
+
+    def test_risk_score_unsupported_methods(self):
+        response = self.c.post(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+        
+        response = self.c.head(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.options(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.put(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.patch(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.delete(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+        response = self.c.trace(self.endpoint)
+        self.assertEqual(response.status_code, 405)
+
+    def test_risk_score_no_params(self):
+        response = self.c.get(self.endpoint)
+        self.assertEqual(response.status_code, 400)
+
+    def test_risk_score_valid_types(self):
+        valid_options = [
+            {"patient_ids": "880078673"},
+            {"patient_ids": "880078673,865124568"},
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.get(
+                self.endpoint,
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 200)
+
+
+class StateTestCaseLoggedOut(TransactionTestCase):
     endpoint = "/api/state"
 
     def setUp(self):
         self.c = Client()
+
+    def test_state_unsupported_methods(self):
+        response = self.c.head(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.options(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.patch(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+        response = self.c.trace(self.endpoint)
+        self.assertEqual(response.status_code, 302)
+
+    def test_state_post_valid_types(self):
+        valid_options = [
+            {"name": "test1", "definition": "this is a really long text string. this is a really long text string. "},
+            {"name": "test 2", "definition": "{'type': 'example json object', 'prop': 'value', 'list': []}"},
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.post(
+                self.endpoint,
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 302)
+
+    def test_state_get_valid_types(self):
+        # Post an example
+        valid_options = [
+            {"name": "test1", "definition": "this is a really long text string. this is a really long text string. "},
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.post(
+                self.endpoint,
+                valid_option,
+            )
+
+        # Get that data back
+        valid_options = [
+            {},
+            {"name": "test1"},
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.get(
+                self.endpoint,
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 302)
+
+    def test_state_update_valid_types(self):
+        # Make a valid state
+        valid_option = {"name": "test1", "definition": "{'type': 'example json object', 'prop': 'value', 'list': []}"}
+        response = self.c.post(self.endpoint, valid_option)
+
+        # Update that state changing definition, and then definition and name
+        valid_options = [
+            {"old_name": "test1", "new_name": "test1", "new_definition": "update1"},
+            {"old_name": "test1", "new_name": "test2", "new_definition": "update2"},
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.put(
+                self.endpoint,
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 302)
+
+    def test_state_delete_valid_types(self):
+        # Make a valid state
+        valid_option = {"name": "test1", "definition": "{'type': 'example json object', 'prop': 'value', 'list': []}"}
+        response = self.c.post(self.endpoint, valid_option)
+
+        # Delete that state 
+        valid_options = [
+            {"name": "test1"}
+        ]
+
+        for valid_option in valid_options:
+            response = self.c.delete(
+                self.endpoint,
+                valid_option,
+            )
+            self.assertEqual(response.status_code, 302)
+
+
+class StateTestCaseLoggedIn(TransactionTestCase):
+    endpoint = "/api/state"
+
+    def setUp(self):
+        self.c = Client()
+        User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
+        self.c.login(username = 'test_user', password = 'test_password')
 
     def test_state_unsupported_methods(self):
         response = self.c.head(self.endpoint)
@@ -732,7 +1155,3 @@ class StateTestCase(TransactionTestCase):
                 {}
             )
             self.assertEqual(ast.literal_eval(response.content.decode()),[])
-
-
-class LoginLogoutFlowTestCase(TransactionTestCase):
-    pass

@@ -2,10 +2,15 @@ import ast
 import cx_Oracle
 import csv
 import json
+import os
 
 from collections import Counter
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed, QueryDict
 from django.forms.models import model_to_dict
+from django.contrib.auth.decorators import login_required
+
+from api.decorators import conditional_login_required
+from api.models import State
 from api.utils import (
     make_connection, 
     data_dictionary, 
@@ -16,7 +21,6 @@ from api.utils import (
     output_quarter, 
     validate_dates
 )
-from api.models import State
 
 
 DE_IDENT_FIELDS = {
@@ -62,6 +66,7 @@ def index(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def get_attributes(request):
     if request.method == "GET":
         # Get the list of allowed filter_selection names from the cpt function 
@@ -109,62 +114,7 @@ def get_attributes(request):
     else:
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
-
-def fetch_professional_set(request):
-    if request.method == "GET":
-        allowed_types = ["SURGEON_ID", "ANESTHESIOLOGIST_ID"]
-
-        professional_type = request.GET.get('professional_type')
-        professional_id = request.GET.get('professional_id')
-        
-        if not (professional_type and professional_id):
-            return HttpResponseBadRequest("professional_type and professional_id must be supplied.")
-
-        if not (professional_type in allowed_types):
-            return HttpResponseBadRequest(f"professional_type must be one of the following: {allowed_types}.")
-
-        partner = FIELDS_IN_USE.get('surgeon_id') if professional_type == "ANESTHESIOLOGIST_ID" else FIELDS_IN_USE.get('anest_id')
-        partner_clean = "SURGEON_ID" if professional_type == "ANESTHESIOLOGIST_ID" else "ANESTHESIOLOGIST_ID"
-
-        command = f"""
-        SELECT
-            SUM(INTRAOP.PRBC_UNITS),
-            SUM(INTRAOP.FFP_UNITS),
-            SUM(INTRAOP.PLT_UNITS),
-            SUM(INTRAOP.CRYO_UNITS),
-            SUM(INTRAOP.CELL_SAVER_ML),
-            SURG.{partner},
-            SURG.{FIELDS_IN_USE.get('case_id')},
-            SURG.PRIM_PROC_DESC
-        FROM
-            {TABLES_IN_USE.get('intra_op_trnsfsd')} INTRAOP
-        INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
-            ON (SURG.{FIELDS_IN_USE.get('case_id')} = INTRAOP.{FIELDS_IN_USE.get('case_id')})
-        WHERE SURG.{partner} = :id
-        GROUP BY
-            SURG.{FIELDS_IN_USE.get('case_id')},
-            SURG.{partner},
-            SURG.PRIM_PROC_DESC
-        """
-
-        result = execute_sql(command, id = professional_id)
-        items = [
-            {
-                "PRBC_UNITS": row[0] if row[0] else 0,
-                "FFP_UNITS": row[1] if row[1] else 0,
-                "PLT_UNITS": row[2] if row[2] else 0,
-                "CRYO_UNITS":row[3] if row[3] else 0,
-                "CELL_SAVER_ML":row[4] if row[4] else 0,
-                partner_clean: row[5],
-                "DI_CASE_ID":row[6],
-                "DESC":row[7]
-            }
-            for row in result]
-        return JsonResponse({"result": items})
-    else:
-        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
-
-
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def fetch_surgery(request):
     if request.method == "GET":
         # Get the values from the request
@@ -201,6 +151,7 @@ def fetch_surgery(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def fetch_patient(request):
     if request.method == "GET":
         # Get the values from the request
@@ -236,6 +187,7 @@ def fetch_patient(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def request_transfused_units(request):
     if request.method == "GET":
         # Get the required parameters from the query string
@@ -384,6 +336,7 @@ def request_transfused_units(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def test_results(request):
     if request.method == "GET":
         case_ids = request.GET.get("case_ids") or ""
@@ -397,6 +350,7 @@ def test_results(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def risk_score(request):
     if request.method == "GET":
         patient_ids = request.GET.get("patient_ids") or ""
@@ -449,6 +403,7 @@ def risk_score(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def patient_outcomes(request):
     if request.method == "GET":
         patient_ids = request.GET.get("patient_ids") or ""
@@ -495,6 +450,7 @@ def patient_outcomes(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def hemoglobin(request):
     if request.method == "GET":
         command = """
@@ -622,6 +578,7 @@ def hemoglobin(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+@conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def state(request):
     if request.method == "GET":
         # Get the name from the querystring
