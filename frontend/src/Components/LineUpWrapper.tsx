@@ -131,15 +131,24 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                         .column(LineUpJS.buildNumberColumn("CRYO_UNITS", [0, BloodProductCap.CRYO_UNITS]))
                         .column(LineUpJS.buildNumberColumn("CELL_SAVER_ML", [0, BloodProductCap.CELL_SAVER_ML]))
                         .build(node);
-                    lineup.data.getFirstRanking().on("filterChanged", (previous, current) => {
-                        const filter_output = lineup.data.getFirstRanking().getGroups()[0].order
 
-                        const caseIDList = filter_output.map(v => hemoglobinDataSet[v].CASE_ID)
-                        actions.updateSelectedPatientGroup(caseIDList)
+                    lineup.data.getFirstRanking().on("filterChanged", (previous, current) => {
+                        //Solution to not return the group order after the filter applied. a Time Out.
+                        setTimeout(() => {
+                            const filter_output = lineup.data.getFirstRanking().getGroups()[0].order
+
+                            const caseIDList = filter_output.map(v => hemoglobinDataSet[v].CASE_ID)
+                            actions.updateSelectedPatientGroup(caseIDList)
+                            console.log(caseIDList)
+                        }, 1000)
                         // console.log(previous, current); // filter settings
+                        // console.log(lineup.data.getFirstRanking().getGroups())
                         // console.log(lineup.data); // DataProvider
-                        // console.log(lineup.data.getFirstRanking().getGroups()[0].order); // First ranking
+                        // console.log(lineup.data.getFirstRanking()); // First ranking
+
+                        // setTimeout(() => { console.log(lineup.data.getFirstRanking().getGroups()) }, 2000)
                     });
+
                 }
             }
         })
