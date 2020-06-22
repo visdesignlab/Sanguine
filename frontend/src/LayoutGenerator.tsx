@@ -6,7 +6,7 @@ import { Tab, Grid, GridColumn, Button } from "semantic-ui-react";
 import { actions } from ".";
 import DetailView from "./Components/Utilities/DetailView";
 import LineUpWrapper from "./Components/LineUpWrapper";
-import PatientComparisonWrapper from "./Components/PatientComparisonWrapper";
+//import PatientComparisonWrapper from "./Components/PatientComparisonWrapper";
 import Store from "./Interfaces/Store";
 import { LayoutElement } from "./Interfaces/ApplicationState";
 import DumbbellChartVisualization from "./Components/DumbbellChart/DumbbellChartVisualization";
@@ -184,14 +184,16 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
             <Tab.Pane key="LineUp">
                 <div className={"lineup"} id={"lineup-wrapper"}>
                     <LineUpWrapper hemoglobinDataSet={hemoData} /></div></Tab.Pane>
-    }, {
-        menuItem: 'Selected Patients',
-        pane:
-            <Tab.Pane key="Patients">
-                <PatientComparisonWrapper></PatientComparisonWrapper>
+    },
+        // {
+        //     menuItem: 'Selected Patients',
+        //     pane:
+        //         <Tab.Pane key="Patients">
+        //             <PatientComparisonWrapper></PatientComparisonWrapper>
 
-            </Tab.Pane>
-    }]
+        //         </Tab.Pane>
+        // }
+    ]
     return <Tab panes={panes}
         renderActiveOnly={false}
     ></Tab>

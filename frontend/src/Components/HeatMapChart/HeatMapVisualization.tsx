@@ -29,7 +29,8 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         filterSelection,
         showZero,
         dateRange,
-        currentSelectPatientGroup
+        currentSelectPatientGroup,
+        currentOutputFilterSet
     } = store!;
     const svgRef = useRef<SVGSVGElement>(null);
     // const [data, setData] = useState<{ original: BarChartDataPoint[]; perCase: BarChartDataPoint[]; }>({ original: [], perCase: [] });
@@ -83,29 +84,30 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
 
             //console.log(dataResult)
             let cast_data = (dataResult as any).map(function (ob: any) {
+                const aggregateByAttr = ob.aggregated_by;
+                // let criteriaMet = true;
+                // if (currentOutputFilterSet.length > 0) {
+                //     for (let selectSet of currentOutputFilterSet) {
+                //         if (selectSet.set_name === aggregatedBy) {
+                //             if (!selectSet.set_value.includes(aggregateByAttr)) {
+                //                 criteriaMet = false;
+                //             }
+                //         }
+                //     }
+                // }
+                // if (criteriaMet) {
 
                 ob.case_id.map((singleId: any) => {
                     caseDictionary[singleId] = true;
                 })
 
                 let zeroCaseNum = 0;
-                const aggregateByAttr = ob.aggregated_by;
-
                 const case_num = ob.transfused_units.length;
                 caseCount += case_num
 
                 let outputResult = ob.transfused_units;
-                // if (!showZero) {
-                //     outputResult = outputResult.filter((d: number) => {
-                //         if (d > 0) {
-                //             return true;
-                //         }
-                //         zeroCaseNum += 1;
-                //         return false;
-                //     })
-                // } else {
                 zeroCaseNum = outputResult.filter((d: number) => d === 0).length
-                // }
+
                 const total_val = sum(outputResult);
 
                 let countDict = {} as any
@@ -142,6 +144,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                         }
                     }
                 })
+
                 const new_ob: HeatMapDataPoint = {
                     caseCount: case_num,
                     aggregateAttribute: aggregateByAttr,
@@ -150,9 +153,10 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                     zeroCaseNum: zeroCaseNum,
                     patientIDList: ob.pat_id
                 };
-
                 return new_ob;
+                //   }
             });
+            cast_data = cast_data.filter((d: any) => d)
             // setData(cast_data);
             stateUpdateWrapperUseJSON(data, cast_data, setData)
             stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList);
@@ -166,7 +170,9 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
 
     useEffect(() => {
         fetchChartData();
-    }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroup]);
+    }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroup,
+        //  currentOutputFilterSet
+    ]);
 
     const makeExtraPairData = () => {
         let newExtraPairData: any[] = []
