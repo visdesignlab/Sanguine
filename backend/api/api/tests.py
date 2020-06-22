@@ -111,7 +111,7 @@ class NoParamRoutesTestCaseLoggedOut(TransactionTestCase):
 
     def test_get_api_root_logged_out(self):
         response = self.c.get("/api/")
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.content.decode(),
             "Bloodvis API endpoint. Please use the client application to access the data here.",
@@ -119,11 +119,11 @@ class NoParamRoutesTestCaseLoggedOut(TransactionTestCase):
 
     def test_get_attributes_logged_out(self):
         response = self.c.get("/api/get_attributes")
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 302)
 
     def test_hemoglobin_logged_out(self):
         response = self.c.get("/api/hemoglobin")
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 302)
 
 
 class NoParamRoutesTestCaseLoggedIn(TransactionTestCase):
