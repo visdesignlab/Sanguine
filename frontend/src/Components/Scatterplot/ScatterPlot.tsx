@@ -10,7 +10,8 @@ import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
 import { offset, AxisLabelDict } from "../../PresetsProfile"
-import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range } from "d3";
+import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range, median } from "d3";
+
 //import CustomizedAxis from "../Utilities/CustomizedAxis";
 import { highlight_orange, basic_gray } from "../../PresetsProfile";
 
@@ -216,9 +217,16 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         let selectedPatients: any[] = [];
         const patientGroupSet = new Set(currentSelectPatientGroup)
         //let unselectedPatients = [];
+        let medianSet: any = {}
         let unselectedPatients = data.map((dataPoint) => {
+
             const cx = xAxisName === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
-            // const cx = dataPoint.xLoc;
+
+            if (medianSet[dataPoint.xVal]) {
+                medianSet[dataPoint.xVal].push(dataPoint.yVal)
+            } else {
+                medianSet[dataPoint.xVal] = [dataPoint.yVal]
+            }
             const cy = yAxisScale()(dataPoint.yVal)
             const isSelected = decideIfSelected(dataPoint)
             const isBrushed = (brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1])
@@ -245,7 +253,12 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
                 );
             }
         })
-        return unselectedPatients.concat(selectedPatients)
+        let lineSet: any[] = []
+        for (let [key, value] of Object.entries(medianSet)) {
+            const medianVal = median(value as any) || 0
+            lineSet.push(<line strokeWidth="3px" stroke={highlight_orange} x1={xAxisScale()(key as any)} y1={yAxisScale()(medianVal)} y2={yAxisScale()(medianVal)} x2={xAxisScale()(key as any) + xAxisScale().bandwidth() || 0} />)
+        }
+        return unselectedPatients.concat(selectedPatients).concat(lineSet)
     }
 
 
