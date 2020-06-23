@@ -7,14 +7,16 @@ import { scaleLinear, timeFormat, max } from "d3";
 import { actions } from "../..";
 import { AxisLabelDict, Accronym, stateUpdateWrapperUseJSON } from "../../PresetsProfile";
 import { highlight_orange, secondary_gray } from "../../PresetsProfile";
+import { SingleCasePoint } from "../../Interfaces/ApplicationState";
 
 interface OwnProps {
+  hemoData: any;
   store?: Store;
 }
 
 export type Props = OwnProps;
 
-const SideBar: FC<Props> = ({ store }: Props) => {
+const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
   const {
     // totalCaseCount, 
     totalAggregatedCaseCount,
@@ -29,9 +31,44 @@ const SideBar: FC<Props> = ({ store }: Props) => {
   // const [itemSelected, setItemSelected] = useState<any[]>([]);
   // const [itemUnselected, setItemUnselected] = useState<any[]>([]);
   const [surgeryList, setSurgeryList] = useState<any[]>([]);
+  const [caseList, setCaseList] = useState<any[]>([]);
 
   const surgeryBarStarting = 140
   const surgeryBarEnding = 240
+
+  useEffect(() => {
+    //TODO there are duplicated caseID. 3881 incoming, 3876 outgoing
+    let caseDuplicationCheck = new Set();
+
+    let newCaseList = hemoData.map((d: any) => {
+
+      if (!caseDuplicationCheck.has(d.CASE_ID)) {
+        caseDuplicationCheck.add(d.CASE_ID)
+        const newSingleCasePoint: SingleCasePoint = {
+          visitNum: d.VISIT_ID,
+          caseId: d.CASE_ID,
+          YEAR: d.YEAR,
+          SURGEON_ID: d.SURGEON_ID,
+          ANESTHOLOGIST_ID: d.ANESTHOLOGIST_ID,
+          patientID: d.PATIENT_ID,
+          DATE: d.DATE
+        };
+        const newOption = {
+          key: `${d.CASE_ID}`,
+          text: d.CASE_ID,
+          value: JSON.stringify(newSingleCasePoint),
+          //caseRelated: newSingleCasePoint
+
+        };
+        return newOption
+      } else { return undefined }
+
+    })
+    newCaseList = newCaseList.filter((d: any) => d)
+
+    stateUpdateWrapperUseJSON(caseList, newCaseList, setCaseList)
+  }, [hemoData])
+
   async function fetchProcedureList() {
     const res = await fetch("http://localhost:8000/api/get_attributes");
     const data = await res.json();
@@ -190,7 +227,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
       </Grid.Row>
 
       <Grid.Row style={{ padding: "20px" }}>
-        <Container style={{ overflow: "auto", height: "40vh" }}>
+        <Container style={{ overflow: "auto", height: "20vh" }}>
           {/* <List relaxed divided >
             <List.Item key={"filter-header"} style={{ background: "#dff9ec" }}>
               <List.Content floated="left" style={{ width: "60%" }}>
@@ -254,6 +291,30 @@ const SideBar: FC<Props> = ({ store }: Props) => {
 
           </Dropdown>
 
+        </Container>
+      </Grid.Row>
+      <Grid.Row centered style={{ padding: "20px" }}>
+        <Container style={{ height: "20vh" }}>
+          <Dropdown
+            placeholder="Case Search"
+            search
+            selection
+            style={{ width: 270 }}
+            clearable
+            onChange={(e, d) => { console.log(JSON.parse(d.value as any)); actions.selectPatient(JSON.parse(d.value as any)) }}
+
+            options={caseList}
+          // header={<Header><SVG>
+          //   <text alignmentBaseline="hanging" x={0} y={0}>Procedures</text>
+          //   <rect x={surgeryBarStarting} y={0} width={surgeryBarEnding - surgeryBarStarting} height={13} fill={secondary_gray} />
+
+          //   <text x={surgeryBarStarting + 1} y={11} textAnchor="start" alignmentBaseline="baseline" fill="white">0</text>
+          //   <text x={surgeryBarEnding} y={11} textAnchor="end" alignmentBaseline="baseline" fill="white">{maxCaseCount}</text>
+          // </SVG></Header>}
+          // value={filterSelection}
+          >
+
+          </Dropdown>
         </Container>
       </Grid.Row>
     </Grid>
