@@ -1,9 +1,9 @@
 import React, { FC, useEffect, useState, useCallback } from "react";
 import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
-import { Grid, Container, List, Button } from "semantic-ui-react";
+import { Grid, Container, List, Button, Dropdown, Header } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";
-import { scaleLinear, timeFormat } from "d3";
+import { scaleLinear, timeFormat, max } from "d3";
 import { actions } from "../..";
 import { AxisLabelDict, Accronym, stateUpdateWrapperUseJSON } from "../../PresetsProfile";
 import { highlight_orange, secondary_gray } from "../../PresetsProfile";
@@ -24,37 +24,49 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     currentOutputFilterSet,
     currentSelectPatientGroup,
     filterSelection } = store!;
-  const [procedureList, setProcedureList] = useState<any[]>([]);
+  //const [procedureList, setProcedureList] = useState<any[]>([]);
   const [maxCaseCount, setMaxCaseCount] = useState(0);
-  const [itemSelected, setItemSelected] = useState<any[]>([]);
-  const [itemUnselected, setItemUnselected] = useState<any[]>([]);
+  // const [itemSelected, setItemSelected] = useState<any[]>([]);
+  // const [itemUnselected, setItemUnselected] = useState<any[]>([]);
+  const [surgeryList, setSurgeryList] = useState<any[]>([]);
 
-
-
+  const surgeryBarStarting = 140
+  const surgeryBarEnding = 240
   async function fetchProcedureList() {
     const res = await fetch("http://localhost:8000/api/get_attributes");
     const data = await res.json();
-    const result = data.result
+    const result = data.result;
 
-    console.log(result)
-    let tempMaxCaseCount = 0;
-    let tempItemUnselected: any[] = [];
-    let tempItemSelected: any[] = [];
-    result.forEach((d: any) => {
-      tempMaxCaseCount = d.count > tempMaxCaseCount ? d.count : tempMaxCaseCount;
-      if (filterSelection.includes(d.value)) {
-        tempItemSelected.push(d)
-      } else {
-        tempItemUnselected.push(d)
-      }
-    })
-    tempItemSelected.sort((a: any, b: any) => b.count - a.count)
-    tempItemUnselected.sort((a: any, b: any) => b.count - a.count)
+    let tempSurgeryList: any[] = [];
+
+    const tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
     setMaxCaseCount(tempMaxCaseCount)
-    stateUpdateWrapperUseJSON(procedureList, result, setProcedureList)
+    const caseScale = scaleLinear().domain([0, tempMaxCaseCount]).range([0, surgeryBarEnding - surgeryBarStarting])
+
+    result.forEach((d: any) => {
+
+      tempSurgeryList.push({
+        key: d.value,
+        text: d.value,
+        value: d.value,
+        count: d.count,
+        content: (
+          <SVG>
+            <text alignmentBaseline="hanging" x={0} y={0}>{d.value}</text>
+            <rect x={surgeryBarEnding - caseScale(d.count)} y={0} width={caseScale(d.count)} height={13} fill={secondary_gray} />
+          </SVG>
+        ),
+      })
+    })
+    tempSurgeryList.sort((a: any, b: any) => b.count - a.count)
+    console.log(tempSurgeryList)
+    // tempItemSelected.sort((a: any, b: any) => b.count - a.count)
+    // tempItemUnselected.sort((a: any, b: any) => b.count - a.count)
+    // setMaxCaseCount(tempMaxCaseCount)
+    stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList)
     //setProcedureList(result);
-    setItemUnselected(tempItemUnselected);
-    setItemSelected(tempItemSelected)
+    // setItemUnselected(tempItemUnselected);
+    // setItemSelected(tempItemSelected)
   }
 
   useEffect(() => {
@@ -62,29 +74,25 @@ const SideBar: FC<Props> = ({ store }: Props) => {
     //  console.log(rawDateRange)
   }, []);
 
-  useEffect(() => {
-    let newItemSelected: any[] = []
-    let newItemUnselected: any[] = []
-    procedureList.forEach((d: any) => {
-      if (filterSelection.includes(d.value)) {
-        newItemSelected.push(d)
-      }
-      else {
-        newItemUnselected.push(d)
-      }
-    })
-    newItemSelected.sort((a: any, b: any) => b.count - a.count)
-    newItemUnselected.sort((a: any, b: any) => b.count - a.count)
-    stateUpdateWrapperUseJSON(itemSelected, newItemSelected, setItemSelected)
+  // useEffect(() => {
+  //   let newItemSelected: any[] = []
+  //   let newItemUnselected: any[] = []
+  //   procedureList.forEach((d: any) => {
+  //     if (filterSelection.includes(d.value)) {
+  //       newItemSelected.push(d)
+  //     }
+  //     else {
+  //       newItemUnselected.push(d)
+  //     }
+  //   })
+  //   newItemSelected.sort((a: any, b: any) => b.count - a.count)
+  //   newItemUnselected.sort((a: any, b: any) => b.count - a.count)
+  //   stateUpdateWrapperUseJSON(itemSelected, newItemSelected, setItemSelected)
 
-    stateUpdateWrapperUseJSON(itemUnselected, newItemUnselected, setItemUnselected)
-  }, [filterSelection])
+  //   stateUpdateWrapperUseJSON(itemUnselected, newItemUnselected, setItemUnselected)
+  // }, [filterSelection])
 
-  const caseScale = useCallback(() => {
-    const caseScale = scaleLinear().domain([0, maxCaseCount]).range([0, 90])
 
-    return caseScale;
-  }, [maxCaseCount])
 
   const generateSurgery = () => {
     let output: any[] = [<span>Procedures: </span>]
@@ -183,7 +191,7 @@ const SideBar: FC<Props> = ({ store }: Props) => {
 
       <Grid.Row style={{ padding: "20px" }}>
         <Container style={{ overflow: "auto", height: "40vh" }}>
-          <List relaxed divided >
+          {/* <List relaxed divided >
             <List.Item key={"filter-header"} style={{ background: "#dff9ec" }}>
               <List.Content floated="left" style={{ width: "60%" }}>
                 <b>Procedures</b>
@@ -224,16 +232,27 @@ const SideBar: FC<Props> = ({ store }: Props) => {
                   </ListIT>)
               }
             })}
-          </List>
-          {/* <Dropdown
-              placeholder="Procedure"
-              multiple
-              search
-              selection
-              onChange={actions.filterSelectionChange}
-              options={procedureList.result}
-              value={filterSelection}
-            /> */}
+          </List> */}
+
+          <Dropdown
+            placeholder="Procedure Selection"
+            multiple
+            search
+            selection
+            style={{ width: 270 }}
+            onChange={(e, d) => { actions.filterSelectionChange(d.value) }}
+            options={surgeryList}
+            header={<Header><SVG>
+              <text alignmentBaseline="hanging" x={0} y={0}>Procedures</text>
+              <rect x={surgeryBarStarting} y={0} width={surgeryBarEnding - surgeryBarStarting} height={13} fill={secondary_gray} />
+
+              <text x={surgeryBarStarting + 1} y={11} textAnchor="start" alignmentBaseline="baseline" fill="white">0</text>
+              <text x={surgeryBarEnding} y={11} textAnchor="end" alignmentBaseline="baseline" fill="white">{maxCaseCount}</text>
+            </SVG></Header>}
+            value={filterSelection}
+          >
+
+          </Dropdown>
 
         </Container>
       </Grid.Row>
@@ -244,7 +263,7 @@ export default inject("store")(observer(SideBar));
 
 const SVG = styled.svg`
   height: 15px;
-  width: 100px;
+  width: 250px;
 `;
 interface ListITProps {
   isSelected: boolean;
