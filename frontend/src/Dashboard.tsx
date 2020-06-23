@@ -28,7 +28,7 @@ const Dashboard: FC<Props> = ({ hemoData, store }: Props) => {
             </Container>
             <Grid padded>
                 <SpecialPaddingColumn width={3} >
-                    <SideBar></SideBar>
+                    <SideBar hemoData={hemoData}></SideBar>
                 </SpecialPaddingColumn>
                 <Grid.Column width={13}>
                     <LayoutGenerator hemoData={hemoData} />

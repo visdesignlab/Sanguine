@@ -32,16 +32,18 @@ const DetailView: FC<Props> = ({ store }: Props) => {
                 //    console.log(individualInfo)
                 const fetchTransfused = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}&case_ids=${currentSelectPatient.caseId}`)
                 const fetchResultTran = await fetchTransfused.json();
-                //  console.log(fetchResultTran)
-                const transfusedInfo = fetchResultTran[0].transfused_units;
-                const transfusionResult = {
-                    PRBC_UNITS: transfusedInfo[0] || 0,
-                    FFP_UNITS: transfusedInfo[1] || 0,
-                    PLT_UNITS: transfusedInfo[2] || 0,
-                    CRYO_UNITS: transfusedInfo[3] || 0,
-                    CELL_SAVER_ML: transfusedInfo[4] || 0
+                console.log(fetchResultTran)
+                let transfusionResult = {};
+                if (fetchResultTran.length > 0) {
+                    const transfusedInfo = fetchResultTran[0].transfused_units;
+                    transfusionResult = {
+                        PRBC_UNITS: transfusedInfo[0] || 0,
+                        FFP_UNITS: transfusedInfo[1] || 0,
+                        PLT_UNITS: transfusedInfo[2] || 0,
+                        CRYO_UNITS: transfusedInfo[3] || 0,
+                        CELL_SAVER_ML: transfusedInfo[4] || 0
+                    }
                 }
-
                 const fetchSurgery = await fetch(`http://localhost:8000/api/fetch_surgery?case_id=${currentSelectPatient.caseId}`)
                 const fetchSurgeryJson = await fetchSurgery.json();
                 const surgeryInfo = fetchSurgeryJson.result[0];
