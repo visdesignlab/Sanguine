@@ -1,10 +1,7 @@
 import React, {
   FC,
   useEffect,
-  useRef,
-  useLayoutEffect,
   useState,
-  useMemo,
   useCallback
 } from "react";
 import Store from "../../Interfaces/Store";
@@ -17,16 +14,9 @@ import {
   range,
   scaleLinear,
   scaleOrdinal,
-  mouse,
-  axisBottom,
   axisLeft,
-  ScaleLinear,
   ScaleOrdinal,
-  axisTop,
-  scalePow,
-  ticks,
   median,
-  timeParse,
 } from "d3";
 import { DumbbellDataPoint } from "../../Interfaces/ApplicationState";
 import { offset, AxisLabelDict, minimumWidthScale, stateUpdateWrapperUseJSON } from "../../PresetsProfile"
@@ -66,7 +56,8 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
   const currentOffset = offset.minimum;
   const {
     //dumbbellSorted,
-    currentSelectPatient, currentSelectPatientGroup } = store!;
+    currentSelectPatient,
+    currentSelectSet } = store!;
   const svgSelection = select(svg.current);
 
   useEffect(() => {
@@ -264,18 +255,23 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
     } return false;
   }
 
-  const decideIfBrushed = (d: DumbbellDataPoint) => {
-    return currentSelectPatientGroup.includes(d.case.caseId);
-  }
-
-  // const decideIfSurgeon = (d: DumbbellDataPoint) => {
-
-  //   if (currentSelectSet) {
-  //     return d.case[currentSelectSet.set_name] === currentSelectSet.set_value
-  //   }
-  //   return true;
-
+  // const decideIfBrushed = (d: DumbbellDataPoint) => {
+  //   return currentSelectPatientGroup.includes(d.case.caseId);
   // }
+
+  const decideIfBrushed = (d: DumbbellDataPoint) => {
+
+    if (currentSelectSet.length > 0) {
+      for (let selected of currentSelectSet) {
+        if (selected.set_value.includes(d.case[selected.set_name])) { return true; }
+
+      }
+      return false;
+    }
+    else {
+      return false;
+    }
+  }
 
   const generateDumbbells = () => {
     let selectedPatients: any[] = []

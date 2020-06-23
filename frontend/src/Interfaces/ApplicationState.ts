@@ -49,12 +49,13 @@ export interface SingleCasePoint {
   SURGEON_ID: number;
   ANESTHOLOGIST_ID: number;
   patientID: number;
-  DATE: Date;
-  [key: string]: number | Date;
+  DATE: number;
+  [key: string]: number;
 }
 export interface ScatterDataPoint {
   xVal: number;
   yVal: number;
+  randomFactor: number;
   case: SingleCasePoint;
 }
 

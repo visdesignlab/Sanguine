@@ -1,10 +1,8 @@
 import React, { FC, useState } from 'react';
 import Store from './Interfaces/Store';
 import { inject, observer } from 'mobx-react';
-import { Form, Button, Container, Header, Message, Image } from 'semantic-ui-react';
-import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
-import $ from 'jquery';
-import { render } from 'react-dom';
+import { Form, Container, Header, Message, Image } from 'semantic-ui-react';
+import { Redirect } from 'react-router-dom'
 import { getCookie } from './Interfaces/UserManagement';
 
 
@@ -19,7 +17,6 @@ const Logins: FC<Props> = ({ store }: Props) => {
     // const password = useFormInput('');
     const { isLoggedIn } = store!
     const [hideErrorMessage, setError] = useState<boolean>(true);
-    const [loading, setLoading] = useState(false);
 
     const [username, setUserName] = useState<string | null>(null)
     const [password, setPassWord] = useState<string | null>(null)
@@ -30,7 +27,6 @@ const Logins: FC<Props> = ({ store }: Props) => {
 
     const handleLogin = async () => {
         setError(true)
-        setLoading(true)
 
         // Get the csrf cookie by visiting the site
         fetch(`http://localhost:8000/accounts/login/`, {

@@ -6,7 +6,7 @@ import { Tab, Grid, GridColumn, Button } from "semantic-ui-react";
 import { actions } from ".";
 import DetailView from "./Components/Utilities/DetailView";
 import LineUpWrapper from "./Components/LineUpWrapper";
-import PatientComparisonWrapper from "./Components/PatientComparisonWrapper";
+//import PatientComparisonWrapper from "./Components/PatientComparisonWrapper";
 import Store from "./Interfaces/Store";
 import { LayoutElement } from "./Interfaces/ApplicationState";
 import DumbbellChartVisualization from "./Components/DumbbellChart/DumbbellChartVisualization";
@@ -14,7 +14,7 @@ import BarChartVisualization from "./Components/BarChart/BarChartVisualization";
 import ScatterPlotVisualization from "./Components/Scatterplot/ScatterPlotVisualization";
 import HeatMapVisualization from "./Components/HeatMapChart/HeatMapVisualization";
 import InterventionPlotVisualization from "./Components/InterventionPlot/InterventionPlotVisualization";
-import { Responsive, WidthProvider } from "react-grid-layout";
+import { Responsive } from "react-grid-layout";
 import 'react-grid-layout/css/styles.css'
 interface OwnProps {
     hemoData: any;
@@ -184,14 +184,16 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
             <Tab.Pane key="LineUp">
                 <div className={"lineup"} id={"lineup-wrapper"}>
                     <LineUpWrapper hemoglobinDataSet={hemoData} /></div></Tab.Pane>
-    }, {
-        menuItem: 'Selected Patients',
-        pane:
-            <Tab.Pane key="Patients">
-                <PatientComparisonWrapper></PatientComparisonWrapper>
+    },
+        // {
+        //     menuItem: 'Selected Patients',
+        //     pane:
+        //         <Tab.Pane key="Patients">
+        //             <PatientComparisonWrapper></PatientComparisonWrapper>
 
-            </Tab.Pane>
-    }]
+        //         </Tab.Pane>
+        // }
+    ]
     return <Tab panes={panes}
         renderActiveOnly={false}
     ></Tab>
