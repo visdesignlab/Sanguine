@@ -377,18 +377,19 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const filterSelectionChange = (selectedFilterOption: any) => {
+  const filterSelectionChange = (selectedFilterOption: string[]) => {
     provenance.applyAction(
       `Change Filter Selection to ${selectedFilterOption}`,
       (state: ApplicationState) => {
-        if (state.filterSelection.includes(selectedFilterOption)) {
-          state.filterSelection = state.filterSelection.filter(d => d !== selectedFilterOption)
-        }
-        else {
-          state.filterSelection.push(selectedFilterOption)
-        }
+        // if (state.filterSelection.includes(selectedFilterOption)) {
+        //   state.filterSelection = state.filterSelection.filter(d => d !== selectedFilterOption)
+        // }
+        // else {
+        //   state.filterSelection.push(selectedFilterOption)
+        // }
 
-        //state.filterSelection = selectedFilterOption;
+        state.filterSelection = selectedFilterOption;
+        // console.log(state.filterSelection)
         return state;
       }
     )
