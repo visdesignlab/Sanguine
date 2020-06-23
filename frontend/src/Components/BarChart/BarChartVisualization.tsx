@@ -1,14 +1,13 @@
-import React, { FC, useEffect, useRef, useLayoutEffect, useState, useMemo } from "react";
+import React, { FC, useEffect, useRef, useLayoutEffect, useState } from "react";
 import Store from "../../Interfaces/Store";
-import styled from 'styled-components'
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { BarChartDataPoint } from '../../Interfaces/ApplicationState'
 import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON, ChartSVG } from "../../PresetsProfile"
 import BarChart from "./BarChart"
-import { Button, Icon, Table, Grid, Dropdown, GridColumn, Menu, Container, Modal, Input, Form, Message } from "semantic-ui-react";
+import { Button, Icon, Grid, Dropdown, Menu, Modal, Form, Message } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
-import { sum, max, median, create, mean } from "d3";
+import { sum, median } from "d3";
 
 interface OwnProps {
   aggregatedBy: string;
@@ -85,13 +84,10 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     console.log(dataResult)
     if (dataResult) {
       let yMaxTemp = -1;
-      //let perCaseYMaxTemp = -1
-      // let perCaseData: BarChartDataPoint[] = [];
-      // const caseList = dataResult.case_id_list;
       let caseDictionary = {} as any;
 
-      // 
       //console.log(dataResult)
+
       let cast_data = (dataResult as any).map(function (ob: any) {
         let zeroCaseNum = 0;
         ob.case_id.map((singleId: any) => {
@@ -102,9 +98,8 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
 
         const case_num = ob.transfused_units.length;
         caseCount += case_num
-        // const total_val = sum(ob.valueToVisualize);
+
         const medianVal = median(ob.transfused_units);
-        // let pd = createpd(ob.valueToVisualize, { max: BloodProductCap[valueToVisualize], width: 4 });
 
         let removed_zeros = ob.transfused_units;
         if (!showZero) {
@@ -118,32 +113,16 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         } else {
           zeroCaseNum = removed_zeros.filter((d: number) => d === 0).length
         }
-        //const case_num = removed_zeros.length;
+
         const total_val = sum(removed_zeros);
-        //const medianVal = median(removed_zeros);
+
         let pd = createpd(removed_zeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
-
-        // const maxY = parseFloat(max(ob.valueToVisualize)!);
-
-        // yMaxTemp = yMaxTemp < maxY ? maxY : yMaxTemp;
-
-
         pd = [{ x: 0, y: 0 }].concat(pd)
         let reverse_pd = pd.map((pair: any) => {
           return { x: pair.x, y: - pair.y }
         }).reverse()
         pd = pd.concat(reverse_pd)
-        // console.log(pd)
-        //   ob.y_axis -= 999
-        // }
-        // caseCount += ob.case_count;
-        // // let y_val = perCaseSelected
-        // //   ? ob.y_axis / ob.case_count
-        // //   : ob.y_axis;
-        // const y_val = ob.y_axis;
-        // const perCaseYVal = ob.y_axis / ob.case_count
-        // yMaxTemp = y_val > yMaxTemp ? y_val : yMaxTemp;
-        // perCaseYMaxTemp = perCaseYVal > perCaseYMaxTemp ? perCaseYVal : perCaseYMaxTemp;
+
         const new_ob: BarChartDataPoint = {
           caseCount: case_num,
           aggregateAttribute: aggregateByAttr,
@@ -154,20 +133,11 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
           zeroCaseNum: zeroCaseNum,
           patienIDList: ob.pat_id
         };
-        // const perCaseOb: BarChartDataPoint = {
-        //   xVal: ob.x_axis,
-        //   yVal: y_val / ob.case_count,
-        //   caseCount: ob.case_count
-        // }
-        // perCaseData.push(perCaseOb)
         return new_ob;
       });
       stateUpdateWrapperUseJSON(data, cast_data, setData)
-      //setData(cast_data);
-
       stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList)
       setYMax(yMaxTemp);
-      //actions.updateCaseCount("AGGREGATED", caseCount);
       store!.totalAggregatedCaseCount = caseCount;
       console.log(cast_data)
     }
@@ -175,10 +145,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
 
   useEffect(() => {
     fetchChartData();
-
   }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroup]);
-
-  // useEffect(()=>{console.log(caseIDList)},[caseIDList])
 
   async function makeExtraPairData() {
     let newExtraPairData: any[] = []
@@ -189,21 +156,18 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         let kdeMax = 0;
         switch (variable) {
           case "Total Transfusion":
-            //let newDataBar = {} as any;
             data.map((dataPoint: BarChartDataPoint) => {
               newData[dataPoint.aggregateAttribute] = dataPoint.totalVal;
             });
             newExtraPairData.push({ name: "Total", data: newData, type: "BarChart" });
             break;
           case "Per Case":
-            // let newDataPerCase = {} as any;
             data.map((dataPoint: BarChartDataPoint) => {
               newData[dataPoint.aggregateAttribute] = dataPoint.totalVal / dataPoint.caseCount;
             });
             newExtraPairData.push({ name: "Per Case", data: newData, type: "BarChart" });
             break;
           case "Zero Transfusion":
-            //let newDataPerCase = {} as any;
             data.map((dataPoint: BarChartDataPoint) => {
               newData[dataPoint.aggregateAttribute] = { number: dataPoint.zeroCaseNum, percentage: dataPoint.zeroCaseNum / dataPoint.caseCount };
             });
@@ -215,12 +179,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
             });
             newExtraPairData.push({ name: "RISK", data: newData, type: "Outcomes" });
             break;
-          // case "SOI":
-          //   data.map(async (dataPoint: BarChartDataPoint) => {
-          //     newData[dataPoint.aggregateAttribute] = dataPoint.patienIDList;
-          //   });
-          //   newExtraPairData.push({ name: "SOI", data: newData, type: "Outcomes" });
-          //   break;
+
           case "Mortality":
             data.map(async (dataPoint: BarChartDataPoint) => {
               newData[dataPoint.aggregateAttribute] = dataPoint.patienIDList;
@@ -257,12 +216,11 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
             newExtraPairData.push({ name: "Preop Hemo", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
             break;
           case "Postop Hemo":
-            //let newData = {} as any;
             data.map((dataPoint: BarChartDataPoint) => {
               newData[dataPoint.aggregateAttribute] = [];
             });
             hemoglobinDataSet.map((ob: any) => {
-              // const begin = parseFloat(ob.HEMO[0]);
+
               const end = parseFloat(ob.HEMO[1]);
               if (newData[ob[aggregatedBy]] && end > 0 && caseIDList[ob.CASE_ID]) {
                 newData[ob[aggregatedBy]].push(end);

@@ -1,11 +1,10 @@
-import React, { FC, useEffect, useMemo, useCallback } from "react";
+import React, { FC, useCallback } from "react";
 import Store from "../../Interfaces/Store";
-import styled from "styled-components";
 import { inject, observer } from "mobx-react";
-import { ScaleBand, scaleOrdinal, range, scaleLinear, ScaleOrdinal, max, format, interpolateGreys, scaleBand } from "d3";
+import { scaleLinear, format, interpolateGreys, scaleBand } from "d3";
 import { extraPairWidth } from "../../PresetsProfile"
 import { Popup } from "semantic-ui-react";
-import { secondary_gray, greyScaleRange } from "../../PresetsProfile";
+import { greyScaleRange } from "../../PresetsProfile";
 
 interface OwnProps {
     dataSet: any[];
@@ -16,7 +15,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const ExtraPairBasic: FC<Props> = ({ dataSet, aggregationScaleRange, aggregationScaleDomain, store }: Props) => {
+const ExtraPairBasic: FC<Props> = ({ dataSet, aggregationScaleRange, aggregationScaleDomain }: Props) => {
 
 
     const aggregationScale = useCallback(() => {

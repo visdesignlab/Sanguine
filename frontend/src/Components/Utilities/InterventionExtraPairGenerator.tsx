@@ -1,19 +1,11 @@
 
-import React, {
-    FC,
-    useMemo,
-    useEffect,
-    useState
-} from "react";
-import Store from "../../Interfaces/Store";
+import React, { FC } from "react";
 import { inject, observer } from "mobx-react";
 import { extraPairWidth, extraPairPadding, offset } from "../../PresetsProfile";
-import ExtraPairDumbbell from "../BarChart/ExtraPairDumbbell";
 import { actions } from "../..";
 // import ExtraPairViolin from "../BarChart/ExtraPairViolin";
 // import ExtraPairBar from "../BarChart/ExtraPairBar";
 import ExtraPairBasicInt from "../InterventionPlot/ExtraPairBaiscInt";
-import { ScaleBand } from "d3";
 import styled from "styled-components";
 import ExtraPairBarInt from "../InterventionPlot/ExtraPairBarInt";
 import ExtraPairViolinInt from "../InterventionPlot/ExtraPairViolinInt";

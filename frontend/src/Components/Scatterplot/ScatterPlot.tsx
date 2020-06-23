@@ -10,7 +10,8 @@ import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
 import { offset, AxisLabelDict } from "../../PresetsProfile"
-import { select, scaleLinear, axisLeft, axisBottom, brush, event } from "d3";
+import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range, median } from "d3";
+
 //import CustomizedAxis from "../Utilities/CustomizedAxis";
 import { highlight_orange, basic_gray } from "../../PresetsProfile";
 
@@ -37,25 +38,77 @@ export type Props = OwnProps;
 const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yMin, xAxisName, yAxisName, store }: Props) => {
 
     const currentOffset = offset.regular;
-    const { currentSelectPatient, currentSelectPatientGroup } = store!;
+    const { currentSelectPatient, currentSelectPatientGroup, currentOutputFilterSet } = store!;
     const svgSelection = select(svg.current);
     const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null)
+    const [isFirstRender, updateIsFirstRender] = useState(true)
+
+    const updateBrush = () => {
+        updateBrushLoc(event.selection)
+    }
+
+    const xAxisScale = useCallback(() => {
+        let xAxisScale: any;
+        if (xAxisName === "CELL_SAVER_ML") {
+            xAxisScale = scaleLinear()
+                .domain([0.9 * xMin, 1.1 * xMax])
+                .range([currentOffset.left, width - currentOffset.right - currentOffset.margin]);
+        } else {
+            xAxisScale = scaleBand()
+                .domain(range(0, xMax + 1) as any)
+                .range([currentOffset.left, width - currentOffset.right - currentOffset.margin])
+                .padding(0.2)
+
+        }
+        return xAxisScale
+    }, [xMax, xMin, width])
+
+    const yAxisScale = useCallback(() => {
+        // const indices = range(0, data.length)
+        // console.log(data.length, currentOffset.left)
+        // const xAxisScale = scaleOrdinal()
+        //     .domain(indices as any)
+        //     .range(range(currentOffset.left, width - currentOffset.right, (width - currentOffset.left - currentOffset.right) / (data.length + 1)));
+
+        const yAxisScale = scaleLinear()
+            .domain([0.9 * yMin, 1.1 * yMax])
+            .range([height - currentOffset.bottom, currentOffset.top]);
+
+        return yAxisScale;
+    }, [yMax, yMin, height])
+
+    const brushDef = brush()
+        .extent([[xAxisScale().range()[0], yAxisScale().range()[1]], [xAxisScale().range()[1], yAxisScale().range()[0]]])
+        .on("end", updateBrush)
+        ;
+    svgSelection.select(".brush-layer").call(brushDef as any);
 
     useEffect(() => {
-        let caseList: number[] = [];
-        data.map((d) => {
-            const cx = (xAxisScale())(d.xVal)
-            const cy = yAxisScale()(d.yVal)
-            if (brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
-                caseList.push(d.case.caseId)
+        if (isFirstRender) {
+            updateIsFirstRender(false)
+
+        }
+        else {
+            let caseList: number[] = [];
+            data.map((dataPoint) => {
+                //  const cx = (xAxisScale())(d.xVal as any) || 0
+                const cx = xAxisName === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
+                const cy = yAxisScale()(dataPoint.yVal)
+                if (brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
+                    caseList.push(dataPoint.case.caseId)
+                }
+            })
+            if (caseList.length > 1000) {
+                updateBrushLoc(null)
+            } else {
+                actions.updateSelectedPatientGroup(caseList)
             }
-        })
-        if (caseList.length > 1000) {
-            updateBrushLoc(null)
-        } else {
-            actions.updateSelectedPatientGroup(caseList)
         }
     }, [brushLoc])
+
+    useEffect(() => {
+        brushDef.move(svgSelection.select(".brush-layer"), null)
+    }, [currentOutputFilterSet])
     //  let numberList: { num: number, indexEnding: number }[] = [];
     // if (data.length > 0) {
     //     data = data.sort(
@@ -83,39 +136,15 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
     // })
     // }
 
-    const xAxisScale = useCallback(() => {
-        const xAxisScale = scaleLinear()
-            .domain([0.9 * xMin, 1.1 * xMax])
-            .range([currentOffset.left, width - currentOffset.right - currentOffset.margin]);
-        return xAxisScale
-    }, [xMax, xMin, width])
 
-    const yAxisScale = useCallback(() => {
-        // const indices = range(0, data.length)
-        // console.log(data.length, currentOffset.left)
-        // const xAxisScale = scaleOrdinal()
-        //     .domain(indices as any)
-        //     .range(range(currentOffset.left, width - currentOffset.right, (width - currentOffset.left - currentOffset.right) / (data.length + 1)));
-
-        const yAxisScale = scaleLinear()
-            .domain([0.9 * yMin, 1.1 * yMax])
-            .range([height - currentOffset.bottom, currentOffset.top]);
-
-        return yAxisScale;
-    }, [yMax, yMin, height])
 
     const yAxisLabel = axisLeft(yAxisScale());
-    const xAxisLabel = axisBottom(xAxisScale());
+    const xAxisLabel = axisBottom(xAxisScale() as any);
 
 
-    const updateBrush = () => {
-        updateBrushLoc(event.selection)
-    }
 
-    const brushDef = brush()
-        // .on("brush", updateBrush)
-        .on("end", updateBrush);
-    svgSelection.select(".brush-layer").call(brushDef as any);
+
+
 
     svgSelection
         .select(".axes")
@@ -186,21 +215,31 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
 
     const generateScatterDots = () => {
         let selectedPatients: any[] = [];
+        const patientGroupSet = new Set(currentSelectPatientGroup)
         //let unselectedPatients = [];
+        let medianSet: any = {}
         let unselectedPatients = data.map((dataPoint) => {
-            const cx = xAxisScale()(dataPoint.xVal)
+
+            const cx = xAxisName === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
+
+            if (medianSet[dataPoint.xVal]) {
+                medianSet[dataPoint.xVal].push(dataPoint.yVal)
+            } else {
+                medianSet[dataPoint.xVal] = [dataPoint.yVal]
+            }
             const cy = yAxisScale()(dataPoint.yVal)
             const isSelected = decideIfSelected(dataPoint)
             const isBrushed = (brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1])
-                || (currentSelectPatientGroup.includes(dataPoint.case.caseId));
+                || (patientGroupSet.has(dataPoint.case.caseId));
             if (isSelected || isBrushed) {
-                selectedPatients.push(<Circle cx={cx}
-                    cy={cy}
-                    // fill={ ? highlight_orange : basic_gray}
-                    isselected={isSelected}
-                    isbrushed={isBrushed}
-                    onClick={() => { clickDumbbellHandler(dataPoint) }}
-                />)
+                selectedPatients.push(
+                    <Circle cx={cx}
+                        cy={cy}
+                        // fill={ ? highlight_orange : basic_gray}
+                        isselected={isSelected}
+                        isbrushed={isBrushed}
+                        onClick={() => { clickDumbbellHandler(dataPoint) }}
+                    />)
             } else {
                 return (
                     <Circle cx={cx}
@@ -214,7 +253,12 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
                 );
             }
         })
-        return unselectedPatients.concat(selectedPatients)
+        let lineSet: any[] = []
+        for (let [key, value] of Object.entries(medianSet)) {
+            const medianVal = median(value as any) || 0
+            lineSet.push(<line strokeWidth="3px" stroke={highlight_orange} x1={xAxisScale()(key as any)} y1={yAxisScale()(medianVal)} y2={yAxisScale()(medianVal)} x2={xAxisScale()(key as any) + xAxisScale().bandwidth() || 0} />)
+        }
+        return unselectedPatients.concat(selectedPatients).concat(lineSet)
     }
 
 

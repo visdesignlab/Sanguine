@@ -1,5 +1,4 @@
-import React, { FC, useEffect, useState, useRef, createRef } from "react";
-import styled from "styled-components";
+import React, { FC, useEffect, useState, useRef } from "react";
 import { inject, observer } from "mobx-react";
 import Store from "../Interfaces/Store";
 
@@ -111,10 +110,12 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
     //     })
     // }
 
+    //TODO make the line up side bar on the main instead of on a seperate tab. 
+    //
+
     useEffect(() => {
         $(document).ready(function () {
             const node = document.getElementById("lineup-wrapper")
-            console.log(node)
             if (node && hemoglobinDataSet.length > 0 && distinctCategories.surgeons.length > 0) {
                 if (!(node.getElementsByClassName("lu-side-panel").length > 0)) {
                     const lineup = LineUpJS.builder(hemoglobinDataSet)
@@ -130,11 +131,24 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                         .column(LineUpJS.buildNumberColumn("CRYO_UNITS", [0, BloodProductCap.CRYO_UNITS]))
                         .column(LineUpJS.buildNumberColumn("CELL_SAVER_ML", [0, BloodProductCap.CELL_SAVER_ML]))
                         .build(node);
+
                     lineup.data.getFirstRanking().on("filterChanged", (previous, current) => {
-                        console.log(previous, current); // filter settings
-                        console.log(lineup.data); // DataProvider
-                        console.log(lineup.data.getFirstRanking()); // First ranking
+                        //Solution to not return the group order after the filter applied. a Time Out.
+                        setTimeout(() => {
+                            const filter_output = lineup.data.getFirstRanking().getGroups()[0].order
+
+                            const caseIDList = filter_output.map(v => hemoglobinDataSet[v].CASE_ID)
+                            actions.updateSelectedPatientGroup(caseIDList)
+                            console.log(caseIDList)
+                        }, 1000)
+                        // console.log(previous, current); // filter settings
+                        // console.log(lineup.data.getFirstRanking().getGroups())
+                        // console.log(lineup.data); // DataProvider
+                        // console.log(lineup.data.getFirstRanking()); // First ranking
+
+                        // setTimeout(() => { console.log(lineup.data.getFirstRanking().getGroups()) }, 2000)
                     });
+
                 }
             }
         })

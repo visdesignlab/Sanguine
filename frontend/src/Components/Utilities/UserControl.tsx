@@ -13,7 +13,7 @@ import {
   interventionChartType, presetOptions, stateUpdateWrapperUseJSON, dumbbellValueOptions, scatterYOptions, typeDiction
 } from "../../PresetsProfile";
 import ClipboardJS from 'clipboard';
-import { NavLink, Redirect } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { getCookie } from "../../Interfaces/UserManagement";
 interface OwnProps {
   store?: Store;

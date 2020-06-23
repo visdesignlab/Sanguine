@@ -38,7 +38,7 @@ const App: FC<Props> = ({ store }: Props) => {
       YEAR: number,
       QUARTER: string,
       MONTH: string,
-      DATE: Date | null,
+      DATE: number,
       PRBC_UNITS: number,
       FFP_UNITS: number,
       PLT_UNITS: number,

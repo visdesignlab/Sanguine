@@ -1,11 +1,11 @@
-import React, { FC, useEffect } from "react";
+import React, { FC } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { InterventionDataPoint } from "../../Interfaces/ApplicationState";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
-import { highlight_orange, basic_gray, highlight_blue, third_gray } from "../../PresetsProfile";
+import { highlight_orange, highlight_blue, third_gray } from "../../PresetsProfile";
 
 interface OwnProps {
     dataPoint: InterventionDataPoint;

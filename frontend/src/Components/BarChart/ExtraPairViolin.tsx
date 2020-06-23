@@ -1,11 +1,10 @@
-import React, { FC, useEffect, useMemo, useCallback } from "react";
+import React, { FC, useCallback } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
-import { ScaleBand, scaleOrdinal, range, scaleLinear, ScaleOrdinal, line, curveCatmullRom, median, format, scaleBand } from "d3";
+import { scaleLinear, line, curveCatmullRom, format, scaleBand } from "d3";
 import { extraPairWidth } from "../../PresetsProfile"
 import { preop_color, postop_color, basic_gray } from "../../PresetsProfile";
-import { create as createpd } from "pdfast";
 import { Popup } from "semantic-ui-react";
 
 interface OwnProps {
