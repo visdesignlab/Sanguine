@@ -38,7 +38,7 @@ export type Props = OwnProps;
 const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yMin, xAxisName, yAxisName, store }: Props) => {
 
     const currentOffset = offset.regular;
-    const { currentSelectPatient, currentSelectPatientGroup, currentOutputFilterSet } = store!;
+    const { currentSelectPatient, currentSelectPatientGroup, currentOutputFilterSet, currentSelectSet } = store!;
     const svgSelection = select(svg.current);
     const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null)
     const [isFirstRender, updateIsFirstRender] = useState(true)
@@ -86,65 +86,34 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
     useEffect(() => {
         if (isFirstRender) {
             updateIsFirstRender(false)
-
         }
-        else {
+        else if (brushLoc) {
             let caseList: number[] = [];
             data.map((dataPoint) => {
                 //  const cx = (xAxisScale())(d.xVal as any) || 0
                 const cx = xAxisName === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
                 const cy = yAxisScale()(dataPoint.yVal)
-                if (brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
+                if (cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
                     caseList.push(dataPoint.case.caseId)
                 }
             })
-            if (caseList.length > 1000) {
+            if (caseList.length > 1000 || caseList.length === 0) {
                 updateBrushLoc(null)
+                brushDef.move(svgSelection.select(".brush-layer"), null)
             } else {
-                actions.updateSelectedPatientGroup(caseList)
+                // actions.updateSelectedPatientGroup(caseList)
+                actions.selectSet({ set_name: "CASE_ID", set_value: caseList }, true)
             }
         }
     }, [brushLoc])
 
     useEffect(() => {
         brushDef.move(svgSelection.select(".brush-layer"), null)
-    }, [currentOutputFilterSet])
-    //  let numberList: { num: number, indexEnding: number }[] = [];
-    // if (data.length > 0) {
-    //     data = data.sort(
-    //         (a, b) => {
-    //             if (a.xVal === b.xVal) {
-    //                 if (a.yVal < b.yVal) return -1;
-    //                 if (a.yVal > b.yVal) return 1;
-    //             } else {
-    //                 if (a.xVal > b.xVal) return 1;
-    //                 if (a.xVal < b.xVal) return -1;
-    //             }
-    //             return 0;
-    //         }
-    //     );
-
-
-
-    // data.map((d, i) => {
-    //     if (i === data.length - 1) {
-    //         numberList.push({ num: d.xVal, indexEnding: i })
-    //     }
-    //     else if (d.xVal !== data[i + 1].xVal) {
-    //         numberList.push({ num: d.xVal, indexEnding: i })
-    //     }
-    // })
-    // }
-
+    }, [currentOutputFilterSet, currentSelectPatientGroup])
 
 
     const yAxisLabel = axisLeft(yAxisScale());
     const xAxisLabel = axisBottom(xAxisScale() as any);
-
-
-
-
-
 
     svgSelection
         .select(".axes")
@@ -178,8 +147,6 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         )
         .call(xAxisLabel as any);
 
-
-
     svgSelection
         .select(".axes")
         .select(".x-label")
@@ -195,18 +162,19 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
             return currentSelectPatient.caseId === d.case.caseId
         }
         return false;
-        // else if (currentSelectSet.length > 0) {
-        //     //let selectSet: SelectSet;
-        //     for (let selectSet of currentSelectSet) {
-        //         if (d.case[selectSet.set_name] === selectSet.set_value)
-        //             return true;
-        //     }
-        //     return false;
-        // }
-        // else {
-        //     return false;
-        // }
-        //  return true;
+    }
+
+    const decideIfSelectSet = (d: ScatterDataPoint) => {
+        if (currentSelectSet.length > 0) {
+            for (let selected of currentSelectSet) {
+                if (selected.set_value.includes(d.case[selected.set_name])) { return true; }
+
+            }
+            return false;
+        }
+        else {
+            return false;
+        }
     }
 
     const clickDumbbellHandler = (d: ScatterDataPoint) => {
@@ -229,15 +197,17 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
             }
             const cy = yAxisScale()(dataPoint.yVal)
             const isSelected = decideIfSelected(dataPoint)
+            const isSelectSet = decideIfSelectSet(dataPoint);
             const isBrushed = (brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1])
                 || (patientGroupSet.has(dataPoint.case.caseId));
-            if (isSelected || isBrushed) {
+            if (isSelected || isBrushed || isSelectSet) {
                 selectedPatients.push(
                     <Circle cx={cx}
                         cy={cy}
                         // fill={ ? highlight_orange : basic_gray}
                         isselected={isSelected}
                         isbrushed={isBrushed}
+                        isSelectSet={isSelectSet}
                         onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />)
             } else {
@@ -247,6 +217,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
                         // fill={ ? highlight_orange : basic_gray}
                         isselected={isSelected}
                         isbrushed={isBrushed}
+                        isSelectSet={isSelectSet}
                         onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />
 
@@ -285,10 +256,13 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
 export default inject("store")(observer(ScatterPlot));
 interface DotProps {
     isselected: boolean;
-    isbrushed: boolean
+    isbrushed: boolean;
+    isSelectSet: boolean;
 }
 const Circle = styled(`circle`) <DotProps>`
   r:4px
   opacity:${props => props.isselected ? 1 : 0.5}
+  stroke:${props => (props.isSelectSet ? highlight_orange : "none")}
+  stroke-width:2px;
   fill:${props => (props.isbrushed || props.isselected ? highlight_orange : basic_gray)}
 `;
