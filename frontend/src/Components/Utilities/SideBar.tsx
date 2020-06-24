@@ -96,7 +96,6 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
       })
     })
     tempSurgeryList.sort((a: any, b: any) => b.count - a.count)
-    console.log(tempSurgeryList)
     // tempItemSelected.sort((a: any, b: any) => b.count - a.count)
     // tempItemUnselected.sort((a: any, b: any) => b.count - a.count)
     // setMaxCaseCount(tempMaxCaseCount)
@@ -156,7 +155,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
   const generatePatientSelection = () => {
     let output: any[] = []
     if (currentSelectPatientGroup.length > 0) {
-      output.push(<List.Item key={"Patient Circled"} style={{ textAlign: "left" }} content={`${currentSelectPatientGroup.length} patients selected`} />)
+      output.push(<FilterListIT key={"Patient Circled"} style={{ textAlign: "left" }} onClick={() => { actions.updateSelectedPatientGroup([]) }} content={`${currentSelectPatientGroup.length} patients filtered`} />)
     }
     return output
   }
@@ -172,7 +171,9 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         <Container style={{ height: "20vh" }}>
           <List bulleted>
 
-            <List.Header style={{ textAlign: "left" }}><b>Current View</b></List.Header>
+            <List.Header style={{ textAlign: "left" }}>
+              <b>Current View</b>
+            </List.Header>
             <List.Item key="Date"
               //icon="circle"
               style={{ textAlign: "left" }}
@@ -210,11 +211,20 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
           <List bulleted>
             <List.Header style={{ textAlign: "left" }}><b>Current Selected</b></List.Header>
             {currentSelectSet.map((selectSet) => {
-              return <FilterListIT
-                //icon="caret right" 
-                key={`${selectSet.set_name}currentselecting`}
-                onClick={() => { actions.clearSelectSet(selectSet.set_name) }}
-                content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
+              if (selectSet.set_name === "CASE_ID") {
+                return <List.Item
+                  //icon="caret right" 
+                  key={`${selectSet.set_name}currentselecting`}
+                  style={{ textAlign: "left" }}
+                  //  onClick={() => { actions.clearSelectSet(selectSet.set_name) }}
+                  content={`${selectSet.set_value.length} cases selected`} />
+              } else {
+                return <FilterListIT
+                  //icon="caret right" 
+                  key={`${selectSet.set_name}currentselecting`}
+                  onClick={() => { actions.clearSelectSet(selectSet.set_name) }}
+                  content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
+              }
             })}
           </List>
           <Button disabled={!(currentSelectSet.length > 0)}
@@ -226,7 +236,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         </Container>
       </Grid.Row>
 
-      <Grid.Row style={{ padding: "20px" }}>
+      <Grid.Row centered style={{ padding: "20px" }}>
         <Container style={{ overflow: "auto", height: "20vh" }}>
           {/* <List relaxed divided >
             <List.Item key={"filter-header"} style={{ background: "#dff9ec" }}>
@@ -287,12 +297,10 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
               <text x={surgeryBarEnding} y={11} textAnchor="end" alignmentBaseline="baseline" fill="white">{maxCaseCount}</text>
             </SVG></Header>}
             value={filterSelection}
-          >
-
-          </Dropdown>
-
+          />
         </Container>
       </Grid.Row>
+
       <Grid.Row centered style={{ padding: "20px" }}>
         <Container style={{ height: "20vh" }}>
           <Dropdown
@@ -301,7 +309,14 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             selection
             style={{ width: 270 }}
             clearable
-            onChange={(e, d) => { console.log(JSON.parse(d.value as any)); actions.selectPatient(JSON.parse(d.value as any)) }}
+            onChange={(e, d) => {
+              if (d.value && (d.value as any).length > 0) {
+                actions.selectPatient(JSON.parse(d.value as any))
+              } else {
+                actions.selectPatient(null)
+              }
+            }
+            }
 
             options={caseList}
           // header={<Header><SVG>
