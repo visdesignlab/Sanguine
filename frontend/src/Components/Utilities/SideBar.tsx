@@ -25,6 +25,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     currentSelectSet,
     currentOutputFilterSet,
     currentSelectPatientGroup,
+    currentSelectPatient,
     filterSelection } = store!;
   //const [procedureList, setProcedureList] = useState<any[]>([]);
   const [maxCaseCount, setMaxCaseCount] = useState(0);
@@ -309,12 +310,14 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             selection
             style={{ width: 270 }}
             clearable
+
             onChange={(e, d) => {
               if (d.value && (d.value as any).length > 0) {
                 actions.selectPatient(JSON.parse(d.value as any))
-              } else {
-                actions.selectPatient(null)
               }
+              // else {
+              //   actions.selectPatient(null)
+              // }
             }
             }
 

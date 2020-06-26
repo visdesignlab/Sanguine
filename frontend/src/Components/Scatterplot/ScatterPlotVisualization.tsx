@@ -35,6 +35,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
         currentOutputFilterSet,
         //  perCaseSelected,
         dateRange,
+        previewMode,
         showZero
         //actualYearRange,
 
@@ -185,7 +186,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
 
         <Grid style={{ height: "100%" }}>
             <Grid.Row >
-                <Grid.Column verticalAlign="middle" width={1}>
+                <Grid.Column verticalAlign="middle" width={1} style={{ display: previewMode ? "none" : null }}>
                     <Menu icon vertical compact size="mini" borderless secondary widths={2}>
 
                         <Menu.Item header>
