@@ -30,6 +30,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
         layoutArray,
         filterSelection,
         showZero,
+        previewMode,
         currentSelectPatientGroup,
         rawDateRange,
         dateRange
@@ -586,7 +587,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
 
         <Grid style={{ height: "100%" }} >
             <Grid.Row >
-                <Grid.Column verticalAlign="middle" width={1}>
+                <Grid.Column verticalAlign="middle" width={1} style={{ display: previewMode ? "none" : null }}>
                     <Menu icon vertical compact size="mini" borderless secondary widths={2}>
                         <Menu.Item fitted>
                             <Dropdown selectOnBlur={false} basic item icon="plus" compact>
