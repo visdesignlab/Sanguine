@@ -865,7 +865,7 @@ class PatientOutcomesTestCaseLoggedOut(TransactionTestCase):
     def setUp(self):
         self.c = Client()
 
-    def test_risk_score_unsupported_methods(self):
+    def test_patient_outcomes_unsupported_methods(self):
         response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 302)
         
@@ -887,11 +887,11 @@ class PatientOutcomesTestCaseLoggedOut(TransactionTestCase):
         response = self.c.trace(self.endpoint)
         self.assertEqual(response.status_code, 302)
 
-    def test_risk_score_no_params(self):
+    def test_patient_outcomes_no_params(self):
         response = self.c.get(self.endpoint)
         self.assertEqual(response.status_code, 302)
 
-    def test_risk_score_valid_types(self):
+    def test_patient_outcomes_valid_types(self):
         valid_options = [
             {"patient_ids": "880078673"},
             {"patient_ids": "880078673,865124568"},
@@ -913,7 +913,7 @@ class PatientOutcomesTestCaseLoggedIn(TransactionTestCase):
         User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
         self.c.login(username = 'test_user', password = 'test_password')
 
-    def test_risk_score_unsupported_methods(self):
+    def test_patient_outcomes_unsupported_methods(self):
         response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 405)
         
@@ -935,11 +935,11 @@ class PatientOutcomesTestCaseLoggedIn(TransactionTestCase):
         response = self.c.trace(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
-    def test_risk_score_no_params(self):
+    def test_patient_outcomes_no_params(self):
         response = self.c.get(self.endpoint)
         self.assertEqual(response.status_code, 200)
 
-    def test_risk_score_valid_types(self):
+    def test_patient_outcomes_valid_types(self):
         valid_options = [
             {"patient_ids": "880078673"},
             {"patient_ids": "880078673,865124568"},
