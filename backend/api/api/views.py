@@ -358,12 +358,13 @@ def risk_score(request):
         # Parse the ids
         patient_ids = patient_ids.split(",") if patient_ids else []
 
-        if not patient_ids:
-            return HttpResponseBadRequest("patient_ids must be supplied")
-
-        # Generate the patient filters
-        pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
-        pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
+        if patient_ids:
+            # Generate the patient filters
+            pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
+            pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
+        else:
+            pat_bind_names = []
+            pat_filters_safe_sql = ""
 
         # Defined the sql command
         command = f"""
@@ -411,13 +412,14 @@ def patient_outcomes(request):
         # Parse the ids
         patient_ids = patient_ids.split(",") if patient_ids else []
 
-        if not patient_ids:
-            return HttpResponseBadRequest("patient_ids must be supplied")
-
-        # Generate the patient filters
-        pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
-        pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
-
+        if patient_ids:
+            # Generate the patient filters
+            pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
+            pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
+        else:
+            pat_bind_names = []
+            pat_filters_safe_sql = ""
+        
         # Defined the sql command
         command = f"""
         SELECT
