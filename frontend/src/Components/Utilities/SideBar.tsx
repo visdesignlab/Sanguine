@@ -32,49 +32,49 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     filterSelection } = store!;
 
   const [surgerySearchResult, setsurgerySearchResult] = useState<any[]>([]);
-
+  const [caseSearchResult, setCaseSearchResult] = useState<any[]>([])
 
   const [maxCaseCount, setMaxCaseCount] = useState(0);
   const [itemSelected, setItemSelected] = useState<any[]>([]);
   const [itemUnselected, setItemUnselected] = useState<any[]>([]);
   const [surgeryList, setSurgeryList] = useState<any[]>([]);
-  const [caseList, setCaseList] = useState<any[]>([]);
+  //const [caseList, setCaseList] = useState<any[]>([]);
 
-  const [searchVal, setSearchVal] = useState("");
+  const [searchSurgeryVal, setSearchSurgeryVal] = useState("");
+  const [searchCaseVal, setSearchCaseVal] = useState("")
 
+  // useEffect(() => {
+  //   //TODO there are duplicated caseID. 3881 incoming, 3876 outgoing
+  //   let caseDuplicationCheck = new Set();
 
-  useEffect(() => {
-    //TODO there are duplicated caseID. 3881 incoming, 3876 outgoing
-    let caseDuplicationCheck = new Set();
+  //   let newCaseList = hemoData.map((d: any) => {
 
-    let newCaseList = hemoData.map((d: any) => {
+  //     if (!caseDuplicationCheck.has(d.CASE_ID)) {
+  //       caseDuplicationCheck.add(d.CASE_ID)
+  //       const newSingleCasePoint: SingleCasePoint = {
+  //         visitNum: d.VISIT_ID,
+  //         caseId: d.CASE_ID,
+  //         YEAR: d.YEAR,
+  //         SURGEON_ID: d.SURGEON_ID,
+  //         ANESTHOLOGIST_ID: d.ANESTHOLOGIST_ID,
+  //         patientID: d.PATIENT_ID,
+  //         DATE: d.DATE
+  //       };
+  //       const newOption = {
+  //         key: `${d.CASE_ID}`,
+  //         text: d.CASE_ID,
+  //         value: JSON.stringify(newSingleCasePoint),
+  //         //caseRelated: newSingleCasePoint
 
-      if (!caseDuplicationCheck.has(d.CASE_ID)) {
-        caseDuplicationCheck.add(d.CASE_ID)
-        const newSingleCasePoint: SingleCasePoint = {
-          visitNum: d.VISIT_ID,
-          caseId: d.CASE_ID,
-          YEAR: d.YEAR,
-          SURGEON_ID: d.SURGEON_ID,
-          ANESTHOLOGIST_ID: d.ANESTHOLOGIST_ID,
-          patientID: d.PATIENT_ID,
-          DATE: d.DATE
-        };
-        const newOption = {
-          key: `${d.CASE_ID}`,
-          text: d.CASE_ID,
-          value: JSON.stringify(newSingleCasePoint),
-          //caseRelated: newSingleCasePoint
+  //       };
+  //       return newOption
+  //     } else { return undefined }
 
-        };
-        return newOption
-      } else { return undefined }
+  //   })
+  //   newCaseList = newCaseList.filter((d: any) => d)
 
-    })
-    newCaseList = newCaseList.filter((d: any) => d)
-
-    stateUpdateWrapperUseJSON(caseList, newCaseList, setCaseList)
-  }, [hemoData])
+  //   stateUpdateWrapperUseJSON(caseList, newCaseList, setCaseList)
+  // }, [hemoData])
 
   const caseScale = useCallback(() => {
     const caseScale = scaleLinear().domain([0, maxCaseCount]).range([0, surgeryBarEnding - surgeryBarStarting])
@@ -255,22 +255,23 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
       <Grid.Row centered style={{}}>
         <Container style={{ overflow: "auto", height: "30vh" }}>
           <Search
+            placeholder="Search a Procedure"
             minCharacters={3}
-            onSearchChange={(e, searchValue) => {
-              setSearchVal(searchValue.value || "")
-              if (searchValue.value && searchValue.value.length >= 3) {
-                let searchResult = surgeryList.filter(d => d.value.includes(searchValue.value))
-                setsurgerySearchResult(searchResult);
+            onSearchChange={(e, output) => {
+              setSearchSurgeryVal(output.value || "")
+              if (output.value && output.value.length >= 3) {
+                let searchResult = surgeryList.filter(d => d.value.includes(output.value))
+                //setsurgerySearchResult(searchResult);
+                stateUpdateWrapperUseJSON(surgerySearchResult, searchResult, setsurgerySearchResult)
               }
             }
             }
             results={surgerySearchResult.map(d => { return { title: d.value } })}
             onResultSelect={(e, d) => {
-              if (!filterSelection.includes(d.result)) { actions.filterSelectionChange(d.result.title) } setSearchVal("")
+              if (!filterSelection.includes(d.result)) { actions.filterSelectionChange(d.result.title) } setSearchSurgeryVal("")
             }
             }
-            value={searchVal}
-
+            value={searchSurgeryVal}
           />
           <List relaxed divided >
 
@@ -333,35 +334,38 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 
       <Grid.Row centered style={{ padding: "20px" }}>
         <Container style={{ height: "20vh" }}>
-          <Dropdown
-            placeholder="Case Search"
-            search
-            selection
-            style={{ width: 270 }}
-            clearable
-
-            onChange={(e, d) => {
-              if (d.value && (d.value as any).length > 0) {
-                actions.selectPatient(JSON.parse(d.value as any))
+          <Search
+            placeholder="Search a Case"
+            //defaultValue={"Search Case"}
+            minCharacters={3}
+            onSearchChange={(e, output) => {
+              setSearchCaseVal(output.value || "")
+              if (output.value && output.value.length >= 3) {
+                let searchResult = hemoData.filter((d: any) => d.CASE_ID.toString().includes(output.value))
+                stateUpdateWrapperUseJSON(caseSearchResult, searchResult, setCaseSearchResult);
               }
-              // else {
-              //   actions.selectPatient(null)
-              // }
             }
             }
+            results={caseSearchResult.map(d => { return { title: d.CASE_ID } })}
+            onResultSelect={(e, resultSelection) => {
+              const selectedPat = caseSearchResult.filter((d: any) => d.CASE_ID === resultSelection.result.title)[0]
+              console.log(selectedPat)
+              const newSingleCasePoint: SingleCasePoint = {
+                visitNum: selectedPat.VISIT_ID,
+                caseId: selectedPat.CASE_ID,
+                YEAR: selectedPat.YEAR,
+                SURGEON_ID: selectedPat.SURGEON_ID,
+                ANESTHOLOGIST_ID: selectedPat.ANESTHOLOGIST_ID,
+                patientID: selectedPat.PATIENT_ID,
+                DATE: selectedPat.DATE
+              };
+              actions.selectPatient(newSingleCasePoint);
+              setSearchCaseVal("")
+            }
+            }
+            value={searchCaseVal}
+          />
 
-            options={caseList}
-          // header={<Header><SVG>
-          //   <text alignmentBaseline="hanging" x={0} y={0}>Procedures</text>
-          //   <rect x={surgeryBarStarting} y={0} width={surgeryBarEnding - surgeryBarStarting} height={13} fill={secondary_gray} />
-
-          //   <text x={surgeryBarStarting + 1} y={11} textAnchor="start" alignmentBaseline="baseline" fill="white">0</text>
-          //   <text x={surgeryBarEnding} y={11} textAnchor="end" alignmentBaseline="baseline" fill="white">{maxCaseCount}</text>
-          // </SVG></Header>}
-          // value={filterSelection}
-          >
-
-          </Dropdown>
         </Container>
       </Grid.Row>
     </Grid>
