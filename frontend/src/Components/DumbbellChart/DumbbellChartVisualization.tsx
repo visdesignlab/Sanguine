@@ -34,7 +34,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
     layoutArray,
     filterSelection,
     currentSelectPatientGroup,
-
+    previewMode,
     dateRange,
     showZero,
     currentOutputFilterSet
@@ -177,7 +177,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
   return (
     <Grid style={{ height: "100%" }}>
       <Grid.Row>
-        <Grid.Column verticalAlign="middle" width={2}>
+        <Grid.Column verticalAlign="middle" width={2} style={{ display: previewMode ? "none" : null }}>
           <Menu text compact size="mini" vertical>
             <Menu.Item header>Show</Menu.Item>
             <Menu.Menu>

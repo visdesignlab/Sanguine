@@ -377,7 +377,7 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const filterSelectionChange = (selectedFilterOption: any) => {
+  const filterSelectionChange = (selectedFilterOption: string) => {
     provenance.applyAction(
       `Change Filter Selection to ${selectedFilterOption}`,
       (state: ApplicationState) => {
@@ -388,7 +388,8 @@ export function setupProvenance(): AppProvenance {
           state.filterSelection.push(selectedFilterOption)
         }
 
-        //state.filterSelection = selectedFilterOption;
+        // state.filterSelection = selectedFilterOption;
+        // console.log(state.filterSelection)
         return state;
       }
     )
@@ -448,15 +449,24 @@ export function setupProvenance(): AppProvenance {
           // state.currentSelectSet = temporarySetArray.length === state.currentSelectSet.length ? state.currentSelectSet.concat([data]) : temporarySetArray;
           const addingType = data.set_name;
           const alreadyIn = state.currentSelectSet.filter(d => d.set_name === addingType).length > 0
+
+
           if (!alreadyIn) {
             state.currentSelectSet.push(data)
           } else {
+
             state.currentSelectSet = state.currentSelectSet.map((d) => {
               if (d.set_name === addingType) {
-                d.set_value = d.set_value.includes(data.set_value[0]) ? d.set_value.filter(num => num !== d.set_value[0]) : d.set_value.concat(data.set_value)
+                if (addingType === "CASE_ID") {
+                  d.set_value = data.set_value
+                }
+                else {
+                  d.set_value = d.set_value.includes(data.set_value[0]) ? d.set_value.filter(num => num !== d.set_value[0]) : d.set_value.concat(data.set_value)
+                }
               }
               return d
             })
+
           }
         }
         console.log(state.currentSelectSet)
@@ -478,7 +488,14 @@ export function setupProvenance(): AppProvenance {
     provenance.applyAction(
       `change output filter`,
       (state: ApplicationState) => {
-        state.currentOutputFilterSet = state.currentSelectSet;
+        state.currentSelectSet.map(d => {
+          if (d.set_name === "CASE_ID") {
+            state.currentSelectPatientGroup = d.set_value
+          } else {
+            state.currentOutputFilterSet.push(d)
+          }
+        })
+        //state.currentOutputFilterSet = state.currentSelectSet;
         state.currentSelectSet = [];
         state.currentSelectPatient = null;
         return state;

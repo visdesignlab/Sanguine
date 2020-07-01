@@ -141,24 +141,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
   const regularMenu = (
     <Menu widths={7}>
-      <Menu.Item>
-        <Button.Group>
-          <Button primary disabled={isAtRoot} onClick={actions.goBack}>
-            Undo
-            </Button>
-          <Button.Or></Button.Or>
-          <Button secondary disabled={isAtLatest} onClick={actions.goForward}>
-            Redo
-            </Button>
-        </Button.Group>
-      </Menu.Item>
 
-      <Menu.Item>
-        <Container>
-
-          <SemanticDatePicker placeholder={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} - ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} type="range" onChange={onDateChange} />
-        </Container>
-      </Menu.Item>
       <Menu.Item>
         {/* <Button onClick={addModeButtonHandler} content={"Add"} /> */}
         <Dropdown button text="Add" pointing style={{ background: blood_red, color: "white" }}>
@@ -170,8 +153,14 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             <Dropdown.Item onClick={() => addModeButtonHandler(4)}>Intervention Plot</Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
-
       </Menu.Item>
+
+      <Menu.Item>
+        <Container>
+          <SemanticDatePicker placeholder={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} - ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} type="range" onChange={onDateChange} />
+        </Container>
+      </Menu.Item>
+
       <Menu.Item>
         <Checkbox
           checked={showZero}
@@ -344,7 +333,17 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       <Menu.Item>
         <Button content="Preview Mode" onClick={() => { store!.previewMode = true }} />
       </Menu.Item>
-
+      <Menu.Item>
+        <Button.Group>
+          <Button primary disabled={isAtRoot} onClick={actions.goBack}>
+            Undo
+            </Button>
+          <Button.Or></Button.Or>
+          <Button secondary disabled={isAtLatest} onClick={actions.goForward}>
+            Redo
+            </Button>
+        </Button.Group>
+      </Menu.Item>
       <Menu.Item>
         <NavLink component={Button} to="/" onClick={() => { store!.isLoggedIn = false; }} >
           Log Out
