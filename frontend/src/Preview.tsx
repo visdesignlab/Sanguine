@@ -49,7 +49,7 @@ const Preview: FC<Props> = ({ store, hemoData }: Props) => {
             </Container>
             <Grid padded>
                 <SpecialPaddingColumn width={3} >
-                    <SideBar></SideBar>
+                    <SideBar hemoData={hemoData}></SideBar>
                 </SpecialPaddingColumn>
                 <Grid.Column width={13}>
                     <LayoutGenerator hemoData={hemoData} />

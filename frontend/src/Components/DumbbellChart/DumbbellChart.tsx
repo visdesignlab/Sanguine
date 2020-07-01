@@ -255,11 +255,11 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
     } return false;
   }
 
-  // const decideIfBrushed = (d: DumbbellDataPoint) => {
+  // const decideIfSelectSet = (d: DumbbellDataPoint) => {
   //   return currentSelectPatientGroup.includes(d.case.caseId);
   // }
 
-  const decideIfBrushed = (d: DumbbellDataPoint) => {
+  const decideIfSelectSet = (d: DumbbellDataPoint) => {
 
     if (currentSelectSet.length > 0) {
       for (let selected of currentSelectSet) {
@@ -283,10 +283,10 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
       const rectDifference = Math.abs(end - start)
       const xVal = (valueScale() as ScaleOrdinal<any, number>)(index)
       const isSelected = decideIfSelected(dataPoint);
-      const isBrushed = decideIfBrushed(dataPoint);
+      const isSelectSet = decideIfSelectSet(dataPoint);
 
       if (xVal) {
-        if (isSelected || isBrushed) {
+        if (isSelected || isSelectSet) {
           selectedPatients.push(<Popup
             content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}
             key={`${dataPoint.case.visitNum}-${dataPoint.case.caseId}`}
@@ -297,7 +297,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
                   }
                   y={returning}
                   height={rectDifference}
-                  isselected={decideIfSelected(dataPoint) || decideIfBrushed(dataPoint)}
+                  isselected={decideIfSelected(dataPoint) || decideIfSelectSet(dataPoint)}
                   display={showingAttr.gap ? undefined : "none"}
                 />
                 <Circle
@@ -309,7 +309,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
                     clickDumbbellHandler(dataPoint);
                   }}
                   isselected={decideIfSelected(dataPoint)}
-                  isbrushed={decideIfBrushed(dataPoint)}
+                  isSelectSet={decideIfSelectSet(dataPoint)}
                   ispreop={true}
                   display={showingAttr.preop ? undefined : "none"}
                 />
@@ -322,7 +322,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
                     clickDumbbellHandler(dataPoint);
                   }}
                   isselected={decideIfSelected(dataPoint)}
-                  isbrushed={decideIfBrushed(dataPoint)}
+                  isSelectSet={decideIfSelectSet(dataPoint)}
                   ispreop={false}
                   display={showingAttr.postop ? undefined : "none"}
                 />
@@ -341,7 +341,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
                   }
                   y={returning}
                   height={rectDifference}
-                  isselected={decideIfSelected(dataPoint) || decideIfBrushed(dataPoint)}
+                  isselected={decideIfSelected(dataPoint) || decideIfSelectSet(dataPoint)}
                   display={showingAttr.gap ? undefined : "none"}
                 />
                 <Circle
@@ -353,7 +353,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
                     clickDumbbellHandler(dataPoint);
                   }}
                   isselected={decideIfSelected(dataPoint)}
-                  isbrushed={decideIfBrushed(dataPoint)}
+                  isSelectSet={decideIfSelectSet(dataPoint)}
                   ispreop={true}
                   display={showingAttr.preop ? undefined : "none"}
                 />
@@ -366,7 +366,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
                     clickDumbbellHandler(dataPoint);
                   }}
                   isselected={decideIfSelected(dataPoint)}
-                  isbrushed={decideIfBrushed(dataPoint)}
+                  isSelectSet={decideIfSelectSet(dataPoint)}
                   ispreop={false}
                   display={showingAttr.postop ? undefined : "none"}
                 />
@@ -434,7 +434,7 @@ export default inject("store")(observer(DumbbellChart));
 
 interface DotProps {
   isselected: boolean;
-  isbrushed: boolean;
+  isSelectSet: boolean;
   ispreop: boolean;
 }
 interface RectProps {
@@ -458,7 +458,7 @@ const Circle = styled(`circle`) <DotProps>`
   r:4px
   fill: ${props => (props.isselected ? highlight_orange : props.ispreop ? preop_color : postop_color)};
   opacity:${props => props.isselected ? 1 : 0.8}
-  stroke:${props => (props.isbrushed ? highlight_orange : "none")}
+  stroke:${props => (props.isSelectSet ? highlight_orange : "none")}
   stroke-width:2px;
 `;
 

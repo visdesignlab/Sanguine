@@ -30,6 +30,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     showZero,
     currentSelectPatientGroup,
     // actualYearRange,
+    previewMode,
     dateRange,
 
   } = store!;
@@ -284,8 +285,8 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     // />
     <Grid style={{ height: "100%" }} >
       <Grid.Row >
-        <Grid.Column verticalAlign="middle" width={1}>
-          <Menu icon vertical compact size="mini" borderless secondary widths={2}>
+        <Grid.Column verticalAlign="middle" width={1} style={{ display: previewMode ? "none" : null }}>
+          <Menu icon vertical compact size="mini" borderless secondary widths={2} >
             <Menu.Item fitted>
               <Dropdown selectOnBlur={false} basic item icon="plus" compact>
                 <Dropdown.Menu>

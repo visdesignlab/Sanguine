@@ -48,6 +48,7 @@ const ExtraPairOutcomes: FC<Props> = ({ outcomeName, dataSet, aggregationScaleDo
             let patientOutcome;
             let patientOutcomeResult;
             let meanOutput;
+            // const t0 = performance.now();
             switch (outcomeName) {
                 case "RISK":
                     patientOutcome = await fetch(`http://localhost:8000/api/risk_score?patient_ids=${patientIDArray[i]}`)
@@ -65,7 +66,9 @@ const ExtraPairOutcomes: FC<Props> = ({ outcomeName, dataSet, aggregationScaleDo
                     meanOutput = mean(patientOutcomeResult.map((d: any) => parseFloat(d.patient_death)));
                     break;
             }
-
+            //  const t1 = performance.now();
+            // console.log(`Call to fetch ${outcomeName} of ${patientIDArray.length} patients, took ${t1 - t0} milliseconds.`);
+            console.log(patientOutcomeResult)
             dataResult.push({ aggregation: aggreArray[i], outcome: meanOutput ? meanOutput : 0 })
         }
 

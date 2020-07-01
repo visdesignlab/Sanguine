@@ -35,7 +35,9 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
         currentOutputFilterSet,
         //  perCaseSelected,
         dateRange,
-        showZero
+        previewMode,
+        showZero,
+        currentSelectPatientGroup,
         //actualYearRange,
 
     } = store!;
@@ -63,7 +65,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
     async function fetchChartData() {
         let transfused_dict = {} as any;
         const transfusedRes = await fetch(
-            `http://localhost:8000/api/request_transfused_units?transfusion_type=${xAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}`
+            `http://localhost:8000/api/request_transfused_units?transfusion_type=${xAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`
         );
         const transfusedDataResult = await transfusedRes.json();
         transfusedDataResult.forEach((element: any) => {
@@ -171,7 +173,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
 
     useEffect(() => {
         fetchChartData();
-    }, [dateRange, filterSelection, showZero, hemoglobinDataSet, yAxis, xAxis, currentOutputFilterSet]);
+    }, [dateRange, filterSelection, showZero, hemoglobinDataSet, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroup]);
 
     const changeYAxis = (e: any, value: any) => {
 
@@ -185,7 +187,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
 
         <Grid style={{ height: "100%" }}>
             <Grid.Row >
-                <Grid.Column verticalAlign="middle" width={1}>
+                <Grid.Column verticalAlign="middle" width={1} style={{ display: previewMode ? "none" : null }}>
                     <Menu icon vertical compact size="mini" borderless secondary widths={2}>
 
                         <Menu.Item header>
