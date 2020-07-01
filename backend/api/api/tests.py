@@ -843,7 +843,7 @@ class RiskScoreTestCaseLoggedIn(TransactionTestCase):
 
     def test_risk_score_no_params(self):
         response = self.c.get(self.endpoint)
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 200)
 
     def test_risk_score_valid_types(self):
         valid_options = [
