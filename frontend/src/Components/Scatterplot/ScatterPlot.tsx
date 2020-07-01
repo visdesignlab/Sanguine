@@ -9,7 +9,7 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
-import { offset, AxisLabelDict } from "../../PresetsProfile"
+import { offset, AxisLabelDict, highlight_blue } from "../../PresetsProfile"
 import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range, median } from "d3";
 
 //import CustomizedAxis from "../Utilities/CustomizedAxis";
@@ -183,7 +183,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
 
     const generateScatterDots = () => {
         let selectedPatients: any[] = [];
-        const patientGroupSet = new Set(currentSelectPatientGroup)
+        //  const patientGroupSet = new Set(currentSelectPatientGroup)
         //let unselectedPatients = [];
         let medianSet: any = {}
         let unselectedPatients = data.map((dataPoint) => {
@@ -198,15 +198,15 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
             const cy = yAxisScale()(dataPoint.yVal)
             const isSelected = decideIfSelected(dataPoint)
             const isSelectSet = decideIfSelectSet(dataPoint);
-            const isBrushed = (brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1])
-                || (patientGroupSet.has(dataPoint.case.caseId));
+            const isBrushed = brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]
+            //  || (patientGroupSet.has(dataPoint.case.caseId));
             if (isSelected || isBrushed || isSelectSet) {
                 selectedPatients.push(
                     <Circle cx={cx}
                         cy={cy}
                         // fill={ ? highlight_orange : basic_gray}
                         isselected={isSelected}
-                        isbrushed={isBrushed}
+                        isbrushed={isBrushed || false}
                         isSelectSet={isSelectSet}
                         onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />)
@@ -216,7 +216,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
                         cy={cy}
                         // fill={ ? highlight_orange : basic_gray}
                         isselected={isSelected}
-                        isbrushed={isBrushed}
+                        isbrushed={isBrushed || false}
                         isSelectSet={isSelectSet}
                         onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />
@@ -227,7 +227,14 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         let lineSet: any[] = []
         for (let [key, value] of Object.entries(medianSet)) {
             const medianVal = median(value as any) || 0
-            lineSet.push(<line strokeWidth="3px" stroke={highlight_orange} x1={xAxisScale()(key as any)} y1={yAxisScale()(medianVal)} y2={yAxisScale()(medianVal)} x2={xAxisScale()(key as any) + xAxisScale().bandwidth() || 0} />)
+            lineSet.push(
+                <line strokeWidth="3px"
+                    stroke={highlight_blue}
+                    opacity={0.5}
+                    x1={xAxisScale()(key as any)}
+                    y1={yAxisScale()(medianVal)}
+                    y2={yAxisScale()(medianVal)}
+                    x2={xAxisScale()(key as any) + xAxisScale().bandwidth() || 0} />)
         }
         return unselectedPatients.concat(selectedPatients).concat(lineSet)
     }
