@@ -359,7 +359,7 @@ class RequestTransfusedUnitsTestCaseLoggedOut(TransactionTestCase):
         response = self.c.get(self.endpoint)
         self.assertEqual(response.status_code, 302)
 
-    def test_risk_score_unsupported_methods(self):
+    def test_request_transfused_unsupported_methods(self):
         response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 302)
         
@@ -556,7 +556,7 @@ class RequestTransfusedUnitsTestCaseLoggedIn(TransactionTestCase):
         response = self.c.get(self.endpoint)
         self.assertEqual(response.status_code, 400)
 
-    def test_risk_score_unsupported_methods(self):
+    def test_request_transfused_unsupported_methods(self):
         response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 405)
         
