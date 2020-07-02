@@ -18,7 +18,7 @@ interface OwnProps {
 export type Props = OwnProps;
 
 const ExtraPairOutcomes: FC<Props> = ({ outcomeName, dataSet, aggregationScaleDomain, aggregationScaleRange, store }: Props) => {
-    const [dataOutput, setDataOtuput] = useState<{ aggregation: any, outcome: number }[]>([])
+    //const [dataOutput, setDataOtuput] = useState<{ aggregation: any, outcome: number }[]>([])
 
 
     const aggregationScale = useCallback(() => {
@@ -38,47 +38,47 @@ const ExtraPairOutcomes: FC<Props> = ({ outcomeName, dataSet, aggregationScaleDo
         return outcomeScale
     }, [outcomeName])
 
-    async function fetchChartData() {
-        let dataResult: { aggregation: any, outcome: number }[] = []
+    // async function fetchChartData() {
+    //     let dataResult: { aggregation: any, outcome: number }[] = []
 
-        const aggreArray = Object.keys(dataSet)
-        const patientIDArray = Object.values(dataSet)
+    //     const aggreArray = Object.keys(dataSet)
+    //     const patientIDArray = Object.values(dataSet)
 
-        for (let i = 0; i < aggreArray.length; i++) {
-            let patientOutcome;
-            let patientOutcomeResult;
-            let meanOutput;
-            // const t0 = performance.now();
-            switch (outcomeName) {
-                case "RISK":
-                    patientOutcome = await fetch(`http://localhost:8000/api/risk_score?patient_ids=${patientIDArray[i]}`)
-                    patientOutcomeResult = await patientOutcome.json();
-                    meanOutput = mean(patientOutcomeResult.map((d: any) => parseFloat(d.apr_drg_weight)));
-                    break;
-                case "Vent":
-                    patientOutcome = await fetch(`http://localhost:8000/api/patient_outcomes?patient_ids=${patientIDArray[i]}`)
-                    patientOutcomeResult = await patientOutcome.json();
-                    meanOutput = mean(patientOutcomeResult.map((d: any) => parseFloat(d.gr_than_1440_vent)));
-                    break;
-                case "Mortality":
-                    patientOutcome = await fetch(`http://localhost:8000/api/patient_outcomes?patient_ids=${patientIDArray[i]}`)
-                    patientOutcomeResult = await patientOutcome.json();
-                    meanOutput = mean(patientOutcomeResult.map((d: any) => parseFloat(d.patient_death)));
-                    break;
-            }
-            //  const t1 = performance.now();
-            // console.log(`Call to fetch ${outcomeName} of ${patientIDArray.length} patients, took ${t1 - t0} milliseconds.`);
-            console.log(patientOutcomeResult)
-            dataResult.push({ aggregation: aggreArray[i], outcome: meanOutput ? meanOutput : 0 })
-        }
+    //     for (let i = 0; i < aggreArray.length; i++) {
+    //         let patientOutcome;
+    //         let patientOutcomeResult;
+    //         let meanOutput;
+    //         // const t0 = performance.now();
+    //         switch (outcomeName) {
+    //             case "RISK":
+    //                 patientOutcome = await fetch(`http://localhost:8000/api/risk_score?patient_ids=${patientIDArray[i]}`)
+    //                 patientOutcomeResult = await patientOutcome.json();
+    //                 meanOutput = mean(patientOutcomeResult.map((d: any) => parseFloat(d.apr_drg_weight)));
+    //                 break;
+    //             case "Vent":
+    //                 patientOutcome = await fetch(`http://localhost:8000/api/patient_outcomes?patient_ids=${patientIDArray[i]}`)
+    //                 patientOutcomeResult = await patientOutcome.json();
+    //                 meanOutput = mean(patientOutcomeResult.map((d: any) => parseFloat(d.gr_than_1440_vent)));
+    //                 break;
+    //             case "Mortality":
+    //                 patientOutcome = await fetch(`http://localhost:8000/api/patient_outcomes?patient_ids=${patientIDArray[i]}`)
+    //                 patientOutcomeResult = await patientOutcome.json();
+    //                 meanOutput = mean(patientOutcomeResult.map((d: any) => parseFloat(d.patient_death)));
+    //                 break;
+    //         }
+    //         //  const t1 = performance.now();
+    //         // console.log(`Call to fetch ${outcomeName} of ${patientIDArray.length} patients, took ${t1 - t0} milliseconds.`);
+    //         console.log(patientOutcomeResult)
+    //         dataResult.push({ aggregation: aggreArray[i], outcome: meanOutput ? meanOutput : 0 })
+    //     }
 
-        setDataOtuput(dataResult)
-    }
+    //     setDataOtuput(dataResult)
+    // }
 
-    useEffect(() => {
-        fetchChartData();
+    // useEffect(() => {
+    //     fetchChartData();
 
-    }, [dataSet]);
+    // }, [dataSet]);
 
     // const [valueScale] = useMemo(() => {
     //     console.log(dataSet)
@@ -89,18 +89,18 @@ const ExtraPairOutcomes: FC<Props> = ({ outcomeName, dataSet, aggregationScaleDo
 
     return (
         <>
-            {dataOutput.map((d: { aggregation: any, outcome: number }) => {
+            {Object.entries(dataSet).map(([val, dataVal]) => {
                 //console.log(val, dataVal)
                 return (
                     [<Popup
-                        content={format(".4r")(d.outcome)}
+                        content={format(".4r")(dataVal)}
                         trigger={
                             <rect
                                 x={0}
-                                y={aggregationScale()(d.aggregation)}
+                                y={aggregationScale()(val)}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
                                 // fill={interpolateGreys(valueScale(dataVal))}
-                                fill={interpolateGreys(outcomeScale()(d.outcome || 0))}
+                                fill={interpolateGreys(outcomeScale()(dataVal || 0))}
                                 opacity={0.8}
                                 width={extraPairWidth.Outcomes}
                                 height={aggregationScale().bandwidth()} />
@@ -108,13 +108,13 @@ const ExtraPairOutcomes: FC<Props> = ({ outcomeName, dataSet, aggregationScaleDo
 
                     <text x={extraPairWidth.Outcomes * 0.5}
                         y={
-                            aggregationScale()(d.aggregation)! +
+                            aggregationScale()(val)! +
                             0.5 * aggregationScale().bandwidth()
                         }
                         fill="white"
                         alignmentBaseline={"central"}
                         textAnchor={"middle"}
-                        fontSize="12px">{format(".2f")(d.outcome)}</text>]
+                        fontSize="12px">{format(".2f")(dataVal)}</text>]
 
 
                 )

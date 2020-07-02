@@ -11,6 +11,7 @@ interface OwnProps {
     aggregationScaleDomain: string;
     aggregationScaleRange: string;
     store?: Store;
+
 }
 
 export type Props = OwnProps;

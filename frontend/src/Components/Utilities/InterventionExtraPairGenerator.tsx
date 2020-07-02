@@ -9,6 +9,7 @@ import ExtraPairBasicInt from "../InterventionPlot/ExtraPairBaiscInt";
 import styled from "styled-components";
 import ExtraPairBarInt from "../InterventionPlot/ExtraPairBarInt";
 import ExtraPairViolinInt from "../InterventionPlot/ExtraPairViolinInt";
+import ExtraPairOutcomesInt from "../InterventionPlot/ExtraPairOutcomesInt";
 //import ExtraPairOutcomes from "../BarChart/ExtraPairOutcomes";
 
 interface OwnProps {
@@ -85,8 +86,12 @@ const InterventionExtraPairGenerator: FC<Props> = ({ extraPairDataSet, aggregati
             case "Basic":
                 transferedDistance += (extraPairWidth.Basic + extraPairPadding)
                 returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Basic)},0)`}>
-                    <ExtraPairBasicInt aggregationScaleDomain={aggregationScaleDomain}
-                        aggregationScaleRange={aggregationScaleRange} preIntData={pairData.preIntData} postIntData={pairData.postIntData} totalData={pairData.totalIntData} />
+                    <ExtraPairBasicInt
+                        aggregationScaleDomain={aggregationScaleDomain}
+                        aggregationScaleRange={aggregationScaleRange}
+                        preIntData={pairData.preIntData}
+                        postIntData={pairData.postIntData}
+                        totalData={pairData.totalIntData} />
                     <ExtraPairText
                         x={extraPairWidth.Basic / 2}
                         y={height - currentOffset.bottom + 20}
@@ -95,17 +100,23 @@ const InterventionExtraPairGenerator: FC<Props> = ({ extraPairDataSet, aggregati
                 </g>);
                 break;
 
-            // case "Outcomes":
-            //     transferedDistance += (extraPairWidth.Basic + extraPairPadding)
-            //     returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Basic)},0)`}>
-            //         <ExtraPairOutcomes aggregatedScale={aggregationScale} dataSet={pairData.data} outcomeName={pairData.name} />
-            //         <ExtraPairText
-            //             x={extraPairWidth.Basic / 2}
-            //             y={dimension.height - currentOffset.bottom + 20}
-            //             onClick={() => actions.removeExtraPair(chartId, pairData.name)}
-            //         >{pairData.name}</ExtraPairText>
-            //     </g>);
-            //     break;
+            case "Outcomes":
+                transferedDistance += (extraPairWidth.Basic + extraPairPadding)
+                returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Basic)},0)`}>
+                    <ExtraPairOutcomesInt
+                        aggregationScaleDomain={aggregationScaleDomain}
+                        aggregationScaleRange={aggregationScaleRange}
+                        preIntData={pairData.preIntData}
+                        postIntData={pairData.postIntData}
+                        totalData={pairData.totalIntData}
+                        outcomeName={pairData.name} />
+                    <ExtraPairText
+                        x={extraPairWidth.Basic / 2}
+                        y={height - currentOffset.bottom + 20}
+                        onClick={() => actions.removeExtraPair(chartId, pairData.name)}
+                    >{pairData.name}</ExtraPairText>
+                </g>);
+                break;
         }
     })
     return returningComponents

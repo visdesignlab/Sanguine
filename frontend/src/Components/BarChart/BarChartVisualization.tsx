@@ -7,7 +7,7 @@ import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, int
 import BarChart from "./BarChart"
 import { Button, Icon, Grid, Dropdown, Menu, Modal, Form, Message } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
-import { sum, median } from "d3";
+import { sum, median, mean } from "d3";
 
 interface OwnProps {
   aggregatedBy: string;
@@ -153,6 +153,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     if (extraPairArray.length > 0) {
       extraPairArray.forEach(async (variable: string) => {
         let newData = {} as any;
+        let temporaryDataHolder: any = {}
         let medianData = {} as any;
         let kdeMax = 0;
         switch (variable) {
@@ -175,22 +176,49 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
             newExtraPairData.push({ name: "Zero %", data: newData, type: "Basic" });
             break;
           case "RISK":
-            data.map(async (dataPoint: BarChartDataPoint) => {
-              newData[dataPoint.aggregateAttribute] = dataPoint.patienIDList;
-            });
+            // let temporaryDataHolder: any = {}
+            data.map((dataPoint: BarChartDataPoint) => {
+              temporaryDataHolder[dataPoint.aggregateAttribute] = []
+            })
+            hemoglobinDataSet.map((ob: any) => {
+              if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                temporaryDataHolder[ob[aggregatedBy]].push(ob.DRG_WEIGHT)
+              }
+            })
+            for (const [key, value] of Object.entries(temporaryDataHolder)) {
+              newData[key] = mean(value as any)
+            }
             newExtraPairData.push({ name: "RISK", data: newData, type: "Outcomes" });
             break;
-
           case "Mortality":
-            data.map(async (dataPoint: BarChartDataPoint) => {
-              newData[dataPoint.aggregateAttribute] = dataPoint.patienIDList;
-            });
+            // let temporaryDataHolder: any = {}
+            data.map((dataPoint: BarChartDataPoint) => {
+              temporaryDataHolder[dataPoint.aggregateAttribute] = []
+            })
+            hemoglobinDataSet.map((ob: any) => {
+              if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                temporaryDataHolder[ob[aggregatedBy]].push(ob.DEATH)
+              }
+            })
+            for (const [key, value] of Object.entries(temporaryDataHolder)) {
+              newData[key] = mean(value as any)
+            }
             newExtraPairData.push({ name: "Mortality", data: newData, type: "Outcomes" });
             break;
+          //TODO I need to think about when we have a patient group filter, how does that apply to extra pair plot. 
           case "Vent":
-            data.map(async (dataPoint: BarChartDataPoint) => {
-              newData[dataPoint.aggregateAttribute] = dataPoint.patienIDList;
-            });
+            // let temporaryDataHolder:any = {}
+            data.map((dataPoint: BarChartDataPoint) => {
+              temporaryDataHolder[dataPoint.aggregateAttribute] = []
+            })
+            hemoglobinDataSet.map((ob: any) => {
+              if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                temporaryDataHolder[ob[aggregatedBy]].push(ob.VENT)
+              }
+            })
+            for (const [key, value] of Object.entries(temporaryDataHolder)) {
+              newData[key] = mean(value as any)
+            }
             newExtraPairData.push({ name: "Vent", data: newData, type: "Outcomes" });
             break;
           case "Preop Hemo":
