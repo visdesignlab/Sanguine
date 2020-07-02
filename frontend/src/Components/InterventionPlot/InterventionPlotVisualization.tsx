@@ -6,7 +6,7 @@ import { InterventionDataPoint } from '../../Interfaces/ApplicationState'
 import { BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON, ChartSVG } from "../../PresetsProfile"
 import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
-import { sum, median, timeFormat, timeParse } from "d3";
+import { sum, median, timeFormat, timeParse, mean } from "d3";
 import InterventionPlot from "./InterventionPlot";
 
 interface OwnProps {
@@ -346,6 +346,9 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
         if (extraPairArray.length > 0) {
             extraPairArray.forEach((variable: string) => {
                 let newData = {} as any;
+                let temporaryDataHolder: any = {}
+                let temporaryPreIntDataHolder: any = {}
+                let temporaryPostIntDataHolder: any = {}
                 let preIntData = {} as any;
                 let postIntData = {} as any;
                 let kdeMax = 0;
@@ -385,39 +388,103 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         newExtraPairData.push({ name: "Zero %", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                         break;
 
-                    case "ROM":
-                        data.map(async (dataPoint: InterventionDataPoint) => {
-                            newData[dataPoint.aggregateAttribute] = dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList);
-                            preIntData[dataPoint.aggregateAttribute] = dataPoint.prePatienIDList;
-                            postIntData[dataPoint.aggregateAttribute] = dataPoint.postPatienIDList;
-                        });
-                        newExtraPairData.push({ name: "ROM", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
-                        break;
+                    case "RISK":
+                        // let temporaryDataHolder: any = {}
+                        data.map((dataPoint: InterventionDataPoint) => {
+                            temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = []
+                            temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = []
+                            temporaryDataHolder[dataPoint.aggregateAttribute] = []
+                        })
+                        hemoglobinDataSet.map((ob: any) => {
+                            if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                                temporaryDataHolder[ob[aggregatedBy]].push(ob.DRG_WEIGHT)
+                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() < interventionDate) {
+                                    temporaryPreIntDataHolder[ob[aggregatedBy]].push(ob.DRG_WEIGHT);
+                                }
 
-                    case "SOI":
-                        data.map(async (dataPoint: InterventionDataPoint) => {
-                            newData[dataPoint.aggregateAttribute] = dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList);
-                            preIntData[dataPoint.aggregateAttribute] = dataPoint.prePatienIDList;
-                            postIntData[dataPoint.aggregateAttribute] = dataPoint.postPatienIDList;
-                        });
-                        newExtraPairData.push({ name: "SOI", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
+                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() > interventionDate) {
+                                    temporaryPostIntDataHolder[ob[aggregatedBy]].push(ob.DRG_WEIGHT);
+                                }
+                            }
+
+                        })
+
+                        for (const [key, value] of Object.entries(temporaryDataHolder)) {
+                            newData[key] = mean(value as any)
+                        }
+                        for (const [key, value] of Object.entries(temporaryPreIntDataHolder)) {
+                            preIntData[key] = mean(value as any)
+                        }
+                        for (const [key, value] of Object.entries(temporaryPostIntDataHolder)) {
+                            postIntData[key] = mean(value as any)
+                        }
+
+                        newExtraPairData.push({ name: "RISK", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
                         break;
 
                     case "Mortality":
-                        data.map(async (dataPoint: InterventionDataPoint) => {
-                            newData[dataPoint.aggregateAttribute] = dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList);
-                            preIntData[dataPoint.aggregateAttribute] = dataPoint.prePatienIDList;
-                            postIntData[dataPoint.aggregateAttribute] = dataPoint.postPatienIDList;
-                        });
+                        data.map((dataPoint: InterventionDataPoint) => {
+                            temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = []
+                            temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = []
+                            temporaryDataHolder[dataPoint.aggregateAttribute] = []
+                        })
+                        hemoglobinDataSet.map((ob: any) => {
+                            if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                                temporaryDataHolder[ob[aggregatedBy]].push(ob.DEATH)
+                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() < interventionDate) {
+                                    temporaryPreIntDataHolder[ob[aggregatedBy]].push(ob.DEATH);
+                                }
+
+                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() > interventionDate) {
+                                    temporaryPostIntDataHolder[ob[aggregatedBy]].push(ob.DEATH);
+                                }
+                            }
+
+                        })
+
+                        for (const [key, value] of Object.entries(temporaryDataHolder)) {
+                            newData[key] = mean(value as any)
+                        }
+                        for (const [key, value] of Object.entries(temporaryPreIntDataHolder)) {
+                            preIntData[key] = mean(value as any)
+                        }
+                        for (const [key, value] of Object.entries(temporaryPostIntDataHolder)) {
+                            postIntData[key] = mean(value as any)
+                        }
+
                         newExtraPairData.push({ name: "Mortality", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
                         break;
 
                     case "Vent":
-                        data.map(async (dataPoint: InterventionDataPoint) => {
-                            newData[dataPoint.aggregateAttribute] = dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList);
-                            preIntData[dataPoint.aggregateAttribute] = dataPoint.prePatienIDList;
-                            postIntData[dataPoint.aggregateAttribute] = dataPoint.postPatienIDList;
-                        });
+                        data.map((dataPoint: InterventionDataPoint) => {
+                            temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = []
+                            temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = []
+                            temporaryDataHolder[dataPoint.aggregateAttribute] = []
+                        })
+                        hemoglobinDataSet.map((ob: any) => {
+                            if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                                temporaryDataHolder[ob[aggregatedBy]].push(ob.VENT)
+                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() < interventionDate) {
+                                    temporaryPreIntDataHolder[ob[aggregatedBy]].push(ob.VENT);
+                                }
+
+                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() > interventionDate) {
+                                    temporaryPostIntDataHolder[ob[aggregatedBy]].push(ob.VENT);
+                                }
+                            }
+
+                        })
+
+                        for (const [key, value] of Object.entries(temporaryDataHolder)) {
+                            newData[key] = mean(value as any)
+                        }
+                        for (const [key, value] of Object.entries(temporaryPreIntDataHolder)) {
+                            preIntData[key] = mean(value as any)
+                        }
+                        for (const [key, value] of Object.entries(temporaryPostIntDataHolder)) {
+                            postIntData[key] = mean(value as any)
+                        }
+
                         newExtraPairData.push({ name: "Vent", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
                         break;
 

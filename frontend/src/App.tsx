@@ -27,6 +27,19 @@ const App: FC<Props> = ({ store }: Props) => {
     const resultHemo = dataHemo.result;
     const resTrans = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(2014, 0, 1)), timeFormat("%d-%b-%Y")(new Date(2019, 11, 31))]}`)
     const dataTrans = await resTrans.json();
+    const resRisk = await fetch(`http://localhost:8000/api/risk_score`);
+    const dataRisk = await resRisk.json();
+    let riskOutcomeDict: any = {}
+    for (let obj of dataRisk) {
+      riskOutcomeDict[obj.visit_no] = { DRG_WEIGHT: obj.apr_drg_weight }
+    }
+    const resOutcome = await fetch(`http://localhost:8000/api/patient_outcomes`);
+    const dataOutcome = await resOutcome.json();
+    for (let obj of dataOutcome) {
+      riskOutcomeDict[obj.visit_no].VENT = obj.gr_than_1440_vent
+      riskOutcomeDict[obj.visit_no].DEATH = obj.patient_death
+    }
+
     let transfused_dict = {} as any;
 
     let result: {
@@ -44,7 +57,10 @@ const App: FC<Props> = ({ store }: Props) => {
       PLT_UNITS: number,
       CRYO_UNITS: number,
       CELL_SAVER_ML: number,
-      HEMO: number[]
+      HEMO: number[],
+      DRG_WEIGHT: number,
+      VENT: number,
+      DEATH: number
     }[] = [];
 
 
@@ -76,13 +92,17 @@ const App: FC<Props> = ({ store }: Props) => {
           HEMO: ob.HEMO,
           QUARTER: ob.QUARTER,
           MONTH: ob.MONTH,
-          DATE: ob.DATE
+          DATE: ob.DATE,
+          VENT: riskOutcomeDict[ob.VISIT_ID].VENT,
+          DRG_WEIGHT: riskOutcomeDict[ob.VISIT_ID].DRG_WEIGHT,
+          DEATH: riskOutcomeDict[ob.VISIT_ID].DEATH,
         })
       }
     })
 
     result = result.filter((d: any) => d);
     console.log("hemo data done")
+    console.log(result)
     setHemoData(result)
     store!.loadingModalOpen = false;
 
