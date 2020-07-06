@@ -6,8 +6,9 @@ import React, {
 import { inject, observer } from "mobx-react";
 import Store from "../../Interfaces/Store";
 import { List, Container, Button } from "semantic-ui-react";
-import { HIPAA_Sensitive, AxisLabelDict, stateUpdateWrapperUseJSON } from "../../PresetsProfile";
+import { HIPAA_Sensitive, AxisLabelDict, stateUpdateWrapperUseJSON, Title } from "../../PresetsProfile";
 import { actions } from "../..";
+import styled from "styled-components";
 
 interface OwnProps {
     store?: Store;
@@ -84,14 +85,14 @@ const DetailView: FC<Props> = ({ store }: Props) => {
     const generate_List_Items = () => {
         let result = [];
         if (individualInfo) {
-            result.push(<List.Header><b style={{}}>Selected Patient</b></List.Header>)
+            result.push(<List.Header><Title>Selected Patient</Title></List.Header>)
             for (let [key, val] of Object.entries(individualInfo)) {
                 if (!HIPAA_Sensitive.has(key)) {
                     result.push(
 
                         <List.Item>
-                            <List.Content>{AxisLabelDict[key] ? AxisLabelDict[key] : key}</List.Content>
-                            <List.Description>{val as string}</List.Description>
+                            <List.Header >{AxisLabelDict[key] ? AxisLabelDict[key] : key}</List.Header>
+                            <List.Content>{val as string}</List.Content>
                         </List.Item>)
                 }
 
@@ -104,17 +105,24 @@ const DetailView: FC<Props> = ({ store }: Props) => {
 
 
     return (
-        <Container>
-            <div style={{ visibility: individualInfo ? "visible" : "hidden" }}>
-                <Button floated="right" icon="close" circular compact size="mini" basic onClick={() => { actions.selectPatient(null) }} /></div>
+        <BoxContainer
+            style={{ visibility: individualInfo ? "visible" : "hidden" }}
+        >
+            {/* <div  */}
+            <Button floated="right" style={{ "margin-top": "10px" }} icon="close" circular compact size="mini" basic onClick={() => { actions.selectPatient(null) }} />
+            {/* </div> */}
             <List>
-
                 {generate_List_Items()}
             </List>
-        </Container>
+        </BoxContainer>
     )
 }
 
+const BoxContainer = styled(Container)`
+    border: 1px solid #ccc!important
+    padding: 0.01em 16px
+    border-radius: 16px
+`
 
 export default inject("store")(observer(DetailView));
 
