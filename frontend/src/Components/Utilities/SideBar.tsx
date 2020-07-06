@@ -5,7 +5,7 @@ import { Grid, Container, List, Button, Header, Search } from "semantic-ui-react
 import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat, max } from "d3";
 import { actions } from "../..";
-import { AxisLabelDict, Accronym, stateUpdateWrapperUseJSON, postop_color } from "../../PresetsProfile";
+import { AxisLabelDict, Accronym, stateUpdateWrapperUseJSON, postop_color, Title } from "../../PresetsProfile";
 import { highlight_orange, secondary_gray } from "../../PresetsProfile";
 import { SingleCasePoint } from "../../Interfaces/ApplicationState";
 
@@ -59,7 +59,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 
   const caseScale = useCallback(() => {
 
-    const caseScale = scaleLinear().domain([0, maxCaseCount]).range([0.6 * width, 0.98 * width])
+    const caseScale = scaleLinear().domain([0, maxCaseCount]).range([0.6 * width, 0.96 * width])
     return caseScale;
   }, [maxCaseCount, width])
 
@@ -160,7 +160,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
           <List bulleted>
 
             <List.Header style={{ textAlign: "left" }}>
-              <b>Current View</b>
+              <Title>Current View</Title>
             </List.Header>
             <List.Item key="Date"
               //icon="circle"
@@ -197,7 +197,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
       <Grid.Row centered >
         <Container style={{ height: "20vh" }}>
           <List bulleted>
-            <List.Header style={{ textAlign: "left" }}><b>Current Selected</b></List.Header>
+            <List.Header style={{ textAlign: "left" }}><Title>Current Selected</Title></List.Header>
             {currentSelectSet.map((selectSet) => {
               if (selectSet.set_name === "CASE_ID") {
                 return <List.Item
@@ -228,7 +228,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
       <Grid.Row centered >
         <Container>
           <Search
-            placeholder="Search a Case"
+            placeholder="Search a Case by ID"
             //defaultValue={"Search Case"}
             minCharacters={3}
             onSearchChange={(e, output) => {
@@ -263,7 +263,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
       </Grid.Row>
 
       <Grid.Row centered >
-        <Container style={{ overflow: "auto", height: "35vh" }} >
+        <Container style={{ overflow: "overlay", height: "35vh" }} >
           <Search
             placeholder="Search a Procedure"
             minCharacters={3}
@@ -288,7 +288,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             <List.Item key={"filter-header"}
               content={
                 <Header><ListSVG id="Procedure-SVG" ref={svgRef}>
-                  <text alignmentBaseline="hanging" x={0} y={0}>Procedures</text>
+                  <text alignmentBaseline="hanging" x={0} y={0} fontSize="medium">Procedures</text>
                   <rect
                     x={caseScale().range()[0]}
                     y={0}
@@ -331,8 +331,6 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
               }
             })}
           </List>
-
-
         </Container>
       </Grid.Row>
 

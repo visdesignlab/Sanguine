@@ -179,3 +179,7 @@ export const ChartSVG = styled.svg`
   height: 80%;
   width: 100%;
 `;
+
+export const Title = styled.b`
+    font-size:larger
+`;
