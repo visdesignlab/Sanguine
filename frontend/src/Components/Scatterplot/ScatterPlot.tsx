@@ -87,6 +87,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         if (isFirstRender) {
             updateIsFirstRender(false)
         }
+
         else if (brushLoc) {
             let caseList: number[] = [];
             data.map((dataPoint) => {
@@ -100,10 +101,13 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
             if (caseList.length > 1000 || caseList.length === 0) {
                 updateBrushLoc(null)
                 brushDef.move(svgSelection.select(".brush-layer"), null)
+                actions.selectSet({ set_name: "CASE_ID", set_value: [] }, true, true)
             } else {
                 // actions.updateSelectedPatientGroup(caseList)
                 actions.selectSet({ set_name: "CASE_ID", set_value: caseList }, true)
             }
+        } else {
+            actions.selectSet({ set_name: "CASE_ID", set_value: [] }, true, true)
         }
     }, [brushLoc])
 
