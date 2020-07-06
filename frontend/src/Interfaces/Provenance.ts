@@ -34,7 +34,7 @@ interface AppProvenance {
     updateCaseCount: (mode: string, newCaseCount: number) => void;
     onLayoutchange: (data: any) => void;
     selectPatient: (data: SingleCasePoint | null) => void;
-    selectSet: (data: SelectSet, shiftKeyPressed: boolean) => void;
+    selectSet: (data: SelectSet, shiftKeyPressed: boolean, clearCaseList?: boolean) => void;
     // storeHemoData: (data: any) => void;
     changeExtraPair: (chartID: string, newExtraPair: string) => void;
     removeExtraPair: (chartID: string, removeingPair: string) => void;
@@ -431,11 +431,14 @@ export function setupProvenance(): AppProvenance {
     })
   };
 
-  const selectSet = (data: SelectSet, shiftKeyPressed: boolean) => {
+  const selectSet = (data: SelectSet, shiftKeyPressed: boolean, clearCaseList?: boolean) => {
     provenance.applyAction(
       `select set ${data.set_name} at ${data.set_value}`,
       (state: ApplicationState) => {
-        if (!shiftKeyPressed) {
+        if (clearCaseList) {
+          state.currentSelectSet = state.currentSelectSet.filter(d => d.set_name !== "CASE_ID");
+        }
+        else if (!shiftKeyPressed) {
           if (state.currentSelectSet.length === 1
             && state.currentSelectSet[0].set_name === data.set_name
             && state.currentSelectSet[0].set_value === data.set_value) {

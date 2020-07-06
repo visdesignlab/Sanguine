@@ -155,7 +155,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
       padded
     >
 
-      <Grid.Row centered style={{ padding: "20px" }} >
+      <Grid.Row centered  >
         <Container style={{ height: "20vh" }}>
           <List bulleted>
 
@@ -164,21 +164,21 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             </List.Header>
             <List.Item key="Date"
               //icon="circle"
-              style={{ textAlign: "left" }}
+              style={{ textAlign: "left", paddingLeft: "20px" }}
               content={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} ~ ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} />
             <List.Item key="AggreCaseCount"
               //   icon="caret right"
-              style={{ textAlign: "left" }}
+              style={{ textAlign: "left", paddingLeft: "20px" }}
               content={`Aggregated Case: ${totalAggregatedCaseCount}`} />
             <List.Item key="IndiCaseCount"
               //  icon="caret right"
-              style={{ textAlign: "left" }}
+              style={{ textAlign: "left", paddingLeft: "20px" }}
               content={`Individual Case: ${totalIndividualCaseCount}`} />
 
             <List.Item
               key="SurgeryList"
               //icon="caret right" 
-              style={{ textAlign: "left" }}
+              style={{ textAlign: "left", paddingLeft: "20px" }}
               content={generateSurgery()} />
             {generatePatientSelection()}
 
@@ -194,7 +194,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         </Container>
 
       </Grid.Row>
-      <Grid.Row centered style={{ padding: "20px" }}>
+      <Grid.Row centered >
         <Container style={{ height: "20vh" }}>
           <List bulleted>
             <List.Header style={{ textAlign: "left" }}><b>Current Selected</b></List.Header>
@@ -203,7 +203,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                 return <List.Item
                   //icon="caret right" 
                   key={`${selectSet.set_name}currentselecting`}
-                  style={{ textAlign: "left" }}
+                  style={{ textAlign: "left", paddingLeft: "20px" }}
                   //  onClick={() => { actions.clearSelectSet(selectSet.set_name) }}
                   content={`${selectSet.set_value.length} cases selected`} />
               } else {
@@ -224,8 +224,46 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         </Container>
       </Grid.Row>
 
-      <Grid.Row centered style={{}}>
-        <Container style={{ overflow: "auto", height: "30vh" }} >
+
+      <Grid.Row centered >
+        <Container>
+          <Search
+            placeholder="Search a Case"
+            //defaultValue={"Search Case"}
+            minCharacters={3}
+            onSearchChange={(e, output) => {
+              setSearchCaseVal(output.value || "")
+              if (output.value && output.value.length >= 3) {
+                let searchResult = hemoData.filter((d: any) => d.CASE_ID.toString().includes(output.value))
+                stateUpdateWrapperUseJSON(caseSearchResult, searchResult, setCaseSearchResult);
+              }
+            }
+            }
+            results={caseSearchResult.map(d => { return { title: d.CASE_ID } })}
+            onResultSelect={(e, resultSelection) => {
+              const selectedPat = caseSearchResult.filter((d: any) => d.CASE_ID === resultSelection.result.title)[0]
+              console.log(selectedPat)
+              const newSingleCasePoint: SingleCasePoint = {
+                visitNum: selectedPat.VISIT_ID,
+                caseId: selectedPat.CASE_ID,
+                YEAR: selectedPat.YEAR,
+                SURGEON_ID: selectedPat.SURGEON_ID,
+                ANESTHOLOGIST_ID: selectedPat.ANESTHOLOGIST_ID,
+                patientID: selectedPat.PATIENT_ID,
+                DATE: selectedPat.DATE
+              };
+              actions.selectPatient(newSingleCasePoint);
+              setSearchCaseVal("")
+            }
+            }
+            value={searchCaseVal}
+          />
+
+        </Container>
+      </Grid.Row>
+
+      <Grid.Row centered >
+        <Container style={{ overflow: "auto", height: "35vh" }} >
           <Search
             placeholder="Search a Procedure"
             minCharacters={3}
@@ -299,42 +337,6 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
       </Grid.Row>
 
 
-      <Grid.Row centered style={{ padding: "20px" }}>
-        <Container>
-          <Search
-            placeholder="Search a Case"
-            //defaultValue={"Search Case"}
-            minCharacters={3}
-            onSearchChange={(e, output) => {
-              setSearchCaseVal(output.value || "")
-              if (output.value && output.value.length >= 3) {
-                let searchResult = hemoData.filter((d: any) => d.CASE_ID.toString().includes(output.value))
-                stateUpdateWrapperUseJSON(caseSearchResult, searchResult, setCaseSearchResult);
-              }
-            }
-            }
-            results={caseSearchResult.map(d => { return { title: d.CASE_ID } })}
-            onResultSelect={(e, resultSelection) => {
-              const selectedPat = caseSearchResult.filter((d: any) => d.CASE_ID === resultSelection.result.title)[0]
-              console.log(selectedPat)
-              const newSingleCasePoint: SingleCasePoint = {
-                visitNum: selectedPat.VISIT_ID,
-                caseId: selectedPat.CASE_ID,
-                YEAR: selectedPat.YEAR,
-                SURGEON_ID: selectedPat.SURGEON_ID,
-                ANESTHOLOGIST_ID: selectedPat.ANESTHOLOGIST_ID,
-                patientID: selectedPat.PATIENT_ID,
-                DATE: selectedPat.DATE
-              };
-              actions.selectPatient(newSingleCasePoint);
-              setSearchCaseVal("")
-            }
-            }
-            value={searchCaseVal}
-          />
-
-        </Container>
-      </Grid.Row>
     </Grid>
   );
 }
