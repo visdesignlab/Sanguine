@@ -352,9 +352,9 @@ interface ListITProps {
   isSelected: boolean;
 }
 const ListIT = styled(List.Item) <ListITProps>`
-  background:${props => props.isSelected ? '#ffdbb8' : 'none'};
+  background:${props => props.isSelected ? "#e2a364" : 'none'};
   &:hover{
-    background:#d0e4f5;
+    background:#f2d4b6;
   }
 `
 
