@@ -1,11 +1,11 @@
-import React, { FC, useEffect, useState, useCallback } from "react";
+import React, { FC, useEffect, useState, useCallback, useRef, useLayoutEffect } from "react";
 import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
-import { Grid, Container, List, Button, Dropdown, Header, Search } from "semantic-ui-react";
+import { Grid, Container, List, Button, Header, Search } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat, max } from "d3";
 import { actions } from "../..";
-import { AxisLabelDict, Accronym, stateUpdateWrapperUseJSON } from "../../PresetsProfile";
+import { AxisLabelDict, Accronym, stateUpdateWrapperUseJSON, postop_color } from "../../PresetsProfile";
 import { highlight_orange, secondary_gray } from "../../PresetsProfile";
 import { SingleCasePoint } from "../../Interfaces/ApplicationState";
 
@@ -13,8 +13,8 @@ interface OwnProps {
   hemoData: any;
   store?: Store;
 }
-const surgeryBarStarting = 160
-const surgeryBarEnding = 290
+// const surgeryBarStarting = 160
+// const surgeryBarEnding = 290
 
 
 export type Props = OwnProps;
@@ -38,48 +38,30 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
   const [itemSelected, setItemSelected] = useState<any[]>([]);
   const [itemUnselected, setItemUnselected] = useState<any[]>([]);
   const [surgeryList, setSurgeryList] = useState<any[]>([]);
-  //const [caseList, setCaseList] = useState<any[]>([]);
 
   const [searchSurgeryVal, setSearchSurgeryVal] = useState("");
-  const [searchCaseVal, setSearchCaseVal] = useState("")
+  const [searchCaseVal, setSearchCaseVal] = useState("");
 
-  // useEffect(() => {
-  //   //TODO there are duplicated caseID. 3881 incoming, 3876 outgoing
-  //   let caseDuplicationCheck = new Set();
+  const [width, setWidth] = useState(0);
+  const svgRef = useRef<SVGSVGElement>(null);
 
-  //   let newCaseList = hemoData.map((d: any) => {
+  useLayoutEffect(() => {
+    if (svgRef.current) {
+      setWidth(svgRef.current.clientWidth)
+    }
+  })
 
-  //     if (!caseDuplicationCheck.has(d.CASE_ID)) {
-  //       caseDuplicationCheck.add(d.CASE_ID)
-  //       const newSingleCasePoint: SingleCasePoint = {
-  //         visitNum: d.VISIT_ID,
-  //         caseId: d.CASE_ID,
-  //         YEAR: d.YEAR,
-  //         SURGEON_ID: d.SURGEON_ID,
-  //         ANESTHOLOGIST_ID: d.ANESTHOLOGIST_ID,
-  //         patientID: d.PATIENT_ID,
-  //         DATE: d.DATE
-  //       };
-  //       const newOption = {
-  //         key: `${d.CASE_ID}`,
-  //         text: d.CASE_ID,
-  //         value: JSON.stringify(newSingleCasePoint),
-  //         //caseRelated: newSingleCasePoint
-
-  //       };
-  //       return newOption
-  //     } else { return undefined }
-
-  //   })
-  //   newCaseList = newCaseList.filter((d: any) => d)
-
-  //   stateUpdateWrapperUseJSON(caseList, newCaseList, setCaseList)
-  // }, [hemoData])
+  window.addEventListener("resize", () => {
+    if (svgRef.current) {
+      setWidth(svgRef.current.clientWidth)
+    }
+  })
 
   const caseScale = useCallback(() => {
-    const caseScale = scaleLinear().domain([0, maxCaseCount]).range([0, surgeryBarEnding - surgeryBarStarting])
+
+    const caseScale = scaleLinear().domain([0, maxCaseCount]).range([0.6 * width, 0.98 * width])
     return caseScale;
-  }, [maxCaseCount])
+  }, [maxCaseCount, width])
 
   async function fetchProcedureList() {
     const res = await fetch("http://localhost:8000/api/get_attributes");
@@ -92,7 +74,6 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     setMaxCaseCount(tempMaxCaseCount)
     let tempItemUnselected: any[] = [];
     let tempItemSelected: any[] = [];
-    // const caseScale = scaleLinear().domain([0, tempMaxCaseCount]).range([0, surgeryBarEnding - surgeryBarStarting])
 
     result.forEach((d: any) => {
       if (filterSelection.includes(d.value)) {
@@ -100,18 +81,6 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
       } else {
         tempItemUnselected.push(d)
       }
-      // tempSurgeryList.push({
-      //   key: d.value,
-      //   text: d.value,
-      //   value: d.value,
-      //   count: d.count,
-      //   content: (
-      //     <SVG>
-      //       <text alignmentBaseline="hanging" x={0} y={0}>{d.value}</text>
-      //       <rect x={surgeryBarEnding - caseScale(d.count)} y={0} width={caseScale(d.count)} height={13} fill={secondary_gray} />
-      //     </SVG>
-      //   ),
-      // })
     })
     tempSurgeryList.sort((a: any, b: any) => b.count - a.count)
     tempItemSelected.sort((a: any, b: any) => b.count - a.count)
@@ -126,6 +95,8 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
   useEffect(() => {
     fetchProcedureList();
   }, []);
+
+
 
   useEffect(() => {
     let newItemSelected: any[] = []
@@ -176,6 +147,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     return output
   }
 
+
   return (
     <Grid
       divided="vertically"
@@ -183,7 +155,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
       padded
     >
 
-      <Grid.Row centered style={{ padding: "20px" }}>
+      <Grid.Row centered style={{ padding: "20px" }} >
         <Container style={{ height: "20vh" }}>
           <List bulleted>
 
@@ -253,7 +225,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
       </Grid.Row>
 
       <Grid.Row centered style={{}}>
-        <Container style={{ overflow: "auto", height: "30vh" }}>
+        <Container style={{ overflow: "auto", height: "30vh" }} >
           <Search
             placeholder="Search a Procedure"
             minCharacters={3}
@@ -277,12 +249,16 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 
             <List.Item key={"filter-header"}
               content={
-                <Header><ListSVG>
+                <Header><ListSVG id="Procedure-SVG" ref={svgRef}>
                   <text alignmentBaseline="hanging" x={0} y={0}>Procedures</text>
-                  <rect x={surgeryBarStarting} y={0} width={surgeryBarEnding - surgeryBarStarting} height={13} fill={secondary_gray} />
-
-                  <text x={surgeryBarStarting + 1} y={11} fontSize={14} textAnchor="start" alignmentBaseline="baseline" fill="white">0</text>
-                  <text x={surgeryBarEnding} y={11} fontSize={14} textAnchor="end" alignmentBaseline="baseline" fill="white">{maxCaseCount}</text>
+                  <rect
+                    x={caseScale().range()[0]}
+                    y={0}
+                    width={caseScale().range()[1] - caseScale().range()[0]}
+                    height={13}
+                    fill={postop_color} />
+                  <text x={caseScale().range()[0] + 1} y={11} fontSize={14} textAnchor="start" alignmentBaseline="baseline" fill="white">0</text>
+                  <text x={caseScale().range()[1]} y={11} fontSize={14} textAnchor="end" alignmentBaseline="baseline" fill="white">{maxCaseCount}</text>
                 </ListSVG></Header>}
             />
 
@@ -290,9 +266,12 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
               if (listItem.value) {
                 return (
                   <ListIT key={listItem.value} isSelected={true} style={{ cursor: "pointer" }} onClick={() => { actions.filterSelectionChange(listItem.value) }}
-                    content={<ListSVG>
+                    content={<ListSVG >
                       <text alignmentBaseline="hanging" x={0} y={0}>{listItem.value}</text>
-                      <rect x={surgeryBarEnding - caseScale()(listItem.count)} y={0} width={caseScale()(listItem.count)} height={13} fill={secondary_gray} />
+                      <SurgeryRect
+                        x={caseScale().range()[0]}
+                        width={caseScale()(listItem.count) - caseScale().range()[0]}
+                      />
                     </ListSVG>} />
                 )
               }
@@ -301,39 +280,27 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             {itemUnselected.map((listItem: any) => {
               if (listItem.value) {
                 return (
-                  <ListIT key={listItem.value} isSelected={false} style={{ cursor: "pointer" }} content={<ListSVG>
-                    <text alignmentBaseline="hanging" x={0} y={0}>{listItem.value}</text>
-                    <rect x={surgeryBarEnding - caseScale()(listItem.count)} y={0} width={caseScale()(listItem.count)} height={13} fill={secondary_gray} />
-                  </ListSVG>}
+                  <ListIT key={listItem.value} isSelected={false} style={{ cursor: "pointer" }} content={
+                    <ListSVG >
+                      <text alignmentBaseline="hanging" x={0} y={0}>{listItem.value}</text>
+                      <SurgeryRect
+                        x={caseScale().range()[0]}
+                        width={caseScale()(listItem.count) - caseScale().range()[0]}
+                      />
+                    </ListSVG>}
                     onClick={() => { actions.filterSelectionChange(listItem.value) }} />
                 )
               }
             })}
           </List>
 
-          {/* <Dropdown
-            placeholder="Procedure Selection"
-            multiple
-            search
-            selection
-            style={{ width: 270 }}
-            onChange={(e, d) => { actions.filterSelectionChange(d.value) }}
-            options={surgeryList}
-            header={<Header><SVG>
-              <text alignmentBaseline="hanging" x={0} y={0}>Procedures</text>
-              <rect x={surgeryBarStarting} y={0} width={surgeryBarEnding - surgeryBarStarting} height={13} fill={secondary_gray} />
 
-              <text x={surgeryBarStarting + 1} y={11} textAnchor="start" alignmentBaseline="baseline" fill="white">0</text>
-              <text x={surgeryBarEnding} y={11} textAnchor="end" alignmentBaseline="baseline" fill="white">{maxCaseCount}</text>
-            </SVG></Header>}
-            value={filterSelection}
-          /> */}
         </Container>
       </Grid.Row>
 
 
       <Grid.Row centered style={{ padding: "20px" }}>
-        <Container style={{ height: "20vh" }}>
+        <Container>
           <Search
             placeholder="Search a Case"
             //defaultValue={"Search Case"}
@@ -376,8 +343,11 @@ export default inject("store")(observer(SideBar));
 const ListSVG = styled.svg`
   height: 15px;
   padding-left:5px;
-  width: ${surgeryBarEnding};
+  width:95%
+  
 `;
+// width: ${surgeryBarEnding};
+
 interface ListITProps {
   isSelected: boolean;
 }
@@ -393,5 +363,15 @@ const FilterListIT = styled(List.Item)`
   cursor: pointer;
   &:hover{
     text-shadow: 2px 2px 5px ${highlight_orange};
+  }
+`
+
+const SurgeryRect = styled(`rect`)`
+  y:0;
+  height:13px;
+  fill-opacity:0.4;
+  fill:${postop_color};
+  &:hover{
+    fill-opacity:0.6
   }
 `
