@@ -3,7 +3,7 @@ import React, {
 } from "react";
 import { inject, observer } from "mobx-react";
 import { Tab, Grid, GridColumn, Button } from "semantic-ui-react";
-import { actions } from ".";
+import { actions, provenance } from ".";
 import DetailView from "./Components/Utilities/DetailView";
 import LineUpWrapper from "./Components/LineUpWrapper";
 //import PatientComparisonWrapper from "./Components/PatientComparisonWrapper";
@@ -28,10 +28,10 @@ export type Props = OwnProps;
 
 
 const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
-    const { layoutArray } = store!
+    const { layoutArray, filterSelection } = store!
 
     const createElement = (layout: LayoutElement, index: number) => {
-        console.log(layout)
+        console.log(provenance.current().state)
         switch (layout.plot_type) {
             case "DUMBBELL":
                 return (
@@ -90,7 +90,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                         // class_name={"parent-node" + layoutE.i}
                         chartId={layout.i}
                         chartIndex={index}
-
+                        //  filterSelection={filterSelection}
                         notation={layout.notation}
                     />
                 </div>);

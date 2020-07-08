@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useRef, FunctionComponent } from 'react';
 import { inject, observer } from 'mobx-react';
 import Store from './Interfaces/Store';
 import { Grid, Container, Modal, Message, Icon } from 'semantic-ui-react';
@@ -27,10 +27,10 @@ const Dashboard: FC<Props> = ({ hemoData, store }: Props) => {
                 <UserControl />
             </Container>
             <Grid padded>
-                <SpecialPaddingColumn width={3} >
-                    <SideBar hemoData={hemoData}></SideBar>
+                <SpecialPaddingColumn width={2} >
+                    <SideBar hemoData={hemoData} />
                 </SpecialPaddingColumn>
-                <Grid.Column width={13}>
+                <Grid.Column width={14}>
                     <LayoutGenerator hemoData={hemoData} />
                 </Grid.Column>
 

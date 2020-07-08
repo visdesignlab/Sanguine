@@ -20,6 +20,11 @@ export default class Store {
 
 
   @observable filterSelection: string[] = defaultState.filterSelection;
+  // @computed get filterSelection() {
+  //   return (JSON.parse(this.rawFilterSelection) as string[])
+  // }
+
+  @observable currentBrushedPatientGroup: number[] = defaultState.currentBrushedPatientGroup;
   @observable totalAggregatedCaseCount: number = defaultState.totalAggregatedCaseCount;
   @observable totalIndividualCaseCount: number = defaultState.totalIndividualCaseCount
 

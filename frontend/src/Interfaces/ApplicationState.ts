@@ -68,12 +68,13 @@ export interface DumbbellDataPoint {
 }
 
 export interface ApplicationState {
-  layoutArray: LayoutElement[];
+
   //  currentSelectedChart: string;
   // perCaseSelected: boolean;
   // yearRange: number[];
   rawDateRange: number[];
   filterSelection: string[];
+  //rawFilterSelection: string;
   totalAggregatedCaseCount: number;
   totalIndividualCaseCount: number;
   // dumbbellSorted: boolean;
@@ -83,7 +84,9 @@ export interface ApplicationState {
   //hemoglobinDataSet: any;
   showZero: boolean;
   currentSelectPatientGroup: number[];
+  currentBrushedPatientGroup: number[];
   nextAddingIndex: number;
+  layoutArray: LayoutElement[];
 }
 
 export interface LayoutElement {
@@ -107,6 +110,7 @@ export const defaultState: ApplicationState = {
   // currentSelectedChart: "-1",
   rawDateRange: [new Date(2014, 0, 1).getTime(), new Date(2019, 11, 31).getTime()],
   filterSelection: [],
+  //rawFilterSelection: "[]",
   totalAggregatedCaseCount: 0,
   totalIndividualCaseCount: 0,
   currentOutputFilterSet: [],
@@ -114,5 +118,6 @@ export const defaultState: ApplicationState = {
   currentSelectPatient: null,
   nextAddingIndex: 0,
   showZero: true,
-  currentSelectPatientGroup: []
+  currentSelectPatientGroup: [],
+  currentBrushedPatientGroup: []
 };
