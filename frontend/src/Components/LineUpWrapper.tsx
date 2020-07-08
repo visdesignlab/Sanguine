@@ -29,6 +29,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
     //const [caseIDArray, setCaseIDArray] = useState<number[]>([])
 
     useEffect(() => {
+        console.log(hemoglobinDataSet)
         if (hemoglobinDataSet) {
             let distinctSurgeons = new Set();
             let distinctAnesth = new Set();
@@ -57,59 +58,6 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
     }
 
 
-
-
-    // const generateLineUp = () => {
-    //     if (hemoglobinDataSet) {
-    //         // const patientId = currentSelectPatient ? currentSelectPatient.caseId : 1
-    //         return (
-    //         <LineUp data={hemoglobinDataSet}   selection={outputSelectedGroup()} filterGlobally
-    //             onSelectionChanged={(e: number[]) => {
-    //                 if (e.length === 1) {
-
-    //                     actions.selectPatient({
-    //                         visitNum: hemoglobinDataSet[e[0]].VISIT_ID,
-    //                         caseId: hemoglobinDataSet[e[0]].CASE_ID,
-    //                         YEAR: hemoglobinDataSet[e[0]].YEAR,
-    //                         SURGEON_ID: hemoglobinDataSet[e[0]].SURGEON_ID,
-    //                         ANESTHOLOGIST_ID: hemoglobinDataSet[e[0]].ANESTHOLOGIST_ID,
-    //                         patientID: hemoglobinDataSet[e[0]].PATIENT_ID,
-    //                         DATE: hemoglobinDataSet[e[0]].DATE
-    //                     })
-    //                 } else {
-    //                     const caseIDList = e.map(v => hemoglobinDataSet[v].CASE_ID)
-    //                     actions.updateSelectedPatientGroup(caseIDList)
-    //                 }
-    //             }}>
-    //             <LineUpStringColumnDesc column="CASE_ID" label="CASE_ID" /> */}
-    //             <LineUpCategoricalColumnDesc column="PATIENT_ID" categories={distinctCategories.patient} />
-    //             <LineUpCategoricalColumnDesc column="SURGEON_ID" categories={distinctCategories.surgeons} />
-    //             <LineUpCategoricalColumnDesc column="ANESTHOLOGIST_ID" categories={distinctCategories.anesth} />
-    //             <LineUpCategoricalColumnDesc column="YEAR" categories={["2014", "2015", "2016", "2017", "2018", "2019"]} />
-    //             <LineUpStringColumnDesc column="HEMO" />
-    //             <LineUpNumberColumnDesc column="PRBC_UNITS" domain={[0, BloodProductCap.PRBC_UNITS]} />
-    //             <LineUpNumberColumnDesc column="FFP_UNITS" domain={[0, BloodProductCap.FFP_UNITS]} />
-    //             <LineUpNumberColumnDesc column="PLT_UNITS" domain={[0, BloodProductCap.PLT_UNITS]} />
-    //             <LineUpNumberColumnDesc column="CRYO_UNITS" domain={[0, BloodProductCap.CRYO_UNITS]} />
-    //             <LineUpNumberColumnDesc column="CELL_SAVER_ML" domain={[0, BloodProductCap.CELL_SAVER_ML]} />
-    //         </LineUp>)
-    //     }
-    //     ;
-    // }
-    // useScript("../LineUpScript.ts")
-    // return <>{generateLineUp()}</>
-
-    // const arr: any[] = [];
-    // const cats = ['c1', 'c2', 'c3'];
-    // for (let i = 0; i < 100; ++i) {
-    //     arr.push({
-    //         a: Math.random() * 10,
-    //         d: 'Row ' + i,
-    //         cat: cats[Math.floor(Math.random() * 3)],
-    //         cat2: cats[Math.floor(Math.random() * 3)]
-    //     })
-    // }
-
     //TODO make the line up side bar on the main instead of on a seperate tab. 
     //
 
@@ -122,6 +70,10 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                         .column(LineUpJS.buildStringColumn("CASE_ID"))
                         .column(LineUpJS.buildCategoricalColumn("SURGEON_ID").categories(distinctCategories.patient))
                         .column(LineUpJS.buildStringColumn("HEMO"))
+                        .column(LineUpJS.buildCategoricalColumn('VENT').categories(["0", "1"]))
+                        .column(LineUpJS.buildCategoricalColumn("DEATH").categories(["0", "1"]))
+                        .column(LineUpJS.buildDateColumn("DATE"))
+                        .column(LineUpJS.buildNumberColumn("DRG_WEIGHT", [0, 30]))
                         .column(LineUpJS.buildCategoricalColumn("YEAR").categories(["2014", "2015", "2016", "2017", "2018", "2019"]))
                         .column(LineUpJS.buildCategoricalColumn("ANESTHOLOGIST_ID").categories(distinctCategories.anesth))
                         .column(LineUpJS.buildCategoricalColumn("SURGEON_ID").categories(distinctCategories.surgeons))

@@ -3,7 +3,7 @@ import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
 import { Grid, Container, List, Button, Header, Search } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";
-import { scaleLinear, timeFormat, max } from "d3";
+import { scaleLinear, timeFormat, max, select, axisTop } from "d3";
 import { actions } from "../..";
 import { AxisLabelDict, Accronym, stateUpdateWrapperUseJSON, postop_color, Title } from "../../PresetsProfile";
 import { highlight_orange, secondary_gray } from "../../PresetsProfile";
@@ -160,6 +160,8 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
   }
 
 
+  select('#surgeryCaseScale').call(axisTop(caseScale()).ticks(2) as any)
+
   return (
     <Grid
       divided="vertically"
@@ -295,17 +297,18 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 
             <List.Item key={"filter-header"}
               content={
-                <Header><ListSVG id="Procedure-SVG" ref={svgRef}>
-                  <text alignmentBaseline="hanging" x={0} y={0} fontSize="medium">Procedures</text>
-                  <rect
+                <Header><svg height={18} style={{ paddingLeft: "5px" }} width="95%" ref={svgRef}>
+                  <text alignmentBaseline="hanging" x={0} y={0} fontSize="medium">{`Procedures(${surgeryList.length})`}</text>
+                  {/* <rect
                     x={caseScale().range()[0]}
                     y={0}
                     width={caseScale().range()[1] - caseScale().range()[0]}
                     height={13}
                     fill={postop_color} />
                   <text x={caseScale().range()[0] + 1} y={11} fontSize={14} textAnchor="start" alignmentBaseline="baseline" fill="white">0</text>
-                  <text x={caseScale().range()[1]} y={11} fontSize={14} textAnchor="end" alignmentBaseline="baseline" fill="white">{maxCaseCount}</text>
-                </ListSVG></Header>}
+                  <text x={caseScale().range()[1]} y={11} fontSize={14} textAnchor="end" alignmentBaseline="baseline" fill="white">{maxCaseCount}</text> */}
+                  <g id="surgeryCaseScale" transform="translate(0 ,17)"></g>
+                </svg></Header>}
             />
 
             {itemSelected.map((listItem: any) => {
@@ -313,7 +316,11 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                 return (
                   <ListIT key={listItem.value} isSelected={true} style={{ cursor: "pointer" }} onClick={() => { actions.filterSelectionChange(listItem.value) }}
                     content={<ListSVG >
-                      <text alignmentBaseline="hanging" x={0} y={0}>{listItem.value}</text>
+                      <SurgeryForeignObj width={0.6 * width} >
+                        <SurgeryDiv>
+                          {listItem.value}
+                        </SurgeryDiv>
+                      </SurgeryForeignObj>
                       <SurgeryRect
                         x={caseScale().range()[0]}
                         width={caseScale()(listItem.count) - caseScale().range()[0]}
@@ -329,7 +336,14 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                 return (
                   <ListIT key={listItem.value} isSelected={false} style={{ cursor: "pointer" }} content={
                     <ListSVG >
-                      <text alignmentBaseline="hanging" x={0} y={0}>{listItem.value}</text>
+
+                      <SurgeryForeignObj width={0.6 * width} >
+                        <SurgeryDiv>
+                          {listItem.value}
+                        </SurgeryDiv>
+                      </SurgeryForeignObj>
+
+
                       <SurgeryRect
                         x={caseScale().range()[0]}
                         width={caseScale()(listItem.count) - caseScale().range()[0]}
@@ -353,9 +367,25 @@ const ListSVG = styled.svg`
   height: 15px;
   padding-left:5px;
   width:95%
-  
 `;
-// width: ${surgeryBarEnding};
+
+const SurgeryForeignObj = styled.foreignObject`
+  x:0;
+  y:0;
+  height:100%;
+  &:hover{
+    width:100%
+  }
+`
+
+const SurgeryDiv = styled.div`
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  alignment-baseline: hanging;
+  text-align:left;
+  text-shadow: 2px 2px 5px white;
+`
 
 interface ListITProps {
   isSelected: boolean;
@@ -369,7 +399,7 @@ const ListIT = styled(List.Item) <ListITProps>`
 
 const FilterListIT = styled(List.Item)`
   text-align: left;
-  padding-left: 20px;
+  padding-left: 20px!important;
   cursor: pointer;
   &:hover{
     text-shadow: 2px 2px 5px ${highlight_orange};
@@ -378,10 +408,7 @@ const FilterListIT = styled(List.Item)`
 
 const SurgeryRect = styled(`rect`)`
   y:0;
-  height:13px;
+  height:15px;
   fill-opacity:0.4;
   fill:${postop_color};
-  &:hover{
-    fill-opacity:0.6
-  }
 `
