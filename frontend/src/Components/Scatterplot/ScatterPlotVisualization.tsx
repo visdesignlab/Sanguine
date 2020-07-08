@@ -64,6 +64,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
 
     async function fetchChartData() {
         let transfused_dict = {} as any;
+        console.log(filterSelection, currentOutputFilterSet, currentSelectPatientGroup)
         const transfusedRes = await fetch(
             `http://localhost:8000/api/request_transfused_units?transfusion_type=${xAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`
         );
@@ -80,18 +81,14 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
         let tempXMax = 0;
         if (hemoglobinDataSet) {
             let cast_data: ScatterDataPoint[] = hemoglobinDataSet.map((ob: any) => {
-                // const begin_x = +ob.HEMO[0];
-                // const end_x = +ob.HEMO[1];
+
                 const yValue = yAxis === "PREOP_HEMO" ? +ob.HEMO[0] : +ob.HEMO[1]
                 let xValue
-
                 if (transfused_dict[ob.CASE_ID]) {
                     xValue = transfused_dict[ob.CASE_ID].transfused;
                 };
-                //  console.log(transfused_dict);
-                //This filter out anything that has empty value
-                if ((yValue && showZero && transfused_dict[ob.CASE_ID]) || (!showZero && yValue && xValue > 0)) {
 
+                if ((yValue && showZero && transfused_dict[ob.CASE_ID]) || (!showZero && yValue && xValue > 0)) {
                     if ((xValue > 100 && xAxis === "PRBC_UNITS")) {
                         xValue -= 999
                     }
@@ -109,13 +106,10 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                     }
 
                     if (criteriaMet) {
-
-
                         tempYMin = yValue < tempYMin ? yValue : tempYMin;
                         tempYMax = yValue > tempYMax ? yValue : tempYMax;
                         tempXMin = xValue < tempXMin ? xValue : tempXMin;
                         tempXMax = xValue > tempXMax ? xValue : tempXMax;
-
                         let new_ob: ScatterDataPoint = {
                             xVal: xValue,
                             yVal: yValue,
@@ -129,7 +123,6 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                                 patientID: ob.PATIENT_ID,
                                 DATE: ob.DATE
                             }
-
                         };
                         //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
                         return new_ob;
@@ -138,28 +131,9 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                 }
             });
 
-            // let xAxisScale: any;
-            // if (xAxis === "CELL_SAVER_ML") {
-            //     xAxisScale = scaleLinear()
-            //         .domain([0.9 * tempXMin, 1.1 * tempXMax])
-            //         .range([currentOffset.left, width - currentOffset.right - currentOffset.margin]);
-            // } else {
-            //     xAxisScale = scaleBand()
-            //         .domain(range(0, tempXMax) as any)
-            //         .range([currentOffset.left, width - currentOffset.right - currentOffset.margin])
-            // }
-            // console.log((xAxisScale).bandwidth(), xAxisScale.range(), xAxisScale.domain())
-            // cast_data = cast_data.filter((d: ScatterDataPoint | undefined) => {
-            //     if (d) {
-            //         d.xLoc = xAxis === "CELL_SAVER_ML" ? xAxisScale(d.xVal) || 0 : (xAxisScale(d.xVal) || 0) + Math.random() * xAxisScale.bandwidth();
-            //         return d
-            //     }
-            // });
-            //let total_count = cast_data.length;
             cast_data = cast_data.filter((d: any) => d)
-            // console.log(cast_data)
-            //
-            actions.updateCaseCount("INDIVIDUAL", cast_data.length)
+
+            //    actions.updateCaseCount("INDIVIDUAL", cast_data.length)
             //console.log(aggregatedOption)
             stateUpdateWrapperUseJSON(data, cast_data, setData);
             setXMax(tempXMax);
@@ -172,11 +146,11 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
     //TODO reorganize this, seperate out data request and the randomization process. 
 
     useEffect(() => {
+
         fetchChartData();
-    }, [dateRange, filterSelection, showZero, hemoglobinDataSet, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroup]);
+    }, [dateRange, filterSelection, hemoglobinDataSet, showZero, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroup]);
 
     const changeYAxis = (e: any, value: any) => {
-
         actions.changeChart(xAxis, value.value, chartId, "SCATTER")
     }
     const changeXAxis = (e: any, value: any) => {

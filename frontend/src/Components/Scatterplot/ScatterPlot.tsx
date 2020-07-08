@@ -10,7 +10,7 @@ import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
 import { offset, AxisLabelDict, highlight_blue } from "../../PresetsProfile"
-import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range, median } from "d3";
+import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range, median, quantile } from "d3";
 
 //import CustomizedAxis from "../Utilities/CustomizedAxis";
 import { highlight_orange, basic_gray } from "../../PresetsProfile";
@@ -229,17 +229,48 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
             }
         })
         let lineSet: any[] = []
-        for (let [key, value] of Object.entries(medianSet)) {
-            const medianVal = median(value as any) || 0
-            lineSet.push(
-                <line strokeWidth="3px"
-                    stroke={highlight_blue}
-                    opacity={0.5}
-                    x1={xAxisScale()(key as any)}
-                    y1={yAxisScale()(medianVal)}
-                    y2={yAxisScale()(medianVal)}
-                    x2={xAxisScale()(key as any) + xAxisScale().bandwidth() || 0} />)
+        if (xAxisName !== "CELL_SAVER_ML") {
+
+            for (let [key, value] of Object.entries(medianSet)) {
+                const sortedArray = (value as any).sort()
+                const medianVal = median(value as any) || 0
+                const lowerQuantile = quantile(sortedArray as any, 0.05) || 0
+                const upperQuantile = quantile(sortedArray as any, 0.95) || 0
+                // console.log(value, lowerQuantile, upperQuantile)
+                lineSet = lineSet.concat(
+                    [<line strokeWidth="3px"
+                        stroke={highlight_blue}
+                        opacity={0.5}
+                        x1={xAxisScale()(key as any)}
+                        y1={yAxisScale()(medianVal)}
+                        y2={yAxisScale()(medianVal)}
+                        x2={xAxisScale()(key as any) + xAxisScale().bandwidth() || 0} />,
+                    <line strokeWidth="2px"
+                        stroke={highlight_blue}
+                        opacity={0.5}
+                        x1={xAxisScale()(key as any) + 0.5 * xAxisScale().bandwidth() || 0}
+                        y1={yAxisScale()(lowerQuantile)}
+                        y2={yAxisScale()(upperQuantile)}
+                        x2={xAxisScale()(key as any) + 0.5 * xAxisScale().bandwidth() || 0} />,
+                    <line strokeWidth="3px"
+                        stroke={highlight_blue}
+                        opacity={0.5}
+                        x1={xAxisScale()(key as any) + 0.4 * xAxisScale().bandwidth() || 0}
+                        y1={yAxisScale()(upperQuantile)}
+                        y2={yAxisScale()(upperQuantile)}
+                        x2={xAxisScale()(key as any) + 0.6 * xAxisScale().bandwidth() || 0} />,
+                    <line strokeWidth="3px"
+                        stroke={highlight_blue}
+                        opacity={0.5}
+                        x1={xAxisScale()(key as any) + 0.4 * xAxisScale().bandwidth() || 0}
+                        y1={yAxisScale()(lowerQuantile)}
+                        y2={yAxisScale()(lowerQuantile)}
+                        x2={xAxisScale()(key as any) + 0.6 * xAxisScale().bandwidth() || 0} />]
+                )
+            }
         }
+
+
         return unselectedPatients.concat(selectedPatients).concat(lineSet)
     }
 
@@ -277,3 +308,5 @@ const Circle = styled(`circle`) <DotProps>`
   stroke-width:2px;
   fill:${props => (props.isbrushed || props.isselected ? highlight_orange : basic_gray)}
 `;
+
+

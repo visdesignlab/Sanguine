@@ -7,6 +7,7 @@ import {
   SingleCasePoint
 } from "./ApplicationState";
 import { store } from './Store';
+import { toJS } from 'mobx';
 
 interface AppProvenance {
   provenance: Provenance<ApplicationState>;
@@ -46,6 +47,7 @@ interface AppProvenance {
 export function setupProvenance(): AppProvenance {
   const provenance = initProvenance(defaultState, true);
   provenance.addGlobalObserver(() => {
+    console.log(store.filterSelection)
     let isAtRoot = false;
     const currentNode = provenance.current();
     //if (isStateNode(currentNode)) {
@@ -53,24 +55,14 @@ export function setupProvenance(): AppProvenance {
     //}
     store.isAtRoot = isAtRoot;
     store.isAtLatest = provenance.current().children.length === 0;
-  })
 
-  // provenance.addObserver(
-  //   ["currentSelectedChart"],
-  //   (state?: ApplicationState) => {
-  //     store.currentSelectedChart = state
-  //       ? state.currentSelectedChart
-  //       : store.currentSelectedChart;
-  //   }
-  // );
+  })
 
   provenance.addObserver(["currentSelectPatientGroup"], (state?: ApplicationState) => {
     store.currentSelectPatientGroup = state ? state.currentSelectPatientGroup : store.currentSelectPatientGroup;
   })
 
-  provenance.addObserver(["layoutArray"], (state?: ApplicationState) => {
-    store.layoutArray = state ? state.layoutArray : store.layoutArray;
-  });
+
 
   // provenance.addObserver(["hemoglobinDataSet"], async (state?: ApplicationState) => {
   //   store.hemoglobinDataSet = state ? state.hemoglobinDataSet : store.hemoglobinDataSet
@@ -102,8 +94,14 @@ export function setupProvenance(): AppProvenance {
   })
 
   provenance.addObserver(["filterSelection"], (state?: ApplicationState) => {
+    console.log(toJS(store.filterSelection))
     store.filterSelection = state ? state.filterSelection : store.filterSelection
+    console.log(toJS(store.filterSelection))
   })
+
+  // provenance.addObserver(["rawFilterSelection"], (state?: ApplicationState) => {
+  //   store.rawFilterSelection = state ? state.rawFilterSelection : store.rawFilterSelection
+  // })
 
   provenance.addObserver(
     ["currentSelectPatient"],
@@ -124,6 +122,12 @@ export function setupProvenance(): AppProvenance {
       ? state.currentOutputFilterSet
       : store.currentOutputFilterSet;
   })
+
+  provenance.addObserver(["layoutArray"], (state?: ApplicationState) => {
+    console.log(toJS(store.layoutArray))
+    store.layoutArray = state ? state.layoutArray : store.layoutArray;
+    console.log(toJS(store.layoutArray))
+  });
 
   provenance.done();
 
@@ -395,7 +399,25 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
+  // const filterSelectionChange = (selectedFilterOption: string) => {
+  //   provenance.applyAction(
+  //     `Change Filter Selection to ${selectedFilterOption}`,
+  //     (state: ApplicationState) => {
+  //       let currentFilter = JSON.parse(state.rawFilterSelection)
+  //       if (currentFilter.includes(selectedFilterOption)) {
+  //         currentFilter = currentFilter.filter((d: string) => d !== selectedFilterOption)
+  //       }
+  //       else {
+  //         currentFilter.push(selectedFilterOption)
+  //       }
+  //       state.rawFilterSelection = (JSON.stringify(currentFilter))
 
+  //       // state.filterSelection = selectedFilterOption;
+  //       // console.log(state.filterSelection)
+  //       return state;
+  //     }
+  //   )
+  // }
 
   const dateRangeChange = (newDateRange: any) => {
     provenance.applyAction(
