@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useState, useRef } from "react";
 import Store from '../../Interfaces/Store'
 // import {}
-import { Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment, Form, List } from 'semantic-ui-react'
+import { Image, Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment, Form, List } from 'semantic-ui-react'
 import { inject, observer } from "mobx-react";
 import { actions, provenance } from '../..'
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
@@ -74,6 +74,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     const res = await (fetch(`http://localhost:8000/api/state?name=${name}`))
     const result = await res.json()
     provenance.importState(result.definition)
+
   }
 
 
@@ -140,7 +141,18 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
 
   const regularMenu = (
-    <Menu widths={7}>
+    <Menu widths={8}>
+      <Menu.Item>
+        <Image
+          style={{ height: "40px" }}
+          size="small"
+          as='a'
+          target="_blank"
+          src="https://raw.githubusercontent.com/visdesignlab/visdesignlab.github.io/master/assets/images/logos/vdl.png"
+          href="https://vdl.sci.utah.edu"
+        />
+
+      </Menu.Item>
 
       <Menu.Item>
         {/* <Button onClick={addModeButtonHandler} content={"Add"} /> */}
@@ -165,7 +177,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         <Checkbox
           checked={showZero}
           onClick={actions.toggleShowZero}
-          label={<label> Show Zero Transfused </label>}
+          label="Show Zero Transfused"
         />
       </Menu.Item>
 

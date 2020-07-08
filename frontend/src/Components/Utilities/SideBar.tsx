@@ -88,8 +88,10 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     // setMaxCaseCount(tempMaxCaseCount)
     stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList)
     //setProcedureList(result);
-    setItemUnselected(tempItemUnselected);
-    setItemSelected(tempItemSelected)
+    stateUpdateWrapperUseJSON(itemUnselected, tempItemUnselected, setItemUnselected);
+    stateUpdateWrapperUseJSON(itemSelected, tempItemSelected, setItemSelected);
+    //setItemUnselected(tempItemUnselected);
+    // setItemSelected(tempItemSelected);
   }
 
   useEffect(() => {
@@ -314,8 +316,9 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                 )
               }
             })}
-            {itemSelected.length > 0 ? (<List.Item />) : (<></>)}
+            {/* {itemSelected.length > 0 ? (<List.Item />) : (<></>)} */}
             {itemUnselected.map((listItem: any) => {
+
               if (listItem.value) {
                 return (
                   <ListIT key={listItem.value} isSelected={false} style={{ cursor: "pointer" }} content={
