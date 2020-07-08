@@ -8,6 +8,7 @@ import BarChart from "./BarChart"
 import { Button, Icon, Grid, Dropdown, Menu, Modal, Form, Message } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
 import { sum, median, mean } from "d3";
+import axios from 'axios'
 
 interface OwnProps {
   aggregatedBy: string;
@@ -53,11 +54,12 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
   const [extraPairArray, setExtraPairArray] = useState([])
   const [openNotationModal, setOpenNotationModal] = useState(false)
   const [notationInput, setNotationInput] = useState(notation)
+  const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
+
 
   useEffect(() => {
     if (extraPair) { stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray) }
   }, [extraPair])
-
 
   useLayoutEffect(() => {
     if (svgRef.current) {
@@ -67,91 +69,97 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     }
   }, [layoutArray[chartIndex]]);
 
-  // useEffect(() => {
-  //   if (currentSelectPatient) {
-  //     setSelectedBarVal(currentSelectPatient[aggregatedBy])
-  //   }
-  //   else {
-  //     setSelectedBarVal(null);
-  //   }
-  // }, [currentSelectPatient])
 
-  async function fetchChartData() {
-    const res = await fetch(
-      `http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`
-    );
-    const dataResult = await res.json();
+  function fetchChartData() {
+
     let caseCount = 0;
-    console.log(dataResult)
-    if (dataResult) {
-      let yMaxTemp = -1;
-      let caseDictionary = {} as any;
+    const cancelToken = axios.CancelToken;
+    const call = cancelToken.source();
+    setPreviousCancelToken(call)
+    axios.get(`http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
+      cancelToken: call.token
+    }).then(function (response) {
+      const dataResult = response.data
+      if (dataResult) {
+        let yMaxTemp = -1;
+        let caseDictionary = {} as any;
 
-      //console.log(dataResult)
+        //console.log(dataResult)
 
-      let cast_data = (dataResult as any).map(function (ob: any) {
-        let zeroCaseNum = 0;
-        ob.case_id.map((singleId: any) => {
-          caseDictionary[singleId] = true;
-        })
-
-        const aggregateByAttr = ob.aggregated_by;
-
-        const case_num = ob.transfused_units.length;
-        caseCount += case_num
-
-        const medianVal = median(ob.transfused_units);
-
-        let removed_zeros = ob.transfused_units;
-        if (!showZero) {
-          removed_zeros = ob.transfused_units.filter((d: number) => {
-            if (d > 0) {
-              return true;
-            }
-            zeroCaseNum += 1;
-            return false;
+        let cast_data = (dataResult as any).map(function (ob: any) {
+          let zeroCaseNum = 0;
+          ob.case_id.map((singleId: any) => {
+            caseDictionary[singleId] = true;
           })
+
+          const aggregateByAttr = ob.aggregated_by;
+
+          const case_num = ob.transfused_units.length;
+          caseCount += case_num
+
+          const medianVal = median(ob.transfused_units);
+
+          let removed_zeros = ob.transfused_units;
+          if (!showZero) {
+            removed_zeros = ob.transfused_units.filter((d: number) => {
+              if (d > 0) {
+                return true;
+              }
+              zeroCaseNum += 1;
+              return false;
+            })
+          } else {
+            zeroCaseNum = removed_zeros.filter((d: number) => d === 0).length
+          }
+
+          const total_val = sum(removed_zeros);
+
+          let pd = createpd(removed_zeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
+          pd = [{ x: 0, y: 0 }].concat(pd)
+          let reverse_pd = pd.map((pair: any) => {
+            return { x: pair.x, y: - pair.y }
+          }).reverse()
+          pd = pd.concat(reverse_pd)
+
+          const new_ob: BarChartDataPoint = {
+            caseCount: case_num,
+            aggregateAttribute: aggregateByAttr,
+            totalVal: total_val,
+            kdeCal: pd,
+            median: medianVal ? medianVal : 0,
+            actualDataPoints: ob.transfused_units,
+            zeroCaseNum: zeroCaseNum,
+            patienIDList: ob.pat_id
+          };
+          return new_ob;
+        });
+        stateUpdateWrapperUseJSON(data, cast_data, setData)
+        stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList)
+        setYMax(yMaxTemp);
+        store!.totalAggregatedCaseCount = caseCount;
+        console.log(cast_data)
+      }
+    })
+      .catch(function (thrown) {
+        if (axios.isCancel(thrown)) {
+          console.log('Request canceled', thrown.message);
         } else {
-          zeroCaseNum = removed_zeros.filter((d: number) => d === 0).length
+          // handle error
         }
-
-        const total_val = sum(removed_zeros);
-
-        let pd = createpd(removed_zeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
-        pd = [{ x: 0, y: 0 }].concat(pd)
-        let reverse_pd = pd.map((pair: any) => {
-          return { x: pair.x, y: - pair.y }
-        }).reverse()
-        pd = pd.concat(reverse_pd)
-
-        const new_ob: BarChartDataPoint = {
-          caseCount: case_num,
-          aggregateAttribute: aggregateByAttr,
-          totalVal: total_val,
-          kdeCal: pd,
-          median: medianVal ? medianVal : 0,
-          actualDataPoints: ob.transfused_units,
-          zeroCaseNum: zeroCaseNum,
-          patienIDList: ob.pat_id
-        };
-        return new_ob;
       });
-      stateUpdateWrapperUseJSON(data, cast_data, setData)
-      stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList)
-      setYMax(yMaxTemp);
-      store!.totalAggregatedCaseCount = caseCount;
-      console.log(cast_data)
-    }
   }
 
   useEffect(() => {
+    if (previousCancelToken) {
+      previousCancelToken.cancel("cancel the call?")
+    }
     fetchChartData();
   }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroup]);
 
-  async function makeExtraPairData() {
+  function makeExtraPairData() {
     let newExtraPairData: any[] = []
     if (extraPairArray.length > 0) {
-      extraPairArray.forEach(async (variable: string) => {
+      extraPairArray.forEach((variable: string) => {
         let newData = {} as any;
         let temporaryDataHolder: any = {}
         let medianData = {} as any;

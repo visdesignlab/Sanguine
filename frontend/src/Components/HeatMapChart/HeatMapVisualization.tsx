@@ -8,6 +8,7 @@ import { Icon, Grid, Dropdown, Menu, Modal, Form, Button, Message } from "semant
 import { create as createpd } from "pdfast";
 import { sum, median, mean } from "d3";
 import HeatMap from "./HeatMap";
+import axios from 'axios';
 
 interface OwnProps {
     aggregatedBy: string;
@@ -47,7 +48,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     const [extraPairArray, setExtraPairArray] = useState([]);
     const [openNotationModal, setOpenNotationModal] = useState(false)
     const [notationInput, setNotationInput] = useState(notation)
-
+    const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
     useEffect(() => {
         if (extraPair) { stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray) }
@@ -62,114 +63,121 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         }
     }, [layoutArray[chartIndex]]);
 
-    // useEffect(() => {
-    //   if (currentSelectPatient) {
-    //     setSelectedBarVal(currentSelectPatient[aggregatedBy])
-    //   }
-    //   else {
-    //     setSelectedBarVal(null);
-    //   }
-    // }, [currentSelectPatient])
+    function fetchChartData() {
+        let transfused_dict = {} as any;
+        const cancelToken = axios.CancelToken;
+        const call = cancelToken.source();
+        setPreviousCancelToken(call);
+        axios.get(`http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
+            cancelToken: call.token
+        })
+            .then(function (response) {
+                const dataResult = response.data;
+                let caseCount = 0;
+                if (dataResult) {
+                    let yMaxTemp = -1;
 
-    async function fetchChartData() {
-        const res = await fetch(
-            `http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`
-        );
-        const dataResult = await res.json();
-        let caseCount = 0;
-        if (dataResult) {
-            let yMaxTemp = -1;
+                    // const caseList = dataResult.case_id_list;
+                    let caseDictionary = {} as any;
 
-            // const caseList = dataResult.case_id_list;
-            let caseDictionary = {} as any;
+                    //console.log(dataResult)
+                    let cast_data = (dataResult as any).map(function (ob: any) {
+                        const aggregateByAttr = ob.aggregated_by;
+                        // let criteriaMet = true;
+                        // if (currentOutputFilterSet.length > 0) {
+                        //     for (let selectSet of currentOutputFilterSet) {
+                        //         if (selectSet.set_name === aggregatedBy) {
+                        //             if (!selectSet.set_value.includes(aggregateByAttr)) {
+                        //                 criteriaMet = false;
+                        //             }
+                        //         }
+                        //     }
+                        // }
+                        // if (criteriaMet) {
 
-            //console.log(dataResult)
-            let cast_data = (dataResult as any).map(function (ob: any) {
-                const aggregateByAttr = ob.aggregated_by;
-                // let criteriaMet = true;
-                // if (currentOutputFilterSet.length > 0) {
-                //     for (let selectSet of currentOutputFilterSet) {
-                //         if (selectSet.set_name === aggregatedBy) {
-                //             if (!selectSet.set_value.includes(aggregateByAttr)) {
-                //                 criteriaMet = false;
-                //             }
-                //         }
-                //     }
-                // }
-                // if (criteriaMet) {
+                        ob.case_id.map((singleId: any) => {
+                            caseDictionary[singleId] = true;
+                        })
 
-                ob.case_id.map((singleId: any) => {
-                    caseDictionary[singleId] = true;
-                })
+                        let zeroCaseNum = 0;
+                        const case_num = ob.transfused_units.length;
+                        caseCount += case_num
 
-                let zeroCaseNum = 0;
-                const case_num = ob.transfused_units.length;
-                caseCount += case_num
+                        let outputResult = ob.transfused_units;
+                        zeroCaseNum = outputResult.filter((d: number) => d === 0).length
 
-                let outputResult = ob.transfused_units;
-                zeroCaseNum = outputResult.filter((d: number) => d === 0).length
+                        const total_val = sum(outputResult);
 
-                const total_val = sum(outputResult);
+                        let countDict = {} as any
+                        const cap = BloodProductCap[valueToVisualize]
 
-                let countDict = {} as any
-                const cap = BloodProductCap[valueToVisualize]
-
-                if (valueToVisualize === "CELL_SAVER_ML") {
-                    countDict[-1] = 0
-                    for (let i = 0; i <= cap; i += 100) {
-                        countDict[i] = 0
-                    }
-                } else {
-                    for (let i = 0; i <= cap; i++) {
-                        countDict[i] = 0
-                    }
-                }
-
-                outputResult.map((d: any) => {
-                    if (valueToVisualize === "CELL_SAVER_ML") {
-                        const roundedAnswer = Math.floor(d / 100) * 100
-                        if (d === 0) {
-                            countDict[-1] += 1
-                        }
-                        else if (roundedAnswer > cap) {
-                            countDict[cap] += 1
-                        }
-                        else {
-                            countDict[roundedAnswer] += 1
-                        }
-                    } else {
-                        if (d > cap) {
-                            countDict[cap] += 1
+                        if (valueToVisualize === "CELL_SAVER_ML") {
+                            countDict[-1] = 0
+                            for (let i = 0; i <= cap; i += 100) {
+                                countDict[i] = 0
+                            }
                         } else {
-                            countDict[d] += 1
+                            for (let i = 0; i <= cap; i++) {
+                                countDict[i] = 0
+                            }
                         }
-                    }
-                })
+                        outputResult.map((d: any) => {
+                            if (valueToVisualize === "CELL_SAVER_ML") {
+                                const roundedAnswer = Math.floor(d / 100) * 100
+                                if (d === 0) {
+                                    countDict[-1] += 1
+                                }
+                                else if (roundedAnswer > cap) {
+                                    countDict[cap] += 1
+                                }
+                                else {
+                                    countDict[roundedAnswer] += 1
+                                }
+                            } else {
+                                if (d > cap) {
+                                    countDict[cap] += 1
+                                } else {
+                                    countDict[d] += 1
+                                }
+                            }
+                        })
+                        const new_ob: HeatMapDataPoint = {
+                            caseCount: case_num,
+                            aggregateAttribute: aggregateByAttr,
+                            totalVal: total_val,
+                            countDict: countDict,
+                            zeroCaseNum: zeroCaseNum,
+                            patientIDList: ob.pat_id
+                        };
+                        return new_ob;
+                        //   }
+                    });
+                    cast_data = cast_data.filter((d: any) => d)
 
-                const new_ob: HeatMapDataPoint = {
-                    caseCount: case_num,
-                    aggregateAttribute: aggregateByAttr,
-                    totalVal: total_val,
-                    countDict: countDict,
-                    zeroCaseNum: zeroCaseNum,
-                    patientIDList: ob.pat_id
-                };
-                return new_ob;
-                //   }
+                    stateUpdateWrapperUseJSON(data, cast_data, setData)
+                    stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList);
+
+                    setYMax(yMaxTemp);
+                    store!.totalAggregatedCaseCount = caseCount;
+
+                }
+            })
+            .catch(function (thrown) {
+                if (axios.isCancel(thrown)) {
+                    console.log('Request canceled', thrown.message);
+                } else {
+                    // handle error
+                }
             });
-            cast_data = cast_data.filter((d: any) => d)
-            // setData(cast_data);
-            stateUpdateWrapperUseJSON(data, cast_data, setData)
-            stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList);
-            //            setCaseIDList(caseDictionary)
-            // actions.updateCaseCount("AGGREGATED", caseCount)
-            setYMax(yMaxTemp);
-            store!.totalAggregatedCaseCount = caseCount;
 
-        }
+
+
     }
 
     useEffect(() => {
+        if (previousCancelToken) {
+            previousCancelToken.cancel("cancel the call?")
+        }
         fetchChartData();
     }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroup,
         //  currentOutputFilterSet

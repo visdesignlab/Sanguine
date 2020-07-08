@@ -12,7 +12,8 @@ import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
 import { stateUpdateWrapperUseJSON, scatterYOptions, barChartValuesOptions, ChartSVG, offset } from "../../PresetsProfile"
 import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import ScatterPlotChart from "./ScatterPlot";
-import { scaleLinear, scaleBand, range, ScaleLinear, ScaleBand } from "d3";
+import axios from "axios";
+
 
 interface OwnProps {
     yAxis: string;
@@ -53,7 +54,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
     const [yMax, setYMax] = useState(0);
     const [openNotationModal, setOpenNotationModal] = useState(false)
     const [notationInput, setNotationInput] = useState(notation)
-
+    const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
     useLayoutEffect(() => {
         if (svgRef.current) {
             // setWidth(svgRef.current.clientWidth);
@@ -62,91 +63,103 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
         }
     }, [layoutArray[chartIndex]]);
 
-    async function fetchChartData() {
+    function fetchChartData() {
         let transfused_dict = {} as any;
-        console.log(filterSelection, currentOutputFilterSet, currentSelectPatientGroup)
-        const transfusedRes = await fetch(
-            `http://localhost:8000/api/request_transfused_units?transfusion_type=${xAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`
-        );
-        const transfusedDataResult = await transfusedRes.json();
-        transfusedDataResult.forEach((element: any) => {
-            transfused_dict[element.case_id] = {
-                transfused: element.transfused_units || 0
-            };
-        });
+        const cancelToken = axios.CancelToken;
+        const call = cancelToken.source();
+        setPreviousCancelToken(call);
+        axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=${xAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
+            cancelToken: call.token
+        })
+            .then(function (response) {
+                const transfusedDataResult = response.data
+                transfusedDataResult.forEach((element: any) => {
+                    transfused_dict[element.case_id] = {
+                        transfused: element.transfused_units || 0
+                    };
+                });
+                let tempYMax = 0;
+                let tempYMin = Infinity;
+                let tempXMin = Infinity;
+                let tempXMax = 0;
+                if (hemoglobinDataSet) {
+                    let cast_data: ScatterDataPoint[] = hemoglobinDataSet.map((ob: any) => {
 
-        let tempYMax = 0;
-        let tempYMin = Infinity;
-        let tempXMin = Infinity;
-        let tempXMax = 0;
-        if (hemoglobinDataSet) {
-            let cast_data: ScatterDataPoint[] = hemoglobinDataSet.map((ob: any) => {
+                        const yValue = yAxis === "PREOP_HEMO" ? +ob.HEMO[0] : +ob.HEMO[1]
+                        let xValue
+                        if (transfused_dict[ob.CASE_ID]) {
+                            xValue = transfused_dict[ob.CASE_ID].transfused;
+                        };
 
-                const yValue = yAxis === "PREOP_HEMO" ? +ob.HEMO[0] : +ob.HEMO[1]
-                let xValue
-                if (transfused_dict[ob.CASE_ID]) {
-                    xValue = transfused_dict[ob.CASE_ID].transfused;
-                };
+                        if ((yValue && showZero && transfused_dict[ob.CASE_ID]) || (!showZero && yValue && xValue > 0)) {
+                            if ((xValue > 100 && xAxis === "PRBC_UNITS")) {
+                                xValue -= 999
+                            }
+                            if ((xValue > 100 && xAxis === "PLT_UNITS")) {
+                                xValue -= 245
+                            }
 
-                if ((yValue && showZero && transfused_dict[ob.CASE_ID]) || (!showZero && yValue && xValue > 0)) {
-                    if ((xValue > 100 && xAxis === "PRBC_UNITS")) {
-                        xValue -= 999
-                    }
-                    if ((xValue > 100 && xAxis === "PLT_UNITS")) {
-                        xValue -= 245
-                    }
+                            let criteriaMet = true;
+                            if (currentOutputFilterSet.length > 0) {
+                                for (let selectSet of currentOutputFilterSet) {
+                                    if (!selectSet.set_value.includes(ob[selectSet.set_name])) {
+                                        criteriaMet = false;
+                                    }
+                                }
+                            }
 
-                    let criteriaMet = true;
-                    if (currentOutputFilterSet.length > 0) {
-                        for (let selectSet of currentOutputFilterSet) {
-                            if (!selectSet.set_value.includes(ob[selectSet.set_name])) {
-                                criteriaMet = false;
+                            if (criteriaMet) {
+                                tempYMin = yValue < tempYMin ? yValue : tempYMin;
+                                tempYMax = yValue > tempYMax ? yValue : tempYMax;
+                                tempXMin = xValue < tempXMin ? xValue : tempXMin;
+                                tempXMax = xValue > tempXMax ? xValue : tempXMax;
+                                let new_ob: ScatterDataPoint = {
+                                    xVal: xValue,
+                                    yVal: yValue,
+                                    randomFactor: Math.random(),
+                                    case: {
+                                        visitNum: ob.VISIT_ID,
+                                        caseId: ob.CASE_ID,
+                                        YEAR: ob.YEAR,
+                                        ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
+                                        SURGEON_ID: ob.SURGEON_ID,
+                                        patientID: ob.PATIENT_ID,
+                                        DATE: ob.DATE
+                                    }
+                                };
+                                //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
+                                return new_ob;
+                                //}
                             }
                         }
-                    }
+                    });
 
-                    if (criteriaMet) {
-                        tempYMin = yValue < tempYMin ? yValue : tempYMin;
-                        tempYMax = yValue > tempYMax ? yValue : tempYMax;
-                        tempXMin = xValue < tempXMin ? xValue : tempXMin;
-                        tempXMax = xValue > tempXMax ? xValue : tempXMax;
-                        let new_ob: ScatterDataPoint = {
-                            xVal: xValue,
-                            yVal: yValue,
-                            randomFactor: Math.random(),
-                            case: {
-                                visitNum: ob.VISIT_ID,
-                                caseId: ob.CASE_ID,
-                                YEAR: ob.YEAR,
-                                ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
-                                SURGEON_ID: ob.SURGEON_ID,
-                                patientID: ob.PATIENT_ID,
-                                DATE: ob.DATE
-                            }
-                        };
-                        //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
-                        return new_ob;
-                        //}
-                    }
+                    cast_data = cast_data.filter((d: any) => d)
+
+                    //    actions.updateCaseCount("INDIVIDUAL", cast_data.length)
+                    //console.log(aggregatedOption)
+                    stateUpdateWrapperUseJSON(data, cast_data, setData);
+                    setXMax(tempXMax);
+                    setXMin(tempXMin);
+                    setYMax(tempYMax);
+                    setYMin(tempYMin);
+                }
+            })
+            .catch(function (thrown) {
+                if (axios.isCancel(thrown)) {
+                    console.log('Request canceled', thrown.message);
+                } else {
+                    // handle error
                 }
             });
-
-            cast_data = cast_data.filter((d: any) => d)
-
-            //    actions.updateCaseCount("INDIVIDUAL", cast_data.length)
-            //console.log(aggregatedOption)
-            stateUpdateWrapperUseJSON(data, cast_data, setData);
-            setXMax(tempXMax);
-            setXMin(tempXMin);
-            setYMax(tempYMax);
-            setYMin(tempYMin);
-        }
     }
 
     //TODO reorganize this, seperate out data request and the randomization process. 
 
     useEffect(() => {
-
+        if (previousCancelToken) {
+            previousCancelToken.cancel("cancel the call?")
+        }
         fetchChartData();
     }, [dateRange, filterSelection, hemoglobinDataSet, showZero, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroup]);
 
