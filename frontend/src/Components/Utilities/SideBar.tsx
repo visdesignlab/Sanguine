@@ -28,6 +28,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     currentSelectSet,
     currentOutputFilterSet,
     currentSelectPatientGroup,
+    currentBrushedPatientGroup,
     currentSelectPatient,
     filterSelection } = store!;
 
@@ -149,6 +150,15 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     return output
   }
 
+  const generateBrushPatientItem = () => {
+    if (currentBrushedPatientGroup.length > 0) {
+      return (<List.Item
+        style={{ textAlign: "left", paddingLeft: "20px" }}
+        key="Brushed Patients"
+        content={`${currentBrushedPatientGroup.length} patients selected`} />)
+    }
+  }
+
 
   return (
     <Grid
@@ -165,11 +175,9 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
               <Title>Current View</Title>
             </List.Header>
             <List.Item key="Date"
-              //icon="circle"
               style={{ textAlign: "left", paddingLeft: "20px" }}
               content={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} ~ ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} />
             <List.Item key="AggreCaseCount"
-              //   icon="caret right"
               style={{ textAlign: "left", paddingLeft: "20px" }}
               content={`Aggregated Case: ${totalAggregatedCaseCount}`} />
             <List.Item key="IndiCaseCount"
@@ -199,24 +207,22 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
       <Grid.Row centered >
         <Container style={{ height: "20vh" }}>
           <List bulleted>
-            <List.Header style={{ textAlign: "left" }}><Title>Current Selected</Title></List.Header>
+
+            <List.Header style={{ textAlign: "left" }}>
+              <Title>Current Selected</Title>
+            </List.Header>
+
+            {generateBrushPatientItem()}
+
             {currentSelectSet.map((selectSet) => {
-              if (selectSet.set_name === "CASE_ID") {
-                return <List.Item
-                  //icon="caret right" 
-                  key={`${selectSet.set_name}currentselecting`}
-                  style={{ textAlign: "left", paddingLeft: "20px" }}
-                  //  onClick={() => { actions.clearSelectSet(selectSet.set_name) }}
-                  content={`${selectSet.set_value.length} cases selected`} />
-              } else {
-                return <FilterListIT
-                  //icon="caret right" 
-                  key={`${selectSet.set_name}currentselecting`}
-                  onClick={() => { actions.clearSelectSet(selectSet.set_name) }}
-                  content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
-              }
+              return <FilterListIT
+                key={`${selectSet.set_name}currentselecting`}
+                onClick={() => { actions.clearSelectSet(selectSet.set_name) }}
+                content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
             })}
+
           </List>
+
           <Button disabled={!(currentSelectSet.length > 0)}
             basic size="tiny" content="Create Filter" onClick={actions.currentOutputFilterSetChange}
           />
@@ -363,6 +369,7 @@ const ListIT = styled(List.Item) <ListITProps>`
 
 const FilterListIT = styled(List.Item)`
   text-align: left;
+  padding-left: 20px;
   cursor: pointer;
   &:hover{
     text-shadow: 2px 2px 5px ${highlight_orange};

@@ -14,6 +14,7 @@ import { BloodProductCap, dumbbellFacetOptions, barChartValuesOptions, stateUpda
 import DumbbellChart from "./DumbbellChart"
 import { Grid, Menu, Dropdown, Button, Icon, Modal, Form, Message } from "semantic-ui-react";
 import { preop_color, postop_color, basic_gray, third_gray } from "../../PresetsProfile";
+import axios from 'axios';
 
 interface OwnProps {
   yAxis: string;
@@ -53,6 +54,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
   const [openNotationModal, setOpenNotationModal] = useState(false)
   const [notationInput, setNotationInput] = useState(notation)
   const [showingAttr, setShowingAttr] = useState({ preop: true, postop: true, gap: true })
+  const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
   useLayoutEffect(() => {
     if (svgRef.current) {
@@ -63,110 +65,116 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
     }
   }, [layoutArray[chartIndex]]);
 
-
-
-  async function fetchChartData() {
+  function fetchChartData() {
     let transfused_dict = {} as any;
-    let requestingAxis = yAxis
+    let requestingAxis = yAxis;
     if (!BloodProductCap[yAxis]) {
-      requestingAxis = "FFP_UNITS"
+      requestingAxis = "FFP_UNITS";
     }
-    const transfusedRes = await fetch(
-      `http://localhost:8000/api/request_transfused_units?transfusion_type=${requestingAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`
-    );
-    const temp_transfusion_data = await transfusedRes.json();
-    //const temp_transfusion_data = transfusedDataResult.result;
-    //console.log(temp_transfusion_data)
-    let caseIDSet = new Set()
-    temp_transfusion_data.forEach((element: any) => {
-      caseIDSet.add(element.case_id)
-      transfused_dict[element.case_id] = {
-        transfused: element.transfused_units
-      };
-    });
-    console.log(caseIDSet.size)
-    // const hemoRes = await fetch(`http://localhost:8000/api/hemoglobin`);
-    // const hemoDataResult = await hemoRes.json();
-    // const hemo_data = hemoDataResult.result;
-    //let tempYMax = 0;
-    let caseCount = 0;
-    let tempXMin = Infinity;
-    let tempXMax = 0;
-    if (hemoglobinDataSet) {
-      //TODO:
-      //How to solve the total case viewing potential discrepency?
-      let existingCaseID = new Set();
-      let cast_data: DumbbellDataPoint[] = hemoglobinDataSet.map((ob: any) => {
-        const begin_x = +ob.HEMO[0];
-        const end_x = +ob.HEMO[1];
-        let yAxisLabel_val;
 
-        if (transfused_dict[ob.CASE_ID]) {
-          yAxisLabel_val = BloodProductCap[yAxis] ? transfused_dict[ob.CASE_ID].transfused : ob[yAxis];
-        };
-        if (yAxisLabel_val !== undefined && begin_x > 0 && end_x > 0 && !existingCaseID.has(ob.CASE_ID)) {
-          if ((showZero) || (!showZero && yAxisLabel_val > 0)) {
-            if ((yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
-              yAxisLabel_val -= 999
-            }
-            if ((yAxisLabel_val > 100 && yAxis === "PLT_UNITS")) {
-              yAxisLabel_val -= 245
-            }
-            let criteriaMet = true;
-            if (currentOutputFilterSet.length > 0) {
-              for (let selectSet of currentOutputFilterSet) {
-                if (!selectSet.set_value.includes(ob[selectSet.set_name])) {
-                  criteriaMet = false;
+    const cancelToken = axios.CancelToken;
+    const call = cancelToken.source();
+    setPreviousCancelToken(call);
+
+    axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=${requestingAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
+      cancelToken: call.token
+    })
+      .then(function (response) {
+        const tempTransfusionData = response.data;
+        let caseIDSet = new Set()
+        tempTransfusionData.forEach((element: any) => {
+          caseIDSet.add(element.case_id)
+          transfused_dict[element.case_id] = {
+            transfused: element.transfused_units
+          };
+        });
+
+        let caseCount = 0;
+        let tempXMin = Infinity;
+        let tempXMax = 0;
+        if (hemoglobinDataSet) {
+          //TODO:
+          //How to solve the total case viewing potential discrepency?
+          let existingCaseID = new Set();
+          let cast_data: DumbbellDataPoint[] = hemoglobinDataSet.map((ob: any) => {
+            const begin_x = +ob.HEMO[0];
+            const end_x = +ob.HEMO[1];
+            let yAxisLabel_val;
+
+            if (transfused_dict[ob.CASE_ID]) {
+              yAxisLabel_val = BloodProductCap[yAxis] ? transfused_dict[ob.CASE_ID].transfused : ob[yAxis];
+            };
+            if (yAxisLabel_val !== undefined && begin_x > 0 && end_x > 0 && !existingCaseID.has(ob.CASE_ID)) {
+              if ((showZero) || (!showZero && yAxisLabel_val > 0)) {
+                if ((yAxisLabel_val > 100 && yAxis === "PRBC_UNITS")) {
+                  yAxisLabel_val -= 999
+                }
+                if ((yAxisLabel_val > 100 && yAxis === "PLT_UNITS")) {
+                  yAxisLabel_val -= 245
+                }
+                let criteriaMet = true;
+                if (currentOutputFilterSet.length > 0) {
+                  for (let selectSet of currentOutputFilterSet) {
+                    if (!selectSet.set_value.includes(ob[selectSet.set_name])) {
+                      criteriaMet = false;
+                    }
+                  }
+                }
+
+                if (criteriaMet) {
+                  tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
+                  tempXMin = end_x < tempXMin ? end_x : tempXMin;
+                  tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
+                  tempXMax = end_x > tempXMax ? end_x : tempXMax;
+
+                  let new_ob: DumbbellDataPoint = {
+                    case: {
+                      visitNum: ob.VISIT_ID,
+                      caseId: ob.CASE_ID,
+                      YEAR: ob.YEAR,
+                      ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
+                      SURGEON_ID: ob.SURGEON_ID,
+                      patientID: ob.PATIENT_ID,
+                      DATE: ob.DATE
+                    },
+                    startXVal: begin_x,
+                    endXVal: end_x,
+
+                    yVal: yAxisLabel_val,
+
+                  };
+                  existingCaseID.add(ob.CASE_ID)
+                  caseCount++
+                  return new_ob;
                 }
               }
+              //}
             }
+          });
+          cast_data = cast_data.filter((d: any) => d);
+          store!.totalIndividualCaseCount = caseCount;
+          console.log("compare start")
+          stateUpdateWrapperUseJSON(data, cast_data, setData)
+          console.log("compare end")
+          setXMin(tempXMin)
+          setXMax(tempXMax)
 
-            if (criteriaMet) {
-              tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
-              tempXMin = end_x < tempXMin ? end_x : tempXMin;
-              tempXMax = begin_x > tempXMax ? begin_x : tempXMax;
-              tempXMax = end_x > tempXMax ? end_x : tempXMax;
-
-              let new_ob: DumbbellDataPoint = {
-                case: {
-                  visitNum: ob.VISIT_ID,
-                  caseId: ob.CASE_ID,
-                  YEAR: ob.YEAR,
-                  ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
-                  SURGEON_ID: ob.SURGEON_ID,
-                  patientID: ob.PATIENT_ID,
-                  DATE: ob.DATE
-                },
-                startXVal: begin_x,
-                endXVal: end_x,
-
-                yVal: yAxisLabel_val,
-
-              };
-              existingCaseID.add(ob.CASE_ID)
-              caseCount++
-              return new_ob;
-            }
-          }
-          //}
+        }
+      }).catch(function (thrown) {
+        if (axios.isCancel(thrown)) {
+          console.log('Request canceled', thrown.message);
+        } else {
+          // handle error
         }
       });
-      cast_data = cast_data.filter((d: any) => d);
-      // actions.updateCaseCount("INDIVIDUAL", caseCount)
-      store!.totalIndividualCaseCount = caseCount;
-      console.log("compare start")
-      stateUpdateWrapperUseJSON(data, cast_data, setData)
-      console.log("compare end")
-      setXMin(tempXMin)
-      setXMax(tempXMax)
-      // stateUpdateWrapperUseJSON(xRange, { xMin: tempXMin, xMax: tempXMax }, setXRange)
-      //  setData({ result: cast_data });
-      //  setXRange({ xMin: tempXMin, xMax: tempXMax });
 
-    }
+
   }
 
   useEffect(() => {
+    if (previousCancelToken) {
+      previousCancelToken.cancel("cancel the call?")
+    }
     fetchChartData();
   }, [dateRange, filterSelection, hemoglobinDataSet, yAxis, showZero, currentOutputFilterSet, currentSelectPatientGroup]);
 

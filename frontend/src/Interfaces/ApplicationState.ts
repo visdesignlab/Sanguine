@@ -84,6 +84,7 @@ export interface ApplicationState {
   //hemoglobinDataSet: any;
   showZero: boolean;
   currentSelectPatientGroup: number[];
+  currentBrushedPatientGroup: number[];
   nextAddingIndex: number;
   layoutArray: LayoutElement[];
 }
@@ -117,5 +118,6 @@ export const defaultState: ApplicationState = {
   currentSelectPatient: null,
   nextAddingIndex: 0,
   showZero: true,
-  currentSelectPatientGroup: []
+  currentSelectPatientGroup: [],
+  currentBrushedPatientGroup: []
 };
