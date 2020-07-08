@@ -36,8 +36,8 @@ const App: FC<Props> = ({ store }: Props) => {
     const resOutcome = await fetch(`http://localhost:8000/api/patient_outcomes`);
     const dataOutcome = await resOutcome.json();
     for (let obj of dataOutcome) {
-      riskOutcomeDict[obj.visit_no].VENT = obj.gr_than_1440_vent
-      riskOutcomeDict[obj.visit_no].DEATH = obj.patient_death
+      riskOutcomeDict[obj.visit_no].VENT = obj.gr_than_1440_vent || 0
+      riskOutcomeDict[obj.visit_no].DEATH = obj.patient_death || 0
     }
 
     let transfused_dict = {} as any;
@@ -73,6 +73,8 @@ const App: FC<Props> = ({ store }: Props) => {
         CELL_SAVER_ML: element.transfused_units[4] || 0
       };
     });
+
+    //TODO parse the date to proper format.
 
     resultHemo.map((ob: any, index: number) => {
       if (transfused_dict[ob.CASE_ID]) {
