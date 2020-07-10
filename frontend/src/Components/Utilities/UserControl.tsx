@@ -49,13 +49,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
 
   new ClipboardJS(`.copy-clipboard`);
-  const onDateChange = (event: any, data: any) => {
-    console.log(data.value)
-    if (data.value.length > 1) {
 
-      actions.dateRangeChange([data.value[0], data.value[1]])
-    }
-  }
 
   async function fetchSavedStates() {
     const res = await fetch(`http://localhost:8000/api/state`)
@@ -141,7 +135,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
 
   const regularMenu = (
-    <Menu widths={8}>
+    <Menu widths={6}>
       <Menu.Item>
         <Image
           style={{ height: "40px" }}
@@ -167,19 +161,12 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         </Dropdown>
       </Menu.Item>
 
-      <Menu.Item>
+      {/* <Menu.Item>
         <Container>
           <SemanticDatePicker placeholder={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} - ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} type="range" onChange={onDateChange} />
         </Container>
-      </Menu.Item>
+      </Menu.Item> */}
 
-      <Menu.Item>
-        <Checkbox
-          checked={showZero}
-          onClick={actions.toggleShowZero}
-          label="Show Zero Transfused"
-        />
-      </Menu.Item>
 
       <Menu.Item>
         <Dropdown button text="State Management">
