@@ -420,15 +420,24 @@ def patient_outcomes(request):
             pat_bind_names = []
             pat_filters_safe_sql = ""
         
-        # Defined the sql command
+        # Define the sql command
         command = f"""
         SELECT
-            DI_PAT_ID,
-            DI_VISIT_NO,
+            VST.DI_PAT_ID,
+            VST.DI_VISIT_NO,
             CASE WHEN TOTAL_VENT_MINS > 1440 THEN 1 ELSE 0 END AS VENT_1440,
-            CASE WHEN PAT_EXPIRED = 'Y' THEN 1 ELSE 0 END AS PAT_DEATH
+            CASE WHEN PAT_EXPIRED = 'Y' THEN 1 ELSE 0 END AS PAT_DEATH,
+            STROKE.STROKE
         FROM
-            CLIN_DM.BPU_CTS_DI_VISIT
+            {FIELDS_IN_USE['visit']} VST
+        LEFT JOIN (
+            SELECT 
+                DI_PAT_ID,
+                CASE WHEN SUM(CASE WHEN CODE IN ('I97.820', '997.02') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS STROKE
+            FROM {FIELDS_IN_USE['billing_codes']}
+            GROUP BY DI_PAT_ID
+        ) STROKE
+            ON VST.DI_PAT_ID = STROKE.DI_PAT_ID
         WHERE 1=1
             {pat_filters_safe_sql}
         """
