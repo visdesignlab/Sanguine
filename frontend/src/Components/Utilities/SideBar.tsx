@@ -1,13 +1,14 @@
 import React, { FC, useEffect, useState, useCallback, useRef, useLayoutEffect } from "react";
 import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
-import { Grid, Container, List, Button, Header, Search } from "semantic-ui-react";
+import { Grid, Container, List, Button, Header, Search, Checkbox } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat, max, select, axisTop } from "d3";
 import { actions } from "../..";
 import { AxisLabelDict, Accronym, stateUpdateWrapperUseJSON, postop_color, Title } from "../../PresetsProfile";
-import { highlight_orange, secondary_gray } from "../../PresetsProfile";
-import { SingleCasePoint } from "../../Interfaces/ApplicationState";
+import { highlight_orange } from "../../PresetsProfile";
+import SemanticDatePicker from 'react-semantic-ui-datepickers';
+import { SingleCasePoint, defaultState } from "../../Interfaces/ApplicationState";
 
 interface OwnProps {
   hemoData: any;
@@ -29,7 +30,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     currentOutputFilterSet,
     currentSelectPatientGroup,
     currentBrushedPatientGroup,
-    currentSelectPatient,
+    currentSelectPatient, showZero,
     filterSelection } = store!;
 
   const [surgerySearchResult, setsurgerySearchResult] = useState<any[]>([]);
@@ -159,8 +160,19 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     }
   }
 
+  const onDateChange = (event: any, data: any) => {
+    console.log(data.value)
+    if (!data.value) {
+      actions.dateRangeChange(defaultState.rawDateRange)
+    }
+    else if (data.value.length > 1) {
+      actions.dateRangeChange([data.value[0], data.value[1]])
+    }
+  }
+
 
   select('#surgeryCaseScale').call(axisTop(caseScale()).ticks(2) as any)
+
 
   return (
     <Grid
@@ -170,27 +182,39 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     >
 
       <Grid.Row centered  >
-        <Container style={{ height: "20vh" }}>
-          <List bulleted>
+        <Container style={{ paddingLeft: "20px", height: "20vh" }}>
+          <List>
 
             <List.Header style={{ textAlign: "left" }}>
               <Title>Current View</Title>
             </List.Header>
-            <List.Item key="Date"
+
+            <List.Item style={{ textAlign: "left", width: "100%" }} key="Date">
+              <StyledDate onChange={onDateChange} placeholder={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} - ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} type="range" />
+            </List.Item>
+
+            <List.Item style={{ textAlign: "left" }} key="Show Zero">
+              <Checkbox
+                checked={showZero}
+                onClick={actions.toggleShowZero}
+                label="Show Zero Transfused"
+              /></List.Item>
+
+            {/* <List.Item key="Date"
               style={{ textAlign: "left", paddingLeft: "20px" }}
-              content={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} ~ ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} />
+              content={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} ~ ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} /> */}
             <List.Item key="AggreCaseCount"
-              style={{ textAlign: "left", paddingLeft: "20px" }}
+              style={{ textAlign: "left" }}
               content={`Aggregated Case: ${totalAggregatedCaseCount}`} />
             <List.Item key="IndiCaseCount"
               //  icon="caret right"
-              style={{ textAlign: "left", paddingLeft: "20px" }}
+              style={{ textAlign: "left" }}
               content={`Individual Case: ${totalIndividualCaseCount}`} />
 
             <List.Item
               key="SurgeryList"
               //icon="caret right" 
-              style={{ textAlign: "left", paddingLeft: "20px" }}
+              style={{ textAlign: "left" }}
               content={generateSurgery()} />
             {generatePatientSelection()}
 
@@ -343,7 +367,6 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                         </SurgeryDiv>
                       </SurgeryForeignObj>
 
-
                       <SurgeryRect
                         x={caseScale().range()[0]}
                         width={caseScale()(listItem.count) - caseScale().range()[0]}
@@ -363,6 +386,10 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 }
 export default inject("store")(observer(SideBar));
 
+const StyledDate = styled(SemanticDatePicker)`
+  width:100%;
+`
+
 const ListSVG = styled.svg`
   height: 15px;
   padding-left:5px;
@@ -376,7 +403,7 @@ const SurgeryForeignObj = styled.foreignObject`
   &:hover{
     width:100%
   }
-`
+`;
 
 const SurgeryDiv = styled.div`
   overflow: hidden;
@@ -385,17 +412,18 @@ const SurgeryDiv = styled.div`
   alignment-baseline: hanging;
   text-align:left;
   text-shadow: 2px 2px 5px white;
-`
+`;
 
 interface ListITProps {
   isSelected: boolean;
 }
+
 const ListIT = styled(List.Item) <ListITProps>`
   background:${props => props.isSelected ? "#e2a364" : 'none'};
   &:hover{
     background:#f2d4b6;
   }
-`
+`;
 
 const FilterListIT = styled(List.Item)`
   text-align: left;
@@ -404,11 +432,11 @@ const FilterListIT = styled(List.Item)`
   &:hover{
     text-shadow: 2px 2px 5px ${highlight_orange};
   }
-`
+`;
 
 const SurgeryRect = styled(`rect`)`
   y:0;
   height:15px;
   fill-opacity:0.4;
   fill:${postop_color};
-`
+`;

@@ -6,7 +6,7 @@ import { InterventionDataPoint } from '../../Interfaces/ApplicationState'
 import { BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON, ChartSVG } from "../../PresetsProfile"
 import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
-import { sum, median, timeFormat, timeParse, mean, axisBottom } from "d3";
+import { sum, median, timeFormat, timeParse, mean } from "d3";
 import InterventionPlot from "./InterventionPlot";
 import axios from 'axios';
 
