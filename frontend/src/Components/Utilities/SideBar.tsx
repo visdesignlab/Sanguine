@@ -122,7 +122,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 
 
   const generateSurgery = () => {
-    let output: any[] = [<span>Procedures: </span>]
+    let output: any[] = []
     if (filterSelection.length === 0) {
       output.push(<span>All</span>);
     } else {
@@ -146,7 +146,11 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
   const generatePatientSelection = () => {
     let output: any[] = []
     if (currentSelectPatientGroup.length > 0) {
-      output.push(<FilterListIT key={"Patient Circled"} style={{ textAlign: "left" }} onClick={() => { actions.updateSelectedPatientGroup([]) }} content={`${currentSelectPatientGroup.length} patients filtered`} />)
+      output.push(
+        <FilterListIT key={"Patient Circled"} style={{ textAlign: "left" }} onClick={() => { actions.updateSelectedPatientGroup([]) }} content={`${currentSelectPatientGroup.length} patients filtered`}>
+          <List.Header>Patients Filtered</List.Header>
+          <List.Item>{currentSelectPatientGroup.length}</List.Item>
+        </FilterListIT>)
     }
     return output
   }
@@ -154,9 +158,12 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
   const generateBrushPatientItem = () => {
     if (currentBrushedPatientGroup.length > 0) {
       return (<List.Item
-        style={{ textAlign: "left", paddingLeft: "20px" }}
+        style={{ textAlign: "left" }}
         key="Brushed Patients"
-        content={`${currentBrushedPatientGroup.length} patients selected`} />)
+        content={`${currentBrushedPatientGroup.length} patients selected`}>
+        <List.Header>Patients Selected</List.Header>
+        <List.Item>{currentBrushedPatientGroup.length}</List.Item>
+      </List.Item>)
     }
   }
 
@@ -182,7 +189,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     >
 
       <Grid.Row centered  >
-        <Container style={{ paddingLeft: "20px", height: "20vh" }}>
+        <Container style={{ paddingLeft: "20px", height: "30vh" }}>
           <List>
 
             <List.Header style={{ textAlign: "left" }}>
@@ -205,17 +212,30 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
               content={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} ~ ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} /> */}
             <List.Item key="AggreCaseCount"
               style={{ textAlign: "left" }}
-              content={`Aggregated Case: ${totalAggregatedCaseCount}`} />
+            // content={`Aggregated Case: ${totalAggregatedCaseCount}`} 
+            >
+              <List.Header>Aggregated Case</List.Header>
+              <List.Content>{totalAggregatedCaseCount}</List.Content>
+            </List.Item>
+
             <List.Item key="IndiCaseCount"
               //  icon="caret right"
               style={{ textAlign: "left" }}
-              content={`Individual Case: ${totalIndividualCaseCount}`} />
+            // content={`Individual Case: ${totalIndividualCaseCount}`} 
+            >
+              <List.Header>Individual Case</List.Header>
+              <List.Content>{totalIndividualCaseCount}</List.Content>
+            </List.Item>
 
             <List.Item
               key="SurgeryList"
               //icon="caret right" 
               style={{ textAlign: "left" }}
-              content={generateSurgery()} />
+            //content={generateSurgery()} 
+            >
+              <List.Header>Procedures</List.Header>
+              <List.Content>{generateSurgery()} </List.Content>
+            </List.Item>
             {generatePatientSelection()}
 
 
@@ -224,15 +244,18 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                 //icon="caret right"
                 key={`${selectSet.set_name}selected`}
                 onClick={() => { actions.clearOutputFilterSet(selectSet.set_name) }}
-                content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`} />
+                content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`}>
+                <List.Header>{AxisLabelDict[selectSet.set_name]}</List.Header>
+                <List.Content>{selectSet.set_value.sort().toString()}</List.Content>
+              </FilterListIT>
             })}
           </List>
         </Container>
 
       </Grid.Row>
       <Grid.Row centered >
-        <Container style={{ height: "20vh" }}>
-          <List bulleted>
+        <Container style={{ height: "20vh", paddingLeft: "20px" }}>
+          <List>
 
             <List.Header style={{ textAlign: "left" }}>
               <Title>Current Selected</Title>
@@ -244,15 +267,18 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
               return <FilterListIT
                 key={`${selectSet.set_name}currentselecting`}
                 onClick={() => { actions.clearSelectSet(selectSet.set_name) }}
-                content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`} />
+                content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`}>
+                <List.Header>{AxisLabelDict[selectSet.set_name]}</List.Header>
+                <List.Content>{selectSet.set_value.sort().toString()}</List.Content>
+              </FilterListIT>
             })}
 
           </List>
 
-          <Button disabled={!(currentSelectSet.length > 0)}
+          <Button disabled={!(currentSelectSet.length > 0 || currentBrushedPatientGroup.length > 0)}
             basic size="tiny" content="Create Filter" onClick={actions.currentOutputFilterSetChange}
           />
-          <Button disabled={!(currentOutputFilterSet.length > 0)}
+          <Button disabled={!(currentOutputFilterSet.length > 0 || currentSelectPatientGroup.length > 0)}
             basic size="tiny" content="Clear Filter" onClick={() => { actions.clearOutputFilterSet() }}
           />
         </Container>
@@ -297,7 +323,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
       </Grid.Row>
 
       <Grid.Row centered >
-        <Container style={{ overflow: "overlay", height: "35vh" }} >
+        <Container style={{ overflow: "overlay", height: "30vh" }} >
           <Search
             placeholder="Search a Procedure"
             minCharacters={3}
@@ -317,8 +343,8 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             }
             value={searchSurgeryVal}
           />
-          <List relaxed divided >
 
+          <List relaxed divided >
             <List.Item key={"filter-header"}
               content={
                 <Header><svg height={18} style={{ paddingLeft: "5px" }} width="95%" ref={svgRef}>
@@ -427,7 +453,7 @@ const ListIT = styled(List.Item) <ListITProps>`
 
 const FilterListIT = styled(List.Item)`
   text-align: left;
-  padding-left: 20px!important;
+  
   cursor: pointer;
   &:hover{
     text-shadow: 2px 2px 5px ${highlight_orange};
