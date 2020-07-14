@@ -572,7 +572,7 @@ def hemoglobin(request):
                 "DATE":row[3],
                 "HEMO": [row[-3], row[-1]],
                 "SURGEON_ID": row[10],
-                "ANESTHOLOGIST_ID":row[11],
+                "ANESTHESIOLOGIST_ID":row[11],
                 "PATIENT_ID":row[0]} for row in result]
 
         return JsonResponse({"result": items})

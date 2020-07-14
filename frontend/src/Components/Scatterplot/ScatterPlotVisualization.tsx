@@ -121,7 +121,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                                         visitNum: ob.VISIT_ID,
                                         caseId: ob.CASE_ID,
                                         YEAR: ob.YEAR,
-                                        ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
+                                        ANESTHESIOLOGIST_ID: ob.ANESTHESIOLOGIST_ID,
                                         SURGEON_ID: ob.SURGEON_ID,
                                         patientID: ob.PATIENT_ID,
                                         DATE: ob.DATE

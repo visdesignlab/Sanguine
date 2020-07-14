@@ -38,7 +38,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
             let caseIDDict: any = {}
             hemoglobinDataSet.map((ob: any, index: number) => {
                 caseIDDict[ob.CASE_ID] = index;
-                distinctAnesth.add((ob.ANESTHOLOGIST_ID).toString());
+                distinctAnesth.add((ob.ANESTHESIOLOGIST_ID).toString());
                 distinctSurgeons.add((ob.SURGEON_ID).toString());
                 distinctPatient.add(ob.PATIENT_ID.toString());
                 caseIDArray.push(ob.CASE_ID)
@@ -75,7 +75,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                         .column(LineUpJS.buildDateColumn("DATE"))
                         .column(LineUpJS.buildNumberColumn("DRG_WEIGHT", [0, 30]))
                         .column(LineUpJS.buildCategoricalColumn("YEAR").categories(["2014", "2015", "2016", "2017", "2018", "2019"]))
-                        .column(LineUpJS.buildCategoricalColumn("ANESTHOLOGIST_ID").categories(distinctCategories.anesth))
+                        .column(LineUpJS.buildCategoricalColumn("ANESTHESIOLOGIST_ID").categories(distinctCategories.anesth))
                         .column(LineUpJS.buildCategoricalColumn("SURGEON_ID").categories(distinctCategories.surgeons))
                         .column(LineUpJS.buildNumberColumn("PRBC_UNITS", [0, BloodProductCap.PRBC_UNITS]))
                         .column(LineUpJS.buildNumberColumn("FFP_UNITS", [0, BloodProductCap.FFP_UNITS]))

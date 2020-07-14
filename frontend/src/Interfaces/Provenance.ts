@@ -508,18 +508,35 @@ export function setupProvenance(): AppProvenance {
     provenance.applyAction(
       `change output filter`,
       (state: ApplicationState) => {
-        // state.currentSelectSet.map(d => {
-        //   if (d.set_name === "CASE_ID") {
-        //     state.currentSelectPatientGroup = d.set_value
-        //   } else {
-        //     state.currentOutputFilterSet.push(d)
-        //   }
-        // })
+
+        //  state.currentSelectPatientGroup = state.currentSelectPatientGroup.concat(state.currentBrushedPatientGroup);
         state.currentSelectPatientGroup = state.currentBrushedPatientGroup;
-        state.currentOutputFilterSet = state.currentSelectSet;
+        state.currentBrushedPatientGroup = [];
+
+        for (let eachSelectSet of state.currentSelectSet) {
+          const alreadyIn = state.currentOutputFilterSet.filter(d => d.set_name === eachSelectSet.set_name).length > 0
+          if (alreadyIn) {
+            state.currentOutputFilterSet = state.currentOutputFilterSet.map(d => {
+              if (d.set_name === eachSelectSet.set_name) {
+                let setOfValues = new Set(d.set_value)
+                for (let singleValue of eachSelectSet.set_value) {
+                  setOfValues.add(singleValue);
+                }
+                d.set_value = Array.from(setOfValues);
+              }
+              return d
+            })
+          }
+          else {
+            state.currentOutputFilterSet.push(eachSelectSet)
+          }
+
+        }
+        //   state.currentSelectPatientGroup = state.currentBrushedPatientGroup;
+        //state.currentOutputFilterSet = state.currentSelectSet;
         state.currentSelectSet = [];
         state.currentSelectPatient = null;
-        state.currentBrushedPatientGroup = [];
+
         return state;
       }
     )
