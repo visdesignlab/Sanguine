@@ -41,7 +41,7 @@ export const AxisLabelDict: any = {
     CRYO_UNITS: "Intraoperative Cryo Transfused",
     CELL_SAVER_ML: "Cell Salvage Volume (ml)",
     SURGEON_ID: "Surgeon ID",
-    ANESTHOLOGIST_ID: "Anesthologist ID",
+    ANESTHESIOLOGIST_ID: "Anesthesiologist ID",
     YEAR: "Year",
     QUARTER: "Quarter",
     MONTH: "Month",
@@ -89,9 +89,9 @@ export const dumbbellFacetOptions = [
     { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
     { value: "YEAR", key: "YEAR", text: "Year" },
     {
-        value: "ANESTHOLOGIST_ID",
-        key: "ANESTHOLOGIST_ID",
-        text: "Anesthologist ID"
+        value: "ANESTHESIOLOGIST_ID",
+        key: "ANESTHESIOLOGIST_ID",
+        text: "Anesthesiologist ID"
     },
     { value: "QUARTER", key: "QUARTER", text: "Quarter" },
     { value: "MONTH", key: "MONTH", text: "Month" }
@@ -101,9 +101,9 @@ export const barChartAggregationOptions = [
     { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
     { value: "YEAR", key: "YEAR", text: "Year" },
     {
-        value: "ANESTHOLOGIST_ID",
-        key: "ANESTHOLOGIST_ID",
-        text: "Anesthologist ID"
+        value: "ANESTHESIOLOGIST_ID",
+        key: "ANESTHESIOLOGIST_ID",
+        text: "Anesthesiologist ID"
     }
 ];
 

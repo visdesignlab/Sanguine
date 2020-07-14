@@ -276,7 +276,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
           </List>
 
           <Button disabled={!(currentSelectSet.length > 0 || currentBrushedPatientGroup.length > 0)}
-            basic size="tiny" content="Create Filter" onClick={actions.currentOutputFilterSetChange}
+            basic size="tiny" content="Add to Filter" onClick={actions.currentOutputFilterSetChange}
           />
           <Button disabled={!(currentOutputFilterSet.length > 0 || currentSelectPatientGroup.length > 0)}
             basic size="tiny" content="Clear Filter" onClick={() => { actions.clearOutputFilterSet() }}
@@ -308,7 +308,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                 caseId: selectedPat.CASE_ID,
                 YEAR: selectedPat.YEAR,
                 SURGEON_ID: selectedPat.SURGEON_ID,
-                ANESTHOLOGIST_ID: selectedPat.ANESTHOLOGIST_ID,
+                ANESTHESIOLOGIST_ID: selectedPat.ANESTHESIOLOGIST_ID,
                 patientID: selectedPat.PATIENT_ID,
                 DATE: selectedPat.DATE
               };

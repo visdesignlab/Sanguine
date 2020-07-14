@@ -47,7 +47,7 @@ export interface SingleCasePoint {
   caseId: number;
   YEAR: number;
   SURGEON_ID: number;
-  ANESTHOLOGIST_ID: number;
+  ANESTHESIOLOGIST_ID: number;
   patientID: number;
   DATE: number;
   [key: string]: number;

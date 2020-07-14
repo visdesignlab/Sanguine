@@ -132,7 +132,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
                       visitNum: ob.VISIT_ID,
                       caseId: ob.CASE_ID,
                       YEAR: ob.YEAR,
-                      ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
+                      ANESTHESIOLOGIST_ID: ob.ANESTHESIOLOGIST_ID,
                       SURGEON_ID: ob.SURGEON_ID,
                       patientID: ob.PATIENT_ID,
                       DATE: ob.DATE
