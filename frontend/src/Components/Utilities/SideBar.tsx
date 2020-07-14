@@ -189,7 +189,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     >
 
       <Grid.Row centered  >
-        <Container style={{ paddingLeft: "20px", height: "30vh" }}>
+        <Container style={{ paddingLeft: "15px", height: "30vh" }}>
           <List>
 
             <List.Header style={{ textAlign: "left" }}>
@@ -201,10 +201,12 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             </List.Item>
 
             <List.Item style={{ textAlign: "left" }} key="Show Zero">
+              <List.Header>Show Zero Transfused</List.Header>
               <Checkbox
                 checked={showZero}
                 onClick={actions.toggleShowZero}
-                label="Show Zero Transfused"
+                slider
+              // label="Show Zero Transfused"
               /></List.Item>
 
             {/* <List.Item key="Date"
@@ -254,7 +256,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 
       </Grid.Row>
       <Grid.Row centered >
-        <Container style={{ height: "20vh", paddingLeft: "20px" }}>
+        <Container style={{ height: "20vh", paddingLeft: "15px" }}>
           <List>
 
             <List.Header style={{ textAlign: "left" }}>
