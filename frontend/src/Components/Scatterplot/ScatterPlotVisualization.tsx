@@ -138,6 +138,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
 
                     //    actions.updateCaseCount("INDIVIDUAL", cast_data.length)
                     //console.log(aggregatedOption)
+                    store!.totalIndividualCaseCount = cast_data.length
                     stateUpdateWrapperUseJSON(data, cast_data, setData);
                     setXMax(tempXMax);
                     setXMin(tempXMin);
