@@ -215,7 +215,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             // content={`Aggregated Case: ${totalAggregatedCaseCount}`} 
             >
               <List.Header>Aggregated Case</List.Header>
-              <List.Content>{totalAggregatedCaseCount}</List.Content>
+              <List.Content>{totalAggregatedCaseCount}/{hemoData.length}</List.Content>
             </List.Item>
 
             <List.Item key="IndiCaseCount"
@@ -224,7 +224,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             // content={`Individual Case: ${totalIndividualCaseCount}`} 
             >
               <List.Header>Individual Case</List.Header>
-              <List.Content>{totalIndividualCaseCount}</List.Content>
+              <List.Content>{totalIndividualCaseCount}/{hemoData.length}</List.Content>
             </List.Item>
 
             <List.Item
