@@ -38,55 +38,6 @@ const ExtraPairOutcomes: FC<Props> = ({ outcomeName, dataSet, aggregationScaleDo
         return outcomeScale
     }, [outcomeName])
 
-    // async function fetchChartData() {
-    //     let dataResult: { aggregation: any, outcome: number }[] = []
-
-    //     const aggreArray = Object.keys(dataSet)
-    //     const patientIDArray = Object.values(dataSet)
-
-    //     for (let i = 0; i < aggreArray.length; i++) {
-    //         let patientOutcome;
-    //         let patientOutcomeResult;
-    //         let meanOutput;
-    //         // const t0 = performance.now();
-    //         switch (outcomeName) {
-    //             case "RISK":
-    //                 patientOutcome = await fetch(`http://localhost:8000/api/risk_score?patient_ids=${patientIDArray[i]}`)
-    //                 patientOutcomeResult = await patientOutcome.json();
-    //                 meanOutput = mean(patientOutcomeResult.map((d: any) => parseFloat(d.apr_drg_weight)));
-    //                 break;
-    //             case "Vent":
-    //                 patientOutcome = await fetch(`http://localhost:8000/api/patient_outcomes?patient_ids=${patientIDArray[i]}`)
-    //                 patientOutcomeResult = await patientOutcome.json();
-    //                 meanOutput = mean(patientOutcomeResult.map((d: any) => parseFloat(d.gr_than_1440_vent)));
-    //                 break;
-    //             case "Mortality":
-    //                 patientOutcome = await fetch(`http://localhost:8000/api/patient_outcomes?patient_ids=${patientIDArray[i]}`)
-    //                 patientOutcomeResult = await patientOutcome.json();
-    //                 meanOutput = mean(patientOutcomeResult.map((d: any) => parseFloat(d.patient_death)));
-    //                 break;
-    //         }
-    //         //  const t1 = performance.now();
-    //         // console.log(`Call to fetch ${outcomeName} of ${patientIDArray.length} patients, took ${t1 - t0} milliseconds.`);
-    //         console.log(patientOutcomeResult)
-    //         dataResult.push({ aggregation: aggreArray[i], outcome: meanOutput ? meanOutput : 0 })
-    //     }
-
-    //     setDataOtuput(dataResult)
-    // }
-
-    // useEffect(() => {
-    //     fetchChartData();
-
-    // }, [dataSet]);
-
-    // const [valueScale] = useMemo(() => {
-    //     console.log(dataSet)
-    //     const valueScale = scaleLinear().domain([0, 1]).range([0.25, 0.8])
-
-    //     return [valueScale];
-    // }, [dataSet, aggregatedScale])
-
     return (
         <>
             {Object.entries(dataSet).map(([val, dataVal]) => {

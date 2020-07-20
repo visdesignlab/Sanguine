@@ -73,6 +73,8 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                         .column(LineUpJS.buildStringColumn("HEMO"))
                         .column(LineUpJS.buildCategoricalColumn('VENT').categories(["0", "1"]))
                         .column(LineUpJS.buildCategoricalColumn("DEATH").categories(["0", "1"]))
+                        .column(LineUpJS.buildCategoricalColumn('ECMO').categories(["0", "1"]))
+                        .column(LineUpJS.buildCategoricalColumn("STROKE").categories(["0", "1"]))
                         .column(LineUpJS.buildDateColumn("DATE"))
                         .column(LineUpJS.buildNumberColumn("DRG_WEIGHT", [0, 30]))
                         .column(LineUpJS.buildCategoricalColumn("YEAR").categories(["2014", "2015", "2016", "2017", "2018", "2019"]))
