@@ -457,6 +457,8 @@ def patient_outcomes(request):
                 "visit_no": row[1],
                 "gr_than_1440_vent": row[2],
                 "patient_death": row[3],
+                "patient_stroke": row[4],
+                "patient_ECMO": row[5],
             })
 
         return JsonResponse(result_list, safe = False)
