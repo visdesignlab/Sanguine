@@ -61,7 +61,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 
   const caseScale = useCallback(() => {
 
-    const caseScale = scaleLinear().domain([0, maxCaseCount]).range([0.6 * width, 0.93 * width])
+    const caseScale = scaleLinear().domain([0, maxCaseCount]).range([0.6 * width, 0.92 * width])
     return caseScale;
   }, [maxCaseCount, width])
 
@@ -368,7 +368,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             {itemSelected.map((listItem: any) => {
               if (listItem.value) {
                 return (
-                  <ListIT key={listItem.value} isSelected={true} style={{ cursor: "pointer" }} onClick={() => { actions.filterSelectionChange(listItem.value) }}
+                  <SurgeryList key={listItem.value} isSelected={true} style={{ cursor: "pointer" }} onClick={() => { actions.filterSelectionChange(listItem.value) }}
                     content={<ListSVG >
                       <SurgeryForeignObj width={0.6 * width} >
                         <SurgeryDiv>
@@ -389,7 +389,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 
               if (listItem.value) {
                 return (
-                  <ListIT key={listItem.value} isSelected={false} style={{ cursor: "pointer" }} content={
+                  <SurgeryList key={listItem.value} isSelected={false} style={{ cursor: "pointer" }} content={
                     <ListSVG >
 
                       <SurgeryForeignObj width={0.6 * width} >
@@ -446,14 +446,14 @@ const SurgeryDiv = styled.div`
   text-shadow: 2px 2px 5px white;
 `;
 
-interface ListITProps {
+interface SurgeryListProps {
   isSelected: boolean;
 }
 
-const ListIT = styled(List.Item) <ListITProps>`
-  background:${props => props.isSelected ? "#e2a364" : 'none'};
+const SurgeryList = styled(List.Item) <SurgeryListProps>`
+  background:${props => props.isSelected ? "#ecbe8d" : 'none'};
   &:hover{
-    background:#f2d4b6;
+    background:#faeee1;
   }
 `;
 
@@ -473,7 +473,6 @@ const SurgeryRect = styled(`rect`)`
 `;
 
 const SurgeryText = styled(`text`)`
- 
   y:0;
   alignment-baseline: hanging;
   opacity:0;
