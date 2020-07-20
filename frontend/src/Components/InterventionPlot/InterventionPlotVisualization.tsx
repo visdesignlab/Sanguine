@@ -6,7 +6,7 @@ import { InterventionDataPoint } from '../../Interfaces/ApplicationState'
 import { BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON, ChartSVG } from "../../PresetsProfile"
 import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
-import { sum, median, timeFormat, timeParse, mean } from "d3";
+import { sum, median, timeFormat, mean } from "d3";
 import InterventionPlot from "./InterventionPlot";
 import axios from 'axios';
 
@@ -416,11 +416,11 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         hemoglobinDataSet.map((ob: any) => {
                             if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
                                 temporaryDataHolder[ob[aggregatedBy]].push(ob.DRG_WEIGHT)
-                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() < interventionDate) {
+                                if (ob.DATE < interventionDate) {
                                     temporaryPreIntDataHolder[ob[aggregatedBy]].push(ob.DRG_WEIGHT);
                                 }
 
-                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() > interventionDate) {
+                                if (ob.DATE > interventionDate) {
                                     temporaryPostIntDataHolder[ob[aggregatedBy]].push(ob.DRG_WEIGHT);
                                 }
                             }
@@ -449,11 +449,11 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         hemoglobinDataSet.map((ob: any) => {
                             if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
                                 temporaryDataHolder[ob[aggregatedBy]].push(ob.DEATH)
-                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() < interventionDate) {
+                                if (ob.DATE < interventionDate) {
                                     temporaryPreIntDataHolder[ob[aggregatedBy]].push(ob.DEATH);
                                 }
 
-                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() > interventionDate) {
+                                if (ob.DATE > interventionDate) {
                                     temporaryPostIntDataHolder[ob[aggregatedBy]].push(ob.DEATH);
                                 }
                             }
@@ -482,11 +482,11 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         hemoglobinDataSet.map((ob: any) => {
                             if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
                                 temporaryDataHolder[ob[aggregatedBy]].push(ob.VENT)
-                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() < interventionDate) {
+                                if (ob.DATE < interventionDate) {
                                     temporaryPreIntDataHolder[ob[aggregatedBy]].push(ob.VENT);
                                 }
 
-                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() > interventionDate) {
+                                if (ob.DATE > interventionDate) {
                                     temporaryPostIntDataHolder[ob[aggregatedBy]].push(ob.VENT);
                                 }
                             }
@@ -515,11 +515,11 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         hemoglobinDataSet.map((ob: any) => {
                             if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
                                 temporaryDataHolder[ob[aggregatedBy]].push(ob.ECMO)
-                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() < interventionDate) {
+                                if (ob.DATE < interventionDate) {
                                     temporaryPreIntDataHolder[ob[aggregatedBy]].push(ob.ECMO);
                                 }
 
-                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() > interventionDate) {
+                                if (ob.DATE > interventionDate) {
                                     temporaryPostIntDataHolder[ob[aggregatedBy]].push(ob.ECMO);
                                 }
                             }
@@ -547,11 +547,11 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         hemoglobinDataSet.map((ob: any) => {
                             if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
                                 temporaryDataHolder[ob[aggregatedBy]].push(ob.STROKE)
-                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() < interventionDate) {
+                                if (ob.DATE < interventionDate) {
                                     temporaryPreIntDataHolder[ob[aggregatedBy]].push(ob.STROKE);
                                 }
 
-                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() > interventionDate) {
+                                if (ob.DATE > interventionDate) {
                                     temporaryPostIntDataHolder[ob[aggregatedBy]].push(ob.STROKE);
                                 }
                             }
@@ -582,11 +582,11 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
 
                                 newData[ob[aggregatedBy]].push(begin);
 
-                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() < interventionDate) {
+                                if (ob.DATE < interventionDate) {
                                     preIntData[ob[aggregatedBy]].push(begin);
                                 }
 
-                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() > interventionDate) {
+                                if (ob.DATE > interventionDate) {
                                     postIntData[ob[aggregatedBy]].push(begin);
                                 }
                             }
@@ -650,11 +650,11 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
 
                                 newData[ob[aggregatedBy]].push(end);
 
-                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() < interventionDate) {
+                                if (ob.DATE < interventionDate) {
                                     preIntData[ob[aggregatedBy]].push(end);
                                 }
 
-                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() > interventionDate) {
+                                if (ob.DATE > interventionDate) {
                                     postIntData[ob[aggregatedBy]].push(end);
                                 }
                             }
