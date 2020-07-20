@@ -352,7 +352,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       </Menu.Item>
     </Menu>
   );
-
+  //TODO the placeholder does not reset
   const addBarChartMenu = (
     <Menu widths={5}>
       <Menu.Item>
