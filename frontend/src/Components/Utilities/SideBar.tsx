@@ -61,7 +61,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 
   const caseScale = useCallback(() => {
 
-    const caseScale = scaleLinear().domain([0, maxCaseCount]).range([0.6 * width, 0.96 * width])
+    const caseScale = scaleLinear().domain([0, maxCaseCount]).range([0.6 * width, 0.93 * width])
     return caseScale;
   }, [maxCaseCount, width])
 
@@ -72,7 +72,9 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 
     let tempSurgeryList: any[] = result;
 
-    const tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
+    let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
+    tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
+
     setMaxCaseCount(tempMaxCaseCount)
     let tempItemUnselected: any[] = [];
     let tempItemSelected: any[] = [];
@@ -205,7 +207,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
               <Checkbox
                 checked={showZero}
                 onClick={actions.toggleShowZero}
-                slider
+                toggle
               // label="Show Zero Transfused"
               /></List.Item>
 
@@ -216,7 +218,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
               style={{ textAlign: "left" }}
             // content={`Aggregated Case: ${totalAggregatedCaseCount}`} 
             >
-              <List.Header>Aggregated Case</List.Header>
+              <List.Header>Aggregated Cases</List.Header>
               <List.Content>{totalAggregatedCaseCount}/{hemoData.length}</List.Content>
             </List.Item>
 
@@ -225,7 +227,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
               style={{ textAlign: "left" }}
             // content={`Individual Case: ${totalIndividualCaseCount}`} 
             >
-              <List.Header>Individual Case</List.Header>
+              <List.Header>Individual Cases</List.Header>
               <List.Content>{totalIndividualCaseCount}/{hemoData.length}</List.Content>
             </List.Item>
 
@@ -377,6 +379,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                         x={caseScale().range()[0]}
                         width={caseScale()(listItem.count) - caseScale().range()[0]}
                       />
+                      <SurgeryText x={caseScale().range()[0]}>{listItem.count}</SurgeryText>
                     </ListSVG>} />
                 )
               }
@@ -399,6 +402,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                         x={caseScale().range()[0]}
                         width={caseScale()(listItem.count) - caseScale().range()[0]}
                       />
+                      <SurgeryText x={caseScale().range()[0]}>{listItem.count}</SurgeryText>
                     </ListSVG>}
                     onClick={() => { actions.filterSelectionChange(listItem.value) }} />
                 )
@@ -455,7 +459,6 @@ const ListIT = styled(List.Item) <ListITProps>`
 
 const FilterListIT = styled(List.Item)`
   text-align: left;
-  
   cursor: pointer;
   &:hover{
     text-shadow: 2px 2px 5px ${highlight_orange};
@@ -467,4 +470,15 @@ const SurgeryRect = styled(`rect`)`
   height:15px;
   fill-opacity:0.4;
   fill:${postop_color};
+`;
+
+const SurgeryText = styled(`text`)`
+ 
+  y:0;
+  alignment-baseline: hanging;
+  opacity:0;
+  
+  &:hover{
+    opacity:1;
+  }
 `;
