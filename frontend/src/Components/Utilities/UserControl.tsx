@@ -86,7 +86,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   }
 
   const interventionHandler = (e: any, value: any) => {
-    if (value.value === "None") {
+    if (value.value === "None" || !value.value) {
       setInterventionDate(undefined)
     }
     else {
@@ -109,13 +109,15 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   //TODO this need a check for date plotype valid
   const confirmChartAddHandler = () => {
     if (xSelection && ySelection && addingChartType > -1) {
-      actions.addNewChart(xSelection, ySelection, nextAddingIndex, typeDiction[addingChartType], interventionDate, interventionPlotType)
-      setAddMode(false);
-      setAddingChartType(-1)
-      setInterventionDate(undefined);
-      setInterventionPlotType(undefined);
-      setXSelection("")
-      setYSelection("")
+      if (!(addingChartType === 4 && (!interventionDate || !interventionPlotType))) {
+        actions.addNewChart(xSelection, ySelection, nextAddingIndex, typeDiction[addingChartType], interventionDate, interventionPlotType)
+        setAddMode(false);
+        setAddingChartType(-1)
+        setInterventionDate(undefined);
+        setInterventionPlotType(undefined);
+        setXSelection("")
+        setYSelection("")
+      }
     }
   }
 
