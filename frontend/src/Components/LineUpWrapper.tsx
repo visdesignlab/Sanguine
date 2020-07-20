@@ -26,6 +26,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
     const { currentSelectPatientGroup } = store!
     const [distinctCategories, setCatgories] = useState<{ surgeons: any[], anesth: any[], patient: any[] }>({ surgeons: [], anesth: [], patient: [] })
     const [caseIDReference, setCaseIDList] = useState<any>({})
+    const [convertedData, setConvertedData] = useState<any[]>([])
     //const [caseIDArray, setCaseIDArray] = useState<number[]>([])
 
     useEffect(() => {
@@ -36,19 +37,19 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
             let distinctPatient = new Set();
             let caseIDArray: number[] = []
             let caseIDDict: any = {}
+            let tempData = hemoglobinDataSet
             hemoglobinDataSet.map((ob: any, index: number) => {
                 caseIDDict[ob.CASE_ID] = index;
                 distinctAnesth.add((ob.ANESTHESIOLOGIST_ID).toString());
                 distinctSurgeons.add((ob.SURGEON_ID).toString());
                 distinctPatient.add(ob.PATIENT_ID.toString());
                 caseIDArray.push(ob.CASE_ID)
+
             })
             stateUpdateWrapperUseJSON(distinctCategories, { surgeons: (Array.from(distinctSurgeons)), anesth: Array.from(distinctAnesth), patient: Array.from(distinctPatient) }, setCatgories)
             stateUpdateWrapperUseJSON(caseIDReference, caseIDDict, setCaseIDList)
 
-
         }
-
     }, [hemoglobinDataSet])
 
     const outputSelectedGroup = () => {

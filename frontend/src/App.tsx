@@ -95,9 +95,9 @@ const App: FC<Props> = ({ store }: Props) => {
           QUARTER: ob.QUARTER,
           MONTH: ob.MONTH,
           DATE: ob.DATE,
-          VENT: riskOutcomeDict[ob.VISIT_ID].VENT,
+          VENT: riskOutcomeDict[ob.VISIT_ID].VENT.toString(),
           DRG_WEIGHT: riskOutcomeDict[ob.VISIT_ID].DRG_WEIGHT,
-          DEATH: riskOutcomeDict[ob.VISIT_ID].DEATH,
+          DEATH: riskOutcomeDict[ob.VISIT_ID].DEATH.toString(),
         })
       }
     })
