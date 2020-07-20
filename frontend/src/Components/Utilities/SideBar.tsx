@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useState, useCallback, useRef, useLayoutEffect } from "react";
 import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
-import { Grid, Container, List, Button, Header, Search, Checkbox } from "semantic-ui-react";
+import { Grid, Container, List, Button, Header, Search, Checkbox, Icon } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat, max, select, axisTop } from "d3";
 import { actions } from "../..";
@@ -151,6 +151,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
       output.push(
         <FilterListIT key={"Patient Circled"} style={{ textAlign: "left" }} onClick={() => { actions.updateSelectedPatientGroup([]) }} content={`${currentSelectPatientGroup.length} patients filtered`}>
           <List.Header>Patients Filtered</List.Header>
+          <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
           <List.Item>{currentSelectPatientGroup.length}</List.Item>
         </FilterListIT>)
     }
@@ -250,7 +251,9 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                 onClick={() => { actions.clearOutputFilterSet(selectSet.set_name) }}
                 content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`}>
                 <List.Header>{AxisLabelDict[selectSet.set_name]}</List.Header>
-                <List.Content>{selectSet.set_value.sort().toString()}</List.Content>
+                <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
+
+                <List.Content >{selectSet.set_value.sort().join(', ')}</List.Content>
               </FilterListIT>
             })}
           </List>
@@ -273,7 +276,8 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                 onClick={() => { actions.clearSelectSet(selectSet.set_name) }}
                 content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`}>
                 <List.Header>{AxisLabelDict[selectSet.set_name]}</List.Header>
-                <List.Content>{selectSet.set_value.sort().toString()}</List.Content>
+                <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
+                <List.Content>{selectSet.set_value.sort().join(', ')}</List.Content>
               </FilterListIT>
             })}
 
@@ -457,12 +461,13 @@ const SurgeryList = styled(List.Item) <SurgeryListProps>`
   }
 `;
 
+// &:hover{
+// text - shadow: 2px 2px 5px ${ highlight_orange };
+//   }
 const FilterListIT = styled(List.Item)`
   text-align: left;
   cursor: pointer;
-  &:hover{
-    text-shadow: 2px 2px 5px ${highlight_orange};
-  }
+ 
 `;
 
 const SurgeryRect = styled(`rect`)`
@@ -476,8 +481,14 @@ const SurgeryText = styled(`text`)`
   y:0;
   alignment-baseline: hanging;
   opacity:0;
-  
   &:hover{
     opacity:1;
   }
 `;
+
+const DispearingIcon = styled(Icon)`
+  opacity:0!important;
+  ${FilterListIT}:hover &{
+    opacity:1!important;
+  }
+`
