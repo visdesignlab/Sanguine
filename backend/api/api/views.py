@@ -415,7 +415,7 @@ def patient_outcomes(request):
         if patient_ids:
             # Generate the patient filters
             pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
-            pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
+            pat_filters_safe_sql = f"AND VST.DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
         else:
             pat_bind_names = []
             pat_filters_safe_sql = ""
