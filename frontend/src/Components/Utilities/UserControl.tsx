@@ -175,8 +175,8 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       <Menu.Item>
         <Dropdown button text="State Management">
           <Dropdown.Menu>
-            <Dropdown.Item>
-              <Dropdown selectOnBlur={false} text="Presets" >
+            <Dropdown.Item >
+              <Dropdown simple selectOnBlur={false} text="Presets" >
                 <Dropdown.Menu>
                   {presetOptions.map((d: { value: number, text: string }) => {
                     return (<Dropdown.Item key={d.text} onClick={() => { actions.loadPreset(d.value) }} content={d.text} />)
@@ -184,8 +184,8 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 </Dropdown.Menu>
               </Dropdown>
             </Dropdown.Item>
-            <Dropdown.Item>
-              <Dropdown selectOnBlur={false} text="Saved"  >
+            <Dropdown.Item >
+              <Dropdown simple selectOnBlur={false} text="Saved"  >
                 <Dropdown.Menu>
                   {listOfSavedState.map((d) => {
                     return (<Dropdown.Item onClick={() => { loadSavedState(d) }} content={d} />)

@@ -104,7 +104,7 @@ const App: FC<Props> = ({ store }: Props) => {
 
     result = result.filter((d: any) => d);
     console.log("hemo data done")
-    console.log(result)
+    //  console.log(result)
     setHemoData(result)
     store!.loadingModalOpen = false;
 
