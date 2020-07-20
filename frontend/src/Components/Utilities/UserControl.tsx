@@ -25,7 +25,6 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const {
     isAtRoot,
     isAtLatest,
-    showZero,
     rawDateRange,
     nextAddingIndex
   } = store!;
@@ -33,8 +32,8 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const urlRef = useRef(null);
   const [addMode, setAddMode] = useState(false);
   const [addingChartType, setAddingChartType] = useState(-1)
-  const [xSelection, setXSelection] = useState("")
-  const [ySelection, setYSelection] = useState("")
+  const [xSelection, setXSelection] = useState<string>("")
+  const [ySelection, setYSelection] = useState<string>("")
   const [interventionDate, setInterventionDate] = useState<number | undefined>(undefined)
   // const [elementCounter, addToElementCounter] = useState(0)
   const [interventionPlotType, setInterventionPlotType] = useState<string | undefined>(undefined)
@@ -44,7 +43,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const [stateName, setStateName] = useState("")
   const [listOfSavedState, setListOfSavedState] = useState<string[]>([])
   const [openManageStateModal, setOpenManageStateModal] = useState(false)
-  const [openRenameStateModal, setRenameStateModal] = useState(false)
+
 
 
 
@@ -107,20 +106,23 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     setInterventionPlotType(value.value)
   }
 
-
+  //TODO this need a check for date plotype valid
   const confirmChartAddHandler = () => {
     if (xSelection && ySelection && addingChartType > -1) {
-      // addToElementCounter(elementCounter + 1)
       actions.addNewChart(xSelection, ySelection, nextAddingIndex, typeDiction[addingChartType], interventionDate, interventionPlotType)
       setAddMode(false);
       setAddingChartType(-1)
       setInterventionDate(undefined);
       setInterventionPlotType(undefined);
+      setXSelection("")
+      setYSelection("")
     }
   }
 
   const cancelChartAddHandler = () => {
     setAddMode(false);
+    setXSelection("")
+    setYSelection("")
   }
 
   const simulateAPIClick = () => {
@@ -361,14 +363,19 @@ const UserControl: FC<Props> = ({ store }: Props) => {
           selection
           options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
           onChange={yAxisChangeHandler}
+          value={ySelection}
         />
       </Menu.Item>
+
       <Menu.Item>
         <Dropdown
-          placeholder={addingChartType === 0 ? "Select Aggregation" : addingChartType === 1 ? "Facet by" : "Select X-axis Attribute"}
+          placeholder={
+            addingChartType === 0 ? "Select Aggregation" : (addingChartType === 1 ? "Facet by" : "Select X-axis Attribute")
+          }
           selection
           options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
           onChange={xAxisChangeHandler}
+          value={xSelection}
         />
       </Menu.Item>
 
