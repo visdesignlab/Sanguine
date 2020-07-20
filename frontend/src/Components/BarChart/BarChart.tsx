@@ -51,6 +51,8 @@ interface OwnProps {
   extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];
 }
 
+const currentOffset = offset.regular;
+
 export type Props = OwnProps;
 
 const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregatedBy, valueToVisualize, width, height, data, svg, yMax, chartId }: Props) => {
@@ -64,7 +66,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     currentOutputFilterSet
   } = store!;
 
-  const currentOffset = offset.regular;
+
   const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
   // const [aggregationScaleDomain, setAggregationScaleDomain] = useState("")
   const [aggregationScaleRange, setAggregationScaleRange] = useState("")
@@ -84,13 +86,12 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
   useEffect(() => {
     let newkdeMax = 0;
     let newcaseMax = 0;
-    const newXVals = data
-      .map(function (dp) {
-        newcaseMax = dp.caseCount > newcaseMax ? dp.caseCount : newcaseMax;
-        const max_temp = max(dp.kdeCal, d => d.y)
-        newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
-        return dp.aggregateAttribute;
-      })
+    const newXVals = data.map(function (dp) {
+      newcaseMax = dp.caseCount > newcaseMax ? dp.caseCount : newcaseMax;
+      const max_temp = max(dp.kdeCal, d => d.y)
+      newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
+      return dp.aggregateAttribute;
+    })
       .sort();
     const range = [height - currentOffset.bottom, currentOffset.top]
     stateUpdateWrapperUseJSON(xVals, newXVals, setXVals)
