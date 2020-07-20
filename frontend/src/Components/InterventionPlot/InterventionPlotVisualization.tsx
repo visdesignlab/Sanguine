@@ -440,7 +440,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         newExtraPairData.push({ name: "RISK", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
                         break;
 
-                    case "Mortality":
+                    case "Death":
                         data.map((dataPoint: InterventionDataPoint) => {
                             temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = []
                             temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = []
@@ -470,10 +470,10 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                             postIntData[key] = mean(value as any)
                         }
 
-                        newExtraPairData.push({ name: "Mortality", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
+                        newExtraPairData.push({ name: "Death", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
                         break;
 
-                    case "Vent":
+                    case "VENT":
                         data.map((dataPoint: InterventionDataPoint) => {
                             temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = []
                             temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = []
@@ -503,9 +503,73 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                             postIntData[key] = mean(value as any)
                         }
 
-                        newExtraPairData.push({ name: "Vent", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
+                        newExtraPairData.push({ name: "VENT", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
                         break;
 
+                    case "ECMO":
+                        data.map((dataPoint: InterventionDataPoint) => {
+                            temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = []
+                            temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = []
+                            temporaryDataHolder[dataPoint.aggregateAttribute] = []
+                        })
+                        hemoglobinDataSet.map((ob: any) => {
+                            if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                                temporaryDataHolder[ob[aggregatedBy]].push(ob.ECMO)
+                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() < interventionDate) {
+                                    temporaryPreIntDataHolder[ob[aggregatedBy]].push(ob.ECMO);
+                                }
+
+                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() > interventionDate) {
+                                    temporaryPostIntDataHolder[ob[aggregatedBy]].push(ob.ECMO);
+                                }
+                            }
+
+                        })
+
+                        for (const [key, value] of Object.entries(temporaryDataHolder)) {
+                            newData[key] = mean(value as any)
+                        }
+                        for (const [key, value] of Object.entries(temporaryPreIntDataHolder)) {
+                            preIntData[key] = mean(value as any)
+                        }
+                        for (const [key, value] of Object.entries(temporaryPostIntDataHolder)) {
+                            postIntData[key] = mean(value as any)
+                        }
+
+                        newExtraPairData.push({ name: "ECMO", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
+                        break;
+                    case "STROKE":
+                        data.map((dataPoint: InterventionDataPoint) => {
+                            temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = []
+                            temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = []
+                            temporaryDataHolder[dataPoint.aggregateAttribute] = []
+                        })
+                        hemoglobinDataSet.map((ob: any) => {
+                            if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                                temporaryDataHolder[ob[aggregatedBy]].push(ob.STROKE)
+                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() < interventionDate) {
+                                    temporaryPreIntDataHolder[ob[aggregatedBy]].push(ob.STROKE);
+                                }
+
+                                if (timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime() > interventionDate) {
+                                    temporaryPostIntDataHolder[ob[aggregatedBy]].push(ob.STROKE);
+                                }
+                            }
+
+                        })
+
+                        for (const [key, value] of Object.entries(temporaryDataHolder)) {
+                            newData[key] = mean(value as any)
+                        }
+                        for (const [key, value] of Object.entries(temporaryPreIntDataHolder)) {
+                            preIntData[key] = mean(value as any)
+                        }
+                        for (const [key, value] of Object.entries(temporaryPostIntDataHolder)) {
+                            postIntData[key] = mean(value as any)
+                        }
+
+                        newExtraPairData.push({ name: "STROKE", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
+                        break;
                     case "Preop Hemo":
                         data.map((dataPoint: InterventionDataPoint) => {
                             newData[dataPoint.aggregateAttribute] = [];

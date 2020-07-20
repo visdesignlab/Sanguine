@@ -62,7 +62,12 @@ const DetailView: FC<Props> = ({ store }: Props) => {
                 console.log(`Call to fetch one outcome took ${t3 - t2} milliseconds.`);
 
                 const fetchOutcomeJson = await fetchOutcome.json();
-                const outcomeInfo = { Mortality: fetchOutcomeJson[0].patient_death === 0 ? "Yes" : "No", Vent: fetchOutcomeJson[0].gr_than_1440_vent === 0 ? "Yes" : "No" }
+                const outcomeInfo = {
+                    Mortality: fetchOutcomeJson[0].patient_death === 0 ? "Yes" : "No",
+                    Vent: fetchOutcomeJson[0].gr_than_1440_vent === 0 ? "Yes" : "No",
+                    Stroke: fetchOutcomeJson[0].patient_stroke === 0 ? "Yes" : "No",
+                    ECMO: fetchOutcomeJson[0].patient_ECMO === 0 ? "Yes" : "No"
+                }
 
                 //  console.log(surgeryInfo)
                 let final_result = Object.assign(individualInfoJSON, surgeryInfo)

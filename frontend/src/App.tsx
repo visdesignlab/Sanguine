@@ -35,9 +35,12 @@ const App: FC<Props> = ({ store }: Props) => {
     }
     const resOutcome = await fetch(`http://localhost:8000/api/patient_outcomes`);
     const dataOutcome = await resOutcome.json();
+    console.log(dataOutcome)
     for (let obj of dataOutcome) {
-      riskOutcomeDict[obj.visit_no].VENT = obj.gr_than_1440_vent || 0
-      riskOutcomeDict[obj.visit_no].DEATH = obj.patient_death || 0
+      riskOutcomeDict[obj.visit_no].VENT = obj.gr_than_1440_vent || 0;
+      riskOutcomeDict[obj.visit_no].DEATH = obj.patient_death || 0;
+      riskOutcomeDict[obj.visit_no].STROKE = obj.patient_stroke || 0;
+      riskOutcomeDict[obj.visit_no].ECMO = obj.patient_ECMO || 0;
     }
 
     let transfused_dict = {} as any;
@@ -60,7 +63,9 @@ const App: FC<Props> = ({ store }: Props) => {
       HEMO: number[],
       DRG_WEIGHT: number,
       VENT: number,
-      DEATH: number
+      DEATH: number,
+      STROKE: number,
+      ECMO: number
     }[] = [];
 
 
@@ -98,6 +103,8 @@ const App: FC<Props> = ({ store }: Props) => {
           VENT: riskOutcomeDict[ob.VISIT_ID].VENT.toString(),
           DRG_WEIGHT: riskOutcomeDict[ob.VISIT_ID].DRG_WEIGHT,
           DEATH: riskOutcomeDict[ob.VISIT_ID].DEATH.toString(),
+          ECMO: riskOutcomeDict[ob.VISIT_ID].ECMO.toString(),
+          STROKE: riskOutcomeDict[ob.VISIT_ID].STROKE.toString()
         })
       }
     })

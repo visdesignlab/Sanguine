@@ -1,4 +1,7 @@
 import styled from "styled-components"
+import { BasicAggregatedDatePoint, HeatMapDataPoint } from "./Interfaces/ApplicationState"
+import { mean, median } from "d3";
+import { create as createpd } from "pdfast";
 
 export const preop_color = "#209b58"
 export const postop_color = "#20639b"
@@ -25,8 +28,10 @@ export const extraPairOptions = [
     { title: "Zero Transfusion Cases", value: "Zero Transfusion" },
     { title: "Risk Score", value: "RISK" },
     // { title: "Severity of Illness", value: "SOI" },
-    { title: "Mortality Rate", value: "Mortality" },
-    { title: "Ventilation Rate", value: "Vent" }
+    { title: "Mortality Rate", value: "Death" },
+    { title: "Ventilation Rate", value: "VENT" },
+    { title: "ECMO Rate", value: "ECMO" },
+    { title: "Stroke Rate", value: "STROKE" }
 ]
 
 //export const minimumOffset = 
@@ -50,7 +55,7 @@ export const AxisLabelDict: any = {
     POSTOP_HEMO: "Postoperative Hemoglobin Value",
     ROM: "Risk of Mortality",
     SOI: "Severity of Illness",
-    Vent: "Ventilator Over 1440 min"
+    VENT: "Ventilator Over 1440 min"
 };
 
 export const BloodProductCap: any = {
@@ -173,6 +178,169 @@ export const stateUpdateWrapperUseJSON = (oldState: any, newState: any, updateFu
     if (JSON.stringify(oldState) !== JSON.stringify(newState)) {
         updateFunction(newState)
     }
+}
+
+export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string, hemoglobinDataSet: [], extraPairArray: string[], data: BasicAggregatedDatePoint[]) => {
+    let newExtraPairData: any[] = []
+    if (extraPairArray.length > 0) {
+        extraPairArray.forEach((variable: string) => {
+            let newData = {} as any;
+            let kdeMax = 0;
+            let temporaryDataHolder: any = {}
+            let medianData = {} as any;
+            switch (variable) {
+                case "Total Transfusion":
+                    //let newDataBar = {} as any;
+                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                        newData[dataPoint.aggregateAttribute] = dataPoint.totalVal;
+                    });
+                    newExtraPairData.push({ name: "Total", data: newData, type: "BarChart" });
+                    break;
+                case "Per Case":
+                    // let newDataPerCase = {} as any;
+                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                        newData[dataPoint.aggregateAttribute] = dataPoint.totalVal / dataPoint.caseCount;
+                    });
+                    newExtraPairData.push({ name: "Per Case", data: newData, type: "BarChart" });
+                    break;
+                case "Zero Transfusion":
+                    //let newDataPerCase = {} as any;
+                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                        newData[dataPoint.aggregateAttribute] = { number: dataPoint.zeroCaseNum, percentage: dataPoint.zeroCaseNum / dataPoint.caseCount };
+                    });
+                    newExtraPairData.push({ name: "Zero %", data: newData, type: "Basic" });
+                    break;
+                case "RISK":
+                    // let temporaryDataHolder: any = {}
+                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
+                    })
+                    hemoglobinDataSet.map((ob: any) => {
+                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                            temporaryDataHolder[ob[aggregatedBy]].push(ob.DRG_WEIGHT)
+                        }
+                    })
+                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
+                        newData[key] = mean(value as any)
+                    }
+                    newExtraPairData.push({ name: "RISK", data: newData, type: "Outcomes" });
+                    break;
+                case "Death":
+                    // let temporaryDataHolder: any = {}
+                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
+                    })
+                    hemoglobinDataSet.map((ob: any) => {
+                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                            temporaryDataHolder[ob[aggregatedBy]].push(ob.DEATH)
+                        }
+                    })
+                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
+                        newData[key] = mean(value as any)
+                    }
+                    newExtraPairData.push({ name: "Death", data: newData, type: "Outcomes" });
+                    break;
+                //TODO I need to think about when we have a patient group filter, how does that apply to extra pair plot. 
+                case "VENT":
+                    // let temporaryDataHolder:any = {}
+                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
+                    })
+                    hemoglobinDataSet.map((ob: any) => {
+                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                            temporaryDataHolder[ob[aggregatedBy]].push(ob.VENT)
+                        }
+                    })
+                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
+                        newData[key] = mean(value as any)
+                    }
+                    newExtraPairData.push({ name: "VENT", data: newData, type: "Outcomes" });
+                    break;
+                case "ECMO":
+                    // let temporaryDataHolder:any = {}
+                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
+                    })
+                    hemoglobinDataSet.map((ob: any) => {
+                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                            temporaryDataHolder[ob[aggregatedBy]].push(ob.ECMO)
+                        }
+                    })
+                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
+                        newData[key] = mean(value as any)
+                    }
+                    newExtraPairData.push({ name: "ECMO", data: newData, type: "Outcomes" });
+                    break;
+                case "STROKE":
+                    // let temporaryDataHolder:any = {}
+                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
+                    })
+                    hemoglobinDataSet.map((ob: any) => {
+                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                            temporaryDataHolder[ob[aggregatedBy]].push(ob.STROKE)
+                        }
+                    })
+                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
+                        newData[key] = mean(value as any)
+                    }
+                    newExtraPairData.push({ name: "STROKE", data: newData, type: "Outcomes" });
+                    break;
+                case "Preop Hemo":
+                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                        newData[dataPoint.aggregateAttribute] = [];
+                    });
+                    hemoglobinDataSet.map((ob: any) => {
+                        const begin = parseFloat(ob.HEMO[0]);
+                        if (newData[ob[aggregatedBy]] && begin > 0 && caseIDList[ob.CASE_ID]) {
+                            newData[ob[aggregatedBy]].push(begin);
+                        }
+                    });
+                    for (let prop in newData) {
+                        medianData[prop] = median(newData[prop]);
+                        let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
+                        pd = [{ x: 0, y: 0 }].concat(pd);
+                        let reverse_pd = pd.map((pair: any) => {
+                            kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                            return { x: pair.x, y: -pair.y };
+                        }).reverse();
+                        pd = pd.concat(reverse_pd);
+                        newData[prop] = pd;
+                    }
+                    newExtraPairData.push({ name: "Preop Hemo", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
+                    break;
+                case "Postop Hemo":
+                    //let newData = {} as any;
+                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                        newData[dataPoint.aggregateAttribute] = [];
+                    });
+                    hemoglobinDataSet.map((ob: any) => {
+                        // const begin = parseFloat(ob.HEMO[0]);
+                        const end = parseFloat(ob.HEMO[1]);
+                        if (newData[ob[aggregatedBy]] && end > 0 && caseIDList[ob.CASE_ID]) {
+                            newData[ob[aggregatedBy]].push(end);
+                        }
+                    });
+                    for (let prop in newData) {
+                        medianData[prop] = median(newData[prop]);
+                        let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
+                        pd = [{ x: 0, y: 0 }].concat(pd);
+                        let reverse_pd = pd.map((pair: any) => {
+                            kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                            return { x: pair.x, y: -pair.y };
+                        }).reverse();
+                        pd = pd.concat(reverse_pd);
+                        newData[prop] = pd;
+                    }
+                    newExtraPairData.push({ name: "Postop Hemo", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
+                    break;
+                default:
+                    break;
+            }
+        }
+        )
+    }
+    return newExtraPairData;
 }
 
 export const ChartSVG = styled.svg`

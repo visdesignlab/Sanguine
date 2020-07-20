@@ -22,24 +22,22 @@ export interface InterventionDataPoint {
   postPatienIDList: number[];
 }
 
-export interface BarChartDataPoint {
+export interface BasicAggregatedDatePoint {
   aggregateAttribute: any;
-  kdeCal: any[];
-  actualDataPoints: any[]
-  totalVal: number;
-  caseCount: number;
-  median: number;
-  zeroCaseNum: number;
-  patienIDList: number[];
-}
-
-export interface HeatMapDataPoint {
-  aggregateAttribute: any;
-  countDict: any;
   totalVal: number;
   caseCount: number;
   zeroCaseNum: number;
   patientIDList: number[];
+}
+
+export interface BarChartDataPoint extends BasicAggregatedDatePoint {
+  kdeCal: any[];
+  actualDataPoints: any[]
+  median: number;
+}
+
+export interface HeatMapDataPoint extends BasicAggregatedDatePoint {
+  countDict: any;
 }
 
 export interface SingleCasePoint {
