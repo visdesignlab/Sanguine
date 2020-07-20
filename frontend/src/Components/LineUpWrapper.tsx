@@ -30,7 +30,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
     //const [caseIDArray, setCaseIDArray] = useState<number[]>([])
 
     useEffect(() => {
-        console.log(hemoglobinDataSet)
+
         if (hemoglobinDataSet) {
             let distinctSurgeons = new Set();
             let distinctAnesth = new Set();
