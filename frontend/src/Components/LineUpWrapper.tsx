@@ -20,7 +20,6 @@ export type Props = OwnProps;
 
 const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
 
-    const componentRef = useRef<HTMLElement>()
 
     // const lineupvariable = LineUpJS.builder
     const { currentSelectPatientGroup } = store!
@@ -37,27 +36,22 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
             let distinctPatient = new Set();
             let caseIDArray: number[] = []
             let caseIDDict: any = {}
-            let tempData = hemoglobinDataSet
+            let tempData: any[] = []
             hemoglobinDataSet.map((ob: any, index: number) => {
                 caseIDDict[ob.CASE_ID] = index;
                 distinctAnesth.add((ob.ANESTHESIOLOGIST_ID).toString());
                 distinctSurgeons.add((ob.SURGEON_ID).toString());
                 distinctPatient.add(ob.PATIENT_ID.toString());
                 caseIDArray.push(ob.CASE_ID)
-
+                let oldObject = ob;
+                oldObject.DATE = new Date(oldObject.DATE)
+                tempData.push(oldObject);
             })
             stateUpdateWrapperUseJSON(distinctCategories, { surgeons: (Array.from(distinctSurgeons)), anesth: Array.from(distinctAnesth), patient: Array.from(distinctPatient) }, setCatgories)
             stateUpdateWrapperUseJSON(caseIDReference, caseIDDict, setCaseIDList)
-
+            stateUpdateWrapperUseJSON(convertedData, tempData, setConvertedData)
         }
     }, [hemoglobinDataSet])
-
-    const outputSelectedGroup = () => {
-
-        const dataIndicies = currentSelectPatientGroup.map(d => caseIDReference[d])
-        return dataIndicies
-    }
-
 
     //TODO make the line up side bar on the main instead of on a seperate tab. 
     //
@@ -65,9 +59,9 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
     useEffect(() => {
         $(document).ready(function () {
             const node = document.getElementById("lineup-wrapper")
-            if (node && hemoglobinDataSet.length > 0 && distinctCategories.surgeons.length > 0) {
+            if (node && convertedData.length > 0 && distinctCategories.surgeons.length > 0) {
                 if (!(node.getElementsByClassName("lu-side-panel").length > 0)) {
-                    const lineup = LineUpJS.builder(hemoglobinDataSet)
+                    const lineup = LineUpJS.builder(convertedData)
                         .column(LineUpJS.buildStringColumn("CASE_ID"))
                         .column(LineUpJS.buildCategoricalColumn("SURGEON_ID").categories(distinctCategories.patient))
                         .column(LineUpJS.buildStringColumn("HEMO"))
@@ -92,7 +86,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                         setTimeout(() => {
                             const filter_output = lineup.data.getFirstRanking().getGroups()[0].order
 
-                            const caseIDList = filter_output.map(v => hemoglobinDataSet[v].CASE_ID)
+                            const caseIDList = filter_output.map(v => convertedData[v].CASE_ID)
                             actions.updateSelectedPatientGroup(caseIDList)
                             console.log(caseIDList)
                         }, 1000)
@@ -108,7 +102,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
             }
         })
 
-    }, [distinctCategories, hemoglobinDataSet])
+    }, [distinctCategories, convertedData])
 
 
 

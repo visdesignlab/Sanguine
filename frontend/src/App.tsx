@@ -3,7 +3,7 @@ import Store from './Interfaces/Store'
 import { inject, observer } from 'mobx-react';
 import Dashboard from './Dashboard';
 import { BrowserRouter, Switch, Route } from 'react-router-dom'
-import { timeFormat } from 'd3';
+import { timeFormat, timeParse } from 'd3';
 
 import Login from './LogIn'
 import Preview from './Preview';
@@ -35,7 +35,7 @@ const App: FC<Props> = ({ store }: Props) => {
     }
     const resOutcome = await fetch(`http://localhost:8000/api/patient_outcomes`);
     const dataOutcome = await resOutcome.json();
-    console.log(dataOutcome)
+    // console.log(dataOutcome)
     for (let obj of dataOutcome) {
       riskOutcomeDict[obj.visit_no].VENT = obj.gr_than_1440_vent || 0;
       riskOutcomeDict[obj.visit_no].DEATH = obj.patient_death || 0;
@@ -79,7 +79,6 @@ const App: FC<Props> = ({ store }: Props) => {
       };
     });
 
-    //TODO parse the date to proper format.
 
     resultHemo.map((ob: any, index: number) => {
       if (transfused_dict[ob.CASE_ID]) {
@@ -99,7 +98,7 @@ const App: FC<Props> = ({ store }: Props) => {
           HEMO: ob.HEMO,
           QUARTER: ob.QUARTER,
           MONTH: ob.MONTH,
-          DATE: ob.DATE,
+          DATE: timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime(),
           VENT: riskOutcomeDict[ob.VISIT_ID].VENT.toString(),
           DRG_WEIGHT: riskOutcomeDict[ob.VISIT_ID].DRG_WEIGHT,
           DEATH: riskOutcomeDict[ob.VISIT_ID].DEATH.toString(),
@@ -111,7 +110,7 @@ const App: FC<Props> = ({ store }: Props) => {
 
     result = result.filter((d: any) => d);
     console.log("hemo data done")
-    //  console.log(result)
+    console.log(result)
     setHemoData(result)
     store!.loadingModalOpen = false;
 
