@@ -100,7 +100,7 @@ const App: FC<Props> = ({ store }: Props) => {
           MONTH: ob.MONTH,
           DATE: timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime(),
           VENT: riskOutcomeDict[ob.VISIT_ID].VENT.toString(),
-          DRG_WEIGHT: riskOutcomeDict[ob.VISIT_ID].DRG_WEIGHT,
+          DRG_WEIGHT: riskOutcomeDict[ob.VISIT_ID].DRG_WEIGHT || 0,
           DEATH: riskOutcomeDict[ob.VISIT_ID].DEATH.toString(),
           ECMO: riskOutcomeDict[ob.VISIT_ID].ECMO.toString(),
           STROKE: riskOutcomeDict[ob.VISIT_ID].STROKE.toString()

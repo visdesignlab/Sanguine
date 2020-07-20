@@ -63,7 +63,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                 if (!(node.getElementsByClassName("lu-side-panel").length > 0)) {
                     const lineup = LineUpJS.builder(convertedData)
                         .column(LineUpJS.buildStringColumn("CASE_ID"))
-                        .column(LineUpJS.buildCategoricalColumn("SURGEON_ID").categories(distinctCategories.patient))
+                        .column(LineUpJS.buildStringColumn("PATIENT_ID"))
                         .column(LineUpJS.buildStringColumn("HEMO"))
                         .column(LineUpJS.buildCategoricalColumn('VENT').categories(["0", "1"]))
                         .column(LineUpJS.buildCategoricalColumn("DEATH").categories(["0", "1"]))
