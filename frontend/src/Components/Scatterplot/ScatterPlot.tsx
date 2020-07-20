@@ -9,8 +9,8 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
-import { offset, AxisLabelDict, highlight_blue } from "../../PresetsProfile"
-import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range, median, quantile } from "d3";
+import { offset, AxisLabelDict, highlight_blue, postop_color } from "../../PresetsProfile"
+import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range, median, quantile, deviation, mean } from "d3";
 
 //import CustomizedAxis from "../Utilities/CustomizedAxis";
 import { highlight_orange, basic_gray } from "../../PresetsProfile";
@@ -231,40 +231,43 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         if (xAxisName !== "CELL_SAVER_ML") {
 
             for (let [key, value] of Object.entries(medianSet)) {
-                const sortedArray = (value as any).sort()
-                const medianVal = median(value as any) || 0
-                const lowerQuantile = quantile(sortedArray as any, 0.05) || 0
-                const upperQuantile = quantile(sortedArray as any, 0.95) || 0
-                // console.log(value, lowerQuantile, upperQuantile)
+                //   const sortedArray = (value as any).sort()
+                const meanVal = mean(value as any) || 0
+                // const lowerBound = quantile(sortedArray as any, 0.05) || 0
+                // const upperBound = quantile(sortedArray as any, 0.95) || 0
+                const std = deviation(value as any) || 0;
+                const lowerBound = meanVal - 1.96 * std / Math.sqrt((value as any).length)
+                const upperBound = meanVal + 1.96 * std / Math.sqrt((value as any).length)
+                // console.log(value, lowerBound, upperBound)
                 lineSet = lineSet.concat(
                     [<line strokeWidth="3px"
-                        stroke={highlight_blue}
-                        opacity={0.5}
+                        stroke={"#3498d5"}
+                        //  opacity={0.5}
                         x1={xAxisScale()(key as any)}
-                        y1={yAxisScale()(medianVal)}
-                        y2={yAxisScale()(medianVal)}
+                        y1={yAxisScale()(meanVal)}
+                        y2={yAxisScale()(meanVal)}
                         x2={xAxisScale()(key as any) + xAxisScale().bandwidth() || 0} />,
-                    <line strokeWidth="2px"
-                        stroke={highlight_blue}
-                        opacity={0.5}
+                    <line strokeWidth="1px"
+                        stroke={"#3498d5"}
+                        // opacity={0.5}
                         x1={xAxisScale()(key as any) + 0.5 * xAxisScale().bandwidth() || 0}
-                        y1={yAxisScale()(lowerQuantile)}
-                        y2={yAxisScale()(upperQuantile)}
+                        y1={yAxisScale()(lowerBound)}
+                        y2={yAxisScale()(upperBound)}
                         x2={xAxisScale()(key as any) + 0.5 * xAxisScale().bandwidth() || 0} />,
                     <line strokeWidth="3px"
-                        stroke={highlight_blue}
-                        opacity={0.5}
-                        x1={xAxisScale()(key as any) + 0.4 * xAxisScale().bandwidth() || 0}
-                        y1={yAxisScale()(upperQuantile)}
-                        y2={yAxisScale()(upperQuantile)}
-                        x2={xAxisScale()(key as any) + 0.6 * xAxisScale().bandwidth() || 0} />,
+                        stroke={"#3498d5"}
+                        // opacity={0.5}
+                        x1={xAxisScale()(key as any) + 0.3 * xAxisScale().bandwidth() || 0}
+                        y1={yAxisScale()(upperBound)}
+                        y2={yAxisScale()(upperBound)}
+                        x2={xAxisScale()(key as any) + 0.7 * xAxisScale().bandwidth() || 0} />,
                     <line strokeWidth="3px"
-                        stroke={highlight_blue}
-                        opacity={0.5}
-                        x1={xAxisScale()(key as any) + 0.4 * xAxisScale().bandwidth() || 0}
-                        y1={yAxisScale()(lowerQuantile)}
-                        y2={yAxisScale()(lowerQuantile)}
-                        x2={xAxisScale()(key as any) + 0.6 * xAxisScale().bandwidth() || 0} />]
+                        stroke={"#3498d5"}
+                        // opacity={0.5}
+                        x1={xAxisScale()(key as any) + 0.3 * xAxisScale().bandwidth() || 0}
+                        y1={yAxisScale()(lowerBound)}
+                        y2={yAxisScale()(lowerBound)}
+                        x2={xAxisScale()(key as any) + 0.7 * xAxisScale().bandwidth() || 0} />]
                 )
             }
         }
