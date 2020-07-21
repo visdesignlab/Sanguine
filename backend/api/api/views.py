@@ -1,24 +1,25 @@
 import ast
-import cx_Oracle
-import csv
-import json
 import os
 
 from collections import Counter
-from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed, QueryDict
+from django.http import (
+    HttpResponse,
+    JsonResponse,
+    HttpResponseBadRequest,
+    HttpResponseNotAllowed
+)
 from django.forms.models import model_to_dict
 from django.contrib.auth.decorators import login_required
 
 from api.decorators import conditional_login_required
 from api.models import State
 from api.utils import (
-    make_connection, 
-    data_dictionary, 
-    cpt, 
-    execute_sql, 
-    get_all_by_agg, 
-    get_filters, 
-    output_quarter, 
+    data_dictionary,
+    cpt,
+    execute_sql,
+    get_all_by_agg,
+    get_filters,
+    output_quarter,
     validate_dates
 )
 
@@ -47,6 +48,8 @@ DE_IDENT_TABLES = {
     "patient": "CLIN_DM.BPU_CTS_DI_PATIENT",
     "surgery_case": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE",
     "visit": "CLIN_DM.BPU_CTS_DI_VISIT",
+    "extraop_meds": "CLIN_DM.BPU_CTS_DI_EXTRAOP_MEDS",
+    "intraop_meds": "CLIN_DM.BPU_CTS_DI_INTRAOP_MEDS",
 }
 
 IDENT_TABLES = {
@@ -145,7 +148,7 @@ def fetch_surgery(request):
             dict(zip([data_dict[key[0]] for key in result.description], row))
             for row in result
         ]
-        
+
         return JsonResponse({"result": data})
     else:
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
@@ -159,9 +162,9 @@ def fetch_patient(request):
 
         if not patient_id:
             return HttpResponseBadRequest("patient_id must be supplied.")
-        
+
         command = f"""
-        SELECT 
+        SELECT
             PATIENT.{FIELDS_IN_USE.get('birth_date')},
             PATIENT.GENDER_CODE,
             PATIENT.GENDER_DESC,
@@ -170,7 +173,7 @@ def fetch_patient(request):
             PATIENT.ETHNICITY_CODE,
             PATIENT.ETHNICITY_DESC,
             PATIENT.{FIELDS_IN_USE.get('death_date')}
-        FROM 
+        FROM
             {TABLES_IN_USE.get('patient')} PATIENT
         WHERE PATIENT.{FIELDS_IN_USE.get('patient_id')} = :id
         """
@@ -423,24 +426,57 @@ def patient_outcomes(request):
         # Define the sql command
         command = f"""
         SELECT
-            VST.DI_PAT_ID,
-            VST.DI_VISIT_NO,
+            VST.{FIELDS_IN_USE['patient_id']},
+            VST.{FIELDS_IN_USE['visit_no']},
             CASE WHEN TOTAL_VENT_MINS > 1440 THEN 1 ELSE 0 END AS VENT_1440,
             CASE WHEN PAT_EXPIRED = 'Y' THEN 1 ELSE 0 END AS PAT_DEATH,
             BLNG_OUTCOMES.STROKE,
-            BLNG_OUTCOMES.ECMO
+            BLNG_OUTCOMES.ECMO,
+            MEDS.TRANEXAMIC_ACID,
+            MEDS.AMICAR,
+            MEDS.B12
         FROM
             {TABLES_IN_USE['visit']} VST
         LEFT JOIN (
             SELECT 
-                DI_PAT_ID,
+                {FIELDS_IN_USE['patient_id']},
                 CASE WHEN SUM(CASE WHEN CODE IN ('I97.820', '997.02') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS STROKE,
                 CASE WHEN SUM(CASE WHEN CODE IN ('33952', '33954', '33956', '33958', '33962', '33964', '33966', '33973', '33974', '33975', '33976', '33977', '33978', '33979', '33980', '33981', '33982', '33983', '33984', '33986', '33987', '33988', '33989') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS ECMO
             FROM {TABLES_IN_USE['billing_codes']}
             WHERE PRESENT_ON_ADM_F IS NULL
-            GROUP BY DI_PAT_ID
+            GROUP BY {FIELDS_IN_USE['patient_id']}
         ) BLNG_OUTCOMES
-            ON VST.DI_PAT_ID = BLNG_OUTCOMES.DI_PAT_ID
+            ON VST.{FIELDS_IN_USE['patient_id']} = BLNG_OUTCOMES.{FIELDS_IN_USE['patient_id']} AND VST.{FIELDS_IN_USE['visit_no']} = BLNG_OUTCOMES.{FIELDS_IN_USE['visit_no']}
+        LEFT JOIN (
+            SELECT 
+                {FIELDS_IN_USE['patient_id']},
+                DI_VISIT_NO,
+                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (31383, 310071, 301530) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS TRANEXAMIC_ACID,
+                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (300167, 300168) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS AMICAR,
+                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (800001, 59535, 400030, 5553, 23584, 73156, 23579, 23582) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS B12
+            FROM (
+                (
+                    select
+                        {FIELDS_IN_USE['patient_id']},
+                        DI_VISIT_NO,
+                        MEDICATION_ID,
+                        ADMIN_DOSE,
+                        DOSE_UNIT_DESC
+                    FROM {TABLES_IN_USE['intraop_meds']}
+                )
+                UNION ALL
+                (
+                    select 
+                        {FIELDS_IN_USE['patient_id']},
+                        DI_VISIT_NO,
+                        MEDICATION_ID,
+                        ADMIN_DOSE,
+                        DOSE_UNIT_DESC
+                    from {TABLES_IN_USE['extraop_meds']}
+                ))
+            GROUP BY {FIELDS_IN_USE['patient_id']}, DI_VISIT_NO
+        ) MEDS
+            ON VST.{FIELDS_IN_USE['patient_id']} = MEDS.{FIELDS_IN_USE['patient_id']} AND VST.{FIELDS_IN_USE['visit_no']} = MEDS.{FIELDS_IN_USE['visit_no']}
         WHERE 1=1
             {pat_filters_safe_sql}
         """
@@ -459,6 +495,9 @@ def patient_outcomes(request):
                 "patient_death": row[3],
                 "patient_stroke": row[4],
                 "patient_ECMO": row[5],
+                "tranexamic_acid": row[6],
+                "AMICAR": row[7],
+                "B12": row[8],
             })
 
         return JsonResponse(result_list, safe = False)
