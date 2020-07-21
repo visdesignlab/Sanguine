@@ -1232,7 +1232,7 @@ class StateTestCaseLoggedIn(TransactionTestCase):
             )
             self.assertEqual(
                 ast.literal_eval(response.content.decode())["name"],
-                valid_option["new_name"
+                valid_option["new_name"]
             )
 
     def test_state_delete_valid_types(self):
