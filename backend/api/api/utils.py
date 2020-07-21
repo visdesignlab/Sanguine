@@ -4,6 +4,7 @@ import json
 
 from datetime import datetime
 
+
 # Makes and returns the database connection object
 def make_connection():
     # Load credentials
@@ -61,7 +62,7 @@ def execute_sql(command, *args, **kwargs):
 # Returns all values from raw results for a specified agg var
 def get_all_by_agg(result_dict, agg, variable):
     return [
-        y for y in 
+        y for y in
         list(map(lambda x: x[variable] if x["aggregated_by"] == agg else None, result_dict))
         if y is not None
     ]
@@ -82,25 +83,28 @@ def get_filters(filter_selection):
         filters = [a[0] for a in cpt()]
     else:
         filters = [a[0] for a in cpt() if a[2] in filter_selection]
-    
+
     bind_names = get_bind_names(filters)
     filters_safe_sql = f"WHERE CODE IN ({','.join(bind_names)}) "
 
     return filters, bind_names, filters_safe_sql
 
-def output_quarter (number):
-    if number >0 and number < 4:
+
+def output_quarter(number):
+    if number > 0 and number < 4:
         return 1
-    elif number >3 and number < 7:
+    elif number > 3 and number < 7:
         return 2
     elif number > 6 and number < 10:
         return 3
     else:
         return 4
 
+
 def validate_dates(date_array):
     checked_dates = [validate_one_date_string(x) for x in date_array]
     return all(checked_dates)
+
 
 def validate_one_date_string(date):
     DATE_FORMAT = "%d-%b-%Y"

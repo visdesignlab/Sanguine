@@ -23,22 +23,29 @@ class UtilUnitTestCase(TestCase):
 
     def test_execute_sql(self):
         # Test with no args
-        result = utils.execute_sql("SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE")
+        result = utils.execute_sql(
+            "SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE"
+            )
         self.assertIsNotNone(result)
         self.assertTrue(len(result.description) > 0)
 
         # Test with args dict
         queries = [
-            ("SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE WHERE DI_PAT_ID = :bind", {"bind": 123}),
+            ("""SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE
+            WHERE DI_PAT_ID = :bind""", {"bind": 123}),
         ]
-    
+
         for q, params in queries:
             result = utils.execute_sql(q, params)
             self.assertIsNotNone(result)
             self.assertTrue(len(result.description) > 0)
 
         # Test with positional kwargs
-        result = utils.execute_sql("SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE WHERE DI_PAT_ID = :bind", bind = 123)
+        result = utils.execute_sql(
+            """SELECT * FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE
+            WHERE DI_PAT_ID = :bind""",
+            bind=123
+        )
         self.assertIsNotNone(result)
         self.assertTrue(len(result.description) > 0)
 
@@ -64,7 +71,7 @@ class UtilUnitTestCase(TestCase):
         ]
         for invalid_input in invalid_inputs:
             with self.assertRaises(TypeError):
-                bind_names = utils.get_bind_names(invalid_input)
+                utils.get_bind_names(invalid_input)
 
     def test_get_filters_valid_inputs(self):
         valid_inputs = [
@@ -72,7 +79,9 @@ class UtilUnitTestCase(TestCase):
             ["1", "2"],
         ]
         for valid_input in valid_inputs:
-            filters, bind_names, filters_safe_sql = utils.get_filters(valid_input)
+            filters, bind_names, filters_safe_sql = utils.get_filters(
+                valid_input
+            )
             self.assertIsNotNone(filters)
             self.assertIsNotNone(bind_names)
             self.assertIsNotNone(filters_safe_sql)
@@ -90,16 +99,25 @@ class UtilUnitTestCase(TestCase):
         ]
         for invalid_input in invalid_inputs:
             with self.assertRaises(TypeError):
-                filters, bind_names, filters_safe_sql = utils.get_filters(invalid_input)
-        
+                filters, bind_names, filters_safe_sql = utils.get_filters(
+                    invalid_input
+                )
+
 
 class LoginLogoutFlowTestCase(TestCase):
     def setUp(self):
         self.c = Client()
 
     def test_login_logout(self):
-        test_user = User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
-        logged_in_test_user = self.c.login(username = 'test_user', password = 'test_password')
+        test_user = User.objects.create_user(
+            'test_user',
+            'myemail@test.com',
+            'test_password'
+        )
+        logged_in_test_user = self.c.login(
+            username='test_user',
+            password='test_password'
+        )
         self.assertTrue(logged_in_test_user)
 
         self.c.logout()
@@ -129,8 +147,12 @@ class NoParamRoutesTestCaseLoggedOut(TransactionTestCase):
 class NoParamRoutesTestCaseLoggedIn(TransactionTestCase):
     def setUp(self):
         self.c = Client()
-        User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
-        self.c.login(username = 'test_user', password = 'test_password')
+        User.objects.create_user(
+            'test_user',
+            'myemail@test.com',
+            'test_password'
+        )
+        self.c.login(username='test_user', password='test_password')
 
     def test_get_api_root(self):
         response = self.c.get("/api/")
@@ -158,7 +180,7 @@ class RequestSurgeryTestCaseLoggedOut(TransactionTestCase):
     def test_request_surgery_unsupported_methods(self):
         response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 302)
-        
+
         response = self.c.head(self.endpoint)
         self.assertEqual(response.status_code, 302)
 
@@ -201,13 +223,17 @@ class RequestSurgeryTestCaseLoggedIn(TransactionTestCase):
 
     def setUp(self):
         self.c = Client()
-        User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
-        self.c.login(username = 'test_user', password = 'test_password')
+        User.objects.create_user(
+            'test_user',
+            'myemail@test.com',
+            'test_password'
+        )
+        self.c.login(username='test_user', password='test_password')
 
     def test_request_surgery_unsupported_methods(self):
         response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 405)
-        
+
         response = self.c.head(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
@@ -258,7 +284,7 @@ class RequestPatientTestCaseLoggedOut(TransactionTestCase):
     def test_request_patient_unsupported_methods(self):
         response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 302)
-        
+
         response = self.c.head(self.endpoint)
         self.assertEqual(response.status_code, 302)
 
@@ -301,13 +327,17 @@ class RequestPatientTestCaseLoggedIn(TransactionTestCase):
 
     def setUp(self):
         self.c = Client()
-        User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
-        self.c.login(username = 'test_user', password = 'test_password')
+        User.objects.create_user(
+            'test_user',
+            'myemail@test.com',
+            'test_password'
+        )
+        self.c.login(username='test_user', password='test_password')
 
     def test_request_patient_unsupported_methods(self):
         response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 405)
-        
+
         response = self.c.head(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
@@ -362,7 +392,7 @@ class RequestTransfusedUnitsTestCaseLoggedOut(TransactionTestCase):
     def test_request_transfused_unsupported_methods(self):
         response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 302)
-        
+
         response = self.c.head(self.endpoint)
         self.assertEqual(response.status_code, 302)
 
@@ -384,14 +414,14 @@ class RequestTransfusedUnitsTestCaseLoggedOut(TransactionTestCase):
     def test_request_transfused_units_missing_transfusion_type(self):
         response = self.c.get(
             self.endpoint,
-            { "date_range": "01-JAN-2016,31-DEC-2017" },
+            {"date_range": "01-JAN-2016,31-DEC-2017"},
         )
         self.assertEqual(response.status_code, 302)
 
     def test_request_transfused_units_missing_date_range(self):
         response = self.c.get(
             self.endpoint,
-            { "transfusion_type": "PRBC_UNITS" },
+            {"transfusion_type": "PRBC_UNITS"},
         )
         self.assertEqual(response.status_code, 302)
 
@@ -415,7 +445,7 @@ class RequestTransfusedUnitsTestCaseLoggedOut(TransactionTestCase):
             response = self.c.get(
                 self.endpoint,
                 {
-                    "transfusion_type": "PRBC_UNITS", 
+                    "transfusion_type": "PRBC_UNITS",
                     "date_range": invalid_option,
                 },
             )
@@ -431,7 +461,7 @@ class RequestTransfusedUnitsTestCaseLoggedOut(TransactionTestCase):
             response = self.c.get(
                 self.endpoint,
                 {
-                    "transfusion_type": invalid_option, 
+                    "transfusion_type": invalid_option,
                     "date_range": "01-JAN-2016,31-DEC-2017",
                 },
             )
@@ -447,8 +477,8 @@ class RequestTransfusedUnitsTestCaseLoggedOut(TransactionTestCase):
             response = self.c.get(
                 self.endpoint,
                 {
-                    "transfusion_type": "PRBC_UNITS", 
-                    "date_range": "01-JAN-2016,31-DEC-2017", 
+                    "transfusion_type": "PRBC_UNITS",
+                    "date_range": "01-JAN-2016,31-DEC-2017",
                     "aggregated_by": invalid_option,
                 },
             )
@@ -458,8 +488,8 @@ class RequestTransfusedUnitsTestCaseLoggedOut(TransactionTestCase):
         response = self.c.get(
             self.endpoint,
             {
-                "transfusion_type": "ALL_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+                "transfusion_type": "ALL_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "aggregated_by": "YEAR",
             },
         )
@@ -467,69 +497,69 @@ class RequestTransfusedUnitsTestCaseLoggedOut(TransactionTestCase):
 
     def test_request_transfused_units_valid_types(self):
         valid_options = [
-            { # Minimum viable
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # Minimum viable
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
             },
-            { # Different date_range
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2017,31-DEC-2018", 
+            {  # Different date_range
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2017,31-DEC-2018",
             },
-            { # Different transfusion_type (should test them all)
-                "transfusion_type": "ALL_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # Different transfusion_type (should test them all)
+                "transfusion_type": "ALL_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
             },
-            { # Add aggregation
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # Add aggregation
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "aggregated_by": "YEAR",
             },
-            { # Different aggregation
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # Different aggregation
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "aggregated_by": "SURGEON_ID",
             },
-            { # One patient ID
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # One patient ID
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "patient_ids": "585148403",
             },
-            { # Multiple pats
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # Multiple pats
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "patient_ids": "585148403,81015617,632559101",
             },
-            { # One patient ID
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # One patient ID
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "case_ids": "85103152",
             },
-            { # One multiple pats
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # One multiple pats
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "case_ids": "85103152,74712769",
             },
-            { # One filter_selection
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # One filter_selection
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "filter_selection": "Musculoskeletal Thoracic Procedure",
             },
-            { # Multiple filter_selection
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # Multiple filter_selection
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "filter_selection": "Musculoskeletal Thoracic Procedure,Thoracotomy/Lung Procedure",
             },
-            { # Full example
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # Full example
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "patient_ids": "68175619,14711172,35383429,632559101",
                 "case_ids": "85103152",
                 "filter_selection": "Musculoskeletal Thoracic Procedure,Thoracotomy/Lung Procedure",
                 "aggregated_by": "YEAR",
             },
-            { # Full example ALL_UNITS - no agg
-                "transfusion_type": "ALL_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # Full example ALL_UNITS - no agg
+                "transfusion_type": "ALL_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "patient_ids": "68175619,14711172,35383429,632559101",
                 "case_ids": "85103152",
                 "filter_selection": "Musculoskeletal Thoracic Procedure,Thoracotomy/Lung Procedure",
@@ -549,8 +579,12 @@ class RequestTransfusedUnitsTestCaseLoggedIn(TransactionTestCase):
 
     def setUp(self):
         self.c = Client()
-        User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
-        self.c.login(username = 'test_user', password = 'test_password')
+        User.objects.create_user(
+            'test_user',
+            'myemail@test.com',
+            'test_password'
+        )
+        self.c.login(username='test_user', password='test_password')
 
     def test_request_transfused_units_no_params(self):
         response = self.c.get(self.endpoint)
@@ -559,7 +593,7 @@ class RequestTransfusedUnitsTestCaseLoggedIn(TransactionTestCase):
     def test_request_transfused_unsupported_methods(self):
         response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 405)
-        
+
         response = self.c.head(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
@@ -581,7 +615,7 @@ class RequestTransfusedUnitsTestCaseLoggedIn(TransactionTestCase):
     def test_request_transfused_units_missing_transfusion_type(self):
         response = self.c.get(
             self.endpoint,
-            { "date_range": "01-JAN-2016,31-DEC-2017" },
+            {"date_range": "01-JAN-2016,31-DEC-2017"},
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -592,7 +626,7 @@ class RequestTransfusedUnitsTestCaseLoggedIn(TransactionTestCase):
     def test_request_transfused_units_missing_date_range(self):
         response = self.c.get(
             self.endpoint,
-            { "transfusion_type": "PRBC_UNITS" },
+            {"transfusion_type": "PRBC_UNITS"},
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -620,7 +654,7 @@ class RequestTransfusedUnitsTestCaseLoggedIn(TransactionTestCase):
             response = self.c.get(
                 self.endpoint,
                 {
-                    "transfusion_type": "PRBC_UNITS", 
+                    "transfusion_type": "PRBC_UNITS",
                     "date_range": invalid_option,
                 },
             )
@@ -640,7 +674,7 @@ class RequestTransfusedUnitsTestCaseLoggedIn(TransactionTestCase):
             response = self.c.get(
                 self.endpoint,
                 {
-                    "transfusion_type": invalid_option, 
+                    "transfusion_type": invalid_option,
                     "date_range": "01-JAN-2016,31-DEC-2017",
                 },
             )
@@ -660,8 +694,8 @@ class RequestTransfusedUnitsTestCaseLoggedIn(TransactionTestCase):
             response = self.c.get(
                 self.endpoint,
                 {
-                    "transfusion_type": "PRBC_UNITS", 
-                    "date_range": "01-JAN-2016,31-DEC-2017", 
+                    "transfusion_type": "PRBC_UNITS",
+                    "date_range": "01-JAN-2016,31-DEC-2017",
                     "aggregated_by": invalid_option,
                 },
             )
@@ -675,8 +709,8 @@ class RequestTransfusedUnitsTestCaseLoggedIn(TransactionTestCase):
         response = self.c.get(
             self.endpoint,
             {
-                "transfusion_type": "ALL_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+                "transfusion_type": "ALL_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "aggregated_by": "YEAR",
             },
         )
@@ -688,69 +722,69 @@ class RequestTransfusedUnitsTestCaseLoggedIn(TransactionTestCase):
 
     def test_request_transfused_units_valid_types(self):
         valid_options = [
-            { # Minimum viable
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # Minimum viable
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
             },
-            { # Different date_range
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2017,31-DEC-2018", 
+            {  # Different date_range
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2017,31-DEC-2018",
             },
-            { # Different transfusion_type (should test them all)
-                "transfusion_type": "ALL_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # Different transfusion_type (should test them all)
+                "transfusion_type": "ALL_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
             },
-            { # Add aggregation
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # Add aggregation
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "aggregated_by": "YEAR",
             },
-            { # Different aggregation
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # Different aggregation
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "aggregated_by": "SURGEON_ID",
             },
-            { # One patient ID
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # One patient ID
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "patient_ids": "585148403",
             },
-            { # Multiple pats
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # Multiple pats
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "patient_ids": "585148403,81015617,632559101",
             },
-            { # One patient ID
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # One patient ID
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "case_ids": "85103152",
             },
-            { # One multiple pats
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # One multiple pats
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "case_ids": "85103152,74712769",
             },
-            { # One filter_selection
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # One filter_selection
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "filter_selection": "Musculoskeletal Thoracic Procedure",
             },
-            { # Multiple filter_selection
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # Multiple filter_selection
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "filter_selection": "Musculoskeletal Thoracic Procedure,Thoracotomy/Lung Procedure",
             },
-            { # Full example
-                "transfusion_type": "PRBC_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # Full example
+                "transfusion_type": "PRBC_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "patient_ids": "68175619,14711172,35383429,632559101",
                 "case_ids": "85103152",
                 "filter_selection": "Musculoskeletal Thoracic Procedure,Thoracotomy/Lung Procedure",
                 "aggregated_by": "YEAR",
             },
-            { # Full example ALL_UNITS - no agg
-                "transfusion_type": "ALL_UNITS", 
-                "date_range": "01-JAN-2016,31-DEC-2017", 
+            {  # Full example ALL_UNITS - no agg
+                "transfusion_type": "ALL_UNITS",
+                "date_range": "01-JAN-2016,31-DEC-2017",
                 "patient_ids": "68175619,14711172,35383429,632559101",
                 "case_ids": "85103152",
                 "filter_selection": "Musculoskeletal Thoracic Procedure,Thoracotomy/Lung Procedure",
@@ -774,7 +808,7 @@ class RiskScoreTestCaseLoggedOut(TransactionTestCase):
     def test_risk_score_unsupported_methods(self):
         response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 302)
-        
+
         response = self.c.head(self.endpoint)
         self.assertEqual(response.status_code, 302)
 
@@ -816,13 +850,17 @@ class RiskScoreTestCaseLoggedIn(TransactionTestCase):
 
     def setUp(self):
         self.c = Client()
-        User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
-        self.c.login(username = 'test_user', password = 'test_password')
+        User.objects.create_user(
+            'test_user',
+            'myemail@test.com',
+            'test_password'
+        )
+        self.c.login(username='test_user', password='test_password')
 
     def test_risk_score_unsupported_methods(self):
         response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 405)
-        
+
         response = self.c.head(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
@@ -868,7 +906,7 @@ class PatientOutcomesTestCaseLoggedOut(TransactionTestCase):
     def test_patient_outcomes_unsupported_methods(self):
         response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 302)
-        
+
         response = self.c.head(self.endpoint)
         self.assertEqual(response.status_code, 302)
 
@@ -910,13 +948,17 @@ class PatientOutcomesTestCaseLoggedIn(TransactionTestCase):
 
     def setUp(self):
         self.c = Client()
-        User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
-        self.c.login(username = 'test_user', password = 'test_password')
+        User.objects.create_user(
+            'test_user',
+            'myemail@test.com',
+            'test_password'
+        )
+        self.c.login(username='test_user', password='test_password')
 
     def test_patient_outcomes_unsupported_methods(self):
         response = self.c.post(self.endpoint)
         self.assertEqual(response.status_code, 405)
-        
+
         response = self.c.head(self.endpoint)
         self.assertEqual(response.status_code, 405)
 
@@ -974,8 +1016,16 @@ class StateTestCaseLoggedOut(TransactionTestCase):
 
     def test_state_post_valid_types(self):
         valid_options = [
-            {"name": "test1", "definition": "this is a really long text string. this is a really long text string. "},
-            {"name": "test 2", "definition": "{'type': 'example json object', 'prop': 'value', 'list': []}"},
+            {
+                "name": "test1",
+                "definition": """this is a really long text string.
+                this is a really long text string."""
+            },
+            {
+                "name": "test 2",
+                "definition": """{'type': 'example json object',
+                'prop': 'value', 'list': []}"""
+            },
         ]
 
         for valid_option in valid_options:
@@ -988,7 +1038,11 @@ class StateTestCaseLoggedOut(TransactionTestCase):
     def test_state_get_valid_types(self):
         # Post an example
         valid_options = [
-            {"name": "test1", "definition": "this is a really long text string. this is a really long text string. "},
+            {
+                "name": "test1",
+                "definition": """this is a really long text string.
+                this is a really long text string."""
+            },
         ]
 
         for valid_option in valid_options:
@@ -1012,13 +1066,25 @@ class StateTestCaseLoggedOut(TransactionTestCase):
 
     def test_state_update_valid_types(self):
         # Make a valid state
-        valid_option = {"name": "test1", "definition": "{'type': 'example json object', 'prop': 'value', 'list': []}"}
+        valid_option = {
+            "name": "test1",
+            "definition": """{'type': 'example json object',
+            'prop': 'value', 'list': []}"""
+        }
         response = self.c.post(self.endpoint, valid_option)
 
         # Update that state changing definition, and then definition and name
         valid_options = [
-            {"old_name": "test1", "new_name": "test1", "new_definition": "update1"},
-            {"old_name": "test1", "new_name": "test2", "new_definition": "update2"},
+            {
+                "old_name": "test1",
+                "new_name": "test1",
+                "new_definition": "update1"
+            },
+            {
+                "old_name": "test1",
+                "new_name": "test2",
+                "new_definition": "update2"
+            },
         ]
 
         for valid_option in valid_options:
@@ -1030,10 +1096,14 @@ class StateTestCaseLoggedOut(TransactionTestCase):
 
     def test_state_delete_valid_types(self):
         # Make a valid state
-        valid_option = {"name": "test1", "definition": "{'type': 'example json object', 'prop': 'value', 'list': []}"}
+        valid_option = {
+            "name": "test1",
+            "definition": """{'type': 'example json object',
+            'prop': 'value', 'list': []}"""
+        }
         response = self.c.post(self.endpoint, valid_option)
 
-        # Delete that state 
+        # Delete that state
         valid_options = [
             {"name": "test1"}
         ]
@@ -1051,8 +1121,12 @@ class StateTestCaseLoggedIn(TransactionTestCase):
 
     def setUp(self):
         self.c = Client()
-        User.objects.create_user('test_user', 'myemail@test.com', 'test_password')
-        self.c.login(username = 'test_user', password = 'test_password')
+        User.objects.create_user(
+            'test_user',
+            'myemail@test.com',
+            'test_password'
+        )
+        self.c.login(username='test_user', password='test_password')
 
     def test_state_unsupported_methods(self):
         response = self.c.head(self.endpoint)
@@ -1069,8 +1143,16 @@ class StateTestCaseLoggedIn(TransactionTestCase):
 
     def test_state_post_valid_types(self):
         valid_options = [
-            {"name": "test1", "definition": "this is a really long text string. this is a really long text string. "},
-            {"name": "test 2", "definition": "{'type': 'example json object', 'prop': 'value', 'list': []}"},
+            {
+                "name": "test1",
+                "definition": """this is a really long text string.
+                this is a really long text string."""
+            },
+            {
+                "name": "test 2",
+                "definition": """{'type': 'example json object',
+                'prop': 'value', 'list': []}"""
+            },
         ]
 
         for valid_option in valid_options:
@@ -1084,7 +1166,10 @@ class StateTestCaseLoggedIn(TransactionTestCase):
     def test_state_get_valid_types(self):
         # Post an example
         valid_options = [
-            {"name": "test1", "definition": "this is a really long text string. this is a really long text string. "},
+            {
+                "name": "test1",
+                "definition": """this is a really long text string.
+                this is a really long text string."""},
         ]
 
         for valid_option in valid_options:
@@ -1108,13 +1193,25 @@ class StateTestCaseLoggedIn(TransactionTestCase):
 
     def test_state_update_valid_types(self):
         # Make a valid state
-        valid_option = {"name": "test1", "definition": "{'type': 'example json object', 'prop': 'value', 'list': []}"}
+        valid_option = {
+            "name": "test1",
+            "definition": """{'type': 'example json object',
+            'prop': 'value', 'list': []}"""
+            }
         response = self.c.post(self.endpoint, valid_option)
 
         # Update that state changing definition, and then definition and name
         valid_options = [
-            {"old_name": "test1", "new_name": "test1", "new_definition": "update1"},
-            {"old_name": "test1", "new_name": "test2", "new_definition": "update2"},
+            {
+                "old_name": "test1",
+                "new_name": "test1",
+                "new_definition": "update1"
+            },
+            {
+                "old_name": "test1",
+                "new_name": "test2",
+                "new_definition": "update2"
+            },
         ]
 
         for valid_option in valid_options:
@@ -1129,15 +1226,25 @@ class StateTestCaseLoggedIn(TransactionTestCase):
                 self.endpoint,
                 {"name": valid_option["new_name"]}
             )
-            self.assertEqual(ast.literal_eval(response.content.decode())["definition"], valid_option["new_definition"])
-            self.assertEqual(ast.literal_eval(response.content.decode())["name"], valid_option["new_name"])
+            self.assertEqual(
+                ast.literal_eval(response.content.decode())["definition"],
+                valid_option["new_definition"]
+            )
+            self.assertEqual(
+                ast.literal_eval(response.content.decode())["name"],
+                valid_option["new_name"
+            )
 
     def test_state_delete_valid_types(self):
         # Make a valid state
-        valid_option = {"name": "test1", "definition": "{'type': 'example json object', 'prop': 'value', 'list': []}"}
+        valid_option = {
+            "name": "test1",
+            "definition": """{'type': 'example json object',
+            'prop': 'value', 'list': []}"""
+        }
         response = self.c.post(self.endpoint, valid_option)
 
-        # Delete that state 
+        # Delete that state
         valid_options = [
             {"name": "test1"}
         ]
