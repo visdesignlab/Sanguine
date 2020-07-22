@@ -9,7 +9,7 @@ import ExtraPairBasicInt from "../InterventionPlot/ExtraPairBaiscInt";
 import styled from "styled-components";
 import ExtraPairBarInt from "../InterventionPlot/ExtraPairBarInt";
 import ExtraPairViolinInt from "../InterventionPlot/ExtraPairViolinInt";
-import ExtraPairOutcomesInt from "../InterventionPlot/ExtraPairOutcomesInt";
+
 //import ExtraPairOutcomes from "../BarChart/ExtraPairOutcomes";
 
 interface OwnProps {
@@ -91,25 +91,8 @@ const InterventionExtraPairGenerator: FC<Props> = ({ extraPairDataSet, aggregati
                         aggregationScaleRange={aggregationScaleRange}
                         preIntData={pairData.preIntData}
                         postIntData={pairData.postIntData}
-                        totalData={pairData.totalIntData} />
-                    <ExtraPairText
-                        x={extraPairWidth.Basic / 2}
-                        y={height - currentOffset.bottom + 20}
-                        onClick={() => actions.removeExtraPair(chartId, pairData.name)}
-                    >{pairData.name}</ExtraPairText>
-                </g>);
-                break;
-
-            case "Outcomes":
-                transferedDistance += (extraPairWidth.Basic + extraPairPadding)
-                returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Basic)},0)`}>
-                    <ExtraPairOutcomesInt
-                        aggregationScaleDomain={aggregationScaleDomain}
-                        aggregationScaleRange={aggregationScaleRange}
-                        preIntData={pairData.preIntData}
-                        postIntData={pairData.postIntData}
                         totalData={pairData.totalIntData}
-                        outcomeName={pairData.name} />
+                        name={pairData.name} />
                     <ExtraPairText
                         x={extraPairWidth.Basic / 2}
                         y={height - currentOffset.bottom + 20}

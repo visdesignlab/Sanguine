@@ -8,7 +8,7 @@ import ExtraPairViolin from "../BarChart/ExtraPairViolin";
 import ExtraPairBar from "../BarChart/ExtraPairBar";
 import ExtraPairBasic from "../BarChart/ExtraPairBasic";
 import styled from "styled-components";
-import ExtraPairOutcomes from "../BarChart/ExtraPairOutcomes";
+
 
 interface OwnProps {
     extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];
@@ -94,6 +94,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScaleD
                     <ExtraPairBasic
                         aggregationScaleDomain={aggregationScaleDomain}
                         aggregationScaleRange={aggregationScaleRange}
+                        name={pairData.name}
                         dataSet={pairData.data} />
                     <ExtraPairText
                         x={extraPairWidth.Basic / 2}
@@ -103,21 +104,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScaleD
                 </g>);
                 break;
 
-            case "Outcomes":
-                transferedDistance += (extraPairWidth.Outcomes + extraPairPadding)
-                returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.Outcomes)},0)`}>
-                    <ExtraPairOutcomes
-                        aggregationScaleDomain={aggregationScaleDomain}
-                        aggregationScaleRange={aggregationScaleRange}
-                        dataSet={pairData.data}
-                        outcomeName={pairData.name} />
-                    <ExtraPairText
-                        x={extraPairWidth.Outcomes / 2}
-                        y={height - currentOffset.bottom + 20}
-                        onClick={() => actions.removeExtraPair(chartId, pairData.name)}
-                    >{pairData.name}</ExtraPairText>
-                </g>);
-                break;
+
         }
     })
     return returningComponents

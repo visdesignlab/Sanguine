@@ -11,12 +11,12 @@ interface OwnProps {
     aggregationScaleDomain: string;
     aggregationScaleRange: string;
     store?: Store;
-
+    name: string;
 }
 
 export type Props = OwnProps;
 
-const ExtraPairBasic: FC<Props> = ({ dataSet, aggregationScaleRange, aggregationScaleDomain }: Props) => {
+const ExtraPairBasic: FC<Props> = ({ name, dataSet, aggregationScaleRange, aggregationScaleDomain }: Props) => {
 
 
     const aggregationScale = useCallback(() => {
@@ -33,7 +33,15 @@ const ExtraPairBasic: FC<Props> = ({ dataSet, aggregationScaleRange, aggregation
     //     return [valueScale];
     // }, [dataSet])
 
-    const valueScale = scaleLinear().domain([0, 1]).range(greyScaleRange)
+    const valueScale = useCallback(() => {
+        let valueScale;
+        if (name === "RISK") {
+            valueScale = scaleLinear().domain([0, 30]).range(greyScaleRange);
+        } else {
+            valueScale = scaleLinear().domain([0, 1]).range(greyScaleRange);
+        }
+        return valueScale;
+    }, [])
 
     // const valueScale = useCallback(()=>{
 
@@ -46,13 +54,13 @@ const ExtraPairBasic: FC<Props> = ({ dataSet, aggregationScaleRange, aggregation
                 // console.log(val, dataVal)
                 return (
                     [<Popup
-                        content={(dataVal.number)}
+                        content={name === "RISK" ? format(".2f")(dataVal.actualVal) : (dataVal.actualVal)}
                         trigger={
                             <rect
                                 x={0}
                                 y={aggregationScale()(val)}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
-                                fill={interpolateGreys(valueScale(dataVal.percentage))}
+                                fill={interpolateGreys(valueScale()(dataVal.calculated))}
                                 //fill={secondary_gray}
                                 opacity={0.8}
                                 width={extraPairWidth.Basic}
@@ -67,7 +75,7 @@ const ExtraPairBasic: FC<Props> = ({ dataSet, aggregationScaleRange, aggregation
                         fill="white"
                         alignmentBaseline={"central"}
                         fontSize="12px"
-                        textAnchor={"middle"}>{format(".0%")(dataVal.percentage)}</text>]
+                        textAnchor={"middle"}>{name === "RISK" ? format(".2f")(dataVal.calculated) : format(".0%")(dataVal.calculated)}</text>]
 
 
                 )
