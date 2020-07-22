@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useRef, useLayoutEffect, useState, useMemo } from "react";
+import React, { FC, useEffect, useRef, useLayoutEffect, useState } from "react";
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
@@ -126,7 +126,6 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         const aggregateByAttr = preIntOb.aggregated_by;
                         const preIntMed = median(preIntOb.transfused_units);
                         let preRemovedZeros = preIntOb.transfused_units;
-
 
                         if (!showZero) {
                             preRemovedZeros = preRemovedZeros.filter((d: number) => {
@@ -348,12 +347,12 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                     // handle error
                 }
             });
-
-
-
     }
 
     useEffect(() => {
+        if (previousCancelToken) {
+            previousCancelToken.cancel("cancel the call.")
+        }
         fetchChartData();
     }, [filterSelection, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroup]);
 
@@ -716,10 +715,10 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
         //  setExtraPairData(newExtraPairData)
     }
 
-    useMemo(() => {
+    useEffect(() => {
         makeExtraPairData();
-        //console.log(extraPairData)
-    }, [extraPairArray, data, hemoglobinDataSet]);
+        console.log(extraPairData, data)
+    }, [extraPairArray, data, hemoglobinDataSet, caseIDList]);
 
     const changeAggregation = (e: any, value: any) => {
         actions.changeChart(value.value, valueToVisualize, chartId, "INTERVENTION")

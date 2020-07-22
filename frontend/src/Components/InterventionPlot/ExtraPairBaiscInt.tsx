@@ -20,12 +20,7 @@ interface OwnProps {
 export type Props = OwnProps;
 
 const ExtraPairBasicInt: FC<Props> = ({ totalData, preIntData, postIntData, aggregationScaleRange, aggregationScaleDomain, store }: Props) => {
-    // const [valueScale] = useMemo(() => {
-    //     //console.log(dataSet)
-    //     const valueScale = scaleLinear().domain([0, 1]).range([0.25, 0.8])
 
-    //     return [valueScale];
-    // }, [])
 
     const aggregatedScale = useCallback(() => {
         const aggregatedScale = scaleBand().domain(JSON.parse(aggregationScaleDomain)).range(JSON.parse(aggregationScaleRange)).paddingInner(0.1);

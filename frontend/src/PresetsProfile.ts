@@ -240,7 +240,12 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                     }
                     newExtraPairData.push({ name: "Death", data: newData, type: "Outcomes" });
                     break;
+
                 //TODO I need to think about when we have a patient group filter, how does that apply to extra pair plot. 
+                //I think it actually works just fine since the returning data will be
+                //different when the patient group is applied
+
+
                 case "VENT":
                     // let temporaryDataHolder:any = {}
                     data.map((dataPoint: BasicAggregatedDatePoint) => {

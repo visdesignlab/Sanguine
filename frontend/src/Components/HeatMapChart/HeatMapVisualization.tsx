@@ -190,9 +190,10 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     }
 
     useMemo(() => {
+        console.log("Using Memo")
         makeExtraPairData();
         //console.log(extraPairData)
-    }, [extraPairArray, data, hemoglobinDataSet]);
+    }, [extraPairArray, data, hemoglobinDataSet, caseIDList]);
 
     const toggleStripGraphMode = () => {
         setStripMode(!stripPlotMode)

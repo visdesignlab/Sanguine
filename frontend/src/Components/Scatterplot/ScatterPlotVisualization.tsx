@@ -155,7 +155,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
             });
     }
 
-    //TODO reorganize this, seperate out data request and the randomization process. 
+
 
     useEffect(() => {
         if (previousCancelToken) {

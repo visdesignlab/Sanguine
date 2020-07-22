@@ -30,16 +30,16 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
     }, [aggregationScaleDomain, aggregationScaleRange])
 
     const valueScale = useCallback(() => {
-        let maxIndices = 0;
-        Object.values(dataSet).map((array) => {
-            maxIndices = array.length > maxIndices ? array.length : maxIndices
-        })
+        // let maxIndices = 0;
+        // Object.values(dataSet).map((array) => {
+        //     maxIndices = array.length > maxIndices ? array.length : maxIndices
+        // })
         // const indices = range(0, maxIndices) as number[]
 
         const valueScale = scaleLinear().domain([0, 18]).range([0, extraPairWidth.Violin])
 
         return valueScale;
-    }, [dataSet, aggregationScale()])
+    }, [])
 
 
     const lineFunction = useCallback(() => {

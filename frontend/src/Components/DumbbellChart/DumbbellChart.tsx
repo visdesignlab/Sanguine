@@ -205,7 +205,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
   }, [xMin, xMax, dimensionHeight])
   //console.log(data)
 
-  //TODO this need to be shrinked.
+
   const valueScale = useCallback(() => {
     const valueScale = scaleOrdinal()
       .domain(indicies as any)
