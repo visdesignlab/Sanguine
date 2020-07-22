@@ -106,7 +106,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     setInterventionPlotType(value.value)
   }
 
-  //TODO this need a check for date plotype valid
+
   const confirmChartAddHandler = () => {
     if (xSelection && ySelection && addingChartType > -1) {
       if (!(addingChartType === 4 && (!interventionDate || !interventionPlotType))) {
@@ -356,7 +356,8 @@ const UserControl: FC<Props> = ({ store }: Props) => {
       </Menu.Item>
     </Menu>
   );
-  //TODO the placeholder does not reset
+
+
   const addBarChartMenu = (
     <Menu widths={5}>
       <Menu.Item>

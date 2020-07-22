@@ -156,16 +156,13 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     fetchChartData();
   }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroup]);
 
-  function makeExtraPairData() {
+  //TODO change this to useMemo
+  useEffect(() => {
+    console.log("using effect")
     const newExtraPairData = generateExtrapairPlotData(caseIDList, aggregatedBy, hemoglobinDataSet, extraPairArray, data)
     stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
 
-  }
-
-  //TODO change this to useMemo
-  useEffect(() => {
-    makeExtraPairData();
-  }, [extraPairArray, data, hemoglobinDataSet]);
+  }, [extraPairArray, data, hemoglobinDataSet, caseIDList]);
 
 
 

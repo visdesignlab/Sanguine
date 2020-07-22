@@ -99,7 +99,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     setAggregationScaleRange(JSON.stringify(range))
     setKdeMax(newkdeMax)
     setCaseMax(newcaseMax)
-  }, [data, height])
+  }, [data, height, xVals])
 
   const aggregationScale = useCallback(() => {
     const aggregationScale = scaleBand()
