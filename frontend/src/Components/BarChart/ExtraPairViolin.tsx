@@ -29,18 +29,9 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
         return aggregationScale
     }, [aggregationScaleDomain, aggregationScaleRange])
 
-    const valueScale = useCallback(() => {
-        // let maxIndices = 0;
-        // Object.values(dataSet).map((array) => {
-        //     maxIndices = array.length > maxIndices ? array.length : maxIndices
-        // })
-        // const indices = range(0, maxIndices) as number[]
 
-        const valueScale = scaleLinear().domain([0, 18]).range([0, extraPairWidth.Violin])
 
-        return valueScale;
-    }, [])
-
+    const valueScale = scaleLinear().domain([0, 18]).range([0, extraPairWidth.Violin])
 
     const lineFunction = useCallback(() => {
         const kdeScale = scaleLinear()
@@ -49,9 +40,9 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
         const lineFunction = line()
             .curve(curveCatmullRom)
             .y((d: any) => kdeScale(d.y) + 0.5 * aggregationScale().bandwidth())
-            .x((d: any) => valueScale()(d.x));
+            .x((d: any) => valueScale(d.x));
         return lineFunction
-    }, [valueScale(), aggregationScale()])
+    }, [aggregationScale()])
 
 
 
@@ -71,8 +62,8 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
                         />} />,
 
                     <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }}
-                        x1={valueScale()(name === "Preop Hemo" ? 13 : 7.5)}
-                        x2={valueScale()(name === "Preop Hemo" ? 13 : 7.5)}
+                        x1={valueScale(name === "Preop Hemo" ? 13 : 7.5)}
+                        x2={valueScale(name === "Preop Hemo" ? 13 : 7.5)}
                         y1={aggregationScale()(val)!}
                         y2={aggregationScale()(val)! + aggregationScale().bandwidth()} />]
                 )

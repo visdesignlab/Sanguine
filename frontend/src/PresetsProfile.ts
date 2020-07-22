@@ -1,6 +1,6 @@
 import styled from "styled-components"
 import { BasicAggregatedDatePoint, HeatMapDataPoint } from "./Interfaces/ApplicationState"
-import { mean, median } from "d3";
+import { mean, median, sum } from "d3";
 import { create as createpd } from "pdfast";
 
 export const preop_color = "#209b58"
@@ -206,7 +206,7 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                 case "Zero Transfusion":
                     //let newDataPerCase = {} as any;
                     data.map((dataPoint: BasicAggregatedDatePoint) => {
-                        newData[dataPoint.aggregateAttribute] = { number: dataPoint.zeroCaseNum, percentage: dataPoint.zeroCaseNum / dataPoint.caseCount };
+                        newData[dataPoint.aggregateAttribute] = { actualVal: dataPoint.zeroCaseNum, calculated: dataPoint.zeroCaseNum / dataPoint.caseCount };
                     });
                     newExtraPairData.push({ name: "Zero %", data: newData, type: "Basic" });
                     break;
@@ -221,9 +221,9 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         }
                     })
                     for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key] = mean(value as any)
+                        newData[key] = { calculated: mean(value as any) || 0, actualVal: mean(value as any) || 0 }
                     }
-                    newExtraPairData.push({ name: "RISK", data: newData, type: "Outcomes" });
+                    newExtraPairData.push({ name: "RISK", data: newData, type: "Basic" });
                     break;
                 case "Death":
                     // let temporaryDataHolder: any = {}
@@ -236,9 +236,9 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         }
                     })
                     for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key] = mean(value as any)
+                        newData[key] = { calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0 }
                     }
-                    newExtraPairData.push({ name: "Death", data: newData, type: "Outcomes" });
+                    newExtraPairData.push({ name: "Death", data: newData, type: "Basic" });
                     break;
 
                 //TODO I need to think about when we have a patient group filter, how does that apply to extra pair plot. 
@@ -257,9 +257,9 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         }
                     })
                     for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key] = mean(value as any)
+                        newData[key] = { calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0 }
                     }
-                    newExtraPairData.push({ name: "VENT", data: newData, type: "Outcomes" });
+                    newExtraPairData.push({ name: "VENT", data: newData, type: "Basic" });
                     break;
                 case "ECMO":
                     // let temporaryDataHolder:any = {}
@@ -272,9 +272,9 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         }
                     })
                     for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key] = mean(value as any)
+                        newData[key] = { calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0 }
                     }
-                    newExtraPairData.push({ name: "ECMO", data: newData, type: "Outcomes" });
+                    newExtraPairData.push({ name: "ECMO", data: newData, type: "Basic" });
                     break;
                 case "STROKE":
                     // let temporaryDataHolder:any = {}
@@ -287,9 +287,9 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         }
                     })
                     for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key] = mean(value as any)
+                        newData[key] = { calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0 }
                     }
-                    newExtraPairData.push({ name: "STROKE", data: newData, type: "Outcomes" });
+                    newExtraPairData.push({ name: "STROKE", data: newData, type: "Basic" });
                     break;
                 case "Preop Hemo":
                     data.map((dataPoint: BasicAggregatedDatePoint) => {

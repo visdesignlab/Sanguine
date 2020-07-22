@@ -36,14 +36,16 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
         return aggregatedScale
     }, [aggregationScaleDomain, aggregationScaleRange])
 
-    const valueScale = useCallback(() => {
-        // let maxIndices = 0;
-        // Object.values(totalData).map((array) => {
-        //     maxIndices = array.length > maxIndices ? array.length : maxIndices
-        // })
-        const valueScale = scaleLinear().domain([0, 18]).range([0, extraPairWidth.Violin])
-        return valueScale;
-    }, [])
+    // const valueScale = useCallback(() => {
+    //     // let maxIndices = 0;
+    //     // Object.values(totalData).map((array) => {
+    //     //     maxIndices = array.length > maxIndices ? array.length : maxIndices
+    //     // })
+    //     const valueScale = 
+    //     return valueScale;
+    // }, [])
+
+    const valueScale = scaleLinear().domain([0, 18]).range([0, extraPairWidth.Violin])
 
     const lineFunction = useCallback(() => {
 
@@ -53,9 +55,9 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
         const lineFunction = line()
             .curve(curveCatmullRom)
             .y((d: any) => kdeScale(d.y) + 0.5 * aggregatedScale().bandwidth())
-            .x((d: any) => valueScale()(d.x));
+            .x((d: any) => valueScale(d.x));
         return lineFunction
-    }, [valueScale(), aggregatedScale()])
+    }, [aggregatedScale()])
 
 
     const halfLineFunction = useCallback(() => {
@@ -67,10 +69,10 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
         const halfLineFunction = line()
             .curve(curveCatmullRom)
             .y((d: any) => halfKDEScale(d.y) + 0.25 * aggregatedScale().bandwidth())
-            .x((d: any) => valueScale()(d.x))
+            .x((d: any) => valueScale(d.x))
 
         return halfLineFunction;
-    }, [valueScale(), aggregatedScale()])
+    }, [aggregatedScale()])
 
 
     const generateOutput = () => {
@@ -89,8 +91,8 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
                         />} />,
 
                     <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }}
-                        x1={valueScale()(name === "Preop Hemo" ? 13 : 7.5)}
-                        x2={valueScale()(name === "Preop Hemo" ? 13 : 7.5)}
+                        x1={valueScale(name === "Preop Hemo" ? 13 : 7.5)}
+                        x2={valueScale(name === "Preop Hemo" ? 13 : 7.5)}
                         y1={aggregatedScale()(val)!}
                         y2={aggregatedScale()(val)! + aggregatedScale().bandwidth()} />]
                 )
@@ -127,8 +129,8 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
                         />} />,
 
                     <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }}
-                        x1={valueScale()(name === "Preop Hemo" ? 13 : 7.5)}
-                        x2={valueScale()(name === "Preop Hemo" ? 13 : 7.5)}
+                        x1={valueScale(name === "Preop Hemo" ? 13 : 7.5)}
+                        x2={valueScale(name === "Preop Hemo" ? 13 : 7.5)}
                         y1={aggregatedScale()(val)!}
                         y2={aggregatedScale()(val)! + aggregatedScale().bandwidth()} />]
                 )

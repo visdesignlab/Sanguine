@@ -357,7 +357,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
     }, [filterSelection, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroup]);
 
 
-    //{ name: string,totalIntData:any[], preIntData: any[], postIntData: any[], type: string, kdeMax?: number, medianSet?: any }
+
     const makeExtraPairData = () => {
         let newExtraPairData: any[] = []
         if (extraPairArray.length > 0) {
@@ -394,14 +394,28 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         newExtraPairData.push({ name: "Per Case", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "BarChart" });
                         break;
 
+                    //TODO Add actual number to the result so that the hover pop is showing actual numbers. 
                     case "Zero Transfusion":
                         //let newDataPerCase = {} as any;
                         // console.log(data)
                         data.map((dataPoint: InterventionDataPoint) => {
-                            newData[dataPoint.aggregateAttribute] = (dataPoint.preZeroCaseNum + dataPoint.postZeroCaseNum) / (dataPoint.preCaseCount + dataPoint.postCaseCount);
-                            preIntData[dataPoint.aggregateAttribute] = dataPoint.preZeroCaseNum / dataPoint.preCaseCount;
-                            postIntData[dataPoint.aggregateAttribute] = dataPoint.postZeroCaseNum / dataPoint.postCaseCount;
+
+                            newData[dataPoint.aggregateAttribute] = {
+                                calculated: (dataPoint.preZeroCaseNum + dataPoint.postZeroCaseNum) / (dataPoint.preCaseCount + dataPoint.postCaseCount) || 0,
+                                actualVal: (dataPoint.preZeroCaseNum + dataPoint.postZeroCaseNum) || 0
+                            }
+
+                            preIntData[dataPoint.aggregateAttribute] = {
+                                calculated: dataPoint.preZeroCaseNum / dataPoint.preCaseCount || 0,
+                                actualVal: dataPoint.preZeroCaseNum || 0
+                            }
+
+                            postIntData[dataPoint.aggregateAttribute] = {
+                                calculated: dataPoint.postZeroCaseNum / dataPoint.postCaseCount || 0,
+                                actualVal: dataPoint.postZeroCaseNum || 0
+                            }
                         });
+
                         newExtraPairData.push({ name: "Zero %", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                         break;
 
@@ -427,16 +441,22 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         })
 
                         for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                            newData[key] = mean(value as any)
+                            newData[key] = {
+                                calculated: mean(value as any) || 0, actualVal: mean(value as any) || 0
+                            }
                         }
                         for (const [key, value] of Object.entries(temporaryPreIntDataHolder)) {
-                            preIntData[key] = mean(value as any)
+                            preIntData[key] = {
+                                calculated: mean(value as any) || 0, actualVal: mean(value as any) || 0
+                            }
                         }
                         for (const [key, value] of Object.entries(temporaryPostIntDataHolder)) {
-                            postIntData[key] = mean(value as any)
+                            postIntData[key] = {
+                                calculated: mean(value as any) || 0, actualVal: mean(value as any) || 0
+                            }
                         }
 
-                        newExtraPairData.push({ name: "RISK", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
+                        newExtraPairData.push({ name: "RISK", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                         break;
 
                     case "Death":
@@ -460,16 +480,22 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         })
 
                         for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                            newData[key] = mean(value as any)
+                            newData[key] = {
+                                calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0
+                            }
                         }
                         for (const [key, value] of Object.entries(temporaryPreIntDataHolder)) {
-                            preIntData[key] = mean(value as any)
+                            preIntData[key] = {
+                                calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0
+                            }
                         }
                         for (const [key, value] of Object.entries(temporaryPostIntDataHolder)) {
-                            postIntData[key] = mean(value as any)
+                            postIntData[key] = {
+                                calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0
+                            }
                         }
 
-                        newExtraPairData.push({ name: "Death", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
+                        newExtraPairData.push({ name: "Death", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                         break;
 
                     case "VENT":
@@ -493,16 +519,22 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         })
 
                         for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                            newData[key] = mean(value as any)
+                            newData[key] = {
+                                calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0
+                            }
                         }
                         for (const [key, value] of Object.entries(temporaryPreIntDataHolder)) {
-                            preIntData[key] = mean(value as any)
+                            preIntData[key] = {
+                                calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0
+                            }
                         }
                         for (const [key, value] of Object.entries(temporaryPostIntDataHolder)) {
-                            postIntData[key] = mean(value as any)
+                            postIntData[key] = {
+                                calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0
+                            }
                         }
 
-                        newExtraPairData.push({ name: "VENT", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
+                        newExtraPairData.push({ name: "VENT", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                         break;
 
                     case "ECMO":
@@ -526,16 +558,22 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         })
 
                         for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                            newData[key] = mean(value as any)
+                            newData[key] = {
+                                calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0
+                            }
                         }
                         for (const [key, value] of Object.entries(temporaryPreIntDataHolder)) {
-                            preIntData[key] = mean(value as any)
+                            preIntData[key] = {
+                                calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0
+                            }
                         }
                         for (const [key, value] of Object.entries(temporaryPostIntDataHolder)) {
-                            postIntData[key] = mean(value as any)
+                            postIntData[key] = {
+                                calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0
+                            }
                         }
 
-                        newExtraPairData.push({ name: "ECMO", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
+                        newExtraPairData.push({ name: "ECMO", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                         break;
                     case "STROKE":
                         data.map((dataPoint: InterventionDataPoint) => {
@@ -558,16 +596,22 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         })
 
                         for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                            newData[key] = mean(value as any)
+                            newData[key] = {
+                                calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0
+                            }
                         }
                         for (const [key, value] of Object.entries(temporaryPreIntDataHolder)) {
-                            preIntData[key] = mean(value as any)
+                            preIntData[key] = {
+                                calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0
+                            }
                         }
                         for (const [key, value] of Object.entries(temporaryPostIntDataHolder)) {
-                            postIntData[key] = mean(value as any)
+                            postIntData[key] = {
+                                calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0
+                            }
                         }
 
-                        newExtraPairData.push({ name: "STROKE", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Outcomes" });
+                        newExtraPairData.push({ name: "STROKE", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                         break;
                     case "Preop Hemo":
                         data.map((dataPoint: InterventionDataPoint) => {

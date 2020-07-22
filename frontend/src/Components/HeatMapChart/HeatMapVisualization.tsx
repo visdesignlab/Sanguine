@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useRef, useLayoutEffect, useState, useMemo } from "react";
+import React, { FC, useEffect, useRef, useLayoutEffect, useState } from "react";
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
@@ -189,8 +189,8 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         // setExtraPairData(newExtraPairData)
     }
 
-    useMemo(() => {
-        console.log("Using Memo")
+    useEffect(() => {
+
         makeExtraPairData();
         //console.log(extraPairData)
     }, [extraPairArray, data, hemoglobinDataSet, caseIDList]);
