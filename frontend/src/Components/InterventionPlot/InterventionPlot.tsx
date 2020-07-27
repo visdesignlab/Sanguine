@@ -297,7 +297,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
     }
 
     const outputTextElement = (dataPoint: InterventionDataPoint) => {
-        if (aggregationScale().bandwidth() > 40) {
+        if (aggregationScale().bandwidth() > 30) {
             return ([<text
                 fill="white"
                 x={-32.5}
