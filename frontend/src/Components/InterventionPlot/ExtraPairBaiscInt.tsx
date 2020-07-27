@@ -46,7 +46,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
             output = Object.entries(preIntData).map(([val, dataVal]) => {
                 return (
                     [<Popup
-                        content={name === "RISK" ? format(".2f")(dataVal.actualVal) : dataVal.actualVal}
+                        content={`${dataVal.actualVal} /${dataVal.outOfTotal}`}
                         trigger={
                             <rect
                                 x={0}
@@ -66,14 +66,14 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                         }
                         fill="white"
                         alignmentBaseline={"central"}
-                        textAnchor={"middle"}>{name === "RISK" ? format(".2f")(dataVal.calculated) : format(".0%")(dataVal.calculated)}</text>]
+                        textAnchor={"middle"}>{format(".0%")(dataVal.calculated)}</text>]
                 )
             })
             output = output.concat(Object.entries(postIntData).map(([val, dataVal]) => {
                 // console.log(val, dataVal)
                 return (
                     [<Popup
-                        content={name === "RISK" ? format(".2f")(dataVal.actualVal) : dataVal.actualVal}
+                        content={`${dataVal.actualVal}/${dataVal.outOfTotal}`}
                         trigger={
                             <rect
                                 x={0}
@@ -93,7 +93,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                         }
                         fill="white"
                         alignmentBaseline={"central"}
-                        textAnchor={"middle"}>{name === "RISK" ? format(".2f")(dataVal.calculated) : format(".0%")(dataVal.calculated)}</text>]
+                        textAnchor={"middle"}>{format(".0%")(dataVal.calculated)}</text>]
 
 
                 )
@@ -103,7 +103,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
             output = Object.entries(totalData).map(([val, dataVal]) => {
                 return (
                     [<Popup
-                        content={name === "RISK" ? format(".2f")(dataVal.actualVal) : dataVal.actualVal}
+                        content={`${dataVal.actualVal}/${dataVal.outOfTotal}`}
                         trigger={
                             <g>
                                 <rect
@@ -133,7 +133,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                         }
                         fill="white"
                         alignmentBaseline={"central"}
-                        textAnchor={"middle"}>{name === "RISK" ? format(".2f")(dataVal.calculated) : format(".0%")(dataVal.calculated)}</text>]
+                        textAnchor={"middle"}>{format(".0%")(dataVal.calculated)}</text>]
 
 
                 )
