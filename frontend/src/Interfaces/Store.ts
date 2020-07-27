@@ -38,10 +38,7 @@ export default class Store {
     return [timeFormat("%d-%b-%Y")(new Date(this.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(this.rawDateRange[1]))]
 
   }
-  //@observable hemoglobinDataSet: any = defaultState.hemoglobinDataSet;
-  // @computed get nextAddingIndex() {
-  //   return this.layoutArray.length
-  // }
+
   @observable nextAddingIndex: number = defaultState.nextAddingIndex;
   @observable currentOutputFilterSet: SelectSet[] = defaultState.currentOutputFilterSet;
 

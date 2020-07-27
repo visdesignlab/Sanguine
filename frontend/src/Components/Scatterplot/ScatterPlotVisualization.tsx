@@ -85,7 +85,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                 if (hemoglobinDataSet) {
                     let cast_data: ScatterDataPoint[] = hemoglobinDataSet.map((ob: any) => {
 
-                        const yValue = yAxis === "PREOP_HEMO" ? +ob.HEMO[0] : +ob.HEMO[1]
+                        const yValue = yAxis === "PREOP_HGB" ? ob.PREOP_HGB : ob.POSTOP_HGB
                         let xValue
                         if (transfused_dict[ob.CASE_ID]) {
                             xValue = transfused_dict[ob.CASE_ID].transfused;

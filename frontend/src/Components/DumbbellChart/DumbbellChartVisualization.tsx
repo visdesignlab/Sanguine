@@ -97,8 +97,8 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
           //How to solve the total case viewing potential discrepency?
           let existingCaseID = new Set();
           let cast_data: DumbbellDataPoint[] = hemoglobinDataSet.map((ob: any) => {
-            const begin_x = +ob.HEMO[0];
-            const end_x = +ob.HEMO[1];
+            const begin_x = ob.PREOP_HGB;
+            const end_x = ob.POSTOP_HGB;
             let yAxisLabel_val;
 
             if (transfused_dict[ob.CASE_ID]) {
@@ -179,7 +179,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
   }, [dateRange, filterSelection, hemoglobinDataSet, yAxis, showZero, currentOutputFilterSet, currentSelectPatientGroup]);
 
   const changeXVal = (e: any, value: any) => {
-    actions.changeChart(value.value, "HEMO_VALUE", chartId, "DUMBBELL")
+    actions.changeChart(value.value, "HGB_VALUE", chartId, "DUMBBELL")
   }
 
   return (

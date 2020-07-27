@@ -52,12 +52,12 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         if (xAxisName === "CELL_SAVER_ML") {
             xAxisScale = scaleLinear()
                 .domain([0.9 * xMin, 1.1 * xMax])
-                .range([currentOffset.left, width - currentOffset.right - currentOffset.margin]);
+                .range([currentOffset.left, width - currentOffset.right - currentOffset.margin]).nice();
         } else {
             xAxisScale = scaleBand()
                 .domain(range(0, xMax + 1) as any)
                 .range([currentOffset.left, width - currentOffset.right - currentOffset.margin])
-                .padding(0.2)
+                .padding(0.2);
 
         }
         return xAxisScale
@@ -72,7 +72,8 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
 
         const yAxisScale = scaleLinear()
             .domain([0.9 * yMin, 1.1 * yMax])
-            .range([height - currentOffset.bottom, currentOffset.top]);
+            .range([height - currentOffset.bottom, currentOffset.top])
+            .nice();
 
         return yAxisScale;
     }, [yMax, yMin, height])

@@ -60,7 +60,8 @@ const App: FC<Props> = ({ store }: Props) => {
       PLT_UNITS: number,
       CRYO_UNITS: number,
       CELL_SAVER_ML: number,
-      HEMO: number[],
+      PREOP_HGB: number,
+      POSTOP_HGB: number,
       DRG_WEIGHT: number,
       VENT: number,
       DEATH: number,
@@ -95,7 +96,8 @@ const App: FC<Props> = ({ store }: Props) => {
           PLT_UNITS: transfusedResult.PLT_UNITS,
           CRYO_UNITS: transfusedResult.CRYO_UNITS,
           CELL_SAVER_ML: transfusedResult.CELL_SAVER_ML,
-          HEMO: ob.HEMO,
+          PREOP_HGB: +ob.HEMO[0],
+          POSTOP_HGB: +ob.HEMO[1],
           QUARTER: ob.QUARTER,
           MONTH: ob.MONTH,
           DATE: timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime(),
@@ -109,7 +111,7 @@ const App: FC<Props> = ({ store }: Props) => {
     })
 
     result = result.filter((d: any) => d);
-    console.log("hemo data done")
+    console.log("HGB data done")
     console.log(result)
     setHemoData(result)
     store!.loadingModalOpen = false;
