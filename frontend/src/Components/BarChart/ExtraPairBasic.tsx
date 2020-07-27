@@ -2,7 +2,7 @@ import React, { FC, useCallback } from "react";
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { scaleLinear, format, interpolateGreys, scaleBand } from "d3";
-import { extraPairWidth } from "../../PresetsProfile"
+import { extraPairWidth, basic_gray } from "../../PresetsProfile"
 import { Popup } from "semantic-ui-react";
 import { greyScaleRange } from "../../PresetsProfile";
 
@@ -41,18 +41,28 @@ const ExtraPairBasic: FC<Props> = ({ name, dataSet, aggregationScaleRange, aggre
                                 x={0}
                                 y={aggregationScale()(val)}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
-                                fill={interpolateGreys(valueScale(dataVal.calculated))}
+                                fill={dataVal.calculated !== undefined ? interpolateGreys(valueScale(dataVal.calculated)) : "white"}
                                 //fill={secondary_gray}
                                 opacity={0.8}
                                 width={extraPairWidth.Basic}
                                 height={aggregationScale().bandwidth()} />
                         } />,
 
+                    <line
+                        opacity={dataVal.calculated !== undefined ? 0 : 1}
+                        y1={0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                        y2={0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                        x1={0.35 * extraPairWidth.Basic}
+                        x2={0.65 * extraPairWidth.Basic}
+                        strokeWidth={0.5}
+                        stroke={basic_gray}
+                    />,
                     <text x={extraPairWidth.Basic * 0.5}
                         y={
                             aggregationScale()(val)! +
                             0.5 * aggregationScale().bandwidth()
                         }
+                        opacity={dataVal.calculated !== undefined ? 1 : 0}
                         fill="white"
                         alignmentBaseline={"central"}
                         fontSize="12px"

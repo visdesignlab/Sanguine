@@ -2,15 +2,14 @@ import React, { FC, useCallback } from "react";
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { format, scaleBand, scaleLinear, interpolateGreys } from "d3";
-import { extraPairWidth, greyScaleRange } from "../../PresetsProfile"
+import { extraPairWidth, greyScaleRange, basic_gray } from "../../PresetsProfile"
 import { Popup } from "semantic-ui-react";
-import { secondary_gray } from "../../PresetsProfile";
 
 interface OwnProps {
     totalData: any[];
     preIntData: any[];
     postIntData: any[];
-    //  aggregatedScale: ScaleBand<string>;
+    //  aggregationScale: ScaleBand<string>;
     aggregationScaleDomain: string;
     aggregationScaleRange: string;
     //yMax:number;
@@ -23,9 +22,9 @@ export type Props = OwnProps;
 const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData, aggregationScaleRange, aggregationScaleDomain, store }: Props) => {
 
 
-    const aggregatedScale = useCallback(() => {
-        const aggregatedScale = scaleBand().domain(JSON.parse(aggregationScaleDomain)).range(JSON.parse(aggregationScaleRange)).paddingInner(0.1);
-        return aggregatedScale
+    const aggregationScale = useCallback(() => {
+        const aggregationScale = scaleBand().domain(JSON.parse(aggregationScaleDomain)).range(JSON.parse(aggregationScaleRange)).paddingInner(0.1);
+        return aggregationScale
     }, [aggregationScaleDomain, aggregationScaleRange])
 
     const valueScale = useCallback(() => {
@@ -42,7 +41,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
 
     const outputText = () => {
         let output = [];
-        if (aggregatedScale().bandwidth() > 40) {
+        if (aggregationScale().bandwidth() > 30) {
             output = Object.entries(preIntData).map(([val, dataVal]) => {
                 return (
                     [<Popup
@@ -50,20 +49,29 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                         trigger={
                             <rect
                                 x={0}
-                                y={aggregatedScale()(val)}
+                                y={aggregationScale()(val)}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
-                                fill={interpolateGreys(valueScale()(dataVal.calculated))}
+                                fill={dataVal.calculated !== undefined ? interpolateGreys(valueScale()(dataVal.calculated)) : "white"}
                                 //fill={secondary_gray}
                                 opacity={0.8}
                                 width={extraPairWidth.Basic}
-                                height={aggregatedScale().bandwidth() * 0.5} />
+                                height={aggregationScale().bandwidth() * 0.5} />
                         } />,
-
+                    <line
+                        opacity={dataVal.calculated !== undefined ? 0 : 1}
+                        y1={0.25 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                        y2={0.25 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                        x1={0.35 * extraPairWidth.Basic}
+                        x2={0.65 * extraPairWidth.Basic}
+                        strokeWidth={0.5}
+                        stroke={basic_gray}
+                    />,
                     <text x={extraPairWidth.Basic * 0.5}
                         y={
-                            aggregatedScale()(val)! +
-                            0.25 * aggregatedScale().bandwidth()
+                            aggregationScale()(val)! +
+                            0.25 * aggregationScale().bandwidth()
                         }
+                        opacity={dataVal.calculated !== undefined ? 1 : 0}
                         fill="white"
                         alignmentBaseline={"central"}
                         textAnchor={"middle"}>{format(".0%")(dataVal.calculated)}</text>]
@@ -77,20 +85,29 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                         trigger={
                             <rect
                                 x={0}
-                                y={aggregatedScale()(val)! + 0.5 * aggregatedScale().bandwidth()}
+                                y={aggregationScale()(val)! + 0.5 * aggregationScale().bandwidth()}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
-                                fill={interpolateGreys(valueScale()(dataVal.calculated))}
+                                fill={dataVal.calculated !== undefined ? interpolateGreys(valueScale()(dataVal.calculated)) : "white"}
                                 //fill={secondary_gray}
                                 opacity={0.8}
                                 width={extraPairWidth.Basic}
-                                height={aggregatedScale().bandwidth() * 0.5} />
+                                height={aggregationScale().bandwidth() * 0.5} />
                         } />,
-
+                    <line
+                        opacity={dataVal.calculated !== undefined ? 0 : 1}
+                        y1={0.75 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                        y2={0.75 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                        x1={0.35 * extraPairWidth.Basic}
+                        x2={0.65 * extraPairWidth.Basic}
+                        strokeWidth={0.5}
+                        stroke={basic_gray}
+                    />,
                     <text x={extraPairWidth.Basic * 0.5}
                         y={
-                            aggregatedScale()(val)! +
-                            0.75 * aggregatedScale().bandwidth()
+                            aggregationScale()(val)! +
+                            0.75 * aggregationScale().bandwidth()
                         }
+                        opacity={dataVal.calculated !== undefined ? 1 : 0}
                         fill="white"
                         alignmentBaseline={"central"}
                         textAnchor={"middle"}>{format(".0%")(dataVal.calculated)}</text>]
@@ -105,33 +122,35 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                     [<Popup
                         content={`${dataVal.actualVal}/${dataVal.outOfTotal}`}
                         trigger={
-                            <g>
-                                <rect
-                                    x={0}
-                                    y={aggregatedScale()(val)}
-                                    // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
-                                    fill={interpolateGreys(valueScale()(preIntData[(val as any)].calculated))}
-                                    //fill={secondary_gray}
-                                    opacity={0.8}
-                                    width={extraPairWidth.Basic}
-                                    height={aggregatedScale().bandwidth() * 0.5} />
-                                <rect
-                                    x={0}
-                                    y={aggregatedScale()(val)! + aggregatedScale().bandwidth() * 0.5}
-                                    // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
-                                    fill={interpolateGreys(valueScale()(postIntData[(val as any)].calculated))}
-                                    //fill={secondary_gray}
-                                    opacity={0.8}
-                                    width={extraPairWidth.Basic}
-                                    height={aggregatedScale().bandwidth() * 0.5} />
-                            </g>
+
+                            <rect
+                                x={0}
+                                y={aggregationScale()(val)}
+                                // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
+                                fill={dataVal.calculated !== undefined ? interpolateGreys(valueScale()(dataVal.calculated)) : "white"}
+                                //fill={secondary_gray}
+                                opacity={0.8}
+                                width={extraPairWidth.Basic}
+                                height={aggregationScale().bandwidth() * 0.5} />
+
+
                         } />,
+                    <line
+                        opacity={dataVal.calculated !== undefined ? 0 : 1}
+                        y1={0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                        y2={0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                        x1={0.35 * extraPairWidth.Basic}
+                        x2={0.65 * extraPairWidth.Basic}
+                        strokeWidth={0.5}
+                        stroke={basic_gray}
+                    />,
                     <text x={extraPairWidth.Basic * 0.5}
                         y={
-                            aggregatedScale()(val)! +
-                            0.5 * aggregatedScale().bandwidth()
+                            aggregationScale()(val)! +
+                            0.5 * aggregationScale().bandwidth()
                         }
                         fill="white"
+                        opacity={dataVal.calculated !== undefined ? 1 : 0}
                         alignmentBaseline={"central"}
                         textAnchor={"middle"}>{format(".0%")(dataVal.calculated)}</text>]
 
