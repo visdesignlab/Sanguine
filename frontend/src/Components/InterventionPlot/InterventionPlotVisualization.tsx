@@ -565,7 +565,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                             postIntData[key].actualVal = sum(temporaryPostIntDataHolder[key])
                         }
 
-                        newExtraPairData.push({ name: "STROKE", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
+                        newExtraPairData.push({ name: "Stroke", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                         break;
 
                     case "RISK":

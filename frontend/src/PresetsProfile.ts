@@ -223,8 +223,8 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         }
                     })
                     for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key].calculated = mean(value as any) || 0;
-                        newData[key].actualVal = sum(value as any) || 0;
+                        newData[key].calculated = mean(value as any);
+                        newData[key].actualVal = sum(value as any);
 
                     }
                     newExtraPairData.push({ name: "Death", data: newData, type: "Basic" });
@@ -243,8 +243,8 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         }
                     })
                     for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key].calculated = mean(value as any) || 0;
-                        newData[key].actualVal = sum(value as any) || 0;
+                        newData[key].calculated = mean(value as any);
+                        newData[key].actualVal = sum(value as any);
                     }
                     newExtraPairData.push({ name: "VENT", data: newData, type: "Basic" });
                     break;
@@ -260,8 +260,8 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         }
                     })
                     for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key].calculated = mean(value as any) || 0;
-                        newData[key].actualVal = sum(value as any) || 0;
+                        newData[key].calculated = mean(value as any);
+                        newData[key].actualVal = sum(value as any);
                     }
                     newExtraPairData.push({ name: "ECMO", data: newData, type: "Basic" });
                     break;
@@ -277,10 +277,10 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         }
                     })
                     for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key].calculated = mean(value as any) || 0;
-                        newData[key].actualVal = sum(value as any) || 0;
+                        newData[key].calculated = mean(value as any);
+                        newData[key].actualVal = sum(value as any);
                     }
-                    newExtraPairData.push({ name: "STROKE", data: newData, type: "Basic" });
+                    newExtraPairData.push({ name: "Stroke", data: newData, type: "Basic" });
                     break;
 
                 case "RISK":
@@ -304,7 +304,7 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         pd = pd.concat(reversePd)
                         newData[key] = pd
                     }
-                    newExtraPairData.push({ name: "RISK", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
+                    newExtraPairData.push({ name: "Risk", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
                     break;
 
                 case "Preop HGB":
