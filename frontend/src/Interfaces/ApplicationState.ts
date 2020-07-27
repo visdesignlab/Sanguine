@@ -79,7 +79,6 @@ export interface ApplicationState {
   currentSelectSet: SelectSet[];
   currentOutputFilterSet: SelectSet[];
   currentSelectPatient: SingleCasePoint | null;
-  //hemoglobinDataSet: any;
   showZero: boolean;
   currentSelectPatientGroup: number[];
   currentBrushedPatientGroup: number[];

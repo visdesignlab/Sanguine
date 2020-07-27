@@ -36,7 +36,7 @@ interface AppProvenance {
     onLayoutchange: (data: any) => void;
     selectPatient: (data: SingleCasePoint | null) => void;
     selectSet: (data: SelectSet, shiftKeyPressed: boolean) => void;
-    // storeHemoData: (data: any) => void;
+
     changeExtraPair: (chartID: string, newExtraPair: string) => void;
     removeExtraPair: (chartID: string, removeingPair: string) => void;
 
@@ -230,7 +230,7 @@ export function setupProvenance(): AppProvenance {
                 extraPair: JSON.stringify([])
               }, {
                 aggregatedBy: "PRBC_UNITS",
-                valueToVisualize: "HEMO_VALUE",
+                valueToVisualize: "HGB_VALUE",
                 i: "2",
                 w: 1,
                 h: 1,
@@ -570,15 +570,6 @@ export function setupProvenance(): AppProvenance {
       }
     )
   }
-
-
-  // const storeHemoData = (data: any) => {
-  //   provenance.applyAction(`cache hemo data`,
-  //     (state: ApplicationState) => {
-  //       state.hemoglobinDataSet = data;
-  //       return state;
-  //     })
-  // }
 
   const goForward = () => {
     provenance.goForwardOneStep();

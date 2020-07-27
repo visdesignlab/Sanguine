@@ -26,26 +26,7 @@ const ExtraPairBasic: FC<Props> = ({ name, dataSet, aggregationScaleRange, aggre
         return aggregationScale
     }, [aggregationScaleDomain, aggregationScaleRange])
 
-    // const [valueScale] = useMemo(() => {
-    //    // console.log(dataSet)
-    //     const valueScale = scaleLinear().domain([0, 1]).range(greyScaleRange)
-
-    //     return [valueScale];
-    // }, [dataSet])
-
-    const valueScale = useCallback(() => {
-        let valueScale;
-        if (name === "RISK") {
-            valueScale = scaleLinear().domain([0, 30]).range(greyScaleRange);
-        } else {
-            valueScale = scaleLinear().domain([0, 1]).range(greyScaleRange);
-        }
-        return valueScale;
-    }, [])
-
-    // const valueScale = useCallback(()=>{
-
-    // })
+    const valueScale = scaleLinear().domain([0, 1]).range(greyScaleRange);
 
 
     return (
@@ -54,13 +35,13 @@ const ExtraPairBasic: FC<Props> = ({ name, dataSet, aggregationScaleRange, aggre
                 // console.log(val, dataVal)
                 return (
                     [<Popup
-                        content={name === "RISK" ? format(".2f")(dataVal.actualVal) : (dataVal.actualVal)}
+                        content={`${dataVal.actualVal}/${dataVal.outOfTotal}`}
                         trigger={
                             <rect
                                 x={0}
                                 y={aggregationScale()(val)}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
-                                fill={interpolateGreys(valueScale()(dataVal.calculated))}
+                                fill={interpolateGreys(valueScale(dataVal.calculated))}
                                 //fill={secondary_gray}
                                 opacity={0.8}
                                 width={extraPairWidth.Basic}

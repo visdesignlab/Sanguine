@@ -32,6 +32,9 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
 
 
     const valueScale = scaleLinear().domain([0, 18]).range([0, extraPairWidth.Violin])
+    if (name === "RISK") {
+        valueScale.domain([0, 30]);
+    }
 
     const lineFunction = useCallback(() => {
         const kdeScale = scaleLinear()
@@ -62,8 +65,9 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
                         />} />,
 
                     <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }}
-                        x1={valueScale(name === "Preop Hemo" ? 13 : 7.5)}
-                        x2={valueScale(name === "Preop Hemo" ? 13 : 7.5)}
+                        x1={valueScale(name === "Preop HGB" ? 13 : 7.5)}
+                        x2={valueScale(name === "Preop HGB" ? 13 : 7.5)}
+                        opacity={name === "RISK" ? 0 : 1}
                         y1={aggregationScale()(val)!}
                         y2={aggregationScale()(val)! + aggregationScale().bandwidth()} />]
                 )

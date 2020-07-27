@@ -21,8 +21,8 @@ export const offset = {
 };
 
 export const extraPairOptions = [
-    { title: "Preop Hemoglobin", value: "Preop Hemo" },
-    { title: "Postop Hemoglobin", value: "Postop Hemo" },
+    { title: "Preop Hemoglobin", value: "Preop HGB" },
+    { title: "Postop Hemoglobin", value: "Postop HGB" },
     { title: "Total Transfusion", value: "Total Transfusion" },
     { title: "Per Case Transfusion", value: "Per Case" },
     { title: "Zero Transfusion Cases", value: "Zero Transfusion" },
@@ -50,9 +50,9 @@ export const AxisLabelDict: any = {
     YEAR: "Year",
     QUARTER: "Quarter",
     MONTH: "Month",
-    HEMO_VALUE: "Hemoglobin Value",
-    PREOP_HEMO: "Preoperative Hemoglobin Value",
-    POSTOP_HEMO: "Postoperative Hemoglobin Value",
+    HGB_VALUE: "Hemoglobin Value",
+    PREOP_HGB: "Preoperative Hemoglobin Value",
+    POSTOP_HGB: "Postoperative Hemoglobin Value",
     ROM: "Risk of Mortality",
     SOI: "Severity of Illness",
     VENT: "Ventilator Over 1440 min"
@@ -73,13 +73,13 @@ export const presetOptions = [{ value: 1, key: 1, text: "Preset 1" }]
 
 export const scatterYOptions = [
     {
-        value: "PREOP_HEMO",
-        key: "PREOP_HEMO",
+        value: "PREOP_HGB",
+        key: "PREOP_HGB",
         text: "Preoperative Hemoglobin Value"
     },
     {
-        value: "POSTOP_HEMO",
-        key: "POSTOP_HEMO",
+        value: "POSTOP_HGB",
+        key: "POSTOP_HGB",
         text: "Postoperative Hemoglobin Value"
     }
 ]
@@ -87,7 +87,7 @@ export const scatterYOptions = [
 export const typeDiction = ["VIOLIN", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION"]
 
 export const dumbbellValueOptions = [
-    { value: "HEMO_VALUE", key: "HEMO_VALUE", text: "Hemoglobin Value" }
+    { value: "HGB_VALUE", key: "HGB_VALUE", text: "Hemoglobin Value" }
 ]
 
 export const dumbbellFacetOptions = [
@@ -206,10 +206,83 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                 case "Zero Transfusion":
                     //let newDataPerCase = {} as any;
                     data.map((dataPoint: BasicAggregatedDatePoint) => {
-                        newData[dataPoint.aggregateAttribute] = { actualVal: dataPoint.zeroCaseNum, calculated: dataPoint.zeroCaseNum / dataPoint.caseCount };
+                        newData[dataPoint.aggregateAttribute] = { actualVal: dataPoint.zeroCaseNum, calculated: dataPoint.zeroCaseNum / dataPoint.caseCount, outOfTotal: dataPoint.caseCount };
                     });
                     newExtraPairData.push({ name: "Zero %", data: newData, type: "Basic" });
                     break;
+
+                case "Death":
+                    // let temporaryDataHolder: any = {}
+                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
+                        newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.caseCount }
+                    })
+                    hemoglobinDataSet.map((ob: any) => {
+                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                            temporaryDataHolder[ob[aggregatedBy]].push(ob.DEATH)
+                        }
+                    })
+                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
+                        newData[key].calculated = mean(value as any) || 0;
+                        newData[key].actualVal = sum(value as any) || 0;
+
+                    }
+                    newExtraPairData.push({ name: "Death", data: newData, type: "Basic" });
+                    break;
+
+
+                case "VENT":
+                    // let temporaryDataHolder:any = {}
+                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
+                        newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.caseCount }
+                    })
+                    hemoglobinDataSet.map((ob: any) => {
+                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                            temporaryDataHolder[ob[aggregatedBy]].push(ob.VENT)
+                        }
+                    })
+                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
+                        newData[key].calculated = mean(value as any) || 0;
+                        newData[key].actualVal = sum(value as any) || 0;
+                    }
+                    newExtraPairData.push({ name: "VENT", data: newData, type: "Basic" });
+                    break;
+                case "ECMO":
+                    // let temporaryDataHolder:any = {}
+                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
+                        newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.caseCount }
+                    })
+                    hemoglobinDataSet.map((ob: any) => {
+                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                            temporaryDataHolder[ob[aggregatedBy]].push(ob.ECMO)
+                        }
+                    })
+                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
+                        newData[key].calculated = mean(value as any) || 0;
+                        newData[key].actualVal = sum(value as any) || 0;
+                    }
+                    newExtraPairData.push({ name: "ECMO", data: newData, type: "Basic" });
+                    break;
+                case "STROKE":
+                    // let temporaryDataHolder:any = {}
+                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
+                        newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.caseCount }
+                    })
+                    hemoglobinDataSet.map((ob: any) => {
+                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+                            temporaryDataHolder[ob[aggregatedBy]].push(ob.STROKE)
+                        }
+                    })
+                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
+                        newData[key].calculated = mean(value as any) || 0;
+                        newData[key].actualVal = sum(value as any) || 0;
+                    }
+                    newExtraPairData.push({ name: "STROKE", data: newData, type: "Basic" });
+                    break;
+
                 case "RISK":
                     // let temporaryDataHolder: any = {}
                     data.map((dataPoint: BasicAggregatedDatePoint) => {
@@ -221,82 +294,25 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         }
                     })
                     for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key] = { calculated: mean(value as any) || 0, actualVal: mean(value as any) || 0 }
+                        medianData[key] = median(value as any);
+                        let pd = createpd(value, { min: 0, max: 30 });
+                        pd = [{ x: 0, y: 0 }].concat(pd)
+                        let reversePd = pd.map((pair: any) => {
+                            kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                            return { x: pair.x, y: -pair.y };
+                        }).reverse();
+                        pd = pd.concat(reversePd)
+                        newData[key] = pd
                     }
-                    newExtraPairData.push({ name: "RISK", data: newData, type: "Basic" });
-                    break;
-                case "Death":
-                    // let temporaryDataHolder: any = {}
-                    data.map((dataPoint: BasicAggregatedDatePoint) => {
-                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
-                    })
-                    hemoglobinDataSet.map((ob: any) => {
-                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
-                            temporaryDataHolder[ob[aggregatedBy]].push(ob.DEATH)
-                        }
-                    })
-                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key] = { calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0 }
-                    }
-                    newExtraPairData.push({ name: "Death", data: newData, type: "Basic" });
+                    newExtraPairData.push({ name: "RISK", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
                     break;
 
-                //TODO I need to think about when we have a patient group filter, how does that apply to extra pair plot. 
-                //I think it actually works just fine since the returning data will be
-                //different when the patient group is applied
-
-
-                case "VENT":
-                    // let temporaryDataHolder:any = {}
-                    data.map((dataPoint: BasicAggregatedDatePoint) => {
-                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
-                    })
-                    hemoglobinDataSet.map((ob: any) => {
-                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
-                            temporaryDataHolder[ob[aggregatedBy]].push(ob.VENT)
-                        }
-                    })
-                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key] = { calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0 }
-                    }
-                    newExtraPairData.push({ name: "VENT", data: newData, type: "Basic" });
-                    break;
-                case "ECMO":
-                    // let temporaryDataHolder:any = {}
-                    data.map((dataPoint: BasicAggregatedDatePoint) => {
-                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
-                    })
-                    hemoglobinDataSet.map((ob: any) => {
-                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
-                            temporaryDataHolder[ob[aggregatedBy]].push(ob.ECMO)
-                        }
-                    })
-                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key] = { calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0 }
-                    }
-                    newExtraPairData.push({ name: "ECMO", data: newData, type: "Basic" });
-                    break;
-                case "STROKE":
-                    // let temporaryDataHolder:any = {}
-                    data.map((dataPoint: BasicAggregatedDatePoint) => {
-                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
-                    })
-                    hemoglobinDataSet.map((ob: any) => {
-                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
-                            temporaryDataHolder[ob[aggregatedBy]].push(ob.STROKE)
-                        }
-                    })
-                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key] = { calculated: mean(value as any) || 0, actualVal: sum(value as any) || 0 }
-                    }
-                    newExtraPairData.push({ name: "STROKE", data: newData, type: "Basic" });
-                    break;
-                case "Preop Hemo":
+                case "Preop HGB":
                     data.map((dataPoint: BasicAggregatedDatePoint) => {
                         newData[dataPoint.aggregateAttribute] = [];
                     });
                     hemoglobinDataSet.map((ob: any) => {
-                        const begin = parseFloat(ob.HEMO[0]);
+                        const begin = parseFloat(ob.PREOP_HGB);
                         if (newData[ob[aggregatedBy]] && begin > 0 && caseIDList[ob.CASE_ID]) {
                             newData[ob[aggregatedBy]].push(begin);
                         }
@@ -305,23 +321,22 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         medianData[prop] = median(newData[prop]);
                         let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
-                        let reverse_pd = pd.map((pair: any) => {
+                        let reversePd = pd.map((pair: any) => {
                             kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
-                        pd = pd.concat(reverse_pd);
+                        pd = pd.concat(reversePd);
                         newData[prop] = pd;
                     }
-                    newExtraPairData.push({ name: "Preop Hemo", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
+                    newExtraPairData.push({ name: "Preop HGB", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
                     break;
-                case "Postop Hemo":
+                case "Postop HGB":
                     //let newData = {} as any;
                     data.map((dataPoint: BasicAggregatedDatePoint) => {
                         newData[dataPoint.aggregateAttribute] = [];
                     });
                     hemoglobinDataSet.map((ob: any) => {
-                        // const begin = parseFloat(ob.HEMO[0]);
-                        const end = parseFloat(ob.HEMO[1]);
+                        const end = parseFloat(ob.POSTOP_HGB);
                         if (newData[ob[aggregatedBy]] && end > 0 && caseIDList[ob.CASE_ID]) {
                             newData[ob[aggregatedBy]].push(end);
                         }
@@ -330,14 +345,14 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         medianData[prop] = median(newData[prop]);
                         let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
-                        let reverse_pd = pd.map((pair: any) => {
+                        let reversePd = pd.map((pair: any) => {
                             kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
-                        pd = pd.concat(reverse_pd);
+                        pd = pd.concat(reversePd);
                         newData[prop] = pd;
                     }
-                    newExtraPairData.push({ name: "Postop Hemo", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
+                    newExtraPairData.push({ name: "Postop HGB", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
                     break;
                 default:
                     break;

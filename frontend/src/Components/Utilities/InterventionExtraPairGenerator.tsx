@@ -60,13 +60,15 @@ const InterventionExtraPairGenerator: FC<Props> = ({ extraPairDataSet, aggregati
                         aggregationScaleRange={aggregationScaleRange}
                         name={pairData.name}
                         kdeMax={pairData.kdeMax ? pairData.kdeMax : (0)} />,
+
                         <ExtraPairText
                         x={extraPairWidth.Dumbbell / 2}
                         y={height - currentOffset.bottom + 20}
                         onClick={() => actions.removeExtraPair(chartId, pairData.name)}
-                    >{`${pairData.name}, ${pairData.name === "Preop Hemo" ? 13 : 7.5}`}</ExtraPairText>
+                    >{pairData.name === "RISK" ? pairData.name : `${pairData.name}, ${pairData.name === "Preop HGB" ? 13 : 7.5}`}</ExtraPairText>
                 </g>);
                 break;
+
             case "BarChart":
                 transferedDistance += (extraPairWidth.BarChart + extraPairPadding)
                 returningComponents.push(<g transform={`translate(${transferedDistance - (extraPairWidth.BarChart)},0)`}>
