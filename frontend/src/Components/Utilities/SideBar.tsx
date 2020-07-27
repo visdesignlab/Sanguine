@@ -383,7 +383,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                         x={caseScale().range()[0]}
                         width={caseScale()(listItem.count) - caseScale().range()[0]}
                       />
-                      <SurgeryText x={caseScale().range()[0]}>{listItem.count}</SurgeryText>
+                      <SurgeryText y={9} x={caseScale().range()[1]}>{listItem.count}</SurgeryText>
                     </ListSVG>} />
                 )
               }
@@ -406,7 +406,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                         x={caseScale().range()[0]}
                         width={caseScale()(listItem.count) - caseScale().range()[0]}
                       />
-                      <SurgeryText x={caseScale().range()[0]}>{listItem.count}</SurgeryText>
+                      <SurgeryText y={9} x={caseScale().range()[1]}>{listItem.count}</SurgeryText>
                     </ListSVG>}
                     onClick={() => { actions.filterSelectionChange(listItem.value) }} />
                 )
@@ -471,19 +471,18 @@ const FilterListIT = styled(List.Item)`
 `;
 
 const SurgeryRect = styled(`rect`)`
-  y:0;
+  y:1;
   height:15px;
   fill-opacity:0.4;
   fill:${postop_color};
 `;
 
 const SurgeryText = styled(`text`)`
-  y:0;
-  alignment-baseline: hanging;
-  opacity:0;
-  &:hover{
-    opacity:1;
-  }
+  
+  text-anchor:end
+  alignment-baseline: middle;
+  transform: translate(13px, 0px);
+ 
 `;
 
 const DispearingIcon = styled(Icon)`
