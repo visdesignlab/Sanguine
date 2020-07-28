@@ -4,9 +4,9 @@ import React, {
 import { inject, observer } from "mobx-react";
 import { extraPairWidth, extraPairPadding, offset, Accronym } from "../../PresetsProfile";
 import { actions } from "../..";
-import ExtraPairViolin from "../BarChart/ExtraPairViolin";
-import ExtraPairBar from "../BarChart/ExtraPairBar";
-import ExtraPairBasic from "../BarChart/ExtraPairBasic";
+import ExtraPairViolin from "../ExtraPair/ExtraPairViolin";
+import ExtraPairBar from "../ExtraPair/ExtraPairBar";
+import ExtraPairBasic from "../ExtraPair/ExtraPairBasic";
 import styled from "styled-components";
 import { select, max, format } from "d3";
 import { ExtraPairPoint } from "../../Interfaces/ApplicationState";
