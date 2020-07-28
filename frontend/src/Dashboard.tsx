@@ -8,6 +8,7 @@ import styled from 'styled-components';
 import './App.css'
 //import 'react-grid-layout/css/styles.css'
 import LayoutGenerator from './LayoutGenerator';
+import { select } from 'd3';
 
 
 interface OwnProps {
@@ -19,18 +20,18 @@ type Props = OwnProps;
 const Dashboard: FC<Props> = ({ hemoData, store }: Props) => {
 
     const { loadingModalOpen } = store!;
-
+    select("#Main-Body").append("div").attr("class", "tooltiptext")
 
     return (
         <LayoutDiv>
-            <Container fluid>
+            <Container fluid id="Top-Bar">
                 <UserControl />
             </Container>
-            <Grid padded>
-                <SpecialPaddingColumn width={2} >
+            <Grid padded >
+                <SpecialPaddingColumn width={2} id="Side-Bar">
                     <SideBar hemoData={hemoData} />
                 </SpecialPaddingColumn>
-                <Grid.Column width={14}>
+                <Grid.Column width={14} id="Main-Body">
                     <LayoutGenerator hemoData={hemoData} />
                 </Grid.Column>
 

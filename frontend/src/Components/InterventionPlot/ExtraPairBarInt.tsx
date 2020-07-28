@@ -26,7 +26,6 @@ const ExtraPairBarInt: FC<Props> = ({ preDataSet, postDataSet, totalDataSet, agg
     }, [totalDataSet])
 
     const halfValueScale = useCallback(() => {
-
         const halfValueScale = scaleLinear().domain([0, max(Object.values(preDataSet).concat(Object.values(postDataSet)))]).range([0, extraPairWidth.BarChart])
         return halfValueScale;
     }, [totalDataSet])
@@ -38,7 +37,7 @@ const ExtraPairBarInt: FC<Props> = ({ preDataSet, postDataSet, totalDataSet, agg
 
     const generateOutput = () => {
         let output: any[] = [];
-        if (aggregatedScale().bandwidth() > 40) {
+        if (aggregatedScale().bandwidth() > 30) {
             output = Object.entries(preDataSet).map(([val, dataVal]) => {
                 return (
                     <Popup

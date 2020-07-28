@@ -2,7 +2,7 @@ import React, { FC, useEffect, useRef, useLayoutEffect, useState } from "react";
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { InterventionDataPoint } from '../../Interfaces/ApplicationState'
+import { InterventionDataPoint, ExtraPairInterventionPoint } from '../../Interfaces/ApplicationState'
 import { BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON, ChartSVG } from "../../PresetsProfile"
 import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
@@ -39,17 +39,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
 
     const svgRef = useRef<SVGSVGElement>(null);
 
-    const [extraPairData, setExtraPairData] = useState<{
-        name: string,
-        totalIntData: any[],
-        preIntData: any[],
-        postIntData: any[],
-        type: string,
-        kdeMax?: number,
-        totalMedianSet?: any,
-        preMedianSet?: any,
-        postMedianSet?: any
-    }[]>([])
+    const [extraPairData, setExtraPairData] = useState<ExtraPairInterventionPoint[]>([])
 
     const [data, setData] = useState<InterventionDataPoint[]>([]);
 
@@ -61,7 +51,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
     const [height, setHeight] = useState(0)
 
     const [caseIDList, setCaseIDList] = useState<any>(null)
-    const [extraPairArray, setExtraPairArray] = useState([]);
+    const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
 
     const [openNotationModal, setOpenNotationModal] = useState(false)
     const [notationInput, setNotationInput] = useState(notation)
@@ -357,7 +347,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
     }, [filterSelection, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroup]);
 
     const makeExtraPairData = () => {
-        let newExtraPairData: any[] = []
+        let newExtraPairData: ExtraPairInterventionPoint[] = []
         if (extraPairArray.length > 0) {
             extraPairArray.forEach((variable: string) => {
                 let newData = {} as any;
@@ -378,7 +368,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                             preIntData[dataPoint.aggregateAttribute] = dataPoint.preTotalVal;
                             postIntData[dataPoint.aggregateAttribute] = dataPoint.postTotalVal;
                         });
-                        newExtraPairData.push({ name: "Total", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "BarChart" });
+                        newExtraPairData.push({ name: "Total Transfusion", label: "Total", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "BarChart" });
                         break;
 
                     case "Per Case":
@@ -389,7 +379,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                             postIntData[dataPoint.aggregateAttribute] = dataPoint.postTotalVal / dataPoint.postCaseCount;
 
                         });
-                        newExtraPairData.push({ name: "Per Case", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "BarChart" });
+                        newExtraPairData.push({ name: "Per Case", label: "Per Case", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "BarChart" });
                         break;
 
                     //TODO Add actual number to the result so that the hover pop is showing actual numbers. 
@@ -417,7 +407,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                             }
                         });
 
-                        newExtraPairData.push({ name: "Zero %", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
+                        newExtraPairData.push({ name: "Zero Transfusion", label: "Zero %", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                         break;
 
 
@@ -456,7 +446,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                             postIntData[key].actualVal = sum(temporaryPostIntDataHolder[key])
                         }
 
-                        newExtraPairData.push({ name: "Death", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
+                        newExtraPairData.push({ name: "Death", label: "Death", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                         break;
 
                     case "VENT":
@@ -492,7 +482,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                             postIntData[key].actualVal = sum(temporaryPostIntDataHolder[key])
                         }
 
-                        newExtraPairData.push({ name: "VENT", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
+                        newExtraPairData.push({ name: "VENT", label: "Vent", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                         break;
 
                     case "ECMO":
@@ -529,7 +519,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                             postIntData[key].actualVal = sum(temporaryPostIntDataHolder[key])
                         }
 
-                        newExtraPairData.push({ name: "ECMO", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
+                        newExtraPairData.push({ name: "ECMO", label: "ECMO", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                         break;
                     case "STROKE":
                         data.map((dataPoint: InterventionDataPoint) => {
@@ -565,7 +555,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                             postIntData[key].actualVal = sum(temporaryPostIntDataHolder[key])
                         }
 
-                        newExtraPairData.push({ name: "Stroke", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
+                        newExtraPairData.push({ name: "STROKE", label: "Stroke", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                         break;
 
                     case "RISK":
@@ -622,6 +612,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
 
                         newExtraPairData.push({
                             name: "RISK",
+                            label: "Risk",
                             preIntData: preIntData,
                             postIntData: postIntData,
                             totalIntData: newData,
@@ -686,6 +677,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
 
                         newExtraPairData.push({
                             name: "Preop HGB",
+                            label: "Preop HGB",
                             preIntData: preIntData,
                             postIntData: postIntData,
                             totalIntData: newData,
@@ -753,7 +745,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         }
 
                         newExtraPairData.push({
-                            name: "Postop HGB",
+                            name: "Postop HGB", label: "Postop HGB",
                             preIntData: preIntData,
                             postIntData: postIntData,
                             totalIntData: newData,

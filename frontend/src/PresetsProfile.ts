@@ -53,8 +53,7 @@ export const AxisLabelDict: any = {
     HGB_VALUE: "Hemoglobin Value",
     PREOP_HGB: "Preoperative Hemoglobin Value",
     POSTOP_HGB: "Postoperative Hemoglobin Value",
-    ROM: "Risk of Mortality",
-    SOI: "Severity of Illness",
+    RISK: "DRG Weight",
     VENT: "Ventilator Over 1440 min"
 };
 
@@ -171,7 +170,11 @@ export const Accronym = {
     EGD: "Esophagogastroduodenoscopy",
     VATS: "Video-assisted Thoracoscopic Surgery",
     TVR: "Tricuspid Valve Repair",
-    PVR: "Proliferative Vitreoretinopathy"
+    PVR: "Proliferative Vitreoretinopathy",
+    VENT: "Over 24 Hours Ventilator Usage",
+    RISK: "Diagnosis-related Group Weight",
+    "Zero %": "Zero Transfusion"
+
 }
 
 export const stateUpdateWrapperUseJSON = (oldState: any, newState: any, updateFunction: (value: React.SetStateAction<any>) => void) => {
@@ -194,21 +197,21 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                     data.map((dataPoint: BasicAggregatedDatePoint) => {
                         newData[dataPoint.aggregateAttribute] = dataPoint.totalVal;
                     });
-                    newExtraPairData.push({ name: "Total", data: newData, type: "BarChart" });
+                    newExtraPairData.push({ name: "Total Transfusion", label: "Total", data: newData, type: "BarChart" });
                     break;
                 case "Per Case":
                     // let newDataPerCase = {} as any;
                     data.map((dataPoint: BasicAggregatedDatePoint) => {
                         newData[dataPoint.aggregateAttribute] = dataPoint.totalVal / dataPoint.caseCount;
                     });
-                    newExtraPairData.push({ name: "Per Case", data: newData, type: "BarChart" });
+                    newExtraPairData.push({ name: "Per Case", label: "Per Case", data: newData, type: "BarChart" });
                     break;
                 case "Zero Transfusion":
                     //let newDataPerCase = {} as any;
                     data.map((dataPoint: BasicAggregatedDatePoint) => {
                         newData[dataPoint.aggregateAttribute] = { actualVal: dataPoint.zeroCaseNum, calculated: dataPoint.zeroCaseNum / dataPoint.caseCount, outOfTotal: dataPoint.caseCount };
                     });
-                    newExtraPairData.push({ name: "Zero %", data: newData, type: "Basic" });
+                    newExtraPairData.push({ name: "Zero Transfusion", label: "Zero %", data: newData, type: "Basic" });
                     break;
 
                 case "Death":
@@ -246,7 +249,7 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         newData[key].calculated = mean(value as any);
                         newData[key].actualVal = sum(value as any);
                     }
-                    newExtraPairData.push({ name: "VENT", data: newData, type: "Basic" });
+                    newExtraPairData.push({ name: "VENT", label: "Vent", data: newData, type: "Basic" });
                     break;
                 case "ECMO":
                     // let temporaryDataHolder:any = {}
@@ -263,7 +266,7 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         newData[key].calculated = mean(value as any);
                         newData[key].actualVal = sum(value as any);
                     }
-                    newExtraPairData.push({ name: "ECMO", data: newData, type: "Basic" });
+                    newExtraPairData.push({ name: "ECMO", label: "ECMO", data: newData, type: "Basic" });
                     break;
                 case "STROKE":
                     // let temporaryDataHolder:any = {}
@@ -280,7 +283,7 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         newData[key].calculated = mean(value as any);
                         newData[key].actualVal = sum(value as any);
                     }
-                    newExtraPairData.push({ name: "Stroke", data: newData, type: "Basic" });
+                    newExtraPairData.push({ name: "STROKE", label: "Stroke", data: newData, type: "Basic" });
                     break;
 
                 case "RISK":
@@ -304,7 +307,7 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         pd = pd.concat(reversePd)
                         newData[key] = pd
                     }
-                    newExtraPairData.push({ name: "Risk", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
+                    newExtraPairData.push({ name: "RISK", label: "Risk", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
                     break;
 
                 case "Preop HGB":
@@ -328,7 +331,7 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         pd = pd.concat(reversePd);
                         newData[prop] = pd;
                     }
-                    newExtraPairData.push({ name: "Preop HGB", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
+                    newExtraPairData.push({ name: "Preop HGB", label: "Preop HGB", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
                     break;
                 case "Postop HGB":
                     //let newData = {} as any;
@@ -352,7 +355,7 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         pd = pd.concat(reversePd);
                         newData[prop] = pd;
                     }
-                    newExtraPairData.push({ name: "Postop HGB", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
+                    newExtraPairData.push({ name: "Postop HGB", label: "Postop HGB", data: newData, type: "Violin", kdeMax: kdeMax, medianSet: medianData });
                     break;
                 default:
                     break;

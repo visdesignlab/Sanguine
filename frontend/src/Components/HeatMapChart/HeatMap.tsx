@@ -17,7 +17,7 @@ import {
     interpolateReds
 } from "d3";
 import {
-    HeatMapDataPoint
+    HeatMapDataPoint, ExtraPairPoint
 } from "../../Interfaces/ApplicationState";
 import {
     offset,
@@ -45,7 +45,7 @@ interface OwnProps {
     svg: React.RefObject<SVGSVGElement>;
     yMax: number;
 
-    extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];
+    extraPairDataSet: ExtraPairPoint[];
 }
 
 export type Props = OwnProps;

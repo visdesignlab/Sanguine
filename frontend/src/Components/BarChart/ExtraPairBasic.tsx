@@ -68,7 +68,6 @@ const ExtraPairBasic: FC<Props> = ({ name, dataSet, aggregationScaleRange, aggre
                         fontSize="12px"
                         textAnchor={"middle"}>{format(".0%")(dataVal.calculated)}</text>]
 
-
                 )
             })}
         </>

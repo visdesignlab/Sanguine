@@ -3,7 +3,6 @@ export interface SelectSet {
   set_value: number[];
 }
 
-
 export interface InterventionDataPoint {
   aggregateAttribute: any;
   preInKdeCal: any[];
@@ -62,7 +61,28 @@ export interface DumbbellDataPoint {
   endXVal: number;
   yVal: number;
   case: SingleCasePoint;
+}
 
+export interface ExtraPairPoint {
+  name: string;
+  data: any[];
+  type: string;
+  label: string;
+  kdeMax?: number;
+  medianSet?: any;
+}
+
+export interface ExtraPairInterventionPoint {
+  name: string;
+  totalIntData: any[];
+  preIntData: any[];
+  postIntData: any[];
+  type: string;
+  kdeMax?: number;
+  totalMedianSet?: any;
+  preMedianSet?: any;
+  postMedianSet?: any;
+  label: string;
 }
 
 export interface ApplicationState {

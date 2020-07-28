@@ -2,7 +2,7 @@ import React, { FC, useEffect, useRef, useLayoutEffect, useState } from "react";
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { HeatMapDataPoint } from '../../Interfaces/ApplicationState'
+import { HeatMapDataPoint, ExtraPairPoint } from '../../Interfaces/ApplicationState'
 import { BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON, ChartSVG, generateExtrapairPlotData } from "../../PresetsProfile"
 import { Icon, Grid, Dropdown, Menu, Modal, Form, Button, Message } from "semantic-ui-react";
 
@@ -42,7 +42,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     const [width, setWidth] = useState(0);
     const [height, setHeight] = useState(0)
     //const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
-    const [extraPairData, setExtraPairData] = useState<{ name: string, data: any[], type: string }[]>([])
+    const [extraPairData, setExtraPairData] = useState<ExtraPairPoint[]>([])
     const [stripPlotMode, setStripMode] = useState(false);
     const [caseIDList, setCaseIDList] = useState<any>(null)
     const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
