@@ -74,7 +74,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                         opacity={dataVal.calculated !== undefined ? 1 : 0}
                         fill="white"
                         alignmentBaseline={"central"}
-                        textAnchor={"middle"}>{format(".0%")(dataVal.calculated)}</text>]
+                        textAnchor={"middle"}>{Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? "<1%" : format(".0%")(dataVal.calculated)}</text>]
                 )
             })
             output = output.concat(Object.entries(postIntData).map(([val, dataVal]) => {
@@ -110,7 +110,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                         opacity={dataVal.calculated !== undefined ? 1 : 0}
                         fill="white"
                         alignmentBaseline={"central"}
-                        textAnchor={"middle"}>{format(".0%")(dataVal.calculated)}</text>]
+                        textAnchor={"middle"}>{Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? "<1%" : format(".0%")(dataVal.calculated)}</text>]
 
 
                 )
@@ -152,7 +152,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                         fill="white"
                         opacity={dataVal.calculated !== undefined ? 1 : 0}
                         alignmentBaseline={"central"}
-                        textAnchor={"middle"}>{format(".0%")(dataVal.calculated)}</text>]
+                        textAnchor={"middle"}>{Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? "<1%" : format(".0%")(dataVal.calculated)}</text>]
 
 
                 )
