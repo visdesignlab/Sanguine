@@ -64,11 +64,6 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
     }, [xMax, xMin, width])
 
     const yAxisScale = useCallback(() => {
-        // const indices = range(0, data.length)
-        // console.log(data.length, currentOffset.left)
-        // const xAxisScale = scaleOrdinal()
-        //     .domain(indices as any)
-        //     .range(range(currentOffset.left, width - currentOffset.right, (width - currentOffset.left - currentOffset.right) / (data.length + 1)));
 
         const yAxisScale = scaleLinear()
             .domain([0.9 * yMin, 1.1 * yMax])

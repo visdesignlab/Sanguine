@@ -5,10 +5,10 @@ import { extraPairWidth, extraPairPadding, offset, Accronym } from "../../Preset
 import { actions } from "../..";
 // import ExtraPairViolin from "../BarChart/ExtraPairViolin";
 // import ExtraPairBar from "../BarChart/ExtraPairBar";
-import ExtraPairBasicInt from "../InterventionPlot/ExtraPairBaiscInt";
+import ExtraPairBasicInt from "../ExtraPairIntervention/ExtraPairBaiscInt";
 import styled from "styled-components";
-import ExtraPairBarInt from "../InterventionPlot/ExtraPairBarInt";
-import ExtraPairViolinInt from "../InterventionPlot/ExtraPairViolinInt";
+import ExtraPairBarInt from "../ExtraPairIntervention/ExtraPairBarInt";
+import ExtraPairViolinInt from "../ExtraPairIntervention/ExtraPairViolinInt";
 import { ExtraPairInterventionPoint } from "../../Interfaces/ApplicationState";
 import { max, select, scaleBand, format } from "d3";
 
