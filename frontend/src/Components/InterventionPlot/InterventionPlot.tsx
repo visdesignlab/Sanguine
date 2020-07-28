@@ -223,7 +223,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
         if (currentSelectSet.length > 0) {
             //let selectSet: SelectSet;
             for (let selectSet of currentSelectSet) {
-                if (aggregatedBy === selectSet.set_name && selectSet.set_value.includes(d.aggregateAttribute))
+                if (aggregatedBy === selectSet.setName && selectSet.setValues.includes(d.aggregateAttribute))
                     return true;
             }
             return false;
@@ -236,7 +236,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
 
     const decideIfFiltered = (d: InterventionDataPoint) => {
         for (let filterSet of currentOutputFilterSet) {
-            if (aggregatedBy === filterSet.set_name && filterSet.set_value.includes(d.aggregateAttribute))
+            if (aggregatedBy === filterSet.setName && filterSet.setValues.includes(d.aggregateAttribute))
                 return true
         }
         return false;

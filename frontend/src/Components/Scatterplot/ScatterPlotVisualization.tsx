@@ -102,7 +102,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                             let criteriaMet = true;
                             if (currentOutputFilterSet.length > 0) {
                                 for (let selectSet of currentOutputFilterSet) {
-                                    if (!selectSet.set_value.includes(ob[selectSet.set_name])) {
+                                    if (!selectSet.setValues.includes(ob[selectSet.setName])) {
                                         criteriaMet = false;
                                     }
                                 }

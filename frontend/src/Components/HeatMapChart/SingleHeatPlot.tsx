@@ -63,12 +63,13 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
                                 width={valueScale().bandwidth()}
                                 height={bandwidth}
                                 isselected={isSelected}
-                                isfiltered={isFiltered}
+                                //   isfiltered={isFiltered}
                                 onClick={(e) => {
                                     actions.selectSet(
                                         {
-                                            set_name: aggregatedBy,
-                                            set_value: [dataPoint.aggregateAttribute]
+                                            setName: aggregatedBy,
+                                            setValues: [dataPoint.aggregateAttribute],
+                                            //setPatientIds: [dataPoint.patientIDList]
                                         },
                                         e.shiftKey
                                     )
@@ -92,12 +93,12 @@ export default inject("store")(observer(SingleHeatPlot));
 
 interface HeatRectProp {
     isselected: boolean;
-    isfiltered: boolean;
+    //   isfiltered: boolean;
 }
-
+//(props.isfiltered ? highlight_blue : "none"))}
 const HeatRect = styled(`rect`) <HeatRectProp>`
     y:0;
     opacity:0.6;
-    stroke: ${props => (props.isselected ? highlight_orange : (props.isfiltered ? highlight_blue : "none"))};
+    stroke: ${props => (props.isselected ? highlight_orange : `none`)};
     stroke-width:2;
   `;

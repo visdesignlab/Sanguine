@@ -32,8 +32,9 @@ const SingleViolinPlot: FC<Props> = ({ howToTransform, isFiltered, isSinglePatie
         onClick={(e) => {
           actions.selectSet(
             {
-              set_name: aggregatedBy,
-              set_value: [dataPoint.aggregateAttribute]
+              setName: aggregatedBy,
+              setValues: [dataPoint.aggregateAttribute],
+              // setPatientIds: [dataPoint.patientIDList]
             },
             e.shiftKey
           )

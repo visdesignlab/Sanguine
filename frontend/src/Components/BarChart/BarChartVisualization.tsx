@@ -2,7 +2,7 @@ import React, { FC, useEffect, useRef, useLayoutEffect, useState } from "react";
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { BarChartDataPoint, ExtraPairPoint } from '../../Interfaces/ApplicationState'
+import { BarChartDataPoint, ExtraPairPoint, BasicAggregatedDatePoint } from '../../Interfaces/ApplicationState'
 import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON, ChartSVG, generateExtrapairPlotData } from "../../PresetsProfile"
 import BarChart from "./BarChart"
 import { Button, Icon, Grid, Dropdown, Menu, Modal, Form, Message } from "semantic-ui-react";
@@ -30,7 +30,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     filterSelection,
     showZero,
     currentSelectPatientGroup,
-    // actualYearRange,
+    currentOutputFilterSet,
     previewMode,
     dateRange,
 
@@ -84,55 +84,74 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         let yMaxTemp = -1;
         let caseDictionary = {} as any;
 
-        //console.log(dataResult)
+
 
         let cast_data = (dataResult as any).map(function (ob: any) {
-          let zeroCaseNum = 0;
-          ob.case_id.map((singleId: any) => {
-            caseDictionary[singleId] = true;
-          })
 
+          let zeroCaseNum = 0;
           const aggregateByAttr = ob.aggregated_by;
 
-          const case_num = ob.transfused_units.length;
-          caseCount += case_num
-
-          const medianVal = median(ob.transfused_units);
-
-          let removed_zeros = ob.transfused_units;
-          if (!showZero) {
-            removed_zeros = ob.transfused_units.filter((d: number) => {
-              if (d > 0) {
-                return true;
+          let criteriaMet = true;
+          if (currentOutputFilterSet.length > 0) {
+            for (let selectSet of currentOutputFilterSet) {
+              if (selectSet.setName === aggregatedBy) {
+                if (!selectSet.setValues.includes(aggregateByAttr)) {
+                  criteriaMet = false;
+                }
               }
-              zeroCaseNum += 1;
-              return false;
-            })
-          } else {
-            zeroCaseNum = removed_zeros.filter((d: number) => d === 0).length
+            }
           }
+          if (criteriaMet) {
 
-          const total_val = sum(removed_zeros);
+            ob.case_id.map((singleId: any) => {
+              caseDictionary[singleId] = true;
+            })
 
-          let pd = createpd(removed_zeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
-          pd = [{ x: 0, y: 0 }].concat(pd)
-          let reverse_pd = pd.map((pair: any) => {
-            return { x: pair.x, y: - pair.y }
-          }).reverse()
-          pd = pd.concat(reverse_pd)
 
-          const new_ob: BarChartDataPoint = {
-            caseCount: case_num,
-            aggregateAttribute: aggregateByAttr,
-            totalVal: total_val,
-            kdeCal: pd,
-            median: medianVal ? medianVal : 0,
-            actualDataPoints: ob.transfused_units,
-            zeroCaseNum: zeroCaseNum,
-            patientIDList: ob.pat_id
-          };
-          return new_ob;
+
+            const case_num = ob.transfused_units.length;
+            caseCount += case_num
+
+            const medianVal = median(ob.transfused_units);
+
+            let removed_zeros = ob.transfused_units;
+            if (!showZero) {
+              removed_zeros = ob.transfused_units.filter((d: number) => {
+                if (d > 0) {
+                  return true;
+                }
+                zeroCaseNum += 1;
+                return false;
+              })
+            } else {
+              zeroCaseNum = removed_zeros.filter((d: number) => d === 0).length
+            }
+
+            const total_val = sum(removed_zeros);
+
+            let pd = createpd(removed_zeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
+            pd = [{ x: 0, y: 0 }].concat(pd)
+            let reverse_pd = pd.map((pair: any) => {
+              return { x: pair.x, y: - pair.y }
+            }).reverse()
+            pd = pd.concat(reverse_pd)
+
+            const new_ob: BarChartDataPoint = {
+              caseCount: case_num,
+              aggregateAttribute: aggregateByAttr,
+              totalVal: total_val,
+              kdeCal: pd,
+              median: medianVal ? medianVal : 0,
+              actualDataPoints: ob.transfused_units,
+              zeroCaseNum: zeroCaseNum,
+              patientIDList: ob.pat_id,
+              caseIDList: ob.case_id
+            };
+            return new_ob;
+          }
         });
+
+        cast_data = cast_data.filter((d: any) => d)
         stateUpdateWrapperUseJSON(data, cast_data, setData)
         stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList)
         setYMax(yMaxTemp);
@@ -156,7 +175,33 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     fetchChartData();
   }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroup]);
 
-  //TODO change this to useMemo
+
+  useEffect(() => {
+    let caseDictionary = {} as any;
+    let newData = data.map((d: BasicAggregatedDatePoint) => {
+      let criteriaMet = true;
+      if (currentOutputFilterSet.length > 0) {
+        for (let selectSet of currentOutputFilterSet) {
+          if (selectSet.setName === aggregatedBy) {
+            if (!selectSet.setValues.includes(d.aggregateAttribute)) {
+              criteriaMet = false;
+            }
+          }
+        }
+      }
+      if (criteriaMet) {
+        d.caseIDList.map((singleId: any) => {
+          caseDictionary[singleId] = true;
+        })
+        return d
+      }
+    })
+    newData = newData.filter((d: any) => d);
+    stateUpdateWrapperUseJSON(data, newData, setData)
+    stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList);
+  }, [currentOutputFilterSet])
+
+
   useEffect(() => {
     console.log("using effect")
     const newExtraPairData = generateExtrapairPlotData(caseIDList, aggregatedBy, hemoglobinDataSet, extraPairArray, data)

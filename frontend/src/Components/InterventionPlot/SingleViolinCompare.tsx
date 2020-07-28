@@ -36,8 +36,9 @@ const SingleViolinCompare: FC<Props> = ({ postIntHowToTransform, preIntHowToTran
                         onClick={(e) => {
                             actions.selectSet(
                                 {
-                                    set_name: aggregatedBy,
-                                    set_value: [dataPoint.aggregateAttribute]
+                                    setName: aggregatedBy,
+                                    setValues: [dataPoint.aggregateAttribute],
+                                    // setPatientIds: [dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList)]
                                 },
                                 e.shiftKey
                             )
@@ -56,8 +57,9 @@ const SingleViolinCompare: FC<Props> = ({ postIntHowToTransform, preIntHowToTran
                         onClick={(e) => {
                             actions.selectSet(
                                 {
-                                    set_name: aggregatedBy,
-                                    set_value: [dataPoint.aggregateAttribute]
+                                    setName: aggregatedBy,
+                                    setValues: [dataPoint.aggregateAttribute],
+                                    //setPatientIds: [dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList)]
                                 },
                                 e.shiftKey
                             )

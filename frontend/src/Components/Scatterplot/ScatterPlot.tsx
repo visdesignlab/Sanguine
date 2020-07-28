@@ -110,7 +110,6 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         brushDef.move(svgSelection.select(".brush-layer"), null)
     }, [currentOutputFilterSet, currentSelectPatientGroup])
 
-
     const yAxisLabel = axisLeft(yAxisScale());
     const xAxisLabel = axisBottom(xAxisScale() as any);
 
@@ -166,7 +165,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
     const decideIfSelectSet = (d: ScatterDataPoint) => {
         if (currentSelectSet.length > 0) {
             for (let selected of currentSelectSet) {
-                if (selected.set_value.includes(d.case[selected.set_name])) { return true; }
+                if (selected.setValues.includes(d.case[selected.setName])) { return true; }
 
             }
             return false;
