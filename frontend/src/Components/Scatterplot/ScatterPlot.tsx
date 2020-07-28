@@ -241,34 +241,19 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
                 const upperBound = meanVal + 1.96 * std / Math.sqrt((value as any).length)
                 // console.log(value, lowerBound, upperBound)
                 lineSet = lineSet.concat(
-                    [<line strokeWidth="3px"
-                        stroke={"#3498d5"}
+                    [<StatisticalLine
                         //  opacity={0.5}
                         x1={xAxisScale()(key as any)}
                         y1={yAxisScale()(meanVal)}
                         y2={yAxisScale()(meanVal)}
                         x2={xAxisScale()(key as any) + xAxisScale().bandwidth() || 0} />,
-                    <line strokeWidth="1px"
-                        stroke={"#3498d5"}
+                    <StatisticalLine
                         // opacity={0.5}
                         x1={xAxisScale()(key as any) + 0.5 * xAxisScale().bandwidth() || 0}
                         y1={yAxisScale()(lowerBound)}
                         y2={yAxisScale()(upperBound)}
                         x2={xAxisScale()(key as any) + 0.5 * xAxisScale().bandwidth() || 0} />,
-                    <line strokeWidth="3px"
-                        stroke={"#3498d5"}
-                        // opacity={0.5}
-                        x1={xAxisScale()(key as any) + 0.3 * xAxisScale().bandwidth() || 0}
-                        y1={yAxisScale()(upperBound)}
-                        y2={yAxisScale()(upperBound)}
-                        x2={xAxisScale()(key as any) + 0.7 * xAxisScale().bandwidth() || 0} />,
-                    <line strokeWidth="3px"
-                        stroke={"#3498d5"}
-                        // opacity={0.5}
-                        x1={xAxisScale()(key as any) + 0.3 * xAxisScale().bandwidth() || 0}
-                        y1={yAxisScale()(lowerBound)}
-                        y2={yAxisScale()(lowerBound)}
-                        x2={xAxisScale()(key as any) + 0.7 * xAxisScale().bandwidth() || 0} />]
+                    ]
                 )
             }
         }
@@ -305,11 +290,16 @@ interface DotProps {
     isSelectSet: boolean;
 }
 const Circle = styled(`circle`) <DotProps>`
-  r:4px
-  opacity:${props => props.isselected ? 1 : 0.5}
-  stroke:${props => (props.isSelectSet ? highlight_orange : "none")}
+  r:4px;
+  opacity:${props => props.isselected ? 1 : 0.5};
+  stroke:${props => (props.isSelectSet ? highlight_orange : "none")};
   stroke-width:2px;
-  fill:${props => (props.isbrushed || props.isselected ? highlight_orange : basic_gray)}
+  fill:${props => (props.isbrushed || props.isselected ? highlight_orange : basic_gray)};
 `;
 
 
+const StatisticalLine = styled(`line`)`
+    stroke-width: 3px;
+    stroke: #3498d5;
+
+`
