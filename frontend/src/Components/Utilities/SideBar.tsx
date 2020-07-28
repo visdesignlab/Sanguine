@@ -247,13 +247,13 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             {currentOutputFilterSet.map((selectSet) => {
               return <FilterListIT
                 //icon="caret right"
-                key={`${selectSet.set_name}selected`}
-                onClick={() => { actions.clearOutputFilterSet(selectSet.set_name) }}
-                content={`${AxisLabelDict[selectSet.set_name]}: ${selectSet.set_value.sort()}`}>
-                <List.Header>{AxisLabelDict[selectSet.set_name]}</List.Header>
+                key={`${selectSet.setName}selected`}
+                onClick={() => { actions.clearOutputFilterSet(selectSet.setName) }}
+                content={`${AxisLabelDict[selectSet.setName]}: ${selectSet.setValues.sort()}`}>
+                <List.Header>{AxisLabelDict[selectSet.setName]}</List.Header>
                 <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
 
-                <List.Content >{selectSet.set_value.sort().join(', ')}</List.Content>
+                <List.Content >{selectSet.setValues.sort().join(', ')}</List.Content>
               </FilterListIT>
             })}
           </List>
@@ -272,12 +272,12 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 
             {currentSelectSet.map((selectSet) => {
               return <FilterListIT
-                key={`${selectSet.set_name}currentselecting`}
-                onClick={() => { actions.clearSelectSet(selectSet.set_name) }}
-                content={`${AxisLabelDict[selectSet.set_name]} - ${selectSet.set_value.sort()}`}>
-                <List.Header>{AxisLabelDict[selectSet.set_name]}</List.Header>
+                key={`${selectSet.setName}currentselecting`}
+                onClick={() => { actions.clearSelectSet(selectSet.setName) }}
+                content={`${AxisLabelDict[selectSet.setName]} - ${selectSet.setValues.sort()}`}>
+                <List.Header>{AxisLabelDict[selectSet.setName]}</List.Header>
                 <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
-                <List.Content>{selectSet.set_value.sort().join(', ')}</List.Content>
+                <List.Content>{selectSet.setValues.sort().join(', ')}</List.Content>
               </FilterListIT>
             })}
 

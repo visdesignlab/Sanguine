@@ -462,34 +462,42 @@ export function setupProvenance(): AppProvenance {
   };
 
   const selectSet = (data: SelectSet, shiftKeyPressed: boolean) => {
+    console.log(data)
     provenance.applyAction(
-      `select set ${data.set_name} at ${data.set_value}`,
+      `select set ${data.setName} at ${data.setValues}`,
       (state: ApplicationState) => {
         if (!shiftKeyPressed) {
           if (state.currentSelectSet.length === 1
-            && state.currentSelectSet[0].set_name === data.set_name
-            && state.currentSelectSet[0].set_value === data.set_value) {
-            state.currentSelectSet = []
+            && state.currentSelectSet[0].setName === data.setName
+            && state.currentSelectSet[0].setValues === data.setValues) {
+            state.currentSelectSet = [];
           }
           else {
             state.currentSelectSet = [data]
           }
         }
         else {
-          const addingType = data.set_name;
-          const alreadyIn = state.currentSelectSet.filter(d => d.set_name === addingType).length > 0
+          const addingType = data.setName;
+          const alreadyIn = state.currentSelectSet.filter(d => d.setName === addingType).length > 0
           if (!alreadyIn) {
             state.currentSelectSet.push(data)
           } else {
             state.currentSelectSet = state.currentSelectSet.map((d) => {
-              if (d.set_name === addingType) {
-                d.set_value = d.set_value.includes(data.set_value[0]) ? d.set_value.filter(num => num !== d.set_value[0]) : d.set_value.concat(data.set_value)
+              if (d.setName === addingType) {
+                const indexOfElement = d.setValues.indexOf(data.setValues[0])
+                if (indexOfElement > 0) {
+                  d.setValues = d.setValues.splice(indexOfElement, 1);
+                  //     d.setPatientIds = d.setPatientIds.splice(indexOfElement, 1);
+                } else {
+                  d.setValues = d.setValues.concat(data.setValues)
+                  //  d.setPatientIds = d.setPatientIds.concat(data.setPatientIds)
+                }
               }
               return d
             })
           }
         }
-        console.log(state.currentSelectSet)
+
         return state
       })
   }
@@ -498,7 +506,7 @@ export function setupProvenance(): AppProvenance {
     provenance.applyAction(
       `delete select set`,
       (state: ApplicationState) => {
-        state.currentSelectSet = state.currentSelectSet.filter(d => d.set_name !== target)
+        state.currentSelectSet = state.currentSelectSet.filter(d => d.setName !== target)
         return state;
       }
     )
@@ -514,15 +522,15 @@ export function setupProvenance(): AppProvenance {
         state.currentBrushedPatientGroup = [];
 
         for (let eachSelectSet of state.currentSelectSet) {
-          const alreadyIn = state.currentOutputFilterSet.filter(d => d.set_name === eachSelectSet.set_name).length > 0
+          const alreadyIn = state.currentOutputFilterSet.filter(d => d.setName === eachSelectSet.setName).length > 0
           if (alreadyIn) {
             state.currentOutputFilterSet = state.currentOutputFilterSet.map(d => {
-              if (d.set_name === eachSelectSet.set_name) {
-                let setOfValues = new Set(d.set_value)
-                for (let singleValue of eachSelectSet.set_value) {
+              if (d.setName === eachSelectSet.setName) {
+                let setOfValues = new Set(d.setValues)
+                for (let singleValue of eachSelectSet.setValues) {
                   setOfValues.add(singleValue);
                 }
-                d.set_value = Array.from(setOfValues);
+                d.setValues = Array.from(setOfValues);
               }
               return d
             })
@@ -549,7 +557,7 @@ export function setupProvenance(): AppProvenance {
         if (!target) {
           state.currentOutputFilterSet = [];
         } else {
-          state.currentOutputFilterSet = state.currentOutputFilterSet.filter(d => d.set_name !== target)
+          state.currentOutputFilterSet = state.currentOutputFilterSet.filter(d => d.setName !== target)
         }
         return state;
       }

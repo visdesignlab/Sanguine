@@ -2,7 +2,7 @@ import React, { FC, useEffect, useRef, useLayoutEffect, useState } from "react";
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { HeatMapDataPoint, ExtraPairPoint } from '../../Interfaces/ApplicationState'
+import { HeatMapDataPoint, ExtraPairPoint, BasicAggregatedDatePoint } from '../../Interfaces/ApplicationState'
 import { BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON, ChartSVG, generateExtrapairPlotData } from "../../PresetsProfile"
 import { Icon, Grid, Dropdown, Menu, Modal, Form, Button, Message } from "semantic-ui-react";
 
@@ -79,78 +79,82 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
 
                     // const caseList = dataResult.case_id_list;
                     let caseDictionary = {} as any;
+                    //   console.log(dataResult)
 
-                    //console.log(dataResult)
                     let cast_data = (dataResult as any).map(function (ob: any) {
                         const aggregateByAttr = ob.aggregated_by;
-                        // let criteriaMet = true;
-                        // if (currentOutputFilterSet.length > 0) {
-                        //     for (let selectSet of currentOutputFilterSet) {
-                        //         if (selectSet.set_name === aggregatedBy) {
-                        //             if (!selectSet.set_value.includes(aggregateByAttr)) {
-                        //                 criteriaMet = false;
-                        //             }
-                        //         }
-                        //     }
-                        // }
-                        // if (criteriaMet) {
-
-                        ob.case_id.map((singleId: any) => {
-                            caseDictionary[singleId] = true;
-                        })
-
-                        let zeroCaseNum = 0;
-                        const case_num = ob.transfused_units.length;
-                        caseCount += case_num
-
-                        let outputResult = ob.transfused_units;
-                        zeroCaseNum = outputResult.filter((d: number) => d === 0).length
-
-                        const total_val = sum(outputResult);
-
-                        let countDict = {} as any
-                        const cap = BloodProductCap[valueToVisualize]
-
-                        if (valueToVisualize === "CELL_SAVER_ML") {
-                            countDict[-1] = 0
-                            for (let i = 0; i <= cap; i += 100) {
-                                countDict[i] = 0
-                            }
-                        } else {
-                            for (let i = 0; i <= cap; i++) {
-                                countDict[i] = 0
+                        let criteriaMet = true;
+                        if (currentOutputFilterSet.length > 0) {
+                            for (let selectSet of currentOutputFilterSet) {
+                                if (selectSet.setName === aggregatedBy) {
+                                    if (!selectSet.setValues.includes(aggregateByAttr)) {
+                                        criteriaMet = false;
+                                    }
+                                }
                             }
                         }
-                        outputResult.map((d: any) => {
+                        if (criteriaMet) {
+
+                            ob.case_id.map((singleId: any) => {
+                                caseDictionary[singleId] = true;
+                            })
+
+                            let zeroCaseNum = 0;
+                            const case_num = ob.transfused_units.length;
+                            caseCount += case_num
+
+                            let outputResult = ob.transfused_units;
+                            zeroCaseNum = outputResult.filter((d: number) => d === 0).length
+
+                            const total_val = sum(outputResult);
+
+                            let countDict = {} as any
+                            const cap = BloodProductCap[valueToVisualize]
+
+
                             if (valueToVisualize === "CELL_SAVER_ML") {
-                                const roundedAnswer = Math.floor(d / 100) * 100
-                                if (d === 0) {
-                                    countDict[-1] += 1
-                                }
-                                else if (roundedAnswer > cap) {
-                                    countDict[cap] += 1
-                                }
-                                else {
-                                    countDict[roundedAnswer] += 1
+                                countDict[-1] = 0
+                                for (let i = 0; i <= cap; i += 100) {
+                                    countDict[i] = 0
                                 }
                             } else {
-                                if (d > cap) {
-                                    countDict[cap] += 1
-                                } else {
-                                    countDict[d] += 1
+                                for (let i = 0; i <= cap; i++) {
+                                    countDict[i] = 0
                                 }
                             }
-                        })
-                        const new_ob: HeatMapDataPoint = {
-                            caseCount: case_num,
-                            aggregateAttribute: aggregateByAttr,
-                            totalVal: total_val,
-                            countDict: countDict,
-                            zeroCaseNum: zeroCaseNum,
-                            patientIDList: ob.pat_id
-                        };
-                        return new_ob;
-                        //   }
+
+                            outputResult.map((d: any) => {
+                                if (valueToVisualize === "CELL_SAVER_ML") {
+                                    const roundedAnswer = Math.floor(d / 100) * 100
+                                    if (d === 0) {
+                                        countDict[-1] += 1
+                                    }
+                                    else if (roundedAnswer > cap) {
+                                        countDict[cap] += 1
+                                    }
+                                    else {
+                                        countDict[roundedAnswer] += 1
+                                    }
+                                } else {
+                                    if (d > cap) {
+                                        countDict[cap] += 1
+                                    } else {
+                                        countDict[d] += 1
+                                    }
+                                }
+                            })
+
+                            const new_ob: HeatMapDataPoint = {
+                                caseCount: case_num,
+                                aggregateAttribute: aggregateByAttr,
+                                totalVal: total_val,
+                                countDict: countDict,
+                                zeroCaseNum: zeroCaseNum,
+                                caseIDList: ob.case_id,
+                                patientIDList: ob.pat_id
+                            };
+                            return new_ob;
+                        }
                     });
                     cast_data = cast_data.filter((d: any) => d)
 
@@ -182,6 +186,32 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroup,
         //  currentOutputFilterSet
     ]);
+
+    useEffect(() => {
+        let caseDictionary = {} as any;
+
+        let newData = data.map((d: BasicAggregatedDatePoint) => {
+            let criteriaMet = true;
+            if (currentOutputFilterSet.length > 0) {
+                for (let selectSet of currentOutputFilterSet) {
+                    if (selectSet.setName === aggregatedBy) {
+                        if (!selectSet.setValues.includes(d.aggregateAttribute)) {
+                            criteriaMet = false;
+                        }
+                    }
+                }
+            }
+            if (criteriaMet) {
+                d.caseIDList.map((singleId: any) => {
+                    caseDictionary[singleId] = true;
+                })
+                return d
+            }
+        })
+        newData = newData.filter((d: any) => d);
+        stateUpdateWrapperUseJSON(data, newData, setData)
+        stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList);
+    }, [currentOutputFilterSet])
 
     const makeExtraPairData = () => {
         const newExtraPairData = generateExtrapairPlotData(caseIDList, aggregatedBy, hemoglobinDataSet, extraPairArray, data)

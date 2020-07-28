@@ -62,7 +62,6 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     } = store!;
 
     const currentOffset = offset.regular;
-
     const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
     const [xVals, setXVals] = useState<any[]>([]);
     const [caseMax, setCaseMax] = useState(0);
@@ -78,25 +77,19 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     }, [extraPairDataSet])
 
     useEffect(() => {
-        let newCaseMax = 0
-        // let zeroTransfusedMax = 0;
+        let newCaseMax = 0;
         const tempxVals = data
             .map((dp) => {
                 newCaseMax = newCaseMax > dp.caseCount ? newCaseMax : dp.caseCount
-                // zeroTransfusedMax = zeroTransfusedMax > dp.zeroCaseNum ? zeroTransfusedMax : dp.zeroCaseNum
                 return dp.aggregateAttribute
             })
             .sort();
         // setXVals(tempxVals);
         stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
         setCaseMax(newCaseMax)
-        // console.log("sorted")
+        console.log(data)
     }, [data])
 
-    // const zeroGrayScale = useCallback(()=>{
-    //     const zeroGrayScale = scaleLinear().domain([0,zeroMax]).range([0.25,0.8])
-    //     return zeroGrayScale
-    // },[zeroMax])
 
     const valueScale = useCallback(() => {
         let outputRange
@@ -191,7 +184,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         if (currentSelectSet.length > 0) {
             //let selectSet: SelectSet;
             for (let selectSet of currentSelectSet) {
-                if (aggregatedBy === selectSet.set_name && selectSet.set_value.includes(d.aggregateAttribute))
+                if (aggregatedBy === selectSet.setName && selectSet.setValues.includes(d.aggregateAttribute))
                     return true;
             }
             return false;
@@ -204,7 +197,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
 
     const decideIfFiltered = (d: HeatMapDataPoint) => {
         for (let filterSet of currentOutputFilterSet) {
-            if (aggregatedBy === filterSet.set_name && filterSet.set_value.includes(d.aggregateAttribute))
+            if (aggregatedBy === filterSet.setName && filterSet.setValues.includes(d.aggregateAttribute))
                 return true
         }
         return false;

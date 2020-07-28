@@ -1,6 +1,6 @@
 export interface SelectSet {
-  set_name: string;
-  set_value: number[];
+  setName: string;
+  setValues: number[];
 }
 
 export interface InterventionDataPoint {
@@ -27,6 +27,7 @@ export interface BasicAggregatedDatePoint {
   caseCount: number;
   zeroCaseNum: number;
   patientIDList: number[];
+  caseIDList: number[];
 }
 
 export interface BarChartDataPoint extends BasicAggregatedDatePoint {

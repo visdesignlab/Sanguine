@@ -197,7 +197,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
     if (currentSelectSet.length > 0) {
       //let selectSet: SelectSet;
       for (let selectSet of currentSelectSet) {
-        if (aggregatedBy === selectSet.set_name && selectSet.set_value.includes(d.aggregateAttribute))
+        if (aggregatedBy === selectSet.setName && selectSet.setValues.includes(d.aggregateAttribute))
           return true;
       }
       return false;
@@ -210,7 +210,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
 
   const decideIfFiltered = (d: BarChartDataPoint) => {
     for (let filterSet of currentOutputFilterSet) {
-      if (aggregatedBy === filterSet.set_name && filterSet.set_value.includes(d.aggregateAttribute))
+      if (aggregatedBy === filterSet.setName && filterSet.setValues.includes(d.aggregateAttribute))
         return true
     }
     return false;

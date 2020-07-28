@@ -263,7 +263,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
 
     if (currentSelectSet.length > 0) {
       for (let selected of currentSelectSet) {
-        if (selected.set_value.includes(d.case[selected.set_name])) { return true; }
+        if (selected.setValues.includes(d.case[selected.setName])) { return true; }
 
       }
       return false;
