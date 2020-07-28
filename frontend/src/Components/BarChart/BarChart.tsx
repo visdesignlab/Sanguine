@@ -19,7 +19,7 @@ import {
   curveCatmullRom
 } from "d3";
 import {
-  BarChartDataPoint
+  BarChartDataPoint, ExtraPairPoint
 } from "../../Interfaces/ApplicationState";
 import {
   offset,
@@ -48,7 +48,7 @@ interface OwnProps {
   yMax: number;
   //  selectedVal: number | null;
   stripPlotMode: boolean;
-  extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];
+  extraPairDataSet: ExtraPairPoint[];
 }
 
 const currentOffset = offset.regular;

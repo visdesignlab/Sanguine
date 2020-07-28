@@ -21,7 +21,7 @@ import {
     timeFormat
 } from "d3";
 import {
-    InterventionDataPoint
+    InterventionDataPoint, ExtraPairInterventionPoint
 } from "../../Interfaces/ApplicationState";
 import {
     AxisLabelDict,
@@ -57,17 +57,7 @@ interface OwnProps {
     interventionDate: number;
     //  selectedVal: number | null;
     // stripPlotMode: boolean;
-    extraPairDataSet: {
-        name: string,
-        totalIntData: any[],
-        preIntData: any[],
-        postIntData: any[],
-        type: string,
-        kdeMax?: number,
-        totalMedianSet?: any,
-        preMedianSet?: any,
-        postMedianSet?: any
-    }[];
+    extraPairDataSet: ExtraPairInterventionPoint[];
 }
 
 export type Props = OwnProps;

@@ -11,6 +11,7 @@ import './App.css'
 //import 'react-grid-layout/css/styles.css'
 import { NavLink } from 'react-router-dom';
 import LayoutGenerator from './LayoutGenerator';
+import { select } from 'd3';
 
 interface OwnProps {
     store?: Store
@@ -22,10 +23,10 @@ type Props = OwnProps;
 const Preview: FC<Props> = ({ store, hemoData }: Props) => {
 
     const { showZero, loadingModalOpen } = store!;
-
+    select("#Main-Body").append("div").attr("class", "tooltiptext")
     return (
         <LayoutDiv>
-            <Container fluid>
+            <Container fluid id="Top-Bar">
                 <Menu widths={3}>
                     <Menu.Item>
                         <Checkbox
@@ -47,11 +48,11 @@ const Preview: FC<Props> = ({ store, hemoData }: Props) => {
                     </Menu.Item>
                 </Menu>
             </Container>
-            <Grid padded>
-                <SpecialPaddingColumn width={2} >
+            <Grid padded >
+                <SpecialPaddingColumn width={2} id="Side-Bar" >
                     <SideBar hemoData={hemoData}></SideBar>
                 </SpecialPaddingColumn>
-                <Grid.Column width={14}>
+                <Grid.Column width={14} id="Main-Body">
                     <LayoutGenerator hemoData={hemoData} />
                 </Grid.Column>
 
