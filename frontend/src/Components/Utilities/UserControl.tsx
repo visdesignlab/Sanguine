@@ -7,7 +7,7 @@ import { actions, provenance } from '../..'
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
 import { timeFormat } from "d3";
-import { blood_red } from "../../PresetsProfile";
+import { blood_red, OutcomeType } from "../../PresetsProfile";
 import {
   barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions,
   interventionChartType, presetOptions, stateUpdateWrapperUseJSON, dumbbellValueOptions, scatterYOptions, typeDiction
@@ -34,6 +34,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const [addingChartType, setAddingChartType] = useState(-1)
   const [xSelection, setXSelection] = useState<string>("")
   const [ySelection, setYSelection] = useState<string>("")
+  const [outcomeComparison, setOutcomeComparison] = useState<string>("")
   const [interventionDate, setInterventionDate] = useState<number | undefined>(undefined)
   // const [elementCounter, addToElementCounter] = useState(0)
   const [interventionPlotType, setInterventionPlotType] = useState<string | undefined>(undefined)
@@ -102,6 +103,10 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     setYSelection(value.value)
   }
 
+  const outcomeComparisonHandler = (e: any, value: any) => {
+    setOutcomeComparison(value.value)
+  }
+
   const interventionPlotHandler = (e: any, value: any) => {
     setInterventionPlotType(value.value)
   }
@@ -110,13 +115,14 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const confirmChartAddHandler = () => {
     if (xSelection && ySelection && addingChartType > -1) {
       if (!(addingChartType === 4 && (!interventionDate || !interventionPlotType))) {
-        actions.addNewChart(xSelection, ySelection, nextAddingIndex, typeDiction[addingChartType], interventionDate, interventionPlotType)
+        actions.addNewChart(xSelection, ySelection, nextAddingIndex, typeDiction[addingChartType], outcomeComparison, interventionDate, interventionPlotType)
         setAddMode(false);
         setAddingChartType(-1)
         setInterventionDate(undefined);
         setInterventionPlotType(undefined);
         setXSelection("")
         setYSelection("")
+        setOutcomeComparison("")
       }
     }
   }
@@ -381,6 +387,17 @@ const UserControl: FC<Props> = ({ store }: Props) => {
           value={xSelection}
         />
       </Menu.Item>
+
+      {addingChartType === 3 ? (<Menu.Item>
+        <Dropdown
+          placeholder="Outcome Comparison"
+          selection
+          clearable
+          options={OutcomeType}
+          onChange={outcomeComparisonHandler}
+          value={outcomeComparison}
+        />
+      </Menu.Item>) : (<></>)}
 
       {addingChartType === 4 ? (
         [<Menu.Item>

@@ -30,7 +30,7 @@ interface AppProvenance {
     // yearRangeChange: (data: any) => void;
     dateRangeChange: (data: any) => void;
 
-    addNewChart: (x: string, y: string, i: number, type: string, interventionDate?: number, interventionChartType?: string) => void;
+    addNewChart: (x: string, y: string, i: number, type: string, outcomeComparison?: string, interventionDate?: number, interventionChartType?: string) => void;
     removeChart: (i: any) => void;
     updateCaseCount: (mode: string, newCaseCount: number) => void;
     onLayoutchange: (data: any) => void;
@@ -42,7 +42,7 @@ interface AppProvenance {
 
     updateSelectedPatientGroup: (caseList: number[]) => void;
     updateBrushPatientGroup: (caseList: number[]) => void;
-    changeChart: (x: string, y: string, i: string, type: string, interventionType?: string) => void;
+    changeChart: (x: string, y: string, i: string, type: string, comparisonChartType?: string) => void;
   }
 }
 export function setupProvenance(): AppProvenance {
@@ -141,7 +141,7 @@ export function setupProvenance(): AppProvenance {
   //   )
   // }
 
-  const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plot_type: string, interventionDate?: number, interventionChartType?: string) => {
+  const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plotType: string, outcomeComparison?: string, interventionDate?: number, interventionChartType?: string) => {
 
     const newLayoutElement: LayoutElement = {
       aggregatedBy: xAxisAttribute,
@@ -151,18 +151,25 @@ export function setupProvenance(): AppProvenance {
       h: 1,
       x: 0,
       y: Infinity,
-      plot_type: plot_type,
+      plotType: plotType,
       notation: ""
     }
-    if (plot_type === "VIOLIN" || plot_type === "HEATMAP" || plot_type === "INTERVENTION") {
+    if (plotType === "VIOLIN" || plotType === "HEATMAP" || plotType === "INTERVENTION") {
       newLayoutElement.extraPair = JSON.stringify([]);
     }
-    if (interventionDate) {
-      newLayoutElement.interventionDate = interventionDate
+
+    if (outcomeComparison) {
+      newLayoutElement.plotType = "COMPARISON";
+      newLayoutElement.comparisonChartType = "HEATMAP";
     }
-    if (plot_type === "INTERVENTION" && interventionDate) {
+
+    // if (interventionDate) {
+    //   newLayoutElement.interventionDate = interventionDate;
+    // }
+
+    if (plotType === "INTERVENTION" && interventionDate) {
       newLayoutElement.interventionDate = interventionDate;
-      newLayoutElement.interventionType = interventionChartType ? interventionChartType : "HEATMAP";
+      newLayoutElement.comparisonChartType = interventionChartType ? interventionChartType : "HEATMAP";
     }
 
     provenance.applyAction("Add new chart",
@@ -213,7 +220,7 @@ export function setupProvenance(): AppProvenance {
                 h: 1,
                 x: 0,
                 y: Infinity,
-                plot_type: "VIOLIN",
+                plotType: "VIOLIN",
                 notation: "",
                 extraPair: JSON.stringify([])
               },
@@ -226,7 +233,7 @@ export function setupProvenance(): AppProvenance {
                 x: 0,
                 y: Infinity,
                 notation: "",
-                plot_type: "VIOLIN",
+                plotType: "VIOLIN",
                 extraPair: JSON.stringify([])
               }, {
                 aggregatedBy: "PRBC_UNITS",
@@ -237,7 +244,7 @@ export function setupProvenance(): AppProvenance {
                 x: 0,
                 notation: "",
                 y: Infinity,
-                plot_type: "DUMBBELL"
+                plotType: "DUMBBELL"
               }]
             state.filterSelection = ["CABG", "TAVR"]
             state.nextAddingIndex = 3;
@@ -262,7 +269,7 @@ export function setupProvenance(): AppProvenance {
     );
   }
 
-  const changeChart = (x: string, y: string, i: string, type: string, interventionType?: string) => {
+  const changeChart = (x: string, y: string, i: string, type: string, comparisonChartType?: string) => {
     provenance.applyAction(
       `change chart ${i}`,
       (state: ApplicationState) => {
@@ -270,9 +277,9 @@ export function setupProvenance(): AppProvenance {
           if (d.i === i) {
             d.aggregatedBy = x;
             d.valueToVisualize = y;
-            d.plot_type = type;
-            if (interventionType) {
-              d.interventionType = interventionType;
+            d.plotType = type;
+            if (comparisonChartType) {
+              d.comparisonChartType = comparisonChartType;
             }
           }
           return d

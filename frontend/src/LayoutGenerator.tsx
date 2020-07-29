@@ -14,10 +14,11 @@ import BarChartVisualization from "./Components/BarChart/BarChartVisualization";
 import ScatterPlotVisualization from "./Components/Scatterplot/ScatterPlotVisualization";
 import HeatMapVisualization from "./Components/HeatMapChart/HeatMapVisualization";
 import InterventionPlotVisualization from "./Components/InterventionPlot/InterventionPlotVisualization";
+
 import { Responsive } from "react-grid-layout";
 import 'react-grid-layout/css/styles.css'
 interface OwnProps {
-    hemoData: any;
+    hemoData: any[];
     store?: Store
 }
 
@@ -32,7 +33,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
 
     const createElement = (layout: LayoutElement, index: number) => {
         console.log(provenance.current().state)
-        switch (layout.plot_type) {
+        switch (layout.plotType) {
             case "DUMBBELL":
                 return (
                     <div key={layout.i} className={"parent-node" + layout.i}>
@@ -130,9 +131,14 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                         chartId={layout.i}
                         chartIndex={index}
                         interventionDate={layout.interventionDate!}
-                        interventionPlotType={layout.interventionType!}
+                        interventionPlotType={layout.comparisonChartType!}
                         notation={layout.notation} />
                 </div>);
+            case "COMPARISON":
+                return (<div key={layout.i}
+                    className={"parent-node" + layout.i}>
+                    <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
+                </div>)
 
         }
 

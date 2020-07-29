@@ -3,7 +3,7 @@ export interface SelectSet {
   setValues: number[];
 }
 
-export interface InterventionDataPoint {
+export interface ComparisonDataPoint {
   aggregateAttribute: any;
   preInKdeCal: any[];
   postInKdeCal: any[];
@@ -19,6 +19,8 @@ export interface InterventionDataPoint {
   postZeroCaseNum: number;
   prePatienIDList: number[];
   postPatienIDList: number[];
+  preCaseIDList: number[];
+  postCaseIDList: number[];
 }
 
 export interface BasicAggregatedDatePoint {
@@ -115,11 +117,11 @@ export interface LayoutElement {
   y: number,
   w: number,
   h: number,
-  plot_type: string,
+  plotType: string,
   //  aggregation?: string,
   extraPair?: string,
   interventionDate?: number,
-  interventionType?: string,
+  comparisonChartType?: string,
   notation: string
 }
 

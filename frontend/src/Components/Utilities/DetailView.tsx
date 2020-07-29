@@ -48,18 +48,13 @@ const DetailView: FC<Props> = ({ store }: Props) => {
                 const fetchSurgery = await fetch(`http://localhost:8000/api/fetch_surgery?case_id=${currentSelectPatient.caseId}`)
                 const fetchSurgeryJson = await fetchSurgery.json();
                 const surgeryInfo = fetchSurgeryJson.result[0];
-
-                const t0 = performance.now();
                 const fetchRisk = await fetch(`http://localhost:8000/api/risk_score?patient_ids=${currentSelectPatient.patientID}`)
-                const t1 = performance.now();
-                console.log(`Call to fetch one risk score took ${t1 - t0} milliseconds.`);
-
                 const fetchRiskJson = await fetchRisk.json();
                 const riskInfo = { ROM: fetchRiskJson[0].apr_drg_rom, SOI: fetchRiskJson[0].apr_drg_soi }
-                const t2 = performance.now();
+
                 const fetchOutcome = await fetch(`http://localhost:8000/api/patient_outcomes?patient_ids=${currentSelectPatient.patientID}`)
-                const t3 = performance.now();
-                console.log(`Call to fetch one outcome took ${t3 - t2} milliseconds.`);
+
+
 
                 const fetchOutcomeJson = await fetchOutcome.json();
                 const outcomeInfo = {
