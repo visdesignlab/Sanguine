@@ -8,7 +8,6 @@ export const stateUpdateWrapperUseJSON = (oldState: any, newState: any, updateFu
     }
 }
 
-//TODO change this function to solely dependendent on the caseList for each aggregation
 export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggregatedBy: string, hemoglobinDataSet: [], extraPairArray: string[], data: ComparisonDataPoint[]) => {
     let newExtraPairData: ExtraPairInterventionPoint[] = []
     if (extraPairArray.length > 0) {
@@ -76,8 +75,6 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
 
                     newExtraPairData.push({ name: "Zero Transfusion", label: "Zero %", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                     break;
-
-
 
                 case "Death":
                     data.map((dataPoint: ComparisonDataPoint) => {

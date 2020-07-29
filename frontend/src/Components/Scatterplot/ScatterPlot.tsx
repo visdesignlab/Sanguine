@@ -91,7 +91,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
                 const cx = xAxisName === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
                 const cy = yAxisScale()(dataPoint.yVal)
                 if (cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
-                    caseList.push(dataPoint.case.caseId)
+                    caseList.push(dataPoint.case.CASE_ID)
                 }
             })
             if (caseList.length > 1000 || caseList.length === 0) {
@@ -156,8 +156,8 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         .text(AxisLabelDict[xAxisName] ? AxisLabelDict[xAxisName] : xAxisName);
 
     const decideIfSelected = (d: ScatterDataPoint) => {
-        if (currentSelectPatient && d.case.caseId > 0) {
-            return currentSelectPatient.caseId === d.case.caseId
+        if (currentSelectPatient && d.case.CASE_ID > 0) {
+            return currentSelectPatient.CASE_ID === d.case.CASE_ID
         }
         return false;
     }
@@ -165,8 +165,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
     const decideIfSelectSet = (d: ScatterDataPoint) => {
         if (currentSelectSet.length > 0) {
             for (let selected of currentSelectSet) {
-                if (selected.setValues.includes(d.case[selected.setName])) { return true; }
-
+                if (selected.setValues.includes((d.case[selected.setName]) as any)) { return true; }
             }
             return false;
         }
@@ -197,7 +196,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
             const isSelected = decideIfSelected(dataPoint)
             const isSelectSet = decideIfSelectSet(dataPoint);
             const isBrushed = brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]
-            //  || (patientGroupSet.has(dataPoint.case.caseId));
+            //  || (patientGroupSet.has(dataPoint.case.CASE_ID));
             if (isSelected || isBrushed || isSelectSet) {
                 selectedPatients.push(
                     <Circle cx={cx}

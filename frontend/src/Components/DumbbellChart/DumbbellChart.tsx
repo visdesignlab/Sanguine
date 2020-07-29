@@ -264,7 +264,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
 
     if (currentSelectSet.length > 0) {
       for (let selected of currentSelectSet) {
-        if (selected.setValues.includes(d.case[selected.setName])) { return true; }
+        if (selected.setValues.includes((d.case[selected.setName]) as any)) { return true; }
 
       }
       return false;
@@ -290,7 +290,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
         if (isSelected || isSelectSet) {
           selectedPatients.push(<Popup
             content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}
-            key={`${dataPoint.case.visitNum}-${dataPoint.case.caseId}`}
+            key={`${dataPoint.case.VISIT_ID}-${dataPoint.case.caseId}`}
             trigger={
               <g >
                 <Rect
@@ -334,7 +334,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
         return (
           <Popup
             content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}
-            key={`${dataPoint.case.visitNum}-${dataPoint.case.caseId}`}
+            key={`${dataPoint.case.VISIT_ID}-${dataPoint.case.caseId}`}
             trigger={
               <g >
                 <Rect

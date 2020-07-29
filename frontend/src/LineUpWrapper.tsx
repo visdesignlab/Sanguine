@@ -45,8 +45,31 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                 distinctSurgeons.add((ob.SURGEON_ID).toString());
                 distinctPatient.add(ob.PATIENT_ID.toString());
                 caseIDArray.push(ob.CASE_ID)
-                let oldObject = ob;
-                oldObject.DATE = new Date(oldObject.DATE)
+                // let oldObject = ob;
+                let oldObject = {}
+                oldObject = {
+                    CASE_ID: ob.CASE_ID,
+                    DATE: new Date(ob.DATE),
+                    VISIT_ID: ob.VISIT_ID,
+                    PATIENT_ID: ob.PATIENT_ID,
+                    SURGEON_ID: ob.SURGEON_ID,
+                    CRYO_UNITS: ob.CRYO_UNITS,
+                    DEATH: ob.DEATH,
+                    ANESTHESIOLOGIST_ID: ob.ANESTHESIOLOGIST_ID,
+
+                    CELL_SAVER_ML: ob.CELL_SAVER_ML,
+                    ECMO: ob.ECMO,
+                    DRG_WEIGHT: ob.DRG_WEIGHT,
+
+                    FFP_UNITS: ob.FFP_UNITS,
+                    PLT_UNITS: ob.PLT_UNITS,
+                    POSTOP_HGB: ob.POSTOP_HGB,
+                    PRBC_UNITS: ob.PRBC_UNITS,
+                    PREOP_HGB: ob.PREOP_HGB,
+                    STROKE: ob.STROKE,
+                    VENT: ob.VENT
+                }
+
                 tempData.push(oldObject);
             })
             stateUpdateWrapperUseJSON(distinctCategories, { surgeons: (Array.from(distinctSurgeons)), anesth: Array.from(distinctAnesth), patient: Array.from(distinctPatient) }, setCatgories)

@@ -312,15 +312,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             onResultSelect={(e, resultSelection) => {
               const selectedPat = caseSearchResult.filter((d: any) => d.CASE_ID === resultSelection.result.title)[0]
               console.log(selectedPat)
-              const newSingleCasePoint: SingleCasePoint = {
-                visitNum: selectedPat.VISIT_ID,
-                caseId: selectedPat.CASE_ID,
-                YEAR: selectedPat.YEAR,
-                SURGEON_ID: selectedPat.SURGEON_ID,
-                ANESTHESIOLOGIST_ID: selectedPat.ANESTHESIOLOGIST_ID,
-                patientID: selectedPat.PATIENT_ID,
-                DATE: selectedPat.DATE
-              };
+              const newSingleCasePoint: SingleCasePoint = selectedPat;
               actions.selectPatient(newSingleCasePoint);
               setSearchCaseVal("")
             }

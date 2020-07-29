@@ -10,6 +10,7 @@ import { HIPAA_Sensitive, AxisLabelDict, Title } from "../../PresetsProfile";
 import { actions } from "../..";
 import styled from "styled-components";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
+import { toJS } from "mobx";
 
 interface OwnProps {
     store?: Store;
@@ -26,51 +27,62 @@ const DetailView: FC<Props> = ({ store }: Props) => {
 
     useEffect(() => {
         async function fetchIndividualInformaiton() {
+
             if (currentSelectPatient) {
-                const fetchResult = await fetch(`http://localhost:8000/api/fetch_patient?patient_id=${currentSelectPatient.patientID}`)
+                console.log(toJS(currentSelectPatient))
+                const fetchResult = await fetch(`http://localhost:8000/api/fetch_patient?patient_id=${currentSelectPatient.PATIENT_ID}`)
+
                 const fetchResultJson = await fetchResult.json();
+
                 const individualInfoJSON = fetchResultJson.result[0];
 
-                //    console.log(individualInfo)
-                const fetchTransfused = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}&case_ids=${currentSelectPatient.caseId}`)
-                const fetchResultTran = await fetchTransfused.json();
-                console.log(fetchResultTran)
-                let transfusionResult = {};
-                if (fetchResultTran.length > 0) {
-                    const transfusedInfo = fetchResultTran[0].transfused_units;
-                    transfusionResult = {
-                        PRBC_UNITS: transfusedInfo[0] || 0,
-                        FFP_UNITS: transfusedInfo[1] || 0,
-                        PLT_UNITS: transfusedInfo[2] || 0,
-                        CRYO_UNITS: transfusedInfo[3] || 0,
-                        CELL_SAVER_ML: transfusedInfo[4] || 0
-                    }
-                }
-                const fetchSurgery = await fetch(`http://localhost:8000/api/fetch_surgery?case_id=${currentSelectPatient.caseId}`)
+
+                // const fetchTransfused = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}&case_ids=${currentSelectPatient.caseId}`)
+                // const fetchResultTran = await fetchTransfused.json();
+                // console.log(fetchResultTran)
+                // let transfusionResult = {};
+                // if (fetchResultTran.length > 0) {
+                //     const transfusedInfo = fetchResultTran[0].transfused_units;
+                //     transfusionResult = {
+                //         PRBC_UNITS: transfusedInfo[0] || 0,
+                //         FFP_UNITS: transfusedInfo[1] || 0,
+                //         PLT_UNITS: transfusedInfo[2] || 0,
+                //         CRYO_UNITS: transfusedInfo[3] || 0,
+                //         CELL_SAVER_ML: transfusedInfo[4] || 0
+                //     }
+                // }
+                const fetchSurgery = await fetch(`http://localhost:8000/api/fetch_surgery?case_id=${currentSelectPatient.CASE_ID}`)
                 const fetchSurgeryJson = await fetchSurgery.json();
                 const surgeryInfo = fetchSurgeryJson.result[0];
-                const fetchRisk = await fetch(`http://localhost:8000/api/risk_score?patient_ids=${currentSelectPatient.patientID}`)
-                const fetchRiskJson = await fetchRisk.json();
-                const riskInfo = { ROM: fetchRiskJson[0].apr_drg_rom, SOI: fetchRiskJson[0].apr_drg_soi }
+                //const fetchRisk = await fetch(`http://localhost:8000/api/risk_score?patient_ids=${currentSelectPatient.patientID}`)
+                // const fetchRiskJson = await fetchRisk.json();
+                //const riskInfo = { ROM: fetchRiskJson[0].apr_drg_rom, SOI: fetchRiskJson[0].apr_drg_soi }
 
-                const fetchOutcome = await fetch(`http://localhost:8000/api/patient_outcomes?patient_ids=${currentSelectPatient.patientID}`)
+                // const fetchOutcome = await fetch(`http://localhost:8000/api/patient_outcomes?patient_ids=${currentSelectPatient.patientID}`)
 
 
 
-                const fetchOutcomeJson = await fetchOutcome.json();
-                const outcomeInfo = {
-                    Mortality: fetchOutcomeJson[0].patient_death === 0 ? "Yes" : "No",
-                    Vent: fetchOutcomeJson[0].gr_than_1440_vent === 0 ? "Yes" : "No",
-                    Stroke: fetchOutcomeJson[0].patient_stroke === 0 ? "Yes" : "No",
-                    ECMO: fetchOutcomeJson[0].patient_ECMO === 0 ? "Yes" : "No"
-                }
+                // const fetchOutcomeJson = await fetchOutcome.json();
+                // const outcomeInfo = {
+                //     Mortality: fetchOutcomeJson[0].patient_death === 0 ? "Yes" : "No",
+                //     Vent: fetchOutcomeJson[0].gr_than_1440_vent === 0 ? "Yes" : "No",
+                //     Stroke: fetchOutcomeJson[0].patient_stroke === 0 ? "Yes" : "No",
+                //     ECMO: fetchOutcomeJson[0].patient_ECMO === 0 ? "Yes" : "No"
+                // }
 
-                //  console.log(surgeryInfo)
+
+
                 let final_result = Object.assign(individualInfoJSON, surgeryInfo)
-                final_result = Object.assign(final_result, transfusionResult)
-                final_result = Object.assign(final_result, riskInfo)
-                final_result = Object.assign(final_result, outcomeInfo)
+                console.log(final_result)
+                final_result = Object.assign(final_result, currentSelectPatient)
+                console.log(final_result)
+                // final_result = Object.assign(final_result, riskInfo)
+                // final_result = Object.assign(final_result, outcomeInfo)
 
+                const outcomeAttributes = ["DEATH", "ECMO", "STROKE", "VENT"]
+                outcomeAttributes.forEach((attribute) => {
+                    final_result[attribute] = final_result[attribute] === "0" ? "No" : "Yes"
+                })
                 stateUpdateWrapperUseJSON(individualInfo, final_result, setIndividualInfo)
                 //  setIndividualInfo(final_result)
             }

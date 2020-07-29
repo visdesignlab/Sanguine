@@ -7,6 +7,7 @@ import { timeFormat, timeParse, select } from 'd3';
 
 import Login from './LogIn'
 import Preview from './Preview';
+import { SingleCasePoint } from './Interfaces/ApplicationState';
 
 interface OwnProps {
   store?: Store;
@@ -47,30 +48,7 @@ const App: FC<Props> = ({ store }: Props) => {
 
     let transfused_dict = {} as any;
 
-    let result: {
-      CASE_ID: number,
-      VISIT_ID: number,
-      PATIENT_ID: number,
-      ANESTHESIOLOGIST_ID: number,
-      SURGEON_ID: number,
-      YEAR: number,
-      QUARTER: string,
-      MONTH: string,
-      DATE: number,
-      PRBC_UNITS: number,
-      FFP_UNITS: number,
-      PLT_UNITS: number,
-      CRYO_UNITS: number,
-      CELL_SAVER_ML: number,
-      PREOP_HGB: number,
-      POSTOP_HGB: number,
-      DRG_WEIGHT: number,
-      VENT: number,
-      DEATH: number,
-      STROKE: number,
-      ECMO: number
-    }[] = [];
-
+    let cacheData: SingleCasePoint[] = [];
 
     dataTrans.forEach((element: any) => {
       transfused_dict[element.case_id] = {
@@ -84,9 +62,11 @@ const App: FC<Props> = ({ store }: Props) => {
 
 
     resultHemo.map((ob: any, index: number) => {
+
       if (transfused_dict[ob.CASE_ID]) {
         const transfusedResult = transfused_dict[ob.CASE_ID];
-        result.push({
+        const time = ((timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE))!.getTime())
+        const outputObj: SingleCasePoint = {
           CASE_ID: ob.CASE_ID,
           VISIT_ID: ob.VISIT_ID,
           PATIENT_ID: ob.PATIENT_ID,
@@ -102,20 +82,21 @@ const App: FC<Props> = ({ store }: Props) => {
           POSTOP_HGB: +ob.HEMO[1],
           QUARTER: ob.QUARTER,
           MONTH: ob.MONTH,
-          DATE: timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE)!.getTime(),
+          DATE: time,
           VENT: riskOutcomeDict[ob.VISIT_ID].VENT.toString(),
           DRG_WEIGHT: riskOutcomeDict[ob.VISIT_ID].DRG_WEIGHT || 0,
           DEATH: riskOutcomeDict[ob.VISIT_ID].DEATH.toString(),
           ECMO: riskOutcomeDict[ob.VISIT_ID].ECMO.toString(),
           STROKE: riskOutcomeDict[ob.VISIT_ID].STROKE.toString()
-        })
+        }
+        cacheData.push(outputObj)
       }
     })
 
-    result = result.filter((d: any) => d);
+    cacheData = cacheData.filter((d: any) => d);
     console.log("HGB data done")
-    console.log(result)
-    setHemoData(result)
+    console.log(cacheData)
+    setHemoData(cacheData)
     store!.loadingModalOpen = false;
 
   }
