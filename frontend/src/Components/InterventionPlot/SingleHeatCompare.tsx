@@ -2,14 +2,14 @@ import React, { FC, useCallback } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
-import { InterventionDataPoint } from "../../Interfaces/ApplicationState";
+import { ComparisonDataPoint } from "../../Interfaces/ApplicationState";
 import { scaleLinear, interpolateReds, scaleBand, interpolateGreys, format } from "d3";
 import { highlight_orange, basic_gray, highlight_blue, greyScaleRange } from "../../PresetsProfile";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
 
 interface OwnProps {
-    dataPoint: InterventionDataPoint;
+    dataPoint: ComparisonDataPoint;
     isSelected: boolean;
     aggregatedBy: string;
     isFiltered: boolean;
@@ -134,6 +134,6 @@ interface HeatRectProp {
 const HeatRect = styled(`rect`) <HeatRectProp>`
     
     opacity:0.6;
-    stroke: ${props => (props.isselected ? highlight_orange : (props.isfiltered ? highlight_blue : "none"))};
-    stroke-width:3;
-  `;
+    stroke: ${props => (props.isselected ? highlight_orange : "none")};
+    stroke - width: 3;
+`;

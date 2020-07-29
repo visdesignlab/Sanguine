@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState, useRef } from "react";
+import React, { FC, useEffect, useState, useRef, useMemo } from "react";
 import { inject, observer } from "mobx-react";
 import Store from "../Interfaces/Store";
 
@@ -26,7 +26,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
     const [distinctCategories, setCatgories] = useState<{ surgeons: any[], anesth: any[], patient: any[] }>({ surgeons: [], anesth: [], patient: [] })
     const [caseIDReference, setCaseIDList] = useState<any>({})
     const [convertedData, setConvertedData] = useState<any[]>([])
-    //const [caseIDArray, setCaseIDArray] = useState<number[]>([])
+    const [caseIDArray, setCaseIDArray] = useState<number[]>([])
 
     useEffect(() => {
 
@@ -39,6 +39,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
             let tempData: any[] = []
             hemoglobinDataSet.map((ob: any, index: number) => {
                 caseIDDict[ob.CASE_ID] = index;
+                caseIDArray.push(ob.CASE_ID);
                 distinctAnesth.add((ob.ANESTHESIOLOGIST_ID).toString());
                 distinctSurgeons.add((ob.SURGEON_ID).toString());
                 distinctPatient.add(ob.PATIENT_ID.toString());
@@ -56,12 +57,14 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
     //TODO make the line up side bar on the main instead of on a seperate tab. 
     //
 
-    useEffect(() => {
+
+    const lineup = useMemo(() => {
+
         $(document).ready(function () {
             const node = document.getElementById("lineup-wrapper")
             if (node && convertedData.length > 0 && distinctCategories.surgeons.length > 0) {
                 if (!(node.getElementsByClassName("lu-side-panel").length > 0)) {
-                    const lineup = LineUpJS.builder(convertedData)
+                    let lineup = LineUpJS.builder(convertedData)
                         .column(LineUpJS.buildStringColumn("CASE_ID"))
                         .column(LineUpJS.buildStringColumn("PATIENT_ID"))
 
@@ -99,12 +102,26 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
 
                         // setTimeout(() => { console.log(lineup.data.getFirstRanking().getGroups()) }, 2000)
                     });
-
+                    return lineup;
                 }
             }
         })
 
     }, [distinctCategories, convertedData])
+
+    //line 114 is denying the loop
+    //Lineup is never defined somehow.
+    useEffect(() => {
+        console.log(lineup)
+        if (lineup !== undefined) {
+            console.log('called inside')
+            let outputIndex: number[] = [];
+            currentSelectPatientGroup.forEach(item => outputIndex.push(caseIDReference[item]));
+            console.log(outputIndex)
+            //    lineup.setSelection(outputIndex);
+
+        }
+    }, [currentSelectPatientGroup])
 
 
 

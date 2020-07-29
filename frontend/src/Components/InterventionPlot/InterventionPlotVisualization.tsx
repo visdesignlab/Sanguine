@@ -2,7 +2,7 @@ import React, { FC, useEffect, useRef, useLayoutEffect, useState } from "react";
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { InterventionDataPoint, ExtraPairInterventionPoint } from '../../Interfaces/ApplicationState'
+import { ComparisonDataPoint, ExtraPairInterventionPoint } from '../../Interfaces/ApplicationState'
 import { BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON, ChartSVG } from "../../PresetsProfile"
 import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
@@ -33,6 +33,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
         showZero,
         previewMode,
         currentSelectPatientGroup,
+        currentOutputFilterSet,
         rawDateRange,
         dateRange
     } = store!;
@@ -41,7 +42,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
 
     const [extraPairData, setExtraPairData] = useState<ExtraPairInterventionPoint[]>([])
 
-    const [data, setData] = useState<InterventionDataPoint[]>([]);
+    const [data, setData] = useState<ComparisonDataPoint[]>([]);
 
     const [yMax, setYMax] = useState(0);
 
@@ -103,228 +104,259 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                 let caseCount = 0;
                 if (preInterventiondataResult && postInterventionResult) {
                     let yMaxTemp = -1;
-                    //let cast_data = InterventionData
+                    //let castData = InterventionData
 
                     let caseDictionary = {} as any
-                    let cast_data = (preInterventiondataResult as any).map(function (preIntOb: any) {
-
-                        preIntOb.case_id.map((singleId: any) => {
-                            caseDictionary[singleId] = true;
-                        })
-
-                        let zeroCaseNum = 0;
+                    let castData = (preInterventiondataResult as any).map(function (preIntOb: any) {
                         const aggregateByAttr = preIntOb.aggregated_by;
-                        const preIntMed = median(preIntOb.transfused_units);
-                        let preRemovedZeros = preIntOb.transfused_units;
-
-                        if (!showZero) {
-                            preRemovedZeros = preRemovedZeros.filter((d: number) => {
-                                if (d > 0) {
-                                    return true;
+                        let criteriaMet = true;
+                        if (currentOutputFilterSet.length > 0) {
+                            for (let selectSet of currentOutputFilterSet) {
+                                if (selectSet.setName === aggregatedBy) {
+                                    if (!selectSet.setValues.includes(aggregateByAttr)) {
+                                        criteriaMet = false;
+                                    }
                                 }
-                                zeroCaseNum += 1;
-                                return false;
+                            }
+                        }
+                        if (criteriaMet) {
+                            preIntOb.case_id.map((singleId: any) => {
+                                caseDictionary[singleId] = true;
                             })
-                        } else {
-                            zeroCaseNum = preRemovedZeros.filter((d: number) => d === 0).length
-                        }
-                        //const case_num = removed_zeros.length;
-                        const total_val = sum(preRemovedZeros);
-                        const case_num = preIntOb.transfused_units.length;
-                        caseCount += case_num;
-                        //const medianVal = median(removed_zeros);
 
-                        let preIntPD = createpd(preRemovedZeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
+                            let zeroCaseNum = 0;
 
-                        preIntPD = [{ x: 0, y: 0 }].concat(preIntPD)
-                        let reversePrePD = preIntPD.map((pair: any) => {
-                            return { x: pair.x, y: - pair.y }
-                        }).reverse()
-                        preIntPD = preIntPD.concat(reversePrePD)
+                            const preIntMed = median(preIntOb.transfused_units);
+                            let preRemovedZeros = preIntOb.transfused_units;
 
-
-                        let preCountDict = {} as any;
-                        let postCountDict = {} as any;
-                        const cap = BloodProductCap[valueToVisualize]
-
-                        if (valueToVisualize === "CELL_SAVER_ML") {
-                            preCountDict[-1] = 0;
-                            postCountDict[-1] = 0
-                            for (let i = 0; i <= cap; i += 100) {
-                                preCountDict[i] = 0
-                                postCountDict[i] = 0
+                            if (!showZero) {
+                                preRemovedZeros = preRemovedZeros.filter((d: number) => {
+                                    if (d > 0) {
+                                        return true;
+                                    }
+                                    zeroCaseNum += 1;
+                                    return false;
+                                })
+                            } else {
+                                zeroCaseNum = preRemovedZeros.filter((d: number) => d === 0).length
                             }
-                        } else {
-                            for (let i = 0; i <= cap; i++) {
-                                preCountDict[i] = 0
-                                postCountDict[i] = 0
-                            }
-                        }
+                            //const case_num = removed_zeros.length;
+                            const total_val = sum(preRemovedZeros);
+                            const case_num = preIntOb.transfused_units.length;
+                            caseCount += case_num;
+                            //const medianVal = median(removed_zeros);
 
-                        preIntOb.transfused_units.map((d: any) => {
+                            let preIntPD = createpd(preRemovedZeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
+
+                            preIntPD = [{ x: 0, y: 0 }].concat(preIntPD)
+                            let reversePrePD = preIntPD.map((pair: any) => {
+                                return { x: pair.x, y: - pair.y }
+                            }).reverse()
+                            preIntPD = preIntPD.concat(reversePrePD)
+
+
+                            let preCountDict = {} as any;
+                            let postCountDict = {} as any;
+                            const cap = BloodProductCap[valueToVisualize]
+
                             if (valueToVisualize === "CELL_SAVER_ML") {
-                                const roundedAnswer = Math.floor(d / 100) * 100
-                                if (d === 0) {
-                                    preCountDict[-1] += 1
-                                }
-                                else if (roundedAnswer > cap) {
-                                    preCountDict[cap] += 1
-                                }
-                                else {
-                                    preCountDict[roundedAnswer] += 1
+                                preCountDict[-1] = 0;
+                                postCountDict[-1] = 0
+                                for (let i = 0; i <= cap; i += 100) {
+                                    preCountDict[i] = 0
+                                    postCountDict[i] = 0
                                 }
                             } else {
-                                if (d > cap) {
-                                    preCountDict[cap] += 1
+                                for (let i = 0; i <= cap; i++) {
+                                    preCountDict[i] = 0
+                                    postCountDict[i] = 0
+                                }
+                            }
+
+                            preIntOb.transfused_units.map((d: any) => {
+                                if (valueToVisualize === "CELL_SAVER_ML") {
+                                    const roundedAnswer = Math.floor(d / 100) * 100
+                                    if (d === 0) {
+                                        preCountDict[-1] += 1
+                                    }
+                                    else if (roundedAnswer > cap) {
+                                        preCountDict[cap] += 1
+                                    }
+                                    else {
+                                        preCountDict[roundedAnswer] += 1
+                                    }
                                 } else {
-                                    preCountDict[d] += 1
+                                    if (d > cap) {
+                                        preCountDict[cap] += 1
+                                    } else {
+                                        preCountDict[d] += 1
+                                    }
                                 }
-                            }
 
-                        });
+                            });
 
-                        const new_ob: InterventionDataPoint = {
-                            preCaseCount: case_num,
-                            postCaseCount: 0,
-                            aggregateAttribute: aggregateByAttr,
-                            preTotalVal: total_val,
-                            postTotalVal: 0,
-                            preInKdeCal: preIntPD,
-                            postInKdeCal: [],
-                            preInMedian: preIntMed ? preIntMed : 0,
-                            postInMedian: 0,
-                            preCountDict: preCountDict,
-                            postCountDict: postCountDict,
-                            preZeroCaseNum: zeroCaseNum,
-                            postZeroCaseNum: 0,
-                            prePatienIDList: preIntOb.pat_id,
-                            postPatienIDList: []
-                        };
-
-                        return new_ob;
-                    });
-
-                    //     console.log(cast_data);
-
-
-                    (postInterventionResult as any).map((postIntOb: any) => {
-
-                        const postIntMed = median(postIntOb.transfused_units);
-
-                        let postRemovedZeros = postIntOb.transfused_units;
-                        let zeroCaseNum = 0;
-
-                        postIntOb.case_id.map((singleId: any) => {
-                            caseDictionary[singleId] = true;
-                        })
-
-                        if (!showZero) {
-                            postRemovedZeros = postRemovedZeros.filter((d: number) => {
-                                if (d > 0) {
-                                    return true;
-                                }
-                                zeroCaseNum += 1;
-                                return false;
-                            })
-                        } else {
-                            zeroCaseNum = postRemovedZeros.filter((d: number) => d === 0).length
-                        }
-
-                        const total_val = sum(postRemovedZeros);
-                        const case_num = postIntOb.transfused_units.length;
-                        caseCount += case_num
-
-                        let postIntPD = createpd(postRemovedZeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
-
-                        //    console.log(postRemovedZeros)
-                        postIntPD = [{ x: 0, y: 0 }].concat(postIntPD)
-                        let reversePostPD = postIntPD.map((pair: any) => {
-                            return { x: pair.x, y: - pair.y }
-                        }).reverse()
-                        postIntPD = postIntPD.concat(reversePostPD)
-
-
-                        let preCountDict = {} as any;
-                        let postCountDict = {} as any;
-                        const cap = BloodProductCap[valueToVisualize]
-
-                        if (valueToVisualize === "CELL_SAVER_ML") {
-                            preCountDict[-1] = 0;
-                            postCountDict[-1] = 0
-                            for (let i = 0; i <= cap; i += 100) {
-                                preCountDict[i] = 0
-                                postCountDict[i] = 0
-                            }
-                        } else {
-                            for (let i = 0; i <= cap; i++) {
-                                preCountDict[i] = 0
-                                postCountDict[i] = 0
-                            }
-                        }
-
-                        postIntOb.transfused_units.map((d: any) => {
-                            if (valueToVisualize === "CELL_SAVER_ML") {
-                                const roundedAnswer = Math.floor(d / 100) * 100
-                                if (d === 0) {
-                                    postCountDict[-1] += 1
-                                }
-                                else if (roundedAnswer > cap) {
-                                    postCountDict[cap] += 1
-                                }
-                                else {
-                                    postCountDict[roundedAnswer] += 1
-                                }
-                            } else {
-                                if (d > cap) {
-                                    postCountDict[cap] += 1
-                                } else {
-                                    postCountDict[d] += 1
-                                }
-                            }
-
-                        })
-                        let found = false;
-                        cast_data = cast_data.map((d: InterventionDataPoint) => {
-
-                            if (d.aggregateAttribute === postIntOb.aggregated_by) {
-                                found = true;
-                                d.postCountDict = postCountDict;
-                                d.postInKdeCal = postIntPD;
-                                d.postInMedian = postIntMed ? postIntMed : 0;
-                                d.postZeroCaseNum = zeroCaseNum;
-                                d.postCaseCount = case_num
-                                d.postTotalVal = total_val
-                                d.postPatienIDList = postIntOb.pat_id
-                                return d;
-                            }
-                            else {
-                                return d;
-                            }
-                        })
-                        if (!found) {
-                            const new_ob: InterventionDataPoint = {
-                                postCaseCount: case_num,
-                                preCaseCount: 0,
-                                aggregateAttribute: postIntOb.aggregated_by,
-                                postTotalVal: total_val, preTotalVal: 0,
-                                preInKdeCal: [],
-                                postInKdeCal: postIntPD,
-                                preInMedian: 0,
-                                postInMedian: postIntMed ? postIntMed : 0,
+                            const new_ob: ComparisonDataPoint = {
+                                preCaseCount: case_num,
+                                postCaseCount: 0,
+                                aggregateAttribute: aggregateByAttr,
+                                preTotalVal: total_val,
+                                postTotalVal: 0,
+                                preInKdeCal: preIntPD,
+                                postInKdeCal: [],
+                                preInMedian: preIntMed ? preIntMed : 0,
+                                postInMedian: 0,
                                 preCountDict: preCountDict,
                                 postCountDict: postCountDict,
-                                postZeroCaseNum: zeroCaseNum,
-                                preZeroCaseNum: 0,
-                                prePatienIDList: [],
-                                postPatienIDList: postIntOb.pat_id
+                                preZeroCaseNum: zeroCaseNum,
+                                postZeroCaseNum: 0,
+                                prePatienIDList: preIntOb.pat_id,
+                                postPatienIDList: [],
+                                preCaseIDList: preIntOb.case_id,
+                                postCaseIDList: []
                             };
-                            cast_data.push(new_ob)
-                        }
-                    })
 
-                    stateUpdateWrapperUseJSON(data, cast_data, setData)
+                            return new_ob;
+                        }
+                    });
+                    console.log(castData);
+                    castData = castData.filter((d: any) => d);
+                    console.log(castData);
+                    (postInterventionResult as any).map((postIntOb: any) => {
+
+                        let criteriaMet = true;
+                        if (currentOutputFilterSet.length > 0) {
+                            for (let selectSet of currentOutputFilterSet) {
+                                if (selectSet.setName === aggregatedBy) {
+                                    if (!selectSet.setValues.includes(postIntOb.aggregated_by)) {
+                                        criteriaMet = false;
+                                    }
+                                }
+                            }
+                        }
+                        if (criteriaMet) {
+                            const postIntMed = median(postIntOb.transfused_units);
+
+                            let postRemovedZeros = postIntOb.transfused_units;
+                            let zeroCaseNum = 0;
+
+                            postIntOb.case_id.map((singleId: any) => {
+                                caseDictionary[singleId] = true;
+                            })
+
+                            if (!showZero) {
+                                postRemovedZeros = postRemovedZeros.filter((d: number) => {
+                                    if (d > 0) {
+                                        return true;
+                                    }
+                                    zeroCaseNum += 1;
+                                    return false;
+                                })
+                            } else {
+                                zeroCaseNum = postRemovedZeros.filter((d: number) => d === 0).length
+                            }
+
+                            const total_val = sum(postRemovedZeros);
+                            const case_num = postIntOb.transfused_units.length;
+                            caseCount += case_num
+
+                            let postIntPD = createpd(postRemovedZeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
+
+                            //    console.log(postRemovedZeros)
+                            postIntPD = [{ x: 0, y: 0 }].concat(postIntPD)
+                            let reversePostPD = postIntPD.map((pair: any) => {
+                                return { x: pair.x, y: - pair.y }
+                            }).reverse()
+                            postIntPD = postIntPD.concat(reversePostPD)
+
+
+                            let preCountDict = {} as any;
+                            let postCountDict = {} as any;
+                            const cap = BloodProductCap[valueToVisualize]
+
+                            if (valueToVisualize === "CELL_SAVER_ML") {
+                                preCountDict[-1] = 0;
+                                postCountDict[-1] = 0
+                                for (let i = 0; i <= cap; i += 100) {
+                                    preCountDict[i] = 0
+                                    postCountDict[i] = 0
+                                }
+                            } else {
+                                for (let i = 0; i <= cap; i++) {
+                                    preCountDict[i] = 0
+                                    postCountDict[i] = 0
+                                }
+                            }
+
+                            postIntOb.transfused_units.map((d: any) => {
+                                if (valueToVisualize === "CELL_SAVER_ML") {
+                                    const roundedAnswer = Math.floor(d / 100) * 100
+                                    if (d === 0) {
+                                        postCountDict[-1] += 1
+                                    }
+                                    else if (roundedAnswer > cap) {
+                                        postCountDict[cap] += 1
+                                    }
+                                    else {
+                                        postCountDict[roundedAnswer] += 1
+                                    }
+                                } else {
+                                    if (d > cap) {
+                                        postCountDict[cap] += 1
+                                    } else {
+                                        postCountDict[d] += 1
+                                    }
+                                }
+
+                            })
+                            let found = false;
+                            castData = castData.map((d: ComparisonDataPoint) => {
+
+                                if (d.aggregateAttribute === postIntOb.aggregated_by) {
+                                    found = true;
+                                    d.postCountDict = postCountDict;
+                                    d.postInKdeCal = postIntPD;
+                                    d.postInMedian = postIntMed ? postIntMed : 0;
+                                    d.postZeroCaseNum = zeroCaseNum;
+                                    d.postCaseCount = case_num
+                                    d.postTotalVal = total_val
+                                    d.postPatienIDList = postIntOb.pat_id
+                                    d.postCaseIDList = postIntOb.case_id
+                                    return d;
+                                }
+                                else {
+                                    return d;
+                                }
+                            })
+                            if (!found) {
+                                const new_ob: ComparisonDataPoint = {
+                                    postCaseCount: case_num,
+                                    preCaseCount: 0,
+                                    aggregateAttribute: postIntOb.aggregated_by,
+                                    postTotalVal: total_val, preTotalVal: 0,
+                                    preInKdeCal: [],
+                                    postInKdeCal: postIntPD,
+                                    preInMedian: 0,
+                                    postInMedian: postIntMed ? postIntMed : 0,
+                                    preCountDict: preCountDict,
+                                    postCountDict: postCountDict,
+                                    postZeroCaseNum: zeroCaseNum,
+                                    preZeroCaseNum: 0,
+                                    prePatienIDList: [],
+                                    postPatienIDList: postIntOb.pat_id,
+                                    preCaseIDList: [],
+                                    postCaseIDList: postIntOb.case_id
+                                };
+                                castData.push(new_ob)
+                            }
+                        }
+
+                    })
+                    console.log(castData);
+                    castData = castData.filter((d: any) => d)
+                    console.log(castData);
+                    stateUpdateWrapperUseJSON(data, castData, setData)
                     stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList)
-                    // setData(cast_data);
+                    // setData(castData);
                     // setCaseIDList(caseDictionary)
                     // actions.updateCaseCount("AGGREGATED", caseCount)
                     store!.totalAggregatedCaseCount = caseCount
@@ -346,6 +378,36 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
         fetchChartData();
     }, [filterSelection, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroup]);
 
+    useEffect(() => {
+        let caseDictionary = {} as any;
+
+        let newData = data.map((d: ComparisonDataPoint) => {
+            let criteriaMet = true;
+            if (currentOutputFilterSet.length > 0) {
+                for (let selectSet of currentOutputFilterSet) {
+                    if (selectSet.setName === aggregatedBy) {
+                        if (!selectSet.setValues.includes(d.aggregateAttribute)) {
+                            criteriaMet = false;
+                        }
+                    }
+                }
+            }
+            if (criteriaMet) {
+                d.preCaseIDList.map((singleId: any) => {
+                    caseDictionary[singleId] = true;
+                })
+                d.postCaseIDList.map((singleId: any) => {
+                    caseDictionary[singleId] = true;
+                })
+                return d
+            }
+        })
+        newData = newData.filter((d: any) => d);
+        stateUpdateWrapperUseJSON(data, newData, setData)
+        stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList);
+    }, [currentOutputFilterSet])
+
+
     const makeExtraPairData = () => {
         let newExtraPairData: ExtraPairInterventionPoint[] = []
         if (extraPairArray.length > 0) {
@@ -363,7 +425,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                 switch (variable) {
                     case "Total Transfusion":
                         //let newDataBar = {} as any;
-                        data.map((dataPoint: InterventionDataPoint) => {
+                        data.map((dataPoint: ComparisonDataPoint) => {
                             newData[dataPoint.aggregateAttribute] = dataPoint.preTotalVal + dataPoint.postTotalVal;
                             preIntData[dataPoint.aggregateAttribute] = dataPoint.preTotalVal;
                             postIntData[dataPoint.aggregateAttribute] = dataPoint.postTotalVal;
@@ -373,7 +435,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
 
                     case "Per Case":
                         // let newDataPerCase = {} as any;
-                        data.map((dataPoint: InterventionDataPoint) => {
+                        data.map((dataPoint: ComparisonDataPoint) => {
                             newData[dataPoint.aggregateAttribute] = (dataPoint.preTotalVal + dataPoint.postTotalVal) / (dataPoint.preCaseCount + dataPoint.postCaseCount);
                             preIntData[dataPoint.aggregateAttribute] = dataPoint.preTotalVal / dataPoint.preCaseCount;
                             postIntData[dataPoint.aggregateAttribute] = dataPoint.postTotalVal / dataPoint.postCaseCount;
@@ -386,7 +448,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                     case "Zero Transfusion":
                         //let newDataPerCase = {} as any;
                         // console.log(data)
-                        data.map((dataPoint: InterventionDataPoint) => {
+                        data.map((dataPoint: ComparisonDataPoint) => {
 
                             newData[dataPoint.aggregateAttribute] = {
                                 calculated: (dataPoint.preZeroCaseNum + dataPoint.postZeroCaseNum) / (dataPoint.preCaseCount + dataPoint.postCaseCount),
@@ -413,7 +475,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
 
 
                     case "Death":
-                        data.map((dataPoint: InterventionDataPoint) => {
+                        data.map((dataPoint: ComparisonDataPoint) => {
                             temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = [];
                             temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = [];
                             temporaryDataHolder[dataPoint.aggregateAttribute] = [];
@@ -450,7 +512,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         break;
 
                     case "VENT":
-                        data.map((dataPoint: InterventionDataPoint) => {
+                        data.map((dataPoint: ComparisonDataPoint) => {
                             temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = [];
                             temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = [];
                             temporaryDataHolder[dataPoint.aggregateAttribute] = [];
@@ -486,7 +548,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         break;
 
                     case "ECMO":
-                        data.map((dataPoint: InterventionDataPoint) => {
+                        data.map((dataPoint: ComparisonDataPoint) => {
                             temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = [];
                             temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = [];
                             temporaryDataHolder[dataPoint.aggregateAttribute] = [];
@@ -522,7 +584,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         newExtraPairData.push({ name: "ECMO", label: "ECMO", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                         break;
                     case "STROKE":
-                        data.map((dataPoint: InterventionDataPoint) => {
+                        data.map((dataPoint: ComparisonDataPoint) => {
                             temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = []
                             temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = []
                             temporaryDataHolder[dataPoint.aggregateAttribute] = []
@@ -560,7 +622,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
 
                     case "RISK":
                         // let temporaryDataHolder: any = {}
-                        data.map((dataPoint: InterventionDataPoint) => {
+                        data.map((dataPoint: ComparisonDataPoint) => {
                             temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = []
                             temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = []
                             temporaryDataHolder[dataPoint.aggregateAttribute] = []
@@ -624,7 +686,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         });
                         break;
                     case "Preop HGB":
-                        data.map((dataPoint: InterventionDataPoint) => {
+                        data.map((dataPoint: ComparisonDataPoint) => {
                             newData[dataPoint.aggregateAttribute] = [];
                             preIntData[dataPoint.aggregateAttribute] = [];
                             postIntData[dataPoint.aggregateAttribute] = [];
@@ -690,7 +752,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         break;
 
                     case "Postop HGB":
-                        data.map((dataPoint: InterventionDataPoint) => {
+                        data.map((dataPoint: ComparisonDataPoint) => {
                             newData[dataPoint.aggregateAttribute] = [];
                             preIntData[dataPoint.aggregateAttribute] = [];
                             postIntData[dataPoint.aggregateAttribute] = [];

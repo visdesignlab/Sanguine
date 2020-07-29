@@ -54,7 +54,7 @@ export const AxisLabelDict: any = {
     PREOP_HGB: "Preoperative Hemoglobin Value",
     POSTOP_HGB: "Postoperative Hemoglobin Value",
     RISK: "DRG Weight",
-    VENT: "Ventilator Over 1440 min"
+    VENT: "Ventilator Over 24hr"
 };
 
 export const BloodProductCap: any = {
@@ -114,6 +114,17 @@ export const barChartAggregationOptions = [
 export const interventionChartType = [
     { value: "HEATMAP", key: "HEATMAP", text: "Heat Map" },
     // { value: "VIOLIN", key: "VIOLIN", text: "Violin Plot" }
+]
+// VENT: number,
+//     DEATH: number,
+//         STROKE: number,
+//             ECMO: number
+export const OutcomeType = [
+
+    { value: "DEATH", key: "DEATH", text: "Death" },
+    { value: "VENT", key: "VENT", text: "Ventilator Over 24hr" },
+    { value: "STROKE", key: "STROKE", text: "Stroke" },
+    { value: "ECMO", key: "ECMO", text: "ECMO" },
 ]
 
 

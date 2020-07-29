@@ -73,6 +73,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         })
             .then(function (response) {
                 const dataResult = response.data;
+                console.log(dataResult)
                 let caseCount = 0;
                 if (dataResult) {
                     let yMaxTemp = -1;

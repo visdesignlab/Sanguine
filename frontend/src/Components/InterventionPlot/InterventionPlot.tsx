@@ -21,7 +21,7 @@ import {
     timeFormat
 } from "d3";
 import {
-    InterventionDataPoint, ExtraPairInterventionPoint
+    ComparisonDataPoint, ExtraPairInterventionPoint
 } from "../../Interfaces/ApplicationState";
 import {
     AxisLabelDict,
@@ -50,7 +50,7 @@ interface OwnProps {
     // dimensionWhole: { width: number, height: number }
     dimensionWidth: number,
     dimensionHeight: number;
-    data: InterventionDataPoint[];
+    data: ComparisonDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
     yMax: number;
     plotType: string;
@@ -216,7 +216,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
             AxisLabelDict[aggregatedBy] ? AxisLabelDict[aggregatedBy] : aggregatedBy
         );
 
-    const decideIfSelected = (d: InterventionDataPoint) => {
+    const decideIfSelected = (d: ComparisonDataPoint) => {
         // if (currentSelectPatient && currentSelectPatient[aggregatedBy] === d.aggregateAttribute) {
         //   return true;
         // }
@@ -234,7 +234,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
         //  return true;
     }
 
-    const decideIfFiltered = (d: InterventionDataPoint) => {
+    const decideIfFiltered = (d: ComparisonDataPoint) => {
         for (let filterSet of currentOutputFilterSet) {
             if (aggregatedBy === filterSet.setName && filterSet.setValues.includes(d.aggregateAttribute))
                 return true
@@ -242,7 +242,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
         return false;
     }
 
-    const decideSinglePatientSelect = (d: InterventionDataPoint) => {
+    const decideSinglePatientSelect = (d: ComparisonDataPoint) => {
         if (currentSelectPatient) {
             return currentSelectPatient[aggregatedBy] === d.aggregateAttribute;
         } else {
@@ -251,7 +251,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
     }
 
 
-    const outputSinglePlotElement = (dataPoint: InterventionDataPoint) => {
+    const outputSinglePlotElement = (dataPoint: ComparisonDataPoint) => {
 
         if (plotType === "HEATMAP") {
             return ([<SingleHeatCompare
@@ -286,7 +286,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
 
     }
 
-    const outputTextElement = (dataPoint: InterventionDataPoint) => {
+    const outputTextElement = (dataPoint: ComparisonDataPoint) => {
         if (aggregationScale().bandwidth() > 30) {
             return ([<text
                 fill="white"
