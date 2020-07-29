@@ -3,12 +3,13 @@ import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { BarChartDataPoint, ExtraPairPoint, BasicAggregatedDatePoint } from '../../Interfaces/ApplicationState'
-import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON, ChartSVG, generateExtrapairPlotData } from "../../PresetsProfile"
+import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, interventionChartType, extraPairOptions, ChartSVG } from "../../PresetsProfile"
 import BarChart from "./BarChart"
 import { Button, Icon, Grid, Dropdown, Menu, Modal, Form, Message } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
 import { sum, median, mean } from "d3";
 import axios from 'axios'
+import { stateUpdateWrapperUseJSON, generateExtrapairPlotData } from "../../HelperFunctions";
 
 interface OwnProps {
   aggregatedBy: string;
@@ -27,7 +28,7 @@ export type Props = OwnProps;
 const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggregatedBy, valueToVisualize, chartId, store, chartIndex, extraPair }: Props) => {
   const {
     layoutArray,
-    filterSelection,
+    proceduresSelection,
     showZero,
     currentSelectPatientGroup,
     currentOutputFilterSet,
@@ -76,7 +77,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     const cancelToken = axios.CancelToken;
     const call = cancelToken.source();
     setPreviousCancelToken(call)
-    axios.get(`http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
+    axios.get(`http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
       cancelToken: call.token
     }).then(function (response) {
       const dataResult = response.data
@@ -173,7 +174,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
       previousCancelToken.cancel("cancel the call?")
     }
     fetchChartData();
-  }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroup]);
+  }, [proceduresSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroup]);
 
 
   useEffect(() => {

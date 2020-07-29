@@ -20,7 +20,7 @@ interface AppProvenance {
     toggleShowZero: (event: any, data: any) => void;
     // togglePerCase: (event: any, data: any) => void;
     // toggleDumbbell: (event: any, data: any) => void;
-    filterSelectionChange: (data: any) => void;
+    proceduresSelectionChange: (data: any) => void;
     currentOutputFilterSetChange: () => void;
     clearOutputFilterSet: (target?: string) => void;
     clearSelectSet: (target?: string) => void;
@@ -90,14 +90,14 @@ export function setupProvenance(): AppProvenance {
       : store.totalIndividualCaseCount;
   })
 
-  provenance.addObserver(["filterSelection"], (state?: ApplicationState) => {
-    console.log(toJS(store.filterSelection))
-    store.filterSelection = state ? state.filterSelection : store.filterSelection
-    console.log(toJS(store.filterSelection))
+  provenance.addObserver(["proceduresSelection"], (state?: ApplicationState) => {
+    console.log(toJS(store.proceduresSelection))
+    store.proceduresSelection = state ? state.proceduresSelection : store.proceduresSelection
+    console.log(toJS(store.proceduresSelection))
   })
 
-  // provenance.addObserver(["rawFilterSelection"], (state?: ApplicationState) => {
-  //   store.rawFilterSelection = state ? state.rawFilterSelection : store.rawFilterSelection
+  // provenance.addObserver(["rawproceduresSelection"], (state?: ApplicationState) => {
+  //   store.rawproceduresSelection = state ? state.rawproceduresSelection : store.rawproceduresSelection
   // })
 
   provenance.addObserver(
@@ -161,6 +161,7 @@ export function setupProvenance(): AppProvenance {
     if (outcomeComparison) {
       newLayoutElement.plotType = "COMPARISON";
       newLayoutElement.comparisonChartType = "HEATMAP";
+      newLayoutElement.outcomeComparison = outcomeComparison;
     }
 
     // if (interventionDate) {
@@ -246,7 +247,7 @@ export function setupProvenance(): AppProvenance {
                 y: Infinity,
                 plotType: "DUMBBELL"
               }]
-            state.filterSelection = ["CABG", "TAVR"]
+            state.proceduresSelection = ["CABG", "TAVR"]
             state.nextAddingIndex = 3;
             return state
           }
@@ -396,39 +397,39 @@ export function setupProvenance(): AppProvenance {
     )
   }
 
-  const filterSelectionChange = (selectedFilterOption: string) => {
+  const proceduresSelectionChange = (selectedFilterOption: string) => {
     provenance.applyAction(
       `Change Filter Selection to ${selectedFilterOption}`,
       (state: ApplicationState) => {
-        if (state.filterSelection.includes(selectedFilterOption)) {
-          state.filterSelection = state.filterSelection.filter(d => d !== selectedFilterOption)
+        if (state.proceduresSelection.includes(selectedFilterOption)) {
+          state.proceduresSelection = state.proceduresSelection.filter(d => d !== selectedFilterOption)
         }
         else {
-          state.filterSelection.push(selectedFilterOption)
+          state.proceduresSelection.push(selectedFilterOption)
         }
 
-        // state.filterSelection = selectedFilterOption;
-        // console.log(state.filterSelection)
+        // state.proceduresSelection = selectedFilterOption;
+        // console.log(state.proceduresSelection)
         return state;
       }
     )
   }
 
-  // const filterSelectionChange = (selectedFilterOption: string) => {
+  // const proceduresSelectionChange = (selectedFilterOption: string) => {
   //   provenance.applyAction(
   //     `Change Filter Selection to ${selectedFilterOption}`,
   //     (state: ApplicationState) => {
-  //       let currentFilter = JSON.parse(state.rawFilterSelection)
+  //       let currentFilter = JSON.parse(state.rawproceduresSelection)
   //       if (currentFilter.includes(selectedFilterOption)) {
   //         currentFilter = currentFilter.filter((d: string) => d !== selectedFilterOption)
   //       }
   //       else {
   //         currentFilter.push(selectedFilterOption)
   //       }
-  //       state.rawFilterSelection = (JSON.stringify(currentFilter))
+  //       state.rawproceduresSelection = (JSON.stringify(currentFilter))
 
-  //       // state.filterSelection = selectedFilterOption;
-  //       // console.log(state.filterSelection)
+  //       // state.proceduresSelection = selectedFilterOption;
+  //       // console.log(state.proceduresSelection)
   //       return state;
   //     }
   //   )
@@ -604,7 +605,7 @@ export function setupProvenance(): AppProvenance {
       changeChart,
       toggleShowZero,
       // toggleDumbbell,
-      filterSelectionChange,
+      proceduresSelectionChange,
 
       //  yearRangeChange,
       dateRangeChange,

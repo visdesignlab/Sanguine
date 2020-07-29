@@ -30,7 +30,7 @@ import {
     CELL_SAVER_TICKS,
     extraPairWidth,
     extraPairPadding,
-    stateUpdateWrapperUseJSON
+    Accronym,
 } from "../../PresetsProfile"
 
 //import SingleHeatPlot from "./SingleHeatPlot";
@@ -40,6 +40,7 @@ import { third_gray, preop_color, postop_color, greyScaleRange, highlight_orange
 import SingleHeatCompare from "./SingleHeatCompare";
 import SingleViolinCompare from "./SingleViolinCompare";
 import InterventionExtraPairGenerator from "../Utilities/InterventionExtraPairGenerator";
+import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 
 interface OwnProps {
@@ -52,9 +53,10 @@ interface OwnProps {
     dimensionHeight: number;
     data: ComparisonDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
-    yMax: number;
+
     plotType: string;
-    interventionDate: number;
+    interventionDate?: number;
+    outcomeComparison?: string;
     //  selectedVal: number | null;
     // stripPlotMode: boolean;
     extraPairDataSet: ExtraPairInterventionPoint[];
@@ -62,7 +64,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, interventionDate, store, aggregatedBy, valueToVisualize, dimensionHeight, dimensionWidth, data, svg, yMax }: Props) => {
+const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outcomeComparison, interventionDate, store, aggregatedBy, valueToVisualize, dimensionHeight, dimensionWidth, data, svg }: Props) => {
 
     const svgSelection = select(svg.current);
 
@@ -231,8 +233,8 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
         else {
             return false;
         }
-        //  return true;
     }
+
 
     const decideIfFiltered = (d: ComparisonDataPoint) => {
         for (let filterSet of currentOutputFilterSet) {
@@ -249,6 +251,8 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
             return false;
         }
     }
+
+
 
 
     const outputSinglePlotElement = (dataPoint: ComparisonDataPoint) => {
@@ -328,8 +332,8 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                 {dataPoint.preCaseCount + dataPoint.postCaseCount}
             </text>])
         }
-
     }
+
     const outputGradientLegend = () => {
         if (!showZero) {
             return [<rect
@@ -352,6 +356,8 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                 fill="url(#gradient1)" />
         }
     }
+
+
 
 
     return (
@@ -406,14 +412,12 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                     height={10}
                     fill={preop_color}
                     opacity={0.65} />
-
                 <rect x={0.9 * (dimensionWidth - extraPairTotalWidth)}
                     y={10}
                     width={10}
                     height={10}
                     fill={postop_color}
                     opacity={0.65} />
-
                 <text
                     x={0.9 * (dimensionWidth - extraPairTotalWidth)}
                     y={0}
@@ -421,7 +425,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                     textAnchor={"end"}
                     fontSize="11px"
                     fill={third_gray}>
-                    Pre Intervine
+                    {interventionDate ? `Pre Intervine` : `Positive`}
                 </text>
                 <text
                     x={0.9 * (dimensionWidth - extraPairTotalWidth)}
@@ -430,7 +434,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                     textAnchor={"end"}
                     fontSize="11px"
                     fill={third_gray}>
-                    Post Intervine
+                    {interventionDate ? `Post Intervine` : `Negative`}
                 </text>
                 <text
                     x={0.25 * (dimensionWidth - extraPairTotalWidth)}
@@ -439,13 +443,16 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                     textAnchor="middle"
                     fontSize="13px"
                     fill={third_gray}
-                >Intervention: {timeFormat("%Y-%m-%d")(new Date(interventionDate))}</text>
+                >{interventionDate ?
+                    `Intervention: ${timeFormat("%Y-%m-%d")(new Date(interventionDate))}`
+                    : `Comparing Outcome: ${((Accronym as any)[outcomeComparison || ""]) || outcomeComparison}`}</text>
             </g>
 
             <g className="chart"
                 transform={`translate(${currentOffset.left + extraPairTotalWidth},0)`}
             >
                 {data.map((dataPoint) => {
+
                     return outputSinglePlotElement(dataPoint)
                         .concat([
 

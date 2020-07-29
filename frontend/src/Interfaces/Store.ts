@@ -19,9 +19,9 @@ export default class Store {
   @observable rawDateRange: number[] = defaultState.rawDateRange;
 
 
-  @observable filterSelection: string[] = defaultState.filterSelection;
-  // @computed get filterSelection() {
-  //   return (JSON.parse(this.rawFilterSelection) as string[])
+  @observable proceduresSelection: string[] = defaultState.proceduresSelection;
+  // @computed get proceduresSelection() {
+  //   return (JSON.parse(this.rawproceduresSelection) as string[])
   // }
 
   @observable currentBrushedPatientGroup: number[] = defaultState.currentBrushedPatientGroup;

@@ -26,14 +26,14 @@ import {
   extraPairWidth,
   extraPairPadding,
   AxisLabelDict,
-  BloodProductCap,
-  stateUpdateWrapperUseJSON
+  BloodProductCap
 } from "../../PresetsProfile"
 import SingleViolinPlot from "./SingleViolinPlot";
 import SingleStripPlot from "./SingleStripPlot";
 
 import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
 import { greyScaleRange } from "../../PresetsProfile";
+import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 interface OwnProps {
   aggregatedBy: string;

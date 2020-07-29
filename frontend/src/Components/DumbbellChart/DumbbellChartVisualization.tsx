@@ -10,11 +10,12 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { DumbbellDataPoint } from "../../Interfaces/ApplicationState"
-import { BloodProductCap, dumbbellFacetOptions, barChartValuesOptions, stateUpdateWrapperUseJSON, ChartSVG } from "../../PresetsProfile"
+import { BloodProductCap, dumbbellFacetOptions, barChartValuesOptions, ChartSVG } from "../../PresetsProfile"
 import DumbbellChart from "./DumbbellChart"
 import { Grid, Menu, Dropdown, Button, Icon, Modal, Form, Message } from "semantic-ui-react";
 import { preop_color, postop_color, basic_gray, third_gray } from "../../PresetsProfile";
 import axios from 'axios';
+import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 interface OwnProps {
   yAxis: string;
@@ -33,7 +34,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
 
   const {
     layoutArray,
-    filterSelection,
+    proceduresSelection,
     currentSelectPatientGroup,
     previewMode,
     dateRange,
@@ -76,7 +77,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
     const call = cancelToken.source();
     setPreviousCancelToken(call);
 
-    axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=${requestingAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
+    axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=${requestingAxis}&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
       cancelToken: call.token
     })
       .then(function (response) {
@@ -176,7 +177,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
       previousCancelToken.cancel("cancel the call?")
     }
     fetchChartData();
-  }, [dateRange, filterSelection, hemoglobinDataSet, yAxis, showZero, currentOutputFilterSet, currentSelectPatientGroup]);
+  }, [dateRange, proceduresSelection, hemoglobinDataSet, yAxis, showZero, currentOutputFilterSet, currentSelectPatientGroup]);
 
   const changeXVal = (e: any, value: any) => {
     actions.changeChart(value.value, "HGB_VALUE", chartId, "DUMBBELL")
