@@ -2,7 +2,8 @@ export interface SelectSet {
   setName: string;
   setValues: number[];
 }
-
+//Pre = Positive, outcome 1
+//Post = Negative, outcome 0
 export interface ComparisonDataPoint {
   aggregateAttribute: any;
   preInKdeCal: any[];
@@ -94,8 +95,8 @@ export interface ApplicationState {
   // perCaseSelected: boolean;
   // yearRange: number[];
   rawDateRange: number[];
-  filterSelection: string[];
-  //rawFilterSelection: string;
+  proceduresSelection: string[];
+  //rawproceduresSelection: string;
   totalAggregatedCaseCount: number;
   totalIndividualCaseCount: number;
   // dumbbellSorted: boolean;
@@ -103,8 +104,10 @@ export interface ApplicationState {
   currentOutputFilterSet: SelectSet[];
   currentSelectPatient: SingleCasePoint | null;
   showZero: boolean;
+  //This two are both case ids
   currentSelectPatientGroup: number[];
   currentBrushedPatientGroup: number[];
+
   nextAddingIndex: number;
   layoutArray: LayoutElement[];
 }
@@ -122,6 +125,7 @@ export interface LayoutElement {
   extraPair?: string,
   interventionDate?: number,
   comparisonChartType?: string,
+  outcomeComparison?: string,
   notation: string
 }
 
@@ -129,8 +133,8 @@ export const defaultState: ApplicationState = {
   layoutArray: [],
   // currentSelectedChart: "-1",
   rawDateRange: [new Date(2014, 0, 1).getTime(), new Date(2019, 11, 31).getTime()],
-  filterSelection: [],
-  //rawFilterSelection: "[]",
+  proceduresSelection: [],
+  //rawproceduresSelection: "[]",
   totalAggregatedCaseCount: 0,
   totalIndividualCaseCount: 0,
   currentOutputFilterSet: [],

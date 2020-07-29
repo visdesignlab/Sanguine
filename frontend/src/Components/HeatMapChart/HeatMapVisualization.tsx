@@ -3,12 +3,13 @@ import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { HeatMapDataPoint, ExtraPairPoint, BasicAggregatedDatePoint } from '../../Interfaces/ApplicationState'
-import { BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions, stateUpdateWrapperUseJSON, ChartSVG, generateExtrapairPlotData } from "../../PresetsProfile"
+import { BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions, ChartSVG, } from "../../PresetsProfile"
 import { Icon, Grid, Dropdown, Menu, Modal, Form, Button, Message } from "semantic-ui-react";
 
 import { sum, median, mean } from "d3";
 import HeatMap from "./HeatMap";
 import axios from 'axios';
+import { stateUpdateWrapperUseJSON, generateExtrapairPlotData } from "../../HelperFunctions";
 
 interface OwnProps {
     aggregatedBy: string;
@@ -27,7 +28,7 @@ export type Props = OwnProps;
 const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggregatedBy, valueToVisualize, chartId, store, chartIndex, extraPair }: Props) => {
     const {
         layoutArray,
-        filterSelection,
+        proceduresSelection,
         showZero,
         dateRange,
         currentSelectPatientGroup,
@@ -68,13 +69,13 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
         setPreviousCancelToken(call);
-        axios.get(`http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
+        axios.get(`http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
             cancelToken: call.token
         })
             .then(function (response) {
                 const dataResult = response.data;
                 console.log(dataResult)
-                let caseCount = 0;
+                //  let caseCount = 0;
                 if (dataResult) {
                     let yMaxTemp = -1;
 
@@ -102,7 +103,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
 
                             let zeroCaseNum = 0;
                             const case_num = ob.transfused_units.length;
-                            caseCount += case_num
+                            //  caseCount += case_num
 
                             let outputResult = ob.transfused_units;
                             zeroCaseNum = outputResult.filter((d: number) => d === 0).length
@@ -163,7 +164,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                     stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList);
 
                     setYMax(yMaxTemp);
-                    store!.totalAggregatedCaseCount = caseCount;
+                    store!.totalAggregatedCaseCount = Object.keys(caseDictionary).length;
 
                 }
             })
@@ -184,35 +185,9 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
             previousCancelToken.cancel("cancel the call?")
         }
         fetchChartData();
-    }, [filterSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroup,
+    }, [proceduresSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroup, currentOutputFilterSet
         //  currentOutputFilterSet
     ]);
-
-    useEffect(() => {
-        let caseDictionary = {} as any;
-
-        let newData = data.map((d: BasicAggregatedDatePoint) => {
-            let criteriaMet = true;
-            if (currentOutputFilterSet.length > 0) {
-                for (let selectSet of currentOutputFilterSet) {
-                    if (selectSet.setName === aggregatedBy) {
-                        if (!selectSet.setValues.includes(d.aggregateAttribute)) {
-                            criteriaMet = false;
-                        }
-                    }
-                }
-            }
-            if (criteriaMet) {
-                d.caseIDList.map((singleId: any) => {
-                    caseDictionary[singleId] = true;
-                })
-                return d
-            }
-        })
-        newData = newData.filter((d: any) => d);
-        stateUpdateWrapperUseJSON(data, newData, setData)
-        stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList);
-    }, [currentOutputFilterSet])
 
     const makeExtraPairData = () => {
         const newExtraPairData = generateExtrapairPlotData(caseIDList, aggregatedBy, hemoglobinDataSet, extraPairArray, data)

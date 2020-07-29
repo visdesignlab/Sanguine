@@ -6,9 +6,10 @@ import React, {
 import { inject, observer } from "mobx-react";
 import Store from "../../Interfaces/Store";
 import { List, Container, Button } from "semantic-ui-react";
-import { HIPAA_Sensitive, AxisLabelDict, stateUpdateWrapperUseJSON, Title } from "../../PresetsProfile";
+import { HIPAA_Sensitive, AxisLabelDict, Title } from "../../PresetsProfile";
 import { actions } from "../..";
 import styled from "styled-components";
+import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 interface OwnProps {
     store?: Store;

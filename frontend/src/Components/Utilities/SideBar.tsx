@@ -5,10 +5,11 @@ import { Grid, Container, List, Button, Header, Search, Checkbox, Icon } from "s
 import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat, max, select, axisTop } from "d3";
 import { actions } from "../..";
-import { AxisLabelDict, Accronym, stateUpdateWrapperUseJSON, postop_color, Title } from "../../PresetsProfile";
+import { AxisLabelDict, Accronym, postop_color, Title } from "../../PresetsProfile";
 import { highlight_orange } from "../../PresetsProfile";
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import { SingleCasePoint, defaultState } from "../../Interfaces/ApplicationState";
+import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 interface OwnProps {
   hemoData: any;
@@ -31,7 +32,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     currentSelectPatientGroup,
     currentBrushedPatientGroup,
     currentSelectPatient, showZero,
-    filterSelection } = store!;
+    proceduresSelection } = store!;
 
   const [surgerySearchResult, setsurgerySearchResult] = useState<any[]>([]);
   const [caseSearchResult, setCaseSearchResult] = useState<any[]>([])
@@ -80,7 +81,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     let tempItemSelected: any[] = [];
 
     result.forEach((d: any) => {
-      if (filterSelection.includes(d.value)) {
+      if (proceduresSelection.includes(d.value)) {
         tempItemSelected.push(d)
       } else {
         tempItemUnselected.push(d)
@@ -108,7 +109,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     let newItemSelected: any[] = []
     let newItemUnselected: any[] = []
     surgeryList.forEach((d: any) => {
-      if (filterSelection.includes(d.value)) {
+      if (proceduresSelection.includes(d.value)) {
         newItemSelected.push(d)
       }
       else {
@@ -119,16 +120,16 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     // newItemUnselected.sort((a: any, b: any) => b.count - a.count)
     stateUpdateWrapperUseJSON(itemSelected, newItemSelected, setItemSelected)
     stateUpdateWrapperUseJSON(itemUnselected, newItemUnselected, setItemUnselected)
-  }, [filterSelection])
+  }, [proceduresSelection])
 
 
 
   const generateSurgery = () => {
     let output: any[] = []
-    if (filterSelection.length === 0) {
+    if (proceduresSelection.length === 0) {
       output.push(<span>All</span>);
     } else {
-      filterSelection.map((d, i) => {
+      proceduresSelection.map((d, i) => {
         const stringArray = d.split(" ")
         stringArray.map((word, index) => {
           if ((Accronym as any)[word]) {
@@ -137,7 +138,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             output.push((<span>{`${index !== 0 ? " " : ""}${word}${index !== stringArray.length - 1 ? " " : ""}`}</span>))
           }
         })
-        if (i !== filterSelection.length - 1) {
+        if (i !== proceduresSelection.length - 1) {
           output.push((<span>, </span>))
         }
       })
@@ -346,7 +347,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             }
             results={surgerySearchResult.map(d => { return { title: d.value } })}
             onResultSelect={(e, d) => {
-              if (!filterSelection.includes(d.result)) { actions.filterSelectionChange(d.result.title) } setSearchSurgeryVal("")
+              if (!proceduresSelection.includes(d.result)) { actions.proceduresSelectionChange(d.result.title) } setSearchSurgeryVal("")
             }
             }
             value={searchSurgeryVal}
@@ -372,7 +373,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             {itemSelected.map((listItem: any) => {
               if (listItem.value) {
                 return (
-                  <SurgeryList key={listItem.value} isSelected={true} style={{ cursor: "pointer" }} onClick={() => { actions.filterSelectionChange(listItem.value) }}
+                  <SurgeryList key={listItem.value} isSelected={true} style={{ cursor: "pointer" }} onClick={() => { actions.proceduresSelectionChange(listItem.value) }}
                     content={<ListSVG >
                       <SurgeryForeignObj width={0.6 * width} >
                         <SurgeryDiv>
@@ -408,7 +409,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                       />
                       <SurgeryText y={9} x={caseScale().range()[1]}>{listItem.count}</SurgeryText>
                     </ListSVG>}
-                    onClick={() => { actions.filterSelectionChange(listItem.value) }} />
+                    onClick={() => { actions.proceduresSelectionChange(listItem.value) }} />
                 )
               }
             })}

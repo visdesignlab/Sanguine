@@ -10,11 +10,12 @@ import { timeFormat } from "d3";
 import { blood_red, OutcomeType } from "../../PresetsProfile";
 import {
   barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions,
-  interventionChartType, presetOptions, stateUpdateWrapperUseJSON, dumbbellValueOptions, scatterYOptions, typeDiction
+  interventionChartType, presetOptions, dumbbellValueOptions, scatterYOptions, typeDiction
 } from "../../PresetsProfile";
 import ClipboardJS from 'clipboard';
 import { NavLink } from 'react-router-dom'
 import { getCookie } from "../../Interfaces/UserManagement";
+import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 interface OwnProps {
   store?: Store;
 }
@@ -45,11 +46,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
   const [listOfSavedState, setListOfSavedState] = useState<string[]>([])
   const [openManageStateModal, setOpenManageStateModal] = useState(false)
 
-
-
-
   new ClipboardJS(`.copy-clipboard`);
-
 
   async function fetchSavedStates() {
     const res = await fetch(`http://localhost:8000/api/state`)

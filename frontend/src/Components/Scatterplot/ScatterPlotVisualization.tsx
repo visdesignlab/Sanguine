@@ -9,10 +9,11 @@ import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
-import { stateUpdateWrapperUseJSON, scatterYOptions, barChartValuesOptions, ChartSVG, offset } from "../../PresetsProfile"
+import { scatterYOptions, barChartValuesOptions, ChartSVG, offset } from "../../PresetsProfile"
 import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import ScatterPlotChart from "./ScatterPlot";
 import axios from "axios";
+import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 
 interface OwnProps {
@@ -32,7 +33,7 @@ export type Props = OwnProps;
 const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinDataSet, yAxis, xAxis, chartIndex, store }: Props) => {
     const {
         layoutArray,
-        filterSelection,
+        proceduresSelection,
         currentOutputFilterSet,
         //  perCaseSelected,
         dateRange,
@@ -68,7 +69,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
         setPreviousCancelToken(call);
-        axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=${xAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
+        axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=${xAxis}&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
             cancelToken: call.token
         })
             .then(function (response) {
@@ -162,7 +163,9 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
             previousCancelToken.cancel("cancel the call?")
         }
         fetchChartData();
-    }, [dateRange, filterSelection, hemoglobinDataSet, showZero, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroup]);
+    }, [dateRange, proceduresSelection, hemoglobinDataSet, showZero, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroup]);
+
+
 
     const changeYAxis = (e: any, value: any) => {
         actions.changeChart(xAxis, value.value, chartId, "SCATTER")

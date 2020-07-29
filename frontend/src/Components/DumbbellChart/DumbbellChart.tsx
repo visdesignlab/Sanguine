@@ -19,9 +19,10 @@ import {
   median,
 } from "d3";
 import { DumbbellDataPoint } from "../../Interfaces/ApplicationState";
-import { offset, AxisLabelDict, minimumWidthScale, stateUpdateWrapperUseJSON } from "../../PresetsProfile"
+import { offset, AxisLabelDict, minimumWidthScale } from "../../PresetsProfile"
 import CustomizedAxis from "../Utilities/CustomizedAxis";
 import { preop_color, basic_gray, highlight_orange, postop_color } from "../../PresetsProfile"
+import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 interface OwnProps {
   yAxisName: string;

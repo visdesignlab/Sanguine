@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useState, useRef, useMemo } from "react";
 import { inject, observer } from "mobx-react";
-import Store from "../Interfaces/Store";
+import Store from "./Interfaces/Store";
 
 //import * as LineUpJS from "lineupjsx";
 // import { LineUpStringColumnDesc, LineUp, LineUpCategoricalColumnDesc, LineUpNumberColumnDesc } from "lineupjsx";
@@ -8,8 +8,9 @@ import * as LineUpJS from "lineupjs"
 import "lineupjs/build/LineUpJS.css";
 import $ from 'jquery';
 
-import { BloodProductCap, stateUpdateWrapperUseJSON } from "../PresetsProfile";
-import { actions } from "..";
+import { BloodProductCap } from "./PresetsProfile";
+import { actions } from ".";
+import { stateUpdateWrapperUseJSON } from "./HelperFunctions";
 
 interface OwnProps {
     hemoglobinDataSet: any;

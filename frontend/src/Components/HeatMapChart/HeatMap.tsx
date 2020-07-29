@@ -25,13 +25,13 @@ import {
     extraPairPadding,
     AxisLabelDict,
     BloodProductCap,
-    CELL_SAVER_TICKS,
-    stateUpdateWrapperUseJSON
+    CELL_SAVER_TICKS
 } from "../../PresetsProfile"
 
 import SingleHeatPlot from "./SingleHeatPlot";
 import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
 import { third_gray, greyScaleRange, highlight_orange } from "../../PresetsProfile";
+import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 interface OwnProps {
     aggregatedBy: string;
@@ -84,7 +84,6 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                 return dp.aggregateAttribute
             })
             .sort();
-        // setXVals(tempxVals);
         stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
         setCaseMax(newCaseMax)
         console.log(data)

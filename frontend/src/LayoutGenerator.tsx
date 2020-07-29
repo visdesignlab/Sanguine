@@ -5,7 +5,7 @@ import { inject, observer } from "mobx-react";
 import { Tab, Grid, GridColumn, Button } from "semantic-ui-react";
 import { actions, provenance } from ".";
 import DetailView from "./Components/Utilities/DetailView";
-import LineUpWrapper from "./Components/LineUpWrapper";
+import LineUpWrapper from "./LineUpWrapper";
 //import PatientComparisonWrapper from "./Components/PatientComparisonWrapper";
 import Store from "./Interfaces/Store";
 import { LayoutElement } from "./Interfaces/ApplicationState";
@@ -17,6 +17,7 @@ import InterventionPlotVisualization from "./Components/InterventionPlot/Interve
 
 import { Responsive } from "react-grid-layout";
 import 'react-grid-layout/css/styles.css'
+import ComparisonPlotVisualization from "./Components/ComparisonPlot/ComparisonPlotVisualization";
 interface OwnProps {
     hemoData: any[];
     store?: Store
@@ -29,7 +30,7 @@ export type Props = OwnProps;
 
 
 const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
-    const { layoutArray, filterSelection } = store!
+    const { layoutArray, proceduresSelection } = store!
 
     const createElement = (layout: LayoutElement, index: number) => {
         console.log(provenance.current().state)
@@ -91,7 +92,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                         // class_name={"parent-node" + layoutE.i}
                         chartId={layout.i}
                         chartIndex={index}
-                        //  filterSelection={filterSelection}
+                        //  proceduresSelection={proceduresSelection}
                         notation={layout.notation}
                     />
                 </div>);
@@ -138,7 +139,21 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                 return (<div key={layout.i}
                     className={"parent-node" + layout.i}>
                     <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
-                </div>)
+                    <ComparisonPlotVisualization
+                        aggregatedBy={layout.aggregatedBy}
+                        chartId={layout.i}
+                        chartIndex={index}
+                        hemoglobinDataSet={hemoData}
+                        extraPair={layout.extraPair}
+                        notation={layout.notation}
+                        valueToVisualize={layout.valueToVisualize}
+                        outcomeComparison={layout.outcomeComparison!}
+                        w={layout.w}
+                    />
+                </div>
+
+
+                )
 
         }
 
