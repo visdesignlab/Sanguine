@@ -129,15 +129,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
                   tempXMax = end_x > tempXMax ? end_x : tempXMax;
 
                   let new_ob: DumbbellDataPoint = {
-                    case: {
-                      visitNum: ob.VISIT_ID,
-                      caseId: ob.CASE_ID,
-                      YEAR: ob.YEAR,
-                      ANESTHESIOLOGIST_ID: ob.ANESTHESIOLOGIST_ID,
-                      SURGEON_ID: ob.SURGEON_ID,
-                      patientID: ob.PATIENT_ID,
-                      DATE: ob.DATE
-                    },
+                    case: ob,
                     startXVal: begin_x,
                     endXVal: end_x,
 

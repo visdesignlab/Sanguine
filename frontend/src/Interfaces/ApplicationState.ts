@@ -44,14 +44,28 @@ export interface HeatMapDataPoint extends BasicAggregatedDatePoint {
 }
 
 export interface SingleCasePoint {
-  visitNum: number;
-  caseId: number;
+  VISIT_ID: number;
+  CASE_ID: number;
+  PATIENT_ID: number;
   YEAR: number;
   SURGEON_ID: number;
+  CRYO_UNITS: number;
+  DEATH: string;
   ANESTHESIOLOGIST_ID: number;
-  patientID: number;
   DATE: number;
-  [key: string]: number;
+  QUARTER: string;
+  CELL_SAVER_ML: number;
+  ECMO: string;
+  DRG_WEIGHT: number;
+  MONTH: string;
+  FFP_UNITS: number;
+  PLT_UNITS: number;
+  POSTOP_HGB: number;
+  PRBC_UNITS: number;
+  PREOP_HGB: number;
+  STROKE: string;
+  VENT: string;
+  [key: string]: number | string;
 }
 export interface ScatterDataPoint {
   xVal: number;

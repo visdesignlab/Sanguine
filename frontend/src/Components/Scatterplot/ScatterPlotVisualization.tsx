@@ -8,7 +8,7 @@ import React, {
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
+import { ScatterDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
 import { scatterYOptions, barChartValuesOptions, ChartSVG, offset } from "../../PresetsProfile"
 import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import ScatterPlotChart from "./ScatterPlot";
@@ -23,7 +23,7 @@ interface OwnProps {
     store?: Store;
     chartIndex: number;
     notation: string;
-    hemoglobinDataSet: any;
+    hemoglobinDataSet: SingleCasePoint[];
     w: number;
     // aggregatedOption?: string;
 }
@@ -65,6 +65,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
     }, [layoutArray[chartIndex]]);
 
     function fetchChartData() {
+        console.log(hemoglobinDataSet)
         let transfused_dict = {} as any;
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
@@ -84,7 +85,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                 let tempXMin = Infinity;
                 let tempXMax = 0;
                 if (hemoglobinDataSet) {
-                    let cast_data: ScatterDataPoint[] = hemoglobinDataSet.map((ob: any) => {
+                    let castData: any[] = hemoglobinDataSet.map((ob: SingleCasePoint) => {
 
                         const yValue = yAxis === "PREOP_HGB" ? ob.PREOP_HGB : ob.POSTOP_HGB
                         let xValue
@@ -103,7 +104,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                             let criteriaMet = true;
                             if (currentOutputFilterSet.length > 0) {
                                 for (let selectSet of currentOutputFilterSet) {
-                                    if (!selectSet.setValues.includes(ob[selectSet.setName])) {
+                                    if (!selectSet.setValues.includes((ob[selectSet.setName]) as any)) {
                                         criteriaMet = false;
                                     }
                                 }
@@ -118,15 +119,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                                     xVal: xValue,
                                     yVal: yValue,
                                     randomFactor: Math.random(),
-                                    case: {
-                                        visitNum: ob.VISIT_ID,
-                                        caseId: ob.CASE_ID,
-                                        YEAR: ob.YEAR,
-                                        ANESTHESIOLOGIST_ID: ob.ANESTHESIOLOGIST_ID,
-                                        SURGEON_ID: ob.SURGEON_ID,
-                                        patientID: ob.PATIENT_ID,
-                                        DATE: ob.DATE
-                                    }
+                                    case: ob
                                 };
                                 //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
                                 return new_ob;
@@ -135,12 +128,12 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                         }
                     });
 
-                    cast_data = cast_data.filter((d: any) => d)
+                    castData = castData.filter((d: any) => d)
 
-                    //    actions.updateCaseCount("INDIVIDUAL", cast_data.length)
+                    //    actions.updateCaseCount("INDIVIDUAL", castData.length)
                     //console.log(aggregatedOption)
-                    store!.totalIndividualCaseCount = cast_data.length
-                    stateUpdateWrapperUseJSON(data, cast_data, setData);
+                    store!.totalIndividualCaseCount = castData.length
+                    stateUpdateWrapperUseJSON(data, castData, setData);
                     setXMax(tempXMax);
                     setXMin(tempXMin);
                     setYMax(tempYMax);

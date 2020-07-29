@@ -106,12 +106,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                             }
                         }
                     }
-                    // if (new Date(singleCase.DATE).getTime() < new Date(rawDateRange[0]).getTime() || new Date(singleCase.DATE).getTime() > new Date(rawDateRange[1]).getTime()) {
-                    //     criteriaMet = false;
-                    // }
-                    // else if (currentSelectPatientGroup.length > 0 && !currentSelectPatientGroup.includes(singleCase.CASE_ID)) {
-                    //     criteriaMet = false;
-                    // }
+
                     if (!caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
 
                         criteriaMet = false;
@@ -141,7 +136,6 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                             temporaryDataHolder[singleCase[aggregatedBy]].postCaseIDList.add(singleCase.CASE_ID)
                         }
                     }
-
                 })
                 /**Construct the following data
          * aggregateAttribute: singleCase[aggregatedBy],
