@@ -80,7 +80,9 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
     const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0);
     const [kdeMax, setKdeMax] = useState(0);
     const [xVals, setXVals] = useState([]);
-    const [caseMax, setCaseMax] = useState(0)
+    const [caseMax, setCaseMax] = useState(0);
+    const [preTotal, setPreTotal] = useState(0);
+    const [postTotal, setPostTotal] = useState(0)
     // const [preZeroMax, setPreZeroMax] = useState(0)
     // const [postZeroMax,setPostZeroMax] = useState(0)
 
@@ -96,15 +98,21 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         let newkdeMax = 0
         let newCaseMax = 0;
         let newZeroMax = 0;
+        let newPreTotal = 0;
+        let newPostTotal = 0;
         const newXvals = data.map(dp => {
             newCaseMax = newCaseMax > (dp.preCaseCount + dp.postCaseCount) ? newCaseMax : (dp.preCaseCount + dp.postCaseCount);
             newZeroMax = newZeroMax > (dp.postZeroCaseNum + dp.preZeroCaseNum) ? newCaseMax : (dp.postZeroCaseNum + dp.preZeroCaseNum);
+            newPreTotal += dp.preCaseCount;
+            newPostTotal += dp.postCaseCount;
             const max_temp = max([max(dp.preInKdeCal, d => d.y), max(dp.postInKdeCal, d => d.y)])
             newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
             return dp.aggregateAttribute
         })
             .sort();
         stateUpdateWrapperUseJSON(xVals, newXvals, setXVals);
+        setPreTotal(newPreTotal);
+        setPostTotal(newPostTotal)
         setKdeMax(newkdeMax);
         setCaseMax(newCaseMax);
 
@@ -337,19 +345,20 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
     const outputGradientLegend = () => {
         if (!showZero) {
             return [<rect
-                x={0.5 * (dimensionWidth - extraPairTotalWidth)}
+                x={0.8 * (dimensionWidth - extraPairTotalWidth)}
                 y={0}
                 width={0.2 * (dimensionWidth - extraPairTotalWidth)}
                 height={7.5}
-                fill="url(#gradient1)" />, <rect
-                x={0.5 * (dimensionWidth - extraPairTotalWidth)}
+                fill="url(#gradient1)" />,
+            <rect
+                x={0.8 * (dimensionWidth - extraPairTotalWidth)}
                 y={7.5}
                 width={0.2 * (dimensionWidth - extraPairTotalWidth)}
                 height={7.5}
                 fill="url(#gradient2)" />]
         } else {
             return <rect
-                x={0.5 * (dimensionWidth - extraPairTotalWidth)}
+                x={0.8 * (dimensionWidth - extraPairTotalWidth)}
                 y={0}
                 width={0.2 * (dimensionWidth - extraPairTotalWidth)}
                 height={15}
@@ -387,7 +396,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                 {outputGradientLegend()}
 
                 <text
-                    x={0.5 * (dimensionWidth - extraPairTotalWidth)}
+                    x={0.8 * (dimensionWidth - extraPairTotalWidth)}
                     y={15}
                     alignmentBaseline={"hanging"}
                     textAnchor={"start"}
@@ -396,7 +405,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                     0%
                 </text>
                 <text
-                    x={0.7 * (dimensionWidth - extraPairTotalWidth)}
+                    x={1 * (dimensionWidth - extraPairTotalWidth)}
                     y={15}
                     alignmentBaseline={"hanging"}
                     textAnchor={"end"}
@@ -406,46 +415,52 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                 </text>
             </g>
             <g>
-                <rect x={0.9 * (dimensionWidth - extraPairTotalWidth)}
+                <rect x={0.7 * (dimensionWidth - extraPairTotalWidth)}
                     y={0}
                     width={10}
-                    height={10}
+                    height={12}
                     fill={preop_color}
                     opacity={0.65} />
-                <rect x={0.9 * (dimensionWidth - extraPairTotalWidth)}
-                    y={10}
+                <rect x={0.7 * (dimensionWidth - extraPairTotalWidth)}
+                    y={12}
                     width={10}
-                    height={10}
+                    height={12}
                     fill={postop_color}
                     opacity={0.65} />
                 <text
-                    x={0.9 * (dimensionWidth - extraPairTotalWidth)}
+                    x={0.7 * (dimensionWidth - extraPairTotalWidth) - 1}
+                    y={6}
+                    alignmentBaseline={"middle"}
+                    textAnchor={"end"}
+                    fontSize="11px"
+                    fill={third_gray}>
+                    {` ${interventionDate ? `Pre Intervine` : `True`} ${preTotal}/${preTotal + postTotal}`}
+                </text>
+                <text
+                    x={0.7 * (dimensionWidth - extraPairTotalWidth) - 1}
+                    y={18}
+                    alignmentBaseline={"middle"}
+                    textAnchor={"end"}
+                    fontSize="11px"
+                    fill={third_gray}>
+                    {`${interventionDate ? `Post Intervine` : `False`} ${postTotal}/${preTotal + postTotal}`}
+                </text>
+                <text
+                    x={0.1 * (dimensionWidth - extraPairTotalWidth)}
                     y={0}
-                    alignmentBaseline={"hanging"}
-                    textAnchor={"end"}
-                    fontSize="11px"
-                    fill={third_gray}>
-                    {interventionDate ? `Pre Intervine` : `Positive`}
-                </text>
-                <text
-                    x={0.9 * (dimensionWidth - extraPairTotalWidth)}
-                    y={10}
-                    alignmentBaseline={"hanging"}
-                    textAnchor={"end"}
-                    fontSize="11px"
-                    fill={third_gray}>
-                    {interventionDate ? `Post Intervine` : `Negative`}
-                </text>
-                <text
-                    x={0.25 * (dimensionWidth - extraPairTotalWidth)}
-                    y={5}
                     alignmentBaseline="hanging"
-                    textAnchor="middle"
-                    fontSize="13px"
+                    textAnchor="start"
+                    fontSize="11px"
                     fill={third_gray}
-                >{interventionDate ?
+                >
+                    <tspan x="0" dy="1em">{interventionDate ? `Intervention:` : `Comparing Outcome:`}</tspan>
+                    <tspan x="0" dy="1em">{interventionDate ? timeFormat("%Y-%m-%d")(new Date(interventionDate)) : ((Accronym as any)[outcomeComparison || ""]) || outcomeComparison}</tspan>
+
+                    {/* {interventionDate ?
                     `Intervention: ${timeFormat("%Y-%m-%d")(new Date(interventionDate))}`
-                    : `Comparing Outcome: ${((Accronym as any)[outcomeComparison || ""]) || outcomeComparison}`}</text>
+                    : `Comparing Outcome: ${((Accronym as any)[outcomeComparison || ""]) || outcomeComparison}`} */}
+
+                </text>
             </g>
 
             <g className="chart"

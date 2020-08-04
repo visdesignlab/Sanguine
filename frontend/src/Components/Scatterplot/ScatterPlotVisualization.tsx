@@ -9,7 +9,7 @@ import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
-import { scatterYOptions, barChartValuesOptions, ChartSVG, offset } from "../../PresetsProfile"
+import { scatterYOptions, barChartValuesOptions, ChartSVG, offset, OutcomeType } from "../../PresetsProfile"
 import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import ScatterPlotChart from "./ScatterPlot";
 import axios from "axios";
@@ -43,7 +43,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
         //actualYearRange,
 
     } = store!;
-    const currentOffset = offset.regular;
+
     const svgRef = useRef<SVGSVGElement>(null);
     const [width, setWidth] = useState(w === 1 ? 542.28 : 1146.97);
     const [height, setHeight] = useState(0);
@@ -51,11 +51,15 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
     const [xMin, setXMin] = useState(0);
     const [xMax, setXMax] = useState(0);
     const [yMin, setYMin] = useState(0);
-
     const [yMax, setYMax] = useState(0);
+
+    const [highlightOption, setHighlightOption] = useState("")
+
     const [openNotationModal, setOpenNotationModal] = useState(false)
     const [notationInput, setNotationInput] = useState(notation)
+
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
+
     useLayoutEffect(() => {
         if (svgRef.current) {
             // setWidth(svgRef.current.clientWidth);
@@ -131,7 +135,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                     castData = castData.filter((d: any) => d)
 
                     //    actions.updateCaseCount("INDIVIDUAL", castData.length)
-                    //console.log(aggregatedOption)
+                    console.log(castData)
                     store!.totalIndividualCaseCount = castData.length
                     stateUpdateWrapperUseJSON(data, castData, setData);
                     setXMax(tempXMax);
@@ -167,6 +171,10 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
         actions.changeChart(value.value, yAxis, chartId, "SCATTER")
     }
 
+    // const changeHighlightOption = (value: any) => {
+    //     console.log(value)
+    // }
+
     return (
 
         <Grid style={{ height: "100%" }}>
@@ -174,12 +182,26 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                 <Grid.Column verticalAlign="middle" width={1} style={{ display: previewMode ? "none" : null }}>
                     <Menu icon vertical compact size="mini" borderless secondary widths={2}>
 
-                        <Menu.Item header>
-                            <Dropdown selectOnBlur={false} pointing basic item icon="settings" compact >
+                        <Menu.Item fitted>
+                            <Dropdown selectOnBlur={false} basic item icon="settings" compact >
                                 <Dropdown.Menu>
                                     <Dropdown text="Change X-Axis" pointing basic item compact options={barChartValuesOptions} onChange={changeXAxis} />
                                     <Dropdown text="Change Y-Axis" pointing basic item compact options={scatterYOptions} onChange={changeYAxis} />
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        </Menu.Item>
 
+                        <Menu.Item fitted>
+                            <Dropdown selectOnBlur={false} basic item compact icon="lightbulb outline">
+                                <Dropdown.Menu>
+                                    <Dropdown.Item onClick={() => { setHighlightOption("") }}>Clear</Dropdown.Item>
+                                    {OutcomeType.map((d) => {
+                                        return (
+                                            <Dropdown.Item onClick={() => { setHighlightOption(d.value) }}>
+                                                {d.text}
+                                            </Dropdown.Item>
+                                        )
+                                    })}
 
                                 </Dropdown.Menu>
                             </Dropdown>
@@ -216,8 +238,6 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                         </Modal>
 
 
-
-
                     </Menu>
                 </Grid.Column>
                 <Grid.Column width={15}  >
@@ -243,7 +263,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                             xMin={xMin}
                             yMax={yMax}
                             yMin={yMin}
-
+                            highlightOption={highlightOption}
                         />
                     </ChartSVG>
 

@@ -428,7 +428,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                                 <Dropdown.Menu>
                                     <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
                                     <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue}></Dropdown>
-                                    <Dropdown text="Change Type" pointing basic item compact options={interventionChartType} onChange={changeType}></Dropdown>
+                                    {/* <Dropdown text="Change Type" pointing basic item compact options={interventionChartType} onChange={changeType}></Dropdown> */}
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item>
