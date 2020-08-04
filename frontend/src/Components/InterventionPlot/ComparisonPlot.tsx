@@ -78,7 +78,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
 
     const currentOffset = offset.intervention;
     const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0);
-    const [kdeMax, setKdeMax] = useState(0);
+    // const [kdeMax, setKdeMax] = useState(0);
     const [xVals, setXVals] = useState([]);
     const [caseMax, setCaseMax] = useState(0);
     const [preTotal, setPreTotal] = useState(0);
@@ -95,7 +95,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
     }, [extraPairDataSet])
 
     useEffect(() => {
-        let newkdeMax = 0
+
         let newCaseMax = 0;
         let newZeroMax = 0;
         let newPreTotal = 0;
@@ -105,15 +105,15 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
             newZeroMax = newZeroMax > (dp.postZeroCaseNum + dp.preZeroCaseNum) ? newCaseMax : (dp.postZeroCaseNum + dp.preZeroCaseNum);
             newPreTotal += dp.preCaseCount;
             newPostTotal += dp.postCaseCount;
-            const max_temp = max([max(dp.preInKdeCal, d => d.y), max(dp.postInKdeCal, d => d.y)])
-            newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
+            //  const max_temp = max([max(dp.preInKdeCal, d => d.y), max(dp.postInKdeCal, d => d.y)])
+            //  newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
             return dp.aggregateAttribute
         })
             .sort();
         stateUpdateWrapperUseJSON(xVals, newXvals, setXVals);
         setPreTotal(newPreTotal);
         setPostTotal(newPostTotal)
-        setKdeMax(newkdeMax);
+        // setKdeMax(newkdeMax);
         setCaseMax(newCaseMax);
 
     }, [data])
@@ -154,17 +154,17 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         return linearValueScale;
     }, [extraPairTotalWidth, dimensionWidth, valueToVisualize])
 
-    const lineFunction = useCallback(() => {
-        const kdeScale = scaleLinear()
-            .domain([0, kdeMax])
-            .range([0.25 * aggregationScale().bandwidth(), 0])
-        const lineFunction = line()
-            .curve(curveCatmullRom)
-            .y((d: any) => kdeScale(d.y))
-            .x((d: any) => linearValueScale()(d.x) - currentOffset.left);
-        return lineFunction
+    // const lineFunction = useCallback(() => {
+    //     const kdeScale = scaleLinear()
+    //         .domain([0, kdeMax])
+    //         .range([0.25 * aggregationScale().bandwidth(), 0])
+    //     const lineFunction = line()
+    //         .curve(curveCatmullRom)
+    //         .y((d: any) => kdeScale(d.y))
+    //         .x((d: any) => linearValueScale()(d.x) - currentOffset.left);
+    //     return lineFunction
 
-    }, [kdeMax, aggregationScale()])
+    // }, [kdeMax, aggregationScale()])
 
     const aggregationLabel = axisLeft(aggregationScale());
 
@@ -264,37 +264,48 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
 
 
     const outputSinglePlotElement = (dataPoint: ComparisonDataPoint) => {
+        return ([<SingleHeatCompare
+            isSelected={decideIfSelected(dataPoint)}
+            isFiltered={decideIfFiltered(dataPoint)}
+            bandwidth={aggregationScale().bandwidth()}
+            valueScaleDomain={JSON.stringify(valueScale().domain())}
+            valueScaleRange={JSON.stringify(valueScale().range())}
+            aggregatedBy={aggregatedBy}
+            dataPoint={dataPoint}
+            howToTransform={(`translate(-${currentOffset.left},${aggregationScale()(
+                dataPoint.aggregateAttribute
+            )})`).toString()}
+        />])
+        // if (plotType === "HEATMAP") {
+        //     return ([<SingleHeatCompare
+        //         isSelected={decideIfSelected(dataPoint)}
+        //         isFiltered={decideIfFiltered(dataPoint)}
+        //         bandwidth={aggregationScale().bandwidth()}
+        //         valueScaleDomain={JSON.stringify(valueScale().domain())}
+        //         valueScaleRange={JSON.stringify(valueScale().range())}
+        //         aggregatedBy={aggregatedBy}
+        //         dataPoint={dataPoint}
+        //         howToTransform={(`translate(-${currentOffset.left},${aggregationScale()(
+        //             dataPoint.aggregateAttribute
+        //         )})`).toString()}
+        //     />])
 
-        if (plotType === "HEATMAP") {
-            return ([<SingleHeatCompare
-                isSelected={decideIfSelected(dataPoint)}
-                isFiltered={decideIfFiltered(dataPoint)}
-                bandwidth={aggregationScale().bandwidth()}
-                valueScaleDomain={JSON.stringify(valueScale().domain())}
-                valueScaleRange={JSON.stringify(valueScale().range())}
-                aggregatedBy={aggregatedBy}
-                dataPoint={dataPoint}
-                howToTransform={(`translate(-${currentOffset.left},${aggregationScale()(
-                    dataPoint.aggregateAttribute
-                )})`).toString()}
-            />])
 
-
-        }
-        else {
-            return ([<SingleViolinCompare
-                preIntPath={lineFunction()(dataPoint.preInKdeCal)!}
-                postIntPath={lineFunction()(dataPoint.postInKdeCal)!}
-                dataPoint={dataPoint}
-                aggregatedBy={aggregatedBy}
-                isSelected={decideIfSelected(dataPoint)}
-                isFiltered={decideIfFiltered(dataPoint)}
-                preIntHowToTransform={(`translate(0,${aggregationScale()(
-                    dataPoint.aggregateAttribute
-                )})`).toString()}
-                postIntHowToTransform={(`translate(0,${aggregationScale()(dataPoint.aggregateAttribute)! + aggregationScale().bandwidth() * 0.5})`).toString()}
-            />])
-        }
+        // }
+        // else {
+        //     return ([<SingleViolinCompare
+        //         preIntPath={lineFunction()(dataPoint.preInKdeCal)!}
+        //         postIntPath={lineFunction()(dataPoint.postInKdeCal)!}
+        //         dataPoint={dataPoint}
+        //         aggregatedBy={aggregatedBy}
+        //         isSelected={decideIfSelected(dataPoint)}
+        //         isFiltered={decideIfFiltered(dataPoint)}
+        //         preIntHowToTransform={(`translate(0,${aggregationScale()(
+        //             dataPoint.aggregateAttribute
+        //         )})`).toString()}
+        //         postIntHowToTransform={(`translate(0,${aggregationScale()(dataPoint.aggregateAttribute)! + aggregationScale().bandwidth() * 0.5})`).toString()}
+        //     />])
+        // }
 
     }
 
