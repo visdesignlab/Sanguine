@@ -35,7 +35,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
     const {
         layoutArray,
         proceduresSelection,
-        currentSelectPatientGroup,
+        currentSelectPatientGroupIDs,
         previewMode,
         dateRange,
         showZero,
@@ -77,7 +77,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
         const call = cancelToken.source();
         setPreviousCancelToken(call);
 
-        axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=${requestingAxis}&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
+        axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=${requestingAxis}&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroupIDs.toString()}`, {
             cancelToken: call.token
         })
             .then(function (response) {
@@ -169,7 +169,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
             previousCancelToken.cancel("cancel the call?")
         }
         fetchChartData();
-    }, [dateRange, proceduresSelection, hemoglobinDataSet, yAxis, showZero, currentOutputFilterSet, currentSelectPatientGroup]);
+    }, [dateRange, proceduresSelection, hemoglobinDataSet, yAxis, showZero, currentOutputFilterSet, currentSelectPatientGroupIDs]);
 
     const changeXVal = (value: any) => {
         actions.changeChart(value, "HGB_VALUE", chartId, "DUMBBELL")

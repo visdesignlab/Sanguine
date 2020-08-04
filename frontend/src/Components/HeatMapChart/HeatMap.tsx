@@ -56,7 +56,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
 
     const {
         showZero,
-        currentSelectPatient,
+        //currentSelectPatient,
         currentOutputFilterSet,
         currentSelectSet
     } = store!;
@@ -201,13 +201,13 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         }
         return false;
     }
-    const decideSinglePatientSelect = (d: HeatMapDataPoint) => {
-        if (currentSelectPatient) {
-            return currentSelectPatient[aggregatedBy] === d.aggregateAttribute;
-        } else {
-            return false;
-        }
-    }
+    // const decideSinglePatientSelect = (d: HeatMapDataPoint) => {
+    //     if (currentSelectPatient) {
+    //         return currentSelectPatient[aggregatedBy] === d.aggregateAttribute;
+    //     } else {
+    //         return false;
+    //     }
+    // }
 
 
     const outputSinglePlotElement = (dataPoint: HeatMapDataPoint) => {
@@ -311,7 +311,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                             y={aggregationScale()(dataPoint.aggregateAttribute)}
                             width={35}
                             height={aggregationScale().bandwidth()}
-                            stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
+                            // stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
                             strokeWidth={2}
                         />,
                         <text

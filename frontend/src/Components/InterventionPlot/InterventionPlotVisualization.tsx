@@ -33,7 +33,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
         proceduresSelection,
         showZero,
         previewMode,
-        currentSelectPatientGroup,
+        currentSelectPatientGroupIDs,
         currentOutputFilterSet,
         rawDateRange,
         dateRange
@@ -93,12 +93,12 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
         const call = cancelToken.source();
         setPreviousCancelToken(call);
         const getPreInt = () => {
-            return axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[dateRange[0], timeFormat("%d-%b-%Y")(new Date(interventionDate))]}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
+            return axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[dateRange[0], timeFormat("%d-%b-%Y")(new Date(interventionDate))]}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroupIDs.toString()}`, {
                 cancelToken: call.token
             })
         }
         const getPostInt = () => {
-            return axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(interventionDate)), dateRange[1]]}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
+            return axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(interventionDate)), dateRange[1]]}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroupIDs.toString()}`, {
                 cancelToken: call.token
             })
         }
@@ -179,7 +179,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
             previousCancelToken.cancel("cancel the call.")
         }
         fetchChartData();
-    }, [proceduresSelection, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroup, currentOutputFilterSet]);
+    }, [proceduresSelection, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet]);
 
 
     useEffect(() => {

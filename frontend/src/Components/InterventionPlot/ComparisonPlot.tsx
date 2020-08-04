@@ -70,7 +70,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
 
     const {
         // perCaseSelected,
-        currentSelectPatient,
+        //  currentSelectPatient,
         currentOutputFilterSet,
         currentSelectSet,
         showZero
@@ -252,13 +252,13 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         return false;
     }
 
-    const decideSinglePatientSelect = (d: ComparisonDataPoint) => {
-        if (currentSelectPatient) {
-            return currentSelectPatient[aggregatedBy] === d.aggregateAttribute;
-        } else {
-            return false;
-        }
-    }
+    // const decideSinglePatientSelect = (d: ComparisonDataPoint) => {
+    //     if (currentSelectPatient) {
+    //         return currentSelectPatient[aggregatedBy] === d.aggregateAttribute;
+    //     } else {
+    //         return false;
+    //     }
+    // }
 
 
 
@@ -508,7 +508,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                                 opacity={0.65}
                                 height={aggregationScale().bandwidth() * 0.47} />,
                             <rect x={-50} y={aggregationScale()(dataPoint.aggregateAttribute)} width={35} fill="none" height={aggregationScale().bandwidth()}
-                                stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
+                                //   stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
                                 strokeWidth={2} />
 
 

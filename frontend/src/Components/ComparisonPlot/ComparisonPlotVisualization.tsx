@@ -34,7 +34,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
         proceduresSelection,
         showZero,
         previewMode,
-        currentSelectPatientGroup,
+        currentSelectPatientGroupIDs,
         currentOutputFilterSet,
         dateRange
     } = store!;
@@ -86,7 +86,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
         const call = cancelToken.source();
         setPreviousCancelToken(call);
 
-        axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
+        axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroupIDs.toString()}`, {
             cancelToken: call.token
         })
             .then(function (response) {
@@ -166,7 +166,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
             previousCancelToken.cancel("cancel the call?")
         }
         fetchChartData();
-    }, [proceduresSelection, hemoglobinDataSet, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroup]);
+    }, [proceduresSelection, hemoglobinDataSet, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroupIDs]);
 
 
     useEffect(() => {

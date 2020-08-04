@@ -8,55 +8,58 @@ import { actions } from "../..";
 import { highlight_orange, highlight_blue, third_gray } from "../../PresetsProfile";
 
 interface OwnProps {
-  dataPoint: BarChartDataPoint;
-  isSelected: boolean;
-  isFiltered: boolean;
-  path: string;
-  aggregatedBy: string;
-  howToTransform: string;
-  store?: Store;
-  isSinglePatientSelect: boolean;
+    dataPoint: BarChartDataPoint;
+    isSelected: boolean;
+    isFiltered: boolean;
+    path: string;
+    aggregatedBy: string;
+    howToTransform: string;
+    store?: Store;
+    // isSinglePatientSelect: boolean;
 }
 
 export type Props = OwnProps;
 
 
 
-const SingleViolinPlot: FC<Props> = ({ howToTransform, isFiltered, isSinglePatientSelect, dataPoint, aggregatedBy, isSelected, path, store }: Props) => {
-  return (<Popup
-    content={dataPoint.totalVal}
-    key={dataPoint.aggregateAttribute}
-    trigger={
-      <ViolinLine
-        d={path}
-        onClick={(e) => {
-          actions.selectSet(
-            {
-              setName: aggregatedBy,
-              setValues: [dataPoint.aggregateAttribute],
-              // setPatientIds: [dataPoint.patientIDList]
-            },
-            e.shiftKey
-          )
-        }}
+const SingleViolinPlot: FC<Props> = ({ howToTransform, isFiltered, dataPoint, aggregatedBy, isSelected, path, store }: Props) => {
+    return (<Popup
+        content={dataPoint.totalVal}
+        key={dataPoint.aggregateAttribute}
+        trigger={
+            <ViolinLine
+                d={path}
+                onClick={(e) => {
+                    actions.selectSet(
+                        {
+                            setName: aggregatedBy,
+                            setValues: [dataPoint.aggregateAttribute],
+                            // setPatientIds: [dataPoint.patientIDList]
+                        },
+                        e.shiftKey
+                    )
+                }}
 
-        isselected={isSelected}
-        isfiltered={isFiltered}
-        issinglepatientselected={isSinglePatientSelect}
-        transform={howToTransform}
-      />
-    }
-  />)
+                isselected={isSelected}
+                isfiltered={isFiltered}
+                //   issinglepatientselected={isSinglePatientSelect}
+                transform={howToTransform}
+            />
+        }
+    />)
 }
 
 export default inject("store")(observer(SingleViolinPlot));
 
 interface ViolinLineProp {
-  isselected: boolean;
-  isfiltered: boolean;
-  issinglepatientselected: boolean;
+    isselected: boolean;
+    isfiltered: boolean;
+    // issinglepatientselected: boolean;
 }
+
+// stroke:${props => (props.issinglepatientselected ? highlight_orange : third_gray)};
+
 const ViolinLine = styled(`path`) <ViolinLineProp>`
-    stroke:${props => (props.issinglepatientselected ? highlight_orange : third_gray)};
+   
     fill: ${props => (props.isselected ? highlight_orange : (props.isfiltered ? highlight_blue : third_gray))};
   `;
