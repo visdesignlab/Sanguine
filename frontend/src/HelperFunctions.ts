@@ -1,6 +1,7 @@
-import { BasicAggregatedDatePoint, ExtraPairInterventionPoint, ComparisonDataPoint, ExtraPairPoint } from "./Interfaces/ApplicationState"
+import { BasicAggregatedDatePoint, ExtraPairInterventionPoint, ComparisonDataPoint, ExtraPairPoint, SingleCasePoint } from "./Interfaces/ApplicationState"
 import { mean, median, sum } from "d3";
 import { create as createpd } from "pdfast";
+import { BloodProductCap } from "./PresetsProfile";
 
 export const stateUpdateWrapperUseJSON = (oldState: any, newState: any, updateFunction: (value: React.SetStateAction<any>) => void) => {
     if (JSON.stringify(oldState) !== JSON.stringify(newState)) {
@@ -624,4 +625,140 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
         )
     }
     return newExtraPairData;
+}
+
+export const generateComparisonData = (temporaryDataHolder: any[], showZero: boolean, valueToVisualize: string) => {
+    let caseCount = 0;
+    let outputData: ComparisonDataPoint[] = [];
+    Object.values(temporaryDataHolder).map((computedData: any) => {
+        const prePatientIDArray: number[] = Array.from(computedData.prePatientIDList);
+        const postPatientIDArray: number[] = Array.from(computedData.postPatienIDList);
+        // const preCaseIDArray: number[] = Array.from(computedData.preCaseIDList);
+        // const postCaseIDArray: number[] = Array.from(computedData.postCaseIDList);
+
+        let preCaseIDArray: number[] = [];
+        let postCaseIDArray: number[] = [];
+
+
+        let preDataArray: SingleCasePoint[] = computedData.preData;
+        let postDataArray: SingleCasePoint[] = computedData.postData;
+        let preZeroNum = 0;
+        let postZeroNum = 0;
+        if (!showZero) {
+            preDataArray = preDataArray.filter((d: SingleCasePoint) => {
+                if (d[valueToVisualize] > 0) {
+                    preCaseIDArray.push(d.CASE_ID)
+                    return true;
+                }
+                preZeroNum += 1;
+                return false;
+            })
+            postDataArray = postDataArray.filter((d: SingleCasePoint) => {
+                if (d[valueToVisualize] > 0) {
+                    postCaseIDArray.push(d.CASE_ID)
+                    return true;
+                }
+                postZeroNum += 1;
+                return false;
+            })
+        } else {
+            preZeroNum = preDataArray.filter((d) => {
+                preCaseIDArray.push(d.CASE_ID)
+                return d[valueToVisualize] === 0;
+            }).length;
+            postZeroNum = postDataArray.filter((d) => {
+                postCaseIDArray.push(d.CASE_ID)
+                return d[valueToVisualize] === 0;
+            }).length;
+
+        }
+
+        caseCount += preCaseIDArray.length;
+        caseCount += postCaseIDArray.length;
+
+        let preCountDict = {} as any;
+        let postCountDict = {} as any;
+        const cap: number = BloodProductCap[valueToVisualize]
+
+        if (valueToVisualize === "CELL_SAVER_ML") {
+            preCountDict[-1] = [];
+            postCountDict[-1] = [];
+            for (let i = 0; i <= cap; i += 100) {
+                preCountDict[i] = [];
+                postCountDict[i] = [];
+            }
+        } else {
+            for (let i = 0; i <= cap; i++) {
+                preCountDict[i] = [];
+                postCountDict[i] = [];
+            }
+        }
+
+        preDataArray.map((d: SingleCasePoint) => {
+            if (valueToVisualize === "CELL_SAVER_ML") {
+                const roundedAnswer = Math.floor(d[valueToVisualize] / 100) * 100
+                if (d[valueToVisualize] === 0) {
+                    preCountDict[-1].push(d)
+                }
+                else if (roundedAnswer > cap) {
+                    preCountDict[cap].push(d)
+                }
+                else {
+                    preCountDict[roundedAnswer].push(d)
+                }
+            } else {
+                if ((d[valueToVisualize]) > cap) {
+                    preCountDict[cap].push(d)
+                } else {
+                    preCountDict[(d[valueToVisualize])].push(d)
+                }
+            }
+
+        });
+
+        postDataArray.map((d: SingleCasePoint) => {
+            if (valueToVisualize === "CELL_SAVER_ML") {
+                const roundedAnswer = Math.floor(d[valueToVisualize] / 100) * 100
+                if (d[valueToVisualize] === 0) {
+                    postCountDict[-1].push(d)
+                }
+                else if (roundedAnswer > cap) {
+                    postCountDict[cap].push(d)
+                }
+                else {
+                    postCountDict[roundedAnswer].push(d)
+                }
+            } else {
+                if ((d[valueToVisualize]) > cap) {
+                    postCountDict[cap].push(d)
+                } else {
+                    postCountDict[(d[valueToVisualize])].push(d)
+                }
+            }
+
+        });
+
+        outputData.push(
+            {
+                aggregateAttribute: computedData.aggregateAttribute,
+                preTotalVal: sum(computedData.preData),
+                postTotalVal: sum(computedData.postData),
+                prePatienIDList: prePatientIDArray,
+                postPatienIDList: postPatientIDArray,
+                preCaseIDList: preCaseIDArray,
+                postCaseIDList: postCaseIDArray,
+                preZeroCaseNum: preZeroNum,
+                postZeroCaseNum: postZeroNum,
+                //preInKdeCal: prePD,
+                // postInKdeCal: postPD,
+                preCountDict: preCountDict,
+                postCountDict: postCountDict,
+                preCaseCount: preCaseIDArray.length,
+                postCaseCount: postCaseIDArray.length,
+                //   preInMedian: median(preDataArray,d=>d[valueToVisualize]) || 0,
+                //   postInMedian: median(postDataArray,d=>d[valueToVisualize]) || 0
+            }
+        )
+    });
+    return [caseCount, outputData]
 }

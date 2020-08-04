@@ -38,9 +38,9 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
         <>
 
             {valueScale().domain().map(point => {
-                const preOutput = dataPoint.preCountDict[point] ? dataPoint.preCountDict[point] : 0;
+                const preOutput = dataPoint.preCountDict[point].length;
 
-                const postOutput = dataPoint.postCountDict[point] ? dataPoint.postCountDict[point] : 0;
+                const postOutput = dataPoint.postCountDict[point].length;
 
                 const preCaseCount = showZero ? dataPoint.preCaseCount : dataPoint.preCaseCount - dataPoint.preZeroCaseNum;
                 const postCaseCount = showZero ? dataPoint.postCaseCount : dataPoint.postCaseCount - dataPoint.postZeroCaseNum;

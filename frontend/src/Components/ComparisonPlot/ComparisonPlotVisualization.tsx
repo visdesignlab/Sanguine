@@ -1,13 +1,13 @@
 import Store from "../../Interfaces/Store";
 import { FC, useRef, useState, useEffect, useLayoutEffect } from "react";
-import { ExtraPairInterventionPoint, ComparisonDataPoint } from "../../Interfaces/ApplicationState";
+import { ExtraPairInterventionPoint, ComparisonDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
 import React from "react";
 import { inject, observer } from "mobx-react";
 import { BloodProductCap, extraPairOptions, barChartAggregationOptions, barChartValuesOptions, interventionChartType, ChartSVG } from "../../PresetsProfile";
 import axios from 'axios';
 import { sum, median } from "d3";
 import { create as createpd } from "pdfast";
-import { stateUpdateWrapperUseJSON, generateExtrapairPlotDataWithIntervention } from "../../HelperFunctions";
+import { stateUpdateWrapperUseJSON, generateExtrapairPlotDataWithIntervention, generateComparisonData } from "../../HelperFunctions";
 import { actions } from "../..";
 import { Grid, Menu, Dropdown, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import InterventionPlot from "../InterventionPlot/ComparisonPlot";
@@ -36,7 +36,6 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
         previewMode,
         currentSelectPatientGroup,
         currentOutputFilterSet,
-        rawDateRange,
         dateRange
     } = store!;
 
@@ -79,8 +78,9 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
     function fetchChartData() {
         let temporaryDataHolder: any = {}
         let caseDictionary = {} as any;
-        let outputData: ComparisonDataPoint[] = [];
-        let caseSetReturnedFromQuery = new Set()
+
+        let caseSetReturnedFromQuery = new Set();
+
 
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
@@ -94,7 +94,6 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                 transfusedDataResult.forEach((element: any) => {
                     caseSetReturnedFromQuery.add(element.case_id)
                 })
-                console.log(caseSetReturnedFromQuery)
                 hemoglobinDataSet.map((singleCase: any) => {
                     let criteriaMet = true;
                     if (currentOutputFilterSet.length > 0) {
@@ -108,7 +107,6 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                     }
 
                     if (!caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
-
                         criteriaMet = false;
                     }
 
@@ -127,13 +125,13 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                             }
                         }
                         if (caseOutcome > 0) {
-                            temporaryDataHolder[singleCase[aggregatedBy]].preData.push(singleCase[valueToVisualize])
+                            temporaryDataHolder[singleCase[aggregatedBy]].preData.push(singleCase)
                             temporaryDataHolder[singleCase[aggregatedBy]].prePatientIDList.add(singleCase.PATIENT_ID)
-                            temporaryDataHolder[singleCase[aggregatedBy]].preCaseIDList.add(singleCase.CASE_ID)
+                            // temporaryDataHolder[singleCase[aggregatedBy]].preCaseIDList.add(singleCase.CASE_ID)
                         } else {
-                            temporaryDataHolder[singleCase[aggregatedBy]].postData.push(singleCase[valueToVisualize])
+                            temporaryDataHolder[singleCase[aggregatedBy]].postData.push(singleCase)
                             temporaryDataHolder[singleCase[aggregatedBy]].postPatienIDList.add(singleCase.PATIENT_ID)
-                            temporaryDataHolder[singleCase[aggregatedBy]].postCaseIDList.add(singleCase.CASE_ID)
+                            // temporaryDataHolder[singleCase[aggregatedBy]].postCaseIDList.add(singleCase.CASE_ID)
                         }
                     }
                 })
@@ -146,137 +144,12 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                         preCaseIDList: new Set(),
                         postCaseIDList: new Set()
          */
-                Object.values(temporaryDataHolder).forEach((computedData: any) => {
-                    const prePatientIDArray: number[] = Array.from(computedData.prePatientIDList);
-                    const postPatientIDArray: number[] = Array.from(computedData.postPatienIDList);
-                    const preCaseIDArray: number[] = Array.from(computedData.preCaseIDList);
-                    const postCaseIDArray: number[] = Array.from(computedData.postCaseIDList);
-                    let preDataArray = computedData.preData;
-                    let postDataArray = computedData.postData;
-                    let preZeroNum = 0;
-                    let postZeroNum = 0;
-                    if (!showZero) {
-                        preDataArray = preDataArray.filter((d: number) => {
-                            if (d > 0) {
-                                return true;
-                            }
-                            preZeroNum += 1;
-                            return false;
-                        })
-                        postDataArray = postDataArray.filter((d: number) => {
-                            if (d > 0) {
-                                return true;
-                            }
-                            postZeroNum += 1;
-                            return false;
-                        })
-                    } else {
-                        preZeroNum = preDataArray.filter((d: number) => d === 0).length;
-                        postZeroNum = postDataArray.filter((d: number) => d === 0).length
-                    }
-
-                    let prePD = createpd(preDataArray, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
-
-                    prePD = [{ x: 0, y: 0 }].concat(prePD)
-                    let reversePrePD = prePD.map((pair: any) => {
-                        return { x: pair.x, y: - pair.y }
-                    }).reverse()
-                    prePD = prePD.concat(reversePrePD)
-
-                    let postPD = createpd(postDataArray, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
-
-                    postPD = [{ x: 0, y: 0 }].concat(postPD)
-                    let reversePostPD = postPD.map((pair: any) => {
-                        return { x: pair.x, y: - pair.y }
-                    }).reverse()
-                    postPD = postPD.concat(reversePostPD)
 
 
-                    let preCountDict = {} as any;
-                    let postCountDict = {} as any;
-                    const cap = BloodProductCap[valueToVisualize]
-
-                    if (valueToVisualize === "CELL_SAVER_ML") {
-                        preCountDict[-1] = 0;
-                        postCountDict[-1] = 0
-                        for (let i = 0; i <= cap; i += 100) {
-                            preCountDict[i] = 0
-                            postCountDict[i] = 0
-                        }
-                    } else {
-                        for (let i = 0; i <= cap; i++) {
-                            preCountDict[i] = 0
-                            postCountDict[i] = 0
-                        }
-                    }
-
-                    preDataArray.map((d: any) => {
-                        if (valueToVisualize === "CELL_SAVER_ML") {
-                            const roundedAnswer = Math.floor(d / 100) * 100
-                            if (d === 0) {
-                                preCountDict[-1] += 1
-                            }
-                            else if (roundedAnswer > cap) {
-                                preCountDict[cap] += 1
-                            }
-                            else {
-                                preCountDict[roundedAnswer] += 1
-                            }
-                        } else {
-                            if (d > cap) {
-                                preCountDict[cap] += 1
-                            } else {
-                                preCountDict[d] += 1
-                            }
-                        }
-                    });
-
-                    postDataArray.map((d: any) => {
-                        if (valueToVisualize === "CELL_SAVER_ML") {
-                            const roundedAnswer = Math.floor(d / 100) * 100
-                            if (d === 0) {
-                                postCountDict[-1] += 1
-                            }
-                            else if (roundedAnswer > cap) {
-                                postCountDict[cap] += 1
-                            }
-                            else {
-                                postCountDict[roundedAnswer] += 1
-                            }
-                        } else {
-                            if (d > cap) {
-                                postCountDict[cap] += 1
-                            } else {
-                                postCountDict[d] += 1
-                            }
-                        }
-
-                    });
-
-                    outputData.push(
-                        {
-                            aggregateAttribute: computedData.aggregateAttribute,
-                            preTotalVal: sum(computedData.preData),
-                            postTotalVal: sum(computedData.postData),
-                            prePatienIDList: prePatientIDArray,
-                            postPatienIDList: postPatientIDArray,
-                            preCaseIDList: preCaseIDArray,
-                            postCaseIDList: postCaseIDArray,
-                            preZeroCaseNum: preZeroNum,
-                            postZeroCaseNum: postZeroNum,
-                            preInKdeCal: prePD,
-                            postInKdeCal: postPD,
-                            preCountDict: preCountDict,
-                            postCountDict: postCountDict,
-                            preCaseCount: preCaseIDArray.length,
-                            postCaseCount: postCaseIDArray.length,
-                            preInMedian: median(preDataArray) || 0,
-                            postInMedian: median(postDataArray) || 0
-                        }
-                    )
-                });
+                const [caseCount, outputData] = generateComparisonData(temporaryDataHolder, showZero, valueToVisualize)
                 stateUpdateWrapperUseJSON(data, outputData, setData);
                 stateUpdateWrapperUseJSON(caseIDDictionary, caseDictionary, setCaseIDList)
+                store!.totalAggregatedCaseCount = caseCount as number;
             })
             .catch(function (thrown) {
                 if (axios.isCancel(thrown)) {
