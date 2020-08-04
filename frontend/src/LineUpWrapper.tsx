@@ -140,7 +140,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
         if (lineup !== undefined) {
             console.log('called inside')
             let outputIndex: number[] = [];
-            currentSelectPatientGroup.forEach(item => outputIndex.push(caseIDReference[item]));
+            currentSelectPatientGroup.forEach(item => outputIndex.push(caseIDReference[item.CASE_ID]));
             console.log(outputIndex)
             //    lineup.setSelection(outputIndex);
 

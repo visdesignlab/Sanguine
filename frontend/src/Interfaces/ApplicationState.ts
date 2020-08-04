@@ -116,11 +116,11 @@ export interface ApplicationState {
     // dumbbellSorted: boolean;
     currentSelectSet: SelectSet[];
     currentOutputFilterSet: SelectSet[];
-    currentSelectPatient: SingleCasePoint | null;
+    // currentSelectPatient: SingleCasePoint[] | null;
     showZero: boolean;
     //This two are both case ids
-    currentSelectPatientGroup: number[];
-    currentBrushedPatientGroup: number[];
+    currentSelectPatientGroup: SingleCasePoint[];
+    currentBrushedPatientGroup: SingleCasePoint[];
 
     nextAddingIndex: number;
     layoutArray: LayoutElement[];
@@ -153,7 +153,7 @@ export const defaultState: ApplicationState = {
     totalIndividualCaseCount: 0,
     currentOutputFilterSet: [],
     currentSelectSet: [],
-    currentSelectPatient: null,
+    //currentSelectPatient: null,
     nextAddingIndex: 0,
     showZero: true,
     currentSelectPatientGroup: [],

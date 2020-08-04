@@ -39,7 +39,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
         dateRange,
         previewMode,
         showZero,
-        currentSelectPatientGroup,
+        currentSelectPatientGroupIDs,
         //actualYearRange,
 
     } = store!;
@@ -69,12 +69,12 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
     }, [layoutArray[chartIndex]]);
 
     function fetchChartData() {
-        console.log(hemoglobinDataSet)
+
         let transfused_dict = {} as any;
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
         setPreviousCancelToken(call);
-        axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=${xAxis}&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
+        axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=${xAxis}&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroupIDs.toString()}`, {
             cancelToken: call.token
         })
             .then(function (response) {
@@ -135,7 +135,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                     castData = castData.filter((d: any) => d)
 
                     //    actions.updateCaseCount("INDIVIDUAL", castData.length)
-                    console.log(castData)
+
                     store!.totalIndividualCaseCount = castData.length
                     stateUpdateWrapperUseJSON(data, castData, setData);
                     setXMax(tempXMax);
@@ -160,7 +160,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
             previousCancelToken.cancel("cancel the call?")
         }
         fetchChartData();
-    }, [dateRange, proceduresSelection, hemoglobinDataSet, showZero, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroup]);
+    }, [dateRange, proceduresSelection, hemoglobinDataSet, showZero, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroupIDs]);
 
 
 

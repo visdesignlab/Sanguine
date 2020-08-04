@@ -8,12 +8,13 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
+import { ScatterDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
 import { offset, AxisLabelDict, highlight_blue, postop_color, Accronym, preop_color, third_gray } from "../../PresetsProfile"
 import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range, median, quantile, deviation, mean } from "d3";
 
 //import CustomizedAxis from "../Utilities/CustomizedAxis";
 import { highlight_orange, basic_gray } from "../../PresetsProfile";
+import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 interface OwnProps {
     yAxisName: string;
@@ -39,14 +40,21 @@ export type Props = OwnProps;
 const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width, height, yMax, yMin, xAxisName, yAxisName, store }: Props) => {
 
     const currentOffset = offset.regular;
-    const { currentSelectPatient, currentSelectPatientGroup, currentOutputFilterSet, currentSelectSet } = store!;
+    const {
+        //   currentSelectPatient, 
+        currentBrushedPatientGroup,
+        currentSelectPatientGroup,
+        currentOutputFilterSet,
+        currentSelectSet } = store!;
     const svgSelection = select(svg.current);
     const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null)
-    const [isFirstRender, updateIsFirstRender] = useState(true)
+    const [isFirstRender, updateIsFirstRender] = useState(true);
+    const [brushedCaseList, updatebrushedCaseList] = useState<number[]>([])
 
     const updateBrush = () => {
         updateBrushLoc(event.selection)
     }
+
 
     const xAxisScale = useCallback(() => {
         let xAxisScale: any;
@@ -85,30 +93,37 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
         }
 
         else if (brushLoc) {
-            let caseList: number[] = [];
+            let caseList: SingleCasePoint[] = [];
             data.map((dataPoint) => {
                 //  const cx = (xAxisScale())(d.xVal as any) || 0
                 const cx = xAxisName === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
                 const cy = yAxisScale()(dataPoint.yVal)
                 if (cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
-                    caseList.push(dataPoint.case.CASE_ID)
+                    caseList.push(dataPoint.case)
                 }
             })
             if (caseList.length > 1000 || caseList.length === 0) {
                 updateBrushLoc(null)
                 brushDef.move(svgSelection.select(".brush-layer"), null)
-                actions.updateBrushPatientGroup([])
+                actions.updateBrushPatientGroup([], "REPLACE")
             } else {
-                actions.updateBrushPatientGroup(caseList)
+                actions.updateBrushPatientGroup(caseList, "REPLACE")
             }
         } else {
-            actions.updateBrushPatientGroup([])
+            actions.updateBrushPatientGroup([], "REPLACE")
         }
     }, [brushLoc])
 
     useEffect(() => {
         brushDef.move(svgSelection.select(".brush-layer"), null)
     }, [currentOutputFilterSet, currentSelectPatientGroup])
+
+    useEffect(() => {
+
+        let newbrushedCaseList = currentBrushedPatientGroup.map(d => d.CASE_ID)
+        stateUpdateWrapperUseJSON(brushedCaseList, newbrushedCaseList, updatebrushedCaseList)
+    }, [currentBrushedPatientGroup])
+
 
     const yAxisLabel = axisLeft(yAxisScale());
     const xAxisLabel = axisBottom(xAxisScale() as any);
@@ -161,12 +176,12 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
     }, [highlightOption])
 
 
-    const decideIfSelected = (d: ScatterDataPoint) => {
-        if (currentSelectPatient && d.case.CASE_ID > 0) {
-            return currentSelectPatient.CASE_ID === d.case.CASE_ID
-        }
-        return false;
-    }
+    // const decideIfSelected = (d: ScatterDataPoint) => {
+    //     if (currentSelectPatient && d.case.CASE_ID > 0) {
+    //         return currentSelectPatient.CASE_ID === d.case.CASE_ID
+    //     }
+    //     return false;
+    // }
 
     const decideIfSelectSet = (d: ScatterDataPoint) => {
         if (currentSelectSet.length > 0) {
@@ -188,12 +203,13 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
         }
     }
 
-    const clickDumbbellHandler = (d: ScatterDataPoint) => {
-        actions.selectPatient(d.case)
-    }
+    // const clickDumbbellHandler = (d: ScatterDataPoint) => {
+    //     actions.selectPatient(d.case)
+    // }
 
     const generateScatterDots = () => {
         let selectedPatients: any[] = [];
+        let brushedSet = new Set(brushedCaseList)
         //  const patientGroupSet = new Set(currentSelectPatientGroup)
         //let unselectedPatients = [];
         let medianSet: any = {}
@@ -207,30 +223,33 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
                 medianSet[dataPoint.xVal] = [dataPoint.yVal]
             }
             const cy = yAxisScale()(dataPoint.yVal)
-            const isSelected = decideIfSelected(dataPoint)
+            //   const isSelected = decideIfSelected(dataPoint)
             const isSelectSet = decideIfSelectSet(dataPoint);
             const isHighlightOption = decideIfHighlightOption(dataPoint);
-            const isBrushed = brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]
+
+            const isBrushed = brushedSet.has(dataPoint.case.CASE_ID)
+
+            // const isBrushed = brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]
             //  || (patientGroupSet.has(dataPoint.case.CASE_ID));
-            if (isSelected || isBrushed || isSelectSet || isHighlightOption) {
+            if (isBrushed || isSelectSet || isHighlightOption) {
                 selectedPatients.push(
                     <Circle cx={cx}
                         cy={cy}
                         // fill={ ? highlight_orange : basic_gray}
-                        isselected={isSelected || isSelectSet}
+                        isselected={isSelectSet}
                         isbrushed={isBrushed || false}
                         isHighlightOutcome={isHighlightOption}
-                        onClick={() => { clickDumbbellHandler(dataPoint) }}
+                    // onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />)
             } else {
                 return (
                     <Circle cx={cx}
                         cy={cy}
                         // fill={ ? highlight_orange : basic_gray}
-                        isselected={isSelected || isSelectSet}
+                        isselected={isSelectSet}
                         isbrushed={isBrushed || false}
                         isHighlightOutcome={isHighlightOption}
-                        onClick={() => { clickDumbbellHandler(dataPoint) }}
+                    //  onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />
 
                 );
