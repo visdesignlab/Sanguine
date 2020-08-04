@@ -293,7 +293,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
             previousCancelToken.cancel("cancel the call?")
         }
         fetchChartData();
-    }, [proceduresSelection, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroup]);
+    }, [proceduresSelection, hemoglobinDataSet, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroup]);
 
 
     useEffect(() => {

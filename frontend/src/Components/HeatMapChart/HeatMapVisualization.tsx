@@ -212,9 +212,9 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         actions.changeChart(aggregatedBy, value.value, chartId, "HEATMAP")
     }
 
-    const changePlotType = (e: any, value: any) => {
-        actions.changeChart(aggregatedBy, valueToVisualize, chartId, value.value)
-    }
+    // const changePlotType = (e: any, value: any) => {
+    //     actions.changeChart(aggregatedBy, valueToVisualize, chartId, value.value)
+    // }
 
 
     //  return true;
@@ -237,7 +237,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                             <Dropdown selectOnBlur={false} basic item icon="plus" compact>
                                 <Dropdown.Menu>
                                     {
-                                        extraPairOptions.map((d: { value: string; title: string }) => {
+                                        extraPairOptions.map((d) => {
                                             return (
                                                 <Dropdown.Item
                                                     onClick={() => {
@@ -252,15 +252,15 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item >
-                        <Menu.Item fitted onClick={toggleStripGraphMode}>
+                        {/* <Menu.Item fitted onClick={toggleStripGraphMode}>
                             <Icon name="ellipsis vertical" />
-                        </Menu.Item>
-                        <Menu.Item header>
-                            <Dropdown selectOnBlur={false} pointing basic item icon="settings" compact >
+                        </Menu.Item> */}
+                        <Menu.Item fitted>
+                            <Dropdown selectOnBlur={false} basic item icon="settings" compact >
                                 <Dropdown.Menu>
                                     <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation} />
                                     <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue} />
-                                    <Dropdown text="Change Plot Type" pointing basic item compact options={interventionChartType} onChange={changePlotType} />
+                                    {/* <Dropdown text="Change Plot Type" pointing basic item compact options={interventionChartType} onChange={changePlotType} /> */}
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item>
@@ -294,10 +294,6 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                                 <Button content="Cancel" onClick={() => { setOpenNotationModal(false) }} />
                             </Modal.Actions>
                         </Modal>
-
-
-
-
                     </Menu>
                 </Grid.Column>
                 <Grid.Column width={(15) as any}>

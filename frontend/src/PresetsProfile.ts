@@ -33,7 +33,7 @@ export const extraPairOptions = [
 ]
 
 //export const minimumOffset = 
-export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 30, Outcomes: 35 }
+export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 40, Outcomes: 40 }
 export const extraPairPadding = 5;
 export const minimumWidthScale = 18;
 
@@ -185,7 +185,9 @@ export const Accronym = {
     PVR: "Proliferative Vitreoretinopathy",
     VENT: "Over 24 Hours Ventilator Usage",
     RISK: "Diagnosis-related Group Weight",
-    "Zero %": "Zero Transfusion"
+    "Zero %": "Zero Transfusion",
+    DEATH: "Death",
+    STROKE: "Stroke",
 
 }
 
