@@ -65,15 +65,12 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
                                 isselected={isSelected}
                                 //   isfiltered={isFiltered}
                                 onClick={(e) => {
-                                    actions.updateBrushPatientGroup(dataPoint.countDict[point], e.shiftKey ? "ADD" : "REPLACE")
-                                    actions.selectSet(
-                                        {
-                                            setName: aggregatedBy,
-                                            setValues: [dataPoint.aggregateAttribute],
-                                            //setPatientIds: [dataPoint.patientIDList]
-                                        },
-                                        e.shiftKey
-                                    )
+                                    actions.updateBrushPatientGroup(dataPoint.countDict[point], e.shiftKey ? "ADD" : "REPLACE", {
+                                        setName: aggregatedBy,
+                                        setValues: [dataPoint.aggregateAttribute],
+                                        //setPatientIds: [dataPoint.patientIDList]
+                                    })
+
                                 }} />}
                     />,
                     <line transform={howToTransform}
