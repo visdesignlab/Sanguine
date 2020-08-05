@@ -151,7 +151,9 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         let output: any[] = []
         if (currentSelectPatientGroup.length > 0) {
             output.push(
-                <FilterListIT key={"Patient Circled"} style={{ textAlign: "left" }} onClick={() => { actions.updateSelectedPatientGroup([]) }} content={`${currentSelectPatientGroup.length} patients filtered`}>
+                <FilterListIT key={"Patient Circled"} style={{ textAlign: "left" }}
+                    onClick={() => { actions.updateSelectedPatientGroup([]) }}
+                    content={`${currentSelectPatientGroup.length} patients filtered`}>
                     <List.Header>Cases Filtered</List.Header>
                     <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
                     <List.Item>{currentSelectPatientGroup.length}</List.Item>
@@ -165,8 +167,10 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             return (<List.Item
                 style={{ textAlign: "left" }}
                 key="Brushed Patients"
+                onClick={() => { actions.updateBrushPatientGroup([], "REPLACE") }}
                 content={`${currentBrushedPatientGroup.length} patients selected`}>
                 <List.Header>Cases Selected</List.Header>
+                <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
                 <List.Item>{currentBrushedPatientGroup.length}</List.Item>
             </List.Item>)
         }

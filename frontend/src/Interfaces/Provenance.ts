@@ -41,7 +41,7 @@ interface AppProvenance {
         removeExtraPair: (chartID: string, removeingPair: string) => void;
 
         updateSelectedPatientGroup: (caseList: SingleCasePoint[]) => void;
-        updateBrushPatientGroup: (caseList: SingleCasePoint[], mode: "ADD" | "REPLACE") => void;
+        updateBrushPatientGroup: (caseList: SingleCasePoint[], mode: "ADD" | "REPLACE", selectedSet?: SelectSet) => void;
         changeChart: (x: string, y: string, i: string, type: string, comparisonChartType?: string) => void;
     }
 }
@@ -305,20 +305,6 @@ export function setupProvenance(): AppProvenance {
             })
     }
 
-    // const selectChart = (chartID: string) => {
-    //   provenance.applyAction(
-    //     `Selecting ${chartID}`,
-    //     (state: ApplicationState) => {
-    //       if (state.currentSelectedChart === chartID) {
-    //         state.currentSelectedChart = "-1";
-    //       } else {
-    //         state.currentSelectedChart = chartID;
-    //       }
-    //       return state;
-    //     }
-    //   )
-    // }
-
 
 
     const toggleShowZero = (event: any, showZero: any) => {
@@ -352,25 +338,7 @@ export function setupProvenance(): AppProvenance {
 )
      */
 
-    const updateBrushPatientGroup = (caseList: SingleCasePoint[], mode: "ADD" | "REPLACE") => {
-        provenance.applyAction(
-            `Update Selected Patients Group`,
-            (state: ApplicationState) => {
-                if (mode === "ADD") {
-                    let oldList = state.currentBrushedPatientGroup.map(d => d.CASE_ID)
-                    for (let newCase of caseList) {
-                        if (!oldList.includes(newCase.CASE_ID)) {
-                            state.currentBrushedPatientGroup.push(newCase)
-                        }
-                    }
-                }
-                else {
-                    state.currentBrushedPatientGroup = caseList;
-                }
-                return state;
-            }
-        )
-    };
+
 
 
 
@@ -434,26 +402,6 @@ export function setupProvenance(): AppProvenance {
         )
     }
 
-    // const proceduresSelectionChange = (selectedFilterOption: string) => {
-    //   provenance.applyAction(
-    //     `Change Filter Selection to ${selectedFilterOption}`,
-    //     (state: ApplicationState) => {
-    //       let currentFilter = JSON.parse(state.rawproceduresSelection)
-    //       if (currentFilter.includes(selectedFilterOption)) {
-    //         currentFilter = currentFilter.filter((d: string) => d !== selectedFilterOption)
-    //       }
-    //       else {
-    //         currentFilter.push(selectedFilterOption)
-    //       }
-    //       state.rawproceduresSelection = (JSON.stringify(currentFilter))
-
-    //       // state.proceduresSelection = selectedFilterOption;
-    //       // console.log(state.proceduresSelection)
-    //       return state;
-    //     }
-    //   )
-    // }
-
     const dateRangeChange = (newDateRange: any) => {
         provenance.applyAction(
             `Change date range to ${newDateRange}`,
@@ -488,8 +436,61 @@ export function setupProvenance(): AppProvenance {
     //     })
     //   };
 
+
+    const updateBrushPatientGroup = (caseList: SingleCasePoint[], mode: "ADD" | "REPLACE", selectedSet?: SelectSet) => {
+        provenance.applyAction(
+            `Update Selected Patients Group`,
+            (state: ApplicationState) => {
+                if (mode === "ADD") {
+                    let oldList = state.currentBrushedPatientGroup.map(d => d.CASE_ID)
+                    for (let newCase of caseList) {
+                        if (!oldList.includes(newCase.CASE_ID)) {
+                            state.currentBrushedPatientGroup.push(newCase)
+                        }
+                    }
+                    if (selectedSet) {
+                        const addingType = selectedSet.setName;
+                        const alreadyIn = state.currentSelectSet.filter(d => d.setName === addingType).length > 0
+                        if (!alreadyIn) {
+                            state.currentSelectSet.push(selectedSet)
+                        } else {
+                            state.currentSelectSet = state.currentSelectSet.map((d) => {
+                                if (d.setName === addingType) {
+                                    const indexOfElement = d.setValues.indexOf(selectedSet.setValues[0])
+                                    if (indexOfElement > 0) {
+                                        d.setValues = d.setValues.splice(indexOfElement, 1);
+                                        //     d.setPatientIds = d.setPatientIds.splice(indexOfElement, 1);
+                                    } else {
+                                        d.setValues = d.setValues.concat(selectedSet.setValues)
+                                        //  d.setPatientIds = d.setPatientIds.concat(data.setPatientIds)
+                                    }
+                                }
+                                return d
+                            })
+                        }
+                    }
+                }
+                else {
+                    state.currentBrushedPatientGroup = caseList;
+                    if (selectedSet) {
+                        if (state.currentSelectSet.length === 1
+                            && state.currentSelectSet[0].setName === selectedSet.setName
+                            && state.currentSelectSet[0].setValues === selectedSet.setValues) {
+                            state.currentSelectSet = [];
+                        }
+                        else {
+                            state.currentSelectSet = [selectedSet]
+                        }
+                    }
+                }
+                return state;
+            }
+        )
+    };
+
+
     const selectSet = (data: SelectSet, shiftKeyPressed: boolean) => {
-        console.log(data)
+
         provenance.applyAction(
             `select set ${data.setName} at ${data.setValues}`,
             (state: ApplicationState) => {
@@ -539,6 +540,8 @@ export function setupProvenance(): AppProvenance {
         )
     }
 
+
+
     const currentOutputFilterSetChange = () => {
         provenance.applyAction(
             `change output filter`,
@@ -583,6 +586,7 @@ export function setupProvenance(): AppProvenance {
             (state: ApplicationState) => {
                 if (!target) {
                     state.currentOutputFilterSet = [];
+                    state.currentSelectPatientGroup = [];
                 } else {
                     state.currentOutputFilterSet = state.currentOutputFilterSet.filter(d => d.setName !== target)
                 }
