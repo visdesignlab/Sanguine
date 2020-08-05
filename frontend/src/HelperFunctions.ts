@@ -1,4 +1,4 @@
-import { BasicAggregatedDatePoint, ExtraPairInterventionPoint, ComparisonDataPoint, ExtraPairPoint, SingleCasePoint } from "./Interfaces/ApplicationState"
+import { BasicAggregatedDatePoint, ExtraPairInterventionPoint, ComparisonDataPoint, ExtraPairPoint, SingleCasePoint, HeatMapDataPoint } from "./Interfaces/ApplicationState"
 import { mean, median, sum } from "d3";
 import { create as createpd } from "pdfast";
 import { BloodProductCap } from "./PresetsProfile";
@@ -740,23 +740,101 @@ export const generateComparisonData = (temporaryDataHolder: any[], showZero: boo
 
         outputData.push(
             {
+
                 aggregateAttribute: computedData.aggregateAttribute,
-                preTotalVal: sum(computedData.preData),
-                postTotalVal: sum(computedData.postData),
+                preTotalVal: sum(preDataArray, d => (d[valueToVisualize] as number)),
+                postTotalVal: sum(postDataArray, d => (d[valueToVisualize] as number)),
                 prePatienIDList: prePatientIDArray,
                 postPatienIDList: postPatientIDArray,
                 preCaseIDList: preCaseIDArray,
                 postCaseIDList: postCaseIDArray,
                 preZeroCaseNum: preZeroNum,
                 postZeroCaseNum: postZeroNum,
-                //preInKdeCal: prePD,
-                // postInKdeCal: postPD,
                 preCountDict: preCountDict,
                 postCountDict: postCountDict,
                 preCaseCount: preCaseIDArray.length,
                 postCaseCount: postCaseIDArray.length,
-                //   preInMedian: median(preDataArray,d=>d[valueToVisualize]) || 0,
-                //   postInMedian: median(postDataArray,d=>d[valueToVisualize]) || 0
+            }
+        )
+    });
+    return [caseCount, outputData]
+}
+
+export const generateRegularData = (temporaryDataHolder: any[], showZero: boolean, valueToVisualize: string) => {
+    let caseCount = 0;
+    let outputData: HeatMapDataPoint[] = [];
+    Object.values(temporaryDataHolder).map((computedData: any) => {
+        const patientIDArray: number[] = Array.from(computedData.patientIDList);
+
+        let caseIDArray: number[] = [];
+
+
+        let dataArray: SingleCasePoint[] = computedData.data;
+        let zeroNum = 0;
+        if (!showZero) {
+
+            dataArray = dataArray.filter((d: SingleCasePoint) => {
+                if (d[valueToVisualize] > 0) {
+                    caseIDArray.push(d.CASE_ID)
+                    return true;
+                }
+                zeroNum += 1;
+                return false;
+            })
+        } else {
+            zeroNum = dataArray.filter((d) => {
+                caseIDArray.push(d.CASE_ID)
+                return d[valueToVisualize] === 0;
+            }).length;
+        }
+
+        caseCount += caseIDArray.length;
+
+        let countDict = {} as any;
+        const cap: number = BloodProductCap[valueToVisualize]
+
+        if (valueToVisualize === "CELL_SAVER_ML") {
+            countDict[-1] = [];
+            for (let i = 0; i <= cap; i += 100) {
+                countDict[i] = [];
+            }
+        } else {
+            for (let i = 0; i <= cap; i++) {
+                countDict[i] = [];
+            }
+        }
+
+        dataArray.map((d: SingleCasePoint) => {
+            if (valueToVisualize === "CELL_SAVER_ML") {
+                const roundedAnswer = Math.floor(d[valueToVisualize] / 100) * 100
+                if (d[valueToVisualize] === 0) {
+                    countDict[-1].push(d)
+                }
+                else if (roundedAnswer > cap) {
+                    countDict[cap].push(d)
+                }
+                else {
+                    countDict[roundedAnswer].push(d)
+                }
+            } else {
+                if ((d[valueToVisualize]) > cap) {
+                    countDict[cap].push(d)
+                } else {
+                    countDict[(d[valueToVisualize])].push(d)
+                }
+            }
+
+        });
+
+        outputData.push(
+            {
+                aggregateAttribute: computedData.aggregateAttribute,
+                totalVal: sum(dataArray, d => (d[valueToVisualize] as number)),
+                patientIDList: patientIDArray,
+                caseIDList: caseIDArray,
+                zeroCaseNum: zeroNum,
+                countDict: countDict,
+                caseCount: dataArray.length
             }
         )
     });

@@ -9,7 +9,7 @@ import { Icon, Grid, Dropdown, Menu, Modal, Form, Button, Message } from "semant
 import { sum, median, mean } from "d3";
 import HeatMap from "./HeatMap";
 import axios from 'axios';
-import { stateUpdateWrapperUseJSON, generateExtrapairPlotData } from "../../HelperFunctions";
+import { stateUpdateWrapperUseJSON, generateExtrapairPlotData, generateRegularData } from "../../HelperFunctions";
 
 interface OwnProps {
     aggregatedBy: string;
@@ -39,7 +39,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     // const [data, setData] = useState<{ original: BarChartDataPoint[]; perCase: BarChartDataPoint[]; }>({ original: [], perCase: [] });
     const [data, setData] = useState<HeatMapDataPoint[]>([]);
 
-    const [yMax, setYMax] = useState(0);
+
     const [width, setWidth] = useState(0);
     const [height, setHeight] = useState(0)
     //const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
@@ -65,109 +65,60 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     }, [layoutArray[chartIndex]]);
 
     function fetchChartData() {
-        let transfused_dict = {} as any;
+        let temporaryDataHolder: any = {}
+        let caseDictionary = {} as any;
+
+        let caseSetReturnedFromQuery = new Set();
+
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
         setPreviousCancelToken(call);
-        axios.get(`http://localhost:8000/api/request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroupIDs.toString()}`, {
+
+        axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroupIDs.toString()}`, {
             cancelToken: call.token
         })
             .then(function (response) {
-                const dataResult = response.data;
-                console.log(dataResult)
-                //  let caseCount = 0;
-                if (dataResult) {
-                    let yMaxTemp = -1;
-
-                    // const caseList = dataResult.case_id_list;
-                    let caseDictionary = {} as any;
-                    //   console.log(dataResult)
-
-                    let cast_data = (dataResult as any).map(function (ob: any) {
-                        const aggregateByAttr = ob.aggregated_by;
+                const transfusedDataResult = response.data;
+                if (transfusedDataResult) {
+                    transfusedDataResult.forEach((element: any) => {
+                        caseSetReturnedFromQuery.add(element.case_id)
+                    })
+                    hemoglobinDataSet.map((singleCase: any) => {
                         let criteriaMet = true;
                         if (currentOutputFilterSet.length > 0) {
                             for (let selectSet of currentOutputFilterSet) {
                                 if (selectSet.setName === aggregatedBy) {
-                                    if (!selectSet.setValues.includes(aggregateByAttr)) {
+                                    if (!selectSet.setValues.includes(singleCase[aggregatedBy])) {
                                         criteriaMet = false;
                                     }
                                 }
                             }
                         }
+
+                        if (!caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
+                            criteriaMet = false;
+                        }
                         if (criteriaMet) {
+                            caseDictionary[singleCase.CASE_ID] = true;
+                            if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
+                                temporaryDataHolder[singleCase[aggregatedBy]] = {
+                                    aggregateAttribute: singleCase[aggregatedBy],
+                                    data: [],
+                                    patientIDList: new Set(),
 
-                            ob.case_id.map((singleId: any) => {
-                                caseDictionary[singleId] = true;
-                            })
-
-                            let zeroCaseNum = 0;
-                            const case_num = ob.transfused_units.length;
-                            //  caseCount += case_num
-
-                            let outputResult = ob.transfused_units;
-                            zeroCaseNum = outputResult.filter((d: number) => d === 0).length
-
-                            const total_val = sum(outputResult);
-
-                            let countDict = {} as any
-                            const cap = BloodProductCap[valueToVisualize]
-
-
-                            if (valueToVisualize === "CELL_SAVER_ML") {
-                                countDict[-1] = 0
-                                for (let i = 0; i <= cap; i += 100) {
-                                    countDict[i] = 0
-                                }
-                            } else {
-                                for (let i = 0; i <= cap; i++) {
-                                    countDict[i] = 0
                                 }
                             }
-
-                            outputResult.map((d: any) => {
-                                if (valueToVisualize === "CELL_SAVER_ML") {
-                                    const roundedAnswer = Math.floor(d / 100) * 100
-                                    if (d === 0) {
-                                        countDict[-1] += 1
-                                    }
-                                    else if (roundedAnswer > cap) {
-                                        countDict[cap] += 1
-                                    }
-                                    else {
-                                        countDict[roundedAnswer] += 1
-                                    }
-                                } else {
-                                    if (d > cap) {
-                                        countDict[cap] += 1
-                                    } else {
-                                        countDict[d] += 1
-                                    }
-                                }
-                            })
-
-                            const new_ob: HeatMapDataPoint = {
-                                caseCount: case_num,
-                                aggregateAttribute: aggregateByAttr,
-                                totalVal: total_val,
-                                countDict: countDict,
-                                zeroCaseNum: zeroCaseNum,
-                                caseIDList: ob.case_id,
-                                patientIDList: ob.pat_id
-                            };
-                            return new_ob;
+                            temporaryDataHolder[singleCase[aggregatedBy]].data.push(singleCase)
+                            temporaryDataHolder[singleCase[aggregatedBy]].patientIDList.add(singleCase.PATIENT_ID)
                         }
-                    });
-                    cast_data = cast_data.filter((d: any) => d)
-
-                    stateUpdateWrapperUseJSON(data, cast_data, setData)
+                    })
+                    const [caseCount, outputData] = generateRegularData(temporaryDataHolder, showZero, valueToVisualize)
+                    stateUpdateWrapperUseJSON(data, outputData, setData)
                     stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList);
-
-                    setYMax(yMaxTemp);
-                    store!.totalAggregatedCaseCount = Object.keys(caseDictionary).length;
-
+                    store!.totalAggregatedCaseCount = caseCount as number
                 }
-            })
+            }
+            )
             .catch(function (thrown) {
                 if (axios.isCancel(thrown)) {
                     console.log('Request canceled', thrown.message);
@@ -305,7 +256,6 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                             svg={svgRef}
                             aggregatedBy={aggregatedBy}
                             valueToVisualize={valueToVisualize}
-                            yMax={yMax}
                             // selectedVal={selectedBar}
                             chartId={chartId}
                             // stripPlotMode={stripPlotMode}

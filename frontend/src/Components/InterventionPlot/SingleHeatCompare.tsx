@@ -66,6 +66,9 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                                 isselected={isSelected}
                                 isfiltered={isFiltered}
                                 onClick={(e) => {
+
+                                    //TODO combine these to actions together so that provenance only logs one step
+                                    actions.updateBrushPatientGroup(dataPoint.preCountDict[point], e.shiftKey ? "ADD" : "REPLACE")
                                     actions.selectSet(
                                         {
                                             setName: aggregatedBy,
@@ -88,6 +91,7 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                                 isselected={isSelected}
                                 isfiltered={isFiltered}
                                 onClick={(e) => {
+                                    actions.updateBrushPatientGroup(dataPoint.preCountDict[point], e.shiftKey ? "ADD" : "REPLACE")
                                     actions.selectSet(
                                         {
                                             setName: aggregatedBy,
