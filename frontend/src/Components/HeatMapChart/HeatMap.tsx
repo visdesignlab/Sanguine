@@ -43,14 +43,14 @@ interface OwnProps {
     dimensionHeight: number,
     data: HeatMapDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
-    yMax: number;
+
 
     extraPairDataSet: ExtraPairPoint[];
 }
 
 export type Props = OwnProps;
 
-const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, valueToVisualize, dimensionHeight, dimensionWidth, data, svg, yMax }: Props) => {
+const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, valueToVisualize, dimensionHeight, dimensionWidth, data, svg }: Props) => {
 
     const svgSelection = select(svg.current);
 

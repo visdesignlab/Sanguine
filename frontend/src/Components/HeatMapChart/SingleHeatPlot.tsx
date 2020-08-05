@@ -43,7 +43,7 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
     return (
         <>
             {valueScale().domain().map(point => {
-                const output = dataPoint.countDict[point] ? dataPoint.countDict[point] : 0
+                const output = dataPoint.countDict[point].length
                 const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum
                 // let content = output/caseCount
                 let colorFill = output === 0 ? "white" : interpolateReds(colorScale(output / caseCount))
@@ -65,6 +65,7 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
                                 isselected={isSelected}
                                 //   isfiltered={isFiltered}
                                 onClick={(e) => {
+                                    actions.updateBrushPatientGroup(dataPoint.countDict[point], e.shiftKey ? "ADD" : "REPLACE")
                                     actions.selectSet(
                                         {
                                             setName: aggregatedBy,

@@ -91,66 +91,69 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
         })
             .then(function (response) {
                 const transfusedDataResult = response.data;
-                transfusedDataResult.forEach((element: any) => {
-                    caseSetReturnedFromQuery.add(element.case_id)
-                })
-                hemoglobinDataSet.map((singleCase: any) => {
-                    let criteriaMet = true;
-                    if (currentOutputFilterSet.length > 0) {
-                        for (let selectSet of currentOutputFilterSet) {
-                            if (selectSet.setName === aggregatedBy) {
-                                if (!selectSet.setValues.includes(singleCase[aggregatedBy])) {
-                                    criteriaMet = false;
+                if (transfusedDataResult) {
+                    transfusedDataResult.forEach((element: any) => {
+                        caseSetReturnedFromQuery.add(element.case_id)
+                    })
+                    hemoglobinDataSet.map((singleCase: any) => {
+                        let criteriaMet = true;
+                        if (currentOutputFilterSet.length > 0) {
+                            for (let selectSet of currentOutputFilterSet) {
+                                if (selectSet.setName === aggregatedBy) {
+                                    if (!selectSet.setValues.includes(singleCase[aggregatedBy])) {
+                                        criteriaMet = false;
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    if (!caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
-                        criteriaMet = false;
-                    }
+                        if (!caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
+                            criteriaMet = false;
+                        }
 
-                    if (criteriaMet) {
-                        caseDictionary[singleCase.CASE_ID] = true;
-                        const caseOutcome = parseInt(singleCase[outcomeComparison]);
-                        if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
-                            temporaryDataHolder[singleCase[aggregatedBy]] = {
-                                aggregateAttribute: singleCase[aggregatedBy],
-                                preData: [],
-                                postData: [],
-                                prePatientIDList: new Set(),
-                                postPatienIDList: new Set(),
-                                preCaseIDList: new Set(),
-                                postCaseIDList: new Set()
+                        if (criteriaMet) {
+                            caseDictionary[singleCase.CASE_ID] = true;
+                            const caseOutcome = parseInt(singleCase[outcomeComparison]);
+                            if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
+                                temporaryDataHolder[singleCase[aggregatedBy]] = {
+                                    aggregateAttribute: singleCase[aggregatedBy],
+                                    preData: [],
+                                    postData: [],
+                                    prePatientIDList: new Set(),
+                                    postPatienIDList: new Set(),
+                                    preCaseIDList: new Set(),
+                                    postCaseIDList: new Set()
+                                }
+                            }
+                            if (caseOutcome > 0) {
+                                temporaryDataHolder[singleCase[aggregatedBy]].preData.push(singleCase)
+                                temporaryDataHolder[singleCase[aggregatedBy]].prePatientIDList.add(singleCase.PATIENT_ID)
+                                // temporaryDataHolder[singleCase[aggregatedBy]].preCaseIDList.add(singleCase.CASE_ID)
+                            } else {
+                                temporaryDataHolder[singleCase[aggregatedBy]].postData.push(singleCase)
+                                temporaryDataHolder[singleCase[aggregatedBy]].postPatienIDList.add(singleCase.PATIENT_ID)
+                                // temporaryDataHolder[singleCase[aggregatedBy]].postCaseIDList.add(singleCase.CASE_ID)
                             }
                         }
-                        if (caseOutcome > 0) {
-                            temporaryDataHolder[singleCase[aggregatedBy]].preData.push(singleCase)
-                            temporaryDataHolder[singleCase[aggregatedBy]].prePatientIDList.add(singleCase.PATIENT_ID)
-                            // temporaryDataHolder[singleCase[aggregatedBy]].preCaseIDList.add(singleCase.CASE_ID)
-                        } else {
-                            temporaryDataHolder[singleCase[aggregatedBy]].postData.push(singleCase)
-                            temporaryDataHolder[singleCase[aggregatedBy]].postPatienIDList.add(singleCase.PATIENT_ID)
-                            // temporaryDataHolder[singleCase[aggregatedBy]].postCaseIDList.add(singleCase.CASE_ID)
-                        }
-                    }
-                })
-                /**Construct the following data
-         * aggregateAttribute: singleCase[aggregatedBy],
-                        preData: [], --- positive
-                        postData: [], --- negative
-                        prePatientIDList: new Set(),
-                        postPatienIDList: new Set(),
-                        preCaseIDList: new Set(),
-                        postCaseIDList: new Set()
-         */
+                    })
+                    /**Construct the following data
+             * aggregateAttribute: singleCase[aggregatedBy],
+                            preData: [], --- positive
+                            postData: [], --- negative
+                            prePatientIDList: new Set(),
+                            postPatienIDList: new Set(),
+                            preCaseIDList: new Set(),
+                            postCaseIDList: new Set()
+             */
 
 
-                const [caseCount, outputData] = generateComparisonData(temporaryDataHolder, showZero, valueToVisualize)
-                stateUpdateWrapperUseJSON(data, outputData, setData);
-                stateUpdateWrapperUseJSON(caseIDDictionary, caseDictionary, setCaseIDList)
-                store!.totalAggregatedCaseCount = caseCount as number;
-            })
+                    const [caseCount, outputData] = generateComparisonData(temporaryDataHolder, showZero, valueToVisualize)
+                    stateUpdateWrapperUseJSON(data, outputData, setData);
+                    stateUpdateWrapperUseJSON(caseIDDictionary, caseDictionary, setCaseIDList)
+                    store!.totalAggregatedCaseCount = caseCount as number;
+                }
+            }
+            )
             .catch(function (thrown) {
                 if (axios.isCancel(thrown)) {
                     console.log('Request canceled', thrown.message);

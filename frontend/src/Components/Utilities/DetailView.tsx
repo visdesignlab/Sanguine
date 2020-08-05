@@ -5,7 +5,7 @@ import React, {
 } from "react";
 import { inject, observer } from "mobx-react";
 import Store from "../../Interfaces/Store";
-import { List, Container, Button } from "semantic-ui-react";
+import { List, Container, Button, Header } from "semantic-ui-react";
 import { HIPAA_Sensitive, AxisLabelDict, Title } from "../../PresetsProfile";
 import { actions } from "../..";
 import styled from "styled-components";
@@ -90,29 +90,61 @@ const DetailView: FC<Props> = ({ store }: Props) => {
 
 
     return (
-        <BoxContainer
-            style={{ visibility: individualInfo ? "visible" : "hidden" }}
-        >
-            {/* <div  */}
-            <Button floated="right" style={{ "margin-top": "10px" }} icon="close" circular compact size="mini" basic
-                onClick={() => {
-                    setCurrentSelectPatient(undefined)
-                    // actions.selectPatient(null) 
-                }}
-            />
-            {/* </div> */}
-            <List>
-                {generate_List_Items()}
-            </List>
-        </BoxContainer>
+        <Container>
+            <BoxContainer style={{ padding: "0.01em 0px", visibility: currentBrushedPatientGroup.length > 0 ? "visible" : "hidden", overflow: "overlay", height: "15vh" }}>
+                <List relaxed divided>
+                    <List.Item key="case-header"
+                        content={<Header style={{ padding: "0 5px" }}>Case Selected</Header>}
+                    >
+
+                    </List.Item>
+                    {currentBrushedPatientGroup.map(d => {
+                        return (
+                            <CaseItem key={d.CASE_ID}
+                                isSelected={currentSelectPatient && currentSelectPatient.CASE_ID === d.CASE_ID}
+                                onClick={() => { setCurrentSelectPatient(d) }}
+                            >
+                                <span style={{ padding: "0 5px" }}>{d.CASE_ID}</span>
+                            </CaseItem>)
+                    })}
+                </List>
+            </BoxContainer>
+            <BoxContainer
+                style={{ visibility: individualInfo ? "visible" : "hidden" }}
+            >
+                {/* <div  */}
+                <Button floated="right" style={{ "margin-top": "10px" }} icon="close" circular compact size="mini" basic
+                    onClick={() => {
+                        setCurrentSelectPatient(undefined)
+                        // actions.selectPatient(null) 
+                    }}
+                />
+                {/* </div> */}
+                <List>
+                    {generate_List_Items()}
+                </List>
+            </BoxContainer>
+        </Container>
     )
 }
 
 const BoxContainer = styled(Container)`
     border: 1px solid #ccc!important
-    padding: 0.01em 16px
-    border-radius: 16px
+    padding: 0.01em 5px
+    border-radius: 13px;
+    margin:1vh
 `
+
+interface CaseItemProps {
+    isSelected: boolean;
+}
+const CaseItem = styled(List.Item) <CaseItemProps>`
+  background:${props => props.isSelected ? "#ecbe8d" : 'none'};
+  cursor: pointer
+  &:hover{
+    background:#faeee1;
+  }
+`;
 
 export default inject("store")(observer(DetailView));
 

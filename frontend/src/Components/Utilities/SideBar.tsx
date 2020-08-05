@@ -152,7 +152,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         if (currentSelectPatientGroup.length > 0) {
             output.push(
                 <FilterListIT key={"Patient Circled"} style={{ textAlign: "left" }} onClick={() => { actions.updateSelectedPatientGroup([]) }} content={`${currentSelectPatientGroup.length} patients filtered`}>
-                    <List.Header>Patients Filtered</List.Header>
+                    <List.Header>Cases Filtered</List.Header>
                     <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
                     <List.Item>{currentSelectPatientGroup.length}</List.Item>
                 </FilterListIT>)
@@ -166,7 +166,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                 style={{ textAlign: "left" }}
                 key="Brushed Patients"
                 content={`${currentBrushedPatientGroup.length} patients selected`}>
-                <List.Header>Patients Selected</List.Header>
+                <List.Header>Cases Selected</List.Header>
                 <List.Item>{currentBrushedPatientGroup.length}</List.Item>
             </List.Item>)
         }
@@ -367,7 +367,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                         {itemSelected.map((listItem: any) => {
                             if (listItem.value) {
                                 return (
-                                    <SurgeryList key={listItem.value} isSelected={true} style={{ cursor: "pointer" }} onClick={() => { actions.proceduresSelectionChange(listItem.value) }}
+                                    <SurgeryList key={listItem.value} isSelected={true} onClick={() => { actions.proceduresSelectionChange(listItem.value) }}
                                         content={<ListSVG >
                                             <SurgeryForeignObj width={0.6 * width} >
                                                 <SurgeryDiv>
@@ -388,7 +388,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 
                             if (listItem.value) {
                                 return (
-                                    <SurgeryList key={listItem.value} isSelected={false} style={{ cursor: "pointer" }} content={
+                                    <SurgeryList key={listItem.value} isSelected={false} content={
                                         <ListSVG >
 
                                             <SurgeryForeignObj width={0.6 * width} >
@@ -451,6 +451,7 @@ interface SurgeryListProps {
 
 const SurgeryList = styled(List.Item) <SurgeryListProps>`
   background:${props => props.isSelected ? "#ecbe8d" : 'none'};
+  cursor: pointer
   &:hover{
     background:#faeee1;
   }
