@@ -45,6 +45,13 @@ It should show as `(bloodvis)[uID@bloodvis]$`.
 ![Server image](https://github.com/visdesignlab/bloodvis/blob/master/images/server.png)
 
 
+## Start Chrome on VM
+
+1. Launch a terminal
+2. Type `ssh bloodvis -Y` to go to the VM. Enter uID password when prompted.
+3. Type `google-chrome --use-gl=swiftshader` to start chrome through the virtual machine.
+
+
 ## Start the frontend
 
 1. Launch a terminal.
@@ -55,13 +62,7 @@ It should show as `(bloodvis)[uID@bloodvis]$`.
 6. Type `npm start`
     - _NOTE_: You may have to run `npm install` if `npm start` raises errors.
 7. Close the firefox because that is a really old version and our tool does not work properly on there. 
+8. Use chrome instead and go to `localhost:3000` to view the visualization. 
+9. To access the app, an account is required at login. Please contact us for access. 
 
-
-## Start Chrome on VM
-
-1. Launch a terminal
-2. Type `ssh bloodvis -Y` to go to the VM. Enter uID password when prompted.
-3. Type `google-chrome --use-gl=swiftshader` to view this in chrome.
-4. Go to `localhost:3000` to view the visualization. 
-5. To access the app, an account is required at login. Please contact us for access. 
 
