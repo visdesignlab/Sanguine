@@ -169,7 +169,9 @@ export const HIPAA_Sensitive = new Set([
     "Surgery End Time",
     "CASE_ID",
     "VISIT_ID",
-    "DATE", "MONTH"
+    "DATE",
+    "MONTH",
+    "PATIENT_ID"
 ])
 
 export const Accronym = {

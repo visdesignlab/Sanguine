@@ -32,20 +32,19 @@ const DetailView: FC<Props> = ({ store }: Props) => {
         async function fetchIndividualInformaiton() {
 
             if (currentSelectPatient) {
-                console.log(toJS(currentSelectPatient))
                 const fetchResult = await fetch(`http://localhost:8000/api/fetch_patient?patient_id=${currentSelectPatient.PATIENT_ID}`)
 
                 const fetchResultJson = await fetchResult.json();
-
                 const individualInfoJSON = fetchResultJson.result[0];
+
                 const fetchSurgery = await fetch(`http://localhost:8000/api/fetch_surgery?case_id=${currentSelectPatient.CASE_ID}`)
                 const fetchSurgeryJson = await fetchSurgery.json();
                 const surgeryInfo = fetchSurgeryJson.result[0];
 
                 let final_result = Object.assign(individualInfoJSON, surgeryInfo)
-                console.log(final_result)
+
                 final_result = Object.assign(final_result, currentSelectPatient)
-                console.log(final_result)
+
 
 
                 const outcomeAttributes = ["DEATH", "ECMO", "STROKE", "VENT"]

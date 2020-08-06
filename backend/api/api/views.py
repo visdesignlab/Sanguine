@@ -141,8 +141,6 @@ def fetch_surgery(request):
             SURG.{FIELDS_IN_USE.get('surgery_end_time')},
             SURG.SURGERY_ELAP,
             SURG.SURGERY_TYPE_DESC,
-            SURG.{FIELDS_IN_USE.get('surgeon_id')},
-            SURG.{FIELDS_IN_USE.get('anest_id')},
             SURG.PRIM_PROC_DESC,
             SURG.POSTOP_ICU_LOS
         FROM
