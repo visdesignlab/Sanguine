@@ -87,7 +87,7 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                                 isselected={isSelected}
                                 isfiltered={isFiltered}
                                 onClick={(e) => {
-                                    actions.updateBrushPatientGroup(dataPoint.preCountDict[point], e.shiftKey ? "ADD" : "REPLACE", {
+                                    actions.updateBrushPatientGroup(dataPoint.postCountDict[point], e.shiftKey ? "ADD" : "REPLACE", {
                                         setName: aggregatedBy,
                                         setValues: [dataPoint.aggregateAttribute],
                                         //   setPatientIds: [dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList)]
