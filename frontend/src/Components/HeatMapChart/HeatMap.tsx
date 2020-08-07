@@ -17,7 +17,7 @@ import {
     interpolateReds
 } from "d3";
 import {
-    HeatMapDataPoint
+    HeatMapDataPoint, ExtraPairPoint
 } from "../../Interfaces/ApplicationState";
 import {
     offset,
@@ -25,13 +25,13 @@ import {
     extraPairPadding,
     AxisLabelDict,
     BloodProductCap,
-    CELL_SAVER_TICKS,
-    stateUpdateWrapperUseJSON
+    CELL_SAVER_TICKS
 } from "../../PresetsProfile"
 
 import SingleHeatPlot from "./SingleHeatPlot";
 import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
 import { third_gray, greyScaleRange, highlight_orange } from "../../PresetsProfile";
+import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 interface OwnProps {
     aggregatedBy: string;
@@ -43,26 +43,25 @@ interface OwnProps {
     dimensionHeight: number,
     data: HeatMapDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
-    yMax: number;
 
-    extraPairDataSet: { name: string, data: any[], type: string, kdeMax?: number, medianSet?: any }[];
+
+    extraPairDataSet: ExtraPairPoint[];
 }
 
 export type Props = OwnProps;
 
-const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, valueToVisualize, dimensionHeight, dimensionWidth, data, svg, yMax }: Props) => {
+const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, valueToVisualize, dimensionHeight, dimensionWidth, data, svg }: Props) => {
 
     const svgSelection = select(svg.current);
 
     const {
         showZero,
-        currentSelectPatient,
+        //currentSelectPatient,
         currentOutputFilterSet,
         currentSelectSet
     } = store!;
 
     const currentOffset = offset.regular;
-
     const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
     const [xVals, setXVals] = useState<any[]>([]);
     const [caseMax, setCaseMax] = useState(0);
@@ -78,25 +77,18 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     }, [extraPairDataSet])
 
     useEffect(() => {
-        let newCaseMax = 0
-        // let zeroTransfusedMax = 0;
+        let newCaseMax = 0;
         const tempxVals = data
             .map((dp) => {
                 newCaseMax = newCaseMax > dp.caseCount ? newCaseMax : dp.caseCount
-                // zeroTransfusedMax = zeroTransfusedMax > dp.zeroCaseNum ? zeroTransfusedMax : dp.zeroCaseNum
                 return dp.aggregateAttribute
             })
             .sort();
-        // setXVals(tempxVals);
         stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
         setCaseMax(newCaseMax)
-        // console.log("sorted")
+        console.log(data)
     }, [data])
 
-    // const zeroGrayScale = useCallback(()=>{
-    //     const zeroGrayScale = scaleLinear().domain([0,zeroMax]).range([0.25,0.8])
-    //     return zeroGrayScale
-    // },[zeroMax])
 
     const valueScale = useCallback(() => {
         let outputRange
@@ -191,7 +183,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         if (currentSelectSet.length > 0) {
             //let selectSet: SelectSet;
             for (let selectSet of currentSelectSet) {
-                if (aggregatedBy === selectSet.set_name && selectSet.set_value.includes(d.aggregateAttribute))
+                if (aggregatedBy === selectSet.setName && selectSet.setValues.includes(d.aggregateAttribute))
                     return true;
             }
             return false;
@@ -204,18 +196,18 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
 
     const decideIfFiltered = (d: HeatMapDataPoint) => {
         for (let filterSet of currentOutputFilterSet) {
-            if (aggregatedBy === filterSet.set_name && filterSet.set_value.includes(d.aggregateAttribute))
+            if (aggregatedBy === filterSet.setName && filterSet.setValues.includes(d.aggregateAttribute))
                 return true
         }
         return false;
     }
-    const decideSinglePatientSelect = (d: HeatMapDataPoint) => {
-        if (currentSelectPatient) {
-            return currentSelectPatient[aggregatedBy] === d.aggregateAttribute;
-        } else {
-            return false;
-        }
-    }
+    // const decideSinglePatientSelect = (d: HeatMapDataPoint) => {
+    //     if (currentSelectPatient) {
+    //         return currentSelectPatient[aggregatedBy] === d.aggregateAttribute;
+    //     } else {
+    //         return false;
+    //     }
+    // }
 
 
     const outputSinglePlotElement = (dataPoint: HeatMapDataPoint) => {
@@ -319,7 +311,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                             y={aggregationScale()(dataPoint.aggregateAttribute)}
                             width={35}
                             height={aggregationScale().bandwidth()}
-                            stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
+                            // stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
                             strokeWidth={2}
                         />,
                         <text

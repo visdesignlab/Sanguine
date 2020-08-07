@@ -117,16 +117,6 @@ There are several routes set up for accessing the patient and surgery data. Here
     curl '127.0.0.1:8000/api/fetch_patient?patient_id=68175619'
     ```
 
-TODO: This method may be used, Haihan will update when she decides to use or delete this endpoint.
-- Name: `/api/request_fetch_professional_set`
-  - Allowed Methods: `GET`
-  - Parameters: `None`
-  - Description: Base API endpoint. Returns text and a 200 to verify everything is working. Doesn't return data.
-  - Example:
-    ```
-    curl '127.0.0.1:8000/api/request_fetch_professional_set'
-    ```
-
 - Name: `/api/risk_score`
   - Allowed Methods: `GET`
   - Parameters:  

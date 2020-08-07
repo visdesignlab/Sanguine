@@ -1,5 +1,6 @@
 import styled from "styled-components"
 
+
 export const preop_color = "#209b58"
 export const postop_color = "#20639b"
 export const highlight_orange = "#d98532"
@@ -18,19 +19,21 @@ export const offset = {
 };
 
 export const extraPairOptions = [
-    { title: "Preop Hemoglobin", value: "Preop Hemo" },
-    { title: "Postop Hemoglobin", value: "Postop Hemo" },
+    { title: "Preop Hemoglobin", value: "Preop HGB" },
+    { title: "Postop Hemoglobin", value: "Postop HGB" },
     { title: "Total Transfusion", value: "Total Transfusion" },
     { title: "Per Case Transfusion", value: "Per Case" },
     { title: "Zero Transfusion Cases", value: "Zero Transfusion" },
     { title: "Risk Score", value: "RISK" },
     // { title: "Severity of Illness", value: "SOI" },
-    { title: "Mortality Rate", value: "Mortality" },
-    { title: "Ventilation Rate", value: "Vent" }
+    { title: "Mortality Rate", value: "Death" },
+    { title: "Ventilation Rate", value: "VENT" },
+    { title: "ECMO Rate", value: "ECMO" },
+    { title: "Stroke Rate", value: "STROKE" }
 ]
 
 //export const minimumOffset = 
-export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 30, Outcomes: 35 }
+export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 40, Outcomes: 40 }
 export const extraPairPadding = 5;
 export const minimumWidthScale = 18;
 
@@ -41,16 +44,15 @@ export const AxisLabelDict: any = {
     CRYO_UNITS: "Intraoperative Cryo Transfused",
     CELL_SAVER_ML: "Cell Salvage Volume (ml)",
     SURGEON_ID: "Surgeon ID",
-    ANESTHOLOGIST_ID: "Anesthologist ID",
+    ANESTHESIOLOGIST_ID: "Anesthesiologist ID",
     YEAR: "Year",
     QUARTER: "Quarter",
     MONTH: "Month",
-    HEMO_VALUE: "Hemoglobin Value",
-    PREOP_HEMO: "Preoperative Hemoglobin Value",
-    POSTOP_HEMO: "Postoperative Hemoglobin Value",
-    ROM: "Risk of Mortality",
-    SOI: "Severity of Illness",
-    Vent: "Ventilator Over 1440 min"
+    HGB_VALUE: "Hemoglobin Value",
+    PREOP_HGB: "Preoperative Hemoglobin Value",
+    POSTOP_HGB: "Postoperative Hemoglobin Value",
+    RISK: "DRG Weight",
+    VENT: "Ventilator Over 24hr"
 };
 
 export const BloodProductCap: any = {
@@ -68,13 +70,13 @@ export const presetOptions = [{ value: 1, key: 1, text: "Preset 1" }]
 
 export const scatterYOptions = [
     {
-        value: "PREOP_HEMO",
-        key: "PREOP_HEMO",
+        value: "PREOP_HGB",
+        key: "PREOP_HGB",
         text: "Preoperative Hemoglobin Value"
     },
     {
-        value: "POSTOP_HEMO",
-        key: "POSTOP_HEMO",
+        value: "POSTOP_HGB",
+        key: "POSTOP_HGB",
         text: "Postoperative Hemoglobin Value"
     }
 ]
@@ -82,16 +84,16 @@ export const scatterYOptions = [
 export const typeDiction = ["VIOLIN", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION"]
 
 export const dumbbellValueOptions = [
-    { value: "HEMO_VALUE", key: "HEMO_VALUE", text: "Hemoglobin Value" }
+    { value: "HGB_VALUE", key: "HGB_VALUE", text: "Hemoglobin Value" }
 ]
 
 export const dumbbellFacetOptions = [
     { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
     { value: "YEAR", key: "YEAR", text: "Year" },
     {
-        value: "ANESTHOLOGIST_ID",
-        key: "ANESTHOLOGIST_ID",
-        text: "Anesthologist ID"
+        value: "ANESTHESIOLOGIST_ID",
+        key: "ANESTHESIOLOGIST_ID",
+        text: "Anesthesiologist ID"
     },
     { value: "QUARTER", key: "QUARTER", text: "Quarter" },
     { value: "MONTH", key: "MONTH", text: "Month" }
@@ -101,15 +103,26 @@ export const barChartAggregationOptions = [
     { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
     { value: "YEAR", key: "YEAR", text: "Year" },
     {
-        value: "ANESTHOLOGIST_ID",
-        key: "ANESTHOLOGIST_ID",
-        text: "Anesthologist ID"
+        value: "ANESTHESIOLOGIST_ID",
+        key: "ANESTHESIOLOGIST_ID",
+        text: "Anesthesiologist ID"
     }
 ];
 
 export const interventionChartType = [
     { value: "HEATMAP", key: "HEATMAP", text: "Heat Map" },
-    { value: "VIOLIN", key: "VIOLIN", text: "Violin Plot" }
+    // { value: "VIOLIN", key: "VIOLIN", text: "Violin Plot" }
+]
+// VENT: number,
+//     DEATH: number,
+//         STROKE: number,
+//             ECMO: number
+export const OutcomeType = [
+
+    { value: "DEATH", key: "DEATH", text: "Death" },
+    { value: "VENT", key: "VENT", text: "Ventilator Over 24hr" },
+    { value: "STROKE", key: "STROKE", text: "Stroke" },
+    { value: "ECMO", key: "ECMO", text: "ECMO" },
 ]
 
 
@@ -153,7 +166,12 @@ export const HIPAA_Sensitive = new Set([
     "Date of Birth",
     "Surgery Date",
     "Surgery Start Time",
-    "Surgery End Time"
+    "Surgery End Time",
+    "CASE_ID",
+    "VISIT_ID",
+    "DATE",
+    "MONTH",
+    "PATIENT_ID"
 ])
 
 export const Accronym = {
@@ -166,14 +184,16 @@ export const Accronym = {
     EGD: "Esophagogastroduodenoscopy",
     VATS: "Video-assisted Thoracoscopic Surgery",
     TVR: "Tricuspid Valve Repair",
-    PVR: "Proliferative Vitreoretinopathy"
+    PVR: "Proliferative Vitreoretinopathy",
+    VENT: "Over 24 Hours Ventilator Usage",
+    RISK: "Diagnosis-related Group Weight",
+    "Zero %": "Zero Transfusion",
+    DEATH: "Death",
+    STROKE: "Stroke",
+
 }
 
-export const stateUpdateWrapperUseJSON = (oldState: any, newState: any, updateFunction: (value: React.SetStateAction<any>) => void) => {
-    if (JSON.stringify(oldState) !== JSON.stringify(newState)) {
-        updateFunction(newState)
-    }
-}
+
 
 export const ChartSVG = styled.svg`
   height: 80%;

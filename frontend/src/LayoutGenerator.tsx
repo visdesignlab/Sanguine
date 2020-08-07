@@ -5,7 +5,7 @@ import { inject, observer } from "mobx-react";
 import { Tab, Grid, GridColumn, Button } from "semantic-ui-react";
 import { actions, provenance } from ".";
 import DetailView from "./Components/Utilities/DetailView";
-import LineUpWrapper from "./Components/LineUpWrapper";
+import LineUpWrapper from "./LineUpWrapper";
 //import PatientComparisonWrapper from "./Components/PatientComparisonWrapper";
 import Store from "./Interfaces/Store";
 import { LayoutElement } from "./Interfaces/ApplicationState";
@@ -14,10 +14,12 @@ import BarChartVisualization from "./Components/BarChart/BarChartVisualization";
 import ScatterPlotVisualization from "./Components/Scatterplot/ScatterPlotVisualization";
 import HeatMapVisualization from "./Components/HeatMapChart/HeatMapVisualization";
 import InterventionPlotVisualization from "./Components/InterventionPlot/InterventionPlotVisualization";
+
 import { Responsive } from "react-grid-layout";
 import 'react-grid-layout/css/styles.css'
+import ComparisonPlotVisualization from "./Components/ComparisonPlot/ComparisonPlotVisualization";
 interface OwnProps {
-    hemoData: any;
+    hemoData: any[];
     store?: Store
 }
 
@@ -28,11 +30,11 @@ export type Props = OwnProps;
 
 
 const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
-    const { layoutArray, filterSelection } = store!
+    const { layoutArray, proceduresSelection } = store!
 
     const createElement = (layout: LayoutElement, index: number) => {
         console.log(provenance.current().state)
-        switch (layout.plot_type) {
+        switch (layout.plotType) {
             case "DUMBBELL":
                 return (
                     <div key={layout.i} className={"parent-node" + layout.i}>
@@ -90,7 +92,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                         // class_name={"parent-node" + layoutE.i}
                         chartId={layout.i}
                         chartIndex={index}
-                        //  filterSelection={filterSelection}
+                        //  proceduresSelection={proceduresSelection}
                         notation={layout.notation}
                     />
                 </div>);
@@ -130,9 +132,28 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                         chartId={layout.i}
                         chartIndex={index}
                         interventionDate={layout.interventionDate!}
-                        interventionPlotType={layout.interventionType!}
+                        interventionPlotType={layout.comparisonChartType!}
                         notation={layout.notation} />
                 </div>);
+            case "COMPARISON":
+                return (<div key={layout.i}
+                    className={"parent-node" + layout.i}>
+                    <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
+                    <ComparisonPlotVisualization
+                        aggregatedBy={layout.aggregatedBy}
+                        chartId={layout.i}
+                        chartIndex={index}
+                        hemoglobinDataSet={hemoData}
+                        extraPair={layout.extraPair}
+                        notation={layout.notation}
+                        valueToVisualize={layout.valueToVisualize}
+                        outcomeComparison={layout.outcomeComparison!}
+                        w={layout.w}
+                    />
+                </div>
+
+
+                )
 
         }
 

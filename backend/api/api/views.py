@@ -141,8 +141,6 @@ def fetch_surgery(request):
             SURG.{FIELDS_IN_USE.get('surgery_end_time')},
             SURG.SURGERY_ELAP,
             SURG.SURGERY_TYPE_DESC,
-            SURG.{FIELDS_IN_USE.get('surgeon_id')},
-            SURG.{FIELDS_IN_USE.get('anest_id')},
             SURG.PRIM_PROC_DESC,
             SURG.POSTOP_ICU_LOS
         FROM
@@ -682,16 +680,17 @@ def hemoglobin(request):
         """
 
         result = execute_sql(command)
-        items = [{"CASE_ID": row[1],
-                  "VISIT_ID": row[2],
-                  "YEAR":row[4],
-                  "QUARTER": str(row[4])[2:]+"/"+str(output_quarter(row[5])),
-                  "MONTH":str(row[4])[2:]+"/"+str(row[5]),
-                  "DATE":row[3],
-                  "HEMO": [row[-3], row[-1]],
-                  "SURGEON_ID": row[10],
-                  "ANESTHOLOGIST_ID":row[11],
-                  "PATIENT_ID":row[0]} for row in result]
+
+        items = [{"CASE_ID":row[1],
+                "VISIT_ID": row[2],
+                "YEAR":row[4],
+                "QUARTER": str(row[4])[2:]+"/"+str(output_quarter(row[5])),
+                "MONTH":str(row[4])[2:]+"/"+str(row[5]),
+                "DATE":row[3],
+                "HEMO": [row[-3], row[-1]],
+                "SURGEON_ID": row[10],
+                "ANESTHESIOLOGIST_ID":row[11],
+                "PATIENT_ID":row[0]} for row in result]
 
         return JsonResponse({"result": items})
     else:
