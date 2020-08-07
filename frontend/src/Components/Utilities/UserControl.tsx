@@ -49,7 +49,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     new ClipboardJS(`.copy-clipboard`);
 
     async function fetchSavedStates() {
-        const res = await fetch(`http://localhost:8000/api/state`)
+        const res = await fetch(`${process.env.REACT_APP_QUERY_URL}state`)
         const result = await res.json()
         if (result) {
             const resultList = result.map((d: any[]) => d[1])
@@ -62,7 +62,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     }, [])
 
     const loadSavedState = async (name: string) => {
-        const res = await (fetch(`http://localhost:8000/api/state?name=${name}`))
+        const res = await (fetch(`${process.env.REACT_APP_QUERY_URL}state?name=${name}`))
         const result = await res.json()
         provenance.importState(result.definition)
 
@@ -230,7 +230,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                     <List.Content floated="right">
                                         <Button onClick={() => {
                                             const csrftoken = simulateAPIClick()
-                                            fetch(`http://localhost:8000/api/state`, {
+                                            fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
                                                 method: 'DELETE',
                                                 credentials: "include",
                                                 headers: {
@@ -272,7 +272,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
                             const csrftoken = simulateAPIClick()
                             if (listOfSavedState.includes(stateName)) {
-                                fetch(`http://localhost:8000/api/state`, {
+                                fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
                                     method: `PUT`,
                                     credentials: "include",
                                     headers: {
@@ -285,7 +285,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                     body: JSON.stringify({ old_name: stateName, new_name: stateName, new_definition: provenance.exportState(false) })
                                 })
                             } else {
-                                fetch(`http://localhost:8000/api/state`, {
+                                fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
                                     method: 'POST',
                                     credentials: "include",
                                     headers: {

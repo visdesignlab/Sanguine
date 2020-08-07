@@ -68,7 +68,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     }, [maxCaseCount, width])
 
     async function fetchProcedureList() {
-        const res = await fetch("http://localhost:8000/api/get_attributes");
+        const res = await fetch(`${process.env.REACT_APP_QUERY_URL}get_attributes`);
         const data = await res.json();
         const result = data.result;
 

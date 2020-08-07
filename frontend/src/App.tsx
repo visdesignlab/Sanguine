@@ -25,18 +25,18 @@ const App: FC<Props> = ({ store }: Props) => {
 
 
     async function cacheHemoData() {
-        const resHemo = await fetch("http://localhost:8000/api/hemoglobin");
+        const resHemo = await fetch(`${process.env.REACT_APP_QUERY_URL}hemoglobin`);
         const dataHemo = await resHemo.json();
         const resultHemo = dataHemo.result;
-        const resTrans = await fetch(`http://localhost:8000/api/request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(2014, 0, 1)), timeFormat("%d-%b-%Y")(new Date(2019, 11, 31))]}`)
+        const resTrans = await fetch(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(2014, 0, 1)), timeFormat("%d-%b-%Y")(new Date(2019, 11, 31))]}`)
         const dataTrans = await resTrans.json();
-        const resRisk = await fetch(`http://localhost:8000/api/risk_score`);
+        const resRisk = await fetch(`${process.env.REACT_APP_QUERY_URL}risk_score`);
         const dataRisk = await resRisk.json();
         let riskOutcomeDict: any = {}
         for (let obj of dataRisk) {
             riskOutcomeDict[obj.visit_no] = { DRG_WEIGHT: obj.apr_drg_weight }
         }
-        const resOutcome = await fetch(`http://localhost:8000/api/patient_outcomes`);
+        const resOutcome = await fetch(`${process.env.REACT_APP_QUERY_URL}patient_outcomes`);
         const dataOutcome = await resOutcome.json();
         // console.log(dataOutcome)
         for (let obj of dataOutcome) {
