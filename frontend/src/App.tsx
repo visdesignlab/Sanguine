@@ -2,7 +2,7 @@ import React, { FC, useEffect, useState } from 'react';
 import Store from './Interfaces/Store'
 import { inject, observer } from 'mobx-react';
 import Dashboard from './Dashboard';
-import { BrowserRouter, Switch, Route } from 'react-router-dom'
+import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
 import { timeFormat, timeParse, select } from 'd3';
 
 import Login from './LogIn'
@@ -112,12 +112,15 @@ const App: FC<Props> = ({ store }: Props) => {
                 <Route exact path='/dashboard' render={() => {
                     // if (isLoggedIn) return <Dashboard />
                     // else return <Redirect to="/" />
-                    if (previewMode) {
-                        return <Preview hemoData={hemoData} />
+                    if (isLoggedIn) {
+                        if (previewMode) {
+                            return <Preview hemoData={hemoData} />
+                        }
+                        else {
+                            return <Dashboard hemoData={hemoData} />
+                        }
                     }
-                    else {
-                        return <Dashboard hemoData={hemoData} />
-                    }
+                    else return <Redirect to="/" />
                 }} />
                 <Route path='/' component={Login} />
 
