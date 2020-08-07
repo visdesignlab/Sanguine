@@ -32,12 +32,12 @@ const DetailView: FC<Props> = ({ store }: Props) => {
         async function fetchIndividualInformaiton() {
 
             if (currentSelectPatient) {
-                const fetchResult = await fetch(`http://localhost:8000/api/fetch_patient?patient_id=${currentSelectPatient.PATIENT_ID}`)
+                const fetchResult = await fetch(`${process.env.REACT_APP_QUERY_URL}fetch_patient?patient_id=${currentSelectPatient.PATIENT_ID}`)
 
                 const fetchResultJson = await fetchResult.json();
                 const individualInfoJSON = fetchResultJson.result[0];
 
-                const fetchSurgery = await fetch(`http://localhost:8000/api/fetch_surgery?case_id=${currentSelectPatient.CASE_ID}`)
+                const fetchSurgery = await fetch(`${process.env.REACT_APP_QUERY_URL}fetch_surgery?case_id=${currentSelectPatient.CASE_ID}`)
                 const fetchSurgeryJson = await fetchSurgery.json();
                 const surgeryInfo = fetchSurgeryJson.result[0];
 

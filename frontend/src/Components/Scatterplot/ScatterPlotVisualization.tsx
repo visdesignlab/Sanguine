@@ -74,7 +74,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
         setPreviousCancelToken(call);
-        axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=${xAxis}&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroupIDs.toString()}`, {
+        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=${xAxis}&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroupIDs.toString()}`, {
             cancelToken: call.token
         })
             .then(function (response) {
