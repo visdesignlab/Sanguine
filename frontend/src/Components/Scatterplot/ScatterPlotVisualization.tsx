@@ -8,11 +8,12 @@ import React, {
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
-import { stateUpdateWrapperUseJSON, scatterYOptions, barChartValuesOptions, ChartSVG, offset } from "../../PresetsProfile"
+import { ScatterDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
+import { scatterYOptions, barChartValuesOptions, ChartSVG, offset, OutcomeType } from "../../PresetsProfile"
 import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import ScatterPlotChart from "./ScatterPlot";
 import axios from "axios";
+import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 
 interface OwnProps {
@@ -22,7 +23,7 @@ interface OwnProps {
     store?: Store;
     chartIndex: number;
     notation: string;
-    hemoglobinDataSet: any;
+    hemoglobinDataSet: SingleCasePoint[];
     w: number;
     // aggregatedOption?: string;
 }
@@ -32,17 +33,17 @@ export type Props = OwnProps;
 const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinDataSet, yAxis, xAxis, chartIndex, store }: Props) => {
     const {
         layoutArray,
-        filterSelection,
+        proceduresSelection,
         currentOutputFilterSet,
         //  perCaseSelected,
         dateRange,
         previewMode,
         showZero,
-        currentSelectPatientGroup,
+        currentSelectPatientGroupIDs,
         //actualYearRange,
 
     } = store!;
-    const currentOffset = offset.regular;
+
     const svgRef = useRef<SVGSVGElement>(null);
     const [width, setWidth] = useState(w === 1 ? 542.28 : 1146.97);
     const [height, setHeight] = useState(0);
@@ -50,11 +51,15 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
     const [xMin, setXMin] = useState(0);
     const [xMax, setXMax] = useState(0);
     const [yMin, setYMin] = useState(0);
-
     const [yMax, setYMax] = useState(0);
+
+    const [highlightOption, setHighlightOption] = useState("")
+
     const [openNotationModal, setOpenNotationModal] = useState(false)
     const [notationInput, setNotationInput] = useState(notation)
+
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
+
     useLayoutEffect(() => {
         if (svgRef.current) {
             // setWidth(svgRef.current.clientWidth);
@@ -64,11 +69,12 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
     }, [layoutArray[chartIndex]]);
 
     function fetchChartData() {
+
         let transfused_dict = {} as any;
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
         setPreviousCancelToken(call);
-        axios.get(`http://localhost:8000/api/request_transfused_units?transfusion_type=${xAxis}&date_range=${dateRange}&filter_selection=${filterSelection.toString()}&case_ids=${currentSelectPatientGroup.toString()}`, {
+        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=${xAxis}&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroupIDs.toString()}`, {
             cancelToken: call.token
         })
             .then(function (response) {
@@ -83,9 +89,9 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                 let tempXMin = Infinity;
                 let tempXMax = 0;
                 if (hemoglobinDataSet) {
-                    let cast_data: ScatterDataPoint[] = hemoglobinDataSet.map((ob: any) => {
+                    let castData: any[] = hemoglobinDataSet.map((ob: SingleCasePoint) => {
 
-                        const yValue = yAxis === "PREOP_HEMO" ? +ob.HEMO[0] : +ob.HEMO[1]
+                        const yValue = yAxis === "PREOP_HGB" ? ob.PREOP_HGB : ob.POSTOP_HGB
                         let xValue
                         if (transfused_dict[ob.CASE_ID]) {
                             xValue = transfused_dict[ob.CASE_ID].transfused;
@@ -102,7 +108,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                             let criteriaMet = true;
                             if (currentOutputFilterSet.length > 0) {
                                 for (let selectSet of currentOutputFilterSet) {
-                                    if (!selectSet.set_value.includes(ob[selectSet.set_name])) {
+                                    if (!selectSet.setValues.includes((ob[selectSet.setName]) as any)) {
                                         criteriaMet = false;
                                     }
                                 }
@@ -117,15 +123,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                                     xVal: xValue,
                                     yVal: yValue,
                                     randomFactor: Math.random(),
-                                    case: {
-                                        visitNum: ob.VISIT_ID,
-                                        caseId: ob.CASE_ID,
-                                        YEAR: ob.YEAR,
-                                        ANESTHOLOGIST_ID: ob.ANESTHOLOGIST_ID,
-                                        SURGEON_ID: ob.SURGEON_ID,
-                                        patientID: ob.PATIENT_ID,
-                                        DATE: ob.DATE
-                                    }
+                                    case: ob
                                 };
                                 //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
                                 return new_ob;
@@ -134,11 +132,12 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                         }
                     });
 
-                    cast_data = cast_data.filter((d: any) => d)
+                    castData = castData.filter((d: any) => d)
 
-                    //    actions.updateCaseCount("INDIVIDUAL", cast_data.length)
-                    //console.log(aggregatedOption)
-                    stateUpdateWrapperUseJSON(data, cast_data, setData);
+                    //    actions.updateCaseCount("INDIVIDUAL", castData.length)
+
+                    store!.totalIndividualCaseCount = castData.length
+                    stateUpdateWrapperUseJSON(data, castData, setData);
                     setXMax(tempXMax);
                     setXMin(tempXMin);
                     setYMax(tempYMax);
@@ -154,14 +153,16 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
             });
     }
 
-    //TODO reorganize this, seperate out data request and the randomization process. 
+
 
     useEffect(() => {
         if (previousCancelToken) {
             previousCancelToken.cancel("cancel the call?")
         }
         fetchChartData();
-    }, [dateRange, filterSelection, hemoglobinDataSet, showZero, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroup]);
+    }, [dateRange, proceduresSelection, hemoglobinDataSet, showZero, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroupIDs]);
+
+
 
     const changeYAxis = (e: any, value: any) => {
         actions.changeChart(xAxis, value.value, chartId, "SCATTER")
@@ -170,6 +171,10 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
         actions.changeChart(value.value, yAxis, chartId, "SCATTER")
     }
 
+    // const changeHighlightOption = (value: any) => {
+    //     console.log(value)
+    // }
+
     return (
 
         <Grid style={{ height: "100%" }}>
@@ -177,12 +182,26 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                 <Grid.Column verticalAlign="middle" width={1} style={{ display: previewMode ? "none" : null }}>
                     <Menu icon vertical compact size="mini" borderless secondary widths={2}>
 
-                        <Menu.Item header>
-                            <Dropdown selectOnBlur={false} pointing basic item icon="settings" compact >
+                        <Menu.Item fitted>
+                            <Dropdown selectOnBlur={false} basic item icon="settings" compact >
                                 <Dropdown.Menu>
                                     <Dropdown text="Change X-Axis" pointing basic item compact options={barChartValuesOptions} onChange={changeXAxis} />
                                     <Dropdown text="Change Y-Axis" pointing basic item compact options={scatterYOptions} onChange={changeYAxis} />
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        </Menu.Item>
 
+                        <Menu.Item fitted>
+                            <Dropdown selectOnBlur={false} basic item compact icon="lightbulb outline">
+                                <Dropdown.Menu>
+                                    <Dropdown.Item onClick={() => { setHighlightOption("") }}>Clear</Dropdown.Item>
+                                    {OutcomeType.map((d) => {
+                                        return (
+                                            <Dropdown.Item onClick={() => { setHighlightOption(d.value) }}>
+                                                {d.text}
+                                            </Dropdown.Item>
+                                        )
+                                    })}
 
                                 </Dropdown.Menu>
                             </Dropdown>
@@ -219,8 +238,6 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                         </Modal>
 
 
-
-
                     </Menu>
                 </Grid.Column>
                 <Grid.Column width={15}  >
@@ -246,7 +263,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                             xMin={xMin}
                             yMax={yMax}
                             yMin={yMin}
-
+                            highlightOption={highlightOption}
                         />
                     </ChartSVG>
 

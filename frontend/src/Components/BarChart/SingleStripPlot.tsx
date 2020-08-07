@@ -44,8 +44,8 @@ const SingleStripPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggr
     //     d={path}
     //     onClick={() => {
     //       actions.selectSet({
-    //         set_name: aggregatedBy,
-    //         set_value: dataPoint.aggregateAttribute
+    //         setName: aggregatedBy,
+    //         setValues: dataPoint.aggregateAttribute
     //       });
     //     }}
     //     isselected={isSelected}

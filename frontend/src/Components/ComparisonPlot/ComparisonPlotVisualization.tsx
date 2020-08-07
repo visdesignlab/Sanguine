@@ -1,15 +1,17 @@
-import React, { FC, useEffect, useRef, useLayoutEffect, useState } from "react";
 import Store from "../../Interfaces/Store";
+import { FC, useRef, useState, useEffect, useLayoutEffect } from "react";
+import { ExtraPairInterventionPoint, ComparisonDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
+import React from "react";
 import { inject, observer } from "mobx-react";
-import { actions } from "../..";
-import { ComparisonDataPoint, ExtraPairInterventionPoint, SingleCasePoint } from '../../Interfaces/ApplicationState'
-import { BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions, ChartSVG } from "../../PresetsProfile"
-import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
-import { create as createpd } from "pdfast";
-import { sum, median, timeFormat, mean } from "d3";
-import InterventionPlot from "./ComparisonPlot";
+import { BloodProductCap, extraPairOptions, barChartAggregationOptions, barChartValuesOptions, interventionChartType, ChartSVG } from "../../PresetsProfile";
 import axios from 'axios';
+import { sum, median } from "d3";
+import { create as createpd } from "pdfast";
 import { stateUpdateWrapperUseJSON, generateExtrapairPlotDataWithIntervention, generateComparisonData } from "../../HelperFunctions";
+import { actions } from "../..";
+import { Grid, Menu, Dropdown, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
+import InterventionPlot from "../InterventionPlot/ComparisonPlot";
+
 
 interface OwnProps {
     aggregatedBy: string;
@@ -17,8 +19,7 @@ interface OwnProps {
     chartId: string;
     store?: Store;
     chartIndex: number;
-    interventionDate: number;
-    interventionPlotType: string;
+    outcomeComparison: string;
     extraPair?: string;
     hemoglobinDataSet: any;
     notation: string;
@@ -27,7 +28,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, extraPair, aggregatedBy, valueToVisualize, chartId, store, chartIndex, interventionDate, interventionPlotType }: Props) => {
+const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation, hemoglobinDataSet, extraPair, aggregatedBy, valueToVisualize, chartId, store, chartIndex }: Props) => {
     const {
         layoutArray,
         proceduresSelection,
@@ -35,7 +36,6 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
         previewMode,
         currentSelectPatientGroupIDs,
         currentOutputFilterSet,
-        rawDateRange,
         dateRange
     } = store!;
 
@@ -44,8 +44,6 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
     const [extraPairData, setExtraPairData] = useState<ExtraPairInterventionPoint[]>([])
 
     const [data, setData] = useState<ComparisonDataPoint[]>([]);
-
-
 
     // const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
 
@@ -59,9 +57,10 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
     const [notationInput, setNotationInput] = useState(notation)
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
-
     useEffect(() => {
-        if (extraPair) { stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray) }
+        if (extraPair) {
+            stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray)
+        }
     }, [extraPair])
 
     useLayoutEffect(() => {
@@ -76,44 +75,24 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
         }
     }, [layoutArray[chartIndex]]);
 
-    useEffect(() => {
-        if (new Date(interventionDate).getTime() < new Date(rawDateRange[0]).getTime() || new Date(interventionDate).getTime() > new Date(rawDateRange[1]).getTime()) {
-            actions.removeChart(chartId)
-        }
-    }, [rawDateRange])
-
-
     function fetchChartData() {
-        let temporaryDataHolder: any = {};
+        let temporaryDataHolder: any = {}
         let caseDictionary = {} as any;
-        let preCaseSetReturnedFromQuery = new Set();
-        let postCaseSetReturnedFromQuery = new Set();
+
+        let caseSetReturnedFromQuery = new Set();
+
 
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
         setPreviousCancelToken(call);
-        const getPreInt = () => {
-            return axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[dateRange[0], timeFormat("%d-%b-%Y")(new Date(interventionDate))]}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroupIDs.toString()}`, {
-                cancelToken: call.token
-            })
-        }
-        const getPostInt = () => {
-            return axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(interventionDate)), dateRange[1]]}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroupIDs.toString()}`, {
-                cancelToken: call.token
-            })
-        }
-
-        Promise.all([getPreInt(), getPostInt()])
-            .then(function (results) {
-                const preInterventiondataResult = results[0].data;
-                const postInterventionResult = results[1].data;
-                let caseCount = 0;
-                if (preInterventiondataResult && postInterventionResult) {
-                    preInterventiondataResult.forEach((element: any) => {
-                        preCaseSetReturnedFromQuery.add(element.case_id);
-                    })
-                    postInterventionResult.forEach((element: any) => {
-                        postCaseSetReturnedFromQuery.add(element.case_id);
+        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroupIDs.toString()}`, {
+            cancelToken: call.token
+        })
+            .then(function (response) {
+                const transfusedDataResult = response.data;
+                if (transfusedDataResult) {
+                    transfusedDataResult.forEach((element: any) => {
+                        caseSetReturnedFromQuery.add(element.case_id)
                     })
                     hemoglobinDataSet.map((singleCase: any) => {
                         let criteriaMet = true;
@@ -126,66 +105,76 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                                 }
                             }
                         }
-                        if (preCaseSetReturnedFromQuery.has(singleCase.CASE_ID) && criteriaMet) {
-                            caseDictionary[singleCase.CASE_ID] = true;
-                            if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
-                                temporaryDataHolder[singleCase[aggregatedBy]] = {
-                                    aggregateAttribute: singleCase[aggregatedBy],
-                                    preData: [],
-                                    postData: [],
-                                    prePatientIDList: new Set(),
-                                    postPatienIDList: new Set(),
-                                    preCaseIDList: new Set(),
-                                    postCaseIDList: new Set()
-                                }
-                            }
-                            temporaryDataHolder[singleCase[aggregatedBy]].preData.push(singleCase)
-                            temporaryDataHolder[singleCase[aggregatedBy]].prePatientIDList.add(singleCase.PATIENT_ID)
-                        } else if (postCaseSetReturnedFromQuery.has(singleCase.CASE_ID) && criteriaMet) {
-                            caseDictionary[singleCase.CASE_ID] = true;
-                            if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
-                                temporaryDataHolder[singleCase[aggregatedBy]] = {
-                                    aggregateAttribute: singleCase[aggregatedBy],
-                                    preData: [],
-                                    postData: [],
-                                    prePatientIDList: new Set(),
-                                    postPatienIDList: new Set(),
-                                    preCaseIDList: new Set(),
-                                    postCaseIDList: new Set()
-                                }
-                            }
-                            temporaryDataHolder[singleCase[aggregatedBy]].postData.push(singleCase)
-                            temporaryDataHolder[singleCase[aggregatedBy]].postPatienIDList.add(singleCase.PATIENT_ID)
+
+                        if (!caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
+                            criteriaMet = false;
                         }
 
-
+                        if (criteriaMet) {
+                            caseDictionary[singleCase.CASE_ID] = true;
+                            const caseOutcome = parseInt(singleCase[outcomeComparison]);
+                            if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
+                                temporaryDataHolder[singleCase[aggregatedBy]] = {
+                                    aggregateAttribute: singleCase[aggregatedBy],
+                                    preData: [],
+                                    postData: [],
+                                    prePatientIDList: new Set(),
+                                    postPatienIDList: new Set(),
+                                    preCaseIDList: new Set(),
+                                    postCaseIDList: new Set()
+                                }
+                            }
+                            if (caseOutcome > 0) {
+                                temporaryDataHolder[singleCase[aggregatedBy]].preData.push(singleCase)
+                                temporaryDataHolder[singleCase[aggregatedBy]].prePatientIDList.add(singleCase.PATIENT_ID)
+                                // temporaryDataHolder[singleCase[aggregatedBy]].preCaseIDList.add(singleCase.CASE_ID)
+                            } else {
+                                temporaryDataHolder[singleCase[aggregatedBy]].postData.push(singleCase)
+                                temporaryDataHolder[singleCase[aggregatedBy]].postPatienIDList.add(singleCase.PATIENT_ID)
+                                // temporaryDataHolder[singleCase[aggregatedBy]].postCaseIDList.add(singleCase.CASE_ID)
+                            }
+                        }
                     })
+                    /**Construct the following data
+             * aggregateAttribute: singleCase[aggregatedBy],
+                            preData: [], --- positive
+                            postData: [], --- negative
+                            prePatientIDList: new Set(),
+                            postPatienIDList: new Set(),
+                            preCaseIDList: new Set(),
+                            postCaseIDList: new Set()
+             */
+
+
                     const [caseCount, outputData] = generateComparisonData(temporaryDataHolder, showZero, valueToVisualize)
                     stateUpdateWrapperUseJSON(data, outputData, setData);
                     stateUpdateWrapperUseJSON(caseIDDictionary, caseDictionary, setCaseIDList)
                     store!.totalAggregatedCaseCount = caseCount as number;
                 }
-            }).catch(function (thrown) {
+            }
+            )
+            .catch(function (thrown) {
                 if (axios.isCancel(thrown)) {
                     console.log('Request canceled', thrown.message);
                 } else {
                     // handle error
                 }
             });
+
     }
 
     useEffect(() => {
         if (previousCancelToken) {
-            previousCancelToken.cancel("cancel the call.")
+            previousCancelToken.cancel("cancel the call?")
         }
         fetchChartData();
-    }, [proceduresSelection, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet]);
+    }, [proceduresSelection, hemoglobinDataSet, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroupIDs]);
 
 
     useEffect(() => {
         const newExtraPairData = generateExtrapairPlotDataWithIntervention(caseIDDictionary, aggregatedBy, hemoglobinDataSet, extraPairArray, data)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
-        console.log(extraPairData)
+
     }, [extraPairArray, data, hemoglobinDataSet, caseIDDictionary]);
 
     const changeAggregation = (e: any, value: any) => {
@@ -198,6 +187,9 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
     const changeType = (e: any, value: any) => {
         actions.changeChart(aggregatedBy, valueToVisualize, chartId, "INTERVENTION", value.value)
     }
+
+
+
 
     return (
 
@@ -230,7 +222,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                                 <Dropdown.Menu>
                                     <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
                                     <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue}></Dropdown>
-                                    {/* <Dropdown text="Change Type" pointing basic item compact options={interventionChartType} onChange={changeType}></Dropdown> */}
+                                    <Dropdown text="Change Type" pointing basic item compact options={interventionChartType} onChange={changeType}></Dropdown>
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item>
@@ -272,7 +264,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                     <ChartSVG ref={svgRef}>
 
                         <InterventionPlot
-                            interventionDate={interventionDate}
+
                             chartId={chartId}
                             //dimensionWhole={dimensions}
                             dimensionWidth={width}
@@ -281,8 +273,8 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                             svg={svgRef}
                             aggregatedBy={aggregatedBy}
                             valueToVisualize={valueToVisualize}
-
-                            plotType={interventionPlotType}
+                            plotType="HEATMAP"
+                            outcomeComparison={outcomeComparison}
                             extraPairDataSet={extraPairData}
                         />
                     </ChartSVG>
@@ -292,10 +284,6 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                 </Grid.Column>
 
             </Grid.Row>
-        </Grid>
-    );
+        </Grid>)
 }
-
-
-export default inject("store")(observer(InterventionPlotVisualization));
-
+export default inject("store")(observer(ComparisonPlotVisualization));
