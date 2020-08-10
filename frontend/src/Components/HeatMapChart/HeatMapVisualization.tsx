@@ -33,6 +33,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         dateRange,
         currentSelectPatientGroupIDs,
         previewMode,
+        outcomesSelection,
         currentOutputFilterSet
     } = store!;
     const svgRef = useRef<SVGSVGElement>(null);
@@ -98,6 +99,22 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                         if (!caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
                             criteriaMet = false;
                         }
+
+                        // if (outcomesSelection.length > 0) {
+                        //     outcomesSelection.forEach((outcome) => {
+                        //         if (singleCase[outcome] === "0") {
+                        //             criteriaMet = false;
+                        //         }
+                        //     })
+                        // }
+                        if (outcomesSelection) {
+
+                            if (singleCase[outcomesSelection] === "0") {
+                                criteriaMet = false;
+                            }
+
+                        }
+
                         if (criteriaMet) {
                             caseDictionary[singleCase.CASE_ID] = true;
                             if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
@@ -136,8 +153,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
             previousCancelToken.cancel("cancel the call?")
         }
         fetchChartData();
-    }, [proceduresSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet
-        //  currentOutputFilterSet
+    }, [proceduresSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet, outcomesSelection
     ]);
 
     const makeExtraPairData = () => {

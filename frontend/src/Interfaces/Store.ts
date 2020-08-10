@@ -23,6 +23,7 @@ export default class Store {
     // @computed get proceduresSelection() {
     //   return (JSON.parse(this.rawproceduresSelection) as string[])
     // }
+    @observable outcomesSelection: string = defaultState.outcomesSelection;
 
     @observable currentBrushedPatientGroup: SingleCasePoint[] = defaultState.currentBrushedPatientGroup;
 
