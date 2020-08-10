@@ -36,7 +36,8 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
         previewMode,
         currentSelectPatientGroupIDs,
         currentOutputFilterSet,
-        dateRange
+        dateRange,
+        outcomesSelection
     } = store!;
 
     const svgRef = useRef<SVGSVGElement>(null);
@@ -110,6 +111,21 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                             criteriaMet = false;
                         }
 
+                        // if (outcomesSelection.length > 0) {
+                        //     outcomesSelection.forEach((outcome) => {
+                        //         if (outcome !== outcomeComparison) {
+                        //             if (singleCase[outcome] === "0") {
+                        //                 criteriaMet = false;
+                        //             }
+                        //         }
+                        //     })
+                        // }
+                        if (outcomesSelection && outcomesSelection !== outcomeComparison) {
+                            if (singleCase[outcomesSelection] === "0") {
+                                criteriaMet = false;
+                            }
+                        }
+
                         if (criteriaMet) {
                             caseDictionary[singleCase.CASE_ID] = true;
                             const caseOutcome = parseInt(singleCase[outcomeComparison]);
@@ -168,7 +184,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
             previousCancelToken.cancel("cancel the call?")
         }
         fetchChartData();
-    }, [proceduresSelection, hemoglobinDataSet, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroupIDs]);
+    }, [proceduresSelection, hemoglobinDataSet, dateRange, aggregatedBy, showZero, outcomesSelection, valueToVisualize, currentSelectPatientGroupIDs]);
 
 
     useEffect(() => {

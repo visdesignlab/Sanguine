@@ -39,7 +39,8 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
         previewMode,
         dateRange,
         showZero,
-        currentOutputFilterSet
+        currentOutputFilterSet,
+        outcomesSelection
     } = store!;
 
     const svgRef = useRef<SVGSVGElement>(null);
@@ -121,6 +122,20 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
                                         }
                                     }
                                 }
+                                // if (outcomesSelection.length > 0) {
+                                //     outcomesSelection.forEach((outcome) => {
+                                //         if (ob[outcome] === "0") {
+                                //             criteriaMet = false;
+                                //         }
+                                //     })
+                                // }
+                                if (outcomesSelection) {
+
+                                    if (ob[outcomesSelection] === "0") {
+                                        criteriaMet = false;
+                                    }
+
+                                }
 
                                 if (criteriaMet) {
                                     tempXMin = begin_x < tempXMin ? begin_x : tempXMin;
@@ -169,7 +184,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
             previousCancelToken.cancel("cancel the call?")
         }
         fetchChartData();
-    }, [dateRange, proceduresSelection, hemoglobinDataSet, yAxis, showZero, currentOutputFilterSet, currentSelectPatientGroupIDs]);
+    }, [dateRange, proceduresSelection, hemoglobinDataSet, yAxis, showZero, currentOutputFilterSet, currentSelectPatientGroupIDs, outcomesSelection]);
 
     const changeXVal = (value: any) => {
         actions.changeChart(value, "HGB_VALUE", chartId, "DUMBBELL")
