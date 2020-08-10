@@ -5,7 +5,6 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 DEBUG = os.getenv("DJANGO_DEBUG") == "True"
 
 ALLOWED_HOSTS = [
-    "localhost",
     "bloodvis.chpc.utah.edu",
 ]
 
