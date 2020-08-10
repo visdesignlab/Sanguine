@@ -356,7 +356,6 @@ export function setupProvenance(): AppProvenance {
                             let originalArray = JSON.parse(d.extraPair);
                             originalArray.push(newExtraPair);
                             d.extraPair = JSON.stringify(originalArray)
-                            console.log(d)
                         }
                     }
                     return d
