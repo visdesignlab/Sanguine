@@ -128,9 +128,7 @@ export function setupProvenance(): AppProvenance {
     })
 
     provenance.addObserver(["layoutArray"], (state?: ApplicationState) => {
-        console.log(toJS(store.layoutArray))
         store.layoutArray = state ? state.layoutArray : store.layoutArray;
-        console.log(toJS(store.layoutArray))
     });
 
     provenance.done();

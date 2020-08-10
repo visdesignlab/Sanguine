@@ -33,7 +33,6 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
     const { layoutArray, proceduresSelection } = store!
 
     const createElement = (layout: LayoutElement, index: number) => {
-        console.log(provenance.current().state)
         switch (layout.plotType) {
             case "DUMBBELL":
                 return (
