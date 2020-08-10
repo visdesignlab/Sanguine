@@ -250,7 +250,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                         <List.Item key="Outcomes"
                             style={{ textAlign: "left" }}>
                             <List.Header>Outcomes</List.Header>
-                            <Dropdown value={outcomesSelection} clearable selection options={OutcomeType} onChange={(e, v) => { console.log(v); actions.changeOutcomesSelection((v.value as string)) }} />
+                            <Dropdown value={outcomesSelection} clearable selection options={OutcomeType} onChange={(e, v) => { actions.changeOutcomesSelection((v.value as string)) }} />
 
                         </List.Item>
                         {generatePatientSelection()}

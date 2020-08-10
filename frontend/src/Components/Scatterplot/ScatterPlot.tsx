@@ -15,6 +15,7 @@ import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, ran
 //import CustomizedAxis from "../Utilities/CustomizedAxis";
 import { highlight_orange, basic_gray } from "../../PresetsProfile";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
+import CustomizedAxisBand from "../Utilities/CustomizedAxisBand";
 
 interface OwnProps {
     yAxisName: string;
@@ -39,6 +40,7 @@ export type Props = OwnProps;
 
 const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yMin, xAxisName, yAxisName, store }: Props) => {
 
+    const scalePadding = 0.2;
     const currentOffset = offset.regular;
     const {
         //   currentSelectPatient, 
@@ -66,7 +68,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
             xAxisScale = scaleBand()
                 .domain(range(0, xMax + 1) as any)
                 .range([currentOffset.left, width - currentOffset.right - currentOffset.margin])
-                .padding(0.2);
+                .padding(scalePadding);
         }
         return xAxisScale
     }, [xMax, xMin, width])
@@ -150,13 +152,14 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
             AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
         );
 
-    svgSelection.select('.axes')
-        .select(".x-axis")
-        .attr(
-            "transform",
-            `translate(0 ,${height - currentOffset.bottom} )`
-        )
-        .call(xAxisLabel as any);
+    if (xAxisName === "CELL_SAVER_ML") {
+        svgSelection.select('.axes')
+            .select(".x-axis")
+
+            .call(xAxisLabel as any);
+    }
+
+
 
     svgSelection
         .select(".axes")
@@ -280,7 +283,9 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
     return (<>
         <g className="axes">
             <g className="y-axis"></g>
-            <g className="x-axis"></g>
+            <g className="x-axis" transform={`translate(0 ,${height - currentOffset.bottom} )`}>
+                {xAxisName !== "CELL_SAVER_ML" ? <CustomizedAxisBand scalePadding={scalePadding} scaleDomain={JSON.stringify(xAxisScale().domain())} scaleRange={JSON.stringify(xAxisScale().range())} /> : <></>}
+            </g>
             {/* <g className="x-axis" transform={`translate(0,${height - currentOffset.bottom})`}> */}
             {/* <CustomizedAxis scaleDomain={JSON.stringify(xAxisScale.domain())} scaleRange={JSON.stringify(xAxisScale.range())} numberList={numberList} /> */}
             {/* </g> */}
