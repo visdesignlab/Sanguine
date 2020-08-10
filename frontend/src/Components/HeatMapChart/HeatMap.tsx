@@ -79,11 +79,18 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     useEffect(() => {
         let newCaseMax = 0;
         const tempxVals = data
+            .sort((a, b) => {
+                if (aggregatedBy === "YEAR") { return a.aggregateAttribute - b.aggregateAttribute }
+                else {
+                    return a.caseCount - b.caseCount
+                }
+            })
             .map((dp) => {
                 newCaseMax = newCaseMax > dp.caseCount ? newCaseMax : dp.caseCount
                 return dp.aggregateAttribute
             })
-            .sort();
+
+
         stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
         setCaseMax(newCaseMax)
     }, [data])

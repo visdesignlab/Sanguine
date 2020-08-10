@@ -100,16 +100,22 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         let newZeroMax = 0;
         let newPreTotal = 0;
         let newPostTotal = 0;
-        const newXvals = data.map(dp => {
-            newCaseMax = newCaseMax > (dp.preCaseCount + dp.postCaseCount) ? newCaseMax : (dp.preCaseCount + dp.postCaseCount);
-            newZeroMax = newZeroMax > (dp.postZeroCaseNum + dp.preZeroCaseNum) ? newCaseMax : (dp.postZeroCaseNum + dp.preZeroCaseNum);
-            newPreTotal += dp.preCaseCount;
-            newPostTotal += dp.postCaseCount;
-            //  const max_temp = max([max(dp.preInKdeCal, d => d.y), max(dp.postInKdeCal, d => d.y)])
-            //  newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
-            return dp.aggregateAttribute
-        })
-            .sort();
+        const newXvals = data
+            .sort((a, b) => {
+                if (aggregatedBy === "YEAR") { return a.aggregateAttribute - b.aggregateAttribute }
+                else {
+                    return a.postCaseCount + a.preCaseCount - b.postCaseCount - b.preCaseCount
+                }
+            })
+            .map(dp => {
+                newCaseMax = newCaseMax > (dp.preCaseCount + dp.postCaseCount) ? newCaseMax : (dp.preCaseCount + dp.postCaseCount);
+                newZeroMax = newZeroMax > (dp.postZeroCaseNum + dp.preZeroCaseNum) ? newCaseMax : (dp.postZeroCaseNum + dp.preZeroCaseNum);
+                newPreTotal += dp.preCaseCount;
+                newPostTotal += dp.postCaseCount;
+                //  const max_temp = max([max(dp.preInKdeCal, d => d.y), max(dp.postInKdeCal, d => d.y)])
+                //  newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
+                return dp.aggregateAttribute
+            });
         stateUpdateWrapperUseJSON(xVals, newXvals, setXVals);
         setPreTotal(newPreTotal);
         setPostTotal(newPostTotal)
