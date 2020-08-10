@@ -110,9 +110,18 @@ const App: FC<Props> = ({ store }: Props) => {
                 {/* <Route exact path='/' component={Home} /> */}
 
                 <Route exact path='/dashboard' render={() => {
-                    // if (isLoggedIn) return <Dashboard />
-                    // else return <Redirect to="/" />
-                    if (isLoggedIn) {
+
+                    if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
+                        if (isLoggedIn) {
+                            if (previewMode) {
+                                return <Preview hemoData={hemoData} />
+                            }
+                            else {
+                                return <Dashboard hemoData={hemoData} />
+                            }
+                        }
+                        else return <Redirect to="/" />
+                    } else {
                         if (previewMode) {
                             return <Preview hemoData={hemoData} />
                         }
@@ -120,8 +129,9 @@ const App: FC<Props> = ({ store }: Props) => {
                             return <Dashboard hemoData={hemoData} />
                         }
                     }
-                    else return <Redirect to="/" />
-                }} />
+                }
+
+                } />
                 <Route path='/' component={Login} />
 
             </Switch></BrowserRouter>
