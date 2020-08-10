@@ -112,3 +112,4 @@ CORS_ALLOW_HEADERS = [
 ]
 
 LOGIN_REDIRECT_URL = '/api'
+LOGIN_URL = '/api/accounts/login'

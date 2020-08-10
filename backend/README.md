@@ -25,7 +25,7 @@ Not yet applicable.
 
 There are several routes set up for accessing the patient and surgery data. Here are the names, allowed methods, parameters, descriptions, and examples:
 
-- Name: `/admin` (From [django admin module](https://docs.djangoproject.com/en/2.2/ref/contrib/admin/))
+- Name: `api/admin` (From [django admin module](https://docs.djangoproject.com/en/2.2/ref/contrib/admin/))
   - Allowed Methods: `GET`
   - Parameters: `None`
   - Description: Access through a browser to manage users.
@@ -34,7 +34,7 @@ There are several routes set up for accessing the patient and surgery data. Here
     curl '127.0.0.1:8000/admin'
     ```
 
-- Name: `/accounts/*` (From [django auth module](https://docs.djangoproject.com/en/2.2/topics/auth/))
+- Name: `api/accounts/*` (From [django auth module](https://docs.djangoproject.com/en/2.2/topics/auth/))
   - Allowed Methods: `POST, GET, PUT, DELETE` 
   - Parameters: `None`
   - Description: Manage your own account, reset passwords, login, logout, etc.s
