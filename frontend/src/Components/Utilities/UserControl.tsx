@@ -131,7 +131,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     }
 
     const simulateAPIClick = () => {
-        fetch(`http://localhost:8000/accounts/login/`, {
+        fetch(`http://localhost:8000/api/accounts/login/`, {
             method: 'GET',
             credentials: 'include',
         })
