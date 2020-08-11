@@ -38,7 +38,7 @@ const Logins: FC<Props> = ({ store }: Props) => {
         //store!.csrftoken = csrftoken
 
         // Post the log in data to the site with the cookie
-        fetch(`https://bloodvis.chpc.utah.edu0/api/accounts/login/`, {
+        fetch(`https://bloodvis.chpc.utah.edu/api/accounts/login/`, {
             method: 'POST',
             credentials: "include",
             headers: {
