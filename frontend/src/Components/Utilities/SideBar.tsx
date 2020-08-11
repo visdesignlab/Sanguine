@@ -6,7 +6,6 @@ import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat, max, select, axisTop } from "d3";
 import { actions } from "../..";
 import { AxisLabelDict, Accronym, postop_color, Title, OutcomeType } from "../../PresetsProfile";
-import { highlight_orange } from "../../PresetsProfile";
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import { defaultState } from "../../Interfaces/ApplicationState";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
@@ -160,9 +159,9 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         if (proceduresSelection.length === 0) {
             output.push(<span>All</span>);
         } else {
-            proceduresSelection.map((d, i) => {
+            proceduresSelection.forEach((d, i) => {
                 const stringArray = d.split(" ")
-                stringArray.map((word, index) => {
+                stringArray.forEach((word, index) => {
                     if ((Accronym as any)[word]) {
                         output.push((<div className="tooltip" style={{ cursor: "help" }}>{word}<span className="tooltiptext">{`${(Accronym as any)[word]}`}</span></div>))
                     } else {
@@ -207,7 +206,6 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     }
 
     const onDateChange = (event: any, data: any) => {
-        console.log(data.value)
         if (!data.value) {
             actions.dateRangeChange(defaultState.rawDateRange)
         }
@@ -236,7 +234,15 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                         </List.Header>
 
                         <List.Item style={{ textAlign: "left", width: "100%" }} key="Date">
+                            <List.Header>Date Range</List.Header>
                             <StyledDate onChange={onDateChange} placeholder={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} - ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} type="range" />
+                        </List.Item>
+
+                        <List.Item key="Outcomes"
+                            style={{ textAlign: "left" }}>
+                            <List.Header>Outcomes</List.Header>
+                            <Dropdown value={outcomesSelection} clearable selection options={OutcomeType} onChange={(e, v) => { actions.changeOutcomesSelection((v.value as string)) }} />
+
                         </List.Item>
 
                         <List.Item style={{ textAlign: "left" }} key="Show Zero">
@@ -277,12 +283,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                             <List.Header>Procedures</List.Header>
                             <List.Content>{generateSurgery()} </List.Content>
                         </List.Item>
-                        <List.Item key="Outcomes"
-                            style={{ textAlign: "left" }}>
-                            <List.Header>Outcomes</List.Header>
-                            <Dropdown value={outcomesSelection} clearable selection options={OutcomeType} onChange={(e, v) => { actions.changeOutcomesSelection((v.value as string)) }} />
 
-                        </List.Item>
                         {generatePatientSelection()}
 
 
@@ -421,7 +422,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                                             <SurgeryText y={9} x={caseScale().range()[1]}>{listItem.count}</SurgeryText>
                                         </ListSVG>} />
                                 )
-                            }
+                            } else { return (<></>) }
                         })}
                         {/* {itemSelected.length > 0 ? (<List.Item />) : (<></>)} */}
                         {itemUnselected.map((listItem: any) => {
@@ -445,7 +446,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                                         </ListSVG>}
                                         onClick={() => { actions.proceduresSelectionChange(listItem.value) }} />
                                 )
-                            }
+                            } else { return (<></>) }
                         })}
                     </List>
                 </Container>

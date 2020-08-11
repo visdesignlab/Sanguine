@@ -89,6 +89,26 @@ export const dumbbellValueOptions = [
 ]
 
 export const dumbbellFacetOptions = [
+    {
+        value: "PRBC_UNITS",
+        key: "PRBC_UNITS",
+        text: "Intraoperative RBCs Transfused"
+    },
+    {
+        value: "FFP_UNITS",
+        key: "FFP_UNITS",
+        text: "Intraoperative FFP Transfused"
+    },
+    {
+        value: "PLT_UNITS",
+        key: "PLT_UNITS",
+        text: "Intraoperative Platelets Transfused"
+    },
+    {
+        value: "CRYO_UNITS",
+        key: "CRYO_UNITS",
+        text: "Intraoperative Cryo Transfused"
+    },
     { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
     { value: "YEAR", key: "YEAR", text: "Year" },
     {

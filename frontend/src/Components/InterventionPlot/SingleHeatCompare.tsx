@@ -36,84 +36,87 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
 
     return (
         <>
-
             {valueScale().domain().map(point => {
-                const preOutput = dataPoint.preCountDict[point].length;
+                if (dataPoint.preCountDict[point]) {
+                    const preOutput = dataPoint.preCountDict[point].length;
 
-                const postOutput = dataPoint.postCountDict[point].length;
+                    const postOutput = dataPoint.postCountDict[point].length;
 
-                const preCaseCount = showZero ? dataPoint.preCaseCount : dataPoint.preCaseCount - dataPoint.preZeroCaseNum;
-                const postCaseCount = showZero ? dataPoint.postCaseCount : dataPoint.postCaseCount - dataPoint.postZeroCaseNum;
+                    const preCaseCount = showZero ? dataPoint.preCaseCount : dataPoint.preCaseCount - dataPoint.preZeroCaseNum;
+                    const postCaseCount = showZero ? dataPoint.postCaseCount : dataPoint.postCaseCount - dataPoint.postZeroCaseNum;
 
-                let preFill = preOutput === 0 ? "white" : interpolateReds(colorScale(preOutput / preCaseCount))
-                let postFill = postOutput === 0 ? "white" : interpolateReds(colorScale(postOutput / postCaseCount))
-                if (!showZero && point as any === 0) {
-                    preFill = preOutput === 0 ? "white" : interpolateGreys(greyScale(preOutput / dataPoint.preCaseCount));
-                    postFill = postOutput === 0 ? "white" : interpolateGreys(greyScale(postOutput / dataPoint.postCaseCount))
+                    let preFill = preOutput === 0 ? "white" : interpolateReds(colorScale(preOutput / preCaseCount))
+                    let postFill = postOutput === 0 ? "white" : interpolateReds(colorScale(postOutput / postCaseCount))
+                    if (!showZero && point as any === 0) {
+                        preFill = preOutput === 0 ? "white" : interpolateGreys(greyScale(preOutput / dataPoint.preCaseCount));
+                        postFill = postOutput === 0 ? "white" : interpolateGreys(greyScale(postOutput / dataPoint.postCaseCount))
+                    }
+
+                    return (
+                        [<Popup content={format(".0%")(preOutput / dataPoint.preCaseCount)}
+                            key={`Pre${dataPoint.aggregateAttribute} - ${point}`}
+                            trigger={
+                                <HeatRect
+                                    fill={preFill}
+                                    x={valueScale()(point)}
+                                    y={0}
+                                    transform={howToTransform}
+                                    width={valueScale().bandwidth()}
+                                    height={bandwidth * 0.5}
+                                    isselected={isSelected}
+                                    isfiltered={isFiltered}
+                                    onClick={(e) => {
+
+                                        actions.updateBrushPatientGroup(dataPoint.preCountDict[point], e.shiftKey ? "ADD" : "REPLACE", {
+                                            setName: aggregatedBy,
+                                            setValues: [dataPoint.aggregateAttribute],
+                                            //   setPatientIds: [dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList)]
+                                        })
+
+                                    }} />}
+                        />, <Popup content={format(".0%")(postOutput / dataPoint.postCaseCount)}
+                            key={`Post${dataPoint.aggregateAttribute} - ${point}`}
+                            trigger={
+                                <HeatRect
+                                    fill={postFill}
+                                    x={valueScale()(point)}
+                                    y={bandwidth * 0.5}
+                                    transform={howToTransform}
+                                    width={valueScale().bandwidth()}
+                                    height={bandwidth * 0.5}
+                                    isselected={isSelected}
+                                    isfiltered={isFiltered}
+                                    onClick={(e) => {
+                                        actions.updateBrushPatientGroup(dataPoint.postCountDict[point], e.shiftKey ? "ADD" : "REPLACE", {
+                                            setName: aggregatedBy,
+                                            setValues: [dataPoint.aggregateAttribute],
+                                            //   setPatientIds: [dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList)]
+                                        })
+
+                                    }} />}
+                        />,
+                        <line
+                            transform={howToTransform}
+                            strokeWidth={0.5}
+                            stroke={basic_gray}
+                            opacity={preOutput === 0 ? 1 : 0}
+                            y1={0.25 * bandwidth}
+                            y2={0.25 * bandwidth}
+                            x1={valueScale()(point)! + 0.35 * valueScale().bandwidth()}
+                            x2={valueScale()(point)! + 0.65 * valueScale().bandwidth()} />,
+                        <line
+                            transform={howToTransform}
+                            strokeWidth={0.5}
+                            stroke={basic_gray}
+                            opacity={postOutput === 0 ? 1 : 0}
+                            y1={0.75 * bandwidth}
+                            y2={0.75 * bandwidth}
+                            x1={valueScale()(point)! + 0.35 * valueScale().bandwidth()}
+                            x2={valueScale()(point)! + 0.65 * valueScale().bandwidth()} />]
+                    )
+                } else {
+                    return (<></>)
                 }
-
-                return (
-                    [<Popup content={format(".0%")(preOutput / dataPoint.preCaseCount)}
-                        key={`Pre${dataPoint.aggregateAttribute} - ${point}`}
-                        trigger={
-                            <HeatRect
-                                fill={preFill}
-                                x={valueScale()(point)}
-                                y={0}
-                                transform={howToTransform}
-                                width={valueScale().bandwidth()}
-                                height={bandwidth * 0.5}
-                                isselected={isSelected}
-                                isfiltered={isFiltered}
-                                onClick={(e) => {
-
-                                    actions.updateBrushPatientGroup(dataPoint.preCountDict[point], e.shiftKey ? "ADD" : "REPLACE", {
-                                        setName: aggregatedBy,
-                                        setValues: [dataPoint.aggregateAttribute],
-                                        //   setPatientIds: [dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList)]
-                                    })
-
-                                }} />}
-                    />, <Popup content={format(".0%")(postOutput / dataPoint.postCaseCount)}
-                        key={`Post${dataPoint.aggregateAttribute} - ${point}`}
-                        trigger={
-                            <HeatRect
-                                fill={postFill}
-                                x={valueScale()(point)}
-                                y={bandwidth * 0.5}
-                                transform={howToTransform}
-                                width={valueScale().bandwidth()}
-                                height={bandwidth * 0.5}
-                                isselected={isSelected}
-                                isfiltered={isFiltered}
-                                onClick={(e) => {
-                                    actions.updateBrushPatientGroup(dataPoint.postCountDict[point], e.shiftKey ? "ADD" : "REPLACE", {
-                                        setName: aggregatedBy,
-                                        setValues: [dataPoint.aggregateAttribute],
-                                        //   setPatientIds: [dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList)]
-                                    })
-
-                                }} />}
-                    />,
-                    <line
-                        transform={howToTransform}
-                        strokeWidth={0.5}
-                        stroke={basic_gray}
-                        opacity={preOutput === 0 ? 1 : 0}
-                        y1={0.25 * bandwidth}
-                        y2={0.25 * bandwidth}
-                        x1={valueScale()(point)! + 0.35 * valueScale().bandwidth()}
-                        x2={valueScale()(point)! + 0.65 * valueScale().bandwidth()} />,
-                    <line
-                        transform={howToTransform}
-                        strokeWidth={0.5}
-                        stroke={basic_gray}
-                        opacity={postOutput === 0 ? 1 : 0}
-                        y1={0.75 * bandwidth}
-                        y2={0.75 * bandwidth}
-                        x1={valueScale()(point)! + 0.35 * valueScale().bandwidth()}
-                        x2={valueScale()(point)! + 0.65 * valueScale().bandwidth()} />]
-                )
             })},
             <line transform={howToTransform} x1={valueScale().range()[0]} x2={valueScale().range()[1]} y1={bandwidth * 0.5} y2={bandwidth * 0.5}
                 stroke="white" />

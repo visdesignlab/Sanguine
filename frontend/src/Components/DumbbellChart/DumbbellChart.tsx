@@ -20,12 +20,12 @@ import {
 } from "d3";
 import { DumbbellDataPoint } from "../../Interfaces/ApplicationState";
 import { offset, AxisLabelDict, minimumWidthScale } from "../../PresetsProfile"
-import CustomizedAxis from "../Utilities/CustomizedAxisOrdinal";
+import CustomizedAxisOrdinal from "../Utilities/CustomizedAxisOrdinal";
 import { preop_color, basic_gray, highlight_orange, postop_color } from "../../PresetsProfile"
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 interface OwnProps {
-    yAxisName: string;
+    valueToVisualize: string;
     //chartId: string;
     store?: Store;
     dimensionWidth: number,
@@ -44,7 +44,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionHeight, dimensionWidth, data, svg, store, xMin, xMax }: Props) => {
+const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dimensionHeight, dimensionWidth, data, svg, store, xMin, xMax }: Props) => {
 
     const [averageForEachTransfused, setAverage] = useState<any>({})
     const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([])
@@ -130,22 +130,42 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
             let currentPreopSum: number[] = [];
             let currentPostopSum: number[] = [];
             let averageDict: any = {}
-            tempSortedData.forEach((d, i) => {
-                currentPreopSum.push(d.startXVal)
-                currentPostopSum.push(d.endXVal)
-                if (i === tempSortedData.length - 1) {
-                    tempNumberList.push({ num: d.yVal, indexEnding: i })
-                    averageDict[d.yVal] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
-                    tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length })
-                }
-                else if (d.yVal !== tempSortedData[i + 1].yVal) {
-                    tempNumberList.push({ num: d.yVal, indexEnding: i })
-                    averageDict[(d.yVal).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
-                    tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length })
-                    currentPostopSum = [];
-                    currentPreopSum = [];
-                }
-            })
+            if (valueToVisualize === "CELL_SAVER_ML") {
+                tempSortedData.forEach((d, i) => {
+                    currentPreopSum.push(d.startXVal)
+                    currentPostopSum.push(d.endXVal)
+                    const roundedAnswer = Math.floor(d.yVal / 100) * 100
+                    if (i === tempSortedData.length - 1) {
+                        tempNumberList.push({ num: roundedAnswer, indexEnding: i })
+                        averageDict[roundedAnswer] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
+                        tempDatapointsDict.push({ title: roundedAnswer, length: currentPreopSum.length })
+                    }
+                    else if (roundedAnswer !== (Math.floor(tempSortedData[i + 1].yVal / 100) * 100)) {
+                        tempNumberList.push({ num: roundedAnswer, indexEnding: i })
+                        averageDict[(roundedAnswer).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
+                        tempDatapointsDict.push({ title: roundedAnswer, length: currentPreopSum.length })
+                        currentPostopSum = [];
+                        currentPreopSum = [];
+                    }
+                })
+            } else {
+                tempSortedData.forEach((d, i) => {
+                    currentPreopSum.push(d.startXVal)
+                    currentPostopSum.push(d.endXVal)
+                    if (i === tempSortedData.length - 1) {
+                        tempNumberList.push({ num: d.yVal, indexEnding: i })
+                        averageDict[d.yVal] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
+                        tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length })
+                    }
+                    else if (d.yVal !== tempSortedData[i + 1].yVal) {
+                        tempNumberList.push({ num: d.yVal, indexEnding: i })
+                        averageDict[(d.yVal).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
+                        tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length })
+                        currentPostopSum = [];
+                        currentPreopSum = [];
+                    }
+                })
+            }
 
             const newindices = range(0, data.length)
             stateUpdateWrapperUseJSON(indicies, newindices, setIndicies)
@@ -234,7 +254,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
         .attr("alignment-baseline", "hanging")
         // .attr("transform", `translate(0 ,${currentOffset.top}`)
         .text(
-            AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
+            AxisLabelDict[valueToVisualize] ? AxisLabelDict[valueToVisualize] : valueToVisualize
         );
     svgSelection.select('.axes')
         .select(".x-axis")
@@ -402,7 +422,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
             <g className="axes">
                 <g className="x-axis"></g>
                 <g className="y-axis" transform={`translate(0,${dimensionHeight - currentOffset.bottom})`}>
-                    <CustomizedAxis scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} />
+                    <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} />
                 </g>
                 <text className="x-label" />
                 <text className="y-label" />

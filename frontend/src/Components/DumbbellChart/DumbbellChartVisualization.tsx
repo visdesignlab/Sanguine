@@ -10,7 +10,7 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { DumbbellDataPoint } from "../../Interfaces/ApplicationState"
-import { BloodProductCap, dumbbellFacetOptions, barChartValuesOptions, ChartSVG } from "../../PresetsProfile"
+import { BloodProductCap, dumbbellFacetOptions, ChartSVG } from "../../PresetsProfile"
 import DumbbellChart from "./DumbbellChart"
 import { Grid, Menu, Dropdown, Button, Icon, Modal, Form, Message } from "semantic-ui-react";
 import { preop_color, postop_color, basic_gray } from "../../PresetsProfile";
@@ -180,7 +180,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
                 }
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dateRange, proceduresSelection, hemoglobinDataSet, yAxis, showZero, currentOutputFilterSet, currentSelectPatientGroupIDs]);
+    }, [dateRange, proceduresSelection, hemoglobinDataSet, yAxis, showZero, outcomesSelection, currentOutputFilterSet, currentSelectPatientGroupIDs]);
 
     const changeXVal = (value: any) => {
         actions.changeChart(value, "HGB_VALUE", chartId, "DUMBBELL")
@@ -212,7 +212,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
                         <Menu.Item >
                             <Dropdown selectOnBlur={false} basic item icon="settings" compact>
                                 <Dropdown.Menu>
-                                    {(dumbbellFacetOptions.concat(barChartValuesOptions)).map((d) => {
+                                    {(dumbbellFacetOptions).map((d) => {
                                         return (<Dropdown.Item onClick={() => {
                                             changeXVal(d.value)
                                         }}>{d.text}</Dropdown.Item>)
@@ -281,7 +281,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
         </text> */}
                         <DumbbellChart
                             svg={svgRef}
-                            yAxisName={yAxis}
+                            valueToVisualize={yAxis}
                             data={data}
                             dimensionHeight={dimensionHeight}
                             dimensionWidth={dimensionWidth}

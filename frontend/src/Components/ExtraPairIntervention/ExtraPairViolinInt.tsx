@@ -75,7 +75,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
             .x((d: any) => valueScale(d.x))
 
         return halfLineFunction;
-    }, [aggregatedScale, kdeMax])
+    }, [aggregatedScale, kdeMax, valueScale])
 
 
     const generateOutput = () => {
@@ -154,7 +154,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
         const svgSelection = select(svgRef.current);
         const scaleLabel = axisBottom(valueScale).ticks(3);
         svgSelection.select(".axis").call(scaleLabel as any);
-    }, [svgRef])
+    }, [svgRef, valueScale])
 
 
     return (
