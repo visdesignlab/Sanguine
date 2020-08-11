@@ -9,8 +9,8 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
-import { offset, AxisLabelDict, highlight_blue, postop_color, Accronym, preop_color, third_gray } from "../../PresetsProfile"
-import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range, median, quantile, deviation, mean } from "d3";
+import { offset, AxisLabelDict, Accronym, preop_color, third_gray } from "../../PresetsProfile"
+import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range, deviation, mean } from "d3";
 
 //import CustomizedAxis from "../Utilities/CustomizedAxis";
 import { highlight_orange, basic_gray } from "../../PresetsProfile";

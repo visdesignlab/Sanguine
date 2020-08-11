@@ -9,7 +9,7 @@ import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
-import { scatterYOptions, barChartValuesOptions, ChartSVG, offset, OutcomeType } from "../../PresetsProfile"
+import { scatterYOptions, barChartValuesOptions, ChartSVG, OutcomeType } from "../../PresetsProfile"
 import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import ScatterPlotChart from "./ScatterPlot";
 import axios from "axios";
@@ -66,7 +66,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
             setWidth(w === 1 ? 542.28 : 1146.97)
             setHeight(svgRef.current.clientHeight)
         }
-    }, [layoutArray[chartIndex]]);
+    }, [layoutArray[chartIndex], w]);
 
     function fetchChartData() {
 

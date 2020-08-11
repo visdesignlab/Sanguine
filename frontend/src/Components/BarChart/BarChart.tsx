@@ -114,7 +114,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
             .domain([0, BloodProductCap[valueToVisualize]])
             .range([currentOffset.left, width - extraPairTotalWidth - currentOffset.right - currentOffset.margin]);
         return valueScale
-    }, [width])
+    }, [width, valueToVisualize, extraPairTotalWidth])
 
     const caseScale = useCallback(() => {
         //const caseMax = max(data.map(d => d.caseCount)) || 0;
@@ -135,7 +135,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
             .x((d: any) => valueScale()(d.x) - currentOffset.left);
 
         return lineFunction
-    }, [kdeMax, valueScale()])
+    }, [kdeMax, valueScale, aggregationScale,])
 
 
 
