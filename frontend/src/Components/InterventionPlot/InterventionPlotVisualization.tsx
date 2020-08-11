@@ -35,7 +35,8 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
         currentSelectPatientGroupIDs,
         currentOutputFilterSet,
         rawDateRange,
-        dateRange
+        dateRange,
+        outcomesSelection
     } = store!;
 
     const svgRef = useRef<SVGSVGElement>(null);
@@ -131,6 +132,23 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                                 }
                             }
                         }
+
+                        // if (outcomesSelection.length > 0) {
+                        //     outcomesSelection.forEach((outcome) => {
+                        //         if (singleCase[outcome] === "0") {
+                        //             criteriaMet = false;
+                        //         }
+                        //     })
+                        // }
+                        if (outcomesSelection) {
+
+                            if (singleCase[outcomesSelection] === "0") {
+                                criteriaMet = false;
+                            }
+
+                        }
+
+
                         if (preCaseSetReturnedFromQuery.has(singleCase.CASE_ID) && criteriaMet) {
                             caseDictionary[singleCase.CASE_ID] = true;
                             if (!temporaryDataHolder[singleCase[aggregatedBy]]) {

@@ -15,6 +15,7 @@ import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, ran
 //import CustomizedAxis from "../Utilities/CustomizedAxis";
 import { highlight_orange, basic_gray } from "../../PresetsProfile";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
+import CustomizedAxisBand from "../Utilities/CustomizedAxisBand";
 
 interface OwnProps {
     yAxisName: string;
@@ -32,13 +33,14 @@ interface OwnProps {
     //xRange: { 
     xMin: number;
     xMax: number;
-    highlightOption: string;
+    //  highlightOption: string;
 }
 
 export type Props = OwnProps;
 
-const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width, height, yMax, yMin, xAxisName, yAxisName, store }: Props) => {
+const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yMin, xAxisName, yAxisName, store }: Props) => {
 
+    const scalePadding = 0.2;
     const currentOffset = offset.regular;
     const {
         //   currentSelectPatient, 
@@ -66,7 +68,7 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
             xAxisScale = scaleBand()
                 .domain(range(0, xMax + 1) as any)
                 .range([currentOffset.left, width - currentOffset.right - currentOffset.margin])
-                .padding(0.2);
+                .padding(scalePadding);
         }
         return xAxisScale
     }, [xMax, xMin, width, currentOffset, xAxisName])
@@ -151,13 +153,14 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
             AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
         );
 
-    svgSelection.select('.axes')
-        .select(".x-axis")
-        .attr(
-            "transform",
-            `translate(0 ,${height - currentOffset.bottom} )`
-        )
-        .call(xAxisLabel as any);
+    if (xAxisName === "CELL_SAVER_ML") {
+        svgSelection.select('.axes')
+            .select(".x-axis")
+
+            .call(xAxisLabel as any);
+    }
+
+
 
     svgSelection
         .select(".axes")
@@ -169,12 +172,7 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
         .attr("text-anchor", "middle")
         .text(AxisLabelDict[xAxisName] ? AxisLabelDict[xAxisName] : xAxisName);
 
-    useEffect(() => {
-        if (highlightOption) {
-            svgSelection.select(".highlight-label")
-                .text(`${(Accronym as any)[highlightOption] || highlightOption} Highlighted`);
-        }
-    }, [highlightOption])
+
 
 
     // const decideIfSelected = (d: ScatterDataPoint) => {
@@ -196,13 +194,7 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
         }
     }
 
-    const decideIfHighlightOption = (d: ScatterDataPoint) => {
-        if (highlightOption) {
-            return d.case[highlightOption] > 0
-        } else {
-            return false;
-        }
-    }
+
 
     // const clickDumbbellHandler = (d: ScatterDataPoint) => {
     //     actions.selectPatient(d.case)
@@ -227,20 +219,20 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
             const cy = yAxisScale()(dataPoint.yVal)
             //   const isSelected = decideIfSelected(dataPoint)
             const isSelectSet = decideIfSelectSet(dataPoint);
-            const isHighlightOption = decideIfHighlightOption(dataPoint);
+            //   const isHighlightOption = decideIfHighlightOption(dataPoint);
 
             const isBrushed = brushedSet.has(dataPoint.case.CASE_ID)
 
             // const isBrushed = brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]
             //  || (patientGroupSet.has(dataPoint.case.CASE_ID));
-            if (isBrushed || isSelectSet || isHighlightOption) {
+            if (isBrushed || isSelectSet) {
                 selectedPatients.push(
                     <Circle cx={cx}
                         cy={cy}
                         // fill={ ? highlight_orange : basic_gray}
                         isselected={isSelectSet}
                         isbrushed={isBrushed || false}
-                        isHighlightOutcome={isHighlightOption}
+                    //      isHighlightOutcome={isHighlightOption}
                     // onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />)
             } else {
@@ -250,7 +242,7 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
                         // fill={ ? highlight_orange : basic_gray}
                         isselected={isSelectSet}
                         isbrushed={isBrushed || false}
-                        isHighlightOutcome={isHighlightOption}
+                    //           isHighlightOutcome={isHighlightOption}
                     //  onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />
 
@@ -293,7 +285,9 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
     return (<>
         <g className="axes">
             <g className="y-axis"></g>
-            <g className="x-axis"></g>
+            <g className="x-axis" transform={`translate(0 ,${height - currentOffset.bottom} )`}>
+                {xAxisName !== "CELL_SAVER_ML" ? <CustomizedAxisBand scalePadding={scalePadding} scaleDomain={JSON.stringify(xAxisScale().domain())} scaleRange={JSON.stringify(xAxisScale().range())} /> : <></>}
+            </g>
             {/* <g className="x-axis" transform={`translate(0,${height - currentOffset.bottom})`}> */}
             {/* <CustomizedAxis scaleDomain={JSON.stringify(xAxisScale.domain())} scaleRange={JSON.stringify(xAxisScale.range())} numberList={numberList} /> */}
             {/* </g> */}
@@ -315,12 +309,10 @@ export default inject("store")(observer(ScatterPlot));
 interface DotProps {
     isselected: boolean;
     isbrushed: boolean;
-    isHighlightOutcome: boolean;
 }
 const Circle = styled(`circle`) <DotProps>`
   r:4px;
   opacity:${props => props.isselected ? 1 : 0.5};
-  stroke:${props => (props.isHighlightOutcome ? preop_color : "none")};
   stroke-width:2px;
   fill:${props => (props.isbrushed || props.isselected ? highlight_orange : basic_gray)};
 `;

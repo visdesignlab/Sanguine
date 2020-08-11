@@ -40,6 +40,8 @@ interface AppProvenance {
         changeExtraPair: (chartID: string, newExtraPair: string) => void;
         removeExtraPair: (chartID: string, removeingPair: string) => void;
 
+        changeOutcomesSelection: (newOutcomeSelections: string) => void;
+
         updateSelectedPatientGroup: (caseList: SingleCasePoint[]) => void;
         updateBrushPatientGroup: (caseList: SingleCasePoint[], mode: "ADD" | "REPLACE", selectedSet?: SelectSet) => void;
         changeChart: (x: string, y: string, i: string, type: string, comparisonChartType?: string) => void;
@@ -67,6 +69,10 @@ export function setupProvenance(): AppProvenance {
 
     provenance.addObserver(["nextAddingIndex"], (state?: ApplicationState) => {
         store.nextAddingIndex = state ? state.nextAddingIndex : store.nextAddingIndex;
+    })
+
+    provenance.addObserver(["outcomesSelection"], (state?: ApplicationState) => {
+        store.outcomesSelection = state ? state.outcomesSelection : store.outcomesSelection;
     })
 
     provenance.addObserver(['showZero'], (state?: ApplicationState) => {
@@ -122,9 +128,7 @@ export function setupProvenance(): AppProvenance {
     })
 
     provenance.addObserver(["layoutArray"], (state?: ApplicationState) => {
-        console.log(toJS(store.layoutArray))
         store.layoutArray = state ? state.layoutArray : store.layoutArray;
-        console.log(toJS(store.layoutArray))
     });
 
     provenance.done();
@@ -352,7 +356,6 @@ export function setupProvenance(): AppProvenance {
                             let originalArray = JSON.parse(d.extraPair);
                             originalArray.push(newExtraPair);
                             d.extraPair = JSON.stringify(originalArray)
-                            console.log(d)
                         }
                     }
                     return d
@@ -487,6 +490,16 @@ export function setupProvenance(): AppProvenance {
             }
         )
     };
+
+    const changeOutcomesSelection = (newOutcomesSelection: string) => {
+        provenance.applyAction(
+            `new outcomes selection`,
+            (state: ApplicationState) => {
+                state.outcomesSelection = newOutcomesSelection;
+                return state;
+            }
+        )
+    }
 
 
     const selectSet = (data: SelectSet, shiftKeyPressed: boolean) => {
@@ -645,6 +658,7 @@ export function setupProvenance(): AppProvenance {
             changeExtraPair,
             removeExtraPair,
             loadPreset,
+            changeOutcomesSelection,
             currentOutputFilterSetChange,
             clearSelectSet,
             clearOutputFilterSet

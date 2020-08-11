@@ -1,11 +1,12 @@
 import React, { FC, useEffect, useState, useCallback, useRef, useLayoutEffect } from "react";
 import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
-import { Grid, Container, List, Button, Header, Search, Checkbox, Icon } from "semantic-ui-react";
+import { Grid, Container, List, Button, Header, Search, Checkbox, Icon, Dropdown } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat, max, select, axisTop } from "d3";
 import { actions } from "../..";
-import { AxisLabelDict, Accronym, postop_color, Title } from "../../PresetsProfile";
+import { AxisLabelDict, Accronym, postop_color, Title, OutcomeType } from "../../PresetsProfile";
+import { highlight_orange } from "../../PresetsProfile";
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import { defaultState } from "../../Interfaces/ApplicationState";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
@@ -30,7 +31,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         currentOutputFilterSet,
         currentSelectPatientGroup,
         currentBrushedPatientGroup,
-        // currentSelectPatient, 
+        outcomesSelection,
         showZero,
         proceduresSelection } = store!;
 
@@ -227,7 +228,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         >
 
             <Grid.Row centered  >
-                <Container style={{ paddingLeft: "15px", height: "30vh" }}>
+                <Container style={{ paddingLeft: "15px", height: "35vh" }}>
                     <List>
 
                         <List.Header style={{ textAlign: "left" }}>
@@ -276,6 +277,12 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                             <List.Header>Procedures</List.Header>
                             <List.Content>{generateSurgery()} </List.Content>
                         </List.Item>
+                        <List.Item key="Outcomes"
+                            style={{ textAlign: "left" }}>
+                            <List.Header>Outcomes</List.Header>
+                            <Dropdown value={outcomesSelection} clearable selection options={OutcomeType} onChange={(e, v) => { actions.changeOutcomesSelection((v.value as string)) }} />
+
+                        </List.Item>
                         {generatePatientSelection()}
 
 
@@ -296,7 +303,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 
             </Grid.Row>
             <Grid.Row centered >
-                <Container style={{ height: "20vh", paddingLeft: "15px" }}>
+                <Container style={{ height: "15vh", paddingLeft: "15px" }}>
                     <List>
 
                         <List.Header style={{ textAlign: "left" }}>

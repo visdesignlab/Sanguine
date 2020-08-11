@@ -39,7 +39,8 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
         previewMode,
         dateRange,
         showZero,
-        currentOutputFilterSet
+        currentOutputFilterSet,
+        outcomesSelection
     } = store!;
 
     const svgRef = useRef<SVGSVGElement>(null);
@@ -124,6 +125,20 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
                                             criteriaMet = false;
                                         }
                                     }
+                                }
+                                // if (outcomesSelection.length > 0) {
+                                //     outcomesSelection.forEach((outcome) => {
+                                //         if (ob[outcome] === "0") {
+                                //             criteriaMet = false;
+                                //         }
+                                //     })
+                                // }
+                                if (outcomesSelection) {
+
+                                    if (ob[outcomesSelection] === "0") {
+                                        criteriaMet = false;
+                                    }
+
                                 }
 
                                 if (criteriaMet) {

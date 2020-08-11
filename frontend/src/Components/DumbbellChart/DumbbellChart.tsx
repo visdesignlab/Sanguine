@@ -20,7 +20,7 @@ import {
 } from "d3";
 import { DumbbellDataPoint } from "../../Interfaces/ApplicationState";
 import { offset, AxisLabelDict, minimumWidthScale } from "../../PresetsProfile"
-import CustomizedAxis from "../Utilities/CustomizedAxis";
+import CustomizedAxis from "../Utilities/CustomizedAxisOrdinal";
 import { preop_color, basic_gray, highlight_orange, postop_color } from "../../PresetsProfile"
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 

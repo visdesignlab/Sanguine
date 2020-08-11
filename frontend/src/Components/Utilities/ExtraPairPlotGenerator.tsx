@@ -20,6 +20,7 @@ interface OwnProps {
     aggregationScaleRange: string;
     chartId: string;
     height: number;
+
 }
 
 export type Props = OwnProps;
@@ -27,10 +28,6 @@ export type Props = OwnProps;
 const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScaleDomain, aggregationScaleRange, chartId, height }: Props) => {
 
     const currentOffset = offset.regular;
-
-
-
-
     const extraPairTextGenerator = (nameInput: string, labelInput: string, type: "Basic" | "Violin" | "Bar",
         extraPairDataSet: ExtraPairPoint) => {
         let explanation = "";
