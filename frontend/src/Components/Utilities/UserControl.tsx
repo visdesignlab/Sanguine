@@ -78,7 +78,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
     const addOptions = [
         [barChartValuesOptions, barChartAggregationOptions],
-        [dumbbellValueOptions, barChartValuesOptions.concat(dumbbellFacetOptions)],
+        [dumbbellValueOptions, dumbbellFacetOptions],
         [scatterYOptions, barChartValuesOptions],
         [barChartValuesOptions, barChartAggregationOptions],
         [barChartValuesOptions, [barChartAggregationOptions[0], barChartAggregationOptions[2]]]

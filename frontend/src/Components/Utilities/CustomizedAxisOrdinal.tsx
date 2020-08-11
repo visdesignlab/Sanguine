@@ -27,13 +27,13 @@ const CustomizedAxisOrdinal: FC<Props> = ({ numberList, scaleDomain, scaleRange 
         let scale = scaleOrdinal()
             .domain(domain as any)
             .range(range);
-        // scale = scale as ScaleOrdinal < any, number >
+
         return scale;
     }, [scaleDomain, scaleRange])
 
     return <>
 
-        {numberList.forEach((numberOb, ind) => {
+        {numberList.map((numberOb, ind) => {
             let x1 = ind === 0 ? (scale() as ScaleOrdinal<any, number>)(0) : (1 + (scale() as ScaleOrdinal<any, number>)((numberList[ind - 1].indexEnding + 1)) - 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding)))
             let x2 = ind === numberList.length - 1 ? (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding) : (-1 + (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding) + 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding)))
             if (x1 && x2) {
@@ -41,7 +41,7 @@ const CustomizedAxisOrdinal: FC<Props> = ({ numberList, scaleDomain, scaleRange 
                 <LineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? secondary_gray : basic_gray} />,
                 <AxisText x={x1 + 0.5 * (x2 - x1)}>{numberOb.num}</AxisText>
                 ])
-            }
+            } else { return <></> }
         })}
     </>
 }

@@ -2,12 +2,12 @@ import React, { FC, useEffect, useRef, useLayoutEffect, useState } from "react";
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { BarChartDataPoint, ExtraPairPoint, BasicAggregatedDatePoint } from '../../Interfaces/ApplicationState'
-import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, interventionChartType, extraPairOptions, ChartSVG } from "../../PresetsProfile"
+import { BarChartDataPoint, ExtraPairPoint } from '../../Interfaces/ApplicationState'
+import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, extraPairOptions, ChartSVG } from "../../PresetsProfile"
 import BarChart from "./BarChart"
 import { Button, Icon, Grid, Dropdown, Menu, Modal, Form, Message } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
-import { sum, median, mean } from "d3";
+import { sum, median } from "d3";
 import axios from 'axios'
 import { stateUpdateWrapperUseJSON, generateExtrapairPlotData } from "../../HelperFunctions";
 
@@ -60,6 +60,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
 
     useEffect(() => {
         if (extraPair) { stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray) }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [extraPair])
 
     useLayoutEffect(() => {
@@ -71,8 +72,12 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     }, [layoutArray, w]);
 
 
-    function fetchChartData() {
 
+
+    useEffect(() => {
+        if (previousCancelToken) {
+            previousCancelToken.cancel("cancel the call?")
+        }
         let caseCount = 0;
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
@@ -87,7 +92,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
 
 
 
-                let cast_data = (dataResult as any).map(function (ob: any) {
+                let cast_data = (dataResult as any).forEach(function (ob: any) {
 
                     let zeroCaseNum = 0;
                     const aggregateByAttr = ob.aggregated_by;
@@ -104,7 +109,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                     }
                     if (criteriaMet) {
 
-                        ob.case_id.map((singleId: any) => {
+                        ob.case_id.forEach((singleId: any) => {
                             caseDictionary[singleId] = true;
                         })
 
@@ -167,48 +172,17 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                     // handle error
                 }
             });
-    }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [proceduresSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentOutputFilterSet, currentSelectPatientGroupIDs]);
 
-    useEffect(() => {
-        if (previousCancelToken) {
-            previousCancelToken.cancel("cancel the call?")
-        }
-        fetchChartData();
-    }, [proceduresSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroupIDs]);
-
-
-    useEffect(() => {
-        let caseDictionary = {} as any;
-        let newData = data.map((d: BasicAggregatedDatePoint) => {
-            let criteriaMet = true;
-            if (currentOutputFilterSet.length > 0) {
-                for (let selectSet of currentOutputFilterSet) {
-                    if (selectSet.setName === aggregatedBy) {
-                        if (!selectSet.setValues.includes(d.aggregateAttribute)) {
-                            criteriaMet = false;
-                        }
-                    }
-                }
-            }
-            if (criteriaMet) {
-                d.caseIDList.map((singleId: any) => {
-                    caseDictionary[singleId] = true;
-                })
-                return d
-            }
-        })
-        newData = newData.filter((d: any) => d);
-        stateUpdateWrapperUseJSON(data, newData, setData)
-        stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList);
-    }, [currentOutputFilterSet])
 
 
     useEffect(() => {
         console.log("using effect")
         const newExtraPairData = generateExtrapairPlotData(caseIDList, aggregatedBy, hemoglobinDataSet, extraPairArray, data)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
-
-    }, [extraPairArray, data, hemoglobinDataSet, caseIDList]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [extraPairArray, data, hemoglobinDataSet, caseIDList, aggregatedBy]);
 
 
 
@@ -223,22 +197,10 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         actions.changeChart(aggregatedBy, value.value, chartId, "VIOLIN")
     }
 
-    const changePlotType = (e: any, value: any) => {
-        actions.changeChart(aggregatedBy, valueToVisualize, chartId, value.value)
-    }
-
-    //  return true;
 
 
 
     return (
-        // <Bars
-        // chartId={chartId}
-        // data={data.result}
-        // yMax={yMax}
-        // aggregatedByName={aggregatedBy}
-        // valueToVisualizeName={valueToVisualize}
-        // />
         <Grid style={{ height: "100%" }} >
             <Grid.Row >
                 <Grid.Column verticalAlign="middle" width={1} style={{ display: previewMode ? "none" : null }}>

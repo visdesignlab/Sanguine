@@ -120,7 +120,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         // setKdeMax(newkdeMax);
         setCaseMax(newCaseMax);
 
-    }, [data, xVals])
+    }, [data, xVals, aggregatedBy])
 
     const aggregationScale = useCallback(() => {
         let aggregationScale = scaleBand()

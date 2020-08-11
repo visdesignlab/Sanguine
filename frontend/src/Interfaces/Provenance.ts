@@ -7,7 +7,6 @@ import {
     SingleCasePoint
 } from "./ApplicationState";
 import { store } from './Store';
-import { toJS } from 'mobx';
 
 interface AppProvenance {
     provenance: Provenance<ApplicationState>;
@@ -97,9 +96,7 @@ export function setupProvenance(): AppProvenance {
     })
 
     provenance.addObserver(["proceduresSelection"], (state?: ApplicationState) => {
-        console.log(toJS(store.proceduresSelection))
         store.proceduresSelection = state ? state.proceduresSelection : store.proceduresSelection
-        console.log(toJS(store.proceduresSelection))
     })
 
     // provenance.addObserver(["rawproceduresSelection"], (state?: ApplicationState) => {

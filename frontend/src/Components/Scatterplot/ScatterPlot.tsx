@@ -9,7 +9,7 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
-import { offset, AxisLabelDict, Accronym, preop_color, third_gray } from "../../PresetsProfile"
+import { offset, AxisLabelDict, third_gray } from "../../PresetsProfile"
 import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range, deviation, mean } from "d3";
 
 //import CustomizedAxis from "../Utilities/CustomizedAxis";
@@ -125,6 +125,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
 
         let newbrushedCaseList = currentBrushedPatientGroup.map(d => d.CASE_ID)
         stateUpdateWrapperUseJSON(brushedCaseList, newbrushedCaseList, updatebrushedCaseList)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentBrushedPatientGroup])
 
 

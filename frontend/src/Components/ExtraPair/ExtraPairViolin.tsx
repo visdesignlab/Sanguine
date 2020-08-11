@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { scaleLinear, line, curveCatmullRom, format, scaleBand, select, axisBottom } from "d3";
 import { extraPairWidth } from "../../PresetsProfile"
-import { preop_color, postop_color, basic_gray } from "../../PresetsProfile";
+import { basic_gray } from "../../PresetsProfile";
 import { Popup } from "semantic-ui-react";
 
 interface OwnProps {
@@ -53,7 +53,7 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
         const svgSelection = select(svgRef.current);
         const scaleLabel = axisBottom(valueScale).ticks(3);
         svgSelection.select(".axis").call(scaleLabel as any);
-    }, [svgRef])
+    }, [svgRef, valueScale])
 
 
 
@@ -88,9 +88,7 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
     )
 }
 
-interface DotProps {
-    ispreop: boolean;
-}
+
 
 const ViolinLine = styled(`path`)`
     fill: ${basic_gray};

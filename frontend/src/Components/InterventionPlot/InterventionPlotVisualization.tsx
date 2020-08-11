@@ -196,7 +196,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                 }
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [proceduresSelection, dateRange, aggregatedBy, showZero, interventionDate, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet]);
+    }, [proceduresSelection, dateRange, aggregatedBy, outcomesSelection, showZero, interventionDate, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet]);
 
 
     useEffect(() => {
@@ -243,7 +243,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         <Menu.Item>
                             <Dropdown selectOnBlur={false} pointing basic item icon="settings" compact >
                                 <Dropdown.Menu>
-                                    <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
+                                    <Dropdown text="Change Aggregation" pointing basic item compact options={[barChartAggregationOptions[0], barChartAggregationOptions[2]]} onChange={changeAggregation}></Dropdown>
                                     <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue}></Dropdown>
                                     {/* <Dropdown text="Change Type" pointing basic item compact options={interventionChartType} onChange={changeType}></Dropdown> */}
                                 </Dropdown.Menu>

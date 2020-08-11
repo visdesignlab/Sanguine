@@ -180,7 +180,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                 }
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [proceduresSelection, hemoglobinDataSet, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet, outcomeComparison]);
+    }, [proceduresSelection, outcomesSelection, hemoglobinDataSet, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet, outcomeComparison]);
 
 
     useEffect(() => {

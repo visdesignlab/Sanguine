@@ -9,7 +9,7 @@ import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
-import { scatterYOptions, barChartValuesOptions, ChartSVG, OutcomeType } from "../../PresetsProfile"
+import { scatterYOptions, barChartValuesOptions, ChartSVG } from "../../PresetsProfile"
 import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import ScatterPlotChart from "./ScatterPlot";
 import axios from "axios";
@@ -173,7 +173,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                 }
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dateRange, proceduresSelection, hemoglobinDataSet, showZero, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroupIDs]);
+    }, [dateRange, proceduresSelection, hemoglobinDataSet, showZero, outcomesSelection, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroupIDs]);
 
 
 
