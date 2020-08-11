@@ -7,10 +7,8 @@ import { inject, observer } from "mobx-react";
 import Store from "../../Interfaces/Store";
 import { List, Container, Button, Header } from "semantic-ui-react";
 import { HIPAA_Sensitive, AxisLabelDict, Title } from "../../PresetsProfile";
-import { actions } from "../..";
 import styled from "styled-components";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
-import { toJS } from "mobx";
 import { SingleCasePoint } from "../../Interfaces/ApplicationState";
 
 interface OwnProps {
@@ -22,7 +20,7 @@ export type Props = OwnProps;
 const DetailView: FC<Props> = ({ store }: Props) => {
     const {
         currentBrushedPatientGroup,
-        dateRange } = store!
+    } = store!
 
     const [individualInfo, setIndividualInfo] = useState<any>(null)
     const [currentSelectPatient, setCurrentSelectPatient] = useState<SingleCasePoint | undefined>(undefined)
@@ -61,7 +59,7 @@ const DetailView: FC<Props> = ({ store }: Props) => {
         }
         fetchIndividualInformaiton()
 
-    }, [currentSelectPatient])
+    }, [currentSelectPatient, individualInfo])
 
     const generate_List_Items = () => {
         let result = [];

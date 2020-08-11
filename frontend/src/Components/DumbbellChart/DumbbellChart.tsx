@@ -127,7 +127,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
             let currentPreopSum: number[] = [];
             let currentPostopSum: number[] = [];
             let averageDict: any = {}
-            tempSortedData.map((d, i) => {
+            tempSortedData.forEach((d, i) => {
                 currentPreopSum.push(d.startXVal)
                 currentPostopSum.push(d.endXVal)
                 if (i === tempSortedData.length - 1) {
@@ -143,6 +143,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
                     currentPreopSum = [];
                 }
             })
+
             const newindices = range(0, data.length)
             stateUpdateWrapperUseJSON(indicies, newindices, setIndicies)
             stateUpdateWrapperUseJSON(averageForEachTransfused, averageDict, setAverage)
@@ -150,7 +151,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
             stateUpdateWrapperUseJSON(datapointsDict, tempDatapointsDict, setDataPointDict)
             stateUpdateWrapperUseJSON(numberList, tempNumberList, setNumberList)
         }
-    }, [data, sortMode])
+    }, [data, sortMode, averageForEachTransfused, datapointsDict, indicies, numberList, sortedData])
 
     useEffect(() => {
         const widthAllowed = dimensionWidth - currentOffset.left - currentOffset.right;
