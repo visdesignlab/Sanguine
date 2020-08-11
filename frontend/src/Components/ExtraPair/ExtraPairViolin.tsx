@@ -1,8 +1,8 @@
-import React, { FC, useCallback } from "react";
+import React, { FC, useCallback, useRef, useEffect } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
-import { scaleLinear, line, curveCatmullRom, format, scaleBand } from "d3";
+import { scaleLinear, line, curveCatmullRom, format, scaleBand, select, axisBottom } from "d3";
 import { extraPairWidth } from "../../PresetsProfile"
 import { preop_color, postop_color, basic_gray } from "../../PresetsProfile";
 import { Popup } from "semantic-ui-react";
@@ -47,11 +47,21 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
         return lineFunction
     }, [aggregationScale()])
 
+    const svgRef = useRef<SVGSVGElement>(null);
+
+    useEffect(() => {
+        const svgSelection = select(svgRef.current);
+        const scaleLabel = axisBottom(valueScale).ticks(3);
+        svgSelection.select(".axis").call(scaleLabel as any);
+    }, [svgRef])
 
 
 
     return (
         <>
+            <g ref={svgRef} transform={`translate(0,${aggregationScale().range()[0]})`}>
+                <g className="axis"></g>
+            </g>
             {Object.entries(dataSet).map(([val, dataArray]) => {
 
                 // const sortedArray = dataArray.sort((a: any, b: any) =>
