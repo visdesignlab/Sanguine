@@ -33,9 +33,10 @@ export const extraPairOptions = [
 ]
 
 //export const minimumOffset = 
-export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 40, Outcomes: 40 }
-export const extraPairPadding = 5;
+export const extraPairWidth: any = { Violin: 100, Dumbbell: 110, BarChart: 50, Basic: 40, Outcomes: 40 }
+export const extraPairPadding = 10;
 export const minimumWidthScale = 18;
+export const caseRectWidth = 30;
 
 export const AxisLabelDict: any = {
     PRBC_UNITS: "Intraoperative RBCs Transfused",
@@ -88,6 +89,26 @@ export const dumbbellValueOptions = [
 ]
 
 export const dumbbellFacetOptions = [
+    {
+        value: "PRBC_UNITS",
+        key: "PRBC_UNITS",
+        text: "Intraoperative RBCs Transfused"
+    },
+    {
+        value: "FFP_UNITS",
+        key: "FFP_UNITS",
+        text: "Intraoperative FFP Transfused"
+    },
+    {
+        value: "PLT_UNITS",
+        key: "PLT_UNITS",
+        text: "Intraoperative Platelets Transfused"
+    },
+    {
+        value: "CRYO_UNITS",
+        key: "CRYO_UNITS",
+        text: "Intraoperative Cryo Transfused"
+    },
     { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
     { value: "YEAR", key: "YEAR", text: "Year" },
     {
@@ -173,6 +194,7 @@ export const HIPAA_Sensitive = new Set([
     "MONTH",
     "PATIENT_ID"
 ])
+
 
 export const Accronym = {
     CABG: "Coronary Artery Bypass Grafting",
