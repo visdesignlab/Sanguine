@@ -131,7 +131,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     }
 
     const simulateAPIClick = () => {
-        fetch(`https://bloodvis.chpc.utah.eduapi/accounts/login/`, {
+        fetch(`https://bloodvis.chpc.utah.edu/api/accounts/login/`, {
             method: 'GET',
             credentials: 'include',
         })
