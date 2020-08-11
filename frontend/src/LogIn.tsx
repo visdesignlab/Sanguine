@@ -29,7 +29,7 @@ const Logins: FC<Props> = ({ store }: Props) => {
         setError(true)
 
         // Get the csrf cookie by visiting the site
-        fetch(`http://localhost:8000/api/accounts/login/`, {
+        fetch(`https://bloodvis.chpc.utah.edu/api/accounts/login/`, {
             method: 'GET',
             credentials: 'include',
         })
@@ -38,7 +38,7 @@ const Logins: FC<Props> = ({ store }: Props) => {
         //store!.csrftoken = csrftoken
 
         // Post the log in data to the site with the cookie
-        fetch(`http://localhost:8000/api/accounts/login/`, {
+        fetch(`https://bloodvis.chpc.utah.edu0/api/accounts/login/`, {
             method: 'POST',
             credentials: "include",
             headers: {
