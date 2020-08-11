@@ -2,11 +2,10 @@ import React, { FC, useEffect, useRef, useLayoutEffect, useState } from "react";
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { ComparisonDataPoint, ExtraPairInterventionPoint, SingleCasePoint } from '../../Interfaces/ApplicationState'
-import { BloodProductCap, barChartAggregationOptions, barChartValuesOptions, interventionChartType, extraPairOptions, ChartSVG } from "../../PresetsProfile"
+import { ComparisonDataPoint, ExtraPairInterventionPoint } from '../../Interfaces/ApplicationState'
+import { barChartAggregationOptions, barChartValuesOptions, extraPairOptions, ChartSVG } from "../../PresetsProfile"
 import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
-import { create as createpd } from "pdfast";
-import { sum, median, timeFormat, mean } from "d3";
+import { timeFormat } from "d3";
 import InterventionPlot from "./ComparisonPlot";
 import axios from 'axios';
 import { stateUpdateWrapperUseJSON, generateExtrapairPlotDataWithIntervention, generateComparisonData } from "../../HelperFunctions";
@@ -62,6 +61,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
 
     useEffect(() => {
         if (extraPair) { stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray) }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [extraPair])
 
     useLayoutEffect(() => {
@@ -74,16 +74,21 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
             setWidth(w === 1 ? 542.28 : 1146.97)
             setHeight(svgRef.current.clientHeight);
         }
-    }, [layoutArray[chartIndex]]);
+    }, [layoutArray, w]);
 
     useEffect(() => {
         if (new Date(interventionDate).getTime() < new Date(rawDateRange[0]).getTime() || new Date(interventionDate).getTime() > new Date(rawDateRange[1]).getTime()) {
             actions.removeChart(chartId)
         }
-    }, [rawDateRange])
+    }, [rawDateRange, chartId, interventionDate])
 
 
-    function fetchChartData() {
+
+
+    useEffect(() => {
+        if (previousCancelToken) {
+            previousCancelToken.cancel("cancel the call.")
+        }
         let temporaryDataHolder: any = {};
         let caseDictionary = {} as any;
         let preCaseSetReturnedFromQuery = new Set();
@@ -107,7 +112,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
             .then(function (results) {
                 const preInterventiondataResult = results[0].data;
                 const postInterventionResult = results[1].data;
-                let caseCount = 0;
+
                 if (preInterventiondataResult && postInterventionResult) {
                     preInterventiondataResult.forEach((element: any) => {
                         preCaseSetReturnedFromQuery.add(element.case_id);
@@ -115,7 +120,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                     postInterventionResult.forEach((element: any) => {
                         postCaseSetReturnedFromQuery.add(element.case_id);
                     })
-                    hemoglobinDataSet.map((singleCase: any) => {
+                    hemoglobinDataSet.forEach((singleCase: any) => {
                         let criteriaMet = true;
                         if (currentOutputFilterSet.length > 0) {
                             for (let selectSet of currentOutputFilterSet) {
@@ -172,21 +177,15 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                     // handle error
                 }
             });
-    }
-
-    useEffect(() => {
-        if (previousCancelToken) {
-            previousCancelToken.cancel("cancel the call.")
-        }
-        fetchChartData();
-    }, [proceduresSelection, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [proceduresSelection, dateRange, aggregatedBy, showZero, interventionDate, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet]);
 
 
     useEffect(() => {
         const newExtraPairData = generateExtrapairPlotDataWithIntervention(caseIDDictionary, aggregatedBy, hemoglobinDataSet, extraPairArray, data)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
-        console.log(extraPairData)
-    }, [extraPairArray, data, hemoglobinDataSet, caseIDDictionary]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [extraPairArray, data, hemoglobinDataSet, aggregatedBy, caseIDDictionary]);
 
     const changeAggregation = (e: any, value: any) => {
         actions.changeChart(value.value, valueToVisualize, chartId, "INTERVENTION")
@@ -195,9 +194,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
         actions.changeChart(aggregatedBy, value.value, chartId, "INTERVENTION")
     }
 
-    const changeType = (e: any, value: any) => {
-        actions.changeChart(aggregatedBy, valueToVisualize, chartId, "INTERVENTION", value.value)
-    }
+
 
     return (
 

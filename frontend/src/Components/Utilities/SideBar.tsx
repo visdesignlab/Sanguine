@@ -6,9 +6,8 @@ import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat, max, select, axisTop } from "d3";
 import { actions } from "../..";
 import { AxisLabelDict, Accronym, postop_color, Title } from "../../PresetsProfile";
-import { highlight_orange } from "../../PresetsProfile";
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
-import { SingleCasePoint, defaultState } from "../../Interfaces/ApplicationState";
+import { defaultState } from "../../Interfaces/ApplicationState";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 interface OwnProps {
@@ -53,7 +52,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         if (svgRef.current) {
             setWidth(svgRef.current.clientWidth)
         }
-    })
+    }, [])
 
     window.addEventListener("resize", () => {
         if (svgRef.current) {
@@ -67,41 +66,70 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         return caseScale;
     }, [maxCaseCount, width])
 
-    async function fetchProcedureList() {
-        const res = await fetch(`${process.env.REACT_APP_QUERY_URL}get_attributes`);
-        const data = await res.json();
-        const result = data.result;
+    // async function fetchProcedureList() {
+    //     const res = await fetch(`${process.env.REACT_APP_QUERY_URL}get_attributes`);
+    //     const data = await res.json();
+    //     const result = data.result;
 
-        let tempSurgeryList: any[] = result;
+    //     let tempSurgeryList: any[] = result;
 
-        let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
-        tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
+    //     let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
+    //     tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
 
-        setMaxCaseCount(tempMaxCaseCount)
-        let tempItemUnselected: any[] = [];
-        let tempItemSelected: any[] = [];
+    //     setMaxCaseCount(tempMaxCaseCount)
+    //     let tempItemUnselected: any[] = [];
+    //     let tempItemSelected: any[] = [];
 
-        result.forEach((d: any) => {
-            if (proceduresSelection.includes(d.value)) {
-                tempItemSelected.push(d)
-            } else {
-                tempItemUnselected.push(d)
-            }
-        })
-        tempSurgeryList.sort((a: any, b: any) => b.count - a.count)
-        tempItemSelected.sort((a: any, b: any) => b.count - a.count)
-        tempItemUnselected.sort((a: any, b: any) => b.count - a.count)
-        // setMaxCaseCount(tempMaxCaseCount)
-        stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList)
-        //setProcedureList(result);
-        stateUpdateWrapperUseJSON(itemUnselected, tempItemUnselected, setItemUnselected);
-        stateUpdateWrapperUseJSON(itemSelected, tempItemSelected, setItemSelected);
-        //setItemUnselected(tempItemUnselected);
-        // setItemSelected(tempItemSelected);
-    }
+    //     result.forEach((d: any) => {
+    //         if (proceduresSelection.includes(d.value)) {
+    //             tempItemSelected.push(d)
+    //         } else {
+    //             tempItemUnselected.push(d)
+    //         }
+    //     })
+    //     tempSurgeryList.sort((a: any, b: any) => b.count - a.count)
+    //     tempItemSelected.sort((a: any, b: any) => b.count - a.count)
+    //     tempItemUnselected.sort((a: any, b: any) => b.count - a.count)
+    //     // setMaxCaseCount(tempMaxCaseCount)
+    //     stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList)
+    //     //setProcedureList(result);
+    //     stateUpdateWrapperUseJSON(itemUnselected, tempItemUnselected, setItemUnselected);
+    //     stateUpdateWrapperUseJSON(itemSelected, tempItemSelected, setItemSelected);
+    //     //setItemUnselected(tempItemUnselected);
+    //     // setItemSelected(tempItemSelected);
+    // }
 
     useEffect(() => {
-        fetchProcedureList();
+        fetch(`${process.env.REACT_APP_QUERY_URL}get_attributes`)
+            .then(response => response.json())
+            .then(function (data) {
+                const result = data.result;
+                let tempSurgeryList: any[] = result;
+
+                let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
+                tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
+
+                setMaxCaseCount(tempMaxCaseCount)
+                let tempItemUnselected: any[] = [];
+                let tempItemSelected: any[] = [];
+
+                result.forEach((d: any) => {
+                    if (proceduresSelection.includes(d.value)) {
+                        tempItemSelected.push(d)
+                    } else {
+                        tempItemUnselected.push(d)
+                    }
+                })
+                tempSurgeryList.sort((a: any, b: any) => b.count - a.count)
+                tempItemSelected.sort((a: any, b: any) => b.count - a.count)
+                tempItemUnselected.sort((a: any, b: any) => b.count - a.count)
+                // setMaxCaseCount(tempMaxCaseCount)
+                stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList)
+                //setProcedureList(result);
+                stateUpdateWrapperUseJSON(itemUnselected, tempItemUnselected, setItemUnselected);
+                stateUpdateWrapperUseJSON(itemSelected, tempItemSelected, setItemSelected);
+            });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
 
@@ -121,7 +149,8 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         // newItemUnselected.sort((a: any, b: any) => b.count - a.count)
         stateUpdateWrapperUseJSON(itemSelected, newItemSelected, setItemSelected)
         stateUpdateWrapperUseJSON(itemUnselected, newItemUnselected, setItemUnselected)
-    }, [proceduresSelection])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [proceduresSelection, surgeryList])
 
 
 

@@ -28,7 +28,7 @@ const ExtraPairBarInt: FC<Props> = ({ preDataSet, postDataSet, totalDataSet, agg
     const halfValueScale = useCallback(() => {
         const halfValueScale = scaleLinear().domain([0, max(Object.values(preDataSet).concat(Object.values(postDataSet)))]).range([0, extraPairWidth.BarChart])
         return halfValueScale;
-    }, [totalDataSet])
+    }, [postDataSet, preDataSet])
 
     const aggregatedScale = useCallback(() => {
         const aggregatedScale = scaleBand().domain(JSON.parse(aggregationScaleDomain)).range(JSON.parse(aggregationScaleRange)).paddingInner(0.1);

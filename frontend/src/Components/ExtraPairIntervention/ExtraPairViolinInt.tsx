@@ -60,7 +60,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
             .y((d: any) => kdeScale(d.y) + 0.5 * aggregatedScale().bandwidth())
             .x((d: any) => valueScale(d.x));
         return lineFunction
-    }, [aggregatedScale()])
+    }, [aggregatedScale, kdeMax, valueScale])
 
 
     const halfLineFunction = useCallback(() => {
@@ -75,7 +75,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
             .x((d: any) => valueScale(d.x))
 
         return halfLineFunction;
-    }, [aggregatedScale()])
+    }, [aggregatedScale, kdeMax])
 
 
     const generateOutput = () => {

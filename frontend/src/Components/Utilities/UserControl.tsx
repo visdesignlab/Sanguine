@@ -1,12 +1,11 @@
 import React, { FC, useEffect, useState, useRef } from "react";
 import Store from '../../Interfaces/Store'
 // import {}
-import { Image, Menu, Checkbox, Button, Dropdown, Container, Modal, Icon, Message, Segment, Form, List } from 'semantic-ui-react'
+import { Image, Menu, Button, Dropdown, Modal, Icon, Message, Segment, Form, List } from 'semantic-ui-react'
 import { inject, observer } from "mobx-react";
 import { actions, provenance } from '../..'
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
-import { timeFormat } from "d3";
 import { blood_red, OutcomeType } from "../../PresetsProfile";
 import {
     barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions,
@@ -58,7 +57,15 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     }
 
     useEffect(() => {
-        fetchSavedStates()
+        fetch(`${process.env.REACT_APP_QUERY_URL}state`)
+            .then(result => result.json())
+            .then(result => {
+                if (result) {
+                    const resultList = result.map((d: any[]) => d[1])
+                    stateUpdateWrapperUseJSON(listOfSavedState, resultList, setListOfSavedState)
+                }
+            })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const loadSavedState = async (name: string) => {
@@ -131,7 +138,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     }
 
     const simulateAPIClick = () => {
-        fetch(`http://localhost:8000/api/accounts/login/`, {
+        fetch(`${process.env.REACT_APP_QUERY_URL}accounts/login/`, {
             method: 'GET',
             credentials: 'include',
         })
@@ -271,6 +278,8 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                         <Button disabled={stateName.length === 0} content="Save" positive onClick={() => {
 
                             const csrftoken = simulateAPIClick()
+
+                            //does the following ACAO needs to change?
                             if (listOfSavedState.includes(stateName)) {
                                 fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
                                     method: `PUT`,

@@ -5,7 +5,6 @@ import React, {
     useCallback
 } from "react";
 import Store from "../../Interfaces/Store";
-import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import {
     select,
@@ -308,9 +307,9 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
 }
 export default inject("store")(observer(BarChart));
 
-const ExtraPairText = styled(`text`)`
-  font-size: 11px
-  text-anchor: middle
-  alignment-baseline:hanging
-  cursor:pointer
-`
+// const ExtraPairText = styled(`text`)`
+//   font-size: 11px
+//   text-anchor: middle
+//   alignment-baseline:hanging
+//   cursor:pointer
+// `

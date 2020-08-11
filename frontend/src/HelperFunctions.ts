@@ -1,5 +1,5 @@
 import { BasicAggregatedDatePoint, ExtraPairInterventionPoint, ComparisonDataPoint, ExtraPairPoint, SingleCasePoint, HeatMapDataPoint } from "./Interfaces/ApplicationState"
-import { mean, median, sum } from "d3";
+import { mean, median, sum, max } from "d3";
 import { create as createpd } from "pdfast";
 import { BloodProductCap } from "./PresetsProfile";
 
@@ -30,7 +30,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
             switch (variable) {
                 case "Total Transfusion":
                     //let newDataBar = {} as any;
-                    data.map((dataPoint: ComparisonDataPoint) => {
+                    data.forEach((dataPoint: ComparisonDataPoint) => {
                         newData[dataPoint.aggregateAttribute] = dataPoint.preTotalVal + dataPoint.postTotalVal;
                         preIntData[dataPoint.aggregateAttribute] = dataPoint.preTotalVal;
                         postIntData[dataPoint.aggregateAttribute] = dataPoint.postTotalVal;
@@ -40,7 +40,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
 
                 case "Per Case":
                     // let newDataPerCase = {} as any;
-                    data.map((dataPoint: ComparisonDataPoint) => {
+                    data.forEach((dataPoint: ComparisonDataPoint) => {
                         newData[dataPoint.aggregateAttribute] = (dataPoint.preTotalVal + dataPoint.postTotalVal) / (dataPoint.preCaseCount + dataPoint.postCaseCount);
                         preIntData[dataPoint.aggregateAttribute] = dataPoint.preTotalVal / dataPoint.preCaseCount;
                         postIntData[dataPoint.aggregateAttribute] = dataPoint.postTotalVal / dataPoint.postCaseCount;
@@ -53,7 +53,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                 case "Zero Transfusion":
                     //let newDataPerCase = {} as any;
                     // console.log(data)
-                    data.map((dataPoint: ComparisonDataPoint) => {
+                    data.forEach((dataPoint: ComparisonDataPoint) => {
 
                         newData[dataPoint.aggregateAttribute] = {
                             calculated: (dataPoint.preZeroCaseNum + dataPoint.postZeroCaseNum) / (dataPoint.preCaseCount + dataPoint.postCaseCount),
@@ -78,7 +78,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                     break;
 
                 case "Death":
-                    data.map((dataPoint: ComparisonDataPoint) => {
+                    data.forEach((dataPoint: ComparisonDataPoint) => {
                         temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = [];
                         temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = [];
                         temporaryDataHolder[dataPoint.aggregateAttribute] = [];
@@ -88,7 +88,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                         preCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.preCaseIDList)
                         postCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.postCaseIDList)
                     })
-                    hemoglobinDataSet.map((ob: any) => {
+                    hemoglobinDataSet.forEach((ob: any) => {
                         if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
                             temporaryDataHolder[ob[aggregatedBy]].push(ob.DEATH)
                             if (preCaseDicts[ob[aggregatedBy]].has(ob.CASE_ID)) {
@@ -116,7 +116,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                     break;
 
                 case "VENT":
-                    data.map((dataPoint: ComparisonDataPoint) => {
+                    data.forEach((dataPoint: ComparisonDataPoint) => {
                         preCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.preCaseIDList)
                         postCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.postCaseIDList)
 
@@ -127,7 +127,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                         preIntData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.preCaseCount };
                         postIntData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.postCaseCount };
                     })
-                    hemoglobinDataSet.map((ob: any) => {
+                    hemoglobinDataSet.forEach((ob: any) => {
                         if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
                             temporaryDataHolder[ob[aggregatedBy]].push(ob.VENT)
                             if (preCaseDicts[ob[aggregatedBy]].has(ob.CASE_ID)) {
@@ -154,7 +154,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                     break;
 
                 case "ECMO":
-                    data.map((dataPoint: ComparisonDataPoint) => {
+                    data.forEach((dataPoint: ComparisonDataPoint) => {
                         preCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.preCaseIDList)
                         postCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.postCaseIDList)
 
@@ -165,7 +165,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                         preIntData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.preCaseCount };
                         postIntData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.postCaseCount };
                     })
-                    hemoglobinDataSet.map((ob: any) => {
+                    hemoglobinDataSet.forEach((ob: any) => {
                         if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
                             temporaryDataHolder[ob[aggregatedBy]].push(ob.ECMO)
                             if (preCaseDicts[ob[aggregatedBy]].has(ob.CASE_ID)) {
@@ -192,7 +192,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                     newExtraPairData.push({ name: "ECMO", label: "ECMO", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                     break;
                 case "STROKE":
-                    data.map((dataPoint: ComparisonDataPoint) => {
+                    data.forEach((dataPoint: ComparisonDataPoint) => {
                         preCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.preCaseIDList)
                         postCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.postCaseIDList)
 
@@ -203,7 +203,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                         preIntData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.preCaseCount };
                         postIntData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.postCaseCount };
                     })
-                    hemoglobinDataSet.map((ob: any) => {
+                    hemoglobinDataSet.forEach((ob: any) => {
                         if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
                             temporaryDataHolder[ob[aggregatedBy]].push(ob.STROKE)
                             if (preCaseDicts[ob[aggregatedBy]].has(ob.CASE_ID)) {
@@ -232,7 +232,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
 
                 case "RISK":
                     // let temporaryDataHolder: any = {}
-                    data.map((dataPoint: ComparisonDataPoint) => {
+                    data.forEach((dataPoint: ComparisonDataPoint) => {
                         preCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.preCaseIDList)
                         postCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.postCaseIDList)
 
@@ -240,7 +240,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                         temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = []
                         temporaryDataHolder[dataPoint.aggregateAttribute] = []
                     })
-                    hemoglobinDataSet.map((ob: any) => {
+                    hemoglobinDataSet.forEach((ob: any) => {
                         if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
                             temporaryDataHolder[ob[aggregatedBy]].push(ob.DRG_WEIGHT)
                             if (preCaseDicts[ob[aggregatedBy]].has(ob.CASE_ID)) {
@@ -259,8 +259,13 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
 
                         let pd = createpd(value, { min: 0, max: 30 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
+
+                        let kdeMax_temp: number = (max(pd, (d: any) => (d.y as number)) || 0)
+
+                        kdeMax = kdeMax > kdeMax_temp ? kdeMax : kdeMax_temp;
+
                         let reverse_pd = pd.map((pair: any) => {
-                            kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                            //       kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
@@ -268,8 +273,13 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
 
                         pd = createpd(temporaryPreIntDataHolder[key], { min: 0, max: 30 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
+
+                        kdeMax_temp = (max(pd, (d: any) => (d.y as number)) || 0)
+
+                        kdeMax = kdeMax > kdeMax_temp ? kdeMax : kdeMax_temp;
+
                         reverse_pd = pd.map((pair: any) => {
-                            kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                            //kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
@@ -277,8 +287,11 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
 
                         pd = createpd(temporaryPostIntDataHolder[key], { min: 0, max: 30 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
+                        kdeMax_temp = (max(pd, (d: any) => (d.y as number)) || 0)
+
+                        kdeMax = kdeMax > kdeMax_temp ? kdeMax : kdeMax_temp
                         reverse_pd = pd.map((pair: any) => {
-                            kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                            //  kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
@@ -299,7 +312,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                     });
                     break;
                 case "Preop HGB":
-                    data.map((dataPoint: ComparisonDataPoint) => {
+                    data.forEach((dataPoint: ComparisonDataPoint) => {
                         preCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.preCaseIDList)
                         postCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.postCaseIDList)
 
@@ -307,7 +320,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                         preIntData[dataPoint.aggregateAttribute] = [];
                         postIntData[dataPoint.aggregateAttribute] = [];
                     });
-                    hemoglobinDataSet.map((ob: any) => {
+                    hemoglobinDataSet.forEach((ob: any) => {
                         const resultValue = parseFloat(ob.PREOP_HGB);
                         if (newData[ob[aggregatedBy]] && resultValue > 0 && caseIDList[ob.CASE_ID]) {
                             newData[ob[aggregatedBy]].push(resultValue);
@@ -327,8 +340,13 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
 
                         let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
+
+                        let kdeMax_temp: number = (max(pd, (d: any) => (d.y as number)) || 0)
+
+                        kdeMax = kdeMax > kdeMax_temp ? kdeMax : kdeMax_temp
+
                         let reverse_pd = pd.map((pair: any) => {
-                            kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                            //       kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
@@ -336,8 +354,13 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
 
                         pd = createpd(preIntData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
+
+                        kdeMax_temp = (max(pd, (d: any) => (d.y as number)) || 0)
+
+                        kdeMax = kdeMax > kdeMax_temp ? kdeMax : kdeMax_temp
+
                         reverse_pd = pd.map((pair: any) => {
-                            kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                            //   kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
@@ -345,8 +368,12 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
 
                         pd = createpd(postIntData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
+                        kdeMax_temp = (max(pd, (d: any) => (d.y as number)) || 0)
+
+                        kdeMax = kdeMax > kdeMax_temp ? kdeMax : kdeMax_temp
+
                         reverse_pd = pd.map((pair: any) => {
-                            kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                            //kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
@@ -368,7 +395,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                     break;
 
                 case "Postop HGB":
-                    data.map((dataPoint: ComparisonDataPoint) => {
+                    data.forEach((dataPoint: ComparisonDataPoint) => {
                         preCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.preCaseIDList)
                         postCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.postCaseIDList)
 
@@ -376,7 +403,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                         preIntData[dataPoint.aggregateAttribute] = [];
                         postIntData[dataPoint.aggregateAttribute] = [];
                     });
-                    hemoglobinDataSet.map((ob: any) => {
+                    hemoglobinDataSet.forEach((ob: any) => {
                         const resultValue = parseFloat(ob.POSTOP_HGB);
                         if (newData[ob[aggregatedBy]] && resultValue > 0 && caseIDList[ob.CASE_ID]) {
                             newData[ob[aggregatedBy]].push(resultValue);
@@ -396,8 +423,13 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
 
                         let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
+
+                        let kdeMax_temp: number = (max(pd, (d: any) => (d.y as number)) || 0)
+
+                        kdeMax = kdeMax > kdeMax_temp ? kdeMax : kdeMax_temp
+
                         let reverse_pd = pd.map((pair: any) => {
-                            kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                            //    kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
@@ -405,8 +437,13 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
 
                         pd = createpd(preIntData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
+
+                        kdeMax_temp = (max(pd, (d: any) => (d.y as number)) || 0)
+
+                        kdeMax = kdeMax > kdeMax_temp ? kdeMax : kdeMax_temp;
+
                         reverse_pd = pd.map((pair: any) => {
-                            kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                            //    kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
@@ -414,8 +451,13 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
 
                         pd = createpd(postIntData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
+
+                        kdeMax_temp = (max(pd, (d: any) => (d.y as number)) || 0)
+
+                        kdeMax = kdeMax > kdeMax_temp ? kdeMax : kdeMax_temp;
+
                         reverse_pd = pd.map((pair: any) => {
-                            kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                            //     kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
@@ -455,21 +497,21 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
             switch (variable) {
                 case "Total Transfusion":
                     //let newDataBar = {} as any;
-                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         newData[dataPoint.aggregateAttribute] = dataPoint.totalVal;
                     });
                     newExtraPairData.push({ name: "Total Transfusion", label: "Total", data: newData, type: "BarChart" });
                     break;
                 case "Per Case":
                     // let newDataPerCase = {} as any;
-                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         newData[dataPoint.aggregateAttribute] = dataPoint.totalVal / dataPoint.caseCount;
                     });
                     newExtraPairData.push({ name: "Per Case", label: "Per Case", data: newData, type: "BarChart" });
                     break;
                 case "Zero Transfusion":
                     //let newDataPerCase = {} as any;
-                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         newData[dataPoint.aggregateAttribute] = { actualVal: dataPoint.zeroCaseNum, calculated: dataPoint.zeroCaseNum / dataPoint.caseCount, outOfTotal: dataPoint.caseCount };
                     });
                     newExtraPairData.push({ name: "Zero Transfusion", label: "Zero %", data: newData, type: "Basic" });
@@ -477,11 +519,11 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
 
                 case "Death":
                     // let temporaryDataHolder: any = {}
-                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         temporaryDataHolder[dataPoint.aggregateAttribute] = []
                         newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.caseCount }
                     })
-                    hemoglobinDataSet.map((ob: any) => {
+                    hemoglobinDataSet.forEach((ob: any) => {
                         if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
                             temporaryDataHolder[ob[aggregatedBy]].push(ob.DEATH)
                         }
@@ -497,11 +539,11 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
 
                 case "VENT":
                     // let temporaryDataHolder:any = {}
-                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         temporaryDataHolder[dataPoint.aggregateAttribute] = []
                         newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.caseCount }
                     })
-                    hemoglobinDataSet.map((ob: any) => {
+                    hemoglobinDataSet.forEach((ob: any) => {
                         if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
                             temporaryDataHolder[ob[aggregatedBy]].push(ob.VENT)
                         }
@@ -514,11 +556,11 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                     break;
                 case "ECMO":
                     // let temporaryDataHolder:any = {}
-                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         temporaryDataHolder[dataPoint.aggregateAttribute] = []
                         newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.caseCount }
                     })
-                    hemoglobinDataSet.map((ob: any) => {
+                    hemoglobinDataSet.forEach((ob: any) => {
                         if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
                             temporaryDataHolder[ob[aggregatedBy]].push(ob.ECMO)
                         }
@@ -531,11 +573,11 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                     break;
                 case "STROKE":
                     // let temporaryDataHolder:any = {}
-                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         temporaryDataHolder[dataPoint.aggregateAttribute] = []
                         newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.caseCount }
                     })
-                    hemoglobinDataSet.map((ob: any) => {
+                    hemoglobinDataSet.forEach((ob: any) => {
                         if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
                             temporaryDataHolder[ob[aggregatedBy]].push(ob.STROKE)
                         }
@@ -549,10 +591,10 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
 
                 case "RISK":
                     // let temporaryDataHolder: any = {}
-                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         temporaryDataHolder[dataPoint.aggregateAttribute] = []
                     })
-                    hemoglobinDataSet.map((ob: any) => {
+                    hemoglobinDataSet.forEach((ob: any) => {
                         if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
                             temporaryDataHolder[ob[aggregatedBy]].push(ob.DRG_WEIGHT)
                         }
@@ -561,8 +603,12 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         medianData[key] = median(value as any);
                         let pd = createpd(value, { min: 0, max: 30 });
                         pd = [{ x: 0, y: 0 }].concat(pd)
+                        let kdeMax_temp: number = (max(pd, (d: any) => (d.y as number)) || 0)
+
+                        kdeMax = kdeMax > kdeMax_temp ? kdeMax : kdeMax_temp;
+
                         let reversePd = pd.map((pair: any) => {
-                            kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                            // kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reversePd)
@@ -572,10 +618,10 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                     break;
 
                 case "Preop HGB":
-                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         newData[dataPoint.aggregateAttribute] = [];
                     });
-                    hemoglobinDataSet.map((ob: any) => {
+                    hemoglobinDataSet.forEach((ob: any) => {
                         const resultValue = parseFloat(ob.PREOP_HGB);
                         if (newData[ob[aggregatedBy]] && resultValue > 0 && caseIDList[ob.CASE_ID]) {
                             newData[ob[aggregatedBy]].push(resultValue);
@@ -585,8 +631,12 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         medianData[prop] = median(newData[prop]);
                         let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
+                        let kdeMax_temp: number = (max(pd, (d: any) => (d.y as number)) || 0)
+
+                        kdeMax = kdeMax > kdeMax_temp ? kdeMax : kdeMax_temp;
+
                         let reversePd = pd.map((pair: any) => {
-                            kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                            // kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reversePd);
@@ -596,10 +646,10 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                     break;
                 case "Postop HGB":
                     //let newData = {} as any;
-                    data.map((dataPoint: BasicAggregatedDatePoint) => {
+                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         newData[dataPoint.aggregateAttribute] = [];
                     });
-                    hemoglobinDataSet.map((ob: any) => {
+                    hemoglobinDataSet.forEach((ob: any) => {
                         const resultValue = parseFloat(ob.POSTOP_HGB);
                         if (newData[ob[aggregatedBy]] && resultValue > 0 && caseIDList[ob.CASE_ID]) {
                             newData[ob[aggregatedBy]].push(resultValue);
@@ -609,8 +659,12 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                         medianData[prop] = median(newData[prop]);
                         let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
+                        let kdeMax_temp: number = (max(pd, (d: any) => (d.y as number)) || 0)
+
+                        kdeMax = kdeMax > kdeMax_temp ? kdeMax : kdeMax_temp;
+
                         let reversePd = pd.map((pair: any) => {
-                            kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
+                            //  kdeMax = pair.y > kdeMax ? pair.y : kdeMax;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reversePd);
@@ -630,7 +684,7 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
 export const generateComparisonData = (temporaryDataHolder: any[], showZero: boolean, valueToVisualize: string) => {
     let caseCount = 0;
     let outputData: ComparisonDataPoint[] = [];
-    Object.values(temporaryDataHolder).map((computedData: any) => {
+    Object.values(temporaryDataHolder).forEach((computedData: any) => {
         const prePatientIDArray: number[] = Array.from(computedData.prePatientIDList);
         const postPatientIDArray: number[] = Array.from(computedData.postPatienIDList);
         // const preCaseIDArray: number[] = Array.from(computedData.preCaseIDList);
@@ -694,7 +748,7 @@ export const generateComparisonData = (temporaryDataHolder: any[], showZero: boo
             }
         }
 
-        preDataArray.map((d: SingleCasePoint) => {
+        preDataArray.forEach((d: SingleCasePoint) => {
             if (valueToVisualize === "CELL_SAVER_ML") {
                 const roundedAnswer = Math.floor(d[valueToVisualize] / 100) * 100
                 if (d[valueToVisualize] === 0) {
@@ -716,7 +770,7 @@ export const generateComparisonData = (temporaryDataHolder: any[], showZero: boo
 
         });
 
-        postDataArray.map((d: SingleCasePoint) => {
+        postDataArray.forEach((d: SingleCasePoint) => {
             if (valueToVisualize === "CELL_SAVER_ML") {
                 const roundedAnswer = Math.floor(d[valueToVisualize] / 100) * 100
                 if (d[valueToVisualize] === 0) {
@@ -763,7 +817,7 @@ export const generateComparisonData = (temporaryDataHolder: any[], showZero: boo
 export const generateRegularData = (temporaryDataHolder: any[], showZero: boolean, valueToVisualize: string) => {
     let caseCount = 0;
     let outputData: HeatMapDataPoint[] = [];
-    Object.values(temporaryDataHolder).map((computedData: any) => {
+    Object.values(temporaryDataHolder).forEach((computedData: any) => {
         const patientIDArray: number[] = Array.from(computedData.patientIDList);
 
         let caseIDArray: number[] = [];
@@ -804,7 +858,7 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
             }
         }
 
-        dataArray.map((d: SingleCasePoint) => {
+        dataArray.forEach((d: SingleCasePoint) => {
             if (valueToVisualize === "CELL_SAVER_ML") {
                 const roundedAnswer = Math.floor(d[valueToVisualize] / 100) * 100
                 if (d[valueToVisualize] === 0) {

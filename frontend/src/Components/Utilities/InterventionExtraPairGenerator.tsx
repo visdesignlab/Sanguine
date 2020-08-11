@@ -79,7 +79,7 @@ const InterventionExtraPairGenerator: FC<Props> = ({ extraPairDataSet, aggregati
         >{labelInput}</ExtraPairText>
     }
 
-    extraPairDataSet.map((pairData, index) => {
+    extraPairDataSet.forEach((pairData, index) => {
         switch (pairData.type) {
             case "Violin":
                 transferedDistance += (extraPairWidth.Dumbbell + extraPairPadding)

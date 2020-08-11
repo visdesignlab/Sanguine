@@ -10,12 +10,9 @@ import {
     select,
     scaleLinear,
     scaleBand,
-    max,
     axisLeft,
     axisBottom,
     interpolateGreys,
-    line,
-    curveCatmullRom,
     range,
     interpolateReds,
     timeFormat
@@ -36,9 +33,8 @@ import {
 //import SingleHeatPlot from "./SingleHeatPlot";
 
 //import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
-import { third_gray, preop_color, postop_color, greyScaleRange, highlight_orange } from "../../PresetsProfile";
+import { third_gray, preop_color, postop_color, greyScaleRange } from "../../PresetsProfile";
 import SingleHeatCompare from "./SingleHeatCompare";
-import SingleViolinCompare from "./SingleViolinCompare";
 import InterventionExtraPairGenerator from "../Utilities/InterventionExtraPairGenerator";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
@@ -116,7 +112,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         // setKdeMax(newkdeMax);
         setCaseMax(newCaseMax);
 
-    }, [data])
+    }, [data, xVals])
 
     const aggregationScale = useCallback(() => {
         let aggregationScale = scaleBand()
@@ -124,7 +120,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
             .range([dimensionHeight - currentOffset.bottom, currentOffset.top])
             .paddingInner(0.1);
         return aggregationScale
-    }, [xVals, dimensionHeight, aggregatedBy])
+    }, [xVals, dimensionHeight, currentOffset])
 
     const valueScale = useCallback(() => {
         let outputRange
@@ -139,7 +135,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
             .range([currentOffset.left, (dimensionWidth - extraPairTotalWidth) - currentOffset.right - currentOffset.margin])
             .paddingInner(0.01);
         return valueScale
-    }, [dimensionWidth, extraPairTotalWidth, valueToVisualize])
+    }, [dimensionWidth, extraPairTotalWidth, valueToVisualize, currentOffset])
 
     const caseScale = useCallback(() => {
         const caseScale = scaleLinear().domain([0, caseMax]).range(greyScaleRange);
@@ -152,7 +148,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
             .range([currentOffset.left, (dimensionWidth - extraPairTotalWidth) - currentOffset.right - currentOffset.margin]);
 
         return linearValueScale;
-    }, [extraPairTotalWidth, dimensionWidth, valueToVisualize])
+    }, [extraPairTotalWidth, dimensionWidth, valueToVisualize, currentOffset])
 
     // const lineFunction = useCallback(() => {
     //     const kdeScale = scaleLinear()
