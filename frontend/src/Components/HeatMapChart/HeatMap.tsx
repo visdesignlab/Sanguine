@@ -25,7 +25,8 @@ import {
     extraPairPadding,
     AxisLabelDict,
     BloodProductCap,
-    CELL_SAVER_TICKS
+    CELL_SAVER_TICKS,
+    caseRectWidth
 } from "../../PresetsProfile"
 
 import SingleHeatPlot from "./SingleHeatPlot";
@@ -141,7 +142,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         )
         .call(aggregationLabel as any)
         .selectAll("text")
-        .attr("transform", `translate(-35,0)`)
+        .attr("transform", `translate(-${caseRectWidth - 4},0)`)
 
     svgSelection
         .select(".axes")
@@ -313,16 +314,16 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                     return outputSinglePlotElement(dataPoint).concat([
                         <rect
                             fill={interpolateGreys(caseScale()(dataPoint.caseCount))}
-                            x={-40}
+                            x={-caseRectWidth - 5}
                             y={aggregationScale()(dataPoint.aggregateAttribute)}
-                            width={35}
+                            width={caseRectWidth}
                             height={aggregationScale().bandwidth()}
                             // stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
                             strokeWidth={2}
                         />,
                         <text
                             fill="white"
-                            x={-22.5}
+                            x={-20}
                             y={
                                 aggregationScale()(dataPoint.aggregateAttribute)! +
                                 0.5 * aggregationScale().bandwidth()

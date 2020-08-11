@@ -20,6 +20,7 @@ interface OwnProps {
     aggregationScaleRange: string;
     chartId: string;
     height: number;
+
 }
 
 export type Props = OwnProps;
