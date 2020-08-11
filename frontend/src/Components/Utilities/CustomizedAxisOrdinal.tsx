@@ -2,7 +2,6 @@ import React, {
     FC,
     useCallback
 } from "react";
-import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import {
@@ -20,7 +19,7 @@ interface OwnProps {
 }
 export type Props = OwnProps;
 
-const CustomizedAxis: FC<Props> = ({ numberList, scaleDomain, scaleRange }) => {
+const CustomizedAxisOrdinal: FC<Props> = ({ numberList, scaleDomain, scaleRange }) => {
 
     const scale = useCallback(() => {
         const domain = JSON.parse(scaleDomain);
@@ -28,8 +27,8 @@ const CustomizedAxis: FC<Props> = ({ numberList, scaleDomain, scaleRange }) => {
         let scale = scaleOrdinal()
             .domain(domain as any)
             .range(range);
-        // scale = scale as ScaleOrdinal < any, number >
-        return scale
+
+        return scale;
     }, [scaleDomain, scaleRange])
 
     return <>
@@ -42,11 +41,11 @@ const CustomizedAxis: FC<Props> = ({ numberList, scaleDomain, scaleRange }) => {
                 <LineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? secondary_gray : basic_gray} />,
                 <AxisText x={x1 + 0.5 * (x2 - x1)}>{numberOb.num}</AxisText>
                 ])
-            }
+            } else { return <></> }
         })}
     </>
 }
-export default inject("store")(observer(CustomizedAxis));
+export default inject("store")(observer(CustomizedAxisOrdinal));
 
 
 const Line = styled(`line`)`

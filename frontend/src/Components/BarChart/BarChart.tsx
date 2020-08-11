@@ -5,7 +5,6 @@ import React, {
     useCallback
 } from "react";
 import Store from "../../Interfaces/Store";
-import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import {
     select,
@@ -114,7 +113,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
             .domain([0, BloodProductCap[valueToVisualize]])
             .range([currentOffset.left, width - extraPairTotalWidth - currentOffset.right - currentOffset.margin]);
         return valueScale
-    }, [width])
+    }, [width, valueToVisualize, extraPairTotalWidth])
 
     const caseScale = useCallback(() => {
         //const caseMax = max(data.map(d => d.caseCount)) || 0;
@@ -135,7 +134,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
             .x((d: any) => valueScale()(d.x) - currentOffset.left);
 
         return lineFunction
-    }, [kdeMax, valueScale()])
+    }, [kdeMax, valueScale, aggregationScale,])
 
 
 
@@ -308,9 +307,9 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
 }
 export default inject("store")(observer(BarChart));
 
-const ExtraPairText = styled(`text`)`
-  font-size: 11px
-  text-anchor: middle
-  alignment-baseline:hanging
-  cursor:pointer
-`
+// const ExtraPairText = styled(`text`)`
+//   font-size: 11px
+//   text-anchor: middle
+//   alignment-baseline:hanging
+//   cursor:pointer
+// `

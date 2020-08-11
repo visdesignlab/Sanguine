@@ -1,10 +1,10 @@
-import React, { FC, useCallback } from "react";
+import React, { FC, useCallback, useRef, useEffect } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
-import { scaleLinear, line, curveCatmullRom, format, scaleBand } from "d3";
+import { scaleLinear, line, curveCatmullRom, format, scaleBand, select, axisBottom } from "d3";
 import { extraPairWidth } from "../../PresetsProfile"
-import { preop_color, postop_color, basic_gray } from "../../PresetsProfile";
+import { basic_gray } from "../../PresetsProfile";
 import { Popup } from "semantic-ui-react";
 
 interface OwnProps {
@@ -45,13 +45,23 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
             .y((d: any) => kdeScale(d.y) + 0.5 * aggregationScale().bandwidth())
             .x((d: any) => valueScale(d.x));
         return lineFunction
-    }, [aggregationScale()])
+    }, [aggregationScale, kdeMax, valueScale])
 
+    const svgRef = useRef<SVGSVGElement>(null);
+
+    useEffect(() => {
+        const svgSelection = select(svgRef.current);
+        const scaleLabel = axisBottom(valueScale).ticks(3);
+        svgSelection.select(".axis").call(scaleLabel as any);
+    }, [svgRef, valueScale])
 
 
 
     return (
         <>
+            <g ref={svgRef} transform={`translate(0,${aggregationScale().range()[0]})`}>
+                <g className="axis"></g>
+            </g>
             {Object.entries(dataSet).map(([val, dataArray]) => {
 
                 // const sortedArray = dataArray.sort((a: any, b: any) =>
@@ -78,15 +88,7 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
     )
 }
 
-interface DotProps {
-    ispreop: boolean;
-}
 
-const Circle = styled(`circle`) <DotProps>`
-  r:2
-  fill: ${props => (props.ispreop ? preop_color : postop_color)};
-  opacity: 0.5
-`;
 
 const ViolinLine = styled(`path`)`
     fill: ${basic_gray};

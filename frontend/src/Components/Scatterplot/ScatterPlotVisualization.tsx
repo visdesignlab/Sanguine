@@ -9,7 +9,7 @@ import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
-import { scatterYOptions, barChartValuesOptions, ChartSVG, offset, OutcomeType } from "../../PresetsProfile"
+import { scatterYOptions, barChartValuesOptions, ChartSVG } from "../../PresetsProfile"
 import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
 import ScatterPlotChart from "./ScatterPlot";
 import axios from "axios";
@@ -40,7 +40,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
         previewMode,
         showZero,
         currentSelectPatientGroupIDs,
-        //actualYearRange,
+        outcomesSelection
 
     } = store!;
 
@@ -53,7 +53,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
     const [yMin, setYMin] = useState(0);
     const [yMax, setYMax] = useState(0);
 
-    const [highlightOption, setHighlightOption] = useState("")
+    //  const [highlightOption, setHighlightOption] = useState("")
 
     const [openNotationModal, setOpenNotationModal] = useState(false)
     const [notationInput, setNotationInput] = useState(notation)
@@ -66,9 +66,15 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
             setWidth(w === 1 ? 542.28 : 1146.97)
             setHeight(svgRef.current.clientHeight)
         }
-    }, [layoutArray[chartIndex]]);
+    }, [layoutArray, w]);
 
-    function fetchChartData() {
+
+
+
+    useEffect(() => {
+        if (previousCancelToken) {
+            previousCancelToken.cancel("cancel the call?")
+        }
 
         let transfused_dict = {} as any;
         const cancelToken = axios.CancelToken;
@@ -113,6 +119,21 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                                     }
                                 }
                             }
+                            // if (outcomesSelection.length > 0) {
+                            //     outcomesSelection.forEach((outcome) => {
+                            //         if (ob[outcome] === "0") {
+                            //             criteriaMet = false;
+                            //         }
+                            //     })
+                            // }
+                            if (outcomesSelection) {
+
+                                if (ob[outcomesSelection] === "0") {
+                                    criteriaMet = false;
+                                }
+
+                            }
+
 
                             if (criteriaMet) {
                                 tempYMin = yValue < tempYMin ? yValue : tempYMin;
@@ -128,8 +149,8 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                                 //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
                                 return new_ob;
                                 //}
-                            }
-                        }
+                            } else { return undefined }
+                        } else { return undefined }
                     });
 
                     castData = castData.filter((d: any) => d)
@@ -151,16 +172,8 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                     // handle error
                 }
             });
-    }
-
-
-
-    useEffect(() => {
-        if (previousCancelToken) {
-            previousCancelToken.cancel("cancel the call?")
-        }
-        fetchChartData();
-    }, [dateRange, proceduresSelection, hemoglobinDataSet, showZero, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroupIDs]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dateRange, proceduresSelection, hemoglobinDataSet, showZero, outcomesSelection, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroupIDs]);
 
 
 
@@ -191,7 +204,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                             </Dropdown>
                         </Menu.Item>
 
-                        <Menu.Item fitted>
+                        {/* <Menu.Item fitted>
                             <Dropdown selectOnBlur={false} basic item compact icon="lightbulb outline">
                                 <Dropdown.Menu>
                                     <Dropdown.Item onClick={() => { setHighlightOption("") }}>Clear</Dropdown.Item>
@@ -205,7 +218,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
 
                                 </Dropdown.Menu>
                             </Dropdown>
-                        </Menu.Item>
+                        </Menu.Item> */}
                         <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
                             <Icon name="edit" />
                         </Menu.Item>
@@ -263,7 +276,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                             xMin={xMin}
                             yMax={yMax}
                             yMin={yMin}
-                            highlightOption={highlightOption}
+                        //     highlightOption={highlightOption}
                         />
                     </ChartSVG>
 

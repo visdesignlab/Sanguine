@@ -1,8 +1,8 @@
-import React, { FC, useCallback } from "react";
+import React, { FC, useCallback, useRef, useEffect } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
-import { scaleLinear, line, curveCatmullRom, format, scaleBand } from "d3";
+import { scaleLinear, line, curveCatmullRom, format, scaleBand, select, axisBottom } from "d3";
 import { extraPairWidth } from "../../PresetsProfile"
 import { basic_gray } from "../../PresetsProfile";
 import { Popup } from "semantic-ui-react";
@@ -45,7 +45,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
     //     return valueScale;
     // }, [])
 
-    const valueScale = scaleLinear().domain([0, 18]).range([0, extraPairWidth.Violin]);
+    const valueScale = scaleLinear().domain([0, 18]).range([0, extraPairWidth.Violin]).nice();
     if (name === "RISK") {
         valueScale.domain([0, 30]);
     }
@@ -60,7 +60,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
             .y((d: any) => kdeScale(d.y) + 0.5 * aggregatedScale().bandwidth())
             .x((d: any) => valueScale(d.x));
         return lineFunction
-    }, [aggregatedScale()])
+    }, [aggregatedScale, kdeMax, valueScale])
 
 
     const halfLineFunction = useCallback(() => {
@@ -75,7 +75,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
             .x((d: any) => valueScale(d.x))
 
         return halfLineFunction;
-    }, [aggregatedScale()])
+    }, [aggregatedScale, kdeMax, valueScale])
 
 
     const generateOutput = () => {
@@ -146,8 +146,22 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
 
         return output;
     }
+
+
+    const svgRef = useRef<SVGSVGElement>(null);
+
+    useEffect(() => {
+        const svgSelection = select(svgRef.current);
+        const scaleLabel = axisBottom(valueScale).ticks(3);
+        svgSelection.select(".axis").call(scaleLabel as any);
+    }, [svgRef, valueScale])
+
+
     return (
         <>
+            <g ref={svgRef} transform={`translate(0,${aggregatedScale().range()[0]})`}>
+                <g className="axis"></g>
+            </g>
             {generateOutput()}
         </>
     )

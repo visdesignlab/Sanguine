@@ -1,12 +1,10 @@
 import Store from "../../Interfaces/Store";
 import { FC, useRef, useState, useEffect, useLayoutEffect } from "react";
-import { ExtraPairInterventionPoint, ComparisonDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
+import { ExtraPairInterventionPoint, ComparisonDataPoint } from "../../Interfaces/ApplicationState";
 import React from "react";
 import { inject, observer } from "mobx-react";
-import { BloodProductCap, extraPairOptions, barChartAggregationOptions, barChartValuesOptions, interventionChartType, ChartSVG } from "../../PresetsProfile";
+import { extraPairOptions, barChartAggregationOptions, barChartValuesOptions, interventionChartType, ChartSVG } from "../../PresetsProfile";
 import axios from 'axios';
-import { sum, median } from "d3";
-import { create as createpd } from "pdfast";
 import { stateUpdateWrapperUseJSON, generateExtrapairPlotDataWithIntervention, generateComparisonData } from "../../HelperFunctions";
 import { actions } from "../..";
 import { Grid, Menu, Dropdown, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
@@ -36,7 +34,8 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
         previewMode,
         currentSelectPatientGroupIDs,
         currentOutputFilterSet,
-        dateRange
+        dateRange,
+        outcomesSelection
     } = store!;
 
     const svgRef = useRef<SVGSVGElement>(null);
@@ -61,7 +60,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
         if (extraPair) {
             stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray)
         }
-    }, [extraPair])
+    }, [extraPair, extraPairArray])
 
     useLayoutEffect(() => {
         if (svgRef.current) {
@@ -73,9 +72,14 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
             setWidth(w === 1 ? 542.28 : 1146.97)
             setHeight(svgRef.current.clientHeight);
         }
-    }, [layoutArray[chartIndex]]);
+    }, [layoutArray, w]);
 
-    function fetchChartData() {
+
+
+    useEffect(() => {
+        if (previousCancelToken) {
+            previousCancelToken.cancel("cancel the call?")
+        }
         let temporaryDataHolder: any = {}
         let caseDictionary = {} as any;
 
@@ -94,7 +98,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                     transfusedDataResult.forEach((element: any) => {
                         caseSetReturnedFromQuery.add(element.case_id)
                     })
-                    hemoglobinDataSet.map((singleCase: any) => {
+                    hemoglobinDataSet.forEach((singleCase: any) => {
                         let criteriaMet = true;
                         if (currentOutputFilterSet.length > 0) {
                             for (let selectSet of currentOutputFilterSet) {
@@ -108,6 +112,21 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
 
                         if (!caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
                             criteriaMet = false;
+                        }
+
+                        // if (outcomesSelection.length > 0) {
+                        //     outcomesSelection.forEach((outcome) => {
+                        //         if (outcome !== outcomeComparison) {
+                        //             if (singleCase[outcome] === "0") {
+                        //                 criteriaMet = false;
+                        //             }
+                        //         }
+                        //     })
+                        // }
+                        if (outcomesSelection && outcomesSelection !== outcomeComparison) {
+                            if (singleCase[outcomesSelection] === "0") {
+                                criteriaMet = false;
+                            }
                         }
 
                         if (criteriaMet) {
@@ -160,32 +179,25 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                     // handle error
                 }
             });
-
-    }
-
-    useEffect(() => {
-        if (previousCancelToken) {
-            previousCancelToken.cancel("cancel the call?")
-        }
-        fetchChartData();
-    }, [proceduresSelection, hemoglobinDataSet, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroupIDs]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [proceduresSelection, outcomesSelection, hemoglobinDataSet, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet, outcomeComparison]);
 
 
     useEffect(() => {
         const newExtraPairData = generateExtrapairPlotDataWithIntervention(caseIDDictionary, aggregatedBy, hemoglobinDataSet, extraPairArray, data)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
-
-    }, [extraPairArray, data, hemoglobinDataSet, caseIDDictionary]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [extraPairArray, data, hemoglobinDataSet, caseIDDictionary, aggregatedBy]);
 
     const changeAggregation = (e: any, value: any) => {
-        actions.changeChart(value.value, valueToVisualize, chartId, "INTERVENTION")
+        actions.changeChart(value.value, valueToVisualize, chartId, "COMPARISON")
     }
     const changeValue = (e: any, value: any) => {
-        actions.changeChart(aggregatedBy, value.value, chartId, "INTERVENTION")
+        actions.changeChart(aggregatedBy, value.value, chartId, "COMPARISON")
     }
 
     const changeType = (e: any, value: any) => {
-        actions.changeChart(aggregatedBy, valueToVisualize, chartId, "INTERVENTION", value.value)
+        actions.changeChart(aggregatedBy, valueToVisualize, chartId, "COMPARISON", value.value)
     }
 
 
