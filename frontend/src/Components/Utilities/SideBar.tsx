@@ -1,14 +1,13 @@
 import React, { FC, useEffect, useState, useCallback, useRef, useLayoutEffect } from "react";
 import Store from "../../Interfaces/Store";
 import styled from 'styled-components'
-import { Grid, Container, List, Button, Header, Search, Checkbox, Icon } from "semantic-ui-react";
+import { Grid, Container, List, Button, Header, Search, Checkbox, Icon, Dropdown } from "semantic-ui-react";
 import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat, max, select, axisTop } from "d3";
 import { actions } from "../..";
-import { AxisLabelDict, Accronym, postop_color, Title } from "../../PresetsProfile";
-import { highlight_orange } from "../../PresetsProfile";
+import { AxisLabelDict, Accronym, postop_color, Title, OutcomeType } from "../../PresetsProfile";
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
-import { SingleCasePoint, defaultState } from "../../Interfaces/ApplicationState";
+import { defaultState } from "../../Interfaces/ApplicationState";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 interface OwnProps {
@@ -31,7 +30,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         currentOutputFilterSet,
         currentSelectPatientGroup,
         currentBrushedPatientGroup,
-        // currentSelectPatient, 
+        outcomesSelection,
         showZero,
         proceduresSelection } = store!;
 
@@ -53,7 +52,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         if (svgRef.current) {
             setWidth(svgRef.current.clientWidth)
         }
-    })
+    }, [])
 
     window.addEventListener("resize", () => {
         if (svgRef.current) {
@@ -67,41 +66,70 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         return caseScale;
     }, [maxCaseCount, width])
 
-    async function fetchProcedureList() {
-        const res = await fetch(`${process.env.REACT_APP_QUERY_URL}get_attributes`);
-        const data = await res.json();
-        const result = data.result;
+    // async function fetchProcedureList() {
+    //     const res = await fetch(`${process.env.REACT_APP_QUERY_URL}get_attributes`);
+    //     const data = await res.json();
+    //     const result = data.result;
 
-        let tempSurgeryList: any[] = result;
+    //     let tempSurgeryList: any[] = result;
 
-        let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
-        tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
+    //     let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
+    //     tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
 
-        setMaxCaseCount(tempMaxCaseCount)
-        let tempItemUnselected: any[] = [];
-        let tempItemSelected: any[] = [];
+    //     setMaxCaseCount(tempMaxCaseCount)
+    //     let tempItemUnselected: any[] = [];
+    //     let tempItemSelected: any[] = [];
 
-        result.forEach((d: any) => {
-            if (proceduresSelection.includes(d.value)) {
-                tempItemSelected.push(d)
-            } else {
-                tempItemUnselected.push(d)
-            }
-        })
-        tempSurgeryList.sort((a: any, b: any) => b.count - a.count)
-        tempItemSelected.sort((a: any, b: any) => b.count - a.count)
-        tempItemUnselected.sort((a: any, b: any) => b.count - a.count)
-        // setMaxCaseCount(tempMaxCaseCount)
-        stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList)
-        //setProcedureList(result);
-        stateUpdateWrapperUseJSON(itemUnselected, tempItemUnselected, setItemUnselected);
-        stateUpdateWrapperUseJSON(itemSelected, tempItemSelected, setItemSelected);
-        //setItemUnselected(tempItemUnselected);
-        // setItemSelected(tempItemSelected);
-    }
+    //     result.forEach((d: any) => {
+    //         if (proceduresSelection.includes(d.value)) {
+    //             tempItemSelected.push(d)
+    //         } else {
+    //             tempItemUnselected.push(d)
+    //         }
+    //     })
+    //     tempSurgeryList.sort((a: any, b: any) => b.count - a.count)
+    //     tempItemSelected.sort((a: any, b: any) => b.count - a.count)
+    //     tempItemUnselected.sort((a: any, b: any) => b.count - a.count)
+    //     // setMaxCaseCount(tempMaxCaseCount)
+    //     stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList)
+    //     //setProcedureList(result);
+    //     stateUpdateWrapperUseJSON(itemUnselected, tempItemUnselected, setItemUnselected);
+    //     stateUpdateWrapperUseJSON(itemSelected, tempItemSelected, setItemSelected);
+    //     //setItemUnselected(tempItemUnselected);
+    //     // setItemSelected(tempItemSelected);
+    // }
 
     useEffect(() => {
-        fetchProcedureList();
+        fetch(`${process.env.REACT_APP_QUERY_URL}get_attributes`)
+            .then(response => response.json())
+            .then(function (data) {
+                const result = data.result;
+                let tempSurgeryList: any[] = result;
+
+                let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
+                tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
+
+                setMaxCaseCount(tempMaxCaseCount)
+                let tempItemUnselected: any[] = [];
+                let tempItemSelected: any[] = [];
+
+                result.forEach((d: any) => {
+                    if (proceduresSelection.includes(d.value)) {
+                        tempItemSelected.push(d)
+                    } else {
+                        tempItemUnselected.push(d)
+                    }
+                })
+                tempSurgeryList.sort((a: any, b: any) => b.count - a.count)
+                tempItemSelected.sort((a: any, b: any) => b.count - a.count)
+                tempItemUnselected.sort((a: any, b: any) => b.count - a.count)
+                // setMaxCaseCount(tempMaxCaseCount)
+                stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList)
+                //setProcedureList(result);
+                stateUpdateWrapperUseJSON(itemUnselected, tempItemUnselected, setItemUnselected);
+                stateUpdateWrapperUseJSON(itemSelected, tempItemSelected, setItemSelected);
+            });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
 
@@ -121,7 +149,8 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         // newItemUnselected.sort((a: any, b: any) => b.count - a.count)
         stateUpdateWrapperUseJSON(itemSelected, newItemSelected, setItemSelected)
         stateUpdateWrapperUseJSON(itemUnselected, newItemUnselected, setItemUnselected)
-    }, [proceduresSelection])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [proceduresSelection, surgeryList])
 
 
 
@@ -130,9 +159,9 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         if (proceduresSelection.length === 0) {
             output.push(<span>All</span>);
         } else {
-            proceduresSelection.map((d, i) => {
+            proceduresSelection.forEach((d, i) => {
                 const stringArray = d.split(" ")
-                stringArray.map((word, index) => {
+                stringArray.forEach((word, index) => {
                     if ((Accronym as any)[word]) {
                         output.push((<div className="tooltip" style={{ cursor: "help" }}>{word}<span className="tooltiptext">{`${(Accronym as any)[word]}`}</span></div>))
                     } else {
@@ -177,7 +206,6 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     }
 
     const onDateChange = (event: any, data: any) => {
-        console.log(data.value)
         if (!data.value) {
             actions.dateRangeChange(defaultState.rawDateRange)
         }
@@ -198,7 +226,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         >
 
             <Grid.Row centered  >
-                <Container style={{ paddingLeft: "15px", height: "30vh" }}>
+                <Container style={{ paddingLeft: "15px", height: "35vh" }}>
                     <List>
 
                         <List.Header style={{ textAlign: "left" }}>
@@ -206,7 +234,15 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                         </List.Header>
 
                         <List.Item style={{ textAlign: "left", width: "100%" }} key="Date">
+                            <List.Header>Date Range</List.Header>
                             <StyledDate onChange={onDateChange} placeholder={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} - ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} type="range" />
+                        </List.Item>
+
+                        <List.Item key="Outcomes"
+                            style={{ textAlign: "left" }}>
+                            <List.Header>Outcomes</List.Header>
+                            <Dropdown value={outcomesSelection} clearable selection options={OutcomeType} onChange={(e, v) => { actions.changeOutcomesSelection((v.value as string)) }} />
+
                         </List.Item>
 
                         <List.Item style={{ textAlign: "left" }} key="Show Zero">
@@ -247,6 +283,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                             <List.Header>Procedures</List.Header>
                             <List.Content>{generateSurgery()} </List.Content>
                         </List.Item>
+
                         {generatePatientSelection()}
 
 
@@ -267,7 +304,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 
             </Grid.Row>
             <Grid.Row centered >
-                <Container style={{ height: "20vh", paddingLeft: "15px" }}>
+                <Container style={{ height: "15vh", paddingLeft: "15px" }}>
                     <List>
 
                         <List.Header style={{ textAlign: "left" }}>
@@ -385,7 +422,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                                             <SurgeryText y={9} x={caseScale().range()[1]}>{listItem.count}</SurgeryText>
                                         </ListSVG>} />
                                 )
-                            }
+                            } else { return (<></>) }
                         })}
                         {/* {itemSelected.length > 0 ? (<List.Item />) : (<></>)} */}
                         {itemUnselected.map((listItem: any) => {
@@ -409,7 +446,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                                         </ListSVG>}
                                         onClick={() => { actions.proceduresSelectionChange(listItem.value) }} />
                                 )
-                            }
+                            } else { return (<></>) }
                         })}
                     </List>
                 </Container>

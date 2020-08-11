@@ -1,4 +1,4 @@
-import React, { FC, useRef, FunctionComponent } from 'react';
+import React, { FC } from 'react';
 import { inject, observer } from 'mobx-react';
 import Store from './Interfaces/Store';
 import { Grid, Container, Modal, Message, Icon } from 'semantic-ui-react';

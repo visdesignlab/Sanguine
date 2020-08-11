@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { HeatMapDataPoint } from "../../Interfaces/ApplicationState";
 import { scaleLinear, interpolateReds, scaleBand, interpolateGreys, format } from "d3";
-import { highlight_orange, basic_gray, highlight_blue, greyScaleRange } from "../../PresetsProfile";
+import { highlight_orange, basic_gray, greyScaleRange } from "../../PresetsProfile";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
 
@@ -43,45 +43,49 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
     return (
         <>
             {valueScale().domain().map(point => {
-                const output = dataPoint.countDict[point].length
-                const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum
-                // let content = output/caseCount
-                let colorFill = output === 0 ? "white" : interpolateReds(colorScale(output / caseCount))
-                if (!showZero && point as any === 0) {
-                    colorFill = output === 0 ? "white" : interpolateGreys(greyScale(output / (dataPoint.caseCount)))
-                    /// content = output/dataPoint.caseCount
+                if (dataPoint.countDict[point]) {
+                    const output = dataPoint.countDict[point].length
+                    const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum
+                    // let content = output/caseCount
+                    let colorFill = output === 0 ? "white" : interpolateReds(colorScale(output / caseCount))
+                    if (!showZero && point as any === 0) {
+                        colorFill = output === 0 ? "white" : interpolateGreys(greyScale(output / (dataPoint.caseCount)))
+                        /// content = output/dataPoint.caseCount
+                    }
+
+                    return (
+                        [<Popup content={format(".0%")(output / dataPoint.caseCount)}
+                            key={dataPoint.aggregateAttribute + '-' + point}
+                            trigger={
+                                <HeatRect
+                                    fill={colorFill}
+                                    x={valueScale()(point)}
+                                    transform={howToTransform}
+                                    width={valueScale().bandwidth()}
+                                    height={bandwidth}
+                                    isselected={isSelected}
+                                    //   isfiltered={isFiltered}
+                                    onClick={(e) => {
+                                        actions.updateBrushPatientGroup(dataPoint.countDict[point], e.shiftKey ? "ADD" : "REPLACE", {
+                                            setName: aggregatedBy,
+                                            setValues: [dataPoint.aggregateAttribute],
+                                            //setPatientIds: [dataPoint.patientIDList]
+                                        })
+
+                                    }} />}
+                        />,
+                        <line transform={howToTransform}
+                            strokeWidth={0.5}
+                            stroke={basic_gray}
+                            opacity={output === 0 ? 1 : 0}
+                            y1={0.5 * bandwidth}
+                            y2={0.5 * bandwidth}
+                            x1={valueScale()(point)! + 0.35 * valueScale().bandwidth()}
+                            x2={valueScale()(point)! + 0.65 * valueScale().bandwidth()} />]
+                    )
+                } else {
+                    return <></>
                 }
-
-                return (
-                    [<Popup content={format(".0%")(output / dataPoint.caseCount)}
-                        key={dataPoint.aggregateAttribute + '-' + point}
-                        trigger={
-                            <HeatRect
-                                fill={colorFill}
-                                x={valueScale()(point)}
-                                transform={howToTransform}
-                                width={valueScale().bandwidth()}
-                                height={bandwidth}
-                                isselected={isSelected}
-                                //   isfiltered={isFiltered}
-                                onClick={(e) => {
-                                    actions.updateBrushPatientGroup(dataPoint.countDict[point], e.shiftKey ? "ADD" : "REPLACE", {
-                                        setName: aggregatedBy,
-                                        setValues: [dataPoint.aggregateAttribute],
-                                        //setPatientIds: [dataPoint.patientIDList]
-                                    })
-
-                                }} />}
-                    />,
-                    <line transform={howToTransform}
-                        strokeWidth={0.5}
-                        stroke={basic_gray}
-                        opacity={output === 0 ? 1 : 0}
-                        y1={0.5 * bandwidth}
-                        y2={0.5 * bandwidth}
-                        x1={valueScale()(point)! + 0.35 * valueScale().bandwidth()}
-                        x2={valueScale()(point)! + 0.65 * valueScale().bandwidth()} />]
-                )
             })}
         </>)
 

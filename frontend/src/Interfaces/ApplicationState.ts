@@ -105,9 +105,7 @@ export interface ExtraPairInterventionPoint {
 
 export interface ApplicationState {
 
-    //  currentSelectedChart: string;
-    // perCaseSelected: boolean;
-    // yearRange: number[];
+    outcomesSelection: string;
     rawDateRange: number[];
     proceduresSelection: string[];
     //rawproceduresSelection: string;
@@ -145,6 +143,7 @@ export interface LayoutElement {
 
 export const defaultState: ApplicationState = {
     layoutArray: [],
+    outcomesSelection: "",
     // currentSelectedChart: "-1",
     rawDateRange: [new Date(2014, 0, 1).getTime(), new Date(2019, 11, 31).getTime()],
     proceduresSelection: [],

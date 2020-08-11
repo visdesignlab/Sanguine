@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState, useRef, useMemo } from "react";
+import React, { FC, useEffect, useState, useMemo } from "react";
 import { inject, observer } from "mobx-react";
 import Store from "./Interfaces/Store";
 
@@ -22,12 +22,12 @@ export type Props = OwnProps;
 const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
 
 
-    // const lineupvariable = LineUpJS.builder
+    //const lineupvariable = LineUpJS.builder
     const { currentSelectPatientGroup } = store!
     const [distinctCategories, setCatgories] = useState<{ surgeons: any[], anesth: any[], patient: any[] }>({ surgeons: [], anesth: [], patient: [] })
     const [caseIDReference, setCaseIDList] = useState<any>({})
     const [convertedData, setConvertedData] = useState<any[]>([])
-    const [caseIDArray, setCaseIDArray] = useState<number[]>([])
+    // const [caseIDArray, setCaseIDArray] = useState<number[]>([])
 
     useEffect(() => {
 
@@ -38,7 +38,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
             let caseIDArray: number[] = []
             let caseIDDict: any = {}
             let tempData: any[] = []
-            hemoglobinDataSet.map((ob: any, index: number) => {
+            hemoglobinDataSet.forEach((ob: any, index: number) => {
                 caseIDDict[ob.CASE_ID] = index;
                 caseIDArray.push(ob.CASE_ID);
                 distinctAnesth.add((ob.ANESTHESIOLOGIST_ID).toString());
@@ -76,6 +76,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
             stateUpdateWrapperUseJSON(caseIDReference, caseIDDict, setCaseIDList)
             stateUpdateWrapperUseJSON(convertedData, tempData, setConvertedData)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hemoglobinDataSet])
 
     //TODO make the line up side bar on the main instead of on a seperate tab. 
@@ -145,6 +146,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
             //    lineup.setSelection(outputIndex);
 
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentSelectPatientGroup])
 
 

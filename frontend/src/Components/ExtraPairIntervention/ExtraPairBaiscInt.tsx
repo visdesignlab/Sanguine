@@ -35,7 +35,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
             valueScale = scaleLinear().domain([0, 1]).range(greyScaleRange);
         }
         return valueScale;
-    }, [])
+    }, [name])
 
     //  scaleLinear().domain([0, 1]).range(greyScaleRange)
 
