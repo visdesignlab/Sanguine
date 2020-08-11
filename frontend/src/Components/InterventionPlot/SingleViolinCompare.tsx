@@ -2,13 +2,13 @@ import React, { FC } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
-import { InterventionDataPoint } from "../../Interfaces/ApplicationState";
+import { ComparisonDataPoint } from "../../Interfaces/ApplicationState";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
 import { highlight_orange, highlight_blue, third_gray } from "../../PresetsProfile";
 
 interface OwnProps {
-    dataPoint: InterventionDataPoint;
+    dataPoint: ComparisonDataPoint;
     isSelected: boolean;
     isFiltered: boolean;
     preIntPath: string;
@@ -36,8 +36,9 @@ const SingleViolinCompare: FC<Props> = ({ postIntHowToTransform, preIntHowToTran
                         onClick={(e) => {
                             actions.selectSet(
                                 {
-                                    set_name: aggregatedBy,
-                                    set_value: [dataPoint.aggregateAttribute]
+                                    setName: aggregatedBy,
+                                    setValues: [dataPoint.aggregateAttribute],
+                                    // setPatientIds: [dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList)]
                                 },
                                 e.shiftKey
                             )
@@ -56,8 +57,9 @@ const SingleViolinCompare: FC<Props> = ({ postIntHowToTransform, preIntHowToTran
                         onClick={(e) => {
                             actions.selectSet(
                                 {
-                                    set_name: aggregatedBy,
-                                    set_value: [dataPoint.aggregateAttribute]
+                                    setName: aggregatedBy,
+                                    setValues: [dataPoint.aggregateAttribute],
+                                    //setPatientIds: [dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList)]
                                 },
                                 e.shiftKey
                             )

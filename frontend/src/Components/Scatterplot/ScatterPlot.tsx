@@ -8,12 +8,13 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { ScatterDataPoint } from "../../Interfaces/ApplicationState";
-import { offset, AxisLabelDict, highlight_blue } from "../../PresetsProfile"
-import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range, median, quantile } from "d3";
+import { ScatterDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
+import { offset, AxisLabelDict, highlight_blue, postop_color, Accronym, preop_color, third_gray } from "../../PresetsProfile"
+import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range, median, quantile, deviation, mean } from "d3";
 
 //import CustomizedAxis from "../Utilities/CustomizedAxis";
 import { highlight_orange, basic_gray } from "../../PresetsProfile";
+import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 interface OwnProps {
     yAxisName: string;
@@ -31,48 +32,51 @@ interface OwnProps {
     //xRange: { 
     xMin: number;
     xMax: number;
+    highlightOption: string;
 }
 
 export type Props = OwnProps;
 
-const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yMin, xAxisName, yAxisName, store }: Props) => {
+const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width, height, yMax, yMin, xAxisName, yAxisName, store }: Props) => {
 
     const currentOffset = offset.regular;
-    const { currentSelectPatient, currentSelectPatientGroup, currentOutputFilterSet, currentSelectSet } = store!;
+    const {
+        //   currentSelectPatient, 
+        currentBrushedPatientGroup,
+        currentSelectPatientGroup,
+        currentOutputFilterSet,
+        currentSelectSet } = store!;
     const svgSelection = select(svg.current);
     const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null)
-    const [isFirstRender, updateIsFirstRender] = useState(true)
+    const [isFirstRender, updateIsFirstRender] = useState(true);
+    const [brushedCaseList, updatebrushedCaseList] = useState<number[]>([])
 
     const updateBrush = () => {
         updateBrushLoc(event.selection)
     }
+
 
     const xAxisScale = useCallback(() => {
         let xAxisScale: any;
         if (xAxisName === "CELL_SAVER_ML") {
             xAxisScale = scaleLinear()
                 .domain([0.9 * xMin, 1.1 * xMax])
-                .range([currentOffset.left, width - currentOffset.right - currentOffset.margin]);
+                .range([currentOffset.left, width - currentOffset.right - currentOffset.margin]).nice();
         } else {
             xAxisScale = scaleBand()
                 .domain(range(0, xMax + 1) as any)
                 .range([currentOffset.left, width - currentOffset.right - currentOffset.margin])
-                .padding(0.2)
-
+                .padding(0.2);
         }
         return xAxisScale
     }, [xMax, xMin, width])
 
     const yAxisScale = useCallback(() => {
-        // const indices = range(0, data.length)
-        // console.log(data.length, currentOffset.left)
-        // const xAxisScale = scaleOrdinal()
-        //     .domain(indices as any)
-        //     .range(range(currentOffset.left, width - currentOffset.right, (width - currentOffset.left - currentOffset.right) / (data.length + 1)));
 
         const yAxisScale = scaleLinear()
             .domain([0.9 * yMin, 1.1 * yMax])
-            .range([height - currentOffset.bottom, currentOffset.top]);
+            .range([height - currentOffset.bottom, currentOffset.top])
+            .nice();
 
         return yAxisScale;
     }, [yMax, yMin, height])
@@ -89,30 +93,36 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         }
 
         else if (brushLoc) {
-            let caseList: number[] = [];
+            let caseList: SingleCasePoint[] = [];
             data.map((dataPoint) => {
                 //  const cx = (xAxisScale())(d.xVal as any) || 0
                 const cx = xAxisName === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
                 const cy = yAxisScale()(dataPoint.yVal)
                 if (cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
-                    caseList.push(dataPoint.case.caseId)
+                    caseList.push(dataPoint.case)
                 }
             })
             if (caseList.length > 1000 || caseList.length === 0) {
                 updateBrushLoc(null)
                 brushDef.move(svgSelection.select(".brush-layer"), null)
-                actions.updateBrushPatientGroup([])
+                actions.updateBrushPatientGroup([], "REPLACE")
             } else {
-                actions.updateBrushPatientGroup(caseList)
+                actions.updateBrushPatientGroup(caseList, "REPLACE")
             }
         } else {
-            actions.updateBrushPatientGroup([])
+            actions.updateBrushPatientGroup([], "REPLACE")
         }
     }, [brushLoc])
 
     useEffect(() => {
         brushDef.move(svgSelection.select(".brush-layer"), null)
     }, [currentOutputFilterSet, currentSelectPatientGroup])
+
+    useEffect(() => {
+
+        let newbrushedCaseList = currentBrushedPatientGroup.map(d => d.CASE_ID)
+        stateUpdateWrapperUseJSON(brushedCaseList, newbrushedCaseList, updatebrushedCaseList)
+    }, [currentBrushedPatientGroup])
 
 
     const yAxisLabel = axisLeft(yAxisScale());
@@ -122,9 +132,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         .select(".axes")
         .select(".y-axis")
         .attr("transform", `translate(${currentOffset.left}, 0)`)
-
         .attr('display', null)
-
         .call(yAxisLabel as any);
 
     svgSelection
@@ -160,18 +168,25 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         .attr("text-anchor", "middle")
         .text(AxisLabelDict[xAxisName] ? AxisLabelDict[xAxisName] : xAxisName);
 
-    const decideIfSelected = (d: ScatterDataPoint) => {
-        if (currentSelectPatient && d.case.caseId > 0) {
-            return currentSelectPatient.caseId === d.case.caseId
+    useEffect(() => {
+        if (highlightOption) {
+            svgSelection.select(".highlight-label")
+                .text(`${(Accronym as any)[highlightOption] || highlightOption} Highlighted`);
         }
-        return false;
-    }
+    }, [highlightOption])
+
+
+    // const decideIfSelected = (d: ScatterDataPoint) => {
+    //     if (currentSelectPatient && d.case.CASE_ID > 0) {
+    //         return currentSelectPatient.CASE_ID === d.case.CASE_ID
+    //     }
+    //     return false;
+    // }
 
     const decideIfSelectSet = (d: ScatterDataPoint) => {
         if (currentSelectSet.length > 0) {
             for (let selected of currentSelectSet) {
-                if (selected.set_value.includes(d.case[selected.set_name])) { return true; }
-
+                if (selected.setValues.includes((d.case[selected.setName]) as any)) { return true; }
             }
             return false;
         }
@@ -180,12 +195,21 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         }
     }
 
-    const clickDumbbellHandler = (d: ScatterDataPoint) => {
-        actions.selectPatient(d.case)
+    const decideIfHighlightOption = (d: ScatterDataPoint) => {
+        if (highlightOption) {
+            return d.case[highlightOption] > 0
+        } else {
+            return false;
+        }
     }
+
+    // const clickDumbbellHandler = (d: ScatterDataPoint) => {
+    //     actions.selectPatient(d.case)
+    // }
 
     const generateScatterDots = () => {
         let selectedPatients: any[] = [];
+        let brushedSet = new Set(brushedCaseList)
         //  const patientGroupSet = new Set(currentSelectPatientGroup)
         //let unselectedPatients = [];
         let medianSet: any = {}
@@ -199,29 +223,33 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
                 medianSet[dataPoint.xVal] = [dataPoint.yVal]
             }
             const cy = yAxisScale()(dataPoint.yVal)
-            const isSelected = decideIfSelected(dataPoint)
+            //   const isSelected = decideIfSelected(dataPoint)
             const isSelectSet = decideIfSelectSet(dataPoint);
-            const isBrushed = brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]
-            //  || (patientGroupSet.has(dataPoint.case.caseId));
-            if (isSelected || isBrushed || isSelectSet) {
+            const isHighlightOption = decideIfHighlightOption(dataPoint);
+
+            const isBrushed = brushedSet.has(dataPoint.case.CASE_ID)
+
+            // const isBrushed = brushLoc && cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]
+            //  || (patientGroupSet.has(dataPoint.case.CASE_ID));
+            if (isBrushed || isSelectSet || isHighlightOption) {
                 selectedPatients.push(
                     <Circle cx={cx}
                         cy={cy}
                         // fill={ ? highlight_orange : basic_gray}
-                        isselected={isSelected}
+                        isselected={isSelectSet}
                         isbrushed={isBrushed || false}
-                        isSelectSet={isSelectSet}
-                        onClick={() => { clickDumbbellHandler(dataPoint) }}
+                        isHighlightOutcome={isHighlightOption}
+                    // onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />)
             } else {
                 return (
                     <Circle cx={cx}
                         cy={cy}
                         // fill={ ? highlight_orange : basic_gray}
-                        isselected={isSelected}
+                        isselected={isSelectSet}
                         isbrushed={isBrushed || false}
-                        isSelectSet={isSelectSet}
-                        onClick={() => { clickDumbbellHandler(dataPoint) }}
+                        isHighlightOutcome={isHighlightOption}
+                    //  onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />
 
                 );
@@ -231,45 +259,31 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         if (xAxisName !== "CELL_SAVER_ML") {
 
             for (let [key, value] of Object.entries(medianSet)) {
-                const sortedArray = (value as any).sort()
-                const medianVal = median(value as any) || 0
-                const lowerQuantile = quantile(sortedArray as any, 0.05) || 0
-                const upperQuantile = quantile(sortedArray as any, 0.95) || 0
-                // console.log(value, lowerQuantile, upperQuantile)
+                //   const sortedArray = (value as any).sort()
+                const meanVal = mean(value as any) || 0
+                // const lowerBound = quantile(sortedArray as any, 0.05) || 0
+                // const upperBound = quantile(sortedArray as any, 0.95) || 0
+                const std = deviation(value as any) || 0;
+                const lowerBound = meanVal - 1.96 * std / Math.sqrt((value as any).length)
+                const upperBound = meanVal + 1.96 * std / Math.sqrt((value as any).length)
+                // console.log(value, lowerBound, upperBound)
                 lineSet = lineSet.concat(
-                    [<line strokeWidth="3px"
-                        stroke={highlight_blue}
-                        opacity={0.5}
+                    [<StatisticalLine
+                        //  opacity={0.5}
                         x1={xAxisScale()(key as any)}
-                        y1={yAxisScale()(medianVal)}
-                        y2={yAxisScale()(medianVal)}
+                        y1={yAxisScale()(meanVal)}
+                        y2={yAxisScale()(meanVal)}
                         x2={xAxisScale()(key as any) + xAxisScale().bandwidth() || 0} />,
-                    <line strokeWidth="2px"
-                        stroke={highlight_blue}
-                        opacity={0.5}
+                    <StatisticalLine
+                        // opacity={0.5}
                         x1={xAxisScale()(key as any) + 0.5 * xAxisScale().bandwidth() || 0}
-                        y1={yAxisScale()(lowerQuantile)}
-                        y2={yAxisScale()(upperQuantile)}
+                        y1={yAxisScale()(lowerBound)}
+                        y2={yAxisScale()(upperBound)}
                         x2={xAxisScale()(key as any) + 0.5 * xAxisScale().bandwidth() || 0} />,
-                    <line strokeWidth="3px"
-                        stroke={highlight_blue}
-                        opacity={0.5}
-                        x1={xAxisScale()(key as any) + 0.4 * xAxisScale().bandwidth() || 0}
-                        y1={yAxisScale()(upperQuantile)}
-                        y2={yAxisScale()(upperQuantile)}
-                        x2={xAxisScale()(key as any) + 0.6 * xAxisScale().bandwidth() || 0} />,
-                    <line strokeWidth="3px"
-                        stroke={highlight_blue}
-                        opacity={0.5}
-                        x1={xAxisScale()(key as any) + 0.4 * xAxisScale().bandwidth() || 0}
-                        y1={yAxisScale()(lowerQuantile)}
-                        y2={yAxisScale()(lowerQuantile)}
-                        x2={xAxisScale()(key as any) + 0.6 * xAxisScale().bandwidth() || 0} />]
+                    ]
                 )
             }
         }
-
-
         return unselectedPatients.concat(selectedPatients).concat(lineSet)
     }
 
@@ -286,7 +300,8 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
             <text className="y-label" />
         </g>
         <g className="chart-comp" >
-
+            <text fontSize="13px"
+                fill={third_gray} x={width} textAnchor="end" alignmentBaseline="hanging" y={0} className="highlight-label" />
             {/* <line x1={currentOffset.left} x2={dimension.width - currentOffset.right} y1={testValueScale(11)} y2={testValueScale(11)} style={{ stroke: "#990D0D", strokeWidth: "2" }} /> */}
             {generateScatterDots()}
             <g className="brush-layer" />
@@ -298,14 +313,19 @@ export default inject("store")(observer(ScatterPlot));
 interface DotProps {
     isselected: boolean;
     isbrushed: boolean;
-    isSelectSet: boolean;
+    isHighlightOutcome: boolean;
 }
 const Circle = styled(`circle`) <DotProps>`
-  r:4px
-  opacity:${props => props.isselected ? 1 : 0.5}
-  stroke:${props => (props.isSelectSet ? highlight_orange : "none")}
+  r:4px;
+  opacity:${props => props.isselected ? 1 : 0.5};
+  stroke:${props => (props.isHighlightOutcome ? preop_color : "none")};
   stroke-width:2px;
-  fill:${props => (props.isbrushed || props.isselected ? highlight_orange : basic_gray)}
+  fill:${props => (props.isbrushed || props.isselected ? highlight_orange : basic_gray)};
 `;
 
 
+const StatisticalLine = styled(`line`)`
+    stroke-width: 3px;
+    stroke: #3498d5;
+
+`
