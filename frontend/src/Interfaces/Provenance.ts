@@ -187,7 +187,7 @@ export function setupProvenance(): AppProvenance {
             `change layout to chart ${data.i}`,
             //We use index here because the layout array should always have the same order as the layoutlement array
             (state: ApplicationState) => {
-                data.map((gridLayout: any) => {
+                data.forEach((gridLayout: any) => {
                     let match = state.layoutArray.filter(d => d.i === gridLayout.i)[0]
                     match.w = gridLayout.w;
                     match.h = gridLayout.h;

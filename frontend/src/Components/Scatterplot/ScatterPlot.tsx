@@ -69,7 +69,7 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
                 .padding(0.2);
         }
         return xAxisScale
-    }, [xMax, xMin, width])
+    }, [xMax, xMin, width, currentOffset, xAxisName])
 
     const yAxisScale = useCallback(() => {
 
@@ -79,12 +79,11 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
             .nice();
 
         return yAxisScale;
-    }, [yMax, yMin, height])
+    }, [yMax, yMin, height, currentOffset])
 
     const brushDef = brush()
         .extent([[xAxisScale().range()[0], yAxisScale().range()[1]], [xAxisScale().range()[1], yAxisScale().range()[0]]])
-        .on("end", updateBrush)
-        ;
+        .on("end", updateBrush);
     svgSelection.select(".brush-layer").call(brushDef as any);
 
     useEffect(() => {
@@ -94,7 +93,7 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
 
         else if (brushLoc) {
             let caseList: SingleCasePoint[] = [];
-            data.map((dataPoint) => {
+            data.forEach((dataPoint) => {
                 //  const cx = (xAxisScale())(d.xVal as any) || 0
                 const cx = xAxisName === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
                 const cy = yAxisScale()(dataPoint.yVal)
@@ -112,10 +111,12 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
         } else {
             actions.updateBrushPatientGroup([], "REPLACE")
         }
-    }, [brushLoc])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [brushLoc, xAxisScale, yAxisScale, data, xAxisName])
 
     useEffect(() => {
         brushDef.move(svgSelection.select(".brush-layer"), null)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentOutputFilterSet, currentSelectPatientGroup])
 
     useEffect(() => {
@@ -209,11 +210,12 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
 
     const generateScatterDots = () => {
         let selectedPatients: any[] = [];
+        let unselectedPatients: any[] = [];
         let brushedSet = new Set(brushedCaseList)
         //  const patientGroupSet = new Set(currentSelectPatientGroup)
         //let unselectedPatients = [];
         let medianSet: any = {}
-        let unselectedPatients = data.map((dataPoint) => {
+        data.forEach((dataPoint) => {
 
             const cx = xAxisName === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
 
@@ -242,7 +244,7 @@ const ScatterPlot: FC<Props> = ({ xMax, highlightOption, xMin, svg, data, width,
                     // onClick={() => { clickDumbbellHandler(dataPoint) }}
                     />)
             } else {
-                return (
+                unselectedPatients.push(
                     <Circle cx={cx}
                         cy={cy}
                         // fill={ ? highlight_orange : basic_gray}

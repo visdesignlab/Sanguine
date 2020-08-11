@@ -2,7 +2,6 @@ import React, {
     FC,
     useCallback
 } from "react";
-import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import {
@@ -34,7 +33,7 @@ const CustomizedAxis: FC<Props> = ({ numberList, scaleDomain, scaleRange }) => {
 
     return <>
 
-        {numberList.map((numberOb, ind) => {
+        {numberList.forEach((numberOb, ind) => {
             let x1 = ind === 0 ? (scale() as ScaleOrdinal<any, number>)(0) : (1 + (scale() as ScaleOrdinal<any, number>)((numberList[ind - 1].indexEnding + 1)) - 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding)))
             let x2 = ind === numberList.length - 1 ? (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding) : (-1 + (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding) + 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding)))
             if (x1 && x2) {

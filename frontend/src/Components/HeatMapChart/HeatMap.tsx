@@ -30,7 +30,7 @@ import {
 
 import SingleHeatPlot from "./SingleHeatPlot";
 import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
-import { third_gray, greyScaleRange, highlight_orange } from "../../PresetsProfile";
+import { third_gray, greyScaleRange } from "../../PresetsProfile";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 interface OwnProps {
@@ -86,7 +86,8 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             .sort();
         stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
         setCaseMax(newCaseMax)
-        console.log(data)
+        //console.log(data)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data])
 
 
@@ -105,7 +106,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             .paddingInner(0.01);
 
         return valueScale
-    }, [dimensionWidth, extraPairTotalWidth, valueToVisualize]);
+    }, [dimensionWidth, extraPairTotalWidth, valueToVisualize, currentOffset]);
 
 
     const aggregationScale = useCallback(() => {
@@ -114,7 +115,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             .range([dimensionHeight - currentOffset.bottom, currentOffset.top])
             .paddingInner(0.1);
         return aggregationScale
-    }, [dimensionHeight, xVals, aggregatedBy])
+    }, [dimensionHeight, xVals, currentOffset])
 
     const caseScale = useCallback(() => {
         // const caseMax = max(data.map(d => d.caseCount)) || 0;

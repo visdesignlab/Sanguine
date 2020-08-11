@@ -66,9 +66,15 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
             setWidth(w === 1 ? 542.28 : 1146.97)
             setHeight(svgRef.current.clientHeight)
         }
-    }, [layoutArray[chartIndex], w]);
+    }, [layoutArray, w]);
 
-    function fetchChartData() {
+
+
+
+    useEffect(() => {
+        if (previousCancelToken) {
+            previousCancelToken.cancel("cancel the call?")
+        }
 
         let transfused_dict = {} as any;
         const cancelToken = axios.CancelToken;
@@ -128,8 +134,8 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                                 //if (new_ob.startXVal > 0 && new_ob.endXVal > 0) {
                                 return new_ob;
                                 //}
-                            }
-                        }
+                            } else { return undefined }
+                        } else { return undefined }
                     });
 
                     castData = castData.filter((d: any) => d)
@@ -151,15 +157,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                     // handle error
                 }
             });
-    }
-
-
-
-    useEffect(() => {
-        if (previousCancelToken) {
-            previousCancelToken.cancel("cancel the call?")
-        }
-        fetchChartData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dateRange, proceduresSelection, hemoglobinDataSet, showZero, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroupIDs]);
 
 

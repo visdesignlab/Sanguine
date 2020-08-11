@@ -3,7 +3,7 @@ import Store from './Interfaces/Store'
 import { inject, observer } from 'mobx-react';
 import Dashboard from './Dashboard';
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
-import { timeFormat, timeParse, select } from 'd3';
+import { timeFormat, timeParse } from 'd3';
 
 import Login from './LogIn'
 import Preview from './Preview';
@@ -61,7 +61,7 @@ const App: FC<Props> = ({ store }: Props) => {
         });
 
 
-        resultHemo.map((ob: any, index: number) => {
+        resultHemo.forEach((ob: any, index: number) => {
 
             if (transfused_dict[ob.CASE_ID]) {
                 const transfusedResult = transfused_dict[ob.CASE_ID];
@@ -103,6 +103,7 @@ const App: FC<Props> = ({ store }: Props) => {
 
     useEffect(() => {
         cacheHemoData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     return (
         <BrowserRouter>
@@ -112,7 +113,20 @@ const App: FC<Props> = ({ store }: Props) => {
                 <Route exact path='/dashboard' render={() => {
                     // if (isLoggedIn) return <Dashboard />
                     // else return <Redirect to="/" />
-                    if (isLoggedIn) {
+
+
+
+                    if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
+                        if (isLoggedIn) {
+                            if (previewMode) {
+                                return <Preview hemoData={hemoData} />
+                            }
+                            else {
+                                return <Dashboard hemoData={hemoData} />
+                            }
+                        }
+                        else return <Redirect to="/" />
+                    } else {
                         if (previewMode) {
                             return <Preview hemoData={hemoData} />
                         }
@@ -120,8 +134,9 @@ const App: FC<Props> = ({ store }: Props) => {
                             return <Dashboard hemoData={hemoData} />
                         }
                     }
-                    else return <Redirect to="/" />
-                }} />
+
+                }
+                } />
                 <Route path='/' component={Login} />
 
             </Switch></BrowserRouter>

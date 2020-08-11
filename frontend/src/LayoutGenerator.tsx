@@ -3,7 +3,7 @@ import React, {
 } from "react";
 import { inject, observer } from "mobx-react";
 import { Tab, Grid, GridColumn, Button } from "semantic-ui-react";
-import { actions, provenance } from ".";
+import { actions } from ".";
 import DetailView from "./Components/Utilities/DetailView";
 import LineUpWrapper from "./LineUpWrapper";
 //import PatientComparisonWrapper from "./Components/PatientComparisonWrapper";
@@ -14,10 +14,10 @@ import BarChartVisualization from "./Components/BarChart/BarChartVisualization";
 import ScatterPlotVisualization from "./Components/Scatterplot/ScatterPlotVisualization";
 import HeatMapVisualization from "./Components/HeatMapChart/HeatMapVisualization";
 import InterventionPlotVisualization from "./Components/InterventionPlot/InterventionPlotVisualization";
-
-import { Responsive } from "react-grid-layout";
-import 'react-grid-layout/css/styles.css'
 import ComparisonPlotVisualization from "./Components/ComparisonPlot/ComparisonPlotVisualization";
+import { Responsive } from "react-grid-layout";
+import 'react-grid-layout/css/styles.css';
+
 interface OwnProps {
     hemoData: any[];
     store?: Store
@@ -30,10 +30,10 @@ export type Props = OwnProps;
 
 
 const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
-    const { layoutArray, proceduresSelection } = store!
+    const { layoutArray } = store!
 
     const createElement = (layout: LayoutElement, index: number) => {
-        console.log(provenance.current().state)
+
         switch (layout.plotType) {
             case "DUMBBELL":
                 return (

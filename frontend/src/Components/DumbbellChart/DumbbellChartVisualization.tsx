@@ -13,7 +13,7 @@ import { DumbbellDataPoint } from "../../Interfaces/ApplicationState"
 import { BloodProductCap, dumbbellFacetOptions, barChartValuesOptions, ChartSVG } from "../../PresetsProfile"
 import DumbbellChart from "./DumbbellChart"
 import { Grid, Menu, Dropdown, Button, Icon, Modal, Form, Message } from "semantic-ui-react";
-import { preop_color, postop_color, basic_gray, third_gray } from "../../PresetsProfile";
+import { preop_color, postop_color, basic_gray } from "../../PresetsProfile";
 import axios from 'axios';
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
@@ -64,9 +64,13 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
             setDimensionHeight(svgRef.current.clientHeight)
 
         }
-    }, [layoutArray[chartIndex]]);
+    }, [layoutArray, w]);
 
-    function fetchChartData() {
+
+    useEffect(() => {
+        if (previousCancelToken) {
+            previousCancelToken.cancel("cancel the call?")
+        }
         let transfused_dict = {} as any;
         let requestingAxis = yAxis;
         if (!BloodProductCap[yAxis]) {
@@ -139,10 +143,10 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
                                     existingCaseID.add(ob.CASE_ID)
                                     caseCount++
                                     return new_ob;
-                                }
-                            }
+                                } else { return undefined }
+                            } else { return undefined }
                             //}
-                        }
+                        } else { return undefined }
                     });
                     cast_data = cast_data.filter((d: any) => d);
                     store!.totalIndividualCaseCount = caseCount;
@@ -160,15 +164,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
                     // handle error
                 }
             });
-
-
-    }
-
-    useEffect(() => {
-        if (previousCancelToken) {
-            previousCancelToken.cancel("cancel the call?")
-        }
-        fetchChartData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dateRange, proceduresSelection, hemoglobinDataSet, yAxis, showZero, currentOutputFilterSet, currentSelectPatientGroupIDs]);
 
     const changeXVal = (value: any) => {
@@ -297,22 +293,22 @@ export default inject("store")(observer(DumbbellChartVisualization));
 
 
 
-interface ActiveProps {
-    active: boolean;
-}
+// interface ActiveProps {
+//     active: boolean;
+// }
 
-const PostopMenuItem = styled(Menu.Item) <ActiveProps>`
-  &&&&&{color: ${props => props.active ? postop_color : third_gray}!important;
-        }
-`
+// const PostopMenuItem = styled(Menu.Item) <ActiveProps>`
+//   &&&&&{color: ${props => props.active ? postop_color : third_gray}!important;
+//         }
+// `
 
-const PreopMenuItem = styled(Menu.Item) <ActiveProps>`
- &&&&&{color: ${props => props.active ? preop_color : third_gray}!important;}
-`
+// const PreopMenuItem = styled(Menu.Item) <ActiveProps>`
+//  &&&&&{color: ${props => props.active ? preop_color : third_gray}!important;}
+// `
 
-const GapMenuItem = styled(Menu.Item)`
-  &&&&&{color: ${props => props.active ? basic_gray : third_gray}!important;}
-`
+// const GapMenuItem = styled(Menu.Item)`
+//   &&&&&{color: ${props => props.active ? basic_gray : third_gray}!important;}
+//`
 const GapButton = styled(Button)`
   &&&&& {color: ${basic_gray}!important;
 box - shadow: 0 0 0 1px ${basic_gray} inset!important;}`
@@ -327,8 +323,8 @@ const PreopButton = styled(Button)`
 box - shadow: 0 0 0 1px ${ preop_color} inset!important;}`
 
 
-const OptionsP = styled.p`
-  margin-top:5px;
-  margin-bottom:5px;
-  margin-left:1px;
-`
+// const OptionsP = styled.p`
+//   margin-top:5px;
+//   margin-bottom:5px;
+//   margin-left:1px;
+// `

@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { HeatMapDataPoint } from "../../Interfaces/ApplicationState";
 import { scaleLinear, interpolateReds, scaleBand, interpolateGreys, format } from "d3";
-import { highlight_orange, basic_gray, highlight_blue, greyScaleRange } from "../../PresetsProfile";
+import { highlight_orange, basic_gray, greyScaleRange } from "../../PresetsProfile";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
 

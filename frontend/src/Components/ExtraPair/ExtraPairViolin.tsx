@@ -45,7 +45,7 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
             .y((d: any) => kdeScale(d.y) + 0.5 * aggregationScale().bandwidth())
             .x((d: any) => valueScale(d.x));
         return lineFunction
-    }, [aggregationScale()])
+    }, [aggregationScale, kdeMax, valueScale])
 
 
 
@@ -81,12 +81,6 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
 interface DotProps {
     ispreop: boolean;
 }
-
-const Circle = styled(`circle`) <DotProps>`
-  r:2
-  fill: ${props => (props.ispreop ? preop_color : postop_color)};
-  opacity: 0.5
-`;
 
 const ViolinLine = styled(`path`)`
     fill: ${basic_gray};

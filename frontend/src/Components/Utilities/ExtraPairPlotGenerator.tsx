@@ -79,7 +79,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScaleD
     let transferedDistance = 0
     let returningComponents: any = []
     console.log(extraPairDataSet)
-    extraPairDataSet.map((pairData, index) => {
+    extraPairDataSet.forEach((pairData, index) => {
         switch (pairData.type) {
             case "Violin":
                 transferedDistance += (extraPairWidth.Dumbbell + extraPairPadding)
