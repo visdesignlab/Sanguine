@@ -28,6 +28,7 @@ import {
     extraPairWidth,
     extraPairPadding,
     Accronym,
+    caseRectWidth,
 } from "../../PresetsProfile"
 
 //import SingleHeatPlot from "./SingleHeatPlot";
@@ -63,6 +64,7 @@ export type Props = OwnProps;
 const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outcomeComparison, interventionDate, store, aggregatedBy, valueToVisualize, dimensionHeight, dimensionWidth, data, svg }: Props) => {
 
     const svgSelection = select(svg.current);
+    const differentialSquareWidth = 10;
 
     const {
         // perCaseSelected,
@@ -83,9 +85,9 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
     // const [postZeroMax,setPostZeroMax] = useState(0)
 
     useEffect(() => {
-        let totalWidth = 0
+        let totalWidth = extraPairDataSet.length > 0 ? (extraPairDataSet.length + 1) * extraPairPadding : 0;
         extraPairDataSet.forEach((d) => {
-            totalWidth += (extraPairWidth[d.type] + extraPairPadding)
+            totalWidth += (extraPairWidth[d.type])
         })
         setExtraPairTotlaWidth(totalWidth)
     }, [extraPairDataSet])
@@ -96,16 +98,22 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         let newZeroMax = 0;
         let newPreTotal = 0;
         let newPostTotal = 0;
-        const newXvals = data.map(dp => {
-            newCaseMax = newCaseMax > (dp.preCaseCount + dp.postCaseCount) ? newCaseMax : (dp.preCaseCount + dp.postCaseCount);
-            newZeroMax = newZeroMax > (dp.postZeroCaseNum + dp.preZeroCaseNum) ? newCaseMax : (dp.postZeroCaseNum + dp.preZeroCaseNum);
-            newPreTotal += dp.preCaseCount;
-            newPostTotal += dp.postCaseCount;
-            //  const max_temp = max([max(dp.preInKdeCal, d => d.y), max(dp.postInKdeCal, d => d.y)])
-            //  newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
-            return dp.aggregateAttribute
-        })
-            .sort();
+        const newXvals = data
+            .sort((a, b) => {
+                if (aggregatedBy === "YEAR") { return a.aggregateAttribute - b.aggregateAttribute }
+                else {
+                    return a.postCaseCount + a.preCaseCount - b.postCaseCount - b.preCaseCount
+                }
+            })
+            .map(dp => {
+                newCaseMax = newCaseMax > (dp.preCaseCount + dp.postCaseCount) ? newCaseMax : (dp.preCaseCount + dp.postCaseCount);
+                newZeroMax = newZeroMax > (dp.postZeroCaseNum + dp.preZeroCaseNum) ? newCaseMax : (dp.postZeroCaseNum + dp.preZeroCaseNum);
+                newPreTotal += dp.preCaseCount;
+                newPostTotal += dp.postCaseCount;
+                //  const max_temp = max([max(dp.preInKdeCal, d => d.y), max(dp.postInKdeCal, d => d.y)])
+                //  newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
+                return dp.aggregateAttribute
+            });
         stateUpdateWrapperUseJSON(xVals, newXvals, setXVals);
         setPreTotal(newPreTotal);
         setPostTotal(newPostTotal)
@@ -175,7 +183,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         )
         .call(aggregationLabel as any)
         .selectAll("text")
-        .attr("transform", `translate(-45,0)`)
+        .attr("transform", `translate(${-caseRectWidth - differentialSquareWidth + 4},0)`)
 
     svgSelection
         .select(".axes")
@@ -309,7 +317,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         if (aggregationScale().bandwidth() > 30) {
             return ([<text
                 fill="white"
-                x={-32.5}
+                x={-caseRectWidth}
                 y={
                     aggregationScale()(dataPoint.aggregateAttribute)! +
                     0.25 * aggregationScale().bandwidth()
@@ -321,7 +329,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                 {dataPoint.preCaseCount}
             </text>, <text
                 fill="white"
-                x={-32.5}
+                x={-caseRectWidth}
                 y={
                     aggregationScale()(dataPoint.aggregateAttribute)! +
                     0.75 * aggregationScale().bandwidth()
@@ -335,7 +343,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         } else {
             return ([<text
                 fill="white"
-                x={-32.5}
+                x={-caseRectWidth}
                 y={
                     aggregationScale()(dataPoint.aggregateAttribute)! +
                     0.5 * aggregationScale().bandwidth()
@@ -424,13 +432,13 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
             <g>
                 <rect x={0.7 * (dimensionWidth - extraPairTotalWidth)}
                     y={0}
-                    width={10}
+                    width={differentialSquareWidth}
                     height={12}
                     fill={preop_color}
                     opacity={0.65} />
                 <rect x={0.7 * (dimensionWidth - extraPairTotalWidth)}
                     y={12}
-                    width={10}
+                    width={differentialSquareWidth}
                     height={12}
                     fill={postop_color}
                     opacity={0.65} />
@@ -480,30 +488,30 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
 
                             <rect
                                 fill={interpolateGreys(caseScale()(dataPoint.preCaseCount))}
-                                x={-50}
+                                x={-caseRectWidth - 15}
                                 y={aggregationScale()(dataPoint.aggregateAttribute)}
-                                width={35}
+                                width={caseRectWidth}
                                 height={aggregationScale().bandwidth() * 0.5}
                             />,
                             <rect fill={interpolateGreys(caseScale()(dataPoint.postCaseCount))}
-                                x={-50}
-                                y={aggregationScale()(dataPoint.aggregateAttribute)! + aggregationScale().bandwidth() * 0.5} width={35}
+                                x={-caseRectWidth - 15}
+                                y={aggregationScale()(dataPoint.aggregateAttribute)! + aggregationScale().bandwidth() * 0.5} width={caseRectWidth}
                                 height={aggregationScale().bandwidth() * 0.5} />,
                             <rect
                                 fill={preop_color}
                                 x={-15}
                                 y={aggregationScale()(dataPoint.aggregateAttribute)}
-                                width={10}
+                                width={differentialSquareWidth}
                                 opacity={0.65}
                                 height={aggregationScale().bandwidth() * 0.47}
                             />,
                             <rect fill={postop_color}
                                 x={-15}
                                 y={aggregationScale()(dataPoint.aggregateAttribute)! + aggregationScale().bandwidth() * 0.5}
-                                width={10}
+                                width={differentialSquareWidth}
                                 opacity={0.65}
                                 height={aggregationScale().bandwidth() * 0.47} />,
-                            <rect x={-50} y={aggregationScale()(dataPoint.aggregateAttribute)} width={35} fill="none" height={aggregationScale().bandwidth()}
+                            <rect x={-caseRectWidth - 15} y={aggregationScale()(dataPoint.aggregateAttribute)} width={caseRectWidth} fill="none" height={aggregationScale().bandwidth()}
                                 //   stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
                                 strokeWidth={2} />
 

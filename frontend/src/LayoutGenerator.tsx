@@ -33,7 +33,6 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
     const { layoutArray } = store!
 
     const createElement = (layout: LayoutElement, index: number) => {
-
         switch (layout.plotType) {
             case "DUMBBELL":
                 return (

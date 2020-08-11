@@ -19,7 +19,7 @@ interface OwnProps {
 }
 export type Props = OwnProps;
 
-const CustomizedAxis: FC<Props> = ({ numberList, scaleDomain, scaleRange }) => {
+const CustomizedAxisOrdinal: FC<Props> = ({ numberList, scaleDomain, scaleRange }) => {
 
     const scale = useCallback(() => {
         const domain = JSON.parse(scaleDomain);
@@ -28,7 +28,7 @@ const CustomizedAxis: FC<Props> = ({ numberList, scaleDomain, scaleRange }) => {
             .domain(domain as any)
             .range(range);
         // scale = scale as ScaleOrdinal < any, number >
-        return scale
+        return scale;
     }, [scaleDomain, scaleRange])
 
     return <>
@@ -45,7 +45,7 @@ const CustomizedAxis: FC<Props> = ({ numberList, scaleDomain, scaleRange }) => {
         })}
     </>
 }
-export default inject("store")(observer(CustomizedAxis));
+export default inject("store")(observer(CustomizedAxisOrdinal));
 
 
 const Line = styled(`line`)`

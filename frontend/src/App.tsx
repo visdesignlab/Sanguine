@@ -111,10 +111,6 @@ const App: FC<Props> = ({ store }: Props) => {
                 {/* <Route exact path='/' component={Home} /> */}
 
                 <Route exact path='/dashboard' render={() => {
-                    // if (isLoggedIn) return <Dashboard />
-                    // else return <Redirect to="/" />
-
-
 
                     if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
                         if (isLoggedIn) {
@@ -134,8 +130,8 @@ const App: FC<Props> = ({ store }: Props) => {
                             return <Dashboard hemoData={hemoData} />
                         }
                     }
-
                 }
+
                 } />
                 <Route path='/' component={Login} />
 

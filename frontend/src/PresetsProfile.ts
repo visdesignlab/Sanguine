@@ -33,9 +33,10 @@ export const extraPairOptions = [
 ]
 
 //export const minimumOffset = 
-export const extraPairWidth: any = { Violin: 110, Dumbbell: 110, BarChart: 50, Basic: 40, Outcomes: 40 }
-export const extraPairPadding = 5;
+export const extraPairWidth: any = { Violin: 100, Dumbbell: 110, BarChart: 50, Basic: 40, Outcomes: 40 }
+export const extraPairPadding = 10;
 export const minimumWidthScale = 18;
+export const caseRectWidth = 30;
 
 export const AxisLabelDict: any = {
     PRBC_UNITS: "Intraoperative RBCs Transfused",
@@ -173,6 +174,7 @@ export const HIPAA_Sensitive = new Set([
     "MONTH",
     "PATIENT_ID"
 ])
+
 
 export const Accronym = {
     CABG: "Coronary Artery Bypass Grafting",
