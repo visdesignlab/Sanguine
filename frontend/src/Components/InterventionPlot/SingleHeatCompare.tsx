@@ -2,14 +2,14 @@ import React, { FC, useCallback } from "react";
 import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
-import { InterventionDataPoint } from "../../Interfaces/ApplicationState";
+import { ComparisonDataPoint } from "../../Interfaces/ApplicationState";
 import { scaleLinear, interpolateReds, scaleBand, interpolateGreys, format } from "d3";
 import { highlight_orange, basic_gray, highlight_blue, greyScaleRange } from "../../PresetsProfile";
 import { Popup } from "semantic-ui-react";
 import { actions } from "../..";
 
 interface OwnProps {
-    dataPoint: InterventionDataPoint;
+    dataPoint: ComparisonDataPoint;
     isSelected: boolean;
     aggregatedBy: string;
     isFiltered: boolean;
@@ -38,9 +38,9 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
         <>
 
             {valueScale().domain().map(point => {
-                const preOutput = dataPoint.preCountDict[point] ? dataPoint.preCountDict[point] : 0;
+                const preOutput = dataPoint.preCountDict[point].length;
 
-                const postOutput = dataPoint.postCountDict[point] ? dataPoint.postCountDict[point] : 0;
+                const postOutput = dataPoint.postCountDict[point].length;
 
                 const preCaseCount = showZero ? dataPoint.preCaseCount : dataPoint.preCaseCount - dataPoint.preZeroCaseNum;
                 const postCaseCount = showZero ? dataPoint.postCaseCount : dataPoint.postCaseCount - dataPoint.postZeroCaseNum;
@@ -66,13 +66,13 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                                 isselected={isSelected}
                                 isfiltered={isFiltered}
                                 onClick={(e) => {
-                                    actions.selectSet(
-                                        {
-                                            set_name: aggregatedBy,
-                                            set_value: [dataPoint.aggregateAttribute]
-                                        },
-                                        e.shiftKey
-                                    )
+
+                                    actions.updateBrushPatientGroup(dataPoint.preCountDict[point], e.shiftKey ? "ADD" : "REPLACE", {
+                                        setName: aggregatedBy,
+                                        setValues: [dataPoint.aggregateAttribute],
+                                        //   setPatientIds: [dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList)]
+                                    })
+
                                 }} />}
                     />, <Popup content={format(".0%")(postOutput / dataPoint.postCaseCount)}
                         key={`Post${dataPoint.aggregateAttribute} - ${point}`}
@@ -87,13 +87,12 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                                 isselected={isSelected}
                                 isfiltered={isFiltered}
                                 onClick={(e) => {
-                                    actions.selectSet(
-                                        {
-                                            set_name: aggregatedBy,
-                                            set_value: [dataPoint.aggregateAttribute]
-                                        },
-                                        e.shiftKey
-                                    )
+                                    actions.updateBrushPatientGroup(dataPoint.postCountDict[point], e.shiftKey ? "ADD" : "REPLACE", {
+                                        setName: aggregatedBy,
+                                        setValues: [dataPoint.aggregateAttribute],
+                                        //   setPatientIds: [dataPoint.prePatienIDList.concat(dataPoint.postPatienIDList)]
+                                    })
+
                                 }} />}
                     />,
                     <line
@@ -132,6 +131,6 @@ interface HeatRectProp {
 const HeatRect = styled(`rect`) <HeatRectProp>`
     
     opacity:0.6;
-    stroke: ${props => (props.isselected ? highlight_orange : (props.isfiltered ? highlight_blue : "none"))};
-    stroke-width:3;
-  `;
+    stroke: ${props => (props.isselected ? highlight_orange : "none")};
+    stroke - width: 3;
+`;

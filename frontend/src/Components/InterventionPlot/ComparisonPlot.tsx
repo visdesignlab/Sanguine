@@ -21,7 +21,7 @@ import {
     timeFormat
 } from "d3";
 import {
-    InterventionDataPoint
+    ComparisonDataPoint, ExtraPairInterventionPoint
 } from "../../Interfaces/ApplicationState";
 import {
     AxisLabelDict,
@@ -30,7 +30,7 @@ import {
     CELL_SAVER_TICKS,
     extraPairWidth,
     extraPairPadding,
-    stateUpdateWrapperUseJSON
+    Accronym,
 } from "../../PresetsProfile"
 
 //import SingleHeatPlot from "./SingleHeatPlot";
@@ -40,6 +40,7 @@ import { third_gray, preop_color, postop_color, greyScaleRange, highlight_orange
 import SingleHeatCompare from "./SingleHeatCompare";
 import SingleViolinCompare from "./SingleViolinCompare";
 import InterventionExtraPairGenerator from "../Utilities/InterventionExtraPairGenerator";
+import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 
 interface OwnProps {
@@ -50,35 +51,26 @@ interface OwnProps {
     // dimensionWhole: { width: number, height: number }
     dimensionWidth: number,
     dimensionHeight: number;
-    data: InterventionDataPoint[];
+    data: ComparisonDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
-    yMax: number;
+
     plotType: string;
-    interventionDate: number;
+    interventionDate?: number;
+    outcomeComparison?: string;
     //  selectedVal: number | null;
     // stripPlotMode: boolean;
-    extraPairDataSet: {
-        name: string,
-        totalIntData: any[],
-        preIntData: any[],
-        postIntData: any[],
-        type: string,
-        kdeMax?: number,
-        totalMedianSet?: any,
-        preMedianSet?: any,
-        postMedianSet?: any
-    }[];
+    extraPairDataSet: ExtraPairInterventionPoint[];
 }
 
 export type Props = OwnProps;
 
-const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, interventionDate, store, aggregatedBy, valueToVisualize, dimensionHeight, dimensionWidth, data, svg, yMax }: Props) => {
+const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outcomeComparison, interventionDate, store, aggregatedBy, valueToVisualize, dimensionHeight, dimensionWidth, data, svg }: Props) => {
 
     const svgSelection = select(svg.current);
 
     const {
         // perCaseSelected,
-        currentSelectPatient,
+        //  currentSelectPatient,
         currentOutputFilterSet,
         currentSelectSet,
         showZero
@@ -86,9 +78,11 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
 
     const currentOffset = offset.intervention;
     const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0);
-    const [kdeMax, setKdeMax] = useState(0);
+    // const [kdeMax, setKdeMax] = useState(0);
     const [xVals, setXVals] = useState([]);
-    const [caseMax, setCaseMax] = useState(0)
+    const [caseMax, setCaseMax] = useState(0);
+    const [preTotal, setPreTotal] = useState(0);
+    const [postTotal, setPostTotal] = useState(0)
     // const [preZeroMax, setPreZeroMax] = useState(0)
     // const [postZeroMax,setPostZeroMax] = useState(0)
 
@@ -101,19 +95,25 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
     }, [extraPairDataSet])
 
     useEffect(() => {
-        let newkdeMax = 0
+
         let newCaseMax = 0;
         let newZeroMax = 0;
+        let newPreTotal = 0;
+        let newPostTotal = 0;
         const newXvals = data.map(dp => {
             newCaseMax = newCaseMax > (dp.preCaseCount + dp.postCaseCount) ? newCaseMax : (dp.preCaseCount + dp.postCaseCount);
             newZeroMax = newZeroMax > (dp.postZeroCaseNum + dp.preZeroCaseNum) ? newCaseMax : (dp.postZeroCaseNum + dp.preZeroCaseNum);
-            const max_temp = max([max(dp.preInKdeCal, d => d.y), max(dp.postInKdeCal, d => d.y)])
-            newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
+            newPreTotal += dp.preCaseCount;
+            newPostTotal += dp.postCaseCount;
+            //  const max_temp = max([max(dp.preInKdeCal, d => d.y), max(dp.postInKdeCal, d => d.y)])
+            //  newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
             return dp.aggregateAttribute
         })
             .sort();
         stateUpdateWrapperUseJSON(xVals, newXvals, setXVals);
-        setKdeMax(newkdeMax);
+        setPreTotal(newPreTotal);
+        setPostTotal(newPostTotal)
+        // setKdeMax(newkdeMax);
         setCaseMax(newCaseMax);
 
     }, [data])
@@ -154,17 +154,17 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
         return linearValueScale;
     }, [extraPairTotalWidth, dimensionWidth, valueToVisualize])
 
-    const lineFunction = useCallback(() => {
-        const kdeScale = scaleLinear()
-            .domain([0, kdeMax])
-            .range([0.25 * aggregationScale().bandwidth(), 0])
-        const lineFunction = line()
-            .curve(curveCatmullRom)
-            .y((d: any) => kdeScale(d.y))
-            .x((d: any) => linearValueScale()(d.x) - currentOffset.left);
-        return lineFunction
+    // const lineFunction = useCallback(() => {
+    //     const kdeScale = scaleLinear()
+    //         .domain([0, kdeMax])
+    //         .range([0.25 * aggregationScale().bandwidth(), 0])
+    //     const lineFunction = line()
+    //         .curve(curveCatmullRom)
+    //         .y((d: any) => kdeScale(d.y))
+    //         .x((d: any) => linearValueScale()(d.x) - currentOffset.left);
+    //     return lineFunction
 
-    }, [kdeMax, aggregationScale()])
+    // }, [kdeMax, aggregationScale()])
 
     const aggregationLabel = axisLeft(aggregationScale());
 
@@ -226,14 +226,14 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
             AxisLabelDict[aggregatedBy] ? AxisLabelDict[aggregatedBy] : aggregatedBy
         );
 
-    const decideIfSelected = (d: InterventionDataPoint) => {
+    const decideIfSelected = (d: ComparisonDataPoint) => {
         // if (currentSelectPatient && currentSelectPatient[aggregatedBy] === d.aggregateAttribute) {
         //   return true;
         // }
         if (currentSelectSet.length > 0) {
             //let selectSet: SelectSet;
             for (let selectSet of currentSelectSet) {
-                if (aggregatedBy === selectSet.set_name && selectSet.set_value.includes(d.aggregateAttribute))
+                if (aggregatedBy === selectSet.setName && selectSet.setValues.includes(d.aggregateAttribute))
                     return true;
             }
             return false;
@@ -241,63 +241,76 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
         else {
             return false;
         }
-        //  return true;
     }
 
-    const decideIfFiltered = (d: InterventionDataPoint) => {
+
+    const decideIfFiltered = (d: ComparisonDataPoint) => {
         for (let filterSet of currentOutputFilterSet) {
-            if (aggregatedBy === filterSet.set_name && filterSet.set_value.includes(d.aggregateAttribute))
+            if (aggregatedBy === filterSet.setName && filterSet.setValues.includes(d.aggregateAttribute))
                 return true
         }
         return false;
     }
 
-    const decideSinglePatientSelect = (d: InterventionDataPoint) => {
-        if (currentSelectPatient) {
-            return currentSelectPatient[aggregatedBy] === d.aggregateAttribute;
-        } else {
-            return false;
-        }
+    // const decideSinglePatientSelect = (d: ComparisonDataPoint) => {
+    //     if (currentSelectPatient) {
+    //         return currentSelectPatient[aggregatedBy] === d.aggregateAttribute;
+    //     } else {
+    //         return false;
+    //     }
+    // }
+
+
+
+
+    const outputSinglePlotElement = (dataPoint: ComparisonDataPoint) => {
+        return ([<SingleHeatCompare
+            isSelected={decideIfSelected(dataPoint)}
+            isFiltered={decideIfFiltered(dataPoint)}
+            bandwidth={aggregationScale().bandwidth()}
+            valueScaleDomain={JSON.stringify(valueScale().domain())}
+            valueScaleRange={JSON.stringify(valueScale().range())}
+            aggregatedBy={aggregatedBy}
+            dataPoint={dataPoint}
+            howToTransform={(`translate(-${currentOffset.left},${aggregationScale()(
+                dataPoint.aggregateAttribute
+            )})`).toString()}
+        />])
+        // if (plotType === "HEATMAP") {
+        //     return ([<SingleHeatCompare
+        //         isSelected={decideIfSelected(dataPoint)}
+        //         isFiltered={decideIfFiltered(dataPoint)}
+        //         bandwidth={aggregationScale().bandwidth()}
+        //         valueScaleDomain={JSON.stringify(valueScale().domain())}
+        //         valueScaleRange={JSON.stringify(valueScale().range())}
+        //         aggregatedBy={aggregatedBy}
+        //         dataPoint={dataPoint}
+        //         howToTransform={(`translate(-${currentOffset.left},${aggregationScale()(
+        //             dataPoint.aggregateAttribute
+        //         )})`).toString()}
+        //     />])
+
+
+        // }
+        // else {
+        //     return ([<SingleViolinCompare
+        //         preIntPath={lineFunction()(dataPoint.preInKdeCal)!}
+        //         postIntPath={lineFunction()(dataPoint.postInKdeCal)!}
+        //         dataPoint={dataPoint}
+        //         aggregatedBy={aggregatedBy}
+        //         isSelected={decideIfSelected(dataPoint)}
+        //         isFiltered={decideIfFiltered(dataPoint)}
+        //         preIntHowToTransform={(`translate(0,${aggregationScale()(
+        //             dataPoint.aggregateAttribute
+        //         )})`).toString()}
+        //         postIntHowToTransform={(`translate(0,${aggregationScale()(dataPoint.aggregateAttribute)! + aggregationScale().bandwidth() * 0.5})`).toString()}
+        //     />])
+        // }
+
     }
 
-
-    const outputSinglePlotElement = (dataPoint: InterventionDataPoint) => {
-
-        if (plotType === "HEATMAP") {
-            return ([<SingleHeatCompare
-                isSelected={decideIfSelected(dataPoint)}
-                isFiltered={decideIfFiltered(dataPoint)}
-                bandwidth={aggregationScale().bandwidth()}
-                valueScaleDomain={JSON.stringify(valueScale().domain())}
-                valueScaleRange={JSON.stringify(valueScale().range())}
-                aggregatedBy={aggregatedBy}
-                dataPoint={dataPoint}
-                howToTransform={(`translate(-${currentOffset.left},${aggregationScale()(
-                    dataPoint.aggregateAttribute
-                )})`).toString()}
-            />])
-
-
-        }
-        else {
-            return ([<SingleViolinCompare
-                preIntPath={lineFunction()(dataPoint.preInKdeCal)!}
-                postIntPath={lineFunction()(dataPoint.postInKdeCal)!}
-                dataPoint={dataPoint}
-                aggregatedBy={aggregatedBy}
-                isSelected={decideIfSelected(dataPoint)}
-                isFiltered={decideIfFiltered(dataPoint)}
-                preIntHowToTransform={(`translate(0,${aggregationScale()(
-                    dataPoint.aggregateAttribute
-                )})`).toString()}
-                postIntHowToTransform={(`translate(0,${aggregationScale()(dataPoint.aggregateAttribute)! + aggregationScale().bandwidth() * 0.5})`).toString()}
-            />])
-        }
-
-    }
-
-    const outputTextElement = (dataPoint: InterventionDataPoint) => {
-        if (aggregationScale().bandwidth() > 40) {
+    const outputTextElement = (dataPoint: ComparisonDataPoint) => {
+        if (aggregationScale().bandwidth() > 30) {
             return ([<text
                 fill="white"
                 x={-32.5}
@@ -338,30 +351,33 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                 {dataPoint.preCaseCount + dataPoint.postCaseCount}
             </text>])
         }
-
     }
+
     const outputGradientLegend = () => {
         if (!showZero) {
             return [<rect
-                x={0.5 * (dimensionWidth - extraPairTotalWidth)}
+                x={0.8 * (dimensionWidth - extraPairTotalWidth)}
                 y={0}
                 width={0.2 * (dimensionWidth - extraPairTotalWidth)}
                 height={7.5}
-                fill="url(#gradient1)" />, <rect
-                x={0.5 * (dimensionWidth - extraPairTotalWidth)}
+                fill="url(#gradient1)" />,
+            <rect
+                x={0.8 * (dimensionWidth - extraPairTotalWidth)}
                 y={7.5}
                 width={0.2 * (dimensionWidth - extraPairTotalWidth)}
                 height={7.5}
                 fill="url(#gradient2)" />]
         } else {
             return <rect
-                x={0.5 * (dimensionWidth - extraPairTotalWidth)}
+                x={0.8 * (dimensionWidth - extraPairTotalWidth)}
                 y={0}
                 width={0.2 * (dimensionWidth - extraPairTotalWidth)}
                 height={15}
                 fill="url(#gradient1)" />
         }
     }
+
+
 
 
     return (
@@ -391,7 +407,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                 {outputGradientLegend()}
 
                 <text
-                    x={0.5 * (dimensionWidth - extraPairTotalWidth)}
+                    x={0.8 * (dimensionWidth - extraPairTotalWidth)}
                     y={15}
                     alignmentBaseline={"hanging"}
                     textAnchor={"start"}
@@ -400,7 +416,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                     0%
                 </text>
                 <text
-                    x={0.7 * (dimensionWidth - extraPairTotalWidth)}
+                    x={1 * (dimensionWidth - extraPairTotalWidth)}
                     y={15}
                     alignmentBaseline={"hanging"}
                     textAnchor={"end"}
@@ -410,52 +426,59 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                 </text>
             </g>
             <g>
-                <rect x={0.9 * (dimensionWidth - extraPairTotalWidth)}
+                <rect x={0.7 * (dimensionWidth - extraPairTotalWidth)}
                     y={0}
                     width={10}
-                    height={10}
+                    height={12}
                     fill={preop_color}
                     opacity={0.65} />
-
-                <rect x={0.9 * (dimensionWidth - extraPairTotalWidth)}
-                    y={10}
+                <rect x={0.7 * (dimensionWidth - extraPairTotalWidth)}
+                    y={12}
                     width={10}
-                    height={10}
+                    height={12}
                     fill={postop_color}
                     opacity={0.65} />
-
                 <text
-                    x={0.9 * (dimensionWidth - extraPairTotalWidth)}
+                    x={0.7 * (dimensionWidth - extraPairTotalWidth) - 1}
+                    y={6}
+                    alignmentBaseline={"middle"}
+                    textAnchor={"end"}
+                    fontSize="11px"
+                    fill={third_gray}>
+                    {` ${interventionDate ? `Pre Intervine` : `True`} ${preTotal}/${preTotal + postTotal}`}
+                </text>
+                <text
+                    x={0.7 * (dimensionWidth - extraPairTotalWidth) - 1}
+                    y={18}
+                    alignmentBaseline={"middle"}
+                    textAnchor={"end"}
+                    fontSize="11px"
+                    fill={third_gray}>
+                    {`${interventionDate ? `Post Intervine` : `False`} ${postTotal}/${preTotal + postTotal}`}
+                </text>
+                <text
+                    x={0.1 * (dimensionWidth - extraPairTotalWidth)}
                     y={0}
-                    alignmentBaseline={"hanging"}
-                    textAnchor={"end"}
-                    fontSize="11px"
-                    fill={third_gray}>
-                    Pre Intervine
-                </text>
-                <text
-                    x={0.9 * (dimensionWidth - extraPairTotalWidth)}
-                    y={10}
-                    alignmentBaseline={"hanging"}
-                    textAnchor={"end"}
-                    fontSize="11px"
-                    fill={third_gray}>
-                    Post Intervine
-                </text>
-                <text
-                    x={0.25 * (dimensionWidth - extraPairTotalWidth)}
-                    y={5}
                     alignmentBaseline="hanging"
-                    textAnchor="middle"
-                    fontSize="13px"
+                    textAnchor="start"
+                    fontSize="11px"
                     fill={third_gray}
-                >Intervention: {timeFormat("%Y-%m-%d")(new Date(interventionDate))}</text>
+                >
+                    <tspan x="0" dy="1em">{interventionDate ? `Intervention:` : `Comparing Outcome:`}</tspan>
+                    <tspan x="0" dy="1em">{interventionDate ? timeFormat("%Y-%m-%d")(new Date(interventionDate)) : ((Accronym as any)[outcomeComparison || ""]) || outcomeComparison}</tspan>
+
+                    {/* {interventionDate ?
+                    `Intervention: ${timeFormat("%Y-%m-%d")(new Date(interventionDate))}`
+                    : `Comparing Outcome: ${((Accronym as any)[outcomeComparison || ""]) || outcomeComparison}`} */}
+
+                </text>
             </g>
 
             <g className="chart"
                 transform={`translate(${currentOffset.left + extraPairTotalWidth},0)`}
             >
                 {data.map((dataPoint) => {
+
                     return outputSinglePlotElement(dataPoint)
                         .concat([
 
@@ -485,7 +508,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, inte
                                 opacity={0.65}
                                 height={aggregationScale().bandwidth() * 0.47} />,
                             <rect x={-50} y={aggregationScale()(dataPoint.aggregateAttribute)} width={35} fill="none" height={aggregationScale().bandwidth()}
-                                stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
+                                //   stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
                                 strokeWidth={2} />
 
 

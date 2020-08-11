@@ -43,7 +43,7 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
     return (
         <>
             {valueScale().domain().map(point => {
-                const output = dataPoint.countDict[point] ? dataPoint.countDict[point] : 0
+                const output = dataPoint.countDict[point].length
                 const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum
                 // let content = output/caseCount
                 let colorFill = output === 0 ? "white" : interpolateReds(colorScale(output / caseCount))
@@ -63,15 +63,14 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
                                 width={valueScale().bandwidth()}
                                 height={bandwidth}
                                 isselected={isSelected}
-                                isfiltered={isFiltered}
+                                //   isfiltered={isFiltered}
                                 onClick={(e) => {
-                                    actions.selectSet(
-                                        {
-                                            set_name: aggregatedBy,
-                                            set_value: [dataPoint.aggregateAttribute]
-                                        },
-                                        e.shiftKey
-                                    )
+                                    actions.updateBrushPatientGroup(dataPoint.countDict[point], e.shiftKey ? "ADD" : "REPLACE", {
+                                        setName: aggregatedBy,
+                                        setValues: [dataPoint.aggregateAttribute],
+                                        //setPatientIds: [dataPoint.patientIDList]
+                                    })
+
                                 }} />}
                     />,
                     <line transform={howToTransform}
@@ -92,12 +91,12 @@ export default inject("store")(observer(SingleHeatPlot));
 
 interface HeatRectProp {
     isselected: boolean;
-    isfiltered: boolean;
+    //   isfiltered: boolean;
 }
-
+//(props.isfiltered ? highlight_blue : "none"))}
 const HeatRect = styled(`rect`) <HeatRectProp>`
     y:0;
     opacity:0.6;
-    stroke: ${props => (props.isselected ? highlight_orange : (props.isfiltered ? highlight_blue : "none"))};
+    stroke: ${props => (props.isselected ? highlight_orange : `none`)};
     stroke-width:2;
   `;
