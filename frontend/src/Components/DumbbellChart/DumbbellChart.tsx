@@ -20,12 +20,12 @@ import {
 } from "d3";
 import { DumbbellDataPoint } from "../../Interfaces/ApplicationState";
 import { offset, AxisLabelDict, minimumWidthScale } from "../../PresetsProfile"
-import CustomizedAxis from "../Utilities/CustomizedAxis";
+import CustomizedAxisOrdinal from "../Utilities/CustomizedAxisOrdinal";
 import { preop_color, basic_gray, highlight_orange, postop_color } from "../../PresetsProfile"
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 interface OwnProps {
-    yAxisName: string;
+    valueToVisualize: string;
     //chartId: string;
     store?: Store;
     dimensionWidth: number,
@@ -44,7 +44,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionHeight, dimensionWidth, data, svg, store, xMin, xMax }: Props) => {
+const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dimensionHeight, dimensionWidth, data, svg, store, xMin, xMax }: Props) => {
 
     const [averageForEachTransfused, setAverage] = useState<any>({})
     const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([])
@@ -55,6 +55,9 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
     const [indicies, setIndicies] = useState([])
 
     const currentOffset = offset.minimum;
+    // const currentOffsetLeft = currentOffset.left;
+    // const currentOffsetRight = currentOffset.right
+
     const {
         //dumbbellSorted,
         //  currentSelectPatient,
@@ -127,22 +130,43 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
             let currentPreopSum: number[] = [];
             let currentPostopSum: number[] = [];
             let averageDict: any = {}
-            tempSortedData.map((d, i) => {
-                currentPreopSum.push(d.startXVal)
-                currentPostopSum.push(d.endXVal)
-                if (i === tempSortedData.length - 1) {
-                    tempNumberList.push({ num: d.yVal, indexEnding: i })
-                    averageDict[d.yVal] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
-                    tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length })
-                }
-                else if (d.yVal !== tempSortedData[i + 1].yVal) {
-                    tempNumberList.push({ num: d.yVal, indexEnding: i })
-                    averageDict[(d.yVal).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
-                    tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length })
-                    currentPostopSum = [];
-                    currentPreopSum = [];
-                }
-            })
+            if (valueToVisualize === "CELL_SAVER_ML") {
+                tempSortedData.forEach((d, i) => {
+                    currentPreopSum.push(d.startXVal)
+                    currentPostopSum.push(d.endXVal)
+                    const roundedAnswer = Math.floor(d.yVal / 100) * 100
+                    if (i === tempSortedData.length - 1) {
+                        tempNumberList.push({ num: roundedAnswer, indexEnding: i })
+                        averageDict[roundedAnswer] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
+                        tempDatapointsDict.push({ title: roundedAnswer, length: currentPreopSum.length })
+                    }
+                    else if (roundedAnswer !== (Math.floor(tempSortedData[i + 1].yVal / 100) * 100)) {
+                        tempNumberList.push({ num: roundedAnswer, indexEnding: i })
+                        averageDict[(roundedAnswer).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
+                        tempDatapointsDict.push({ title: roundedAnswer, length: currentPreopSum.length })
+                        currentPostopSum = [];
+                        currentPreopSum = [];
+                    }
+                })
+            } else {
+                tempSortedData.forEach((d, i) => {
+                    currentPreopSum.push(d.startXVal)
+                    currentPostopSum.push(d.endXVal)
+                    if (i === tempSortedData.length - 1) {
+                        tempNumberList.push({ num: d.yVal, indexEnding: i })
+                        averageDict[d.yVal] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
+                        tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length })
+                    }
+                    else if (d.yVal !== tempSortedData[i + 1].yVal) {
+                        tempNumberList.push({ num: d.yVal, indexEnding: i })
+                        averageDict[(d.yVal).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
+                        tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length })
+                        currentPostopSum = [];
+                        currentPreopSum = [];
+                    }
+                })
+            }
+
             const newindices = range(0, data.length)
             stateUpdateWrapperUseJSON(indicies, newindices, setIndicies)
             stateUpdateWrapperUseJSON(averageForEachTransfused, averageDict, setAverage)
@@ -150,6 +174,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
             stateUpdateWrapperUseJSON(datapointsDict, tempDatapointsDict, setDataPointDict)
             stateUpdateWrapperUseJSON(numberList, tempNumberList, setNumberList)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data, sortMode])
 
     useEffect(() => {
@@ -158,14 +183,14 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
         let spacing: any = {};
 
         if (minimumWidthScale * datapointsDict.length >= (widthAllowed)) {
-            datapointsDict.map((d, i) => {
+            datapointsDict.forEach((d, i) => {
                 spacing[i] = minimumWidthScale;
             })
         }
         else {
             let numberOfTitlesUsingMinimumScale = 0;
             let totalDataPointsNotUsingMinimumScale = 0;
-            datapointsDict.map((d, i) => {
+            datapointsDict.forEach((d, i) => {
                 if ((d.length / sortedData.length) * widthAllowed < minimumWidthScale) {
                     spacing[i] = minimumWidthScale;
                     numberOfTitlesUsingMinimumScale += 1;
@@ -176,7 +201,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
             })
             const spaceLeft = widthAllowed - numberOfTitlesUsingMinimumScale * minimumWidthScale;
 
-            datapointsDict.map((d, i) => {
+            datapointsDict.forEach((d, i) => {
                 if (!spacing[i]) {
                     spacing[i] = spaceLeft * d.length / totalDataPointsNotUsingMinimumScale
                 }
@@ -184,7 +209,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
         }
         let newResultRange: number[] = [];
         let currentLoc = currentOffset.left;
-        datapointsDict.map((d, i) => {
+        datapointsDict.forEach((d, i) => {
             let calculatedRange = range(currentLoc, currentLoc + spacing[i], spacing[i] / (d.length + 1))
             calculatedRange.splice(0, 1)
             if (calculatedRange.length !== d.length) {
@@ -194,7 +219,8 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
             currentLoc += spacing[i]
             stateUpdateWrapperUseJSON(resultRange, newResultRange, setResultRange)
         })
-    }, [datapointsDict, dimensionWidth])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [datapointsDict, dimensionWidth, currentOffset, sortedData])
 
 
 
@@ -203,7 +229,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
             .domain([0.9 * xMin, 1.1 * xMax])
             .range([dimensionHeight - currentOffset.bottom, currentOffset.top]);
         return testValueScale
-    }, [xMin, xMax, dimensionHeight])
+    }, [xMin, xMax, dimensionHeight, currentOffset])
     //console.log(data)
 
 
@@ -228,7 +254,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
         .attr("alignment-baseline", "hanging")
         // .attr("transform", `translate(0 ,${currentOffset.top}`)
         .text(
-            AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
+            AxisLabelDict[valueToVisualize] ? AxisLabelDict[valueToVisualize] : valueToVisualize
         );
     svgSelection.select('.axes')
         .select(".x-axis")
@@ -275,9 +301,10 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
     }
 
     const generateDumbbells = () => {
-        let selectedPatients: any[] = []
+        let selectedPatients: any[] = [];
+        let unselectedPatients: any[] = [];
 
-        let unselectedPatients = sortedData.map((dataPoint, index) => {
+        sortedData.forEach((dataPoint, index) => {
             const start = testValueScale()(dataPoint.startXVal);
             const end = testValueScale()(dataPoint.endXVal);
             const returning = start > end ? end : start;
@@ -290,7 +317,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
                 if (isSelectSet) {
                     selectedPatients.push(<Popup
                         content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}
-                        key={`${dataPoint.case.VISIT_ID}-${dataPoint.case.caseId}`}
+                        key={`${dataPoint.case.VISIT_ID}-${dataPoint.case.CASE_ID}`}
                         trigger={
                             <g >
                                 <Rect
@@ -331,54 +358,56 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
                             </g>
                         }
                     />)
+                } else {
+                    unselectedPatients.push(
+                        <Popup
+                            content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}
+                            key={`${dataPoint.case.VISIT_ID}-${dataPoint.case.CASE_ID}`}
+                            trigger={
+                                <g >
+                                    <Rect
+                                        x={xVal - 1
+                                        }
+                                        y={returning}
+                                        height={rectDifference}
+                                        isselected={isSelectSet}
+                                        //  isselected={decideIfSelected(dataPoint) || decideIfSelectSet(dataPoint)}
+                                        display={showingAttr.gap ? undefined : "none"}
+                                    />
+                                    <Circle
+                                        cx={
+                                            xVal
+                                        }
+                                        cy={testValueScale()(dataPoint.startXVal)}
+                                        onClick={() => {
+                                            clickDumbbellHandler(dataPoint);
+                                        }}
+                                        // isselected={decideIfSelected(dataPoint)}
+                                        isSelectSet={isSelectSet}
+                                        ispreop={true}
+                                        display={showingAttr.preop ? undefined : "none"}
+                                    />
+                                    <Circle
+                                        cx={
+                                            xVal
+                                        }
+                                        cy={testValueScale()(dataPoint.endXVal)}
+                                        onClick={() => {
+                                            clickDumbbellHandler(dataPoint);
+                                        }}
+                                        //   isselected={decideIfSelected(dataPoint)}
+                                        isSelectSet={isSelectSet}
+                                        ispreop={false}
+                                        display={showingAttr.postop ? undefined : "none"}
+                                    />
+                                </g>
+                            }
+                        />)
                 }
-                return (
-                    <Popup
-                        content={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}
-                        key={`${dataPoint.case.VISIT_ID}-${dataPoint.case.caseId}`}
-                        trigger={
-                            <g >
-                                <Rect
-                                    x={xVal - 1
-                                    }
-                                    y={returning}
-                                    height={rectDifference}
-                                    isselected={isSelectSet}
-                                    //  isselected={decideIfSelected(dataPoint) || decideIfSelectSet(dataPoint)}
-                                    display={showingAttr.gap ? undefined : "none"}
-                                />
-                                <Circle
-                                    cx={
-                                        xVal
-                                    }
-                                    cy={testValueScale()(dataPoint.startXVal)}
-                                    onClick={() => {
-                                        clickDumbbellHandler(dataPoint);
-                                    }}
-                                    // isselected={decideIfSelected(dataPoint)}
-                                    isSelectSet={isSelectSet}
-                                    ispreop={true}
-                                    display={showingAttr.preop ? undefined : "none"}
-                                />
-                                <Circle
-                                    cx={
-                                        xVal
-                                    }
-                                    cy={testValueScale()(dataPoint.endXVal)}
-                                    onClick={() => {
-                                        clickDumbbellHandler(dataPoint);
-                                    }}
-                                    //   isselected={decideIfSelected(dataPoint)}
-                                    isSelectSet={isSelectSet}
-                                    ispreop={false}
-                                    display={showingAttr.postop ? undefined : "none"}
-                                />
-                            </g>
-                        }
-                    />
-                );
+
             }
         })
+
         return unselectedPatients.concat(selectedPatients);
     }
 
@@ -393,7 +422,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
             <g className="axes">
                 <g className="x-axis"></g>
                 <g className="y-axis" transform={`translate(0,${dimensionHeight - currentOffset.bottom})`}>
-                    <CustomizedAxis scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} />
+                    <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} />
                 </g>
                 <text className="x-label" />
                 <text className="y-label" />
@@ -420,8 +449,8 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, yAxisName, dimensionH
                                 <Line x1={x1} x2={x2} y1={beginY} y2={beginY} ispreop={true} />,
                                 <Line x1={x1} x2={x2} y1={endY} y2={endY} ispreop={false} />, interventionLine
                             ])
-                        }
-                    }
+                        } else { return <></> }
+                    } else { return <></> }
                 })}
             </g>
         </>
@@ -461,8 +490,6 @@ const Circle = styled(`circle`) <DotProps>`
   r:4px
   fill: ${props => (props.isSelectSet ? highlight_orange : props.ispreop ? preop_color : postop_color)};
   opacity:${props => props.isSelectSet ? 1 : 0.8}
-  stroke:${props => (props.isSelectSet ? highlight_orange : "none")}
-  stroke-width:2px;
 `;
 
 const Rect = styled(`rect`) <RectProps>`

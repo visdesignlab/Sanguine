@@ -25,12 +25,13 @@ import {
     extraPairPadding,
     AxisLabelDict,
     BloodProductCap,
-    CELL_SAVER_TICKS
+    CELL_SAVER_TICKS,
+    caseRectWidth
 } from "../../PresetsProfile"
 
 import SingleHeatPlot from "./SingleHeatPlot";
 import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
-import { third_gray, greyScaleRange, highlight_orange } from "../../PresetsProfile";
+import { third_gray, greyScaleRange } from "../../PresetsProfile";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 
 interface OwnProps {
@@ -79,14 +80,22 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     useEffect(() => {
         let newCaseMax = 0;
         const tempxVals = data
+            .sort((a, b) => {
+                if (aggregatedBy === "YEAR") { return a.aggregateAttribute - b.aggregateAttribute }
+                else {
+                    return a.caseCount - b.caseCount
+                }
+            })
             .map((dp) => {
                 newCaseMax = newCaseMax > dp.caseCount ? newCaseMax : dp.caseCount
                 return dp.aggregateAttribute
             })
-            .sort();
+
+
         stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
         setCaseMax(newCaseMax)
-        console.log(data)
+        //console.log(data)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data])
 
 
@@ -105,7 +114,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             .paddingInner(0.01);
 
         return valueScale
-    }, [dimensionWidth, extraPairTotalWidth, valueToVisualize]);
+    }, [dimensionWidth, extraPairTotalWidth, valueToVisualize, currentOffset]);
 
 
     const aggregationScale = useCallback(() => {
@@ -114,7 +123,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             .range([dimensionHeight - currentOffset.bottom, currentOffset.top])
             .paddingInner(0.1);
         return aggregationScale
-    }, [dimensionHeight, xVals, aggregatedBy])
+    }, [dimensionHeight, xVals, currentOffset])
 
     const caseScale = useCallback(() => {
         // const caseMax = max(data.map(d => d.caseCount)) || 0;
@@ -135,7 +144,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         )
         .call(aggregationLabel as any)
         .selectAll("text")
-        .attr("transform", `translate(-35,0)`)
+        .attr("transform", `translate(-${caseRectWidth - 4},0)`)
 
     svgSelection
         .select(".axes")
@@ -307,16 +316,16 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                     return outputSinglePlotElement(dataPoint).concat([
                         <rect
                             fill={interpolateGreys(caseScale()(dataPoint.caseCount))}
-                            x={-40}
+                            x={-caseRectWidth - 5}
                             y={aggregationScale()(dataPoint.aggregateAttribute)}
-                            width={35}
+                            width={caseRectWidth}
                             height={aggregationScale().bandwidth()}
                             // stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
                             strokeWidth={2}
                         />,
                         <text
                             fill="white"
-                            x={-22.5}
+                            x={-20}
                             y={
                                 aggregationScale()(dataPoint.aggregateAttribute)! +
                                 0.5 * aggregationScale().bandwidth()
