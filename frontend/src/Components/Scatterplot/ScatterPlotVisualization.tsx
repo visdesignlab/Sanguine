@@ -128,7 +128,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                             // }
                             if (outcomesSelection) {
 
-                                if (ob[outcomesSelection] === "0") {
+                                if (ob[outcomesSelection] === 0) {
                                     criteriaMet = false;
                                 }
 

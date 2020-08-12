@@ -41,7 +41,7 @@ const ExtraPairBasic: FC<Props> = ({ name, dataSet, aggregationScaleRange, aggre
                                 x={0}
                                 y={aggregationScale()(val)}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
-                                fill={dataVal.calculated !== undefined ? interpolateGreys(valueScale(dataVal.calculated)) : "white"}
+                                fill={!isNaN(dataVal.calculated) ? interpolateGreys(valueScale(dataVal.calculated)) : "white"}
                                 //fill={secondary_gray}
                                 opacity={0.8}
                                 width={extraPairWidth.Basic}
@@ -49,7 +49,7 @@ const ExtraPairBasic: FC<Props> = ({ name, dataSet, aggregationScaleRange, aggre
                         } />,
 
                     <line
-                        opacity={dataVal.calculated !== undefined ? 0 : 1}
+                        opacity={!isNaN(dataVal.calculated) ? 0 : 1}
                         y1={0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
                         y2={0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
                         x1={0.35 * extraPairWidth.Basic}
@@ -62,7 +62,7 @@ const ExtraPairBasic: FC<Props> = ({ name, dataSet, aggregationScaleRange, aggre
                             aggregationScale()(val)! +
                             0.5 * aggregationScale().bandwidth()
                         }
-                        opacity={dataVal.calculated !== undefined ? 1 : 0}
+                        opacity={!isNaN(dataVal.calculated) ? 1 : 0}
                         fill="white"
                         alignmentBaseline={"central"}
                         fontSize="12px"

@@ -50,12 +50,12 @@ export interface SingleCasePoint {
     YEAR: number;
     SURGEON_ID: number;
     CRYO_UNITS: number;
-    DEATH: string;
+    DEATH: number;
     ANESTHESIOLOGIST_ID: number;
     DATE: number;
     QUARTER: string;
     CELL_SAVER_ML: number;
-    ECMO: string;
+    ECMO: number;
     DRG_WEIGHT: number;
     MONTH: string;
     FFP_UNITS: number;
@@ -63,8 +63,11 @@ export interface SingleCasePoint {
     POSTOP_HGB: number;
     PRBC_UNITS: number;
     PREOP_HGB: number;
-    STROKE: string;
-    VENT: string;
+    STROKE: number;
+    VENT: number;
+    B12: number;
+    TXA: number;
+    AMICAR: number;
     [key: string]: number | string;
 }
 export interface ScatterDataPoint {
