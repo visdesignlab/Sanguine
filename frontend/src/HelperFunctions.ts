@@ -73,7 +73,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                             outOfTotal: dataPoint.postCaseCount
                         }
                     });
-
+                    console.log(newData, preIntData, postIntData)
                     newExtraPairData.push({ name: "Zero Transfusion", label: "Zero %", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                     break;
 
