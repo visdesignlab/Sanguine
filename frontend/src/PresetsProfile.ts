@@ -26,10 +26,13 @@ export const extraPairOptions = [
     { title: "Zero Transfusion Cases", value: "Zero Transfusion" },
     { title: "Risk Score", value: "RISK" },
     // { title: "Severity of Illness", value: "SOI" },
-    { title: "Mortality Rate", value: "Death" },
+    { title: "Mortality Rate", value: "DEATH" },
     { title: "Ventilation Rate", value: "VENT" },
     { title: "ECMO Rate", value: "ECMO" },
-    { title: "Stroke Rate", value: "STROKE" }
+    { title: "Stroke Rate", value: "STROKE" },
+    { title: "B12", value: "B12" },
+    { title: "Tranexamic Acid", value: "TXA" },
+    { title: "Amicar", value: "AMICAR" }
 ]
 
 //export const minimumOffset = 
@@ -144,6 +147,9 @@ export const OutcomeType = [
     { value: "VENT", key: "VENT", text: "Ventilator Over 24hr" },
     { value: "STROKE", key: "STROKE", text: "Stroke" },
     { value: "ECMO", key: "ECMO", text: "ECMO" },
+    { value: "B12", key: "B12", text: "B12" },
+    { value: "TXA", key: "TXA", text: "Tranexamic Acid" },
+    { value: "AMICAR", key: "AMICAR", text: "Amicar" },
 ]
 
 
@@ -212,7 +218,7 @@ export const Accronym = {
     "Zero %": "Zero Transfusion",
     DEATH: "Death",
     STROKE: "Stroke",
-
+    TXA: "Tranexamic Acid"
 }
 
 

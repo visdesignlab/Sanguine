@@ -11,9 +11,10 @@ import $ from 'jquery';
 import { BloodProductCap } from "./PresetsProfile";
 import { actions } from ".";
 import { stateUpdateWrapperUseJSON } from "./HelperFunctions";
+import { SingleCasePoint } from "./Interfaces/ApplicationState";
 
 interface OwnProps {
-    hemoglobinDataSet: any;
+    hemoglobinDataSet: SingleCasePoint[];
     store?: Store;
 }
 
@@ -23,7 +24,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
 
 
     //const lineupvariable = LineUpJS.builder
-    const { currentSelectPatientGroup } = store!
+    //   const { currentSelectPatientGroup } = store!
     const [distinctCategories, setCatgories] = useState<{ surgeons: any[], anesth: any[], patient: any[] }>({ surgeons: [], anesth: [], patient: [] })
     const [caseIDReference, setCaseIDList] = useState<any>({})
     const [convertedData, setConvertedData] = useState<any[]>([])
@@ -38,7 +39,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
             let caseIDArray: number[] = []
             let caseIDDict: any = {}
             let tempData: any[] = []
-            hemoglobinDataSet.forEach((ob: any, index: number) => {
+            hemoglobinDataSet.forEach((ob: SingleCasePoint, index: number) => {
                 caseIDDict[ob.CASE_ID] = index;
                 caseIDArray.push(ob.CASE_ID);
                 distinctAnesth.add((ob.ANESTHESIOLOGIST_ID).toString());
@@ -54,11 +55,11 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                     PATIENT_ID: ob.PATIENT_ID,
                     SURGEON_ID: ob.SURGEON_ID,
                     CRYO_UNITS: ob.CRYO_UNITS,
-                    DEATH: ob.DEATH,
+                    DEATH: ob.DEATH.toString(),
                     ANESTHESIOLOGIST_ID: ob.ANESTHESIOLOGIST_ID,
 
                     CELL_SAVER_ML: ob.CELL_SAVER_ML,
-                    ECMO: ob.ECMO,
+                    ECMO: ob.ECMO.toString(),
                     DRG_WEIGHT: ob.DRG_WEIGHT,
 
                     FFP_UNITS: ob.FFP_UNITS,
@@ -66,8 +67,11 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                     POSTOP_HGB: ob.POSTOP_HGB,
                     PRBC_UNITS: ob.PRBC_UNITS,
                     PREOP_HGB: ob.PREOP_HGB,
-                    STROKE: ob.STROKE,
-                    VENT: ob.VENT
+                    STROKE: ob.STROKE.toString(),
+                    VENT: ob.VENT.toString(),
+                    B12: ob.B12.toString(),
+                    AMICAR: ob.AMICAR.toString(),
+                    TXA: ob.TXA.toString()
                 }
 
                 tempData.push(oldObject);
@@ -92,7 +96,9 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                     let lineup = LineUpJS.builder(convertedData)
                         .column(LineUpJS.buildStringColumn("CASE_ID"))
                         .column(LineUpJS.buildStringColumn("PATIENT_ID"))
-
+                        .column(LineUpJS.buildCategoricalColumn('B12').categories(["0", "1"]))
+                        .column(LineUpJS.buildCategoricalColumn("TXA").categories(["0", "1"]))
+                        .column(LineUpJS.buildCategoricalColumn('AMICAR').categories(["0", "1"]))
                         .column(LineUpJS.buildCategoricalColumn('VENT').categories(["0", "1"]))
                         .column(LineUpJS.buildCategoricalColumn("DEATH").categories(["0", "1"]))
                         .column(LineUpJS.buildCategoricalColumn('ECMO').categories(["0", "1"]))
@@ -137,17 +143,17 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
     //line 114 is denying the loop
     //Lineup is never defined somehow.
     useEffect(() => {
-        console.log(lineup)
+        //    console.log(lineup)
         if (lineup !== undefined) {
             console.log('called inside')
             let outputIndex: number[] = [];
-            currentSelectPatientGroup.forEach(item => outputIndex.push(caseIDReference[item.CASE_ID]));
+            //   currentSelectPatientGroup.forEach(item => outputIndex.push(caseIDReference[item.CASE_ID]));
             console.log(outputIndex)
             //    lineup.setSelection(outputIndex);
 
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentSelectPatientGroup])
+    }, [])
 
 
 
