@@ -360,22 +360,22 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
     const outputGradientLegend = () => {
         if (!showZero) {
             return [<rect
-                x={0.8 * (dimensionWidth - extraPairTotalWidth)}
+                x={0.8 * (dimensionWidth)}
                 y={0}
-                width={0.2 * (dimensionWidth - extraPairTotalWidth)}
+                width={0.2 * (dimensionWidth)}
                 height={7.5}
                 fill="url(#gradient1)" />,
             <rect
-                x={0.8 * (dimensionWidth - extraPairTotalWidth)}
+                x={0.8 * (dimensionWidth)}
                 y={7.5}
-                width={0.2 * (dimensionWidth - extraPairTotalWidth)}
+                width={0.2 * (dimensionWidth)}
                 height={7.5}
                 fill="url(#gradient2)" />]
         } else {
             return <rect
-                x={0.8 * (dimensionWidth - extraPairTotalWidth)}
+                x={0.8 * (dimensionWidth)}
                 y={0}
-                width={0.2 * (dimensionWidth - extraPairTotalWidth)}
+                width={0.2 * (dimensionWidth)}
                 height={15}
                 fill="url(#gradient1)" />
         }
@@ -411,7 +411,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                 {outputGradientLegend()}
 
                 <text
-                    x={0.8 * (dimensionWidth - extraPairTotalWidth)}
+                    x={0.8 * (dimensionWidth)}
                     y={15}
                     alignmentBaseline={"hanging"}
                     textAnchor={"start"}
@@ -420,7 +420,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                     0%
                 </text>
                 <text
-                    x={1 * (dimensionWidth - extraPairTotalWidth)}
+                    x={1 * (dimensionWidth)}
                     y={15}
                     alignmentBaseline={"hanging"}
                     textAnchor={"end"}
@@ -430,20 +430,20 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                 </text>
             </g>
             <g>
-                <rect x={0.7 * (dimensionWidth - extraPairTotalWidth)}
+                <rect x={0.7 * (dimensionWidth)}
                     y={0}
                     width={differentialSquareWidth}
                     height={12}
                     fill={preop_color}
                     opacity={0.65} />
-                <rect x={0.7 * (dimensionWidth - extraPairTotalWidth)}
+                <rect x={0.7 * (dimensionWidth)}
                     y={12}
                     width={differentialSquareWidth}
                     height={12}
                     fill={postop_color}
                     opacity={0.65} />
                 <text
-                    x={0.7 * (dimensionWidth - extraPairTotalWidth) - 1}
+                    x={0.7 * (dimensionWidth) - 1}
                     y={6}
                     alignmentBaseline={"middle"}
                     textAnchor={"end"}
@@ -452,7 +452,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                     {` ${interventionDate ? `Pre Intervine` : `True`} ${preTotal}/${preTotal + postTotal}`}
                 </text>
                 <text
-                    x={0.7 * (dimensionWidth - extraPairTotalWidth) - 1}
+                    x={0.7 * (dimensionWidth) - 1}
                     y={18}
                     alignmentBaseline={"middle"}
                     textAnchor={"end"}
@@ -461,7 +461,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                     {`${interventionDate ? `Post Intervine` : `False`} ${postTotal}/${preTotal + postTotal}`}
                 </text>
                 <text
-                    x={0.1 * (dimensionWidth - extraPairTotalWidth)}
+                    x={0.1 * (dimensionWidth)}
                     y={0}
                     alignmentBaseline="hanging"
                     textAnchor="start"

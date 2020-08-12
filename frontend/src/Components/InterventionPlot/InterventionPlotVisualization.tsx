@@ -142,7 +142,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         // }
                         if (outcomesSelection) {
 
-                            if (singleCase[outcomesSelection] === "0") {
+                            if (singleCase[outcomesSelection] === 0) {
                                 criteriaMet = false;
                             }
 
@@ -221,7 +221,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                 <Grid.Column verticalAlign="middle" width={1} style={{ display: previewMode ? "none" : null }}>
                     <Menu icon vertical compact size="mini" borderless secondary widths={2}>
                         <Menu.Item fitted>
-                            <Dropdown selectOnBlur={false} basic item icon="plus" compact>
+                            <Dropdown disabled={extraPairArray.length >= 5} selectOnBlur={false} basic item icon="plus" compact>
                                 <Dropdown.Menu>
                                     {
                                         extraPairOptions.map((d: { value: string; title: string }) => {
