@@ -183,7 +183,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         )
         .call(aggregationLabel as any)
         .selectAll("text")
-        .attr("transform", `translate(${-caseRectWidth - differentialSquareWidth + 4},0)`)
+        .attr("transform", `translate(${-caseRectWidth - differentialSquareWidth + 2},0)`)
 
     svgSelection
         .select(".axes")
