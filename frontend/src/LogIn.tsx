@@ -1,7 +1,7 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useState, useEffect } from 'react';
 import Store from './Interfaces/Store';
 import { inject, observer } from 'mobx-react';
-import { Form, Container, Header, Message, Image } from 'semantic-ui-react';
+import { Form, Container, Header, Message, Image, Modal, Button } from 'semantic-ui-react';
 import { Redirect } from 'react-router-dom'
 import { getCookie } from './Interfaces/UserManagement';
 
@@ -15,12 +15,24 @@ type Props = OwnProps;
 const Logins: FC<Props> = ({ store }: Props) => {
     // const username = useFormInput('');
     // const password = useFormInput('');
-    const { isLoggedIn } = store!
+    const { isLoggedIn } = store!;
+
+
+
+
+
     const [hideErrorMessage, setError] = useState<boolean>(true);
 
+    const [openWarning, setOpenWarning] = useState(false)
     const [username, setUserName] = useState<string | null>(null)
     const [password, setPassWord] = useState<string | null>(null)
 
+
+    const isChrome = !!(window as any).chrome && (!!(window as any).chrome.webstore || !!(window as any).chrome.runtime);
+
+    useEffect(() => {
+        setOpenWarning(!isChrome)
+    }, [isChrome])
 
 
 
@@ -72,40 +84,58 @@ const Logins: FC<Props> = ({ store }: Props) => {
 
     }
 
+    const generateOutput = () => {
+        if (isLoggedIn) {
+            return (<Redirect to="/dashboard" />)
+        } else {
+            return (<Container style={{ padding: 50 }}>
+
+                <Modal basic
+                    open={openWarning}>
+                    <Header icon="warning sign" content="Warning" />
+                    <Modal.Content>
+                        <p>This application is designed to be used on Chrome.</p>
+                        <p>Using it on other browsers may cause inaccurate visual representations of the data.</p>
+                    </Modal.Content>
+                    <Modal.Actions>
+                        <Button onClick={() => setOpenWarning(false)}>I understand</Button>
+                    </Modal.Actions>
+                </Modal>
+
+                <Header as='h1'>Welcome to BloodVis</Header>
+                <Image size="small"
+                    as='a'
+                    target="_blank"
+                    src="https://raw.githubusercontent.com/visdesignlab/visdesignlab.github.io/master/assets/images/logos/vdl.png"
+                    href="https://vdl.sci.utah.edu"
+                />
+                <Header as='h3'>Log in</Header>
+                <Form onSubmit={() => handleLogin()}>
+                    <Form.Input
+                        width={10}
+                        label="Username"
+                        value={username}
+                        required
+                        onChange={(e, d) => { setUserName(d.value) }} />
+
+                    <Form.Input
+                        required
+                        width={10}
+                        label="Password"
+                        value={password}
+                        type="password"
+                        onChange={(e, d) => { setPassWord(d.value) }} />
+
+                    <Form.Button content="Login" />
+                </Form>
+                <Message hidden={hideErrorMessage} icon="user x" content="Log in failed. Please check your username and password."></Message>
+            </Container>)
+        }
+    }
+
     return (
-        isLoggedIn ?
-            <Redirect to="/dashboard" /> :
-            (
-                <Container style={{ padding: 50 }}>
-                    <Header as='h1'>Welcome to BloodVis</Header>
-                    <Image size="small"
-                        as='a'
-                        target="_blank"
-                        src="https://raw.githubusercontent.com/visdesignlab/visdesignlab.github.io/master/assets/images/logos/vdl.png"
-                        href="https://vdl.sci.utah.edu"
-                    />
-                    <Header as='h3'>Log in</Header>
-                    <Form onSubmit={() => handleLogin()}>
-                        <Form.Input
-                            width={10}
-                            label="Username"
-                            value={username}
-                            required
-                            onChange={(e, d) => { setUserName(d.value) }} />
 
-                        <Form.Input
-                            required
-                            width={10}
-                            label="Password"
-                            value={password}
-                            type="password"
-                            onChange={(e, d) => { setPassWord(d.value) }} />
-
-                        <Form.Button content="Login" />
-                    </Form>
-                    <Message hidden={hideErrorMessage} icon="user x" content="Log in failed. Please check your username and password."></Message>
-                </Container>
-            )
+        generateOutput()
 
     );
 }
