@@ -111,7 +111,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                         // }
                         if (outcomesSelection) {
 
-                            if (singleCase[outcomesSelection] === "0") {
+                            if (singleCase[outcomesSelection] === 0) {
                                 criteriaMet = false;
                             }
 
@@ -146,9 +146,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                 }
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [proceduresSelection, outcomesSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet
-        //  currentOutputFilterSet
-    ]);
+    }, [proceduresSelection, outcomesSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet, hemoglobinDataSet]);
 
 
 
@@ -190,7 +188,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                 <Grid.Column verticalAlign="middle" width={1} style={{ display: previewMode ? "none" : null }} >
                     <Menu icon vertical compact size="mini" borderless secondary widths={2} style={{}}>
                         <Menu.Item fitted>
-                            <Dropdown selectOnBlur={false} basic item icon="plus" compact>
+                            <Dropdown disabled={extraPairArray.length >= 5} selectOnBlur={false} basic item icon="plus" compact>
                                 <Dropdown.Menu>
                                     {
                                         extraPairOptions.map((d) => {

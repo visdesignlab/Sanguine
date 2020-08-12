@@ -51,7 +51,7 @@ export default class Store {
 
     @observable currentSelectPatientGroup: SingleCasePoint[] = defaultState.currentSelectPatientGroup;
 
-    @observable isLoggedIn: boolean = false;
+    @observable isLoggedIn: boolean = process.env.REACT_APP_REQUIRE_LOGIN === "true" ? false : true;
     @observable previewMode: boolean = false;
     @observable loadingModalOpen: boolean = true;
     // @observable csrftoken: string | null = ""

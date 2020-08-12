@@ -9,7 +9,7 @@ export const stateUpdateWrapperUseJSON = (oldState: any, newState: any, updateFu
     }
 }
 
-export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggregatedBy: string, hemoglobinDataSet: [], extraPairArray: string[], data: ComparisonDataPoint[]) => {
+export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: ComparisonDataPoint[]) => {
     let newExtraPairData: ExtraPairInterventionPoint[] = []
     if (extraPairArray.length > 0) {
         extraPairArray.forEach((variable: string) => {
@@ -73,161 +73,32 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                             outOfTotal: dataPoint.postCaseCount
                         }
                     });
-
+                    console.log(newData, preIntData, postIntData)
                     newExtraPairData.push({ name: "Zero Transfusion", label: "Zero %", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
                     break;
 
-                case "Death":
-                    data.forEach((dataPoint: ComparisonDataPoint) => {
-                        temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = [];
-                        temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = [];
-                        temporaryDataHolder[dataPoint.aggregateAttribute] = [];
-                        newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.preCaseCount + dataPoint.postCaseCount };
-                        preIntData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.preCaseCount };
-                        postIntData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.postCaseCount };
-                        preCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.preCaseIDList)
-                        postCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.postCaseIDList)
-                    })
-                    hemoglobinDataSet.forEach((ob: any) => {
-                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
-                            temporaryDataHolder[ob[aggregatedBy]].push(ob.DEATH)
-                            if (preCaseDicts[ob[aggregatedBy]].has(ob.CASE_ID)) {
-                                temporaryPreIntDataHolder[ob[aggregatedBy]].push(ob.DEATH);
-                            }
-                            if (postCaseDicts[ob[aggregatedBy]].has(ob.CASE_ID)) {
-                                temporaryPostIntDataHolder[ob[aggregatedBy]].push(ob.DEATH);
-                            }
-                        }
-
-                    })
-
-                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key].calculated = mean(value as any);
-                        newData[key].actualVal = sum(value as any)
-
-                        preIntData[key].calculated = mean(temporaryPreIntDataHolder[key])
-                        preIntData[key].actualVal = sum(temporaryPreIntDataHolder[key])
-
-                        postIntData[key].calculated = mean(temporaryPostIntDataHolder[key])
-                        postIntData[key].actualVal = sum(temporaryPostIntDataHolder[key])
-                    }
-
-                    newExtraPairData.push({ name: "Death", label: "Death", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
+                case "DEATH":
+                    newExtraPairData.push(outcomeComparisonDataGenerate("DEATH", "Death", data, hemoglobinDataSet, caseIDList, aggregatedBy));
                     break;
 
                 case "VENT":
-                    data.forEach((dataPoint: ComparisonDataPoint) => {
-                        preCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.preCaseIDList)
-                        postCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.postCaseIDList)
-
-                        temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = [];
-                        temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = [];
-                        temporaryDataHolder[dataPoint.aggregateAttribute] = [];
-                        newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.preCaseCount + dataPoint.postCaseCount };
-                        preIntData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.preCaseCount };
-                        postIntData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.postCaseCount };
-                    })
-                    hemoglobinDataSet.forEach((ob: any) => {
-                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
-                            temporaryDataHolder[ob[aggregatedBy]].push(ob.VENT)
-                            if (preCaseDicts[ob[aggregatedBy]].has(ob.CASE_ID)) {
-                                temporaryPreIntDataHolder[ob[aggregatedBy]].push(ob.VENT);
-                            }
-                            if (postCaseDicts[ob[aggregatedBy]].has(ob.CASE_ID)) {
-                                temporaryPostIntDataHolder[ob[aggregatedBy]].push(ob.VENT);
-                            }
-                        }
-
-                    })
-                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key].calculated = mean(value as any);
-                        newData[key].actualVal = sum(value as any)
-
-                        preIntData[key].calculated = mean(temporaryPreIntDataHolder[key])
-                        preIntData[key].actualVal = sum(temporaryPreIntDataHolder[key])
-
-                        postIntData[key].calculated = mean(temporaryPostIntDataHolder[key])
-                        postIntData[key].actualVal = sum(temporaryPostIntDataHolder[key])
-                    }
-
-                    newExtraPairData.push({ name: "VENT", label: "Vent", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
+                    newExtraPairData.push(outcomeComparisonDataGenerate("VENT", "Vent", data, hemoglobinDataSet, caseIDList, aggregatedBy));
                     break;
 
                 case "ECMO":
-                    data.forEach((dataPoint: ComparisonDataPoint) => {
-                        preCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.preCaseIDList)
-                        postCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.postCaseIDList)
-
-                        temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = [];
-                        temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = [];
-                        temporaryDataHolder[dataPoint.aggregateAttribute] = [];
-                        newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.preCaseCount + dataPoint.postCaseCount };
-                        preIntData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.preCaseCount };
-                        postIntData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.postCaseCount };
-                    })
-                    hemoglobinDataSet.forEach((ob: any) => {
-                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
-                            temporaryDataHolder[ob[aggregatedBy]].push(ob.ECMO)
-                            if (preCaseDicts[ob[aggregatedBy]].has(ob.CASE_ID)) {
-                                temporaryPreIntDataHolder[ob[aggregatedBy]].push(ob.ECMO);
-                            }
-                            if (postCaseDicts[ob[aggregatedBy]].has(ob.CASE_ID)) {
-                                temporaryPostIntDataHolder[ob[aggregatedBy]].push(ob.ECMO);
-                            }
-                        }
-
-                    })
-
-                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key].calculated = mean(value as any);
-                        newData[key].actualVal = sum(value as any)
-
-                        preIntData[key].calculated = mean(temporaryPreIntDataHolder[key])
-                        preIntData[key].actualVal = sum(temporaryPreIntDataHolder[key])
-
-                        postIntData[key].calculated = mean(temporaryPostIntDataHolder[key])
-                        postIntData[key].actualVal = sum(temporaryPostIntDataHolder[key])
-                    }
-
-                    newExtraPairData.push({ name: "ECMO", label: "ECMO", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
+                    newExtraPairData.push(outcomeComparisonDataGenerate("ECMO", "ECMO", data, hemoglobinDataSet, caseIDList, aggregatedBy));
                     break;
                 case "STROKE":
-                    data.forEach((dataPoint: ComparisonDataPoint) => {
-                        preCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.preCaseIDList)
-                        postCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.postCaseIDList)
-
-                        temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = []
-                        temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = []
-                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
-                        newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.preCaseCount + dataPoint.postCaseCount };
-                        preIntData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.preCaseCount };
-                        postIntData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.postCaseCount };
-                    })
-                    hemoglobinDataSet.forEach((ob: any) => {
-                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
-                            temporaryDataHolder[ob[aggregatedBy]].push(ob.STROKE)
-                            if (preCaseDicts[ob[aggregatedBy]].has(ob.CASE_ID)) {
-                                temporaryPreIntDataHolder[ob[aggregatedBy]].push(ob.STROKE);
-                            }
-                            if (postCaseDicts[ob[aggregatedBy]].has(ob.CASE_ID)) {
-                                temporaryPostIntDataHolder[ob[aggregatedBy]].push(ob.STROKE);
-                            }
-                        }
-
-                    })
-
-                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key].calculated = mean(value as any);
-                        newData[key].actualVal = sum(value as any)
-
-                        preIntData[key].calculated = mean(temporaryPreIntDataHolder[key])
-                        preIntData[key].actualVal = sum(temporaryPreIntDataHolder[key])
-
-                        postIntData[key].calculated = mean(temporaryPostIntDataHolder[key])
-                        postIntData[key].actualVal = sum(temporaryPostIntDataHolder[key])
-                    }
-
-                    newExtraPairData.push({ name: "STROKE", label: "Stroke", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
+                    newExtraPairData.push(outcomeComparisonDataGenerate("STROKE", "Stroke", data, hemoglobinDataSet, caseIDList, aggregatedBy));
+                    break;
+                case "B12":
+                    newExtraPairData.push(outcomeComparisonDataGenerate("B12", "B12", data, hemoglobinDataSet, caseIDList, aggregatedBy));
+                    break;
+                case "TXA":
+                    newExtraPairData.push(outcomeComparisonDataGenerate("TXA", "TXA", data, hemoglobinDataSet, caseIDList, aggregatedBy));
+                    break;
+                case "AMICAR":
+                    newExtraPairData.push(outcomeComparisonDataGenerate("AMICAR", "Amicar", data, hemoglobinDataSet, caseIDList, aggregatedBy));
                     break;
 
                 case "RISK":
@@ -486,7 +357,57 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
     return newExtraPairData
 }
 
-export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string, hemoglobinDataSet: [], extraPairArray: string[], data: BasicAggregatedDatePoint[]) => {
+const outcomeComparisonDataGenerate = (name: string, label: string, data: ComparisonDataPoint[], hemoglobinDataSet: SingleCasePoint[], caseIDList: any, aggregatedBy: string,) => {
+
+    let newData = {} as any;
+    let temporaryDataHolder: any = {}
+    let temporaryPreIntDataHolder: any = {}
+    let temporaryPostIntDataHolder: any = {}
+    let preIntData = {} as any;
+    let postIntData = {} as any;
+    let preCaseDicts = {} as any;
+    let postCaseDicts = {} as any;
+
+    data.forEach((dataPoint: ComparisonDataPoint) => {
+        preCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.preCaseIDList)
+        postCaseDicts[dataPoint.aggregateAttribute] = new Set(dataPoint.postCaseIDList)
+
+        temporaryPreIntDataHolder[dataPoint.aggregateAttribute] = []
+        temporaryPostIntDataHolder[dataPoint.aggregateAttribute] = []
+        temporaryDataHolder[dataPoint.aggregateAttribute] = []
+        newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.preCaseCount + dataPoint.postCaseCount };
+        preIntData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.preCaseCount };
+        postIntData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.postCaseCount };
+    })
+    hemoglobinDataSet.forEach((ob: any) => {
+        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+            temporaryDataHolder[ob[aggregatedBy]].push(ob[name])
+            if (preCaseDicts[ob[aggregatedBy]].has(ob.CASE_ID)) {
+                temporaryPreIntDataHolder[ob[aggregatedBy]].push(ob[name]);
+            }
+            if (postCaseDicts[ob[aggregatedBy]].has(ob.CASE_ID)) {
+                temporaryPostIntDataHolder[ob[aggregatedBy]].push(ob[name]);
+            }
+        }
+
+    })
+
+    for (const [key, value] of Object.entries(temporaryDataHolder)) {
+        newData[key].calculated = mean(value as any);
+        newData[key].actualVal = sum(value as any)
+
+        preIntData[key].calculated = mean(temporaryPreIntDataHolder[key])
+        preIntData[key].actualVal = sum(temporaryPreIntDataHolder[key])
+
+        postIntData[key].calculated = mean(temporaryPostIntDataHolder[key])
+        postIntData[key].actualVal = sum(temporaryPostIntDataHolder[key])
+    }
+
+    return ({ name: name, label: label, preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "Basic" });
+
+}
+
+export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: BasicAggregatedDatePoint[]) => {
     let newExtraPairData: ExtraPairPoint[] = []
     if (extraPairArray.length > 0) {
         extraPairArray.forEach((variable: string) => {
@@ -517,76 +438,26 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                     newExtraPairData.push({ name: "Zero Transfusion", label: "Zero %", data: newData, type: "Basic" });
                     break;
 
-                case "Death":
-                    // let temporaryDataHolder: any = {}
-                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
-                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
-                        newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.caseCount }
-                    })
-                    hemoglobinDataSet.forEach((ob: any) => {
-                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
-                            temporaryDataHolder[ob[aggregatedBy]].push(ob.DEATH)
-                        }
-                    })
-                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key].calculated = mean(value as any);
-                        newData[key].actualVal = sum(value as any);
-
-                    }
-                    newExtraPairData.push({ name: "Death", label: "Death", data: newData, type: "Basic" });
+                case "DEATH":
+                    newExtraPairData.push(outcomeDataGenerate(caseIDList, aggregatedBy, "DEATH", "Death", data, hemoglobinDataSet));
                     break;
-
-
                 case "VENT":
-                    // let temporaryDataHolder:any = {}
-                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
-                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
-                        newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.caseCount }
-                    })
-                    hemoglobinDataSet.forEach((ob: any) => {
-                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
-                            temporaryDataHolder[ob[aggregatedBy]].push(ob.VENT)
-                        }
-                    })
-                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key].calculated = mean(value as any);
-                        newData[key].actualVal = sum(value as any);
-                    }
-                    newExtraPairData.push({ name: "VENT", label: "Vent", data: newData, type: "Basic" });
+                    newExtraPairData.push(outcomeDataGenerate(caseIDList, aggregatedBy, "VENT", "Vent", data, hemoglobinDataSet));
                     break;
                 case "ECMO":
-                    // let temporaryDataHolder:any = {}
-                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
-                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
-                        newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.caseCount }
-                    })
-                    hemoglobinDataSet.forEach((ob: any) => {
-                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
-                            temporaryDataHolder[ob[aggregatedBy]].push(ob.ECMO)
-                        }
-                    })
-                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key].calculated = mean(value as any);
-                        newData[key].actualVal = sum(value as any);
-                    }
-                    newExtraPairData.push({ name: "ECMO", label: "ECMO", data: newData, type: "Basic" });
+                    newExtraPairData.push(outcomeDataGenerate(caseIDList, aggregatedBy, "ECMO", "ECMO", data, hemoglobinDataSet));
                     break;
                 case "STROKE":
-                    // let temporaryDataHolder:any = {}
-                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
-                        temporaryDataHolder[dataPoint.aggregateAttribute] = []
-                        newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.caseCount }
-                    })
-                    hemoglobinDataSet.forEach((ob: any) => {
-                        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
-                            temporaryDataHolder[ob[aggregatedBy]].push(ob.STROKE)
-                        }
-                    })
-                    for (const [key, value] of Object.entries(temporaryDataHolder)) {
-                        newData[key].calculated = mean(value as any);
-                        newData[key].actualVal = sum(value as any);
-                    }
-                    newExtraPairData.push({ name: "STROKE", label: "Stroke", data: newData, type: "Basic" });
+                    newExtraPairData.push(outcomeDataGenerate(caseIDList, aggregatedBy, "STROKE", "Stroke", data, hemoglobinDataSet));
+                    break;
+                case "AMICAR":
+                    newExtraPairData.push(outcomeDataGenerate(caseIDList, aggregatedBy, "AMICAR", "Amicar", data, hemoglobinDataSet));
+                    break;
+                case "B12":
+                    newExtraPairData.push(outcomeDataGenerate(caseIDList, aggregatedBy, "B12", "B12", data, hemoglobinDataSet));
+                    break;
+                case "TXA":
+                    newExtraPairData.push(outcomeDataGenerate(caseIDList, aggregatedBy, "TXA", "TXA", data, hemoglobinDataSet));
                     break;
 
                 case "RISK":
@@ -679,6 +550,26 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
         )
     }
     return newExtraPairData;
+}
+
+const outcomeDataGenerate = (caseIDList: any, aggregatedBy: string, name: string, label: string, data: BasicAggregatedDatePoint[], hemoglobinDataSet: SingleCasePoint[]) => {
+    let temporaryDataHolder: any = {};
+    let newData = {} as any;
+    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
+        temporaryDataHolder[dataPoint.aggregateAttribute] = []
+        newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.caseCount }
+    })
+    hemoglobinDataSet.forEach((ob: any) => {
+        if (temporaryDataHolder[ob[aggregatedBy]] && caseIDList[ob.CASE_ID]) {
+            temporaryDataHolder[ob[aggregatedBy]].push(ob[name])
+        }
+    })
+    for (const [key, value] of Object.entries(temporaryDataHolder)) {
+        newData[key].calculated = mean(value as any);
+        newData[key].actualVal = sum(value as any);
+
+    }
+    return ({ name: name, label: label, data: newData, type: "Basic" })
 }
 
 export const generateComparisonData = (temporaryDataHolder: any[], showZero: boolean, valueToVisualize: string) => {

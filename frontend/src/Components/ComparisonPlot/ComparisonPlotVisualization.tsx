@@ -124,7 +124,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                         //     })
                         // }
                         if (outcomesSelection && outcomesSelection !== outcomeComparison) {
-                            if (singleCase[outcomesSelection] === "0") {
+                            if (singleCase[outcomesSelection] === 0) {
                                 criteriaMet = false;
                             }
                         }
