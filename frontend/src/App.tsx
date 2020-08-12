@@ -38,12 +38,15 @@ const App: FC<Props> = ({ store }: Props) => {
         }
         const resOutcome = await fetch(`${process.env.REACT_APP_QUERY_URL}patient_outcomes`);
         const dataOutcome = await resOutcome.json();
-        // console.log(dataOutcome)
+
         for (let obj of dataOutcome) {
             riskOutcomeDict[obj.visit_no].VENT = obj.gr_than_1440_vent || 0;
             riskOutcomeDict[obj.visit_no].DEATH = obj.patient_death || 0;
             riskOutcomeDict[obj.visit_no].STROKE = obj.patient_stroke || 0;
             riskOutcomeDict[obj.visit_no].ECMO = obj.patient_ECMO || 0;
+            riskOutcomeDict[obj.visit_no].AMICAR = obj.AMICAR || 0;
+            riskOutcomeDict[obj.visit_no].B12 = obj.B12 || 0;
+            riskOutcomeDict[obj.visit_no].TXA = obj.tranexamic_acid || 0;
         }
 
         let transfused_dict = {} as any;
@@ -83,11 +86,14 @@ const App: FC<Props> = ({ store }: Props) => {
                     QUARTER: ob.QUARTER,
                     MONTH: ob.MONTH,
                     DATE: time,
-                    VENT: riskOutcomeDict[ob.VISIT_ID].VENT.toString(),
+                    VENT: riskOutcomeDict[ob.VISIT_ID].VENT,
                     DRG_WEIGHT: riskOutcomeDict[ob.VISIT_ID].DRG_WEIGHT || 0,
-                    DEATH: riskOutcomeDict[ob.VISIT_ID].DEATH.toString(),
-                    ECMO: riskOutcomeDict[ob.VISIT_ID].ECMO.toString(),
-                    STROKE: riskOutcomeDict[ob.VISIT_ID].STROKE.toString()
+                    DEATH: riskOutcomeDict[ob.VISIT_ID].DEATH,
+                    ECMO: riskOutcomeDict[ob.VISIT_ID].ECMO,
+                    STROKE: riskOutcomeDict[ob.VISIT_ID].STROKE,
+                    TXA: riskOutcomeDict[ob.VISIT_ID].TXA,
+                    B12: riskOutcomeDict[ob.VISIT_ID].B12,
+                    AMICAR: riskOutcomeDict[ob.VISIT_ID].AMICAR
                 }
                 cacheData.push(outputObj)
             }
