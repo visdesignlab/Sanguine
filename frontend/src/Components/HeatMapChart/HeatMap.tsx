@@ -75,7 +75,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             totalWidth += (extraPairWidth[d.type])
         })
         setExtraPairTotlaWidth(totalWidth)
-        console.log(dimensionWidth, extraPairTotalWidth, valueScale().range())
+
     }, [extraPairDataSet])
 
     useEffect(() => {
@@ -114,7 +114,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             .domain(outputRange as any)
             .range([currentOffset.left, dimensionWidth - extraPairTotalWidth - currentOffset.right - currentOffset.margin])
             .paddingInner(0.01);
-
+        // console.log(dimensionWidth, extraPairTotalWidth, valueScale.range())
         return valueScale
     }, [dimensionWidth, extraPairTotalWidth, valueToVisualize, currentOffset]);
 
@@ -245,21 +245,21 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
     const outputGradientLegend = () => {
         if (!showZero) {
             return [<rect
-                x={0.7 * (dimensionWidth - extraPairTotalWidth)}
+                x={0.7 * (dimensionWidth)}
                 y={0}
-                width={0.2 * (dimensionWidth - extraPairTotalWidth)}
+                width={0.2 * (dimensionWidth)}
                 height={7.5}
                 fill="url(#gradient1)" />, <rect
-                x={0.7 * (dimensionWidth - extraPairTotalWidth)}
+                x={0.7 * (dimensionWidth)}
                 y={7.5}
-                width={0.2 * (dimensionWidth - extraPairTotalWidth)}
+                width={0.2 * (dimensionWidth)}
                 height={7.5}
                 fill="url(#gradient2)" />]
         } else {
             return <rect
-                x={0.7 * (dimensionWidth - extraPairTotalWidth)}
+                x={0.7 * (dimensionWidth)}
                 y={0}
-                width={0.2 * (dimensionWidth - extraPairTotalWidth)}
+                width={0.2 * (dimensionWidth)}
                 height={15}
                 fill="url(#gradient1)" />
         }
@@ -293,7 +293,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                 </defs>
                 {outputGradientLegend()}
                 <text
-                    x={0.7 * (dimensionWidth - extraPairTotalWidth)}
+                    x={0.7 * (dimensionWidth)}
                     y={15}
                     alignmentBaseline={"hanging"}
                     textAnchor={"start"}
@@ -302,7 +302,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                     0%
                 </text>
                 <text
-                    x={0.9 * (dimensionWidth - extraPairTotalWidth)}
+                    x={0.9 * (dimensionWidth)}
                     y={15}
                     alignmentBaseline={"hanging"}
                     textAnchor={"end"}

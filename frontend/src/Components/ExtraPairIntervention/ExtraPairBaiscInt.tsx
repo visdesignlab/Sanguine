@@ -51,14 +51,14 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                                 x={0}
                                 y={aggregationScale()(val)}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
-                                fill={dataVal.calculated !== undefined ? interpolateGreys(valueScale()(dataVal.calculated)) : "white"}
+                                fill={!isNaN(dataVal.calculated) ? interpolateGreys(valueScale()(dataVal.calculated)) : "white"}
                                 //fill={secondary_gray}
                                 opacity={0.8}
                                 width={extraPairWidth.Basic}
                                 height={aggregationScale().bandwidth() * 0.5} />
                         } />,
                     <line
-                        opacity={dataVal.calculated !== undefined ? 0 : 1}
+                        opacity={!isNaN(dataVal.calculated) ? 0 : 1}
                         y1={0.25 * aggregationScale().bandwidth() + aggregationScale()(val)!}
                         y2={0.25 * aggregationScale().bandwidth() + aggregationScale()(val)!}
                         x1={0.35 * extraPairWidth.Basic}
@@ -71,7 +71,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                             aggregationScale()(val)! +
                             0.25 * aggregationScale().bandwidth()
                         }
-                        opacity={dataVal.calculated !== undefined ? 1 : 0}
+                        opacity={!isNaN(dataVal.calculated) ? 1 : 0}
                         fill="white"
                         alignmentBaseline={"central"}
                         textAnchor={"middle"}>{Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? "<1%" : format(".0%")(dataVal.calculated)}</text>]
@@ -87,14 +87,14 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                                 x={0}
                                 y={aggregationScale()(val)! + 0.5 * aggregationScale().bandwidth()}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
-                                fill={dataVal.calculated !== undefined ? interpolateGreys(valueScale()(dataVal.calculated)) : "white"}
+                                fill={!isNaN(dataVal.calculated) ? interpolateGreys(valueScale()(dataVal.calculated)) : "white"}
                                 //fill={secondary_gray}
                                 opacity={0.8}
                                 width={extraPairWidth.Basic}
                                 height={aggregationScale().bandwidth() * 0.5} />
                         } />,
                     <line
-                        opacity={dataVal.calculated !== undefined ? 0 : 1}
+                        opacity={!isNaN(dataVal.calculated) ? 0 : 1}
                         y1={0.75 * aggregationScale().bandwidth() + aggregationScale()(val)!}
                         y2={0.75 * aggregationScale().bandwidth() + aggregationScale()(val)!}
                         x1={0.35 * extraPairWidth.Basic}
@@ -107,7 +107,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                             aggregationScale()(val)! +
                             0.75 * aggregationScale().bandwidth()
                         }
-                        opacity={dataVal.calculated !== undefined ? 1 : 0}
+                        opacity={!isNaN(dataVal.calculated) ? 1 : 0}
                         fill="white"
                         alignmentBaseline={"central"}
                         textAnchor={"middle"}>{Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? "<1%" : format(".0%")(dataVal.calculated)}</text>]
@@ -127,7 +127,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                                 x={0}
                                 y={aggregationScale()(val)}
                                 // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
-                                fill={dataVal.calculated !== undefined ? interpolateGreys(valueScale()(dataVal.calculated)) : "white"}
+                                fill={!isNaN(dataVal.calculated) ? interpolateGreys(valueScale()(dataVal.calculated)) : "white"}
                                 //fill={secondary_gray}
                                 opacity={0.8}
                                 width={extraPairWidth.Basic}
@@ -136,7 +136,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
 
                         } />,
                     <line
-                        opacity={dataVal.calculated !== undefined ? 0 : 1}
+                        opacity={!isNaN(dataVal.calculated) ? 0 : 1}
                         y1={0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
                         y2={0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
                         x1={0.35 * extraPairWidth.Basic}
@@ -150,7 +150,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                             0.5 * aggregationScale().bandwidth()
                         }
                         fill="white"
-                        opacity={dataVal.calculated !== undefined ? 1 : 0}
+                        opacity={!isNaN(dataVal.calculated) ? 1 : 0}
                         alignmentBaseline={"central"}
                         textAnchor={"middle"}>{Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? "<1%" : format(".0%")(dataVal.calculated)}</text>]
 

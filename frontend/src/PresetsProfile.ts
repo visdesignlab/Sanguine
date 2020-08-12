@@ -12,9 +12,9 @@ export const highlight_blue = "#32d9d9"
 export const greyScaleRange = [0.25, 0.8]
 
 export const offset = {
-    regular: { left: 90, bottom: 40, right: 10, top: 40, margin: 20 },
-    minimum: { left: 35, bottom: 40, right: 10, top: 40, margin: 20 },
-    intervention: { left: 100, bottom: 40, right: 10, top: 40, margin: 20 }
+    regular: { left: 90, bottom: 40, right: 10, top: 40, margin: 10 },
+    minimum: { left: 35, bottom: 40, right: 10, top: 40, margin: 10 },
+    intervention: { left: 100, bottom: 40, right: 10, top: 40, margin: 10 }
 
 };
 

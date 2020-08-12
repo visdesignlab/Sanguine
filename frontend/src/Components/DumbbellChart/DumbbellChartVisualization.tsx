@@ -135,7 +135,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
                                 // }
                                 if (outcomesSelection) {
 
-                                    if (ob[outcomesSelection] === "0") {
+                                    if (ob[outcomesSelection] === 0) {
                                         criteriaMet = false;
                                     }
 
