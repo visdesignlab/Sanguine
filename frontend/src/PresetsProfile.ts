@@ -32,7 +32,7 @@ export const extraPairOptions = [
     { title: "Stroke Rate", value: "STROKE" },
     { title: "B12", value: "B12" },
     { title: "Tranexamic Acid", value: "TXA" },
-    { title: "AMICAR", value: "AMICAR" }
+    { title: "Amicar", value: "AMICAR" }
 ]
 
 //export const minimumOffset = 
@@ -147,6 +147,9 @@ export const OutcomeType = [
     { value: "VENT", key: "VENT", text: "Ventilator Over 24hr" },
     { value: "STROKE", key: "STROKE", text: "Stroke" },
     { value: "ECMO", key: "ECMO", text: "ECMO" },
+    { value: "B12", key: "B12", text: "B12" },
+    { value: "TXA", key: "TXA", text: "Tranexamic Acid" },
+    { value: "AMICAR", key: "AMICAR", text: "Amicar" },
 ]
 
 

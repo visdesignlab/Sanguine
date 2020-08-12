@@ -98,7 +98,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                     newExtraPairData.push(outcomeComparisonDataGenerate("TXA", "TXA", data, hemoglobinDataSet, caseIDList, aggregatedBy));
                     break;
                 case "AMICAR":
-                    newExtraPairData.push(outcomeComparisonDataGenerate("AMICAR", "AMICAR", data, hemoglobinDataSet, caseIDList, aggregatedBy));
+                    newExtraPairData.push(outcomeComparisonDataGenerate("AMICAR", "Amicar", data, hemoglobinDataSet, caseIDList, aggregatedBy));
                     break;
 
                 case "RISK":
@@ -451,7 +451,7 @@ export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string,
                     newExtraPairData.push(outcomeDataGenerate(caseIDList, aggregatedBy, "STROKE", "Stroke", data, hemoglobinDataSet));
                     break;
                 case "AMICAR":
-                    newExtraPairData.push(outcomeDataGenerate(caseIDList, aggregatedBy, "AMICAR", "AMICAR", data, hemoglobinDataSet));
+                    newExtraPairData.push(outcomeDataGenerate(caseIDList, aggregatedBy, "AMICAR", "Amicar", data, hemoglobinDataSet));
                     break;
                 case "B12":
                     newExtraPairData.push(outcomeDataGenerate(caseIDList, aggregatedBy, "B12", "B12", data, hemoglobinDataSet));
