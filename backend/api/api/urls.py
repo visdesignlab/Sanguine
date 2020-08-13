@@ -17,10 +17,13 @@ from django.contrib import admin
 from django.urls import path, include
 
 from . import views
+from . import auth_views
 
 urlpatterns = [
     path("api/admin/", admin.site.urls),
-    path('api/accounts/', include('django.contrib.auth.urls')),
+    path("api/accounts/", include('django.contrib.auth.urls')),
+    path("api/whoami", auth_views.whoami, name="whoami"),
+
     path("api/", views.index, name="index"),
     path("api/get_attributes", views.get_attributes, name="get_attributes"),
     path("api/hemoglobin", views.hemoglobin, name="hemoglobin"),
