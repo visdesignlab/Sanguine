@@ -82,13 +82,19 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         let newCaseMax = 0;
         const tempxVals = data
             .sort((a, b) => {
-                if (aggregatedBy === "YEAR") { return a.aggregateAttribute - b.aggregateAttribute }
+                if (aggregatedBy === "YEAR") {
+                    return a.aggregateAttribute - b.aggregateAttribute
+                }
                 else {
-                    return a.caseCount - b.caseCount
+                    if (showZero) { return a.caseCount - b.caseCount }
+                    else { return (a.caseCount - a.zeroCaseNum) - (b.caseCount - b.zeroCaseNum) }
                 }
             })
             .map((dp) => {
-                newCaseMax = newCaseMax > dp.caseCount ? newCaseMax : dp.caseCount
+                if (showZero) { newCaseMax = newCaseMax > dp.caseCount ? newCaseMax : dp.caseCount }
+                else {
+                    newCaseMax = newCaseMax > (dp.caseCount - dp.zeroCaseNum) ? newCaseMax : (dp.caseCount - dp.zeroCaseNum)
+                }
                 return dp.aggregateAttribute
             })
 
@@ -317,7 +323,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                 {data.map((dataPoint) => {
                     return outputSinglePlotElement(dataPoint).concat([
                         <rect
-                            fill={interpolateGreys(caseScale()(dataPoint.caseCount))}
+                            fill={interpolateGreys(caseScale()(showZero ? dataPoint.caseCount : (dataPoint.caseCount - dataPoint.zeroCaseNum)))}
                             x={-caseRectWidth - 5}
                             y={aggregationScale()(dataPoint.aggregateAttribute)}
                             width={caseRectWidth}
@@ -336,7 +342,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                             textAnchor={"middle"}
                             fontSize="12px"
                         >
-                            {dataPoint.caseCount}
+                            {showZero ? dataPoint.caseCount : (dataPoint.caseCount - dataPoint.zeroCaseNum)}
                         </text>,
                     ]);
                 })}

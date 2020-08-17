@@ -706,7 +706,7 @@ export const generateComparisonData = (temporaryDataHolder: any[], showZero: boo
 }
 
 export const generateRegularData = (temporaryDataHolder: any[], showZero: boolean, valueToVisualize: string) => {
-    let caseCount = 0;
+    let totalCaseCount = 0;
     let outputData: HeatMapDataPoint[] = [];
     Object.values(temporaryDataHolder).forEach((computedData: any) => {
         const patientIDArray: number[] = Array.from(computedData.patientIDList);
@@ -716,24 +716,28 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
 
         let dataArray: SingleCasePoint[] = computedData.data;
         let zeroNum = 0;
-        if (!showZero) {
+        // if (!showZero) {
 
-            dataArray = dataArray.filter((d: SingleCasePoint) => {
-                if (d[valueToVisualize] > 0) {
-                    caseIDArray.push(d.CASE_ID)
-                    return true;
-                }
-                zeroNum += 1;
-                return false;
-            })
-        } else {
-            zeroNum = dataArray.filter((d) => {
-                caseIDArray.push(d.CASE_ID)
-                return d[valueToVisualize] === 0;
-            }).length;
-        }
+        //     dataArray = dataArray.filter((d: SingleCasePoint) => {
+        //         if (d[valueToVisualize] > 0) {
+        //             caseIDArray.push(d.CASE_ID)
+        //             return true;
+        //         }
+        //         zeroNum += 1;
+        //         return false;
+        //     })
+        // } else {
+        //     zeroNum = dataArray.filter((d) => {
+        //         caseIDArray.push(d.CASE_ID)
+        //         return d[valueToVisualize] === 0;
+        //     }).length;
+        // }
+        zeroNum = dataArray.filter((d) => {
+            caseIDArray.push(d.CASE_ID)
+            return d[valueToVisualize] === 0;
+        }).length;
 
-        caseCount += caseIDArray.length;
+        totalCaseCount += caseIDArray.length;
 
         let countDict = {} as any;
         const cap: number = BloodProductCap[valueToVisualize]
@@ -783,5 +787,5 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
             }
         )
     });
-    return [caseCount, outputData]
+    return [totalCaseCount, outputData]
 }

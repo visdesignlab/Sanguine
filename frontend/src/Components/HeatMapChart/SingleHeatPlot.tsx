@@ -47,15 +47,18 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
                     const output = dataPoint.countDict[point].length
                     const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum
                     // let content = output/caseCount
+                    let disables = false;
                     let colorFill = output === 0 ? "white" : interpolateReds(colorScale(output / caseCount))
                     if (!showZero && point as any === 0) {
                         colorFill = output === 0 ? "white" : interpolateGreys(greyScale(output / (dataPoint.caseCount)))
+                        disables = true;
                         /// content = output/dataPoint.caseCount
                     }
 
                     return (
-                        [<Popup content={format(".0%")(output / dataPoint.caseCount)}
+                        [<Popup content={(format(".0%")(output / dataPoint.caseCount))}
                             key={dataPoint.aggregateAttribute + '-' + point}
+                            disabled={disables}
                             trigger={
                                 <HeatRect
                                     fill={colorFill}
