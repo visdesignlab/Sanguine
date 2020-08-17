@@ -193,7 +193,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 
     const generateBrushPatientItem = () => {
         if (currentBrushedPatientGroup.length > 0) {
-            return (<List.Item
+            return (<FilterListIT
                 style={{ textAlign: "left" }}
                 key="Brushed Patients"
                 onClick={() => { actions.updateBrushPatientGroup([], "REPLACE") }}
@@ -201,7 +201,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                 <List.Header>Cases Selected</List.Header>
                 <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
                 <List.Item>{currentBrushedPatientGroup.length}</List.Item>
-            </List.Item>)
+            </FilterListIT>)
         }
     }
 
