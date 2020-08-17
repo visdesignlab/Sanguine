@@ -21,15 +21,13 @@ export type Props = OwnProps;
 
 const DetailView: FC<Props> = ({ hemoData, store }: Props) => {
     const {
-        currentBrushedPatientGroup,
-
+        currentBrushedPatientGroup
     } = store!
 
     const [individualInfo, setIndividualInfo] = useState<any>(null);
     const [currentSelectPatient, setCurrentSelectPatient] = useState<SingleCasePoint | undefined>(undefined);
     const [searchCaseVal, setSearchCaseVal] = useState("");
     const [caseSearchResult, setCaseSearchResult] = useState<any[]>([]);
-
 
     useEffect(() => {
         async function fetchIndividualInformaiton() {
@@ -93,7 +91,10 @@ const DetailView: FC<Props> = ({ hemoData, store }: Props) => {
 
     return (
         <Container>
-            <Container style={{ textAlign: "center" }}>
+            <Container>
+                <Title >Detail View</Title>
+            </Container>
+            <Container style={{ marginTop: "0.5vh" }}>
                 <Search
                     placeholder="Search a Case by ID"
                     //defaultValue={"Search Case"}
@@ -120,13 +121,14 @@ const DetailView: FC<Props> = ({ hemoData, store }: Props) => {
                 />
 
             </Container>
-            <BoxContainer style={{ padding: "0.01em 0.01em", visibility: currentBrushedPatientGroup.length > 0 ? "visible" : "hidden", overflow: "overlay", height: "15vh" }}>
+            <BoxContainer style={{ padding: "0.01em 0.01em", visibility: currentBrushedPatientGroup.length > 0 ? "visible" : "hidden", overflow: "overlay", height: "15vh" }} >
                 <List relaxed divided>
                     <List.Item key="case-header" style={{ padding: "5px" }}>
-                        {/* <List.Header style={{ padding: "0 5px" }}>Case Selected</List.Header> */}
                         <List.Content floated="right"><Button icon="close" compact size="mini" basic circular onClick={() => { actions.updateBrushPatientGroup([], "REPLACE") }} /></List.Content>
                         <List.Content><Header>Case Selected</Header></List.Content>
                     </List.Item>
+
+
                     {currentBrushedPatientGroup.map(d => {
                         return (
                             <CaseItem key={d.CASE_ID}
@@ -161,7 +163,7 @@ const BoxContainer = styled(Container)`
     border: 1px solid #ccc!important
     padding: 0.01em 5px
     border-radius: 13px;
-    margin:1vh
+    margin:0.5vh
 `
 
 interface CaseItemProps {

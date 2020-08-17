@@ -89,7 +89,6 @@ export interface ExtraPairPoint {
     data: any[];
     type: string;
     label: string;
-    kdeMax?: number;
     medianSet?: any;
 }
 
@@ -99,7 +98,6 @@ export interface ExtraPairInterventionPoint {
     preIntData: any[];
     postIntData: any[];
     type: string;
-    kdeMax?: number;
     totalMedianSet?: any;
     preMedianSet?: any;
     postMedianSet?: any;

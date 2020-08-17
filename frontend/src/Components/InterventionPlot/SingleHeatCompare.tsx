@@ -40,21 +40,25 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                 if (dataPoint.preCountDict[point]) {
                     const preOutput = dataPoint.preCountDict[point].length;
 
+
                     const postOutput = dataPoint.postCountDict[point].length;
 
-                    const preCaseCount = showZero ? dataPoint.preCaseCount : dataPoint.preCaseCount - dataPoint.preZeroCaseNum;
-                    const postCaseCount = showZero ? dataPoint.postCaseCount : dataPoint.postCaseCount - dataPoint.postZeroCaseNum;
 
+                    const preCaseCount = showZero ? dataPoint.preCaseCount : (dataPoint.preCaseCount - dataPoint.preZeroCaseNum);
+                    const postCaseCount = showZero ? dataPoint.postCaseCount : (dataPoint.postCaseCount - dataPoint.postZeroCaseNum);
+                    let disables = false;
                     let preFill = preOutput === 0 ? "white" : interpolateReds(colorScale(preOutput / preCaseCount))
                     let postFill = postOutput === 0 ? "white" : interpolateReds(colorScale(postOutput / postCaseCount))
                     if (!showZero && point as any === 0) {
+                        disables = true;
                         preFill = preOutput === 0 ? "white" : interpolateGreys(greyScale(preOutput / dataPoint.preCaseCount));
                         postFill = postOutput === 0 ? "white" : interpolateGreys(greyScale(postOutput / dataPoint.postCaseCount))
                     }
 
                     return (
-                        [<Popup content={format(".0%")(preOutput / dataPoint.preCaseCount)}
+                        [<Popup content={format(".0%")(preOutput / preCaseCount)}
                             key={`Pre${dataPoint.aggregateAttribute} - ${point}`}
+                            disabled={disables}
                             trigger={
                                 <HeatRect
                                     fill={preFill}
@@ -74,7 +78,8 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                                         })
 
                                     }} />}
-                        />, <Popup content={format(".0%")(postOutput / dataPoint.postCaseCount)}
+                        />, <Popup content={format(".0%")(postOutput / postCaseCount)}
+                            disabled={disables}
                             key={`Post${dataPoint.aggregateAttribute} - ${point}`}
                             trigger={
                                 <HeatRect
