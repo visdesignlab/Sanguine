@@ -88,7 +88,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScaleD
                         //                        aggregatedScale={aggregationScale()}
                         dataSet={pairData.data}
                         name={pairData.name}
-                        kdeMax={pairData.kdeMax ? pairData.kdeMax : (0)} />,
+                    />,
 
                    {extraPairTextGenerator(pairData.name, pairData.label, "Violin", pairData)}
                 </g>);

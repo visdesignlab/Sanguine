@@ -95,21 +95,36 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
     useEffect(() => {
 
         let newCaseMax = 0;
-        let newZeroMax = 0;
+
         let newPreTotal = 0;
         let newPostTotal = 0;
         const newXvals = data
             .sort((a, b) => {
-                if (aggregatedBy === "YEAR") { return a.aggregateAttribute - b.aggregateAttribute }
+                if (aggregatedBy === "YEAR") {
+                    return a.aggregateAttribute - b.aggregateAttribute
+                }
                 else {
-                    return a.postCaseCount + a.preCaseCount - b.postCaseCount - b.preCaseCount
+                    if (showZero) {
+                        return (a.postCaseCount + a.preCaseCount - a.preZeroCaseNum - a.postZeroCaseNum) -
+                            (b.postCaseCount + b.preCaseCount - b.preZeroCaseNum - b.postZeroCaseNum)
+                    }
+                    else {
+                        return a.postCaseCount + a.preCaseCount - b.postCaseCount - b.preCaseCount
+                    }
                 }
             })
             .map(dp => {
-                newCaseMax = newCaseMax > (dp.preCaseCount + dp.postCaseCount) ? newCaseMax : (dp.preCaseCount + dp.postCaseCount);
-                newZeroMax = newZeroMax > (dp.postZeroCaseNum + dp.preZeroCaseNum) ? newCaseMax : (dp.postZeroCaseNum + dp.preZeroCaseNum);
-                newPreTotal += dp.preCaseCount;
-                newPostTotal += dp.postCaseCount;
+                const preCaseCount = showZero ? (dp.preCaseCount) : (dp.preCaseCount - dp.preZeroCaseNum);
+                const postCaseCount = showZero ? dp.postCaseCount : (dp.postCaseCount - dp.postZeroCaseNum);
+                // if (showZero) {
+                //     newCaseMax = newCaseMax > (dp.preCaseCount + dp.postCaseCount) ? newCaseMax : (dp.preCaseCount + dp.postCaseCount);
+                // }
+                // else {
+                //     newCaseMax = newCaseMax > (dp.preCaseCount + dp.postCaseCount - dp.preZeroCaseNum - dp.postZeroCaseNum) ? newCaseMax : (dp.preCaseCount + dp.postCaseCount - dp.preZeroCaseNum - dp.postZeroCaseNum);
+                // }
+                newCaseMax = newCaseMax > (preCaseCount + postCaseCount) ? newCaseMax : (preCaseCount + postCaseCount);
+                newPreTotal += preCaseCount;
+                newPostTotal += postCaseCount;
                 //  const max_temp = max([max(dp.preInKdeCal, d => d.y), max(dp.postInKdeCal, d => d.y)])
                 //  newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
                 return dp.aggregateAttribute
@@ -119,8 +134,8 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         setPostTotal(newPostTotal)
         // setKdeMax(newkdeMax);
         setCaseMax(newCaseMax);
-
-    }, [data, xVals, aggregatedBy])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data, aggregatedBy, showZero])
 
     const aggregationScale = useCallback(() => {
         let aggregationScale = scaleBand()
@@ -487,13 +502,13 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                         .concat([
 
                             <rect
-                                fill={interpolateGreys(caseScale()(dataPoint.preCaseCount))}
+                                fill={interpolateGreys(caseScale()(showZero ? dataPoint.preCaseCount : (dataPoint.preCaseCount - dataPoint.preZeroCaseNum)))}
                                 x={-caseRectWidth - 15}
                                 y={aggregationScale()(dataPoint.aggregateAttribute)}
                                 width={caseRectWidth}
                                 height={aggregationScale().bandwidth() * 0.5}
                             />,
-                            <rect fill={interpolateGreys(caseScale()(dataPoint.postCaseCount))}
+                            <rect fill={interpolateGreys(caseScale()(showZero ? dataPoint.postCaseCount : (dataPoint.postCaseCount - dataPoint.postZeroCaseNum)))}
                                 x={-caseRectWidth - 15}
                                 y={aggregationScale()(dataPoint.aggregateAttribute)! + aggregationScale().bandwidth() * 0.5} width={caseRectWidth}
                                 height={aggregationScale().bandwidth() * 0.5} />,

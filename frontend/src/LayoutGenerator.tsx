@@ -2,9 +2,8 @@ import React, {
     FC
 } from "react";
 import { inject, observer } from "mobx-react";
-import { Tab, Grid, GridColumn, Button } from "semantic-ui-react";
+import { Tab, Button } from "semantic-ui-react";
 import { actions } from ".";
-import DetailView from "./Components/Utilities/DetailView";
 import LineUpWrapper from "./LineUpWrapper";
 //import PatientComparisonWrapper from "./Components/PatientComparisonWrapper";
 import Store from "./Interfaces/Store";
@@ -172,31 +171,28 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
     }
     const panes = [{
         menuItem: 'Main', pane: <Tab.Pane key="Main">
-            <Grid>
-                <GridColumn width={13}>
-                    <Responsive
-                        onResizeStop={actions.onLayoutchange}
-                        onDragStop={actions.onLayoutchange}
-                        // onLayoutChange={actions.onLayoutchange}
-                        // onBreakpointChange={this._onBreakpointChange}
-                        className="layout"
-                        cols={colData}
-                        rowHeight={600}
-                        width={1300}
-                        //cols={2}
-                        //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
 
-                        layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
-                    >
-                        {layoutArray.map((layoutE, i) => {
-                            return createElement(layoutE, i);
-                        })}
-                    </Responsive>
-                </GridColumn>
-                <Grid.Column width={3}>
-                    <DetailView hemoData={hemoData} />
-                </Grid.Column>
-            </Grid>
+            <Responsive
+                onResizeStop={actions.onLayoutchange}
+                onDragStop={actions.onLayoutchange}
+                // onLayoutChange={actions.onLayoutchange}
+                // onBreakpointChange={this._onBreakpointChange}
+                className="layout"
+                cols={colData}
+                rowHeight={600}
+                width={1300}
+                //cols={2}
+                //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+
+                layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
+            >
+                {layoutArray.map((layoutE, i) => {
+                    return createElement(layoutE, i);
+                })}
+            </Responsive>
+
+
+
         </Tab.Pane >
     },
     {

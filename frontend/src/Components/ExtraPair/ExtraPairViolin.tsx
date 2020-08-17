@@ -14,18 +14,18 @@ interface OwnProps {
     aggregationScaleRange: string;
     store?: Store;
     medianSet: any;
-    kdeMax: number;
+    //    kdeMax: number;
     name: string;
 }
 
 export type Props = OwnProps;
 
-const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregationScaleRange, kdeMax, medianSet, name }: Props) => {
+const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregationScaleRange, medianSet, name }: Props) => {
 
     const aggregationScale = useCallback(() => {
         const domain = JSON.parse(aggregationScaleDomain);
         const range = JSON.parse(aggregationScaleRange);
-        const aggregationScale = scaleBand().domain(domain).range(range).paddingInner(0.1);
+        const aggregationScale = scaleBand().domain(domain).range(range).paddingInner(0.2);
         return aggregationScale
     }, [aggregationScaleDomain, aggregationScaleRange])
 
@@ -36,7 +36,7 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
         valueScale.domain([0, 30]);
     }
 
-    const lineFunction = useCallback(() => {
+    const lineFunction = useCallback((kdeMax) => {
         const kdeScale = scaleLinear()
             .domain([-kdeMax, kdeMax])
             .range([-0.5 * aggregationScale().bandwidth(), 0.5 * aggregationScale().bandwidth()])
@@ -45,7 +45,7 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
             .y((d: any) => kdeScale(d.y) + 0.5 * aggregationScale().bandwidth())
             .x((d: any) => valueScale(d.x));
         return lineFunction
-    }, [aggregationScale, kdeMax, valueScale])
+    }, [aggregationScale, valueScale])
 
     const svgRef = useRef<SVGSVGElement>(null);
 
@@ -62,7 +62,7 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
             <g ref={svgRef} transform={`translate(0,${aggregationScale().range()[0]})`}>
                 <g className="axis"></g>
             </g>
-            {Object.entries(dataSet).map(([val, dataArray]) => {
+            {Object.entries(dataSet).map(([val, result]) => {
 
                 // const sortedArray = dataArray.sort((a: any, b: any) =>
                 //     Math.abs(a[1] - a[0]) - Math.abs(b[1] - b[0]))
@@ -70,7 +70,7 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
                 return ([
                     <Popup content={`median ${format(".2f")(medianSet[val])}`} key={`violin-${val}`} trigger={
                         <ViolinLine
-                            d={lineFunction()(dataArray)!}
+                            d={lineFunction(result.kdeMax)(result.kdeArray)!}
                             transform={`translate(0,${aggregationScale()(val)!})`}
                         />} />,
 

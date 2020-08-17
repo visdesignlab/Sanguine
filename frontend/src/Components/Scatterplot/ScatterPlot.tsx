@@ -91,9 +91,10 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
     useEffect(() => {
         if (isFirstRender) {
             updateIsFirstRender(false)
+            console.log("ONE!")
         }
-
         else if (brushLoc) {
+            console.log("TWO!")
             let caseList: SingleCasePoint[] = [];
             data.forEach((dataPoint) => {
                 //  const cx = (xAxisScale())(d.xVal as any) || 0
@@ -110,9 +111,12 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
             } else {
                 actions.updateBrushPatientGroup(caseList, "REPLACE")
             }
-        } else {
-            actions.updateBrushPatientGroup([], "REPLACE")
         }
+        //Commented out because adding a scatterplot would remove the current brushed patients. 
+        //  else {
+        //     console.log("THREE!")
+        //     actions.updateBrushPatientGroup([], "REPLACE")
+        // }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [brushLoc, xAxisScale, yAxisScale, data, xAxisName])
 

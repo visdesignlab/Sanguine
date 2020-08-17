@@ -12,6 +12,7 @@ import './App.css'
 import { NavLink } from 'react-router-dom';
 import LayoutGenerator from './LayoutGenerator';
 import { select } from 'd3';
+import DetailView from './Components/Utilities/DetailView';
 
 interface OwnProps {
     store?: Store
@@ -52,8 +53,11 @@ const Preview: FC<Props> = ({ store, hemoData }: Props) => {
                 <SpecialPaddingColumn width={2} id="Side-Bar" >
                     <SideBar hemoData={hemoData}></SideBar>
                 </SpecialPaddingColumn>
-                <Grid.Column width={14} id="Main-Body">
+                <Grid.Column width={12} id="Main-Body">
                     <LayoutGenerator hemoData={hemoData} />
+                </Grid.Column>
+                <Grid.Column width={2}>
+                    <DetailView hemoData={hemoData} />
                 </Grid.Column>
 
             </Grid>

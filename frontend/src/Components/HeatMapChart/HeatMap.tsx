@@ -103,7 +103,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         setCaseMax(newCaseMax)
         //console.log(data)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data])
+    }, [data, showZero, aggregatedBy])
 
 
     const valueScale = useCallback(() => {

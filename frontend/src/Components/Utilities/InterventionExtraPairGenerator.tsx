@@ -94,8 +94,7 @@ const InterventionExtraPairGenerator: FC<Props> = ({ extraPairDataSet, aggregati
                         // aggregatedScale={aggregationScale}
                         aggregationScaleDomain={aggregationScaleDomain}
                         aggregationScaleRange={aggregationScaleRange}
-                        name={pairData.name}
-                        kdeMax={pairData.kdeMax ? pairData.kdeMax : (0)} />,
+                        name={pairData.name} />,
                         {extraPairTextGenerator(pairData.name, pairData.label, "Violin", pairData)}
                 </g>);
                 break;

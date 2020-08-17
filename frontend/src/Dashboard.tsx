@@ -9,6 +9,7 @@ import './App.css'
 //import 'react-grid-layout/css/styles.css'
 import LayoutGenerator from './LayoutGenerator';
 import { select } from 'd3';
+import DetailView from './Components/Utilities/DetailView';
 
 
 interface OwnProps {
@@ -31,11 +32,14 @@ const Dashboard: FC<Props> = ({ hemoData, store }: Props) => {
                 <SpecialPaddingColumn width={2} id="Side-Bar">
                     <SideBar hemoData={hemoData} />
                 </SpecialPaddingColumn>
-                <Grid.Column width={14} id="Main-Body">
+                <Grid.Column width={12} id="Main-Body">
                     <LayoutGenerator hemoData={hemoData} />
                 </Grid.Column>
-
+                <Grid.Column width={2}>
+                    <DetailView hemoData={hemoData} />
+                </Grid.Column>
             </Grid>
+
             <Modal open={loadingModalOpen} closeOnEscape={false}
                 closeOnDimmerClick={false}>
                 <Message icon>
