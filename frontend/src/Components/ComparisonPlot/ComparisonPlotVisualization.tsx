@@ -49,7 +49,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
     const [width, setWidth] = useState(0)
     const [height, setHeight] = useState(0)
 
-    const [caseIDDictionary, setCaseIDList] = useState<any>(null)
+    // const [caseIDDictionary, setCaseIDList] = useState<any>(null)
     const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
 
     const [openNotationModal, setOpenNotationModal] = useState(false)
@@ -60,7 +60,8 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
         if (extraPair) {
             stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray)
         }
-    }, [extraPair, extraPairArray])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [extraPair])
 
     useLayoutEffect(() => {
         if (svgRef.current) {
@@ -81,7 +82,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
             previousCancelToken.cancel("cancel the call?")
         }
         let temporaryDataHolder: any = {}
-        let caseDictionary = {} as any;
+        // let caseDictionary = {} as any;
 
         let caseSetReturnedFromQuery = new Set();
 
@@ -130,7 +131,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                         }
 
                         if (criteriaMet) {
-                            caseDictionary[singleCase.CASE_ID] = true;
+                            //  caseDictionary[singleCase.CASE_ID] = true;
                             const caseOutcome = parseInt(singleCase[outcomeComparison]);
                             if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
                                 temporaryDataHolder[singleCase[aggregatedBy]] = {
@@ -167,7 +168,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
 
                     const [caseCount, outputData] = generateComparisonData(temporaryDataHolder, showZero, valueToVisualize)
                     stateUpdateWrapperUseJSON(data, outputData, setData);
-                    stateUpdateWrapperUseJSON(caseIDDictionary, caseDictionary, setCaseIDList)
+                    //  stateUpdateWrapperUseJSON(caseIDDictionary, caseDictionary, setCaseIDList)
                     store!.totalAggregatedCaseCount = caseCount as number;
                 }
             }
@@ -184,10 +185,10 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
 
 
     useEffect(() => {
-        const newExtraPairData = generateExtrapairPlotDataWithIntervention(caseIDDictionary, aggregatedBy, hemoglobinDataSet, extraPairArray, data)
+        const newExtraPairData = generateExtrapairPlotDataWithIntervention(aggregatedBy, hemoglobinDataSet, extraPairArray, data)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extraPairArray, data, hemoglobinDataSet, caseIDDictionary, aggregatedBy]);
+    }, [extraPairArray, data, hemoglobinDataSet, aggregatedBy]);
 
     const changeAggregation = (e: any, value: any) => {
         actions.changeChart(value.value, valueToVisualize, chartId, "COMPARISON")

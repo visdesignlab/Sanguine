@@ -21,14 +21,7 @@ import {
     ComparisonDataPoint, ExtraPairInterventionPoint
 } from "../../Interfaces/ApplicationState";
 import {
-    AxisLabelDict,
-    BloodProductCap,
-    offset,
-    CELL_SAVER_TICKS,
-    extraPairWidth,
-    extraPairPadding,
-    Accronym,
-    caseRectWidth,
+    AxisLabelDict, BloodProductCap, offset, CELL_SAVER_TICKS, extraPairWidth, extraPairPadding, Accronym, caseRectWidth,
 } from "../../PresetsProfile"
 
 //import SingleHeatPlot from "./SingleHeatPlot";
