@@ -3,7 +3,7 @@ import { FC, useRef, useState, useEffect, useLayoutEffect } from "react";
 import { ExtraPairInterventionPoint, ComparisonDataPoint } from "../../Interfaces/ApplicationState";
 import React from "react";
 import { inject, observer } from "mobx-react";
-import { extraPairOptions, barChartAggregationOptions, barChartValuesOptions, interventionChartType, ChartSVG } from "../../PresetsProfile";
+import { extraPairOptions, barChartAggregationOptions, barChartValuesOptions, ChartSVG, OutcomeDropdownOptions } from "../../PresetsProfile";
 import axios from 'axios';
 import { stateUpdateWrapperUseJSON, generateExtrapairPlotDataWithIntervention, generateComparisonData } from "../../HelperFunctions";
 import { actions } from "../..";
@@ -197,8 +197,13 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
         actions.changeChart(aggregatedBy, value.value, chartId, "COMPARISON")
     }
 
-    const changeType = (e: any, value: any) => {
-        actions.changeChart(aggregatedBy, valueToVisualize, chartId, "COMPARISON", value.value)
+    const changeOutcome = (e: any, value: any) => {
+        console.log(value)
+        if (value.value === "NONE") {
+            actions.changeChart(aggregatedBy, valueToVisualize, chartId, "HEATMAP", value.value)
+        } else {
+            actions.changeChart(aggregatedBy, valueToVisualize, chartId, "COMPARISON", value.value)
+        }
     }
 
 
@@ -235,7 +240,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                                 <Dropdown.Menu>
                                     <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
                                     <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue}></Dropdown>
-                                    <Dropdown text="Change Type" pointing basic item compact options={interventionChartType} onChange={changeType}></Dropdown>
+                                    <Dropdown text="Change Type" pointing basic item compact options={OutcomeDropdownOptions} onChange={changeOutcome}></Dropdown>
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item>

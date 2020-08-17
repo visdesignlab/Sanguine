@@ -5,7 +5,7 @@ import { Grid, Container, List, Button, Header, Search, Checkbox, Icon, Dropdown
 import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat, max, select, axisTop } from "d3";
 import { actions } from "../..";
-import { AxisLabelDict, Accronym, postop_color, Title, OutcomeType } from "../../PresetsProfile";
+import { AcronymDictionary, postop_color, Title, OutcomeType } from "../../PresetsProfile";
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import { defaultState } from "../../Interfaces/ApplicationState";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
@@ -162,8 +162,8 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             proceduresSelection.forEach((d, i) => {
                 const stringArray = d.split(" ")
                 stringArray.forEach((word, index) => {
-                    if ((Accronym as any)[word]) {
-                        output.push((<div className="tooltip" style={{ cursor: "help" }}>{word}<span className="tooltiptext">{`${(Accronym as any)[word]}`}</span></div>))
+                    if ((AcronymDictionary as any)[word]) {
+                        output.push((<div className="tooltip" style={{ cursor: "help" }}>{word}<span className="tooltiptext">{`${(AcronymDictionary as any)[word]}`}</span></div>))
                     } else {
                         output.push((<span>{`${index !== 0 ? " " : ""}${word}${index !== stringArray.length - 1 ? " " : ""}`}</span>))
                     }
@@ -292,8 +292,8 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                                 //icon="caret right"
                                 key={`${selectSet.setName}selected`}
                                 onClick={() => { actions.clearOutputFilterSet(selectSet.setName) }}
-                                content={`${AxisLabelDict[selectSet.setName]}: ${selectSet.setValues.sort()}`}>
-                                <List.Header>{AxisLabelDict[selectSet.setName]}</List.Header>
+                                content={`${AcronymDictionary[selectSet.setName]}: ${selectSet.setValues.sort()}`}>
+                                <List.Header>{AcronymDictionary[selectSet.setName]}</List.Header>
                                 <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
 
                                 <List.Content >{selectSet.setValues.sort().join(', ')}</List.Content>
@@ -317,8 +317,8 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                             return <FilterListIT
                                 key={`${selectSet.setName}currentselecting`}
                                 onClick={() => { actions.clearSelectSet(selectSet.setName) }}
-                                content={`${AxisLabelDict[selectSet.setName]} - ${selectSet.setValues.sort()}`}>
-                                <List.Header>{AxisLabelDict[selectSet.setName]}</List.Header>
+                                content={`${AcronymDictionary[selectSet.setName]} - ${selectSet.setValues.sort()}`}>
+                                <List.Header>{AcronymDictionary[selectSet.setName]}</List.Header>
                                 <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
                                 <List.Content>{selectSet.setValues.sort().join(', ')}</List.Content>
                             </FilterListIT>

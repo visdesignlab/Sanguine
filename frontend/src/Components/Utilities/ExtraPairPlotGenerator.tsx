@@ -2,7 +2,7 @@ import React, {
     FC
 } from "react";
 import { inject, observer } from "mobx-react";
-import { extraPairWidth, extraPairPadding, offset, Accronym } from "../../PresetsProfile";
+import { extraPairWidth, extraPairPadding, offset, AcronymDictionary } from "../../PresetsProfile";
 import { actions } from "../..";
 import ExtraPairViolin from "../ExtraPair/ExtraPairViolin";
 import ExtraPairBar from "../ExtraPair/ExtraPairBar";
@@ -48,7 +48,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScaleD
                 break;
         }
 
-        let tooltipText = `${(Accronym as any)[nameInput] ? `${(Accronym as any)[nameInput]}<br/>` : ""}
+        let tooltipText = `${AcronymDictionary[nameInput] ? `${AcronymDictionary[nameInput]}<br/>` : ""}
                  ${explanation}
                 <br/> <small>Click to remove</small>`;
 
@@ -125,10 +125,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScaleD
 
 
 
-/**
- * if ((Accronym as any)[word]) {
-            output.push((<div className="tooltip" style={{ cursor: "help" }}>{word}<span className="tooltiptext">{`${(Accronym as any)[word]}`}</span></div>))
- */
+
 
 export default inject("store")(observer(ExtraPairPlotGenerator));
 

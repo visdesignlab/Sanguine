@@ -6,7 +6,7 @@ import React, {
 import { inject, observer } from "mobx-react";
 import Store from "../../Interfaces/Store";
 import { List, Container, Button, Header, Search } from "semantic-ui-react";
-import { HIPAA_Sensitive, AxisLabelDict, Title } from "../../PresetsProfile";
+import { HIPAA_Sensitive, AcronymDictionary, Title } from "../../PresetsProfile";
 import styled from "styled-components";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 import { SingleCasePoint } from "../../Interfaces/ApplicationState";
@@ -48,7 +48,7 @@ const DetailView: FC<Props> = ({ hemoData, store }: Props) => {
 
 
 
-                const outcomeAttributes = ["DEATH", "ECMO", "STROKE", "VENT"]
+                const outcomeAttributes = ["DEATH", "ECMO", "STROKE", "VENT", "AMICAR", "TXA", "B12"]
                 outcomeAttributes.forEach((attribute) => {
                     final_result[attribute] = final_result[attribute] === "0" ? "No" : "Yes"
                 })
@@ -75,7 +75,7 @@ const DetailView: FC<Props> = ({ hemoData, store }: Props) => {
                 if (!HIPAA_Sensitive.has(key)) {
                     result.push(
                         <List.Item>
-                            <List.Header >{AxisLabelDict[key] ? AxisLabelDict[key] : key}</List.Header>
+                            <List.Header >{AcronymDictionary[key] ? AcronymDictionary[key] : key}</List.Header>
                             <List.Content>{val as string}</List.Content>
                         </List.Item>
                     )

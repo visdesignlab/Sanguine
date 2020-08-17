@@ -43,7 +43,7 @@ interface AppProvenance {
 
         updateSelectedPatientGroup: (caseList: SingleCasePoint[]) => void;
         updateBrushPatientGroup: (caseList: SingleCasePoint[], mode: "ADD" | "REPLACE", selectedSet?: SelectSet) => void;
-        changeChart: (x: string, y: string, i: string, type: string, comparisonChartType?: string) => void;
+        changeChart: (x: string, y: string, i: string, type: string, outcomeComparison?: string) => void;
     }
 }
 export function setupProvenance(): AppProvenance {
@@ -272,7 +272,7 @@ export function setupProvenance(): AppProvenance {
         );
     }
 
-    const changeChart = (x: string, y: string, i: string, type: string, comparisonChartType?: string) => {
+    const changeChart = (x: string, y: string, i: string, type: string, outcomeComparison?: string) => {
         provenance.applyAction(
             `change chart ${i}`,
             (state: ApplicationState) => {
@@ -281,8 +281,9 @@ export function setupProvenance(): AppProvenance {
                         d.aggregatedBy = x;
                         d.valueToVisualize = y;
                         d.plotType = type;
-                        if (comparisonChartType) {
-                            d.comparisonChartType = comparisonChartType;
+                        if (outcomeComparison) {
+                            d.outcomeComparison = outcomeComparison === "NONE" ? undefined : outcomeComparison;
+
                         }
                     }
                     return d

@@ -9,7 +9,7 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
-import { offset, AxisLabelDict, third_gray } from "../../PresetsProfile"
+import { offset, AcronymDictionary, third_gray } from "../../PresetsProfile"
 import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range, deviation, mean } from "d3";
 
 //import CustomizedAxis from "../Utilities/CustomizedAxis";
@@ -156,7 +156,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         .attr("alignment-baseline", "hanging")
         // .attr("transform", `translate(0 ,${currentOffset.top}`)
         .text(
-            AxisLabelDict[yAxisName] ? AxisLabelDict[yAxisName] : yAxisName
+            AcronymDictionary[yAxisName] ? AcronymDictionary[yAxisName] : yAxisName
         );
 
     if (xAxisName === "CELL_SAVER_ML") {
@@ -176,7 +176,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         .attr("alignment-baseline", "hanging")
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
-        .text(AxisLabelDict[xAxisName] ? AxisLabelDict[xAxisName] : xAxisName);
+        .text(AcronymDictionary[xAxisName] ? AcronymDictionary[xAxisName] : xAxisName);
 
 
 
