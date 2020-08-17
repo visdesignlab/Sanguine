@@ -57,7 +57,7 @@ const Logins: FC<Props> = ({ store }: Props) => {
                 'Accept': 'application/x-www-form-urlencoded',
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'X-CSRFToken': csrftoken || '',
-                "Access-Control-Allow-Origin": 'http://localhost:3000',
+                "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
                 "Access-Control-Allow-Credentials": "true",
             },
             body: `csrfmiddlewaretoken=${csrftoken}&username=${username}&password=${password}`
