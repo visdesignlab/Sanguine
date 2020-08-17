@@ -28,6 +28,7 @@ const App: FC<Props> = ({ store }: Props) => {
         if (isLoggedIn) {
             const resHemo = await fetch(`${process.env.REACT_APP_QUERY_URL}hemoglobin`);
             const dataHemo = await resHemo.json();
+            console.log(dataHemo)
             const resultHemo = dataHemo.result;
             const resTrans = await fetch(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(2014, 0, 1)), timeFormat("%d-%b-%Y")(new Date(2019, 11, 31))]}`)
             const dataTrans = await resTrans.json();

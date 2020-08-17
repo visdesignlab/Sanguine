@@ -80,7 +80,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
 
     const generateOutput = () => {
         let output = []
-        if (aggregatedScale().bandwidth() > 40) {
+        if (aggregatedScale().bandwidth() > 30) {
             output = Object.entries(preIntData).map(([val, dataArray]) => {
 
                 // const sortedArray = dataArray.sort((a: any, b: any) =>
