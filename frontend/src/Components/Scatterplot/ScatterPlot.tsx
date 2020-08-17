@@ -120,13 +120,14 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [brushLoc, xAxisScale, yAxisScale, data, xAxisName])
 
+    //Clear the brush
     useEffect(() => {
         brushDef.move(svgSelection.select(".brush-layer"), null)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentOutputFilterSet, currentSelectPatientGroup])
 
-    useEffect(() => {
 
+    useEffect(() => {
         let newbrushedCaseList = currentBrushedPatientGroup.map(d => d.CASE_ID)
         stateUpdateWrapperUseJSON(brushedCaseList, newbrushedCaseList, updatebrushedCaseList)
         // eslint-disable-next-line react-hooks/exhaustive-deps

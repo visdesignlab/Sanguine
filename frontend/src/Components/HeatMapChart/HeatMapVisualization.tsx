@@ -44,7 +44,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     //const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
     const [extraPairData, setExtraPairData] = useState<ExtraPairPoint[]>([])
 
-    const [caseIDList, setCaseIDList] = useState<any>(null)
+    //  const [caseIDList, setCaseIDList] = useState<any>(null)
     const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
     const [openNotationModal, setOpenNotationModal] = useState(false)
     const [notationInput, setNotationInput] = useState(notation)
@@ -69,7 +69,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
             previousCancelToken.cancel("cancel the call?")
         }
         let temporaryDataHolder: any = {}
-        let caseDictionary = {} as any;
+        //   let caseDictionary = {} as any;
 
         let caseSetReturnedFromQuery = new Set();
 
@@ -118,7 +118,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                         }
 
                         if (criteriaMet) {
-                            caseDictionary[singleCase.CASE_ID] = true;
+                            //   caseDictionary[singleCase.CASE_ID] = true;
                             if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
                                 temporaryDataHolder[singleCase[aggregatedBy]] = {
                                     aggregateAttribute: singleCase[aggregatedBy],
@@ -133,7 +133,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                     })
                     const [caseCount, outputData] = generateRegularData(temporaryDataHolder, showZero, valueToVisualize)
                     stateUpdateWrapperUseJSON(data, outputData, setData)
-                    stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList);
+                    // stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList);
                     store!.totalAggregatedCaseCount = caseCount as number
                 }
             }
@@ -152,10 +152,10 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
 
     useEffect(() => {
 
-        const newExtraPairData = generateExtrapairPlotData(caseIDList, aggregatedBy, hemoglobinDataSet, extraPairArray, data)
+        const newExtraPairData = generateExtrapairPlotData(aggregatedBy, hemoglobinDataSet, extraPairArray, data)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extraPairArray, data, hemoglobinDataSet, caseIDList, aggregatedBy]);
+    }, [extraPairArray, data, hemoglobinDataSet, aggregatedBy]);
 
 
 

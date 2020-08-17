@@ -51,7 +51,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     // const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
     const [extraPairData, setExtraPairData] = useState<ExtraPairPoint[]>([])
     const [stripPlotMode, setStripMode] = useState(false);
-    const [caseIDList, setCaseIDList] = useState<any>(null)
+    // const [caseIDList, setCaseIDList] = useState<any>(null)
     const [extraPairArray, setExtraPairArray] = useState([])
     const [openNotationModal, setOpenNotationModal] = useState(false)
     const [notationInput, setNotationInput] = useState(notation)
@@ -88,7 +88,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
             const dataResult = response.data
             if (dataResult) {
                 let yMaxTemp = -1;
-                let caseDictionary = {} as any;
+                // let caseDictionary = {} as any;
 
 
 
@@ -109,9 +109,9 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                     }
                     if (criteriaMet) {
 
-                        ob.case_id.forEach((singleId: any) => {
-                            caseDictionary[singleId] = true;
-                        })
+                        // ob.case_id.forEach((singleId: any) => {
+                        //  //   caseDictionary[singleId] = true;
+                        // })
 
 
 
@@ -159,7 +159,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
 
                 cast_data = cast_data.filter((d: any) => d)
                 stateUpdateWrapperUseJSON(data, cast_data, setData)
-                stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList)
+                //   stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList)
                 setYMax(yMaxTemp);
                 store!.totalAggregatedCaseCount = caseCount;
                 console.log(cast_data)
@@ -179,10 +179,10 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
 
     useEffect(() => {
         console.log("using effect")
-        const newExtraPairData = generateExtrapairPlotData(caseIDList, aggregatedBy, hemoglobinDataSet, extraPairArray, data)
+        const newExtraPairData = generateExtrapairPlotData(aggregatedBy, hemoglobinDataSet, extraPairArray, data)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extraPairArray, data, hemoglobinDataSet, caseIDList, aggregatedBy]);
+    }, [extraPairArray, data, hemoglobinDataSet, aggregatedBy]);
 
 
 

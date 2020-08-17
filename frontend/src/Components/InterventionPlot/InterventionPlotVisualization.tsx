@@ -52,7 +52,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
     const [width, setWidth] = useState(0)
     const [height, setHeight] = useState(0)
 
-    const [caseIDDictionary, setCaseIDList] = useState<any>(null)
+    //  const [caseIDDictionary, setCaseIDList] = useState<any>(null)
     const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
 
     const [openNotationModal, setOpenNotationModal] = useState(false)
@@ -91,7 +91,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
             previousCancelToken.cancel("cancel the call.")
         }
         let temporaryDataHolder: any = {};
-        let caseDictionary = {} as any;
+        //  let caseDictionary = {} as any;
         let preCaseSetReturnedFromQuery = new Set();
         let postCaseSetReturnedFromQuery = new Set();
 
@@ -150,7 +150,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
 
 
                         if (preCaseSetReturnedFromQuery.has(singleCase.CASE_ID) && criteriaMet) {
-                            caseDictionary[singleCase.CASE_ID] = true;
+                            // caseDictionary[singleCase.CASE_ID] = true;
                             if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
                                 temporaryDataHolder[singleCase[aggregatedBy]] = {
                                     aggregateAttribute: singleCase[aggregatedBy],
@@ -165,7 +165,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                             temporaryDataHolder[singleCase[aggregatedBy]].preData.push(singleCase)
                             temporaryDataHolder[singleCase[aggregatedBy]].prePatientIDList.add(singleCase.PATIENT_ID)
                         } else if (postCaseSetReturnedFromQuery.has(singleCase.CASE_ID) && criteriaMet) {
-                            caseDictionary[singleCase.CASE_ID] = true;
+                            //  caseDictionary[singleCase.CASE_ID] = true;
                             if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
                                 temporaryDataHolder[singleCase[aggregatedBy]] = {
                                     aggregateAttribute: singleCase[aggregatedBy],
@@ -185,7 +185,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                     })
                     const [caseCount, outputData] = generateComparisonData(temporaryDataHolder, showZero, valueToVisualize)
                     stateUpdateWrapperUseJSON(data, outputData, setData);
-                    stateUpdateWrapperUseJSON(caseIDDictionary, caseDictionary, setCaseIDList)
+                    // stateUpdateWrapperUseJSON(caseIDDictionary, caseDictionary, setCaseIDList)
                     store!.totalAggregatedCaseCount = caseCount as number;
                 }
             }).catch(function (thrown) {
@@ -200,10 +200,10 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
 
 
     useEffect(() => {
-        const newExtraPairData = generateExtrapairPlotDataWithIntervention(caseIDDictionary, aggregatedBy, hemoglobinDataSet, extraPairArray, data)
+        const newExtraPairData = generateExtrapairPlotDataWithIntervention(aggregatedBy, hemoglobinDataSet, extraPairArray, data)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extraPairArray, data, hemoglobinDataSet, aggregatedBy, caseIDDictionary]);
+    }, [extraPairArray, data, hemoglobinDataSet, aggregatedBy]);
 
     const changeAggregation = (e: any, value: any) => {
         actions.changeChart(value.value, valueToVisualize, chartId, "INTERVENTION")

@@ -9,7 +9,7 @@ export const stateUpdateWrapperUseJSON = (oldState: any, newState: any, updateFu
     }
 }
 
-export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: ComparisonDataPoint[]) => {
+export const generateExtrapairPlotDataWithIntervention = (aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: ComparisonDataPoint[]) => {
     let newExtraPairData: ExtraPairInterventionPoint[] = []
     if (extraPairArray.length > 0) {
         extraPairArray.forEach((variable: string) => {
@@ -77,27 +77,27 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
                     break;
 
                 case "DEATH":
-                    newExtraPairData.push(outcomeComparisonDataGenerate("DEATH", "Death", data, hemoglobinDataSet, caseIDList, aggregatedBy));
+                    newExtraPairData.push(outcomeComparisonDataGenerate("DEATH", "Death", data, hemoglobinDataSet, aggregatedBy));
                     break;
 
                 case "VENT":
-                    newExtraPairData.push(outcomeComparisonDataGenerate("VENT", "Vent", data, hemoglobinDataSet, caseIDList, aggregatedBy));
+                    newExtraPairData.push(outcomeComparisonDataGenerate("VENT", "Vent", data, hemoglobinDataSet, aggregatedBy));
                     break;
 
                 case "ECMO":
-                    newExtraPairData.push(outcomeComparisonDataGenerate("ECMO", "ECMO", data, hemoglobinDataSet, caseIDList, aggregatedBy));
+                    newExtraPairData.push(outcomeComparisonDataGenerate("ECMO", "ECMO", data, hemoglobinDataSet, aggregatedBy));
                     break;
                 case "STROKE":
-                    newExtraPairData.push(outcomeComparisonDataGenerate("STROKE", "Stroke", data, hemoglobinDataSet, caseIDList, aggregatedBy));
+                    newExtraPairData.push(outcomeComparisonDataGenerate("STROKE", "Stroke", data, hemoglobinDataSet, aggregatedBy));
                     break;
                 case "B12":
-                    newExtraPairData.push(outcomeComparisonDataGenerate("B12", "B12", data, hemoglobinDataSet, caseIDList, aggregatedBy));
+                    newExtraPairData.push(outcomeComparisonDataGenerate("B12", "B12", data, hemoglobinDataSet, aggregatedBy));
                     break;
                 case "TXA":
-                    newExtraPairData.push(outcomeComparisonDataGenerate("TXA", "TXA", data, hemoglobinDataSet, caseIDList, aggregatedBy));
+                    newExtraPairData.push(outcomeComparisonDataGenerate("TXA", "TXA", data, hemoglobinDataSet, aggregatedBy));
                     break;
                 case "AMICAR":
-                    newExtraPairData.push(outcomeComparisonDataGenerate("AMICAR", "Amicar", data, hemoglobinDataSet, caseIDList, aggregatedBy));
+                    newExtraPairData.push(outcomeComparisonDataGenerate("AMICAR", "Amicar", data, hemoglobinDataSet, aggregatedBy));
                     break;
 
                 case "RISK":
@@ -343,7 +343,7 @@ export const generateExtrapairPlotDataWithIntervention = (caseIDList: any, aggre
     return newExtraPairData
 }
 
-const outcomeComparisonDataGenerate = (name: string, label: string, data: ComparisonDataPoint[], hemoglobinDataSet: SingleCasePoint[], caseIDList: any, aggregatedBy: string,) => {
+const outcomeComparisonDataGenerate = (name: string, label: string, data: ComparisonDataPoint[], hemoglobinDataSet: SingleCasePoint[], aggregatedBy: string) => {
 
     let newData = {} as any;
     let temporaryDataHolder: any = {}
@@ -394,7 +394,7 @@ const outcomeComparisonDataGenerate = (name: string, label: string, data: Compar
 
 }
 
-export const generateExtrapairPlotData = (caseIDList: any, aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: BasicAggregatedDatePoint[]) => {
+export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: BasicAggregatedDatePoint[]) => {
     let newExtraPairData: ExtraPairPoint[] = []
     if (extraPairArray.length > 0) {
         extraPairArray.forEach((variable: string) => {
