@@ -23,7 +23,7 @@ import {
     offset,
     extraPairWidth,
     extraPairPadding,
-    AxisLabelDict,
+    AcronymDictionary,
     BloodProductCap,
     CELL_SAVER_TICKS,
     caseRectWidth
@@ -176,7 +176,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         .attr("transform", `translate(${extraPairTotalWidth},0)`)
         .text(() => {
             //const trailing = perCaseSelected ? " / Case" : "";
-            return AxisLabelDict[valueToVisualize] ? AxisLabelDict[valueToVisualize] : valueToVisualize
+            return AcronymDictionary[valueToVisualize] ? AcronymDictionary[valueToVisualize] : valueToVisualize
         }
         );
 
@@ -190,7 +190,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         .attr("alignment-baseline", "hanging")
         .attr("transform", `translate(${extraPairTotalWidth},0)`)
         .text(
-            AxisLabelDict[aggregatedBy] ? AxisLabelDict[aggregatedBy] : aggregatedBy
+            AcronymDictionary[aggregatedBy] ? AcronymDictionary[aggregatedBy] : aggregatedBy
         );
 
     const decideIfSelected = (d: HeatMapDataPoint) => {

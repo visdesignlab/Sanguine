@@ -396,7 +396,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
             {addingChartType === 3 ? (<Menu.Item>
                 <Dropdown
-                    placeholder="Outcome Comparison"
+                    placeholder="Outcome Comparison (Optional)"
                     selection
                     clearable
                     options={OutcomeType}

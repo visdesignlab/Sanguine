@@ -21,7 +21,7 @@ import {
     ComparisonDataPoint, ExtraPairInterventionPoint
 } from "../../Interfaces/ApplicationState";
 import {
-    AxisLabelDict, BloodProductCap, offset, CELL_SAVER_TICKS, extraPairWidth, extraPairPadding, Accronym, caseRectWidth,
+    AcronymDictionary, BloodProductCap, offset, CELL_SAVER_TICKS, extraPairWidth, extraPairPadding, caseRectWidth,
 } from "../../PresetsProfile"
 
 //import SingleHeatPlot from "./SingleHeatPlot";
@@ -221,7 +221,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         .attr("transform", `translate(${extraPairTotalWidth},0)`)
         .text(() => {
             //const trailing = perCaseSelected ? " / Case" : "";
-            return AxisLabelDict[valueToVisualize] ? AxisLabelDict[valueToVisualize] : valueToVisualize
+            return AcronymDictionary[valueToVisualize] ? AcronymDictionary[valueToVisualize] : valueToVisualize
         }
         );
 
@@ -235,7 +235,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         .attr("alignment-baseline", "hanging")
         .attr("transform", `translate(${extraPairTotalWidth},0)`)
         .text(
-            AxisLabelDict[aggregatedBy] ? AxisLabelDict[aggregatedBy] : aggregatedBy
+            AcronymDictionary[aggregatedBy] ? AcronymDictionary[aggregatedBy] : aggregatedBy
         );
 
     const decideIfSelected = (d: ComparisonDataPoint) => {
@@ -477,7 +477,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                     fill={third_gray}
                 >
                     <tspan x="0" dy="1em">{interventionDate ? `Intervention:` : `Comparing Outcome:`}</tspan>
-                    <tspan x="0" dy="1em">{interventionDate ? timeFormat("%Y-%m-%d")(new Date(interventionDate)) : ((Accronym as any)[outcomeComparison || ""]) || outcomeComparison}</tspan>
+                    <tspan x="0" dy="1em">{interventionDate ? timeFormat("%Y-%m-%d")(new Date(interventionDate)) : (AcronymDictionary[outcomeComparison || ""]) || outcomeComparison}</tspan>
 
                     {/* {interventionDate ?
                     `Intervention: ${timeFormat("%Y-%m-%d")(new Date(interventionDate))}`

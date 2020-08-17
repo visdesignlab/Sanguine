@@ -19,7 +19,7 @@ import {
     median,
 } from "d3";
 import { DumbbellDataPoint } from "../../Interfaces/ApplicationState";
-import { offset, AxisLabelDict, minimumWidthScale } from "../../PresetsProfile"
+import { offset, AcronymDictionary, minimumWidthScale } from "../../PresetsProfile"
 import CustomizedAxisOrdinal from "../Utilities/CustomizedAxisOrdinal";
 import { preop_color, basic_gray, highlight_orange, postop_color } from "../../PresetsProfile"
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
@@ -254,7 +254,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
         .attr("alignment-baseline", "hanging")
         // .attr("transform", `translate(0 ,${currentOffset.top}`)
         .text(
-            AxisLabelDict[valueToVisualize] ? AxisLabelDict[valueToVisualize] : valueToVisualize
+            AcronymDictionary[valueToVisualize] ? AcronymDictionary[valueToVisualize] : valueToVisualize
         );
     svgSelection.select('.axes')
         .select(".x-axis")

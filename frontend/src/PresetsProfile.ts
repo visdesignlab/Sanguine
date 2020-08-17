@@ -41,23 +41,23 @@ export const extraPairPadding = 10;
 export const minimumWidthScale = 18;
 export const caseRectWidth = 30;
 
-export const AxisLabelDict: any = {
-    PRBC_UNITS: "Intraoperative RBCs Transfused",
-    FFP_UNITS: "Intraoperative FFP Transfused",
-    PLT_UNITS: "Intraoperative Platelets Transfused",
-    CRYO_UNITS: "Intraoperative Cryo Transfused",
-    CELL_SAVER_ML: "Cell Salvage Volume (ml)",
-    SURGEON_ID: "Surgeon ID",
-    ANESTHESIOLOGIST_ID: "Anesthesiologist ID",
-    YEAR: "Year",
-    QUARTER: "Quarter",
-    MONTH: "Month",
-    HGB_VALUE: "Hemoglobin Value",
-    PREOP_HGB: "Preoperative Hemoglobin Value",
-    POSTOP_HGB: "Postoperative Hemoglobin Value",
-    RISK: "DRG Weight",
-    VENT: "Ventilator Over 24hr"
-};
+// export const AcronymDictionary: any = {
+//     PRBC_UNITS: "Intraoperative RBCs Transfused",
+//     FFP_UNITS: "Intraoperative FFP Transfused",
+//     PLT_UNITS: "Intraoperative Platelets Transfused",
+//     CRYO_UNITS: "Intraoperative Cryo Transfused",
+//     CELL_SAVER_ML: "Cell Salvage Volume (ml)",
+//     SURGEON_ID: "Surgeon ID",
+//     ANESTHESIOLOGIST_ID: "Anesthesiologist ID",
+//     YEAR: "Year",
+//     QUARTER: "Quarter",
+//     MONTH: "Month",
+//     HGB_VALUE: "Hemoglobin Value",
+//     PREOP_HGB: "Preoperative Hemoglobin Value",
+//     POSTOP_HGB: "Postoperative Hemoglobin Value",
+//     RISK: "DRG Weight",
+//     VENT: "Ventilator Over 24hr"
+// };
 
 export const BloodProductCap: any = {
     PRBC_UNITS: 5,
@@ -85,7 +85,7 @@ export const scatterYOptions = [
     }
 ]
 
-export const typeDiction = ["VIOLIN", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION"]
+export const typeDiction = ["VIOLIN", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION", "COMPARISON"]
 
 export const dumbbellValueOptions = [
     { value: "HGB_VALUE", key: "HGB_VALUE", text: "Hemoglobin Value" }
@@ -152,6 +152,8 @@ export const OutcomeType = [
     { value: "AMICAR", key: "AMICAR", text: "Amicar" },
 ]
 
+export const OutcomeDropdownOptions = OutcomeType.concat({ value: "NONE", key: "NONE", text: "None" })
+
 
 export const barChartValuesOptions = [
     {
@@ -202,7 +204,7 @@ export const HIPAA_Sensitive = new Set([
 ])
 
 
-export const Accronym = {
+export const AcronymDictionary: any = {
     CABG: "Coronary Artery Bypass Grafting",
     TAVR: "Transcatheter Aortic Valve Replacement",
     VAD: "Ventricular Assist Devices",
@@ -218,7 +220,21 @@ export const Accronym = {
     "Zero %": "Zero Transfusion",
     DEATH: "Death",
     STROKE: "Stroke",
-    TXA: "Tranexamic Acid"
+    TXA: "Tranexamic Acid",
+    PRBC_UNITS: "Intraoperative RBCs Transfused",
+    FFP_UNITS: "Intraoperative FFP Transfused",
+    PLT_UNITS: "Intraoperative Platelets Transfused",
+    CRYO_UNITS: "Intraoperative Cryo Transfused",
+    CELL_SAVER_ML: "Cell Salvage Volume (ml)",
+    SURGEON_ID: "Surgeon ID",
+    ANESTHESIOLOGIST_ID: "Anesthesiologist ID",
+    YEAR: "Year",
+    QUARTER: "Quarter",
+    MONTH: "Month",
+    HGB_VALUE: "Hemoglobin Value",
+    PREOP_HGB: "Preoperative Hemoglobin Value",
+    POSTOP_HGB: "Postoperative Hemoglobin Value",
+    DRG_WEIGHT: "Diagnosis-related Group Weight"
 }
 
 

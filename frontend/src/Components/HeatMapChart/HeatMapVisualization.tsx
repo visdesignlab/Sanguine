@@ -3,7 +3,7 @@ import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { HeatMapDataPoint, ExtraPairPoint } from '../../Interfaces/ApplicationState'
-import { barChartAggregationOptions, barChartValuesOptions, extraPairOptions, ChartSVG, } from "../../PresetsProfile"
+import { barChartAggregationOptions, barChartValuesOptions, extraPairOptions, ChartSVG, OutcomeType, } from "../../PresetsProfile"
 import { Icon, Grid, Dropdown, Menu, Modal, Form, Button, Message } from "semantic-ui-react";
 import HeatMap from "./HeatMap";
 import axios from 'axios';
@@ -166,9 +166,9 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         actions.changeChart(aggregatedBy, value.value, chartId, "HEATMAP")
     }
 
-    // const changePlotType = (e: any, value: any) => {
-    //     actions.changeChart(aggregatedBy, valueToVisualize, chartId, value.value)
-    // }
+    const changePlotType = (e: any, value: any) => {
+        actions.changeChart(aggregatedBy, valueToVisualize, chartId, "COMPARISON", value.value)
+    }
 
 
     //  return true;
@@ -214,7 +214,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                                 <Dropdown.Menu>
                                     <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation} />
                                     <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue} />
-                                    {/* <Dropdown text="Change Plot Type" pointing basic item compact options={interventionChartType} onChange={changePlotType} /> */}
+                                    <Dropdown text="Add Outcome Comparison" pointing basic item compact options={OutcomeType} onChange={changePlotType} />
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item>
