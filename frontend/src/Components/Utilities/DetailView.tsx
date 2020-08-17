@@ -10,6 +10,7 @@ import { HIPAA_Sensitive, AxisLabelDict, Title } from "../../PresetsProfile";
 import styled from "styled-components";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 import { SingleCasePoint } from "../../Interfaces/ApplicationState";
+import { actions } from "../..";
 
 interface OwnProps {
     store?: Store;
@@ -90,10 +91,10 @@ const DetailView: FC<Props> = ({ store }: Props) => {
         <Container>
             <BoxContainer style={{ padding: "0.01em 0px", visibility: currentBrushedPatientGroup.length > 0 ? "visible" : "hidden", overflow: "overlay", height: "15vh" }}>
                 <List relaxed divided>
-                    <List.Item key="case-header"
-                        content={<Header style={{ padding: "0 5px" }}>Case Selected</Header>}
-                    >
-
+                    <List.Item key="case-header"                    >
+                        {/* <List.Header style={{ padding: "0 5px" }}>Case Selected</List.Header> */}
+                        <List.Content floated="right"><Button icon="close" compact size="mini" basic circular onClick={() => { actions.updateBrushPatientGroup([], "REPLACE") }} /></List.Content>
+                        <List.Content style={{ padding: "0 5px" }}><Header>Case Selected</Header></List.Content>
                     </List.Item>
                     {currentBrushedPatientGroup.map(d => {
                         return (
