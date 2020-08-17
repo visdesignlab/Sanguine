@@ -15,7 +15,19 @@ This API uses pipenv and django to serve up the dynamically queried data. To ins
 
 Once pipenv has finished setting up, run `pipenv run serve` to run a local development server at http://127.0.0.1:8000/.
 
-**NOTE**: You will need access to the University of Utah health records database with a VPN to query any data.
+**NOTE**: You will need access to the University of Utah health records database with a VPN to query any data. You will also need to set the credentials for the data warehouse
+
+## MYSQL
+
+To store sessions data, we're using mysql. There are a couple of commands required to set everything up
+
+```
+# Create a user
+CREATE USER '<user>'@'<host>' IDENTIFIED BY '<password>'
+
+# Create a db
+CREATE DATABASE bloodvis CHARACTER SET utf8 COLLATE utf8_bin
+```
 
 ## Deploying In Production
 
