@@ -49,10 +49,18 @@ There are several routes set up for accessing the patient and surgery data. Here
 - Name: `api/accounts/*` (From [django auth module](https://docs.djangoproject.com/en/2.2/topics/auth/))
   - Allowed Methods: `POST, GET, PUT, DELETE` 
   - Parameters: `None`
-  - Description: Manage your own account, reset passwords, login, logout, etc.s
+  - Description: Manage your own account, reset passwords, login, logout, etc.
   - Example:
     ```
     curl '127.0.0.1:8000/accounts/{login,logout,etc.}'
+    ```
+
+- Name: `/api/whoami` 
+  - Allowed Methods: `GET`
+  - Parameters: `None`
+  - Description: Base API endpoint. Returns user email and 200.
+    ```
+    curl '127.0.0.1:8000/api/whoami'
     ```
 
 - Name: `/api` 
