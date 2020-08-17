@@ -194,7 +194,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                     </Responsive>
                 </GridColumn>
                 <Grid.Column width={3}>
-                    <DetailView />
+                    <DetailView hemoData={hemoData} />
                 </Grid.Column>
             </Grid>
         </Tab.Pane >

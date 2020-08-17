@@ -5,7 +5,7 @@ import React, {
 } from "react";
 import { inject, observer } from "mobx-react";
 import Store from "../../Interfaces/Store";
-import { List, Container, Button, Header } from "semantic-ui-react";
+import { List, Container, Button, Header, Search } from "semantic-ui-react";
 import { HIPAA_Sensitive, AxisLabelDict, Title } from "../../PresetsProfile";
 import styled from "styled-components";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
@@ -13,18 +13,22 @@ import { SingleCasePoint } from "../../Interfaces/ApplicationState";
 import { actions } from "../..";
 
 interface OwnProps {
+    hemoData: SingleCasePoint[];
     store?: Store;
 }
 
 export type Props = OwnProps;
 
-const DetailView: FC<Props> = ({ store }: Props) => {
+const DetailView: FC<Props> = ({ hemoData, store }: Props) => {
     const {
         currentBrushedPatientGroup,
+
     } = store!
 
-    const [individualInfo, setIndividualInfo] = useState<any>(null)
-    const [currentSelectPatient, setCurrentSelectPatient] = useState<SingleCasePoint | undefined>(undefined)
+    const [individualInfo, setIndividualInfo] = useState<any>(null);
+    const [currentSelectPatient, setCurrentSelectPatient] = useState<SingleCasePoint | undefined>(undefined);
+    const [searchCaseVal, setSearchCaseVal] = useState("");
+    const [caseSearchResult, setCaseSearchResult] = useState<any[]>([]);
 
 
     useEffect(() => {
@@ -89,12 +93,39 @@ const DetailView: FC<Props> = ({ store }: Props) => {
 
     return (
         <Container>
-            <BoxContainer style={{ padding: "0.01em 0px", visibility: currentBrushedPatientGroup.length > 0 ? "visible" : "hidden", overflow: "overlay", height: "15vh" }}>
+            <Container style={{ textAlign: "center" }}>
+                <Search
+                    placeholder="Search a Case by ID"
+                    //defaultValue={"Search Case"}
+                    minCharacters={3}
+                    onSearchChange={(e, output) => {
+                        setSearchCaseVal(output.value || "")
+
+                        if (output.value && output.value.length >= 3) {
+                            let searchResult = hemoData.filter((d: any) => d.CASE_ID.toString().includes(output.value))
+                            stateUpdateWrapperUseJSON(caseSearchResult, searchResult, setCaseSearchResult);
+                        }
+                    }
+                    }
+                    results={caseSearchResult.map(d => { return { title: d.CASE_ID } })}
+                    onResultSelect={(e, resultSelection) => {
+                        const selectedPat = caseSearchResult.filter((d: any) => d.CASE_ID === resultSelection.result.title)[0]
+                        // const newSingleCasePoint: SingleCasePoint = selectedPat;
+                        setSearchCaseVal("");
+                        actions.updateBrushPatientGroup([selectedPat], "ADD");
+
+                    }
+                    }
+                    value={searchCaseVal}
+                />
+
+            </Container>
+            <BoxContainer style={{ padding: "0.01em 0.01em", visibility: currentBrushedPatientGroup.length > 0 ? "visible" : "hidden", overflow: "overlay", height: "15vh" }}>
                 <List relaxed divided>
-                    <List.Item key="case-header"                    >
+                    <List.Item key="case-header" style={{ padding: "5px" }}>
                         {/* <List.Header style={{ padding: "0 5px" }}>Case Selected</List.Header> */}
                         <List.Content floated="right"><Button icon="close" compact size="mini" basic circular onClick={() => { actions.updateBrushPatientGroup([], "REPLACE") }} /></List.Content>
-                        <List.Content style={{ padding: "0 5px" }}><Header>Case Selected</Header></List.Content>
+                        <List.Content><Header>Case Selected</Header></List.Content>
                     </List.Item>
                     {currentBrushedPatientGroup.map(d => {
                         return (
@@ -102,7 +133,7 @@ const DetailView: FC<Props> = ({ store }: Props) => {
                                 isSelected={currentSelectPatient && currentSelectPatient.CASE_ID === d.CASE_ID}
                                 onClick={() => { setCurrentSelectPatient(d) }}
                             >
-                                <span style={{ padding: "0 5px" }}>{d.CASE_ID}</span>
+                                <span style={{ paddingLeft: "5px" }}>{d.CASE_ID}</span>
                             </CaseItem>)
                     })}
                 </List>
@@ -122,7 +153,7 @@ const DetailView: FC<Props> = ({ store }: Props) => {
                     {generate_List_Items()}
                 </List>
             </BoxContainer>
-        </Container>
+        </Container >
     )
 }
 

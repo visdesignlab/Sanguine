@@ -35,7 +35,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         proceduresSelection } = store!;
 
     const [surgerySearchResult, setsurgerySearchResult] = useState<any[]>([]);
-    const [caseSearchResult, setCaseSearchResult] = useState<any[]>([])
+    //   const [caseSearchResult, setCaseSearchResult] = useState<any[]>([])
 
     const [maxCaseCount, setMaxCaseCount] = useState(0);
     const [itemSelected, setItemSelected] = useState<any[]>([]);
@@ -43,7 +43,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     const [surgeryList, setSurgeryList] = useState<any[]>([]);
 
     const [searchSurgeryVal, setSearchSurgeryVal] = useState("");
-    const [searchCaseVal, setSearchCaseVal] = useState("");
+    //  const [searchCaseVal, setSearchCaseVal] = useState("");
 
     const [width, setWidth] = useState(0);
     const svgRef = useRef<SVGSVGElement>(null);
@@ -226,7 +226,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         >
 
             <Grid.Row centered  >
-                <Container style={{ paddingLeft: "15px", height: "35vh" }}>
+                <Container style={{ paddingLeft: "15px", height: "40vh" }}>
                     <List>
 
                         <List.Header style={{ textAlign: "left" }}>
@@ -339,36 +339,6 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             <Grid.Row centered >
                 <Container>
                     <Search
-                        placeholder="Search a Case by ID"
-                        //defaultValue={"Search Case"}
-                        minCharacters={3}
-                        onSearchChange={(e, output) => {
-                            setSearchCaseVal(output.value || "")
-
-                            if (output.value && output.value.length >= 3) {
-                                let searchResult = hemoData.filter((d: any) => d.CASE_ID.toString().includes(output.value))
-                                stateUpdateWrapperUseJSON(caseSearchResult, searchResult, setCaseSearchResult);
-                            }
-                        }
-                        }
-                        results={caseSearchResult.map(d => { return { title: d.CASE_ID } })}
-                        onResultSelect={(e, resultSelection) => {
-                            const selectedPat = caseSearchResult.filter((d: any) => d.CASE_ID === resultSelection.result.title)[0]
-                            // const newSingleCasePoint: SingleCasePoint = selectedPat;
-                            setSearchCaseVal("");
-                            actions.updateBrushPatientGroup([selectedPat], "ADD");
-
-                        }
-                        }
-                        value={searchCaseVal}
-                    />
-
-                </Container>
-            </Grid.Row>
-
-            <Grid.Row centered >
-                <Container style={{ overflow: "overlay", height: "30vh" }} >
-                    <Search
                         placeholder="Search a Procedure"
                         minCharacters={3}
                         onSearchChange={(e, output) => {
@@ -387,6 +357,13 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                         }
                         value={searchSurgeryVal}
                     />
+
+                </Container>
+            </Grid.Row>
+
+            <Grid.Row centered >
+                <Container style={{ overflow: "overlay", height: "25vh" }} >
+
 
                     <List relaxed divided >
                         <List.Item key={"filter-header"}
