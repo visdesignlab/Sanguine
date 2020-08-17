@@ -66,3 +66,19 @@ It should show as `(bloodvis)[uID@bloodvis]$`.
 9. To access the app, an account is required at login. Please contact us for access. 
 
 
+## Developer Docs - Deployment
+
+Link the systemd service files to the correct place for the user
+
+```
+systemctl --user enable $(pwd)/api.service
+systemctl --user enable $(pwd)/frontend.service
+
+# Check that the enable worked
+systemctl --user status api.service
+systemctl --user status frontend.service
+
+systemctl --user start api.service
+systemctl --user start frontend.service
+```
+
