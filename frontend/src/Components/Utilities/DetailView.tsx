@@ -144,7 +144,7 @@ const DetailView: FC<Props> = ({ hemoData, store }: Props) => {
                 style={{ visibility: individualInfo ? "visible" : "hidden" }}
             >
                 {/* <div  */}
-                <Button floated="right" style={{ "margin-top": "10px" }} icon="close" circular compact size="mini" basic
+                <Button floated="right" style={{ marginTop: "10px" }} icon="close" circular compact size="mini" basic
                     onClick={() => {
                         setCurrentSelectPatient(undefined)
                         // actions.selectPatient(null) 

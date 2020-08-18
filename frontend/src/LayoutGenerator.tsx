@@ -38,6 +38,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                     <div key={layout.i} className={"parent-node" + layout.i}>
 
                         <Button icon="close" floated="right" circular compact size="mini" basic onClick={() => { actions.removeChart(layout.i) }} />
+                        <Button floated="right" icon="move" size="mini" circular compact basic className="move-icon" />
                         <DumbbellChartVisualization
                             yAxis={layout.aggregatedBy}
                             w={layout.w}
@@ -60,6 +61,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                     >
 
                         <Button floated="right" icon="close" circular compact size="mini" basic onClick={() => { actions.removeChart(layout.i) }} />
+                        <Button floated="right" icon="move" size="mini" circular compact basic className="move-icon" />
                         <BarChartVisualization
                             hemoglobinDataSet={hemoData}
                             w={layout.w}
@@ -82,6 +84,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                 >
 
                     <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
+                    <Button floated="right" icon="move" size="mini" circular compact basic className="move-icon" />
                     <ScatterPlotVisualization
                         xAxis={layout.aggregatedBy}
                         w={layout.w}
@@ -104,6 +107,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                 >
 
                     <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
+                    <Button floated="right" icon="move" size="mini" circular compact basic className="move-icon" />
                     <HeatMapVisualization
                         hemoglobinDataSet={hemoData}
                         w={layout.w}
@@ -121,6 +125,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                 return (<div key={layout.i}
                     className={"parent-node" + layout.i}>
                     <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
+                    <Button floated="right" icon="move" size="mini" circular compact basic className="move-icon" />
                     <InterventionPlotVisualization
                         extraPair={layout.extraPair}
                         w={layout.w}
@@ -137,6 +142,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                 return (<div key={layout.i}
                     className={"parent-node" + layout.i}>
                     <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
+                    <Button floated="right" icon="move" size="mini" circular compact basic className="move-icon" />
                     <ComparisonPlotVisualization
                         aggregatedBy={layout.aggregatedBy}
                         chartId={layout.i}
@@ -175,6 +181,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
             <Responsive
                 onResizeStop={actions.onLayoutchange}
                 onDragStop={actions.onLayoutchange}
+                draggableHandle={".move-icon"}
                 // onLayoutChange={actions.onLayoutchange}
                 // onBreakpointChange={this._onBreakpointChange}
                 className="layout"

@@ -9,7 +9,7 @@ import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
 import { blood_red, OutcomeType } from "../../PresetsProfile";
 import {
     barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions,
-    interventionChartType, presetOptions, dumbbellValueOptions, scatterYOptions, typeDiction
+    presetOptions, dumbbellValueOptions, scatterYOptions, typeDiction
 } from "../../PresetsProfile";
 import ClipboardJS from 'clipboard';
 import { NavLink } from 'react-router-dom'
@@ -30,6 +30,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     } = store!;
 
     const urlRef = useRef(null);
+    const interventionPlotType = "HEATMAP"
     const [addMode, setAddMode] = useState(false);
     const [addingChartType, setAddingChartType] = useState(-1)
     const [xSelection, setXSelection] = useState<string>("")
@@ -37,7 +38,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     const [outcomeComparison, setOutcomeComparison] = useState<string>("")
     const [interventionDate, setInterventionDate] = useState<number | undefined>(undefined)
     // const [elementCounter, addToElementCounter] = useState(0)
-    const [interventionPlotType, setInterventionPlotType] = useState<string | undefined>(undefined)
+    // const [interventionPlotType, setInterventionPlotType] = useState<string | undefined>(undefined)
     const [shareUrl, setShareUrl] = useState(window.location.href);
     const [openShareModal, setOpenShareModal] = useState(false);
     const [openSaveStateModal, setOpenSaveStateModal] = useState(false)
@@ -111,19 +112,19 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         setOutcomeComparison(value.value)
     }
 
-    const interventionPlotHandler = (e: any, value: any) => {
-        setInterventionPlotType(value.value)
-    }
+    // const interventionPlotHandler = (e: any, value: any) => {
+    //     setInterventionPlotType(value.value)
+    // }
 
 
     const confirmChartAddHandler = () => {
         if (xSelection && ySelection && addingChartType > -1) {
-            if (!(addingChartType === 4 && (!interventionDate || !interventionPlotType))) {
+            if (!(addingChartType === 4 && (!interventionDate))) {
                 actions.addNewChart(xSelection, ySelection, nextAddingIndex, typeDiction[addingChartType], outcomeComparison, interventionDate, interventionPlotType)
                 setAddMode(false);
                 setAddingChartType(-1)
                 setInterventionDate(undefined);
-                setInterventionPlotType(undefined);
+                //setInterventionPlotType(undefined);
                 setXSelection("")
                 setYSelection("")
                 setOutcomeComparison("")
@@ -406,17 +407,14 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             </Menu.Item>) : (<></>)}
 
             {addingChartType === 4 ? (
-                [<Menu.Item>
+                <Menu.Item>
                     <SemanticDatePicker
                         placeholder={"Intervention"}
                         minDate={rawDateRange[0] as any}
                         maxDate={rawDateRange[1] as any}
                         onChange={interventionHandler} />
-                </Menu.Item>,
-
-                <Menu.Item>
-                    <Dropdown placeholder={"Plot Type"} selection options={interventionChartType} onChange={interventionPlotHandler}></Dropdown>
-                </Menu.Item>]) : (<></>)}
+                </Menu.Item>
+            ) : (<></>)}
 
             <Menu.Item>
                 <Button.Group>

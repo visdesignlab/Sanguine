@@ -5,11 +5,12 @@ import { actions } from "../..";
 import { BarChartDataPoint, ExtraPairPoint } from '../../Interfaces/ApplicationState'
 import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, extraPairOptions, ChartSVG } from "../../PresetsProfile"
 import BarChart from "./BarChart"
-import { Button, Icon, Grid, Dropdown, Menu, Modal, Form, Message } from "semantic-ui-react";
+import { Icon, Grid, Dropdown, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
 import { sum, median } from "d3";
 import axios from 'axios'
 import { stateUpdateWrapperUseJSON, generateExtrapairPlotData } from "../../HelperFunctions";
+import NotationForm from "../Utilities/NotationForm";
 
 interface OwnProps {
     aggregatedBy: string;
@@ -52,9 +53,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     const [extraPairData, setExtraPairData] = useState<ExtraPairPoint[]>([])
     const [stripPlotMode, setStripMode] = useState(false);
     // const [caseIDList, setCaseIDList] = useState<any>(null)
-    const [extraPairArray, setExtraPairArray] = useState([])
-    const [openNotationModal, setOpenNotationModal] = useState(false)
-    const [notationInput, setNotationInput] = useState(notation)
+    const [extraPairArray, setExtraPairArray] = useState([]);
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
 
@@ -236,15 +235,15 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item>
-                        <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
+                        {/* <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
                             <Icon name="edit" />
-                        </Menu.Item>
+                        </Menu.Item> */}
 
                         {/* Modal for annotation. */}
-                        <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
+                        {/* <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
                             <Modal.Header>
                                 Set the annotation for chart
-              </Modal.Header>
+                        </Modal.Header>
                             <Modal.Content>
                                 <Form>
                                     <Form.TextArea autoFocus
@@ -265,7 +264,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                                 <Button content="Save" positive onClick={() => { setOpenNotationModal(false); actions.changeNotation(chartId, notationInput); }} />
                                 <Button content="Cancel" onClick={() => { setOpenNotationModal(false) }} />
                             </Modal.Actions>
-                        </Modal>
+                        </Modal> */}
 
 
                     </Menu>
@@ -299,7 +298,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                         />
                     </ChartSVG>
                     {/* <Container>{notation}</Container> */}
-                    <Message hidden={notation.length === 0} >{notation}</Message>
+                    <NotationForm notation={notation} chartId={chartId} />
 
                 </Grid.Column>
             </Grid.Row>
