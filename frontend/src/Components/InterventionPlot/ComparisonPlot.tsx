@@ -438,45 +438,47 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                 </text>
             </g>
             <g>
-                <rect x={0.7 * (dimensionWidth)}
-                    y={0}
-                    width={differentialSquareWidth}
-                    height={12}
-                    fill={preop_color}
-                    opacity={0.65} />
-                <rect x={0.7 * (dimensionWidth)}
-                    y={12}
-                    width={differentialSquareWidth}
-                    height={12}
-                    fill={postop_color}
-                    opacity={0.65} />
-                <text
-                    x={0.7 * (dimensionWidth) - 1}
-                    y={6}
-                    alignmentBaseline={"middle"}
-                    textAnchor={"end"}
-                    fontSize="11px"
-                    fill={third_gray}>
-                    {` ${interventionDate ? `Pre Intervine` : `True`} ${preTotal}/${preTotal + postTotal}`}
-                </text>
-                <text
-                    x={0.7 * (dimensionWidth) - 1}
-                    y={18}
-                    alignmentBaseline={"middle"}
-                    textAnchor={"end"}
-                    fontSize="11px"
-                    fill={third_gray}>
-                    {`${interventionDate ? `Post Intervine` : `False`} ${postTotal}/${preTotal + postTotal}`}
-                </text>
+                <g transform="translate(0,4)">
+                    <rect x={0.2 * (dimensionWidth)}
+                        y={0}
+                        width={differentialSquareWidth}
+                        height={12}
+                        fill={preop_color}
+                        opacity={0.65} />
+                    <rect x={0.2 * (dimensionWidth)}
+                        y={12}
+                        width={differentialSquareWidth}
+                        height={12}
+                        fill={postop_color}
+                        opacity={0.65} />
+                    <text
+                        x={0.2 * (dimensionWidth) + differentialSquareWidth + 1}
+                        y={6}
+                        alignmentBaseline={"middle"}
+                        textAnchor={"start"}
+                        fontSize="11px"
+                        fill={"black"}>
+                        {` ${interventionDate ? `Pre Intervine` : `True`} ${preTotal}/${preTotal + postTotal}`}
+                    </text>
+                    <text
+                        x={0.2 * (dimensionWidth) + differentialSquareWidth + 1}
+                        y={18}
+                        alignmentBaseline={"middle"}
+                        textAnchor={"start"}
+                        fontSize="11px"
+                        fill={"black"}>
+                        {`${interventionDate ? `Post Intervine` : `False`} ${postTotal}/${preTotal + postTotal}`}
+                    </text>
+                </g>
                 <text
                     x={0.1 * (dimensionWidth)}
                     y={0}
                     alignmentBaseline="hanging"
                     textAnchor="start"
-                    fontSize="11px"
-                    fill={third_gray}
+                    fontSize="13px"
+                    fill={"black"}
                 >
-                    <tspan x="0" dy="1em">{interventionDate ? `Intervention:` : `Comparing Outcome:`}</tspan>
+                    <tspan x="0" dy="1em">{interventionDate ? `Intervention:` : `Comparing:`}</tspan>
                     <tspan x="0" dy="1em">{interventionDate ? timeFormat("%Y-%m-%d")(new Date(interventionDate)) : (AcronymDictionary[outcomeComparison || ""]) || outcomeComparison}</tspan>
 
                     {/* {interventionDate ?

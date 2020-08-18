@@ -124,7 +124,7 @@ const DetailView: FC<Props> = ({ hemoData, store }: Props) => {
             <BoxContainer style={{ padding: "0.01em 0.01em", visibility: currentBrushedPatientGroup.length > 0 ? "visible" : "hidden", overflow: "overlay", height: "15vh" }} >
                 <List relaxed divided>
                     <List.Item key="case-header" style={{ padding: "5px" }}>
-                        <List.Content floated="right"><Button icon="close" compact size="mini" basic circular onClick={() => { actions.updateBrushPatientGroup([], "REPLACE") }} /></List.Content>
+                        <List.Content floated="right"><Button icon="close" compact size="mini" basic circular onClick={() => { setCurrentSelectPatient(undefined); actions.updateBrushPatientGroup([], "REPLACE") }} /></List.Content>
                         <List.Content><Header>Case Selected</Header></List.Content>
                     </List.Item>
 

@@ -437,7 +437,7 @@ export function setupProvenance(): AppProvenance {
     //     })
     //   };
 
-
+    //TODO see if this can be optimized 
     const updateBrushPatientGroup = (caseList: SingleCasePoint[], mode: "ADD" | "REPLACE", selectedSet?: SelectSet) => {
         provenance.applyAction(
             `Update Selected Patients Group`,
@@ -450,20 +450,20 @@ export function setupProvenance(): AppProvenance {
                         }
                     }
                     if (selectedSet) {
+
                         const addingType = selectedSet.setName;
                         const alreadyIn = state.currentSelectSet.filter(d => d.setName === addingType).length > 0
                         if (!alreadyIn) {
+                            console.log('not in here yet')
                             state.currentSelectSet.push(selectedSet)
                         } else {
+                            console.log("already in here")
                             state.currentSelectSet = state.currentSelectSet.map((d) => {
                                 if (d.setName === addingType) {
                                     const indexOfElement = d.setValues.indexOf(selectedSet.setValues[0])
-                                    if (indexOfElement > 0) {
-                                        d.setValues = d.setValues.splice(indexOfElement, 1);
-                                        //     d.setPatientIds = d.setPatientIds.splice(indexOfElement, 1);
-                                    } else {
+                                    if (indexOfElement < 0) {
                                         d.setValues = d.setValues.concat(selectedSet.setValues)
-                                        //  d.setPatientIds = d.setPatientIds.concat(data.setPatientIds)
+
                                     }
                                 }
                                 return d
@@ -524,7 +524,7 @@ export function setupProvenance(): AppProvenance {
                         state.currentSelectSet = state.currentSelectSet.map((d) => {
                             if (d.setName === addingType) {
                                 const indexOfElement = d.setValues.indexOf(data.setValues[0])
-                                if (indexOfElement > 0) {
+                                if (indexOfElement >= 0) {
                                     d.setValues = d.setValues.splice(indexOfElement, 1);
                                     //     d.setPatientIds = d.setPatientIds.splice(indexOfElement, 1);
                                 } else {

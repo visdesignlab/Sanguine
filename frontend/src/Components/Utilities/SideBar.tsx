@@ -182,7 +182,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             output.push(
                 <FilterListIT key={"Patient Circled"} style={{ textAlign: "left" }}
                     onClick={() => { actions.updateSelectedPatientGroup([]) }}
-                    content={`${currentSelectPatientGroup.length} patients filtered`}>
+                >
                     <List.Header>Cases Filtered</List.Header>
                     <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
                     <List.Item>{currentSelectPatientGroup.length}</List.Item>
@@ -197,7 +197,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                 style={{ textAlign: "left" }}
                 key="Brushed Patients"
                 onClick={() => { actions.updateBrushPatientGroup([], "REPLACE") }}
-                content={`${currentBrushedPatientGroup.length} patients selected`}>
+            >
                 <List.Header>Cases Selected</List.Header>
                 <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
                 <List.Item>{currentBrushedPatientGroup.length}</List.Item>
@@ -292,7 +292,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                                 //icon="caret right"
                                 key={`${selectSet.setName}selected`}
                                 onClick={() => { actions.clearOutputFilterSet(selectSet.setName) }}
-                                content={`${AcronymDictionary[selectSet.setName]}: ${selectSet.setValues.sort()}`}>
+                            >
                                 <List.Header>{AcronymDictionary[selectSet.setName]}</List.Header>
                                 <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
 
@@ -317,7 +317,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                             return <FilterListIT
                                 key={`${selectSet.setName}currentselecting`}
                                 onClick={() => { actions.clearSelectSet(selectSet.setName) }}
-                                content={`${AcronymDictionary[selectSet.setName]} - ${selectSet.setValues.sort()}`}>
+                            >
                                 <List.Header>{AcronymDictionary[selectSet.setName]}</List.Header>
                                 <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
                                 <List.Content>{selectSet.setValues.sort().join(', ')}</List.Content>
