@@ -60,7 +60,7 @@ WSGI_APPLICATION = "api.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', 
-        'NAME': 'bloodvis',
+        'NAME': os.getenv("MYSQL_DB"),
         'USER': os.getenv("MYSQL_USER"),
         'PASSWORD': os.getenv("MYSQL_PASS"),
         'HOST': os.getenv("MYSQL_HOST"),
