@@ -239,7 +239,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                                 <Dropdown.Menu>
                                     <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
                                     <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue}></Dropdown>
-                                    <Dropdown text="Change Type" pointing basic item compact options={OutcomeDropdownOptions} onChange={changeOutcome}></Dropdown>
+                                    <Dropdown text="Change Comparison" pointing basic item compact options={OutcomeDropdownOptions} onChange={changeOutcome}></Dropdown>
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item>

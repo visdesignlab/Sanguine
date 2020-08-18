@@ -31,6 +31,7 @@ import { third_gray, preop_color, postop_color, greyScaleRange } from "../../Pre
 import SingleHeatCompare from "./SingleHeatCompare";
 import InterventionExtraPairGenerator from "../Utilities/InterventionExtraPairGenerator";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
+import styled from "styled-components";
 
 
 interface OwnProps {
@@ -470,7 +471,11 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                         {`${interventionDate ? `Post Intervine` : `False`} ${postTotal}/${preTotal + postTotal}`}
                     </text>
                 </g>
-                <text
+                <foreignObject x={0.0 * (dimensionWidth)} y={0} width={0.15 * dimensionWidth} height={currentOffset.top}>
+                    <ComparisonDiv>{interventionDate ? `Intervention:` : `Comparing:`}</ComparisonDiv>
+                    <ComparisonDiv>{interventionDate ? timeFormat("%Y-%m-%d")(new Date(interventionDate)) : (AcronymDictionary[outcomeComparison || ""]) || outcomeComparison}</ComparisonDiv>
+                </foreignObject>
+                {/* <text
                     x={0.1 * (dimensionWidth)}
                     y={0}
                     alignmentBaseline="hanging"
@@ -481,11 +486,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                     <tspan x="0" dy="1em">{interventionDate ? `Intervention:` : `Comparing:`}</tspan>
                     <tspan x="0" dy="1em">{interventionDate ? timeFormat("%Y-%m-%d")(new Date(interventionDate)) : (AcronymDictionary[outcomeComparison || ""]) || outcomeComparison}</tspan>
 
-                    {/* {interventionDate ?
-                    `Intervention: ${timeFormat("%Y-%m-%d")(new Date(interventionDate))}`
-                    : `Comparing Outcome: ${((Accronym as any)[outcomeComparison || ""]) || outcomeComparison}`} */}
-
-                </text>
+                </text> */}
             </g>
 
             <g className="chart"
@@ -543,3 +544,8 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
     );
 }
 export default inject("store")(observer(InterventionPlot));
+
+const ComparisonDiv = styled.div`
+  font-size:x-small;
+  line-height:normal;
+`;
