@@ -31,7 +31,7 @@ CREATE DATABASE bloodvis CHARACTER SET utf8 COLLATE utf8_bin
 
 ## Deploying In Production
 
-Not yet applicable.
+To deploy in production, there are a number of dependencies. Of course, we'll need python3 and pipenv to start. We'll also need mysql running on the backend server with the correct username and password defined in the .env file.
 
 ## Route Documentation 
 
