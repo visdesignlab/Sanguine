@@ -5,3 +5,4 @@ api/static
 *.DS_Store
 *.coverage
 .env
+.env.prod
