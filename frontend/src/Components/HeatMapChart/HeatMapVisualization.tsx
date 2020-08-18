@@ -4,10 +4,11 @@ import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { HeatMapDataPoint, ExtraPairPoint } from '../../Interfaces/ApplicationState'
 import { barChartAggregationOptions, barChartValuesOptions, extraPairOptions, ChartSVG, OutcomeType, } from "../../PresetsProfile"
-import { Icon, Grid, Dropdown, Menu, Modal, Form, Button, Message } from "semantic-ui-react";
+import { Grid, Dropdown, Menu } from "semantic-ui-react";
 import HeatMap from "./HeatMap";
 import axios from 'axios';
 import { stateUpdateWrapperUseJSON, generateExtrapairPlotData, generateRegularData } from "../../HelperFunctions";
+import NotationForm from "../Utilities/NotationForm";
 
 interface OwnProps {
     aggregatedBy: string;
@@ -46,8 +47,8 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
 
     //  const [caseIDList, setCaseIDList] = useState<any>(null)
     const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
-    const [openNotationModal, setOpenNotationModal] = useState(false)
-    const [notationInput, setNotationInput] = useState(notation)
+    //    const [openNotationModal, setOpenNotationModal] = useState(false)
+    // const [notationInput, setNotationInput] = useState(notation)
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
     useEffect(() => {
@@ -171,6 +172,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     }
 
 
+
     //  return true;
 
 
@@ -218,12 +220,12 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item>
-                        <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
+                        {/* <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
                             <Icon name="edit" />
-                        </Menu.Item>
+                        </Menu.Item> */}
 
                         {/* Modal for annotation. */}
-                        <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
+                        {/* <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
                             <Modal.Header>
                                 Set the annotation for chart
               </Modal.Header>
@@ -247,8 +249,9 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                                 <Button content="Save" positive onClick={() => { setOpenNotationModal(false); actions.changeNotation(chartId, notationInput); }} />
                                 <Button content="Cancel" onClick={() => { setOpenNotationModal(false) }} />
                             </Modal.Actions>
-                        </Modal>
+                        </Modal> */}
                     </Menu>
+
                 </Grid.Column>
                 <Grid.Column width={(15) as any}>
                     <ChartSVG ref={svgRef}>
@@ -266,8 +269,8 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                         />
                     </ChartSVG>
 
-                    <Message hidden={notation.length === 0} >{notation}</Message>
-
+                    {/* <Message hidden={notation.length === 0} >{notation}</Message> */}
+                    <NotationForm notation={notation} chartId={chartId} />
 
                 </Grid.Column>
             </Grid.Row>

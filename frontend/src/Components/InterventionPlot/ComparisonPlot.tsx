@@ -368,20 +368,20 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
     const outputGradientLegend = () => {
         if (!showZero) {
             return [<rect
-                x={0.8 * (dimensionWidth)}
+                x={0.7 * (dimensionWidth)}
                 y={0}
                 width={0.2 * (dimensionWidth)}
                 height={7.5}
                 fill="url(#gradient1)" />,
             <rect
-                x={0.8 * (dimensionWidth)}
+                x={0.7 * (dimensionWidth)}
                 y={7.5}
                 width={0.2 * (dimensionWidth)}
                 height={7.5}
                 fill="url(#gradient2)" />]
         } else {
             return <rect
-                x={0.8 * (dimensionWidth)}
+                x={0.7 * (dimensionWidth)}
                 y={0}
                 width={0.2 * (dimensionWidth)}
                 height={15}
@@ -419,7 +419,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                 {outputGradientLegend()}
 
                 <text
-                    x={0.8 * (dimensionWidth)}
+                    x={0.7 * (dimensionWidth)}
                     y={15}
                     alignmentBaseline={"hanging"}
                     textAnchor={"start"}
@@ -428,7 +428,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                     0%
                 </text>
                 <text
-                    x={1 * (dimensionWidth)}
+                    x={0.9 * (dimensionWidth)}
                     y={15}
                     alignmentBaseline={"hanging"}
                     textAnchor={"end"}

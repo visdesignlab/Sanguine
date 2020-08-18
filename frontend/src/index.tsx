@@ -7,6 +7,7 @@ import * as serviceWorker from './serviceWorker';
 import { setupProvenance } from './Interfaces/Provenance'
 import { store } from './Interfaces/Store'
 import { Provider } from 'mobx-react';
+import 'mobx-react-lite/batchingForReactDom'
 import "semantic-ui-css/semantic.min.css"
 
 export const { provenance, actions } = setupProvenance();

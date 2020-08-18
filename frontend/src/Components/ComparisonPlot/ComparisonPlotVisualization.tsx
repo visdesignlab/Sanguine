@@ -7,8 +7,9 @@ import { extraPairOptions, barChartAggregationOptions, barChartValuesOptions, Ch
 import axios from 'axios';
 import { stateUpdateWrapperUseJSON, generateExtrapairPlotDataWithIntervention, generateComparisonData } from "../../HelperFunctions";
 import { actions } from "../..";
-import { Grid, Menu, Dropdown, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
+import { Grid, Menu, Dropdown } from "semantic-ui-react";
 import InterventionPlot from "../InterventionPlot/ComparisonPlot";
+import NotationForm from "../Utilities/NotationForm";
 
 
 interface OwnProps {
@@ -52,8 +53,6 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
     // const [caseIDDictionary, setCaseIDList] = useState<any>(null)
     const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
 
-    const [openNotationModal, setOpenNotationModal] = useState(false)
-    const [notationInput, setNotationInput] = useState(notation)
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
     useEffect(() => {
@@ -245,36 +244,6 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                             </Dropdown>
                         </Menu.Item>
 
-                        <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
-                            <Icon name="edit" />
-                        </Menu.Item>
-
-                        {/* Modal for annotation. */}
-                        <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
-                            <Modal.Header>
-                                Set the annotation for chart
-              </Modal.Header>
-                            <Modal.Content>
-                                <Form>
-                                    <Form.TextArea autoFocus
-                                        value={notationInput}
-                                        label="Notation"
-                                        onChange={(e, d) => {
-                                            if (typeof d.value === "number") {
-                                                setNotationInput((d.value).toString() || "")
-                                            } else {
-                                                setNotationInput(d.value || "")
-                                            }
-                                        }
-                                        }
-                                    />
-                                </Form>
-                            </Modal.Content>
-                            <Modal.Actions>
-                                <Button content="Save" positive onClick={() => { setOpenNotationModal(false); actions.changeNotation(chartId, notationInput); }} />
-                                <Button content="Cancel" onClick={() => { setOpenNotationModal(false) }} />
-                            </Modal.Actions>
-                        </Modal>
 
                     </Menu>
                 </Grid.Column>
@@ -297,7 +266,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                         />
                     </ChartSVG>
 
-                    <Message hidden={notation.length === 0} >{notation}</Message>
+                    <NotationForm notation={notation} chartId={chartId} />
 
                 </Grid.Column>
 

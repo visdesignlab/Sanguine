@@ -10,10 +10,11 @@ import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
 import { scatterYOptions, barChartValuesOptions, ChartSVG } from "../../PresetsProfile"
-import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
+import { Grid, Dropdown, Menu } from "semantic-ui-react";
 import ScatterPlotChart from "./ScatterPlot";
 import axios from "axios";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
+import NotationForm from "../Utilities/NotationForm";
 
 
 interface OwnProps {
@@ -55,8 +56,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
 
     //  const [highlightOption, setHighlightOption] = useState("")
 
-    const [openNotationModal, setOpenNotationModal] = useState(false)
-    const [notationInput, setNotationInput] = useState(notation)
+
 
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
@@ -219,12 +219,12 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item> */}
-                        <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
+                        {/* <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
                             <Icon name="edit" />
-                        </Menu.Item>
+                        </Menu.Item> */}
 
                         {/* Modal for annotation. */}
-                        <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
+                        {/* <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
                             <Modal.Header>
                                 Set the annotation for chart
               </Modal.Header>
@@ -248,7 +248,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                                 <Button content="Save" positive onClick={() => { setOpenNotationModal(false); actions.changeNotation(chartId, notationInput); }} />
                                 <Button content="Cancel" onClick={() => { setOpenNotationModal(false) }} />
                             </Modal.Actions>
-                        </Modal>
+                        </Modal> */}
 
 
                     </Menu>
@@ -280,7 +280,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                         />
                     </ChartSVG>
 
-                    <Message hidden={notation.length === 0} >{notation}</Message>
+                    <NotationForm notation={notation} chartId={chartId} />
 
                 </Grid.Column>
             </Grid.Row>

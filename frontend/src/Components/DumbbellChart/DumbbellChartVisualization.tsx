@@ -12,10 +12,11 @@ import { actions } from "../..";
 import { DumbbellDataPoint } from "../../Interfaces/ApplicationState"
 import { BloodProductCap, dumbbellFacetOptions, ChartSVG } from "../../PresetsProfile"
 import DumbbellChart from "./DumbbellChart"
-import { Grid, Menu, Dropdown, Button, Icon, Modal, Form, Message } from "semantic-ui-react";
+import { Grid, Menu, Dropdown, Button } from "semantic-ui-react";
 import { preop_color, postop_color, basic_gray } from "../../PresetsProfile";
 import axios from 'axios';
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
+import NotationForm from "../Utilities/NotationForm";
 
 interface OwnProps {
     yAxis: string;
@@ -53,8 +54,6 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
     const [xMin, setXMin] = useState(Infinity);
     const [xMax, setXMax] = useState(0)
     const [sortMode, setSortMode] = useState("Postop");
-    const [openNotationModal, setOpenNotationModal] = useState(false)
-    const [notationInput, setNotationInput] = useState(notation)
     const [showingAttr, setShowingAttr] = useState({ preop: true, postop: true, gap: true })
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
@@ -221,36 +220,6 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
                             </Dropdown>
                         </Menu.Item>
 
-                        <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
-                            <Icon name="edit" />
-                        </Menu.Item>
-
-                        {/* Modal for annotation. */}
-                        <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
-                            <Modal.Header>
-                                Set the annotation for chart
-                            </Modal.Header>
-                            <Modal.Content>
-                                <Form>
-                                    <Form.TextArea autoFocus
-                                        value={notationInput}
-                                        label="Notation"
-                                        onChange={(e, d) => {
-                                            if (typeof d.value === "number") {
-                                                setNotationInput((d.value).toString() || "")
-                                            } else {
-                                                setNotationInput(d.value || "")
-                                            }
-                                        }
-                                        }
-                                    />
-                                </Form>
-                            </Modal.Content>
-                            <Modal.Actions>
-                                <Button content="Save" positive onClick={() => { setOpenNotationModal(false); actions.changeNotation(chartId, notationInput); }} />
-                                <Button content="Cancel" onClick={() => { setOpenNotationModal(false) }} />
-                            </Modal.Actions>
-                        </Modal>
 
 
                     </Menu>
@@ -295,7 +264,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
                         />
                     </ChartSVG>
 
-                    <Message hidden={notation.length === 0} color="green">{notation}</Message>
+                    <NotationForm notation={notation} chartId={chartId} />
 
                 </Grid.Column>
             </Grid.Row>
