@@ -471,7 +471,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                         {`${interventionDate ? `Post Intervine` : `False`} ${postTotal}/${preTotal + postTotal}`}
                     </text>
                 </g>
-                <foreignObject x={0.0 * (dimensionWidth)} y={0} width={0.15 * dimensionWidth} height={currentOffset.top}>
+                <foreignObject x={0.0 * (dimensionWidth)} y={0} width={0.2 * dimensionWidth} height={currentOffset.top}>
                     <ComparisonDiv>{interventionDate ? `Intervention:` : `Comparing:`}</ComparisonDiv>
                     <ComparisonDiv>{interventionDate ? timeFormat("%Y-%m-%d")(new Date(interventionDate)) : (AcronymDictionary[outcomeComparison || ""]) || outcomeComparison}</ComparisonDiv>
                 </foreignObject>

@@ -57,14 +57,15 @@ export function setupProvenance(): AppProvenance {
         //}
         store.isAtRoot = isAtRoot;
         store.isAtLatest = provenance.current().children.length === 0;
+        console.log("state change")
     })
 
     provenance.addObserver(["currentSelectPatientGroup"], (state?: ApplicationState) => {
         store.currentSelectPatientGroup = state ? state.currentSelectPatientGroup : store.currentSelectPatientGroup;
     })
 
-    provenance.addObserver(["currentBrushedPatientGroup"], async (state?: ApplicationState) => {
-        store.currentBrushedPatientGroup = state ? state.currentBrushedPatientGroup : store.currentBrushedPatientGroup
+    provenance.addObserver(["currentBrushedPatientGroup"], (state?: ApplicationState) => {
+        store.currentBrushedPatientGroup = state ? state.currentBrushedPatientGroup : store.currentBrushedPatientGroup;
     })
 
     provenance.addObserver(["nextAddingIndex"], (state?: ApplicationState) => {
@@ -103,15 +104,6 @@ export function setupProvenance(): AppProvenance {
     provenance.addObserver(["procedureTypeSelection"], (state?: ApplicationState) => {
         store.procedureTypeSelection = state ? state.procedureTypeSelection : store.procedureTypeSelection
     })
-
-    //   provenance.addObserver(
-    //     ["currentSelectPatient"],
-    //     (state?: ApplicationState) => {
-    //       store.currentSelectPatient = state
-    //         ? state.currentSelectPatient
-    //         : store.currentSelectPatient;
-    //     }
-    //   );
 
     provenance.addObserver(["currentSelectSet"], (state?: ApplicationState) => {
         store.currentSelectSet = state
@@ -267,9 +259,15 @@ export function setupProvenance(): AppProvenance {
                 state.layoutArray = state.layoutArray.filter(
                     d => d.i !== remove_index
                 );
-                console.log(state)
+                if (state.layoutArray.length === 0) {
+                    store.totalAggregatedCaseCount = 0;
+                    store.totalIndividualCaseCount = 0;
+                    state.currentBrushedPatientGroup = [];
+                }
+                console.log(state, store)
                 return state;
             }
+
         );
     }
 
@@ -289,7 +287,7 @@ export function setupProvenance(): AppProvenance {
                     }
                     return d
                 })
-                console.log(state)
+
                 return state
             }
         )
@@ -323,7 +321,7 @@ export function setupProvenance(): AppProvenance {
             `Per Case ${showZero}`,
             (state: ApplicationState) => {
                 state.showZero = showZero.checked;
-                console.log(state)
+
                 return state;
             }
         )
@@ -493,6 +491,7 @@ export function setupProvenance(): AppProvenance {
                         }
                     }
                 }
+                console.log(state)
                 return state;
             }
         )

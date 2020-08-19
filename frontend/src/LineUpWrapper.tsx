@@ -141,21 +141,21 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
         })
 
     }, [distinctCategories, convertedData])
-
+    console.log(lineup)
     //line 114 is denying the loop
     //Lineup is never defined somehow.
-    useEffect(() => {
-        //    console.log(lineup)
-        if (lineup !== undefined) {
-            console.log('called inside')
-            let outputIndex: number[] = [];
-            //   currentSelectPatientGroup.forEach(item => outputIndex.push(caseIDReference[item.CASE_ID]));
-            console.log(outputIndex)
-            //    lineup.setSelection(outputIndex);
+    // useEffect(() => {
+    //     //    console.log(lineup)
+    //     if (lineup !== undefined) {
+    //         console.log('called inside')
+    //         let outputIndex: number[] = [];
+    //         //   currentSelectPatientGroup.forEach(item => outputIndex.push(caseIDReference[item.CASE_ID]));
+    //         console.log(outputIndex)
+    //         //    lineup.setSelection(outputIndex);
 
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    //     }
+    //     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // }, [])
 
 
 

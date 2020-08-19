@@ -55,10 +55,12 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
                         /// content = output/dataPoint.caseCount
                     }
 
+                    const outputContent = (output / caseCount < 0.01 && output > 0) ? "<1%" : format(".0%")(output / caseCount)
+
                     return (
-                        [<Popup content={(format(".0%")(output / caseCount))}
+                        [<Popup content={outputContent}
                             key={dataPoint.aggregateAttribute + '-' + point}
-                            disabled={disables}
+                            disabled={disables || caseCount === 0}
                             trigger={
                                 <HeatRect
                                     fill={colorFill}

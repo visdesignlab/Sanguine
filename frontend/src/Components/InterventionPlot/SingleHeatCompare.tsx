@@ -55,10 +55,13 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                         postFill = postOutput === 0 ? "white" : interpolateGreys(greyScale(postOutput / dataPoint.postCaseCount))
                     }
 
+                    const preOutputContent = (preOutput / preCaseCount < 0.01 && preOutput > 0) ? "<1%" : format(".0%")(preOutput / preCaseCount)
+                    const postOutputContent = (postOutput / postCaseCount < 0.01 && postOutput > 0) ? "<1%" : format(".0%")(postOutput / postCaseCount)
+
                     return (
-                        [<Popup content={format(".0%")(preOutput / preCaseCount)}
+                        [<Popup content={preOutputContent}
                             key={`Pre${dataPoint.aggregateAttribute} - ${point}`}
-                            disabled={disables}
+                            disabled={disables || (preCaseCount === 0)}
                             trigger={
                                 <HeatRect
                                     fill={preFill}
@@ -78,8 +81,8 @@ const SingleHeatCompare: FC<Props> = ({ howToTransform, dataPoint, bandwidth, ag
                                         })
 
                                     }} />}
-                        />, <Popup content={format(".0%")(postOutput / postCaseCount)}
-                            disabled={disables}
+                        />, <Popup content={(postOutputContent)}
+                            disabled={disables || postCaseCount === 0}
                             key={`Post${dataPoint.aggregateAttribute} - ${point}`}
                             trigger={
                                 <HeatRect

@@ -207,7 +207,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
                 }
             })
         }
-        console.log(widthAllowed, datapointsDict, spacing,)
+
         let newResultRange: number[] = [];
         let currentLoc = currentOffset.left;
         datapointsDict.forEach((d, i) => {
@@ -220,7 +220,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
             currentLoc += spacing[i]
             stateUpdateWrapperUseJSON(resultRange, newResultRange, setResultRange)
         })
-        console.log(newResultRange)
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [datapointsDict, dimensionWidth, currentOffset, sortedData])
 

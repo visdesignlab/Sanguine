@@ -9,7 +9,7 @@ export const third_gray = "#a2a2a2"
 export const secondary_gray = "#666666"
 export const blood_red = "#b10000"
 export const highlight_blue = "#32d9d9"
-export const greyScaleRange = [0.25, 0.8]
+export const greyScaleRange = [0.3, 0.85]
 
 export const offset = {
     regular: { left: 90, bottom: 40, right: 10, top: 40, margin: 10 },

@@ -154,7 +154,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         const newExtraPairData = generateExtrapairPlotData(aggregatedBy, hemoglobinDataSet, extraPairArray, data)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extraPairArray, data, hemoglobinDataSet, aggregatedBy]);
+    }, [extraPairArray, data, hemoglobinDataSet]);
 
 
 
