@@ -150,3 +150,4 @@ LOGIN_URL = '/api/accounts/login'
 
 CAS_SERVER_URL = "https://go.utah.edu/cas"
 CAS_ADMIN_PREFIX = "api/"
+CAS_REDIRECT_URL = "https://bloodvis.chpc.utah.edu/api/whoami"
