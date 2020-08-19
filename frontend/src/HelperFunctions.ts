@@ -560,7 +560,7 @@ const outcomeDataGenerate = (aggregatedBy: string, name: string, label: string, 
 }
 
 export const generateComparisonData = (temporaryDataHolder: any[], showZero: boolean, valueToVisualize: string) => {
-    let caseCount = 0;
+    let totalCaseCount = 0;
     let outputData: ComparisonDataPoint[] = [];
     Object.values(temporaryDataHolder).forEach((computedData: any) => {
         const prePatientIDArray: number[] = Array.from(computedData.prePatientIDList);
@@ -600,8 +600,8 @@ export const generateComparisonData = (temporaryDataHolder: any[], showZero: boo
             return d[valueToVisualize] === 0;
         }).length;
 
-        caseCount += preCaseIDArray.length;
-        caseCount += postCaseIDArray.length;
+        totalCaseCount += preCaseIDArray.length;
+        totalCaseCount += postCaseIDArray.length;
 
         let preCountDict = {} as any;
         let postCountDict = {} as any;
@@ -684,7 +684,7 @@ export const generateComparisonData = (temporaryDataHolder: any[], showZero: boo
             }
         )
     });
-    return [caseCount, outputData]
+    return [totalCaseCount, outputData]
 }
 
 export const generateRegularData = (temporaryDataHolder: any[], showZero: boolean, valueToVisualize: string) => {
