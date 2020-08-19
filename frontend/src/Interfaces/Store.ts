@@ -18,7 +18,7 @@ export default class Store {
 
     @observable rawDateRange: number[] = defaultState.rawDateRange;
 
-
+    @observable procedureTypeSelection: [boolean, boolean, boolean] = defaultState.procedureTypeSelection;
     @observable proceduresSelection: string[] = defaultState.proceduresSelection;
     // @computed get proceduresSelection() {
     //   return (JSON.parse(this.rawproceduresSelection) as string[])
@@ -45,6 +45,9 @@ export default class Store {
         return [timeFormat("%d-%b-%Y")(new Date(this.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(this.rawDateRange[1]))]
 
     }
+    // @computed get noProcedureTypeSelected(){
+    //     return !(this.procedureTypeSelection[0] || this.procedureTypeSelection[1] || this.procedureTypeSelection[2])
+    // }
 
     @observable nextAddingIndex: number = defaultState.nextAddingIndex;
     @observable currentOutputFilterSet: SelectSet[] = defaultState.currentOutputFilterSet;

@@ -36,7 +36,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
         currentSelectPatientGroupIDs,
         currentOutputFilterSet,
         rawDateRange,
-        dateRange,
+        dateRange, procedureTypeSelection,
         outcomesSelection
     } = store!;
 
@@ -131,21 +131,15 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                             }
                         }
 
-                        // if (outcomesSelection.length > 0) {
-                        //     outcomesSelection.forEach((outcome) => {
-                        //         if (singleCase[outcome] === "0") {
-                        //             criteriaMet = false;
-                        //         }
-                        //     })
-                        // }
-                        if (outcomesSelection) {
-
+                        if (!procedureTypeSelection[singleCase.SURGERY_TYPE]) {
+                            criteriaMet = false;
+                        }
+                        else if (outcomesSelection) {
                             if (singleCase[outcomesSelection] === 0) {
                                 criteriaMet = false;
                             }
 
                         }
-
 
                         if (preCaseSetReturnedFromQuery.has(singleCase.CASE_ID) && criteriaMet) {
                             // caseDictionary[singleCase.CASE_ID] = true;
@@ -194,7 +188,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                 }
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [proceduresSelection, hemoglobinDataSet, dateRange, aggregatedBy, outcomesSelection, showZero, interventionDate, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet]);
+    }, [proceduresSelection, procedureTypeSelection, hemoglobinDataSet, dateRange, aggregatedBy, outcomesSelection, showZero, interventionDate, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet]);
 
 
     useEffect(() => {

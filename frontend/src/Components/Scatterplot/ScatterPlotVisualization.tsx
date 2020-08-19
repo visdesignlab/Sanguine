@@ -36,7 +36,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
         layoutArray,
         proceduresSelection,
         currentOutputFilterSet,
-        //  perCaseSelected,
+        procedureTypeSelection,
         dateRange,
         previewMode,
         showZero,
@@ -119,14 +119,11 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                                     }
                                 }
                             }
-                            // if (outcomesSelection.length > 0) {
-                            //     outcomesSelection.forEach((outcome) => {
-                            //         if (ob[outcome] === "0") {
-                            //             criteriaMet = false;
-                            //         }
-                            //     })
-                            // }
-                            if (outcomesSelection) {
+
+                            if (!procedureTypeSelection[ob.SURGERY_TYPE]) {
+                                criteriaMet = false;
+                            }
+                            else if (outcomesSelection) {
 
                                 if (ob[outcomesSelection] === 0) {
                                     criteriaMet = false;
@@ -173,7 +170,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                 }
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dateRange, proceduresSelection, hemoglobinDataSet, showZero, outcomesSelection, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroupIDs]);
+    }, [dateRange, proceduresSelection, procedureTypeSelection, hemoglobinDataSet, showZero, outcomesSelection, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroupIDs]);
 
 
 

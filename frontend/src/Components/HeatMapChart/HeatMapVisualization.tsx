@@ -33,7 +33,8 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         currentSelectPatientGroupIDs,
         previewMode,
         outcomesSelection,
-        currentOutputFilterSet
+        currentOutputFilterSet,
+        procedureTypeSelection
     } = store!;
     const svgRef = useRef<SVGSVGElement>(null);
     // const [data, setData] = useState<{ original: BarChartDataPoint[]; perCase: BarChartDataPoint[]; }>({ original: [], perCase: [] });
@@ -102,15 +103,10 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                         if (!caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
                             criteriaMet = false;
                         }
-
-                        // if (outcomesSelection.length > 0) {
-                        //     outcomesSelection.forEach((outcome) => {
-                        //         if (singleCase[outcome] === "0") {
-                        //             criteriaMet = false;
-                        //         }
-                        //     })
-                        // }
-                        if (outcomesSelection) {
+                        else if (!procedureTypeSelection[singleCase.SURGERY_TYPE]) {
+                            criteriaMet = false;
+                        }
+                        else if (outcomesSelection) {
 
                             if (singleCase[outcomesSelection] === 0) {
                                 criteriaMet = false;
@@ -147,7 +143,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                 }
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [proceduresSelection, outcomesSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet, hemoglobinDataSet]);
+    }, [proceduresSelection, procedureTypeSelection, outcomesSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet, hemoglobinDataSet]);
 
 
 

@@ -1,6 +1,6 @@
 import Store from "../../Interfaces/Store";
 import { FC, useRef, useState, useEffect, useLayoutEffect } from "react";
-import { ExtraPairInterventionPoint, ComparisonDataPoint } from "../../Interfaces/ApplicationState";
+import { ExtraPairInterventionPoint, ComparisonDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
 import React from "react";
 import { inject, observer } from "mobx-react";
 import { extraPairOptions, barChartAggregationOptions, barChartValuesOptions, ChartSVG, OutcomeDropdownOptions } from "../../PresetsProfile";
@@ -36,7 +36,9 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
         currentSelectPatientGroupIDs,
         currentOutputFilterSet,
         dateRange,
-        outcomesSelection
+        outcomesSelection,
+        procedureTypeSelection,
+
     } = store!;
 
     const svgRef = useRef<SVGSVGElement>(null);
@@ -98,12 +100,12 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                     transfusedDataResult.forEach((element: any) => {
                         caseSetReturnedFromQuery.add(element.case_id)
                     })
-                    hemoglobinDataSet.forEach((singleCase: any) => {
+                    hemoglobinDataSet.forEach((singleCase: SingleCasePoint) => {
                         let criteriaMet = true;
                         if (currentOutputFilterSet.length > 0) {
                             for (let selectSet of currentOutputFilterSet) {
                                 if (selectSet.setName === aggregatedBy) {
-                                    if (!selectSet.setValues.includes(singleCase[aggregatedBy])) {
+                                    if (!selectSet.setValues.includes(singleCase[aggregatedBy] as any)) {
                                         criteriaMet = false;
                                     }
                                 }
@@ -113,17 +115,11 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                         if (!caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
                             criteriaMet = false;
                         }
+                        else if (!procedureTypeSelection[singleCase.SURGERY_TYPE]) {
+                            criteriaMet = false;
+                        }
 
-                        // if (outcomesSelection.length > 0) {
-                        //     outcomesSelection.forEach((outcome) => {
-                        //         if (outcome !== outcomeComparison) {
-                        //             if (singleCase[outcome] === "0") {
-                        //                 criteriaMet = false;
-                        //             }
-                        //         }
-                        //     })
-                        // }
-                        if (outcomesSelection && outcomesSelection !== outcomeComparison) {
+                        else if (outcomesSelection && outcomesSelection !== outcomeComparison) {
                             if (singleCase[outcomesSelection] === 0) {
                                 criteriaMet = false;
                             }
@@ -131,7 +127,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
 
                         if (criteriaMet) {
                             //  caseDictionary[singleCase.CASE_ID] = true;
-                            const caseOutcome = parseInt(singleCase[outcomeComparison]);
+                            const caseOutcome = singleCase[outcomeComparison];
                             if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
                                 temporaryDataHolder[singleCase[aggregatedBy]] = {
                                     aggregateAttribute: singleCase[aggregatedBy],
@@ -180,7 +176,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                 }
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [proceduresSelection, outcomesSelection, hemoglobinDataSet, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet, outcomeComparison]);
+    }, [proceduresSelection, procedureTypeSelection, outcomesSelection, hemoglobinDataSet, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet, outcomeComparison]);
 
 
     useEffect(() => {

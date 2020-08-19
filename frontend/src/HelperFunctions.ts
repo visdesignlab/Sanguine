@@ -576,34 +576,7 @@ export const generateComparisonData = (temporaryDataHolder: any[], showZero: boo
         let postDataArray: SingleCasePoint[] = computedData.postData;
         let preZeroNum = 0;
         let postZeroNum = 0;
-        // if (!showZero) {
-        //     preDataArray = preDataArray.filter((d: SingleCasePoint) => {
-        //         if (d[valueToVisualize] > 0) {
-        //             preCaseIDArray.push(d.CASE_ID)
-        //             return true;
-        //         }
-        //         preZeroNum += 1;
-        //         return false;
-        //     })
-        //     postDataArray = postDataArray.filter((d: SingleCasePoint) => {
-        //         if (d[valueToVisualize] > 0) {
-        //             postCaseIDArray.push(d.CASE_ID)
-        //             return true;
-        //         }
-        //         postZeroNum += 1;
-        //         return false;
-        //     })
-        // } else {
-        //     preZeroNum = preDataArray.filter((d) => {
-        //         preCaseIDArray.push(d.CASE_ID)
-        //         return d[valueToVisualize] === 0;
-        //     }).length;
-        //     postZeroNum = postDataArray.filter((d) => {
-        //         postCaseIDArray.push(d.CASE_ID)
-        //         return d[valueToVisualize] === 0;
-        //     }).length;
 
-        // }
         preZeroNum = preDataArray.filter((d) => {
             if (!showZero) {
                 if (d[valueToVisualize] > 0) {
