@@ -65,8 +65,8 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     useLayoutEffect(() => {
         if (svgRef.current) {
             setDimensionHeight(svgRef.current.clientHeight);
-            // setDimensionWidth(svgRef.current.clientWidth)
-            setDimensionWidth(w === 1 ? 542.28 : 1146.97)
+            setDimensionWidth(svgRef.current.clientWidth)
+            //  setDimensionWidth(w === 1 ? 542.28 : 1146.97)
         }
     }, [layoutArray, w]);
 

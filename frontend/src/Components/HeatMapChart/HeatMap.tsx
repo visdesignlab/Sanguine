@@ -120,7 +120,6 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             .domain(outputRange as any)
             .range([currentOffset.left, dimensionWidth - extraPairTotalWidth - currentOffset.right - currentOffset.margin])
             .paddingInner(0.01);
-        // console.log(dimensionWidth, extraPairTotalWidth, valueScale.range())
         return valueScale
     }, [dimensionWidth, extraPairTotalWidth, valueToVisualize, currentOffset]);
 

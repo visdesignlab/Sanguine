@@ -43,7 +43,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
 
     const [width, setWidth] = useState(0);
     const [height, setHeight] = useState(0)
-    //const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
+
     const [extraPairData, setExtraPairData] = useState<ExtraPairPoint[]>([])
 
     //  const [caseIDList, setCaseIDList] = useState<any>(null)
@@ -60,11 +60,13 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     //TODO change all the dependency to w,h
     useLayoutEffect(() => {
         if (svgRef.current) {
-            //  setWidth(svgRef.current.clientWidth);
-            setWidth(w === 1 ? 542.28 : 1146.97)
+            setWidth(svgRef.current.clientWidth);
+            // setWidth(w === 1 ? 542.28 : 1146.97)
             setHeight(svgRef.current.clientHeight)
+
         }
-    }, [layoutArray, w]);
+
+    }, [layoutArray, w, svgRef]);
 
     useEffect(() => {
         if (previousCancelToken) {

@@ -23,7 +23,7 @@ type Props = OwnProps;
 
 const Preview: FC<Props> = ({ store, hemoData }: Props) => {
 
-    const { showZero, loadingModalOpen } = store!;
+    const { showZero, loadingModalOpen, dataLoadingFailed } = store!;
     select("#Main-Body").append("div").attr("class", "tooltiptext")
     return (
         <LayoutDiv>
@@ -64,11 +64,17 @@ const Preview: FC<Props> = ({ store, hemoData }: Props) => {
             <Modal open={loadingModalOpen} closeOnEscape={false}
                 closeOnDimmerClick={false}>
                 <Message icon>
-                    <Icon name='circle notched' loading />
-                    <Message.Content>
-                        <Message.Header>Just one second</Message.Header>
+                    {dataLoadingFailed ?
+                        ([<Icon name='warning sign' />,
+                        <Message.Content>
+                            <Message.Header>Failed</Message.Header>
+                        Data retrieval failed. Please try later or contact the admins.
+                    </Message.Content>]) :
+                        ([<Icon name='circle notched' loading />,
+                        <Message.Content>
+                            <Message.Header>Just one second</Message.Header>
                         We are fetching required data.
-                        </Message.Content>
+                    </Message.Content>])}
                 </Message>
 
             </Modal>

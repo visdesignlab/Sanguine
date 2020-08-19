@@ -60,8 +60,8 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
 
     useLayoutEffect(() => {
         if (svgRef.current) {
-            //   setDimensionWidth(svgRef.current.clientWidth);
-            setDimensionWidth(w === 1 ? 542.28 : 1146.97)
+            setDimensionWidth(svgRef.current.clientWidth);
+            //  setDimensionWidth(w === 1 ? 542.28 : 1146.97)
             setDimensionHeight(svgRef.current.clientHeight)
 
         }

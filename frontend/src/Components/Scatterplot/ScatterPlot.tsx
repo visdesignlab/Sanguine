@@ -89,7 +89,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
     svgSelection.select(".brush-layer").call(brushDef as any);
 
     useEffect(() => {
-        console.log("ONE!", brushLoc)
+        //        console.log("ONE!", brushLoc)
         if (isFirstRender) {
             updateIsFirstRender(false)
 
