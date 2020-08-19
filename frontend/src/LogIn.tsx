@@ -35,6 +35,18 @@ const Logins: FC<Props> = ({ store }: Props) => {
     }, [isChrome])
 
 
+    useEffect(() => {
+        fetch(`${process.env.REACT_APP_QUERY_URL}whoami`, {
+            method: 'GET'
+        }).then(response => {
+            //TODO if logged in, it is 200 right?
+            if (response.status === 200) {
+                store!.isLoggedIn = true;
+            }
+        })
+    }, [])
+
+
 
 
     const handleLogin = async () => {

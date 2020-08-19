@@ -146,6 +146,13 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         return csrftoken
     }
 
+    const logoutHandler = () => {
+        fetch(`${process.env.REACT_APP_QUERY_URL}accounts/logout`, {
+            method: 'GET'
+        })
+        store!.isLoggedIn = false;
+    }
+
 
 
     const regularMenu = (
@@ -361,7 +368,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             </Menu.Item>
 
             <Menu.Item>
-                <NavLink component={Button} isActive={() => { return false }} to="/" onClick={() => { store!.isLoggedIn = false; }} >
+                <NavLink component={Button} isActive={() => { return false }} to="/" onClick={() => { logoutHandler(); }} >
                     Log Out
         </NavLink>
 
