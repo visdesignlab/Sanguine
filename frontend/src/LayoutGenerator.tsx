@@ -32,6 +32,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
     const { layoutArray } = store!
     const [tabWidth, setTabWidth] = useState(1300);
 
+
     const createElement = (layout: LayoutElement, index: number) => {
         switch (layout.plotType) {
             case "DUMBBELL":
@@ -185,6 +186,12 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
             // console.log(tabRef)
         }
     }, [tabRef])
+
+    window.addEventListener("resize", () => {
+        if (tabRef.current) {
+            setTabWidth((tabRef.current as any).clientWidth)
+        }
+    })
 
     const panes = [{
         menuItem: 'Main', pane:
