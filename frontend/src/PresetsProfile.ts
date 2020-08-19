@@ -152,6 +152,12 @@ export const OutcomeType = [
     { value: "AMICAR", key: "AMICAR", text: "Amicar" },
 ]
 
+export const SurgeryType = [
+    { value: 0, key: 0, text: "Urgent" },
+    { value: 1, key: 1, text: "Elective" },
+    { value: 2, key: 2, text: "Emergent" },
+]
+export const surgeryTypeArray = ["Urgent", "Elective", "Emergent"]
 export const OutcomeDropdownOptions = OutcomeType.concat({ value: "NONE", key: "NONE", text: "None" })
 
 

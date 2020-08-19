@@ -41,7 +41,8 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
         dateRange,
         showZero,
         currentOutputFilterSet,
-        outcomesSelection
+        outcomesSelection,
+        procedureTypeSelection
     } = store!;
 
     const svgRef = useRef<SVGSVGElement>(null);
@@ -125,14 +126,12 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
                                         }
                                     }
                                 }
-                                // if (outcomesSelection.length > 0) {
-                                //     outcomesSelection.forEach((outcome) => {
-                                //         if (ob[outcome] === "0") {
-                                //             criteriaMet = false;
-                                //         }
-                                //     })
-                                // }
-                                if (outcomesSelection) {
+
+
+                                if (!procedureTypeSelection[ob.SURGERY_TYPE]) {
+                                    criteriaMet = false;
+                                }
+                                else if (outcomesSelection) {
 
                                     if (ob[outcomesSelection] === 0) {
                                         criteriaMet = false;
@@ -179,7 +178,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
                 }
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dateRange, proceduresSelection, hemoglobinDataSet, yAxis, showZero, outcomesSelection, currentOutputFilterSet, currentSelectPatientGroupIDs]);
+    }, [dateRange, procedureTypeSelection, proceduresSelection, hemoglobinDataSet, yAxis, showZero, outcomesSelection, currentOutputFilterSet, currentSelectPatientGroupIDs]);
 
     const changeXVal = (value: any) => {
         actions.changeChart(value, "HGB_VALUE", chartId, "DUMBBELL")

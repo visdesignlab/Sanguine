@@ -5,7 +5,7 @@ import { Grid, Container, List, Button, Header, Search, Checkbox, Icon, Dropdown
 import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat, max, select, axisTop } from "d3";
 import { actions } from "../..";
-import { AcronymDictionary, postop_color, Title, OutcomeType } from "../../PresetsProfile";
+import { AcronymDictionary, postop_color, Title, OutcomeType, SurgeryType } from "../../PresetsProfile";
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import { defaultState } from "../../Interfaces/ApplicationState";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
@@ -32,6 +32,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         currentBrushedPatientGroup,
         outcomesSelection,
         showZero,
+        procedureTypeSelection,
         proceduresSelection } = store!;
 
     const [surgerySearchResult, setsurgerySearchResult] = useState<any[]>([]);
@@ -214,6 +215,12 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         }
     }
 
+    const calculateSelectedProcedureType = () => {
+        let output = procedureTypeSelection.map((d, i) => d ? i : -1)
+        output = output.filter(d => d > -1)
+        return output
+    }
+
 
     select('#surgeryCaseScale').call(axisTop(caseScale()).ticks(2) as any)
 
@@ -243,6 +250,18 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                             <List.Header>Outcomes/Interventions</List.Header>
                             <Dropdown value={outcomesSelection} clearable selection options={OutcomeType} onChange={(e, v) => { actions.changeOutcomesSelection((v.value as string)) }} />
 
+                        </List.Item>
+                        <List.Item key="Procedure Types" style={{ textAlign: "left" }}>
+                            <List.Header>Surgery Types</List.Header>
+                            <Dropdown options={SurgeryType} clearable multiple selection
+                                value={calculateSelectedProcedureType()}
+                                onChange={(e, v) => {
+                                    let newSurgerySelection: [boolean, boolean, boolean] = [false, false, false];
+                                    if (v.value) {
+                                        (v.value as number[]).forEach(d => { newSurgerySelection[d] = true })
+                                    }
+                                    actions.changeSurgeryTypeSelection(newSurgerySelection)
+                                }} />
                         </List.Item>
 
                         <List.Item style={{ textAlign: "left" }} key="Show Zero">

@@ -8,6 +8,7 @@ import { timeFormat, timeParse } from 'd3';
 import Login from './LogIn'
 import Preview from './Preview';
 import { SingleCasePoint } from './Interfaces/ApplicationState';
+import { surgeryTypeArray } from './PresetsProfile';
 
 interface OwnProps {
     store?: Store;
@@ -29,6 +30,7 @@ const App: FC<Props> = ({ store }: Props) => {
             const resHemo = await fetch(`${process.env.REACT_APP_QUERY_URL}hemoglobin`);
             const dataHemo = await resHemo.json();
             const resultHemo = dataHemo.result;
+
             const resTrans = await fetch(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(2014, 0, 1)), timeFormat("%d-%b-%Y")(new Date(2019, 11, 31))]}`)
             const dataTrans = await resTrans.json();
             const resRisk = await fetch(`${process.env.REACT_APP_QUERY_URL}risk_score`);
@@ -94,7 +96,8 @@ const App: FC<Props> = ({ store }: Props) => {
                         STROKE: riskOutcomeDict[ob.VISIT_ID].STROKE,
                         TXA: riskOutcomeDict[ob.VISIT_ID].TXA,
                         B12: riskOutcomeDict[ob.VISIT_ID].B12,
-                        AMICAR: riskOutcomeDict[ob.VISIT_ID].AMICAR
+                        AMICAR: riskOutcomeDict[ob.VISIT_ID].AMICAR,
+                        SURGERY_TYPE: surgeryTypeArray.indexOf(ob.SURGERY_TYPE)
                     }
                     cacheData.push(outputObj)
                 }
@@ -102,7 +105,7 @@ const App: FC<Props> = ({ store }: Props) => {
 
             cacheData = cacheData.filter((d: any) => d);
             console.log("HGB data done")
-            console.log(cacheData)
+
             setHemoData(cacheData)
             store!.loadingModalOpen = false;
         }

@@ -34,7 +34,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         currentSelectPatientGroupIDs,
         currentOutputFilterSet,
         previewMode,
-        dateRange,
+        dateRange, procedureTypeSelection
 
     } = store!;
     const svgRef = useRef<SVGSVGElement>(null);
@@ -106,6 +106,9 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                             }
                         }
                     }
+                    if (!procedureTypeSelection[ob.SURGERY_TYPE]) {
+                        criteriaMet = false;
+                    }
                     if (criteriaMet) {
 
                         // ob.case_id.forEach((singleId: any) => {
@@ -172,7 +175,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                 }
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [proceduresSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentOutputFilterSet, currentSelectPatientGroupIDs]);
+    }, [proceduresSelection, procedureTypeSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentOutputFilterSet, currentSelectPatientGroupIDs]);
 
 
 

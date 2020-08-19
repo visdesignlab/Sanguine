@@ -44,6 +44,7 @@ interface AppProvenance {
         updateSelectedPatientGroup: (caseList: SingleCasePoint[]) => void;
         updateBrushPatientGroup: (caseList: SingleCasePoint[], mode: "ADD" | "REPLACE", selectedSet?: SelectSet) => void;
         changeChart: (x: string, y: string, i: string, type: string, outcomeComparison?: string) => void;
+        changeSurgeryTypeSelection: (input: [boolean, boolean, boolean]) => void;
     }
 }
 export function setupProvenance(): AppProvenance {
@@ -99,9 +100,9 @@ export function setupProvenance(): AppProvenance {
         store.proceduresSelection = state ? state.proceduresSelection : store.proceduresSelection
     })
 
-    // provenance.addObserver(["rawproceduresSelection"], (state?: ApplicationState) => {
-    //   store.rawproceduresSelection = state ? state.rawproceduresSelection : store.rawproceduresSelection
-    // })
+    provenance.addObserver(["procedureTypeSelection"], (state?: ApplicationState) => {
+        store.procedureTypeSelection = state ? state.procedureTypeSelection : store.procedureTypeSelection
+    })
 
     //   provenance.addObserver(
     //     ["currentSelectPatient"],
@@ -307,6 +308,14 @@ export function setupProvenance(): AppProvenance {
             })
     }
 
+    const changeSurgeryTypeSelection = (input: [boolean, boolean, boolean]) => {
+        provenance.applyAction(`Change Surgery Type Selection`,
+            (state: ApplicationState) => {
+                state.procedureTypeSelection = input;
+                return state;
+            }
+        )
+    }
 
 
     const toggleShowZero = (event: any, showZero: any) => {
@@ -659,7 +668,8 @@ export function setupProvenance(): AppProvenance {
             changeOutcomesSelection,
             currentOutputFilterSetChange,
             clearSelectSet,
-            clearOutputFilterSet
+            clearOutputFilterSet,
+            changeSurgeryTypeSelection
         }
     };
 
