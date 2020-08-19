@@ -762,5 +762,7 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
             }
         )
     });
+
     return [totalCaseCount, outputData]
+
 }
