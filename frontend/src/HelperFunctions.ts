@@ -34,6 +34,7 @@ export const generateExtrapairPlotDataWithIntervention = (aggregatedBy: string, 
                         preIntData[dataPoint.aggregateAttribute] = dataPoint.preTotalVal;
                         postIntData[dataPoint.aggregateAttribute] = dataPoint.postTotalVal;
                     });
+                    //     console.log(data)
                     newExtraPairData.push({ name: "Total Transfusion", label: "Total", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "BarChart" });
                     break;
 
@@ -622,9 +623,15 @@ export const generateComparisonData = (temporaryDataHolder: any[], showZero: boo
         }
 
         preDataArray.forEach((d: SingleCasePoint) => {
+            let transfusionOutput = d[valueToVisualize] as number
+            if (valueToVisualize === "PRBC_UNITS" && d[valueToVisualize] > 100) {
+                transfusionOutput = (d[valueToVisualize] - 999)
+            } else if (d[valueToVisualize] > 100 && valueToVisualize === "PLT_UNITS") {
+                transfusionOutput = (d[valueToVisualize] - 245)
+            }
             if (valueToVisualize === "CELL_SAVER_ML") {
-                const roundedAnswer = Math.floor(d[valueToVisualize] / 100) * 100
-                if (d[valueToVisualize] === 0) {
+                const roundedAnswer = Math.floor(transfusionOutput / 100) * 100
+                if (transfusionOutput === 0) {
                     preCountDict[-1].push(d)
                 }
                 else if (roundedAnswer > cap) {
@@ -634,19 +641,25 @@ export const generateComparisonData = (temporaryDataHolder: any[], showZero: boo
                     preCountDict[roundedAnswer].push(d)
                 }
             } else {
-                if ((d[valueToVisualize]) > cap) {
+                if ((transfusionOutput) > cap) {
                     preCountDict[cap].push(d)
                 } else {
-                    preCountDict[(d[valueToVisualize])].push(d)
+                    preCountDict[(transfusionOutput)].push(d)
                 }
             }
 
         });
 
         postDataArray.forEach((d: SingleCasePoint) => {
+            let transfusionOutput = d[valueToVisualize] as number
+            if (valueToVisualize === "PRBC_UNITS" && d[valueToVisualize] > 100) {
+                transfusionOutput = (d[valueToVisualize] - 999)
+            } else if (d[valueToVisualize] > 100 && valueToVisualize === "PLT_UNITS") {
+                transfusionOutput = (d[valueToVisualize] - 245)
+            }
             if (valueToVisualize === "CELL_SAVER_ML") {
-                const roundedAnswer = Math.floor(d[valueToVisualize] / 100) * 100
-                if (d[valueToVisualize] === 0) {
+                const roundedAnswer = Math.floor(transfusionOutput / 100) * 100
+                if (transfusionOutput === 0) {
                     postCountDict[-1].push(d)
                 }
                 else if (roundedAnswer > cap) {
@@ -656,10 +669,10 @@ export const generateComparisonData = (temporaryDataHolder: any[], showZero: boo
                     postCountDict[roundedAnswer].push(d)
                 }
             } else {
-                if ((d[valueToVisualize]) > cap) {
+                if ((transfusionOutput) > cap) {
                     postCountDict[cap].push(d)
                 } else {
-                    postCountDict[(d[valueToVisualize])].push(d)
+                    postCountDict[(transfusionOutput)].push(d)
                 }
             }
 
@@ -669,8 +682,23 @@ export const generateComparisonData = (temporaryDataHolder: any[], showZero: boo
             {
 
                 aggregateAttribute: computedData.aggregateAttribute,
-                preTotalVal: sum(preDataArray, d => (d[valueToVisualize] as number)),
-                postTotalVal: sum(postDataArray, d => (d[valueToVisualize] as number)),
+                preTotalVal: sum(preDataArray, d => {
+                    if (valueToVisualize === "PRBC_UNITS" && d[valueToVisualize] > 100) {
+                        return (d[valueToVisualize] - 999)
+                    } else if (d[valueToVisualize] > 100 && valueToVisualize === "PLT_UNITS") {
+                        return (d[valueToVisualize] - 245)
+                    }
+                    return (d[valueToVisualize] as number)
+                }
+                ),
+                postTotalVal: sum(postDataArray, d => {
+                    if (valueToVisualize === "PRBC_UNITS" && d[valueToVisualize] > 100) {
+                        return (d[valueToVisualize] - 999)
+                    } else if (d[valueToVisualize] > 100 && valueToVisualize === "PLT_UNITS") {
+                        return (d[valueToVisualize] - 245)
+                    }
+                    return (d[valueToVisualize] as number)
+                }),
                 prePatienIDList: prePatientIDArray,
                 postPatienIDList: postPatientIDArray,
                 preCaseIDList: preCaseIDArray,
@@ -729,9 +757,17 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
         }
 
         dataArray.forEach((d: SingleCasePoint) => {
+
+            let transfusionOutput = d[valueToVisualize] as number
+            if (valueToVisualize === "PRBC_UNITS" && d[valueToVisualize] > 100) {
+                transfusionOutput = (d[valueToVisualize] - 999)
+            } else if (d[valueToVisualize] > 100 && valueToVisualize === "PLT_UNITS") {
+                transfusionOutput = (d[valueToVisualize] - 245)
+            }
+
             if (valueToVisualize === "CELL_SAVER_ML") {
-                const roundedAnswer = Math.floor(d[valueToVisualize] / 100) * 100
-                if (d[valueToVisualize] === 0) {
+                const roundedAnswer = Math.floor(transfusionOutput / 100) * 100
+                if (transfusionOutput === 0) {
                     countDict[-1].push(d)
                 }
                 else if (roundedAnswer > cap) {
@@ -741,10 +777,10 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
                     countDict[roundedAnswer].push(d)
                 }
             } else {
-                if ((d[valueToVisualize]) > cap) {
+                if ((transfusionOutput) > cap) {
                     countDict[cap].push(d)
                 } else {
-                    countDict[(d[valueToVisualize])].push(d)
+                    countDict[(transfusionOutput)].push(d)
                 }
             }
 
@@ -753,7 +789,14 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
         outputData.push(
             {
                 aggregateAttribute: computedData.aggregateAttribute,
-                totalVal: sum(dataArray, d => (d[valueToVisualize] as number)),
+                totalVal: sum(dataArray, d => {
+                    if (valueToVisualize === "PRBC_UNITS" && d[valueToVisualize] > 100) {
+                        return (d[valueToVisualize] - 999)
+                    } else if (d[valueToVisualize] > 100 && valueToVisualize === "PLT_UNITS") {
+                        return (d[valueToVisualize] - 245)
+                    }
+                    return (d[valueToVisualize] as number)
+                }),
                 patientIDList: patientIDArray,
                 caseIDList: caseIDArray,
                 zeroCaseNum: zeroNum,
