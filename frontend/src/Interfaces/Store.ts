@@ -57,6 +57,7 @@ export default class Store {
     @observable isLoggedIn: boolean = process.env.REACT_APP_REQUIRE_LOGIN === "true" ? false : true;
     @observable previewMode: boolean = false;
     @observable loadingModalOpen: boolean = true;
+    @observable dataLoadingFailed: boolean = false;
     // @observable csrftoken: string | null = ""
 
 }
