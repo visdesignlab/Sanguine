@@ -15,6 +15,7 @@ django-cors-headers = "*"
 coverage = "*"
 gunicorn = "*"
 mysqlclient = "*"
+django-cas-ng = "*"
 
 [scripts]
 collectstatic = "python api/manage.py collectstatic"
