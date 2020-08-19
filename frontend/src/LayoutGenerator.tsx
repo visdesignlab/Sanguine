@@ -1,8 +1,8 @@
 import React, {
-    FC
+    FC, useRef, useLayoutEffect, useState
 } from "react";
 import { inject, observer } from "mobx-react";
-import { Tab, Button } from "semantic-ui-react";
+import { Tab, Button, Ref } from "semantic-ui-react";
 import { actions } from ".";
 import LineUpWrapper from "./LineUpWrapper";
 //import PatientComparisonWrapper from "./Components/PatientComparisonWrapper";
@@ -30,6 +30,7 @@ export type Props = OwnProps;
 
 const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
     const { layoutArray } = store!
+    const [tabWidth, setTabWidth] = useState(1300);
 
     const createElement = (layout: LayoutElement, index: number) => {
         switch (layout.plotType) {
@@ -175,32 +176,47 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
         const newStuff = output.map(d => ({ ...d }))
         return newStuff
     }
+
+    const tabRef = useRef(undefined)
+
+    useLayoutEffect(() => {
+        if (tabRef.current) {
+            setTabWidth((tabRef.current as any).clientWidth)
+            // console.log(tabRef)
+        }
+    }, [tabRef])
+
     const panes = [{
-        menuItem: 'Main', pane: <Tab.Pane key="Main">
+        menuItem: 'Main', pane:
+            <Ref innerRef={tabRef}>
+                <Tab.Pane key="Main" >
 
-            <Responsive
-                onResizeStop={actions.onLayoutchange}
-                onDragStop={actions.onLayoutchange}
-                draggableHandle={".move-icon"}
-                // onLayoutChange={actions.onLayoutchange}
-                // onBreakpointChange={this._onBreakpointChange}
-                className="layout"
-                cols={colData}
-                rowHeight={600}
-                width={1300}
-                //cols={2}
-                //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+                    <Responsive
+                        onResizeStop={actions.onLayoutchange}
+                        onDragStop={actions.onLayoutchange}
+                        draggableHandle={".move-icon"}
+                        // onLayoutChange={actions.onLayoutchange}
+                        // onBreakpointChange={this._onBreakpointChange}
+                        className="layout"
+                        cols={colData}
+                        rowHeight={600}
+                        width={tabWidth}
+                        //cols={2}
+                        //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
 
-                layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
-            >
-                {layoutArray.map((layoutE, i) => {
-                    return createElement(layoutE, i);
-                })}
-            </Responsive>
+                        layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
+                    >
+                        {layoutArray.map((layoutE, i) => {
+
+                            return createElement(layoutE, i);
+
+                        })}
+                    </Responsive>
 
 
 
-        </Tab.Pane >
+                </Tab.Pane >
+            </Ref>
     },
     {
         menuItem: 'LineUp', pane:

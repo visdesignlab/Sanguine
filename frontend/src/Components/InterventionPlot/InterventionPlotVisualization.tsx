@@ -69,8 +69,8 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
             //     height: svgRef.current.clientHeight,
             //     width: svgRef.current.clientWidth
             // });
-            // setWidth(svgRef.current.clientWidth);
-            setWidth(w === 1 ? 542.28 : 1146.97)
+            setWidth(svgRef.current.clientWidth);
+            // setWidth(w === 1 ? 542.28 : 1146.97)
             setHeight(svgRef.current.clientHeight);
         }
     }, [layoutArray, w]);
