@@ -184,7 +184,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
 
         if (minimumWidthScale * datapointsDict.length >= (widthAllowed)) {
             datapointsDict.forEach((d, i) => {
-                spacing[i] = minimumWidthScale;
+                spacing[i] = widthAllowed / datapointsDict.length;
             })
         }
         else {
@@ -203,10 +203,11 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
 
             datapointsDict.forEach((d, i) => {
                 if (!spacing[i]) {
-                    spacing[i] = spaceLeft * d.length / totalDataPointsNotUsingMinimumScale
+                    spacing[i] = spaceLeft * (d.length / totalDataPointsNotUsingMinimumScale)
                 }
             })
         }
+        console.log(widthAllowed, datapointsDict, spacing,)
         let newResultRange: number[] = [];
         let currentLoc = currentOffset.left;
         datapointsDict.forEach((d, i) => {
