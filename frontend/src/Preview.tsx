@@ -1,8 +1,7 @@
 import React, { FC } from 'react';
 import { inject, observer } from 'mobx-react';
 import Store from './Interfaces/Store';
-import { Button, Grid, Container, Modal, Message, Icon, Menu, Checkbox } from 'semantic-ui-react';
-import { actions } from '.';
+import { Button, Grid, Container, Modal, Message, Icon, Menu, Image } from 'semantic-ui-react';
 
 import SideBar from './Components/Utilities/SideBar';
 import styled from 'styled-components';
@@ -23,18 +22,22 @@ type Props = OwnProps;
 
 const Preview: FC<Props> = ({ store, hemoData }: Props) => {
 
-    const { showZero, loadingModalOpen, dataLoadingFailed } = store!;
+    const { loadingModalOpen, dataLoadingFailed } = store!;
     select("#Main-Body").append("div").attr("class", "tooltiptext")
     return (
         <LayoutDiv>
             <Container fluid id="Top-Bar">
                 <Menu widths={3}>
                     <Menu.Item>
-                        <Checkbox
-                            checked={showZero}
-                            onClick={actions.toggleShowZero}
-                            label={<label> Show Zero Transfused </label>}
+                        <Image
+                            style={{ height: "40px" }}
+                            size="small"
+                            as='a'
+                            target="_blank"
+                            src="https://raw.githubusercontent.com/visdesignlab/visdesignlab.github.io/master/assets/images/logos/vdl.png"
+                            href="https://vdl.sci.utah.edu"
                         />
+
                     </Menu.Item>
                     <Menu.Item>
                         {/* <NavLink component={Button} to="/dashboard" >
@@ -43,9 +46,10 @@ const Preview: FC<Props> = ({ store, hemoData }: Props) => {
                         <Button content="Customize Mode" onClick={() => { store!.previewMode = false }} />
                     </Menu.Item>
                     <Menu.Item>
-                        <NavLink component={Button} to="/" onClick={() => { store!.isLoggedIn = false; }} >
+                        <NavLink component={Button} isActive={() => { return false }} to="/" onClick={() => { store!.isLoggedIn = false; }} >
                             Log Out
-                    </NavLink>
+        </NavLink>
+
                     </Menu.Item>
                 </Menu>
             </Container>
