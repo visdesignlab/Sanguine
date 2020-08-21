@@ -150,7 +150,7 @@ LOGIN_URL = '/api/accounts/login'
 
 CAS_SERVER_URL = "https://go.utah.edu/cas/"
 CAS_ADMIN_PREFIX = "api/"
-CAS_REDIRECT_URL = "/"
+CAS_IGNORE_REFERER = True
 CAS_FORCE_SSL_SERVICE_URL = True
 CAS_VERSION = '3'
 CAS_USERNAME_ATTRIBUTE = "unid"
