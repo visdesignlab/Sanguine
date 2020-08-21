@@ -36,19 +36,19 @@ const Logins: FC<Props> = ({ store }: Props) => {
 
 
     useEffect(() => {
-        fetch(`${process.env.REACT_APP_QUERY_URL}accounts/login/`, {
-            method: 'GET',
-            credentials: 'include',
-        })
-        var csrftoken = getCookie('csrftoken');
+        // fetch(`${process.env.REACT_APP_QUERY_URL}accounts/login/`, {
+        //     method: 'GET',
+        //     credentials: 'include',
+        // })
+        // var csrftoken = getCookie('csrftoken');
         //I guess this is how to include credentials?
         fetch(`${process.env.REACT_APP_QUERY_URL}whoami`, {
             method: 'GET',
             credentials: "include",
             headers: {
-                'Accept': 'application/x-www-form-urlencoded',
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRFToken': csrftoken || '',
+                // 'Accept': 'application/x-www-form-urlencoded',
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+                // 'X-CSRFToken': csrftoken || '',
                 "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
                 "Access-Control-Allow-Credentials": "true",
             },
