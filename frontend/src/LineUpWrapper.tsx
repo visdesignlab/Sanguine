@@ -28,7 +28,6 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
     const [distinctCategories, setCatgories] = useState<{ surgeons: any[], anesth: any[], patient: any[] }>({ surgeons: [], anesth: [], patient: [] })
     const [caseIDReference, setCaseIDList] = useState<any>({})
     const [convertedData, setConvertedData] = useState<any[]>([])
-    // const [caseIDArray, setCaseIDArray] = useState<number[]>([])
 
     useEffect(() => {
 
@@ -36,16 +35,16 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
             let distinctSurgeons = new Set();
             let distinctAnesth = new Set();
             let distinctPatient = new Set();
-            let caseIDArray: number[] = []
+
             let caseIDDict: any = {}
             let tempData: any[] = []
             hemoglobinDataSet.forEach((ob: SingleCasePoint, index: number) => {
-                caseIDDict[ob.CASE_ID] = index;
-                caseIDArray.push(ob.CASE_ID);
+                caseIDDict[ob.CASE_ID] = ob;
+
                 distinctAnesth.add((ob.ANESTHESIOLOGIST_ID).toString());
                 distinctSurgeons.add((ob.SURGEON_ID).toString());
                 distinctPatient.add(ob.PATIENT_ID.toString());
-                caseIDArray.push(ob.CASE_ID)
+
                 // let oldObject = ob;
                 let oldObject = {}
                 oldObject = {
@@ -125,8 +124,12 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                             const filter_output = lineup.data.getFirstRanking().getGroups()[0].order
 
                             const caseIDList = filter_output.map(v => convertedData[v].CASE_ID)
-                            actions.updateSelectedPatientGroup(caseIDList)
-                            console.log(caseIDList)
+
+                            const finalOutput = caseIDList.map(d => caseIDReference[d])
+                            //This needs to output a list of Cases not numbers
+
+                            actions.updateSelectedPatientGroup(finalOutput)
+                            console.log(finalOutput)
                         }, 1000)
                         // console.log(previous, current); // filter settings
                         // console.log(lineup.data.getFirstRanking().getGroups())
@@ -139,7 +142,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                 }
             }
         })
-
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [distinctCategories, convertedData])
     console.log(lineup)
     //line 114 is denying the loop
