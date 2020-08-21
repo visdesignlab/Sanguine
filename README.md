@@ -52,7 +52,7 @@ systemctl --user restart api.service
 cd frontend
 /usr/bin/scl enable rh-nodejs10 -- npm run build
 sudo /usr/bin/rsync -av /uufs/chpc.utah.edu/common/HIPAA/IRB_00124248/deployed-app/bloodvis/frontend/build/* /var/www/html
-/usr/bin/chown -R apache. /var/www/html
+sudo /usr/bin/chown -R apache. /var/www/html
 sudo systemctl restart httpd24-httpd
 ```
 
