@@ -68,6 +68,7 @@ export interface SingleCasePoint {
     B12: number;
     TXA: number;
     AMICAR: number;
+    SURGERY_TYPE: number;
     [key: string]: number | string;
 }
 export interface ScatterDataPoint {
@@ -89,7 +90,6 @@ export interface ExtraPairPoint {
     data: any[];
     type: string;
     label: string;
-    kdeMax?: number;
     medianSet?: any;
 }
 
@@ -99,7 +99,6 @@ export interface ExtraPairInterventionPoint {
     preIntData: any[];
     postIntData: any[];
     type: string;
-    kdeMax?: number;
     totalMedianSet?: any;
     preMedianSet?: any;
     postMedianSet?: any;
@@ -111,6 +110,7 @@ export interface ApplicationState {
     outcomesSelection: string;
     rawDateRange: number[];
     proceduresSelection: string[];
+    procedureTypeSelection: [boolean, boolean, boolean];
     //rawproceduresSelection: string;
     totalAggregatedCaseCount: number;
     totalIndividualCaseCount: number;
@@ -146,6 +146,7 @@ export interface LayoutElement {
 
 export const defaultState: ApplicationState = {
     layoutArray: [],
+    procedureTypeSelection: [true, true, true],
     outcomesSelection: "",
     // currentSelectedChart: "-1",
     rawDateRange: [new Date(2014, 0, 1).getTime(), new Date(2019, 11, 31).getTime()],

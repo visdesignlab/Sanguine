@@ -8,7 +8,7 @@ import * as LineUpJS from "lineupjs"
 import "lineupjs/build/LineUpJS.css";
 import $ from 'jquery';
 
-import { BloodProductCap } from "./PresetsProfile";
+import { BloodProductCap, surgeryTypeArray } from "./PresetsProfile";
 import { actions } from ".";
 import { stateUpdateWrapperUseJSON } from "./HelperFunctions";
 import { SingleCasePoint } from "./Interfaces/ApplicationState";
@@ -71,7 +71,8 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                     VENT: ob.VENT.toString(),
                     B12: ob.B12.toString(),
                     AMICAR: ob.AMICAR.toString(),
-                    TXA: ob.TXA.toString()
+                    TXA: ob.TXA.toString(),
+                    SURGERY_TYPE: surgeryTypeArray[ob.SURGERY_TYPE]
                 }
 
                 tempData.push(oldObject);
@@ -103,6 +104,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                         .column(LineUpJS.buildCategoricalColumn("DEATH").categories(["0", "1"]))
                         .column(LineUpJS.buildCategoricalColumn('ECMO').categories(["0", "1"]))
                         .column(LineUpJS.buildCategoricalColumn("STROKE").categories(["0", "1"]))
+                        .column(LineUpJS.buildCategoricalColumn("SURGERY_TYPE").categories(surgeryTypeArray))
                         .column(LineUpJS.buildDateColumn("DATE"))
                         .column(LineUpJS.buildNumberColumn("DRG_WEIGHT", [0, 30]))
                         .column(LineUpJS.buildNumberColumn("PREOP_HGB", [0, 18]))
@@ -139,21 +141,21 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
         })
 
     }, [distinctCategories, convertedData])
-
+    console.log(lineup)
     //line 114 is denying the loop
     //Lineup is never defined somehow.
-    useEffect(() => {
-        //    console.log(lineup)
-        if (lineup !== undefined) {
-            console.log('called inside')
-            let outputIndex: number[] = [];
-            //   currentSelectPatientGroup.forEach(item => outputIndex.push(caseIDReference[item.CASE_ID]));
-            console.log(outputIndex)
-            //    lineup.setSelection(outputIndex);
+    // useEffect(() => {
+    //     //    console.log(lineup)
+    //     if (lineup !== undefined) {
+    //         console.log('called inside')
+    //         let outputIndex: number[] = [];
+    //         //   currentSelectPatientGroup.forEach(item => outputIndex.push(caseIDReference[item.CASE_ID]));
+    //         console.log(outputIndex)
+    //         //    lineup.setSelection(outputIndex);
 
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    //     }
+    //     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // }, [])
 
 
 

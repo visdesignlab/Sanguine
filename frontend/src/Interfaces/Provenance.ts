@@ -43,7 +43,8 @@ interface AppProvenance {
 
         updateSelectedPatientGroup: (caseList: SingleCasePoint[]) => void;
         updateBrushPatientGroup: (caseList: SingleCasePoint[], mode: "ADD" | "REPLACE", selectedSet?: SelectSet) => void;
-        changeChart: (x: string, y: string, i: string, type: string, comparisonChartType?: string) => void;
+        changeChart: (x: string, y: string, i: string, type: string, outcomeComparison?: string) => void;
+        changeSurgeryTypeSelection: (input: [boolean, boolean, boolean]) => void;
     }
 }
 export function setupProvenance(): AppProvenance {
@@ -56,14 +57,15 @@ export function setupProvenance(): AppProvenance {
         //}
         store.isAtRoot = isAtRoot;
         store.isAtLatest = provenance.current().children.length === 0;
+        console.log("state change")
     })
 
     provenance.addObserver(["currentSelectPatientGroup"], (state?: ApplicationState) => {
         store.currentSelectPatientGroup = state ? state.currentSelectPatientGroup : store.currentSelectPatientGroup;
     })
 
-    provenance.addObserver(["currentBrushedPatientGroup"], async (state?: ApplicationState) => {
-        store.currentBrushedPatientGroup = state ? state.currentBrushedPatientGroup : store.currentBrushedPatientGroup
+    provenance.addObserver(["currentBrushedPatientGroup"], (state?: ApplicationState) => {
+        store.currentBrushedPatientGroup = state ? state.currentBrushedPatientGroup : store.currentBrushedPatientGroup;
     })
 
     provenance.addObserver(["nextAddingIndex"], (state?: ApplicationState) => {
@@ -99,18 +101,9 @@ export function setupProvenance(): AppProvenance {
         store.proceduresSelection = state ? state.proceduresSelection : store.proceduresSelection
     })
 
-    // provenance.addObserver(["rawproceduresSelection"], (state?: ApplicationState) => {
-    //   store.rawproceduresSelection = state ? state.rawproceduresSelection : store.rawproceduresSelection
-    // })
-
-    //   provenance.addObserver(
-    //     ["currentSelectPatient"],
-    //     (state?: ApplicationState) => {
-    //       store.currentSelectPatient = state
-    //         ? state.currentSelectPatient
-    //         : store.currentSelectPatient;
-    //     }
-    //   );
+    provenance.addObserver(["procedureTypeSelection"], (state?: ApplicationState) => {
+        store.procedureTypeSelection = state ? state.procedureTypeSelection : store.procedureTypeSelection
+    })
 
     provenance.addObserver(["currentSelectSet"], (state?: ApplicationState) => {
         store.currentSelectSet = state
@@ -266,13 +259,19 @@ export function setupProvenance(): AppProvenance {
                 state.layoutArray = state.layoutArray.filter(
                     d => d.i !== remove_index
                 );
-                console.log(state)
+                if (state.layoutArray.length === 0) {
+                    store.totalAggregatedCaseCount = 0;
+                    store.totalIndividualCaseCount = 0;
+                    state.currentBrushedPatientGroup = [];
+                }
+                console.log(state, store)
                 return state;
             }
+
         );
     }
 
-    const changeChart = (x: string, y: string, i: string, type: string, comparisonChartType?: string) => {
+    const changeChart = (x: string, y: string, i: string, type: string, outcomeComparison?: string) => {
         provenance.applyAction(
             `change chart ${i}`,
             (state: ApplicationState) => {
@@ -281,13 +280,14 @@ export function setupProvenance(): AppProvenance {
                         d.aggregatedBy = x;
                         d.valueToVisualize = y;
                         d.plotType = type;
-                        if (comparisonChartType) {
-                            d.comparisonChartType = comparisonChartType;
+                        if (outcomeComparison) {
+                            d.outcomeComparison = outcomeComparison === "NONE" ? undefined : outcomeComparison;
+
                         }
                     }
                     return d
                 })
-                console.log(state)
+
                 return state
             }
         )
@@ -306,6 +306,14 @@ export function setupProvenance(): AppProvenance {
             })
     }
 
+    const changeSurgeryTypeSelection = (input: [boolean, boolean, boolean]) => {
+        provenance.applyAction(`Change Surgery Type Selection`,
+            (state: ApplicationState) => {
+                state.procedureTypeSelection = input;
+                return state;
+            }
+        )
+    }
 
 
     const toggleShowZero = (event: any, showZero: any) => {
@@ -313,7 +321,7 @@ export function setupProvenance(): AppProvenance {
             `Per Case ${showZero}`,
             (state: ApplicationState) => {
                 state.showZero = showZero.checked;
-                console.log(state)
+
                 return state;
             }
         )
@@ -436,7 +444,7 @@ export function setupProvenance(): AppProvenance {
     //     })
     //   };
 
-
+    //TODO see if this can be optimized 
     const updateBrushPatientGroup = (caseList: SingleCasePoint[], mode: "ADD" | "REPLACE", selectedSet?: SelectSet) => {
         provenance.applyAction(
             `Update Selected Patients Group`,
@@ -449,20 +457,20 @@ export function setupProvenance(): AppProvenance {
                         }
                     }
                     if (selectedSet) {
+
                         const addingType = selectedSet.setName;
                         const alreadyIn = state.currentSelectSet.filter(d => d.setName === addingType).length > 0
                         if (!alreadyIn) {
+                            console.log('not in here yet')
                             state.currentSelectSet.push(selectedSet)
                         } else {
+                            console.log("already in here")
                             state.currentSelectSet = state.currentSelectSet.map((d) => {
                                 if (d.setName === addingType) {
                                     const indexOfElement = d.setValues.indexOf(selectedSet.setValues[0])
-                                    if (indexOfElement > 0) {
-                                        d.setValues = d.setValues.splice(indexOfElement, 1);
-                                        //     d.setPatientIds = d.setPatientIds.splice(indexOfElement, 1);
-                                    } else {
+                                    if (indexOfElement < 0) {
                                         d.setValues = d.setValues.concat(selectedSet.setValues)
-                                        //  d.setPatientIds = d.setPatientIds.concat(data.setPatientIds)
+
                                     }
                                 }
                                 return d
@@ -483,6 +491,7 @@ export function setupProvenance(): AppProvenance {
                         }
                     }
                 }
+                console.log(state)
                 return state;
             }
         )
@@ -523,7 +532,7 @@ export function setupProvenance(): AppProvenance {
                         state.currentSelectSet = state.currentSelectSet.map((d) => {
                             if (d.setName === addingType) {
                                 const indexOfElement = d.setValues.indexOf(data.setValues[0])
-                                if (indexOfElement > 0) {
+                                if (indexOfElement >= 0) {
                                     d.setValues = d.setValues.splice(indexOfElement, 1);
                                     //     d.setPatientIds = d.setPatientIds.splice(indexOfElement, 1);
                                 } else {
@@ -658,7 +667,8 @@ export function setupProvenance(): AppProvenance {
             changeOutcomesSelection,
             currentOutputFilterSetChange,
             clearSelectSet,
-            clearOutputFilterSet
+            clearOutputFilterSet,
+            changeSurgeryTypeSelection
         }
     };
 

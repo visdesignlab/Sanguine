@@ -1,7 +1,7 @@
 
 import React, { FC } from "react";
 import { inject, observer } from "mobx-react";
-import { extraPairWidth, extraPairPadding, offset, Accronym } from "../../PresetsProfile";
+import { extraPairWidth, extraPairPadding, offset, AcronymDictionary } from "../../PresetsProfile";
 import { actions } from "../..";
 // import ExtraPairViolin from "../BarChart/ExtraPairViolin";
 // import ExtraPairBar from "../BarChart/ExtraPairBar";
@@ -55,7 +55,7 @@ const InterventionExtraPairGenerator: FC<Props> = ({ extraPairDataSet, aggregati
                 break;
         }
 
-        let tooltipText = `${(Accronym as any)[nameInput] ? `${(Accronym as any)[nameInput]}<br/>` : ""}
+        let tooltipText = `${AcronymDictionary[nameInput] ? `${AcronymDictionary[nameInput]}<br/>` : ""}
                  ${explanation}
                 <br/> <small>Click to remove</small>`;
 
@@ -94,8 +94,7 @@ const InterventionExtraPairGenerator: FC<Props> = ({ extraPairDataSet, aggregati
                         // aggregatedScale={aggregationScale}
                         aggregationScaleDomain={aggregationScaleDomain}
                         aggregationScaleRange={aggregationScaleRange}
-                        name={pairData.name}
-                        kdeMax={pairData.kdeMax ? pairData.kdeMax : (0)} />,
+                        name={pairData.name} />,
                         {extraPairTextGenerator(pairData.name, pairData.label, "Violin", pairData)}
                 </g>);
                 break;

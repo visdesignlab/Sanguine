@@ -5,11 +5,12 @@ import { actions } from "../..";
 import { BarChartDataPoint, ExtraPairPoint } from '../../Interfaces/ApplicationState'
 import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, extraPairOptions, ChartSVG } from "../../PresetsProfile"
 import BarChart from "./BarChart"
-import { Button, Icon, Grid, Dropdown, Menu, Modal, Form, Message } from "semantic-ui-react";
+import { Icon, Grid, Dropdown, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
 import { sum, median } from "d3";
 import axios from 'axios'
 import { stateUpdateWrapperUseJSON, generateExtrapairPlotData } from "../../HelperFunctions";
+import NotationForm from "../Utilities/NotationForm";
 
 interface OwnProps {
     aggregatedBy: string;
@@ -33,7 +34,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         currentSelectPatientGroupIDs,
         currentOutputFilterSet,
         previewMode,
-        dateRange,
+        dateRange, procedureTypeSelection
 
     } = store!;
     const svgRef = useRef<SVGSVGElement>(null);
@@ -51,10 +52,8 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     // const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
     const [extraPairData, setExtraPairData] = useState<ExtraPairPoint[]>([])
     const [stripPlotMode, setStripMode] = useState(false);
-    const [caseIDList, setCaseIDList] = useState<any>(null)
-    const [extraPairArray, setExtraPairArray] = useState([])
-    const [openNotationModal, setOpenNotationModal] = useState(false)
-    const [notationInput, setNotationInput] = useState(notation)
+    // const [caseIDList, setCaseIDList] = useState<any>(null)
+    const [extraPairArray, setExtraPairArray] = useState([]);
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
 
@@ -66,8 +65,8 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     useLayoutEffect(() => {
         if (svgRef.current) {
             setDimensionHeight(svgRef.current.clientHeight);
-            // setDimensionWidth(svgRef.current.clientWidth)
-            setDimensionWidth(w === 1 ? 542.28 : 1146.97)
+            setDimensionWidth(svgRef.current.clientWidth)
+            //  setDimensionWidth(w === 1 ? 542.28 : 1146.97)
         }
     }, [layoutArray, w]);
 
@@ -88,7 +87,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
             const dataResult = response.data
             if (dataResult) {
                 let yMaxTemp = -1;
-                let caseDictionary = {} as any;
+                // let caseDictionary = {} as any;
 
 
 
@@ -107,11 +106,14 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                             }
                         }
                     }
+                    if (!procedureTypeSelection[ob.SURGERY_TYPE]) {
+                        criteriaMet = false;
+                    }
                     if (criteriaMet) {
 
-                        ob.case_id.forEach((singleId: any) => {
-                            caseDictionary[singleId] = true;
-                        })
+                        // ob.case_id.forEach((singleId: any) => {
+                        //  //   caseDictionary[singleId] = true;
+                        // })
 
 
 
@@ -159,7 +161,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
 
                 cast_data = cast_data.filter((d: any) => d)
                 stateUpdateWrapperUseJSON(data, cast_data, setData)
-                stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList)
+                //   stateUpdateWrapperUseJSON(caseIDList, caseDictionary, setCaseIDList)
                 setYMax(yMaxTemp);
                 store!.totalAggregatedCaseCount = caseCount;
                 console.log(cast_data)
@@ -173,16 +175,16 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                 }
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [proceduresSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentOutputFilterSet, currentSelectPatientGroupIDs]);
+    }, [proceduresSelection, procedureTypeSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentOutputFilterSet, currentSelectPatientGroupIDs]);
 
 
 
     useEffect(() => {
         console.log("using effect")
-        const newExtraPairData = generateExtrapairPlotData(caseIDList, aggregatedBy, hemoglobinDataSet, extraPairArray, data)
+        const newExtraPairData = generateExtrapairPlotData(aggregatedBy, hemoglobinDataSet, extraPairArray, data)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extraPairArray, data, hemoglobinDataSet, caseIDList, aggregatedBy]);
+    }, [extraPairArray, data, hemoglobinDataSet, aggregatedBy]);
 
 
 
@@ -236,15 +238,15 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item>
-                        <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
+                        {/* <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
                             <Icon name="edit" />
-                        </Menu.Item>
+                        </Menu.Item> */}
 
                         {/* Modal for annotation. */}
-                        <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
+                        {/* <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
                             <Modal.Header>
                                 Set the annotation for chart
-              </Modal.Header>
+                        </Modal.Header>
                             <Modal.Content>
                                 <Form>
                                     <Form.TextArea autoFocus
@@ -265,7 +267,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                                 <Button content="Save" positive onClick={() => { setOpenNotationModal(false); actions.changeNotation(chartId, notationInput); }} />
                                 <Button content="Cancel" onClick={() => { setOpenNotationModal(false) }} />
                             </Modal.Actions>
-                        </Modal>
+                        </Modal> */}
 
 
                     </Menu>
@@ -299,7 +301,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                         />
                     </ChartSVG>
                     {/* <Container>{notation}</Container> */}
-                    <Message hidden={notation.length === 0} >{notation}</Message>
+                    <NotationForm notation={notation} chartId={chartId} />
 
                 </Grid.Column>
             </Grid.Row>

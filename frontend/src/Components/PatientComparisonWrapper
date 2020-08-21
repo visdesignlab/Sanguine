@@ -6,7 +6,7 @@
 // import { inject, observer } from "mobx-react";
 // import Store from "../Interfaces/Store";
 // import { List } from "semantic-ui-react";
-// import { HIPAA_Sensitive, AxisLabelDict, stateUpdateWrapperUseJSON } from "../PresetsProfile";
+// import { HIPAA_Sensitive, AcronymDictionary, stateUpdateWrapperUseJSON } from "../PresetsProfile";
 
 // interface OwnProps {
 //     store?: Store;
@@ -79,7 +79,7 @@
 //                     result.push(
 
 //                         <List.Item>
-//                             <List.Content>{AxisLabelDict[key] ? AxisLabelDict[key] : key}</List.Content>
+//                             <List.Content>{AcronymDictionary[key] ? AcronymDictionary[key] : key}</List.Content>
 //                             <List.Description>{val as string}</List.Description>
 //                         </List.Item>)
 //                 }
