@@ -36,14 +36,29 @@ const Logins: FC<Props> = ({ store }: Props) => {
 
 
     useEffect(() => {
+        fetch(`${process.env.REACT_APP_QUERY_URL}accounts/login/`, {
+            method: 'GET',
+            credentials: 'include',
+        })
+        var csrftoken = getCookie('csrftoken');
+        //I guess this is how to include credentials?
         fetch(`${process.env.REACT_APP_QUERY_URL}whoami`, {
-            method: 'GET'
+            method: 'GET',
+            credentials: "include",
+            headers: {
+                'Accept': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrftoken || '',
+                "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
+                "Access-Control-Allow-Credentials": "true",
+            },
         }).then(response => {
             //TODO if logged in, it is 200 right?
             if (response.status === 200) {
                 store!.isLoggedIn = true;
             }
         })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
 
