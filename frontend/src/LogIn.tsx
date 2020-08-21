@@ -13,8 +13,7 @@ interface OwnProps {
 type Props = OwnProps;
 
 const Logins: FC<Props> = ({ store }: Props) => {
-    // const username = useFormInput('');
-    // const password = useFormInput('');
+
     const { isLoggedIn } = store!;
 
 
@@ -33,6 +32,26 @@ const Logins: FC<Props> = ({ store }: Props) => {
     useEffect(() => {
         setOpenWarning(!isChrome)
     }, [isChrome])
+
+
+    useEffect(() => {
+
+        fetch(`${process.env.REACT_APP_QUERY_URL}whoami`, {
+            method: 'GET',
+            credentials: "include",
+            headers: {
+                "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
+                "Access-Control-Allow-Credentials": "true",
+            },
+        }).then(response => {
+            if (response.status === 200) {
+                store!.isLoggedIn = true;
+            } else {
+                window.location.replace(`${process.env.REACT_APP_QUERY_URL}accounts/login/`);
+            }
+        })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
 
 

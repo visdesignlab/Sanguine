@@ -40,15 +40,19 @@ To use this, make sure you are on the campus network. If off-campus, use a VPN t
 Link the systemd service files to the correct place for the user
 
 ```
+# First time set up
 systemctl --user enable $(pwd)/api.service
-
-# Check that the enable worked
 systemctl --user status api.service
-
 systemctl --user start api.service
 
-# Start the frontend
-screen
-npm run start
+# Restart the api
+systemctl --user restart api.service
+
+# Start/restart the frontend
+cd frontend
+/usr/bin/scl enable rh-nodejs10 -- npm run build
+sudo /usr/bin/rsync -av /uufs/chpc.utah.edu/common/HIPAA/IRB_00124248/deployed-app/bloodvis/frontend/build/* /var/www/html
+sudo /usr/bin/chown -R apache. /var/www/html
+sudo systemctl restart httpd24-httpd
 ```
 
