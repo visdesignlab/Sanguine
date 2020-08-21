@@ -2,7 +2,7 @@ import React, {
     FC, useRef, useLayoutEffect, useState
 } from "react";
 import { inject, observer } from "mobx-react";
-import { Tab, Button, Ref } from "semantic-ui-react";
+import { Tab, Button } from "semantic-ui-react";
 import { actions } from ".";
 import LineUpWrapper from "./LineUpWrapper";
 //import PatientComparisonWrapper from "./Components/PatientComparisonWrapper";
@@ -196,34 +196,34 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
     const panes = [{
         menuItem: 'Main', pane:
 
-                <Tab.Pane key="Main" >
+            <Tab.Pane key="Main" >
 
-                    <Responsive
-                        onResizeStop={actions.onLayoutchange}
-                        onDragStop={actions.onLayoutchange}
-                        draggableHandle={".move-icon"}
-                        // onLayoutChange={actions.onLayoutchange}
-                        // onBreakpointChange={this._onBreakpointChange}
-                        className="layout"
-                        cols={colData}
-                        rowHeight={600}
-                        width={tabWidth}
-                        //cols={2}
-                        //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+                <Responsive
+                    onResizeStop={actions.onLayoutchange}
+                    onDragStop={actions.onLayoutchange}
+                    draggableHandle={".move-icon"}
+                    // onLayoutChange={actions.onLayoutchange}
+                    // onBreakpointChange={this._onBreakpointChange}
+                    className="layout"
+                    cols={colData}
+                    rowHeight={600}
+                    width={tabWidth}
+                    //cols={2}
+                    //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
 
-                        layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
-                    >
-                        {layoutArray.map((layoutE, i) => {
+                    layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
+                >
+                    {layoutArray.map((layoutE, i) => {
 
-                            return createElement(layoutE, i);
+                        return createElement(layoutE, i);
 
-                        })}
-                    </Responsive>
+                    })}
+                </Responsive>
 
 
 
-                </Tab.Pane >
-    
+            </Tab.Pane >
+
     },
     {
         menuItem: 'LineUp', pane:
