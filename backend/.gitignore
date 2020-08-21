@@ -4,3 +4,5 @@ api/db.sqlite3
 api/static
 *.DS_Store
 *.coverage
+.env
+.env.prod

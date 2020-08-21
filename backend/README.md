@@ -15,17 +15,29 @@ This API uses pipenv and django to serve up the dynamically queried data. To ins
 
 Once pipenv has finished setting up, run `pipenv run serve` to run a local development server at http://127.0.0.1:8000/.
 
-**NOTE**: You will need access to the University of Utah health records database with a VPN to query any data.
+**NOTE**: You will need access to the University of Utah health records database with a VPN to query any data. You will also need to set the credentials for the data warehouse
+
+## MYSQL
+
+To store sessions data, we're using mysql. There are a couple of commands required to set everything up
+
+```
+# Create a user
+CREATE USER '<user>'@'<host>' IDENTIFIED BY '<password>'
+
+# Create a db
+CREATE DATABASE bloodvis CHARACTER SET utf8 COLLATE utf8_bin
+```
 
 ## Deploying In Production
 
-Not yet applicable.
+To deploy in production, there are a number of dependencies. Of course, we'll need python3 and pipenv to start. We'll also need mysql running on the backend server with the correct username and password defined in the .env file.
 
 ## Route Documentation 
 
 There are several routes set up for accessing the patient and surgery data. Here are the names, allowed methods, parameters, descriptions, and examples:
 
-- Name: `/admin` (From [django admin module](https://docs.djangoproject.com/en/2.2/ref/contrib/admin/))
+- Name: `api/admin` (From [django admin module](https://docs.djangoproject.com/en/2.2/ref/contrib/admin/))
   - Allowed Methods: `GET`
   - Parameters: `None`
   - Description: Access through a browser to manage users.
@@ -34,13 +46,21 @@ There are several routes set up for accessing the patient and surgery data. Here
     curl '127.0.0.1:8000/admin'
     ```
 
-- Name: `/accounts/*` (From [django auth module](https://docs.djangoproject.com/en/2.2/topics/auth/))
+- Name: `api/accounts/*` (From [django auth module](https://docs.djangoproject.com/en/2.2/topics/auth/))
   - Allowed Methods: `POST, GET, PUT, DELETE` 
   - Parameters: `None`
-  - Description: Manage your own account, reset passwords, login, logout, etc.s
+  - Description: Manage your own account, reset passwords, login, logout, etc.
   - Example:
     ```
     curl '127.0.0.1:8000/accounts/{login,logout,etc.}'
+    ```
+
+- Name: `/api/whoami` 
+  - Allowed Methods: `GET`
+  - Parameters: `None`
+  - Description: Base API endpoint. Returns user email and 200.
+    ```
+    curl '127.0.0.1:8000/api/whoami'
     ```
 
 - Name: `/api` 
