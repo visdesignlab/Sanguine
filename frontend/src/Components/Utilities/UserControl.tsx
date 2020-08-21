@@ -251,7 +251,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                                     'Accept': 'application/x-www-form-urlencoded',
                                                     'Content-Type': 'application/x-www-form-urlencoded',
                                                     'X-CSRFToken': csrftoken || '',
-                                                    "Access-Control-Allow-Origin": 'http://localhost:3000',
+                                                    "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
                                                     "Access-Control-Allow-Credentials": "true",
                                                 },
                                                 body: JSON.stringify({ name: d })
@@ -295,7 +295,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                         'Accept': 'application/x-www-form-urlencoded',
                                         'Content-Type': 'application/x-www-form-urlencoded',
                                         'X-CSRFToken': csrftoken || '',
-                                        "Access-Control-Allow-Origin": 'http://localhost:3000',
+                                        "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
                                         "Access-Control-Allow-Credentials": "true",
                                     },
                                     body: JSON.stringify({ old_name: stateName, new_name: stateName, new_definition: provenance.exportState(false) })
@@ -308,7 +308,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                         'Accept': 'application/x-www-form-urlencoded',
                                         'Content-Type': 'application/x-www-form-urlencoded',
                                         'X-CSRFToken': csrftoken || '',
-                                        "Access-Control-Allow-Origin": 'http://localhost:3000',
+                                        "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
                                         "Access-Control-Allow-Credentials": "true",
                                     },
                                     body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&definition=${provenance.exportState(false)}`
