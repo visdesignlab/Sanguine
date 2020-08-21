@@ -195,7 +195,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
 
     const panes = [{
         menuItem: 'Main', pane:
-            <Ref innerRef={tabRef}>
+
                 <Tab.Pane key="Main" >
 
                     <Responsive
@@ -223,7 +223,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
 
 
                 </Tab.Pane >
-            </Ref>
+    
     },
     {
         menuItem: 'LineUp', pane:
