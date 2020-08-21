@@ -29,6 +29,8 @@ const DetailView: FC<Props> = ({ hemoData, store }: Props) => {
     const [searchCaseVal, setSearchCaseVal] = useState("");
     const [caseSearchResult, setCaseSearchResult] = useState<any[]>([]);
 
+
+
     useEffect(() => {
         async function fetchIndividualInformaiton() {
 
@@ -63,6 +65,12 @@ const DetailView: FC<Props> = ({ hemoData, store }: Props) => {
         fetchIndividualInformaiton()
 
     }, [currentSelectPatient, individualInfo])
+
+    useEffect(() => {
+        if (currentBrushedPatientGroup.length === 0) {
+            setCurrentSelectPatient(undefined)
+        }
+    }, [currentBrushedPatientGroup])
 
     const generate_List_Items = () => {
         let result = [];
