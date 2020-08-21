@@ -5,7 +5,7 @@ import { Grid, Container, List, Button, Header, Search, Checkbox, Icon, Dropdown
 import { inject, observer } from "mobx-react";
 import { scaleLinear, timeFormat, max, select, axisTop } from "d3";
 import { actions } from "../..";
-import { AxisLabelDict, Accronym, postop_color, Title, OutcomeType } from "../../PresetsProfile";
+import { AcronymDictionary, postop_color, Title, OutcomeType, SurgeryType } from "../../PresetsProfile";
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import { defaultState } from "../../Interfaces/ApplicationState";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
@@ -32,10 +32,11 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         currentBrushedPatientGroup,
         outcomesSelection,
         showZero,
+        procedureTypeSelection,
         proceduresSelection } = store!;
 
     const [surgerySearchResult, setsurgerySearchResult] = useState<any[]>([]);
-    const [caseSearchResult, setCaseSearchResult] = useState<any[]>([])
+    //   const [caseSearchResult, setCaseSearchResult] = useState<any[]>([])
 
     const [maxCaseCount, setMaxCaseCount] = useState(0);
     const [itemSelected, setItemSelected] = useState<any[]>([]);
@@ -43,7 +44,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
     const [surgeryList, setSurgeryList] = useState<any[]>([]);
 
     const [searchSurgeryVal, setSearchSurgeryVal] = useState("");
-    const [searchCaseVal, setSearchCaseVal] = useState("");
+    //  const [searchCaseVal, setSearchCaseVal] = useState("");
 
     const [width, setWidth] = useState(0);
     const svgRef = useRef<SVGSVGElement>(null);
@@ -162,8 +163,8 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             proceduresSelection.forEach((d, i) => {
                 const stringArray = d.split(" ")
                 stringArray.forEach((word, index) => {
-                    if ((Accronym as any)[word]) {
-                        output.push((<div className="tooltip" style={{ cursor: "help" }}>{word}<span className="tooltiptext">{`${(Accronym as any)[word]}`}</span></div>))
+                    if ((AcronymDictionary as any)[word]) {
+                        output.push((<div className="tooltip" style={{ cursor: "help" }}>{word}<span className="tooltiptext">{`${(AcronymDictionary as any)[word]}`}</span></div>))
                     } else {
                         output.push((<span>{`${index !== 0 ? " " : ""}${word}${index !== stringArray.length - 1 ? " " : ""}`}</span>))
                     }
@@ -182,7 +183,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             output.push(
                 <FilterListIT key={"Patient Circled"} style={{ textAlign: "left" }}
                     onClick={() => { actions.updateSelectedPatientGroup([]) }}
-                    content={`${currentSelectPatientGroup.length} patients filtered`}>
+                >
                     <List.Header>Cases Filtered</List.Header>
                     <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
                     <List.Item>{currentSelectPatientGroup.length}</List.Item>
@@ -193,15 +194,15 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
 
     const generateBrushPatientItem = () => {
         if (currentBrushedPatientGroup.length > 0) {
-            return (<List.Item
+            return (<FilterListIT
                 style={{ textAlign: "left" }}
                 key="Brushed Patients"
                 onClick={() => { actions.updateBrushPatientGroup([], "REPLACE") }}
-                content={`${currentBrushedPatientGroup.length} patients selected`}>
+            >
                 <List.Header>Cases Selected</List.Header>
                 <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
                 <List.Item>{currentBrushedPatientGroup.length}</List.Item>
-            </List.Item>)
+            </FilterListIT>)
         }
     }
 
@@ -212,6 +213,12 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         else if (data.value.length > 1) {
             actions.dateRangeChange([data.value[0], data.value[1]])
         }
+    }
+
+    const calculateSelectedProcedureType = () => {
+        let output = procedureTypeSelection.map((d, i) => d ? i : -1)
+        output = output.filter(d => d > -1)
+        return output
     }
 
 
@@ -226,7 +233,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
         >
 
             <Grid.Row centered  >
-                <Container style={{ paddingLeft: "15px", height: "35vh" }}>
+                <Container style={{ paddingLeft: "15px", height: "40vh" }}>
                     <List>
 
                         <List.Header style={{ textAlign: "left" }}>
@@ -243,6 +250,18 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                             <List.Header>Outcomes/Interventions</List.Header>
                             <Dropdown value={outcomesSelection} clearable selection options={OutcomeType} onChange={(e, v) => { actions.changeOutcomesSelection((v.value as string)) }} />
 
+                        </List.Item>
+                        <List.Item key="Procedure Types" style={{ textAlign: "left" }}>
+                            <List.Header>Surgery Types</List.Header>
+                            <Dropdown options={SurgeryType} clearable multiple selection
+                                value={calculateSelectedProcedureType()}
+                                onChange={(e, v) => {
+                                    let newSurgerySelection: [boolean, boolean, boolean] = [false, false, false];
+                                    if (v.value) {
+                                        (v.value as number[]).forEach(d => { newSurgerySelection[d] = true })
+                                    }
+                                    actions.changeSurgeryTypeSelection(newSurgerySelection)
+                                }} />
                         </List.Item>
 
                         <List.Item style={{ textAlign: "left" }} key="Show Zero">
@@ -292,8 +311,8 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                                 //icon="caret right"
                                 key={`${selectSet.setName}selected`}
                                 onClick={() => { actions.clearOutputFilterSet(selectSet.setName) }}
-                                content={`${AxisLabelDict[selectSet.setName]}: ${selectSet.setValues.sort()}`}>
-                                <List.Header>{AxisLabelDict[selectSet.setName]}</List.Header>
+                            >
+                                <List.Header>{AcronymDictionary[selectSet.setName]}</List.Header>
                                 <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
 
                                 <List.Content >{selectSet.setValues.sort().join(', ')}</List.Content>
@@ -317,8 +336,8 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                             return <FilterListIT
                                 key={`${selectSet.setName}currentselecting`}
                                 onClick={() => { actions.clearSelectSet(selectSet.setName) }}
-                                content={`${AxisLabelDict[selectSet.setName]} - ${selectSet.setValues.sort()}`}>
-                                <List.Header>{AxisLabelDict[selectSet.setName]}</List.Header>
+                            >
+                                <List.Header>{AcronymDictionary[selectSet.setName]}</List.Header>
                                 <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
                                 <List.Content>{selectSet.setValues.sort().join(', ')}</List.Content>
                             </FilterListIT>
@@ -339,36 +358,6 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             <Grid.Row centered >
                 <Container>
                     <Search
-                        placeholder="Search a Case by ID"
-                        //defaultValue={"Search Case"}
-                        minCharacters={3}
-                        onSearchChange={(e, output) => {
-                            setSearchCaseVal(output.value || "")
-
-                            if (output.value && output.value.length >= 3) {
-                                let searchResult = hemoData.filter((d: any) => d.CASE_ID.toString().includes(output.value))
-                                stateUpdateWrapperUseJSON(caseSearchResult, searchResult, setCaseSearchResult);
-                            }
-                        }
-                        }
-                        results={caseSearchResult.map(d => { return { title: d.CASE_ID } })}
-                        onResultSelect={(e, resultSelection) => {
-                            const selectedPat = caseSearchResult.filter((d: any) => d.CASE_ID === resultSelection.result.title)[0]
-                            // const newSingleCasePoint: SingleCasePoint = selectedPat;
-                            setSearchCaseVal("");
-                            actions.updateBrushPatientGroup([selectedPat], "ADD");
-
-                        }
-                        }
-                        value={searchCaseVal}
-                    />
-
-                </Container>
-            </Grid.Row>
-
-            <Grid.Row centered >
-                <Container style={{ overflow: "overlay", height: "30vh" }} >
-                    <Search
                         placeholder="Search a Procedure"
                         minCharacters={3}
                         onSearchChange={(e, output) => {
@@ -387,6 +376,13 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                         }
                         value={searchSurgeryVal}
                     />
+
+                </Container>
+            </Grid.Row>
+
+            <Grid.Row centered >
+                <Container style={{ overflow: "overlay", height: "25vh" }} >
+
 
                     <List relaxed divided >
                         <List.Item key={"filter-header"}

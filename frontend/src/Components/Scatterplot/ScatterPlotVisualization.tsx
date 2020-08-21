@@ -10,10 +10,11 @@ import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
 import { scatterYOptions, barChartValuesOptions, ChartSVG } from "../../PresetsProfile"
-import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
+import { Grid, Dropdown, Menu } from "semantic-ui-react";
 import ScatterPlotChart from "./ScatterPlot";
 import axios from "axios";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
+import NotationForm from "../Utilities/NotationForm";
 
 
 interface OwnProps {
@@ -35,7 +36,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
         layoutArray,
         proceduresSelection,
         currentOutputFilterSet,
-        //  perCaseSelected,
+        procedureTypeSelection,
         dateRange,
         previewMode,
         showZero,
@@ -55,15 +56,14 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
 
     //  const [highlightOption, setHighlightOption] = useState("")
 
-    const [openNotationModal, setOpenNotationModal] = useState(false)
-    const [notationInput, setNotationInput] = useState(notation)
+
 
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
     useLayoutEffect(() => {
         if (svgRef.current) {
-            // setWidth(svgRef.current.clientWidth);
-            setWidth(w === 1 ? 542.28 : 1146.97)
+            setWidth(svgRef.current.clientWidth);
+            //  setWidth(w === 1 ? 542.28 : 1146.97)
             setHeight(svgRef.current.clientHeight)
         }
     }, [layoutArray, w]);
@@ -119,14 +119,11 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                                     }
                                 }
                             }
-                            // if (outcomesSelection.length > 0) {
-                            //     outcomesSelection.forEach((outcome) => {
-                            //         if (ob[outcome] === "0") {
-                            //             criteriaMet = false;
-                            //         }
-                            //     })
-                            // }
-                            if (outcomesSelection) {
+
+                            if (!procedureTypeSelection[ob.SURGERY_TYPE]) {
+                                criteriaMet = false;
+                            }
+                            else if (outcomesSelection) {
 
                                 if (ob[outcomesSelection] === 0) {
                                     criteriaMet = false;
@@ -173,7 +170,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                 }
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dateRange, proceduresSelection, hemoglobinDataSet, showZero, outcomesSelection, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroupIDs]);
+    }, [dateRange, proceduresSelection, procedureTypeSelection, hemoglobinDataSet, showZero, outcomesSelection, yAxis, xAxis, currentOutputFilterSet, currentSelectPatientGroupIDs]);
 
 
 
@@ -219,12 +216,12 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item> */}
-                        <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
+                        {/* <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
                             <Icon name="edit" />
-                        </Menu.Item>
+                        </Menu.Item> */}
 
                         {/* Modal for annotation. */}
-                        <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
+                        {/* <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
                             <Modal.Header>
                                 Set the annotation for chart
               </Modal.Header>
@@ -248,7 +245,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                                 <Button content="Save" positive onClick={() => { setOpenNotationModal(false); actions.changeNotation(chartId, notationInput); }} />
                                 <Button content="Cancel" onClick={() => { setOpenNotationModal(false) }} />
                             </Modal.Actions>
-                        </Modal>
+                        </Modal> */}
 
 
                     </Menu>
@@ -280,7 +277,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
                         />
                     </ChartSVG>
 
-                    <Message hidden={notation.length === 0} >{notation}</Message>
+                    <NotationForm notation={notation} chartId={chartId} />
 
                 </Grid.Column>
             </Grid.Row>

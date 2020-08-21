@@ -1,14 +1,15 @@
 import Store from "../../Interfaces/Store";
 import { FC, useRef, useState, useEffect, useLayoutEffect } from "react";
-import { ExtraPairInterventionPoint, ComparisonDataPoint } from "../../Interfaces/ApplicationState";
+import { ExtraPairInterventionPoint, ComparisonDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
 import React from "react";
 import { inject, observer } from "mobx-react";
-import { extraPairOptions, barChartAggregationOptions, barChartValuesOptions, interventionChartType, ChartSVG } from "../../PresetsProfile";
+import { extraPairOptions, barChartAggregationOptions, barChartValuesOptions, ChartSVG, OutcomeDropdownOptions } from "../../PresetsProfile";
 import axios from 'axios';
 import { stateUpdateWrapperUseJSON, generateExtrapairPlotDataWithIntervention, generateComparisonData } from "../../HelperFunctions";
 import { actions } from "../..";
-import { Grid, Menu, Dropdown, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
+import { Grid, Menu, Dropdown } from "semantic-ui-react";
 import InterventionPlot from "../InterventionPlot/ComparisonPlot";
+import NotationForm from "../Utilities/NotationForm";
 
 
 interface OwnProps {
@@ -35,7 +36,9 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
         currentSelectPatientGroupIDs,
         currentOutputFilterSet,
         dateRange,
-        outcomesSelection
+        outcomesSelection,
+        procedureTypeSelection,
+
     } = store!;
 
     const svgRef = useRef<SVGSVGElement>(null);
@@ -49,18 +52,17 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
     const [width, setWidth] = useState(0)
     const [height, setHeight] = useState(0)
 
-    const [caseIDDictionary, setCaseIDList] = useState<any>(null)
+    // const [caseIDDictionary, setCaseIDList] = useState<any>(null)
     const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
 
-    const [openNotationModal, setOpenNotationModal] = useState(false)
-    const [notationInput, setNotationInput] = useState(notation)
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
     useEffect(() => {
         if (extraPair) {
             stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray)
         }
-    }, [extraPair, extraPairArray])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [extraPair])
 
     useLayoutEffect(() => {
         if (svgRef.current) {
@@ -68,8 +70,8 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
             //     height: svgRef.current.clientHeight,
             //     width: svgRef.current.clientWidth
             // });
-            // setWidth(svgRef.current.clientWidth);
-            setWidth(w === 1 ? 542.28 : 1146.97)
+            setWidth(svgRef.current.clientWidth);
+            //   setWidth(w === 1 ? 542.28 : 1146.97)
             setHeight(svgRef.current.clientHeight);
         }
     }, [layoutArray, w]);
@@ -81,7 +83,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
             previousCancelToken.cancel("cancel the call?")
         }
         let temporaryDataHolder: any = {}
-        let caseDictionary = {} as any;
+        // let caseDictionary = {} as any;
 
         let caseSetReturnedFromQuery = new Set();
 
@@ -98,12 +100,12 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                     transfusedDataResult.forEach((element: any) => {
                         caseSetReturnedFromQuery.add(element.case_id)
                     })
-                    hemoglobinDataSet.forEach((singleCase: any) => {
+                    hemoglobinDataSet.forEach((singleCase: SingleCasePoint) => {
                         let criteriaMet = true;
                         if (currentOutputFilterSet.length > 0) {
                             for (let selectSet of currentOutputFilterSet) {
                                 if (selectSet.setName === aggregatedBy) {
-                                    if (!selectSet.setValues.includes(singleCase[aggregatedBy])) {
+                                    if (!selectSet.setValues.includes(singleCase[aggregatedBy] as any)) {
                                         criteriaMet = false;
                                     }
                                 }
@@ -113,25 +115,19 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                         if (!caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
                             criteriaMet = false;
                         }
+                        else if (!procedureTypeSelection[singleCase.SURGERY_TYPE]) {
+                            criteriaMet = false;
+                        }
 
-                        // if (outcomesSelection.length > 0) {
-                        //     outcomesSelection.forEach((outcome) => {
-                        //         if (outcome !== outcomeComparison) {
-                        //             if (singleCase[outcome] === "0") {
-                        //                 criteriaMet = false;
-                        //             }
-                        //         }
-                        //     })
-                        // }
-                        if (outcomesSelection && outcomesSelection !== outcomeComparison) {
+                        else if (outcomesSelection && outcomesSelection !== outcomeComparison) {
                             if (singleCase[outcomesSelection] === 0) {
                                 criteriaMet = false;
                             }
                         }
 
                         if (criteriaMet) {
-                            caseDictionary[singleCase.CASE_ID] = true;
-                            const caseOutcome = parseInt(singleCase[outcomeComparison]);
+                            //  caseDictionary[singleCase.CASE_ID] = true;
+                            const caseOutcome = singleCase[outcomeComparison];
                             if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
                                 temporaryDataHolder[singleCase[aggregatedBy]] = {
                                     aggregateAttribute: singleCase[aggregatedBy],
@@ -167,7 +163,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
 
                     const [caseCount, outputData] = generateComparisonData(temporaryDataHolder, showZero, valueToVisualize)
                     stateUpdateWrapperUseJSON(data, outputData, setData);
-                    stateUpdateWrapperUseJSON(caseIDDictionary, caseDictionary, setCaseIDList)
+                    //  stateUpdateWrapperUseJSON(caseIDDictionary, caseDictionary, setCaseIDList)
                     store!.totalAggregatedCaseCount = caseCount as number;
                 }
             }
@@ -180,14 +176,14 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                 }
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [proceduresSelection, outcomesSelection, hemoglobinDataSet, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet, outcomeComparison]);
+    }, [proceduresSelection, procedureTypeSelection, outcomesSelection, hemoglobinDataSet, dateRange, aggregatedBy, showZero, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet, outcomeComparison]);
 
 
     useEffect(() => {
-        const newExtraPairData = generateExtrapairPlotDataWithIntervention(caseIDDictionary, aggregatedBy, hemoglobinDataSet, extraPairArray, data)
+        const newExtraPairData = generateExtrapairPlotDataWithIntervention(aggregatedBy, hemoglobinDataSet, extraPairArray, data)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extraPairArray, data, hemoglobinDataSet, caseIDDictionary, aggregatedBy]);
+    }, [extraPairArray, data, hemoglobinDataSet, aggregatedBy]);
 
     const changeAggregation = (e: any, value: any) => {
         actions.changeChart(value.value, valueToVisualize, chartId, "COMPARISON")
@@ -196,8 +192,13 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
         actions.changeChart(aggregatedBy, value.value, chartId, "COMPARISON")
     }
 
-    const changeType = (e: any, value: any) => {
-        actions.changeChart(aggregatedBy, valueToVisualize, chartId, "COMPARISON", value.value)
+    const changeOutcome = (e: any, value: any) => {
+        console.log(value)
+        if (value.value === "NONE") {
+            actions.changeChart(aggregatedBy, valueToVisualize, chartId, "HEATMAP", value.value)
+        } else {
+            actions.changeChart(aggregatedBy, valueToVisualize, chartId, "COMPARISON", value.value)
+        }
     }
 
 
@@ -210,7 +211,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                 <Grid.Column verticalAlign="middle" width={1} style={{ display: previewMode ? "none" : null }}>
                     <Menu icon vertical compact size="mini" borderless secondary widths={2}>
                         <Menu.Item fitted>
-                            <Dropdown selectOnBlur={false} basic item icon="plus" compact>
+                            <Dropdown disabled={extraPairArray.length >= 5} selectOnBlur={false} basic item icon="plus" compact>
                                 <Dropdown.Menu>
                                     {
                                         extraPairOptions.map((d: { value: string; title: string }) => {
@@ -234,41 +235,11 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                                 <Dropdown.Menu>
                                     <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
                                     <Dropdown text="Change Value" pointing basic item compact options={barChartValuesOptions} onChange={changeValue}></Dropdown>
-                                    <Dropdown text="Change Type" pointing basic item compact options={interventionChartType} onChange={changeType}></Dropdown>
+                                    <Dropdown text="Change Comparison" pointing basic item compact options={OutcomeDropdownOptions} onChange={changeOutcome}></Dropdown>
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item>
 
-                        <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
-                            <Icon name="edit" />
-                        </Menu.Item>
-
-                        {/* Modal for annotation. */}
-                        <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
-                            <Modal.Header>
-                                Set the annotation for chart
-              </Modal.Header>
-                            <Modal.Content>
-                                <Form>
-                                    <Form.TextArea autoFocus
-                                        value={notationInput}
-                                        label="Notation"
-                                        onChange={(e, d) => {
-                                            if (typeof d.value === "number") {
-                                                setNotationInput((d.value).toString() || "")
-                                            } else {
-                                                setNotationInput(d.value || "")
-                                            }
-                                        }
-                                        }
-                                    />
-                                </Form>
-                            </Modal.Content>
-                            <Modal.Actions>
-                                <Button content="Save" positive onClick={() => { setOpenNotationModal(false); actions.changeNotation(chartId, notationInput); }} />
-                                <Button content="Cancel" onClick={() => { setOpenNotationModal(false) }} />
-                            </Modal.Actions>
-                        </Modal>
 
                     </Menu>
                 </Grid.Column>
@@ -291,7 +262,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
                         />
                     </ChartSVG>
 
-                    <Message hidden={notation.length === 0} >{notation}</Message>
+                    <NotationForm notation={notation} chartId={chartId} />
 
                 </Grid.Column>
 

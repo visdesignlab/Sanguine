@@ -21,14 +21,7 @@ import {
     ComparisonDataPoint, ExtraPairInterventionPoint
 } from "../../Interfaces/ApplicationState";
 import {
-    AxisLabelDict,
-    BloodProductCap,
-    offset,
-    CELL_SAVER_TICKS,
-    extraPairWidth,
-    extraPairPadding,
-    Accronym,
-    caseRectWidth,
+    AcronymDictionary, BloodProductCap, offset, CELL_SAVER_TICKS, extraPairWidth, extraPairPadding, caseRectWidth,
 } from "../../PresetsProfile"
 
 //import SingleHeatPlot from "./SingleHeatPlot";
@@ -38,6 +31,7 @@ import { third_gray, preop_color, postop_color, greyScaleRange } from "../../Pre
 import SingleHeatCompare from "./SingleHeatCompare";
 import InterventionExtraPairGenerator from "../Utilities/InterventionExtraPairGenerator";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
+import styled from "styled-components";
 
 
 interface OwnProps {
@@ -95,21 +89,36 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
     useEffect(() => {
 
         let newCaseMax = 0;
-        let newZeroMax = 0;
+
         let newPreTotal = 0;
         let newPostTotal = 0;
         const newXvals = data
             .sort((a, b) => {
-                if (aggregatedBy === "YEAR") { return a.aggregateAttribute - b.aggregateAttribute }
+                if (aggregatedBy === "YEAR") {
+                    return a.aggregateAttribute - b.aggregateAttribute
+                }
                 else {
-                    return a.postCaseCount + a.preCaseCount - b.postCaseCount - b.preCaseCount
+                    if (showZero) {
+                        return (a.postCaseCount + a.preCaseCount - a.preZeroCaseNum - a.postZeroCaseNum) -
+                            (b.postCaseCount + b.preCaseCount - b.preZeroCaseNum - b.postZeroCaseNum)
+                    }
+                    else {
+                        return a.postCaseCount + a.preCaseCount - b.postCaseCount - b.preCaseCount
+                    }
                 }
             })
             .map(dp => {
-                newCaseMax = newCaseMax > (dp.preCaseCount + dp.postCaseCount) ? newCaseMax : (dp.preCaseCount + dp.postCaseCount);
-                newZeroMax = newZeroMax > (dp.postZeroCaseNum + dp.preZeroCaseNum) ? newCaseMax : (dp.postZeroCaseNum + dp.preZeroCaseNum);
-                newPreTotal += dp.preCaseCount;
-                newPostTotal += dp.postCaseCount;
+                const preCaseCount = showZero ? (dp.preCaseCount) : (dp.preCaseCount - dp.preZeroCaseNum);
+                const postCaseCount = showZero ? dp.postCaseCount : (dp.postCaseCount - dp.postZeroCaseNum);
+                // if (showZero) {
+                //     newCaseMax = newCaseMax > (dp.preCaseCount + dp.postCaseCount) ? newCaseMax : (dp.preCaseCount + dp.postCaseCount);
+                // }
+                // else {
+                //     newCaseMax = newCaseMax > (dp.preCaseCount + dp.postCaseCount - dp.preZeroCaseNum - dp.postZeroCaseNum) ? newCaseMax : (dp.preCaseCount + dp.postCaseCount - dp.preZeroCaseNum - dp.postZeroCaseNum);
+                // }
+                newCaseMax = newCaseMax > (preCaseCount + postCaseCount) ? newCaseMax : (preCaseCount + postCaseCount);
+                newPreTotal += preCaseCount;
+                newPostTotal += postCaseCount;
                 //  const max_temp = max([max(dp.preInKdeCal, d => d.y), max(dp.postInKdeCal, d => d.y)])
                 //  newkdeMax = newkdeMax > max_temp ? newkdeMax : max_temp;
                 return dp.aggregateAttribute
@@ -119,8 +128,8 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         setPostTotal(newPostTotal)
         // setKdeMax(newkdeMax);
         setCaseMax(newCaseMax);
-
-    }, [data, xVals, aggregatedBy])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data, aggregatedBy, showZero])
 
     const aggregationScale = useCallback(() => {
         let aggregationScale = scaleBand()
@@ -213,7 +222,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         .attr("transform", `translate(${extraPairTotalWidth},0)`)
         .text(() => {
             //const trailing = perCaseSelected ? " / Case" : "";
-            return AxisLabelDict[valueToVisualize] ? AxisLabelDict[valueToVisualize] : valueToVisualize
+            return AcronymDictionary[valueToVisualize] ? AcronymDictionary[valueToVisualize] : valueToVisualize
         }
         );
 
@@ -227,7 +236,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         .attr("alignment-baseline", "hanging")
         .attr("transform", `translate(${extraPairTotalWidth},0)`)
         .text(
-            AxisLabelDict[aggregatedBy] ? AxisLabelDict[aggregatedBy] : aggregatedBy
+            AcronymDictionary[aggregatedBy] ? AcronymDictionary[aggregatedBy] : aggregatedBy
         );
 
     const decideIfSelected = (d: ComparisonDataPoint) => {
@@ -360,20 +369,20 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
     const outputGradientLegend = () => {
         if (!showZero) {
             return [<rect
-                x={0.8 * (dimensionWidth)}
+                x={0.7 * (dimensionWidth)}
                 y={0}
                 width={0.2 * (dimensionWidth)}
                 height={7.5}
                 fill="url(#gradient1)" />,
             <rect
-                x={0.8 * (dimensionWidth)}
+                x={0.7 * (dimensionWidth)}
                 y={7.5}
                 width={0.2 * (dimensionWidth)}
                 height={7.5}
                 fill="url(#gradient2)" />]
         } else {
             return <rect
-                x={0.8 * (dimensionWidth)}
+                x={0.7 * (dimensionWidth)}
                 y={0}
                 width={0.2 * (dimensionWidth)}
                 height={15}
@@ -411,7 +420,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                 {outputGradientLegend()}
 
                 <text
-                    x={0.8 * (dimensionWidth)}
+                    x={0.7 * (dimensionWidth)}
                     y={15}
                     alignmentBaseline={"hanging"}
                     textAnchor={"start"}
@@ -420,7 +429,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                     0%
                 </text>
                 <text
-                    x={1 * (dimensionWidth)}
+                    x={0.9 * (dimensionWidth)}
                     y={15}
                     alignmentBaseline={"hanging"}
                     textAnchor={"end"}
@@ -430,52 +439,54 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                 </text>
             </g>
             <g>
-                <rect x={0.7 * (dimensionWidth)}
-                    y={0}
-                    width={differentialSquareWidth}
-                    height={12}
-                    fill={preop_color}
-                    opacity={0.65} />
-                <rect x={0.7 * (dimensionWidth)}
-                    y={12}
-                    width={differentialSquareWidth}
-                    height={12}
-                    fill={postop_color}
-                    opacity={0.65} />
-                <text
-                    x={0.7 * (dimensionWidth) - 1}
-                    y={6}
-                    alignmentBaseline={"middle"}
-                    textAnchor={"end"}
-                    fontSize="11px"
-                    fill={third_gray}>
-                    {` ${interventionDate ? `Pre Intervine` : `True`} ${preTotal}/${preTotal + postTotal}`}
-                </text>
-                <text
-                    x={0.7 * (dimensionWidth) - 1}
-                    y={18}
-                    alignmentBaseline={"middle"}
-                    textAnchor={"end"}
-                    fontSize="11px"
-                    fill={third_gray}>
-                    {`${interventionDate ? `Post Intervine` : `False`} ${postTotal}/${preTotal + postTotal}`}
-                </text>
-                <text
+                <g transform="translate(0,4)">
+                    <rect x={0.2 * (dimensionWidth)}
+                        y={0}
+                        width={differentialSquareWidth}
+                        height={12}
+                        fill={preop_color}
+                        opacity={0.65} />
+                    <rect x={0.2 * (dimensionWidth)}
+                        y={12}
+                        width={differentialSquareWidth}
+                        height={12}
+                        fill={postop_color}
+                        opacity={0.65} />
+                    <text
+                        x={0.2 * (dimensionWidth) + differentialSquareWidth + 1}
+                        y={6}
+                        alignmentBaseline={"middle"}
+                        textAnchor={"start"}
+                        fontSize="11px"
+                        fill={"black"}>
+                        {` ${interventionDate ? `Pre Intervine` : `True`} ${preTotal}/${preTotal + postTotal}`}
+                    </text>
+                    <text
+                        x={0.2 * (dimensionWidth) + differentialSquareWidth + 1}
+                        y={18}
+                        alignmentBaseline={"middle"}
+                        textAnchor={"start"}
+                        fontSize="11px"
+                        fill={"black"}>
+                        {`${interventionDate ? `Post Intervine` : `False`} ${postTotal}/${preTotal + postTotal}`}
+                    </text>
+                </g>
+                <foreignObject x={0.0 * (dimensionWidth)} y={0} width={0.2 * dimensionWidth} height={currentOffset.top}>
+                    <ComparisonDiv>{interventionDate ? `Intervention:` : `Comparing:`}</ComparisonDiv>
+                    <ComparisonDiv>{interventionDate ? timeFormat("%Y-%m-%d")(new Date(interventionDate)) : (AcronymDictionary[outcomeComparison || ""]) || outcomeComparison}</ComparisonDiv>
+                </foreignObject>
+                {/* <text
                     x={0.1 * (dimensionWidth)}
                     y={0}
                     alignmentBaseline="hanging"
                     textAnchor="start"
-                    fontSize="11px"
-                    fill={third_gray}
+                    fontSize="13px"
+                    fill={"black"}
                 >
-                    <tspan x="0" dy="1em">{interventionDate ? `Intervention:` : `Comparing Outcome:`}</tspan>
-                    <tspan x="0" dy="1em">{interventionDate ? timeFormat("%Y-%m-%d")(new Date(interventionDate)) : ((Accronym as any)[outcomeComparison || ""]) || outcomeComparison}</tspan>
+                    <tspan x="0" dy="1em">{interventionDate ? `Intervention:` : `Comparing:`}</tspan>
+                    <tspan x="0" dy="1em">{interventionDate ? timeFormat("%Y-%m-%d")(new Date(interventionDate)) : (AcronymDictionary[outcomeComparison || ""]) || outcomeComparison}</tspan>
 
-                    {/* {interventionDate ?
-                    `Intervention: ${timeFormat("%Y-%m-%d")(new Date(interventionDate))}`
-                    : `Comparing Outcome: ${((Accronym as any)[outcomeComparison || ""]) || outcomeComparison}`} */}
-
-                </text>
+                </text> */}
             </g>
 
             <g className="chart"
@@ -487,13 +498,13 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                         .concat([
 
                             <rect
-                                fill={interpolateGreys(caseScale()(dataPoint.preCaseCount))}
+                                fill={interpolateGreys(caseScale()(showZero ? dataPoint.preCaseCount : (dataPoint.preCaseCount - dataPoint.preZeroCaseNum)))}
                                 x={-caseRectWidth - 15}
                                 y={aggregationScale()(dataPoint.aggregateAttribute)}
                                 width={caseRectWidth}
                                 height={aggregationScale().bandwidth() * 0.5}
                             />,
-                            <rect fill={interpolateGreys(caseScale()(dataPoint.postCaseCount))}
+                            <rect fill={interpolateGreys(caseScale()(showZero ? dataPoint.postCaseCount : (dataPoint.postCaseCount - dataPoint.postZeroCaseNum)))}
                                 x={-caseRectWidth - 15}
                                 y={aggregationScale()(dataPoint.aggregateAttribute)! + aggregationScale().bandwidth() * 0.5} width={caseRectWidth}
                                 height={aggregationScale().bandwidth() * 0.5} />,
@@ -533,3 +544,8 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
     );
 }
 export default inject("store")(observer(InterventionPlot));
+
+const ComparisonDiv = styled.div`
+  font-size:x-small;
+  line-height:normal;
+`;

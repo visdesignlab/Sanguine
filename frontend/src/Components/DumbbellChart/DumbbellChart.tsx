@@ -19,7 +19,7 @@ import {
     median,
 } from "d3";
 import { DumbbellDataPoint } from "../../Interfaces/ApplicationState";
-import { offset, AxisLabelDict, minimumWidthScale } from "../../PresetsProfile"
+import { offset, AcronymDictionary, minimumWidthScale } from "../../PresetsProfile"
 import CustomizedAxisOrdinal from "../Utilities/CustomizedAxisOrdinal";
 import { preop_color, basic_gray, highlight_orange, postop_color } from "../../PresetsProfile"
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
@@ -184,7 +184,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
 
         if (minimumWidthScale * datapointsDict.length >= (widthAllowed)) {
             datapointsDict.forEach((d, i) => {
-                spacing[i] = minimumWidthScale;
+                spacing[i] = widthAllowed / datapointsDict.length;
             })
         }
         else {
@@ -203,10 +203,11 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
 
             datapointsDict.forEach((d, i) => {
                 if (!spacing[i]) {
-                    spacing[i] = spaceLeft * d.length / totalDataPointsNotUsingMinimumScale
+                    spacing[i] = spaceLeft * (d.length / totalDataPointsNotUsingMinimumScale)
                 }
             })
         }
+
         let newResultRange: number[] = [];
         let currentLoc = currentOffset.left;
         datapointsDict.forEach((d, i) => {
@@ -219,6 +220,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
             currentLoc += spacing[i]
             stateUpdateWrapperUseJSON(resultRange, newResultRange, setResultRange)
         })
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [datapointsDict, dimensionWidth, currentOffset, sortedData])
 
@@ -254,7 +256,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
         .attr("alignment-baseline", "hanging")
         // .attr("transform", `translate(0 ,${currentOffset.top}`)
         .text(
-            AxisLabelDict[valueToVisualize] ? AxisLabelDict[valueToVisualize] : valueToVisualize
+            AcronymDictionary[valueToVisualize] ? AcronymDictionary[valueToVisualize] : valueToVisualize
         );
     svgSelection.select('.axes')
         .select(".x-axis")

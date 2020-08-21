@@ -22,17 +22,18 @@ interface OwnProps {
     totalMedianSet: any;
     preMedianSet: any;
     postMedianSet: any;
-
-    kdeMax: number;
     name: string;
 }
 
 export type Props = OwnProps;
 
-const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, totalMedianSet, aggregationScaleRange, aggregationScaleDomain, kdeMax, preMedianSet, postMedianSet, name }: Props) => {
+const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, totalMedianSet, aggregationScaleRange, aggregationScaleDomain, preMedianSet, postMedianSet, name }: Props) => {
 
     const aggregatedScale = useCallback(() => {
-        const aggregatedScale = scaleBand().domain(JSON.parse(aggregationScaleDomain)).range(JSON.parse(aggregationScaleRange)).paddingInner(0.1);
+        const aggregatedScale = scaleBand()
+            .domain(JSON.parse(aggregationScaleDomain))
+            .range(JSON.parse(aggregationScaleRange))
+            .paddingInner(0.2);
         return aggregatedScale
     }, [aggregationScaleDomain, aggregationScaleRange])
 
@@ -50,7 +51,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
         valueScale.domain([0, 30]);
     }
 
-    const lineFunction = useCallback(() => {
+    const lineFunction = useCallback((kdeMax) => {
 
         const kdeScale = scaleLinear()
             .domain([-kdeMax, kdeMax])
@@ -60,10 +61,10 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
             .y((d: any) => kdeScale(d.y) + 0.5 * aggregatedScale().bandwidth())
             .x((d: any) => valueScale(d.x));
         return lineFunction
-    }, [aggregatedScale, kdeMax, valueScale])
+    }, [aggregatedScale, valueScale])
 
 
-    const halfLineFunction = useCallback(() => {
+    const halfLineFunction = useCallback((kdeMax) => {
 
         const halfKDEScale = scaleLinear()
             .domain([-kdeMax, kdeMax])
@@ -75,13 +76,13 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
             .x((d: any) => valueScale(d.x))
 
         return halfLineFunction;
-    }, [aggregatedScale, kdeMax, valueScale])
+    }, [aggregatedScale, valueScale])
 
 
     const generateOutput = () => {
         let output = []
-        if (aggregatedScale().bandwidth() > 40) {
-            output = Object.entries(preIntData).map(([val, dataArray]) => {
+        if (aggregatedScale().bandwidth() > 30) {
+            output = Object.entries(preIntData).map(([val, result]) => {
 
                 // const sortedArray = dataArray.sort((a: any, b: any) =>
                 //     Math.abs(a[1] - a[0]) - Math.abs(b[1] - b[0]))
@@ -89,7 +90,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
                 return ([
                     <Popup content={`median ${format(".2f")(preMedianSet[val])}`} key={`violin-${val}`} trigger={
                         <ViolinLine
-                            d={halfLineFunction()(dataArray)!}
+                            d={halfLineFunction(result.kdeMax)(result.kdeArray)!}
                             transform={`translate(0,${aggregatedScale()(val)!})`}
                         />} />,
 
@@ -104,7 +105,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
 
             })
 
-            output = output.concat(Object.entries(postIntData).map(([val, dataArray]) => {
+            output = output.concat(Object.entries(postIntData).map(([val, result]) => {
 
                 // const sortedArray = dataArray.sort((a: any, b: any) =>
                 //     Math.abs(a[1] - a[0]) - Math.abs(b[1] - b[0]))
@@ -112,7 +113,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
                 return ([
                     <Popup content={`median ${format(".2f")(postMedianSet[val])}`} key={`violin-${val}-pre`} trigger={
                         <ViolinLine
-                            d={halfLineFunction()(dataArray)!}
+                            d={halfLineFunction(result.kdeMax)(result.kdeArray)!}
                             transform={`translate(0,${aggregatedScale()(val)! + 0.5 * aggregatedScale().bandwidth()})`}
                         />} />]
                 )
@@ -120,7 +121,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
 
             }))
         } else {
-            output = Object.entries(totalData).map(([val, dataArray]) => {
+            output = Object.entries(totalData).map(([val, result]) => {
 
                 // const sortedArray = dataArray.sort((a: any, b: any) =>
                 //     Math.abs(a[1] - a[0]) - Math.abs(b[1] - b[0]))
@@ -128,7 +129,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalData, preIntData, postIntData, tot
                 return ([
                     <Popup content={`median ${format(".2f")(totalMedianSet[val])}`} key={`violin-${val}-post`} trigger={
                         <ViolinLine
-                            d={lineFunction()(dataArray)!}
+                            d={lineFunction(result.kdeMax)(result.kdeArray)!}
                             transform={`translate(0,${aggregatedScale()(val)!})`}
                         />} />,
 

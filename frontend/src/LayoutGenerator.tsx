@@ -1,10 +1,9 @@
 import React, {
-    FC
+    FC, useRef, useLayoutEffect, useState
 } from "react";
 import { inject, observer } from "mobx-react";
-import { Tab, Grid, GridColumn, Button } from "semantic-ui-react";
+import { Tab, Button, Ref } from "semantic-ui-react";
 import { actions } from ".";
-import DetailView from "./Components/Utilities/DetailView";
 import LineUpWrapper from "./LineUpWrapper";
 //import PatientComparisonWrapper from "./Components/PatientComparisonWrapper";
 import Store from "./Interfaces/Store";
@@ -31,6 +30,8 @@ export type Props = OwnProps;
 
 const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
     const { layoutArray } = store!
+    const [tabWidth, setTabWidth] = useState(1300);
+
 
     const createElement = (layout: LayoutElement, index: number) => {
         switch (layout.plotType) {
@@ -39,6 +40,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                     <div key={layout.i} className={"parent-node" + layout.i}>
 
                         <Button icon="close" floated="right" circular compact size="mini" basic onClick={() => { actions.removeChart(layout.i) }} />
+                        <Button floated="right" icon="move" size="mini" circular compact basic className="move-icon" />
                         <DumbbellChartVisualization
                             yAxis={layout.aggregatedBy}
                             w={layout.w}
@@ -61,6 +63,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                     >
 
                         <Button floated="right" icon="close" circular compact size="mini" basic onClick={() => { actions.removeChart(layout.i) }} />
+                        <Button floated="right" icon="move" size="mini" circular compact basic className="move-icon" />
                         <BarChartVisualization
                             hemoglobinDataSet={hemoData}
                             w={layout.w}
@@ -83,6 +86,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                 >
 
                     <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
+                    <Button floated="right" icon="move" size="mini" circular compact basic className="move-icon" />
                     <ScatterPlotVisualization
                         xAxis={layout.aggregatedBy}
                         w={layout.w}
@@ -105,6 +109,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                 >
 
                     <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
+                    <Button floated="right" icon="move" size="mini" circular compact basic className="move-icon" />
                     <HeatMapVisualization
                         hemoglobinDataSet={hemoData}
                         w={layout.w}
@@ -122,6 +127,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                 return (<div key={layout.i}
                     className={"parent-node" + layout.i}>
                     <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
+                    <Button floated="right" icon="move" size="mini" circular compact basic className="move-icon" />
                     <InterventionPlotVisualization
                         extraPair={layout.extraPair}
                         w={layout.w}
@@ -138,6 +144,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                 return (<div key={layout.i}
                     className={"parent-node" + layout.i}>
                     <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
+                    <Button floated="right" icon="move" size="mini" circular compact basic className="move-icon" />
                     <ComparisonPlotVisualization
                         aggregatedBy={layout.aggregatedBy}
                         chartId={layout.i}
@@ -170,34 +177,53 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
         const newStuff = output.map(d => ({ ...d }))
         return newStuff
     }
+
+    const tabRef = useRef(undefined)
+
+    useLayoutEffect(() => {
+        if (tabRef.current) {
+            setTabWidth((tabRef.current as any).clientWidth)
+            // console.log(tabRef)
+        }
+    }, [tabRef])
+
+    window.addEventListener("resize", () => {
+        if (tabRef.current) {
+            setTabWidth((tabRef.current as any).clientWidth)
+        }
+    })
+
     const panes = [{
-        menuItem: 'Main', pane: <Tab.Pane key="Main">
-            <Grid>
-                <GridColumn width={13}>
+        menuItem: 'Main', pane:
+            <Ref innerRef={tabRef}>
+                <Tab.Pane key="Main" >
+
                     <Responsive
                         onResizeStop={actions.onLayoutchange}
                         onDragStop={actions.onLayoutchange}
+                        draggableHandle={".move-icon"}
                         // onLayoutChange={actions.onLayoutchange}
                         // onBreakpointChange={this._onBreakpointChange}
                         className="layout"
                         cols={colData}
                         rowHeight={600}
-                        width={1300}
+                        width={tabWidth}
                         //cols={2}
                         //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
 
                         layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
                     >
                         {layoutArray.map((layoutE, i) => {
+
                             return createElement(layoutE, i);
+
                         })}
                     </Responsive>
-                </GridColumn>
-                <Grid.Column width={3}>
-                    <DetailView />
-                </Grid.Column>
-            </Grid>
-        </Tab.Pane >
+
+
+
+                </Tab.Pane >
+            </Ref>
     },
     {
         menuItem: 'LineUp', pane:

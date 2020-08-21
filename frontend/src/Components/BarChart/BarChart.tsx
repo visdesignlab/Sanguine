@@ -24,7 +24,7 @@ import {
     offset,
     extraPairWidth,
     extraPairPadding,
-    AxisLabelDict,
+    AcronymDictionary,
     BloodProductCap
 } from "../../PresetsProfile"
 import SingleViolinPlot from "./SingleViolinPlot";
@@ -172,7 +172,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         .attr("transform", `translate(${extraPairTotalWidth},0)`)
         .text(() => {
             //const trailing = perCaseSelected ? " / Case" : "";
-            return AxisLabelDict[valueToVisualize] ? AxisLabelDict[valueToVisualize] : valueToVisualize
+            return AcronymDictionary[valueToVisualize] ? AcronymDictionary[valueToVisualize] : valueToVisualize
         }
         );
 
@@ -186,7 +186,7 @@ const BarChart: FC<Props> = ({ extraPairDataSet, stripPlotMode, store, aggregate
         .attr("alignment-baseline", "hanging")
         .attr("transform", `translate(${extraPairTotalWidth},0)`)
         .text(
-            AxisLabelDict[aggregatedBy] ? AxisLabelDict[aggregatedBy] : aggregatedBy
+            AcronymDictionary[aggregatedBy] ? AcronymDictionary[aggregatedBy] : aggregatedBy
         );
 
     const decideIfSelected = (d: BarChartDataPoint) => {

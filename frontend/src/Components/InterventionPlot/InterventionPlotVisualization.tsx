@@ -4,11 +4,12 @@ import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ComparisonDataPoint, ExtraPairInterventionPoint } from '../../Interfaces/ApplicationState'
 import { barChartAggregationOptions, barChartValuesOptions, extraPairOptions, ChartSVG } from "../../PresetsProfile"
-import { Grid, Dropdown, Menu, Icon, Modal, Form, Button, Message } from "semantic-ui-react";
+import { Grid, Dropdown, Menu } from "semantic-ui-react";
 import { timeFormat } from "d3";
 import InterventionPlot from "./ComparisonPlot";
 import axios from 'axios';
 import { stateUpdateWrapperUseJSON, generateExtrapairPlotDataWithIntervention, generateComparisonData } from "../../HelperFunctions";
+import NotationForm from "../Utilities/NotationForm";
 
 interface OwnProps {
     aggregatedBy: string;
@@ -35,7 +36,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
         currentSelectPatientGroupIDs,
         currentOutputFilterSet,
         rawDateRange,
-        dateRange,
+        dateRange, procedureTypeSelection,
         outcomesSelection
     } = store!;
 
@@ -52,11 +53,8 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
     const [width, setWidth] = useState(0)
     const [height, setHeight] = useState(0)
 
-    const [caseIDDictionary, setCaseIDList] = useState<any>(null)
+    //  const [caseIDDictionary, setCaseIDList] = useState<any>(null)
     const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
-
-    const [openNotationModal, setOpenNotationModal] = useState(false)
-    const [notationInput, setNotationInput] = useState(notation)
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
 
@@ -71,8 +69,8 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
             //     height: svgRef.current.clientHeight,
             //     width: svgRef.current.clientWidth
             // });
-            // setWidth(svgRef.current.clientWidth);
-            setWidth(w === 1 ? 542.28 : 1146.97)
+            setWidth(svgRef.current.clientWidth);
+            // setWidth(w === 1 ? 542.28 : 1146.97)
             setHeight(svgRef.current.clientHeight);
         }
     }, [layoutArray, w]);
@@ -91,7 +89,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
             previousCancelToken.cancel("cancel the call.")
         }
         let temporaryDataHolder: any = {};
-        let caseDictionary = {} as any;
+        //  let caseDictionary = {} as any;
         let preCaseSetReturnedFromQuery = new Set();
         let postCaseSetReturnedFromQuery = new Set();
 
@@ -133,24 +131,18 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                             }
                         }
 
-                        // if (outcomesSelection.length > 0) {
-                        //     outcomesSelection.forEach((outcome) => {
-                        //         if (singleCase[outcome] === "0") {
-                        //             criteriaMet = false;
-                        //         }
-                        //     })
-                        // }
-                        if (outcomesSelection) {
-
+                        if (!procedureTypeSelection[singleCase.SURGERY_TYPE]) {
+                            criteriaMet = false;
+                        }
+                        else if (outcomesSelection) {
                             if (singleCase[outcomesSelection] === 0) {
                                 criteriaMet = false;
                             }
 
                         }
 
-
                         if (preCaseSetReturnedFromQuery.has(singleCase.CASE_ID) && criteriaMet) {
-                            caseDictionary[singleCase.CASE_ID] = true;
+                            // caseDictionary[singleCase.CASE_ID] = true;
                             if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
                                 temporaryDataHolder[singleCase[aggregatedBy]] = {
                                     aggregateAttribute: singleCase[aggregatedBy],
@@ -165,7 +157,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                             temporaryDataHolder[singleCase[aggregatedBy]].preData.push(singleCase)
                             temporaryDataHolder[singleCase[aggregatedBy]].prePatientIDList.add(singleCase.PATIENT_ID)
                         } else if (postCaseSetReturnedFromQuery.has(singleCase.CASE_ID) && criteriaMet) {
-                            caseDictionary[singleCase.CASE_ID] = true;
+                            //  caseDictionary[singleCase.CASE_ID] = true;
                             if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
                                 temporaryDataHolder[singleCase[aggregatedBy]] = {
                                     aggregateAttribute: singleCase[aggregatedBy],
@@ -185,7 +177,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                     })
                     const [caseCount, outputData] = generateComparisonData(temporaryDataHolder, showZero, valueToVisualize)
                     stateUpdateWrapperUseJSON(data, outputData, setData);
-                    stateUpdateWrapperUseJSON(caseIDDictionary, caseDictionary, setCaseIDList)
+                    // stateUpdateWrapperUseJSON(caseIDDictionary, caseDictionary, setCaseIDList)
                     store!.totalAggregatedCaseCount = caseCount as number;
                 }
             }).catch(function (thrown) {
@@ -196,14 +188,14 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                 }
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [proceduresSelection, hemoglobinDataSet, dateRange, aggregatedBy, outcomesSelection, showZero, interventionDate, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet]);
+    }, [proceduresSelection, procedureTypeSelection, hemoglobinDataSet, dateRange, aggregatedBy, outcomesSelection, showZero, interventionDate, valueToVisualize, currentSelectPatientGroupIDs, currentOutputFilterSet]);
 
 
     useEffect(() => {
-        const newExtraPairData = generateExtrapairPlotDataWithIntervention(caseIDDictionary, aggregatedBy, hemoglobinDataSet, extraPairArray, data)
+        const newExtraPairData = generateExtrapairPlotDataWithIntervention(aggregatedBy, hemoglobinDataSet, extraPairArray, data)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extraPairArray, data, hemoglobinDataSet, aggregatedBy, caseIDDictionary]);
+    }, [extraPairArray, data, hemoglobinDataSet]);
 
     const changeAggregation = (e: any, value: any) => {
         actions.changeChart(value.value, valueToVisualize, chartId, "INTERVENTION")
@@ -250,36 +242,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                             </Dropdown>
                         </Menu.Item>
 
-                        <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
-                            <Icon name="edit" />
-                        </Menu.Item>
 
-                        {/* Modal for annotation. */}
-                        <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
-                            <Modal.Header>
-                                Set the annotation for chart
-              </Modal.Header>
-                            <Modal.Content>
-                                <Form>
-                                    <Form.TextArea autoFocus
-                                        value={notationInput}
-                                        label="Notation"
-                                        onChange={(e, d) => {
-                                            if (typeof d.value === "number") {
-                                                setNotationInput((d.value).toString() || "")
-                                            } else {
-                                                setNotationInput(d.value || "")
-                                            }
-                                        }
-                                        }
-                                    />
-                                </Form>
-                            </Modal.Content>
-                            <Modal.Actions>
-                                <Button content="Save" positive onClick={() => { setOpenNotationModal(false); actions.changeNotation(chartId, notationInput); }} />
-                                <Button content="Cancel" onClick={() => { setOpenNotationModal(false) }} />
-                            </Modal.Actions>
-                        </Modal>
 
                     </Menu>
                 </Grid.Column>
@@ -302,7 +265,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
                         />
                     </ChartSVG>
 
-                    <Message hidden={notation.length === 0} >{notation}</Message>
+                    <NotationForm notation={notation} chartId={chartId} />
 
                 </Grid.Column>
 
