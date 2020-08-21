@@ -12,7 +12,6 @@ import {
     interventionChartType, presetOptions, dumbbellValueOptions, scatterYOptions, typeDiction
 } from "../../PresetsProfile";
 import ClipboardJS from 'clipboard';
-import { NavLink } from 'react-router-dom'
 import { getCookie } from "../../Interfaces/UserManagement";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 interface OwnProps {
@@ -150,7 +149,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         // fetch(`${process.env.REACT_APP_QUERY_URL}accounts/logout`, {
         //     method: 'GET'
         // })
-        store!.isLoggedIn = false;
+
         window.location.replace(`${process.env.REACT_APP_QUERY_URL}accounts/logout`);
 
     }
@@ -370,9 +369,9 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             </Menu.Item>
 
             <Menu.Item>
-                <NavLink component={Button} isActive={() => { return false }} to="/" onClick={() => { logoutHandler(); }} >
+                <Button onClick={() => { logoutHandler(); }} >
                     Log Out
-        </NavLink>
+                 </Button>
 
             </Menu.Item>
         </Menu>
