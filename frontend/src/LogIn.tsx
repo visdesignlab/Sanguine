@@ -56,6 +56,8 @@ const Logins: FC<Props> = ({ store }: Props) => {
             //TODO if logged in, it is 200 right?
             if (response.status === 200) {
                 store!.isLoggedIn = true;
+            } else {
+                window.location.replace(`${process.env.REACT_APP_QUERY_URL}accounts/login/`);
             }
         })
         // eslint-disable-next-line react-hooks/exhaustive-deps
