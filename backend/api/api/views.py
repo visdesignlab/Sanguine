@@ -9,7 +9,7 @@ from django.http import (
     HttpResponseNotAllowed
 )
 from django.forms.models import model_to_dict
-from django.contrib.auth.decorators import login_required
+from django_cas_ng.decorators import login_required
 
 from api.decorators import conditional_login_required
 from api.models import State
