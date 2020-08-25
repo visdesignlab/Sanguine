@@ -52,7 +52,7 @@ const DetailView: FC<Props> = ({ hemoData, store }: Props) => {
 
                 const outcomeAttributes = ["DEATH", "ECMO", "STROKE", "VENT", "AMICAR", "TXA", "B12"]
                 outcomeAttributes.forEach((attribute) => {
-                    final_result[attribute] = final_result[attribute] === "0" ? "No" : "Yes"
+                    final_result[attribute] = final_result[attribute] === 0? "No" : "Yes"
                 })
                 stateUpdateWrapperUseJSON(individualInfo, final_result, setIndividualInfo)
 
