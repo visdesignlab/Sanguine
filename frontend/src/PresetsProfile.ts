@@ -24,7 +24,7 @@ export const extraPairOptions = [
     { title: "Total Transfusion", value: "Total Transfusion" },
     { title: "Per Case Transfusion", value: "Per Case" },
     { title: "Zero Transfusion Cases", value: "Zero Transfusion" },
-    { title: "Risk Score", value: "RISK" },
+    { title: "DRG Weight (Risk)", value: "RISK" },
     // { title: "Severity of Illness", value: "SOI" },
     { title: "Mortality Rate", value: "DEATH" },
     { title: "Ventilation Rate", value: "VENT" },
