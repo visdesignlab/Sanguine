@@ -167,7 +167,7 @@ export const generateExtrapairPlotDataWithIntervention = (aggregatedBy: string, 
 
                     newExtraPairData.push({
                         name: "RISK",
-                        label: "Risk",
+                        label: "DRG Weight",
                         preIntData: preIntData,
                         postIntData: postIntData,
                         totalIntData: newData,
@@ -473,7 +473,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
                         pd = pd.concat(reversePd)
                         newData[key] = { kdeArray: pd, kdeMax: kdeMax_temp };
                     }
-                    newExtraPairData.push({ name: "RISK", label: "Risk", data: newData, type: "Violin", medianSet: medianData });
+                    newExtraPairData.push({ name: "RISK", label: "DRG Weight", data: newData, type: "Violin", medianSet: medianData });
                     break;
 
                 case "Preop HGB":
