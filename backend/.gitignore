@@ -6,3 +6,4 @@ api/static
 *.coverage
 .env
 .env.prod
+api/api/tests.py
