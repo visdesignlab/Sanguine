@@ -459,7 +459,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                         textAnchor={"start"}
                         fontSize="11px"
                         fill={"black"}>
-                        {` ${interventionDate ? `Pre Intervine` : `True`} ${preTotal}/${preTotal + postTotal}`}
+                        {` ${interventionDate ? `Pre Intervene` : `True`} ${preTotal}/${preTotal + postTotal}`}
                     </text>
                     <text
                         x={0.2 * (dimensionWidth) + differentialSquareWidth + 1}
@@ -468,7 +468,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                         textAnchor={"start"}
                         fontSize="11px"
                         fill={"black"}>
-                        {`${interventionDate ? `Post Intervine` : `False`} ${postTotal}/${preTotal + postTotal}`}
+                        {`${interventionDate ? `Post Intervene` : `False`} ${postTotal}/${preTotal + postTotal}`}
                     </text>
                 </g>
                 <foreignObject x={0.0 * (dimensionWidth)} y={0} width={0.2 * dimensionWidth} height={currentOffset.top}>
