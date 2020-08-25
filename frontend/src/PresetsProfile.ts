@@ -222,7 +222,7 @@ export const AcronymDictionary: any = {
     TVR: "Tricuspid Valve Repair",
     PVR: "Proliferative Vitreoretinopathy",
     VENT: "Over 24 Hours Ventilator Usage",
-    RISK: "Diagnosis-related Group Weight",
+    RISK: "Diagnosis-related Group Weight (Risk Score)",
     "Zero %": "Zero Transfusion",
     DEATH: "Death",
     STROKE: "Stroke",
