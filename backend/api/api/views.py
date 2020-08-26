@@ -798,7 +798,7 @@ def state(request):
             state_access = StateAccess.objects.filter(state=state).filter(user=user)
 
             # Make sure that user is owner or at least reader
-            if state.owner != user or not state_access:
+            if not(state.owner == user or state_access):
                 return HttpResponseBadRequest("Not authorized", 401)
 
             # Return the json for the state
