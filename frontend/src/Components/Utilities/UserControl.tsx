@@ -51,7 +51,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         const res = await fetch(`${process.env.REACT_APP_QUERY_URL}state`)
         const result = await res.json()
         if (result) {
-            const resultList = result.map((d: any[]) => d[1])
+            const resultList = result.map((d: any[]) => d)
             stateUpdateWrapperUseJSON(listOfSavedState, resultList, setListOfSavedState)
         }
     }
@@ -61,7 +61,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             .then(result => result.json())
             .then(result => {
                 if (result) {
-                    const resultList = result.map((d: any[]) => d[1])
+                    const resultList = result.map((d: any[]) => d)
                     stateUpdateWrapperUseJSON(listOfSavedState, resultList, setListOfSavedState)
                 }
             })
