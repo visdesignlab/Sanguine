@@ -792,7 +792,7 @@ def state(request):
 
         if name:
             # Get the object from the database and all related StateAccess objects
-            state = State.objects.filter(name=name)
+            state = State.objects.get(name=name)
             if not state:
                 return HttpResponseBadRequest("State not found", 404)
             state_access = StateAccess.objects.filter(state=state).filter(user=user)
