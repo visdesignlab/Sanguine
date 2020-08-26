@@ -65,13 +65,14 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
     const svgSelection = select(svg.current);
 
     useEffect(() => {
+        const copyOfData: DumbbellDataPoint[] = JSON.parse(JSON.stringify(data))
         let tempNumberList: { num: number, indexEnding: number }[] = [];
         let tempDatapointsDict: { title: any, length: number }[] = [];
         if (data.length > 0) {
             let tempSortedData: DumbbellDataPoint[] = [];
             switch (sortMode) {
                 case "Postop":
-                    tempSortedData = data.sort(
+                    tempSortedData = copyOfData.sort(
                         (a, b) => {
                             // if (interventionDate) {
                             //   const intervDate = typeof interventionDate === "string" ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate;
@@ -96,7 +97,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
                     );
                     break;
                 case "Preop":
-                    tempSortedData = data.sort(
+                    tempSortedData = copyOfData.sort(
                         (a, b) => {
                             if (a.yVal === b.yVal) {
                                 if (a.startXVal > b.startXVal) return 1;
@@ -110,7 +111,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
                     );
                     break;
                 case "Gap":
-                    tempSortedData = data.sort(
+                    tempSortedData = copyOfData.sort(
                         (a, b) => {
                             if (a.yVal === b.yVal) {
                                 if (Math.abs(a.endXVal - a.startXVal) > Math.abs(b.endXVal - b.startXVal)) return 1;
