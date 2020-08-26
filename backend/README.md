@@ -158,7 +158,7 @@ There are several routes set up for accessing the patient and surgery data. Here
     ```
 
 - Name: `/api/state`
-  - Allowed Methods: `GET. POST, PUT, DELETE`
+  - Allowed Methods: `GET, POST, PUT, DELETE`
   - Parameters:  
     `name`: The name of the state object.  
     `definition`: The state definition, usually the string from our provenance library.
@@ -170,8 +170,8 @@ There are several routes set up for accessing the patient and surgery data. Here
 
     # POST
     curl -X POST '127.0.0.1:8000/api/state' \ 
-      -H "Content-Type: application/json" \
-      -d '{"name": "example_state", "definition": "foo"}'
+      -F "name=example_state" \
+      -F "definition=foo"
     
     # PUT
     curl -X PUT '127.0.0.1:8000/api/state' \ 
@@ -182,6 +182,21 @@ There are several routes set up for accessing the patient and surgery data. Here
     curl -X DELETE '127.0.0.1:8000/api/state' \ 
       -H "Content-Type: application/json" \
       -d '{"name": "example_state"}'
+    ```
+
+- Name: `/api/share_state`
+  - Allowed Methods: `POST`
+  - Parameters:  
+    `name`: The name of the state object.  
+    `role`: Role type. "WR" for writers and "RE" for readers.
+    `user`: uid of person to share with.
+  - Description: Shares access of state to another user with reader or writer privileges.
+  - Example:
+    ```
+    curl -X POST '127.0.0.1:8000/api/share_state' \ 
+      -F "name=example_state" \
+      -F "user=test1" \
+      -F "role=WR"
     ```
 
 ## Testing
