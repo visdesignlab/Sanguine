@@ -883,7 +883,7 @@ def share_state(request):
         requesting_user = request.user.id
 
         state_object = State.objects.get(name=name)
-        user_object = User.objects.get(username=user) # username = uid
+        user_object = User.objects.get(username=user)  # username = uid
 
         # Make sure state exists, requesting users is owner, and new user is not owner, user exists
         if not state_object:
@@ -906,7 +906,7 @@ def share_state(request):
         # If all above passed, make the StateAccess object
         StateAccess.objects.create(
             state=state_object,
-            user=user,
+            user=user_object.id,
             role=role,
         )
         return HttpResponse("Added new user to role", 201)
