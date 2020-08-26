@@ -798,7 +798,7 @@ def state(request):
             state_access = StateAccess.objects.filter(state=state).filter(user=user)
 
             # Make sure that user is owner or at least reader
-            if not(state.owner == user or state_access):
+            if not(str(state.owner) == str(user) or state_access):
                 return HttpResponseBadRequest("Not authorized", 401)
 
             # Return the json for the state
@@ -857,7 +857,7 @@ def state(request):
 
         # Delete the matching State object
         result = State.objects.get(name=name)
-        if result.owner != request.user.id:
+        if str(result.owner) != str(request.user.id):
             return HttpResponseBadRequest("Requester is not owner", 400)
         result.delete()
 
