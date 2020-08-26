@@ -1,18 +1,18 @@
-# BloodVis Visualization Project 
+# Sanguine Visualization Project 
 
 This project is a collaboration between VDL and ARUP at University of Utah. We visualize blood usage in cardiac surgeries and associated patient and surgery attributes. Through this interactive visualization tool, we hope to offer clinical practitioners a better overall view on the use of blood, thus facilitating better patient outcomes. 
 
-![Interface image](https://github.com/visdesignlab/bloodvis/blob/master/images/interface.png)
+![Interface image](https://github.com/visdesignlab/sanguine/blob/master/images/interface.png)
 
 ## Table of Contents
 
-1. [Access Bloodvis on CHPC](#access-bloodvis-on-chpc)
+1. [Access Sanguine on CHPC](#access-sanguine-on-chpc)
 1. [Quick start guide](#development-environment-quick-start)
     - [Start the server](#start-the-server)
     - [Start the frontend](#start-the-frontend)
 1. [Deployment docs](#deploying-in-production)
 
-## Access Bloodvis on CHPC
+## Access Sanguine on CHPC
 
 To use this, make sure you are on the campus network. If off-campus, use a VPN that ends in utah.edu. Navigate to https://bloodvis.chpc.utah.edu
 
