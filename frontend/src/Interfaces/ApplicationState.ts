@@ -91,6 +91,7 @@ export interface ExtraPairPoint {
     type: string;
     label: string;
     medianSet?: any;
+    kdeMax?: number;
 }
 
 export interface ExtraPairInterventionPoint {
@@ -103,6 +104,8 @@ export interface ExtraPairInterventionPoint {
     preMedianSet?: any;
     postMedianSet?: any;
     label: string;
+    totalKdeMax?: number,
+    halfKdeMax?: number
 }
 
 export interface ApplicationState {

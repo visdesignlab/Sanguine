@@ -37,7 +37,8 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
         currentOutputFilterSet,
         rawDateRange,
         dateRange, procedureTypeSelection,
-        outcomesSelection
+        outcomesSelection,
+        mainCompWidth,
     } = store!;
 
     const svgRef = useRef<SVGSVGElement>(null);
@@ -73,7 +74,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
             // setWidth(w === 1 ? 542.28 : 1146.97)
             setHeight(svgRef.current.clientHeight);
         }
-    }, [layoutArray, w]);
+    }, [layoutArray, mainCompWidth]);
 
     useEffect(() => {
         if (new Date(interventionDate).getTime() < new Date(rawDateRange[0]).getTime() || new Date(interventionDate).getTime() > new Date(rawDateRange[1]).getTime()) {
