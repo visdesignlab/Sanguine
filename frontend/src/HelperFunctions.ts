@@ -1,5 +1,5 @@
 import { BasicAggregatedDatePoint, ExtraPairInterventionPoint, ComparisonDataPoint, ExtraPairPoint, SingleCasePoint, HeatMapDataPoint } from "./Interfaces/ApplicationState"
-import { mean, median, sum } from "d3";
+import { mean, median, sum, max } from "d3";
 import { create as createpd } from "pdfast";
 import { BloodProductCap } from "./PresetsProfile";
 
@@ -25,6 +25,8 @@ export const generateExtrapairPlotDataWithIntervention = (aggregatedBy: string, 
 
             let preCaseDicts = {} as any;
             let postCaseDicts = {} as any;
+            let kdeMax_nonInt: any = 0;
+            let kdeMax_Int: any = 0;
 
             switch (variable) {
                 case "Total Transfusion":
@@ -132,37 +134,44 @@ export const generateExtrapairPlotDataWithIntervention = (aggregatedBy: string, 
                         let pd = createpd(value, { min: 0, max: 30 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
 
-                        // let kdeMax_temp: number = (max(pd, (d: any) => (d.y as number)) || 0)
-                        let kdeMax_temp = 0
+                        if ((value as any).length > 5) {
+                            kdeMax_nonInt = (max(pd, (val: any) => val.y) as any) > kdeMax_nonInt ? max(pd, (val: any) => val.y) : kdeMax_nonInt
+                        }
+
                         let reverse_pd = pd.map((pair: any) => {
-                            kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
+
                         pd = pd.concat(reverse_pd);
-                        newData[key] = { kdeArray: pd, kdeMax: kdeMax_temp };
+                        newData[key] = { kdeArray: pd, dataPoints: value };
 
                         pd = createpd(temporaryPreIntDataHolder[key], { min: 0, max: 30 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
-                        kdeMax_temp = 0
+
+                        if (temporaryPreIntDataHolder[key].length > 5) {
+                            kdeMax_Int = (max(pd, (val: any) => val.y) as any) > kdeMax_Int ? max(pd, (val: any) => val.y) : kdeMax_Int
+                        }
 
                         reverse_pd = pd.map((pair: any) => {
-                            kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
+                            // kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
-                        preIntData[key] = { kdeArray: pd, kdeMax: kdeMax_temp };
+                        preIntData[key] = { kdeArray: pd, dataPoints: temporaryPreIntDataHolder[key] };
 
                         pd = createpd(temporaryPostIntDataHolder[key], { min: 0, max: 30 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
-                        kdeMax_temp = 0
 
+                        if (temporaryPostIntDataHolder[key].length > 5) {
+                            kdeMax_Int = (max(pd, (val: any) => val.y) as any) > kdeMax_Int ? max(pd, (val: any) => val.y) : kdeMax_Int
+                        }
 
                         reverse_pd = pd.map((pair: any) => {
-                            kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
+
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
-                        postIntData[key] = { kdeArray: pd, kdeMax: kdeMax_temp };
+                        postIntData[key] = { kdeArray: pd, dataPoints: temporaryPostIntDataHolder[key] };
                     }
 
                     newExtraPairData.push({
@@ -174,7 +183,9 @@ export const generateExtrapairPlotDataWithIntervention = (aggregatedBy: string, 
                         type: "Violin",
                         totalMedianSet: medianData,
                         preMedianSet: preMedianData,
-                        postMedianSet: postMedianData
+                        postMedianSet: postMedianData,
+                        totalKdeMax: kdeMax_nonInt,
+                        halfKdeMax: kdeMax_Int
                     });
                     break;
                 case "Preop HGB":
@@ -208,36 +219,44 @@ export const generateExtrapairPlotDataWithIntervention = (aggregatedBy: string, 
                         let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
 
-                        let kdeMax_temp = 0
+                        if ((newData[prop] as any).length > 5) {
+                            kdeMax_nonInt = (max(pd, (val: any) => val.y) as any) > kdeMax_nonInt ? max(pd, (val: any) => val.y) : kdeMax_nonInt
+                        }
+
                         let reverse_pd = pd.map((pair: any) => {
-                            kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
+                            // kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
-                        newData[prop] = { kdeArray: pd, kdeMax: kdeMax_temp };
+                        newData[prop] = { kdeArray: pd, dataPoints: newData[prop] };
 
                         pd = createpd(preIntData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
 
-                        kdeMax_temp = 0
+                        if (preIntData[prop].length > 5) {
+                            kdeMax_Int = (max(pd, (val: any) => val.y) as any) > kdeMax_Int ? max(pd, (val: any) => val.y) : kdeMax_Int
+                        }
 
                         reverse_pd = pd.map((pair: any) => {
-                            kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
+                            //  kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
-                        preIntData[prop] = { kdeArray: pd, kdeMax: kdeMax_temp };
+                        preIntData[prop] = { kdeArray: pd, dataPoints: preIntData[prop] };
 
                         pd = createpd(postIntData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
-                        kdeMax_temp = 0
+                        //  kdeMax_temp = 0
+                        if (postIntData[prop].length > 5) {
+                            kdeMax_Int = (max(pd, (val: any) => val.y) as any) > kdeMax_Int ? max(pd, (val: any) => val.y) : kdeMax_Int
+                        }
 
                         reverse_pd = pd.map((pair: any) => {
-                            kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
+                            //      kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
-                        postIntData[prop] = { kdeArray: pd, kdeMax: kdeMax_temp };
+                        postIntData[prop] = { kdeArray: pd, dataPoints: postIntData[prop] };
                     }
 
                     newExtraPairData.push({
@@ -249,7 +268,9 @@ export const generateExtrapairPlotDataWithIntervention = (aggregatedBy: string, 
                         type: "Violin",
                         totalMedianSet: medianData,
                         preMedianSet: preMedianData,
-                        postMedianSet: postMedianData
+                        postMedianSet: postMedianData,
+                        halfKdeMax: kdeMax_Int,
+                        totalKdeMax: kdeMax_nonInt
                     });
                     break;
 
@@ -285,42 +306,49 @@ export const generateExtrapairPlotDataWithIntervention = (aggregatedBy: string, 
                         let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
 
-                        let kdeMax_temp = 0
+                        //   let kdeMax_temp = 0
+                        if (newData[prop].length > 5) {
+                            kdeMax_nonInt = (max(pd, (val: any) => val.y) as any) > kdeMax_nonInt ? max(pd, (val: any) => val.y) : kdeMax_nonInt
+
+                        }
 
                         let reverse_pd = pd.map((pair: any) => {
-                            kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
+                            //  kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
-                        newData[prop] = { kdeArray: pd, kdeMax: kdeMax_temp };
+                        newData[prop] = { kdeArray: pd, dataPoints: newData[prop] };
 
                         pd = createpd(preIntData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
 
-                        kdeMax_temp = 0
 
+                        if (preIntData[prop].length > 5) {
+                            kdeMax_Int = (max(pd, (val: any) => val.y) as any) > kdeMax_Int ? max(pd, (val: any) => val.y) : kdeMax_Int
+
+                        }
 
 
                         reverse_pd = pd.map((pair: any) => {
-                            kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
+                            //  kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
-                        preIntData[prop] = { kdeArray: pd, kdeMax: kdeMax_temp };
+                        preIntData[prop] = { kdeArray: pd, dataPoints: preIntData[prop] };
 
                         pd = createpd(postIntData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
 
-                        kdeMax_temp = 0
+                        if (postIntData[prop].length > 5) {
+                            kdeMax_Int = (max(pd, (val: any) => val.y) as any) > kdeMax_Int ? max(pd, (val: any) => val.y) : kdeMax_Int
 
-
-
+                        }
                         reverse_pd = pd.map((pair: any) => {
-                            kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
+                            //   kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reverse_pd);
-                        postIntData[prop] = { kdeArray: pd, kdeMax: kdeMax_temp };
+                        postIntData[prop] = { kdeArray: pd, dataPoints: postIntData[prop] };
                     }
 
                     newExtraPairData.push({
@@ -331,7 +359,9 @@ export const generateExtrapairPlotDataWithIntervention = (aggregatedBy: string, 
                         type: "Violin",
                         totalMedianSet: medianData,
                         preMedianSet: preMedianData,
-                        postMedianSet: postMedianData
+                        postMedianSet: postMedianData,
+                        halfKdeMax: kdeMax_Int,
+                        totalKdeMax: kdeMax_nonInt
                     });
                     break;
 
@@ -403,6 +433,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
             let caseDictionary = {} as any;
             let temporaryDataHolder: any = {}
             let medianData = {} as any;
+            let kdeMax_temp: any = 0
             switch (variable) {
                 case "Total Transfusion":
                     //let newDataBar = {} as any;
@@ -463,17 +494,19 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
                         medianData[key] = median(value as any);
                         let pd = createpd(value, { min: 0, max: 30 });
                         pd = [{ x: 0, y: 0 }].concat(pd)
-                        let kdeMax_temp = 0
 
+                        if ((value as any).length > 5) {
+                            kdeMax_temp = (max(pd, (val: any) => val.y) as any) > kdeMax_temp ? max(pd, (val: any) => val.y) : kdeMax_temp
+                        }
 
                         let reversePd = pd.map((pair: any) => {
-                            kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
+
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reversePd)
-                        newData[key] = { kdeArray: pd, kdeMax: kdeMax_temp };
+                        newData[key] = { kdeArray: pd, dataPoints: value };
                     }
-                    newExtraPairData.push({ name: "RISK", label: "DRG Weight", data: newData, type: "Violin", medianSet: medianData });
+                    newExtraPairData.push({ name: "RISK", label: "DRG Weight", data: newData, type: "Violin", medianSet: medianData, kdeMax: kdeMax_temp });
                     break;
 
                 case "Preop HGB":
@@ -492,16 +525,19 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
                         medianData[prop] = median(newData[prop]);
                         let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
-                        let kdeMax_temp = 0
+
+                        if ((newData[prop] as any).length > 5) {
+                            kdeMax_temp = (max(pd, (val: any) => val.y) as any) > kdeMax_temp ? max(pd, (val: any) => val.y) : kdeMax_temp
+                        }
 
                         let reversePd = pd.map((pair: any) => {
-                            kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
+
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reversePd);
-                        newData[prop] = { kdeArray: pd, kdeMax: kdeMax_temp };
+                        newData[prop] = { kdeArray: pd, dataPoints: newData[prop] };
                     }
-                    newExtraPairData.push({ name: "Preop HGB", label: "Preop HGB", data: newData, type: "Violin", medianSet: medianData });
+                    newExtraPairData.push({ name: "Preop HGB", label: "Preop HGB", data: newData, type: "Violin", medianSet: medianData, kdeMax: kdeMax_temp });
                     break;
                 case "Postop HGB":
                     //let newData = {} as any;
@@ -519,15 +555,19 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
                         medianData[prop] = median(newData[prop]);
                         let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
                         pd = [{ x: 0, y: 0 }].concat(pd);
-                        let kdeMax_temp = 0
+
+                        if ((newData[prop] as any).length > 5) {
+                            kdeMax_temp = (max(pd, (val: any) => val.y) as any) > kdeMax_temp ? max(pd, (val: any) => val.y) : kdeMax_temp
+                        }
+
                         let reversePd = pd.map((pair: any) => {
-                            kdeMax_temp = pair.y > kdeMax_temp ? pair.y : kdeMax_temp;
+
                             return { x: pair.x, y: -pair.y };
                         }).reverse();
                         pd = pd.concat(reversePd);
-                        newData[prop] = { kdeArray: pd, kdeMax: kdeMax_temp };
+                        newData[prop] = { kdeArray: pd, dataPoints: newData[prop] };
                     }
-                    newExtraPairData.push({ name: "Postop HGB", label: "Postop HGB", data: newData, type: "Violin", medianSet: medianData });
+                    newExtraPairData.push({ name: "Postop HGB", label: "Postop HGB", data: newData, type: "Violin", medianSet: medianData, kdeMax: kdeMax_temp });
                     break;
                 default:
                     break;
