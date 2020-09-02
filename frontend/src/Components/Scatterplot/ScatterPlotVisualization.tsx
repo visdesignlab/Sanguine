@@ -41,6 +41,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
         previewMode,
         showZero,
         currentSelectPatientGroupIDs,
+        mainCompWidth,
         outcomesSelection
 
     } = store!;
@@ -66,7 +67,7 @@ const ScatterPlotVisualization: FC<Props> = ({ w, notation, chartId, hemoglobinD
             //  setWidth(w === 1 ? 542.28 : 1146.97)
             setHeight(svgRef.current.clientHeight)
         }
-    }, [layoutArray, w]);
+    }, [layoutArray, mainCompWidth]);
 
 
 

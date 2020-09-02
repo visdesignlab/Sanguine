@@ -34,7 +34,8 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         previewMode,
         outcomesSelection,
         currentOutputFilterSet,
-        procedureTypeSelection
+        procedureTypeSelection,
+        mainCompWidth
     } = store!;
     const svgRef = useRef<SVGSVGElement>(null);
     // const [data, setData] = useState<{ original: BarChartDataPoint[]; perCase: BarChartDataPoint[]; }>({ original: [], perCase: [] });
@@ -66,7 +67,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
 
         }
 
-    }, [layoutArray, w, svgRef]);
+    }, [layoutArray, mainCompWidth, svgRef]);
 
     useEffect(() => {
         if (previousCancelToken) {
