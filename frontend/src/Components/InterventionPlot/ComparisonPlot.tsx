@@ -335,7 +335,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                 textAnchor={"middle"}
                 fontSize="12px"
             >
-                {dataPoint.preCaseCount}
+                {showZero ? dataPoint.preCaseCount : (dataPoint.preCaseCount - dataPoint.preZeroCaseNum)}
             </text>, <text
                 fill="white"
                 x={-caseRectWidth}
@@ -347,7 +347,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                 textAnchor={"middle"}
                 fontSize="12px"
             >
-                {dataPoint.postCaseCount}
+                {showZero ? dataPoint.postCaseCount : (dataPoint.postCaseCount - dataPoint.postZeroCaseNum)}
             </text>])
         } else {
             return ([<text
@@ -361,7 +361,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                 textAnchor={"middle"}
                 fontSize="12px"
             >
-                {dataPoint.preCaseCount + dataPoint.postCaseCount}
+                {showZero ? (dataPoint.preCaseCount + dataPoint.postCaseCount) : ((dataPoint.preCaseCount + dataPoint.postCaseCount) - (dataPoint.preZeroCaseNum + dataPoint.postZeroCaseNum))}
             </text>])
         }
     }
