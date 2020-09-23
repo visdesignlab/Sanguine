@@ -94,8 +94,8 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
             if (node && convertedData.length > 0 && distinctCategories.surgeons.length > 0) {
                 if (!(node.getElementsByClassName("lu-side-panel").length > 0)) {
                     let lineup = LineUpJS.builder(convertedData)
-                        .column(LineUpJS.buildStringColumn("CASE_ID"))
-                        .column(LineUpJS.buildStringColumn("PATIENT_ID"))
+                        // .column(LineUpJS.buildStringColumn("CASE_ID"))
+                        // .column(LineUpJS.buildStringColumn("PATIENT_ID"))
                         .column(LineUpJS.buildCategoricalColumn('B12').categories(["0", "1"]))
                         .column(LineUpJS.buildCategoricalColumn("TXA").categories(["0", "1"]))
                         .column(LineUpJS.buildCategoricalColumn('AMICAR').categories(["0", "1"]))
@@ -104,7 +104,7 @@ const LineUpWrapper: FC<Props> = ({ hemoglobinDataSet, store }: Props) => {
                         .column(LineUpJS.buildCategoricalColumn('ECMO').categories(["0", "1"]))
                         .column(LineUpJS.buildCategoricalColumn("STROKE").categories(["0", "1"]))
                         .column(LineUpJS.buildCategoricalColumn("SURGERY_TYPE").categories(surgeryTypeArray))
-                        .column(LineUpJS.buildDateColumn("DATE"))
+                        //    .column(LineUpJS.buildDateColumn("DATE"))
                         .column(LineUpJS.buildNumberColumn("DRG_WEIGHT", [0, 30]))
                         .column(LineUpJS.buildNumberColumn("PREOP_HGB", [0, 18]))
                         .column(LineUpJS.buildNumberColumn("POSTOP_HGB", [0, 18]))
