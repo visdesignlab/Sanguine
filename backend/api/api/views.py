@@ -43,13 +43,17 @@ IDENT_FIELDS = {
 }
 
 DE_IDENT_TABLES = {
-    "billing_codes": "CLIN_DM.BPU_CTS_DI_BILLING_CODES",
-    "intra_op_trnsfsd": "CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD",
-    "patient": "CLIN_DM.BPU_CTS_DI_PATIENT",
-    "surgery_case": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE",
-    "visit": "CLIN_DM.BPU_CTS_DI_VISIT",
-    "extraop_meds": "CLIN_DM.BPU_CTS_DI_EXTRAOP_MEDS",
-    "intraop_meds": "CLIN_DM.BPU_CTS_DI_INTRAOP_MEDS",
+    "billing_codes": "CLIN_DM.BPU_CTS_DI_BILL_CODES_092920",
+    "intra_op_trnsfsd": "CLIN_DM.BPU_CTS_DI_INTRP_TRNSF_092920",
+    "extra_op_trnsfsd": "CLIN_DM.BPU_CTS_DI_EXTRP_TRNSF_092920",
+    "patient": "CLIN_DM.BPU_CTS_DI_PATIENT_092920",
+    "surgery_case": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE_092920",
+    "visit": "CLIN_DM.BPU_CTS_DI_VISIT_092920",
+    "visit_labs": "CLIN_DM.BPU_CTS_DI_VST_LABS_092920",
+    "extraop_meds": "CLIN_DM.BPU_CTS_DI_EXTRAOP_MEDS_092920",
+    "intraop_meds": "CLIN_DM.BPU_CTS_DI_INTRAOP_MEDS_092920",
+    "extraop_vitals": "CLIN_DM.BPU_CTS_DI_EXTRAOP_VTLS_092920",
+    "preop_labs": "CLIN_DM.BPU_CTS_DI_PREOP_LABS_092920",
 }
 
 IDENT_TABLES = {
@@ -296,15 +300,14 @@ def request_transfused_units(request):
             LIMITED_SURG.DI_PAT_ID,
             LIMITED_SURG.DI_CASE_ID,
             {transfusion_type}
-        FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD TRNSFSD
+        FROM {TABLES_IN_USE.get('intra_op_trnsfsd')} TRNSFSD
         RIGHT JOIN (
             SELECT *
-            FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE
+            FROM {TABLES_IN_USE.get('surgery_case')}
             WHERE DI_CASE_ID IN (
                 SELECT DI_CASE_ID
-                FROM CLIN_DM.BPU_CTS_DI_BILLING_CODES BLNG
-                INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE SURG
-                    ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) AND (BLNG.DI_VISIT_NO = SURG.DI_VISIT_NO) AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE) 
+                FROM {TABLES_IN_USE.get('billing_codes')} BLNG
+                INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
                 {filters_safe_sql}
             )
         ) LIMITED_SURG
@@ -401,7 +404,7 @@ def risk_score(request):
             APR_DRG_ROM,
             APR_DRG_SOI
         FROM
-            CLIN_DM.BPU_CTS_DI_VISIT
+            {TABLES_IN_USE.get('visit')}
         WHERE 1=1
             {pat_filters_safe_sql}
         """
@@ -571,7 +574,7 @@ def patient_outcomes(request):
 )
 def hemoglobin(request):
     if request.method == "GET":
-        command = """
+        command = f"""
         WITH
         LAB_HB AS (
             SELECT
@@ -582,7 +585,7 @@ def hemoglobin(request):
                 V.RESULT_CODE,
                 V.RESULT_VALUE
             FROM
-                CLIN_DM.BPU_CTS_DI_VST_LABS V
+                {TABLES_IN_USE.get("visit_labs")} V
             WHERE UPPER(V.RESULT_DESC) = 'HEMOGLOBIN'
         ),
         PREOP_HB AS (
@@ -603,7 +606,7 @@ def hemoglobin(request):
                     SC.DI_SURGERY_END_DTM,
                     MAX(LH.DI_DRAW_DTM) AS DI_PREOP_DRAW_DTM
                 FROM
-                    CLIN_DM.BPU_CTS_DI_SURGERY_CASE SC
+                    {TABLES_IN_USE.get('surgery_case')} SC
                 INNER JOIN LAB_HB LH
                     ON SC.DI_VISIT_NO = LH.DI_VISIT_NO
                 WHERE LH.DI_RESULT_DTM < SC.DI_SURGERY_START_DTM
@@ -636,7 +639,7 @@ def hemoglobin(request):
                     SC2.DI_SURGERY_END_DTM,
                     MIN(LH3.DI_DRAW_DTM) AS DI_POSTOP_DRAW_DTM
                 FROM
-                    CLIN_DM.BPU_CTS_DI_SURGERY_CASE SC2
+                    {TABLES_IN_USE.get('surgery_case')} SC2
                 INNER JOIN LAB_HB LH3
                     ON SC2.DI_VISIT_NO = LH3.DI_VISIT_NO
                 WHERE LH3.DI_DRAW_DTM > SC2.DI_SURGERY_END_DTM
@@ -672,7 +675,7 @@ def hemoglobin(request):
             POST.DI_POSTOP_DRAW_DTM,
             POST.RESULT_VALUE AS POSTOP_HEMO
         FROM
-            CLIN_DM.BPU_CTS_DI_SURGERY_CASE SC3
+            {TABLES_IN_USE.get('surgery_case')} SC3
         LEFT OUTER JOIN PREOP_HB PRE
             ON SC3.DI_CASE_ID = PRE.DI_CASE_ID
         LEFT OUTER JOIN POSTOP_HB POST
