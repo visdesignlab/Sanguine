@@ -271,24 +271,36 @@ def request_transfused_units(request):
         if transfusion_type != "PRBC_UNITS,FFP_UNITS,PLT_UNITS,CRYO_UNITS,CELL_SAVER_ML":
             transfusion_type = f"SUM({transfusion_type}), {aggregates[aggregated_by]}" if aggregated_by else f"SUM({transfusion_type})"
         else:
-            transfusion_type = (f"SUM(PRBC_UNITS),SUM(FFP_UNITS),SUM(PLT_UNITS),SUM(CRYO_UNITS),SUM(CELL_SAVER_ML),{aggregates[aggregated_by]}" 
-                                if aggregated_by
-                                else "SUM(PRBC_UNITS),SUM(FFP_UNITS),SUM(PLT_UNITS),SUM(CRYO_UNITS),SUM(CELL_SAVER_ML)")
+            transfusion_type = (
+                f"SUM(PRBC_UNITS),SUM(FFP_UNITS),SUM(PLT_UNITS),SUM(CRYO_UNITS),SUM(CELL_SAVER_ML),{aggregates[aggregated_by]}"
+                if aggregated_by
+                else "SUM(PRBC_UNITS),SUM(FFP_UNITS),SUM(PLT_UNITS),SUM(CRYO_UNITS),SUM(CELL_SAVER_ML)"
+            )
 
-        group_by = (f"GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, LIMITED_SURG.DI_PAT_ID, LIMITED_SURG.DI_CASE_ID, {aggregates[aggregated_by]}" 
-                    if aggregated_by
-                    else "GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, LIMITED_SURG.DI_PAT_ID, LIMITED_SURG.DI_CASE_ID")
+        group_by = (
+            f"GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, LIMITED_SURG.DI_PAT_ID, LIMITED_SURG.DI_CASE_ID, {aggregates[aggregated_by]}"
+            if aggregated_by
+            else "GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, LIMITED_SURG.DI_PAT_ID, LIMITED_SURG.DI_CASE_ID"
+        )
 
         # Generate the CPT filter sql
         filters, bind_names, filters_safe_sql = get_filters(filter_selection)
 
         # Generate the patient filters
         pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
-        pat_filters_safe_sql = f"AND TRNSFSD.DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
+        pat_filters_safe_sql = (
+            f"AND TRNSFSD.DI_PAT_ID IN ({','.join(pat_bind_names)}) "
+            if patient_ids != []
+            else ""
+        )
 
         # Generate case id filters
         case_bind_names = [f":case_id{str(i)}" for i in range(len(case_ids))]
-        case_filters_safe_sql = f"AND TRNSFSD.DI_CASE_ID IN ({','.join(case_bind_names)}) " if case_ids != [] else ""
+        case_filters_safe_sql = (
+            f"AND TRNSFSD.DI_CASE_ID IN ({','.join(case_bind_names)}) "
+            if case_ids != []
+            else ""
+        )
 
         # Build the sql query
         # Safe to use format strings since there are limited options for
@@ -308,6 +320,7 @@ def request_transfused_units(request):
                 SELECT DI_CASE_ID
                 FROM {TABLES_IN_USE.get('billing_codes')} BLNG
                 INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
+                    ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) AND (BLNG.DI_VISIT_NO = SURG.DI_VISIT_NO) AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE)
                 {filters_safe_sql}
             )
         ) LIMITED_SURG
@@ -321,7 +334,8 @@ def request_transfused_units(request):
         result = execute_sql(
             command,
             dict(
-                zip(bind_names + pat_bind_names + case_bind_names, filters + patient_ids + case_ids),
+                zip(bind_names + pat_bind_names + case_bind_names,
+                    filters + patient_ids + case_ids),
                 min_time=min_time,
                 max_time=max_time
             )
@@ -336,12 +350,14 @@ def request_transfused_units(request):
                 "pat_id": row[2],
                 "case_id": row[3],
                 "transfused_units": (row[4:9]) if ("PRBC_UNITS" in transfusion_type and "FFP_UNITS" in transfusion_type) else (row[4] or 0),
-                "aggregated_by": None if not aggregated_by else row[5]  # aggregated_by and ALL_UNITS never happen together
+                # aggregated_by and ALL_UNITS never happen together
+                "aggregated_by": None if not aggregated_by else row[5]
             })
 
         # Manipulate the data into the right format
         if aggregated_by:
-            aggregated_bys = list(set(map(lambda x: x["aggregated_by"], result_dict)))
+            aggregated_bys = list(
+                set(map(lambda x: x["aggregated_by"], result_dict)))
             cleaned = [
                 {
                     "aggregated_by": agg,
@@ -387,8 +403,10 @@ def risk_score(request):
 
         if patient_ids:
             # Generate the patient filters
-            pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
-            pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
+            pat_bind_names = [
+                f":pat_id{str(i)}" for i in range(len(patient_ids))]
+            pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [
+            ] else ""
         else:
             pat_bind_names = []
             pat_filters_safe_sql = ""
@@ -444,8 +462,14 @@ def patient_outcomes(request):
 
         if patient_ids:
             # Generate the patient filters
-            pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
-            pat_filters_safe_sql = f"AND VST.DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
+            pat_bind_names = [
+                f":pat_id{str(i)}" for i in range(len(patient_ids))
+            ]
+            pat_filters_safe_sql = (
+                f"AND VST.DI_PAT_ID IN ({','.join(pat_bind_names)}) "
+                if patient_ids != [] 
+                else ""
+            )
         else:
             pat_bind_names = []
             pat_filters_safe_sql = ""
@@ -684,17 +708,21 @@ def hemoglobin(request):
 
         result = execute_sql(command)
 
-        items = [{"CASE_ID":row[1],
-                "VISIT_ID": row[2],
-                "YEAR":row[4],
-                "QUARTER": str(row[4])[2:]+"/"+str(output_quarter(row[5])),
-                "MONTH":str(row[4])[2:]+"/"+str(row[5]),
-                "DATE":row[3],
-                "HEMO": [row[-3], row[-1]],
-                "SURGEON_ID": row[10],
-                "ANESTHESIOLOGIST_ID":row[11],
-                "SURGERY_TYPE":row[9],
-                "PATIENT_ID":row[0]} for row in result]
+        items = [{
+            "CASE_ID": row[1],
+            "VISIT_ID": row[2],
+            "YEAR":row[4],
+            "QUARTER": str(row[4])[2:]+"/"+str(output_quarter(row[5])),
+            "MONTH":str(row[4])[2:]+"/"+str(row[5]),
+            "DATE":row[3],
+            "HEMO": [row[-3], row[-1]],
+            "SURGEON_ID": row[10],
+            "ANESTHESIOLOGIST_ID":row[11],
+            "SURGERY_TYPE":row[9],
+            "PATIENT_ID":row[0]
+            }
+            for row in result
+        ]
 
         return JsonResponse({"result": items})
     else:
