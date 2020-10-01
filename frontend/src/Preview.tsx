@@ -8,7 +8,7 @@ import styled from 'styled-components';
 
 import './App.css'
 //import 'react-grid-layout/css/styles.css'
-import { NavLink } from 'react-router-dom';
+//import { NavLink } from 'react-router-dom';
 import LayoutGenerator from './LayoutGenerator';
 import { select } from 'd3';
 import DetailView from './Components/Utilities/DetailView';
@@ -46,9 +46,9 @@ const Preview: FC<Props> = ({ store, hemoData }: Props) => {
                         <Button content="Customize Mode" onClick={() => { store!.previewMode = false }} />
                     </Menu.Item>
                     <Menu.Item>
-                        <NavLink component={Button} isActive={() => { return false }} to="/" onClick={() => { store!.isLoggedIn = false; }} >
+                        <Button onClick={() => { store!.isLoggedIn = false; }} >
                             Log Out
-        </NavLink>
+                    </Button>
 
                     </Menu.Item>
                 </Menu>
