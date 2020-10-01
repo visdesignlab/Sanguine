@@ -2,7 +2,7 @@ import React, { FC, useEffect, useState } from 'react';
 import Store from './Interfaces/Store'
 import { inject, observer } from 'mobx-react';
 import Dashboard from './Dashboard';
-import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
+//import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
 import { timeFormat, timeParse } from 'd3';
 
 import Login from './LogIn'
@@ -204,37 +204,39 @@ const App: FC<Props> = ({ store }: Props) => {
         cacheHemoData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLoggedIn]);
-    return (
-        <BrowserRouter>
-            <Switch>
-                {/* <Route exact path='/' component={Home} /> */}
 
-                <Route exact path='/dashboard' render={() => {
-
-                    if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
-                        if (isLoggedIn) {
-                            if (previewMode) {
-                                return <Preview hemoData={hemoData} />
-                            }
-                            else {
-                                return <Dashboard hemoData={hemoData} />
-                            }
-                        }
-                        else return <Redirect to="/" />
-                    } else {
-                        if (previewMode) {
-                            return <Preview hemoData={hemoData} />
-                        }
-                        else {
-                            return <Dashboard hemoData={hemoData} />
-                        }
-                    }
+    const commputeOutputRenderComponent = () => {
+        if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
+            if (isLoggedIn) {
+                if (previewMode) {
+                    return <Preview hemoData={hemoData} />
                 }
+                else {
+                    return <Dashboard hemoData={hemoData} />
+                }
+            }
+            else return <Login />
+        } else {
+            if (previewMode) {
+                return <Preview hemoData={hemoData} />
+            }
+            else {
+                return <Dashboard hemoData={hemoData} />
+            }
+        }
+    }
 
-                } />
-                <Route path='/' component={Login} />
 
-            </Switch></BrowserRouter>
+    return (
+
+
+        commputeOutputRenderComponent()
+
+
+
+
+
+
         // <Login />
         // <Dashboard hemoData={hemoData} />
     );
