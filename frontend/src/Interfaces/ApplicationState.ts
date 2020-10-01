@@ -144,12 +144,15 @@ export interface LayoutElement {
     notation: string
 }
 
+const today = new Date()
+today.setDate(today.getDate() + 1)
+
 export const defaultState: ApplicationState = {
     layoutArray: [],
     procedureTypeSelection: [true, true, true],
     outcomesSelection: "",
     // currentSelectedChart: "-1",
-    rawDateRange: [new Date(2014, 0, 1).getTime(), new Date(2019, 11, 31).getTime()],
+    rawDateRange: [new Date(2014, 0, 1).getTime(), today.getTime()],
     proceduresSelection: [],
     //rawproceduresSelection: "[]",
     totalAggregatedCaseCount: 0,
