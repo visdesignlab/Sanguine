@@ -2,8 +2,6 @@ import React, { FC, useEffect, useState, useMemo } from "react";
 import { inject, observer } from "mobx-react";
 import Store from "./Interfaces/Store";
 
-//import * as LineUpJS from "lineupjsx";
-// import { LineUpStringColumnDesc, LineUp, LineUpCategoricalColumnDesc, LineUpNumberColumnDesc } from "lineupjsx";
 import * as LineUpJS from "lineupjs"
 import "lineupjs/build/LineUpJS.css";
 import $ from 'jquery';
