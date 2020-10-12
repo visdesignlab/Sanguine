@@ -1,14 +1,14 @@
-import React, { FC } from 'react';
+import React, { FC, useState, useEffect } from 'react';
 import { inject, observer } from 'mobx-react';
 import Store from './Interfaces/Store';
-import { Button, Grid, Container, Modal, Message, Icon, Menu, Image } from 'semantic-ui-react';
+import { Button, Grid, Container, Modal, Message, Icon, Menu, Image, Header } from 'semantic-ui-react';
 
 import SideBar from './Components/Utilities/SideBar';
 import styled from 'styled-components';
 
 import './App.css'
 //import 'react-grid-layout/css/styles.css'
-import { NavLink } from 'react-router-dom';
+//import { NavLink } from 'react-router-dom';
 import LayoutGenerator from './LayoutGenerator';
 import { select } from 'd3';
 import DetailView from './Components/Utilities/DetailView';
@@ -23,7 +23,15 @@ type Props = OwnProps;
 const Preview: FC<Props> = ({ store, hemoData }: Props) => {
 
     const { loadingModalOpen, dataLoadingFailed } = store!;
-    select("#Main-Body").append("div").attr("class", "tooltiptext")
+    select("#Main-Body").append("div").attr("class", "tooltiptext");
+    const [openWarning, setOpenWarning] = useState(false)
+
+    const isChrome = !!(window as any).chrome && (!!(window as any).chrome.webstore || !!(window as any).chrome.runtime);
+
+    useEffect(() => {
+        setOpenWarning(!isChrome)
+    }, [isChrome])
+
     return (
         <LayoutDiv>
             <Container fluid id="Top-Bar">
@@ -40,15 +48,13 @@ const Preview: FC<Props> = ({ store, hemoData }: Props) => {
 
                     </Menu.Item>
                     <Menu.Item>
-                        {/* <NavLink component={Button} to="/dashboard" >
-                            Customize Mode
-                </NavLink> */}
+
                         <Button content="Customize Mode" onClick={() => { store!.previewMode = false }} />
                     </Menu.Item>
                     <Menu.Item>
-                        <NavLink component={Button} isActive={() => { return false }} to="/" onClick={() => { store!.isLoggedIn = false; }} >
+                        <Button onClick={() => { store!.isLoggedIn = false; }} >
                             Log Out
-        </NavLink>
+                    </Button>
 
                     </Menu.Item>
                 </Menu>
@@ -65,6 +71,17 @@ const Preview: FC<Props> = ({ store, hemoData }: Props) => {
                 </Grid.Column>
 
             </Grid>
+            <Modal
+                open={openWarning}>
+                <Header icon="warning sign" content="Warning" />
+                <Modal.Content>
+                    <p>This application is designed to be used on Chrome.</p>
+                    <p>Using it on other browsers may cause inaccurate visual representations of the data.</p>
+                </Modal.Content>
+                <Modal.Actions>
+                    <Button onClick={() => setOpenWarning(false)}>I understand</Button>
+                </Modal.Actions>
+            </Modal>
             <Modal open={loadingModalOpen} closeOnEscape={false}
                 closeOnDimmerClick={false}>
                 <Message icon>

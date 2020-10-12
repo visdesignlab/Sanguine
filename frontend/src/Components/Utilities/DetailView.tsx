@@ -6,7 +6,7 @@ import React, {
 import { inject, observer } from "mobx-react";
 import Store from "../../Interfaces/Store";
 import { List, Container, Button, Header, Search } from "semantic-ui-react";
-import { HIPAA_Sensitive, AcronymDictionary, Title ,surgeryTypeArray} from "../../PresetsProfile";
+import { HIPAA_Sensitive, AcronymDictionary, Title, surgeryTypeArray } from "../../PresetsProfile";
 import styled from "styled-components";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 import { SingleCasePoint } from "../../Interfaces/ApplicationState";
@@ -52,10 +52,10 @@ const DetailView: FC<Props> = ({ hemoData, store }: Props) => {
 
                 const outcomeAttributes = ["DEATH", "ECMO", "STROKE", "VENT", "AMICAR", "TXA", "B12"]
                 outcomeAttributes.forEach((attribute) => {
-                    final_result[attribute] = final_result[attribute] === 0? "No" : "Yes"
+                    final_result[attribute] = final_result[attribute] === 0 ? "No" : "Yes"
                 })
-                
-                final_result.SURGERY_TYPE =  surgeryTypeArray[ final_result.SURGERY_TYPE];
+
+                final_result.SURGERY_TYPE = surgeryTypeArray[final_result.SURGERY_TYPE];
                 stateUpdateWrapperUseJSON(individualInfo, final_result, setIndividualInfo)
 
             }
@@ -145,7 +145,10 @@ const DetailView: FC<Props> = ({ hemoData, store }: Props) => {
                                 isSelected={currentSelectPatient && currentSelectPatient.CASE_ID === d.CASE_ID}
                                 onClick={() => { setCurrentSelectPatient(d) }}
                             >
-                                <span style={{ paddingLeft: "5px" }}>{d.CASE_ID}</span>
+                                <span style={{ paddingLeft: "5px" }}>
+                                    {/* {d.CASE_ID} */}
+                                    --------
+                                    </span>
                             </CaseItem>)
                     })}
                 </List>
