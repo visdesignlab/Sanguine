@@ -49,7 +49,7 @@ const Dashboard: FC<Props> = ({ hemoData, store }: Props) => {
                 </Grid.Column>
             </Grid>
 
-            <Modal basic
+            <Modal
                 open={openWarning}>
                 <Header icon="warning sign" content="Warning" />
                 <Modal.Content>
