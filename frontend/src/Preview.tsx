@@ -48,9 +48,7 @@ const Preview: FC<Props> = ({ store, hemoData }: Props) => {
 
                     </Menu.Item>
                     <Menu.Item>
-                        {/* <NavLink component={Button} to="/dashboard" >
-                            Customize Mode
-                </NavLink> */}
+
                         <Button content="Customize Mode" onClick={() => { store!.previewMode = false }} />
                     </Menu.Item>
                     <Menu.Item>
