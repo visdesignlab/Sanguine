@@ -34,7 +34,7 @@ const ExtraPairViolinInt: FC<Props> = ({ totalKdeMax, halfKdeMax, totalData, pre
         const aggregatedScale = scaleBand()
             .domain(JSON.parse(aggregationScaleDomain))
             .range(JSON.parse(aggregationScaleRange))
-            .paddingInner(0.2);
+            .paddingInner(0.1);
         return aggregatedScale
     }, [aggregationScaleDomain, aggregationScaleRange])
 
