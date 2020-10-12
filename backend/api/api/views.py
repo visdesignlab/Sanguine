@@ -643,7 +643,7 @@ def hemoglobin(request):
             ) X
             INNER JOIN LAB_HB LH2
                 ON X.DI_VISIT_NO = LH2.DI_VISIT_NO
-                AND X.DI_PREOP_DRAW_DTM = LH2.DI_DRAW_DTM
+                AND X.DI_PREOP_DRAW_DTM = LH2.DI_DRAW_DTM  
         ),
         POSTOP_HB AS (
             SELECT
@@ -679,31 +679,62 @@ def hemoglobin(request):
                 AND Z.DI_POSTOP_DRAW_DTM = LH4.DI_DRAW_DTM
         )
         SELECT
-            SC3.DI_PAT_ID,
-            SC3.DI_CASE_ID,
-            SC3.DI_VISIT_NO,
-            SC3.DI_CASE_DATE,
-            EXTRACT (YEAR from SC3.DI_CASE_DATE) YEAR,
-            EXTRACT (MONTH from SC3.DI_CASE_DATE) AS MONTH,
-            SC3.DI_SURGERY_START_DTM,
-            SC3.DI_SURGERY_END_DTM,
-            SC3.SURGERY_ELAP,
-            SC3.SURGERY_TYPE_DESC,
-            SC3.SURGEON_PROV_DWID,
-            SC3.ANESTH_PROV_DWID,
-            SC3.PRIM_PROC_DESC,
-            SC3.POSTOP_ICU_LOS,
-            SC3.SCHED_SITE_DESC,
-            PRE.DI_PREOP_DRAW_DTM,
-            PRE.RESULT_VALUE AS PREOP_HEMO,
-            POST.DI_POSTOP_DRAW_DTM,
-            POST.RESULT_VALUE AS POSTOP_HEMO
+            SC3.DI_PAT_ID
+            ,SC3.DI_CASE_ID
+            ,SC3.DI_VISIT_NO
+            ,SC3.DI_CASE_DATE
+            ,EXTRACT (YEAR from SC3.DI_CASE_DATE) YEAR
+            ,EXTRACT (MONTH from SC3.DI_CASE_DATE) AS MONTH
+            ,SC3.DI_SURGERY_START_DTM
+            ,SC3.DI_SURGERY_END_DTM
+            ,SC3.SURGERY_ELAP
+            ,SC3.SURGERY_TYPE_DESC
+            ,SC3.SURGEON_PROV_DWID
+            ,SC3.ANESTH_PROV_DWID
+            ,SC3.PRIM_PROC_DESC
+            ,SC3.POSTOP_ICU_LOS
+            ,SC3.SCHED_SITE_DESC
+            ,MAX(CASE
+            WHEN PRE.DI_PREOP_DRAW_DTM IS NOT NULL
+            THEN PRE.DI_PREOP_DRAW_DTM
+            END)
+            AS DI_PREOP_DRAW_DTM
+            ,MAX(CASE
+            WHEN PRE.RESULT_VALUE IS NOT NULL
+            THEN PRE.RESULT_VALUE
+            END)
+            AS PREOP_HEMO
+            ,MAX(CASE
+            WHEN POST.DI_POSTOP_DRAW_DTM IS NOT NULL
+            THEN POST.DI_POSTOP_DRAW_DTM
+            END)
+            AS DI_POSTOP_DRAW_DTM
+            ,MAX(CASE
+            WHEN POST.RESULT_VALUE IS NOT NULL
+            THEN POST.RESULT_VALUE
+            END)
+            AS POSTOP_HEMO
         FROM
             {TABLES_IN_USE.get('surgery_case')} SC3
         LEFT OUTER JOIN PREOP_HB PRE
             ON SC3.DI_CASE_ID = PRE.DI_CASE_ID
         LEFT OUTER JOIN POSTOP_HB POST
             ON SC3.DI_CASE_ID = POST.DI_CASE_ID
+        GROUP BY SC3.DI_PAT_ID
+            ,SC3.DI_CASE_ID
+            ,SC3.DI_VISIT_NO
+            ,SC3.DI_CASE_DATE
+            ,EXTRACT (YEAR from SC3.DI_CASE_DATE)
+            ,EXTRACT (MONTH from SC3.DI_CASE_DATE)
+            ,SC3.DI_SURGERY_START_DTM
+            ,SC3.DI_SURGERY_END_DTM
+            ,SC3.SURGERY_ELAP
+            ,SC3.SURGERY_TYPE_DESC
+            ,SC3.SURGEON_PROV_DWID
+            ,SC3.ANESTH_PROV_DWID
+            ,SC3.PRIM_PROC_DESC
+            ,SC3.POSTOP_ICU_LOS
+            ,SC3.SCHED_SITE_DESC
         """
 
         result = execute_sql(command)
