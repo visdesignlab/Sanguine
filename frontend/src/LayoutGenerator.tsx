@@ -1,5 +1,5 @@
 import React, {
-    FC, useRef, useLayoutEffect, useState
+    FC, useRef, useLayoutEffect,
 } from "react";
 import { inject, observer } from "mobx-react";
 import { Tab, Button, Ref } from "semantic-ui-react";
@@ -185,6 +185,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
             store!.mainCompWidth = ((tabRef.current as any).clientWidth)
             // console.log(tabRef)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tabRef])
 
     window.addEventListener("resize", () => {
