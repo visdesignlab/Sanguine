@@ -72,7 +72,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                             0.25 * aggregationScale().bandwidth()
                         }
                         opacity={!isNaN(dataVal.calculated) ? 1 : 0}
-                        fill="white"
+                        fill={valueScale()(dataVal.calculated) > 0.4 ? "white" : "black"}
                         alignmentBaseline={"central"}
                         textAnchor={"middle"}>{Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? "<1%" : format(".0%")(dataVal.calculated)}</text>]
                 )
@@ -108,7 +108,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                             0.75 * aggregationScale().bandwidth()
                         }
                         opacity={!isNaN(dataVal.calculated) ? 1 : 0}
-                        fill="white"
+                        fill={valueScale()(dataVal.calculated) > 0.4 ? "white" : "black"}
                         alignmentBaseline={"central"}
                         textAnchor={"middle"}>{Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? "<1%" : format(".0%")(dataVal.calculated)}</text>]
 
@@ -149,7 +149,7 @@ const ExtraPairBasicInt: FC<Props> = ({ totalData, name, preIntData, postIntData
                             aggregationScale()(val)! +
                             0.5 * aggregationScale().bandwidth()
                         }
-                        fill="white"
+                        fill={valueScale()(dataVal.calculated) > 0.4 ? "white" : "black"}
                         opacity={!isNaN(dataVal.calculated) ? 1 : 0}
                         alignmentBaseline={"central"}
                         textAnchor={"middle"}>{Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? "<1%" : format(".0%")(dataVal.calculated)}</text>]

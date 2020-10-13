@@ -14,13 +14,13 @@ interface OwnProps {
     aggregationScaleRange: string;
     store?: Store;
     medianSet: any;
-    //    kdeMax: number;
+    kdeMax: number;
     name: string;
 }
 
 export type Props = OwnProps;
 
-const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregationScaleRange, medianSet, name }: Props) => {
+const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, aggregationScaleRange, medianSet, name }: Props) => {
 
     const aggregationScale = useCallback(() => {
         const domain = JSON.parse(aggregationScaleDomain);
@@ -30,13 +30,13 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
     }, [aggregationScaleDomain, aggregationScaleRange])
 
 
-
+    console.log(dataSet)
     const valueScale = scaleLinear().domain([0, 18]).range([0, extraPairWidth.Violin])
     if (name === "RISK") {
         valueScale.domain([0, 30]);
     }
 
-    const lineFunction = useCallback((kdeMax) => {
+    const lineFunction = useCallback(() => {
         const kdeScale = scaleLinear()
             .domain([-kdeMax, kdeMax])
             .range([-0.5 * aggregationScale().bandwidth(), 0.5 * aggregationScale().bandwidth()])
@@ -45,7 +45,7 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
             .y((d: any) => kdeScale(d.y) + 0.5 * aggregationScale().bandwidth())
             .x((d: any) => valueScale(d.x));
         return lineFunction
-    }, [aggregationScale, valueScale])
+    }, [aggregationScale, valueScale, kdeMax])
 
     const svgRef = useRef<SVGSVGElement>(null);
 
@@ -55,6 +55,20 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
         svgSelection.select(".axis").call(scaleLabel as any);
     }, [svgRef, valueScale])
 
+    const generateViolin = (dataPoints: any, pdArray: any, aggregationAttribute: string) => {
+        if (dataPoints.length > 5) {
+            return <ViolinLine
+                d={lineFunction()(pdArray)!}
+                transform={`translate(0,${aggregationScale()(aggregationAttribute)!})`}
+            />
+        } else {
+            const result = dataPoints.map((d: any) => {
+                return <circle r={2} fill={basic_gray} cx={valueScale(d)} cy={(aggregationScale()(aggregationAttribute) || 0) + Math.random() * aggregationScale().bandwidth() * 0.5 + aggregationScale().bandwidth() * 0.25} />
+            })
+
+            return <g>{result}</g>
+        }
+    }
 
 
     return (
@@ -64,15 +78,10 @@ const ExtraPairViolin: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregati
             </g>
             {Object.entries(dataSet).map(([val, result]) => {
 
-                // const sortedArray = dataArray.sort((a: any, b: any) =>
-                //     Math.abs(a[1] - a[0]) - Math.abs(b[1] - b[0]))
-                //console.log(`translate(0,${aggregatedScale(val)!}`)
                 return ([
                     <Popup content={`median ${format(".2f")(medianSet[val])}`} key={`violin-${val}`} trigger={
-                        <ViolinLine
-                            d={lineFunction(result.kdeMax)(result.kdeArray)!}
-                            transform={`translate(0,${aggregationScale()(val)!})`}
-                        />} />,
+                        generateViolin(result.dataPoints, result.kdeArray, val)
+                    } />,
 
                     <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }}
                         x1={valueScale(name === "Preop HGB" ? 13 : 7.5)}

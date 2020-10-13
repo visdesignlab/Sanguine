@@ -105,8 +105,10 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
             .then(response => response.json())
             .then(function (data) {
                 const result = data.result;
+
                 let tempSurgeryList: any[] = result;
 
+                console.log(tempSurgeryList)
                 let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
                 tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
 
