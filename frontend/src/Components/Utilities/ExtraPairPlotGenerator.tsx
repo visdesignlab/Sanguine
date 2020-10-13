@@ -85,6 +85,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScaleD
                         medianSet={pairData.medianSet}
                         aggregationScaleDomain={aggregationScaleDomain}
                         aggregationScaleRange={aggregationScaleRange}
+                        kdeMax={pairData.kdeMax || 0}
                         //                        aggregatedScale={aggregationScale()}
                         dataSet={pairData.data}
                         name={pairData.name}

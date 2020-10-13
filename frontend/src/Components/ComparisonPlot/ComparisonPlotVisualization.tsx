@@ -36,7 +36,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
         currentSelectPatientGroupIDs,
         currentOutputFilterSet,
         dateRange,
-        outcomesSelection,
+        outcomesSelection, mainCompWidth,
         procedureTypeSelection,
 
     } = store!;
@@ -74,7 +74,7 @@ const ComparisonPlotVisualization: FC<Props> = ({ w, outcomeComparison, notation
             //   setWidth(w === 1 ? 542.28 : 1146.97)
             setHeight(svgRef.current.clientHeight);
         }
-    }, [layoutArray, w]);
+    }, [layoutArray, mainCompWidth,]);
 
 
 

@@ -41,7 +41,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
         dateRange,
         showZero,
         currentOutputFilterSet,
-        outcomesSelection,
+        outcomesSelection, mainCompWidth,
         procedureTypeSelection
     } = store!;
 
@@ -65,7 +65,7 @@ const DumbbellChartVisualization: FC<Props> = ({ w, notation, yAxis, chartId, st
             setDimensionHeight(svgRef.current.clientHeight)
 
         }
-    }, [layoutArray, w]);
+    }, [layoutArray, mainCompWidth,]);
 
 
     useEffect(() => {

@@ -58,6 +58,7 @@ export default class Store {
     @observable previewMode: boolean = false;
     @observable loadingModalOpen: boolean = true;
     @observable dataLoadingFailed: boolean = false;
+    @observable mainCompWidth: number = 1300
     // @observable csrftoken: string | null = ""
 
 }

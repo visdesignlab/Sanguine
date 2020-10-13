@@ -1,8 +1,8 @@
 import React, {
-    FC, useRef, useLayoutEffect, useState
+    FC, useRef, useLayoutEffect,
 } from "react";
 import { inject, observer } from "mobx-react";
-import { Tab, Button } from "semantic-ui-react";
+import { Tab, Button, Ref } from "semantic-ui-react";
 import { actions } from ".";
 import LineUpWrapper from "./LineUpWrapper";
 //import PatientComparisonWrapper from "./Components/PatientComparisonWrapper";
@@ -29,8 +29,8 @@ export type Props = OwnProps;
 
 
 const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
-    const { layoutArray } = store!
-    const [tabWidth, setTabWidth] = useState(1300);
+    const { layoutArray, mainCompWidth } = store!
+    //  const [tabWidth, setTabWidth] = useState(mainCompWidth);
 
 
     const createElement = (layout: LayoutElement, index: number) => {
@@ -182,16 +182,19 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
 
     useLayoutEffect(() => {
         if (tabRef.current) {
-            setTabWidth((tabRef.current as any).clientWidth)
+            store!.mainCompWidth = ((tabRef.current as any).clientWidth)
             // console.log(tabRef)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tabRef])
 
     window.addEventListener("resize", () => {
         if (tabRef.current) {
-            setTabWidth((tabRef.current as any).clientWidth)
+            store!.mainCompWidth = ((tabRef.current as any).clientWidth)
         }
     })
+
+
 
     const panes = [{
         menuItem: 'Main', pane:
@@ -207,7 +210,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                     className="layout"
                     cols={colData}
                     rowHeight={600}
-                    width={tabWidth}
+                    width={0.95 * mainCompWidth}
                     //cols={2}
                     //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
 
@@ -219,9 +222,6 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
 
                     })}
                 </Responsive>
-
-
-
             </Tab.Pane >
 
     },
@@ -240,9 +240,10 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
         //         </Tab.Pane>
         // }
     ]
-    return <Tab panes={panes}
-        renderActiveOnly={false}
-    ></Tab>
+    return <Ref innerRef={tabRef}>
+        <Tab panes={panes}
+            renderActiveOnly={false} />
+    </Ref>
 }
 
 

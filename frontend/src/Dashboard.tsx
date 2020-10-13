@@ -1,7 +1,7 @@
-import React, { FC } from 'react';
+import React, { FC, useState, useEffect } from 'react';
 import { inject, observer } from 'mobx-react';
 import Store from './Interfaces/Store';
-import { Grid, Container, Modal, Message, Icon } from 'semantic-ui-react';
+import { Grid, Container, Modal, Message, Icon, Header, Button } from 'semantic-ui-react';
 import UserControl from './Components/Utilities/UserControl';
 import SideBar from './Components/Utilities/SideBar';
 import styled from 'styled-components';
@@ -20,8 +20,17 @@ type Props = OwnProps;
 
 const Dashboard: FC<Props> = ({ hemoData, store }: Props) => {
 
+
     const { loadingModalOpen, dataLoadingFailed } = store!;
     select("#Main-Body").append("div").attr("class", "tooltiptext")
+
+    const [openWarning, setOpenWarning] = useState(false)
+
+    const isChrome = !!(window as any).chrome && (!!(window as any).chrome.webstore || !!(window as any).chrome.runtime);
+
+    useEffect(() => {
+        setOpenWarning(!isChrome)
+    }, [isChrome])
 
     return (
         <LayoutDiv>
@@ -39,6 +48,18 @@ const Dashboard: FC<Props> = ({ hemoData, store }: Props) => {
                     <DetailView hemoData={hemoData} />
                 </Grid.Column>
             </Grid>
+
+            <Modal
+                open={openWarning}>
+                <Header icon="warning sign" content="Warning" />
+                <Modal.Content>
+                    <p>This application is designed to be used on Chrome.</p>
+                    <p>Using it on other browsers may cause inaccurate visual representations of the data.</p>
+                </Modal.Content>
+                <Modal.Actions>
+                    <Button onClick={() => setOpenWarning(false)}>I understand</Button>
+                </Modal.Actions>
+            </Modal>
 
             <Modal open={loadingModalOpen} closeOnEscape={false}
                 closeOnDimmerClick={false}>
