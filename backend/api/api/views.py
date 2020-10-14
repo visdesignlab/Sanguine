@@ -43,13 +43,17 @@ IDENT_FIELDS = {
 }
 
 DE_IDENT_TABLES = {
-    "billing_codes": "CLIN_DM.BPU_CTS_DI_BILLING_CODES",
-    "intra_op_trnsfsd": "CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD",
-    "patient": "CLIN_DM.BPU_CTS_DI_PATIENT",
-    "surgery_case": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE",
-    "visit": "CLIN_DM.BPU_CTS_DI_VISIT",
-    "extraop_meds": "CLIN_DM.BPU_CTS_DI_EXTRAOP_MEDS",
-    "intraop_meds": "CLIN_DM.BPU_CTS_DI_INTRAOP_MEDS",
+    "billing_codes": "CLIN_DM.BPU_CTS_DI_BILL_CODES_092920",
+    "intra_op_trnsfsd": "CLIN_DM.BPU_CTS_DI_INTRP_TRNSF_092920",
+    "extra_op_trnsfsd": "CLIN_DM.BPU_CTS_DI_EXTRP_TRNSF_092920",
+    "patient": "CLIN_DM.BPU_CTS_DI_PATIENT_092920",
+    "surgery_case": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE_092920",
+    "visit": "CLIN_DM.BPU_CTS_DI_VISIT_092920",
+    "visit_labs": "CLIN_DM.BPU_CTS_DI_VST_LABS_092920",
+    "extraop_meds": "CLIN_DM.BPU_CTS_DI_EXTRAOP_MEDS_092920",
+    "intraop_meds": "CLIN_DM.BPU_CTS_DI_INTRAOP_MEDS_092920",
+    "extraop_vitals": "CLIN_DM.BPU_CTS_DI_EXTRAOP_VTLS_092920",
+    "preop_labs": "CLIN_DM.BPU_CTS_DI_PREOP_LABS_092920",
 }
 
 IDENT_TABLES = {
@@ -267,24 +271,36 @@ def request_transfused_units(request):
         if transfusion_type != "PRBC_UNITS,FFP_UNITS,PLT_UNITS,CRYO_UNITS,CELL_SAVER_ML":
             transfusion_type = f"SUM({transfusion_type}), {aggregates[aggregated_by]}" if aggregated_by else f"SUM({transfusion_type})"
         else:
-            transfusion_type = (f"SUM(PRBC_UNITS),SUM(FFP_UNITS),SUM(PLT_UNITS),SUM(CRYO_UNITS),SUM(CELL_SAVER_ML),{aggregates[aggregated_by]}" 
-                                if aggregated_by
-                                else "SUM(PRBC_UNITS),SUM(FFP_UNITS),SUM(PLT_UNITS),SUM(CRYO_UNITS),SUM(CELL_SAVER_ML)")
+            transfusion_type = (
+                f"SUM(PRBC_UNITS),SUM(FFP_UNITS),SUM(PLT_UNITS),SUM(CRYO_UNITS),SUM(CELL_SAVER_ML),{aggregates[aggregated_by]}"
+                if aggregated_by
+                else "SUM(PRBC_UNITS),SUM(FFP_UNITS),SUM(PLT_UNITS),SUM(CRYO_UNITS),SUM(CELL_SAVER_ML)"
+            )
 
-        group_by = (f"GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, LIMITED_SURG.DI_PAT_ID, LIMITED_SURG.DI_CASE_ID, {aggregates[aggregated_by]}" 
-                    if aggregated_by
-                    else "GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, LIMITED_SURG.DI_PAT_ID, LIMITED_SURG.DI_CASE_ID")
+        group_by = (
+            f"GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, LIMITED_SURG.DI_PAT_ID, LIMITED_SURG.DI_CASE_ID, {aggregates[aggregated_by]}"
+            if aggregated_by
+            else "GROUP BY LIMITED_SURG.SURGEON_PROV_DWID, LIMITED_SURG.ANESTH_PROV_DWID, LIMITED_SURG.DI_PAT_ID, LIMITED_SURG.DI_CASE_ID"
+        )
 
         # Generate the CPT filter sql
         filters, bind_names, filters_safe_sql = get_filters(filter_selection)
 
         # Generate the patient filters
         pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
-        pat_filters_safe_sql = f"AND TRNSFSD.DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
+        pat_filters_safe_sql = (
+            f"AND TRNSFSD.DI_PAT_ID IN ({','.join(pat_bind_names)}) "
+            if patient_ids != []
+            else ""
+        )
 
         # Generate case id filters
         case_bind_names = [f":case_id{str(i)}" for i in range(len(case_ids))]
-        case_filters_safe_sql = f"AND TRNSFSD.DI_CASE_ID IN ({','.join(case_bind_names)}) " if case_ids != [] else ""
+        case_filters_safe_sql = (
+            f"AND TRNSFSD.DI_CASE_ID IN ({','.join(case_bind_names)}) "
+            if case_ids != []
+            else ""
+        )
 
         # Build the sql query
         # Safe to use format strings since there are limited options for
@@ -296,15 +312,15 @@ def request_transfused_units(request):
             LIMITED_SURG.DI_PAT_ID,
             LIMITED_SURG.DI_CASE_ID,
             {transfusion_type}
-        FROM CLIN_DM.BPU_CTS_DI_INTRAOP_TRNSFSD TRNSFSD
+        FROM {TABLES_IN_USE.get('intra_op_trnsfsd')} TRNSFSD
         RIGHT JOIN (
             SELECT *
-            FROM CLIN_DM.BPU_CTS_DI_SURGERY_CASE
+            FROM {TABLES_IN_USE.get('surgery_case')}
             WHERE DI_CASE_ID IN (
                 SELECT DI_CASE_ID
-                FROM CLIN_DM.BPU_CTS_DI_BILLING_CODES BLNG
-                INNER JOIN CLIN_DM.BPU_CTS_DI_SURGERY_CASE SURG
-                    ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) AND (BLNG.DI_VISIT_NO = SURG.DI_VISIT_NO) AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE) 
+                FROM {TABLES_IN_USE.get('billing_codes')} BLNG
+                INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
+                    ON (BLNG.DI_PAT_ID = SURG.DI_PAT_ID) AND (BLNG.DI_VISIT_NO = SURG.DI_VISIT_NO) AND (BLNG.DI_PROC_DTM = SURG.DI_CASE_DATE)
                 {filters_safe_sql}
             )
         ) LIMITED_SURG
@@ -318,7 +334,8 @@ def request_transfused_units(request):
         result = execute_sql(
             command,
             dict(
-                zip(bind_names + pat_bind_names + case_bind_names, filters + patient_ids + case_ids),
+                zip(bind_names + pat_bind_names + case_bind_names,
+                    filters + patient_ids + case_ids),
                 min_time=min_time,
                 max_time=max_time
             )
@@ -333,12 +350,14 @@ def request_transfused_units(request):
                 "pat_id": row[2],
                 "case_id": row[3],
                 "transfused_units": (row[4:9]) if ("PRBC_UNITS" in transfusion_type and "FFP_UNITS" in transfusion_type) else (row[4] or 0),
-                "aggregated_by": None if not aggregated_by else row[5]  # aggregated_by and ALL_UNITS never happen together
+                # aggregated_by and ALL_UNITS never happen together
+                "aggregated_by": None if not aggregated_by else row[5]
             })
 
         # Manipulate the data into the right format
         if aggregated_by:
-            aggregated_bys = list(set(map(lambda x: x["aggregated_by"], result_dict)))
+            aggregated_bys = list(
+                set(map(lambda x: x["aggregated_by"], result_dict)))
             cleaned = [
                 {
                     "aggregated_by": agg,
@@ -384,8 +403,10 @@ def risk_score(request):
 
         if patient_ids:
             # Generate the patient filters
-            pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
-            pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
+            pat_bind_names = [
+                f":pat_id{str(i)}" for i in range(len(patient_ids))]
+            pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [
+            ] else ""
         else:
             pat_bind_names = []
             pat_filters_safe_sql = ""
@@ -401,7 +422,7 @@ def risk_score(request):
             APR_DRG_ROM,
             APR_DRG_SOI
         FROM
-            CLIN_DM.BPU_CTS_DI_VISIT
+            {TABLES_IN_USE.get('visit')}
         WHERE 1=1
             {pat_filters_safe_sql}
         """
@@ -441,8 +462,14 @@ def patient_outcomes(request):
 
         if patient_ids:
             # Generate the patient filters
-            pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
-            pat_filters_safe_sql = f"AND VST.DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [] else ""
+            pat_bind_names = [
+                f":pat_id{str(i)}" for i in range(len(patient_ids))
+            ]
+            pat_filters_safe_sql = (
+                f"AND VST.DI_PAT_ID IN ({','.join(pat_bind_names)}) "
+                if patient_ids != [] 
+                else ""
+            )
         else:
             pat_bind_names = []
             pat_filters_safe_sql = ""
@@ -571,7 +598,7 @@ def patient_outcomes(request):
 )
 def hemoglobin(request):
     if request.method == "GET":
-        command = """
+        command = f"""
         WITH
         LAB_HB AS (
             SELECT
@@ -582,7 +609,7 @@ def hemoglobin(request):
                 V.RESULT_CODE,
                 V.RESULT_VALUE
             FROM
-                CLIN_DM.BPU_CTS_DI_VST_LABS V
+                {TABLES_IN_USE.get("visit_labs")} V
             WHERE UPPER(V.RESULT_DESC) = 'HEMOGLOBIN'
         ),
         PREOP_HB AS (
@@ -603,7 +630,7 @@ def hemoglobin(request):
                     SC.DI_SURGERY_END_DTM,
                     MAX(LH.DI_DRAW_DTM) AS DI_PREOP_DRAW_DTM
                 FROM
-                    CLIN_DM.BPU_CTS_DI_SURGERY_CASE SC
+                    {TABLES_IN_USE.get('surgery_case')} SC
                 INNER JOIN LAB_HB LH
                     ON SC.DI_VISIT_NO = LH.DI_VISIT_NO
                 WHERE LH.DI_RESULT_DTM < SC.DI_SURGERY_START_DTM
@@ -616,7 +643,7 @@ def hemoglobin(request):
             ) X
             INNER JOIN LAB_HB LH2
                 ON X.DI_VISIT_NO = LH2.DI_VISIT_NO
-                AND X.DI_PREOP_DRAW_DTM = LH2.DI_DRAW_DTM
+                AND X.DI_PREOP_DRAW_DTM = LH2.DI_DRAW_DTM  
         ),
         POSTOP_HB AS (
             SELECT
@@ -636,7 +663,7 @@ def hemoglobin(request):
                     SC2.DI_SURGERY_END_DTM,
                     MIN(LH3.DI_DRAW_DTM) AS DI_POSTOP_DRAW_DTM
                 FROM
-                    CLIN_DM.BPU_CTS_DI_SURGERY_CASE SC2
+                    {TABLES_IN_USE.get('surgery_case')} SC2
                 INNER JOIN LAB_HB LH3
                     ON SC2.DI_VISIT_NO = LH3.DI_VISIT_NO
                 WHERE LH3.DI_DRAW_DTM > SC2.DI_SURGERY_END_DTM
@@ -652,46 +679,81 @@ def hemoglobin(request):
                 AND Z.DI_POSTOP_DRAW_DTM = LH4.DI_DRAW_DTM
         )
         SELECT
-            SC3.DI_PAT_ID,
-            SC3.DI_CASE_ID,
-            SC3.DI_VISIT_NO,
-            SC3.DI_CASE_DATE,
-            EXTRACT (YEAR from SC3.DI_CASE_DATE) YEAR,
-            EXTRACT (MONTH from SC3.DI_CASE_DATE) AS MONTH,
-            SC3.DI_SURGERY_START_DTM,
-            SC3.DI_SURGERY_END_DTM,
-            SC3.SURGERY_ELAP,
-            SC3.SURGERY_TYPE_DESC,
-            SC3.SURGEON_PROV_DWID,
-            SC3.ANESTH_PROV_DWID,
-            SC3.PRIM_PROC_DESC,
-            SC3.POSTOP_ICU_LOS,
-            SC3.SCHED_SITE_DESC,
-            PRE.DI_PREOP_DRAW_DTM,
-            PRE.RESULT_VALUE AS PREOP_HEMO,
-            POST.DI_POSTOP_DRAW_DTM,
-            POST.RESULT_VALUE AS POSTOP_HEMO
+            SC3.DI_PAT_ID
+            ,SC3.DI_CASE_ID
+            ,SC3.DI_VISIT_NO
+            ,SC3.DI_CASE_DATE
+            ,EXTRACT (YEAR from SC3.DI_CASE_DATE) YEAR
+            ,EXTRACT (MONTH from SC3.DI_CASE_DATE) AS MONTH
+            ,SC3.DI_SURGERY_START_DTM
+            ,SC3.DI_SURGERY_END_DTM
+            ,SC3.SURGERY_ELAP
+            ,SC3.SURGERY_TYPE_DESC
+            ,SC3.SURGEON_PROV_DWID
+            ,SC3.ANESTH_PROV_DWID
+            ,SC3.PRIM_PROC_DESC
+            ,SC3.POSTOP_ICU_LOS
+            ,SC3.SCHED_SITE_DESC
+            ,MAX(CASE
+            WHEN PRE.DI_PREOP_DRAW_DTM IS NOT NULL
+            THEN PRE.DI_PREOP_DRAW_DTM
+            END)
+            AS DI_PREOP_DRAW_DTM
+            ,MAX(CASE
+            WHEN PRE.RESULT_VALUE IS NOT NULL
+            THEN PRE.RESULT_VALUE
+            END)
+            AS PREOP_HEMO
+            ,MAX(CASE
+            WHEN POST.DI_POSTOP_DRAW_DTM IS NOT NULL
+            THEN POST.DI_POSTOP_DRAW_DTM
+            END)
+            AS DI_POSTOP_DRAW_DTM
+            ,MAX(CASE
+            WHEN POST.RESULT_VALUE IS NOT NULL
+            THEN POST.RESULT_VALUE
+            END)
+            AS POSTOP_HEMO
         FROM
-            CLIN_DM.BPU_CTS_DI_SURGERY_CASE SC3
+            {TABLES_IN_USE.get('surgery_case')} SC3
         LEFT OUTER JOIN PREOP_HB PRE
             ON SC3.DI_CASE_ID = PRE.DI_CASE_ID
         LEFT OUTER JOIN POSTOP_HB POST
             ON SC3.DI_CASE_ID = POST.DI_CASE_ID
+        GROUP BY SC3.DI_PAT_ID
+            ,SC3.DI_CASE_ID
+            ,SC3.DI_VISIT_NO
+            ,SC3.DI_CASE_DATE
+            ,EXTRACT (YEAR from SC3.DI_CASE_DATE)
+            ,EXTRACT (MONTH from SC3.DI_CASE_DATE)
+            ,SC3.DI_SURGERY_START_DTM
+            ,SC3.DI_SURGERY_END_DTM
+            ,SC3.SURGERY_ELAP
+            ,SC3.SURGERY_TYPE_DESC
+            ,SC3.SURGEON_PROV_DWID
+            ,SC3.ANESTH_PROV_DWID
+            ,SC3.PRIM_PROC_DESC
+            ,SC3.POSTOP_ICU_LOS
+            ,SC3.SCHED_SITE_DESC
         """
 
         result = execute_sql(command)
 
-        items = [{"CASE_ID":row[1],
-                "VISIT_ID": row[2],
-                "YEAR":row[4],
-                "QUARTER": str(row[4])[2:]+"/"+str(output_quarter(row[5])),
-                "MONTH":str(row[4])[2:]+"/"+str(row[5]),
-                "DATE":row[3],
-                "HEMO": [row[-3], row[-1]],
-                "SURGEON_ID": row[10],
-                "ANESTHESIOLOGIST_ID":row[11],
-                "SURGERY_TYPE":row[9],
-                "PATIENT_ID":row[0]} for row in result]
+        items = [{
+            "CASE_ID": row[1],
+            "VISIT_ID": row[2],
+            "YEAR":row[4],
+            "QUARTER": str(row[4])[2:]+"/"+str(output_quarter(row[5])),
+            "MONTH":str(row[4])[2:]+"/"+str(row[5]),
+            "DATE":row[3],
+            "HEMO": [row[-3], row[-1]],
+            "SURGEON_ID": row[10],
+            "ANESTHESIOLOGIST_ID":row[11],
+            "SURGERY_TYPE":row[9],
+            "PATIENT_ID":row[0]
+            }
+            for row in result
+        ]
 
         return JsonResponse({"result": items})
     else:

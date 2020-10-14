@@ -6,7 +6,7 @@ import { timeFormat, timeParse } from 'd3';
 
 import Login from './LogIn'
 import Preview from './Preview';
-import { SingleCasePoint } from './Interfaces/ApplicationState';
+import { SingleCasePoint, defaultState } from './Interfaces/ApplicationState';
 import { surgeryTypeArray } from './PresetsProfile';
 
 interface OwnProps {
@@ -31,7 +31,7 @@ const App: FC<Props> = ({ store }: Props) => {
                 .then((res) => res.json())
                 .then(async (dataHemo) => {
                     const resultHemo = dataHemo.result;
-                    const resTrans = await fetch(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(2014, 0, 1)), timeFormat("%d-%b-%Y")(new Date(2019, 11, 31))]}`)
+                    const resTrans = await fetch(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(defaultState.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(defaultState.rawDateRange[1]))]}`)
                     const dataTrans = await resTrans.json();
                     const resRisk = await fetch(`${process.env.REACT_APP_QUERY_URL}risk_score`);
                     const dataRisk = await resRisk.json();
