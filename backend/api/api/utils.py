@@ -1,6 +1,7 @@
 import csv
 import cx_Oracle
 import json
+import os
 
 from datetime import datetime
 
@@ -15,9 +16,9 @@ def make_connection():
 
     # Generate the connection
     dsn_tns = cx_Oracle.makedsn(
-        "prodrac-scan.med.utah.edu",
-        "1521",
-        service_name="dwrac_som_analysts.med.utah.edu",
+        os.getenv("ORACLE_HOST"),
+        os.getenv("ORACLE_PORT"),
+        service_name=os.getenv("ORACLE_SERVICE_NAME"),
     )
 
     return cx_Oracle.connect(user=usr_name, password=password, dsn=dsn_tns)
