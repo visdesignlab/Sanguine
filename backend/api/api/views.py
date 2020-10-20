@@ -252,19 +252,19 @@ def request_transfused_units(request):
             "ANESTHESIOLOGIST_ID": f"LIMITED_SURG.{FIELDS_IN_USE.get('anest_id')}",
         }
         having_options = {
-            "PRBC_UNITS": "HAVING SUM(PRBC_UNITS) < 50 OR SUM(PRBC_UNITS) IS NULL",
-            "FFP_UNITS": "HAVING SUM(FFP_UNITS) < 50 OR SUM(FFP_UNITS) IS NULL",
-            "PLT_UNITS": "HAVING SUM(PLT_UNITS) < 15 OR SUM(PLT_UNITS) IS NULL",
+            "PRBC_UNITS": "HAVING SUM(PRBC_UNITS) < 200 OR SUM(PRBC_UNITS) IS NULL",
+            "FFP_UNITS": "HAVING SUM(FFP_UNITS) < 200 OR SUM(FFP_UNITS) IS NULL",
+            "PLT_UNITS": "HAVING SUM(PLT_UNITS) < 30 OR SUM(PLT_UNITS) IS NULL",
             "CRYO_UNITS": "HAVING SUM(CRYO_UNITS) < 100 OR SUM(CRYO_UNITS) IS NULL",
-            "CELL_SAVER_ML": "HAVING SUM(CELL_SAVER_ML) < 7000 OR SUM(CELL_SAVER_ML) IS NULL",
+            "CELL_SAVER_ML": "HAVING SUM(CELL_SAVER_ML) < 15000 OR SUM(CELL_SAVER_ML) IS NULL",
             "ALL_UNITS": (
                 """
                 HAVING
-                    (SUM(PRBC_UNITS) < 50 OR SUM(PRBC_UNITS) IS NULL) AND
-                    (SUM(FFP_UNITS) < 50 OR SUM(FFP_UNITS) IS NULL) AND
-                    (SUM(PLT_UNITS) < 15 OR SUM(PLT_UNITS) IS NULL) AND
+                    (SUM(PRBC_UNITS) < 200 OR SUM(PRBC_UNITS) IS NULL) AND
+                    (SUM(FFP_UNITS) < 200 OR SUM(FFP_UNITS) IS NULL) AND
+                    (SUM(PLT_UNITS) < 30 OR SUM(PLT_UNITS) IS NULL) AND
                     (SUM(CRYO_UNITS) < 100 OR SUM(CRYO_UNITS) IS NULL) AND
-                    (HAVING SUM(CELL_SAVER_ML) < 7000 OR SUM(CELL_SAVER_ML) IS NULL)
+                    (HAVING SUM(CELL_SAVER_ML) < 15000 OR SUM(CELL_SAVER_ML) IS NULL)
                 """
             ),
         }
