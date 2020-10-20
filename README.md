@@ -7,10 +7,10 @@ This project is a collaboration between VDL and ARUP at University of Utah. We v
 ## Table of Contents
 
 1. [Access Sanguine on CHPC](#access-sanguine-on-chpc)
-1. [Quick start guide](#development-environment-quick-start)
+1. [Quick start guide](#quick-start-guide)
     - [Start the server](#start-the-server)
     - [Start the frontend](#start-the-frontend)
-1. [Deployment docs](#deploying-in-production)
+1. [Deployment docs](#deployment-docs)
 
 ## Access Sanguine on CHPC
 
