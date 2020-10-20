@@ -251,6 +251,23 @@ def request_transfused_units(request):
             "SURGEON_ID": f"LIMITED_SURG.{FIELDS_IN_USE.get('surgeon_id')}",
             "ANESTHESIOLOGIST_ID": f"LIMITED_SURG.{FIELDS_IN_USE.get('anest_id')}",
         }
+        having_options = {
+            "PRBC_UNITS": "HAVING SUM(PRBC_UNITS) < 200 OR SUM(PRBC_UNITS) IS NULL",
+            "FFP_UNITS": "HAVING SUM(FFP_UNITS) < 200 OR SUM(FFP_UNITS) IS NULL",
+            "PLT_UNITS": "HAVING SUM(PLT_UNITS) < 30 OR SUM(PLT_UNITS) IS NULL",
+            "CRYO_UNITS": "HAVING SUM(CRYO_UNITS) < 100 OR SUM(CRYO_UNITS) IS NULL",
+            "CELL_SAVER_ML": "HAVING SUM(CELL_SAVER_ML) < 15000 OR SUM(CELL_SAVER_ML) IS NULL",
+            "ALL_UNITS": (
+                """
+                HAVING
+                    (SUM(PRBC_UNITS) < 200 OR SUM(PRBC_UNITS) IS NULL) AND
+                    (SUM(FFP_UNITS) < 200 OR SUM(FFP_UNITS) IS NULL) AND
+                    (SUM(PLT_UNITS) < 30 OR SUM(PLT_UNITS) IS NULL) AND
+                    (SUM(CRYO_UNITS) < 100 OR SUM(CRYO_UNITS) IS NULL) AND
+                    (SUM(CELL_SAVER_ML) < 15000 OR SUM(CELL_SAVER_ML) IS NULL)
+                """
+            ),
+        }
 
         # Check that the params are valid
         if transfusion_type not in blood_products:
@@ -264,6 +281,7 @@ def request_transfused_units(request):
 
         # Update the transfusion type to something more sql
         # friendly if "ALL_UNITS"
+        having_sql = having_options.get(transfusion_type)
         transfusion_type = "PRBC_UNITS,FFP_UNITS,PLT_UNITS,CRYO_UNITS,CELL_SAVER_ML" if transfusion_type == "ALL_UNITS" else transfusion_type
 
         # Update the transfusion type to SUM(var) and add make a group by
@@ -328,6 +346,7 @@ def request_transfused_units(request):
         WHERE LIMITED_SURG.DI_CASE_DATE BETWEEN :min_time AND :max_time
         {pat_filters_safe_sql} {case_filters_safe_sql}
         {group_by}
+        {having_sql}
         """
 
         # Execute the query
