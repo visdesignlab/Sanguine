@@ -264,7 +264,7 @@ def request_transfused_units(request):
                     (SUM(FFP_UNITS) < 200 OR SUM(FFP_UNITS) IS NULL) AND
                     (SUM(PLT_UNITS) < 30 OR SUM(PLT_UNITS) IS NULL) AND
                     (SUM(CRYO_UNITS) < 100 OR SUM(CRYO_UNITS) IS NULL) AND
-                    (HAVING SUM(CELL_SAVER_ML) < 15000 OR SUM(CELL_SAVER_ML) IS NULL)
+                    (SUM(CELL_SAVER_ML) < 15000 OR SUM(CELL_SAVER_ML) IS NULL)
                 """
             ),
         }
