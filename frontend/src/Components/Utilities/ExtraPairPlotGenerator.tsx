@@ -2,7 +2,7 @@ import React, {
     FC
 } from "react";
 import { inject, observer } from "mobx-react";
-import { extraPairWidth, extraPairPadding, offset, AcronymDictionary } from "../../PresetsProfile";
+import { extraPairWidth, extraPairPadding, offset, AcronymDictionary, HGB_HIGH_STANDARD, HGB_LOW_STANDARD } from "../../PresetsProfile";
 import { actions } from "../..";
 import ExtraPairViolin from "../ExtraPair/ExtraPairViolin";
 import ExtraPairBar from "../ExtraPair/ExtraPairBar";
@@ -38,7 +38,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScaleD
                 spacing = extraPairWidth.Basic
                 break;
             case "Violin":
-                explanation = nameInput === "RISK" ? `Scaled 0-30` : (`Scaled 0-18, line at ${nameInput === "Preop HGB" ? 13 : 7.5}`);
+                explanation = nameInput === "RISK" ? `Scaled 0-30` : (`Scaled 0-18, line at ${nameInput === "Preop HGB" ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD}`);
                 spacing = extraPairWidth.Dumbbell
                 break;
             case "Bar":

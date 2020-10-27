@@ -3,7 +3,7 @@ import Store from "../../Interfaces/Store";
 import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { scaleLinear, line, curveCatmullRom, format, scaleBand, select, axisBottom } from "d3";
-import { extraPairWidth } from "../../PresetsProfile"
+import { extraPairWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD } from "../../PresetsProfile"
 import { basic_gray } from "../../PresetsProfile";
 import { Popup } from "semantic-ui-react";
 
@@ -84,8 +84,8 @@ const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, a
                     } />,
 
                     <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }}
-                        x1={valueScale(name === "Preop HGB" ? 13 : 7.5)}
-                        x2={valueScale(name === "Preop HGB" ? 13 : 7.5)}
+                        x1={valueScale(name === "Preop HGB" ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
+                        x2={valueScale(name === "Preop HGB" ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
                         opacity={name === "RISK" ? 0 : 1}
                         y1={aggregationScale()(val)!}
                         y2={aggregationScale()(val)! + aggregationScale().bandwidth()} />]
