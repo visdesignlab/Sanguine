@@ -19,7 +19,7 @@ import {
     median,
 } from "d3";
 import { DumbbellDataPoint } from "../../Interfaces/ApplicationState";
-import { offset, AcronymDictionary, minimumWidthScale } from "../../PresetsProfile"
+import { offset, AcronymDictionary, minimumWidthScale, HGB_LOW_STANDARD, HGB_HIGH_STANDARD } from "../../PresetsProfile"
 import CustomizedAxisOrdinal from "../Utilities/CustomizedAxisOrdinal";
 import { preop_color, basic_gray, highlight_orange, postop_color } from "../../PresetsProfile"
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
@@ -431,8 +431,8 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
                 <text className="y-label" />
             </g>
             <g className="chart-comp" >
-                <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(13)} y2={testValueScale()(13)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
-                <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(7.5)} y2={testValueScale()(7.5)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
+                <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(HGB_HIGH_STANDARD)} y2={testValueScale()(HGB_HIGH_STANDARD)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
+                <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(HGB_LOW_STANDARD)} y2={testValueScale()(HGB_LOW_STANDARD)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
 
                 {generateDumbbells()}
                 {numberList.map((numberOb, ind) => {

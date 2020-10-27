@@ -1,6 +1,5 @@
 import styled from "styled-components"
 
-
 export const preop_color = "#209b58"
 export const postop_color = "#20639b"
 export const highlight_orange = "#d98532"
@@ -10,6 +9,8 @@ export const secondary_gray = "#666666"
 export const blood_red = "#b10000"
 export const highlight_blue = "#32d9d9"
 export const greyScaleRange = [0.3, 0.85]
+export const HGB_LOW_STANDARD = 7.5
+export const HGB_HIGH_STANDARD = 13
 
 export const offset = {
     regular: { left: 90, bottom: 40, right: 10, top: 40, margin: 10 },
