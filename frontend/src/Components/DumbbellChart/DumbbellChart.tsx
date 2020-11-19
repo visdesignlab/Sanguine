@@ -65,12 +65,72 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
     const svgSelection = select(svg.current);
 
     useEffect(() => {
-        const copyOfData: DumbbellDataPoint[] = JSON.parse(JSON.stringify(data))
         let tempNumberList: { num: number, indexEnding: number }[] = [];
         let tempDatapointsDict: { title: any, length: number }[] = [];
         if (data.length > 0) {
+            let tempSortedData = sortDataHelper(data, sortMode)
+            let currentPreopSum: number[] = [];
+            let currentPostopSum: number[] = [];
+            let averageDict: any = {}
+            if (valueToVisualize === "CELL_SAVER_ML") {
+                tempSortedData.forEach((d, i) => {
+                    currentPreopSum.push(d.startXVal)
+                    currentPostopSum.push(d.endXVal)
+                    const roundedAnswer = Math.floor(d.yVal / 100) * 100
+                    if (i === tempSortedData.length - 1) {
+                        tempNumberList.push({ num: roundedAnswer, indexEnding: i })
+                        averageDict[roundedAnswer] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
+                        tempDatapointsDict.push({ title: roundedAnswer, length: currentPreopSum.length })
+                    }
+                    else if (roundedAnswer !== (Math.floor(tempSortedData[i + 1].yVal / 100) * 100)) {
+                        tempNumberList.push({ num: roundedAnswer, indexEnding: i })
+                        averageDict[(roundedAnswer).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
+                        tempDatapointsDict.push({ title: roundedAnswer, length: currentPreopSum.length })
+                        currentPostopSum = [];
+                        currentPreopSum = [];
+                    }
+                })
+            } else {
+                tempSortedData.forEach((d, i) => {
+                    currentPreopSum.push(d.startXVal)
+                    currentPostopSum.push(d.endXVal)
+                    if (i === tempSortedData.length - 1) {
+                        tempNumberList.push({ num: d.yVal, indexEnding: i })
+                        averageDict[d.yVal] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
+                        tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length })
+                    }
+                    else if (d.yVal !== tempSortedData[i + 1].yVal) {
+                        tempNumberList.push({ num: d.yVal, indexEnding: i })
+                        averageDict[(d.yVal).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
+                        tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length })
+                        currentPostopSum = [];
+                        currentPreopSum = [];
+                    }
+                })
+            }
+
+            const newindices = range(0, data.length)
+            stateUpdateWrapperUseJSON(indicies, newindices, setIndicies)
+            stateUpdateWrapperUseJSON(averageForEachTransfused, averageDict, setAverage)
+            stateUpdateWrapperUseJSON(sortedData, tempSortedData, setSortedData)
+            stateUpdateWrapperUseJSON(datapointsDict, tempDatapointsDict, setDataPointDict)
+            stateUpdateWrapperUseJSON(numberList, tempNumberList, setNumberList)
+
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data])
+
+    useEffect(() => {
+        const tempSortedData = sortDataHelper(data, sortMode);
+        stateUpdateWrapperUseJSON(sortedData, tempSortedData, setSortedData)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sortMode])
+
+    const sortDataHelper = (originalData: DumbbellDataPoint[], sortModeInput: string) => {
+        const copyOfData: DumbbellDataPoint[] = JSON.parse(JSON.stringify(originalData))
+        if (originalData.length > 0) {
             let tempSortedData: DumbbellDataPoint[] = [];
-            switch (sortMode) {
+            switch (sortModeInput) {
                 case "Postop":
                     tempSortedData = copyOfData.sort(
                         (a, b) => {
@@ -127,56 +187,10 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
                 default:
                     break;
             }
-
-            let currentPreopSum: number[] = [];
-            let currentPostopSum: number[] = [];
-            let averageDict: any = {}
-            if (valueToVisualize === "CELL_SAVER_ML") {
-                tempSortedData.forEach((d, i) => {
-                    currentPreopSum.push(d.startXVal)
-                    currentPostopSum.push(d.endXVal)
-                    const roundedAnswer = Math.floor(d.yVal / 100) * 100
-                    if (i === tempSortedData.length - 1) {
-                        tempNumberList.push({ num: roundedAnswer, indexEnding: i })
-                        averageDict[roundedAnswer] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
-                        tempDatapointsDict.push({ title: roundedAnswer, length: currentPreopSum.length })
-                    }
-                    else if (roundedAnswer !== (Math.floor(tempSortedData[i + 1].yVal / 100) * 100)) {
-                        tempNumberList.push({ num: roundedAnswer, indexEnding: i })
-                        averageDict[(roundedAnswer).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
-                        tempDatapointsDict.push({ title: roundedAnswer, length: currentPreopSum.length })
-                        currentPostopSum = [];
-                        currentPreopSum = [];
-                    }
-                })
-            } else {
-                tempSortedData.forEach((d, i) => {
-                    currentPreopSum.push(d.startXVal)
-                    currentPostopSum.push(d.endXVal)
-                    if (i === tempSortedData.length - 1) {
-                        tempNumberList.push({ num: d.yVal, indexEnding: i })
-                        averageDict[d.yVal] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
-                        tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length })
-                    }
-                    else if (d.yVal !== tempSortedData[i + 1].yVal) {
-                        tempNumberList.push({ num: d.yVal, indexEnding: i })
-                        averageDict[(d.yVal).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) }
-                        tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length })
-                        currentPostopSum = [];
-                        currentPreopSum = [];
-                    }
-                })
-            }
-
-            const newindices = range(0, data.length)
-            stateUpdateWrapperUseJSON(indicies, newindices, setIndicies)
-            stateUpdateWrapperUseJSON(averageForEachTransfused, averageDict, setAverage)
-            stateUpdateWrapperUseJSON(sortedData, tempSortedData, setSortedData)
-            stateUpdateWrapperUseJSON(datapointsDict, tempDatapointsDict, setDataPointDict)
-            stateUpdateWrapperUseJSON(numberList, tempNumberList, setNumberList)
+            return tempSortedData;
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data, sortMode])
+        return [];
+    }
 
     useEffect(() => {
         const widthAllowed = dimensionWidth - currentOffset.left - currentOffset.right;
@@ -219,9 +233,10 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
             }
             newResultRange = newResultRange.concat(calculatedRange)
             currentLoc += spacing[i]
-            stateUpdateWrapperUseJSON(resultRange, newResultRange, setResultRange)
-        })
 
+
+        })
+        stateUpdateWrapperUseJSON(resultRange, newResultRange, setResultRange)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [datapointsDict, dimensionWidth, currentOffset, sortedData])
 
@@ -233,7 +248,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
             .range([dimensionHeight - currentOffset.bottom, currentOffset.top]);
         return testValueScale
     }, [xMin, xMax, dimensionHeight, currentOffset])
-    //console.log(data)
+
 
 
     const valueScale = useCallback(() => {
