@@ -193,7 +193,7 @@ const InterventionPlotVisualization: FC<Props> = ({ w, notation, hemoglobinDataS
 
 
     useEffect(() => {
-        const newExtraPairData = generateExtrapairPlotDataWithIntervention(aggregatedBy, hemoglobinDataSet, extraPairArray, data)
+        const newExtraPairData = generateExtrapairPlotDataWithIntervention(aggregatedBy, hemoglobinDataSet, extraPairArray, data, valueToVisualize)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [extraPairArray, data, hemoglobinDataSet]);
