@@ -26,14 +26,14 @@ export const extraPairOptions = [
     { title: "Per Case Transfusion", value: "Per Case" },
     { title: "Zero Transfusion Cases", value: "Zero Transfusion" },
     { title: "DRG Weight (Risk)", value: "RISK" },
-    // { title: "Severity of Illness", value: "SOI" },
     { title: "Mortality Rate", value: "DEATH" },
     { title: "Ventilation Rate", value: "VENT" },
     { title: "ECMO Rate", value: "ECMO" },
     { title: "Stroke Rate", value: "STROKE" },
     { title: "B12", value: "B12" },
     { title: "Tranexamic Acid", value: "TXA" },
-    { title: "Amicar", value: "AMICAR" }
+    { title: "Amicar", value: "AMICAR" },
+    { title: "Cost Test", value: "COST" }
 ]
 
 //export const minimumOffset = 
@@ -66,6 +66,14 @@ export const BloodProductCap: any = {
     CRYO_UNITS: 10,
     PLT_UNITS: 10,
     CELL_SAVER_ML: 1000
+}
+//TODO add cost for cryo and cell saver
+export const BloodProductCost: any = {
+    PRBC_UNITS: 200,
+    FFP_UNITS: 55,
+    CRYO_UNITS: 0,
+    PLT_UNITS: 650,
+    CELL_SAVER_ML: 0
 }
 
 export const CELL_SAVER_TICKS = ["0", "0-1h", "1h-2h", "2h-3h", "3h-4h", "4h-5h", "5h-6h", "6h-7h", "7h-8h", "8h-9h", "9h-1k", "1k+"]
@@ -241,7 +249,8 @@ export const AcronymDictionary: any = {
     HGB_VALUE: "Hemoglobin Value",
     PREOP_HGB: "Preoperative Hemoglobin Value",
     POSTOP_HGB: "Postoperative Hemoglobin Value",
-    DRG_WEIGHT: "Diagnosis-related Group Weight"
+    DRG_WEIGHT: "Diagnosis-related Group Weight",
+    COST: "Blood Component Cost per Case"
 }
 
 
