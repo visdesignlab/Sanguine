@@ -32,9 +32,12 @@ export interface BasicAggregatedDatePoint {
     patientIDList: number[];
     caseIDList: number[];
 }
-
+export interface CostBarChartDataPoint {
+    aggregateAttribute: any;
+    dataArray: number[];
+    caseNum: number;
+}
 export interface BarChartDataPoint extends BasicAggregatedDatePoint {
-    kdeCal: any[];
     actualDataPoints: any[]
     median: number;
 }
