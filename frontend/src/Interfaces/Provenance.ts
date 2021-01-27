@@ -149,9 +149,12 @@ export function setupProvenance(): AppProvenance {
             plotType: plotType,
             notation: ""
         }
-        if (plotType === "VIOLIN" || plotType === "HEATMAP" || plotType === "INTERVENTION") {
+        if (
+            // plotType === "COST"|| 
+            plotType === "HEATMAP" || plotType === "INTERVENTION") {
             newLayoutElement.extraPair = JSON.stringify([]);
         }
+
 
         if (outcomeComparison) {
             newLayoutElement.plotType = "COMPARISON";
@@ -172,6 +175,7 @@ export function setupProvenance(): AppProvenance {
             (state: ApplicationState) => {
                 state.layoutArray.push(newLayoutElement)
                 state.nextAddingIndex += 1
+                console.log(state)
                 return state;
             })
     }

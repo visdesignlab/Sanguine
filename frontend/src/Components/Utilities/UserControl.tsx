@@ -117,7 +117,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
 
     const confirmChartAddHandler = () => {
-        if (xSelection && ySelection && addingChartType > -1) {
+        if ((xSelection && ySelection && addingChartType > 0) || (xSelection && addingChartType === 0)) {
             if (!(addingChartType === 4 && (!interventionDate))) {
                 actions.addNewChart(xSelection, ySelection, nextAddingIndex, typeDiction[addingChartType], outcomeComparison, interventionDate, interventionPlotType)
                 setAddMode(false);
@@ -180,6 +180,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                         <Dropdown.Item onClick={() => addModeButtonHandler(2)}>Scatter Plot</Dropdown.Item>
                         <Dropdown.Item onClick={() => addModeButtonHandler(3)}>Heat Map</Dropdown.Item>
                         <Dropdown.Item onClick={() => addModeButtonHandler(4)}>Intervention Plot</Dropdown.Item>
+                        <Dropdown.Item onClick={() => addModeButtonHandler(0)}>Cost Test Chart</Dropdown.Item>
                     </Dropdown.Menu>
                 </Dropdown>
             </Menu.Item>
@@ -378,52 +379,120 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         </Menu>
     );
 
+    //This need to be rewritten
+    const addBarChartMenuRewrite: any[] = [
+        //For #0
+        [<Menu.Item>
+            <Dropdown
+                placeholder={"Select Aggregation"}
+                selection
+                options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
+                onChange={xAxisChangeHandler}
+                value={xSelection}
+            />
+        </Menu.Item>],
+        //For #1
+        [<Menu.Item>
+            <Dropdown
+                placeholder="Select Value to Show"
+                selection
+                options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
+                onChange={yAxisChangeHandler}
+                value={ySelection}
+            />
+        </Menu.Item>,
+
+        <Menu.Item>
+            <Dropdown
+                placeholder="Facet by"
+                selection
+                options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
+                onChange={xAxisChangeHandler}
+                value={xSelection}
+            />
+        </Menu.Item>],
+        //for #2
+        [<Menu.Item>
+            <Dropdown
+                placeholder="Select Y-axis Attribute"
+                selection
+                options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
+                onChange={yAxisChangeHandler}
+                value={ySelection}
+            />
+        </Menu.Item>,
+        <Menu.Item>
+            <Dropdown
+                placeholder="Select X-axis Attribute"
+                selection
+                options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
+                onChange={xAxisChangeHandler}
+                value={xSelection}
+            />
+        </Menu.Item>],
+        //for #3
+        [< Menu.Item >
+            <Dropdown
+                placeholder="Select Value to Show"
+                selection
+                options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
+                onChange={yAxisChangeHandler}
+                value={ySelection}
+            />
+        </Menu.Item >,
+        <Menu.Item>
+            <Dropdown
+                placeholder="Select X-axis Attribute"
+                selection
+                options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
+                onChange={xAxisChangeHandler}
+                value={xSelection}
+            />
+        </Menu.Item>,
+        <Menu.Item>
+            <Dropdown
+                placeholder="Outcome/Intervention Comparison (Optional)"
+                selection
+                clearable
+                options={OutcomeType}
+                onChange={outcomeComparisonHandler}
+                value={outcomeComparison}
+            />
+        </Menu.Item>],
+        //For #4
+        [<Menu.Item>
+            <Dropdown
+                placeholder="Select Value to Show"
+                selection
+                options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
+                onChange={yAxisChangeHandler}
+                value={ySelection}
+            />
+        </Menu.Item>,
+
+        <Menu.Item>
+            <Dropdown
+                placeholder="Select X-axis Attribute"
+                selection
+                options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
+                onChange={xAxisChangeHandler}
+                value={xSelection}
+            />
+        </Menu.Item>,
+        <Menu.Item>
+            <SemanticDatePicker
+                placeholder={"Intervention"}
+                minDate={rawDateRange[0] as any}
+                maxDate={rawDateRange[1] as any}
+                onChange={interventionHandler} />
+        </Menu.Item>
+        ]
+    ]
+
 
     const addBarChartMenu = (
         <Menu widths={5}>
-            <Menu.Item>
-                <Dropdown
-                    placeholder={addingChartType === 2 ? "Select Y-axis Attribute" : "Select Value to Show"}
-                    selection
-                    options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
-                    onChange={yAxisChangeHandler}
-                    value={ySelection}
-                />
-            </Menu.Item>
-
-            <Menu.Item>
-                <Dropdown
-                    placeholder={
-                        addingChartType === 0 ? "Select Aggregation" : (addingChartType === 1 ? "Facet by" : "Select X-axis Attribute")
-                    }
-                    selection
-                    options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
-                    onChange={xAxisChangeHandler}
-                    value={xSelection}
-                />
-            </Menu.Item>
-
-            {addingChartType === 3 ? (<Menu.Item>
-                <Dropdown
-                    placeholder="Outcome/Intervention Comparison (Optional)"
-                    selection
-                    clearable
-                    options={OutcomeType}
-                    onChange={outcomeComparisonHandler}
-                    value={outcomeComparison}
-                />
-            </Menu.Item>) : (<></>)}
-
-            {addingChartType === 4 ? (
-                <Menu.Item>
-                    <SemanticDatePicker
-                        placeholder={"Intervention"}
-                        minDate={rawDateRange[0] as any}
-                        maxDate={rawDateRange[1] as any}
-                        onChange={interventionHandler} />
-                </Menu.Item>
-            ) : (<></>)}
-
+            {addBarChartMenuRewrite[addingChartType]}
             <Menu.Item>
                 <Button.Group>
                     <Button
