@@ -35,16 +35,17 @@ interface OwnProps {
     data: CostBarChartDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
     maximumCost: number;
+    costMode: boolean
     //  selectedVal: number | null;
-    stripPlotMode: boolean;
-    extraPairDataSet: ExtraPairPoint[];
+    // stripPlotMode: boolean;
+    //extraPairDataSet: ExtraPairPoint[];
 }
 
 
 
 export type Props = OwnProps;
 
-const CostBarChart: FC<Props> = ({ maximumCost, stripPlotMode, store, aggregatedBy, dimensionWidth, dimensionHeight, data, svg, chartId }: Props) => {
+const CostBarChart: FC<Props> = ({ maximumCost, store, aggregatedBy, dimensionWidth, dimensionHeight, data, svg, chartId, costMode }: Props) => {
     const svgSelection = select(svg.current);
     const currentOffset = offset.regular;
     const [xVals, setXVals] = useState([]);
@@ -104,7 +105,7 @@ const CostBarChart: FC<Props> = ({ maximumCost, stripPlotMode, store, aggregated
         .attr("alignment-baseline", "hanging")
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
-        .text("Per Case Cost in Dollars");
+        .text(costMode ? "Per Case Cost in Dollars" : "Units per Case");
 
     svgSelection
         //.select(".axes")
@@ -131,7 +132,8 @@ const CostBarChart: FC<Props> = ({ maximumCost, stripPlotMode, store, aggregated
                     valueScaleDomain={JSON.stringify(valueScale().domain())}
                     valueScaleRange={JSON.stringify(valueScale().range())}
                     dataPoint={dp}
-                    aggregatedBy={aggregatedBy}
+                    // aggregatedBy={aggregatedBy}
+                    costMode={costMode}
                     bandwidth={aggregationScale().bandwidth()}
                     howToTransform={(`translate(0,${aggregationScale()(
                         dp.aggregateAttribute

@@ -6,23 +6,24 @@ import { BarChartDataPoint, CostBarChartDataPoint } from "../../Interfaces/Appli
 // import { Popup } from "semantic-ui-react";
 // import { actions } from "../..";
 import { format, scaleLinear, ScaleLinear, schemeAccent, sum } from "d3";
-import { highlight_orange, basic_gray, barChartValuesOptions } from "../../PresetsProfile";
+import { highlight_orange, basic_gray, barChartValuesOptions, colorProfile } from "../../PresetsProfile";
 import { data } from "jquery";
 import { Popup } from "semantic-ui-react";
 
 interface OwnProps {
     dataPoint: CostBarChartDataPoint;
-    aggregatedBy: string;
+    // aggregatedBy: string;
     howToTransform: string;
     store?: Store;
     valueScaleDomain: string;
     valueScaleRange: string
     bandwidth: number;
+    costMode: boolean
 }
 
 export type Props = OwnProps;
 
-const SingleStackedBar: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggregatedBy, valueScaleDomain, valueScaleRange, store }: Props) => {
+const SingleStackedBar: FC<Props> = ({ howToTransform, dataPoint, bandwidth, costMode, valueScaleDomain, valueScaleRange, store }: Props) => {
 
     const valueScale = useCallback(() => {
         const domain = JSON.parse(valueScaleDomain);
@@ -36,7 +37,7 @@ const SingleStackedBar: FC<Props> = ({ howToTransform, dataPoint, bandwidth, agg
         <>
             {dataPoint.dataArray.map((point, index) => {
                 return (
-                    <Popup content={`${barChartValuesOptions[index].key}: ${format("$.2f")(point)}`}
+                    <Popup content={`${barChartValuesOptions[index].key}: ${costMode ? format("$.2f")(point) : format(".4r")(point)}`}
                         key={dataPoint.aggregateAttribute + '-' + point}
                         trigger={
                             <rect
@@ -44,7 +45,7 @@ const SingleStackedBar: FC<Props> = ({ howToTransform, dataPoint, bandwidth, agg
                                 transform={howToTransform}
                                 height={bandwidth}
                                 width={valueScale()(point) - valueScale()(0)}
-                                fill={schemeAccent[index]}
+                                fill={colorProfile[index]}
                             />} />)
             })}
         </>)

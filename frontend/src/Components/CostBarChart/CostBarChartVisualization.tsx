@@ -34,8 +34,8 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
         currentSelectPatientGroupIDs,
         currentOutputFilterSet,
         previewMode,
-        dateRange, procedureTypeSelection
-
+        dateRange,
+        procedureTypeSelection
     } = store!;
     const svgRef = useRef<SVGSVGElement>(null);
     // const [data, setData] = useState<{: BarChartDataPoint[]; perCase: BarChartDataPoint[]; }>({: [], perCase: [] });
@@ -50,10 +50,10 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
     const [dimensionHeight, setDimensionHeight] = useState(0)
     const [dimensionWidth, setDimensionWidth] = useState(0)
     // const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
-    const [extraPairData, setExtraPairData] = useState<ExtraPairPoint[]>([])
-    const [stripPlotMode, setStripMode] = useState(false);
+    // const [extraPairData, setExtraPairData] = useState<ExtraPairPoint[]>([])
+    const [costMode, setCostMode] = useState(true);
     // const [caseIDList, setCaseIDList] = useState<any>(null)
-    const [extraPairArray, setExtraPairArray] = useState([]);
+    // const [extraPairArray, setExtraPairArray] = useState([]);
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
 
@@ -77,7 +77,7 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
         if (previousCancelToken) {
             previousCancelToken.cancel("cancel the call?")
         }
-        let maxCost = 0;
+        let tempmaxCost = 0;
         let temporaryDataHolder: any = {}
         let caseSetReturnedFromQuery = new Set();
         let outputData: CostBarChartDataPoint[] = [];
@@ -129,23 +129,26 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                         temporaryDataHolder[singleCase[aggregatedBy]].caseNum += 1
                     }
                 })
+                console.log(temporaryDataHolder)
                 Object.values(temporaryDataHolder).forEach((dataItem: any) => {
                     let newDataObj: CostBarChartDataPoint = {
                         aggregateAttribute: dataItem.aggregateAttribute,
                         dataArray: [
-                            BloodProductCost.PRBC_UNITS * dataItem.PRBC_UNITS / dataItem.caseNum,
-                            BloodProductCost.FFP_UNITS * dataItem.FFP_UNITS / dataItem.caseNum,
-                            BloodProductCost.CRYO_UNITS * dataItem.CRYO_UNITS / dataItem.caseNum,
-                            BloodProductCost.PLT_UNITS * dataItem.PLT_UNITS / dataItem.caseNum,
-                            BloodProductCost.CELL_SAVER_ML * dataItem.CELL_SAVER_ML / dataItem.caseNum,
+                            dataItem.PRBC_UNITS * (costMode ? BloodProductCost.PRBC_UNITS : 1) / dataItem.caseNum,
+                            dataItem.FFP_UNITS * (costMode ? BloodProductCost.FFP_UNITS : 1) / dataItem.caseNum,
+                            dataItem.CRYO_UNITS * (costMode ? BloodProductCost.CRYO_UNITS : 1) / dataItem.caseNum,
+                            dataItem.PLT_UNITS * (costMode ? BloodProductCost.PLT_UNITS : 1) / dataItem.caseNum,
+                            dataItem.CELL_SAVER_ML * (costMode ? BloodProductCost.CELL_SAVER_ML : 0.001) / dataItem.caseNum,
                         ],
                         caseNum: dataItem.caseNum
                     }
-                    maxCost = maxCost > sum(newDataObj.dataArray) ? maxCost : sum(newDataObj.dataArray)
+                    tempmaxCost = tempmaxCost > sum(newDataObj.dataArray) ? tempmaxCost : sum(newDataObj.dataArray)
+                    console.log(newDataObj)
                     outputData.push(newDataObj)
                 })
                 stateUpdateWrapperUseJSON(data, outputData, setData);
-                setMaximumCost(maxCost)
+                console.log(outputData)
+                setMaximumCost(tempmaxCost)
             }
         }).catch(function (thrown) {
             if (axios.isCancel(thrown)) {
@@ -155,14 +158,17 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
             }
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [proceduresSelection, procedureTypeSelection, dateRange, showZero, aggregatedBy, currentOutputFilterSet, currentSelectPatientGroupIDs]);
+    }, [proceduresSelection, procedureTypeSelection, dateRange, aggregatedBy, currentOutputFilterSet, currentSelectPatientGroupIDs, costMode]);
 
 
 
     const changeAggregation = (e: any, value: any) => {
         actions.changeChart(value.value, "", chartId, "COST")
     }
-
+    const changeMode = (e: any, value: any) => {
+        setCostMode(!costMode)
+        console.log(costMode)
+    }
 
 
 
@@ -175,7 +181,9 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                             <Dropdown selectOnBlur={false} pointing basic item icon="settings" compact >
                                 <Dropdown.Menu>
                                     <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
+                                    <Dropdown.Item text={`Show ${costMode ? "per case" : "cost"}`} onClick={changeMode} />
                                 </Dropdown.Menu>
+
                             </Dropdown>
                         </Menu.Item>
 
@@ -193,9 +201,10 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                             svg={svgRef}
                             aggregatedBy={aggregatedBy}
                             maximumCost={maximumCost}
-                            // selectedVal={selectedBar}
-                            stripPlotMode={stripPlotMode}
-                            extraPairDataSet={extraPairData}
+                            costMode={costMode}
+                        // selectedVal={selectedBar}
+                        // stripPlotMode={stripPlotMode}
+                        // extraPairDataSet={extraPairData}
                         />
                     </ChartSVG>
                     <NotationForm notation={notation} chartId={chartId} />
