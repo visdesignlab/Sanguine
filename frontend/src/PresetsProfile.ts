@@ -68,13 +68,7 @@ export const BloodProductCap: any = {
     CELL_SAVER_ML: 1000
 }
 //TODO add cost for cryo and cell saver
-export const BloodProductCost: any = {
-    PRBC_UNITS: 200,
-    FFP_UNITS: 55,
-    CRYO_UNITS: 100,
-    PLT_UNITS: 650,
-    CELL_SAVER_ML: 1
-}
+
 
 export const CELL_SAVER_TICKS = ["0", "0-1h", "1h-2h", "2h-3h", "3h-4h", "4h-5h", "5h-6h", "6h-7h", "7h-8h", "8h-9h", "9h-1k", "1k+"]
 

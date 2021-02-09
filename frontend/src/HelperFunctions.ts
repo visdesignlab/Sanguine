@@ -1,7 +1,8 @@
 import { BasicAggregatedDatePoint, ExtraPairInterventionPoint, ComparisonDataPoint, ExtraPairPoint, SingleCasePoint, HeatMapDataPoint } from "./Interfaces/ApplicationState"
 import { mean, median, sum, max } from "d3";
 import { create as createpd } from "pdfast";
-import { BloodProductCap, BloodProductCost } from "./PresetsProfile";
+import { BloodProductCap } from "./PresetsProfile";
+import { store } from "./Interfaces/Store";
 
 export const stateUpdateWrapperUseJSON = (oldState: any, newState: any, updateFunction: (value: React.SetStateAction<any>) => void) => {
     if (JSON.stringify(oldState) !== JSON.stringify(newState)) {
@@ -56,9 +57,9 @@ export const generateExtrapairPlotDataWithIntervention = (aggregatedBy: string, 
                         // newData[dataPoint.aggregateAttribute] = (dataPoint.preTotalVal + dataPoint.postTotalVal) / (dataPoint.preCaseCount + dataPoint.postCaseCount - dataPoint.preZeroCaseNum - dataPoint.postZeroCaseNum)
                         // preIntData[dataPoint.aggregateAttribute] = dataPoint.preTotalVal / (dataPoint.preCaseCount - dataPoint.preZeroCaseNum);
                         // postIntData[dataPoint.aggregateAttribute] = dataPoint.postTotalVal / (dataPoint.postCaseCount - dataPoint.postZeroCaseNum);
-                        newData[dataPoint.aggregateAttribute] = BloodProductCost[componentName] * (dataPoint.preTotalVal + dataPoint.postTotalVal) / (dataPoint.preCaseCount + dataPoint.postCaseCount)
-                        preIntData[dataPoint.aggregateAttribute] = BloodProductCost[componentName] * dataPoint.preTotalVal / (dataPoint.preCaseCount);
-                        postIntData[dataPoint.aggregateAttribute] = BloodProductCost[componentName] * dataPoint.postTotalVal / (dataPoint.postCaseCount);
+                        newData[dataPoint.aggregateAttribute] = store.BloodProductCost[componentName] * (dataPoint.preTotalVal + dataPoint.postTotalVal) / (dataPoint.preCaseCount + dataPoint.postCaseCount)
+                        preIntData[dataPoint.aggregateAttribute] = store.BloodProductCost[componentName] * dataPoint.preTotalVal / (dataPoint.preCaseCount);
+                        postIntData[dataPoint.aggregateAttribute] = store.BloodProductCost[componentName] * dataPoint.postTotalVal / (dataPoint.postCaseCount);
                     });
                     newExtraPairData.push({
                         name: "COST",
@@ -479,7 +480,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
                 case "COST":
                     data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         // newData[dataPoint.aggregateAttribute] = dataPoint.totalVal / (dataPoint.caseCount - dataPoint.zeroCaseNum)
-                        newData[dataPoint.aggregateAttribute] = BloodProductCost[componentName] * dataPoint.totalVal / (dataPoint.caseCount)
+                        newData[dataPoint.aggregateAttribute] = store.BloodProductCost[componentName] * dataPoint.totalVal / (dataPoint.caseCount)
                     });
                     newExtraPairData.push({
                         name: "COST",

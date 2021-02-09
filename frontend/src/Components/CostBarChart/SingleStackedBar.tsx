@@ -50,26 +50,6 @@ const SingleStackedBar: FC<Props> = ({ howToTransform, dataPoint, bandwidth, cos
             })}
         </>)
 
-    // <Popup
-    //     content={dataPoint.totalVal}
-    //     key={dataPoint.aggregateAttribute}
-    //     trigger={
-
-    //   <ViolinLine
-    //     d={path}
-    //     onClick={() => {
-    //       actions.selectSet({
-    //         setName: aggregatedBy,
-    //         setValues: dataPoint.aggregateAttribute
-    //       });
-    //     }}
-    //     isselected={isSelected}
-    //     transform={howToTransform}
-    //   />
-
-    //     }
-    //   />
-
 }
 
 export default inject("store")(observer(SingleStackedBar));

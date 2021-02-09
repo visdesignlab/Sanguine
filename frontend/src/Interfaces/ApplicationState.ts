@@ -24,6 +24,7 @@ export interface ComparisonDataPoint {
     postCaseIDList: number[];
 }
 
+
 export interface BasicAggregatedDatePoint {
     aggregateAttribute: any;
     totalVal: number;
@@ -128,7 +129,7 @@ export interface ApplicationState {
     //This two are both case ids
     currentSelectPatientGroup: SingleCasePoint[];
     currentBrushedPatientGroup: SingleCasePoint[];
-
+    BloodProductCost: any;
     nextAddingIndex: number;
     layoutArray: LayoutElement[];
 }
@@ -169,5 +170,12 @@ export const defaultState: ApplicationState = {
     nextAddingIndex: 0,
     showZero: true,
     currentSelectPatientGroup: [],
-    currentBrushedPatientGroup: []
+    currentBrushedPatientGroup: [],
+    BloodProductCost: {
+        PRBC_UNITS: 200,
+        FFP_UNITS: 55,
+        CRYO_UNITS: 100,
+        PLT_UNITS: 650,
+        CELL_SAVER_ML: 1
+    }
 };
