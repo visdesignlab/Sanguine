@@ -3,8 +3,8 @@ import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { BarChartDataPoint, CostBarChartDataPoint, ExtraPairPoint, SingleCasePoint } from '../../Interfaces/ApplicationState'
-import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, extraPairOptions, ChartSVG, BloodProductCost } from "../../PresetsProfile"
-import { Icon, Grid, Dropdown, Menu } from "semantic-ui-react";
+import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, extraPairOptions, ChartSVG, AcronymDictionary } from "../../PresetsProfile"
+import { Icon, Grid, Dropdown, Menu, Button, Form, Modal } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
 import { sum, median } from "d3";
 import axios from 'axios'
@@ -30,7 +30,7 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
     const {
         layoutArray,
         proceduresSelection,
-        showZero,
+        BloodProductCost,
         currentSelectPatientGroupIDs,
         currentOutputFilterSet,
         previewMode,
@@ -44,16 +44,13 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
     >([]);
 
     const [maximumCost, setMaximumCost] = useState(0);
-    // const [kdeMax,setKdeMax] = useState(0)
-    // const [medianVal, setMedian] = useState()
-    //  const [selectedBar, setSelectedBarVal] = useState<number | null>(null);
+    const [costInput, setCostInput] = useState(0)
     const [dimensionHeight, setDimensionHeight] = useState(0)
     const [dimensionWidth, setDimensionWidth] = useState(0)
-    // const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
-    // const [extraPairData, setExtraPairData] = useState<ExtraPairPoint[]>([])
+
     const [costMode, setCostMode] = useState(true);
-    // const [caseIDList, setCaseIDList] = useState<any>(null)
-    // const [extraPairArray, setExtraPairArray] = useState([]);
+    const [openCostInputModal, setOpenCostInputModal] = useState(false);
+    const [modalTitle, setModalTitle] = useState("");
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
 
@@ -158,7 +155,7 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
             }
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [proceduresSelection, procedureTypeSelection, dateRange, aggregatedBy, currentOutputFilterSet, currentSelectPatientGroupIDs, costMode]);
+    }, [proceduresSelection, procedureTypeSelection, dateRange, aggregatedBy, currentOutputFilterSet, currentSelectPatientGroupIDs, costMode, BloodProductCost]);
 
 
 
@@ -170,6 +167,15 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
         console.log(costMode)
     }
 
+    const openCostInputForm = (e: any, value: any) => {
+        setModalTitle(value.value);
+        setCostInput(BloodProductCost[value.value])
+        console.log(costInput)
+        setOpenCostInputModal(true);
+
+
+    }
+
 
 
     return (
@@ -179,8 +185,10 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                     <Menu icon vertical compact size="mini" borderless secondary widths={2} >
                         <Menu.Item>
                             <Dropdown selectOnBlur={false} pointing basic item icon="settings" compact >
+                                {/* TODO: The dropdown menu will continue to have the focus on the item, so need to click something else before clicking the same item again.  */}
                                 <Dropdown.Menu>
-                                    <Dropdown text="Change Aggregation" pointing basic item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
+                                    <Dropdown text="Change Aggregation" pointing item compact options={barChartAggregationOptions} onChange={changeAggregation}></Dropdown>
+                                    <Dropdown text="Adjust Cost Input" pointing item compact deburr options={barChartValuesOptions} onChange={openCostInputForm}></Dropdown>
                                     <Dropdown.Item text={`Show ${costMode ? "per case" : "cost"}`} onClick={changeMode} />
                                 </Dropdown.Menu>
 
@@ -190,7 +198,33 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                     </Menu>
 
                 </Grid.Column>
-
+                <Modal autoFocus open={openCostInputModal} closeOnEscape={false} closeOnDimmerClick={false}>
+                    <Modal.Header>
+                        Set cost for {AcronymDictionary[modalTitle]}
+                    </Modal.Header>
+                    <Modal.Content>
+                        <Form>
+                            <Form.Input
+                                // value={costInput}
+                                // label="Notation"
+                                placeholder={costInput}
+                                onChange={(e, d) => {
+                                    if (!isNaN(parseInt(d.value))) {
+                                        setCostInput(parseInt(d.value))
+                                    }
+                                }
+                                }
+                            />
+                        </Form>
+                    </Modal.Content>
+                    <Modal.Actions>
+                        <Button content="Save" positive onClick={() => {
+                            setOpenCostInputModal(false);
+                            actions.changeCostInput(modalTitle, costInput);
+                        }} />
+                        <Button content="Cancel" onClick={() => { setOpenCostInputModal(false) }} />
+                    </Modal.Actions>
+                </Modal>
                 <Grid.Column width={(15) as any}>
                     <ChartSVG ref={svgRef}>
                         <CostBarChart
@@ -218,3 +252,9 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
 
 export default inject("store")(observer(CostBarChartVisualization));
 
+{/* <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
+                            <Icon name="edit" />
+                        </Menu.Item> */}
+
+{/* Modal for annotation. */ }
+{/**/ }
