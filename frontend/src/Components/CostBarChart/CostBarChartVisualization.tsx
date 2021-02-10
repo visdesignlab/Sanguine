@@ -115,7 +115,8 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                                 CRYO_UNITS: 0,
                                 PLT_UNITS: 0,
                                 CELL_SAVER_ML: 0,
-                                caseNum: 0
+                                caseNum: 0,
+                                SALVAGE_USAGE: 0
                             }
                         }
                         temporaryDataHolder[singleCase[aggregatedBy]].PRBC_UNITS += singleCase.PRBC_UNITS;
@@ -123,6 +124,7 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                         temporaryDataHolder[singleCase[aggregatedBy]].CRYO_UNITS += singleCase.CRYO_UNITS;
                         temporaryDataHolder[singleCase[aggregatedBy]].PLT_UNITS += singleCase.PLT_UNITS;
                         temporaryDataHolder[singleCase[aggregatedBy]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
+                        temporaryDataHolder[singleCase[aggregatedBy]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0)
                         temporaryDataHolder[singleCase[aggregatedBy]].caseNum += 1
                     }
                 })
@@ -135,9 +137,11 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                             dataItem.FFP_UNITS * (costMode ? BloodProductCost.FFP_UNITS : 1) / dataItem.caseNum,
                             dataItem.CRYO_UNITS * (costMode ? BloodProductCost.CRYO_UNITS : 1) / dataItem.caseNum,
                             dataItem.PLT_UNITS * (costMode ? BloodProductCost.PLT_UNITS : 1) / dataItem.caseNum,
-                            dataItem.CELL_SAVER_ML * (costMode ? BloodProductCost.CELL_SAVER_ML : 0.001) / dataItem.caseNum,
+                            (costMode ? (dataItem.SALVAGE_USAGE * BloodProductCost.CELL_SAVER_ML / dataItem.caseNum) : (dataItem.CELL_SAVER_ML * 0.001 / dataItem.caseNum))
                         ],
-                        caseNum: dataItem.caseNum
+                        caseNum: dataItem.caseNum,
+                        cellSalvageUsage: dataItem.SALVAGE_USAGE / dataItem.caseNum,
+                        cellSalvageVolume: dataItem.CELL_SAVER_ML / dataItem.caseNum
                     }
                     tempmaxCost = tempmaxCost > sum(newDataObj.dataArray) ? tempmaxCost : sum(newDataObj.dataArray)
                     console.log(newDataObj)
