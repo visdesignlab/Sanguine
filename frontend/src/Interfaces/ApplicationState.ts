@@ -37,6 +37,8 @@ export interface CostBarChartDataPoint {
     aggregateAttribute: any;
     dataArray: number[];
     caseNum: number;
+    cellSalvageUsage: number;
+    cellSalvageVolume: number;
 }
 export interface BarChartDataPoint extends BasicAggregatedDatePoint {
     actualDataPoints: any[]
@@ -176,6 +178,7 @@ export const defaultState: ApplicationState = {
         FFP_UNITS: 55,
         CRYO_UNITS: 100,
         PLT_UNITS: 650,
-        CELL_SAVER_ML: 1
+        CELL_SAVER_ML: 300,
+
     }
 };
