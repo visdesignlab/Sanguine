@@ -176,7 +176,7 @@ export const defaultState: ApplicationState = {
     BloodProductCost: {
         PRBC_UNITS: 200,
         FFP_UNITS: 55,
-        CRYO_UNITS: 100,
+        CRYO_UNITS: 70,
         PLT_UNITS: 650,
         CELL_SAVER_ML: 300,
 
