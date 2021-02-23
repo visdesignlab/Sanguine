@@ -135,15 +135,16 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                         dataArray: [
                             dataItem.PRBC_UNITS * (costMode ? BloodProductCost.PRBC_UNITS : 1) / dataItem.caseNum,
                             dataItem.FFP_UNITS * (costMode ? BloodProductCost.FFP_UNITS : 1) / dataItem.caseNum,
-                            dataItem.CRYO_UNITS * (costMode ? BloodProductCost.CRYO_UNITS : 1) / dataItem.caseNum,
                             dataItem.PLT_UNITS * (costMode ? BloodProductCost.PLT_UNITS : 1) / dataItem.caseNum,
-                            (costMode ? (dataItem.SALVAGE_USAGE * BloodProductCost.CELL_SAVER_ML / dataItem.caseNum) : (dataItem.CELL_SAVER_ML * 0.001 / dataItem.caseNum))
+                            dataItem.CRYO_UNITS * (costMode ? BloodProductCost.CRYO_UNITS : 1) / dataItem.caseNum,
+                            (costMode ? (dataItem.SALVAGE_USAGE * BloodProductCost.CELL_SAVER_ML / dataItem.caseNum) : (dataItem.CELL_SAVER_ML * 0.004 / dataItem.caseNum))
                         ],
                         caseNum: dataItem.caseNum,
                         cellSalvageUsage: dataItem.SALVAGE_USAGE / dataItem.caseNum,
                         cellSalvageVolume: dataItem.CELL_SAVER_ML / dataItem.caseNum
                     }
-                    tempmaxCost = tempmaxCost > sum(newDataObj.dataArray) ? tempmaxCost : sum(newDataObj.dataArray)
+                    const sum_cost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0)
+                    tempmaxCost = tempmaxCost > sum_cost ? tempmaxCost : sum_cost
                     console.log(newDataObj)
                     outputData.push(newDataObj)
                 })
