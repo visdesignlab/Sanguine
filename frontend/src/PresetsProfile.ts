@@ -16,8 +16,8 @@ export const offset = {
     regular: { left: 90, bottom: 40, right: 10, top: 40, margin: 10 },
     minimum: { left: 35, bottom: 40, right: 10, top: 40, margin: 10 },
     intervention: { left: 100, bottom: 40, right: 10, top: 40, margin: 10 }
-
 };
+export const differentialSquareWidth = 10;
 
 export const extraPairOptions = [
     { title: "Preop Hemoglobin", value: "Preop HGB" },
@@ -88,7 +88,7 @@ export const scatterYOptions = [
     }
 ]
 
-export const typeDiction = ["COST", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION", "COMPARISON"]
+export const typeDiction = ["COST", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION", "COMPARESAVING"]
 
 export const dumbbellValueOptions = [
     { value: "HGB_VALUE", key: "HGB_VALUE", text: "Hemoglobin Value" }
@@ -163,6 +163,11 @@ export const SurgeryType = [
 export const surgeryTypeArray = ["Urgent", "Elective", "Emergent"]
 export const OutcomeDropdownOptions = OutcomeType.concat({ value: "NONE", key: "NONE", text: "None" })
 
+export const CompareSavingValuesOptions = [
+    { value: "AMICAR", key: "AMICAR", text: "AMICAR" },
+    { value: "TXA", key: "TXA", text: "Tranexamic Acid" },
+    { value: "B12", key: "B12", text: "B12" },
+]
 
 export const barChartValuesOptions = [
     {

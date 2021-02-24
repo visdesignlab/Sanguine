@@ -2,7 +2,7 @@ import React, { FC, useEffect, useRef, useLayoutEffect, useState } from "react";
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { BarChartDataPoint, CostBarChartDataPoint, ExtraPairPoint, SingleCasePoint } from '../../Interfaces/ApplicationState'
+import { BarChartDataPoint, CostBarChartDataPoint, CostCompareChartDataPoint, ExtraPairPoint, SingleCasePoint } from '../../Interfaces/ApplicationState'
 import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, extraPairOptions, ChartSVG, AcronymDictionary } from "../../PresetsProfile"
 import { Icon, Grid, Dropdown, Menu, Button, Form, Modal } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
@@ -10,11 +10,11 @@ import { sum, median } from "d3";
 import axios from 'axios'
 import { stateUpdateWrapperUseJSON, generateExtrapairPlotData } from "../../HelperFunctions";
 import NotationForm from "../Utilities/NotationForm";
-import CostBarChart from "./CostBarChart";
+import CompareSavingChart from "./CompareSavingChart";
 
 interface OwnProps {
     aggregatedBy: string;
-    // valueToVisualize: string;
+    valueToCompare: string;
     chartId: string;
     store?: Store;
     chartIndex: number;
@@ -26,7 +26,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggregatedBy, chartId, store, chartIndex }: Props) => {
+const CompareSavingChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggregatedBy, chartId, store, valueToCompare }: Props) => {
     const {
         layoutArray,
         proceduresSelection,
@@ -40,7 +40,7 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
     const svgRef = useRef<SVGSVGElement>(null);
     // const [data, setData] = useState<{: BarChartDataPoint[]; perCase: BarChartDataPoint[]; }>({: [], perCase: [] });
     const [data, setData] = useState<
-        CostBarChartDataPoint[]
+        CostCompareChartDataPoint[]
     >([]);
 
     const [maximumCost, setMaximumCost] = useState(0);
@@ -110,41 +110,74 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                         if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
                             temporaryDataHolder[singleCase[aggregatedBy]] = {
                                 aggregateAttribute: singleCase[aggregatedBy],
-                                PRBC_UNITS: 0,
-                                FFP_UNITS: 0,
-                                CRYO_UNITS: 0,
-                                PLT_UNITS: 0,
-                                CELL_SAVER_ML: 0,
-                                caseNum: 0,
-                                SALVAGE_USAGE: 0
+                                CRYO_UNITS_WITH_INTER: 0,
+                                PLT_UNITS_WITH_INTER: 0,
+                                CELL_SAVER_ML_WITH_INTER: 0,
+                                PRBC_UNITS_WITH_INTER: 0,
+                                FFP_UNITS_WITH_INTER: 0,
+                                CRYO_UNITS_WITHOUT_INTER: 0,
+                                PLT_UNITS_WITHOUT_INTER: 0,
+                                CELL_SAVER_ML_WITHOUT_INTER: 0,
+                                PRBC_UNITS_WITHOUT_INTER: 0,
+                                FFP_UNITS_WITHOUT_INTER: 0,
+                                CASENUM_WITH_INTER: 0,
+                                CASENUM_WITHOUT_INTER: 0,
+                                // CRYO_UNITS: 0,
+                                // PLT_UNITS: 0,
+                                // CELL_SAVER_ML: 0,
+                                // caseNum: 0,
+                                SALVAGE_USAGE_WITH_INTER: 0,
+                                SALVAGE_USAGE_WITHOUT_INTER: 0
                             }
                         }
-                        temporaryDataHolder[singleCase[aggregatedBy]].PRBC_UNITS += singleCase.PRBC_UNITS;
-                        temporaryDataHolder[singleCase[aggregatedBy]].FFP_UNITS += singleCase.FFP_UNITS;
-                        temporaryDataHolder[singleCase[aggregatedBy]].CRYO_UNITS += singleCase.CRYO_UNITS;
-                        temporaryDataHolder[singleCase[aggregatedBy]].PLT_UNITS += singleCase.PLT_UNITS;
-                        temporaryDataHolder[singleCase[aggregatedBy]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
-                        temporaryDataHolder[singleCase[aggregatedBy]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0)
-                        temporaryDataHolder[singleCase[aggregatedBy]].caseNum += 1
+                        if (singleCase[valueToCompare] > 0) {
+                            temporaryDataHolder[singleCase[aggregatedBy]].PRBC_UNITS_WITH_INTER += singleCase.PRBC_UNITS;
+                            temporaryDataHolder[singleCase[aggregatedBy]].FFP_UNITS_WITH_INTER += singleCase.FFP_UNITS;
+                            temporaryDataHolder[singleCase[aggregatedBy]].CRYO_UNITS_WITH_INTER += singleCase.CRYO_UNITS;
+                            temporaryDataHolder[singleCase[aggregatedBy]].PLT_UNITS_WITH_INTER += singleCase.PLT_UNITS;
+                            temporaryDataHolder[singleCase[aggregatedBy]].CELL_SAVER_ML_WITH_INTER += singleCase.CELL_SAVER_ML;
+                            temporaryDataHolder[singleCase[aggregatedBy]].CASENUM_WITH_INTER += 1;
+                            temporaryDataHolder[singleCase[aggregatedBy]].SALVAGE_USAGE_WITH_INTER += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0)
+                        } else {
+                            temporaryDataHolder[singleCase[aggregatedBy]].PRBC_UNITS_WITHOUT_INTER += singleCase.PRBC_UNITS;
+                            temporaryDataHolder[singleCase[aggregatedBy]].FFP_UNITS_WITHOUT_INTER += singleCase.FFP_UNITS;
+                            temporaryDataHolder[singleCase[aggregatedBy]].CRYO_UNITS_WITHOUT_INTER += singleCase.CRYO_UNITS;
+                            temporaryDataHolder[singleCase[aggregatedBy]].PLT_UNITS_WITHOUT_INTER += singleCase.PLT_UNITS;
+                            temporaryDataHolder[singleCase[aggregatedBy]].CELL_SAVER_ML_WITHOUT_INTER += singleCase.CELL_SAVER_ML;
+                            temporaryDataHolder[singleCase[aggregatedBy]].CASENUM_WITHOUT_INTER += 1
+                            temporaryDataHolder[singleCase[aggregatedBy]].SALVAGE_USAGE_WITHOUT_INTER += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0)
+                        }
                     }
                 })
 
                 Object.values(temporaryDataHolder).forEach((dataItem: any) => {
-                    let newDataObj: CostBarChartDataPoint = {
+                    let newDataObj: CostCompareChartDataPoint = {
                         aggregateAttribute: dataItem.aggregateAttribute,
-                        dataArray: [
-                            dataItem.PRBC_UNITS * (costMode ? BloodProductCost.PRBC_UNITS : 1) / dataItem.caseNum,
-                            dataItem.FFP_UNITS * (costMode ? BloodProductCost.FFP_UNITS : 1) / dataItem.caseNum,
-                            dataItem.PLT_UNITS * (costMode ? BloodProductCost.PLT_UNITS : 1) / dataItem.caseNum,
-                            dataItem.CRYO_UNITS * (costMode ? BloodProductCost.CRYO_UNITS : 1) / dataItem.caseNum,
-                            (costMode ? (dataItem.SALVAGE_USAGE * BloodProductCost.CELL_SAVER_ML / dataItem.caseNum) : (dataItem.CELL_SAVER_ML * 0.004 / dataItem.caseNum))
+                        withInterDataArray: [
+                            dataItem.PRBC_UNITS_WITH_INTER * (costMode ? BloodProductCost.PRBC_UNITS : 1) / dataItem.CASENUM_WITH_INTER,
+                            dataItem.FFP_UNITS_WITH_INTER * (costMode ? BloodProductCost.FFP_UNITS : 1) / dataItem.CASENUM_WITH_INTER,
+                            dataItem.PLT_UNITS_WITH_INTER * (costMode ? BloodProductCost.PLT_UNITS : 1) / dataItem.CASENUM_WITH_INTER,
+                            dataItem.CRYO_UNITS_WITH_INTER * (costMode ? BloodProductCost.CRYO_UNITS : 1) / dataItem.CASENUM_WITH_INTER,
+                            (costMode ? (dataItem.SALVAGE_USAGE_WITH_INTER * BloodProductCost.CELL_SAVER_ML / dataItem.CASENUM_WITH_INTER)
+                                : (dataItem.CELL_SAVER_ML_WITH_INTER * 0.004 / dataItem.CASENUM_WITH_INTER))
                         ],
-                        caseNum: dataItem.caseNum,
-                        cellSalvageUsage: dataItem.SALVAGE_USAGE / dataItem.caseNum,
-                        cellSalvageVolume: dataItem.CELL_SAVER_ML / dataItem.caseNum
+                        dataArray: [dataItem.PRBC_UNITS_WITHOUT_INTER * (costMode ? BloodProductCost.PRBC_UNITS : 1) / dataItem.CASENUM_WITHOUT_INTER,
+                        dataItem.FFP_UNITS_WITHOUT_INTER * (costMode ? BloodProductCost.FFP_UNITS : 1) / dataItem.CASENUM_WITHOUT_INTER,
+                        dataItem.PLT_UNITS_WITHOUT_INTER * (costMode ? BloodProductCost.PLT_UNITS : 1) / dataItem.CASENUM_WITHOUT_INTER,
+                        dataItem.CRYO_UNITS_WITHOUT_INTER * (costMode ? BloodProductCost.CRYO_UNITS : 1) / dataItem.CASENUM_WITHOUT_INTER,
+                        (costMode ? (dataItem.SALVAGE_USAGE_WITHOUT_INTER * BloodProductCost.CELL_SAVER_ML / dataItem.CASENUM_WITHOUT_INTER)
+                            : (dataItem.CELL_SAVER_ML_WITHOUT_INTER * 0.004 / dataItem.CASENUM_WITHOUT_INTER))],
+                        caseNum: dataItem.CASENUM_WITHOUT_INTER,
+                        withInterCaseNum: dataItem.CASENUM_WITH_INTER,
+                        cellSalvageUsage: dataItem.SALVAGE_USAGE_WITHOUT_INTER / dataItem.CASENUM_WITHOUT_INTER,
+                        cellSalvageVolume: dataItem.CELL_SAVER_ML_WITHOUT_INTER / dataItem.CASENUM_WITHOUT_INTER,
+                        withInterCellSalvageUsage: dataItem.SALVAGE_USAGE_WITH_INTER / dataItem.CASENUM_WITH_INTER,
+                        withInterCellSalvageVolume: dataItem.CELL_SAVER_ML_WITH_INTER / dataItem.CASENUM_WITH_INTER
                     }
-                    const sum_cost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0)
-                    tempmaxCost = tempmaxCost > sum_cost ? tempmaxCost : sum_cost
+                    const sumCost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0)
+                    const altSumCost = sum(newDataObj.withInterDataArray) + (costMode ? (newDataObj.withInterCellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.withInterDataArray[4]) : 0)
+                    tempmaxCost = tempmaxCost > sumCost ? tempmaxCost : sumCost
+                    tempmaxCost = tempmaxCost > altSumCost ? tempmaxCost : altSumCost
 
                     outputData.push(newDataObj)
                 })
@@ -232,7 +265,7 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                 </Modal>
                 <Grid.Column width={(15) as any}>
                     <ChartSVG ref={svgRef}>
-                        <CostBarChart
+                        <CompareSavingChart
                             chartId={chartId}
                             dimensionWidth={dimensionWidth}
                             dimensionHeight={dimensionHeight}
@@ -241,6 +274,7 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                             aggregatedBy={aggregatedBy}
                             maximumCost={maximumCost}
                             costMode={costMode}
+                            valueToCompare={valueToCompare}
                         // selectedVal={selectedBar}
                         // stripPlotMode={stripPlotMode}
                         // extraPairDataSet={extraPairData}
@@ -255,7 +289,7 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
 }
 
 
-export default inject("store")(observer(CostBarChartVisualization));
+export default inject("store")(observer(CompareSavingChartVisualization));
 
 {/* <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
                             <Icon name="edit" />

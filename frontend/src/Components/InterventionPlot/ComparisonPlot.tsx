@@ -21,7 +21,7 @@ import {
     ComparisonDataPoint, ExtraPairInterventionPoint
 } from "../../Interfaces/ApplicationState";
 import {
-    AcronymDictionary, BloodProductCap, offset, CELL_SAVER_TICKS, extraPairWidth, extraPairPadding, caseRectWidth,
+    AcronymDictionary, BloodProductCap, offset, CELL_SAVER_TICKS, extraPairWidth, extraPairPadding, caseRectWidth, differentialSquareWidth,
 } from "../../PresetsProfile"
 
 //import SingleHeatPlot from "./SingleHeatPlot";
@@ -58,7 +58,7 @@ export type Props = OwnProps;
 const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outcomeComparison, interventionDate, store, aggregatedBy, valueToVisualize, dimensionHeight, dimensionWidth, data, svg }: Props) => {
 
     const svgSelection = select(svg.current);
-    const differentialSquareWidth = 10;
+
 
     const {
         // perCaseSelected,
@@ -545,7 +545,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
 }
 export default inject("store")(observer(InterventionPlot));
 
-const ComparisonDiv = styled.div`
+export const ComparisonDiv = styled.div`
   font-size:x-small;
   line-height:normal;
 `;

@@ -6,7 +6,7 @@ import { inject, observer } from "mobx-react";
 import { actions, provenance } from '../..'
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
-import { blood_red, OutcomeType } from "../../PresetsProfile";
+import { blood_red, CompareSavingValuesOptions, OutcomeType } from "../../PresetsProfile";
 import {
     barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions,
     presetOptions, dumbbellValueOptions, scatterYOptions, typeDiction
@@ -81,7 +81,8 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         [dumbbellValueOptions, dumbbellFacetOptions],
         [scatterYOptions, barChartValuesOptions],
         [barChartValuesOptions, barChartAggregationOptions],
-        [barChartValuesOptions, [barChartAggregationOptions[0], barChartAggregationOptions[2]]]
+        [barChartValuesOptions, [barChartAggregationOptions[0], barChartAggregationOptions[2]]],
+        [CompareSavingValuesOptions, barChartAggregationOptions]
     ]
 
 
@@ -119,6 +120,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     const confirmChartAddHandler = () => {
         if ((xSelection && ySelection && addingChartType > 0) || (xSelection && addingChartType === 0)) {
             if (!(addingChartType === 4 && (!interventionDate))) {
+                console.log(addingChartType, typeDiction)
                 actions.addNewChart(xSelection, ySelection, nextAddingIndex, typeDiction[addingChartType], outcomeComparison, interventionDate, interventionPlotType)
                 setAddMode(false);
                 setAddingChartType(-1)
@@ -175,12 +177,12 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 {/* <Button onClick={addModeButtonHandler} content={"Add"} /> */}
                 <Dropdown button text="Add" pointing style={{ background: blood_red, color: "white" }}>
                     <Dropdown.Menu>
-                        {/* <Dropdown.Item onClick={() => addModeButtonHandler(0)}>Violin Plot</Dropdown.Item> */}
                         <Dropdown.Item onClick={() => addModeButtonHandler(1)}>Dumbbell Chart</Dropdown.Item>
                         <Dropdown.Item onClick={() => addModeButtonHandler(2)}>Scatter Plot</Dropdown.Item>
                         <Dropdown.Item onClick={() => addModeButtonHandler(3)}>Heat Map</Dropdown.Item>
                         <Dropdown.Item onClick={() => addModeButtonHandler(4)}>Intervention Plot</Dropdown.Item>
                         <Dropdown.Item onClick={() => addModeButtonHandler(0)}>Cost Test Chart</Dropdown.Item>
+                        <Dropdown.Item onClick={() => addModeButtonHandler(5)}>Compare Saving Chart</Dropdown.Item>
                     </Dropdown.Menu>
                 </Dropdown>
             </Menu.Item>
@@ -486,7 +488,22 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 maxDate={rawDateRange[1] as any}
                 onChange={interventionHandler} />
         </Menu.Item>
-        ]
+        ],
+        //for #5
+        [<Menu.Item>
+            <Dropdown placeholder="Select Value to Compare"
+                selection
+                options={addOptions[5][0]}
+                onChange={yAxisChangeHandler}
+            />
+        </Menu.Item>,
+        <Menu.Item>
+            <Dropdown placeholder="Select Aggregation"
+                selection
+                options={addOptions[5][1]}
+                onChange={xAxisChangeHandler}
+            />
+        </Menu.Item>]
     ]
 
 

@@ -16,6 +16,7 @@ import ComparisonPlotVisualization from "./Components/ComparisonPlot/ComparisonP
 import { Responsive } from "react-grid-layout";
 import 'react-grid-layout/css/styles.css';
 import CostBarChartVisualization from "./Components/CostBarChart/CostBarChartVisualization";
+import CompareSavingChartVisualization from "./Components/SavingChart/CompareSavingChartVisualization";
 
 interface OwnProps {
     hemoData: any[];
@@ -156,10 +157,25 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                         outcomeComparison={layout.outcomeComparison!}
                         w={layout.w}
                     />
-                </div>
+                </div>);
+            case "COMPARESAVING":
+                return (<div key={layout.i}
+                    className={"parent-node" + layout.i}>
+                    <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
+                    <Button floated="right" icon="move" size="mini" circular compact basic className="move-icon" />
+                    <CompareSavingChartVisualization
+                        aggregatedBy={layout.aggregatedBy}
+                        chartId={layout.i}
+                        chartIndex={index}
+                        hemoglobinDataSet={hemoData}
+                        notation={layout.notation}
+                        valueToCompare={layout.valueToVisualize}
+                        w={layout.w}
+                    />
+
+                </div>)
 
 
-                )
 
         }
 
