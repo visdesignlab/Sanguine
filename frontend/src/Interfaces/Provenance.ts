@@ -141,7 +141,7 @@ export function setupProvenance(): AppProvenance {
     // }
 
     const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plotType: string, outcomeComparison?: string, interventionDate?: number, interventionChartType?: string) => {
-
+        console.log(plotType)
         const newLayoutElement: LayoutElement = {
             aggregatedBy: xAxisAttribute,
             valueToVisualize: yAxisAttribute,

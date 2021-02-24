@@ -40,6 +40,15 @@ export interface CostBarChartDataPoint {
     cellSalvageUsage: number;
     cellSalvageVolume: number;
 }
+
+export interface CostCompareChartDataPoint extends CostBarChartDataPoint {
+    withInterDataArray: number[];
+    withInterCaseNum: number;
+    withInterCellSalvageUsage: number;
+    withInterCellSalvageVolume: number;
+}
+
+
 export interface BarChartDataPoint extends BasicAggregatedDatePoint {
     actualDataPoints: any[]
     median: number;
