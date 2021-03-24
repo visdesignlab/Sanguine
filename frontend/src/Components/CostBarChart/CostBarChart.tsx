@@ -24,6 +24,7 @@ import {
     extraPairPadding,
     greyScaleRange,
     caseRectWidth,
+    basic_gray,
 } from "../../PresetsProfile"
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 import SingleStackedBar from "./SingleStackedBar";
@@ -38,6 +39,7 @@ interface OwnProps {
     data: CostBarChartDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
     maximumCost: number;
+    maxSavedNegative: number;
     costMode: boolean
     //  selectedVal: number | null;
     // stripPlotMode: boolean;
@@ -48,7 +50,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const CostBarChart: FC<Props> = ({ maximumCost, store, aggregatedBy, dimensionWidth, dimensionHeight, data, svg, chartId, costMode }: Props) => {
+const CostBarChart: FC<Props> = ({ maximumCost, store, maxSavedNegative, aggregatedBy, dimensionWidth, dimensionHeight, data, svg, chartId, costMode }: Props) => {
     const svgSelection = select(svg.current);
     const currentOffset = offset.regular;
     const [caseMax, setCaseMax] = useState(0);
@@ -79,10 +81,10 @@ const CostBarChart: FC<Props> = ({ maximumCost, store, aggregatedBy, dimensionWi
 
     const valueScale = useCallback(() => {
         let valueScale = scaleLinear()
-            .domain([0, maximumCost])
+            .domain([maxSavedNegative, maximumCost])
             .range([currentOffset.left, dimensionWidth - currentOffset.right - currentOffset.margin])
         return valueScale
-    }, [dimensionWidth, maximumCost])
+    }, [dimensionWidth, maximumCost, maxSavedNegative])
 
     const caseScale = useCallback(() => {
         // const caseMax = max(data.map(d => d.caseCount)) || 0;
@@ -138,6 +140,7 @@ const CostBarChart: FC<Props> = ({ maximumCost, store, aggregatedBy, dimensionWi
             <g className="y-axis"></g>
             <text className="x-label" />
             <text className="y-label" />
+
         </g>
         <g className="chart">
             {data.map((dp) => {
@@ -180,6 +183,14 @@ const CostBarChart: FC<Props> = ({ maximumCost, store, aggregatedBy, dimensionWi
                         </text></g>
                 );
             })}
+
+            <line x1={valueScale()(0)}
+                x2={valueScale()(0)}
+                y1={dimensionHeight - currentOffset.bottom}
+                y2={currentOffset.top}
+                opacity={costMode ? 1 : 0} stroke={basic_gray}
+                strokeWidth={5}
+                strokeDasharray="5,5" />
         </g>
     </>
 }

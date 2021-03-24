@@ -44,6 +44,7 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
     >([]);
 
     const [maximumCost, setMaximumCost] = useState(0);
+    const [maximumSavedNegative, setMinCost] = useState(0)
     const [costInput, setCostInput] = useState(0)
     const [dimensionHeight, setDimensionHeight] = useState(0)
     const [dimensionWidth, setDimensionWidth] = useState(0)
@@ -75,6 +76,7 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
             previousCancelToken.cancel("cancel the call?")
         }
         let tempmaxCost = 0;
+        let tempMinCost = 0;
         let temporaryDataHolder: any = {}
         let caseSetReturnedFromQuery = new Set();
         let outputData: CostBarChartDataPoint[] = [];
@@ -143,13 +145,17 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                         cellSalvageUsage: dataItem.SALVAGE_USAGE / dataItem.caseNum,
                         cellSalvageVolume: dataItem.CELL_SAVER_ML / dataItem.caseNum
                     }
-                    const sum_cost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0)
+                    // const sum_cost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0)
+                    const sum_cost = sum(newDataObj.dataArray)
                     tempmaxCost = tempmaxCost > sum_cost ? tempmaxCost : sum_cost
-
+                    const costSaved = -(newDataObj.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4])
+                    if (costMode) {
+                        tempMinCost = tempMinCost < costSaved ? tempMinCost : costSaved;
+                    }
                     outputData.push(newDataObj)
                 })
                 stateUpdateWrapperUseJSON(data, outputData, setData);
-
+                setMinCost(tempMinCost)
                 setMaximumCost(tempmaxCost)
             }
         }).catch(function (thrown) {
@@ -240,6 +246,7 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                             svg={svgRef}
                             aggregatedBy={aggregatedBy}
                             maximumCost={maximumCost}
+                            maxSavedNegative={maximumSavedNegative}
                             costMode={costMode}
                         // selectedVal={selectedBar}
                         // stripPlotMode={stripPlotMode}
