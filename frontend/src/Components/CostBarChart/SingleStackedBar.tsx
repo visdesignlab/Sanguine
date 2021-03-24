@@ -36,58 +36,33 @@ const SingleStackedBar: FC<Props> = ({ howToTransform, dataPoint, bandwidth, cos
 
     const generateStackedBars = () => {
         let outputElements = []
-        if (!costMode) {
-            outputElements = dataPoint.dataArray.map((point, index) => {
-                return (
-                    <Popup content={`${barChartValuesOptions[index].key}: ${costMode ? format("$.2f")(point) : format(".4r")(point)}`}
-                        key={dataPoint.aggregateAttribute + '-' + point}
-                        trigger={
-                            <rect
-                                x={valueScale()(sum(dataPoint.dataArray.slice(0, index)))}
-                                transform={howToTransform}
-                                height={bandwidth}
-                                width={valueScale()(point) - valueScale()(0)}
-                                fill={colorProfile[index]}
-                            />} />)
-            })
-        } else {
-            outputElements = dataPoint.dataArray.slice(0, 4).map((point, index) => {
-                return (
-                    <Popup content={`${barChartValuesOptions[index].key}: ${costMode ? format("$.2f")(point) : format(".4r")(point)}`}
-                        key={dataPoint.aggregateAttribute + '-' + point}
-                        trigger={
-                            <rect
-                                x={valueScale()(sum(dataPoint.dataArray.slice(0, index)))}
-                                transform={howToTransform}
-                                height={bandwidth}
-                                width={valueScale()(point) - valueScale()(0)}
-                                fill={colorProfile[index]}
-                            />} />)
-            })
-            //Need adjustment on saving formula
-            outputElements.push(
-                <Popup content={`Potential Saving per case $${dataPoint.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - dataPoint.dataArray[4]}`}
-                    key={dataPoint.aggregateAttribute + 'CELL_SAVING'}
+        outputElements = dataPoint.dataArray.map((point, index) => {
+            return (
+                <Popup content={`${barChartValuesOptions[index].key}: ${costMode ? format("$.2f")(point) : format(".4r")(point)}`}
+                    key={dataPoint.aggregateAttribute + '-' + point}
                     trigger={
-                        <g>
-                            <rect x={valueScale()(sum(dataPoint.dataArray.slice(0, 4)))}
-                                transform={howToTransform}
-                                height={bandwidth}
-                                width={valueScale()(dataPoint.dataArray[4]) - valueScale()(0)}
-                                fill={colorProfile[4]} />
-                            <rect x={valueScale()(sum(dataPoint.dataArray.slice(0, 4)))}
-                                transform={howToTransform}
-                                height={bandwidth}
+                        <rect
+                            x={valueScale()(sum(dataPoint.dataArray.slice(0, index)))}
+                            transform={howToTransform}
+                            height={bandwidth}
+                            width={valueScale()(point) - valueScale()(0)}
+                            fill={colorProfile[index]}
+                        />} />)
+        })
+        if (costMode) {
+            const costSaved = dataPoint.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - dataPoint.dataArray[4]
+            outputElements.push(
+                <Popup content={`Potential Saving per case $${costSaved}`}
+                    key={dataPoint.aggregateAttribute + 'CELL_SAVING'}
+                    trigger={<rect x={valueScale()(-costSaved)}
+                        transform={howToTransform}
+                        height={bandwidth}
 
-                                width={valueScale()(dataPoint.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS) - valueScale()(0)}
-                                fill="#f5f500"
-                                opacity={0.5}
-                            />
-                        </g>
+                        width={valueScale()(0) - valueScale()(-costSaved)}
+                        fill="#f5f500"
+                    />
                     }
-                />
-
-            )
+                />)
         }
         return outputElements
     }
