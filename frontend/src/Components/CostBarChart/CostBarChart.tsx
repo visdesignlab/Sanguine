@@ -12,7 +12,8 @@ import {
     scaleBand,
     sum,
     axisLeft,
-    axisBottom
+    axisBottom,
+    interpolateGreys
 } from "d3";
 import {
     CostBarChartDataPoint, ExtraPairPoint
@@ -21,6 +22,8 @@ import {
     offset,
     AcronymDictionary,
     extraPairPadding,
+    greyScaleRange,
+    caseRectWidth,
 } from "../../PresetsProfile"
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 import SingleStackedBar from "./SingleStackedBar";
@@ -48,8 +51,10 @@ export type Props = OwnProps;
 const CostBarChart: FC<Props> = ({ maximumCost, store, aggregatedBy, dimensionWidth, dimensionHeight, data, svg, chartId, costMode }: Props) => {
     const svgSelection = select(svg.current);
     const currentOffset = offset.regular;
+    const [caseMax, setCaseMax] = useState(0);
     const [xVals, setXVals] = useState([]);
     useEffect(() => {
+        let newCaseMax = 0;
         const tempXVals = data.sort((a, b) => {
             if (aggregatedBy === "YEAR") {
                 return a.aggregateAttribute - b.aggregateAttribute
@@ -57,9 +62,11 @@ const CostBarChart: FC<Props> = ({ maximumCost, store, aggregatedBy, dimensionWi
                 return a.caseNum - b.caseNum
             }
         }).map((dp) => {
+            newCaseMax = newCaseMax > dp.caseNum ? newCaseMax : dp.caseNum
             return dp.aggregateAttribute
         });
         stateUpdateWrapperUseJSON(xVals, tempXVals, setXVals);
+        setCaseMax(newCaseMax)
     }, [data, aggregatedBy])
 
     const aggregationScale = useCallback(() => {
@@ -76,6 +83,12 @@ const CostBarChart: FC<Props> = ({ maximumCost, store, aggregatedBy, dimensionWi
             .range([currentOffset.left, dimensionWidth - currentOffset.right - currentOffset.margin])
         return valueScale
     }, [dimensionWidth, maximumCost])
+
+    const caseScale = useCallback(() => {
+        // const caseMax = max(data.map(d => d.caseCount)) || 0;
+        const caseScale = scaleLinear().domain([0, caseMax]).range(greyScaleRange)
+        return caseScale;
+    }, [caseMax])
 
     svgSelection
         .select(".axes")
@@ -139,6 +152,33 @@ const CostBarChart: FC<Props> = ({ maximumCost, store, aggregatedBy, dimensionWi
                         dp.aggregateAttribute
                     )})`).toString()}
                 />)
+            })}
+            {data.map((dataPoint) => {
+                return (
+                    <g transform={`translate(${currentOffset.left},0)`}>
+                        <rect
+                            fill={interpolateGreys(caseScale()(dataPoint.caseNum))}
+                            x={-caseRectWidth - 5}
+                            y={aggregationScale()(dataPoint.aggregateAttribute)}
+                            width={caseRectWidth}
+                            height={aggregationScale().bandwidth()}
+                            // stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
+                            strokeWidth={2}
+                        />
+                        <text
+                            fill="white"
+                            x={-20}
+                            y={
+                                aggregationScale()(dataPoint.aggregateAttribute)! +
+                                0.5 * aggregationScale().bandwidth()
+                            }
+                            alignmentBaseline={"central"}
+                            textAnchor={"middle"}
+                            fontSize="12px"
+                        >
+                            {dataPoint.caseNum}
+                        </text></g>
+                );
             })}
         </g>
     </>
