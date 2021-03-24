@@ -13,7 +13,8 @@ import {
     sum,
     axisLeft,
     axisBottom,
-    timeFormat
+    timeFormat,
+    interpolateGreys
 } from "d3";
 import {
     CostBarChartDataPoint, CostCompareChartDataPoint, ExtraPairPoint
@@ -25,6 +26,8 @@ import {
     differentialSquareWidth,
     postop_color,
     preop_color,
+    greyScaleRange,
+    caseRectWidth,
 } from "../../PresetsProfile"
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 import SingleCompareBars from "./SingleCompareBars";
@@ -55,11 +58,13 @@ const CompareSavingChart: FC<Props> = ({ maximumCost, store, valueToCompare, agg
     const currentOffset = offset.regular;
     const [withInterTotal, setWithInterTotal] = useState(0);
     const [withoutInterTotal, setWithoutInterTotal] = useState(0)
+    const [caseMax, setCaseMax] = useState(0);
     const [xVals, setXVals] = useState([]);
 
     useEffect(() => {
         let newWithInterTotal = 0;
         let newWithoutInterTotal = 0;
+        let newCaseMax = 0;
         const tempXVals = data.sort((a, b) => {
             if (aggregatedBy === "YEAR") {
                 return a.aggregateAttribute - b.aggregateAttribute
@@ -67,12 +72,14 @@ const CompareSavingChart: FC<Props> = ({ maximumCost, store, valueToCompare, agg
                 return a.caseNum - b.caseNum
             }
         }).map((dp) => {
+            newCaseMax = newCaseMax > (dp.caseNum + dp.withInterCaseNum) ? newCaseMax : (dp.caseNum + dp.withInterCaseNum)
             newWithInterTotal += dp.withInterCaseNum;
             newWithoutInterTotal += dp.caseNum;
             return dp.aggregateAttribute
         });
         setWithInterTotal(newWithInterTotal)
         setWithoutInterTotal(newWithoutInterTotal)
+        setCaseMax(newCaseMax);
         stateUpdateWrapperUseJSON(xVals, tempXVals, setXVals);
     }, [data, aggregatedBy])
 
@@ -90,6 +97,11 @@ const CompareSavingChart: FC<Props> = ({ maximumCost, store, valueToCompare, agg
             .range([currentOffset.left, dimensionWidth - currentOffset.right - currentOffset.margin])
         return valueScale
     }, [dimensionWidth, maximumCost])
+
+    const caseScale = useCallback(() => {
+        const caseScale = scaleLinear().domain([0, caseMax]).range(greyScaleRange);
+        return caseScale
+    }, [caseMax])
 
     svgSelection
         .select(".axes")
@@ -191,6 +203,77 @@ const CompareSavingChart: FC<Props> = ({ maximumCost, store, valueToCompare, agg
                         dp.aggregateAttribute
                     )})`).toString()}
                 />)
+            })}
+            {data.map((dataPoint) => {
+                return (<g transform={`translate(${currentOffset.left},0)`}>
+                    <rect
+                        fill={interpolateGreys(caseScale()(dataPoint.withInterCaseNum))}
+                        x={-caseRectWidth - 15}
+                        y={aggregationScale()(dataPoint.aggregateAttribute)}
+                        width={caseRectWidth}
+                        height={aggregationScale().bandwidth() * 0.5}
+                    />,
+                    <rect fill={interpolateGreys(caseScale()(dataPoint.caseNum))}
+                        x={-caseRectWidth - 15}
+                        y={aggregationScale()(dataPoint.aggregateAttribute)! + aggregationScale().bandwidth() * 0.5} width={caseRectWidth}
+                        height={aggregationScale().bandwidth() * 0.5} />,
+                    <rect
+                        fill={preop_color}
+                        x={-15}
+                        y={aggregationScale()(dataPoint.aggregateAttribute)}
+                        width={differentialSquareWidth}
+                        opacity={0.65}
+                        height={aggregationScale().bandwidth() * 0.47}
+                    />,
+                    <rect fill={postop_color}
+                        x={-15}
+                        y={aggregationScale()(dataPoint.aggregateAttribute)! + aggregationScale().bandwidth() * 0.5}
+                        width={differentialSquareWidth}
+                        opacity={0.65}
+                        height={aggregationScale().bandwidth() * 0.47} />,
+                    <rect x={-caseRectWidth - 15} y={aggregationScale()(dataPoint.aggregateAttribute)} width={caseRectWidth} fill="none" height={aggregationScale().bandwidth()}
+                        //   stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
+                        strokeWidth={2} />
+                    <text
+                        fill={aggregationScale().bandwidth() > 30 ? "white" : "none"}
+                        x={-caseRectWidth}
+                        y={
+                            aggregationScale()(dataPoint.aggregateAttribute)! +
+                            0.25 * aggregationScale().bandwidth()
+                        }
+                        alignmentBaseline={"central"}
+                        textAnchor={"middle"}
+                        fontSize="12px"
+
+                    >
+                        {dataPoint.withInterCaseNum}
+                    </text>, <text
+                        fill={aggregationScale().bandwidth() > 30 ? "white" : "none"}
+                        x={-caseRectWidth}
+                        y={
+                            aggregationScale()(dataPoint.aggregateAttribute)! +
+                            0.75 * aggregationScale().bandwidth()
+                        }
+                        alignmentBaseline={"central"}
+                        textAnchor={"middle"}
+                        fontSize="12px"
+                    >
+                        {dataPoint.caseNum}
+                    </text>
+                    <text
+                        fill={aggregationScale().bandwidth() > 30 ? "none" : "white"}
+                        x={-caseRectWidth}
+                        y={
+                            aggregationScale()(dataPoint.aggregateAttribute)! +
+                            0.5 * aggregationScale().bandwidth()
+                        }
+                        alignmentBaseline={"central"}
+                        textAnchor={"middle"}
+                        fontSize="12px"
+                    >
+                        {dataPoint.caseNum + dataPoint.withInterCaseNum}
+                    </text>
+                </g>)
             })}
         </g>
     </>
