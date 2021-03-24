@@ -36,105 +36,60 @@ const SingleCompareBars: FC<Props> = ({ howToTransform, dataPoint, bandwidth, co
 
     const generateStackedBars = () => {
         let outputElements = []
-        if (!costMode) {
-            outputElements = dataPoint.dataArray.map((point, index) => {
-                return (
-                    <Popup content={`${barChartValuesOptions[index].key}: ${costMode ? format("$.2f")(point) : format(".4r")(point)}`}
-                        key={dataPoint.aggregateAttribute + '-without' + point}
-                        trigger={
-                            <rect
-                                x={valueScale()(sum(dataPoint.dataArray.slice(0, index)))}
-                                transform={howToTransform + `translate(0,${0.5 * bandwidth})`}
-                                height={bandwidth * 0.5}
-                                width={valueScale()(point) - valueScale()(0)}
-                                fill={colorProfile[index]}
-                            />} />)
-            })
-            outputElements = outputElements.concat(dataPoint.withInterDataArray.map((point, index) => {
-                return (
-                    <Popup content={`${barChartValuesOptions[index].key}: ${costMode ? format("$.2f")(point) : format(".4r")(point)}`}
-                        key={dataPoint.aggregateAttribute + '-with' + point}
-                        trigger={
-                            <rect
-                                x={valueScale()(sum(dataPoint.withInterDataArray.slice(0, index)))}
-                                transform={howToTransform}
-                                height={bandwidth * 0.5}
-                                width={valueScale()(point) - valueScale()(0)}
-                                fill={colorProfile[index]}
-                            />} />)
-            }))
-        } else {
-            outputElements = dataPoint.dataArray.slice(0, 4).map((point, index) => {
-                return (
-                    <Popup content={`${barChartValuesOptions[index].key}: ${costMode ? format("$.2f")(point) : format(".4r")(point)}`}
-                        key={dataPoint.aggregateAttribute + '-without' + point}
-                        trigger={
-                            <rect
-                                x={valueScale()(sum(dataPoint.dataArray.slice(0, index)))}
-                                transform={howToTransform + `translate(0,${0.5 * bandwidth})`}
-                                height={bandwidth * 0.5}
-                                width={valueScale()(point) - valueScale()(0)}
-                                fill={colorProfile[index]}
-                            />} />)
-            })
-            outputElements = outputElements.concat(dataPoint.withInterDataArray.map((point, index) => {
-                return (
-                    <Popup content={`${barChartValuesOptions[index].key}: ${costMode ? format("$.2f")(point) : format(".4r")(point)}`}
-                        key={dataPoint.aggregateAttribute + '-with' + point}
-                        trigger={
-                            <rect
-                                x={valueScale()(sum(dataPoint.withInterDataArray.slice(0, index)))}
-                                transform={howToTransform}
-                                height={bandwidth * 0.5}
-                                width={valueScale()(point) - valueScale()(0)}
-                                fill={colorProfile[index]}
-                            />} />)
-            }))
-            //Need adjustment on saving formula
-            outputElements.push(
-                <Popup content={`Potential Saving per case $${dataPoint.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - dataPoint.dataArray[4]}`}
-                    key={dataPoint.aggregateAttribute + 'withoutCELL_SAVING'}
+        outputElements = dataPoint.dataArray.map((point, index) => {
+            return (
+                <Popup content={`${barChartValuesOptions[index].key}: ${costMode ? format("$.2f")(point) : format(".4r")(point)}`}
+                    key={dataPoint.aggregateAttribute + '-without' + point}
                     trigger={
-                        <g>
-                            <rect x={valueScale()(sum(dataPoint.dataArray.slice(0, 4)))}
-                                transform={howToTransform + `translate(0,${0.5 * bandwidth})`}
-                                height={bandwidth * 0.5}
-                                width={valueScale()(dataPoint.dataArray[4]) - valueScale()(0)}
-                                fill={colorProfile[4]} />
-                            <rect x={valueScale()(sum(dataPoint.dataArray.slice(0, 4)))}
-                                transform={howToTransform + `translate(0,${0.5 * bandwidth})`}
-                                height={bandwidth * 0.5}
-                                width={valueScale()(dataPoint.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS) - valueScale()(0)}
-                                fill="#f5f500"
-                                opacity={0.5}
-                            />
-                        </g>
-                    }
-                />
-
-            )
-            outputElements.push(
-                <Popup content={`Potential Saving per case $${dataPoint.withInterCellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - dataPoint.withInterDataArray[4]}`}
-                    key={dataPoint.aggregateAttribute + 'withCELL_SAVING'}
+                        <rect
+                            x={valueScale()(sum(dataPoint.dataArray.slice(0, index)))}
+                            transform={howToTransform + `translate(0,${0.5 * bandwidth})`}
+                            height={bandwidth * 0.5}
+                            width={valueScale()(point) - valueScale()(0)}
+                            fill={colorProfile[index]}
+                        />} />)
+        })
+        outputElements = outputElements.concat(dataPoint.withInterDataArray.map((point, index) => {
+            return (
+                <Popup content={`${barChartValuesOptions[index].key}: ${costMode ? format("$.2f")(point) : format(".4r")(point)}`}
+                    key={dataPoint.aggregateAttribute + '-with' + point}
                     trigger={
-                        <g>
-                            <rect x={valueScale()(sum(dataPoint.withInterDataArray.slice(0, 4)))}
-                                transform={howToTransform}
-                                height={bandwidth * 0.5}
-                                width={valueScale()(dataPoint.withInterDataArray[4]) - valueScale()(0)}
-                                fill={colorProfile[4]} />
-                            <rect x={valueScale()(sum(dataPoint.withInterDataArray.slice(0, 4)))}
-                                transform={howToTransform}
-                                height={bandwidth * 0.5}
-                                width={valueScale()(dataPoint.withInterCellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS) - valueScale()(0)}
-                                fill="#f5f500"
-                                opacity={0.5}
-                            />
-                        </g>
-                    }
-                />
+                        <rect
+                            x={valueScale()(sum(dataPoint.withInterDataArray.slice(0, index)))}
+                            transform={howToTransform}
+                            height={bandwidth * 0.5}
+                            width={valueScale()(point) - valueScale()(0)}
+                            fill={colorProfile[index]}
+                        />} />)
+        }))
+        if (costMode) {
+            const costSaved = dataPoint.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - dataPoint.dataArray[4]
+            const altCostSaved = dataPoint.withInterCellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - dataPoint.withInterDataArray[4]
+            outputElements.push(<Popup content={`Potential Saving per case $${format("$.2f")(costSaved)}`}
+                key={dataPoint.aggregateAttribute + 'withoutCELL_SAVING'}
+                trigger={
+                    <rect x={valueScale()(-costSaved)}
+                        transform={howToTransform + `translate(0,${0.5 * bandwidth})`}
+                        height={bandwidth * 0.5}
+                        width={valueScale()(0) - valueScale()(-costSaved)}
+                        fill="#f5f500"
+                    />
 
-            )
+                }
+            />)
+            outputElements.push(<Popup content={`Potential Saving per case $${format("$.2f")(altCostSaved)}`}
+                key={dataPoint.aggregateAttribute + 'withCELL_SAVING'}
+                trigger={
+                    <rect x={valueScale()(-altCostSaved)}
+                        transform={howToTransform}
+                        height={bandwidth * 0.5}
+                        width={valueScale()(0) - valueScale()(-altCostSaved)}
+                        fill="#f5f500"
+                    />
+                }
+            />)
+
+
         }
         return outputElements
     }

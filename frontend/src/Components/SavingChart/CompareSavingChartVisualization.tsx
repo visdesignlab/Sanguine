@@ -44,6 +44,7 @@ const CompareSavingChartVisualization: FC<Props> = ({ w, notation, hemoglobinDat
     >([]);
 
     const [maximumCost, setMaximumCost] = useState(0);
+    const [maximumSaved, setMinCost] = useState(0)
     const [costInput, setCostInput] = useState(0)
     const [dimensionHeight, setDimensionHeight] = useState(0)
     const [dimensionWidth, setDimensionWidth] = useState(0)
@@ -75,6 +76,7 @@ const CompareSavingChartVisualization: FC<Props> = ({ w, notation, hemoglobinDat
             previousCancelToken.cancel("cancel the call?")
         }
         let tempmaxCost = 0;
+        let tempMinCost = 0;
         let temporaryDataHolder: any = {}
         let caseSetReturnedFromQuery = new Set();
         let outputData: CostBarChartDataPoint[] = [];
@@ -174,16 +176,28 @@ const CompareSavingChartVisualization: FC<Props> = ({ w, notation, hemoglobinDat
                         withInterCellSalvageUsage: dataItem.SALVAGE_USAGE_WITH_INTER / dataItem.CASENUM_WITH_INTER,
                         withInterCellSalvageVolume: dataItem.CELL_SAVER_ML_WITH_INTER / dataItem.CASENUM_WITH_INTER
                     }
-                    const sumCost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0)
-                    const altSumCost = sum(newDataObj.withInterDataArray) + (costMode ? (newDataObj.withInterCellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.withInterDataArray[4]) : 0)
+                    // const sumCost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0)
+                    // const altSumCost = sum(newDataObj.withInterDataArray) + (costMode ? (newDataObj.withInterCellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.withInterDataArray[4]) : 0)
+                    const sumCost = sum(newDataObj.dataArray)
+                    const altSumCost = sum(newDataObj.withInterDataArray)
+                    const costSaved = (newDataObj.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4])
+                    const altCostSaved = (newDataObj.withInterCellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.withInterDataArray[4])
                     tempmaxCost = tempmaxCost > sumCost ? tempmaxCost : sumCost
                     tempmaxCost = tempmaxCost > altSumCost ? tempmaxCost : altSumCost
-
+                    // console.log(costSaved, altCostSaved)
+                    if (costMode) {
+                        if (!isNaN(costSaved)) {
+                            tempMinCost = (tempMinCost > costSaved) ? tempMinCost : costSaved;
+                        }
+                        if (!isNaN(altCostSaved))
+                            tempMinCost = (tempMinCost > altCostSaved) ? tempMinCost : altCostSaved;
+                    }
                     outputData.push(newDataObj)
                 })
                 stateUpdateWrapperUseJSON(data, outputData, setData);
 
                 setMaximumCost(tempmaxCost)
+                setMinCost(tempMinCost)
             }
         }).catch(function (thrown) {
             if (axios.isCancel(thrown)) {
@@ -273,6 +287,7 @@ const CompareSavingChartVisualization: FC<Props> = ({ w, notation, hemoglobinDat
                             svg={svgRef}
                             aggregatedBy={aggregatedBy}
                             maximumCost={maximumCost}
+                            maximumSaved={maximumSaved}
                             costMode={costMode}
                             valueToCompare={valueToCompare}
                         // selectedVal={selectedBar}

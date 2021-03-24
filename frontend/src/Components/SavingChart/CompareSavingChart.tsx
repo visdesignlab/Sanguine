@@ -28,6 +28,7 @@ import {
     preop_color,
     greyScaleRange,
     caseRectWidth,
+    basic_gray,
 } from "../../PresetsProfile"
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 import SingleCompareBars from "./SingleCompareBars";
@@ -43,6 +44,7 @@ interface OwnProps {
     data: CostCompareChartDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
     maximumCost: number;
+    maximumSaved: number;
     costMode: boolean
     //  selectedVal: number | null;
     // stripPlotMode: boolean;
@@ -53,7 +55,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const CompareSavingChart: FC<Props> = ({ maximumCost, store, valueToCompare, aggregatedBy, dimensionWidth, dimensionHeight, data, svg, chartId, costMode }: Props) => {
+const CompareSavingChart: FC<Props> = ({ maximumCost, maximumSaved, store, valueToCompare, aggregatedBy, dimensionWidth, dimensionHeight, data, svg, chartId, costMode }: Props) => {
     const svgSelection = select(svg.current);
     const currentOffset = offset.regular;
     const [withInterTotal, setWithInterTotal] = useState(0);
@@ -93,10 +95,10 @@ const CompareSavingChart: FC<Props> = ({ maximumCost, store, valueToCompare, agg
 
     const valueScale = useCallback(() => {
         let valueScale = scaleLinear()
-            .domain([0, maximumCost])
+            .domain([-maximumSaved, maximumCost])
             .range([currentOffset.left, dimensionWidth - currentOffset.right - currentOffset.margin])
         return valueScale
-    }, [dimensionWidth, maximumCost])
+    }, [dimensionWidth, maximumCost, maximumSaved])
 
     const caseScale = useCallback(() => {
         const caseScale = scaleLinear().domain([0, caseMax]).range(greyScaleRange);
@@ -275,6 +277,13 @@ const CompareSavingChart: FC<Props> = ({ maximumCost, store, valueToCompare, agg
                     </text>
                 </g>)
             })}
+            <line x1={valueScale()(0)}
+                x2={valueScale()(0)}
+                y1={dimensionHeight - currentOffset.bottom}
+                y2={currentOffset.top}
+                opacity={costMode ? 1 : 0} stroke={basic_gray}
+                strokeWidth={5}
+                strokeDasharray="5,5" />
         </g>
     </>
 }
