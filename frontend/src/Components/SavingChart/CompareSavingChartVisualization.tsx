@@ -180,8 +180,8 @@ const CompareSavingChartVisualization: FC<Props> = ({ w, notation, hemoglobinDat
                     // const altSumCost = sum(newDataObj.withInterDataArray) + (costMode ? (newDataObj.withInterCellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.withInterDataArray[4]) : 0)
                     const sumCost = sum(newDataObj.dataArray)
                     const altSumCost = sum(newDataObj.withInterDataArray)
-                    const costSaved = (newDataObj.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4])
-                    const altCostSaved = (newDataObj.withInterCellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.withInterDataArray[4])
+                    const costSaved = (newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4])
+                    const altCostSaved = (newDataObj.withInterCellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.withInterDataArray[4])
                     tempmaxCost = tempmaxCost > sumCost ? tempmaxCost : sumCost
                     tempmaxCost = tempmaxCost > altSumCost ? tempmaxCost : altSumCost
                     // console.log(costSaved, altCostSaved)

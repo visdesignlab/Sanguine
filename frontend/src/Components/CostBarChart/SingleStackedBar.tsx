@@ -50,7 +50,7 @@ const SingleStackedBar: FC<Props> = ({ howToTransform, dataPoint, bandwidth, cos
                         />} />)
         })
         if (costMode) {
-            const costSaved = dataPoint.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - dataPoint.dataArray[4]
+            const costSaved = dataPoint.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - dataPoint.dataArray[4]
             outputElements.push(
                 <Popup content={`Potential Saving per case $${format("$.2f")(costSaved)}`}
                     key={dataPoint.aggregateAttribute + 'CELL_SAVING'}
