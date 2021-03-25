@@ -148,7 +148,7 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                     // const sum_cost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0)
                     const sum_cost = sum(newDataObj.dataArray)
                     tempmaxCost = tempmaxCost > sum_cost ? tempmaxCost : sum_cost
-                    const costSaved = -(newDataObj.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4])
+                    const costSaved = -(newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4])
                     if (costMode && !isNaN(costSaved)) {
                         tempMinCost = tempMinCost < costSaved ? tempMinCost : costSaved;
                     }
