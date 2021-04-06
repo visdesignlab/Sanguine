@@ -40,7 +40,8 @@ interface OwnProps {
     svg: React.RefObject<SVGSVGElement>;
     maximumCost: number;
     maxSavedNegative: number;
-    costMode: boolean
+    costMode: boolean;
+    showPotential: boolean
     //  selectedVal: number | null;
     // stripPlotMode: boolean;
     //extraPairDataSet: ExtraPairPoint[];
@@ -50,7 +51,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const CostBarChart: FC<Props> = ({ maximumCost, store, maxSavedNegative, aggregatedBy, dimensionWidth, dimensionHeight, data, svg, chartId, costMode }: Props) => {
+const CostBarChart: FC<Props> = ({ maximumCost, store, maxSavedNegative, aggregatedBy, dimensionWidth, dimensionHeight, data, svg, showPotential, costMode }: Props) => {
     const svgSelection = select(svg.current);
     const currentOffset = offset.regular;
     const [caseMax, setCaseMax] = useState(0);
@@ -148,6 +149,7 @@ const CostBarChart: FC<Props> = ({ maximumCost, store, maxSavedNegative, aggrega
                     valueScaleDomain={JSON.stringify(valueScale().domain())}
                     valueScaleRange={JSON.stringify(valueScale().range())}
                     dataPoint={dp}
+                    showPotential={showPotential}
                     // aggregatedBy={aggregatedBy}
                     costMode={costMode}
                     bandwidth={aggregationScale().bandwidth()}

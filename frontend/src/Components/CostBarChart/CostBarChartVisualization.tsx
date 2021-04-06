@@ -4,7 +4,7 @@ import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { BarChartDataPoint, CostBarChartDataPoint, ExtraPairPoint, SingleCasePoint } from '../../Interfaces/ApplicationState'
 import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, extraPairOptions, ChartSVG, AcronymDictionary, CostExplain } from "../../PresetsProfile"
-import { Icon, Grid, Dropdown, Menu, Button, Form, Modal, Container, Message } from "semantic-ui-react";
+import { Icon, Grid, Dropdown, Menu, Button, Form, Modal, Container, Message, Checkbox } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
 import { sum, median } from "d3";
 import axios from 'axios'
@@ -53,6 +53,8 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
     const [openCostInputModal, setOpenCostInputModal] = useState(false);
     const [modalTitle, setModalTitle] = useState("");
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
+
+    const [showPotential, setShowPotential] = useState(false);
 
 
     // useEffect(() => {
@@ -145,8 +147,8 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                         cellSalvageUsage: dataItem.SALVAGE_USAGE / dataItem.caseNum,
                         cellSalvageVolume: dataItem.CELL_SAVER_ML / dataItem.caseNum
                     }
-                    // const sum_cost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume / 200 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0)
-                    const sum_cost = sum(newDataObj.dataArray)
+                    // const sum_cost = sum(newDataObj.dataArray) 
+                    const sum_cost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0)
                     tempmaxCost = tempmaxCost > sum_cost ? tempmaxCost : sum_cost
                     const costSaved = -(newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4])
                     if (costMode && !isNaN(costSaved)) {
@@ -175,6 +177,7 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
     }
     const changeMode = (e: any, value: any) => {
         setCostMode(!costMode)
+        setShowPotential(false)
         console.log(costMode)
     }
 
@@ -187,6 +190,9 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
 
     }
 
+    const report = (e: any, value: any) => {
+        setShowPotential(value.checked)
+    }
 
 
     return (
@@ -248,6 +254,7 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                             maximumCost={maximumCost}
                             maxSavedNegative={maximumSavedNegative}
                             costMode={costMode}
+                            showPotential={showPotential}
                         // selectedVal={selectedBar}
                         // stripPlotMode={stripPlotMode}
                         // extraPairDataSet={extraPairData}
@@ -255,7 +262,8 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                     </ChartSVG>
                     {/* <NotationForm notation={notation} chartId={chartId} /> */}
                     <Message>
-                        {CostExplain}
+                        <p>{CostExplain}</p>
+                        <Checkbox label="Show potential RBC cost without cell salvage" onChange={report} checked={showPotential} disabled={!costMode} />
                     </Message>
                 </Grid.Column>
             </Grid.Row>
