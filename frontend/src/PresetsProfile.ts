@@ -18,6 +18,7 @@ export const offset = {
     intervention: { left: 100, bottom: 40, right: 10, top: 40, margin: 10 }
 };
 export const differentialSquareWidth = 10;
+export const CostExplain = "Stacked bar chart on the right of the dashed line shows per case cost for each unit types. The bars on the left of the dashed line shows the potential cost on RBC if not using cell salvage. "
 
 export const extraPairOptions = [
     { title: "Preop Hemoglobin", value: "Preop HGB" },
