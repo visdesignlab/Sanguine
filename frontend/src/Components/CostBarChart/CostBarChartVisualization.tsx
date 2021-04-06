@@ -3,8 +3,8 @@ import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { BarChartDataPoint, CostBarChartDataPoint, ExtraPairPoint, SingleCasePoint } from '../../Interfaces/ApplicationState'
-import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, extraPairOptions, ChartSVG, AcronymDictionary } from "../../PresetsProfile"
-import { Icon, Grid, Dropdown, Menu, Button, Form, Modal } from "semantic-ui-react";
+import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, extraPairOptions, ChartSVG, AcronymDictionary, CostExplain } from "../../PresetsProfile"
+import { Icon, Grid, Dropdown, Menu, Button, Form, Modal, Container, Message } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
 import { sum, median } from "d3";
 import axios from 'axios'
@@ -253,8 +253,10 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
                         // extraPairDataSet={extraPairData}
                         />
                     </ChartSVG>
-                    <NotationForm notation={notation} chartId={chartId} />
-
+                    {/* <NotationForm notation={notation} chartId={chartId} /> */}
+                    <Message>
+                        {CostExplain}
+                    </Message>
                 </Grid.Column>
             </Grid.Row>
         </Grid>
