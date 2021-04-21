@@ -10,19 +10,14 @@ import {
     select,
     scaleLinear,
     scaleBand,
-    sum,
     axisLeft,
     axisBottom,
-    timeFormat,
     interpolateGreys
 } from "d3";
-import {
-    CostBarChartDataPoint, CostCompareChartDataPoint, ExtraPairPoint
-} from "../../Interfaces/ApplicationState";
+import { CostCompareChartDataPoint } from "../../Interfaces/ApplicationState";
 import {
     offset,
     AcronymDictionary,
-    extraPairPadding,
     differentialSquareWidth,
     postop_color,
     preop_color,
@@ -58,6 +53,7 @@ export type Props = OwnProps;
 const CompareSavingChart: FC<Props> = ({ maximumCost, maximumSaved, store, valueToCompare, aggregatedBy, dimensionWidth, dimensionHeight, data, svg, chartId, costMode }: Props) => {
     const svgSelection = select(svg.current);
     const currentOffset = offset.regular;
+    const bandwidthLimit = 28
     const [withInterTotal, setWithInterTotal] = useState(0);
     const [withoutInterTotal, setWithoutInterTotal] = useState(0)
     const [caseMax, setCaseMax] = useState(0);
@@ -83,6 +79,7 @@ const CompareSavingChart: FC<Props> = ({ maximumCost, maximumSaved, store, value
         setWithoutInterTotal(newWithoutInterTotal)
         setCaseMax(newCaseMax);
         stateUpdateWrapperUseJSON(xVals, tempXVals, setXVals);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data, aggregatedBy])
 
     const aggregationScale = useCallback(() => {
@@ -91,14 +88,14 @@ const CompareSavingChart: FC<Props> = ({ maximumCost, maximumSaved, store, value
             .range([dimensionHeight - currentOffset.bottom, currentOffset.top])
             .paddingInner(0.15);
         return aggregationScale
-    }, [dimensionHeight, xVals]);
+    }, [dimensionHeight, xVals, currentOffset]);
 
     const valueScale = useCallback(() => {
         let valueScale = scaleLinear()
             .domain([-maximumSaved, maximumCost])
             .range([currentOffset.left, dimensionWidth - currentOffset.right - currentOffset.margin])
         return valueScale
-    }, [dimensionWidth, maximumCost, maximumSaved])
+    }, [dimensionWidth, maximumCost, maximumSaved, currentOffset])
 
     const caseScale = useCallback(() => {
         const caseScale = scaleLinear().domain([0, caseMax]).range(greyScaleRange);
@@ -237,7 +234,7 @@ const CompareSavingChart: FC<Props> = ({ maximumCost, maximumSaved, store, value
                         //   stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
                         strokeWidth={2} />
                     <text
-                        fill={aggregationScale().bandwidth() > 30 ? "white" : "none"}
+                        fill={aggregationScale().bandwidth() > bandwidthLimit ? "white" : "none"}
                         x={-caseRectWidth}
                         y={
                             aggregationScale()(dataPoint.aggregateAttribute)! +
@@ -250,7 +247,7 @@ const CompareSavingChart: FC<Props> = ({ maximumCost, maximumSaved, store, value
                     >
                         {dataPoint.withInterCaseNum}
                     </text>, <text
-                        fill={aggregationScale().bandwidth() > 30 ? "white" : "none"}
+                        fill={aggregationScale().bandwidth() > bandwidthLimit ? "white" : "none"}
                         x={-caseRectWidth}
                         y={
                             aggregationScale()(dataPoint.aggregateAttribute)! +
@@ -263,7 +260,7 @@ const CompareSavingChart: FC<Props> = ({ maximumCost, maximumSaved, store, value
                         {dataPoint.caseNum}
                     </text>
                     <text
-                        fill={aggregationScale().bandwidth() > 30 ? "none" : "white"}
+                        fill={aggregationScale().bandwidth() > bandwidthLimit ? "none" : "white"}
                         x={-caseRectWidth}
                         y={
                             aggregationScale()(dataPoint.aggregateAttribute)! +

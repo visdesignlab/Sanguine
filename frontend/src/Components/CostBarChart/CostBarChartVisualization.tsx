@@ -2,14 +2,12 @@ import React, { FC, useEffect, useRef, useLayoutEffect, useState } from "react";
 import Store from "../../Interfaces/Store";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
-import { BarChartDataPoint, CostBarChartDataPoint, ExtraPairPoint, SingleCasePoint } from '../../Interfaces/ApplicationState'
-import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, extraPairOptions, ChartSVG, AcronymDictionary, CostExplain } from "../../PresetsProfile"
-import { Icon, Grid, Dropdown, Menu, Button, Form, Modal, Container, Message, Checkbox } from "semantic-ui-react";
-import { create as createpd } from "pdfast";
-import { sum, median } from "d3";
+import { CostBarChartDataPoint } from '../../Interfaces/ApplicationState'
+import { barChartValuesOptions, barChartAggregationOptions, ChartSVG, AcronymDictionary, CostExplain } from "../../PresetsProfile"
+import { Grid, Dropdown, Menu, Button, Form, Modal, Message, Checkbox } from "semantic-ui-react";
+import { sum } from "d3";
 import axios from 'axios'
-import { stateUpdateWrapperUseJSON, generateExtrapairPlotData } from "../../HelperFunctions";
-import NotationForm from "../Utilities/NotationForm";
+import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 import CostBarChart from "./CostBarChart";
 
 interface OwnProps {
@@ -273,10 +271,3 @@ const CostBarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, 
 
 
 export default inject("store")(observer(CostBarChartVisualization));
-
-{/* <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
-                            <Icon name="edit" />
-                        </Menu.Item> */}
-
-{/* Modal for annotation. */ }
-{/**/ }

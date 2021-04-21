@@ -1,13 +1,11 @@
 import React, { FC, useCallback } from "react";
 import Store from "../../Interfaces/Store";
-import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { CostCompareChartDataPoint } from "../../Interfaces/ApplicationState";
 // import { Popup } from "semantic-ui-react";
 // import { actions } from "../..";
-import { format, scaleLinear, ScaleLinear, schemeAccent, sum } from "d3";
-import { highlight_orange, basic_gray, barChartValuesOptions, colorProfile, BloodProductCap } from "../../PresetsProfile";
-import { data } from "jquery";
+import { format, scaleLinear, sum } from "d3";
+import { barChartValuesOptions, colorProfile } from "../../PresetsProfile";
 import { Popup } from "semantic-ui-react";
 
 interface OwnProps {

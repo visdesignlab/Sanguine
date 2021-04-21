@@ -181,8 +181,8 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                         <Dropdown.Item onClick={() => addModeButtonHandler(2)}>Scatter Plot</Dropdown.Item>
                         <Dropdown.Item onClick={() => addModeButtonHandler(3)}>Heat Map</Dropdown.Item>
                         <Dropdown.Item onClick={() => addModeButtonHandler(4)}>Intervention Plot</Dropdown.Item>
-                        <Dropdown.Item onClick={() => addModeButtonHandler(0)}>Cost Test Chart</Dropdown.Item>
-                        <Dropdown.Item onClick={() => addModeButtonHandler(5)}>Compare Saving Chart</Dropdown.Item>
+                        <Dropdown.Item onClick={() => addModeButtonHandler(0)}>Cost and Saving Chart</Dropdown.Item>
+                        <Dropdown.Item onClick={() => addModeButtonHandler(5)}>Compare Cost Chart</Dropdown.Item>
                     </Dropdown.Menu>
                 </Dropdown>
             </Menu.Item>

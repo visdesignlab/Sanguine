@@ -10,18 +10,16 @@ import {
     select,
     scaleLinear,
     scaleBand,
-    sum,
     axisLeft,
     axisBottom,
     interpolateGreys
 } from "d3";
 import {
-    CostBarChartDataPoint, ExtraPairPoint
+    CostBarChartDataPoint
 } from "../../Interfaces/ApplicationState";
 import {
     offset,
     AcronymDictionary,
-    extraPairPadding,
     greyScaleRange,
     caseRectWidth,
     basic_gray,
@@ -70,6 +68,7 @@ const CostBarChart: FC<Props> = ({ maximumCost, store, maxSavedNegative, aggrega
         });
         stateUpdateWrapperUseJSON(xVals, tempXVals, setXVals);
         setCaseMax(newCaseMax)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data, aggregatedBy])
 
     const aggregationScale = useCallback(() => {
@@ -77,15 +76,15 @@ const CostBarChart: FC<Props> = ({ maximumCost, store, maxSavedNegative, aggrega
             .domain(xVals)
             .range([dimensionHeight - currentOffset.bottom, currentOffset.top])
             .paddingInner(0.1);
-        return aggregationScale
-    }, [dimensionHeight, xVals]);
+        return aggregationScale;
+    }, [dimensionHeight, xVals, currentOffset]);
 
     const valueScale = useCallback(() => {
         let valueScale = scaleLinear()
             .domain([maxSavedNegative, maximumCost])
             .range([currentOffset.left, dimensionWidth - currentOffset.right - currentOffset.margin])
         return valueScale
-    }, [dimensionWidth, maximumCost, maxSavedNegative])
+    }, [dimensionWidth, maximumCost, maxSavedNegative, currentOffset])
 
     const caseScale = useCallback(() => {
         // const caseMax = max(data.map(d => d.caseCount)) || 0;
