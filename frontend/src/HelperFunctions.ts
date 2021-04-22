@@ -2,6 +2,7 @@ import { BasicAggregatedDatePoint, ExtraPairInterventionPoint, ComparisonDataPoi
 import { mean, median, sum, max } from "d3";
 import { create as createpd } from "pdfast";
 import { BloodProductCap } from "./PresetsProfile";
+import { store } from "./Interfaces/Store";
 
 export const stateUpdateWrapperUseJSON = (oldState: any, newState: any, updateFunction: (value: React.SetStateAction<any>) => void) => {
     if (JSON.stringify(oldState) !== JSON.stringify(newState)) {
@@ -9,7 +10,7 @@ export const stateUpdateWrapperUseJSON = (oldState: any, newState: any, updateFu
     }
 }
 
-export const generateExtrapairPlotDataWithIntervention = (aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: ComparisonDataPoint[]) => {
+export const generateExtrapairPlotDataWithIntervention = (aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: ComparisonDataPoint[], componentName: string) => {
     let newExtraPairData: ExtraPairInterventionPoint[] = []
     if (extraPairArray.length > 0) {
         extraPairArray.forEach((variable: string) => {
@@ -49,6 +50,25 @@ export const generateExtrapairPlotDataWithIntervention = (aggregatedBy: string, 
 
                     });
                     newExtraPairData.push({ name: "Per Case", label: "Per Case", preIntData: preIntData, postIntData: postIntData, totalIntData: newData, type: "BarChart" });
+                    break;
+                //Same as the non comparison case, what would be an appropriate formula?
+                case "COST":
+                    data.forEach((dataPoint: ComparisonDataPoint) => {
+                        // newData[dataPoint.aggregateAttribute] = (dataPoint.preTotalVal + dataPoint.postTotalVal) / (dataPoint.preCaseCount + dataPoint.postCaseCount - dataPoint.preZeroCaseNum - dataPoint.postZeroCaseNum)
+                        // preIntData[dataPoint.aggregateAttribute] = dataPoint.preTotalVal / (dataPoint.preCaseCount - dataPoint.preZeroCaseNum);
+                        // postIntData[dataPoint.aggregateAttribute] = dataPoint.postTotalVal / (dataPoint.postCaseCount - dataPoint.postZeroCaseNum);
+                        newData[dataPoint.aggregateAttribute] = store.BloodProductCost[componentName] * (dataPoint.preTotalVal + dataPoint.postTotalVal) / (dataPoint.preCaseCount + dataPoint.postCaseCount)
+                        preIntData[dataPoint.aggregateAttribute] = store.BloodProductCost[componentName] * dataPoint.preTotalVal / (dataPoint.preCaseCount);
+                        postIntData[dataPoint.aggregateAttribute] = store.BloodProductCost[componentName] * dataPoint.postTotalVal / (dataPoint.postCaseCount);
+                    });
+                    newExtraPairData.push({
+                        name: "COST",
+                        label: "Cost",
+                        preIntData: preIntData,
+                        postIntData: postIntData,
+                        totalIntData: newData,
+                        type: "BarChart"
+                    })
                     break;
 
                 //TODO Add actual number to the result so that the hover pop is showing actual numbers. 
@@ -425,7 +445,7 @@ const outcomeComparisonDataGenerate = (name: string, label: string, data: Compar
 
 }
 
-export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: BasicAggregatedDatePoint[]) => {
+export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: BasicAggregatedDatePoint[], componentName: string) => {
     let newExtraPairData: ExtraPairPoint[] = []
     if (extraPairArray.length > 0) {
         extraPairArray.forEach((variable: string) => {
@@ -455,6 +475,19 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
                         newData[dataPoint.aggregateAttribute] = { actualVal: dataPoint.zeroCaseNum, calculated: dataPoint.zeroCaseNum / dataPoint.caseCount, outOfTotal: dataPoint.caseCount };
                     });
                     newExtraPairData.push({ name: "Zero Transfusion", label: "Zero %", data: newData, type: "Basic" });
+                    break;
+                //How to actually calculate the cost? what would be an apprioate formula?
+                case "COST":
+                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
+                        // newData[dataPoint.aggregateAttribute] = dataPoint.totalVal / (dataPoint.caseCount - dataPoint.zeroCaseNum)
+                        newData[dataPoint.aggregateAttribute] = store.BloodProductCost[componentName] * dataPoint.totalVal / (dataPoint.caseCount)
+                    });
+                    newExtraPairData.push({
+                        name: "COST",
+                        label: "Cost",
+                        data: newData,
+                        type: "BarChart"
+                    })
                     break;
 
                 case "DEATH":

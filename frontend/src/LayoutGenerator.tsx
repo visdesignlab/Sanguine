@@ -9,13 +9,14 @@ import LineUpWrapper from "./LineUpWrapper";
 import Store from "./Interfaces/Store";
 import { LayoutElement } from "./Interfaces/ApplicationState";
 import DumbbellChartVisualization from "./Components/DumbbellChart/DumbbellChartVisualization";
-import BarChartVisualization from "./Components/BarChart/BarChartVisualization";
 import ScatterPlotVisualization from "./Components/Scatterplot/ScatterPlotVisualization";
 import HeatMapVisualization from "./Components/HeatMapChart/HeatMapVisualization";
 import InterventionPlotVisualization from "./Components/InterventionPlot/InterventionPlotVisualization";
 import ComparisonPlotVisualization from "./Components/ComparisonPlot/ComparisonPlotVisualization";
 import { Responsive } from "react-grid-layout";
 import 'react-grid-layout/css/styles.css';
+import CostBarChartVisualization from "./Components/CostBarChart/CostBarChartVisualization";
+import CompareSavingChartVisualization from "./Components/SavingChart/CompareSavingChartVisualization";
 
 interface OwnProps {
     hemoData: any[];
@@ -53,7 +54,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                         />
                     </div>
                 );
-            case "VIOLIN":
+            case "COST":
                 return (
                     <div
                         //onClick={this.onClickBlock.bind(this, layoutE.i)}
@@ -64,15 +65,15 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
 
                         <Button floated="right" icon="close" circular compact size="mini" basic onClick={() => { actions.removeChart(layout.i) }} />
                         <Button floated="right" icon="move" size="mini" circular compact basic className="move-icon" />
-                        <BarChartVisualization
+                        <CostBarChartVisualization
                             hemoglobinDataSet={hemoData}
                             w={layout.w}
                             aggregatedBy={layout.aggregatedBy}
-                            valueToVisualize={layout.valueToVisualize}
+                            // valueToVisualize={layout.valueToVisualize}
                             // class_name={"parent-node" + layoutE.i}
                             chartId={layout.i}
                             chartIndex={index}
-                            extraPair={layout.extraPair}
+                            // extraPair={layout.extraPair}
                             notation={layout.notation}
                         />
                     </div>
@@ -156,10 +157,25 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
                         outcomeComparison={layout.outcomeComparison!}
                         w={layout.w}
                     />
-                </div>
+                </div>);
+            case "COMPARESAVING":
+                return (<div key={layout.i}
+                    className={"parent-node" + layout.i}>
+                    <Button floated="right" icon="close" size="mini" circular compact basic onClick={() => { actions.removeChart(layout.i) }} />
+                    <Button floated="right" icon="move" size="mini" circular compact basic className="move-icon" />
+                    <CompareSavingChartVisualization
+                        aggregatedBy={layout.aggregatedBy}
+                        chartId={layout.i}
+                        chartIndex={index}
+                        hemoglobinDataSet={hemoData}
+                        notation={layout.notation}
+                        valueToCompare={layout.valueToVisualize}
+                        w={layout.w}
+                    />
+
+                </div>)
 
 
-                )
 
         }
 
