@@ -45,6 +45,8 @@ interface AppProvenance {
         updateBrushPatientGroup: (caseList: SingleCasePoint[], mode: "ADD" | "REPLACE", selectedSet?: SelectSet) => void;
         changeChart: (x: string, y: string, i: string, type: string, outcomeComparison?: string) => void;
         changeSurgeryTypeSelection: (input: [boolean, boolean, boolean]) => void;
+
+        changeCostInput: (item: string, newCost: number) => void;
     }
 }
 export function setupProvenance(): AppProvenance {
@@ -120,7 +122,9 @@ export function setupProvenance(): AppProvenance {
     provenance.addObserver(["layoutArray"], (state?: ApplicationState) => {
         store.layoutArray = state ? state.layoutArray : store.layoutArray;
     });
-
+    provenance.addObserver(["BloodProductCost"], (state?: ApplicationState) => {
+        store.BloodProductCost = state ? state.BloodProductCost : store.BloodProductCost;
+    });
     provenance.done();
 
     // const setLayoutArray = (layoutArray: LayoutElement[], skipProvenance: boolean = false) => {
@@ -137,7 +141,7 @@ export function setupProvenance(): AppProvenance {
     // }
 
     const addNewChart = (xAxisAttribute: string, yAxisAttribute: string, index: number, plotType: string, outcomeComparison?: string, interventionDate?: number, interventionChartType?: string) => {
-
+        console.log(plotType)
         const newLayoutElement: LayoutElement = {
             aggregatedBy: xAxisAttribute,
             valueToVisualize: yAxisAttribute,
@@ -149,9 +153,12 @@ export function setupProvenance(): AppProvenance {
             plotType: plotType,
             notation: ""
         }
-        if (plotType === "VIOLIN" || plotType === "HEATMAP" || plotType === "INTERVENTION") {
+        if (
+            // plotType === "COST"|| 
+            plotType === "HEATMAP" || plotType === "INTERVENTION") {
             newLayoutElement.extraPair = JSON.stringify([]);
         }
+
 
         if (outcomeComparison) {
             newLayoutElement.plotType = "COMPARISON";
@@ -172,6 +179,7 @@ export function setupProvenance(): AppProvenance {
             (state: ApplicationState) => {
                 state.layoutArray.push(newLayoutElement)
                 state.nextAddingIndex += 1
+                console.log(state)
                 return state;
             })
     }
@@ -337,15 +345,6 @@ export function setupProvenance(): AppProvenance {
             }
         )
     };
-
-    /**
-     * 
-     * things.thing = things.thing.filter((thing, index, self) =>
-  index === self.findIndex((t) => (
-    t.place === thing.place && t.name === thing.name
-  ))
-)
-     */
 
 
 
@@ -629,6 +628,17 @@ export function setupProvenance(): AppProvenance {
         )
     }
 
+    const changeCostInput = (item: string, newCost: number) => {
+        provenance.applyAction(
+            `change cost input`,
+            (state: ApplicationState) => {
+                state.BloodProductCost[item] = newCost;
+                console.log(state)
+                return state;
+            }
+        )
+    }
+
     const goForward = () => {
         provenance.goForwardOneStep();
     };
@@ -668,7 +678,8 @@ export function setupProvenance(): AppProvenance {
             currentOutputFilterSetChange,
             clearSelectSet,
             clearOutputFilterSet,
-            changeSurgeryTypeSelection
+            changeSurgeryTypeSelection,
+            changeCostInput
         }
     };
 

@@ -60,6 +60,7 @@ export default class Store {
     @observable dataLoadingFailed: boolean = false;
     @observable mainCompWidth: number = 1300
     // @observable csrftoken: string | null = ""
+    @observable BloodProductCost: any = defaultState.BloodProductCost;
 
 }
 

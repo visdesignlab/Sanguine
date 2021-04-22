@@ -4,7 +4,7 @@ import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { BarChartDataPoint, ExtraPairPoint } from '../../Interfaces/ApplicationState'
 import { BloodProductCap, barChartValuesOptions, barChartAggregationOptions, extraPairOptions, ChartSVG } from "../../PresetsProfile"
-import BarChart from "./BarChart"
+// import BarChart from "./BarChart"
 import { Icon, Grid, Dropdown, Menu } from "semantic-ui-react";
 import { create as createpd } from "pdfast";
 import { sum, median } from "d3";
@@ -14,11 +14,11 @@ import NotationForm from "../Utilities/NotationForm";
 
 interface OwnProps {
     aggregatedBy: string;
-    valueToVisualize: string;
+    // valueToVisualize: string;
     chartId: string;
     store?: Store;
     chartIndex: number;
-    extraPair?: string;
+    //  extraPair?: string;
     hemoglobinDataSet: any;
     notation: string;
     w: number
@@ -26,7 +26,7 @@ interface OwnProps {
 
 export type Props = OwnProps;
 
-const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggregatedBy, valueToVisualize, chartId, store, chartIndex, extraPair }: Props) => {
+const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggregatedBy, chartId, store, chartIndex }: Props) => {
     const {
         layoutArray,
         proceduresSelection,
@@ -57,10 +57,10 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
 
-    useEffect(() => {
-        if (extraPair) { stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray) }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extraPair])
+    // useEffect(() => {
+    //     if (extraPair) { stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray) }
+    //     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // }, [extraPair])
 
     useLayoutEffect(() => {
         if (svgRef.current) {
@@ -81,7 +81,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
         setPreviousCancelToken(call)
-        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=${valueToVisualize}&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroupIDs.toString()}`, {
+        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?aggregated_by=${aggregatedBy}&transfusion_type=ALL_UNITS&date_range=${dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${currentSelectPatientGroupIDs.toString()}`, {
             cancelToken: call.token
         }).then(function (response) {
             const dataResult = response.data
@@ -137,18 +137,12 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
 
                         const total_val = sum(removed_zeros);
 
-                        let pd = createpd(removed_zeros, { width: 2, min: 0, max: BloodProductCap[valueToVisualize] });
-                        pd = [{ x: 0, y: 0 }].concat(pd)
-                        let reverse_pd = pd.map((pair: any) => {
-                            return { x: pair.x, y: - pair.y }
-                        }).reverse()
-                        pd = pd.concat(reverse_pd)
+
 
                         const new_ob: BarChartDataPoint = {
                             caseCount: case_num,
                             aggregateAttribute: aggregateByAttr,
                             totalVal: total_val,
-                            kdeCal: pd,
                             median: medianVal ? medianVal : 0,
                             actualDataPoints: ob.transfused_units,
                             zeroCaseNum: zeroCaseNum,
@@ -175,13 +169,13 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                 }
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [proceduresSelection, procedureTypeSelection, dateRange, showZero, aggregatedBy, valueToVisualize, currentOutputFilterSet, currentSelectPatientGroupIDs]);
+    }, [proceduresSelection, procedureTypeSelection, dateRange, showZero, aggregatedBy, currentOutputFilterSet, currentSelectPatientGroupIDs]);
 
 
 
     useEffect(() => {
         console.log("using effect")
-        const newExtraPairData = generateExtrapairPlotData(aggregatedBy, hemoglobinDataSet, extraPairArray, data)
+        const newExtraPairData = generateExtrapairPlotData(aggregatedBy, hemoglobinDataSet, extraPairArray, data, valueToVisualize)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [extraPairArray, data, hemoglobinDataSet, aggregatedBy]);
@@ -193,7 +187,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
     }
 
     const changeAggregation = (e: any, value: any) => {
-        actions.changeChart(value.value, valueToVisualize, chartId, "VIOLIN")
+        actions.changeChart(value.value, "", chartId, "VIOLIN")
     }
     const changeValue = (e: any, value: any) => {
         actions.changeChart(aggregatedBy, value.value, chartId, "VIOLIN")
@@ -293,7 +287,7 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                             data={data}
                             svg={svgRef}
                             aggregatedBy={aggregatedBy}
-                            valueToVisualize={valueToVisualize}
+                            //   valueToVisualize={valueToVisualize}
                             yMax={yMax}
                             // selectedVal={selectedBar}
                             stripPlotMode={stripPlotMode}

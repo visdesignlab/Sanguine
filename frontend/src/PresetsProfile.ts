@@ -11,13 +11,14 @@ export const highlight_blue = "#32d9d9"
 export const greyScaleRange = [0.3, 0.85]
 export const HGB_LOW_STANDARD = 7.5
 export const HGB_HIGH_STANDARD = 13
-
+export const colorProfile = ["#d7191c", "#abd9e9", "#fdae61", "#2c7bb6", "#e1e100"]
 export const offset = {
     regular: { left: 90, bottom: 40, right: 10, top: 40, margin: 10 },
     minimum: { left: 35, bottom: 40, right: 10, top: 40, margin: 10 },
     intervention: { left: 100, bottom: 40, right: 10, top: 40, margin: 10 }
-
 };
+export const differentialSquareWidth = 10;
+export const CostExplain = "Stacked bar chart on the right of the dashed line shows per case cost for each unit types. The bars on the left of the dashed line shows the potential cost on RBC if not using cell salvage. "
 
 export const extraPairOptions = [
     { title: "Preop Hemoglobin", value: "Preop HGB" },
@@ -26,14 +27,14 @@ export const extraPairOptions = [
     { title: "Per Case Transfusion", value: "Per Case" },
     { title: "Zero Transfusion Cases", value: "Zero Transfusion" },
     { title: "DRG Weight (Risk)", value: "RISK" },
-    // { title: "Severity of Illness", value: "SOI" },
     { title: "Mortality Rate", value: "DEATH" },
     { title: "Ventilation Rate", value: "VENT" },
     { title: "ECMO Rate", value: "ECMO" },
     { title: "Stroke Rate", value: "STROKE" },
     { title: "B12", value: "B12" },
     { title: "Tranexamic Acid", value: "TXA" },
-    { title: "Amicar", value: "AMICAR" }
+    { title: "Amicar", value: "AMICAR" },
+    { title: "Cost Test", value: "COST" }
 ]
 
 //export const minimumOffset = 
@@ -67,6 +68,8 @@ export const BloodProductCap: any = {
     PLT_UNITS: 10,
     CELL_SAVER_ML: 1000
 }
+//TODO add cost for cryo and cell saver
+
 
 export const CELL_SAVER_TICKS = ["0", "0-1h", "1h-2h", "2h-3h", "3h-4h", "4h-5h", "5h-6h", "6h-7h", "7h-8h", "8h-9h", "9h-1k", "1k+"]
 
@@ -86,7 +89,7 @@ export const scatterYOptions = [
     }
 ]
 
-export const typeDiction = ["VIOLIN", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION", "COMPARISON"]
+export const typeDiction = ["COST", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION", "COMPARESAVING"]
 
 export const dumbbellValueOptions = [
     { value: "HGB_VALUE", key: "HGB_VALUE", text: "Hemoglobin Value" }
@@ -161,6 +164,11 @@ export const SurgeryType = [
 export const surgeryTypeArray = ["Urgent", "Elective", "Emergent"]
 export const OutcomeDropdownOptions = OutcomeType.concat({ value: "NONE", key: "NONE", text: "None" })
 
+export const CompareSavingValuesOptions = [
+    { value: "AMICAR", key: "AMICAR", text: "AMICAR" },
+    { value: "TXA", key: "TXA", text: "Tranexamic Acid" },
+    { value: "B12", key: "B12", text: "B12" },
+]
 
 export const barChartValuesOptions = [
     {
@@ -241,7 +249,8 @@ export const AcronymDictionary: any = {
     HGB_VALUE: "Hemoglobin Value",
     PREOP_HGB: "Preoperative Hemoglobin Value",
     POSTOP_HGB: "Postoperative Hemoglobin Value",
-    DRG_WEIGHT: "Diagnosis-related Group Weight"
+    DRG_WEIGHT: "Diagnosis-related Group Weight",
+    COST: "Blood Component Cost per Case"
 }
 
 
