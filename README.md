@@ -41,12 +41,12 @@ Link the systemd service files to the correct place for the user
 
 ```
 # First time set up
-systemctl --user enable $(pwd)/api.service
-systemctl --user status api.service
-systemctl --user start api.service
+# systemctl enable $(pwd)/api.service
+sudo systemctl status api.service
+sudo systemctl start api.service
 
 # Restart the api
-systemctl --user restart api.service
+sudo systemctl restart api.service
 
 # Start/restart the frontend
 cd frontend
