@@ -840,7 +840,7 @@ def state(request):
         state_access = [o.state.name for o in StateAccess.objects.filter(user=user).filter(role="WR")]
         allowed_states = response = set(states + state_access)
         if old_name not in allowed_states:
-            return HttpResponseBadRequest("Not authorized", 401)
+            return HttpResponseBadRequest("State not found", 404)
 
         # Update the State object and save
         result = State.objects.get(name=old_name)
@@ -858,7 +858,7 @@ def state(request):
         # Delete the matching State object
         result = State.objects.get(name=name)
         if str(result.owner) != str(request.user.id):
-            return HttpResponseBadRequest("Requester is not owner", 400)
+            return HttpResponseBadRequest("Requester is not owner", 401)
         result.delete()
 
         return HttpResponse("state object deleted", 200)
