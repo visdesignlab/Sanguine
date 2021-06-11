@@ -83,6 +83,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     }
 
     const shareSpecificState = (name: string) => {
+        setStateNameToShare(name)
         setOpenUIDInputModal(true);
     }
 
