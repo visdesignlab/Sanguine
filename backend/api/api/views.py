@@ -860,9 +860,16 @@ def state(request):
         name = delete.get("name")
 
         # Delete the matching State object
-        result = State.objects.get(name=name)
+        try:
+            result = State.objects.get(name=name)  # username = uid
+        except State.DoesNotExist:
+            return HttpResponseBadRequest("State not found", 404)
+
         if str(result.owner) != str(request.user.id):
             return HttpResponseBadRequest("Requester is not owner", 401)
+
+        StateAccess.objects.all().filter(state_id=result.id).delete()
+
         result.delete()
 
         return HttpResponse("state object deleted", 200)
