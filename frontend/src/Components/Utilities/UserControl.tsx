@@ -151,6 +151,14 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         setYSelection("")
     }
 
+    const clearAllSharingRelatedStates = () => {
+        setStateNameToShare("")
+        setUIDToShare('')
+        setErrorMessage('')
+        setEditAccess(false)
+        setOpenUIDInputModal(false)
+    }
+
     const simulateAPIClick = () => {
         fetch(`${process.env.REACT_APP_QUERY_URL}accounts/login/`, {
             method: 'GET',
@@ -199,17 +207,11 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 </Dropdown>
             </Menu.Item>
 
-            {/* <Menu.Item>
-        <Container>
-          <SemanticDatePicker placeholder={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} - ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} type="range" onChange={onDateChange} />
-        </Container>
-      </Menu.Item> */}
-
-
             <Menu.Item>
                 <Dropdown button text="State Management">
                     <Dropdown.Menu>
-                        {/* <Dropdown.Item >
+                        {/* This is for  presets, which we don't have many good ones
+                        <Dropdown.Item >
                             <Dropdown simple selectOnBlur={false} text="Presets" >
                                 <Dropdown.Menu>
                                     {presetOptions.map((d: { value: number, text: string }) => {
@@ -404,10 +406,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                             })
                                 .then(response => {
                                     if (response.status === 200) {
-                                        setStateNameToShare("")
-                                        setUIDToShare('')
-                                        setEditAccess(false)
-                                        setOpenUIDInputModal(false)
+                                        clearAllSharingRelatedStates()
                                     } else {
                                         setErrorMessage(response.statusText)
                                         console.error('There has been a problem with your fetch operation:', response.statusText);
@@ -421,9 +420,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
                         }} />
                         <Button content="Cancel" onClick={() => {
-                            setOpenUIDInputModal(false);
-                            setEditAccess(false);
-                            setStateNameToShare("")
+                            clearAllSharingRelatedStates()
                         }} />
                     </Modal.Content>
                 </Modal>
