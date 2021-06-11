@@ -403,11 +403,17 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                 body: `csrfmiddlewaretoken=${csrftoken}&name=${stateNameToShare}&user=${uidToShare}&role=${editAccess ? 'WR' : 'RE'}`
                             })
                                 .then(response => {
-                                    setStateNameToShare("")
-                                    setUIDToShare('')
-                                    setEditAccess(false)
-                                    setOpenUIDInputModal(false)
+                                    if (response.status === 200) {
+                                        setStateNameToShare("")
+                                        setUIDToShare('')
+                                        setEditAccess(false)
+                                        setOpenUIDInputModal(false)
+                                    } else {
+                                        setErrorMessage(response.statusText)
+                                        console.error('There has been a problem with your fetch operation:', response.statusText);
+                                    }
                                 })
+
                                 .catch(error => {
                                     setErrorMessage(error)
                                     console.error('There has been a problem with your fetch operation:', error);
