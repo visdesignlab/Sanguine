@@ -9,10 +9,11 @@ from django.http import (
     HttpResponseNotAllowed
 )
 from django.forms.models import model_to_dict
+from django.contrib.auth.models import User
 from django_cas_ng.decorators import login_required
 
 from api.decorators import conditional_login_required
-from api.models import State
+from api.models import State, StateAccess, AccessLevel
 from api.utils import (
     data_dictionary,
     cpt,
@@ -787,31 +788,50 @@ def state(request):
     if request.method == "GET":
         # Get the name from the querystring
         name = request.GET.get("name")
+        user = request.user.id
 
         if name:
-            # Get the object from the database
-            result = State.objects.get(name=name)
+            # Get the object from the database and all related StateAccess objects
+            try:
+                state = State.objects.get(name=name)  # username = uid
+            except State.DoesNotExist:
+                return HttpResponseBadRequest("State not found", 404)
+            state_access = StateAccess.objects.filter(state=state).filter(user=user)
+
+            # Make sure that user is owner or at least reader
+            if not(str(state.owner) == str(user) or state_access):
+                return HttpResponseBadRequest("Not authorized", 401)
 
             # Return the json for the state
-            return JsonResponse(model_to_dict(result))
+            return JsonResponse(model_to_dict(state))
 
         else:
-            # Get the names of all the state objects
-            states = State.objects.all().values_list()
+            # Get the names of all the state objects that a user can access
+            states = [o.name for o in State.objects.all().filter(owner=user)]
+            state_access = [o.state.name for o in StateAccess.objects.filter(user=user)]
+
+            response = set(states + state_access)
 
             # Return the names as a list
-            return JsonResponse(list(states), safe=False)
+            return JsonResponse(list(response), safe=False)
 
     elif request.method == "POST":
         # Get the name and definition from the request
         name = request.POST.get("name")
         definition = request.POST.get("definition")
+        owner = request.user.id
 
-        # Create and save the new State object
-        new_state = State(name=name, definition=definition)
-        new_state.save()
+        if State.objects.filter(name=name).exists():
+            return HttpResponseBadRequest("a state with that name already exists, try another", 400)
 
-        return HttpResponse("state object created", 200)
+        if name and definition:  # owner is guaranteed by login
+            # Create and save the new State object
+            new_state = State(name=name, definition=definition, owner=owner)
+            new_state.save()
+
+            return HttpResponse("state object created", 200)
+        else:
+            return HttpResponseBadRequest("missing params: [name, definition, owner]", 400)
 
     elif request.method == "PUT":
         # Get the required information from the request body
@@ -819,6 +839,16 @@ def state(request):
         old_name = put.get("old_name")
         new_name = put.get("new_name")
         new_definition = put.get("new_definition")
+
+        states = [o.name for o in State.objects.all().filter(owner=request.user.id)]
+        state_access = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="WR")]
+        state_read_access = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="RE")]
+        allowed_states = response = set(states + state_access)
+        
+        if old_name in state_read_access:
+            return HttpResponseBadRequest("Not authorized", 401)
+        elif old_name not in allowed_states:
+            return HttpResponseBadRequest("State not found", 404)
 
         # Update the State object and save
         result = State.objects.get(name=old_name)
@@ -833,8 +863,17 @@ def state(request):
         delete = ast.literal_eval(request.body.decode())
         name = delete.get("name")
 
-        # Delete the matching State obejct
-        result = State.objects.get(name=name)
+        # Delete the matching State object
+        try:
+            result = State.objects.get(name=name)  # username = uid
+        except State.DoesNotExist:
+            return HttpResponseBadRequest("State not found", 404)
+
+        if str(result.owner) != str(request.user.id):
+            return HttpResponseBadRequest("Requester is not owner", 401)
+
+        StateAccess.objects.all().filter(state_id=result.id).delete()
+
         result.delete()
 
         return HttpResponse("state object deleted", 200)
@@ -844,3 +883,51 @@ def state(request):
             ["GET", "POST", "PUT", "DELETE"],
             "Method Not Allowed"
         )
+
+
+@conditional_login_required(
+    login_required,
+    os.getenv("REQUIRE_LOGINS") == "True"
+)
+def share_state(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        user = request.POST.get("user")
+        role = request.POST.get("role")
+
+        requesting_user = request.user.id
+
+        try:
+            state_object = State.objects.get(name=name)
+        except State.DoesNotExist:
+            return HttpResponseBadRequest("State not found", 404)
+
+        try:
+            user_object = User.objects.get(username=user)  # username = uid
+        except User.DoesNotExist:
+            return HttpResponseBadRequest("User does not exist", 400)
+
+        # Make sure state exists, requesting users is owner, and new user is not owner, user exists
+        if str(state_object.owner) != str(requesting_user):
+            return HttpResponseBadRequest("Requesting user is not the owner", 400)
+        if str(state_object.owner) == str(user_object.id):
+            return HttpResponseBadRequest("User is already the owner of the state", 400)
+
+        # Check that new user is not already reader/writer, role in allowed choices
+        state_access_objects = StateAccess.objects.filter(state=state_object).filter(user=user)
+        roles = [a.role for a in state_access_objects]
+        if role in roles:
+            return HttpResponseBadRequest("User already has that role on this state", 400)
+        if role not in [a[1] for a in AccessLevel.choices()]:
+            return HttpResponseBadRequest(f"role must be in: {[a[1] for a in AccessLevel.choices()]}", 400)
+
+        # If all above passed, make the StateAccess object
+        StateAccess.objects.create(
+            state=state_object,
+            user=user_object.id,
+            role=role,
+        )
+        return HttpResponse("Added new user to role", 201)
+
+    else:
+        return HttpResponseNotAllowed(["POST"], "Method Not Allowed")
