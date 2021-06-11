@@ -233,7 +233,7 @@ export const AcronymDictionary: any = {
     VENT: "Over 24 Hours Ventilator Usage",
     RISK: "Diagnosis-related Group Weight (Risk Score)",
     "Zero %": "Zero Transfusion",
-    DEATH: "Death",
+    DEATH: "Death in hospital",
     STROKE: "Stroke",
     TXA: "Tranexamic Acid",
     PRBC_UNITS: "Intraoperative RBCs Transfused",
