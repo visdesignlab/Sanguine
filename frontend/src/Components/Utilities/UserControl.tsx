@@ -36,8 +36,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     const [ySelection, setYSelection] = useState<string>("")
     const [outcomeComparison, setOutcomeComparison] = useState<string>("")
     const [interventionDate, setInterventionDate] = useState<number | undefined>(undefined)
-    // const [elementCounter, addToElementCounter] = useState(0)
-    // const [interventionPlotType, setInterventionPlotType] = useState<string | undefined>(undefined)
+
     const [shareUrl, setShareUrl] = useState(window.location.href);
     const [openShareModal, setOpenShareModal] = useState(false);
     const [openSaveStateModal, setOpenSaveStateModal] = useState(false)
@@ -45,13 +44,20 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     const [listOfSavedState, setListOfSavedState] = useState<string[]>([])
     const [openManageStateModal, setOpenManageStateModal] = useState(false)
 
+    const [stateNameToShare, setStateNameToShare] = useState("")
+    //is uid uxxxxxx or just numbers?
+    const [uidToShare, setUIDToShare] = useState("");
+    const [openUIDInputModal, setOpenUIDInputModal] = useState(false);
+    const [editAccess, setEditAccess] = useState<Boolean>(false);
+    const [errorMessage, setErrorMessage] = useState("")
+
     new ClipboardJS(`.copy-clipboard`);
 
     async function fetchSavedStates() {
         const res = await fetch(`${process.env.REACT_APP_QUERY_URL}state`)
         const result = await res.json()
         if (result) {
-            const resultList = result.map((d: any[]) => d[1])
+            const resultList = result.map((d: any[]) => d)
             stateUpdateWrapperUseJSON(listOfSavedState, resultList, setListOfSavedState)
         }
     }
@@ -61,10 +67,11 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             .then(result => result.json())
             .then(result => {
                 if (result) {
-                    const resultList = result.map((d: any[]) => d[1])
+                    const resultList = result.map((d: any[]) => d)
                     stateUpdateWrapperUseJSON(listOfSavedState, resultList, setListOfSavedState)
                 }
             })
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -73,6 +80,11 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         const result = await res.json()
         provenance.importState(result.definition)
 
+    }
+
+    const shareSpecificState = (name: string) => {
+        setStateNameToShare(name)
+        setOpenUIDInputModal(true);
     }
 
 
@@ -139,6 +151,14 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         setYSelection("")
     }
 
+    const clearAllSharingRelatedStates = () => {
+        setStateNameToShare("")
+        setUIDToShare('')
+        setErrorMessage('')
+        setEditAccess(false)
+        setOpenUIDInputModal(false)
+    }
+
     const simulateAPIClick = () => {
         fetch(`${process.env.REACT_APP_QUERY_URL}accounts/login/`, {
             method: 'GET',
@@ -187,16 +207,10 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 </Dropdown>
             </Menu.Item>
 
-            {/* <Menu.Item>
-        <Container>
-          <SemanticDatePicker placeholder={`${timeFormat("%Y-%m-%d")(new Date(rawDateRange[0]))} - ${timeFormat("%Y-%m-%d")(new Date(rawDateRange[1]))}`} type="range" onChange={onDateChange} />
-        </Container>
-      </Menu.Item> */}
-
-
             <Menu.Item>
                 <Dropdown button text="State Management">
                     <Dropdown.Menu>
+                        {/* This is for  presets, which we don't have many good ones
                         <Dropdown.Item >
                             <Dropdown simple selectOnBlur={false} text="Presets" >
                                 <Dropdown.Menu>
@@ -205,12 +219,22 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                     })}
                                 </Dropdown.Menu>
                             </Dropdown>
-                        </Dropdown.Item>
+                        </Dropdown.Item> */}
                         <Dropdown.Item >
-                            <Dropdown simple selectOnBlur={false} text="Saved"  >
+                            <Dropdown simple selectOnBlur={false} text="Load saved states"  >
                                 <Dropdown.Menu>
                                     {listOfSavedState.map((d) => {
                                         return (<Dropdown.Item onClick={() => { loadSavedState(d) }} content={d} />)
+                                    })}
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        </Dropdown.Item>
+
+                        <Dropdown.Item >
+                            <Dropdown simple selectOnBlur={false} text="Share states with user"  >
+                                <Dropdown.Menu>
+                                    {listOfSavedState.map((d) => {
+                                        return (<Dropdown.Item content={d} onClick={() => { shareSpecificState(d) }} />)
                                     })}
                                 </Dropdown.Menu>
                             </Dropdown>
@@ -218,7 +242,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                         </Dropdown.Item>
 
                         <Dropdown.Item icon="share alternate"
-                            content="Share"
+                            content="Share through URL"
                             onClick={() => {
                                 setShareUrl(
                                     //Kiran says there is a bug with the exportState, so using exportState(false) for now
@@ -230,7 +254,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                         <Dropdown.Item icon="save" content="Save State"
                             onClick={() => { setOpenSaveStateModal(true) }} />
 
-                        <Dropdown.Item icon="setting" content="Manage Saved States"
+                        <Dropdown.Item icon="setting" content="Manage saved states"
                             onClick={() => {
                                 setOpenManageStateModal(true)
                             }}
@@ -243,6 +267,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 <Modal open={openManageStateModal} >
                     <Modal.Header content="Manage Saved States" />
                     <Modal.Content>
+                        <Message hidden={errorMessage.length === 0} onDismiss={() => { setErrorMessage("") }} error header='An error occured' content={errorMessage} />
                         <List divided verticalAlign="middle">
                             {listOfSavedState.map((d) => {
                                 return (<List.Item key={d}>
@@ -260,7 +285,22 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                                     "Access-Control-Allow-Credentials": "true",
                                                 },
                                                 body: JSON.stringify({ name: d })
-                                            }).then(() => { fetchSavedStates() })
+                                            }).then(response => {
+                                                if (response.status === 200) {
+                                                    fetchSavedStates()
+                                                    setOpenManageStateModal(false)
+                                                    setErrorMessage("")
+                                                } else {
+                                                    response.text().then(error => {
+                                                        setErrorMessage(error);
+                                                        console.error('There has been a problem with your fetch operation:', response.statusText);
+                                                    })
+                                                }
+                                            }).catch(error => {
+                                                setErrorMessage(error)
+                                                console.error('There has been a problem with your fetch operation:', error);
+                                            })
+
                                         }}
                                             content="Delete" />
                                     </List.Content>
@@ -273,7 +313,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                     <Modal.Actions>
                         <Button
                             content="Close"
-                            onClick={() => { setOpenManageStateModal(false) }} />
+                            onClick={() => { setOpenManageStateModal(false); setErrorMessage("") }} />
                     </Modal.Actions>
 
                 </Modal>
@@ -282,6 +322,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 <Modal open={openSaveStateModal} closeOnEscape={false} closeOnDimmerClick={false}>
                     <Modal.Header content="Save the current state" />
                     <Modal.Content>
+                        <Message hidden={errorMessage.length === 0} onDismiss={() => { setErrorMessage("") }} error header='An error occured' content={errorMessage} />
                         <Form>
                             <Form.Input label="Name of State" onChange={(e, d) => { setStateName(d.value) }} />
                         </Form>
@@ -304,6 +345,20 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                         "Access-Control-Allow-Credentials": "true",
                                     },
                                     body: JSON.stringify({ old_name: stateName, new_name: stateName, new_definition: provenance.exportState(false) })
+                                }).then(response => {
+                                    if (response.status === 200) {
+                                        setOpenSaveStateModal(false)
+                                        setStateName("")
+                                        setErrorMessage("")
+                                    } else {
+                                        response.text().then(error => {
+                                            setErrorMessage(error);
+                                            console.error('There has been a problem with your fetch operation:', response.statusText);
+                                        })
+                                    }
+                                }).catch(error => {
+                                    setErrorMessage(error)
+                                    console.error('There has been a problem with your fetch operation:', error);
                                 })
                             } else {
                                 fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
@@ -318,12 +373,24 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                     },
                                     body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&definition=${provenance.exportState(false)}`
                                 })
-                                    .then(() => { fetchSavedStates() })
+                                    .then(response => {
+                                        if (response.status === 200) {
+                                            setOpenSaveStateModal(false)
+                                            fetchSavedStates()
+                                            setStateName("")
+                                            setErrorMessage("")
+                                        } else {
+                                            response.text().then(error => {
+                                                setErrorMessage(error);
+                                                console.error('There has been a problem with your fetch operation:', response.statusText);
+                                            })
+                                        }
+                                    })
                             }
-                            setOpenSaveStateModal(false)
-                            setStateName("")
+                            // setOpenSaveStateModal(false)
+                            // setStateName("")
                         }} />
-                        <Button content="Cancel" onClick={() => { setOpenSaveStateModal(false) }} />
+                        <Button content="Cancel" onClick={() => { setOpenSaveStateModal(false); setErrorMessage("") }} />
                     </Modal.Actions>
                 </Modal>
 
@@ -353,6 +420,52 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                    Copy
             </Button>
                     </Modal.Actions>
+                </Modal>
+
+                {/* Modal for UID Input */}
+                <Modal
+                    open={openUIDInputModal}
+                    closeOnEscape={false} closeOnDimmerClick={false}>
+                    <Modal.Header>Input User's UID to directly share {`${stateNameToShare}`}</Modal.Header>
+                    <Modal.Content>
+                        <Message hidden={errorMessage.length === 0} onDismiss={() => { setErrorMessage("") }} error header='An error occured' content={errorMessage} />
+                        <Form>
+                            <Form.Input label="uID" onChange={(e, d) => { setUIDToShare(d.value) }} />
+                            <Form.Checkbox label="Grant edit access" onChange={(e, d) => { setEditAccess(d.checked || false) }} />
+                        </Form>
+                        <Button positive content="Confirm" onClick={() => {
+                            const csrftoken = simulateAPIClick()
+                            fetch(`${process.env.REACT_APP_QUERY_URL}share_state`, {
+                                method: `POST`,
+                                credentials: "include",
+                                headers: {
+                                    'Accept': 'application/x-www-form-urlencoded',
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                    'X-CSRFToken': csrftoken || '',
+                                    "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
+                                    "Access-Control-Allow-Credentials": "true",
+                                },
+                                body: `csrfmiddlewaretoken=${csrftoken}&name=${stateNameToShare}&user=${uidToShare}&role=${editAccess ? 'WR' : 'RE'}`
+                            })
+                                .then(response => {
+                                    if (response.status === 200) {
+                                        clearAllSharingRelatedStates()
+                                    } else {
+                                        response.text().then(error => {
+                                            setErrorMessage(error);
+                                            console.error('There has been a problem with your fetch operation:', response.statusText);
+                                        })
+                                    }
+                                }).catch(error => {
+                                    setErrorMessage(error)
+                                    console.error('There has been a problem with your fetch operation:', error);
+                                })
+
+                        }} />
+                        <Button content="Cancel" onClick={() => {
+                            clearAllSharingRelatedStates()
+                        }} />
+                    </Modal.Content>
                 </Modal>
 
             </Menu.Item>

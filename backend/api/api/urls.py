@@ -35,4 +35,5 @@ urlpatterns = [
     path("api/risk_score", views.risk_score, name="risk_score"),
     path("api/patient_outcomes", views.patient_outcomes, name="patient_outcomes"),
     path("api/state", views.state, name="state"),
+    path("api/share_state", views.share_state, name="share_state"),
 ]
