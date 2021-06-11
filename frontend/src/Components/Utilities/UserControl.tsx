@@ -267,6 +267,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 <Modal open={openManageStateModal} >
                     <Modal.Header content="Manage Saved States" />
                     <Modal.Content>
+                        <Message hidden={errorMessage.length === 0} onDismiss={() => { setErrorMessage("") }} error header='An error occured' content={errorMessage} />
                         <List divided verticalAlign="middle">
                             {listOfSavedState.map((d) => {
                                 return (<List.Item key={d}>
@@ -284,7 +285,20 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                                     "Access-Control-Allow-Credentials": "true",
                                                 },
                                                 body: JSON.stringify({ name: d })
-                                            }).then(() => { fetchSavedStates() })
+                                            }).then(response => {
+                                                if (response.status === 200) {
+                                                    fetchSavedStates()
+                                                    setOpenManageStateModal(false)
+                                                    setErrorMessage("")
+                                                } else {
+                                                    setErrorMessage(response.statusText)
+                                                    console.error('There has been a problem with your fetch operation:', response.statusText);
+                                                }
+                                            }).catch(error => {
+                                                setErrorMessage(error)
+                                                console.error('There has been a problem with your fetch operation:', error);
+                                            })
+
                                         }}
                                             content="Delete" />
                                     </List.Content>
@@ -297,7 +311,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                     <Modal.Actions>
                         <Button
                             content="Close"
-                            onClick={() => { setOpenManageStateModal(false) }} />
+                            onClick={() => { setOpenManageStateModal(false); setErrorMessage("") }} />
                     </Modal.Actions>
 
                 </Modal>
@@ -306,6 +320,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 <Modal open={openSaveStateModal} closeOnEscape={false} closeOnDimmerClick={false}>
                     <Modal.Header content="Save the current state" />
                     <Modal.Content>
+                        <Message hidden={errorMessage.length === 0} onDismiss={() => { setErrorMessage("") }} error header='An error occured' content={errorMessage} />
                         <Form>
                             <Form.Input label="Name of State" onChange={(e, d) => { setStateName(d.value) }} />
                         </Form>
@@ -328,6 +343,18 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                         "Access-Control-Allow-Credentials": "true",
                                     },
                                     body: JSON.stringify({ old_name: stateName, new_name: stateName, new_definition: provenance.exportState(false) })
+                                }).then(response => {
+                                    if (response.status === 200) {
+                                        setOpenSaveStateModal(false)
+                                        setStateName("")
+                                        setErrorMessage("")
+                                    } else {
+                                        setErrorMessage(response.statusText)
+                                        console.error('There has been a problem with your fetch operation:', response.statusText);
+                                    }
+                                }).catch(error => {
+                                    setErrorMessage(error)
+                                    console.error('There has been a problem with your fetch operation:', error);
                                 })
                             } else {
                                 fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
@@ -342,12 +369,22 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                     },
                                     body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&definition=${provenance.exportState(false)}`
                                 })
-                                    .then(() => { fetchSavedStates() })
+                                    .then(response => {
+                                        if (response.status === 200) {
+                                            setOpenSaveStateModal(false)
+                                            fetchSavedStates()
+                                            setStateName("")
+                                            setErrorMessage("")
+                                        } else {
+                                            setErrorMessage(response.statusText)
+                                            console.error('There has been a problem with your fetch operation:', response.statusText);
+                                        }
+                                    })
                             }
-                            setOpenSaveStateModal(false)
-                            setStateName("")
+                            // setOpenSaveStateModal(false)
+                            // setStateName("")
                         }} />
-                        <Button content="Cancel" onClick={() => { setOpenSaveStateModal(false) }} />
+                        <Button content="Cancel" onClick={() => { setOpenSaveStateModal(false); setErrorMessage("") }} />
                     </Modal.Actions>
                 </Modal>
 
@@ -411,9 +448,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                         setErrorMessage(response.statusText)
                                         console.error('There has been a problem with your fetch operation:', response.statusText);
                                     }
-                                })
-
-                                .catch(error => {
+                                }).catch(error => {
                                     setErrorMessage(error)
                                     console.error('There has been a problem with your fetch operation:', error);
                                 })
