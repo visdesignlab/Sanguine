@@ -12,6 +12,7 @@
         "@types/react-dom": "16.9.3",
         "@types/react-grid-layout": "^0.16.7",
         "@types/react-native": "^0.60.31",
+        "@types/react-router-dom": "^5.1.7",
         "@types/styled-components": "^4.4.3",
         "@visdesignlab/provenance-lib-core": "3.0.0",
         "@welldone-software/why-did-you-render": "^4.2.5",
