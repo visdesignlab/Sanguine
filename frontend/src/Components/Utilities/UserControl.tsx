@@ -389,7 +389,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                         </Form>
                         <Button positive content="Confirm" onClick={() => {
                             const csrftoken = simulateAPIClick()
-                            fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
+                            fetch(`${process.env.REACT_APP_QUERY_URL}share_state`, {
                                 method: `POST`,
                                 credentials: "include",
                                 headers: {
