@@ -291,8 +291,10 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                                     setOpenManageStateModal(false)
                                                     setErrorMessage("")
                                                 } else {
-                                                    setErrorMessage(response.statusText)
-                                                    console.error('There has been a problem with your fetch operation:', response.statusText);
+                                                    response.text().then(error => {
+                                                        setErrorMessage(error);
+                                                        console.error('There has been a problem with your fetch operation:', response.statusText);
+                                                    })
                                                 }
                                             }).catch(error => {
                                                 setErrorMessage(error)
@@ -349,8 +351,10 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                         setStateName("")
                                         setErrorMessage("")
                                     } else {
-                                        setErrorMessage(response.statusText)
-                                        console.error('There has been a problem with your fetch operation:', response.statusText);
+                                        response.text().then(error => {
+                                            setErrorMessage(error);
+                                            console.error('There has been a problem with your fetch operation:', response.statusText);
+                                        })
                                     }
                                 }).catch(error => {
                                     setErrorMessage(error)
@@ -376,8 +380,10 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                             setStateName("")
                                             setErrorMessage("")
                                         } else {
-                                            setErrorMessage(response.statusText)
-                                            console.error('There has been a problem with your fetch operation:', response.statusText);
+                                            response.text().then(error => {
+                                                setErrorMessage(error);
+                                                console.error('There has been a problem with your fetch operation:', response.statusText);
+                                            })
                                         }
                                     })
                             }
@@ -445,8 +451,10 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                     if (response.status === 200) {
                                         clearAllSharingRelatedStates()
                                     } else {
-                                        setErrorMessage(response.statusText)
-                                        console.error('There has been a problem with your fetch operation:', response.statusText);
+                                        response.text().then(error => {
+                                            setErrorMessage(error);
+                                            console.error('There has been a problem with your fetch operation:', response.statusText);
+                                        })
                                     }
                                 }).catch(error => {
                                     setErrorMessage(error)
