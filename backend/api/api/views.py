@@ -840,7 +840,7 @@ def state(request):
         new_name = put.get("new_name")
         new_definition = put.get("new_definition")
 
-        states = [o.name for o in State.objects.all().filter(owner=user)]
+        states = [o.name for o in State.objects.all().filter(owner=request.user.id)]
         state_access = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="WR")]
         state_read_access = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="RE")]
         allowed_states = response = set(states + state_access)
