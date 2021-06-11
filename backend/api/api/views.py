@@ -899,7 +899,7 @@ def share_state(request):
         # Make sure state exists, requesting users is owner, and new user is not owner, user exists
         if str(state_object.owner) != str(requesting_user):
             return HttpResponseBadRequest("Requesting user is not the owner", 400)
-        if str(state_object.owner) == str(user):
+        if str(state_object.owner) == str(user_object.id):
             return HttpResponseBadRequest("User is already the owner of the state", 400)
 
         # Check that new user is not already reader/writer, role in allowed choices
