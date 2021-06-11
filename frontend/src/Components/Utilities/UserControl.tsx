@@ -14,6 +14,7 @@ import {
 import ClipboardJS from 'clipboard';
 import { getCookie } from "../../Interfaces/UserManagement";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
+import styled from "styled-components";
 interface OwnProps {
     store?: Store;
 }
@@ -377,6 +378,10 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                     Log Out
                  </Button>
 
+                <a href="https://github.com/visdesignlab/Sanguine/issues" target="_blank" rel="noopener noreferrer">
+                    <BugButton icon="bug" />
+                </a>
+
             </Menu.Item>
         </Menu>
     );
@@ -524,4 +529,9 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     );
     return addMode ? addBarChartMenu : regularMenu;
 };
+
+const BugButton = styled(Button)`
+    &&&&&{margin-left:5px!important;}
+`
+
 export default inject('store')(observer(UserControl))
