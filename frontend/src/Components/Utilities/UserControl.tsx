@@ -36,14 +36,20 @@ const UserControl: FC<Props> = ({ store }: Props) => {
     const [ySelection, setYSelection] = useState<string>("")
     const [outcomeComparison, setOutcomeComparison] = useState<string>("")
     const [interventionDate, setInterventionDate] = useState<number | undefined>(undefined)
-    // const [elementCounter, addToElementCounter] = useState(0)
-    // const [interventionPlotType, setInterventionPlotType] = useState<string | undefined>(undefined)
+
     const [shareUrl, setShareUrl] = useState(window.location.href);
     const [openShareModal, setOpenShareModal] = useState(false);
     const [openSaveStateModal, setOpenSaveStateModal] = useState(false)
     const [stateName, setStateName] = useState("")
     const [listOfSavedState, setListOfSavedState] = useState<string[]>([])
     const [openManageStateModal, setOpenManageStateModal] = useState(false)
+
+    const [stateNameToShare, setStateNameToShare] = useState("")
+    //is uid uxxxxxx or just numbers?
+    const [uidToShare, setUIDToShare] = useState("");
+    const [openUIDInputModal, setOpenUIDInputModal] = useState(false);
+    const [editAccess, setEditAccess] = useState<Boolean>(false);
+    const [errorMessage, setErrorMessage] = useState("")
 
     new ClipboardJS(`.copy-clipboard`);
 
@@ -65,6 +71,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                     stateUpdateWrapperUseJSON(listOfSavedState, resultList, setListOfSavedState)
                 }
             })
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -73,6 +80,10 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         const result = await res.json()
         provenance.importState(result.definition)
 
+    }
+
+    const shareSpecificState = (name: string) => {
+        setOpenUIDInputModal(true);
     }
 
 
@@ -197,7 +208,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             <Menu.Item>
                 <Dropdown button text="State Management">
                     <Dropdown.Menu>
-                        <Dropdown.Item >
+                        {/* <Dropdown.Item >
                             <Dropdown simple selectOnBlur={false} text="Presets" >
                                 <Dropdown.Menu>
                                     {presetOptions.map((d: { value: number, text: string }) => {
@@ -205,12 +216,22 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                                     })}
                                 </Dropdown.Menu>
                             </Dropdown>
-                        </Dropdown.Item>
+                        </Dropdown.Item> */}
                         <Dropdown.Item >
-                            <Dropdown simple selectOnBlur={false} text="Saved"  >
+                            <Dropdown simple selectOnBlur={false} text="Load saved states"  >
                                 <Dropdown.Menu>
                                     {listOfSavedState.map((d) => {
                                         return (<Dropdown.Item onClick={() => { loadSavedState(d) }} content={d} />)
+                                    })}
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        </Dropdown.Item>
+
+                        <Dropdown.Item >
+                            <Dropdown simple selectOnBlur={false} text="Share states with user"  >
+                                <Dropdown.Menu>
+                                    {listOfSavedState.map((d) => {
+                                        return (<Dropdown.Item content={d} onClick={() => { shareSpecificState(d) }} />)
                                     })}
                                 </Dropdown.Menu>
                             </Dropdown>
@@ -218,7 +239,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                         </Dropdown.Item>
 
                         <Dropdown.Item icon="share alternate"
-                            content="Share"
+                            content="Share through URL"
                             onClick={() => {
                                 setShareUrl(
                                     //Kiran says there is a bug with the exportState, so using exportState(false) for now
@@ -230,7 +251,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                         <Dropdown.Item icon="save" content="Save State"
                             onClick={() => { setOpenSaveStateModal(true) }} />
 
-                        <Dropdown.Item icon="setting" content="Manage Saved States"
+                        <Dropdown.Item icon="setting" content="Manage saved states"
                             onClick={() => {
                                 setOpenManageStateModal(true)
                             }}
@@ -353,6 +374,51 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                    Copy
             </Button>
                     </Modal.Actions>
+                </Modal>
+
+                {/* Modal for UID Input */}
+                <Modal
+                    open={openUIDInputModal}
+                    closeOnEscape={false} closeOnDimmerClick={false}>
+                    <Modal.Header>Input User's UID to directly share {`${stateNameToShare}`}</Modal.Header>
+                    <Modal.Content>
+                        <Message hidden={errorMessage.length === 0} onDismiss={() => { setErrorMessage("") }} error header='An error occured' content={errorMessage} />
+                        <Form>
+                            <Form.Input label="uID" onChange={(e, d) => { setUIDToShare(d.value) }} />
+                            <Form.Checkbox label="Grant edit access" onChange={(e, d) => { setEditAccess(d.checked || false) }} />
+                        </Form>
+                        <Button positive content="Confirm" onClick={() => {
+                            const csrftoken = simulateAPIClick()
+                            fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
+                                method: `POST`,
+                                credentials: "include",
+                                headers: {
+                                    'Accept': 'application/x-www-form-urlencoded',
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                    'X-CSRFToken': csrftoken || '',
+                                    "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
+                                    "Access-Control-Allow-Credentials": "true",
+                                },
+                                body: `csrfmiddlewaretoken=${csrftoken}&name=${stateNameToShare}&user=${uidToShare}&role=${editAccess ? 'WR' : 'RE'}`
+                            })
+                                .then(response => {
+                                    setStateNameToShare("")
+                                    setUIDToShare('')
+                                    setEditAccess(false)
+                                    setOpenUIDInputModal(false)
+                                })
+                                .catch(error => {
+                                    setErrorMessage(error)
+                                    console.error('There has been a problem with your fetch operation:', error);
+                                })
+
+                        }} />
+                        <Button content="Cancel" onClick={() => {
+                            setOpenUIDInputModal(false);
+                            setEditAccess(false);
+                            setStateNameToShare("")
+                        }} />
+                    </Modal.Content>
                 </Modal>
 
             </Menu.Item>
