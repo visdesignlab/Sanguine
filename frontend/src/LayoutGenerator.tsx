@@ -17,6 +17,8 @@ import { Responsive } from "react-grid-layout";
 import 'react-grid-layout/css/styles.css';
 import CostBarChartVisualization from "./Components/CostBarChart/CostBarChartVisualization";
 import CompareSavingChartVisualization from "./Components/SavingChart/CompareSavingChartVisualization";
+import { third_gray } from "./PresetsProfile";
+import styled from "styled-components";
 
 interface OwnProps {
     hemoData: any[];
@@ -216,7 +218,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
         menuItem: 'Main', pane:
 
             <Tab.Pane key="Main" >
-
+                <WelcomeText show={layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
                 <Responsive
                     onResizeStop={actions.onLayoutchange}
                     onDragStop={actions.onLayoutchange}
@@ -238,6 +240,7 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
 
                     })}
                 </Responsive>
+
             </Tab.Pane >
 
     },
@@ -261,6 +264,15 @@ const LayoutGenerator: FC<Props> = ({ hemoData, store }: Props) => {
             renderActiveOnly={false} />
     </Ref>
 }
-
+interface TextProps {
+    show: boolean
+}
+const WelcomeText = styled(`text`) <TextProps>`
+    display:${props => props.show ? "none" : "block"}
+    font-size:xxx-large
+    fill:${third_gray}
+    opacity:0.25
+    margin:20px
+`
 
 export default inject("store")(observer(LayoutGenerator));

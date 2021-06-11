@@ -218,7 +218,7 @@ export const HIPAA_Sensitive = new Set([
     "PATIENT_ID"
 ])
 
-
+//Added (hundred ml) for CSV, maybe also remove h on the axis?
 export const AcronymDictionary: any = {
     CABG: "Coronary Artery Bypass Grafting",
     TAVR: "Transcatheter Aortic Valve Replacement",
@@ -233,14 +233,14 @@ export const AcronymDictionary: any = {
     VENT: "Over 24 Hours Ventilator Usage",
     RISK: "Diagnosis-related Group Weight (Risk Score)",
     "Zero %": "Zero Transfusion",
-    DEATH: "Death",
+    DEATH: "Death in hospital",
     STROKE: "Stroke",
     TXA: "Tranexamic Acid",
     PRBC_UNITS: "Intraoperative RBCs Transfused",
     FFP_UNITS: "Intraoperative FFP Transfused",
     PLT_UNITS: "Intraoperative Platelets Transfused",
     CRYO_UNITS: "Intraoperative Cryo Transfused",
-    CELL_SAVER_ML: "Cell Salvage Volume (ml)",
+    CELL_SAVER_ML: "Cell Salvage Volume (hundred ml)",
     SURGEON_ID: "Surgeon ID",
     ANESTHESIOLOGIST_ID: "Anesthesiologist ID",
     YEAR: "Year",
