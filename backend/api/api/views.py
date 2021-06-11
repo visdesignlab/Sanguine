@@ -792,8 +792,9 @@ def state(request):
 
         if name:
             # Get the object from the database and all related StateAccess objects
-            state = State.objects.get(name=name)
-            if not state:
+            try:
+                state = State.objects.get(name=name)  # username = uid
+            except State.DoesNotExist:
                 return HttpResponseBadRequest("State not found", 404)
             state_access = StateAccess.objects.filter(state=state).filter(user=user)
 
@@ -820,6 +821,9 @@ def state(request):
         definition = request.POST.get("definition")
         owner = request.user.id
 
+        if State.objects.filter(name=name).exists():
+            return HttpResponseBadRequest("a state with that name already exists, try another", 400)
+
         if name and definition:  # owner is guaranteed by login
             # Create and save the new State object
             new_state = State(name=name, definition=definition, owner=owner)
@@ -837,7 +841,7 @@ def state(request):
         new_definition = put.get("new_definition")
 
         states = [o.name for o in State.objects.all().filter(owner=user)]
-        state_access = [o.state.name for o in StateAccess.objects.filter(user=user).filter(role="WR")]
+        state_access = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="WR")]
         allowed_states = response = set(states + state_access)
         if old_name not in allowed_states:
             return HttpResponseBadRequest("State not found", 404)
