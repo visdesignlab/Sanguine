@@ -882,18 +882,21 @@ def share_state(request):
 
         requesting_user = request.user.id
 
-        state_object = State.objects.get(name=name)
-        user_object = User.objects.get(username=user)  # username = uid
+        try:
+            state_object = State.objects.get(name=name)
+        except State.DoesNotExist:
+            return HttpResponseBadRequest("State not found", 404)
+
+        try:
+            user_object = User.objects.get(username=user)  # username = uid
+        except User.DoesNotExist:
+            return HttpResponseBadRequest("User does not exist", 400)
 
         # Make sure state exists, requesting users is owner, and new user is not owner, user exists
-        if not state_object:
-            return HttpResponseBadRequest("State not found", 404)
-        if state_object.owner != requesting_user:
+        if str(state_object.owner) != str(requesting_user):
             return HttpResponseBadRequest("Requesting user is not the owner", 400)
-        if state_object.owner == user:
+        if str(state_object.owner) == str(user):
             return HttpResponseBadRequest("User is already the owner of the state", 400)
-        if not user_object:
-            return HttpResponseBadRequest("User does not exist", 400)
 
         # Check that new user is not already reader/writer, role in allowed choices
         state_access_objects = StateAccess.objects.filter(state=state_object).filter(user=user)
