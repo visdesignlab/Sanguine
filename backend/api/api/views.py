@@ -842,8 +842,12 @@ def state(request):
 
         states = [o.name for o in State.objects.all().filter(owner=user)]
         state_access = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="WR")]
+        state_read_access = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="RE")]
         allowed_states = response = set(states + state_access)
-        if old_name not in allowed_states:
+        
+        if old_name in state_read_access:
+            return HttpResponseBadRequest("Not authorized", 401)
+        elif old_name not in allowed_states:
             return HttpResponseBadRequest("State not found", 404)
 
         # Update the State object and save
