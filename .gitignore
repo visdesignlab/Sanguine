@@ -4,3 +4,5 @@
 
 api.service
 frontend.service
+
+.venv/
