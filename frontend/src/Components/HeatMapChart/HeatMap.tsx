@@ -33,6 +33,8 @@ import SingleHeatPlot from "./SingleHeatPlot";
 import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
 import { third_gray, greyScaleRange } from "../../PresetsProfile";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
+import SingleColorLegend from "../Utilities/SingleColorLegend";
+import DualColorLegend from "../Utilities/DualColorLegend";
 
 interface OwnProps {
     aggregatedBy: string;
@@ -249,24 +251,9 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
 
     const outputGradientLegend = () => {
         if (!showZero) {
-            return [<rect
-                x={0.7 * (dimensionWidth)}
-                y={0}
-                width={0.2 * (dimensionWidth)}
-                height={7.5}
-                fill="url(#gradient1)" />, <rect
-                x={0.7 * (dimensionWidth)}
-                y={7.5}
-                width={0.2 * (dimensionWidth)}
-                height={7.5}
-                fill="url(#gradient2)" />]
+            return <DualColorLegend dimensionWidth={dimensionWidth} />
         } else {
-            return <rect
-                x={0.7 * (dimensionWidth)}
-                y={0}
-                width={0.2 * (dimensionWidth)}
-                height={15}
-                fill="url(#gradient1)" />
+            return <SingleColorLegend dimensionWidth={dimensionWidth} />
         }
     }
 
@@ -284,37 +271,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
                 <text className="y-label" />
             </g>
             <g className="legend">
-                <defs>
-                    <linearGradient id="gradient1" x1="0" x2="1" y1="0" y2="0" colorInterpolation="CIE-LCHab">
-                        <stop offset="0%" stopColor={interpolateReds(0.1)} />
-                        <stop offset="50%" stopColor={interpolateReds(0.55)} />
-                        <stop offset="100%" stopColor={interpolateReds(1)} />
-                    </linearGradient>
-                    <linearGradient id="gradient2" x1="0" x2="1" y1="0" y2="0" colorInterpolation="CIE-LCHab">
-                        <stop offset="0%" stopColor={interpolateGreys(0.25)} />
-                        <stop offset="50%" stopColor={interpolateGreys(0.525)} />
-                        <stop offset="100%" stopColor={interpolateGreys(0.8)} />
-                    </linearGradient>
-                </defs>
                 {outputGradientLegend()}
-                <text
-                    x={0.7 * (dimensionWidth)}
-                    y={15}
-                    alignmentBaseline={"hanging"}
-                    textAnchor={"start"}
-                    fontSize="11px"
-                    fill={third_gray}>
-                    0%
-                </text>
-                <text
-                    x={0.9 * (dimensionWidth)}
-                    y={15}
-                    alignmentBaseline={"hanging"}
-                    textAnchor={"end"}
-                    fontSize="11px"
-                    fill={third_gray}>
-                    100%
-                </text>
             </g>
             <g className="chart"
                 transform={`translate(${currentOffset.left + extraPairTotalWidth},0)`}
