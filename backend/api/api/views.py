@@ -1,5 +1,6 @@
 import ast
 import os
+import logging
 
 from collections import Counter
 from django.http import (
@@ -64,13 +65,22 @@ IDENT_TABLES = {
 FIELDS_IN_USE = DE_IDENT_FIELDS
 TABLES_IN_USE = DE_IDENT_TABLES
 
+logging.basicConfig(
+    filename='sanguine.log',
+    encoding='utf-8',
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
 
 def index(request):
     if request.method == "GET":
+        logging.info(f"{request.META.get('REMOTE_ADDR')} GET: index. User: {request.user}")
         return HttpResponse(
             "Bloodvis API endpoint. Please use the client application to access the data here."
         )
     else:
+        logging.info(f"{request.META.get('REMOTE_ADDR')} Method Not Allowed: {request.method} index. User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -80,6 +90,7 @@ def index(request):
 )
 def get_attributes(request):
     if request.method == "GET":
+        logging.info(f"{request.META.get('REMOTE_ADDR')} GET: get_attributes. User: {request.user}")
         # Get the list of allowed filter_selection names from the cpt function
         allowed_names = list(set([a[2] for a in cpt()]))
 
@@ -124,6 +135,7 @@ def get_attributes(request):
         items = [{"value": k, "count": v} for k, v in items.items()]
         return JsonResponse({"result": items})
     else:
+        logging.info(f"{request.META.get('REMOTE_ADDR')} Method Not Allowed: {request.method} get_attributes. User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -133,6 +145,7 @@ def get_attributes(request):
 )
 def fetch_surgery(request):
     if request.method == "GET":
+        logging.info(f"{request.META.get('REMOTE_ADDR')} GET: fetch_surgery. User: {request.user}")
         # Get the values from the request
         case_id = request.GET.get('case_id')
 
@@ -162,6 +175,7 @@ def fetch_surgery(request):
 
         return JsonResponse({"result": data})
     else:
+        logging.info(f"{request.META.get('REMOTE_ADDR')} Method Not Allowed: {request.method} fetch_surgery. User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -171,6 +185,7 @@ def fetch_surgery(request):
 )
 def fetch_patient(request):
     if request.method == "GET":
+        logging.info(f"{request.META.get('REMOTE_ADDR')} GET: fetch_patient. User: {request.user}")
         # Get the values from the request
         patient_id = request.GET.get('patient_id')
 
@@ -201,6 +216,7 @@ def fetch_patient(request):
 
         return JsonResponse({"result": data})
     else:
+        logging.info(f"{request.META.get('REMOTE_ADDR')} Method Not Allowed: {request.method} fetch_patient. User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -210,6 +226,7 @@ def fetch_patient(request):
 )
 def request_transfused_units(request):
     if request.method == "GET":
+        logging.info(f"{request.META.get('REMOTE_ADDR')} GET: request_transfused_units. User: {request.user}")
         # Get the required parameters from the query string
         transfusion_type = request.GET.get("transfusion_type")
         date_range = request.GET.get("date_range") or ""
@@ -390,6 +407,7 @@ def request_transfused_units(request):
 
         return JsonResponse(cleaned, safe=False)
     else:
+        logging.info(f"{request.META.get('REMOTE_ADDR')} Method Not Allowed: {request.method} request_transfused_units. User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -399,6 +417,7 @@ def request_transfused_units(request):
 )
 def test_results(request):
     if request.method == "GET":
+        logging.info(f"{request.META.get('REMOTE_ADDR')} GET: test_results. User: {request.user}")
         case_ids = request.GET.get("case_ids") or ""
         test_types = request.GET.get("test_types") or ""
 
@@ -407,6 +426,7 @@ def test_results(request):
 
         case_ids = case_ids.split(",")
     else:
+        logging.info(f"{request.META.get('REMOTE_ADDR')} Method Not Allowed: {request.method} test_results. User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -416,6 +436,7 @@ def test_results(request):
 )
 def risk_score(request):
     if request.method == "GET":
+        logging.info(f"{request.META.get('REMOTE_ADDR')} GET: risk_score. User: {request.user}")
         patient_ids = request.GET.get("patient_ids") or ""
 
         # Parse the ids
@@ -466,6 +487,7 @@ def risk_score(request):
 
         return JsonResponse(result_list, safe=False)
     else:
+        logging.info(f"{request.META.get('REMOTE_ADDR')} Method Not Allowed: {request.method} risk_score. User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -475,6 +497,7 @@ def risk_score(request):
 )
 def patient_outcomes(request):
     if request.method == "GET":
+        logging.info(f"{request.META.get('REMOTE_ADDR')} GET: patient_outcomes. User: {request.user}")
         patient_ids = request.GET.get("patient_ids") or ""
 
         # Parse the ids
@@ -609,6 +632,7 @@ def patient_outcomes(request):
 
         return JsonResponse(result_list, safe=False)
     else:
+        logging.info(f"{request.META.get('REMOTE_ADDR')} Method Not Allowed: {request.method} patient_outcomes. User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -618,6 +642,7 @@ def patient_outcomes(request):
 )
 def hemoglobin(request):
     if request.method == "GET":
+        logging.info(f"{request.META.get('REMOTE_ADDR')} GET: hemoglobin. User: {request.user}")
         command = f"""
         WITH
         LAB_HB AS (
@@ -777,6 +802,7 @@ def hemoglobin(request):
 
         return JsonResponse({"result": items})
     else:
+        logging.info(f"{request.META.get('REMOTE_ADDR')} Method Not Allowed: {request.method} hemoglobin. User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -786,6 +812,7 @@ def hemoglobin(request):
 )
 def state(request):
     if request.method == "GET":
+        logging.info(f"{request.META.get('REMOTE_ADDR')} GET: state. User: {request.user}")
         # Get the name from the querystring
         name = request.GET.get("name")
         user = request.user.id
@@ -816,6 +843,7 @@ def state(request):
             return JsonResponse(list(response), safe=False)
 
     elif request.method == "POST":
+        logging.info(f"{request.META.get('REMOTE_ADDR')} POST: state. User: {request.user}")
         # Get the name and definition from the request
         name = request.POST.get("name")
         definition = request.POST.get("definition")
@@ -834,6 +862,7 @@ def state(request):
             return HttpResponseBadRequest("missing params: [name, definition, owner]", 400)
 
     elif request.method == "PUT":
+        logging.info(f"{request.META.get('REMOTE_ADDR')} PUT: state. User: {request.user}")
         # Get the required information from the request body
         put = ast.literal_eval(request.body.decode())
         old_name = put.get("old_name")
@@ -859,6 +888,7 @@ def state(request):
         return HttpResponse("state object updated", 200)
 
     elif request.method == "DELETE":
+        logging.info(f"{request.META.get('REMOTE_ADDR')} DELETE: state. User: {request.user}")
         # Get the required information from the request body
         delete = ast.literal_eval(request.body.decode())
         name = delete.get("name")
@@ -879,6 +909,7 @@ def state(request):
         return HttpResponse("state object deleted", 200)
 
     else:
+        logging.info(f"{request.META.get('REMOTE_ADDR')} Method Not Allowed: {request.method} state. User: {request.user}")
         return HttpResponseNotAllowed(
             ["GET", "POST", "PUT", "DELETE"],
             "Method Not Allowed"
@@ -891,6 +922,7 @@ def state(request):
 )
 def share_state(request):
     if request.method == "POST":
+        logging.info(f"{request.META.get('REMOTE_ADDR')} POST: share_state. User: {request.user}")
         name = request.POST.get("name")
         user = request.POST.get("user")
         role = request.POST.get("role")
@@ -930,4 +962,5 @@ def share_state(request):
         return HttpResponse("Added new user to role", 201)
 
     else:
+        logging.info(f"{request.META.get('REMOTE_ADDR')} Method Not Allowed: {request.method} share_state. User: {request.user}")
         return HttpResponseNotAllowed(["POST"], "Method Not Allowed")

@@ -7,3 +7,4 @@ api/static
 .env
 .env.prod
 api/api/tests.py
+sanguine.log
