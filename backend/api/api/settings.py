@@ -147,6 +147,8 @@ CORS_ALLOW_HEADERS = [
 
 LOGIN_REDIRECT_URL = '/api'
 LOGIN_URL = '/api/accounts/login'
+SESSION_COOKIE_AGE = 30 * 60
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 CAS_SERVER_URL = "https://go.utah.edu/cas/"
 CAS_ADMIN_PREFIX = "api/"
