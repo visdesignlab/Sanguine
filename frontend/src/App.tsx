@@ -25,34 +25,21 @@ const App: FC<Props> = ({ store }: Props) => {
 
 
     const handleOnIdle = (event: any) => {
-        // console.log('user is idle', event)
-        // console.log('last active', getLastActiveTime())
-        //logout api call
+        // On idle log the user out
         window.location.replace(`${process.env.REACT_APP_QUERY_URL}accounts/logout`);
     }
 
-    const handleOnActive = (event: any) => {
-        console.log('user is active', event)
-        console.log('time remaining', getRemainingTime())
-    }
-
     const handleOnAction = (event: any) => {
-        console.log('user did something', event.type)
-        if (event.type === "mousedown") {
-            whoamiAPICall()
-        }
+        whoamiAPICall()
     }
 
     const { getRemainingTime, getLastActiveTime } = useIdleTimer({
         //the idle timer setting
         timeout: 1000 * 60 * 30,
         onIdle: handleOnIdle,
-        onActive: handleOnActive,
         onAction: handleOnAction,
         events: ["mousedown", "keydown"],
         throttle: 1000 * 60
-
-
     })
 
     async function cacheHemoData() {
