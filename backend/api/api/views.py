@@ -75,12 +75,12 @@ logging.basicConfig(
 
 def index(request):
     if request.method == "GET":
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: index. User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: index User: {request.user}")
         return HttpResponse(
             "Bloodvis API endpoint. Please use the client application to access the data here."
         )
     else:
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} index. User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} index User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -90,7 +90,7 @@ def index(request):
 )
 def get_attributes(request):
     if request.method == "GET":
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: get_attributes. User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: get_attributes User: {request.user}")
         # Get the list of allowed filter_selection names from the cpt function
         allowed_names = list(set([a[2] for a in cpt()]))
 
@@ -135,7 +135,7 @@ def get_attributes(request):
         items = [{"value": k, "count": v} for k, v in items.items()]
         return JsonResponse({"result": items})
     else:
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} get_attributes. User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} get_attributes User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -145,9 +145,10 @@ def get_attributes(request):
 )
 def fetch_surgery(request):
     if request.method == "GET":
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: fetch_surgery. User: {request.user}")
         # Get the values from the request
         case_id = request.GET.get('case_id')
+
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: fetch_surgery Params: case_id = {case_id} User: {request.user}")
 
         if not case_id:
             return HttpResponseBadRequest("case_id must be supplied.")
@@ -175,7 +176,7 @@ def fetch_surgery(request):
 
         return JsonResponse({"result": data})
     else:
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} fetch_surgery. User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} fetch_surgery User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -185,9 +186,10 @@ def fetch_surgery(request):
 )
 def fetch_patient(request):
     if request.method == "GET":
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: fetch_patient. User: {request.user}")
         # Get the values from the request
         patient_id = request.GET.get('patient_id')
+
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: fetch_patient Params: patient_id = {patient_id} User: {request.user}")
 
         if not patient_id:
             return HttpResponseBadRequest("patient_id must be supplied.")
@@ -216,7 +218,7 @@ def fetch_patient(request):
 
         return JsonResponse({"result": data})
     else:
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} fetch_patient. User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} fetch_patient User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -226,7 +228,6 @@ def fetch_patient(request):
 )
 def request_transfused_units(request):
     if request.method == "GET":
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: request_transfused_units. User: {request.user}")
         # Get the required parameters from the query string
         transfusion_type = request.GET.get("transfusion_type")
         date_range = request.GET.get("date_range") or ""
@@ -236,6 +237,8 @@ def request_transfused_units(request):
         patient_ids = request.GET.get("patient_ids") or ""
         case_ids = request.GET.get("case_ids") or ""
         filter_selection = request.GET.get("filter_selection") or ""
+
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: request_transfused_units Params: transfusion_type = {transfusion_type}, date_range = {date_range}, aggregated_by = {aggregated_by}, patient_ids = {patient_ids}, case_ids = {case_ids}, filter_selection = {filter_selection} User: {request.user}")
 
         # Parse the date_range and the filter selection
         patient_ids = patient_ids.split(",") if patient_ids else []
@@ -407,7 +410,7 @@ def request_transfused_units(request):
 
         return JsonResponse(cleaned, safe=False)
     else:
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} request_transfused_units. User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} request_transfused_units User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -417,16 +420,17 @@ def request_transfused_units(request):
 )
 def test_results(request):
     if request.method == "GET":
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: test_results. User: {request.user}")
         case_ids = request.GET.get("case_ids") or ""
         test_types = request.GET.get("test_types") or ""
+
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: test_results Params: case_ids = {case_ids}, test_types = {test_types} User: {request.user}")
 
         if not case_ids:
             HttpResponseBadRequest("You must supply case_ids")
 
         case_ids = case_ids.split(",")
     else:
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} test_results. User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} test_results User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -436,8 +440,9 @@ def test_results(request):
 )
 def risk_score(request):
     if request.method == "GET":
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: risk_score. User: {request.user}")
         patient_ids = request.GET.get("patient_ids") or ""
+
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: risk_score Params: patient_ids = {patient_ids} User: {request.user}")
 
         # Parse the ids
         patient_ids = patient_ids.split(",") if patient_ids else []
@@ -487,7 +492,7 @@ def risk_score(request):
 
         return JsonResponse(result_list, safe=False)
     else:
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} risk_score. User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} risk_score User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -497,8 +502,9 @@ def risk_score(request):
 )
 def patient_outcomes(request):
     if request.method == "GET":
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: patient_outcomes. User: {request.user}")
         patient_ids = request.GET.get("patient_ids") or ""
+
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: patient_outcomes Params: patient_ids = {patient_ids} User: {request.user}")
 
         # Parse the ids
         patient_ids = patient_ids.split(",") if patient_ids else []
@@ -632,7 +638,7 @@ def patient_outcomes(request):
 
         return JsonResponse(result_list, safe=False)
     else:
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} patient_outcomes. User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} patient_outcomes User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -642,7 +648,7 @@ def patient_outcomes(request):
 )
 def hemoglobin(request):
     if request.method == "GET":
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: hemoglobin. User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: hemoglobin User: {request.user}")
         command = f"""
         WITH
         LAB_HB AS (
@@ -802,7 +808,7 @@ def hemoglobin(request):
 
         return JsonResponse({"result": items})
     else:
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} hemoglobin. User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} hemoglobin User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -812,10 +818,11 @@ def hemoglobin(request):
 )
 def state(request):
     if request.method == "GET":
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: state. User: {request.user}")
         # Get the name from the querystring
         name = request.GET.get("name")
         user = request.user.id
+
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: state Params: name = {name} User: {request.user}")
 
         if name:
             # Get the object from the database and all related StateAccess objects
@@ -843,11 +850,12 @@ def state(request):
             return JsonResponse(list(response), safe=False)
 
     elif request.method == "POST":
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: state. User: {request.user}")
         # Get the name and definition from the request
         name = request.POST.get("name")
         definition = request.POST.get("definition")
         owner = request.user.id
+
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: state Params: name = {name} User: {request.user}")
 
         if State.objects.filter(name=name).exists():
             return HttpResponseBadRequest("a state with that name already exists, try another", 400)
@@ -862,12 +870,13 @@ def state(request):
             return HttpResponseBadRequest("missing params: [name, definition, owner]", 400)
 
     elif request.method == "PUT":
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} PUT: state. User: {request.user}")
         # Get the required information from the request body
         put = ast.literal_eval(request.body.decode())
         old_name = put.get("old_name")
         new_name = put.get("new_name")
         new_definition = put.get("new_definition")
+
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} PUT: state Params: old_name = {old_name}, new_name = {new_name} User: {request.user}")
 
         states = [o.name for o in State.objects.all().filter(owner=request.user.id)]
         state_access = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="WR")]
@@ -888,10 +897,11 @@ def state(request):
         return HttpResponse("state object updated", 200)
 
     elif request.method == "DELETE":
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} DELETE: state. User: {request.user}")
         # Get the required information from the request body
         delete = ast.literal_eval(request.body.decode())
         name = delete.get("name")
+
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} DELETE: state Params: name = {name} User: {request.user}")
 
         # Delete the matching State object
         try:
@@ -909,7 +919,7 @@ def state(request):
         return HttpResponse("state object deleted", 200)
 
     else:
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} state. User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} state User: {request.user}")
         return HttpResponseNotAllowed(
             ["GET", "POST", "PUT", "DELETE"],
             "Method Not Allowed"
@@ -922,10 +932,11 @@ def state(request):
 )
 def share_state(request):
     if request.method == "POST":
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: share_state. User: {request.user}")
         name = request.POST.get("name")
         user = request.POST.get("user")
         role = request.POST.get("role")
+
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: share_state Params: name = {name}, user = {user}, role = {role} User: {request.user}")
 
         requesting_user = request.user.id
 
@@ -962,5 +973,5 @@ def share_state(request):
         return HttpResponse("Added new user to role", 201)
 
     else:
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} share_state. User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} share_state User: {request.user}")
         return HttpResponseNotAllowed(["POST"], "Method Not Allowed")
