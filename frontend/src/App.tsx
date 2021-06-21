@@ -8,6 +8,8 @@ import Login from './LogIn'
 import Preview from './Preview';
 import { SingleCasePoint, defaultState } from './Interfaces/ApplicationState';
 import { surgeryTypeArray } from './PresetsProfile';
+import { useIdleTimer } from 'react-idle-timer';
+import { whoamiAPICall } from './HelperFunctions';
 
 interface OwnProps {
     store?: Store;
@@ -22,7 +24,33 @@ const App: FC<Props> = ({ store }: Props) => {
     const [hemoData, setHemoData] = useState<any>([])
 
 
+    const handleOnIdle = (event: any) => {
+        // console.log('user is idle', event)
+        // console.log('last active', getLastActiveTime())
+        //logout api call
+        window.location.replace(`${process.env.REACT_APP_QUERY_URL}accounts/logout`);
+    }
 
+    const handleOnActive = (event: any) => {
+        console.log('user is active', event)
+        console.log('time remaining', getRemainingTime())
+    }
+
+    const handleOnAction = (event: any) => {
+        console.log('user did something', event.type)
+        if (event.type === "mousedown") {
+            whoamiAPICall()
+        }
+    }
+
+    const { getRemainingTime, getLastActiveTime } = useIdleTimer({
+        //the idle timer setting
+        timeout: 1000 * 60 * 1,
+        onIdle: handleOnIdle,
+        onActive: handleOnActive,
+        onAction: handleOnAction,
+        debounce: 500
+    })
 
     async function cacheHemoData() {
         if (isLoggedIn) {

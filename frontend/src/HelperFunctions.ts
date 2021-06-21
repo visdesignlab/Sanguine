@@ -10,6 +10,23 @@ export const stateUpdateWrapperUseJSON = (oldState: any, newState: any, updateFu
     }
 }
 
+export const whoamiAPICall = () => {
+    fetch(`${process.env.REACT_APP_QUERY_URL}whoami`, {
+        method: 'GET',
+        credentials: "include",
+        headers: {
+            "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
+            "Access-Control-Allow-Credentials": "true",
+        },
+    }).then(response => {
+        if (response.status === 200) {
+            store!.isLoggedIn = true;
+        } else {
+            window.location.replace(`${process.env.REACT_APP_QUERY_URL}accounts/login/`);
+        }
+    })
+}
+
 export const generateExtrapairPlotDataWithIntervention = (aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: ComparisonDataPoint[], componentName: string) => {
     let newExtraPairData: ExtraPairInterventionPoint[] = []
     if (extraPairArray.length > 0) {
