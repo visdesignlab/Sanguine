@@ -45,7 +45,7 @@ const App: FC<Props> = ({ store }: Props) => {
 
     const { getRemainingTime, getLastActiveTime } = useIdleTimer({
         //the idle timer setting
-        timeout: 1000 * 60 * 1,
+        timeout: 1000 * 60 * 30,
         onIdle: handleOnIdle,
         onActive: handleOnActive,
         onAction: handleOnAction,
