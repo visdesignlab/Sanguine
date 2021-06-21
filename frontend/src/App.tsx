@@ -49,7 +49,9 @@ const App: FC<Props> = ({ store }: Props) => {
         onIdle: handleOnIdle,
         onActive: handleOnActive,
         onAction: handleOnAction,
-        events: ["mousedown", "keydown"]
+        events: ["mousedown", "keydown"],
+        throttle: 1000 * 60
+
 
     })
 
