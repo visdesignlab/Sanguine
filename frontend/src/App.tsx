@@ -49,7 +49,8 @@ const App: FC<Props> = ({ store }: Props) => {
         onIdle: handleOnIdle,
         onActive: handleOnActive,
         onAction: handleOnAction,
-        debounce: 500
+        events: ["mousedown", "keydown"]
+
     })
 
     async function cacheHemoData() {
