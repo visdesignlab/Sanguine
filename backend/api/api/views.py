@@ -66,8 +66,7 @@ FIELDS_IN_USE = DE_IDENT_FIELDS
 TABLES_IN_USE = DE_IDENT_TABLES
 
 logging.basicConfig(
-    filename='sanguine.log',
-    encoding='utf-8',
+    handlers=[logging.handlers.RotatingFileHandler('sanguine.log', maxBytes=1000000000, backupCount=10, encoding='utf-8')],
     level=logging.DEBUG,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
@@ -882,7 +881,7 @@ def state(request):
         state_access = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="WR")]
         state_read_access = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="RE")]
         allowed_states = response = set(states + state_access)
-        
+
         if old_name in state_read_access:
             return HttpResponseBadRequest("Not authorized", 401)
         elif old_name not in allowed_states:
