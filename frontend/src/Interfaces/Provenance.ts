@@ -1,4 +1,4 @@
-import { Provenance, initProvenance } from '@visdesignlab/provenance-lib-core'
+import { Provenance, initProvenance } from '@visdesignlab/trrack'
 import {
     ApplicationState,
     defaultState,
