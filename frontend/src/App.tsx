@@ -142,24 +142,25 @@ const App: FC<Props> = ({ store }: Props) => {
     }, [isLoggedIn]);
 
     const commputeOutputRenderComponent = () => {
-        if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
-            if (isLoggedIn) {
-                if (previewMode) {
-                    return <Preview hemoData={hemoData} />
-                }
-                else {
-                    return <Dashboard hemoData={hemoData} />
-                }
-            }
-            else return <Login />
-        } else {
-            if (previewMode) {
-                return <Preview hemoData={hemoData} />
-            }
-            else {
-                return <Dashboard hemoData={hemoData} />
-            }
-        }
+        // if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
+        //     if (isLoggedIn) {
+        //         if (previewMode) {
+        //             return <Preview hemoData={hemoData} />
+        //         }
+        //         else {
+        //             return <Dashboard hemoData={hemoData} />
+        //         }
+        //     }
+        //     else return <Login />
+        // } else {
+        //     if (previewMode) {
+        //         return <Preview hemoData={hemoData} />
+        //     }
+        //     else {
+        //         return <Dashboard hemoData={hemoData} />
+        //     }
+        // }
+        return <div></div>
     }
 
 
