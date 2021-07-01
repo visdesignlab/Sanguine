@@ -24,6 +24,8 @@ import {
     greyScaleRange,
     caseRectWidth,
     basic_gray,
+    AxisFontSize,
+    LegendFontSize,
 } from "../../PresetsProfile"
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 import SingleCompareBars from "./SingleCompareBars";
@@ -128,7 +130,7 @@ const CompareSavingChart: FC<Props> = ({ maximumCost, maximumSaved, store, value
         .attr("x", dimensionWidth * 0.5 + currentOffset.margin)
         .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("alignment-baseline", "hanging")
-        .attr("font-size", "11px")
+        .attr("font-size", AxisFontSize)
         .attr("text-anchor", "middle")
         .text(costMode ? "Per Case Cost in Dollars" : "Units per Case");
 
@@ -137,7 +139,7 @@ const CompareSavingChart: FC<Props> = ({ maximumCost, maximumSaved, store, value
         .select(".y-label")
         .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("x", currentOffset.left - 55)
-        .attr("font-size", "11px")
+        .attr("font-size", AxisFontSize)
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
         .text(
@@ -170,7 +172,7 @@ const CompareSavingChart: FC<Props> = ({ maximumCost, maximumSaved, store, value
                     y={6}
                     alignmentBaseline={"middle"}
                     textAnchor={"start"}
-                    fontSize="11px"
+                    fontSize={LegendFontSize}
                     fill={"black"}>
                     {` True ${withInterTotal}/${withInterTotal + withoutInterTotal}`}
                 </text>
@@ -179,7 +181,7 @@ const CompareSavingChart: FC<Props> = ({ maximumCost, maximumSaved, store, value
                     y={18}
                     alignmentBaseline={"middle"}
                     textAnchor={"start"}
-                    fontSize="11px"
+                    fontSize={LegendFontSize}
                     fill={"black"}>
                     {`False ${withoutInterTotal}/${withInterTotal + withoutInterTotal}`}
                 </text>

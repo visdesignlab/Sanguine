@@ -25,7 +25,8 @@ import {
     AcronymDictionary,
     BloodProductCap,
     CELL_SAVER_TICKS,
-    caseRectWidth
+    caseRectWidth,
+    AxisFontSize
 } from "../../PresetsProfile"
 
 import SingleHeatPlot from "./SingleHeatPlot";
@@ -171,7 +172,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         .attr("x", (dimensionWidth - extraPairTotalWidth) * 0.5)
         .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("alignment-baseline", "hanging")
-        .attr("font-size", "11px")
+        .attr("font-size", AxisFontSize)
         .attr("text-anchor", "middle")
         .attr("transform", `translate(${extraPairTotalWidth},0)`)
         .text(() => {
@@ -185,7 +186,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
         .select(".y-label")
         .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("x", currentOffset.left - 55)
-        .attr("font-size", "11px")
+        .attr("font-size", AxisFontSize)
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
         .attr("transform", `translate(${extraPairTotalWidth},0)`)

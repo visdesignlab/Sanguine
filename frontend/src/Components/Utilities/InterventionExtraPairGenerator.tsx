@@ -1,7 +1,7 @@
 
 import React, { FC } from "react";
 import { inject, observer } from "mobx-react";
-import { extraPairWidth, extraPairPadding, offset, AcronymDictionary, HGB_HIGH_STANDARD, HGB_LOW_STANDARD } from "../../PresetsProfile";
+import { extraPairWidth, extraPairPadding, offset, AcronymDictionary, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, AxisFontSize } from "../../PresetsProfile";
 import { actions } from "../..";
 // import ExtraPairViolin from "../BarChart/ExtraPairViolin";
 // import ExtraPairBar from "../BarChart/ExtraPairBar";
@@ -97,7 +97,7 @@ const InterventionExtraPairGenerator: FC<Props> = ({ extraPairDataSet, aggregati
                         aggregationScaleDomain={aggregationScaleDomain}
                         aggregationScaleRange={aggregationScaleRange}
                         name={pairData.name} />,
-                        {extraPairTextGenerator(pairData.name, pairData.label, "Violin", pairData)}
+                    {extraPairTextGenerator(pairData.name, pairData.label, "Violin", pairData)}
                 </g>);
                 break;
 
@@ -136,7 +136,7 @@ const InterventionExtraPairGenerator: FC<Props> = ({ extraPairDataSet, aggregati
 export default inject("store")(observer(InterventionExtraPairGenerator));
 
 const ExtraPairText = styled(`text`)`
-  font-size: 11px
+  font-size: ${AxisFontSize}
   text-anchor: middle
   alignment-baseline:hanging
   cursor:pointer

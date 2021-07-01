@@ -1,5 +1,6 @@
 import styled from "styled-components"
-
+export const AxisFontSize = "13px"
+export const LegendFontSize = "11px"
 export const preop_color = "#209b58"
 export const postop_color = "#20639b"
 export const highlight_orange = "#d98532"

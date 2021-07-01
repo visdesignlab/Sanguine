@@ -6,7 +6,7 @@ import {
     interpolateGreys,
     interpolateReds,
 } from "d3";
-import { third_gray } from "../../PresetsProfile";
+import { LegendFontSize, third_gray } from "../../PresetsProfile";
 
 interface OwnProps {
     dimensionWidth: number;
@@ -44,37 +44,37 @@ const DualColorLegend: FC<Props> = ({ dimensionWidth }) => {
             y={17.5}
             alignmentBaseline={"middle"}
             textAnchor={"end"}
-            fontSize="11px"
+            fontSize={LegendFontSize}
             fill={third_gray}>
             0%
-                </text>
+        </text>
         <text
             x={0.9 * (dimensionWidth)}
             y={17.5}
             alignmentBaseline={"middle"}
             textAnchor={"start"}
-            fontSize="11px"
+            fontSize={LegendFontSize}
             fill={third_gray}>
             100%
-                </text>
+        </text>
         <text
             x={0.8 * (dimensionWidth)}
             y={25}
             alignmentBaseline={"hanging"}
             textAnchor={"middle"}
-            fontSize="11px"
+            fontSize={LegendFontSize}
             fill={third_gray}>
             % out of all patients
-            </text>
+        </text>
         <text
             x={0.8 * (dimensionWidth)}
             y={7.5}
             alignmentBaseline={"baseline"}
             textAnchor={"middle"}
-            fontSize="11px"
+            fontSize={LegendFontSize}
             fill={third_gray}>
             % out of patients with 1+ transfusions
-            </text>
+        </text>
 
     </g>
 }

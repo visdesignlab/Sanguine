@@ -5,7 +5,7 @@ import { inject, observer } from "mobx-react";
 import {
     interpolateReds,
 } from "d3";
-import { third_gray } from "../../PresetsProfile";
+import { LegendFontSize, third_gray } from "../../PresetsProfile";
 
 interface OwnProps {
     dimensionWidth: number;
@@ -32,19 +32,19 @@ const SingleColorLegend: FC<Props> = ({ dimensionWidth }) => {
             y={7.5}
             alignmentBaseline={"middle"}
             textAnchor={"end"}
-            fontSize="11px"
+            fontSize={LegendFontSize}
             fill={third_gray}>
             0%
-                </text>
+        </text>
         <text
             x={0.9 * (dimensionWidth)}
             y={7.5}
             alignmentBaseline={"middle"}
             textAnchor={"start"}
-            fontSize="11px"
+            fontSize={LegendFontSize}
             fill={third_gray}>
             100%
-                </text>
+        </text>
     </g>
 }
 export default inject("store")(observer(SingleColorLegend));

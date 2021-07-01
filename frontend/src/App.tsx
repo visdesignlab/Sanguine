@@ -10,7 +10,6 @@ import { SingleCasePoint, defaultState } from './Interfaces/ApplicationState';
 import { surgeryTypeArray } from './PresetsProfile';
 import { useIdleTimer } from 'react-idle-timer';
 import { whoamiAPICall } from './HelperFunctions';
-import { env } from 'process';
 
 interface OwnProps {
     store?: Store;
@@ -41,7 +40,7 @@ const App: FC<Props> = ({ store }: Props) => {
     //please check if it works fine.
     useIdleTimer({
         //the idle timer setting
-        timeout: 1000 * 60 * 0.5,
+        timeout: 1000 * 60 * 5,
         onIdle: handleOnIdle,
         onAction: handleOnAction,
         events: ["mousedown", "keydown"],
