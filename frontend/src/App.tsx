@@ -40,7 +40,7 @@ const App: FC<Props> = ({ store }: Props) => {
     //please check if it works fine.
     useIdleTimer({
         //the idle timer setting
-        timeout: 1000 * 60 * 0.5,
+        timeout: 1000 * 60 * 1,
         onIdle: handleOnIdle,
         onAction: handleOnAction,
         events: ["mousedown", "keydown"],
