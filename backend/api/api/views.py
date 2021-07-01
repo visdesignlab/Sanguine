@@ -551,8 +551,8 @@ def patient_outcomes(request):
         # Define the sql command
         command = f"""
         SELECT
-            VST.{FIELDS_IN_USE['patient_id']},
-            VST.{FIELDS_IN_USE['visit_no']},
+            VST.{FIELDS_IN_USE.get('patient_id')},
+            VST.{FIELDS_IN_USE.get('visit_no')},
             CASE WHEN TOTAL_VENT_MINS > 1440 THEN 1 ELSE 0 END AS VENT_1440,
             CASE WHEN PAT_EXPIRED = 'Y' THEN 1 ELSE 0 END AS PAT_DEATH,
             BLNG_OUTCOMES.STROKE,
@@ -588,19 +588,19 @@ def patient_outcomes(request):
             {TABLES_IN_USE['visit']} VST
         LEFT JOIN (
             SELECT
-                {FIELDS_IN_USE['patient_id']},
-                {FIELDS_IN_USE['visit_no']},
+                {FIELDS_IN_USE.get('patient_id')},
+                {FIELDS_IN_USE.get('visit_no')},
                 CASE WHEN SUM(CASE WHEN CODE IN ('I97.820', '997.02') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS STROKE,
                 CASE WHEN SUM(CASE WHEN CODE IN ('33952', '33954', '33956', '33958', '33962', '33964', '33966', '33973', '33974', '33975', '33976', '33977', '33978', '33979', '33980', '33981', '33982', '33983', '33984', '33986', '33987', '33988', '33989') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS ECMO
             FROM {TABLES_IN_USE['billing_codes']}
-            WHERE {FIELDS_IN_USE['present_on_adm']} IS NULL
-            GROUP BY {FIELDS_IN_USE['patient_id']}, {FIELDS_IN_USE['visit_no']}
+            WHERE {FIELDS_IN_USE.get('present_on_adm')} IS NULL
+            GROUP BY {FIELDS_IN_USE.get('patient_id')}, {FIELDS_IN_USE.get('visit_no')}
         ) BLNG_OUTCOMES
-            ON VST.{FIELDS_IN_USE['patient_id']} = BLNG_OUTCOMES.{FIELDS_IN_USE['patient_id']} AND VST.{FIELDS_IN_USE['visit_no']} = BLNG_OUTCOMES.{FIELDS_IN_USE['visit_no']}
+            ON VST.{FIELDS_IN_USE.get('patient_id')} = BLNG_OUTCOMES.{FIELDS_IN_USE.get('patient_id')} AND VST.{FIELDS_IN_USE.get('visit_no')} = BLNG_OUTCOMES.{FIELDS_IN_USE.get('visit_no')}
         LEFT JOIN (
             SELECT
-                {FIELDS_IN_USE['patient_id']},
-                {FIELDS_IN_USE['visit_no']},
+                {FIELDS_IN_USE.get('patient_id')},
+                {FIELDS_IN_USE.get('visit_no')},
                 CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (31383, 310071, 301530) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS TRANEXAMIC_ACID,
                 CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (300167, 300168, 300725, 310033) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS AMICAR,
                 CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (800001, 59535, 400030, 5553, 23584, 73156, 23579, 23582) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS B12,
@@ -618,26 +618,26 @@ def patient_outcomes(request):
             FROM (
                 (
                     SELECT
-                        {FIELDS_IN_USE['patient_id']},
-                        {FIELDS_IN_USE['visit_no']},
-                        {FIELDS_IN_USE['medication_id']},
-                        {FIELDS_IN_USE['admin_dose']},
-                        {FIELDS_IN_USE['dose_unit_desc']}
+                        {FIELDS_IN_USE.get('patient_id')},
+                        {FIELDS_IN_USE.get('visit_no')},
+                        {FIELDS_IN_USE.get('medication_id')},
+                        {FIELDS_IN_USE.get('admin_dose')},
+                        {FIELDS_IN_USE.get('dose_unit_desc')}
                     FROM {TABLES_IN_USE['intraop_meds']}
                 )
                 UNION ALL
                 (
                     SELECT
-                        {FIELDS_IN_USE['patient_id']},
-                        {FIELDS_IN_USE['visit_no']},
-                        {FIELDS_IN_USE['medication_id']},
-                        {FIELDS_IN_USE['admin_dose']},
-                        {FIELDS_IN_USE['dose_unit_desc']}
+                        {FIELDS_IN_USE.get('patient_id')},
+                        {FIELDS_IN_USE.get('visit_no')},
+                        {FIELDS_IN_USE.get('medication_id')},
+                        {FIELDS_IN_USE.get('admin_dose')},
+                        {FIELDS_IN_USE.get('dose_unit_desc')}
                     FROM {TABLES_IN_USE['extraop_meds']}
                 ))
-            GROUP BY {FIELDS_IN_USE['patient_id']}, {FIELDS_IN_USE['visit_no']}
+            GROUP BY {FIELDS_IN_USE.get('patient_id')}, {FIELDS_IN_USE.get('visit_no')}
         ) MEDS
-            ON VST.{FIELDS_IN_USE['patient_id']} = MEDS.{FIELDS_IN_USE['patient_id']} AND VST.{FIELDS_IN_USE['visit_no']} = MEDS.{FIELDS_IN_USE['visit_no']}
+            ON VST.{FIELDS_IN_USE.get('patient_id')} = MEDS.{FIELDS_IN_USE.get('patient_id')} AND VST.{FIELDS_IN_USE.get('visit_no')} = MEDS.{FIELDS_IN_USE.get('visit_no')}
         WHERE 1=1
             {pat_filters_safe_sql}
         """
@@ -678,106 +678,106 @@ def hemoglobin(request):
         WITH
         LAB_HB AS (
             SELECT
-                V.{FIELDS_IN_USE['patient_id']},
-                V.{FIELDS_IN_USE['visit_no']},
-                V.{FIELDS_IN_USE['draw_dtm']},
-                V.{FIELDS_IN_USE['result_dtm']},
-                V.{FIELDS_IN_USE['result_code']},
-                V.{FIELDS_IN_USE['result_value']}
+                V.{FIELDS_IN_USE.get('patient_id')},
+                V.{FIELDS_IN_USE.get('visit_no')},
+                V.{FIELDS_IN_USE.get('draw_dtm')},
+                V.{FIELDS_IN_USE.get('result_dtm')},
+                V.{FIELDS_IN_USE.get('result_code')},
+                V.{FIELDS_IN_USE.get('result_value')}
             FROM
                 {TABLES_IN_USE.get("visit_labs")} V
-            WHERE UPPER(V.{FIELDS_IN_USE['result_desc']}) = 'HEMOGLOBIN'
+            WHERE UPPER(V.{FIELDS_IN_USE.get('result_desc')}) = 'HEMOGLOBIN'
         ),
         PREOP_HB AS (
             SELECT
-                X.{FIELDS_IN_USE['patient_id']},
-                X.{FIELDS_IN_USE['visit_no']},
-                X.{FIELDS_IN_USE['case_id']},
-                X.{FIELDS_IN_USE['surgery_start_time']},
-                X.{FIELDS_IN_USE['surgery_end_time']},
+                X.{FIELDS_IN_USE.get('patient_id')},
+                X.{FIELDS_IN_USE.get('visit_no')},
+                X.{FIELDS_IN_USE.get('case_id')},
+                X.{FIELDS_IN_USE.get('surgery_start_time')},
+                X.{FIELDS_IN_USE.get('surgery_end_time')},
                 X.DI_PREOP_DRAW_DTM,
-                LH2.{FIELDS_IN_USE['result_value']}
+                LH2.{FIELDS_IN_USE.get('result_value')}
             FROM (
                 SELECT
-                    SC.{FIELDS_IN_USE['patient_id']},
-                    SC.{FIELDS_IN_USE['visit_no']},
-                    SC.{FIELDS_IN_USE['case_id']},
-                    SC.{FIELDS_IN_USE['surgery_start_time']},
-                    SC.{FIELDS_IN_USE['surgery_end_time']},
-                    MAX(LH.{FIELDS_IN_USE['draw_dtm']}) AS DI_PREOP_DRAW_DTM
+                    SC.{FIELDS_IN_USE.get('patient_id')},
+                    SC.{FIELDS_IN_USE.get('visit_no')},
+                    SC.{FIELDS_IN_USE.get('case_id')},
+                    SC.{FIELDS_IN_USE.get('surgery_start_time')},
+                    SC.{FIELDS_IN_USE.get('surgery_end_time')},
+                    MAX(LH.{FIELDS_IN_USE.get('draw_dtm')}) AS DI_PREOP_DRAW_DTM
                 FROM
                     {TABLES_IN_USE.get('surgery_case')} SC
                 INNER JOIN LAB_HB LH
-                    ON SC.{FIELDS_IN_USE['visit_no']} = LH.{FIELDS_IN_USE['visit_no']}
-                WHERE LH.{FIELDS_IN_USE['result_dtm']} < SC.{FIELDS_IN_USE['surgery_start_time']}
+                    ON SC.{FIELDS_IN_USE.get('visit_no')} = LH.{FIELDS_IN_USE.get('visit_no')}
+                WHERE LH.{FIELDS_IN_USE.get('result_dtm')} < SC.{FIELDS_IN_USE.get('surgery_start_time')}
                 GROUP BY
-                    SC.{FIELDS_IN_USE['patient_id']},
-                    SC.{FIELDS_IN_USE['visit_no']},
-                    SC.{FIELDS_IN_USE['case_id']},
-                    SC.{FIELDS_IN_USE['surgery_start_time']},
-                    SC.{FIELDS_IN_USE['surgery_end_time']}
+                    SC.{FIELDS_IN_USE.get('patient_id')},
+                    SC.{FIELDS_IN_USE.get('visit_no')},
+                    SC.{FIELDS_IN_USE.get('case_id')},
+                    SC.{FIELDS_IN_USE.get('surgery_start_time')},
+                    SC.{FIELDS_IN_USE.get('surgery_end_time')}
             ) X
             INNER JOIN LAB_HB LH2
-                ON X.{FIELDS_IN_USE['visit_no']} = LH2.{FIELDS_IN_USE['visit_no']}
-                AND X.DI_PREOP_DRAW_DTM = LH2.{FIELDS_IN_USE['draw_dtm']}
+                ON X.{FIELDS_IN_USE.get('visit_no')} = LH2.{FIELDS_IN_USE.get('visit_no')}
+                AND X.DI_PREOP_DRAW_DTM = LH2.{FIELDS_IN_USE.get('draw_dtm')}
         ),
         POSTOP_HB AS (
             SELECT
-                Z.{FIELDS_IN_USE['patient_id']},
-                Z.{FIELDS_IN_USE['visit_no']},
-                Z.{FIELDS_IN_USE['case_id']},
-                Z.{FIELDS_IN_USE['surgery_start_time']},
-                Z.{FIELDS_IN_USE['surgery_end_time']},
+                Z.{FIELDS_IN_USE.get('patient_id')},
+                Z.{FIELDS_IN_USE.get('visit_no')},
+                Z.{FIELDS_IN_USE.get('case_id')},
+                Z.{FIELDS_IN_USE.get('surgery_start_time')},
+                Z.{FIELDS_IN_USE.get('surgery_end_time')},
                 Z.DI_POSTOP_DRAW_DTM,
-                LH4.{FIELDS_IN_USE['result_value']}
+                LH4.{FIELDS_IN_USE.get('result_value')}
             FROM (
                 SELECT
-                    SC2.{FIELDS_IN_USE['patient_id']},
-                    SC2.{FIELDS_IN_USE['visit_no']},
-                    SC2.{FIELDS_IN_USE['case_id']},
-                    SC2.{FIELDS_IN_USE['surgery_start_time']},
-                    SC2.{FIELDS_IN_USE['surgery_end_time']},
-                    MIN(LH3.{FIELDS_IN_USE['draw_dtm']}) AS DI_POSTOP_DRAW_DTM
+                    SC2.{FIELDS_IN_USE.get('patient_id')},
+                    SC2.{FIELDS_IN_USE.get('visit_no')},
+                    SC2.{FIELDS_IN_USE.get('case_id')},
+                    SC2.{FIELDS_IN_USE.get('surgery_start_time')},
+                    SC2.{FIELDS_IN_USE.get('surgery_end_time')},
+                    MIN(LH3.{FIELDS_IN_USE.get('draw_dtm')}) AS DI_POSTOP_DRAW_DTM
                 FROM
                     {TABLES_IN_USE.get('surgery_case')} SC2
                 INNER JOIN LAB_HB LH3
-                    ON SC2.{FIELDS_IN_USE['visit_no']} = LH3.{FIELDS_IN_USE['visit_no']}
-                WHERE LH3.{FIELDS_IN_USE['draw_dtm']} > SC2.{FIELDS_IN_USE['surgery_end_time']}
+                    ON SC2.{FIELDS_IN_USE.get('visit_no')} = LH3.{FIELDS_IN_USE.get('visit_no')}
+                WHERE LH3.{FIELDS_IN_USE.get('draw_dtm')} > SC2.{FIELDS_IN_USE.get('surgery_end_time')}
                 GROUP BY
-                    SC2.{FIELDS_IN_USE['patient_id']},
-                    SC2.{FIELDS_IN_USE['visit_no']},
-                    SC2.{FIELDS_IN_USE['case_id']},
-                    SC2.{FIELDS_IN_USE['surgery_start_time']},
-                    SC2.{FIELDS_IN_USE['surgery_end_time']}
+                    SC2.{FIELDS_IN_USE.get('patient_id')},
+                    SC2.{FIELDS_IN_USE.get('visit_no')},
+                    SC2.{FIELDS_IN_USE.get('case_id')},
+                    SC2.{FIELDS_IN_USE.get('surgery_start_time')},
+                    SC2.{FIELDS_IN_USE.get('surgery_end_time')}
             ) Z
             INNER JOIN LAB_HB LH4
-                ON Z.{FIELDS_IN_USE['visit_no']} = LH4.{FIELDS_IN_USE['visit_no']}
-                AND Z.DI_POSTOP_DRAW_DTM = LH4.{FIELDS_IN_USE['draw_dtm']}
+                ON Z.{FIELDS_IN_USE.get('visit_no')} = LH4.{FIELDS_IN_USE.get('visit_no')}
+                AND Z.DI_POSTOP_DRAW_DTM = LH4.{FIELDS_IN_USE.get('draw_dtm')}
         )
         SELECT
-            SC3.{FIELDS_IN_USE['patient_id']},
-            SC3.{FIELDS_IN_USE['case_id']},
-            SC3.{FIELDS_IN_USE['visit_no']},
-            SC3.{FIELDS_IN_USE['case_date']},
-            EXTRACT (YEAR from SC3.{FIELDS_IN_USE['case_date']}) YEAR,
-            EXTRACT (MONTH from SC3.{FIELDS_IN_USE['case_date']}) AS MONTH,
-            SC3.{FIELDS_IN_USE['surgery_start_time']},
-            SC3.{FIELDS_IN_USE['surgery_end_time']},
-            SC3.{FIELDS_IN_USE['surgery_elapsed']},
-            SC3.{FIELDS_IN_USE['surgery_type']},
-            SC3.{FIELDS_IN_USE['surgeon_id']},
-            SC3.{FIELDS_IN_USE['anest_id']},
-            SC3.{FIELDS_IN_USE['prim_proc_desc']},
-            SC3.{FIELDS_IN_USE['post_op_icu_los']},
-            SC3.{FIELDS_IN_USE['sched_site_desc']},
+            SC3.{FIELDS_IN_USE.get('patient_id')},
+            SC3.{FIELDS_IN_USE.get('case_id')},
+            SC3.{FIELDS_IN_USE.get('visit_no')},
+            SC3.{FIELDS_IN_USE.get('case_date')},
+            EXTRACT (YEAR from SC3.{FIELDS_IN_USE.get('case_date')}) YEAR,
+            EXTRACT (MONTH from SC3.{FIELDS_IN_USE.get('case_date')}) AS MONTH,
+            SC3.{FIELDS_IN_USE.get('surgery_start_time')},
+            SC3.{FIELDS_IN_USE.get('surgery_end_time')},
+            SC3.{FIELDS_IN_USE.get('surgery_elapsed')},
+            SC3.{FIELDS_IN_USE.get('surgery_type')},
+            SC3.{FIELDS_IN_USE.get('surgeon_id')},
+            SC3.{FIELDS_IN_USE.get('anest_id')},
+            SC3.{FIELDS_IN_USE.get('prim_proc_desc')},
+            SC3.{FIELDS_IN_USE.get('post_op_icu_los')},
+            SC3.{FIELDS_IN_USE.get('sched_site_desc')},
             MAX(CASE
                 WHEN PRE.DI_PREOP_DRAW_DTM IS NOT NULL
                 THEN PRE.DI_PREOP_DRAW_DTM
             END)
             AS DI_PREOP_DRAW_DTM,
             MAX(CASE
-                WHEN PRE.{FIELDS_IN_USE['result_value']} IS NOT NULL
-                THEN PRE.{FIELDS_IN_USE['result_value']}
+                WHEN PRE.{FIELDS_IN_USE.get('result_value')} IS NOT NULL
+                THEN PRE.{FIELDS_IN_USE.get('result_value')}
             END)
             AS PREOP_HEMO,
             MAX(CASE
@@ -786,31 +786,31 @@ def hemoglobin(request):
             END)
             AS DI_POSTOP_DRAW_DTM,
             MAX(CASE
-                WHEN POST.{FIELDS_IN_USE['result_value']} IS NOT NULL
-                THEN POST.{FIELDS_IN_USE['result_value']}
+                WHEN POST.{FIELDS_IN_USE.get('result_value')} IS NOT NULL
+                THEN POST.{FIELDS_IN_USE.get('result_value')}
             END)
             AS POSTOP_HEMO
         FROM
             {TABLES_IN_USE.get('surgery_case')} SC3
         LEFT OUTER JOIN PREOP_HB PRE
-            ON SC3.{FIELDS_IN_USE['case_id']} = PRE.{FIELDS_IN_USE['case_id']}
+            ON SC3.{FIELDS_IN_USE.get('case_id')} = PRE.{FIELDS_IN_USE.get('case_id')}
         LEFT OUTER JOIN POSTOP_HB POST
-            ON SC3.{FIELDS_IN_USE['case_id']} = POST.{FIELDS_IN_USE['case_id']}
-        GROUP BY SC3.{FIELDS_IN_USE['patient_id']},
-            SC3.{FIELDS_IN_USE['case_id']},
-            SC3.{FIELDS_IN_USE['visit_no']},
-            SC3.{FIELDS_IN_USE['case_date']},
-            EXTRACT (YEAR from SC3.{FIELDS_IN_USE['case_date']}),
-            EXTRACT (MONTH from SC3.{FIELDS_IN_USE['case_date']}),
-            SC3.{FIELDS_IN_USE['surgery_start_time']},
-            SC3.{FIELDS_IN_USE['surgery_end_time']},
-            SC3.{FIELDS_IN_USE['surgery_elapsed']},
-            SC3.{FIELDS_IN_USE['surgery_type']},
-            SC3.{FIELDS_IN_USE['surgeon_id']},
-            SC3.{FIELDS_IN_USE['anest_id']},
-            SC3.{FIELDS_IN_USE['prim_proc_desc']},
-            SC3.{FIELDS_IN_USE['post_op_icu_los']},
-            SC3.{FIELDS_IN_USE['sched_site_desc']}
+            ON SC3.{FIELDS_IN_USE.get('case_id')} = POST.{FIELDS_IN_USE.get('case_id')}
+        GROUP BY SC3.{FIELDS_IN_USE.get('patient_id')},
+            SC3.{FIELDS_IN_USE.get('case_id')},
+            SC3.{FIELDS_IN_USE.get('visit_no')},
+            SC3.{FIELDS_IN_USE.get('case_date')},
+            EXTRACT (YEAR from SC3.{FIELDS_IN_USE.get('case_date')}),
+            EXTRACT (MONTH from SC3.{FIELDS_IN_USE.get('case_date')}),
+            SC3.{FIELDS_IN_USE.get('surgery_start_time')},
+            SC3.{FIELDS_IN_USE.get('surgery_end_time')},
+            SC3.{FIELDS_IN_USE.get('surgery_elapsed')},
+            SC3.{FIELDS_IN_USE.get('surgery_type')},
+            SC3.{FIELDS_IN_USE.get('surgeon_id')},
+            SC3.{FIELDS_IN_USE.get('anest_id')},
+            SC3.{FIELDS_IN_USE.get('prim_proc_desc')},
+            SC3.{FIELDS_IN_USE.get('post_op_icu_los')},
+            SC3.{FIELDS_IN_USE.get('sched_site_desc')}
         """
 
         result = execute_sql(command)
