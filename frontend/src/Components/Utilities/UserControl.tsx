@@ -402,7 +402,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 >
                     <Modal.Header>
                         Use the following URL to share your state
-               </Modal.Header>
+                    </Modal.Header>
                     <Modal.Content scrolling>
                         <Message info>Length of URL: {shareUrl.length}</Message>
                         <Segment
@@ -418,8 +418,8 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                             className="copy-clipboard"
                             data-clipboard-text={shareUrl}>
                             <Icon name="copy"></Icon>
-                   Copy
-            </Button>
+                            Copy
+                        </Button>
                     </Modal.Actions>
                 </Modal>
 
@@ -478,18 +478,18 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 <Button.Group>
                     <Button primary disabled={isAtRoot} onClick={actions.goBack}>
                         Undo
-            </Button>
+                    </Button>
                     <Button.Or></Button.Or>
                     <Button secondary disabled={isAtLatest} onClick={actions.goForward}>
                         Redo
-            </Button>
+                    </Button>
                 </Button.Group>
             </Menu.Item>
 
             <Menu.Item>
                 <Button onClick={() => { logoutHandler(); }} >
                     Log Out
-                 </Button>
+                </Button>
 
                 <a href="https://github.com/visdesignlab/Sanguine/issues" target="_blank" rel="noopener noreferrer">
                     <BugButton icon="bug" />
@@ -505,74 +505,78 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         [<Menu.Item>
             <Dropdown
                 placeholder={"Select Aggregation"}
-                selection
+
                 options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
                 onChange={xAxisChangeHandler}
                 value={xSelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>],
         //For #1
         [<Menu.Item>
             <Dropdown
                 placeholder="Select Value to Show"
-                selection
+
                 options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
                 onChange={yAxisChangeHandler}
                 value={ySelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>,
 
         <Menu.Item>
             <Dropdown
                 placeholder="Facet by"
-                selection
+
                 options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
                 onChange={xAxisChangeHandler}
                 value={xSelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>],
         //for #2
         [<Menu.Item>
             <Dropdown
                 placeholder="Select Y-axis Attribute"
-                selection
+
                 options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
                 onChange={yAxisChangeHandler}
                 value={ySelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>,
         <Menu.Item>
             <Dropdown
                 placeholder="Select X-axis Attribute"
-                selection
+
                 options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
                 onChange={xAxisChangeHandler}
                 value={xSelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>],
         //for #3
         [< Menu.Item >
             <Dropdown
                 placeholder="Select Value to Show"
-                selection
                 options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
                 onChange={yAxisChangeHandler}
                 value={ySelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item >,
         <Menu.Item>
             <Dropdown
-                placeholder="Select X-axis Attribute"
-                selection
+                placeholder="Select Aggregation"
                 options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
                 onChange={xAxisChangeHandler}
                 value={xSelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>,
         <Menu.Item>
             <Dropdown
                 placeholder="Outcome/Intervention Comparison (Optional)"
-                selection
                 clearable
                 options={OutcomeType}
                 onChange={outcomeComparisonHandler}
@@ -583,21 +587,20 @@ const UserControl: FC<Props> = ({ store }: Props) => {
         [<Menu.Item>
             <Dropdown
                 placeholder="Select Value to Show"
-                selection
                 options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
                 onChange={yAxisChangeHandler}
                 value={ySelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>,
-
         <Menu.Item>
             <Dropdown
-                placeholder="Select X-axis Attribute"
-                selection
+                placeholder="Select Aggregation"
                 options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
                 onChange={xAxisChangeHandler}
                 value={xSelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>,
         <Menu.Item>
             <SemanticDatePicker
@@ -605,22 +608,25 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 minDate={rawDateRange[0] as any}
                 maxDate={rawDateRange[1] as any}
                 onChange={interventionHandler} />
+            <RequirementP>*</RequirementP>
         </Menu.Item>
         ],
         //for #5
         [<Menu.Item>
             <Dropdown placeholder="Select Value to Compare"
-                selection
+
                 options={addOptions[5][0]}
                 onChange={yAxisChangeHandler}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>,
         <Menu.Item>
             <Dropdown placeholder="Select Aggregation"
-                selection
+
                 options={addOptions[5][1]}
                 onChange={xAxisChangeHandler}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>]
     ]
 
@@ -645,6 +651,11 @@ const UserControl: FC<Props> = ({ store }: Props) => {
 
 const BugButton = styled(Button)`
     &&&&&{margin-left:5px!important;}
+`
+
+const RequirementP = styled(`p`)`
+    color:red;
+    font-size:large
 `
 
 export default inject('store')(observer(UserControl))
