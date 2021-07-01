@@ -10,6 +10,7 @@ import { SingleCasePoint, defaultState } from './Interfaces/ApplicationState';
 import { surgeryTypeArray } from './PresetsProfile';
 import { useIdleTimer } from 'react-idle-timer';
 import { whoamiAPICall } from './HelperFunctions';
+import { env } from 'process';
 
 interface OwnProps {
     store?: Store;
@@ -31,7 +32,9 @@ const App: FC<Props> = ({ store }: Props) => {
     }
 
     const handleOnAction = (event: any) => {
-        whoamiAPICall()
+        if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
+            whoamiAPICall()
+        }
     }
 
     //the two const variables were removed to remove never used variables.
