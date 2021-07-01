@@ -27,15 +27,18 @@ const App: FC<Props> = ({ store }: Props) => {
     const handleOnIdle = (event: any) => {
         // On idle log the user out
         window.location.replace(`${process.env.REACT_APP_QUERY_URL}accounts/logout`);
+
     }
 
     const handleOnAction = (event: any) => {
         whoamiAPICall()
     }
 
-    const { getRemainingTime, getLastActiveTime } = useIdleTimer({
+    //the two const variables were removed to remove never used variables.
+    //please check if it works fine.
+    useIdleTimer({
         //the idle timer setting
-        timeout: 1000 * 60 * 30,
+        timeout: 1000 * 60 * 0.5,
         onIdle: handleOnIdle,
         onAction: handleOnAction,
         events: ["mousedown", "keydown"],

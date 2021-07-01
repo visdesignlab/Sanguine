@@ -14,7 +14,6 @@ import {
     axisBottom,
     interpolateGreys,
     range,
-    interpolateReds,
     timeFormat
 } from "d3";
 import {
@@ -27,7 +26,7 @@ import {
 //import SingleHeatPlot from "./SingleHeatPlot";
 
 //import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
-import { third_gray, preop_color, postop_color, greyScaleRange } from "../../PresetsProfile";
+import { preop_color, postop_color, greyScaleRange } from "../../PresetsProfile";
 import SingleHeatCompare from "./SingleHeatCompare";
 import InterventionExtraPairGenerator from "../Utilities/InterventionExtraPairGenerator";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";

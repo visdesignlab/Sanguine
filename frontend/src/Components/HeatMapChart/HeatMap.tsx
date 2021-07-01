@@ -13,8 +13,7 @@ import {
     axisLeft,
     axisBottom,
     interpolateGreys,
-    range,
-    interpolateReds
+    range
 } from "d3";
 import {
     HeatMapDataPoint, ExtraPairPoint
@@ -31,7 +30,7 @@ import {
 
 import SingleHeatPlot from "./SingleHeatPlot";
 import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
-import { third_gray, greyScaleRange } from "../../PresetsProfile";
+import { greyScaleRange } from "../../PresetsProfile";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 import SingleColorLegend from "../Utilities/SingleColorLegend";
 import DualColorLegend from "../Utilities/DualColorLegend";

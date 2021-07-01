@@ -8,8 +8,7 @@ import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import 'react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css';
 import { blood_red, CompareSavingValuesOptions, OutcomeType } from "../../PresetsProfile";
 import {
-    barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions,
-    presetOptions, dumbbellValueOptions, scatterYOptions, typeDiction
+    barChartValuesOptions, dumbbellFacetOptions, barChartAggregationOptions, dumbbellValueOptions, scatterYOptions, typeDiction
 } from "../../PresetsProfile";
 import ClipboardJS from 'clipboard';
 import { getCookie } from "../../Interfaces/UserManagement";
