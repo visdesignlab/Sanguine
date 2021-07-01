@@ -36,11 +36,10 @@ const App: FC<Props> = ({ store }: Props) => {
         }
     }
 
-    //the two const variables were removed to remove never used variables.
-    //please check if it works fine.
+
     useIdleTimer({
-        //the idle timer setting
-        timeout: 1000 * 60 * 1,
+        //the idle timer setting, 120 mins now
+        timeout: 1000 * 60 * 120,
         onIdle: handleOnIdle,
         onAction: handleOnAction,
         events: ["mousedown", "keydown"],
