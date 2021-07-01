@@ -38,7 +38,7 @@ const App: FC<Props> = ({ store }: Props) => {
 
 
     useIdleTimer({
-        //the idle timer setting, 120 mins now
+        //the idle timer setting, 120 mins now.
         timeout: 1000 * 60 * 120,
         onIdle: handleOnIdle,
         onAction: handleOnAction,
