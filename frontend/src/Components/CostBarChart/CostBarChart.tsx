@@ -23,6 +23,7 @@ import {
     greyScaleRange,
     caseRectWidth,
     basic_gray,
+    AxisFontSize,
 } from "../../PresetsProfile"
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
 import SingleStackedBar from "./SingleStackedBar";
@@ -118,7 +119,7 @@ const CostBarChart: FC<Props> = ({ maximumCost, store, maxSavedNegative, aggrega
         .attr("x", dimensionWidth * 0.5 + currentOffset.margin)
         .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("alignment-baseline", "hanging")
-        .attr("font-size", "11px")
+        .attr("font-size", AxisFontSize)
         .attr("text-anchor", "middle")
         .text(costMode ? "Per Case Cost in Dollars" : "Units per Case");
 
@@ -127,7 +128,7 @@ const CostBarChart: FC<Props> = ({ maximumCost, store, maxSavedNegative, aggrega
         .select(".y-label")
         .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("x", currentOffset.left - 55)
-        .attr("font-size", "11px")
+        .attr("font-size", AxisFontSize)
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
         .text(

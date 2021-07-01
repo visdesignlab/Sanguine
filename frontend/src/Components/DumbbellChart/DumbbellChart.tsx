@@ -19,7 +19,7 @@ import {
     median,
 } from "d3";
 import { DumbbellDataPoint } from "../../Interfaces/ApplicationState";
-import { offset, AcronymDictionary, minimumWidthScale, HGB_LOW_STANDARD, HGB_HIGH_STANDARD } from "../../PresetsProfile"
+import { offset, AcronymDictionary, minimumWidthScale, HGB_LOW_STANDARD, HGB_HIGH_STANDARD, AxisFontSize } from "../../PresetsProfile"
 import CustomizedAxisOrdinal from "../Utilities/CustomizedAxisOrdinal";
 import { preop_color, basic_gray, highlight_orange, postop_color } from "../../PresetsProfile"
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
@@ -267,7 +267,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
         .attr("display", null)
         .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("x", 0.5 * (dimensionWidth))
-        .attr("font-size", "11px")
+        .attr("font-size", AxisFontSize)
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
         // .attr("transform", `translate(0 ,${currentOffset.top}`)
@@ -288,7 +288,7 @@ const DumbbellChart: FC<Props> = ({ showingAttr, sortMode, valueToVisualize, dim
         .attr("y", 0)
         .attr("transform", "rotate(-90)")
         .attr("alignment-baseline", "hanging")
-        .attr("font-size", "11px")
+        .attr("font-size", AxisFontSize)
         .attr("text-anchor", "middle")
         .text("Hemoglobin Value");
 

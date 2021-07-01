@@ -9,7 +9,7 @@ import styled from "styled-components";
 import { inject, observer } from "mobx-react";
 import { actions } from "../..";
 import { ScatterDataPoint, SingleCasePoint } from "../../Interfaces/ApplicationState";
-import { offset, AcronymDictionary, third_gray } from "../../PresetsProfile"
+import { offset, AcronymDictionary, third_gray, AxisFontSize } from "../../PresetsProfile"
 import { select, scaleLinear, axisLeft, axisBottom, brush, event, scaleBand, range, deviation, mean } from "d3";
 
 //import CustomizedAxis from "../Utilities/CustomizedAxis";
@@ -155,7 +155,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         .attr("x", -0.5 * height)
         .attr("y", currentOffset.margin)
         .attr("transform", "rotate(-90)")
-        .attr("font-size", "11px")
+        .attr("font-size", AxisFontSize)
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
         // .attr("transform", `translate(0 ,${currentOffset.top}`)
@@ -178,7 +178,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
         .attr("y", height - currentOffset.bottom + 20)
         .attr("x", 0.5 * width + currentOffset.margin)
         .attr("alignment-baseline", "hanging")
-        .attr("font-size", "11px")
+        .attr("font-size", AxisFontSize)
         .attr("text-anchor", "middle")
         .text(AcronymDictionary[xAxisName] ? AcronymDictionary[xAxisName] : xAxisName);
 

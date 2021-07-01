@@ -14,20 +14,19 @@ import {
     axisBottom,
     interpolateGreys,
     range,
-    interpolateReds,
     timeFormat
 } from "d3";
 import {
     ComparisonDataPoint, ExtraPairInterventionPoint
 } from "../../Interfaces/ApplicationState";
 import {
-    AcronymDictionary, BloodProductCap, offset, CELL_SAVER_TICKS, extraPairWidth, extraPairPadding, caseRectWidth, differentialSquareWidth,
+    AcronymDictionary, BloodProductCap, offset, CELL_SAVER_TICKS, extraPairWidth, extraPairPadding, caseRectWidth, differentialSquareWidth, AxisFontSize, LegendFontSize,
 } from "../../PresetsProfile"
 
 //import SingleHeatPlot from "./SingleHeatPlot";
 
 //import ExtraPairPlotGenerator from "../Utilities/ExtraPairPlotGenerator";
-import { third_gray, preop_color, postop_color, greyScaleRange } from "../../PresetsProfile";
+import { preop_color, postop_color, greyScaleRange } from "../../PresetsProfile";
 import SingleHeatCompare from "./SingleHeatCompare";
 import InterventionExtraPairGenerator from "../Utilities/InterventionExtraPairGenerator";
 import { stateUpdateWrapperUseJSON } from "../../HelperFunctions";
@@ -219,7 +218,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         .attr("x", (dimensionWidth - extraPairTotalWidth) * 0.5)
         .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("alignment-baseline", "hanging")
-        .attr("font-size", "11px")
+        .attr("font-size", AxisFontSize)
         .attr("text-anchor", "middle")
         .attr("transform", `translate(${extraPairTotalWidth},0)`)
         .text(() => {
@@ -233,7 +232,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
         .select(".y-label")
         .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("x", currentOffset.left - 55)
-        .attr("font-size", "11px")
+        .attr("font-size", AxisFontSize)
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
         .attr("transform", `translate(${extraPairTotalWidth},0)`)
@@ -411,7 +410,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                         y={6}
                         alignmentBaseline={"middle"}
                         textAnchor={"start"}
-                        fontSize="11px"
+                        fontSize={LegendFontSize}
                         fill={"black"}>
                         {` ${interventionDate ? `Pre Intervene` : `True`} ${preTotal}/${preTotal + postTotal}`}
                     </text>
@@ -420,7 +419,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
                         y={18}
                         alignmentBaseline={"middle"}
                         textAnchor={"start"}
-                        fontSize="11px"
+                        fontSize={LegendFontSize}
                         fill={"black"}>
                         {`${interventionDate ? `Post Intervene` : `False`} ${postTotal}/${preTotal + postTotal}`}
                     </text>
