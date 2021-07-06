@@ -80,7 +80,7 @@ const SingleStackedBar: FC<Props> = ({ howToTransform, dataPoint, showPotential,
             )
             const costSaved = dataPoint.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - dataPoint.dataArray[4]
             outputElements.push(
-                <Popup content={`Potential Saving per case $${format("$.2f")(costSaved)}`}
+                <Popup content={`Potential Saving per case ${format("$.2f")(costSaved)}`}
                     key={dataPoint.aggregateAttribute + 'CELL_SAVING'}
                     trigger={<rect x={valueScale()(-costSaved)}
                         transform={howToTransform}
