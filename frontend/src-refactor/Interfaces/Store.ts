@@ -1,12 +1,14 @@
 
-import { initProvenance, Provenance, createAction } from '@visdesignlab/trrack'
+import { initProvenance, Provenance } from '@visdesignlab/trrack'
 import { createContext } from 'react';
 import { defaultState } from './DefaultState';
+import { ProjectConfigStore } from './ProjectConfigStore';
 import { ActionEvents } from './Types/EventTypes';
 import { ApplicationState } from './Types/StateTypes';
 
-export class ProjectStore {
+export class RootStore {
     provenance: Provenance<ApplicationState, ActionEvents>;
+    configStore: ProjectConfigStore;
 
     constructor() {
         this.provenance = initProvenance<ApplicationState, ActionEvents>(
@@ -15,13 +17,15 @@ export class ProjectStore {
             { loadFromUrl: true }
         )
         this.provenance.done();
+        this.configStore = new ProjectConfigStore(this)
     }
 
-    get State() {
+    get state() {
         return this.provenance.getState(this.provenance.current)
     }
 
 
 }
-
-//we can seperate out actions into categories 
+const Store = createContext(new RootStore())
+export default Store;
+//we can seperate out actions into categories
