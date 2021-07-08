@@ -4,12 +4,21 @@ import { LayoutElement } from "./Types/LayoutTypes";
 
 export class ProjectConfigStore {
     rootStore: RootStore;
-
+    private _isLoggedIn: boolean;
     constructor(rootstore: RootStore) {
         this.rootStore = rootstore;
+        this._isLoggedIn = false;
     }
     get provenance() {
         return this.rootStore.provenance
+    }
+
+    set isLoggedIn(input: boolean) {
+        this._isLoggedIn = input
+    }
+
+    get isLoggedIn() {
+        return this._isLoggedIn;
     }
 
     changeSurgeryUrgencySelection(input: [boolean, boolean, boolean]) {

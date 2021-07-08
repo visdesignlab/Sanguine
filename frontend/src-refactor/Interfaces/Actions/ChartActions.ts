@@ -3,7 +3,7 @@ import { ActionEvents } from "../Types/EventTypes";
 import { LayoutElement } from "../Types/LayoutTypes";
 import { ApplicationState } from "../Types/StateTypes";
 
-const addExtraPair = createAction<ApplicationState, [string, string]>((state, chartID, newExtraPair) => {
+export const addExtraPair = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, newExtraPair) => {
     state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
         if (d.i === chartID && d.extraPair) {
             if (!d.extraPair.includes(newExtraPair)) {
@@ -16,7 +16,7 @@ const addExtraPair = createAction<ApplicationState, [string, string]>((state, ch
     })
 }).setLabel("addExtraPair")
 
-const removeExtraPair = createAction<ApplicationState, [string, string]>((state, chartID, removingPairName) => {
+export const removeExtraPair = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, removingPairName) => {
     state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
         if (d.i === chartID && d.extraPair) {
             let originalArray = JSON.parse(d.extraPair);
@@ -30,11 +30,12 @@ const removeExtraPair = createAction<ApplicationState, [string, string]>((state,
     })
 }).setLabel("removeExtraPair")
 
-const removeChart = createAction<ApplicationState, [string], ActionEvents>((state, indexToRemove) => {
+//change the case num when this changes in store instead of here
+export const removeChart = createAction<ApplicationState, [string], ActionEvents>((state, indexToRemove) => {
     state.layoutArray = state.layoutArray.filter(d => d.i !== indexToRemove);
 }).setLabel("removeChart")
 
-const changeNotation = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, newNotation) => {
+export const changeNotation = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, newNotation) => {
     state.layoutArray = state.layoutArray.map(d => {
         if (d.i === chartID) {
             d.notation = newNotation;
@@ -43,12 +44,12 @@ const changeNotation = createAction<ApplicationState, [string, string], ActionEv
     })
 }).setLabel("changeNotation")
 
-const addNewChart = createAction<ApplicationState, [LayoutElement], ActionEvents>((state: ApplicationState, input) => {
+export const addNewChart = createAction<ApplicationState, [LayoutElement], ActionEvents>((state: ApplicationState, input) => {
     state.layoutArray.push(input)
     state.nextAddingIndex += 1
 }).setLabel("AddChart")
 
-const onLayoutChange = createAction<ApplicationState, [any], ActionEvents>((state, data) => {
+export const onLayoutChange = createAction<ApplicationState, [any], ActionEvents>((state, data) => {
     data.forEach((gridLayout: any) => {
         let match = state.layoutArray.filter(d => d.i === gridLayout.i)[0]
         match.w = gridLayout.w;

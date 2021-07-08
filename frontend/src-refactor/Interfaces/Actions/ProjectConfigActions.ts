@@ -9,9 +9,6 @@ export const loadPreset = createAction<ApplicationState, [LayoutElement[]], Acti
     state.layoutArray = input
 }).setLabel("LoadPreset")
 
-//change the case num when this changes in store instead of here
-
-
 export const toggleShowZero = createAction<ApplicationState, [boolean], ActionEvents>((state, showZero) => {
     state.showZero = showZero;
 }).setLabel("toggleShowZero")
