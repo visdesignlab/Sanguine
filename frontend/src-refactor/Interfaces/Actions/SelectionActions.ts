@@ -1,14 +1,15 @@
 import { createAction } from "@visdesignlab/trrack";
 import { SingleCasePoint } from "../Types/DataTypes";
+import { ActionEvents } from "../Types/EventTypes";
 import { ApplicationState } from "../Types/StateTypes";
 
 
 
-const updateSelectedPatientGroup = createAction<ApplicationState, [SingleCasePoint[]]>((state, caseList) => {
+export const updateSelectedPatientGroup = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
     state.currentSelectPatientGroup = caseList;
 }).setLabel("updatePatientGroup")
 
-const updateProcedureSelection = createAction<ApplicationState, [string]>((state, newProcedureSelection) => {
+export const updateProcedureSelection = createAction<ApplicationState, [string], ActionEvents>((state, newProcedureSelection) => {
     if (state.proceduresSelection.includes(newProcedureSelection)) {
         state.proceduresSelection = state.proceduresSelection.filter(d => d !== newProcedureSelection)
     }
@@ -18,13 +19,13 @@ const updateProcedureSelection = createAction<ApplicationState, [string]>((state
 }).setLabel("updateProcedureSelection")
 
 //TODO rethink ways to organize selections of patient brush, patient select, surgeon group
-const updateBrushPatient = createAction<ApplicationState, []>(() => {
+const updateBrushPatient = createAction<ApplicationState, [], ActionEvents>(() => {
     //todo
 })
-const selectSet = createAction<ApplicationState, []>(() => {
+const selectSet = createAction<ApplicationState, [], ActionEvents>(() => {
     //todo
 })
-const clearSet = createAction<ApplicationState, []>(() => {
+const clearSet = createAction<ApplicationState, [], ActionEvents>(() => {
     //todo
 })
 
