@@ -39,7 +39,7 @@ const App: FC = () => {
         onAction: handleOnAction,
         events: ["mousedown", "keydown"],
         throttle: 1000 * 60
-    })
+    }) //!
 
     async function cacheHemoData() {
         fetch(`${process.env.REACT_APP_QUERY_URL}hemoglobin`)
