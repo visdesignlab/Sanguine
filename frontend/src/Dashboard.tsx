@@ -9,6 +9,6 @@ type Props = {
 
 const Dashboard: FC<Props> = ({ hemoData }: Props) => {
     return <><DataRetrieval /></>
-    //a
+
 }
 export default observer(Dashboard)
