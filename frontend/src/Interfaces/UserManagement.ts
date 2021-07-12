@@ -1,3 +1,6 @@
+import { useContext } from "react";
+import Store, { RootStore } from "./Store";
+
 export const getUser = () => {
     const userStr = sessionStorage.getItem('user');
     if (userStr) return JSON.parse(userStr);
@@ -33,4 +36,23 @@ export function getCookie(name: string) {
         }
     }
     return cookieValue;
+}
+
+export const whoamiAPICall = (store: RootStore) => {
+
+    fetch(`${process.env.REACT_APP_QUERY_URL}whoami`, {
+        method: 'GET',
+        credentials: "include",
+        headers: {
+            "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
+            "Access-Control-Allow-Credentials": "true",
+        },
+    }).then(response => {
+        if (response.status === 200) {
+            store.configStore.isLoggedIn = true;
+        } else {
+            store.configStore.isLoggedIn = false;
+            window.location.replace(`${process.env.REACT_APP_QUERY_URL}accounts/login/`);
+        }
+    })
 }

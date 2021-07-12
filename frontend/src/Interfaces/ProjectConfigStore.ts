@@ -5,9 +5,14 @@ import { LayoutElement } from "./Types/LayoutTypes";
 export class ProjectConfigStore {
     rootStore: RootStore;
     private _isLoggedIn: boolean;
+    private _dataLoading: boolean;
+    private _dataLoadingFailed: boolean;
+
     constructor(rootstore: RootStore) {
         this.rootStore = rootstore;
         this._isLoggedIn = false;
+        this._dataLoading = true;
+        this._dataLoadingFailed = false;
     }
     get provenance() {
         return this.rootStore.provenance
@@ -19,6 +24,20 @@ export class ProjectConfigStore {
 
     get isLoggedIn() {
         return this._isLoggedIn;
+    }
+    set dataLoading(input: boolean) {
+        this._dataLoading = input
+    }
+
+    get dataLoading() {
+        return this._dataLoading;
+    }
+    set dataLoadingFailed(input: boolean) {
+        this._dataLoadingFailed = input
+    }
+
+    get dataLoadingFailed() {
+        return this._dataLoadingFailed;
     }
 
     changeSurgeryUrgencySelection(input: [boolean, boolean, boolean]) {
