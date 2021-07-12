@@ -1,68 +1,37 @@
-import { observable, computed } from 'mobx'
-import {
-    defaultState,
-    LayoutElement,
-    SelectSet,
-    SingleCasePoint
-} from "./ApplicationState";
-import { timeFormat } from 'd3';
 
-export default class Store {
-    @observable isAtRoot: boolean = true;
-    @observable isAtLatest: boolean = true;
-    //  @observable currentSelectedChart: string = defaultState.currentSelectedChart;
-    @observable layoutArray: LayoutElement[] = defaultState.layoutArray;
-    // @observable perCaseSelected: boolean = defaultState.perCaseSelected;
-    @observable showZero: boolean = defaultState.showZero;
-    //@observable yearRange: number[] = defaultState.yearRange;
+import { initProvenance, Provenance } from '@visdesignlab/trrack'
+import { createContext } from 'react';
+import { ChartStore } from './ChartStore';
+import { defaultState } from './DefaultState';
+import { ProjectConfigStore } from './ProjectConfigStore';
+import { SelectionStore } from './SelectionStore';
+import { ActionEvents } from './Types/EventTypes';
+import { ApplicationState } from './Types/StateTypes';
 
-    @observable rawDateRange: number[] = defaultState.rawDateRange;
+export class RootStore {
+    provenance: Provenance<ApplicationState, ActionEvents>;
+    configStore: ProjectConfigStore;
+    selectionStore: SelectionStore;
+    chartStore: ChartStore;
 
-    @observable procedureTypeSelection: [boolean, boolean, boolean] = defaultState.procedureTypeSelection;
-    @observable proceduresSelection: string[] = defaultState.proceduresSelection;
-    // @computed get proceduresSelection() {
-    //   return (JSON.parse(this.rawproceduresSelection) as string[])
-    // }
-    @observable outcomesSelection: string = defaultState.outcomesSelection;
-
-    @observable currentBrushedPatientGroup: SingleCasePoint[] = defaultState.currentBrushedPatientGroup;
-
-    @computed get currentSelectPatientGroupIDs() {
-        let ids = this.currentSelectPatientGroup.map(d => d.CASE_ID);
-        return ids
+    constructor() {
+        this.provenance = initProvenance<ApplicationState, ActionEvents>(
+            defaultState,
+            //Is this correct way to allow load from url?
+            { loadFromUrl: true }
+        )
+        this.provenance.done();
+        this.configStore = new ProjectConfigStore(this);
+        this.chartStore = new ChartStore(this);
+        this.selectionStore = new SelectionStore(this);
     }
 
-    @observable totalAggregatedCaseCount: number = defaultState.totalAggregatedCaseCount;
-    @observable totalIndividualCaseCount: number = defaultState.totalIndividualCaseCount
-
-    // @observable dumbbellSorted: boolean = defaultState.dumbbellSorted;
-    @observable currentSelectSet: SelectSet[] = defaultState.currentSelectSet;
-    // @observable currentSelectPatient: SingleCasePoint | null = defaultState.currentSelectPatient;
-    // @computed get actualYearRange() {
-    //   return [this.yearRange[0] + 2014, this.yearRange[1] + 2014]
-    // }
-    @computed get dateRange() {
-        return [timeFormat("%d-%b-%Y")(new Date(this.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(this.rawDateRange[1]))]
-
+    get state() {
+        return this.provenance.getState(this.provenance.current)
     }
-    // @computed get noProcedureTypeSelected(){
-    //     return !(this.procedureTypeSelection[0] || this.procedureTypeSelection[1] || this.procedureTypeSelection[2])
-    // }
 
-    @observable nextAddingIndex: number = defaultState.nextAddingIndex;
-    @observable currentOutputFilterSet: SelectSet[] = defaultState.currentOutputFilterSet;
-
-    @observable currentSelectPatientGroup: SingleCasePoint[] = defaultState.currentSelectPatientGroup;
-
-    @observable isLoggedIn: boolean = process.env.REACT_APP_REQUIRE_LOGIN === "true" ? false : true;
-    @observable previewMode: boolean = false;
-    @observable loadingModalOpen: boolean = true;
-    @observable dataLoadingFailed: boolean = false;
-    @observable mainCompWidth: number = 1300
-    // @observable csrftoken: string | null = ""
-    @observable BloodProductCost: any = defaultState.BloodProductCost;
 
 }
-
-
-export const store = new Store()
+const Store = createContext(new RootStore())
+export default Store;
+//we can seperate out actions into categories
