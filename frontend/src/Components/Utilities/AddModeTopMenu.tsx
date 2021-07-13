@@ -7,6 +7,7 @@ import { useContext } from "react";
 import Store from "../../Interfaces/Store";
 import { typeDiction } from "../../Presets/Constants";
 import { LayoutElement } from "../../Interfaces/Types/LayoutTypes";
+import { RequirementP } from "../../Presets/StyledComponents";
 
 
 type Props = { addingChartType: number }
@@ -60,7 +61,8 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
     }
 
     const checkValidInput = () => {
-        return (xAggreSelection && yValueSelection && addingChartType > 0) || (xAggreSelection && addingChartType === 0)
+
+        return (xAggreSelection.length > 0 && yValueSelection.length > 0 && addingChartType > 0) || (xAggreSelection.length > 0 && addingChartType === 0)
     }
 
     const confirmChartAddHandler = () => {
@@ -103,99 +105,94 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         [<Menu.Item>
             <Dropdown
                 placeholder={"Select Aggregation"}
-                selection
                 options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
                 onChange={(xAggreSelectionChangeHandler)}
-                value={xAggreSelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>],
+
         //For #1 Dumbbell Chart
+
         [<Menu.Item>
             <Dropdown
                 placeholder="Select Value to Show"
-                selection
                 options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
                 onChange={yValueSelectionChangeHandler}
-                value={yValueSelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>,
-
         <Menu.Item>
             <Dropdown
                 placeholder="Facet by"
-                selection
                 options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
                 onChange={xAggreSelectionChangeHandler}
-                value={xAggreSelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>],
+
         //for #2 Scatter Plot
+
         [<Menu.Item>
             <Dropdown
                 placeholder="Select Y-axis Attribute"
-                selection
                 options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
                 onChange={yValueSelectionChangeHandler}
-                value={yValueSelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>,
         <Menu.Item>
             <Dropdown
                 placeholder="Select X-axis Attribute"
-                selection
                 options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
                 onChange={xAggreSelectionChangeHandler}
-                value={xAggreSelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>],
+
         //for #3 Heat Map
+
         [< Menu.Item >
             <Dropdown
                 placeholder="Select Value to Show"
-                selection
                 options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
                 onChange={yValueSelectionChangeHandler}
-                value={yValueSelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item >,
         <Menu.Item>
             <Dropdown
                 placeholder="Select X-axis Attribute"
-                selection
                 options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
                 onChange={xAggreSelectionChangeHandler}
-                value={xAggreSelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>,
         <Menu.Item>
             <Dropdown
                 placeholder="Outcome/Intervention Comparison (Optional)"
-                selection
                 clearable
                 options={OutcomeOptions}
                 onChange={outcomeComparisonHandler}
-                value={outcomeComparisonSelection}
             />
         </Menu.Item>],
+
         //For #4 Intervention Plot
+
         [<Menu.Item>
             <Dropdown
                 placeholder="Select Value to Show"
-                selection
                 options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
                 onChange={yValueSelectionChangeHandler}
-                value={yValueSelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>,
-
         <Menu.Item>
             <Dropdown
                 placeholder="Select X-axis Attribute"
-                selection
                 options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
                 onChange={xAggreSelectionChangeHandler}
-                value={xAggreSelection}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>,
         <Menu.Item>
             <SemanticDatePicker
@@ -203,21 +200,24 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                 minDate={store.state.rawDateRange[0] as any}
                 maxDate={store.state.rawDateRange[1] as any}
                 onChange={interventionHandler} />
+            <RequirementP>*</RequirementP>
         </Menu.Item>],
+
         //for #5 Compare Cost Chart
+
         [<Menu.Item>
             <Dropdown placeholder="Select Value to Compare"
-                selection
                 options={addOptions[5][0]}
                 onChange={yValueSelectionChangeHandler}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>,
         <Menu.Item>
             <Dropdown placeholder="Select Aggregation"
-                selection
                 options={addOptions[5][1]}
                 onChange={xAggreSelectionChangeHandler}
             />
+            <RequirementP>*</RequirementP>
         </Menu.Item>]
     ]
 
@@ -227,6 +227,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
             <Button.Group>
                 <Button
                     positive
+                    disabled={!checkValidInput()}
                     onClick={confirmChartAddHandler}
                     content={"Confirm"}
                 />

@@ -9,3 +9,8 @@ export const LayoutDiv = styled.div`
 export const SpecialPaddingColumn = styled(Grid.Column)`
   &&&&&{padding-left:5px;}
 `;
+
+export const RequirementP = styled(`p`)`
+    color:red;
+    font-size:large
+`
