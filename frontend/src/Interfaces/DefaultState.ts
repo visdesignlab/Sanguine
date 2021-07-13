@@ -6,7 +6,7 @@ today.setDate(today.getDate() + 1)
 
 export const defaultState: ApplicationState = {
     layoutArray: [],
-    procedureTypeSelection: [true, true, true],
+    surgeryUrgencySelection: [true, true, true],
     outcomesSelection: "",
     // currentSelectedChart: "-1",
     rawDateRange: [new Date(2014, 0, 1).getTime(), today.getTime()],

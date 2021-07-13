@@ -17,8 +17,8 @@ export class RootStore {
     private _isAtLatest: boolean;
 
     constructor() {
-        this._isAtLatest = false;
-        this._isAtRoot = false;
+        this._isAtLatest = true;
+        this._isAtRoot = true;
 
         this.provenance = initProvenance<ApplicationState, ActionEvents>(
             defaultState,

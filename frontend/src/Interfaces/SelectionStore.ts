@@ -19,8 +19,8 @@ export class SelectionStore {
         this.provenance.apply(updateSelectedPatientGroup(caseList))
     }
 
-    updateProcedureSelection(newProcedures: string) {
-        this.provenance.apply(updateProcedureSelection(newProcedures))
+    updateProcedureSelection(newProcedures: string, removing: boolean) {
+        this.provenance.apply(updateProcedureSelection(newProcedures, removing))
     }
 
 
