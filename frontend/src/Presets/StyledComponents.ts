@@ -1,7 +1,7 @@
 import { Button, Grid, List } from "semantic-ui-react";
 import styled from "styled-components";
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
-import { postop_color } from "./Constants";
+import { postop_color, third_gray } from "./Constants";
 
 export const LayoutDiv = styled.div`
   width: 100vw;
@@ -64,6 +64,7 @@ export const SurgeryForeignObj = styled.foreignObject`
     width:100%;
   }
 `
+
 interface SurgeryListProps {
     isSelected: boolean;
 }
@@ -78,4 +79,16 @@ export const SurgeryListComp = styled(List.Item) <SurgeryListProps>`
 
 export const LeftToolBarListItem = styled(List.Item)`
   text-align: left;
+`
+
+interface WelcomeTextProps {
+    show: boolean;
+}
+
+export const WelcomeText = styled(`text`) < WelcomeTextProps>`
+    display:${props => props.show ? "none" : "block"};
+    font-size:xxx-large;
+    fill:${third_gray};
+    opacity:0.25;
+    margin:20px;
 `
