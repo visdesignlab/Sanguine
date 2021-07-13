@@ -70,8 +70,8 @@ interface SurgeryListProps {
 
 export const SurgeryListComp = styled(List.Item) <SurgeryListProps>`
   background:${props => props.isSelected ? "#ecbe8d" : 'none'};
-  cursor: pointer
+  cursor: pointer;
   &:hover{
-    background:#faeee1
+    background:#faeee1;
   }
 `
