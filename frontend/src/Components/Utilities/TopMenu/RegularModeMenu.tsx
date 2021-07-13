@@ -3,8 +3,10 @@ import { observer } from "mobx-react";
 import { useContext, useState } from "react";
 import { FC } from "react";
 import { Menu, Image, Dropdown, Button } from "semantic-ui-react";
-import Store from "../../Interfaces/Store";
-import { blood_red } from "../../Presets/Constants";
+import Store from "../../../Interfaces/Store";
+import { logoutHandler } from "../../../Interfaces/UserManagement";
+import { blood_red } from "../../../Presets/Constants";
+import { BugButton } from "../../../Presets/StyledComponents";
 import AddModeTopMenu from "./AddModeTopMenu";
 import UndoRedoButtons from "./UndoRedoButtons";
 
@@ -99,6 +101,16 @@ const RegularModeMenu: FC = () => {
         </Menu.Item>
         <Menu.Item>
             <UndoRedoButtons />
+        </Menu.Item>
+        <Menu.Item>
+            <Button onClick={() => { logoutHandler() }} >
+                Log Out
+            </Button>
+
+            <a href="https://github.com/visdesignlab/Sanguine/issues" target="_blank" rel="noopener noreferrer">
+                <BugButton icon="bug" />
+            </a>
+
         </Menu.Item>
     </Menu>)
 

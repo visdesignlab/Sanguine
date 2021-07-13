@@ -10,17 +10,18 @@ import Store from "./Interfaces/Store"
 import { SingleCasePoint } from "./Interfaces/Types/DataTypes"
 import { logoutHandler, whoamiAPICall } from "./Interfaces/UserManagement"
 import { SurgeryTypeArray } from "./Presets/DataDict"
+import './App.css'
 
 const App: FC = () => {
     const store = useContext(Store);
     const [hemoData, setHemoData] = useState<SingleCasePoint[]>([])
 
     useEffect(() => {
-        whoamiAPICall(store);
-        if (store.configStore.isLoggedIn) {
+        if (store.configStore.isLoggedIn && hemoData.length === 0) {
             //this need to also be checked to only do once. 
             cacheHemoData();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [store.configStore.isLoggedIn])
 
     const handleOnIdle = (event: any) => {
@@ -29,7 +30,9 @@ const App: FC = () => {
     }
 
     const handleOnAction = (event: any) => {
-        whoamiAPICall(store)
+        if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
+            whoamiAPICall(store)
+        }
     }
 
     useIdleTimer({

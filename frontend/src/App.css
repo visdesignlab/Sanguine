@@ -1,0 +1,55 @@
+
+
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+}
+
+#title{
+  color:black;
+}
+
+.App-link {
+  color: #09d3ac;
+}
+
+/* .lineup>div>div{
+  flex:1 1 auto;
+} 
+
+.lineup>div{
+  display:flex;
+  height:800px
+} */
+
+#lineup-wrapper{
+/* display:flex; */
+  height:800px
+}
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+
+.tooltiptext {
+  visibility: hidden;
+  width: 170px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  /* Position the tooltip */
+  position: absolute;
+  z-index: 1;
+  opacity: 0.7;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+

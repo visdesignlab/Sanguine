@@ -15,7 +15,7 @@ export class ProjectConfigStore {
     constructor(rootstore: RootStore) {
         this.rootStore = rootstore;
         makeAutoObservable(this)
-        this._isLoggedIn = false;
+        this._isLoggedIn = !(process.env.REACT_APP_REQUIRE_LOGIN === "true");
         //TODO don't forget to change this;
         this._dataLoading = false;
         this._dataLoadingFailed = false;

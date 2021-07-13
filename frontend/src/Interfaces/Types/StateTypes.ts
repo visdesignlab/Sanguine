@@ -6,7 +6,7 @@ export type ApplicationState = {
     outcomesSelection: string;
     rawDateRange: number[];
     proceduresSelection: string[];
-    procedureTypeSelection: [boolean, boolean, boolean];
+    surgeryUrgencySelection: [boolean, boolean, boolean];
     //rawproceduresSelection: string;
     totalAggregatedCaseCount: number;
     totalIndividualCaseCount: number;
