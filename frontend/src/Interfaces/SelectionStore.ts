@@ -1,3 +1,4 @@
+import { makeAutoObservable } from "mobx";
 import { updateProcedureSelection, updateSelectedPatientGroup } from "./Actions/SelectionActions";
 import { RootStore } from "./Store";
 import { SingleCasePoint } from "./Types/DataTypes";
@@ -7,6 +8,7 @@ export class SelectionStore {
 
     constructor(rootStore: RootStore) {
         this.rootStore = rootStore
+        makeAutoObservable(this)
     }
 
     get provenance() {

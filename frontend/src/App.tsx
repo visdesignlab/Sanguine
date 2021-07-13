@@ -8,8 +8,8 @@ import Dashboard from "./Dashboard"
 import { defaultState } from "./Interfaces/DefaultState"
 import Store from "./Interfaces/Store"
 import { SingleCasePoint } from "./Interfaces/Types/DataTypes"
-import { whoamiAPICall } from "./Interfaces/UserManagement"
-import { surgeryTypeArray } from "./Presets/DataDict"
+import { logoutHandler, whoamiAPICall } from "./Interfaces/UserManagement"
+import { SurgeryTypeArray } from "./Presets/DataDict"
 
 const App: FC = () => {
     const store = useContext(Store);
@@ -25,7 +25,7 @@ const App: FC = () => {
 
     const handleOnIdle = (event: any) => {
         // On idle log the user out
-        window.location.replace(`${process.env.REACT_APP_QUERY_URL}accounts/logout`);
+        logoutHandler()
     }
 
     const handleOnAction = (event: any) => {
@@ -110,7 +110,7 @@ const App: FC = () => {
                             TXA: riskOutcomeDict[ob.VISIT_ID].TXA,
                             B12: riskOutcomeDict[ob.VISIT_ID].B12,
                             AMICAR: riskOutcomeDict[ob.VISIT_ID].AMICAR,
-                            SURGERY_TYPE: surgeryTypeArray.indexOf(ob.SURGERY_TYPE)
+                            SURGERY_TYPE: SurgeryTypeArray.indexOf(ob.SURGERY_TYPE)
                         }
                         cacheData.push(outputObj)
                     }

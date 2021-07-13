@@ -10,7 +10,6 @@ export type LayoutElement = {
     //  aggregation?: string,
     extraPair?: string,
     interventionDate?: number,
-    comparisonChartType?: string,
     outcomeComparison?: string,
     notation: string
 }
