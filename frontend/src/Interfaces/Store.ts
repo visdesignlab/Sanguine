@@ -15,10 +15,12 @@ export class RootStore {
     chartStore: ChartStore;
     private _isAtRoot: boolean;
     private _isAtLatest: boolean;
+    private _mainCompWidth: number;
 
     constructor() {
         this._isAtLatest = true;
         this._isAtRoot = true;
+        this._mainCompWidth = 0
 
         this.provenance = initProvenance<ApplicationState, ActionEvents>(
             defaultState,
@@ -47,7 +49,8 @@ export class RootStore {
 
     get isAtRoot() { return this._isAtRoot }
     get isAtLatest() { return this._isAtLatest }
-
+    get mainCompWidth() { return this._mainCompWidth }
+    set mainCompWidth(input: number) { this._mainCompWidth = input }
 
 }
 const Store = createContext(new RootStore())

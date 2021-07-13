@@ -8,6 +8,7 @@ import RegularModeMenu from "./Components/Utilities/TopMenu/RegularModeMenu"
 import { SingleCasePoint } from "./Interfaces/Types/DataTypes"
 import { LayoutDiv, SpecialPaddingColumn } from "./Presets/StyledComponents"
 import './App.css'
+import LayoutGenerator from "./Components/LayoutGenerator"
 
 type Props = {
     hemoData: SingleCasePoint[];
@@ -24,8 +25,7 @@ const Dashboard: FC<Props> = ({ hemoData }: Props) => {
                     <LeftToolBox totalCaseNum={hemoData.length} />
                 </SpecialPaddingColumn>
                 <Grid.Column width={12} id="Main-Body">
-                    <div>stuff</div>
-                    {/* <LayoutGenerator hemoData={hemoData} /> */}
+                    <LayoutGenerator hemoData={hemoData} />
                 </Grid.Column>
                 <Grid.Column width={2}>
                     <div>stuff</div>
