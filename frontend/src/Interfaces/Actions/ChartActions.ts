@@ -49,7 +49,7 @@ export const addNewChart = createAction<ApplicationState, [LayoutElement], Actio
     state.nextAddingIndex += 1
 }).setLabel("AddChart")
 
-export const onLayoutChange = createAction<ApplicationState, [any], ActionEvents>((state, data) => {
+export const onLayoutChange = createAction<ApplicationState, [ReactGridLayout.Layout[]], ActionEvents>((state, data) => {
     data.forEach((gridLayout: any) => {
         let match = state.layoutArray.filter(d => d.i === gridLayout.i)[0]
         match.w = gridLayout.w;

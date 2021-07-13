@@ -59,7 +59,7 @@ export class ChartStore {
     }
 
     //TODO check this type
-    onLayoutChange(gridLayout: any) {
+    onLayoutChange(gridLayout: ReactGridLayout.Layout[]) {
         this.provenance.apply(onLayoutChange(gridLayout))
     }
 }
