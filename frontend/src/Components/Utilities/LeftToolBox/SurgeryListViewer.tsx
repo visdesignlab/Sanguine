@@ -1,4 +1,4 @@
-import { max, scaleLinear } from "d3";
+import { axisTop, max, scaleLinear, select } from "d3";
 import { observer } from "mobx-react";
 import { useCallback, useContext, useEffect } from "react";
 import { FC, useLayoutEffect, useRef, useState } from "react";
@@ -32,6 +32,8 @@ const SurgeryListViewer: FC = () => {
             setWidth(svgRef.current.clientWidth)
         }
     });
+
+    select('#surgeryCaseScale').call(axisTop(caseScale()).ticks(2) as any)
 
     useEffect(() => {
         fetch(`${process.env.REACT_APP_QUERY_URL}get_attributes`)
