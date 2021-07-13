@@ -1,3 +1,4 @@
+import { makeAutoObservable } from "mobx";
 import { addExtraPair, addNewChart, changeNotation, onLayoutChange, removeChart, removeExtraPair } from "./Actions/ChartActions";
 import { RootStore } from "./Store";
 import { LayoutElement } from "./Types/LayoutTypes";
@@ -9,6 +10,7 @@ export class ChartStore {
 
     constructor(rootstore: RootStore) {
         this.rootStore = rootstore;
+        makeAutoObservable(this)
         this._totalAggregatedCaseCount = 0;
         this._totalIndividualCaseCount = 0;
     }
@@ -52,7 +54,8 @@ export class ChartStore {
     }
 
     addNewChart(newLayoutElement: LayoutElement) {
-        this.provenance.apply(addNewChart(newLayoutElement))
+        this.rootStore.configStore.chartAdded();
+        this.provenance.apply(addNewChart(newLayoutElement));
     }
 
     //TODO check this type

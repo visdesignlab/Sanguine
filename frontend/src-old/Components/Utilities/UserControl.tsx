@@ -402,7 +402,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 >
                     <Modal.Header>
                         Use the following URL to share your state
-               </Modal.Header>
+                    </Modal.Header>
                     <Modal.Content scrolling>
                         <Message info>Length of URL: {shareUrl.length}</Message>
                         <Segment
@@ -418,8 +418,8 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                             className="copy-clipboard"
                             data-clipboard-text={shareUrl}>
                             <Icon name="copy"></Icon>
-                   Copy
-            </Button>
+                            Copy
+                        </Button>
                     </Modal.Actions>
                 </Modal>
 
@@ -478,18 +478,18 @@ const UserControl: FC<Props> = ({ store }: Props) => {
                 <Button.Group>
                     <Button primary disabled={isAtRoot} onClick={actions.goBack}>
                         Undo
-            </Button>
+                    </Button>
                     <Button.Or></Button.Or>
                     <Button secondary disabled={isAtLatest} onClick={actions.goForward}>
                         Redo
-            </Button>
+                    </Button>
                 </Button.Group>
             </Menu.Item>
 
             <Menu.Item>
                 <Button onClick={() => { logoutHandler(); }} >
                     Log Out
-                 </Button>
+                </Button>
 
                 <a href="https://github.com/visdesignlab/Sanguine/issues" target="_blank" rel="noopener noreferrer">
                     <BugButton icon="bug" />
@@ -640,6 +640,7 @@ const UserControl: FC<Props> = ({ store }: Props) => {
             </Menu.Item>
         </Menu>
     );
+
     return addMode ? addBarChartMenu : regularMenu;
 };
 
