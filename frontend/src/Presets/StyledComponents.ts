@@ -14,14 +14,14 @@ export const SpecialPaddingColumn = styled(Grid.Column)`
 
 export const RequirementP = styled(`p`)`
     color:red;
-    font-size:large
+    font-size:large;
 `
 
 export const BugButton = styled(Button)`
-    &&&&&{margin-left:5px!important;}
+    &&&&&{margin-left:5px!important;};
 `
 export const Title = styled.b`
-    font-size:larger
+    font-size:larger;
 `
 
 export const StyledDate = styled(SemanticDatePicker)`
@@ -35,8 +35,8 @@ export const SurgeryRect = styled(`rect`)`
   fill:${postop_color};
 `
 
-export const SurgeryText = styled(`text`)`
-  text-anchor:end
+export const SurgeryNumText = styled(`text`)`
+  text-anchor:end;
   alignment-baseline: middle;
   transform: translate(13px, 0px);
 `
@@ -53,7 +53,7 @@ export const SurgeryDiv = styled.div`
 export const ListSVG = styled.svg`
   height: 15px;
   padding-left:5px;
-  width:95%
+  width:95%;
 `
 
 export const SurgeryForeignObj = styled.foreignObject`
@@ -61,7 +61,7 @@ export const SurgeryForeignObj = styled.foreignObject`
   y:0;
   height:100%;
   &:hover{
-    width:100%
+    width:100%;
   }
 `
 interface SurgeryListProps {
@@ -74,4 +74,8 @@ export const SurgeryListComp = styled(List.Item) <SurgeryListProps>`
   &:hover{
     background:#faeee1;
   }
+`
+
+export const LeftToolBarListItem = styled(List.Item)`
+  text-align: left;
 `

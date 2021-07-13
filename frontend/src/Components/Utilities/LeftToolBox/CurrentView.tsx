@@ -6,7 +6,7 @@ import { Checkbox, Container, Dropdown, Grid, List } from "semantic-ui-react"
 import { defaultState } from "../../../Interfaces/DefaultState"
 import Store from "../../../Interfaces/Store"
 import { AcronymDictionary, OutcomeOptions, SurgeryUrgency } from "../../../Presets/DataDict"
-import { StyledDate, Title } from "../../../Presets/StyledComponents"
+import { LeftToolBarListItem, StyledDate, Title } from "../../../Presets/StyledComponents"
 
 type Props = { totalCaseNum: number }
 
@@ -65,16 +65,15 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                         <Title>Current View</Title>
                     </List.Header>
 
-                    <List.Item style={{ textAlign: "left", width: "100%" }} key="Date">
+                    <LeftToolBarListItem style={{ width: "100%" }} key="Date">
                         <List.Header>Date Range</List.Header>
                         <StyledDate
                             onChange={onDateChange}
                             placeholder={`${timeFormat("%Y-%m-%d")(new Date(store.state.rawDateRange[0]))} - ${timeFormat("%Y-%m-%d")(new Date(store.state.rawDateRange[1]))}`}
                             type="range" />
-                    </List.Item>
+                    </LeftToolBarListItem>
 
-                    <List.Item key="Outcomes"
-                        style={{ textAlign: "left" }}>
+                    <LeftToolBarListItem key="Outcomes">
                         <List.Header>Outcomes/Interventions</List.Header>
                         <Dropdown
                             value={store.state.outcomesSelection}
@@ -82,9 +81,9 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                             selection
                             options={OutcomeOptions}
                             onChange={(e, v) => { store.configStore.changeOutcomeFilter((v.value as string)) }} />
-                    </List.Item>
+                    </LeftToolBarListItem>
 
-                    <List.Item key="Procedure Types" style={{ textAlign: "left" }}>
+                    <LeftToolBarListItem key="Procedure Types">
                         <List.Header>Surgery Types</List.Header>
                         <Dropdown options={SurgeryUrgency} clearable multiple selection
                             value={calculateSelectedProcedureType()}
@@ -95,37 +94,35 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                                 }
                                 store.configStore.changeSurgeryUrgencySelection(newSurgerySelection)
                             }} />
-                    </List.Item>
+                    </LeftToolBarListItem>
 
 
-                    <List.Item style={{ textAlign: "left" }} key="Show Zero">
+                    <LeftToolBarListItem key="Show Zero">
                         <List.Header>Show Zero Transfused</List.Header>
                         <Checkbox
                             checked={store.state.showZero}
                             onClick={(e, v) => { store.configStore.toggleShowZero(v.checked || false) }}
-                            toggle
-                        /></List.Item>
+                            toggle />
+                    </LeftToolBarListItem>
 
-                    <List.Item key="AggreCaseCount" style={{ textAlign: "left" }}>
+                    <LeftToolBarListItem key="AggreCaseCount">
                         <List.Header>Aggregated Cases</List.Header>
                         <List.Content>
                             {store.chartStore.totalAggregatedCaseCount}/{totalCaseNum}
                         </List.Content>
-                    </List.Item>
+                    </LeftToolBarListItem>
 
-                    <List.Item key="IndiCaseCount" style={{ textAlign: "left" }}>
+                    <LeftToolBarListItem key="IndiCaseCount">
                         <List.Header>Individual Cases</List.Header>
                         <List.Content>
                             {store.chartStore.totalIndividualCaseCount}/{totalCaseNum}
                         </List.Content>
-                    </List.Item>
-                    <List.Item
-                        key="SurgeryList"
-                        style={{ textAlign: "left" }}
-                    >
+                    </LeftToolBarListItem>
+
+                    <LeftToolBarListItem key="SurgeryList">
                         <List.Header>Procedures</List.Header>
                         <List.Content>{generateSurgery()} </List.Content>
-                    </List.Item>
+                    </LeftToolBarListItem>
                     {/* {generatePatientSelection()}
 
 
