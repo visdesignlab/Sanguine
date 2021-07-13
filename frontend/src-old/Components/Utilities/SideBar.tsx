@@ -508,7 +508,7 @@ const SurgeryRect = styled(`rect`)`
 
 const SurgeryText = styled(`text`)`
   
-  text-anchor:end
+  text-anchor:end;
   alignment-baseline: middle;
   transform: translate(13px, 0px);
  

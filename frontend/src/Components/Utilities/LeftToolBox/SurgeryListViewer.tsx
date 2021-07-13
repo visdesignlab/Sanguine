@@ -5,13 +5,16 @@ import { FC, useLayoutEffect, useRef, useState } from "react";
 import { Grid, Container, List, Header } from "semantic-ui-react";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
-import { ListSVG, SurgeryDiv, SurgeryForeignObj, SurgeryListComp, SurgeryRect, SurgeryText } from "../../../Presets/StyledComponents";
+import { ListSVG, SurgeryDiv, SurgeryForeignObj, SurgeryListComp, SurgeryRect, SurgeryNumText } from "../../../Presets/StyledComponents";
 
-const SurgeryListViewer: FC = () => {
+type Props = {
+    surgeryList: any[];
+    maxCaseCount: number
+}
+
+const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
     const store = useContext(Store)
     const [width, setWidth] = useState(0);
-    const [maxCaseCount, setMaxCaseCount] = useState(0);
-    const [surgeryList, setSurgeryList] = useState<any[]>([]);
     const [itemSelected, setItemSelected] = useState<any[]>([]);
     const [itemUnselected, setItemUnselected] = useState<any[]>([]);
     const svgRef = useRef<SVGSVGElement>(null);
@@ -35,34 +38,7 @@ const SurgeryListViewer: FC = () => {
 
     select('#surgeryCaseScale').call(axisTop(caseScale()).ticks(2) as any)
 
-    useEffect(() => {
-        fetch(`${process.env.REACT_APP_QUERY_URL}get_attributes`)
-            .then(response => response.json())
-            .then(function (data) {
-                const result = data.result;
-                let tempSurgeryList: any[] = result;
-                //console.log(tempSurgeryList)
-                let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
-                tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
-                setMaxCaseCount(tempMaxCaseCount)
-                let tempItemUnselected: any[] = [];
-                let tempItemSelected: any[] = [];
-                result.forEach((d: any) => {
-                    if (store.state.proceduresSelection.includes(d.value)) {
-                        tempItemSelected.push(d)
-                    } else {
-                        tempItemUnselected.push(d)
-                    }
-                })
-                tempSurgeryList.sort((a: any, b: any) => b.count - a.count)
-                tempItemSelected.sort((a: any, b: any) => b.count - a.count)
-                tempItemUnselected.sort((a: any, b: any) => b.count - a.count)
-                stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList)
-                stateUpdateWrapperUseJSON(itemUnselected, tempItemUnselected, setItemUnselected);
-                stateUpdateWrapperUseJSON(itemSelected, tempItemSelected, setItemSelected);
-            });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+
 
     useEffect(() => {
         let newItemSelected: any[] = []
@@ -111,7 +87,7 @@ const SurgeryListViewer: FC = () => {
                                         x={caseScale().range()[0]}
                                         width={caseScale()(listItem.count) - caseScale().range()[0]}
                                     />
-                                    <SurgeryText y={9} x={caseScale().range()[1]}>{listItem.count}</SurgeryText>
+                                    <SurgeryNumText y={9} x={caseScale().range()[1]}>{listItem.count}</SurgeryNumText>
                                 </ListSVG>} />
                         )
                     } else { return (<></>) }
@@ -131,9 +107,9 @@ const SurgeryListViewer: FC = () => {
                                     <SurgeryRect
                                         x={caseScale().range()[0]}
                                         width={caseScale()(listItem.count) - caseScale().range()[0]} />
-                                    <SurgeryText y={9} x={caseScale().range()[1]}>
+                                    <SurgeryNumText y={9} x={caseScale().range()[1]}>
                                         {listItem.count}
-                                    </SurgeryText>
+                                    </SurgeryNumText>
                                 </ListSVG>}
                                 onClick={() => { store.selectionStore.updateProcedureSelection(listItem.value, false) }} />
                         )
