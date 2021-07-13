@@ -2,12 +2,12 @@ import { observer } from "mobx-react";
 import { FC, useState } from "react"
 import { Button, Dropdown, Menu } from "semantic-ui-react"
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
-import { AggregationOptions, BloodComponentOptions, OutcomeOptions, scatterYOptions } from "../../Presets/DataDict"
+import { AggregationOptions, BloodComponentOptions, OutcomeOptions, scatterYOptions } from "../../../Presets/DataDict"
 import { useContext } from "react";
-import Store from "../../Interfaces/Store";
-import { typeDiction } from "../../Presets/Constants";
-import { LayoutElement } from "../../Interfaces/Types/LayoutTypes";
-import { RequirementP } from "../../Presets/StyledComponents";
+import Store from "../../../Interfaces/Store";
+import { typeDiction } from "../../../Presets/Constants";
+import { LayoutElement } from "../../../Interfaces/Types/LayoutTypes";
+import { RequirementP } from "../../../Presets/StyledComponents";
 
 
 type Props = { addingChartType: number }

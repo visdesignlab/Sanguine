@@ -253,6 +253,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                             <Dropdown value={outcomesSelection} clearable selection options={OutcomeType} onChange={(e, v) => { actions.changeOutcomesSelection((v.value as string)) }} />
 
                         </List.Item>
+
                         <List.Item key="Procedure Types" style={{ textAlign: "left" }}>
                             <List.Header>Surgery Types</List.Header>
                             <Dropdown options={SurgeryType} clearable multiple selection
@@ -391,14 +392,7 @@ const SideBar: FC<Props> = ({ hemoData, store }: Props) => {
                             content={
                                 <Header><svg height={18} style={{ paddingLeft: "5px" }} width="95%" ref={svgRef}>
                                     <text alignmentBaseline="hanging" x={0} y={0} fontSize="medium">{`Procedures(${surgeryList.length})`}</text>
-                                    {/* <rect
-                    x={caseScale().range()[0]}
-                    y={0}
-                    width={caseScale().range()[1] - caseScale().range()[0]}
-                    height={13}
-                    fill={postop_color} />
-                  <text x={caseScale().range()[0] + 1} y={11} fontSize={14} textAnchor="start" alignmentBaseline="baseline" fill="white">0</text>
-                  <text x={caseScale().range()[1]} y={11} fontSize={14} textAnchor="end" alignmentBaseline="baseline" fill="white">{maxCaseCount}</text> */}
+
                                     <g id="surgeryCaseScale" transform="translate(0 ,17)"></g>
                                 </svg></Header>}
                         />

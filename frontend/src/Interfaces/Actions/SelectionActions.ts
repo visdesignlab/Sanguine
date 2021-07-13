@@ -9,8 +9,8 @@ export const updateSelectedPatientGroup = createAction<ApplicationState, [Single
     state.currentSelectPatientGroup = caseList;
 }).setLabel("updatePatientGroup")
 
-export const updateProcedureSelection = createAction<ApplicationState, [string], ActionEvents>((state, newProcedureSelection) => {
-    if (state.proceduresSelection.includes(newProcedureSelection)) {
+export const updateProcedureSelection = createAction<ApplicationState, [string, boolean], ActionEvents>((state, newProcedureSelection, removing) => {
+    if (removing) {
         state.proceduresSelection = state.proceduresSelection.filter(d => d !== newProcedureSelection)
     }
     else {

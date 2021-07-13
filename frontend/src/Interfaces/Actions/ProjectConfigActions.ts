@@ -28,5 +28,5 @@ export const changeCostConfig = createAction<ApplicationState, [string, number],
 }).setLabel("setBloodComponentConfig")
 
 export const changeSurgeryUrgencySelection = createAction<ApplicationState, [[boolean, boolean, boolean]], ActionEvents>((state, surgeryUrgencyInput) => {
-    state.procedureTypeSelection = surgeryUrgencyInput;
+    state.surgeryUrgencySelection = surgeryUrgencyInput;
 }).setLabel("changeUrgency")
