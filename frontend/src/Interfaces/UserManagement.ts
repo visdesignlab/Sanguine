@@ -1,5 +1,5 @@
-import { useContext } from "react";
-import Store, { RootStore } from "./Store";
+
+import { RootStore } from "./Store";
 
 export const getUser = () => {
     const userStr = sessionStorage.getItem('user');
@@ -55,4 +55,18 @@ export const whoamiAPICall = (store: RootStore) => {
             window.location.replace(`${process.env.REACT_APP_QUERY_URL}accounts/login/`);
         }
     })
+}
+
+export const simulateAPIClick = () => {
+    fetch(`${process.env.REACT_APP_QUERY_URL}accounts/login/`, {
+        method: 'GET',
+        credentials: 'include',
+    })
+    var csrftoken = getCookie('csrftoken');
+    return csrftoken
+}
+
+export const logoutHandler = () => {
+    window.location.replace(`${process.env.REACT_APP_QUERY_URL}accounts/logout`);
+
 }
