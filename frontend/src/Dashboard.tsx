@@ -24,9 +24,11 @@ const Dashboard: FC<Props> = ({ hemoData }: Props) => {
                     <LeftToolBox totalCaseNum={hemoData.length} />
                 </SpecialPaddingColumn>
                 <Grid.Column width={12} id="Main-Body">
+                    <div>stuff</div>
                     {/* <LayoutGenerator hemoData={hemoData} /> */}
                 </Grid.Column>
                 <Grid.Column width={2}>
+                    <div>stuff</div>
                     {/* <DetailView hemoData={hemoData} /> */}
                 </Grid.Column>
             </Grid>
