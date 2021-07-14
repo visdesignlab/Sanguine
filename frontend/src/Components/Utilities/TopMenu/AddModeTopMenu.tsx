@@ -2,10 +2,9 @@ import { observer } from "mobx-react";
 import { FC, useState } from "react"
 import { Button, Dropdown, Menu } from "semantic-ui-react"
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
-import { AggregationOptions, BloodComponentOptions, OutcomeOptions, scatterYOptions } from "../../../Presets/DataDict"
+import { addOptions, OutcomeOptions, typeDiction } from "../../../Presets/DataDict"
 import { useContext } from "react";
 import Store from "../../../Interfaces/Store";
-import { typeDiction } from "../../../Presets/Constants";
 import { LayoutElement } from "../../../Interfaces/Types/LayoutTypes";
 import { RequirementP } from "../../../Presets/StyledComponents";
 
@@ -16,18 +15,9 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
 
     const store = useContext(Store)
 
-    const dumbbellFacetOptions = BloodComponentOptions.slice(0, 4).concat(AggregationOptions).concat([{ value: "QUARTER", key: "QUARTER", text: "Quarter" }])
 
-    const dumbbellValueOptions = [{ value: "HGB_VALUE", key: "HGB_VALUE", text: "Hemoglobin Value" }]
 
-    const addOptions = [
-        [BloodComponentOptions, AggregationOptions],
-        [dumbbellValueOptions, dumbbellFacetOptions],
-        [scatterYOptions, BloodComponentOptions],
-        [BloodComponentOptions, AggregationOptions],
-        [BloodComponentOptions, [AggregationOptions[0], AggregationOptions[2]]],
-        [OutcomeOptions.slice(4, 7), AggregationOptions]
-    ]
+
 
     const [xAggreSelection, setXAggreSelection] = useState<string>("")
     const [yValueSelection, setYValueSelection] = useState<string>("")

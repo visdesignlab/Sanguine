@@ -124,7 +124,6 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                                     aggregateAttribute: singleCase[aggregatedBy],
                                     data: [],
                                     patientIDList: new Set(),
-
                                 }
                             }
                             temporaryDataHolder[singleCase[aggregatedBy]].data.push(singleCase)
@@ -219,36 +218,6 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item>
-                        {/* <Menu.Item fitted onClick={() => { setOpenNotationModal(true) }}>
-                            <Icon name="edit" />
-                        </Menu.Item> */}
-
-                        {/* Modal for annotation. */}
-                        {/* <Modal autoFocus open={openNotationModal} closeOnEscape={false} closeOnDimmerClick={false}>
-                            <Modal.Header>
-                                Set the annotation for chart
-              </Modal.Header>
-                            <Modal.Content>
-                                <Form>
-                                    <Form.TextArea autoFocus
-                                        value={notationInput}
-                                        label="Notation"
-                                        onChange={(e, d) => {
-                                            if (typeof d.value === "number") {
-                                                setNotationInput((d.value).toString() || "")
-                                            } else {
-                                                setNotationInput(d.value || "")
-                                            }
-                                        }
-                                        }
-                                    />
-                                </Form>
-                            </Modal.Content>
-                            <Modal.Actions>
-                                <Button content="Save" positive onClick={() => { setOpenNotationModal(false); actions.changeNotation(chartId, notationInput); }} />
-                                <Button content="Cancel" onClick={() => { setOpenNotationModal(false) }} />
-                            </Modal.Actions>
-                        </Modal> */}
                     </Menu>
 
                 </Grid.Column>
@@ -267,8 +236,6 @@ const BarChartVisualization: FC<Props> = ({ w, notation, hemoglobinDataSet, aggr
                             extraPairDataSet={extraPairData}
                         />
                     </ChartSVG>
-
-                    {/* <Message hidden={notation.length === 0} >{notation}</Message> */}
                     <NotationForm notation={notation} chartId={chartId} />
 
                 </Grid.Column>
