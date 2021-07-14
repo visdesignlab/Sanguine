@@ -1,4 +1,4 @@
-export const typeDiction = ["COST", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION", "COMPARESAVING"]
+
 
 export const preop_color = "#209b58"
 export const postop_color = "#20639b"

@@ -1,5 +1,5 @@
 import { makeAutoObservable } from "mobx";
-import { addExtraPair, addNewChart, changeNotation, onLayoutChange, removeChart, removeExtraPair } from "./Actions/ChartActions";
+import { addExtraPair, addNewChart, changeChart, changeNotation, onLayoutChange, removeChart, removeExtraPair } from "./Actions/ChartActions";
 import { RootStore } from "./Store";
 import { LayoutElement } from "./Types/LayoutTypes";
 
@@ -58,7 +58,11 @@ export class ChartStore {
         this.provenance.apply(addNewChart(newLayoutElement));
     }
 
-    //TODO check this type
+    changeChart(xAggregationSelection: string, yValueSelection: string, chartIndex: string, chartType: string, outcomeComparison?: string) {
+        this.provenance.apply(changeChart(xAggregationSelection, yValueSelection, chartIndex, chartType, outcomeComparison))
+    }
+
+
     onLayoutChange(gridLayout: ReactGridLayout.Layout[]) {
         this.provenance.apply(onLayoutChange(gridLayout))
     }
