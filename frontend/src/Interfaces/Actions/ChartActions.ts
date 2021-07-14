@@ -59,3 +59,17 @@ export const onLayoutChange = createAction<ApplicationState, [ReactGridLayout.La
     })
     state.layoutArray = JSON.parse(JSON.stringify(state.layoutArray))
 }).setLabel("LayoutChange")
+
+export const changeChart = createAction<ApplicationState, [string, string, string, string, string?], ActionEvents>((state, xAggregationSelection, yValueSelection, chartIndex, chartType, outcomeComparison?) => {
+    state.layoutArray = state.layoutArray.map((d) => {
+        if (d.i === chartIndex) {
+            d.aggregatedBy = xAggregationSelection;
+            d.valueToVisualize = yValueSelection;
+            d.plotType = chartType;
+            if (outcomeComparison) {
+                d.outcomeComparison = outcomeComparison === "NONE" ? undefined : outcomeComparison;
+            }
+        }
+        return d;
+    })
+}).setLabel("changeChart")

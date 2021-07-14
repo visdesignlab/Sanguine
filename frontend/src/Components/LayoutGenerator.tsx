@@ -5,11 +5,12 @@ import { Responsive } from "react-grid-layout";
 import 'react-grid-layout/css/styles.css';
 import { Tab, Ref } from "semantic-ui-react";
 import Store from "../Interfaces/Store";
+import { SingleCasePoint } from "../Interfaces/Types/DataTypes";
 import { LayoutElement } from "../Interfaces/Types/LayoutTypes";
 import { WelcomeText } from "../Presets/StyledComponents";
 import ChartStandardButtons from "./Charts/ChartStandardButtons";
 
-type Props = { hemoData: any[]; };
+type Props = { hemoData: SingleCasePoint[]; };
 
 const LayoutGenerator: FC<Props> = ({ hemoData }: Props) => {
     const store = useContext(Store)

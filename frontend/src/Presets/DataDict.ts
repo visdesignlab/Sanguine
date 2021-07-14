@@ -6,12 +6,12 @@ export const BloodComponentOptions = [
     { value: "CRYO_UNITS", key: "CRYO_UNITS", text: "Intraoperative Cryo Transfused" },
     { value: "CELL_SAVER_ML", key: "CELL_SAVER_ML", text: "Cell Salvage Volume (ml)" }];
 
-export const AggregationOptions = [
+const AggregationOptions = [
     { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
     { value: "YEAR", key: "YEAR", text: "Year" },
     { value: "ANESTHESIOLOGIST_ID", key: "ANESTHESIOLOGIST_ID", text: "Anesthesiologist ID" }];
 
-export const scatterYOptions = [
+const ScatterYOptions = [
     { value: "PREOP_HGB", key: "PREOP_HGB", text: "Preoperative Hemoglobin Value" },
     { value: "POSTOP_HGB", key: "POSTOP_HGB", text: "Postoperative Hemoglobin Value" }];
 
@@ -28,6 +28,22 @@ export const SurgeryUrgency = [
     { value: 0, key: 0, text: "Urgent" },
     { value: 1, key: 1, text: "Elective" },
     { value: 2, key: 2, text: "Emergent" }]
+
+
+const dumbbellFacetOptions = BloodComponentOptions.slice(0, 4).concat(AggregationOptions).concat([{ value: "QUARTER", key: "QUARTER", text: "Quarter" }])
+
+const dumbbellValueOptions = [{ value: "HGB_VALUE", key: "HGB_VALUE", text: "Hemoglobin Value" }]
+
+export const typeDiction = ["COST", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION", "COMPARESAVING"];
+
+export const addOptions = [
+    [BloodComponentOptions, AggregationOptions],
+    [dumbbellValueOptions, dumbbellFacetOptions],
+    [ScatterYOptions, BloodComponentOptions],
+    [BloodComponentOptions, AggregationOptions],
+    [BloodComponentOptions, [AggregationOptions[0], AggregationOptions[2]]],
+    [OutcomeOptions.slice(4, 7), AggregationOptions]
+]
 
 export const SurgeryUrgencyArray = ["Urgent", "Elective", "Emergent"]
 

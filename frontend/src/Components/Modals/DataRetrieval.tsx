@@ -17,9 +17,7 @@ const DataRetrievalModal: FC<Props> = ({ errorMessage }: Props) => {
                 ([<Icon name='warning sign' />,
                 <Message.Content>
                     <Message.Header>Failed</Message.Header>
-                    Data retrieval failed.
-                    {errorMessage!}
-                    Please try later or contact the admins.
+                    Data retrieval failed. Please try later or contact the admins. {errorMessage!}
                 </Message.Content>]) :
                 ([<Icon name='circle notched' loading />,
                 <Message.Content>
