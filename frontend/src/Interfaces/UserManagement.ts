@@ -7,6 +7,12 @@ export const getUser = () => {
     else return null;
 }
 
+export const tokenCheckCancel = (previousCancelToken: any) => {
+    if (previousCancelToken) {
+        previousCancelToken.cancel("cancel the call")
+    }
+}
+
 export const getToken = () => {
     return sessionStorage.getItem('token') || null;
 }

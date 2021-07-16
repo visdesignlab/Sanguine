@@ -24,6 +24,15 @@ export const OutcomeOptions = [
     { value: "TXA", key: "TXA", text: "Tranexamic Acid" },
     { value: "AMICAR", key: "AMICAR", text: "Amicar" }]
 
+export const ExtraPairOptions = OutcomeOptions.concat([
+    { text: "Preop Hemoglobin", key: "PREOP_HGB", value: "Preop HGB" },
+    { text: "Postop Hemoglobin", key: "POSTOP_HGB", value: "POSTOP_HGB" },
+    { text: "Total Transfusion", key: "TOTAL_TRANS", value: "TOTAL_TRANS" },
+    { text: "Per Case Transfusion", key: "PER_CASE", value: "PER_CASE" },
+    { text: "Zero Transfusion Cases", key: "ZERO_TRANS", value: "ZERO_TRANS" },
+    { text: "DRG Weight (Risk)", key: "RISK", value: "RISK" }
+])
+
 export const SurgeryUrgency = [
     { value: 0, key: 0, text: "Urgent" },
     { value: 1, key: 1, text: "Elective" },
