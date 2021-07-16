@@ -243,10 +243,7 @@ const HeatMap: FC<Props> = ({ extraPairDataSet, chartId, store, aggregatedBy, va
             howToTransform={(`translate(-${currentOffset.left},${aggregationScale()(
                 dataPoint.aggregateAttribute
             )})`).toString()}
-
         />])
-
-
     }
 
     const outputGradientLegend = () => {

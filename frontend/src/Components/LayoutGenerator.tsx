@@ -7,8 +7,10 @@ import { Tab, Ref } from "semantic-ui-react";
 import Store from "../Interfaces/Store";
 import { SingleCasePoint } from "../Interfaces/Types/DataTypes";
 import { LayoutElement } from "../Interfaces/Types/LayoutTypes";
+import { typeDiction } from "../Presets/DataDict";
 import { WelcomeText } from "../Presets/StyledComponents";
 import ChartStandardButtons from "./Charts/ChartStandardButtons";
+import WrapperHeatMap from "./Charts/HeatMap/WrapperHeatMap";
 
 type Props = { hemoData: SingleCasePoint[]; };
 
@@ -76,23 +78,20 @@ const LayoutGenerator: FC<Props> = ({ hemoData }: Props) => {
 
             case "HEATMAP":
                 return (<div
-                    //onClick={this.onClickBlock.bind(this, layoutE.i)}
                     key={layout.i}
                     className={"parent-node" + layout.i}
-                // data-grid={layoutE}
                 >
                     <ChartStandardButtons chartID={layout.i} />
-                    {/* <HeatMapVisualization
+                    <WrapperHeatMap
                         hemoglobinDataSet={hemoData}
-                        w={layout.w}
-                        aggregatedBy={layout.aggregatedBy}
-                        valueToVisualize={layout.valueToVisualize}
-                        // class_name={"parent-node" + layoutE.i}
                         chartId={layout.i}
-                        chartIndex={index}
-                        extraPair={layout.extraPair}
-                        notation={layout.notation}
-                    /> */}
+                        layoutW={layout.w}
+                        layoutH={layout.h}
+                        extraPairArrayString={layout.extraPair || ""}
+                        xAggregationOption={layout.aggregatedBy}
+                        yValueOption={layout.valueToVisualize}
+                        chartTypeIndexinArray={typeDiction.indexOf(layout.plotType)}
+                    />
                 </div>);
 
             case "INTERVENTION":

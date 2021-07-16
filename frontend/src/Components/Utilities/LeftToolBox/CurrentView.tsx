@@ -76,7 +76,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                     <LeftToolBarListItem key="Outcomes">
                         <List.Header>Outcomes/Interventions</List.Header>
                         <Dropdown
-                            value={store.state.outcomesSelection}
+                            value={store.state.outcomeFilter}
                             clearable
                             selection
                             options={OutcomeOptions}

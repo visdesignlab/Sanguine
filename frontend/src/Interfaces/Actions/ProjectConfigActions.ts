@@ -20,7 +20,7 @@ export const dateRangeChange = createAction<ApplicationState, [number[]], Action
 }).setLabel("setDateRange")
 
 export const changeOutcomeFilter = createAction<ApplicationState, [string], ActionEvents>((state, newOutcomeFilter) => {
-    state.outcomesSelection = newOutcomeFilter;
+    state.outcomeFilter = newOutcomeFilter;
 }).setLabel("setOutcomeFilter")
 
 export const changeCostConfig = createAction<ApplicationState, [string, number], ActionEvents>((state, bloodComponentName, newCost) => {

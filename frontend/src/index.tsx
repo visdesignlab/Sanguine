@@ -1,11 +1,12 @@
 // import "./wdyr"
-import React from 'react';
+import whyDidYouRender from '@welldone-software/why-did-you-render';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 import 'mobx-react-lite/batchingForReactDom'
 import "semantic-ui-css/semantic.min.css"
+import React from 'react';
 
 // export const { provenance, actions } = setupProvenance();
 
@@ -21,6 +22,11 @@ import "semantic-ui-css/semantic.min.css"
 //         }
 //     }
 // }
+
+// whyDidYouRender(React, {
+//     trackAllPureComponents: true,
+//     // exclude: [/XGrid|RowCells|GridCell/],
+// });
 
 ReactDOM.render(
 
