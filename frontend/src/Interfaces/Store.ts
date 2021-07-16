@@ -48,6 +48,10 @@ export class RootStore {
         return this.provenance.getState(this.provenance.current)
     }
 
+    get proceduresSelection() {
+        return this.state.proceduresSelection
+    }
+
     get dateRange() {
         return [timeFormat("%d-%b-%Y")(new Date(this.state.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(this.state.rawDateRange[1]))]
     }
