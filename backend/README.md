@@ -166,7 +166,8 @@ There are several routes set up for accessing the patient and surgery data. Here
   - Allowed Methods: `GET, POST, PUT, DELETE`
   - Parameters:  
     `name`: The name of the state object.  
-    `definition`: The state definition, usually the string from our provenance library.
+    `definition`: The state definition, usually the string from our provenance library.  
+    `public`: true/false indicating whether the state should be public
   - Description: Handles state saving into a database on the backend. A GET will retrieve the state object by name. A POST creates a state object. A PUT updates a state object. Finally, a DELETE will delete a state object. The required parameters for each type of request are documented in the examples.
   - Example:
     ```
@@ -176,12 +177,13 @@ There are several routes set up for accessing the patient and surgery data. Here
     # POST
     curl -X POST '127.0.0.1:8000/api/state' \ 
       -F "name=example_state" \
-      -F "definition=foo"
+      -F "definition=foo" \
+      -F "public=true"
     
     # PUT
     curl -X PUT '127.0.0.1:8000/api/state' \ 
       -H "Content-Type: application/json" \
-      -d '{"old_name": "example_state", "new_name": "a_new_state", "definition": "foo"}'
+      -d '{"old_name": "example_state", "new_name": "a_new_state", "new_definition": "foo", "new_public": "false"}'
     
     # DELETE
     curl -X DELETE '127.0.0.1:8000/api/state' \ 
