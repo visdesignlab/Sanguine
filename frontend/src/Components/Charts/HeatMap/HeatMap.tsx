@@ -14,6 +14,7 @@ import { ChartG, HeatMapDividerLine } from "../../../Presets/StyledSVGComponents
 import DualColorLegend from "../ChartAccessories/DualColorLegend";
 import SingleColorLegend from "../ChartAccessories/SingleColorLegend";
 import SingleHeatRow from "./SingleHeatRow";
+import useDeepCompareEffect from 'use-deep-compare-effect'
 
 type Props = {
     dimensionWidth: number;
@@ -43,7 +44,7 @@ const HeatMap: FC<Props> = ({ dimensionHeight, dimensionWidth, xAggregationOptio
 
     }, [extraPairDataSet])
 
-    useEffect(() => {
+    useDeepCompareEffect(() => {
         const [tempxVals, newCaseMax] = HeatMapSortNoComparison(data, xAggregationOption, store.state.showZero)
         stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
         setCaseMax(newCaseMax as number)
@@ -138,3 +139,4 @@ export const outputGradientLegend = (showZero: boolean, dimensionWidth: number) 
         return <SingleColorLegend dimensionWidth={dimensionWidth} />
     }
 }
+

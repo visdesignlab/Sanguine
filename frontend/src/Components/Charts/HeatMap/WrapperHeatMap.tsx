@@ -16,7 +16,7 @@ import ChartButtonWrapper from "../ChartButtonWrapper";
 import HeatMapButtons from "../ChartAccessories/HeatMapButtons";
 import HeatMap from "./HeatMap";
 import ExtraPairButtons from "../ChartAccessories/ExtraPairButtons";
-import { useEffectDebugger } from "../../../Interfaces/Debugger";
+import useDeepCompareEffect from 'use-deep-compare-effect'
 
 type Props = {
     layoutW: number;
@@ -30,6 +30,7 @@ type Props = {
 }
 const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArrayString, xAggregationOption, yValueOption, chartTypeIndexinArray, hemoglobinDataSet }: Props) => {
     const store = useContext(Store);
+    const { surgeryUrgencySelection, rawDateRange } = store.state;
     const svgRef = useRef<SVGSVGElement>(null);
     const [width, setWidth] = useState(0);
     const [height, setHeight] = useState(0);
@@ -59,7 +60,7 @@ const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArraySt
         }
     }, [layoutH, layoutW, store.mainCompWidth, svgRef]);
 
-    useEffectDebugger(() => {
+    useDeepCompareEffect(() => {
         console.log("called")
         tokenCheckCancel(previousCancelToken)
         const cancelToken = axios.CancelToken;
@@ -85,10 +86,10 @@ const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArraySt
                     // handle error
                 }
             });
-    }, [store.state.proceduresSelection,
-    store.state.surgeryUrgencySelection,
+    }, [store.proceduresSelection,
+        surgeryUrgencySelection,
     store.state.outcomeFilter,
-    store.state.rawDateRange,
+        rawDateRange,
     store.state.showZero,
         xAggregationOption,
         yValueOption,
