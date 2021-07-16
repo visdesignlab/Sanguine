@@ -195,9 +195,9 @@ There are several routes set up for accessing the patient and surgery data. Here
   - Allowed Methods: `POST`
   - Parameters:  
     `name`: The name of the state object.  
-    `role`: Role type. "WR" for writers and "RE" for readers.
+    `role`: Role type. "WR" for writers and "RE" for readers.  
     `user`: uid of person to share with.
-  - Description: Shares access of state to another user with reader or writer privileges.
+  - Description: Shares access of state to another user with reader or writer privileges. Making 2 requests will update the user to the most recent request role.
   - Example:
     ```
     curl -X POST '127.0.0.1:8000/api/share_state' \ 
