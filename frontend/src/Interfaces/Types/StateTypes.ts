@@ -3,7 +3,7 @@ import { LayoutElement } from "./LayoutTypes";
 import { SelectSet } from "./SelectionTypes";
 
 export type ApplicationState = {
-    outcomesSelection: string;
+    outcomeFilter: string;
     rawDateRange: number[];
     proceduresSelection: string[];
     surgeryUrgencySelection: [boolean, boolean, boolean];

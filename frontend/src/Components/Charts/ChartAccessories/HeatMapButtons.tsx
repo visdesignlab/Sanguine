@@ -1,8 +1,8 @@
 import { useContext } from "react";
 import { FC } from "react";
-import { Dropdown } from "semantic-ui-react";
-import Store from "../../Interfaces/Store";
-import { addOptions, OutcomeOptions } from "../../Presets/DataDict";
+import { Dropdown, Menu } from "semantic-ui-react";
+import Store from "../../../Interfaces/Store";
+import { addOptions, OutcomeOptions } from "../../../Presets/DataDict";
 
 
 type Props = {
@@ -32,13 +32,16 @@ const HeatMapButtons: FC<Props> = ({ xAggregationOption, yValueOption, chartType
 
     const OutcomeDropdownOptions = OutcomeOptions.concat({ value: "NONE", key: "NONE", text: "None" })
 
-    return (<Dropdown selectOnBlur={false} basic item icon="settings" compact >
-        <Dropdown.Menu>
-            <Dropdown text="Change Aggregation" pointing basic item compact options={addOptions[chartTypeIndexinArray][0]} onChange={changeAggregation} />
-            <Dropdown text="Change Value" pointing basic item compact options={addOptions[chartTypeIndexinArray][1]} onChange={changeValue} />
-            <Dropdown text="Add Outcome Comparison" pointing basic item compact options={OutcomeDropdownOptions} onChange={changeOutcome} />
-        </Dropdown.Menu>
-    </Dropdown>)
+    return (
+        <Menu.Item fitted>
+            <Dropdown selectOnBlur={false} basic item icon="settings" compact >
+                <Dropdown.Menu>
+                    <Dropdown text="Change Aggregation" pointing basic item compact options={addOptions[chartTypeIndexinArray][0]} onChange={changeAggregation} />
+                    <Dropdown text="Change Value" pointing basic item compact options={addOptions[chartTypeIndexinArray][1]} onChange={changeValue} />
+                    <Dropdown text="Add Outcome Comparison" pointing basic item compact options={OutcomeDropdownOptions} onChange={(e, v) => { changeOutcome(e, v) }} />
+                </Dropdown.Menu>
+            </Dropdown>
+        </Menu.Item>)
 }
 
 export default HeatMapButtons;

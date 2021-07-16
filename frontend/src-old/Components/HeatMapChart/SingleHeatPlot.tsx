@@ -28,7 +28,7 @@ export type Props = OwnProps;
 const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggregatedBy, isSelected, valueScaleDomain, valueScaleRange, store, isFiltered }: Props) => {
     const { showZero } = store!;
     const colorScale = scaleLinear().domain([0, 1]).range([0.1, 1]);
-    const greyScale = scaleLinear().domain([0, 1]).range(greyScaleRange)
+    const greyScale = scaleLinear().domain([0, 1]).range(greyScaleRange);
 
     const valueScale = useCallback(() => {
         const domain = JSON.parse(valueScaleDomain);

@@ -5,7 +5,8 @@ import { FC, useLayoutEffect, useRef, useState } from "react";
 import { Grid, Container, List, Header } from "semantic-ui-react";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
-import { ListSVG, SurgeryDiv, SurgeryForeignObj, SurgeryListComp, SurgeryRect, SurgeryNumText } from "../../../Presets/StyledComponents";
+import { SurgeryDiv, SurgeryForeignObj, SurgeryListComp, SurgeryNumText } from "../../../Presets/StyledComponents";
+import { ListSVG, SurgeryRect } from "../../../Presets/StyledSVGComponents";
 
 type Props = {
     surgeryList: any[];

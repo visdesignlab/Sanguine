@@ -1,4 +1,5 @@
 import { initProvenance, Provenance } from '@visdesignlab/trrack'
+import { timeFormat } from 'd3';
 import { makeAutoObservable } from 'mobx';
 import { createContext } from 'react';
 import { ChartStore } from './ChartStore';
@@ -47,6 +48,9 @@ export class RootStore {
         return this.provenance.getState(this.provenance.current)
     }
 
+    get dateRange() {
+        return [timeFormat("%d-%b-%Y")(new Date(this.state.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(this.state.rawDateRange[1]))]
+    }
     get isAtRoot() { return this._isAtRoot }
     get isAtLatest() { return this._isAtLatest }
     get mainCompWidth() { return this._mainCompWidth }
