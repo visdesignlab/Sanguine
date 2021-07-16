@@ -995,7 +995,7 @@ def share_state(request):
             return HttpResponseBadRequest("User already has that role on this state", 400)
         elif role not in [a[1] for a in AccessLevel.choices()]:
             return HttpResponseBadRequest(f"role must be in: {[a[1] for a in AccessLevel.choices()]}", 400)
-        else
+        else:
             state_access_object.role = role
             state_access_object.save()
             return HttpResponse("Updated user rols", 200)
