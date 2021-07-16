@@ -989,7 +989,7 @@ def share_state(request):
             return HttpResponseBadRequest("User is already the owner of the state", 400)
 
         # Check that new user is not already reader/writer, role in allowed choices
-        state_access_object = StateAccess.objects.filter(state=state_object).get(user=user)
+        state_access_object = StateAccess.objects.filter(state=state_object).get(user=user, name=name)
         roles = [a.role for a in state_access_object]
         if role in roles:
             return HttpResponseBadRequest("User already has that role on this state", 400)
