@@ -34,7 +34,7 @@ const HeatMap: FC<Props> = ({ dimensionHeight, dimensionWidth, xAggregationOptio
     const [xVals, setXVals] = useState<any[]>([]);
     const [caseMax, setCaseMax] = useState(0);
 
-    useEffect(() => {
+    useDeepCompareEffect(() => {
         let totalWidth = extraPairDataSet.length > 0 ? (extraPairDataSet.length + 1) * ExtraPairPadding : 0;
         extraPairDataSet.forEach((d) => {
             totalWidth += (ExtraPairWidth[d.type])
@@ -75,7 +75,6 @@ const HeatMap: FC<Props> = ({ dimensionHeight, dimensionWidth, xAggregationOptio
             bandwidth={aggregationScale().bandwidth()}
             valueScaleDomain={JSON.stringify(valueScale().domain())}
             valueScaleRange={JSON.stringify(valueScale().range())}
-            showZero={store.state.showZero}
             dataPoint={dataPoint}
             howToTransform={(`translate(-${currentOffset.left},${aggregationScale()(
                 dataPoint.aggregateAttribute

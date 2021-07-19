@@ -3,6 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "dependencies": {
+        "@material-ui/core": "^4.12.2",
         "@types/clipboard": "^2.0.1",
         "@types/d3": "^7.0.0",
         "@types/jest": "26.0.23",

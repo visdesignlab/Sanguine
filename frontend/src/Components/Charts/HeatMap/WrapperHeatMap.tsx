@@ -17,6 +17,7 @@ import HeatMapButtons from "../ChartAccessories/HeatMapButtons";
 import HeatMap from "./HeatMap";
 import ExtraPairButtons from "../ChartAccessories/ExtraPairButtons";
 import useDeepCompareEffect from 'use-deep-compare-effect'
+import { DataContext } from "../../../App";
 
 type Props = {
     layoutW: number;
@@ -26,9 +27,10 @@ type Props = {
     xAggregationOption: string;
     yValueOption: string;
     chartTypeIndexinArray: number;
-    hemoglobinDataSet: SingleCasePoint[];
+    // hemoglobinDataSet: SingleCasePoint[];
 }
-const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArrayString, xAggregationOption, yValueOption, chartTypeIndexinArray, hemoglobinDataSet }: Props) => {
+const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArrayString, xAggregationOption, yValueOption, chartTypeIndexinArray }: Props) => {
+    const hemoData = useContext(DataContext)
     const store = useContext(Store);
     const { surgeryUrgencySelection, rawDateRange } = store.state;
     const svgRef = useRef<SVGSVGElement>(null);
@@ -47,10 +49,10 @@ const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArraySt
     }, [extraPairArrayString])
 
     useEffect(() => {
-        const newExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoglobinDataSet, extraPairArray, data, yValueOption, store.state.BloodProductCost)
+        const newExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, data, yValueOption, store.state.BloodProductCost)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extraPairArray, data, hemoglobinDataSet]);
+    }, [extraPairArray, data, hemoData]);
 
     useLayoutEffect(() => {
         if (svgRef.current) {
@@ -73,7 +75,7 @@ const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArraySt
         })
             .then(function (response) {
                 if (response.data) {
-                    const temporaryDataHolder = produceAvailableCasesForNonIntervention(response.data, hemoglobinDataSet, store.state.surgeryUrgencySelection, store.state.outcomeFilter, xAggregationOption)
+                    const temporaryDataHolder = produceAvailableCasesForNonIntervention(response.data, hemoData, store.state.surgeryUrgencySelection, store.state.outcomeFilter, xAggregationOption)
                     const [caseCount, outputData] = generateRegularData(temporaryDataHolder, store.state.showZero, yValueOption)
                     stateUpdateWrapperUseJSON(data, outputData, setData);
                     store.chartStore.totalAggregatedCaseCount = caseCount as number
@@ -95,7 +97,7 @@ const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArraySt
         yValueOption,
         // currentSelectPatientGroupIDs, 
         // currentOutputFilterSet,
-        hemoglobinDataSet])
+        hemoData])
 
     return (
         <ChartWrapperGrid>

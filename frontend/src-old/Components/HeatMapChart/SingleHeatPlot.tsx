@@ -58,7 +58,9 @@ const SingleHeatPlot: FC<Props> = ({ howToTransform, dataPoint, bandwidth, aggre
                     const outputContent = (output / caseCount < 0.01 && output > 0) ? "<1%" : format(".0%")(output / caseCount)
 
                     return (
-                        [<Popup content={outputContent}
+                        [<Popup
+                            style={{ pointerEvents: "none" }}
+                            content={outputContent}
                             key={dataPoint.aggregateAttribute + '-' + point}
                             disabled={disables || caseCount === 0}
                             trigger={
