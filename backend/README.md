@@ -7,7 +7,9 @@ An API server for the Bloodvis application.
 1. [Development Environment Quick Start](#development-environment-quick-start)
 1. [Deploying In Production](#deploying-in-production)
 1. [Route Documentation](#route-documentation)
+1. [Data Dictionary](#data-dictionary)
 1. [Testing](#testing)
+1. [Logging](#logging)
 
 ## Development Environment Quick Start
 
@@ -23,10 +25,13 @@ To store sessions data, we're using mysql. There are a couple of commands requir
 
 ```
 # Create a user
-CREATE USER '<user>'@'<host>' IDENTIFIED BY '<password>'
+CREATE USER '<user>'@'<host>' IDENTIFIED BY '<password>';
 
 # Create a db
-CREATE DATABASE bloodvis CHARACTER SET utf8 COLLATE utf8_bin
+CREATE DATABASE bloodviswebapp CHARACTER SET utf8 COLLATE utf8_bin;
+
+# Grant privileges
+GRANT ALL PRIVILEGES ON bloodviswebapp.* to '<user>'@'<host>';
 ```
 
 ## Deploying In Production
@@ -199,6 +204,56 @@ There are several routes set up for accessing the patient and surgery data. Here
       -F "role=WR"
     ```
 
+## Data Dictionary
+
+For Sanguine to work as expected, the application expects data in a specific format. See [data_dictionary.csv](api/data_dictionary.csv) for column descriptions. We required the following columns:
+
+- ADMINISTERED_DOSE: STRING
+- ANESTHESIOLOGIST_ID: NUMBER
+- APR_DRG_WEIGHT: NUMBER
+- APR_DRG_CODE: STRING
+- APR_DRG_DESC: STRING
+- APR_DRG_ROM: STRING
+- APR_DRG_SOI: STRING
+- BIRTH_DATE: DATE
+- BILLING_CODE: STRING
+- CASE_DATE: DATE
+- CASE_ID: NUMBER
+- DEATH_DATE: DATE 
+- DOSE_UNIT_DESC: STRING
+- DRAW_DTM: DATETIME
+- ETHNICITY_CODE: NUMBER
+- ETHNICITY_DESC: STRING
+- GENDER_CODE: NUMBER
+- GENDER_DESC: STRING
+- MEDICATION_ID: NUMBER
+- PATIENT_ID: NUMBER
+- PATIENT_EXPIRED: BOOLEAN
+- POST_OP_ICU_LOS: NUMBER
+- PRESENT_ON_ADMISSION: BOOLEAN
+- PRIM_PROC_DESC: STRING
+- PROCEDURE_DATETIME: DATETIME
+- RACE_CODE: NUMBER
+- RACE_DESC: STRING
+- RESULT_CODE: STRING
+- RESULT_DESC: STRING
+- RESULT_DTM: DATETIME
+- RESULT_VALUE: STRING 
+- SCHED_SITE_DESC: STRING
+- SURGEON_ID: NUMBER
+- SURGERY_ELAPSED: NUMBER
+- SURGERY_END_DATETIME: DATETIME
+- SURGERY_START_DATETIME: DATETIME
+- SURGERY_TYPE: STRING
+- TOTAL_VENT_MINS: NUMBER
+- VISIT_NUMBER: NUMBER
+
+Please see the ERD.png in this folder to understand how we expect the data to be related.
+
 ## Testing
 
 We supply tests for all of the endpoints we provide using coverage.py. If you are updating the code and want to maintain the same functionality, our tests should help you do that. You can run the tests with `pipenv run test`.
+
+## Logging
+
+As a security measure, we support logging through the standard python logging module. The logs make note of all access to the endpoints, and which parameters were passed through.
