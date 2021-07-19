@@ -1,6 +1,6 @@
 import { timeFormat, timeParse } from "d3"
 import { observer } from "mobx-react"
-import { useContext, useState } from "react"
+import { createContext, useContext, useState } from "react"
 import { useEffect } from "react"
 import { FC } from "react"
 import { useIdleTimer } from "react-idle-timer"
@@ -11,6 +11,8 @@ import { SingleCasePoint } from "./Interfaces/Types/DataTypes"
 import { logoutHandler, whoamiAPICall } from "./Interfaces/UserManagement"
 import { SurgeryTypeArray } from "./Presets/DataDict"
 import './App.css'
+
+export const DataContext = createContext<SingleCasePoint[]>([])
 
 const App: FC = () => {
     const store = useContext(Store);
@@ -130,7 +132,7 @@ const App: FC = () => {
             })
     }
 
-    return <Dashboard hemoData={hemoData} />
+    return <DataContext.Provider value={hemoData}><Dashboard /></DataContext.Provider>
 }
 
 export default observer(App)

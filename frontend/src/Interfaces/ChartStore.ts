@@ -10,7 +10,7 @@ export class ChartStore {
 
     constructor(rootstore: RootStore) {
         this.rootStore = rootstore;
-        makeAutoObservable(this)
+        makeAutoObservable(this);
         this._totalAggregatedCaseCount = 0;
         this._totalIndividualCaseCount = 0;
     }
