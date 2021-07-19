@@ -4,20 +4,24 @@ This project is a collaboration between VDL and ARUP at University of Utah. We v
 
 ![Interface image](https://github.com/visdesignlab/sanguine/blob/master/images/interface.png)
 
+
 ## Table of Contents
 
-1. [Access Sanguine on CHPC](#access-sanguine-on-chpc)
+1. [Access Sanguine on CHPC at Utah](#access-sanguine-on-chpc-at-utah)
 1. [Quick start guide](#quick-start-guide)
     - [Start the server](#start-the-server)
     - [Start the frontend](#start-the-frontend)
 1. [Deployment docs](#deployment-docs)
 
-## Access Sanguine on CHPC
 
-To use this, make sure you are on the campus network. If off-campus, use a VPN that ends in utah.edu. Navigate to https://bloodvis.chpc.utah.edu
+## Access Sanguine on CHPC at Utah
+
+To use this, make sure you are on the campus network. If off-campus, use a VPN that ends in utah.edu. Navigate to https://bloodvis.chpc.utah.edu.
+
+We restrict who can access this application through Utah's CAS server, using duo two-factor authentication. If you need access to this application, please reach out to the developers.
+
 
 ## Quick start guide
-
 
 ### Start the server
 
