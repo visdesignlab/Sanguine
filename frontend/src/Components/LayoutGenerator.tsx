@@ -4,18 +4,20 @@ import { FC, useRef, useLayoutEffect } from "react";
 import { Responsive } from "react-grid-layout";
 import 'react-grid-layout/css/styles.css';
 import { Tab, Ref } from "semantic-ui-react";
+import { DataContext } from "../App";
 import Store from "../Interfaces/Store";
-import { SingleCasePoint } from "../Interfaces/Types/DataTypes";
+
 import { LayoutElement } from "../Interfaces/Types/LayoutTypes";
 import { typeDiction } from "../Presets/DataDict";
 import { WelcomeText } from "../Presets/StyledComponents";
 import ChartStandardButtons from "./Charts/ChartStandardButtons";
 import WrapperHeatMap from "./Charts/HeatMap/WrapperHeatMap";
 
-type Props = { hemoData: SingleCasePoint[]; };
+//type Props = { hemoData: SingleCasePoint[]; };
 
-const LayoutGenerator: FC<Props> = ({ hemoData }: Props) => {
+const LayoutGenerator: FC = () => {
     const store = useContext(Store)
+    const hemoData = useContext(DataContext)
     const createElement = (layout: LayoutElement, index: number) => {
         switch (layout.plotType) {
             case "DUMBBELL":
@@ -83,7 +85,6 @@ const LayoutGenerator: FC<Props> = ({ hemoData }: Props) => {
                 >
                     <ChartStandardButtons chartID={layout.i} />
                     <WrapperHeatMap
-                        hemoglobinDataSet={hemoData}
                         chartId={layout.i}
                         layoutW={layout.w}
                         layoutH={layout.h}

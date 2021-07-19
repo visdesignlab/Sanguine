@@ -1,20 +1,25 @@
 import { format, interpolateGreys, interpolateReds, scaleBand } from "d3";
-import { FC, useCallback } from "react";
+import { observer } from "mobx-react";
+import { FC, useCallback, useContext } from "react";
 import { HeatmapColorScale, HeatmapGreyScale, ValueScaleGeneratorFromDomainRange } from "../../../HelperFunctions/Scales";
+import Store from "../../../Interfaces/Store";
 import { HeatMapDataPoint } from "../../../Interfaces/Types/DataTypes";
 import { Basic_Gray } from "../../../Presets/Constants";
 import { HeatMapRect } from "../../../Presets/StyledSVGComponents";
+import Tooltip from '@material-ui/core/Tooltip';
+
 
 type Props = {
     valueScaleDomain: string;
     valueScaleRange: string;
-    showZero: boolean;
+    // showZero: boolean;
     dataPoint: HeatMapDataPoint;
     howToTransform: string;
     bandwidth: number;
 }
-const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange, showZero, howToTransform, bandwidth }: Props) => {
+const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange, howToTransform, bandwidth }: Props) => {
 
+    const { showZero } = useContext(Store).state
     const valueScale = useCallback(() => {
         return ValueScaleGeneratorFromDomainRange(valueScaleDomain, valueScaleRange)
     }, [valueScaleDomain, valueScaleRange]);
@@ -38,35 +43,20 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
 
                     return (
                         [
-                            // <Popup content={outputContent}
-                            //     key={dataPoint.aggregateAttribute + '-' + point}
-                            //     disabled={disables || caseCount === 0}
-                            //     trigger={
-                            //         <HeatRect
-                            //             fill={colorFill}
-                            //             x={valueScale()(point)}
-                            //             transform={howToTransform}
-                            //             width={valueScale().bandwidth()}
-                            //             height={bandwidth}
-                            //             isselected={isSelected}
-                            //             //   isfiltered={isFiltered}
-                            //             onClick={(e) => {
-                            //                 actions.updateBrushPatientGroup(dataPoint.countDict[point], e.shiftKey ? "ADD" : "REPLACE", {
-                            //                     setName: aggregatedBy,
-                            //                     setValues: [dataPoint.aggregateAttribute],
-                            //                     //setPatientIds: [dataPoint.patientIDList]
-                            //                 })
+                            <Tooltip
+                                title={<div className="charttooltip">{outputContent}</div>}
+                                arrow
+                                placement="top"
+                                hidden={output === 0}
+                                interactive>
 
-                            //             }} />}
-                            // />
-                            <g>
                                 <HeatMapRect
                                     fill={colorFill}
                                     x={valueScale()(point)}
                                     transform={howToTransform}
                                     width={valueScale().bandwidth()}
                                     height={bandwidth}
-
+                                    key={dataPoint.aggregateAttribute + '-' + point}
                                 //  isselected={isSelected}
                                 //   isfiltered={isFiltered}
                                 // onClick={(e) => {
@@ -77,14 +67,9 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                                 //     })
                                 //}} 
                                 />
-                                <text>
-                                    <tspan className="tooltiptext"
-                                        x={valueScale()(point)}
-                                        transform={howToTransform}>
-                                        {outputContent}
-                                    </tspan>
-                                </text>
-                            </g>
+
+
+                            </Tooltip>
                             ,
                             <line transform={howToTransform}
                                 strokeWidth={0.5}
@@ -103,4 +88,4 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
     )
 }
 
-export default SingleHeatRow
+export default observer(SingleHeatRow)
