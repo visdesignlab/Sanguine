@@ -48,7 +48,7 @@ const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArraySt
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [extraPairArrayString])
 
-    useEffect(() => {
+    useDeepCompareEffect(() => {
         const newExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, data, yValueOption, store.state.BloodProductCost)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
         // eslint-disable-next-line react-hooks/exhaustive-deps

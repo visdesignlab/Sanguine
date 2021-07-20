@@ -2,6 +2,8 @@ import { Button, Grid, List } from "semantic-ui-react";
 import styled from "styled-components";
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import { Third_Gray } from "./Constants";
+import ListItem from '@material-ui/core/ListItem';
+import { makeStyles, Theme, createStyles } from "@material-ui/core";
 
 export const LayoutDiv = styled.div`
   width: 100vw;
@@ -69,8 +71,8 @@ export const SurgeryListComp = styled(List.Item) <SurgeryListProps>`
   }
 `
 
-export const LeftToolBarListItem = styled(List.Item)`
-  text-align: left;
+export const LeftToolBarListItem = styled(ListItem)`
+  
 `
 
 interface WelcomeTextProps {
@@ -84,3 +86,14 @@ export const WelcomeText = styled(`text`) < WelcomeTextProps>`
     opacity:0.25;
     margin:20px;
 `
+
+export const useStyles = makeStyles((theme: Theme) =>
+    createStyles({
+        root: {
+
+            '& > *': {
+                margin: theme.spacing(0.5),
+            },
+        },
+    }),
+);

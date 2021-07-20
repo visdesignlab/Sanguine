@@ -2,16 +2,20 @@ import { timeFormat } from "d3"
 import { observer } from "mobx-react"
 import { useContext } from "react"
 import { FC } from "react"
-import { Checkbox, Container, Dropdown, Grid, List } from "semantic-ui-react"
 import { defaultState } from "../../../Interfaces/DefaultState"
 import Store from "../../../Interfaces/Store"
 import { AcronymDictionary, OutcomeOptions, SurgeryUrgency } from "../../../Presets/DataDict"
-import { LeftToolBarListItem, StyledDate, Title } from "../../../Presets/StyledComponents"
+import { LeftToolBarListItem, StyledDate, Title, useStyles } from "../../../Presets/StyledComponents"
+import Container from "@material-ui/core/Container";
+import List from "@material-ui/core/List";
+import { Box, Chip, ListItem, ListItemSecondaryAction, ListItemText, MenuItem, Select, Switch } from "@material-ui/core";
+import { Grid } from "semantic-ui-react"
 
 type Props = { totalCaseNum: number }
 
 const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
     const store = useContext(Store)
+    const { surgeryUrgencySelection } = store.state;
 
     const onDateChange = (event: any, data: any) => {
         if (!data.value) {
@@ -58,34 +62,48 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
 
     return (
-        <Grid.Row centered style={{ paddingLeft: "15px", height: "40vh" }}>
+        <Grid.Row centered style={{ height: "40vh" }}>
             <Container>
-                <List>
-                    <List.Header style={{ textAlign: "left" }}>
+                <List dense>
+                    <ListItem style={{ textAlign: "left" }}>
                         <Title>Current View</Title>
-                    </List.Header>
+                    </ListItem>
 
-                    <LeftToolBarListItem style={{ width: "100%" }} key="Date">
-                        <List.Header>Date Range</List.Header>
-                        <StyledDate
-                            onChange={onDateChange}
-                            placeholder={`${timeFormat("%Y-%m-%d")(new Date(store.state.rawDateRange[0]))} - ${timeFormat("%Y-%m-%d")(new Date(store.state.rawDateRange[1]))}`}
-                            type="range" />
-                    </LeftToolBarListItem>
+                    <ListItem alignItems="flex-start" style={{ width: "100%" }} key="Date">
+                        <ListItemText primary="Date Range"
+                            secondary={<StyledDate
+                                onChange={onDateChange}
+                                placeholder={`${timeFormat("%Y-%m-%d")(new Date(store.state.rawDateRange[0]))} - ${timeFormat("%Y-%m-%d")(new Date(store.state.rawDateRange[1]))}`}
+                                type="range" />} />
 
-                    <LeftToolBarListItem key="Outcomes">
-                        <List.Header>Outcomes/Interventions</List.Header>
-                        <Dropdown
+                    </ListItem>
+
+                    <ListItem key="Outcomes">
+                        <ListItemText primary="Outcomes/Interventions"
+                            secondary={<Select displayEmpty onChange={(e) => { store.configStore.changeOutcomeFilter((e.target.value as string)) }}  >
+                                {[(<MenuItem value="">
+                                    <em>None</em>
+                                </MenuItem>)].concat(OutcomeOptions.map((d) => {
+                                    return <MenuItem value={d.value}> {d.text} </MenuItem>
+                                }))}
+                            </Select>} />
+
+                        {/* <Dropdown
                             value={store.state.outcomeFilter}
                             clearable
                             selection
                             options={OutcomeOptions}
-                            onChange={(e, v) => { store.configStore.changeOutcomeFilter((v.value as string)) }} />
-                    </LeftToolBarListItem>
+                            onChange={(e, v) => { store.configStore.changeOutcomeFilter((v.value as string)) }} /> */}
+                    </ListItem>
 
-                    <LeftToolBarListItem key="Procedure Types">
-                        <List.Header>Surgery Types</List.Header>
-                        <Dropdown options={SurgeryUrgency} clearable multiple selection
+                    <ListItem key="Procedure Types">
+                        <ListItemText primary="Surgery Types" secondary={<Box className={useStyles().root}><Chip label="Urgent" clickable color={surgeryUrgencySelection[0] ? "primary" : undefined}
+                            onClick={() => { store.configStore.changeSurgeryUrgencySelection([!surgeryUrgencySelection[0], surgeryUrgencySelection[1], surgeryUrgencySelection[2]]) }} />
+                            <Chip label="Elective" clickable color={surgeryUrgencySelection[1] ? "primary" : undefined}
+                                onClick={() => { store.configStore.changeSurgeryUrgencySelection([surgeryUrgencySelection[0], !surgeryUrgencySelection[1], surgeryUrgencySelection[2]]) }} />
+                            <Chip label="Emergent" clickable color={surgeryUrgencySelection[2] ? "primary" : undefined}
+                                onClick={() => { store.configStore.changeSurgeryUrgencySelection([surgeryUrgencySelection[0], surgeryUrgencySelection[1], !surgeryUrgencySelection[2]]) }} /></Box>} />
+                        {/* <Dropdown options={SurgeryUrgency} clearable multiple selection
                             value={calculateSelectedProcedureType()}
                             onChange={(e, v) => {
                                 let newSurgerySelection: [boolean, boolean, boolean] = [false, false, false];
@@ -93,36 +111,44 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                                     (v.value as number[]).forEach(d => { newSurgerySelection[d] = true })
                                 }
                                 store.configStore.changeSurgeryUrgencySelection(newSurgerySelection)
-                            }} />
-                    </LeftToolBarListItem>
+                            }} /> */}
+
+                    </ListItem>
 
 
-                    <LeftToolBarListItem key="Show Zero">
-                        <List.Header>Show Zero Transfused</List.Header>
-                        <Checkbox
-                            checked={store.state.showZero}
-                            onClick={(e, v) => { store.configStore.toggleShowZero(v.checked || false) }}
-                            toggle />
-                    </LeftToolBarListItem>
+                    <ListItem key="Show Zero">
+                        <ListItemText primary="Show Zero Transfused"
+                        ></ListItemText>
+                        <ListItemSecondaryAction>
+                            <Switch
+                                checked={store.state.showZero}
+                                onChange={(e) => { store.configStore.toggleShowZero(e.target.checked) }}
+                            />
+                        </ListItemSecondaryAction>
+                    </ListItem>
 
-                    <LeftToolBarListItem key="AggreCaseCount">
-                        <List.Header>Aggregated Cases</List.Header>
+                    <ListItem key="AggreCaseCount">
+                        <ListItemText primary="Aggregated Cases"
+                            secondary={`${store.chartStore.totalAggregatedCaseCount}/${totalCaseNum}`} />
+                        {/* <ListItemText>Aggregated Cases</ListItemText>
                         <List.Content>
                             {store.chartStore.totalAggregatedCaseCount}/{totalCaseNum}
-                        </List.Content>
-                    </LeftToolBarListItem>
+                        </List.Content> */}
+                    </ListItem>
 
-                    <LeftToolBarListItem key="IndiCaseCount">
-                        <List.Header>Individual Cases</List.Header>
+                    <ListItem key="IndiCaseCount">
+                        <ListItemText primary="Individual Cases"
+                            secondary={`${store.chartStore.totalIndividualCaseCount}/${totalCaseNum}`} />
+                        {/* <ListItemText>Individual Cases</ListItemText>
                         <List.Content>
                             {store.chartStore.totalIndividualCaseCount}/{totalCaseNum}
-                        </List.Content>
-                    </LeftToolBarListItem>
+                        </List.Content> */}
+                    </ListItem>
 
-                    <LeftToolBarListItem key="SurgeryList">
-                        <List.Header>Procedures</List.Header>
-                        <List.Content>{generateSurgery()} </List.Content>
-                    </LeftToolBarListItem>
+                    <ListItem key="SurgeryList">
+                        <ListItemText primary="Procedure" secondary={generateSurgery()} />
+                        {/* <List.Content>{generateSurgery()} </List.Content> */}
+                    </ListItem>
                     {/* {generatePatientSelection()}
 
 
@@ -132,7 +158,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                             key={`${selectSet.setName}selected`}
                             onClick={() => { actions.clearOutputFilterSet(selectSet.setName) }}
                         >
-                            <List.Header>{AcronymDictionary[selectSet.setName]}</List.Header>
+                            <ListItemText>{AcronymDictionary[selectSet.setName]}</ListItemText>
                             <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
 
                             <List.Content >{selectSet.setValues.sort().join(', ')}</List.Content>
