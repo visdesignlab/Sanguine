@@ -5,12 +5,10 @@ import BrowserWarning from "./Components/Modals/BrowserWarning"
 import DataRetrieval from "./Components/Modals/DataRetrieval"
 import LeftToolBox from "./Components/Utilities/LeftToolBox/LeftToolBox"
 import RegularModeMenu from "./Components/Utilities/TopMenu/RegularModeMenu"
-import { SingleCasePoint } from "./Interfaces/Types/DataTypes"
 import { LayoutDiv, SpecialPaddingColumn } from "./Presets/StyledComponents"
 import './App.css'
 import LayoutGenerator from "./Components/LayoutGenerator"
 import { DataContext } from "./App"
-import Container from "@material-ui/core/Container"
 import Grid from "@material-ui/core/Grid"
 import { Box, Divider } from "@material-ui/core"
 
@@ -26,7 +24,7 @@ const Dashboard: FC = () => {
             </Box>
             <Divider />
             <Grid container spacing={2} direction="row" justifyContent="space-between">
-                <Grid item xs={1} id="Side-Bar">
+                <Grid item xs={2} id="Side-Bar">
                     <LeftToolBox totalCaseNum={hemoData.length} />
                 </Grid>
                 <Grid item xs={9} id="Main-Body">

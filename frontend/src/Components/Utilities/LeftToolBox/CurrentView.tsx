@@ -103,15 +103,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                                     onClick={() => { store.configStore.changeSurgeryUrgencySelection([surgeryUrgencySelection[0], !surgeryUrgencySelection[1], surgeryUrgencySelection[2]]) }} />
                                 <Chip size="small" label="Emergent" clickable color={surgeryUrgencySelection[2] ? "primary" : undefined}
                                     onClick={() => { store.configStore.changeSurgeryUrgencySelection([surgeryUrgencySelection[0], surgeryUrgencySelection[1], !surgeryUrgencySelection[2]]) }} /></Box>} />
-                        {/* <Dropdown options={SurgeryUrgency} clearable multiple selection
-                            value={calculateSelectedProcedureType()}
-                            onChange={(e, v) => {
-                                let newSurgerySelection: [boolean, boolean, boolean] = [false, false, false];
-                                if (v.value) {
-                                    (v.value as number[]).forEach(d => { newSurgerySelection[d] = true })
-                                }
-                                store.configStore.changeSurgeryUrgencySelection(newSurgerySelection)
-                            }} /> */}
+
 
                     </ListItem>
 
@@ -130,19 +122,11 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                     <ListItem key="AggreCaseCount">
                         <ListItemText primary="Aggregated Cases"
                             secondary={`${store.chartStore.totalAggregatedCaseCount}/${totalCaseNum}`} />
-                        {/* <ListItemText>Aggregated Cases</ListItemText>
-                        <List.Content>
-                            {store.chartStore.totalAggregatedCaseCount}/{totalCaseNum}
-                        </List.Content> */}
                     </ListItem>
 
                     <ListItem key="IndiCaseCount">
                         <ListItemText primary="Individual Cases"
                             secondary={`${store.chartStore.totalIndividualCaseCount}/${totalCaseNum}`} />
-                        {/* <ListItemText>Individual Cases</ListItemText>
-                        <List.Content>
-                            {store.chartStore.totalIndividualCaseCount}/{totalCaseNum}
-                        </List.Content> */}
                     </ListItem>
 
                     <ListItem key="SurgeryList">

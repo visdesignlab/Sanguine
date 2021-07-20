@@ -6,7 +6,7 @@ import { useContext, useState } from "react";
 import { FC } from "react";
 import Store from "../../../Interfaces/Store";
 import { logoutHandler } from "../../../Interfaces/UserManagement";
-import { blood_red } from "../../../Presets/Constants";
+// import { blood_red } from "../../../Presets/Constants";
 import BugReportOutlinedIcon from '@material-ui/icons/BugReportOutlined';
 import { useStyles } from "../../../Presets/StyledComponents";
 import AddModeTopMenu from "./AddModeTopMenu";
