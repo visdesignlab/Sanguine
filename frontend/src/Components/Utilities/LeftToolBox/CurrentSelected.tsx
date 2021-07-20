@@ -1,21 +1,23 @@
+import { Container, List, Grid, ListItem, Button, ButtonGroup } from "@material-ui/core";
 import { observer } from "mobx-react";
 import { FC } from "react";
-import { Grid, Container, List, Button } from "semantic-ui-react";
+// import { Grid, Container, List, Button } from "semantic-ui-react";
 //import { AcronymDictionary } from "../../../Presets/DataDict";
-import { Title } from "../../../Presets/StyledComponents";
+import { Title, useStyles } from "../../../Presets/StyledComponents";
 
 const CurrentSelected: FC = () => {
-    return (<Grid.Row centered >
-        <Container style={{ height: "15vh", paddingLeft: "15px" }}>
-            <List>
+    const styles = useStyles()
+    return (
+        <Grid item >
+            <Container>
+                <List dense>
+                    <ListItem >
+                        <Title>Current Selected</Title>
+                    </ListItem>
 
-                <List.Header style={{ textAlign: "left" }}>
-                    <Title>Current Selected</Title>
-                </List.Header>
+                    {/* {generateBrushPatientItem()} */}
 
-                {/* {generateBrushPatientItem()} */}
-
-                {/* {currentSelectSet.map((selectSet) => {
+                    {/* {currentSelectSet.map((selectSet) => {
                     return <FilterListIT
                         key={`${selectSet.setName}currentselecting`}
                         onClick={() => { actions.clearSelectSet(selectSet.setName) }}
@@ -26,24 +28,25 @@ const CurrentSelected: FC = () => {
                     </FilterListIT>
                 })} */}
 
-            </List>
-
-            <Button
-                // disabled={!(currentSelectSet.length > 0 || currentBrushedPatientGroup.length > 0)}
-                basic
-                size="tiny"
-                content="Add to Filter"
-            //onClick={actions.currentOutputFilterSetChange}
-            />
-            <Button
-                // disabled={!(currentOutputFilterSet.length > 0 || currentSelectPatientGroup.length > 0)}
-                basic
-                size="tiny"
-                content="Clear Filter"
-            //onClick={() => { actions.clearOutputFilterSet() }}
-            />
-        </Container>
-    </Grid.Row>)
+                </List>
+                <ButtonGroup>
+                    <Button
+                        // disabled={!(currentSelectSet.length > 0 || currentBrushedPatientGroup.length > 0)}
+                        variant="outlined"
+                        size="small"
+                        className={styles.tinyFont}
+                    //onClick={actions.currentOutputFilterSetChange}
+                    >Add to Filter</Button>
+                    <Button
+                        // disabled={!(currentOutputFilterSet.length > 0 || currentSelectPatientGroup.length > 0)}
+                        variant="outlined"
+                        size="small"
+                        className={styles.tinyFont}
+                    //onClick={() => { actions.clearOutputFilterSet() }}
+                    >Clear Filter</Button>
+                </ButtonGroup>
+            </Container>
+        </Grid>)
 }
 
 export default observer(CurrentSelected)

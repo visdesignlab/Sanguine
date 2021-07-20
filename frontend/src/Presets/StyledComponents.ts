@@ -18,14 +18,6 @@ export const ChartWrapperGrid = styled(Grid)`
     height:100%
 `
 
-export const RequirementP = styled(`p`)`
-    color:red;
-    font-size:large;
-`
-
-// export const BugButton = styled(Button)`
-//     &&&&&{margin-left:5px!important;};
-// `
 
 export const Title = styled.b`
     font-size:larger;
@@ -106,6 +98,9 @@ export const useStyles = makeStyles((theme: Theme) =>
         },
         centerAlignment: {
             textAlign: "center"
+        },
+        tinyFont: {
+            fontSize: "xx-small"
         }
     }),
 );

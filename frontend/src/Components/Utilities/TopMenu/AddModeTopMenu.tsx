@@ -1,7 +1,5 @@
 import { observer } from "mobx-react";
-import { FC, useState } from "react"
-// import { Button, Dropdown, Menu } from "semantic-ui-react"
-// import SemanticDatePicker from 'react-semantic-ui-datepickers';
+import { FC, useState } from "react";
 import { addOptions, OutcomeOptions, typeDiction } from "../../../Presets/DataDict";
 import {
     KeyboardDatePicker,
@@ -17,7 +15,6 @@ import Button from "@material-ui/core/Button";
 import Select from "@material-ui/core/Select";
 import { DropdownGenerator } from "../../../HelperFunctions/DropdownGenerator";
 import { FormControl, InputLabel } from "@material-ui/core";
-// import { RequirementP } from "../../../Presets/StyledComponents";
 
 
 type Props = { addingChartType: number }
