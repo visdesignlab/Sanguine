@@ -8,3 +8,4 @@ api/static
 .env.prod
 api/api/tests.py
 sanguine.log*
+*.bak
