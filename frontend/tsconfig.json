@@ -3,10 +3,14 @@
         "experimentalDecorators": true,
         "target": "es5",
         "lib": [
+            "es6",
             "dom",
             "dom.iterable",
             "esnext"
         ],
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "strictNullChecks": true,
         "allowJs": true,
         "skipLibCheck": true,
         "esModuleInterop": true,
