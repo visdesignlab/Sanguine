@@ -23,9 +23,9 @@ export const RequirementP = styled(`p`)`
     font-size:large;
 `
 
-export const BugButton = styled(Button)`
-    &&&&&{margin-left:5px!important;};
-`
+// export const BugButton = styled(Button)`
+//     &&&&&{margin-left:5px!important;};
+// `
 
 export const Title = styled.b`
     font-size:larger;
@@ -95,5 +95,14 @@ export const useStyles = makeStyles((theme: Theme) =>
                 margin: theme.spacing(0.5),
             },
         },
+        img: {
+            margin: 'auto',
+            display: 'block',
+            maxWidth: '100%',
+            height: "40px"
+        },
+        centerAlignment: {
+            textAlign: "center"
+        }
     }),
 );
