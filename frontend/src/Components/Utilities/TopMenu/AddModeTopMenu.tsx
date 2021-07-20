@@ -1,12 +1,23 @@
 import { observer } from "mobx-react";
 import { FC, useState } from "react"
-import { Button, Dropdown, Menu } from "semantic-ui-react"
-import SemanticDatePicker from 'react-semantic-ui-datepickers';
-import { addOptions, OutcomeOptions, typeDiction } from "../../../Presets/DataDict"
+// import { Button, Dropdown, Menu } from "semantic-ui-react"
+// import SemanticDatePicker from 'react-semantic-ui-datepickers';
+import { addOptions, OutcomeOptions, typeDiction } from "../../../Presets/DataDict";
+import {
+    KeyboardDatePicker,
+} from '@material-ui/pickers';
 import { useContext } from "react";
 import Store from "../../../Interfaces/Store";
 import { LayoutElement } from "../../../Interfaces/Types/LayoutTypes";
-import { RequirementP } from "../../../Presets/StyledComponents";
+import Grid from "@material-ui/core/Grid";
+import { useStyles } from "../../../Presets/StyledComponents";
+import Divider from "@material-ui/core/Divider";
+import ButtonGroup from "@material-ui/core/ButtonGroup";
+import Button from "@material-ui/core/Button";
+import Select from "@material-ui/core/Select";
+import { DropdownGenerator } from "../../../HelperFunctions/DropdownGenerator";
+import { FormControl, InputLabel } from "@material-ui/core";
+// import { RequirementP } from "../../../Presets/StyledComponents";
 
 
 type Props = { addingChartType: number }
@@ -15,25 +26,11 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
 
     const store = useContext(Store)
 
-
-
-
-
+    const styles = useStyles();
     const [xAggreSelection, setXAggreSelection] = useState<string>("")
     const [yValueSelection, setYValueSelection] = useState<string>("")
     const [outcomeComparisonSelection, setOutcomeComparisonSelection] = useState<string>("")
     const [interventionDate, setInterventionDate] = useState<number | undefined>(undefined)
-
-    const xAggreSelectionChangeHandler = (e: any, value: any) => {
-        setXAggreSelection(value.value)
-    }
-    const yValueSelectionChangeHandler = (e: any, value: any) => {
-        setYValueSelection(value.value)
-    }
-
-    const outcomeComparisonHandler = (e: any, value: any) => {
-        setOutcomeComparisonSelection(value.value)
-    }
 
     const cancelChartAddHandler = () => {
         store.configStore.topMenuBarAddMode = false;
@@ -41,17 +38,17 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         setYValueSelection("");
     }
 
-    const interventionHandler = (e: any, value: any) => {
-        if (value.value === "None" || !value.value) {
-            setInterventionDate(undefined)
+    const interventionHandler = (date: Date | null) => {
+        if (date) {
+            setInterventionDate(date.getTime())
+
         }
         else {
-            setInterventionDate(value.value.getTime())
+            setInterventionDate(undefined)
         }
     }
 
     const checkValidInput = () => {
-
         return (xAggreSelection.length > 0 && yValueSelection.length > 0 && addingChartType > 0) || (xAggreSelection.length > 0 && addingChartType === 0)
     }
 
@@ -90,141 +87,128 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         }
     }
 
+
+    const outputRegularOptions = (titleOne: string, titleTwo: string) => {
+        return <>
+            <Grid item xs>
+                <div className={styles.centerAlignment}>
+                    <FormControl required className={styles.formControl}>
+                        <InputLabel>{titleOne}</InputLabel>
+                        <Select
+                            onChange={(e) => { setYValueSelection(e.target.value as string) }}>
+                            {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][0] : [])}
+                        </Select>
+                    </FormControl>
+
+                </div>
+            </Grid>
+            <Divider orientation="vertical" flexItem />
+
+            <Grid item xs>
+                <div className={styles.centerAlignment}>
+                    <FormControl required className={styles.formControl}>
+                        <InputLabel>{titleTwo}</InputLabel>
+                        <Select
+
+                            onChange={(e) => { setXAggreSelection(e.target.value as string) }}>
+                            {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][1] : [])}
+                        </Select>
+                    </FormControl>
+
+                </div>
+            </Grid>
+        </>
+    }
+
     const addBarChartMenuRewrite: any[] = [
         //For #0 Cost and Saving Chart
-        [<Menu.Item>
-            <Dropdown
-                placeholder={"Select Aggregation"}
-                options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
-                onChange={(xAggreSelectionChangeHandler)}
-            />
-            <RequirementP>*</RequirementP>
-        </Menu.Item>],
+        [<Grid item xs>
+            <FormControl required className={styles.formControl}>
+                <Select onChange={(e) => { setXAggreSelection(e.target.value as string) }}>
+                    {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][1] : [])}
+                </Select>
+            </FormControl>
+        </Grid>],
 
         //For #1 Dumbbell Chart
 
-        [<Menu.Item>
-            <Dropdown
-                placeholder="Select Value to Show"
-                options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
-                onChange={yValueSelectionChangeHandler}
-            />
-            <RequirementP>*</RequirementP>
-        </Menu.Item>,
-        <Menu.Item>
-            <Dropdown
-                placeholder="Facet by"
-                options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
-                onChange={xAggreSelectionChangeHandler}
-            />
-            <RequirementP>*</RequirementP>
-        </Menu.Item>],
+        outputRegularOptions("Select Value to Show", "Arranged by"),
 
         //for #2 Scatter Plot
 
-        [<Menu.Item>
-            <Dropdown
-                placeholder="Select Y-axis Attribute"
-                options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
-                onChange={yValueSelectionChangeHandler}
-            />
-            <RequirementP>*</RequirementP>
-        </Menu.Item>,
-        <Menu.Item>
-            <Dropdown
-                placeholder="Select X-axis Attribute"
-                options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
-                onChange={xAggreSelectionChangeHandler}
-            />
-            <RequirementP>*</RequirementP>
-        </Menu.Item>],
+        outputRegularOptions("Select Value to Show", "Arranged by"),
 
         //for #3 Heat Map
 
-        [< Menu.Item >
-            <Dropdown
-                placeholder="Select Value to Show"
-                options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
-                onChange={yValueSelectionChangeHandler}
-            />
-            <RequirementP>*</RequirementP>
-        </Menu.Item >,
-        <Menu.Item>
-            <Dropdown
-                placeholder="Select X-axis Attribute"
-                options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
-                onChange={xAggreSelectionChangeHandler}
-            />
-            <RequirementP>*</RequirementP>
-        </Menu.Item>,
-        <Menu.Item>
-            <Dropdown
-                placeholder="Outcome/Intervention Comparison (Optional)"
-                clearable
-                options={OutcomeOptions}
-                onChange={outcomeComparisonHandler}
-            />
-        </Menu.Item>],
+        [outputRegularOptions("Select Value to Show", "Aggregated by"),
+
+        <Grid item xs>
+            <div className={styles.centerAlignment}>
+                <FormControl className={styles.formControl}>
+                    <Select displayEmpty onChange={(e) => { setOutcomeComparisonSelection(e.target.value as string) }}>
+                        {DropdownGenerator((addingChartType > -1 ? addOptions[addingChartType][1] : []), true)}
+                    </Select>
+                </FormControl>
+            </div>
+        </Grid>
+        ],
 
         //For #4 Intervention Plot
 
-        [<Menu.Item>
-            <Dropdown
-                placeholder="Select Value to Show"
-                options={addingChartType > -1 ? addOptions[addingChartType][0] : []}
-                onChange={yValueSelectionChangeHandler}
-            />
-            <RequirementP>*</RequirementP>
-        </Menu.Item>,
-        <Menu.Item>
-            <Dropdown
-                placeholder="Select X-axis Attribute"
-                options={addingChartType > -1 ? addOptions[addingChartType][1] : []}
-                onChange={xAggreSelectionChangeHandler}
-            />
-            <RequirementP>*</RequirementP>
-        </Menu.Item>,
-        <Menu.Item>
-            <SemanticDatePicker
+        [outputRegularOptions("Select Value to Show", "Aggregated by"),
+
+        <Grid item xs>
+            {/* <SemanticDatePicker
                 placeholder={"Intervention"}
                 minDate={store.state.rawDateRange[0] as any}
                 maxDate={store.state.rawDateRange[1] as any}
-                onChange={interventionHandler} />
-            <RequirementP>*</RequirementP>
-        </Menu.Item>],
+                onChange={interventionHandler} /> */}
+            <div className={styles.centerAlignment}>
+                BUG
+                {/* <KeyboardDatePicker
+                    disableToolbar
+                    variant="inline"
+                    format="MM/dd/yyyy"
+                    margin="normal"
+                    id="date-picker-inline"
+                    label="Date picker inline"
+                    value={interventionDate}
+                    onChange={interventionHandler}
+
+                /> */}
+            </div>
+        </Grid>
+        ],
 
         //for #5 Compare Cost Chart
 
-        [<Menu.Item>
-            <Dropdown placeholder="Select Value to Compare"
-                options={addOptions[5][0]}
-                onChange={yValueSelectionChangeHandler}
-            />
-            <RequirementP>*</RequirementP>
-        </Menu.Item>,
-        <Menu.Item>
-            <Dropdown placeholder="Select Aggregation"
-                options={addOptions[5][1]}
-                onChange={xAggreSelectionChangeHandler}
-            />
-            <RequirementP>*</RequirementP>
-        </Menu.Item>]
+        outputRegularOptions("Select Value to Compare", "Aggregated by")
     ]
 
-    return <Menu widths={5}>
-        {addBarChartMenuRewrite[addingChartType]}
-        <Menu.Item>
-            <Button.Group>
-                <Button
-                    positive
-                    disabled={!checkValidInput()}
-                    onClick={confirmChartAddHandler}
-                    content={"Confirm"}
-                />
-                <Button content={"Cancel"} onClick={cancelChartAddHandler} />
-            </Button.Group>
-        </Menu.Item>
-    </Menu>
+    return <div className={styles.root}>
+        <Grid container direction="row" justifyContent="space-around" alignItems="center">
+            {addBarChartMenuRewrite[addingChartType]}
+            <Divider orientation="vertical" flexItem />
+            <Grid item xs>
+                <div className={styles.centerAlignment}>
+                    <ButtonGroup>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            disabled={!checkValidInput()}
+                            onClick={confirmChartAddHandler}>
+                            Confirm
+                        </Button>
+                        <Button
+                            variant="contained"
+                            onClick={cancelChartAddHandler} >
+                            Cancel
+                        </Button>
+                    </ButtonGroup>
+                </div>
+            </Grid>
+        </Grid>
+    </div>
 }
 
 export default observer(AddModeTopMenu)

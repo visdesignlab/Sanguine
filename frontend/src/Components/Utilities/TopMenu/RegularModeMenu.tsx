@@ -1,10 +1,9 @@
-import { Divider, Grid, Menu, MenuItem, Button, Box, IconButton } from "@material-ui/core";
+import { Divider, Grid, Menu, MenuItem, Button } from "@material-ui/core";
 import { isObservable } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 import { useContext, useState } from "react";
 import { FC } from "react";
-import { Image, Dropdown } from "semantic-ui-react";
 import Store from "../../../Interfaces/Store";
 import { logoutHandler } from "../../../Interfaces/UserManagement";
 import { blood_red } from "../../../Presets/Constants";
