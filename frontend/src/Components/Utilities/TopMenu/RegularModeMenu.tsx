@@ -29,7 +29,7 @@ const RegularModeMenu: FC = () => {
 
     const handleClose = (input?: number) => {
         setAnchorEl(null);
-        if (input) {
+        if (input !== undefined) {
             addModeButtonHandler(input)
         }
     };
