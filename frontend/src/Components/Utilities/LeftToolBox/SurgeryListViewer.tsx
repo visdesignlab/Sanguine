@@ -1,8 +1,9 @@
+import { Grid } from "@material-ui/core";
 import { axisTop, max, scaleLinear, select } from "d3";
 import { observer } from "mobx-react";
 import { useCallback, useContext, useEffect } from "react";
 import { FC, useLayoutEffect, useRef, useState } from "react";
-import { Grid, Container, List, Header } from "semantic-ui-react";
+import { Container, List, Header } from "semantic-ui-react";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
 import { SurgeryDiv, SurgeryForeignObj, SurgeryListComp, SurgeryNumText } from "../../../Presets/StyledComponents";
@@ -58,7 +59,7 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
     }, [store.state.proceduresSelection, surgeryList])
 
 
-    return <Grid.Row centered >
+    return <Grid item >
         <Container style={{ overflow: "overlay", height: "25vh" }} >
             <List relaxed divided >
                 <List.Item key={"filter-header"}
@@ -119,6 +120,6 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
                 })}
             </List>
         </Container>
-    </Grid.Row>
+    </Grid>
 }
 export default observer(SurgeryListViewer)

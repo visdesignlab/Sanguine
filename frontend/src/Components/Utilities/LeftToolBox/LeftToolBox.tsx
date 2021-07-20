@@ -1,7 +1,8 @@
+import Divider from "@material-ui/core/Divider"
+import Grid from "@material-ui/core/Grid"
 import { max } from "d3"
 import { observer } from "mobx-react"
 import { FC, useEffect, useState } from "react"
-import { Grid } from "semantic-ui-react"
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker"
 import CurrentSelected from "./CurrentSelected"
 import CurrentView from "./CurrentView"
@@ -30,12 +31,16 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    return <Grid divided="vertically" verticalAlign={"middle"} padded>
+    return <Grid container spacing={2}>
         <CurrentView totalCaseNum={totalCaseNum} />
+        <Divider orientation="horizontal" style={{ width: '100%' }} />
         <CurrentSelected />
+        <Divider orientation="horizontal" style={{ width: '100%' }} />
         <SurgerySearchBar surgeryList={surgeryList} />
+        <Divider orientation="horizontal" style={{ width: '100%' }} />
         <SurgeryListViewer surgeryList={surgeryList} maxCaseCount={maxCaseCount} />
     </Grid>
+
 }
 
 export default observer(LeftToolBox)
