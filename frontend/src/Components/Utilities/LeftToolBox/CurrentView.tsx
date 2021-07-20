@@ -10,6 +10,7 @@ import Container from "@material-ui/core/Container";
 import List from "@material-ui/core/List";
 import { Box, Chip, ListItem, ListItemSecondaryAction, ListItemText, MenuItem, Select, Switch } from "@material-ui/core";
 import { Grid } from "semantic-ui-react"
+import { DropdownGenerator } from "../../../HelperFunctions/DropdownGenerator"
 
 type Props = { totalCaseNum: number }
 
@@ -80,13 +81,10 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
                     <ListItem key="Outcomes">
                         <ListItemText primary="Outcomes/Interventions"
-                            secondary={<Select displayEmpty onChange={(e) => { store.configStore.changeOutcomeFilter((e.target.value as string)) }}  >
-                                {[(<MenuItem value="">
-                                    <em>None</em>
-                                </MenuItem>)].concat(OutcomeOptions.map((d) => {
-                                    return <MenuItem value={d.value}> {d.text} </MenuItem>
-                                }))}
-                            </Select>} />
+                            secondary={
+                                <Select displayEmpty onChange={(e) => { store.configStore.changeOutcomeFilter((e.target.value as string)) }}  >
+                                    {DropdownGenerator(OutcomeOptions, true)}
+                                </Select>} />
 
                         {/* <Dropdown
                             value={store.state.outcomeFilter}
@@ -97,12 +95,14 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                     </ListItem>
 
                     <ListItem key="Procedure Types">
-                        <ListItemText primary="Surgery Types" secondary={<Box className={useStyles().root}><Chip label="Urgent" clickable color={surgeryUrgencySelection[0] ? "primary" : undefined}
-                            onClick={() => { store.configStore.changeSurgeryUrgencySelection([!surgeryUrgencySelection[0], surgeryUrgencySelection[1], surgeryUrgencySelection[2]]) }} />
-                            <Chip label="Elective" clickable color={surgeryUrgencySelection[1] ? "primary" : undefined}
-                                onClick={() => { store.configStore.changeSurgeryUrgencySelection([surgeryUrgencySelection[0], !surgeryUrgencySelection[1], surgeryUrgencySelection[2]]) }} />
-                            <Chip label="Emergent" clickable color={surgeryUrgencySelection[2] ? "primary" : undefined}
-                                onClick={() => { store.configStore.changeSurgeryUrgencySelection([surgeryUrgencySelection[0], surgeryUrgencySelection[1], !surgeryUrgencySelection[2]]) }} /></Box>} />
+                        <ListItemText primary="Surgery Types" secondary={
+                            <Box className={useStyles().root}>
+                                <Chip size="small" label="Urgent" clickable color={surgeryUrgencySelection[0] ? "primary" : undefined}
+                                    onClick={() => { store.configStore.changeSurgeryUrgencySelection([!surgeryUrgencySelection[0], surgeryUrgencySelection[1], surgeryUrgencySelection[2]]) }} />
+                                <Chip size="small" label="Elective" clickable color={surgeryUrgencySelection[1] ? "primary" : undefined}
+                                    onClick={() => { store.configStore.changeSurgeryUrgencySelection([surgeryUrgencySelection[0], !surgeryUrgencySelection[1], surgeryUrgencySelection[2]]) }} />
+                                <Chip size="small" label="Emergent" clickable color={surgeryUrgencySelection[2] ? "primary" : undefined}
+                                    onClick={() => { store.configStore.changeSurgeryUrgencySelection([surgeryUrgencySelection[0], surgeryUrgencySelection[1], !surgeryUrgencySelection[2]]) }} /></Box>} />
                         {/* <Dropdown options={SurgeryUrgency} clearable multiple selection
                             value={calculateSelectedProcedureType()}
                             onChange={(e, v) => {

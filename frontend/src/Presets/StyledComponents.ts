@@ -89,8 +89,11 @@ export const WelcomeText = styled(`text`) < WelcomeTextProps>`
 
 export const useStyles = makeStyles((theme: Theme) =>
     createStyles({
+        formControl: {
+            margin: theme.spacing(1),
+            minWidth: 200,
+        },
         root: {
-
             '& > *': {
                 margin: theme.spacing(0.5),
             },
