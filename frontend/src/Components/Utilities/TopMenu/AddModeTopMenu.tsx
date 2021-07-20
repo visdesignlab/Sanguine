@@ -109,7 +109,6 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                     <FormControl required className={styles.formControl}>
                         <InputLabel>{titleTwo}</InputLabel>
                         <Select
-
                             onChange={(e) => { setXAggreSelection(e.target.value as string) }}>
                             {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][1] : [])}
                         </Select>
@@ -122,13 +121,16 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
 
     const addBarChartMenuRewrite: any[] = [
         //For #0 Cost and Saving Chart
-        [<Grid item xs>
-            <FormControl required className={styles.formControl}>
-                <Select onChange={(e) => { setXAggreSelection(e.target.value as string) }}>
-                    {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][1] : [])}
-                </Select>
-            </FormControl>
-        </Grid>],
+        <Grid item xs>
+            <div className={styles.centerAlignment}>
+                <FormControl required className={styles.formControl}>
+                    <InputLabel>Aggregated by</InputLabel>
+                    <Select onChange={(e) => { setXAggreSelection(e.target.value as string) }}>
+                        {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][1] : [])}
+                    </Select>
+                </FormControl>
+            </div>
+        </Grid>,
 
         //For #1 Dumbbell Chart
 
@@ -145,8 +147,10 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         <Grid item xs>
             <div className={styles.centerAlignment}>
                 <FormControl className={styles.formControl}>
-                    <Select displayEmpty onChange={(e) => { setOutcomeComparisonSelection(e.target.value as string) }}>
-                        {DropdownGenerator((addingChartType > -1 ? addOptions[addingChartType][1] : []), true)}
+                    <InputLabel>Outcome/Intervention</InputLabel>
+                    <Select onChange={(e) => { console.log(outcomeComparisonSelection); setOutcomeComparisonSelection(e.target.value as string) }}
+                    >
+                        {DropdownGenerator(OutcomeOptions, true)}
                     </Select>
                 </FormControl>
             </div>
@@ -185,7 +189,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         outputRegularOptions("Select Value to Compare", "Aggregated by")
     ]
 
-    return <div className={styles.root}>
+    return <div>
         <Grid container direction="row" justifyContent="space-around" alignItems="center">
             {addBarChartMenuRewrite[addingChartType]}
             <Divider orientation="vertical" flexItem />
