@@ -1,6 +1,5 @@
 import { max } from "d3"
 import { observer } from "mobx-react"
-import { useContext } from "react"
 import { FC, useEffect, useState } from "react"
 import { Grid } from "semantic-ui-react"
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker"
@@ -39,4 +38,4 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
     </Grid>
 }
 
-export default LeftToolBox
+export default observer(LeftToolBox)

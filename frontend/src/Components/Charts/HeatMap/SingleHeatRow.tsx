@@ -67,8 +67,6 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                                 //     })
                                 //}} 
                                 />
-
-
                             </Tooltip>
                             ,
                             <line transform={howToTransform}
