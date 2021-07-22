@@ -1,15 +1,16 @@
+import { Container, Tab, Tabs } from "@material-ui/core";
 import { observer } from "mobx-react";
-import { useContext } from "react";
+import { ChangeEvent, useContext, useState } from "react";
 import { FC, useRef, useLayoutEffect } from "react";
 import { Responsive } from "react-grid-layout";
 import 'react-grid-layout/css/styles.css';
-import { Tab, Ref } from "semantic-ui-react";
+// import {  Ref } from "semantic-ui-react";
 import { DataContext } from "../App";
 import Store from "../Interfaces/Store";
 
 import { LayoutElement } from "../Interfaces/Types/LayoutTypes";
 import { typeDiction } from "../Presets/DataDict";
-import { WelcomeText } from "../Presets/StyledComponents";
+import { useStyles, WelcomeText } from "../Presets/StyledComponents";
 import ChartStandardButtons from "./Charts/ChartStandardButtons";
 import WrapperHeatMap from "./Charts/HeatMap/WrapperHeatMap";
 
@@ -17,7 +18,12 @@ import WrapperHeatMap from "./Charts/HeatMap/WrapperHeatMap";
 
 const LayoutGenerator: FC = () => {
     const store = useContext(Store)
-    const hemoData = useContext(DataContext)
+    const [tabValue, setTabValue] = useState(0);
+    const styles = useStyles();
+    const handleChange = (event: ChangeEvent<{}>, newValue: any) => {
+        setTabValue(newValue);
+    };
+
     const createElement = (layout: LayoutElement, index: number) => {
         switch (layout.plotType) {
             case "DUMBBELL":
@@ -174,45 +180,53 @@ const LayoutGenerator: FC = () => {
         }
     })
 
-    const panes = [{
-        menuItem: 'Main', pane:
+    const panes = [
 
-            <Tab.Pane key="Main" >
-                <WelcomeText show={store.state.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
-                <Responsive
-                    onResizeStop={(e, v) => { store.chartStore.onLayoutChange(e) }}
-                    onDragStop={(e, v) => { store.chartStore.onLayoutChange(e) }}
-                    draggableHandle={".move-icon"}
-                    className="layout"
-                    cols={colData}
-                    rowHeight={600}
-                    width={0.95 * store.mainCompWidth}
-                    //cols={2}
-                    //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-                    layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
-                >
-                    {store.state.layoutArray.map((layoutE, i) => {
-                        return createElement(layoutE, i);
-                    })}
-                </Responsive>
+        <div id="main-tab" className={styles.containerWidth}>
+            <WelcomeText show={store.state.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
+            <Responsive
+                onResizeStop={(e, v) => { store.chartStore.onLayoutChange(e) }}
+                onDragStop={(e, v) => { store.chartStore.onLayoutChange(e) }}
+                draggableHandle={".move-icon"}
+                className="layout"
+                cols={colData}
+                rowHeight={600}
+                width={0.95 * store.mainCompWidth}
+                //cols={2}
+                //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+                layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
+            >
+                {store.state.layoutArray.map((layoutE, i) => {
+                    return createElement(layoutE, i);
+                })}
+            </Responsive>
 
-            </Tab.Pane >
+        </div >,
 
-    },
-    {
-        menuItem: 'LineUp', pane:
-            <Tab.Pane key="LineUp">
-                <div className={"lineup"} id={"lineup-wrapper"}>
-                    {/* <LineUpWrapper hemoglobinDataSet={hemoData} /> */}
-                </div>
-            </Tab.Pane>
-    },
+
+        <div id="filter-tab">
+            <div className={"lineup"} id={"lineup-wrapper"}>
+                {/* <LineUpWrapper hemoglobinDataSet={hemoData} /> */}
+            </div>
+        </div>
     ]
+
     return (
-        <Ref innerRef={tabRef}>
-            <Tab panes={panes}
-                renderActiveOnly={false} />
-        </Ref>)
+        <Container >
+            <Tabs
+                value={tabValue}
+                onChange={handleChange}
+                indicatorColor="primary"
+                textColor="primary"
+                centered>
+                <Tab label="Main" />
+                <Tab label="filter" />
+            </Tabs>
+            <Container ref={tabRef}>
+                {panes[tabValue]}
+            </Container>
+        </Container>
+    )
 }
 
 export default observer(LayoutGenerator);
