@@ -101,6 +101,9 @@ export const useStyles = makeStyles((theme: Theme) =>
         },
         tinyFont: {
             fontSize: "xx-small"
+        },
+        containerWidth: {
+            width: "100%"
         }
     }),
 );
