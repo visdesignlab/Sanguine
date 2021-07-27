@@ -108,64 +108,7 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
                 })}
 
             </table>
-            {/* <List relaxed divided >
-                <List.Item key={"filter-header"}
-                    content={
-                        <Header>
-                            <svg height={18} style={{ paddingLeft: "5px" }} width="95%" ref={svgRef}>
-                                <text
-                                    alignmentBaseline="hanging" x={0} y={0} fontSize="medium">
-                                    {`Procedures(${surgeryList.length})`}
-                                </text>
 
-                                <g id="surgeryCaseScale" transform="translate(0 ,17)" />
-                            </svg>
-                        </Header>} />
-
-                {itemSelected.map((listItem: any) => {
-                    if (listItem.value) {
-                        return (
-                            <SurgeryListComp key={listItem.value} isSelected={true} onClick={() => { store.selectionStore.updateProcedureSelection(listItem.value, true) }}
-                                content={<ListSVG >
-                                    <SurgeryForeignObj width={0.6 * width} >
-                                        <SurgeryDiv>
-                                            {listItem.value}
-                                        </SurgeryDiv>
-                                    </SurgeryForeignObj>
-                                    <SurgeryRect
-                                        x={caseScale().range()[0]}
-                                        width={caseScale()(listItem.count) - caseScale().range()[0]}
-                                    />
-                                    <SurgeryNumText y={9} x={caseScale().range()[1]}>{listItem.count}</SurgeryNumText>
-                                </ListSVG>} />
-                        )
-                    } else { return (<></>) }
-                })}
-
-                {itemUnselected.map((listItem: any) => {
-                    if (listItem.value) {
-                        return (
-                            <SurgeryListComp key={listItem.value} isSelected={false} content={
-                                <ListSVG >
-                                    <SurgeryForeignObj width={0.6 * width} >
-                                        <SurgeryDiv>
-                                            {listItem.value}
-                                        </SurgeryDiv>
-                                    </SurgeryForeignObj>
-
-                                    <SurgeryRect
-                                        x={caseScale().range()[0]}
-                                        width={caseScale()(listItem.count) - caseScale().range()[0]} />
-                                    <SurgeryNumText y={9} x={caseScale().range()[1]}>
-                                        {listItem.count}
-                                    </SurgeryNumText>
-                                </ListSVG>}
-                                onClick={() => { store.selectionStore.updateProcedureSelection(listItem.value, false) }} />
-                        )
-                    }
-                    else { return (<></>) }
-                })}
-            </List> */}
         </Container>
     </Grid>
 
