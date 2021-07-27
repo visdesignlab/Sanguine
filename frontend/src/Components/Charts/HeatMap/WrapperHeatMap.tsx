@@ -32,7 +32,7 @@ type Props = {
 const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArrayString, xAggregationOption, yValueOption, chartTypeIndexinArray }: Props) => {
     const hemoData = useContext(DataContext)
     const store = useContext(Store);
-    const { surgeryUrgencySelection, rawDateRange } = store.state;
+    const { surgeryUrgencySelection, rawDateRange, proceduresSelection } = store.state;
     const svgRef = useRef<SVGSVGElement>(null);
     const [width, setWidth] = useState(0);
     const [height, setHeight] = useState(0);
@@ -70,7 +70,7 @@ const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArraySt
         setPreviousCancelToken(call);
 
         //replace case_ids
-        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${store.dateRange}&filter_selection=${store.state.proceduresSelection.toString()}&case_ids=${[].toString()}`, {
+        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${store.dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${[].toString()}`, {
             cancelToken: call.token
         })
             .then(function (response) {
@@ -88,11 +88,9 @@ const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArraySt
                     // handle error
                 }
             });
-    }, [store.proceduresSelection,
-        surgeryUrgencySelection,
-    store.state.outcomeFilter,
+    }, [proceduresSelection, surgeryUrgencySelection, store.state.outcomeFilter,
         rawDateRange,
-    store.state.showZero,
+        store.state.showZero,
         xAggregationOption,
         yValueOption,
         // currentSelectPatientGroupIDs, 

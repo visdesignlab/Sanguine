@@ -11,12 +11,16 @@ import { SingleCasePoint } from "./Interfaces/Types/DataTypes"
 import { logoutHandler, whoamiAPICall } from "./Interfaces/UserManagement"
 import { SurgeryTypeArray } from "./Presets/DataDict"
 import './App.css'
+import { checkIfCriteriaMetDup } from "./HelperFunctions/CaseListProducer"
+import useDeepCompareEffect from "use-deep-compare-effect"
 
 export const DataContext = createContext<SingleCasePoint[]>([])
 
 const App: FC = () => {
     const store = useContext(Store);
+    const { surgeryUrgencySelection, outcomeFilter } = store.state;
     const [hemoData, setHemoData] = useState<SingleCasePoint[]>([])
+    const [outputFilteredData, setOutputFilteredDAta] = useState<SingleCasePoint[]>([])
 
     useEffect(() => {
         if (store.configStore.isLoggedIn && hemoData.length === 0) {
@@ -45,6 +49,12 @@ const App: FC = () => {
         events: ["mousedown", "keydown"],
         throttle: 1000 * 60
     })
+
+    //Data Updates
+    useDeepCompareEffect(() => {
+        const newFilteredData = hemoData.filter((eachcase: SingleCasePoint) => checkIfCriteriaMetDup(eachcase, surgeryUrgencySelection, outcomeFilter))
+        setOutputFilteredDAta(newFilteredData)
+    }, [surgeryUrgencySelection, outcomeFilter])
 
     async function cacheHemoData() {
         fetch(`${process.env.REACT_APP_QUERY_URL}hemoglobin`)
@@ -132,7 +142,7 @@ const App: FC = () => {
             })
     }
 
-    return <DataContext.Provider value={hemoData}><Dashboard /></DataContext.Provider>
+    return <DataContext.Provider value={outputFilteredData}><Dashboard /></DataContext.Provider>
 }
 
 export default observer(App)

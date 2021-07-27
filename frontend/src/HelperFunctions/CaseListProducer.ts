@@ -56,7 +56,7 @@ export const produceAvailableCasesForIntervention = (transfusedDataResult: any, 
     return temporaryDataHolder;
 }
 
-const checkIfCriteriaMet = (caseSetReturnedFromQuery: Set<unknown>, singleCase: SingleCasePoint, procedureUrgencyFilter: [boolean, boolean, boolean], outcomeFilter: string) => {
+export const checkIfCriteriaMet = (caseSetReturnedFromQuery: Set<unknown>, singleCase: SingleCasePoint, procedureUrgencyFilter: [boolean, boolean, boolean], outcomeFilter: string) => {
     let criteriaMet = true;
     // if (currentOutputFilterSet.length > 0) {
     //     for (let selectSet of currentOutputFilterSet) {
@@ -71,6 +71,28 @@ const checkIfCriteriaMet = (caseSetReturnedFromQuery: Set<unknown>, singleCase: 
         criteriaMet = false;
     }
     else if (!procedureUrgencyFilter[singleCase.SURGERY_TYPE]) {
+        criteriaMet = false;
+    }
+    else if (outcomeFilter) {
+        if (singleCase[outcomeFilter] === 0) {
+            criteriaMet = false;
+        }
+    }
+    return criteriaMet;
+}
+
+export const checkIfCriteriaMetDup = (singleCase: SingleCasePoint, procedureUrgencyFilter: [boolean, boolean, boolean], outcomeFilter: string) => {
+    let criteriaMet = true;
+    // if (currentOutputFilterSet.length > 0) {
+    //     for (let selectSet of currentOutputFilterSet) {
+    //         if (selectSet.setName === aggregatedBy) {
+    //             if (!selectSet.setValues.includes(singleCase[aggregatedBy])) {
+    //                 criteriaMet = false;
+    //             }
+    //         }
+    //     }
+    // }
+    if (!procedureUrgencyFilter[singleCase.SURGERY_TYPE]) {
         criteriaMet = false;
     }
     else if (outcomeFilter) {
