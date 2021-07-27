@@ -1,3 +1,4 @@
+import { Container } from "@material-ui/core"
 import Divider from "@material-ui/core/Divider"
 import Grid from "@material-ui/core/Grid"
 import { max } from "d3"
@@ -32,6 +33,7 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
     }, []);
 
     return <Grid container spacing={2}>
+
         <CurrentView totalCaseNum={totalCaseNum} />
         <Divider orientation="horizontal" style={{ width: '100%' }} />
         <CurrentSelected />
@@ -39,6 +41,7 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
         <SurgerySearchBar surgeryList={surgeryList} />
         <Divider orientation="horizontal" style={{ width: '100%' }} />
         <SurgeryListViewer surgeryList={surgeryList} maxCaseCount={maxCaseCount} />
+
     </Grid>
 
 }
