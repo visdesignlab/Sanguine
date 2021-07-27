@@ -5,7 +5,7 @@ import { useCallback, useContext, useEffect } from "react";
 import { FC, useLayoutEffect, useRef, useState } from "react";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
-import { SurgeryDiv, SurgeryForeignObj, SurgeryListComp, SurgeryNumText, useStyles } from "../../../Presets/StyledComponents";
+import { SurgeryDiv, SurgeryListComp, SurgeryNumText, useStyles } from "../../../Presets/StyledComponents";
 import { ListSVG, SurgeryRect } from "../../../Presets/StyledSVGComponents";
 
 type Props = {
