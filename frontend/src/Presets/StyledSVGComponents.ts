@@ -13,11 +13,13 @@ export const SurgeryRect = styled(`rect`)`
   fill-opacity:0.4;
   fill:${postop_color};
 `
-
-export const ListSVG = styled.svg`
+interface ListSVGProps {
+    widthInput: number;
+}
+export const ListSVG = styled.svg<ListSVGProps>`
   height: 15px;
   padding-left:5px;
-  width:95%;
+  width:${props => props.widthInput}px;
 `
 interface ChartGProps {
     currentOffset: Offset

@@ -18,7 +18,7 @@ const Dashboard: FC = () => {
 
     const hemoData = useContext(DataContext)
     return (
-        <LayoutDiv>
+        <div>
             <Box id="Top-Bar">
                 <RegularModeMenu />
             </Box>
@@ -37,7 +37,7 @@ const Dashboard: FC = () => {
             </Grid>
             {/* <BrowserWarning />
             <DataRetrieval /> */}
-        </LayoutDiv>
+        </div>
     )
 }
 export default observer(Dashboard)

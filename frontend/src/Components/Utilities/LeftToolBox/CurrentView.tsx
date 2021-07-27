@@ -8,8 +8,7 @@ import { AcronymDictionary, OutcomeOptions, SurgeryUrgency } from "../../../Pres
 import { LeftToolBarListItem, StyledDate, Title, useStyles } from "../../../Presets/StyledComponents"
 import Container from "@material-ui/core/Container";
 import List from "@material-ui/core/List";
-import { Box, Chip, ListItem, ListItemSecondaryAction, ListItemText, MenuItem, Select, Switch } from "@material-ui/core";
-import { Grid } from "semantic-ui-react"
+import { Box, Chip, ListItem, ListItemSecondaryAction, ListItemText, MenuItem, Select, Switch, Grid } from "@material-ui/core";
 import { DropdownGenerator } from "../../../HelperFunctions/DropdownGenerator"
 
 type Props = { totalCaseNum: number }
@@ -17,6 +16,7 @@ type Props = { totalCaseNum: number }
 const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
     const store = useContext(Store)
     const { surgeryUrgencySelection } = store.state;
+    const styles = useStyles();
 
     const onDateChange = (event: any, data: any) => {
         if (!data.value) {
@@ -63,9 +63,9 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
 
     return (
-        <Grid.Row centered style={{ height: "40vh" }}>
-            <Container>
-                <List dense>
+        <Grid item className={styles.gridWidth}>
+            <Container className={styles.containerWidth} style={{ height: "40vh" }}>
+                <List dense >
                     <ListItem style={{ textAlign: "left" }}>
                         <Title>Current View</Title>
                     </ListItem>
@@ -150,7 +150,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                     })} */}
                 </List>
             </Container>
-        </Grid.Row>
+        </Grid>
     )
 
 
