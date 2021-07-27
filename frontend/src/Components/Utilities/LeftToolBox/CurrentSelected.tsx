@@ -8,8 +8,8 @@ import { Title, useStyles } from "../../../Presets/StyledComponents";
 const CurrentSelected: FC = () => {
     const styles = useStyles()
     return (
-        <Grid item >
-            <Container>
+        <Grid item className={styles.gridWidth}>
+            <Container style={{ height: "15vh" }}>
                 <List dense>
                     <ListItem >
                         <Title>Current Selected</Title>
@@ -29,7 +29,7 @@ const CurrentSelected: FC = () => {
                 })} */}
 
                 </List>
-                <ButtonGroup>
+                <ButtonGroup style={{ textAlign: "center" }}>
                     <Button
                         // disabled={!(currentSelectSet.length > 0 || currentBrushedPatientGroup.length > 0)}
                         variant="outlined"

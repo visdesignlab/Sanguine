@@ -7,7 +7,7 @@ import { makeStyles, Theme, createStyles } from "@material-ui/core";
 
 export const LayoutDiv = styled.div`
   width: 100vw;
-  height: 100vh;
+
 `;
 
 export const SpecialPaddingColumn = styled(Grid.Column)`
@@ -30,17 +30,21 @@ export const StyledDate = styled(SemanticDatePicker)`
 export const SurgeryNumText = styled(`text`)`
   text-anchor:end;
   alignment-baseline: middle;
-  transform: translate(13px, 0px);
+
 `
 
-export const SurgeryDiv = styled.div`
+
+export const SurgeryDiv = styled.td`
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   alignment-baseline: hanging;
   text-align:left;
   text-shadow: 2px 2px 5px white;
+ 
 `
+
+
 
 export const SurgeryForeignObj = styled.foreignObject`
   x:0;
@@ -55,7 +59,7 @@ interface SurgeryListProps {
     isSelected: boolean;
 }
 
-export const SurgeryListComp = styled(List.Item) <SurgeryListProps>`
+export const SurgeryListComp = styled(`tr`) <SurgeryListProps>`
   background:${props => props.isSelected ? "#ecbe8d" : 'none'};
   cursor: pointer;
   &:hover{
@@ -103,7 +107,11 @@ export const useStyles = makeStyles((theme: Theme) =>
             fontSize: "xx-small"
         },
         containerWidth: {
-            width: "100%"
+            width: "100%",
+            overflow: "auto"
+        },
+        gridWidth: {
+            width: "inherit"
         }
     }),
 );

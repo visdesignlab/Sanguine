@@ -7,6 +7,9 @@
 .App-logo {
   height: 40vmin;
 }
+body {
+        height: auto;
+    }
 
 #title{
   color:black;

@@ -1,6 +1,6 @@
 import { observer } from "mobx-react";
 import { useContext } from "react";
-import { FC, useEffect, useState } from "react";
+import { FC, useState } from "react";
 import { HeatMapSortNoComparison } from "../../../HelperFunctions/ChartSorting";
 import Store from "../../../Interfaces/Store";
 import { ExtraPairPoint, HeatMapDataPoint } from "../../../Interfaces/Types/DataTypes";

@@ -4,10 +4,7 @@ import { ChangeEvent, useContext, useState } from "react";
 import { FC, useRef, useLayoutEffect } from "react";
 import { Responsive } from "react-grid-layout";
 import 'react-grid-layout/css/styles.css';
-// import {  Ref } from "semantic-ui-react";
-import { DataContext } from "../App";
 import Store from "../Interfaces/Store";
-
 import { LayoutElement } from "../Interfaces/Types/LayoutTypes";
 import { typeDiction } from "../Presets/DataDict";
 import { useStyles, WelcomeText } from "../Presets/StyledComponents";
@@ -87,8 +84,7 @@ const LayoutGenerator: FC = () => {
             case "HEATMAP":
                 return (<div
                     key={layout.i}
-                    className={"parent-node" + layout.i}
-                >
+                    className={"parent-node" + layout.i}>
                     <ChartStandardButtons chartID={layout.i} />
                     <WrapperHeatMap
                         chartId={layout.i}
@@ -200,10 +196,7 @@ const LayoutGenerator: FC = () => {
                     return createElement(layoutE, i);
                 })}
             </Responsive>
-
         </div >,
-
-
         <div id="filter-tab">
             <div className={"lineup"} id={"lineup-wrapper"}>
                 {/* <LineUpWrapper hemoglobinDataSet={hemoData} /> */}
