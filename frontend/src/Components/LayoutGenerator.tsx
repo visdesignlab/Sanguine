@@ -205,7 +205,7 @@ const LayoutGenerator: FC = () => {
     ]
 
     return (
-        <Container >
+        <Container className={styles.containerWidth}>
             <Tabs
                 value={tabValue}
                 onChange={handleChange}
@@ -215,7 +215,7 @@ const LayoutGenerator: FC = () => {
                 <Tab label="Main" />
                 <Tab label="filter" />
             </Tabs>
-            <Container ref={tabRef}>
+            <Container ref={tabRef} className={styles.containerWidth}>
                 {panes[tabValue]}
             </Container>
         </Container>

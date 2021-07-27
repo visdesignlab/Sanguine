@@ -82,7 +82,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                     <ListItem key="Outcomes">
                         <ListItemText primary="Outcomes/Interventions"
                             secondary={
-                                <Select displayEmpty onChange={(e) => { store.configStore.changeOutcomeFilter((e.target.value as string)) }}  >
+                                <Select displayEmpty value={store.state.outcomeFilter} onChange={(e) => { store.configStore.changeOutcomeFilter((e.target.value as string)) }}  >
                                     {DropdownGenerator(OutcomeOptions, true)}
                                 </Select>} />
 

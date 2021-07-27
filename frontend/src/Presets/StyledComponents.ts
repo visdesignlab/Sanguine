@@ -45,16 +45,6 @@ export const SurgeryDiv = styled.td`
 `
 
 
-
-export const SurgeryForeignObj = styled.foreignObject`
-  x:0;
-  y:0;
-  height:100%;
-  &:hover{
-    width:100%;
-  }
-`
-
 interface SurgeryListProps {
     isSelected: boolean;
 }
@@ -105,9 +95,11 @@ export const useStyles = makeStyles((theme: Theme) =>
         },
         tinyFont: {
             fontSize: "xx-small"
+
         },
         containerWidth: {
             width: "100%",
+            maxWidth: "none",
             overflow: "auto"
         },
         gridWidth: {
