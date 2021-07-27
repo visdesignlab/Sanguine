@@ -23,30 +23,6 @@ const SurgerySearchBar: FC<Props> = ({ surgeryList }: Props) => {
         }
     }
     return (
-        // <Grid.Row centered >
-        //     <Container>
-        //         <Search
-        //             placeholder="Search a Procedure"
-        //             minCharacters={3}
-        //             onSearchChange={(e, output) => {
-        //                 setSearchSurgeryVal(output.value || "")
-        //                 if (output.value && output.value.length >= 3) {
-        //                     let searchResult = surgeryList.filter(d => d.value.includes(output.value))
-        //                     stateUpdateWrapperUseJSON(surgerySearchResult, searchResult, setsurgerySearchResult)
-        //                 }
-        //             }}
-        //             results={surgerySearchResult.map(d => { return { title: d.value } })}
-        //             onResultSelect={(e, d) => {
-        //                 if (!store.state.proceduresSelection.includes(d.result.title)) {
-        //                     store.selectionStore.updateProcedureSelection(d.result.title, false)
-        //                 }
-        //                 setSearchSurgeryVal("")
-        //             }
-        //             }
-        //             value={searchSurgeryVal}
-        //         />
-        //     </Container>
-        // </Grid.Row>
         <Grid item className={styles.gridWidth}>
             <Container>
                 <Autocomplete
