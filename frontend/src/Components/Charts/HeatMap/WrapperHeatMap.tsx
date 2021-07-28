@@ -11,8 +11,7 @@ import Store from "../../../Interfaces/Store";
 import { ExtraPairPoint, HeatMapDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
 import { tokenCheckCancel } from "../../../Interfaces/UserManagement";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
-import ChartButtonWrapper from "../ChartButtonWrapper";
-import HeatMapButtons from "../ChartAccessories/HeatMapButtons";
+import HeatMapButtons from "../ChartAccessories/ChartConfigMenu";
 import HeatMap from "./HeatMap";
 import ExtraPairButtons from "../ChartAccessories/ExtraPairButtons";
 import useDeepCompareEffect from 'use-deep-compare-effect'
@@ -20,6 +19,7 @@ import { DataContext } from "../../../App";
 import { Grid, Container } from "@material-ui/core";
 
 import { useStyles } from "../../../Presets/StyledComponents";
+import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 
 type Props = {
     layoutW: number;
@@ -105,10 +105,15 @@ const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArraySt
 
             <Grid item xs={1}>
                 {/* <Menu icon vertical compact size="mini" borderless secondary widths={2} style={{}}> */}
-                <Container>
-                    <ExtraPairButtons extraPairArrayString={extraPairArrayString} chartId={chartId} />
-                    <HeatMapButtons xAggregationOption={xAggregationOption} yValueOption={yValueOption} chartTypeIndexinArray={chartTypeIndexinArray} chartId={chartId} />
-                </Container>
+                <div>
+                    <ExtraPairButtons extraPairLength={extraPairArray.length} chartId={chartId} />
+                    <ChartConfigMenu
+                        xAggregationOption={xAggregationOption}
+                        yValueOption={yValueOption}
+                        chartTypeIndexinArray={chartTypeIndexinArray}
+                        chartId={chartId}
+                        requireOutcome={true} />
+                </div>
             </Grid>
             <Grid item xs={11} className={styles.chartWrapper}>
                 <Container className={styles.chartWrapper}>

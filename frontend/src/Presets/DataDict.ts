@@ -11,7 +11,7 @@ const AggregationOptions = [
     { value: "YEAR", key: "YEAR", text: "Year" },
     { value: "ANESTHESIOLOGIST_ID", key: "ANESTHESIOLOGIST_ID", text: "Anesthesiologist ID" }];
 
-const ScatterYOptions = [
+export const ScatterYOptions = [
     { value: "PREOP_HGB", key: "PREOP_HGB", text: "Preoperative Hemoglobin Value" },
     { value: "POSTOP_HGB", key: "POSTOP_HGB", text: "Postoperative Hemoglobin Value" }];
 
