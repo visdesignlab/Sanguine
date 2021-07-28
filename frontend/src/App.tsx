@@ -54,7 +54,7 @@ const App: FC = () => {
     useDeepCompareEffect(() => {
         const newFilteredData = hemoData.filter((eachcase: SingleCasePoint) => checkIfCriteriaMetDup(eachcase, surgeryUrgencySelection, outcomeFilter))
         setOutputFilteredDAta(newFilteredData)
-    }, [surgeryUrgencySelection, outcomeFilter])
+    }, [surgeryUrgencySelection, outcomeFilter, hemoData])
 
     async function cacheHemoData() {
         fetch(`${process.env.REACT_APP_QUERY_URL}hemoglobin`)
@@ -132,8 +132,6 @@ const App: FC = () => {
                 })
 
                 cacheData = cacheData.filter((d: any) => d);
-                console.log("HGB data done")
-
                 setHemoData(cacheData)
                 store.configStore.dataLoading = false;
             }).catch((error) => {

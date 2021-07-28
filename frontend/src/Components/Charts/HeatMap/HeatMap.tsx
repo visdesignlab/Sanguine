@@ -4,7 +4,7 @@ import { FC, useState } from "react";
 import { HeatMapSortNoComparison } from "../../../HelperFunctions/ChartSorting";
 import Store from "../../../Interfaces/Store";
 import { ExtraPairPoint, HeatMapDataPoint } from "../../../Interfaces/Types/DataTypes";
-import { BloodProductCap, CaseRectWidth, ExtraPairPadding, ExtraPairWidth, offset } from "../../../Presets/Constants";
+import { BloodProductCap, CaseRectWidth, ExtraPairPadding, ExtraPairWidth, OffsetDict } from "../../../Presets/Constants";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import { useCallback } from "react";
 import { AggregationScaleGenerator, CaseScaleGenerator, ValueScaleGenerator } from "../../../HelperFunctions/Scales";
@@ -29,7 +29,7 @@ type Props = {
 
 const HeatMap: FC<Props> = ({ dimensionHeight, dimensionWidth, xAggregationOption, yValueOption, chartId, data, svg, extraPairDataSet }: Props) => {
     const store = useContext(Store)
-    const currentOffset = offset.regular;
+    const currentOffset = OffsetDict.regular;
     const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
     const [xVals, setXVals] = useState<any[]>([]);
     const [caseMax, setCaseMax] = useState(0);
