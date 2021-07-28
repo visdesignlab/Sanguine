@@ -84,3 +84,23 @@ export const DumbbellLine = styled(`line`) < AverageLineProps>`
     stroke: ${props => (props.ispreop ? preop_color : postop_color)};
     stroke-width:3px
     `
+
+export const AxisText = styled.text`
+    fill:white;
+    alignment-baseline: hanging;
+    text-anchor: middle;
+    y:0;
+`
+
+export const CustomAxisLine = styled(`line`)`
+    stroke: #404040;
+    stroke-width:2px;
+    y1: 0;
+    y2:0;
+`
+
+export const CustomAxisLineBox = styled(`rect`)`
+    height: 13px;
+    y:0px;
+    opacity:0.75;
+`

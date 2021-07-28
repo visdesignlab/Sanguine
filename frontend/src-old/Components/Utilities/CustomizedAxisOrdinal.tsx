@@ -8,7 +8,7 @@ import {
     ScaleOrdinal,
     scaleOrdinal
 } from "d3";
-import { secondary_gray, basic_gray } from "../../PresetsProfile";
+import { Secondary_Gray, basic_gray } from "../../PresetsProfile";
 
 interface OwnProps {
     //  scale: ScaleOrdinal<any, number>;
@@ -38,7 +38,7 @@ const CustomizedAxisOrdinal: FC<Props> = ({ numberList, scaleDomain, scaleRange 
             let x2 = ind === numberList.length - 1 ? (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding) : (-1 + (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding) + 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding)))
             if (x1 && x2) {
                 return ([<Line x1={x1} x2={x2} />,
-                <LineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? secondary_gray : basic_gray} />,
+                <LineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? Secondary_Gray : basic_gray} />,
                 <AxisText x={x1 + 0.5 * (x2 - x1)}>{numberOb.num}</AxisText>
                 ])
             } else { return <></> }

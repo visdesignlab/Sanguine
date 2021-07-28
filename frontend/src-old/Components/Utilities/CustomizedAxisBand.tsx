@@ -7,7 +7,7 @@ import { inject, observer } from "mobx-react";
 import {
     scaleBand
 } from "d3";
-import { secondary_gray, basic_gray } from "../../PresetsProfile";
+import { Secondary_Gray, basic_gray } from "../../PresetsProfile";
 
 interface OwnProps {
     //  scale: ScaleOrdinal<any, number>;
@@ -40,7 +40,7 @@ const CustomizedAxisBand: FC<Props> = ({ scaleDomain, scaleRange, scalePadding }
             let x1 = scale()(number) || 0;
             let x2 = x1 + scale().bandwidth();
             return [<Line x1={x1} x2={x2} />,
-            <LineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? secondary_gray : basic_gray} />,
+            <LineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? Secondary_Gray : basic_gray} />,
             <AxisText x={x1 + 0.5 * (x2 - x1)}>{number}</AxisText>
             ]
         })}
