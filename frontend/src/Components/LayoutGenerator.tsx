@@ -75,7 +75,7 @@ const LayoutGenerator: FC = () => {
                         xAggregationOption={layout.aggregatedBy}
                         layoutW={layout.w}
                         yValueOption={layout.valueToVisualize}
-
+                        layoutH={layout.h}
                         chartId={layout.i}
 
                     />
