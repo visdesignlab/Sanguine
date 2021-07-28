@@ -5,7 +5,7 @@ import BrowserWarning from "./Components/Modals/BrowserWarning"
 import DataRetrieval from "./Components/Modals/DataRetrieval"
 import LeftToolBox from "./Components/Utilities/LeftToolBox/LeftToolBox"
 import RegularModeMenu from "./Components/Utilities/TopMenu/RegularModeMenu"
-import { LayoutDiv, SpecialPaddingColumn } from "./Presets/StyledComponents"
+
 import './App.css'
 import LayoutGenerator from "./Components/LayoutGenerator"
 import { DataContext } from "./App"

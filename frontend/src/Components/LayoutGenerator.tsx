@@ -9,6 +9,7 @@ import { LayoutElement } from "../Interfaces/Types/LayoutTypes";
 import { typeDiction } from "../Presets/DataDict";
 import { useStyles, WelcomeText } from "../Presets/StyledComponents";
 import ChartStandardButtons from "./Charts/ChartStandardButtons";
+import WrapperDumbbell from "./Charts/DumbbellChart/WrapperDumbbell";
 import WrapperHeatMap from "./Charts/HeatMap/WrapperHeatMap";
 
 //type Props = { hemoData: SingleCasePoint[]; };
@@ -28,16 +29,17 @@ const LayoutGenerator: FC = () => {
                     <div key={layout.i} className={"parent-node" + layout.i}>
 
                         <ChartStandardButtons chartID={layout.i} />
-                        {/* <DumbbellChartVisualization
-                            yAxis={layout.aggregatedBy}
-                            w={layout.w}
+                        <WrapperDumbbell
+
+                            layoutW={layout.w}
                             chartId={layout.i}
-                            chartIndex={index}
-                            hemoglobinDataSet={hemoData}
-                            notation={layout.notation}
+                            layoutH={layout.h}
+                            xAggregationOption={layout.aggregatedBy}
+
+                        // notation={layout.notation}
                         //     interventionDate={layout.interventionDate}
                         // aggregatedOption={layout.aggregation}
-                        /> */}
+                        />
                     </div>
                 );
             case "COST":
@@ -178,7 +180,7 @@ const LayoutGenerator: FC = () => {
 
     const panes = [
 
-        <div id="main-tab" className={styles.containerWidth}>
+        <div id="main-tab" style={{ height: "100%" }}>
             <WelcomeText show={store.state.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
             <Responsive
                 onResizeStop={(e, v) => { store.chartStore.onLayoutChange(e) }}
@@ -186,8 +188,9 @@ const LayoutGenerator: FC = () => {
                 draggableHandle={".move-icon"}
                 className="layout"
                 cols={colData}
-                rowHeight={600}
+                rowHeight={500}
                 width={0.95 * store.mainCompWidth}
+
                 //cols={2}
                 //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                 layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
@@ -215,7 +218,7 @@ const LayoutGenerator: FC = () => {
                 <Tab label="Main" />
                 <Tab label="filter" />
             </Tabs>
-            <Container ref={tabRef} className={styles.containerWidth}>
+            <Container ref={tabRef} style={{ height: "90%", maxWidth: "none" }}>
                 {panes[tabValue]}
             </Container>
         </Container>
