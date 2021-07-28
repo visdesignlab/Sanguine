@@ -2,7 +2,7 @@ import axios from "axios";
 import { observer } from "mobx-react";
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { FC } from "react";
-import { Grid, Menu } from "semantic-ui-react";
+
 import { produceAvailableCasesForNonIntervention } from "../../../HelperFunctions/CaseListProducer";
 import { generateRegularData } from "../../../HelperFunctions/ChartDataGenerator";
 import { generateExtrapairPlotData } from "../../../HelperFunctions/ExtraPairDataGenerator";
@@ -10,7 +10,6 @@ import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
 import { ExtraPairPoint, HeatMapDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
 import { tokenCheckCancel } from "../../../Interfaces/UserManagement";
-import { ChartWrapperGrid } from "../../../Presets/StyledComponents";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
 import ChartButtonWrapper from "../ChartButtonWrapper";
 import HeatMapButtons from "../ChartAccessories/HeatMapButtons";
@@ -18,6 +17,9 @@ import HeatMap from "./HeatMap";
 import ExtraPairButtons from "../ChartAccessories/ExtraPairButtons";
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { DataContext } from "../../../App";
+import { Grid, Container } from "@material-ui/core";
+
+import { useStyles } from "../../../Presets/StyledComponents";
 
 type Props = {
     layoutW: number;
@@ -32,6 +34,7 @@ type Props = {
 const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArrayString, xAggregationOption, yValueOption, chartTypeIndexinArray }: Props) => {
     const hemoData = useContext(DataContext)
     const store = useContext(Store);
+    const styles = useStyles();
     const { surgeryUrgencySelection, rawDateRange, proceduresSelection } = store.state;
     const svgRef = useRef<SVGSVGElement>(null);
     const [width, setWidth] = useState(0);
@@ -98,17 +101,17 @@ const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArraySt
         hemoData])
 
     return (
-        <ChartWrapperGrid>
-            <Grid.Row>
-                <Grid.Column
-                    verticalAlign="middle"
-                    width={1}>
-                    <Menu icon vertical compact size="mini" borderless secondary widths={2} style={{}}>
-                        <ExtraPairButtons extraPairArrayString={extraPairArrayString} chartId={chartId} />
-                        <HeatMapButtons xAggregationOption={xAggregationOption} yValueOption={yValueOption} chartTypeIndexinArray={chartTypeIndexinArray} chartId={chartId} />
-                    </Menu>
-                </Grid.Column>
-                <Grid.Column width={15}>
+        <Grid container direction="row" alignItems="center" className={styles.chartWrapper}>
+
+            <Grid item xs={1}>
+                {/* <Menu icon vertical compact size="mini" borderless secondary widths={2} style={{}}> */}
+                <Container>
+                    <ExtraPairButtons extraPairArrayString={extraPairArrayString} chartId={chartId} />
+                    <HeatMapButtons xAggregationOption={xAggregationOption} yValueOption={yValueOption} chartTypeIndexinArray={chartTypeIndexinArray} chartId={chartId} />
+                </Container>
+            </Grid>
+            <Grid item xs={11} className={styles.chartWrapper}>
+                <Container className={styles.chartWrapper}>
                     <ChartSVG ref={svgRef}>
                         <HeatMap
                             dimensionHeight={height}
@@ -121,9 +124,10 @@ const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArraySt
                             extraPairDataSet={extraPairData}
                         />
                     </ChartSVG>
-                </Grid.Column>
-            </Grid.Row>
-        </ChartWrapperGrid>)
+                </Container>
+            </Grid>
+
+        </Grid>)
 }
 
 export default observer(WrapperHeatMap)

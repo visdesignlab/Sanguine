@@ -1,7 +1,7 @@
-import { Button, Grid, List } from "semantic-ui-react";
+
 import styled from "styled-components";
 import SemanticDatePicker from 'react-semantic-ui-datepickers';
-import { Third_Gray } from "./Constants";
+import { Basic_Gray, postop_color, preop_color, Third_Gray } from "./Constants";
 import ListItem from '@material-ui/core/ListItem';
 import { makeStyles, Theme, createStyles } from "@material-ui/core";
 
@@ -10,13 +10,13 @@ export const LayoutDiv = styled.div`
 
 `;
 
-export const SpecialPaddingColumn = styled(Grid.Column)`
-  &&&&&{padding-left:5px;}
-`;
+// export const SpecialPaddingColumn = styled(Grid.Column)`
+//   &&&&&{padding-left:5px;}
+// `;
 
-export const ChartWrapperGrid = styled(Grid)`
-    height:100%
-`
+// export const ChartWrapperGrid = styled(Grid)`
+//     height:100%
+// `
 
 
 export const Title = styled.b`
@@ -100,10 +100,42 @@ export const useStyles = makeStyles((theme: Theme) =>
         containerWidth: {
             width: "100%",
             maxWidth: "none",
-            overflow: "auto"
+            overflow: "auto",
+            height: "100%"
         },
         gridWidth: {
             width: "inherit"
+        },
+        chartWrapper: {
+            height: "100%"
         }
     }),
 );
+
+export const useButtonStyles = makeStyles((theme: Theme) =>
+    createStyles({
+        preopButtonActive: {
+            backgroundColor: preop_color,
+            color: "white"
+        },
+        postopButtonActive: {
+            backgroundColor: postop_color,
+            color: "white"
+        },
+        gapButtonActive: {
+            backgroundColor: Basic_Gray,
+            color: "white"
+        },
+        preopButtonOutline: {
+            color: preop_color,
+            backgroundColor: "white"
+        },
+        postopButtonOutline: {
+            color: postop_color,
+            backgroundColor: "white"
+        },
+        gapButtonOutline: {
+            color: Basic_Gray,
+            backgroundColor: "white"
+        }
+    }))
