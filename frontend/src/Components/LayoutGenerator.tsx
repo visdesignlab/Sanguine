@@ -11,6 +11,7 @@ import { useStyles, WelcomeText } from "../Presets/StyledComponents";
 import ChartStandardButtons from "./Charts/ChartStandardButtons";
 import WrapperDumbbell from "./Charts/DumbbellChart/WrapperDumbbell";
 import WrapperHeatMap from "./Charts/HeatMap/WrapperHeatMap";
+import WrapperScatter from "./Charts/ScatterPlot/WrapperScatter";
 
 //type Props = { hemoData: SingleCasePoint[]; };
 
@@ -70,17 +71,14 @@ const LayoutGenerator: FC = () => {
                 // data-grid={layoutE}
                 >
                     <ChartStandardButtons chartID={layout.i} />
-                    {/* <ScatterPlotVisualization
-                        xAxis={layout.aggregatedBy}
-                        w={layout.w}
-                        yAxis={layout.valueToVisualize}
-                        hemoglobinDataSet={hemoData}
-                        // class_name={"parent-node" + layoutE.i}
+                    <WrapperScatter
+                        xAggregationOption={layout.aggregatedBy}
+                        layoutW={layout.w}
+                        yValueOption={layout.valueToVisualize}
+
                         chartId={layout.i}
-                        chartIndex={index}
-                        //  proceduresSelection={proceduresSelection}
-                        notation={layout.notation}
-                    /> */}
+
+                    />
                 </div>);
 
             case "HEATMAP":

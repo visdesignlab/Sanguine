@@ -44,3 +44,5 @@ export const ExtraPairWidth: any =
 }
 
 export const ExtraPairPadding = 10;
+
+export const ExtraPairLimit = 5
