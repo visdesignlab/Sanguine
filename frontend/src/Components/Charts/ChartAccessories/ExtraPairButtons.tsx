@@ -1,47 +1,48 @@
+import { IconButton, Menu, MenuItem } from "@material-ui/core";
 import { useContext } from "react";
-import { useEffect } from "react";
 import { FC, useState } from "react";
-import { Menu, Dropdown } from "semantic-ui-react";
-import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
+import InsertChartIcon from '@material-ui/icons/InsertChart';
 import Store from "../../../Interfaces/Store";
 import { ExtraPairOptions } from "../../../Presets/DataDict";
+import { ExtraPairLimit } from "../../../Presets/Constants";
 
 
 type Props = {
-    extraPairArrayString: string;
+    extraPairLength: number
     chartId: string;
 }
-const ExtraPairButtons: FC<Props> = ({ extraPairArrayString, chartId }: Props) => {
+const ExtraPairButtons: FC<Props> = ({ extraPairLength, chartId }: Props) => {
     const store = useContext(Store)
-    const [extraPairArray, setExtraPairArray] = useState<string[]>([])
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
 
-    useEffect(() => {
-        if (extraPairArrayString) {
-            stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPairArrayString), setExtraPairArray)
-        }
-    }, [extraPairArray])
+    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const extraPairHandling = (input: string) => {
+        store.chartStore.addExtraPair(chartId, input);
+        handleClose()
+    }
 
     return (
-        <Menu.Item fitted>
-            <Dropdown disabled={extraPairArray.length >= 5} selectOnBlur={false} basic item icon="plus" compact>
-                <Dropdown.Menu>
-                    {
-                        ExtraPairOptions.map((d) => {
-                            return (
-                                <Dropdown.Item
-                                    key={d.key}
-                                    onClick={() => {
-                                        store.chartStore.addExtraPair(chartId, d.value);
-                                    }}
-                                >
-                                    {d.text}
-                                </Dropdown.Item>
-                            )
-                        })
-                    }
-                </Dropdown.Menu>
-            </Dropdown>
-        </Menu.Item >)
+        <div>
+            <IconButton disabled={extraPairLength >= ExtraPairLimit} onClick={handleClick}>
+                <InsertChartIcon />
+            </IconButton>
+            <Menu anchorEl={anchorEl} open={open}
+                onClose={handleClose}
+            >
+                {ExtraPairOptions.map((option) => (
+                    <MenuItem key={option.key} onClick={() => { extraPairHandling(option.key) }}>{option.text}</MenuItem>
+                ))}
+            </Menu>
+
+        </div>)
 }
 
 export default ExtraPairButtons

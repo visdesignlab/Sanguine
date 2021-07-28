@@ -24,6 +24,7 @@
         "d3": "^7.0.0",
         "jquery": "^3.6.0",
         "lineupjsx": "^4.0.0",
+        "material-ui-nested-menu-item": "^1.0.2",
         "mobx": "^6.3.2",
         "mobx-react": "^7.2.0",
         "node-sass": "^6.0.1",
