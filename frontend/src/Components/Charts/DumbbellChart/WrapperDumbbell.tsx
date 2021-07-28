@@ -31,7 +31,7 @@ const WrapperDumbbell: FC<Props> = ({ xAggregationOption, chartId, layoutH, layo
     const store = useContext(Store);
     const styles = useStyles();
     const buttonStyles = useButtonStyles();
-    const { proceduresSelection, showZero } = store.state;
+    const { proceduresSelection, showZero, rawDateRange } = store.state;
     const svgRef = useRef<SVGSVGElement>(null);
     const [width, setWidth] = useState(0);
     const [height, setHeight] = useState(0);
@@ -133,7 +133,7 @@ const WrapperDumbbell: FC<Props> = ({ xAggregationOption, chartId, layoutH, layo
                 // handle error
             }
         });
-    }, [store.dateRange, proceduresSelection, hemoData, xAggregationOption, showZero,])
+    }, [rawDateRange, proceduresSelection, hemoData, xAggregationOption, showZero])
 
     return <Grid container direction="row" alignItems="center" className={styles.chartWrapper}>
         <Grid item xs={1}>

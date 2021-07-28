@@ -51,7 +51,7 @@ const ScatterPlot: FC<Props> = ({ xMax, xMin, svg, data, width, height, yMax, yM
     const [isFirstRender, updateIsFirstRender] = useState(true);
     const [brushedCaseList, updatebrushedCaseList] = useState<number[]>([])
 
-    const updateBrush = () => {
+    const updateBrush = (e, v) => {
         updateBrushLoc(event.selection)
     }
 
