@@ -29,9 +29,9 @@ type Props = {
     xAggregationOption: string;
     yValueOption: string;
     chartTypeIndexinArray: number;
-    // hemoglobinDataSet: SingleCasePoint[];
+    outcomeComparison?: string;
 }
-const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArrayString, xAggregationOption, yValueOption, chartTypeIndexinArray }: Props) => {
+const WrapperHeatMap: FC<Props> = ({ outcomeComparison, layoutH, layoutW, chartId, extraPairArrayString, xAggregationOption, yValueOption, chartTypeIndexinArray }: Props) => {
     const hemoData = useContext(DataContext)
     const store = useContext(Store);
     const styles = useStyles();
@@ -42,6 +42,7 @@ const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArraySt
     const [extraPairData, setExtraPairData] = useState<ExtraPairPoint[]>([]);
     const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
     const [data, setData] = useState<HeatMapDataPoint[]>([]);
+    const [secondaryData, setSecondaryData] = useState<HeatMapDataPoint[]>([]);
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
     useEffect(() => {
@@ -78,10 +79,45 @@ const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArraySt
         })
             .then(function (response) {
                 if (response.data) {
-                    const temporaryDataHolder = produceAvailableCasesForNonIntervention(response.data, hemoData, store.state.surgeryUrgencySelection, store.state.outcomeFilter, xAggregationOption)
-                    const [caseCount, outputData] = generateRegularData(temporaryDataHolder, store.state.showZero, yValueOption)
+                    // const temporaryDataHolder = produceAvailableCasesForNonIntervention(response.data, hemoData, store.state.surgeryUrgencySelection, store.state.outcomeFilter, xAggregationOption)
+                    let caseSetReturnedFromQuery = new Set();
+                    let temporaryDataHolder: any = {};
+                    let secondaryTemporaryDataHolder: any = {};
+                    response.data.forEach((element: any) => {
+                        caseSetReturnedFromQuery.add(element.case_id);
+                    })
+                    hemoData.forEach((singleCase: SingleCasePoint) => {
+                        if (caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
+                            //   caseDictionary[singleCase.CASE_ID] = true;
+                            if (!temporaryDataHolder[singleCase[xAggregationOption]]) {
+                                temporaryDataHolder[singleCase[xAggregationOption]] = {
+                                    aggregateAttribute: singleCase[xAggregationOption],
+                                    data: [],
+                                    patientIDList: new Set(),
+                                }
+                                secondaryTemporaryDataHolder[singleCase[xAggregationOption]] = {
+                                    aggregateAttribute: singleCase[xAggregationOption],
+                                    data: [],
+                                    patientIDList: new Set(),
+                                }
+                            }
+
+                            if (outcomeComparison && singleCase[outcomeComparison] > 0) {
+                                secondaryTemporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
+                                secondaryTemporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.PATIENT_ID);
+                            }
+                            else {
+                                temporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
+                                temporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.PATIENT_ID);
+                            }
+                        }
+                    })
+                    const [caseCount, outputData] = generateRegularData(temporaryDataHolder, store.state.showZero, yValueOption);
+                    console.log(secondaryTemporaryDataHolder)
+                    const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, store.state.showZero, yValueOption);
                     stateUpdateWrapperUseJSON(data, outputData, setData);
-                    store.chartStore.totalAggregatedCaseCount = caseCount as number
+                    stateUpdateWrapperUseJSON(secondaryData, secondOutputData, setSecondaryData);
+                    store.chartStore.totalAggregatedCaseCount = (caseCount as number) + (secondCaseCount as number)
                 }
             })
             .catch(function (thrown) {
@@ -96,6 +132,7 @@ const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArraySt
         store.state.showZero,
         xAggregationOption,
         yValueOption,
+        outcomeComparison,
         // currentSelectPatientGroupIDs, 
         // currentOutputFilterSet,
         hemoData])
@@ -128,6 +165,7 @@ const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArraySt
                             yValueOption={yValueOption}
                             chartId={chartId}
                             extraPairDataSet={extraPairData}
+                            secondaryData={outcomeComparison ? secondaryData : undefined}
                         />
                     </ChartSVG>
                 </Container>

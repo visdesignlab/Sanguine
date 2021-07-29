@@ -61,17 +61,15 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                     x: 0,
                     y: Infinity,
                     plotType: typeDiction[addingChartType],
-                    notation: ""
+                    notation: "",
+                    outcomeComparison: outcomeComparisonSelection
                 }
                 if (
                     // plotType === "COST"|| 
                     typeDiction[addingChartType] === "HEATMAP" || typeDiction[addingChartType] === "INTERVENTION") {
                     newChart.extraPair = JSON.stringify([]);
                 }
-                if (outcomeComparisonSelection) {
-                    newChart.plotType = "COMPARISON";
-                    newChart.outcomeComparison = outcomeComparisonSelection;
-                }
+
                 store.chartStore.addNewChart(newChart)
                 store.configStore.topMenuBarAddMode = false;
                 setInterventionDate(undefined);

@@ -62,9 +62,13 @@ const WrapperCostBar: FC<Props> = ({ xAggregatedOption, chartId, layoutH, layout
                 dataItem.CRYO_UNITS * (costMode ? BloodProductCost.CRYO_UNITS : 1) / dataItem.caseNum,
                 (costMode ? (dataItem.SALVAGE_USAGE * BloodProductCost.CELL_SAVER_ML / dataItem.caseNum) : (dataItem.CELL_SAVER_ML * 0.004 / dataItem.caseNum))
             ],
-            caseNum: dataItem.caseNum,
+            caseCount: dataItem.caseNum,
             cellSalvageUsage: dataItem.SALVAGE_USAGE / dataItem.caseNum,
-            cellSalvageVolume: dataItem.CELL_SAVER_ML / dataItem.caseNum
+            cellSalvageVolume: dataItem.CELL_SAVER_ML / dataItem.caseNum,
+            totalVal: 0,
+            zeroCaseNum: 0,
+            patientIDList: [],
+            caseIDList: []
         }
         return newDataObj
     }

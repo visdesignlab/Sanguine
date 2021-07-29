@@ -67,7 +67,7 @@ export const changeChart = createAction<ApplicationState, [string, string, strin
             d.valueToVisualize = yValueSelection;
             d.plotType = chartType;
             if (outcomeComparison) {
-                d.outcomeComparison = outcomeComparison === "NONE" ? undefined : outcomeComparison;
+                d.outcomeComparison = outcomeComparison === "NONE" ? "" : outcomeComparison;
             }
         }
         return d;

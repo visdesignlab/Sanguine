@@ -93,6 +93,7 @@ const LayoutGenerator: FC = () => {
                         xAggregationOption={layout.aggregatedBy}
                         yValueOption={layout.valueToVisualize}
                         chartTypeIndexinArray={typeDiction.indexOf(layout.plotType)}
+                        outcomeComparison={layout.outcomeComparison}
                     />
                 </div>);
 
@@ -112,22 +113,7 @@ const LayoutGenerator: FC = () => {
                         interventionPlotType={layout.comparisonChartType!}
                         notation={layout.notation} /> */}
                 </div>);
-            case "COMPARISON":
-                return (<div key={layout.i}
-                    className={"parent-node" + layout.i}>
-                    <ChartStandardButtons chartID={layout.i} />
-                    {/* <ComparisonPlotVisualization
-                        aggregatedBy={layout.aggregatedBy}
-                        chartId={layout.i}
-                        chartIndex={index}
-                        hemoglobinDataSet={hemoData}
-                        extraPair={layout.extraPair}
-                        notation={layout.notation}
-                        valueToVisualize={layout.valueToVisualize}
-                        outcomeComparison={layout.outcomeComparison!}
-                        w={layout.w}
-                    /> */}
-                </div>);
+
         }
 
     }
