@@ -136,7 +136,7 @@ const WrapperCostBar: FC<Props> = ({ xAggregatedOption, chartId, layoutH, layout
                 console.log(temporaryDataHolder)
                 Object.values(temporaryDataHolder).forEach((dataItem: any) => {
                     let newDataObj = makeDataObj(dataItem);
-                    console.log(newDataObj)
+
                     const sum_cost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0)
                     tempmaxCost = tempmaxCost > sum_cost ? tempmaxCost : sum_cost
                     const costSaved = -(newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4])
@@ -146,9 +146,10 @@ const WrapperCostBar: FC<Props> = ({ xAggregatedOption, chartId, layoutH, layout
                     outputData.push(newDataObj)
                 })
                 if (comparisonOption) {
+                    console.log(secondaryTemporaryDataHolder)
                     Object.values(secondaryTemporaryDataHolder).forEach((dataItem: any) => {
                         let newDataObj = makeDataObj(dataItem);
-                        console.log(newDataObj)
+
                         const sum_cost = sum(newDataObj.dataArray) || 0 + (costMode ? (newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0)
                         tempmaxCost = tempmaxCost > sum_cost ? tempmaxCost : sum_cost
                         const costSaved = -(newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4])
@@ -185,7 +186,7 @@ const WrapperCostBar: FC<Props> = ({ xAggregatedOption, chartId, layoutH, layout
                     chartTypeIndexinArray={0}
                     chartId={chartId}
                     requireOutcome={false}
-                    requireSecondary={false} />
+                    requireSecondary={true} />
             </Grid>
             <Grid item xs={11} className={styles.chartWrapper}>
                 <Container className={styles.chartWrapper}>

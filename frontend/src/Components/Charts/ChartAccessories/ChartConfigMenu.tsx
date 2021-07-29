@@ -55,6 +55,8 @@ const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTyp
 
     const OutcomeDropdownOptions = OutcomeOptions.concat({ value: "NONE", key: "NONE", text: "None" })
 
+
+
     return (
         <div>
             <IconButton onClick={handleClick}>
@@ -67,6 +69,7 @@ const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTyp
                     label="Change Aggregation"
                     parentMenuOpen={open}
                 >
+
                     {addOptions[chartTypeIndexinArray][1].map((option) => (
                         <MenuItem key={option.key} onClick={() => { changeXAxis(option.key) }}>{option.text}</MenuItem>
                     ))}
@@ -78,6 +81,7 @@ const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTyp
                     {addOptions[chartTypeIndexinArray][0].map((option) => (
                         <MenuItem key={option.key} onClick={() => { changeYAxis(option.key) }}>{option.text}</MenuItem>
                     ))}
+                    {chartTypeIndexinArray === 0 ? <MenuItem key={"none"} onClick={() => { changeYAxis("") }}>None</MenuItem> : <></>}
                 </NestedMenuItem> : <></>}
                 {requireOutcome ? <NestedMenuItem
                     label="Change Outcome Comparison"

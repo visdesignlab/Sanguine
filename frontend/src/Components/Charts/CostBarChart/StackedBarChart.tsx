@@ -32,6 +32,7 @@ const StackedBarChart: FC<Props> = ({ xAggregationOption, secondaryData, svg, da
     useDeepCompareEffect(() => {
         let newCaseMax = 0;
         if (secondaryData) {
+            console.log(secondaryData)
             let dataToObj: any = {}
             let dataXVals: string[] = []
             secondaryData.map((d: CostBarChartDataPoint) => {
@@ -116,7 +117,7 @@ const StackedBarChart: FC<Props> = ({ xAggregationOption, secondaryData, svg, da
                     return (
                         <SingleStackedBar
                             dataPoint={dp}
-                            howToTransform={(`translate(0,${aggregationScale()(dp.aggregateAttribute) || 0 + (secondaryData ? aggregationScale().bandwidth() * 0.5 : 0)})`).toString()}
+                            howToTransform={(`translate(0,${(aggregationScale()(dp.aggregateAttribute) || 0) + (secondaryData ? (aggregationScale().bandwidth() * 0.5) : 0)})`).toString()}
                             valueScaleDomain={JSON.stringify(valueScale().domain())}
                             valueScaleRange={JSON.stringify(valueScale().range())}
                             bandwidth={secondaryData ? aggregationScale().bandwidth() * 0.5 : aggregationScale().bandwidth()}
@@ -124,6 +125,7 @@ const StackedBarChart: FC<Props> = ({ xAggregationOption, secondaryData, svg, da
                             showPotential={showPotential} />)
                 })}
                 {secondaryData ? secondaryData.map((dp) => {
+                    console.log(dp)
                     return (
                         <SingleStackedBar
                             dataPoint={dp}
