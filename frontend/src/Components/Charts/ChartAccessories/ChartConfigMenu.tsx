@@ -44,12 +44,7 @@ const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTyp
     }
 
     const changeOutcome = (value: string) => {
-
-        if (value === "NONE") {
-            store.chartStore.changeChart(xAggregationOption, yValueOption, chartId, "HEATMAP", value)
-        } else {
-            store.chartStore.changeChart(xAggregationOption, yValueOption, chartId, "COMPARISON", value)
-        }
+        store.chartStore.changeChart(xAggregationOption, yValueOption, chartId, "HEATMAP", value)
         handleClose()
     }
 
@@ -81,7 +76,7 @@ const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTyp
                     {addOptions[chartTypeIndexinArray][0].map((option) => (
                         <MenuItem key={option.key} onClick={() => { changeYAxis(option.key) }}>{option.text}</MenuItem>
                     ))}
-                    {chartTypeIndexinArray === 0 ? <MenuItem key={"none"} onClick={() => { changeYAxis("") }}>None</MenuItem> : <></>}
+                    {chartTypeIndexinArray === 0 ? <MenuItem key={"NONE"} onClick={() => { changeYAxis("") }}>None</MenuItem> : <></>}
                 </NestedMenuItem> : <></>}
                 {requireOutcome ? <NestedMenuItem
                     label="Change Outcome Comparison"

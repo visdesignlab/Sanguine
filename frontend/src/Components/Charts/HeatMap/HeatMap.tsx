@@ -1,7 +1,7 @@
 import { observer } from "mobx-react";
 import { useContext } from "react";
 import { FC, useState } from "react";
-import { HeatMapSortNoComparison } from "../../../HelperFunctions/ChartSorting";
+import { sortHelper } from "../../../HelperFunctions/ChartSorting";
 import Store from "../../../Interfaces/Store";
 import { ExtraPairPoint, HeatMapDataPoint } from "../../../Interfaces/Types/DataTypes";
 import { BloodProductCap, CaseRectWidth, ExtraPairPadding, ExtraPairWidth, OffsetDict } from "../../../Presets/Constants";
@@ -25,11 +25,12 @@ type Props = {
     yValueOption: string;
     chartId: string;
     data: HeatMapDataPoint[];
+    secondaryData?: HeatMapDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
     extraPairDataSet: ExtraPairPoint[];
 }
 
-const HeatMap: FC<Props> = ({ dimensionHeight, dimensionWidth, xAggregationOption, yValueOption, chartId, data, svg, extraPairDataSet }: Props) => {
+const HeatMap: FC<Props> = ({ dimensionHeight, secondaryData, dimensionWidth, xAggregationOption, yValueOption, chartId, data, svg, extraPairDataSet }: Props) => {
     const store = useContext(Store)
     const currentOffset = OffsetDict.regular;
     const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
@@ -47,16 +48,15 @@ const HeatMap: FC<Props> = ({ dimensionHeight, dimensionWidth, xAggregationOptio
     }, [extraPairDataSet])
 
     useDeepCompareEffect(() => {
-        const [tempxVals, newCaseMax] = HeatMapSortNoComparison(data, xAggregationOption, store.state.showZero)
+        const [tempxVals, newCaseMax] = sortHelper(data, xAggregationOption, store.state.showZero, secondaryData)
         stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
         setCaseMax(newCaseMax as number)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data, store.state.showZero, xAggregationOption])
+    }, [data, store.state.showZero, xAggregationOption, secondaryData])
 
     const aggregationScale = useCallback(() => {
         return AggregationScaleGenerator(xVals, dimensionHeight, currentOffset)
     }, [dimensionHeight, xVals, currentOffset])
-
 
     const valueScale = useCallback(() => {
         let outputRange
@@ -68,18 +68,6 @@ const HeatMap: FC<Props> = ({ dimensionHeight, dimensionWidth, xAggregationOptio
         }
         return ValueScaleGenerator(outputRange, currentOffset, dimensionWidth, extraPairTotalWidth)
     }, [dimensionWidth, extraPairTotalWidth, yValueOption, currentOffset]);
-
-    const outputSinglePlotElement = (dataPoint: HeatMapDataPoint) => {
-        return ([<SingleHeatRow
-            bandwidth={aggregationScale().bandwidth()}
-            valueScaleDomain={JSON.stringify(valueScale().domain())}
-            valueScaleRange={JSON.stringify(valueScale().range())}
-            dataPoint={dataPoint}
-            howToTransform={(`translate(-${currentOffset.left},${aggregationScale()(
-                dataPoint.aggregateAttribute
-            )})`).toString()}
-        />])
-    }
 
 
     return <>
@@ -99,18 +87,48 @@ const HeatMap: FC<Props> = ({ dimensionHeight, dimensionWidth, xAggregationOptio
         <g className="legend">
             {outputGradientLegend(store.state.showZero, dimensionWidth)}
         </g>
-        <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
-            {data.map((dataPoint) => {
-                return outputSinglePlotElement(dataPoint).concat([
-                    <CaseCountHeader
-                        caseCount={dataPoint.caseCount}
-                        yPos={aggregationScale()(dataPoint.aggregateAttribute) || 0}
-                        height={aggregationScale().bandwidth()}
-                        zeroCaseNum={dataPoint.zeroCaseNum}
-                        caseMax={caseMax} />
-                ]);
-            })}
-        </ChartG>
+
+        {data.map((dataPoint) => {
+            return (
+                <g>
+                    <SingleHeatRow
+                        bandwidth={secondaryData ? aggregationScale().bandwidth() * 0.5 : aggregationScale().bandwidth()}
+                        valueScaleDomain={JSON.stringify(valueScale().domain())}
+                        valueScaleRange={JSON.stringify(valueScale().range())}
+                        dataPoint={dataPoint}
+                        howToTransform={`translate(0,${(aggregationScale()(dataPoint.aggregateAttribute) || 0) + (secondaryData ? (aggregationScale().bandwidth() * 0.5) : 0)})`}
+                    />
+                    <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
+                        <CaseCountHeader
+                            caseCount={dataPoint.caseCount}
+                            yPos={(aggregationScale()(dataPoint.aggregateAttribute) || 0) + (secondaryData ? (aggregationScale().bandwidth() * 0.5) : 0)}
+                            height={(secondaryData ? 0.5 : 1) * aggregationScale().bandwidth()}
+                            zeroCaseNum={dataPoint.zeroCaseNum}
+                            caseMax={caseMax} />
+                    </ChartG>
+                </g>)
+        })}
+        {secondaryData ? secondaryData.map((dataPoint) => {
+            return (
+                <g>
+                    <SingleHeatRow
+                        bandwidth={aggregationScale().bandwidth() * 0.5}
+                        valueScaleDomain={JSON.stringify(valueScale().domain())}
+                        valueScaleRange={JSON.stringify(valueScale().range())}
+                        dataPoint={dataPoint}
+                        howToTransform={`translate(0,${(aggregationScale()(dataPoint.aggregateAttribute) || 0)})`}
+                    />
+                    <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
+                        <CaseCountHeader
+                            caseCount={dataPoint.caseCount}
+                            yPos={aggregationScale()(dataPoint.aggregateAttribute) || 0}
+                            height={0.5 * aggregationScale().bandwidth()}
+                            zeroCaseNum={dataPoint.zeroCaseNum}
+                            caseMax={caseMax} />
+                    </ChartG>
+                </g>)
+        }) : <></>}
+
     </>
 }
 export default observer(HeatMap)
