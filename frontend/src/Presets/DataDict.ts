@@ -43,15 +43,14 @@ export const dumbbellFacetOptions = BloodComponentOptions.slice(0, 4).concat(Agg
 
 const dumbbellValueOptions = [{ value: "HGB_VALUE", key: "HGB_VALUE", text: "Hemoglobin Value" }]
 
-export const typeDiction = ["COST", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION", "COMPARESAVING"];
+export const typeDiction = ["COST", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION",];
 
 export const addOptions = [
-    [BloodComponentOptions, AggregationOptions],
+    [OutcomeOptions.slice(4, 7), AggregationOptions],
     [dumbbellValueOptions, dumbbellFacetOptions],
     [ScatterYOptions, BloodComponentOptions],
     [BloodComponentOptions, AggregationOptions],
-    [BloodComponentOptions, [AggregationOptions[0], AggregationOptions[2]]],
-    [OutcomeOptions.slice(4, 7), AggregationOptions]
+    [BloodComponentOptions, [AggregationOptions[0], AggregationOptions[2]]]
 ]
 
 export const SurgeryUrgencyArray = ["Urgent", "Elective", "Emergent"]

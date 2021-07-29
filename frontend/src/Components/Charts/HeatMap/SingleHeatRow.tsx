@@ -1,4 +1,4 @@
-import { format, interpolateGreys, interpolateReds, scaleBand } from "d3";
+import { format, interpolateGreys, interpolateReds, ScaleBand, scaleBand } from "d3";
 import { observer } from "mobx-react";
 import { FC, useCallback, useContext } from "react";
 import { HeatmapColorScale, HeatmapGreyScale, ValueScaleGeneratorFromDomainRange } from "../../../HelperFunctions/Scales";
@@ -21,7 +21,7 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
 
     const { showZero } = useContext(Store).state
     const valueScale = useCallback(() => {
-        return ValueScaleGeneratorFromDomainRange(valueScaleDomain, valueScaleRange)
+        return (ValueScaleGeneratorFromDomainRange(valueScaleDomain, valueScaleRange, true) as ScaleBand<string>)
     }, [valueScaleDomain, valueScaleRange]);
 
     return (
