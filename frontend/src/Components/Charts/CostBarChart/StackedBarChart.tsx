@@ -9,6 +9,9 @@ import HeatMapAxis from "../ChartAccessories/HeatMapAxis";
 import { ChartG } from "../../../Presets/StyledSVGComponents";
 import SingleStackedBar from "./SingleStackedBar";
 import CaseCountHeader from "../ChartAccessories/CaseCountHeader";
+import { sortHelper } from "../../../HelperFunctions/ChartSorting";
+import { useContext } from "react";
+import Store from "../../../Interfaces/Store";
 
 type Props = {
     xAggregationOption: string;
@@ -25,55 +28,15 @@ type Props = {
 }
 
 const StackedBarChart: FC<Props> = ({ xAggregationOption, secondaryData, svg, data, dimensionWidth, dimensionHeight, maximumCost, maxSavedNegative, costMode, showPotential }: Props) => {
-    const svgSelection = select(svg.current);
+    const store = useContext(Store);
     const currentOffset = OffsetDict.regular;
     const [caseMax, setCaseMax] = useState(0);
     const [xVals, setXVals] = useState([]);
 
     useDeepCompareEffect(() => {
-        let newCaseMax = 0;
-        if (secondaryData) {
-            console.log(secondaryData)
-            let dataToObj: any = {}
-            let dataXVals: string[] = []
-            secondaryData.map((d: CostBarChartDataPoint) => {
-                dataToObj[d.aggregateAttribute] = d.caseNum;
-                newCaseMax = newCaseMax > d.caseNum ? newCaseMax : d.caseNum
-                dataXVals.push(d.aggregateAttribute)
-            })
-            data.map((d: CostBarChartDataPoint) => {
-                if (dataToObj[d.aggregateAttribute]) {
-                    dataToObj[d.aggregateAttribute] += d.caseNum;
-                } else {
-                    dataToObj[d.aggregateAttribute] = d.caseNum;
-                    dataXVals.push(d.aggregateAttribute)
-                }
-                newCaseMax = newCaseMax > d.caseNum ? newCaseMax : d.caseNum
-            })
-            dataXVals.sort((a, b) => {
-                if (xAggregationOption === "YEAR") {
-                    return parseInt(a) - parseInt(b)
-                } else {
-                    return dataToObj[a] - dataToObj[b];
-                }
-            })
-            stateUpdateWrapperUseJSON(xVals, dataXVals, setXVals);
-            setCaseMax(newCaseMax)
-        }
-        else {
-            const tempXVals = data.sort((a, b) => {
-                if (xAggregationOption === "YEAR") {
-                    return a.aggregateAttribute - b.aggregateAttribute
-                } else {
-                    return a.caseNum - b.caseNum
-                }
-            }).map((dp) => {
-                newCaseMax = newCaseMax > dp.caseNum ? newCaseMax : dp.caseNum
-                return dp.aggregateAttribute
-            });
-            stateUpdateWrapperUseJSON(xVals, tempXVals, setXVals);
-            setCaseMax(newCaseMax)
-        }
+        const [tempxVals, newCaseMax] = sortHelper(data, xAggregationOption, store.state.showZero, secondaryData)
+        stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
+        setCaseMax(newCaseMax as number)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data, xAggregationOption, secondaryData]);
 
@@ -93,10 +56,7 @@ const StackedBarChart: FC<Props> = ({ xAggregationOption, secondaryData, svg, da
         return valueScale
     }, [dimensionWidth, maximumCost, maxSavedNegative, currentOffset]);
 
-    const caseScale = useCallback(() => {
-        const caseScale = scaleLinear().domain([0, caseMax]).range(greyScaleRange);
-        return caseScale;
-    }, [caseMax])
+
 
 
     return (
@@ -131,7 +91,7 @@ const StackedBarChart: FC<Props> = ({ xAggregationOption, secondaryData, svg, da
                                     zeroCaseNum={0}
                                     yPos={(aggregationScale()(dp.aggregateAttribute) || 0) + (secondaryData ? (aggregationScale().bandwidth() * 0.5) : 0)}
                                     caseMax={caseMax}
-                                    caseCount={dp.caseNum} />
+                                    caseCount={dp.caseCount} />
                             </ChartG>
                         </g>)
                 })}
@@ -153,7 +113,7 @@ const StackedBarChart: FC<Props> = ({ xAggregationOption, secondaryData, svg, da
                                     zeroCaseNum={0}
                                     yPos={(aggregationScale()(dp.aggregateAttribute) || 0)}
                                     caseMax={caseMax}
-                                    caseCount={dp.caseNum} />
+                                    caseCount={dp.caseCount} />
                             </ChartG>
                         </g>)
                 }) : <></>}
