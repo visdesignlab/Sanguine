@@ -14,7 +14,9 @@ import { ChartG, HeatMapDividerLine } from "../../../Presets/StyledSVGComponents
 import DualColorLegend from "../ChartAccessories/DualColorLegend";
 import SingleColorLegend from "../ChartAccessories/SingleColorLegend";
 import SingleHeatRow from "./SingleHeatRow";
-import useDeepCompareEffect from 'use-deep-compare-effect'
+import useDeepCompareEffect from 'use-deep-compare-effect';
+import CaseCountHeader from "../ChartAccessories/CaseCountHeader";
+
 
 type Props = {
     dimensionWidth: number;
@@ -55,9 +57,6 @@ const HeatMap: FC<Props> = ({ dimensionHeight, dimensionWidth, xAggregationOptio
         return AggregationScaleGenerator(xVals, dimensionHeight, currentOffset)
     }, [dimensionHeight, xVals, currentOffset])
 
-    const caseScale = useCallback(() => {
-        return CaseScaleGenerator(caseMax)
-    }, [caseMax])
 
     const valueScale = useCallback(() => {
         let outputRange
@@ -103,28 +102,12 @@ const HeatMap: FC<Props> = ({ dimensionHeight, dimensionWidth, xAggregationOptio
         <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
             {data.map((dataPoint) => {
                 return outputSinglePlotElement(dataPoint).concat([
-                    <rect
-                        fill={interpolateGreys(caseScale()(store.state.showZero ? dataPoint.caseCount : (dataPoint.caseCount - dataPoint.zeroCaseNum)))}
-                        x={-CaseRectWidth - 5}
-                        y={aggregationScale()(dataPoint.aggregateAttribute)}
-                        width={CaseRectWidth}
+                    <CaseCountHeader
+                        caseCount={dataPoint.caseCount}
+                        yPos={aggregationScale()(dataPoint.aggregateAttribute) || 0}
                         height={aggregationScale().bandwidth()}
-                        // stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
-                        strokeWidth={2}
-                    />,
-                    <text
-                        fill="white"
-                        x={-20}
-                        y={
-                            aggregationScale()(dataPoint.aggregateAttribute)! +
-                            0.5 * aggregationScale().bandwidth()
-                        }
-                        alignmentBaseline={"central"}
-                        textAnchor={"middle"}
-                        fontSize="12px"
-                    >
-                        {store.state.showZero ? dataPoint.caseCount : (dataPoint.caseCount - dataPoint.zeroCaseNum)}
-                    </text>,
+                        zeroCaseNum={dataPoint.zeroCaseNum}
+                        caseMax={caseMax} />
                 ]);
             })}
         </ChartG>
