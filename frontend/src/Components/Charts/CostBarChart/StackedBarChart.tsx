@@ -8,6 +8,7 @@ import { observer } from "mobx-react";
 import HeatMapAxis from "../ChartAccessories/HeatMapAxis";
 import { ChartG } from "../../../Presets/StyledSVGComponents";
 import SingleStackedBar from "./SingleStackedBar";
+import CaseCountHeader from "../ChartAccessories/CaseCountHeader";
 
 type Props = {
     xAggregationOption: string;
@@ -115,27 +116,48 @@ const StackedBarChart: FC<Props> = ({ xAggregationOption, secondaryData, svg, da
             <g className="chart-comp" >
                 {data.map((dp) => {
                     return (
-                        <SingleStackedBar
-                            dataPoint={dp}
-                            howToTransform={(`translate(0,${(aggregationScale()(dp.aggregateAttribute) || 0) + (secondaryData ? (aggregationScale().bandwidth() * 0.5) : 0)})`).toString()}
-                            valueScaleDomain={JSON.stringify(valueScale().domain())}
-                            valueScaleRange={JSON.stringify(valueScale().range())}
-                            bandwidth={secondaryData ? aggregationScale().bandwidth() * 0.5 : aggregationScale().bandwidth()}
-                            costMode={costMode}
-                            showPotential={showPotential} />)
+                        <g>
+                            <SingleStackedBar
+                                dataPoint={dp}
+                                howToTransform={(`translate(0,${(aggregationScale()(dp.aggregateAttribute) || 0) + (secondaryData ? (aggregationScale().bandwidth() * 0.5) : 0)})`).toString()}
+                                valueScaleDomain={JSON.stringify(valueScale().domain())}
+                                valueScaleRange={JSON.stringify(valueScale().range())}
+                                bandwidth={secondaryData ? aggregationScale().bandwidth() * 0.5 : aggregationScale().bandwidth()}
+                                costMode={costMode}
+                                showPotential={showPotential} />
+                            <ChartG extraPairTotalWidth={0} currentOffset={currentOffset}>
+                                <CaseCountHeader
+                                    height={(secondaryData ? 0.5 : 1) * aggregationScale().bandwidth()}
+                                    zeroCaseNum={0}
+                                    yPos={(aggregationScale()(dp.aggregateAttribute) || 0) + (secondaryData ? (aggregationScale().bandwidth() * 0.5) : 0)}
+                                    caseMax={caseMax}
+                                    caseCount={dp.caseNum} />
+                            </ChartG>
+                        </g>)
                 })}
                 {secondaryData ? secondaryData.map((dp) => {
                     console.log(dp)
                     return (
-                        <SingleStackedBar
-                            dataPoint={dp}
-                            howToTransform={(`translate(0,${aggregationScale()(dp.aggregateAttribute) || 0})`).toString()}
-                            valueScaleDomain={JSON.stringify(valueScale().domain())}
-                            valueScaleRange={JSON.stringify(valueScale().range())}
-                            bandwidth={aggregationScale().bandwidth() * 0.5}
-                            costMode={costMode}
-                            showPotential={showPotential} />)
+                        <g>
+                            <SingleStackedBar
+                                dataPoint={dp}
+                                howToTransform={(`translate(0,${aggregationScale()(dp.aggregateAttribute) || 0})`).toString()}
+                                valueScaleDomain={JSON.stringify(valueScale().domain())}
+                                valueScaleRange={JSON.stringify(valueScale().range())}
+                                bandwidth={aggregationScale().bandwidth() * 0.5}
+                                costMode={costMode}
+                                showPotential={showPotential} />
+                            <ChartG extraPairTotalWidth={0} currentOffset={currentOffset}>
+                                <CaseCountHeader
+                                    height={0.5 * aggregationScale().bandwidth()}
+                                    zeroCaseNum={0}
+                                    yPos={(aggregationScale()(dp.aggregateAttribute) || 0)}
+                                    caseMax={caseMax}
+                                    caseCount={dp.caseNum} />
+                            </ChartG>
+                        </g>)
                 }) : <></>}
+
             </g>
         </>
     )
