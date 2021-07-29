@@ -62,7 +62,6 @@ const RegularModeMenu: FC = () => {
                             <MenuItem onClick={() => handleClose(3)}>Heat Map</MenuItem>
                             <MenuItem onClick={() => handleClose(4)}>Intervention Plot</MenuItem>
                             <MenuItem onClick={() => handleClose(0)}>Cost and Saving Chart</MenuItem>
-                            <MenuItem onClick={() => handleClose(5)}>Compare Cost Chart</MenuItem>
                         </Menu>
                     </div>
                 </Grid>

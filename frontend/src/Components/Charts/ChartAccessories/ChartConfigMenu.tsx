@@ -16,12 +16,14 @@ type Props = {
     chartTypeIndexinArray: number;
     chartId: string;
     requireOutcome: boolean;
+    requireSecondary: boolean
 }
 
-const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTypeIndexinArray, requireOutcome, chartId }: Props) => {
+const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTypeIndexinArray, requireOutcome, chartId, requireSecondary }: Props) => {
     const store = useContext(Store)
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
+
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -69,14 +71,14 @@ const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTyp
                         <MenuItem key={option.key} onClick={() => { changeXAxis(option.key) }}>{option.text}</MenuItem>
                     ))}
                 </NestedMenuItem>
-                <NestedMenuItem
+                {requireSecondary ? <NestedMenuItem
                     label="Change Value to Show"
                     parentMenuOpen={open}
                 >
                     {addOptions[chartTypeIndexinArray][0].map((option) => (
                         <MenuItem key={option.key} onClick={() => { changeYAxis(option.key) }}>{option.text}</MenuItem>
                     ))}
-                </NestedMenuItem>
+                </NestedMenuItem> : <></>}
                 {requireOutcome ? <NestedMenuItem
                     label="Change Outcome Comparison"
                     parentMenuOpen={open}

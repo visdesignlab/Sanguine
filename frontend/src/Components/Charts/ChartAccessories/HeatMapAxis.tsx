@@ -1,4 +1,4 @@
-import { axisBottom, axisLeft, scaleBand, select } from "d3";
+import { axisBottom, axisLeft, ScaleBand, scaleBand, select } from "d3";
 import { FC, useCallback } from "react"
 import { BloodProductCap, CaseRectWidth, CELL_SAVER_TICKS } from "../../../Presets/Constants";
 import { AcronymDictionary } from "../../../Presets/DataDict";
@@ -16,21 +16,26 @@ type Props = {
     valueScaleDomain: string;
     valueScaleRange: string;
     xAggregationOption: string;
+    isValueScaleBand: boolean;
 }
-const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals, dimensionHeight, yValueOption, valueScaleRange, valueScaleDomain, xAggregationOption, dimensionWidth }: Props) => {
+const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals, dimensionHeight, yValueOption, valueScaleRange, valueScaleDomain, xAggregationOption, dimensionWidth, isValueScaleBand }: Props) => {
 
     const aggregationScale = useCallback(() => {
         return AggregationScaleGenerator(xVals, dimensionHeight, currentOffset)
     }, [dimensionHeight, xVals, currentOffset]);
 
     const valueScale = useCallback(() => {
-        return ValueScaleGeneratorFromDomainRange(valueScaleDomain, valueScaleRange)
+        return ValueScaleGeneratorFromDomainRange(valueScaleDomain, valueScaleRange, isValueScaleBand)
     }, [valueScaleDomain, valueScaleRange]);
 
     const svgSelection = select(svg.current);
     const aggregationLabel = axisLeft(aggregationScale());
-    const valueLabel = axisBottom(valueScale()).tickFormat((d, i) => yValueOption === "CELL_SAVER_ML" ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[yValueOption] ? `${d}+` : d));
-
+    let valueLabel;
+    if (isValueScaleBand) {
+        valueLabel = axisBottom(valueScale() as ScaleBand<string>).tickFormat((d, i) => yValueOption === "CELL_SAVER_ML" ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[yValueOption] ? `${d}+` : d));
+    } else {
+        valueLabel = axisBottom(valueScale() as any)
+    }
     svgSelection
         .select(".axes")
         .select(".x-axis")

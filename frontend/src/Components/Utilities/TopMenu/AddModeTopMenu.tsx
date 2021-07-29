@@ -85,15 +85,15 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
     }
 
 
-    const outputRegularOptions = (titleOne: string, titleTwo: string) => {
+    const outputRegularOptions = (titleOne: string, titleTwo: string, titleOneRequied: boolean) => {
         return <>
             <Grid item xs>
                 <div className={styles.centerAlignment}>
-                    <FormControl required className={styles.formControl}>
+                    <FormControl required={titleOneRequied} className={styles.formControl}>
                         <InputLabel>{titleOne}</InputLabel>
                         <Select
                             onChange={(e) => { setYValueSelection(e.target.value as string) }}>
-                            {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][0] : [])}
+                            {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][0] : [], !titleOneRequied)}
                         </Select>
                     </FormControl>
 
@@ -118,28 +118,30 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
 
     const addBarChartMenuRewrite: any[] = [
         //For #0 Cost and Saving Chart
-        <Grid item xs>
-            <div className={styles.centerAlignment}>
-                <FormControl required className={styles.formControl}>
-                    <InputLabel>Aggregated by</InputLabel>
-                    <Select onChange={(e) => { setXAggreSelection(e.target.value as string) }}>
-                        {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][1] : [])}
-                    </Select>
-                </FormControl>
-            </div>
-        </Grid>,
+        // <Grid item xs>
+        //     <div className={styles.centerAlignment}>
+        //         <FormControl required className={styles.formControl}>
+        //             <InputLabel>Aggregated by</InputLabel>
+        //             <Select onChange={(e) => { setXAggreSelection(e.target.value as string) }}>
+        //                 {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][1] : [])}
+        //             </Select>
+        //         </FormControl>
+        //     </div>
+        // </Grid>
+        outputRegularOptions("Select Comparison", "Aggregated by", false)
+        ,
 
         //For #1 Dumbbell Chart
 
-        outputRegularOptions("Select Value to Show", "Arranged by"),
+        outputRegularOptions("Select Value to Show", "Arranged by", true),
 
         //for #2 Scatter Plot
 
-        outputRegularOptions("Select Value to Show", "Arranged by"),
+        outputRegularOptions("Select Value to Show", "Arranged by", true),
 
         //for #3 Heat Map
 
-        [outputRegularOptions("Select Value to Show", "Aggregated by"),
+        [outputRegularOptions("Select Value to Show", "Aggregated by", true),
 
         <Grid item xs>
             <div className={styles.centerAlignment}>
@@ -156,7 +158,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
 
         //For #4 Intervention Plot
 
-        [outputRegularOptions("Select Value to Show", "Aggregated by"),
+        [outputRegularOptions("Select Value to Show", "Aggregated by", true),
 
         <Grid item xs>
             {/* <SemanticDatePicker
@@ -179,11 +181,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                 /> */}
             </div>
         </Grid>
-        ],
-
-        //for #5 Compare Cost Chart
-
-        outputRegularOptions("Select Value to Compare", "Aggregated by")
+        ]
     ]
 
     return <div>

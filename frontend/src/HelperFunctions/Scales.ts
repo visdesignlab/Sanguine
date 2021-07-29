@@ -26,11 +26,17 @@ export const ValueScaleGenerator = (outputRange: number[], currentOffset: Offset
         .paddingInner(0.01);
 }
 
-export const ValueScaleGeneratorFromDomainRange = (valueScaleDomain: string, valueScaleRange: string) => {
+export const ValueScaleGeneratorFromDomainRange = (valueScaleDomain: string, valueScaleRange: string, isScaleBand: boolean) => {
     const domain = JSON.parse(valueScaleDomain);
     const range = JSON.parse(valueScaleRange);
-    return scaleBand()
-        .domain(domain)
-        .range(range)
-        .paddingInner(0.01)
+    if (isScaleBand) {
+        return scaleBand()
+            .domain(domain)
+            .range(range)
+            .paddingInner(0.01)
+    } else {
+        return scaleLinear()
+            .domain(domain)
+            .range(range)
+    }
 }

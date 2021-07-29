@@ -10,18 +10,14 @@ import { DumbbellDataPoint, SingleCasePoint } from "../../../Interfaces/Types/Da
 import { tokenCheckCancel } from "../../../Interfaces/UserManagement";
 import { Basic_Gray, BloodProductCap, postop_color, preop_color } from "../../../Presets/Constants";
 import { useButtonStyles, useStyles } from "../../../Presets/StyledComponents";
-import SettingsIcon from '@material-ui/icons/Settings';
 import React from "react";
-import { dumbbellFacetOptions } from "../../../Presets/DataDict";
-import { changeChart } from "../../../Interfaces/Actions/ChartActions";
 import DumbbellChart from "./DumbbellChart";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
+import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 
 type Props = {
     xAggregationOption: string;
-
     chartId: string;
-
     layoutH: number;
     layoutW: number;
 
@@ -43,21 +39,9 @@ const WrapperDumbbell: FC<Props> = ({ xAggregationOption, chartId, layoutH, layo
     const [showPostop, setShowPostop] = useState(true);
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null);
     const [data, setData] = useState<DumbbellDataPoint[]>([]);
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const open = Boolean(anchorEl);
 
-    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
 
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
 
-    const changeAggregation = (input: any) => {
-        handleClose();
-        store.chartStore.changeChart(input, "HGB_VALUE", chartId, "DUMBBELL");
-    }
 
     useLayoutEffect(() => {
         if (svgRef.current) {
@@ -174,18 +158,13 @@ const WrapperDumbbell: FC<Props> = ({ xAggregationOption, chartId, layoutH, layo
                     Gap
                 </Button>
             </ButtonGroup>
-            <div>
-                <IconButton onClick={handleClick}>
-                    <SettingsIcon />
-                </IconButton>
-                <Menu anchorEl={anchorEl} open={open}
-                    onClose={handleClose}
-                >
-                    {dumbbellFacetOptions.map((option) => (
-                        <MenuItem key={option.key} onClick={() => { changeAggregation(option.key) }}>{option.text}</MenuItem>
-                    ))}
-                </Menu>
-            </div>
+            <ChartConfigMenu
+                xAggregationOption={xAggregationOption}
+                yValueOption={"HGB_VALUE"}
+                chartTypeIndexinArray={1}
+                chartId={chartId}
+                requireOutcome={false}
+                requireSecondary={false} />
         </Grid>
         <Grid item xs={11} className={styles.chartWrapper}>
             <Container className={styles.chartWrapper}>
