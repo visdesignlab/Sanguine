@@ -9,6 +9,7 @@ import { LayoutElement } from "../Interfaces/Types/LayoutTypes";
 import { typeDiction } from "../Presets/DataDict";
 import { useStyles, WelcomeText } from "../Presets/StyledComponents";
 import ChartStandardButtons from "./Charts/ChartStandardButtons";
+import WrapperCostBar from "./Charts/CostBarChart/WrapperCostBar";
 import WrapperDumbbell from "./Charts/DumbbellChart/WrapperDumbbell";
 import WrapperHeatMap from "./Charts/HeatMap/WrapperHeatMap";
 import WrapperScatter from "./Charts/ScatterPlot/WrapperScatter";
@@ -50,17 +51,15 @@ const LayoutGenerator: FC = () => {
                         className={"parent-node" + layout.i}
                     >
                         <ChartStandardButtons chartID={layout.i} />
-                        {/* <CostBarChartVisualization
-                            hemoglobinDataSet={hemoData}
-                            w={layout.w}
-                            aggregatedBy={layout.aggregatedBy}
-                            // valueToVisualize={layout.valueToVisualize}
-                            // class_name={"parent-node" + layoutE.i}
+                        <WrapperCostBar
+
+                            layoutW={layout.w}
+                            layoutH={layout.h}
+                            xAggregatedOption={layout.aggregatedBy}
                             chartId={layout.i}
-                            chartIndex={index}
-                            // extraPair={layout.extraPair}
-                            notation={layout.notation}
-                        /> */}
+                            comparisonOption={layout.valueToVisualize}
+                        // notation={layout.notation}
+                        />
                     </div>
                 );
             case "SCATTER":
@@ -129,21 +128,6 @@ const LayoutGenerator: FC = () => {
                         w={layout.w}
                     /> */}
                 </div>);
-            case "COMPARESAVING":
-                return (<div key={layout.i}
-                    className={"parent-node" + layout.i}>
-                    <ChartStandardButtons chartID={layout.i} />
-                    {/* <CompareSavingChartVisualization
-                        aggregatedBy={layout.aggregatedBy}
-                        chartId={layout.i}
-                        chartIndex={index}
-                        hemoglobinDataSet={hemoData}
-                        notation={layout.notation}
-                        valueToCompare={layout.valueToVisualize}
-                        w={layout.w}
-                    /> */}
-
-                </div>)
         }
 
     }

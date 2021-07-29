@@ -112,7 +112,8 @@ const WrapperHeatMap: FC<Props> = ({ layoutH, layoutW, chartId, extraPairArraySt
                         yValueOption={yValueOption}
                         chartTypeIndexinArray={chartTypeIndexinArray}
                         chartId={chartId}
-                        requireOutcome={true} />
+                        requireOutcome={true}
+                        requireSecondary={true} />
                 </div>
             </Grid>
             <Grid item xs={11} className={styles.chartWrapper}>

@@ -89,6 +89,7 @@ const HeatMap: FC<Props> = ({ dimensionHeight, dimensionWidth, xAggregationOptio
             svg={svg}
             currentOffset={currentOffset}
             xVals={xVals}
+            isValueScaleBand={true}
             dimensionHeight={dimensionHeight}
             dimensionWidth={dimensionHeight}
             extraPairTotalWidth={extraPairTotalWidth}

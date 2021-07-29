@@ -125,7 +125,8 @@ const WrapperScatter: FC<Props> = ({ yValueOption, xAggregationOption, chartId, 
                     yValueOption={yValueOption}
                     chartTypeIndexinArray={2}
                     chartId={chartId}
-                    requireOutcome={false} />
+                    requireOutcome={false}
+                    requireSecondary={true} />
             </Grid>
             <Grid item xs={11} className={styles.chartWrapper}>
                 <Container className={styles.chartWrapper}>
