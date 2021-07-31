@@ -2,22 +2,19 @@ import axios from "axios";
 import { observer } from "mobx-react";
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { FC } from "react";
-
-import { produceAvailableCasesForNonIntervention } from "../../../HelperFunctions/CaseListProducer";
 import { generateRegularData } from "../../../HelperFunctions/ChartDataGenerator";
 import { generateExtrapairPlotData } from "../../../HelperFunctions/ExtraPairDataGenerator";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
+import { BloodProductCap, ExtraPairPadding, ExtraPairWidth, OffsetDict } from "../../../Presets/Constants";
 import Store from "../../../Interfaces/Store";
 import { ExtraPairPoint, HeatMapDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
 import { tokenCheckCancel } from "../../../Interfaces/UserManagement";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
-import HeatMapButtons from "../ChartAccessories/ChartConfigMenu";
 import HeatMap from "./HeatMap";
 import ExtraPairButtons from "../ChartAccessories/ExtraPairButtons";
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { DataContext } from "../../../App";
 import { Grid, Container } from "@material-ui/core";
-
 import { useStyles } from "../../../Presets/StyledComponents";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 
@@ -44,6 +41,8 @@ const WrapperHeatMap: FC<Props> = ({ outcomeComparison, layoutH, layoutW, chartI
     const [data, setData] = useState<HeatMapDataPoint[]>([]);
     const [secondaryData, setSecondaryData] = useState<HeatMapDataPoint[]>([]);
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
+    const [extraPairTotalWidth, setExtraPairTotalWidth] = useState(0);
+
 
     useEffect(() => {
         if (extraPairArrayString) {
@@ -54,15 +53,19 @@ const WrapperHeatMap: FC<Props> = ({ outcomeComparison, layoutH, layoutW, chartI
 
     useDeepCompareEffect(() => {
         const newExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, data, yValueOption, store.state.BloodProductCost)
-        stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData)
+        let totalWidth = newExtraPairData.length > 0 ? (newExtraPairData.length + 1) * ExtraPairPadding : 0;
+        newExtraPairData.forEach((d) => {
+            totalWidth += (ExtraPairWidth[d.type])
+        })
+        setExtraPairTotalWidth(totalWidth)
+        stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [extraPairArray, data, hemoData]);
 
     useLayoutEffect(() => {
         if (svgRef.current) {
             setWidth(svgRef.current.clientWidth);
-            // setWidth(w === 1 ? 542.28 : 1146.97)
-            setHeight(svgRef.current.clientHeight)
+            setHeight(svgRef.current.clientHeight);
         }
     }, [layoutH, layoutW, store.mainCompWidth, svgRef]);
 
@@ -113,7 +116,6 @@ const WrapperHeatMap: FC<Props> = ({ outcomeComparison, layoutH, layoutW, chartI
                         }
                     })
                     const [caseCount, outputData] = generateRegularData(temporaryDataHolder, store.state.showZero, yValueOption);
-                    console.log(secondaryTemporaryDataHolder)
                     const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, store.state.showZero, yValueOption);
                     stateUpdateWrapperUseJSON(data, outputData, setData);
                     stateUpdateWrapperUseJSON(secondaryData, secondOutputData, setSecondaryData);
@@ -143,12 +145,13 @@ const WrapperHeatMap: FC<Props> = ({ outcomeComparison, layoutH, layoutW, chartI
             <Grid item xs={1}>
                 {/* <Menu icon vertical compact size="mini" borderless secondary widths={2} style={{}}> */}
                 <div>
-                    <ExtraPairButtons extraPairLength={extraPairArray.length} chartId={chartId} />
+                    <ExtraPairButtons disbleButton={width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
                     <ChartConfigMenu
                         xAggregationOption={xAggregationOption}
                         yValueOption={yValueOption}
                         chartTypeIndexinArray={chartTypeIndexinArray}
                         chartId={chartId}
+
                         requireOutcome={true}
                         requireSecondary={true} />
                 </div>
@@ -161,6 +164,7 @@ const WrapperHeatMap: FC<Props> = ({ outcomeComparison, layoutH, layoutW, chartI
                             dimensionWidth={width}
                             data={data}
                             svg={svgRef}
+                            extraPairTotalWidth={extraPairTotalWidth}
                             xAggregationOption={xAggregationOption}
                             yValueOption={yValueOption}
                             chartId={chartId}

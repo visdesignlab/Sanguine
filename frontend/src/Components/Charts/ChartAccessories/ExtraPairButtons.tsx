@@ -10,8 +10,9 @@ import { ExtraPairLimit } from "../../../Presets/Constants";
 type Props = {
     extraPairLength: number
     chartId: string;
+    disbleButton: boolean;
 }
-const ExtraPairButtons: FC<Props> = ({ extraPairLength, chartId }: Props) => {
+const ExtraPairButtons: FC<Props> = ({ extraPairLength, chartId, disbleButton }: Props) => {
     const store = useContext(Store)
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
@@ -31,7 +32,7 @@ const ExtraPairButtons: FC<Props> = ({ extraPairLength, chartId }: Props) => {
 
     return (
         <div>
-            <IconButton disabled={extraPairLength >= ExtraPairLimit} onClick={handleClick}>
+            <IconButton disabled={extraPairLength >= ExtraPairLimit || disbleButton} onClick={handleClick}>
                 <InsertChartIcon />
             </IconButton>
             <Menu anchorEl={anchorEl} open={open}

@@ -6,10 +6,11 @@ import { FC, useContext, useEffect, useLayoutEffect, useRef, useState } from "re
 import { DataContext } from "../../../App";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
-import { CostBarChartDataPoint } from "../../../Interfaces/Types/DataTypes";
+import { CostBarChartDataPoint, ExtraPairPoint } from "../../../Interfaces/Types/DataTypes";
 import { useStyles } from "../../../Presets/StyledComponents";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
+import ExtraPairButtons from "../ChartAccessories/ExtraPairButtons";
 import StackedBarChart from "./StackedBarChart";
 
 type Props = {
@@ -19,9 +20,10 @@ type Props = {
     layoutW: number;
     layoutH: number;
     comparisonOption?: string;
+    extraPairArrayString: string;
 }
 
-const WrapperCostBar: FC<Props> = ({ xAggregatedOption, chartId, layoutH, layoutW, comparisonOption }: Props) => {
+const WrapperCostBar: FC<Props> = ({ extraPairArrayString, xAggregatedOption, chartId, layoutH, layoutW, comparisonOption }: Props) => {
     const store = useContext(Store);
     const hemoData = useContext(DataContext);
     const styles = useStyles();
@@ -31,7 +33,9 @@ const WrapperCostBar: FC<Props> = ({ xAggregatedOption, chartId, layoutH, layout
     const [data, setData] = useState<CostBarChartDataPoint[]>([]);
     const [secondaryData, setSecondaryData] = useState<CostBarChartDataPoint[]>([])
     const [maximumCost, setMaximumCost] = useState(0);
-    const [maximumSavedNegative, setMinCost] = useState(0)
+    const [maximumSavedNegative, setMinCost] = useState(0);
+    const [extraPairData, setExtraPairData] = useState<ExtraPairPoint[]>([]);
+    const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
     const [costInput, setCostInput] = useState(0)
     const [dimensionHeight, setDimensionHeight] = useState(0)
     const [dimensionWidth, setDimensionWidth] = useState(0)
@@ -42,6 +46,13 @@ const WrapperCostBar: FC<Props> = ({ xAggregatedOption, chartId, layoutH, layout
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
 
     const [showPotential, setShowPotential] = useState(false);
+
+    useEffect(() => {
+        if (extraPairArrayString) {
+            stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPairArrayString), setExtraPairArray)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [extraPairArrayString])
 
     useLayoutEffect(() => {
         if (svgRef.current) {
@@ -184,13 +195,18 @@ const WrapperCostBar: FC<Props> = ({ xAggregatedOption, chartId, layoutH, layout
     return (
         <Grid container direction="row" alignItems="center" className={styles.chartWrapper}>
             <Grid item xs={1}>
-                <ChartConfigMenu
-                    xAggregationOption={xAggregatedOption}
-                    yValueOption={""}
-                    chartTypeIndexinArray={0}
-                    chartId={chartId}
-                    requireOutcome={false}
-                    requireSecondary={true} />
+                <div>
+                    {/* TODO change false */}
+                    <ExtraPairButtons disbleButton={true} extraPairLength={extraPairArray.length} chartId={chartId} />
+                    <ChartConfigMenu
+                        xAggregationOption={xAggregatedOption}
+                        yValueOption={""}
+                        chartTypeIndexinArray={0}
+                        chartId={chartId}
+                        requireOutcome={false}
+                        requireSecondary={true} />
+                </div>
+
             </Grid>
             <Grid item xs={11} className={styles.chartWrapper}>
                 <Container className={styles.chartWrapper}>

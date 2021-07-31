@@ -21,6 +21,8 @@ export const OffsetDict = {
 
 export const CELL_SAVER_TICKS = ["0", "0-1h", "1h-2h", "2h-3h", "3h-4h", "4h-5h", "5h-6h", "6h-7h", "7h-8h", "8h-9h", "9h-1k", "1k+"]
 
+export const ExtraPairWidth: any = { Violin: 100, BarChart: 50, Basic: 40 }
+export const ExtraPairPadding = 10;
 export const CaseRectWidth = 30;
 export const DumbbellMinimumWidth = 18;
 export const differentialSquareWidth = 10;
@@ -33,16 +35,5 @@ export const BloodProductCap: any = {
     PLT_UNITS: 10,
     CELL_SAVER_ML: 1000
 }
-
-export const ExtraPairWidth: any =
-{
-    Violin: 100,
-    Dumbbell: 110,
-    BarChart: 50,
-    Basic: 40,
-    Outcomes: 40
-}
-
-export const ExtraPairPadding = 10;
 
 export const ExtraPairLimit = 5
