@@ -52,7 +52,7 @@ const LayoutGenerator: FC = () => {
                     >
                         <ChartStandardButtons chartID={layout.i} />
                         <WrapperCostBar
-
+                            extraPairArrayString={layout.extraPair || ""}
                             layoutW={layout.w}
                             layoutH={layout.h}
                             xAggregatedOption={layout.aggregatedBy}

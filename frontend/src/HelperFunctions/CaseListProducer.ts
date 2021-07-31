@@ -23,38 +23,7 @@ export const produceAvailableCasesForNonIntervention = (transfusedDataResult: an
     return temporaryDataHolder;
 }
 
-export const produceAvailableCasesForIntervention = (transfusedDataResult: any, hemoglobinDataSet: SingleCasePoint[], procedureUrgencyFilter: [boolean, boolean, boolean], outcomeFilter: string, aggregatedBy: string, outcomeComparison: string) => {
-    let caseSetReturnedFromQuery = new Set();
-    let temporaryDataHolder: any = {};
-    transfusedDataResult.forEach((element: any) => {
-        caseSetReturnedFromQuery.add(element.case_id);
-    })
-    hemoglobinDataSet.forEach((singleCase: SingleCasePoint) => {
 
-        if (checkIfCriteriaMet(caseSetReturnedFromQuery, singleCase, procedureUrgencyFilter, outcomeFilter)) {
-            const caseOutcome = singleCase[outcomeComparison];
-            if (!temporaryDataHolder[singleCase[aggregatedBy]]) {
-                temporaryDataHolder[singleCase[aggregatedBy]] = {
-                    aggregateAttribute: singleCase[aggregatedBy],
-                    preData: [],
-                    postData: [],
-                    prePatientIDList: new Set(),
-                    postPatienIDList: new Set(),
-                    preCaseIDList: new Set(),
-                    postCaseIDList: new Set()
-                }
-            }
-            if (caseOutcome > 0) {
-                temporaryDataHolder[singleCase[aggregatedBy]].preData.push(singleCase);
-                temporaryDataHolder[singleCase[aggregatedBy]].prePatientIDList.add(singleCase.PATIENT_ID);
-            } else {
-                temporaryDataHolder[singleCase[aggregatedBy]].postData.push(singleCase);
-                temporaryDataHolder[singleCase[aggregatedBy]].postPatienIDList.add(singleCase.PATIENT_ID);
-            }
-        }
-    })
-    return temporaryDataHolder;
-}
 
 export const checkIfCriteriaMet = (caseSetReturnedFromQuery: Set<unknown>, singleCase: SingleCasePoint, procedureUrgencyFilter: [boolean, boolean, boolean], outcomeFilter: string) => {
     let criteriaMet = true;

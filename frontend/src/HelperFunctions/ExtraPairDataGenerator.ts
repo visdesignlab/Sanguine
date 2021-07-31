@@ -5,6 +5,7 @@ import { create as createpd } from "pdfast";
 export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: BasicAggregatedDatePoint[], componentName: string, bloodProductCost: any) => {
     let newExtraPairData: ExtraPairPoint[] = []
     if (extraPairArray.length > 0) {
+        console.log(extraPairArray)
         extraPairArray.forEach((variable: string) => {
             let newData = {} as any;
             let caseDictionary = {} as any;
@@ -12,26 +13,26 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
             let medianData = {} as any;
             let kdeMax_temp: any = 0
             switch (variable) {
-                case "Total Transfusion":
+                case "TOTAL_TRANS":
                     //let newDataBar = {} as any;
                     data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         newData[dataPoint.aggregateAttribute] = dataPoint.totalVal;
                     });
-                    newExtraPairData.push({ name: "Total Transfusion", label: "Total", data: newData, type: "BarChart" });
+                    newExtraPairData.push({ name: "TOTAL_TRANS", label: "Total", data: newData, type: "BarChart" });
                     break;
-                case "Per Case":
+                case "PER_CASE":
                     // let newDataPerCase = {} as any;
                     data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         newData[dataPoint.aggregateAttribute] = dataPoint.totalVal / dataPoint.caseCount;
                     });
-                    newExtraPairData.push({ name: "Per Case", label: "Per Case", data: newData, type: "BarChart" });
+                    newExtraPairData.push({ name: "PER_CASE", label: "Per Case", data: newData, type: "BarChart" });
                     break;
-                case "Zero Transfusion":
+                case "ZERO_TRANS":
                     //let newDataPerCase = {} as any;
                     data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         newData[dataPoint.aggregateAttribute] = { actualVal: dataPoint.zeroCaseNum, calculated: dataPoint.zeroCaseNum / dataPoint.caseCount, outOfTotal: dataPoint.caseCount };
                     });
-                    newExtraPairData.push({ name: "Zero Transfusion", label: "Zero %", data: newData, type: "Basic" });
+                    newExtraPairData.push({ name: "ZERO_TRANS", label: "Zero %", data: newData, type: "Basic" });
                     break;
                 //How to actually calculate the cost? what would be an apprioate formula?
                 case "COST":
@@ -99,7 +100,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
                     newExtraPairData.push({ name: "RISK", label: "DRG Weight", data: newData, type: "Violin", medianSet: medianData, kdeMax: kdeMax_temp });
                     break;
 
-                case "Preop HGB":
+                case "PREOP_HGB":
                     data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         newData[dataPoint.aggregateAttribute] = [];
                         caseDictionary[dataPoint.aggregateAttribute] = new Set(dataPoint.caseIDList)
@@ -127,9 +128,9 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
                         pd = pd.concat(reversePd);
                         newData[prop] = { kdeArray: pd, dataPoints: newData[prop] };
                     }
-                    newExtraPairData.push({ name: "Preop HGB", label: "Preop HGB", data: newData, type: "Violin", medianSet: medianData, kdeMax: kdeMax_temp });
+                    newExtraPairData.push({ name: "PREOP_HGB", label: "Preop HGB", data: newData, type: "Violin", medianSet: medianData, kdeMax: kdeMax_temp });
                     break;
-                case "Postop HGB":
+                case "POSTOP_HGB":
                     //let newData = {} as any;
                     data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         newData[dataPoint.aggregateAttribute] = [];
@@ -157,7 +158,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
                         pd = pd.concat(reversePd);
                         newData[prop] = { kdeArray: pd, dataPoints: newData[prop] };
                     }
-                    newExtraPairData.push({ name: "Postop HGB", label: "Postop HGB", data: newData, type: "Violin", medianSet: medianData, kdeMax: kdeMax_temp });
+                    newExtraPairData.push({ name: "POSTOP_HGB", label: "Postop HGB", data: newData, type: "Violin", medianSet: medianData, kdeMax: kdeMax_temp });
                     break;
                 default:
                     break;

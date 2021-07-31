@@ -22,7 +22,7 @@ export const CaseScaleGenerator = (caseMax: number) => {
 export const ValueScaleGenerator = (outputRange: number[], currentOffset: Offset, dimensionWidth: number, extraPairTotalWidth: number) => {
     return scaleBand()
         .domain(outputRange as any)
-        .range([currentOffset.left, dimensionWidth - extraPairTotalWidth - currentOffset.right - currentOffset.margin])
+        .range([currentOffset.left + extraPairTotalWidth, dimensionWidth - currentOffset.right - currentOffset.margin])
         .paddingInner(0.01);
 }
 
