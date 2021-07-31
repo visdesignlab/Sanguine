@@ -5,7 +5,6 @@ import { create as createpd } from "pdfast";
 export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: BasicAggregatedDatePoint[], componentName: string, bloodProductCost: any) => {
     let newExtraPairData: ExtraPairPoint[] = []
     if (extraPairArray.length > 0) {
-        console.log(extraPairArray)
         extraPairArray.forEach((variable: string) => {
             let newData = {} as any;
             let caseDictionary = {} as any;

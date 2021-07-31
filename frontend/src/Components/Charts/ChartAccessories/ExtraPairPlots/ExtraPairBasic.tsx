@@ -8,12 +8,12 @@ interface OwnProps {
     dataSet: any[];
     aggregationScaleDomain: string;
     aggregationScaleRange: string;
-    name: string;
+    secondaryDataSet?: any[];
 }
 
 export type Props = OwnProps;
 
-const ExtraPairBasic: FC<Props> = ({ name, dataSet, aggregationScaleRange, aggregationScaleDomain }: Props) => {
+const ExtraPairBasic: FC<Props> = ({ secondaryDataSet, dataSet, aggregationScaleRange, aggregationScaleDomain }: Props) => {
 
 
     const aggregationScale = useCallback(() => {
@@ -29,41 +29,73 @@ const ExtraPairBasic: FC<Props> = ({ name, dataSet, aggregationScaleRange, aggre
 
     return (
         <>
-            {Object.entries(dataSet).map(([val, dataVal]) => {
-                return (
-                    <g>
-                        <Tooltip title={`${dataVal.actualVal}/${dataVal.outOfTotal}`}>
-                            <rect
-                                x={0}
-                                y={aggregationScale()(val)}
-                                // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
-                                fill={!isNaN(dataVal.calculated) ? interpolateGreys(valueScale(dataVal.calculated)) : "white"}
-                                opacity={0.8}
-                                width={ExtraPairWidth.Basic}
-                                height={aggregationScale().bandwidth()} />
-                        </Tooltip>
-                        <line
-                            opacity={!isNaN(dataVal.calculated) ? 0 : 1}
-                            y1={0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
-                            y2={0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
-                            x1={0.35 * ExtraPairWidth.Basic}
-                            x2={0.65 * ExtraPairWidth.Basic}
-                            strokeWidth={0.5}
-                            stroke={Basic_Gray}
-                        />
-                        <text x={ExtraPairWidth.Basic * 0.5}
-                            y={
-                                aggregationScale()(val)! +
-                                0.5 * aggregationScale().bandwidth()
-                            }
-                            opacity={!isNaN(dataVal.calculated) ? 1 : 0}
-                            fill={valueScale(dataVal.calculated) > 0.4 ? "white" : "black"}
-                            alignmentBaseline={"central"}
-                            fontSize="12px"
-                            textAnchor={"middle"}>{Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? "<1%" : format(".0%")(dataVal.calculated)}</text>
-                    </g>
-                )
-            })}
+            <g transform={`translate(0,${secondaryDataSet ? aggregationScale().bandwidth() * 0.5 : 0})`}>
+                {Object.entries(dataSet).map(([val, dataVal]) => {
+                    return (
+                        <g>
+                            <Tooltip title={`${dataVal.actualVal}/${dataVal.outOfTotal}`}>
+                                <rect
+                                    x={0}
+                                    y={aggregationScale()(val)}
+                                    // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
+                                    fill={!isNaN(dataVal.calculated) ? interpolateGreys(valueScale(dataVal.calculated)) : "white"}
+                                    opacity={0.8}
+                                    width={ExtraPairWidth.Basic}
+                                    height={(secondaryDataSet ? 0.5 : 1) * aggregationScale().bandwidth()} />
+                            </Tooltip>
+                            <line
+                                opacity={!isNaN(dataVal.calculated) ? 0 : 1}
+                                y1={(secondaryDataSet ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                                y2={(secondaryDataSet ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                                x1={0.35 * ExtraPairWidth.Basic}
+                                x2={0.65 * ExtraPairWidth.Basic}
+                                strokeWidth={0.5}
+                                stroke={Basic_Gray}
+                            />
+                            <text x={ExtraPairWidth.Basic * 0.5}
+                                y={aggregationScale()(val)! + (secondaryDataSet ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth()}
+                                opacity={!isNaN(dataVal.calculated) ? 1 : 0}
+                                fill={valueScale(dataVal.calculated) > 0.4 ? "white" : "black"}
+                                alignmentBaseline={"central"}
+                                fontSize="12px"
+                                textAnchor={"middle"}>{Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? "<1%" : format(".0%")(dataVal.calculated)}</text>
+                        </g>
+                    )
+                })}
+            </g>
+            <g>
+                {secondaryDataSet ? Object.entries(secondaryDataSet).map(([val, dataVal]) => {
+                    return (
+                        <g>
+                            <Tooltip title={`${dataVal.actualVal}/${dataVal.outOfTotal}`}>
+                                <rect
+                                    x={0}
+                                    y={aggregationScale()(val)}
+                                    fill={!isNaN(dataVal.calculated) ? interpolateGreys(valueScale(dataVal.calculated)) : "white"}
+                                    opacity={0.8}
+                                    width={ExtraPairWidth.Basic}
+                                    height={aggregationScale().bandwidth() * 0.5} />
+                            </Tooltip>
+                            <line
+                                opacity={!isNaN(dataVal.calculated) ? 0 : 1}
+                                y1={0.25 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                                y2={0.25 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                                x1={0.35 * ExtraPairWidth.Basic}
+                                x2={0.65 * ExtraPairWidth.Basic}
+                                strokeWidth={0.5}
+                                stroke={Basic_Gray}
+                            />
+                            <text x={ExtraPairWidth.Basic * 0.5}
+                                y={aggregationScale()(val)! + 0.25 * aggregationScale().bandwidth()}
+                                opacity={!isNaN(dataVal.calculated) ? 1 : 0}
+                                fill={valueScale(dataVal.calculated) > 0.4 ? "white" : "black"}
+                                alignmentBaseline={"central"}
+                                fontSize="12px"
+                                textAnchor={"middle"}>{Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? "<1%" : format(".0%")(dataVal.calculated)}</text>
+                        </g>
+                    )
+                }) : <></>}
+            </g>
         </>
     )
 }
