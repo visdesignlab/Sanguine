@@ -10,11 +10,12 @@ interface OwnProps {
     dataSet: any[];
     aggregationScaleDomain: string;
     aggregationScaleRange: string;
+    secondaryDataSet?: any[];
 }
 
 export type Props = OwnProps;
 
-const ExtraPairBar: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregationScaleRange, }: Props) => {
+const ExtraPairBar: FC<Props> = ({ secondaryDataSet, dataSet, aggregationScaleDomain, aggregationScaleRange, }: Props) => {
 
     const aggregationScale = useCallback(() => {
         const domain = JSON.parse(aggregationScaleDomain).map((d: number) => d.toString());;
@@ -30,19 +31,36 @@ const ExtraPairBar: FC<Props> = ({ dataSet, aggregationScaleDomain, aggregationS
 
     return (
         <>
-            {Object.entries(dataSet).map(([val, dataVal]) => {
-                return (
-                    <Tooltip title={format(".4r")(dataVal)}>
-                        <rect
-                            x={0}
-                            y={aggregationScale()(val)}
-                            fill={"#404040"}
-                            opacity={0.8}
-                            width={valueScale()(dataVal)}
-                            height={aggregationScale().bandwidth()} />
-                    </Tooltip>
-                )
-            })}
+            <g transform={`translate(0,${secondaryDataSet ? aggregationScale().bandwidth() * 0.5 : 0})`}>
+                {Object.entries(dataSet).map(([val, dataVal]) => {
+                    return (
+                        <Tooltip title={format(".4r")(dataVal)}>
+                            <rect
+                                x={0}
+                                y={aggregationScale()(val)}
+                                fill={"#404040"}
+                                opacity={0.8}
+                                width={valueScale()(dataVal)}
+                                height={(secondaryDataSet ? 0.5 : 1) * aggregationScale().bandwidth()} />
+                        </Tooltip>
+                    )
+                })}
+            </g>
+            <g>
+                {secondaryDataSet ? Object.entries(secondaryDataSet).map(([val, dataVal]) => {
+                    return (
+                        <Tooltip title={format(".4r")(dataVal)}>
+                            <rect
+                                x={0}
+                                y={aggregationScale()(val)}
+                                fill={"#404040"}
+                                opacity={0.8}
+                                width={valueScale()(dataVal)}
+                                height={aggregationScale().bandwidth() * 0.5} />
+                        </Tooltip>
+                    )
+                }) : <></>}
+            </g>
         </>
     )
 }

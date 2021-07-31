@@ -31,7 +31,7 @@ const CaseCountHeader: FC<Props> = ({ caseCount, yPos, zeroCaseNum, caseMax, hei
         strokeWidth={2}
     />
         <text
-            fill="white"
+            fill={caseScale()(store.state.showZero ? caseCount : (caseCount - zeroCaseNum)) > 0.4 ? "white" : "black"}
             x={-20}
             y={
                 yPos +
