@@ -4,11 +4,11 @@ import { FC, useState } from "react";
 import { sortHelper } from "../../../HelperFunctions/ChartSorting";
 import Store from "../../../Interfaces/Store";
 import { ExtraPairPoint, HeatMapDataPoint } from "../../../Interfaces/Types/DataTypes";
-import { BloodProductCap, CaseRectWidth, ExtraPairPadding, ExtraPairWidth, OffsetDict } from "../../../Presets/Constants";
+import { BloodProductCap, ExtraPairPadding, ExtraPairWidth, OffsetDict } from "../../../Presets/Constants";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import { useCallback } from "react";
-import { AggregationScaleGenerator, CaseScaleGenerator, ValueScaleGenerator } from "../../../HelperFunctions/Scales";
-import { interpolateGreys, range } from "d3";
+import { AggregationScaleGenerator, ValueScaleGenerator } from "../../../HelperFunctions/Scales";
+import { range } from "d3";
 import HeatMapAxis from "../ChartAccessories/HeatMapAxis";
 import { ChartG, HeatMapDividerLine } from "../../../Presets/StyledSVGComponents";
 import DualColorLegend from "../ChartAccessories/DualColorLegend";
@@ -16,6 +16,7 @@ import SingleColorLegend from "../ChartAccessories/SingleColorLegend";
 import SingleHeatRow from "./SingleHeatRow";
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import CaseCountHeader from "../ChartAccessories/CaseCountHeader";
+import GeneratorExtraPair from "../ChartAccessories/ExtraPairPlots/GeneratorExtraPair";
 
 
 type Props = {
@@ -28,24 +29,15 @@ type Props = {
     secondaryData?: HeatMapDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
     extraPairDataSet: ExtraPairPoint[];
+    extraPairTotalWidth: number;
 }
 
-const HeatMap: FC<Props> = ({ dimensionHeight, secondaryData, dimensionWidth, xAggregationOption, yValueOption, chartId, data, svg, extraPairDataSet }: Props) => {
+const HeatMap: FC<Props> = ({ dimensionHeight, secondaryData, dimensionWidth, xAggregationOption, yValueOption, chartId, data, svg, extraPairDataSet, extraPairTotalWidth }: Props) => {
     const store = useContext(Store)
     const currentOffset = OffsetDict.regular;
-    const [extraPairTotalWidth, setExtraPairTotlaWidth] = useState(0)
     const [xVals, setXVals] = useState<any[]>([]);
     const [caseMax, setCaseMax] = useState(0);
 
-    useDeepCompareEffect(() => {
-        let totalWidth = extraPairDataSet.length > 0 ? (extraPairDataSet.length + 1) * ExtraPairPadding : 0;
-        extraPairDataSet.forEach((d) => {
-            totalWidth += (ExtraPairWidth[d.type])
-        })
-        console.log(totalWidth)
-        setExtraPairTotlaWidth(totalWidth)
-
-    }, [extraPairDataSet])
 
     useDeepCompareEffect(() => {
         const [tempxVals, newCaseMax] = sortHelper(data, xAggregationOption, store.state.showZero, secondaryData)
@@ -78,7 +70,7 @@ const HeatMap: FC<Props> = ({ dimensionHeight, secondaryData, dimensionWidth, xA
             xVals={xVals}
             isValueScaleBand={true}
             dimensionHeight={dimensionHeight}
-            dimensionWidth={dimensionHeight}
+            dimensionWidth={dimensionWidth}
             extraPairTotalWidth={extraPairTotalWidth}
             yValueOption={yValueOption}
             valueScaleDomain={JSON.stringify(valueScale().domain())}
@@ -87,48 +79,56 @@ const HeatMap: FC<Props> = ({ dimensionHeight, secondaryData, dimensionWidth, xA
         <g className="legend">
             {outputGradientLegend(store.state.showZero, dimensionWidth)}
         </g>
-
-        {data.map((dataPoint) => {
-            return (
-                <g>
-                    <SingleHeatRow
-                        bandwidth={secondaryData ? aggregationScale().bandwidth() * 0.5 : aggregationScale().bandwidth()}
-                        valueScaleDomain={JSON.stringify(valueScale().domain())}
-                        valueScaleRange={JSON.stringify(valueScale().range())}
-                        dataPoint={dataPoint}
-                        howToTransform={`translate(0,${(aggregationScale()(dataPoint.aggregateAttribute) || 0) + (secondaryData ? (aggregationScale().bandwidth() * 0.5) : 0)})`}
-                    />
-                    <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
-                        <CaseCountHeader
-                            caseCount={dataPoint.caseCount}
-                            yPos={(aggregationScale()(dataPoint.aggregateAttribute) || 0) + (secondaryData ? (aggregationScale().bandwidth() * 0.5) : 0)}
-                            height={(secondaryData ? 0.5 : 1) * aggregationScale().bandwidth()}
-                            zeroCaseNum={dataPoint.zeroCaseNum}
-                            caseMax={caseMax} />
-                    </ChartG>
-                </g>)
-        })}
-        {secondaryData ? secondaryData.map((dataPoint) => {
-            return (
-                <g>
-                    <SingleHeatRow
-                        bandwidth={aggregationScale().bandwidth() * 0.5}
-                        valueScaleDomain={JSON.stringify(valueScale().domain())}
-                        valueScaleRange={JSON.stringify(valueScale().range())}
-                        dataPoint={dataPoint}
-                        howToTransform={`translate(0,${(aggregationScale()(dataPoint.aggregateAttribute) || 0)})`}
-                    />
-                    <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
-                        <CaseCountHeader
-                            caseCount={dataPoint.caseCount}
-                            yPos={aggregationScale()(dataPoint.aggregateAttribute) || 0}
-                            height={0.5 * aggregationScale().bandwidth()}
-                            zeroCaseNum={dataPoint.zeroCaseNum}
-                            caseMax={caseMax} />
-                    </ChartG>
-                </g>)
-        }) : <></>}
-
+        <g>
+            {data.map((dataPoint) => {
+                return (
+                    <g>
+                        <SingleHeatRow
+                            bandwidth={secondaryData ? aggregationScale().bandwidth() * 0.5 : aggregationScale().bandwidth()}
+                            valueScaleDomain={JSON.stringify(valueScale().domain())}
+                            valueScaleRange={JSON.stringify(valueScale().range())}
+                            dataPoint={dataPoint}
+                            howToTransform={`translate(0,${(aggregationScale()(dataPoint.aggregateAttribute) || 0) + (secondaryData ? (aggregationScale().bandwidth() * 0.5) : 0)})`}
+                        />
+                        <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
+                            <CaseCountHeader
+                                caseCount={dataPoint.caseCount}
+                                yPos={(aggregationScale()(dataPoint.aggregateAttribute) || 0) + (secondaryData ? (aggregationScale().bandwidth() * 0.5) : 0)}
+                                height={(secondaryData ? 0.5 : 1) * aggregationScale().bandwidth()}
+                                zeroCaseNum={dataPoint.zeroCaseNum}
+                                caseMax={caseMax} />
+                        </ChartG>
+                    </g>)
+            })}
+            {secondaryData ? secondaryData.map((dataPoint) => {
+                return (
+                    <g>
+                        <SingleHeatRow
+                            bandwidth={aggregationScale().bandwidth() * 0.5}
+                            valueScaleDomain={JSON.stringify(valueScale().domain())}
+                            valueScaleRange={JSON.stringify(valueScale().range())}
+                            dataPoint={dataPoint}
+                            howToTransform={`translate(0,${(aggregationScale()(dataPoint.aggregateAttribute) || 0)})`}
+                        />
+                        <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
+                            <CaseCountHeader
+                                caseCount={dataPoint.caseCount}
+                                yPos={aggregationScale()(dataPoint.aggregateAttribute) || 0}
+                                height={0.5 * aggregationScale().bandwidth()}
+                                zeroCaseNum={dataPoint.zeroCaseNum}
+                                caseMax={caseMax} />
+                        </ChartG>
+                    </g>)
+            }) : <></>}
+        </g>
+        <g className="extraPairChart">
+            <GeneratorExtraPair
+                extraPairDataSet={extraPairDataSet}
+                chartId={chartId}
+                aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
+                aggregationScaleRange={JSON.stringify(aggregationScale().range())}
+                height={dimensionHeight} />
+        </g>
     </>
 }
 export default observer(HeatMap)

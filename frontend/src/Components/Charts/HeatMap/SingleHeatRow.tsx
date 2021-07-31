@@ -21,6 +21,7 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
 
     const { showZero } = useContext(Store).state
     const valueScale = useCallback(() => {
+
         return (ValueScaleGeneratorFromDomainRange(valueScaleDomain, valueScaleRange, true) as ScaleBand<string>)
     }, [valueScaleDomain, valueScaleRange]);
 
@@ -42,7 +43,7 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                     const outputContent = (output / caseCount < 0.01 && output > 0) ? "<1%" : format(".0%")(output / caseCount)
 
                     return (
-                        [
+                        <g>
                             <Tooltip
                                 title={<div className="charttooltip">{outputContent}</div>}
                                 arrow
@@ -68,7 +69,7 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                                 //}} 
                                 />
                             </Tooltip>
-                            ,
+
                             <line transform={howToTransform}
                                 strokeWidth={0.5}
                                 stroke={Basic_Gray}
@@ -76,7 +77,8 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                                 y1={0.5 * bandwidth}
                                 y2={0.5 * bandwidth}
                                 x1={valueScale()(point)! + 0.35 * valueScale().bandwidth()}
-                                x2={valueScale()(point)! + 0.65 * valueScale().bandwidth()} />]
+                                x2={valueScale()(point)! + 0.65 * valueScale().bandwidth()} />
+                        </g>
                     )
                 } else {
                     return <></>
