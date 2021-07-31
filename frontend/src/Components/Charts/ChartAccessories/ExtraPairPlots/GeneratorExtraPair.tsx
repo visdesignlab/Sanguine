@@ -10,6 +10,7 @@ import Store from "../../../../Interfaces/Store";
 import ExtraPairViolin from "./ExtraPairViolin";
 import ExtraPairBar from "./ExtraPairBar";
 import ExtraPairBasic from "./ExtraPairBasic";
+import { Tooltip } from "@material-ui/core";
 
 
 interface OwnProps {
@@ -47,29 +48,28 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
                 break;
         }
 
-        let tooltipText = `${AcronymDictionary[nameInput] ? `${AcronymDictionary[nameInput]}<br/>` : ""}
-                 ${explanation}
-                <br/> <small>Click to remove</small>`;
+        let tooltipText = <div>
+            <p style={{ fontSize: "small", textAlign: "center" }}>{AcronymDictionary[nameInput] ? `${AcronymDictionary[nameInput]}` : undefined}
+                {AcronymDictionary[nameInput] ? <br /> : <></>}
+                {explanation}</p>
+
+            <p style={{ fontSize: "x-small", textAlign: "center" }}>Click to remove</p>
+        </div>
 
 
-        return <ExtraPairText
-            x={spacing / 2}
-            y={height - currentOffset.bottom + 20}
-            onClick={() => {
-                store.chartStore.removeExtraPair(chartId, nameInput)
-                select("#Main-Body").select(".tooltiptext").style("visibility", "hidden");
-            }}
-            onMouseOver={(e) => {
-                select("#Main-Body").select(".tooltiptext")
-                    .style("visibility", "visible")
-                    .html(tooltipText)
-                    .style("left", `${(e.pageX || 0) - document.getElementById("Main-Body")!.offsetLeft}px`)
-                    .style("top", `${(e.pageY || 0) - document.getElementById("Main-Body")!.offsetTop + 10}px`);
-            }}
-            onMouseOut={() => {
-                select("#Main-Body").select(".tooltiptext").style("visibility", "hidden");
-            }}
-        >{labelInput}</ExtraPairText>
+        return (
+            <Tooltip title={tooltipText}>
+                <ExtraPairText
+                    x={spacing / 2}
+                    y={height - currentOffset.bottom + 20}
+                    onClick={() => {
+                        store.chartStore.removeExtraPair(chartId, nameInput)
+                    }}
+
+                >{labelInput}</ExtraPairText>
+            </Tooltip>)
+
+
     }
 
     let transferedDistance = 0
