@@ -11,15 +11,15 @@ interface OwnProps {
     //aggregatedScale: ScaleBand<string>;
     aggregationScaleDomain: string;
     aggregationScaleRange: string;
-
     medianSet: any;
     kdeMax: number;
     name: string;
+    secondaryDataSet?: any[];
 }
 
 export type Props = OwnProps;
 
-const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, aggregationScaleRange, medianSet, name }: Props) => {
+const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, aggregationScaleRange, medianSet, name, secondaryDataSet }: Props) => {
 
     const aggregationScale = useCallback(() => {
         const domain = JSON.parse(aggregationScaleDomain).map((d: number) => d.toString());;
@@ -29,16 +29,17 @@ const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, a
     }, [aggregationScaleDomain, aggregationScaleRange])
 
 
-    console.log(dataSet)
+    console.log(secondaryDataSet)
     const valueScale = scaleLinear().domain([0, 18]).range([0, ExtraPairWidth.Violin])
     if (name === "RISK") {
         valueScale.domain([0, 30]);
     }
 
     const lineFunction = useCallback(() => {
+        const calculatedKdeRange = secondaryDataSet ? [-0.25 * aggregationScale().bandwidth(), 0.25 * aggregationScale().bandwidth()] : [-0.5 * aggregationScale().bandwidth(), 0.5 * aggregationScale().bandwidth()]
         const kdeScale = scaleLinear()
             .domain([-kdeMax, kdeMax])
-            .range([-0.5 * aggregationScale().bandwidth(), 0.5 * aggregationScale().bandwidth()])
+            .range(calculatedKdeRange)
         const lineFunction = line()
             .curve(curveCatmullRom)
             .y((d: any) => kdeScale(d.y) + 0.5 * aggregationScale().bandwidth())
@@ -73,24 +74,41 @@ const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, a
     return (
         <>
             <g ref={svgRef} transform={`translate(0,${aggregationScale().range()[0]})`}>
-                <g className="axis"></g>
+                <g className="axis" />
             </g>
-            {Object.entries(dataSet).map(([val, result]) => {
+            <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }}
+                x1={valueScale(name === "Preop HGB" ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
+                x2={valueScale(name === "Preop HGB" ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
+                opacity={name === "RISK" ? 0 : 1}
+                y1={aggregationScale().range()[0]}
+                y2={aggregationScale().range()[1] - 0.25 * aggregationScale().bandwidth()} />
+            <g transform={`translate(0,${secondaryDataSet ? aggregationScale().bandwidth() * 0.25 : 0})`}>
+                {Object.entries(dataSet).map(([val, result]) => {
 
-                return (
-                    <g>
-                        <Tooltip title={`median ${format(".2f")(medianSet[val])}`}>
-                            {generateViolin(result.dataPoints, result.kdeArray, val)}
-                        </Tooltip>
-                        <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }}
-                            x1={valueScale(name === "Preop HGB" ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
-                            x2={valueScale(name === "Preop HGB" ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
-                            opacity={name === "RISK" ? 0 : 1}
-                            y1={aggregationScale()(val)!}
-                            y2={aggregationScale()(val)! + aggregationScale().bandwidth()} />
-                    </g>
-                )
-            })}
+                    return (
+                        <g>
+                            <Tooltip title={`median ${format(".2f")(medianSet[val])}`}>
+                                {generateViolin(result.dataPoints, result.kdeArray, val)}
+                            </Tooltip>
+
+                        </g>
+                    )
+                })}
+            </g >
+            <g transform={`translate(0,${-aggregationScale().bandwidth() * 0.25})`}>
+                {secondaryDataSet ? Object.entries(secondaryDataSet).map(([val, result]) => {
+                    return (
+                        <g>
+                            <Tooltip title={`median ${format(".2f")(medianSet[val])}`}>
+                                <g>
+                                    {generateViolin(result.dataPoints, result.kdeArray, val)}
+                                </g>
+                            </Tooltip>
+
+                        </g>
+                    )
+                }) : <></>}
+            </g>
         </>
     )
 }

@@ -14,15 +14,17 @@ import ExtraPairBasic from "./ExtraPairBasic";
 
 interface OwnProps {
     extraPairDataSet: ExtraPairPoint[];
+    secondaryExtraPairDataSet?: ExtraPairPoint[];
     aggregationScaleDomain: string;
     aggregationScaleRange: string;
     chartId: string;
     height: number;
+
 }
 
 export type Props = OwnProps;
 
-const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScaleDomain, aggregationScaleRange, chartId, height }: Props) => {
+const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPairDataSet, aggregationScaleDomain, aggregationScaleRange, chartId, height }: Props) => {
     const store = useContext(Store);
     const currentOffset = OffsetDict.regular;
     const extraPairTextGenerator = (nameInput: string, labelInput: string, type: "Basic" | "Violin" | "Bar",
@@ -77,19 +79,20 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScaleD
         switch (pairData.type) {
             case "Violin":
                 transferedDistance += (ExtraPairWidth.Violin + ExtraPairPadding)
-                returningComponents.push(<g transform={`translate(${transferedDistance - (ExtraPairWidth.Violin)},0)`}>
-                    <ExtraPairViolin
-                        medianSet={pairData.medianSet}
-                        aggregationScaleDomain={aggregationScaleDomain}
-                        aggregationScaleRange={aggregationScaleRange}
-                        kdeMax={pairData.kdeMax || 0}
-                        //                        aggregatedScale={aggregationScale()}
-                        dataSet={pairData.data}
-                        name={pairData.name}
-                    />,
-
-                    {extraPairTextGenerator(pairData.name, pairData.label, "Violin", pairData)}
-                </g>);
+                const calculatedKdeMax = secondaryExtraPairDataSet ? Math.max(pairData.kdeMax || 0, secondaryExtraPairDataSet[index].kdeMax || 0) : (pairData.kdeMax || 0)
+                returningComponents.push(
+                    <g transform={`translate(${transferedDistance - (ExtraPairWidth.Violin)},0)`}>
+                        <ExtraPairViolin
+                            medianSet={pairData.medianSet}
+                            aggregationScaleDomain={aggregationScaleDomain}
+                            aggregationScaleRange={aggregationScaleRange}
+                            kdeMax={calculatedKdeMax}
+                            dataSet={pairData.data}
+                            name={pairData.name}
+                            secondaryDataSet={secondaryExtraPairDataSet ? secondaryExtraPairDataSet[index].data : undefined}
+                        />
+                        {extraPairTextGenerator(pairData.name, pairData.label, "Violin", pairData)}
+                    </g>);
                 break;
 
             case "BarChart":
@@ -98,7 +101,8 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScaleD
                     <ExtraPairBar
                         aggregationScaleDomain={aggregationScaleDomain}
                         aggregationScaleRange={aggregationScaleRange}
-                        dataSet={pairData.data} />
+                        dataSet={pairData.data}
+                        secondaryDataSet={secondaryExtraPairDataSet ? secondaryExtraPairDataSet[index].data : undefined} />
                     {extraPairTextGenerator(pairData.name, pairData.label, "Bar", pairData)}
                 </g>);
                 break;
@@ -110,7 +114,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, aggregationScaleD
                     <ExtraPairBasic
                         aggregationScaleDomain={aggregationScaleDomain}
                         aggregationScaleRange={aggregationScaleRange}
-                        name={pairData.name}
+                        secondaryDataSet={secondaryExtraPairDataSet ? secondaryExtraPairDataSet[index].data : undefined}
                         dataSet={pairData.data} />
                     {extraPairTextGenerator(pairData.name, pairData.label, "Basic", pairData)}
                 </g>);

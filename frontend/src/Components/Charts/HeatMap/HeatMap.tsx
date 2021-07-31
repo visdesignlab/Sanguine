@@ -27,12 +27,13 @@ type Props = {
     chartId: string;
     data: HeatMapDataPoint[];
     secondaryData?: HeatMapDataPoint[];
+    secondaryExtraPairDataSet?: ExtraPairPoint[];
     svg: React.RefObject<SVGSVGElement>;
     extraPairDataSet: ExtraPairPoint[];
     extraPairTotalWidth: number;
 }
 
-const HeatMap: FC<Props> = ({ dimensionHeight, secondaryData, dimensionWidth, xAggregationOption, yValueOption, chartId, data, svg, extraPairDataSet, extraPairTotalWidth }: Props) => {
+const HeatMap: FC<Props> = ({ secondaryExtraPairDataSet, dimensionHeight, secondaryData, dimensionWidth, xAggregationOption, yValueOption, chartId, data, svg, extraPairDataSet, extraPairTotalWidth }: Props) => {
     const store = useContext(Store)
     const currentOffset = OffsetDict.regular;
     const [xVals, setXVals] = useState<any[]>([]);
@@ -124,10 +125,12 @@ const HeatMap: FC<Props> = ({ dimensionHeight, secondaryData, dimensionWidth, xA
         <g className="extraPairChart">
             <GeneratorExtraPair
                 extraPairDataSet={extraPairDataSet}
+                secondaryExtraPairDataSet={secondaryExtraPairDataSet ? secondaryExtraPairDataSet : undefined}
                 chartId={chartId}
                 aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
                 aggregationScaleRange={JSON.stringify(aggregationScale().range())}
                 height={dimensionHeight} />
+
         </g>
     </>
 }

@@ -40,6 +40,7 @@ const WrapperHeatMap: FC<Props> = ({ outcomeComparison, layoutH, layoutW, chartI
     const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
     const [data, setData] = useState<HeatMapDataPoint[]>([]);
     const [secondaryData, setSecondaryData] = useState<HeatMapDataPoint[]>([]);
+    const [secondaryExtraPairData, setSecondaryExtraPairData] = useState<ExtraPairPoint[]>([]);
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
     const [extraPairTotalWidth, setExtraPairTotalWidth] = useState(0);
 
@@ -52,7 +53,11 @@ const WrapperHeatMap: FC<Props> = ({ outcomeComparison, layoutH, layoutW, chartI
     }, [extraPairArrayString])
 
     useDeepCompareEffect(() => {
-        const newExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, data, yValueOption, store.state.BloodProductCost)
+        const newExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, data, yValueOption, store.state.BloodProductCost);
+        if (outcomeComparison) {
+            const newSecondaryExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, secondaryData, yValueOption, store.state.BloodProductCost);
+            stateUpdateWrapperUseJSON(secondaryExtraPairData, newSecondaryExtraPairData, setSecondaryExtraPairData)
+        }
         let totalWidth = newExtraPairData.length > 0 ? (newExtraPairData.length + 1) * ExtraPairPadding : 0;
         newExtraPairData.forEach((d) => {
             totalWidth += (ExtraPairWidth[d.type])
@@ -60,7 +65,7 @@ const WrapperHeatMap: FC<Props> = ({ outcomeComparison, layoutH, layoutW, chartI
         setExtraPairTotalWidth(totalWidth)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extraPairArray, data, hemoData]);
+    }, [extraPairArray, data, hemoData, secondaryData, outcomeComparison]);
 
     useLayoutEffect(() => {
         if (svgRef.current) {
@@ -169,6 +174,7 @@ const WrapperHeatMap: FC<Props> = ({ outcomeComparison, layoutH, layoutW, chartI
                             yValueOption={yValueOption}
                             chartId={chartId}
                             extraPairDataSet={extraPairData}
+                            secondaryExtraPairDataSet={outcomeComparison ? secondaryExtraPairData : undefined}
                             secondaryData={outcomeComparison ? secondaryData : undefined}
                         />
                     </ChartSVG>
