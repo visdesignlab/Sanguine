@@ -13,11 +13,11 @@ export const produceAvailableCasesForNonIntervention = (transfusedDataResult: an
                 temporaryDataHolder[singleCase[aggregatedBy]] = {
                     aggregateAttribute: singleCase[aggregatedBy],
                     data: [],
-                    patientIDList: new Set(),
+                    //      patientIDList: new Set(),
                 }
             }
             temporaryDataHolder[singleCase[aggregatedBy]].data.push(singleCase);
-            temporaryDataHolder[singleCase[aggregatedBy]].patientIDList.add(singleCase.PATIENT_ID);
+            //  temporaryDataHolder[singleCase[aggregatedBy]].patientIDList.add(singleCase.PATIENT_ID);
         }
     })
     return temporaryDataHolder;

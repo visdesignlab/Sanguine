@@ -24,7 +24,7 @@ export type BasicAggregatedDatePoint = {
     totalVal: number;
     caseCount: number;
     zeroCaseNum: number;
-    patientIDList: number[];
+    // patientIDList: number[];
     caseIDList: number[];
 }
 export type CostBarChartDataPoint = BasicAggregatedDatePoint & {

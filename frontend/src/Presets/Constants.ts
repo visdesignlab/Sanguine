@@ -25,7 +25,7 @@ export const ExtraPairWidth: any = { Violin: 100, BarChart: 50, Basic: 40 }
 export const ExtraPairPadding = 10;
 export const CaseRectWidth = 30;
 export const DumbbellMinimumWidth = 18;
-export const differentialSquareWidth = 10;
+export const DifferentialSquareWidth = 10;
 export const CostExplain = "Stacked bar chart on the right of the dashed line shows per case cost for each unit types. The bars on the left of the dashed line shows the potential cost on RBC if not using cell salvage. "
 
 export const BloodProductCap: any = {
