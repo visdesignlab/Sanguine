@@ -2,7 +2,7 @@ import { median, max, mean, sum } from "d3";
 import { SingleCasePoint, BasicAggregatedDatePoint, ExtraPairPoint } from "../Interfaces/Types/DataTypes";
 import { create as createpd } from "pdfast";
 
-export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: BasicAggregatedDatePoint[], componentName: string, bloodProductCost: any) => {
+export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: BasicAggregatedDatePoint[]) => {
     let newExtraPairData: ExtraPairPoint[] = []
     if (extraPairArray.length > 0) {
         extraPairArray.forEach((variable: string) => {
@@ -32,19 +32,6 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
                         newData[dataPoint.aggregateAttribute] = { actualVal: dataPoint.zeroCaseNum, calculated: dataPoint.zeroCaseNum / dataPoint.caseCount, outOfTotal: dataPoint.caseCount };
                     });
                     newExtraPairData.push({ name: "ZERO_TRANS", label: "Zero %", data: newData, type: "Basic" });
-                    break;
-                //How to actually calculate the cost? what would be an apprioate formula?
-                case "COST":
-                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
-                        // newData[dataPoint.aggregateAttribute] = dataPoint.totalVal / (dataPoint.caseCount - dataPoint.zeroCaseNum)
-                        newData[dataPoint.aggregateAttribute] = bloodProductCost[componentName] * dataPoint.totalVal / (dataPoint.caseCount)
-                    });
-                    newExtraPairData.push({
-                        name: "COST",
-                        label: "Cost",
-                        data: newData,
-                        type: "BarChart"
-                    })
                     break;
 
                 case "DEATH":

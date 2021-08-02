@@ -76,7 +76,7 @@ const InterventionPlot: FC<Props> = ({ extraPairDataSet, chartId, plotType, outc
     const [xVals, setXVals] = useState([]);
     const [caseMax, setCaseMax] = useState(0);
     const [preTotal, setPreTotal] = useState(0);
-    const [postTotal, setPostTotal] = useState(0)
+    const [postTotal, setPostTotal] = useState(0);
     // const [preZeroMax, setPreZeroMax] = useState(0)
     // const [postZeroMax,setPostZeroMax] = useState(0)
 

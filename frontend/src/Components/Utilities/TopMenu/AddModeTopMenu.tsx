@@ -66,7 +66,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                 }
                 if (
                     // plotType === "COST"|| 
-                    typeDiction[addingChartType] === "HEATMAP" || typeDiction[addingChartType] === "INTERVENTION") {
+                    typeDiction[addingChartType] === "HEATMAP" || typeDiction[addingChartType] === "INTERVENTION" || typeDiction[addingChartType] === "COST") {
                     newChart.extraPair = JSON.stringify([]);
                 }
 

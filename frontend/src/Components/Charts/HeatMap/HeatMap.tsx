@@ -4,11 +4,11 @@ import { FC, useState } from "react";
 import { sortHelper } from "../../../HelperFunctions/ChartSorting";
 import Store from "../../../Interfaces/Store";
 import { ExtraPairPoint, HeatMapDataPoint } from "../../../Interfaces/Types/DataTypes";
-import { BloodProductCap, ExtraPairPadding, ExtraPairWidth, OffsetDict } from "../../../Presets/Constants";
+import { BloodProductCap, DifferentialSquareWidth, ExtraPairPadding, ExtraPairWidth, OffsetDict, postop_color, preop_color } from "../../../Presets/Constants";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import { useCallback } from "react";
 import { AggregationScaleGenerator, ValueScaleGenerator } from "../../../HelperFunctions/Scales";
-import { range } from "d3";
+import { range, timeFormat } from "d3";
 import HeatMapAxis from "../ChartAccessories/HeatMapAxis";
 import { ChartG, HeatMapDividerLine } from "../../../Presets/StyledSVGComponents";
 import DualColorLegend from "../ChartAccessories/DualColorLegend";
@@ -17,6 +17,7 @@ import SingleHeatRow from "./SingleHeatRow";
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import CaseCountHeader from "../ChartAccessories/CaseCountHeader";
 import GeneratorExtraPair from "../ChartAccessories/ExtraPairPlots/GeneratorExtraPair";
+import ComparisonLegend from "../ChartAccessories/ComparisonLegend";
 
 
 type Props = {
@@ -26,14 +27,18 @@ type Props = {
     yValueOption: string;
     chartId: string;
     data: HeatMapDataPoint[];
-    secondaryData?: HeatMapDataPoint[];
-    secondaryExtraPairDataSet?: ExtraPairPoint[];
     svg: React.RefObject<SVGSVGElement>;
     extraPairDataSet: ExtraPairPoint[];
     extraPairTotalWidth: number;
+    interventionDate?: number;
+    secondaryData?: HeatMapDataPoint[];
+    secondaryExtraPairDataSet?: ExtraPairPoint[];
+    firstTotal: number;
+    secondTotal: number;
+    outcomeComparison: string;
 }
 
-const HeatMap: FC<Props> = ({ secondaryExtraPairDataSet, dimensionHeight, secondaryData, dimensionWidth, xAggregationOption, yValueOption, chartId, data, svg, extraPairDataSet, extraPairTotalWidth }: Props) => {
+const HeatMap: FC<Props> = ({ outcomeComparison, interventionDate, secondaryExtraPairDataSet, dimensionHeight, secondaryData, dimensionWidth, xAggregationOption, yValueOption, chartId, data, svg, extraPairDataSet, extraPairTotalWidth, firstTotal, secondTotal }: Props) => {
     const store = useContext(Store)
     const currentOffset = OffsetDict.regular;
     const [xVals, setXVals] = useState<any[]>([]);
@@ -63,7 +68,7 @@ const HeatMap: FC<Props> = ({ secondaryExtraPairDataSet, dimensionHeight, second
     }, [dimensionWidth, extraPairTotalWidth, yValueOption, currentOffset]);
 
 
-    return <>
+    return (<>
         <HeatMapDividerLine dimensionHeight={dimensionHeight} currentOffset={currentOffset} />
         <HeatMapAxis
             svg={svg}
@@ -80,6 +85,14 @@ const HeatMap: FC<Props> = ({ secondaryExtraPairDataSet, dimensionHeight, second
         <g className="legend">
             {outputGradientLegend(store.state.showZero, dimensionWidth)}
         </g>
+
+        {secondaryData ? <ComparisonLegend
+            dimensionWidth={dimensionWidth}
+            interventionDate={interventionDate}
+            firstTotal={firstTotal}
+            secondTotal={secondTotal}
+            outcomeComparison={outcomeComparison} /> : <></>}
+
         <g>
             {data.map((dataPoint) => {
                 return (
@@ -132,8 +145,9 @@ const HeatMap: FC<Props> = ({ secondaryExtraPairDataSet, dimensionHeight, second
                 height={dimensionHeight} />
 
         </g>
-    </>
+    </>)
 }
+
 export default observer(HeatMap)
 
 export const outputGradientLegend = (showZero: boolean, dimensionWidth: number) => {

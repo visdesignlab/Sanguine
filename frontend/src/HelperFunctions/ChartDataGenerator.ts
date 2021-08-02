@@ -81,7 +81,7 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
                     }
                     return (d[valueToVisualize] as number)
                 }),
-                patientIDList: patientIDArray,
+                // patientIDList: patientIDArray,
                 caseIDList: caseIDArray,
                 zeroCaseNum: zeroNum,
                 countDict: countDict,

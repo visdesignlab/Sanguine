@@ -21,29 +21,27 @@ const CaseCountHeader: FC<Props> = ({ caseCount, yPos, zeroCaseNum, caseMax, hei
         return CaseScaleGenerator(caseMax)
     }, [caseMax])
 
-    return <g> <rect
-        fill={interpolateGreys(caseScale()(store.state.showZero ? caseCount : (caseCount - zeroCaseNum)))}
-        x={-CaseRectWidth - 5}
-        y={yPos}
-        width={CaseRectWidth}
-        height={height}
-        // stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
-        strokeWidth={2}
-    />
+    return (<g>
+        <rect
+            fill={interpolateGreys(caseScale()(store.state.showZero ? caseCount : (caseCount - zeroCaseNum)))}
+            x={-CaseRectWidth - 5}
+            y={yPos}
+            width={CaseRectWidth}
+            height={height}
+            // stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
+            strokeWidth={2}
+        />
         <text
             fill={caseScale()(store.state.showZero ? caseCount : (caseCount - zeroCaseNum)) > 0.4 ? "white" : "black"}
             x={-20}
-            y={
-                yPos +
-                0.5 * height
-            }
+            y={yPos + 0.5 * height}
             alignmentBaseline={"central"}
             textAnchor={"middle"}
             fontSize="12px"
         >
             {showZero ? caseCount : (caseCount - zeroCaseNum)}
         </text>
-    </g>
+    </g>)
 }
 
 export default observer(CaseCountHeader)

@@ -1,6 +1,6 @@
 import { scaleBand, scaleLinear, select } from "d3";
 import { FC, useCallback, useEffect, useState } from "react"
-import { CostBarChartDataPoint } from "../../../Interfaces/Types/DataTypes"
+import { CostBarChartDataPoint, ExtraPairPoint } from "../../../Interfaces/Types/DataTypes"
 import { greyScaleRange, OffsetDict } from "../../../Presets/Constants";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import useDeepCompareEffect from "use-deep-compare-effect";
@@ -12,6 +12,8 @@ import CaseCountHeader from "../ChartAccessories/CaseCountHeader";
 import { sortHelper } from "../../../HelperFunctions/ChartSorting";
 import { useContext } from "react";
 import Store from "../../../Interfaces/Store";
+import ComparisonLegend from "../ChartAccessories/ComparisonLegend";
+import GeneratorExtraPair from "../ChartAccessories/ExtraPairPlots/GeneratorExtraPair";
 
 type Props = {
     xAggregationOption: string;
@@ -25,9 +27,16 @@ type Props = {
     maxSavedNegative: number;
     costMode: boolean;
     showPotential: boolean;
+    caseCount: number;
+    secondaryCaseCount: number;
+    outcomeComparison?: string;
+    secondaryExtraPairDataSet?: ExtraPairPoint[];
+    extraPairDataSet: ExtraPairPoint[];
+    extraPairTotalWidth: number;
+    chartId: string;
 }
 
-const StackedBarChart: FC<Props> = ({ xAggregationOption, secondaryData, svg, data, dimensionWidth, dimensionHeight, maximumCost, maxSavedNegative, costMode, showPotential }: Props) => {
+const StackedBarChart: FC<Props> = ({ outcomeComparison, caseCount, secondaryCaseCount, xAggregationOption, secondaryData, svg, data, dimensionWidth, dimensionHeight, maximumCost, maxSavedNegative, costMode, showPotential, extraPairDataSet, extraPairTotalWidth, secondaryExtraPairDataSet, chartId }: Props) => {
     const store = useContext(Store);
     const currentOffset = OffsetDict.regular;
     const [caseMax, setCaseMax] = useState(0);
@@ -52,9 +61,9 @@ const StackedBarChart: FC<Props> = ({ xAggregationOption, secondaryData, svg, da
     const valueScale = useCallback(() => {
         let valueScale = scaleLinear()
             .domain([maxSavedNegative, maximumCost])
-            .range([currentOffset.left, dimensionWidth - currentOffset.right - currentOffset.margin])
+            .range([currentOffset.left + extraPairTotalWidth, dimensionWidth - currentOffset.right - currentOffset.margin])
         return valueScale
-    }, [dimensionWidth, maximumCost, maxSavedNegative, currentOffset]);
+    }, [dimensionWidth, maximumCost, maxSavedNegative, currentOffset, extraPairTotalWidth]);
 
 
 
@@ -68,11 +77,12 @@ const StackedBarChart: FC<Props> = ({ xAggregationOption, secondaryData, svg, da
                 isValueScaleBand={false}
                 dimensionHeight={dimensionHeight}
                 dimensionWidth={dimensionHeight}
-                extraPairTotalWidth={0}
+                extraPairTotalWidth={extraPairTotalWidth}
                 yValueOption={costMode ? "Per Case Cost in Dollars" : "Units per Case"}
                 valueScaleDomain={JSON.stringify(valueScale().domain())}
                 valueScaleRange={JSON.stringify(valueScale().range())}
                 xAggregationOption={xAggregationOption} />
+            {outcomeComparison ? <ComparisonLegend dimensionWidth={dimensionWidth} firstTotal={caseCount} secondTotal={secondaryCaseCount} outcomeComparison={outcomeComparison} /> : <></>}
             <g className="chart-comp" >
                 {data.map((dp) => {
                     return (
@@ -85,7 +95,7 @@ const StackedBarChart: FC<Props> = ({ xAggregationOption, secondaryData, svg, da
                                 bandwidth={secondaryData ? aggregationScale().bandwidth() * 0.5 : aggregationScale().bandwidth()}
                                 costMode={costMode}
                                 showPotential={showPotential} />
-                            <ChartG extraPairTotalWidth={0} currentOffset={currentOffset}>
+                            <ChartG extraPairTotalWidth={extraPairTotalWidth} currentOffset={currentOffset}>
                                 <CaseCountHeader
                                     height={(secondaryData ? 0.5 : 1) * aggregationScale().bandwidth()}
                                     zeroCaseNum={0}
@@ -107,7 +117,7 @@ const StackedBarChart: FC<Props> = ({ xAggregationOption, secondaryData, svg, da
                                 bandwidth={aggregationScale().bandwidth() * 0.5}
                                 costMode={costMode}
                                 showPotential={showPotential} />
-                            <ChartG extraPairTotalWidth={0} currentOffset={currentOffset}>
+                            <ChartG extraPairTotalWidth={extraPairTotalWidth} currentOffset={currentOffset}>
                                 <CaseCountHeader
                                     height={0.5 * aggregationScale().bandwidth()}
                                     zeroCaseNum={0}
@@ -117,7 +127,15 @@ const StackedBarChart: FC<Props> = ({ xAggregationOption, secondaryData, svg, da
                             </ChartG>
                         </g>)
                 }) : <></>}
-
+                <g className="extraPairChart">
+                    <GeneratorExtraPair
+                        extraPairDataSet={extraPairDataSet}
+                        secondaryExtraPairDataSet={secondaryExtraPairDataSet ? secondaryExtraPairDataSet : undefined}
+                        chartId={chartId}
+                        aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
+                        aggregationScaleRange={JSON.stringify(aggregationScale().range())}
+                        height={dimensionHeight} />
+                </g>
             </g>
         </>
     )
