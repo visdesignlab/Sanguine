@@ -45,7 +45,7 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
         )
         .call(aggregationLabel as any)
         .selectAll("text")
-        .attr("transform", `translate(-${CaseRectWidth - 2},0)`)
+        .attr("transform", `translate(-${CaseRectWidth + 2},0)`)
 
     svgSelection
         .select(".axes")

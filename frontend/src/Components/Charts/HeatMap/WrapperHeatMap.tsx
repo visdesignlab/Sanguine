@@ -43,6 +43,8 @@ const WrapperHeatMap: FC<Props> = ({ outcomeComparison, layoutH, layoutW, chartI
     const [secondaryExtraPairData, setSecondaryExtraPairData] = useState<ExtraPairPoint[]>([]);
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
     const [extraPairTotalWidth, setExtraPairTotalWidth] = useState(0);
+    const [caseCount, setCaseCount] = useState(0);
+    const [secondaryCaseCount, setSecondaryCaseCount] = useState(0)
 
 
     useEffect(() => {
@@ -53,9 +55,9 @@ const WrapperHeatMap: FC<Props> = ({ outcomeComparison, layoutH, layoutW, chartI
     }, [extraPairArrayString])
 
     useDeepCompareEffect(() => {
-        const newExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, data, yValueOption, store.state.BloodProductCost);
+        const newExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, data);
         if (outcomeComparison) {
-            const newSecondaryExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, secondaryData, yValueOption, store.state.BloodProductCost);
+            const newSecondaryExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, secondaryData);
             stateUpdateWrapperUseJSON(secondaryExtraPairData, newSecondaryExtraPairData, setSecondaryExtraPairData)
         }
         let totalWidth = newExtraPairData.length > 0 ? (newExtraPairData.length + 1) * ExtraPairPadding : 0;
@@ -124,7 +126,9 @@ const WrapperHeatMap: FC<Props> = ({ outcomeComparison, layoutH, layoutW, chartI
                     const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, store.state.showZero, yValueOption);
                     stateUpdateWrapperUseJSON(data, outputData, setData);
                     stateUpdateWrapperUseJSON(secondaryData, secondOutputData, setSecondaryData);
-                    store.chartStore.totalAggregatedCaseCount = (caseCount as number) + (secondCaseCount as number)
+                    store.chartStore.totalAggregatedCaseCount = (caseCount as number) + (secondCaseCount as number);
+                    setCaseCount(caseCount as number);
+                    setSecondaryCaseCount(secondCaseCount as number)
                 }
             })
             .catch(function (thrown) {
@@ -176,6 +180,9 @@ const WrapperHeatMap: FC<Props> = ({ outcomeComparison, layoutH, layoutW, chartI
                             extraPairDataSet={extraPairData}
                             secondaryExtraPairDataSet={outcomeComparison ? secondaryExtraPairData : undefined}
                             secondaryData={outcomeComparison ? secondaryData : undefined}
+                            firstTotal={caseCount}
+                            secondTotal={secondaryCaseCount}
+                            outcomeComparison={outcomeComparison || ""}
                         />
                     </ChartSVG>
                 </Container>

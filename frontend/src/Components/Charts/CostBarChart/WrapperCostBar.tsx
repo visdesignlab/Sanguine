@@ -3,10 +3,13 @@ import axios from "axios";
 import { sum } from "d3";
 import { observer } from "mobx-react";
 import { FC, useContext, useEffect, useLayoutEffect, useRef, useState } from "react"
+import useDeepCompareEffect from "use-deep-compare-effect";
 import { DataContext } from "../../../App";
+import { generateExtrapairPlotData } from "../../../HelperFunctions/ExtraPairDataGenerator";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
-import { CostBarChartDataPoint, ExtraPairPoint } from "../../../Interfaces/Types/DataTypes";
+import { CostBarChartDataPoint, ExtraPairPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
+import { ExtraPairPadding, ExtraPairWidth } from "../../../Presets/Constants";
 import { useStyles } from "../../../Presets/StyledComponents";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
@@ -39,13 +42,16 @@ const WrapperCostBar: FC<Props> = ({ extraPairArrayString, xAggregatedOption, ch
     const [costInput, setCostInput] = useState(0)
     const [dimensionHeight, setDimensionHeight] = useState(0)
     const [dimensionWidth, setDimensionWidth] = useState(0)
+    const [extraPairTotalWidth, setExtraPairTotalWidth] = useState(0);
 
     const [costMode, setCostMode] = useState(true);
     const [openCostInputModal, setOpenCostInputModal] = useState(false);
     const [modalTitle, setModalTitle] = useState("");
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
-
+    const [secondaryExtraPairData, setSecondaryExtraPairData] = useState<ExtraPairPoint[]>([]);
     const [showPotential, setShowPotential] = useState(false);
+    const [totalCaseCount, setTotalCaseCount] = useState(0);
+    const [secondaryCaseCount, setSecondaryCaseCount] = useState(0);
 
     useEffect(() => {
         if (extraPairArrayString) {
@@ -53,6 +59,22 @@ const WrapperCostBar: FC<Props> = ({ extraPairArrayString, xAggregatedOption, ch
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [extraPairArrayString])
+
+    useDeepCompareEffect(() => {
+        const newExtraPairData = generateExtrapairPlotData(xAggregatedOption, hemoData, extraPairArray, data);
+        if (comparisonOption) {
+            const newSecondaryExtraPairData = generateExtrapairPlotData(xAggregatedOption, hemoData, extraPairArray, secondaryData);
+            stateUpdateWrapperUseJSON(secondaryExtraPairData, newSecondaryExtraPairData, setSecondaryExtraPairData)
+        }
+        let totalWidth = newExtraPairData.length > 0 ? (newExtraPairData.length + 1) * ExtraPairPadding : 0;
+        newExtraPairData.forEach((d) => {
+            totalWidth += (ExtraPairWidth[d.type])
+        })
+        setExtraPairTotalWidth(totalWidth)
+        stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [extraPairArray, data, hemoData, secondaryData, comparisonOption]);
+
 
     useLayoutEffect(() => {
         if (svgRef.current) {
@@ -67,19 +89,19 @@ const WrapperCostBar: FC<Props> = ({ extraPairArrayString, xAggregatedOption, ch
         let newDataObj: CostBarChartDataPoint = {
             aggregateAttribute: dataItem.aggregateAttribute,
             dataArray: [
-                dataItem.PRBC_UNITS * (costMode ? BloodProductCost.PRBC_UNITS : 1) / dataItem.caseNum,
-                dataItem.FFP_UNITS * (costMode ? BloodProductCost.FFP_UNITS : 1) / dataItem.caseNum,
-                dataItem.PLT_UNITS * (costMode ? BloodProductCost.PLT_UNITS : 1) / dataItem.caseNum,
-                dataItem.CRYO_UNITS * (costMode ? BloodProductCost.CRYO_UNITS : 1) / dataItem.caseNum,
-                (costMode ? (dataItem.SALVAGE_USAGE * BloodProductCost.CELL_SAVER_ML / dataItem.caseNum) : (dataItem.CELL_SAVER_ML * 0.004 / dataItem.caseNum))
+                (dataItem.PRBC_UNITS * (costMode ? BloodProductCost.PRBC_UNITS : 1) / dataItem.caseNum) || 0,
+                (dataItem.FFP_UNITS * (costMode ? BloodProductCost.FFP_UNITS : 1) / dataItem.caseNum) || 0,
+                (dataItem.PLT_UNITS * (costMode ? BloodProductCost.PLT_UNITS : 1) / dataItem.caseNum) || 0,
+                (dataItem.CRYO_UNITS * (costMode ? BloodProductCost.CRYO_UNITS : 1) / dataItem.caseNum) || 0,
+                (costMode ? ((dataItem.SALVAGE_USAGE * BloodProductCost.CELL_SAVER_ML / dataItem.caseNum) || 0) : ((dataItem.CELL_SAVER_ML * 0.004 / dataItem.caseNum) || 0))
             ],
             caseCount: dataItem.caseNum,
-            cellSalvageUsage: dataItem.SALVAGE_USAGE / dataItem.caseNum,
-            cellSalvageVolume: dataItem.CELL_SAVER_ML / dataItem.caseNum,
+            cellSalvageUsage: (dataItem.SALVAGE_USAGE / dataItem.caseNum) || 0,
+            cellSalvageVolume: (dataItem.CELL_SAVER_ML / dataItem.caseNum) || 0,
             totalVal: 0,
             zeroCaseNum: 0,
-            patientIDList: [],
-            caseIDList: []
+            // patientIDList: [],
+            caseIDList: Array.from(dataItem.caseIDList)
         }
         return newDataObj
     }
@@ -106,7 +128,7 @@ const WrapperCostBar: FC<Props> = ({ extraPairArrayString, xAggregatedOption, ch
                 dataResult.forEach((element: any) => {
                     caseSetReturnedFromQuery.add(element.case_id)
                 })
-                hemoData.forEach((singleCase: any) => {
+                hemoData.forEach((singleCase: SingleCasePoint) => {
                     if (!temporaryDataHolder[singleCase[xAggregatedOption]]) {
                         temporaryDataHolder[singleCase[xAggregatedOption]] = {
                             aggregateAttribute: singleCase[xAggregatedOption],
@@ -116,7 +138,8 @@ const WrapperCostBar: FC<Props> = ({ extraPairArrayString, xAggregatedOption, ch
                             PLT_UNITS: 0,
                             CELL_SAVER_ML: 0,
                             caseNum: 0,
-                            SALVAGE_USAGE: 0
+                            SALVAGE_USAGE: 0,
+                            caseIDList: new Set()
                         }
                         secondaryTemporaryDataHolder[singleCase[xAggregatedOption]] = {
                             aggregateAttribute: singleCase[xAggregatedOption],
@@ -126,7 +149,8 @@ const WrapperCostBar: FC<Props> = ({ extraPairArrayString, xAggregatedOption, ch
                             PLT_UNITS: 0,
                             CELL_SAVER_ML: 0,
                             caseNum: 0,
-                            SALVAGE_USAGE: 0
+                            SALVAGE_USAGE: 0,
+                            caseIDList: new Set()
                         }
                     }
                     if (comparisonOption && singleCase[comparisonOption] > 0) {
@@ -137,6 +161,7 @@ const WrapperCostBar: FC<Props> = ({ extraPairArrayString, xAggregatedOption, ch
                         secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
                         secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0)
                         secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].caseNum += 1
+                        secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].caseIDList.add(singleCase.CASE_ID)
                     } else {
                         temporaryDataHolder[singleCase[xAggregatedOption]].PRBC_UNITS += singleCase.PRBC_UNITS;
                         temporaryDataHolder[singleCase[xAggregatedOption]].FFP_UNITS += singleCase.FFP_UNITS;
@@ -144,14 +169,17 @@ const WrapperCostBar: FC<Props> = ({ extraPairArrayString, xAggregatedOption, ch
                         temporaryDataHolder[singleCase[xAggregatedOption]].PLT_UNITS += singleCase.PLT_UNITS;
                         temporaryDataHolder[singleCase[xAggregatedOption]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
                         temporaryDataHolder[singleCase[xAggregatedOption]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0)
-                        temporaryDataHolder[singleCase[xAggregatedOption]].caseNum += 1
+                        temporaryDataHolder[singleCase[xAggregatedOption]].caseNum += 1;
+                        temporaryDataHolder[singleCase[xAggregatedOption]].caseIDList.add(singleCase.CASE_ID)
                     }
                 }
                 )
-                console.log(temporaryDataHolder)
+                console.log(temporaryDataHolder, secondaryTemporaryDataHolder)
+                let totalCaseCountTemp = 0;
+                let secondaryCaseCountTemp = 0;
                 Object.values(temporaryDataHolder).forEach((dataItem: any) => {
                     let newDataObj = makeDataObj(dataItem);
-
+                    totalCaseCountTemp += newDataObj.caseCount
                     const sum_cost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0)
                     tempmaxCost = tempmaxCost > sum_cost ? tempmaxCost : sum_cost
                     const costSaved = -(newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4])
@@ -164,8 +192,8 @@ const WrapperCostBar: FC<Props> = ({ extraPairArrayString, xAggregatedOption, ch
                     console.log(secondaryTemporaryDataHolder)
                     Object.values(secondaryTemporaryDataHolder).forEach((dataItem: any) => {
                         let newDataObj = makeDataObj(dataItem);
-
-                        const sum_cost = sum(newDataObj.dataArray) || 0 + (costMode ? (newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0)
+                        secondaryCaseCountTemp += newDataObj.caseCount
+                        const sum_cost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0)
                         tempmaxCost = tempmaxCost > sum_cost ? tempmaxCost : sum_cost
                         const costSaved = -(newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4])
                         if (costMode && !isNaN(costSaved)) {
@@ -175,12 +203,12 @@ const WrapperCostBar: FC<Props> = ({ extraPairArrayString, xAggregatedOption, ch
                     })
                     stateUpdateWrapperUseJSON(secondaryData, secondaryOutputData, setSecondaryData)
                 }
+                store.chartStore.totalAggregatedCaseCount = totalCaseCountTemp + secondaryCaseCountTemp
+                setTotalCaseCount(totalCaseCountTemp);
+                setSecondaryCaseCount(secondaryCaseCountTemp)
                 stateUpdateWrapperUseJSON(data, outputData, setData);
-
-
                 setMinCost(tempMinCost)
                 setMaximumCost(tempmaxCost)
-                console.log(tempmaxCost, maximumCost, tempMinCost, maximumSavedNegative)
             }
         }).catch(function (thrown) {
             if (axios.isCancel(thrown)) {
@@ -196,8 +224,7 @@ const WrapperCostBar: FC<Props> = ({ extraPairArrayString, xAggregatedOption, ch
         <Grid container direction="row" alignItems="center" className={styles.chartWrapper}>
             <Grid item xs={1}>
                 <div>
-                    {/* TODO change false */}
-                    <ExtraPairButtons disbleButton={true} extraPairLength={extraPairArray.length} chartId={chartId} />
+                    <ExtraPairButtons disbleButton={dimensionWidth * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
                     <ChartConfigMenu
                         xAggregationOption={xAggregatedOption}
                         yValueOption={""}
@@ -217,11 +244,18 @@ const WrapperCostBar: FC<Props> = ({ extraPairArrayString, xAggregatedOption, ch
                             secondaryData={comparisonOption ? secondaryData : undefined}
                             svg={svgRef}
                             data={data}
+                            caseCount={totalCaseCount}
+                            secondaryCaseCount={secondaryCaseCount}
+                            outcomeComparison={comparisonOption}
                             dimensionWidth={dimensionWidth}
                             dimensionHeight={dimensionHeight}
                             maximumCost={maximumCost}
                             maxSavedNegative={maximumSavedNegative}
                             costMode={costMode}
+                            extraPairDataSet={extraPairData}
+                            chartId={chartId}
+                            secondaryExtraPairDataSet={comparisonOption ? secondaryExtraPairData : undefined}
+                            extraPairTotalWidth={extraPairTotalWidth}
                             showPotential={showPotential} />
 
                     </ChartSVG>
