@@ -91,7 +91,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
         })
             .then(function (response) {
                 if (response.data) {
-                    // const temporaryDataHolder = produceAvailableCasesForNonIntervention(response.data, hemoData, store.state.surgeryUrgencySelection, store.state.outcomeFilter, xAggregationOption)
+
                     let caseSetReturnedFromQuery = new Set();
                     let temporaryDataHolder: any = {};
                     let secondaryTemporaryDataHolder: any = {};

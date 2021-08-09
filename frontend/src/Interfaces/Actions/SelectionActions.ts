@@ -4,7 +4,7 @@ import { ActionEvents } from "../Types/EventTypes";
 import { ApplicationState } from "../Types/StateTypes";
 
 
-
+//This is a filter
 export const updateSelectedPatientGroup = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
     state.currentSelectPatientGroup = caseList;
     console.log(state)
@@ -34,3 +34,14 @@ const clearSet = createAction<ApplicationState, [], ActionEvents>(() => {
     //todo
 })
 
+export const clearAllFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
+    state.currentSelectPatientGroup = [];
+    state.currentSelectSet = []
+}).setLabel("clearAllFilter");
+
+export const outputToFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
+    state.currentOutputFilterSet = state.currentSelectSet;
+    state.currentSelectSet = []
+    state.currentSelectPatientGroup = state.currentBrushedPatientGroup;
+    state.currentBrushedPatientGroup = [];
+}).setLabel("createFilter");

@@ -1,4 +1,4 @@
 export type SelectSet = {
     setName: string;
-    setValues: number[];
+    setValues: string[];
 }
