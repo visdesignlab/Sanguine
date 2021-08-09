@@ -1,8 +1,10 @@
 import { axisBottom, axisLeft, brush, deviation, mean, range, scaleBand, scaleLinear, select } from "d3"
 import { observer } from "mobx-react"
+import { useContext } from "react"
 import { FC, useCallback, useEffect, useState } from "react"
 import styled from "styled-components"
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker"
+import Store from "../../../Interfaces/Store"
 import { ScatterDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes"
 import { Basic_Gray, highlight_orange, OffsetDict, Third_Gray } from "../../../Presets/Constants"
 import { AcronymDictionary } from "../../../Presets/DataDict"
@@ -24,8 +26,9 @@ type Props = {
 const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yValueOption, data, width, height, svg }: Props) => {
 
     const scalePadding = 0.2;
-    const currentOffset = OffsetDict.regular;
-
+    const currentOffset = OffsetDict.minimum;
+    const store = useContext(Store);
+    const { currentBrushedPatientGroup } = store.state
     const svgSelection = select(svg.current);
     const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null)
     const [isFirstRender, updateIsFirstRender] = useState(true);
@@ -81,25 +84,21 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
                         caseList.push(dataPoint.case)
                     }
                 })
+
+                //     !!!!!!!this is the code of checking brushed patient
+                if (caseList.length > 1000 || caseList.length === 0) {
+                    updateBrushLoc(null)
+                    brushDef.move(svgSelection.select(".brush-layer"), null)
+                    store.selectionStore.updateBrush([])
+                } else {
+                    store.selectionStore.updateBrush(caseList)
+                }
             }
-            //!!!!!!!this is the code of checking brushed patient
-            // if (caseList.length > 1000 || caseList.length === 0) {
-            //     updateBrushLoc(null)
-            //     brushDef.move(svgSelection.select(".brush-layer"), null)
-            //     actions.updateBrushPatientGroup([], "REPLACE")
-            // } else {
-            //     actions.updateBrushPatientGroup(caseList, "REPLACE")
-            // }
-            // }
-            // else {
-            //     actions.updateBrushPatientGroup([], "REPLACE")
-            // }
+            else {
+                store.selectionStore.updateBrush([])
+            }
 
         }
-        // a scatterplot would remove the current brushed patients. 
-        // else {
-        //     actions.updateBrushPatientGroup([], "REPLACE")
-        // }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [brushLoc])
 
@@ -111,11 +110,11 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
     }, [data])
 
 
-    // useEffect(() => {
-    //     let newbrushedCaseList = currentBrushedPatientGroup.map(d => d.CASE_ID)
-    //     stateUpdateWrapperUseJSON(brushedCaseList, newbrushedCaseList, updatebrushedCaseList)
-    //     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, [currentBrushedPatientGroup])
+    useEffect(() => {
+        let newbrushedCaseList = currentBrushedPatientGroup.map(d => d.CASE_ID)
+        stateUpdateWrapperUseJSON(brushedCaseList, newbrushedCaseList, updatebrushedCaseList)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentBrushedPatientGroup])
 
 
     const yAxisLabel = axisLeft(yAxisScale());
@@ -133,7 +132,7 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
         .select(".y-label")
         .attr("display", null)
         .attr("x", -0.5 * height)
-        .attr("y", currentOffset.margin)
+        .attr("y", currentOffset.margin - 10)
         .attr("transform", "rotate(-90)")
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")

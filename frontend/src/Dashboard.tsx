@@ -11,6 +11,7 @@ import LayoutGenerator from "./Components/LayoutGenerator"
 import { DataContext } from "./App"
 import Grid from "@material-ui/core/Grid"
 import { Box, Divider } from "@material-ui/core"
+import DetailView from "./Components/Utilities/DetailView/DetailView"
 
 
 
@@ -23,20 +24,19 @@ const Dashboard: FC = () => {
                 <RegularModeMenu />
             </Box>
             <Divider />
-            <Grid container spacing={2} direction="row" justifyContent="space-between">
+            <Grid container direction="row" justifyContent="space-between">
                 <Grid item xs={2} id="Side-Bar">
                     <LeftToolBox totalCaseNum={hemoData.length} />
                 </Grid>
-                <Grid item xs={9} id="Main-Body">
+                <Grid item xs={8} id="Main-Body">
                     <LayoutGenerator />
                 </Grid>
-                <Grid item xs={1}>
-                    <div>stuff</div>
-                    {/* <DetailView hemoData={hemoData} /> */}
+                <Grid item xs={2}>
+                    <DetailView />
                 </Grid>
             </Grid>
-            {/* <BrowserWarning />
-            <DataRetrieval /> */}
+            <BrowserWarning />
+            <DataRetrieval />
         </div>
     )
 }

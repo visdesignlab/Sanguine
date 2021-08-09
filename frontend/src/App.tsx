@@ -9,7 +9,7 @@ import { defaultState } from "./Interfaces/DefaultState"
 import Store from "./Interfaces/Store"
 import { SingleCasePoint } from "./Interfaces/Types/DataTypes"
 import { logoutHandler, whoamiAPICall } from "./Interfaces/UserManagement"
-import { SurgeryTypeArray } from "./Presets/DataDict"
+import { SurgeryUrgencyArray } from "./Presets/DataDict"
 import './App.css'
 import { checkIfCriteriaMetDup } from "./HelperFunctions/CaseListProducer"
 import useDeepCompareEffect from "use-deep-compare-effect"
@@ -125,7 +125,7 @@ const App: FC = () => {
                             TXA: riskOutcomeDict[ob.VISIT_ID].TXA,
                             B12: riskOutcomeDict[ob.VISIT_ID].B12,
                             AMICAR: riskOutcomeDict[ob.VISIT_ID].AMICAR,
-                            SURGERY_TYPE: SurgeryTypeArray.indexOf(ob.SURGERY_TYPE)
+                            SURGERY_TYPE: SurgeryUrgencyArray.indexOf(ob.SURGERY_TYPE)
                         }
                         cacheData.push(outputObj)
                     }
@@ -140,7 +140,9 @@ const App: FC = () => {
             })
     }
 
-    return <DataContext.Provider value={outputFilteredData}><Dashboard /></DataContext.Provider>
+    return <DataContext.Provider value={outputFilteredData}>
+        <Dashboard />
+    </DataContext.Provider>
 }
 
 export default observer(App)
