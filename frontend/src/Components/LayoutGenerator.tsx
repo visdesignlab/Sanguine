@@ -38,7 +38,7 @@ const LayoutGenerator: FC = () => {
                             layoutH={layout.h}
                             xAggregationOption={layout.aggregatedBy}
 
-                        // notation={layout.notation}
+                            annotationText={layout.notation}
                         //     interventionDate={layout.interventionDate}
                         // aggregatedOption={layout.aggregation}
                         />
@@ -58,7 +58,7 @@ const LayoutGenerator: FC = () => {
                             xAggregatedOption={layout.aggregatedBy}
                             chartId={layout.i}
                             comparisonOption={layout.valueToVisualize}
-                        // notation={layout.notation}
+                            annotationText={layout.notation}
                         />
                     </div>
                 );
@@ -76,7 +76,7 @@ const LayoutGenerator: FC = () => {
                         yValueOption={layout.valueToVisualize}
                         layoutH={layout.h}
                         chartId={layout.i}
-
+                        annotationText={layout.notation}
                     />
                 </div>);
 
@@ -86,6 +86,7 @@ const LayoutGenerator: FC = () => {
                     className={"parent-node" + layout.i}>
                     <ChartStandardButtons chartID={layout.i} />
                     <WrapperHeatMap
+                        annotationText={layout.notation}
                         chartId={layout.i}
                         layoutW={layout.w}
                         layoutH={layout.h}

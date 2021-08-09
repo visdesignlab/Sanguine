@@ -17,6 +17,7 @@ import { DataContext } from "../../../App";
 import { Grid, Container } from "@material-ui/core";
 import { useStyles } from "../../../Presets/StyledComponents";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
+import AnnotationForm from "../ChartAccessories/AnnotationForm";
 
 type Props = {
     layoutW: number;
@@ -27,8 +28,9 @@ type Props = {
     yValueOption: string;
     chartTypeIndexinArray: number;
     outcomeComparison?: string;
+    annotationText: string;
 }
-const WrapperHeatMap: FC<Props> = ({ outcomeComparison, layoutH, layoutW, chartId, extraPairArrayString, xAggregationOption, yValueOption, chartTypeIndexinArray }: Props) => {
+const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH, layoutW, chartId, extraPairArrayString, xAggregationOption, yValueOption, chartTypeIndexinArray }: Props) => {
     const hemoData = useContext(DataContext)
     const store = useContext(Store);
     const styles = useStyles();
@@ -185,9 +187,10 @@ const WrapperHeatMap: FC<Props> = ({ outcomeComparison, layoutH, layoutW, chartI
                             outcomeComparison={outcomeComparison || ""}
                         />
                     </ChartSVG>
+                    <AnnotationForm chartI={chartId} annotationText={annotationText} />
                 </Container>
-            </Grid>
 
+            </Grid>
         </Grid>)
 }
 

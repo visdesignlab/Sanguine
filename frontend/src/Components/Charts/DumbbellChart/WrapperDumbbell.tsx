@@ -14,15 +14,16 @@ import React from "react";
 import DumbbellChart from "./DumbbellChart";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
+import AnnotationForm from "../ChartAccessories/AnnotationForm";
 
 type Props = {
     xAggregationOption: string;
     chartId: string;
     layoutH: number;
     layoutW: number;
-
+    annotationText: string;
 }
-const WrapperDumbbell: FC<Props> = ({ xAggregationOption, chartId, layoutH, layoutW }) => {
+const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartId, layoutH, layoutW }) => {
     const hemoData = useContext(DataContext);
     const store = useContext(Store);
     const styles = useStyles();
@@ -173,6 +174,7 @@ const WrapperDumbbell: FC<Props> = ({ xAggregationOption, chartId, layoutH, layo
                     <DumbbellChart data={data} svg={svgRef} showGap={showGap} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} valueToVisualize={xAggregationOption} dimensionWidth={width} dimensionHeight={height} xMin={xMin} xMax={xMax} />
 
                 </ChartSVG>
+                <AnnotationForm chartI={chartId} annotationText={annotationText} />
             </Container>
         </Grid>
     </Grid>
