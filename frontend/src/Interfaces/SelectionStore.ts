@@ -1,5 +1,5 @@
 import { makeAutoObservable } from "mobx";
-import { setCurrentSelectPatient, updateBrushPatient, updateProcedureSelection, updateSelectedPatientGroup } from "./Actions/SelectionActions";
+import { clearAllFilter, outputToFilter, setCurrentSelectPatient, updateBrushPatient, updateProcedureSelection, updateSelectedPatientGroup } from "./Actions/SelectionActions";
 import { RootStore } from "./Store";
 import { SingleCasePoint } from "./Types/DataTypes";
 
@@ -31,4 +31,11 @@ export class SelectionStore {
         this.provenance.apply(setCurrentSelectPatient(newCase))
     }
 
+    clearAllFilter() {
+        this.provenance.apply(clearAllFilter())
+    }
+
+    outputToFilter() {
+        this.provenance.apply(outputToFilter())
+    }
 }

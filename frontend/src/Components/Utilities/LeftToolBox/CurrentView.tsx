@@ -7,15 +7,16 @@ import Store from "../../../Interfaces/Store"
 import { AcronymDictionary, OutcomeOptions, SurgeryUrgency } from "../../../Presets/DataDict"
 import { LeftToolBarListItem, StyledDate, Title, useStyles } from "../../../Presets/StyledComponents"
 import Container from "@material-ui/core/Container";
+import CloseIcon from '@material-ui/icons/Close';
 import List from "@material-ui/core/List";
-import { Box, Chip, ListItem, ListItemSecondaryAction, ListItemText, MenuItem, Select, Switch, Grid } from "@material-ui/core";
+import { Box, Chip, ListItem, ListItemSecondaryAction, ListItemText, MenuItem, Select, Switch, Grid, IconButton } from "@material-ui/core";
 import { DropdownGenerator } from "../../../HelperFunctions/DropdownGenerator"
 
 type Props = { totalCaseNum: number }
 
 const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
     const store = useContext(Store)
-    const { surgeryUrgencySelection } = store.state;
+    const { surgeryUrgencySelection, currentSelectPatientGroup } = store.state;
     const styles = useStyles();
 
     const onDateChange = (event: any, data: any) => {
@@ -85,13 +86,6 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                                 <Select displayEmpty value={store.state.outcomeFilter} onChange={(e) => { store.configStore.changeOutcomeFilter((e.target.value as string)) }}  >
                                     {DropdownGenerator(OutcomeOptions, true)}
                                 </Select>} />
-
-                        {/* <Dropdown
-                            value={store.state.outcomeFilter}
-                            clearable
-                            selection
-                            options={OutcomeOptions}
-                            onChange={(e, v) => { store.configStore.changeOutcomeFilter((v.value as string)) }} /> */}
                     </ListItem>
 
                     <ListItem key="Procedure Types">
@@ -103,11 +97,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                                     onClick={() => { store.configStore.changeSurgeryUrgencySelection([surgeryUrgencySelection[0], !surgeryUrgencySelection[1], surgeryUrgencySelection[2]]) }} />
                                 <Chip size="small" label="Emergent" clickable color={surgeryUrgencySelection[2] ? "primary" : undefined}
                                     onClick={() => { store.configStore.changeSurgeryUrgencySelection([surgeryUrgencySelection[0], surgeryUrgencySelection[1], !surgeryUrgencySelection[2]]) }} /></Box>} />
-
-
                     </ListItem>
-
-
                     <ListItem key="Show Zero">
                         <ListItemText primary="Show Zero Transfused"
                         ></ListItemText>
@@ -131,11 +121,18 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
                     <ListItem key="SurgeryList">
                         <ListItemText primary="Procedure" secondary={generateSurgery()} />
-                        {/* <List.Content>{generateSurgery()} </List.Content> */}
                     </ListItem>
-                    {/* {generatePatientSelection()}
-
-
+                    {currentSelectPatientGroup.length > 0 ? (
+                        <ListItem key="PatientgroupSelected">
+                            <ListItemText primary="Cases Filtered" secondary={currentSelectPatientGroup.length} />
+                            <ListItemSecondaryAction>
+                                <IconButton onClick={() => { store.selectionStore.updateSelectedPatientGroup([]) }}>
+                                    <CloseIcon />
+                                </IconButton>
+                            </ListItemSecondaryAction>
+                        </ListItem>) : <></>}
+                    {/* 
+                
                     {currentOutputFilterSet.map((selectSet) => {
                         return <FilterListIT
                             //icon="caret right"

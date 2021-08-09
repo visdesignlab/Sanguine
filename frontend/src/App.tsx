@@ -11,14 +11,14 @@ import { SingleCasePoint } from "./Interfaces/Types/DataTypes"
 import { logoutHandler, whoamiAPICall } from "./Interfaces/UserManagement"
 import { SurgeryUrgencyArray } from "./Presets/DataDict"
 import './App.css'
-import { checkIfCriteriaMetDup } from "./HelperFunctions/CaseListProducer"
+import { checkIfCriteriaMet } from "./HelperFunctions/CaseListProducer"
 import useDeepCompareEffect from "use-deep-compare-effect"
 
 export const DataContext = createContext<SingleCasePoint[]>([])
 
 const App: FC = () => {
     const store = useContext(Store);
-    const { surgeryUrgencySelection, outcomeFilter } = store.state;
+    const { surgeryUrgencySelection, outcomeFilter, currentSelectPatientGroup, currentSelectSet } = store.state;
     const [hemoData, setHemoData] = useState<SingleCasePoint[]>([])
     const [outputFilteredData, setOutputFilteredDAta] = useState<SingleCasePoint[]>([])
 
@@ -32,7 +32,10 @@ const App: FC = () => {
 
     const handleOnIdle = (event: any) => {
         // On idle log the user out
-        logoutHandler()
+        if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
+            logoutHandler()
+        }
+
     }
 
     const handleOnAction = (event: any) => {
@@ -52,9 +55,17 @@ const App: FC = () => {
 
     //Data Updates
     useDeepCompareEffect(() => {
-        const newFilteredData = hemoData.filter((eachcase: SingleCasePoint) => checkIfCriteriaMetDup(eachcase, surgeryUrgencySelection, outcomeFilter))
+        console.log(store.state)
+        let patientIDSet: Set<number> | undefined;
+        if (currentSelectPatientGroup.length > 0) {
+            patientIDSet = new Set<number>()
+            currentSelectPatientGroup.forEach((d) => { patientIDSet!.add(d.CASE_ID) })
+        }
+        const newFilteredData = hemoData.filter((eachcase: SingleCasePoint) => checkIfCriteriaMet(eachcase, surgeryUrgencySelection, outcomeFilter, currentSelectSet, patientIDSet))
+
+
         setOutputFilteredDAta(newFilteredData)
-    }, [surgeryUrgencySelection, outcomeFilter, hemoData])
+    }, [surgeryUrgencySelection, outcomeFilter, hemoData, currentSelectSet, currentSelectPatientGroup])
 
     async function cacheHemoData() {
         fetch(`${process.env.REACT_APP_QUERY_URL}hemoglobin`)
