@@ -1,4 +1,4 @@
-import { Container, Grid } from "@material-ui/core";
+import { Container, FormControl, FormHelperText, Grid, IconButton, Switch, Tooltip } from "@material-ui/core";
 import axios from "axios";
 import { sum } from "d3";
 import { observer } from "mobx-react";
@@ -16,6 +16,7 @@ import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import ExtraPairButtons from "../ChartAccessories/ExtraPairButtons";
 import StackedBarChart from "./StackedBarChart";
+import HelpIcon from '@material-ui/icons/Help';
 
 type Props = {
     xAggregatedOption: string;
@@ -86,7 +87,7 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
     }, [layoutH, layoutW, store.mainCompWidth, svgRef]);
 
     const makeDataObj = (dataItem: any) => {
-        console.log(dataItem)
+        // console.log(dataItem)
         let newDataObj: CostBarChartDataPoint = {
             aggregateAttribute: dataItem.aggregateAttribute,
             dataArray: [
@@ -175,7 +176,7 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
                     }
                 }
                 )
-                console.log(temporaryDataHolder, secondaryTemporaryDataHolder)
+                // console.log(temporaryDataHolder, secondaryTemporaryDataHolder)
                 let totalCaseCountTemp = 0;
                 let secondaryCaseCountTemp = 0;
                 Object.values(temporaryDataHolder).forEach((dataItem: any) => {
@@ -190,7 +191,7 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
                     outputData.push(newDataObj)
                 })
                 if (comparisonOption) {
-                    console.log(secondaryTemporaryDataHolder)
+                    // console.log(secondaryTemporaryDataHolder)
                     Object.values(secondaryTemporaryDataHolder).forEach((dataItem: any) => {
                         let newDataObj = makeDataObj(dataItem);
                         secondaryCaseCountTemp += newDataObj.caseCount
@@ -233,6 +234,17 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
                         chartId={chartId}
                         requireOutcome={false}
                         requireSecondary={true} />
+                    <IconButton>
+                        <Tooltip title={<div>  <p style={{ fontSize: "small", textAlign: "center" }}>Stacked bar chart on the right of the dashed line shows per case cost for each unit types. The bars on the left of the dashed line shows the potential cost on RBC if not using cell salvage.</p> </div>}>
+                            <HelpIcon />
+                        </Tooltip>
+                    </IconButton>
+                    <FormControl>
+                        <FormHelperText>Potential cost</FormHelperText>
+                        <Tooltip title={<div>  <p style={{ fontSize: "small", textAlign: "center" }}>Show potential RBC cost without cell salvage</p> </div>}>
+                            <Switch checked={showPotential} onChange={(e) => { setShowPotential(e.target.checked) }} />
+                        </Tooltip>
+                    </FormControl>
                 </div>
 
             </Grid>
