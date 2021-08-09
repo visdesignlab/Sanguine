@@ -27,6 +27,7 @@ const ExtraPairBasic: FC<Props> = ({ secondaryDataSet, dataSet, aggregationScale
     const valueScale = scaleLinear().domain([0, 1]).range(greyScaleRange);
 
 
+
     return (
         <>
             <g transform={`translate(0,${secondaryDataSet ? aggregationScale().bandwidth() * 0.5 : 0})`}>
