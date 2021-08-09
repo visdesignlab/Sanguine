@@ -7,6 +7,7 @@ import { ApplicationState } from "../Types/StateTypes";
 
 export const updateSelectedPatientGroup = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
     state.currentSelectPatientGroup = caseList;
+    console.log(state)
 }).setLabel("updatePatientGroup")
 
 export const updateProcedureSelection = createAction<ApplicationState, [string, boolean], ActionEvents>((state, newProcedureSelection, removing) => {
@@ -18,10 +19,14 @@ export const updateProcedureSelection = createAction<ApplicationState, [string, 
     }
 }).setLabel("updateProcedureSelection")
 
-//TODO rethink ways to organize selections of patient brush, patient select, surgeon group
-const updateBrushPatient = createAction<ApplicationState, [], ActionEvents>(() => {
-    //todo
-})
+export const updateBrushPatient = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
+    state.currentBrushedPatientGroup = caseList;
+}).setLabel("updateBrush")
+
+export const setCurrentSelectPatient = createAction<ApplicationState, [SingleCasePoint | null], ActionEvents>((state, newCase) => {
+    state.currentSelectPatient = newCase;
+}).setLabel("updateCaseSelect");
+
 const selectSet = createAction<ApplicationState, [], ActionEvents>(() => {
     //todo
 })

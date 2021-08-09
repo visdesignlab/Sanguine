@@ -108,7 +108,11 @@ export const useStyles = makeStyles((theme: Theme) =>
         },
         chartWrapper: {
             height: "100%"
-        }
+        },
+        subheader: {
+            padding: "5px",
+            backgroundColor: "white"
+        },
     }),
 );
 
