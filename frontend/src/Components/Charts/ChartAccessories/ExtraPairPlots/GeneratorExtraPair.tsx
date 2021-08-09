@@ -76,10 +76,14 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
     let returningComponents: any = []
 
     extraPairDataSet.forEach((pairData, index) => {
+        let temporarySecondary = secondaryExtraPairDataSet;
+        if (secondaryExtraPairDataSet) {
+            temporarySecondary = secondaryExtraPairDataSet.length > 0 ? temporarySecondary : undefined;
+        }
         switch (pairData.type) {
             case "Violin":
                 transferedDistance += (ExtraPairWidth.Violin + ExtraPairPadding)
-                const calculatedKdeMax = secondaryExtraPairDataSet ? Math.max(pairData.kdeMax || 0, secondaryExtraPairDataSet[index].kdeMax || 0) : (pairData.kdeMax || 0)
+                const calculatedKdeMax = temporarySecondary ? Math.max(pairData.kdeMax || 0, temporarySecondary[index].kdeMax || 0) : (pairData.kdeMax || 0)
                 returningComponents.push(
                     <g transform={`translate(${transferedDistance - (ExtraPairWidth.Violin)},0)`}>
                         <ExtraPairViolin
@@ -89,7 +93,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
                             kdeMax={calculatedKdeMax}
                             dataSet={pairData.data}
                             name={pairData.name}
-                            secondaryDataSet={secondaryExtraPairDataSet ? secondaryExtraPairDataSet[index].data : undefined}
+                            secondaryDataSet={temporarySecondary ? temporarySecondary[index].data : undefined}
                         />
                         {extraPairTextGenerator(pairData.name, pairData.label, "Violin", pairData)}
                     </g>);
@@ -102,19 +106,21 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
                         aggregationScaleDomain={aggregationScaleDomain}
                         aggregationScaleRange={aggregationScaleRange}
                         dataSet={pairData.data}
-                        secondaryDataSet={secondaryExtraPairDataSet ? secondaryExtraPairDataSet[index].data : undefined} />
+                        secondaryDataSet={temporarySecondary ? temporarySecondary[index].data : undefined} />
                     {extraPairTextGenerator(pairData.name, pairData.label, "Bar", pairData)}
                 </g>);
                 break;
 
             case "Basic":
-                transferedDistance += (ExtraPairWidth.Basic + ExtraPairPadding)
+                transferedDistance += (ExtraPairWidth.Basic + ExtraPairPadding);
+
+                console.log(secondaryExtraPairDataSet)
                 returningComponents.push(<g transform={`translate(${transferedDistance - (ExtraPairWidth.Basic)},0)`}>
 
                     <ExtraPairBasic
                         aggregationScaleDomain={aggregationScaleDomain}
                         aggregationScaleRange={aggregationScaleRange}
-                        secondaryDataSet={secondaryExtraPairDataSet ? secondaryExtraPairDataSet[index].data : undefined}
+                        secondaryDataSet={temporarySecondary ? temporarySecondary[index].data : undefined}
                         dataSet={pairData.data} />
                     {extraPairTextGenerator(pairData.name, pairData.label, "Basic", pairData)}
                 </g>);
