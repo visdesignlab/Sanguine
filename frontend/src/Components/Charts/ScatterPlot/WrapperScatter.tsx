@@ -11,6 +11,7 @@ import ScatterPlot from "./ScatterPlot";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import axios from "axios";
 import useDeepCompareEffect from "use-deep-compare-effect";
+import AnnotationForm from "../ChartAccessories/AnnotationForm";
 
 type Props = {
     yValueOption: string;
@@ -18,8 +19,9 @@ type Props = {
     chartId: string;
     layoutW: number;
     layoutH: number;
+    annotationText: string;
 }
-const WrapperScatter: FC<Props> = ({ yValueOption, xAggregationOption, chartId, layoutW, layoutH }: Props) => {
+const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationOption, chartId, layoutW, layoutH }: Props) => {
 
     const hemoData = useContext(DataContext);
     const store = useContext(Store);
@@ -143,6 +145,7 @@ const WrapperScatter: FC<Props> = ({ yValueOption, xAggregationOption, chartId, 
                             height={height}
                             svg={svgRef} />
                     </ChartSVG>
+                    <AnnotationForm chartI={chartId} annotationText={annotationText} />
                 </Container>
             </Grid>
         </Grid>)

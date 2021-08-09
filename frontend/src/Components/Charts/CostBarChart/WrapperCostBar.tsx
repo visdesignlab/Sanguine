@@ -12,6 +12,7 @@ import { CostBarChartDataPoint, ExtraPairPoint, SingleCasePoint } from "../../..
 import { ExtraPairPadding, ExtraPairWidth } from "../../../Presets/Constants";
 import { useStyles } from "../../../Presets/StyledComponents";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
+import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import ExtraPairButtons from "../ChartAccessories/ExtraPairButtons";
 import StackedBarChart from "./StackedBarChart";
@@ -19,14 +20,14 @@ import StackedBarChart from "./StackedBarChart";
 type Props = {
     xAggregatedOption: string;
     chartId: string;
-    // notation: string;
+    annotationText: string;
     layoutW: number;
     layoutH: number;
     comparisonOption?: string;
     extraPairArrayString: string;
 }
 
-const WrapperCostBar: FC<Props> = ({ extraPairArrayString, xAggregatedOption, chartId, layoutH, layoutW, comparisonOption }: Props) => {
+const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggregatedOption, chartId, layoutH, layoutW, comparisonOption }: Props) => {
     const store = useContext(Store);
     const hemoData = useContext(DataContext);
     const styles = useStyles();
@@ -259,6 +260,7 @@ const WrapperCostBar: FC<Props> = ({ extraPairArrayString, xAggregatedOption, ch
                             showPotential={showPotential} />
 
                     </ChartSVG>
+                    <AnnotationForm chartI={chartId} annotationText={annotationText} />
                 </Container>
             </Grid>
         </Grid>)

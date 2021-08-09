@@ -27,7 +27,6 @@ const CaseInfo: FC = () => {
                         </ListItem>
                     )
                 }
-
             }
         }
         return result
