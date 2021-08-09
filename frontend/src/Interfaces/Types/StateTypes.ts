@@ -21,4 +21,5 @@ export type ApplicationState = {
     BloodProductCost: any;
     nextAddingIndex: number;
     layoutArray: LayoutElement[];
+    currentSelectPatient: SingleCasePoint | null;
 }

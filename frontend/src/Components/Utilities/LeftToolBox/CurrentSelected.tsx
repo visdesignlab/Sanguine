@@ -1,12 +1,17 @@
-import { Container, List, Grid, ListItem, Button, ButtonGroup } from "@material-ui/core";
+import { Container, List, Grid, ListItem, Button, ButtonGroup, ListItemText } from "@material-ui/core";
 import { observer } from "mobx-react";
+import { useContext } from "react";
 import { FC } from "react";
+import Store from "../../../Interfaces/Store";
 // import { Grid, Container, List, Button } from "semantic-ui-react";
 //import { AcronymDictionary } from "../../../Presets/DataDict";
 import { Title, useStyles } from "../../../Presets/StyledComponents";
 
 const CurrentSelected: FC = () => {
-    const styles = useStyles()
+    const styles = useStyles();
+    const store = useContext(Store);
+    const { currentBrushedPatientGroup } = store.state
+
     return (
         <Grid item className={styles.gridWidth}>
             <Container style={{ height: "15vh" }}>
@@ -15,7 +20,12 @@ const CurrentSelected: FC = () => {
                         <Title>Current Selected</Title>
                     </ListItem>
 
-                    {/* {generateBrushPatientItem()} */}
+                    {currentBrushedPatientGroup.length > 0 ?
+                        <ListItem alignItems="flex-start" style={{ width: "100%" }}>
+                            <ListItemText primary="Current Brushed Patients"
+                                secondary={currentBrushedPatientGroup.length} />
+                        </ListItem>
+                        : <></>}
 
                     {/* {currentSelectSet.map((selectSet) => {
                     return <FilterListIT

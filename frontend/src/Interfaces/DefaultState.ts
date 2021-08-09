@@ -27,5 +27,6 @@ export const defaultState: ApplicationState = {
         CRYO_UNITS: 70,
         PLT_UNITS: 650,
         CELL_SAVER_ML: 300,
-    }
+    },
+    currentSelectPatient: null
 };

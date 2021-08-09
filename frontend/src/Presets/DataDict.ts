@@ -1,4 +1,4 @@
-export const SurgeryTypeArray = ["Urgent", "Elective", "Emergent"];
+
 export const BloodComponentOptions = [
     { value: "PRBC_UNITS", key: "PRBC_UNITS", text: "Intraoperative RBCs Transfused" },
     { value: "FFP_UNITS", key: "FFP_UNITS", text: "Intraoperative FFP Transfused" },
@@ -88,3 +88,22 @@ export const AcronymDictionary: any = {
     DRG_WEIGHT: "Diagnosis-related Group Weight",
     COST: "Blood Component Cost per Case"
 }
+
+export const HIPAA_Sensitive = new Set([
+    "Gender (M/F)",
+    "Gender (Male/Female)",
+    "Race Code",
+    "Race Description",
+    "Ethnicity Code",
+    "Ethnicity Description",
+    "Date of Death",
+    "Date of Birth",
+    "Surgery Date",
+    "Surgery Start Time",
+    "Surgery End Time",
+    "CASE_ID",
+    "VISIT_ID",
+    "DATE",
+    "MONTH",
+    "PATIENT_ID"
+])
