@@ -4,6 +4,8 @@ import { BloodProductCap, CaseRectWidth, CELL_SAVER_TICKS } from "../../../Prese
 import { AcronymDictionary } from "../../../Presets/DataDict";
 import { AggregationScaleGenerator, CaseScaleGenerator, ValueScaleGeneratorFromDomainRange } from "../../../HelperFunctions/Scales";
 import { Offset } from "../../../Interfaces/Types/OffsetType";
+import { useContext } from "react";
+import Store from "../../../Interfaces/Store";
 
 type Props = {
     svg: React.RefObject<SVGSVGElement>;
@@ -20,6 +22,7 @@ type Props = {
 }
 const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals, dimensionHeight, yValueOption, valueScaleRange, valueScaleDomain, xAggregationOption, dimensionWidth, isValueScaleBand }: Props) => {
 
+    const store = useContext(Store)
     const aggregationScale = useCallback(() => {
         return AggregationScaleGenerator(xVals, dimensionHeight, currentOffset)
     }, [dimensionHeight, xVals, currentOffset]);
@@ -46,6 +49,9 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
         .call(aggregationLabel as any)
         .selectAll("text")
         .attr("transform", `translate(-${CaseRectWidth + 2},0)`)
+        .on("click", (e, d: any) => {
+            store.selectionStore.selectSet(xAggregationOption, d.toString(), !e.shiftKey)
+        })
 
     svgSelection
         .select(".axes")
@@ -76,9 +82,9 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
         //.select(".axes")
         .select(".y-label")
         .attr("y", dimensionHeight - currentOffset.bottom + 20)
-        .attr("x", currentOffset.left - 55)
+        .attr("x", 0)
         .attr("font-size", "11px")
-        .attr("text-anchor", "middle")
+        .attr("text-anchor", "start")
         .attr("alignment-baseline", "hanging")
         .attr("transform", `translate(${extraPairTotalWidth},0)`)
         .text(

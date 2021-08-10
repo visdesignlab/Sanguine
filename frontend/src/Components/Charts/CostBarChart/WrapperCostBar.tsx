@@ -108,7 +108,7 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
         return newDataObj
     }
 
-    useEffect(() => {
+    useDeepCompareEffect(() => {
         if (previousCancelToken) {
             previousCancelToken.cancel("cancel the call?")
         }
@@ -220,7 +220,7 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
             }
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [proceduresSelection, rawDateRange, xAggregatedOption, currentOutputFilterSet, costMode, BloodProductCost]);
+    }, [proceduresSelection, rawDateRange, xAggregatedOption, currentOutputFilterSet, costMode, BloodProductCost, hemoData]);
 
     return (
         <Grid container direction="row" alignItems="center" className={styles.chartWrapper}>

@@ -1,8 +1,11 @@
-import { Container, List, Grid, ListItem, Button, ButtonGroup, ListItemText } from "@material-ui/core";
+import { Container, List, Grid, ListItem, Button, ButtonGroup, ListItemText, IconButton, ListItemSecondaryAction } from "@material-ui/core";
 import { observer } from "mobx-react";
 import { useContext } from "react";
 import { FC } from "react";
 import Store from "../../../Interfaces/Store";
+import CloseIcon from '@material-ui/icons/Close';
+import { SelectSet } from "../../../Interfaces/Types/SelectionTypes";
+import { AcronymDictionary } from "../../../Presets/DataDict";
 // import { Grid, Container, List, Button } from "semantic-ui-react";
 //import { AcronymDictionary } from "../../../Presets/DataDict";
 import { Title, useStyles } from "../../../Presets/StyledComponents";
@@ -14,7 +17,7 @@ const CurrentSelected: FC = () => {
 
     return (
         <Grid item className={styles.gridWidth}>
-            <Container style={{ height: "15vh" }}>
+            <Container style={{ height: "15vh", overflow: "auto" }}>
                 <List dense>
                     <ListItem >
                         <Title>Current Selected</Title>
@@ -26,6 +29,18 @@ const CurrentSelected: FC = () => {
                                 secondary={currentBrushedPatientGroup.length} />
                         </ListItem>
                         : <></>}
+
+                    {currentSelectSet.map((selectSet: SelectSet) => {
+                        return (<ListItem key={`${selectSet.setName}selected`}>
+                            <ListItemText primary={AcronymDictionary[selectSet.setName] ? AcronymDictionary[selectSet.setName] : selectSet.setName}
+                                secondary={selectSet.setValues.sort().join(', ')} />
+                            <ListItemSecondaryAction>
+                                <IconButton onClick={() => { store.selectionStore.clearSet(selectSet.setName) }}>
+                                    <CloseIcon />
+                                </IconButton>
+                            </ListItemSecondaryAction>
+                        </ListItem>)
+                    })}
 
                     {/* {currentSelectSet.map((selectSet) => {
                     return <FilterListIT
@@ -46,7 +61,7 @@ const CurrentSelected: FC = () => {
                         size="small"
                         className={styles.tinyFont}
                         onClick={() => { store.selectionStore.outputToFilter() }}
-                    >Add to Filter</Button>
+                    >Create Filter</Button>
                     <Button
                         disabled={!(currentOutputFilterSet.length > 0 || currentSelectPatientGroup.length > 0)}
                         variant="outlined"

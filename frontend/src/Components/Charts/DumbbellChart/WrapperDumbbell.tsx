@@ -15,6 +15,7 @@ import DumbbellChart from "./DumbbellChart";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
+import useDeepCompareEffect from "use-deep-compare-effect";
 
 type Props = {
     xAggregationOption: string;
@@ -52,7 +53,7 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
         }
     }, [layoutH, layoutW, store.mainCompWidth, svgRef]);
 
-    useEffect(() => {
+    useDeepCompareEffect(() => {
         tokenCheckCancel(previousCancelToken);
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
