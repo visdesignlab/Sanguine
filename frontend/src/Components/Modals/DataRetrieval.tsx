@@ -1,7 +1,8 @@
+import { CircularProgress, Dialog, DialogContent, DialogContentText, DialogTitle, Grid } from "@material-ui/core";
 import { observer } from "mobx-react";
 import { useContext } from "react";
 import { FC } from "react";
-import { Icon, Message, Modal } from "semantic-ui-react";
+
 import Store from "../../Interfaces/Store";
 
 type Props = {
@@ -10,22 +11,33 @@ type Props = {
 
 const DataRetrievalModal: FC<Props> = ({ errorMessage }: Props) => {
     const store = useContext(Store)
-    return <Modal open={store.configStore.dataLoading || store.configStore.dataLoadingFailed} closeOnEscape={false}
-        closeOnDimmerClick={false}>
-        <Message icon>
-            {store.configStore.dataLoadingFailed ?
-                ([<Icon name='warning sign' />,
-                <Message.Content>
-                    <Message.Header>Failed</Message.Header>
-                    Data retrieval failed. Please try later or contact the admins. {errorMessage!}
-                </Message.Content>]) :
-                ([<Icon name='circle notched' loading />,
-                <Message.Content>
-                    <Message.Header>Just one second</Message.Header>
-                    We are fetching required data.
-                </Message.Content>])}
+    return <Dialog open={store.configStore.dataLoading || store.configStore.dataLoadingFailed
+    } >
+        {store.configStore.dataLoadingFailed ?
+            (<>
+                <DialogTitle>Failed</DialogTitle>
+                <DialogContent >
+                    <DialogContentText>
+                        Data retrieval failed. Please try later or contact the admins.
+                    </DialogContentText>
+                </DialogContent>
+            </>) :
+            (<>
+                <DialogTitle>Just one second</DialogTitle>
+                <DialogContent >
+                    <Grid container spacing={2}>
+                        <Grid item>
+                            <CircularProgress />
+                        </Grid>
+                        <Grid item style={{ alignSelf: "center" }}>
+                            <DialogContentText>
 
-        </Message>
-    </Modal>
+                                We are fetching required data.
+                            </DialogContentText>
+                        </Grid>
+                    </Grid>
+                </DialogContent>
+            </>)}
+    </Dialog>
 }
 export default observer(DataRetrievalModal)

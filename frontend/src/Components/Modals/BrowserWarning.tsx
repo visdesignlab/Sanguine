@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@material-ui/core";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@material-ui/core";
 import { useEffect, useState } from "react";
 import { FC } from "react";
 
@@ -36,7 +36,9 @@ const BrowserWarning: FC = () => {
     return (<Dialog open={openWarning}>
         <DialogTitle >Browser Incompatible</DialogTitle>
         <DialogContent>
-            This application is designed to be used on Chrome. Using it on other browsers may cause inaccurate visual representations of the data.
+            <DialogContentText>
+                This application is designed to be used on Chrome. Using it on other browsers may cause inaccurate visual representations of the data.
+            </DialogContentText>
         </DialogContent>
         <DialogActions>
             <Button onClick={() => setOpenWarning(false)} color="primary">
@@ -44,7 +46,5 @@ const BrowserWarning: FC = () => {
             </Button>
         </DialogActions>
     </Dialog>)
-
 }
-
 export default BrowserWarning
