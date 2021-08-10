@@ -1,4 +1,4 @@
-import { timeFormat } from "d3"
+import { select, timeFormat } from "d3"
 import { observer } from "mobx-react"
 import { useContext } from "react"
 import { FC } from "react"
@@ -11,12 +11,13 @@ import CloseIcon from '@material-ui/icons/Close';
 import List from "@material-ui/core/List";
 import { Box, Chip, ListItem, ListItemSecondaryAction, ListItemText, MenuItem, Select, Switch, Grid, IconButton } from "@material-ui/core";
 import { DropdownGenerator } from "../../../HelperFunctions/DropdownGenerator"
+import { SelectSet } from "../../../Interfaces/Types/SelectionTypes"
 
 type Props = { totalCaseNum: number }
 
 const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
     const store = useContext(Store)
-    const { surgeryUrgencySelection, currentSelectPatientGroup } = store.state;
+    const { surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet } = store.state;
     const styles = useStyles();
 
     const onDateChange = (event: any, data: any) => {
@@ -131,20 +132,17 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                                 </IconButton>
                             </ListItemSecondaryAction>
                         </ListItem>) : <></>}
-                    {/* 
-                
-                    {currentOutputFilterSet.map((selectSet) => {
-                        return <FilterListIT
-                            //icon="caret right"
-                            key={`${selectSet.setName}selected`}
-                            onClick={() => { actions.clearOutputFilterSet(selectSet.setName) }}
-                        >
-                            <ListItemText>{AcronymDictionary[selectSet.setName]}</ListItemText>
-                            <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
-
-                            <List.Content >{selectSet.setValues.sort().join(', ')}</List.Content>
-                        </FilterListIT>
-                    })} */}
+                    {currentOutputFilterSet.map((selectSet: SelectSet) => {
+                        return (<ListItem key={`${selectSet.setName}selected`}>
+                            <ListItemText primary={AcronymDictionary[selectSet.setName] ? AcronymDictionary[selectSet.setName] : selectSet.setName}
+                                secondary={selectSet.setValues.sort().join(', ')} />
+                            <ListItemSecondaryAction>
+                                <IconButton onClick={() => { store.selectionStore.removeFilter(selectSet.setName) }}>
+                                    <CloseIcon />
+                                </IconButton>
+                            </ListItemSecondaryAction>
+                        </ListItem>)
+                    })}
                 </List>
             </Container>
         </Grid>

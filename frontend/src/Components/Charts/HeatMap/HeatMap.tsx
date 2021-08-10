@@ -118,6 +118,7 @@ const HeatMap: FC<Props> = ({ outcomeComparison, interventionDate, secondaryExtr
                 return (
                     <g>
                         <SingleHeatRow
+
                             bandwidth={aggregationScale().bandwidth() * 0.5}
                             valueScaleDomain={JSON.stringify(valueScale().domain())}
                             valueScaleRange={JSON.stringify(valueScale().range())}
