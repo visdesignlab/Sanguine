@@ -1,6 +1,6 @@
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@material-ui/core";
 import { useEffect, useState } from "react";
-import { FC } from "react"
-import { Modal, Header, Button } from "semantic-ui-react"
+import { FC } from "react";
 
 const BrowserWarning: FC = () => {
     const [openWarning, setOpenWarning] = useState(false)
@@ -33,19 +33,18 @@ const BrowserWarning: FC = () => {
         setOpenWarning(!isChrome())
     }, [])
 
-    //   setOpenWarning(!isChrome)
+    return (<Dialog open={openWarning}>
+        <DialogTitle >Browser Incompatible</DialogTitle>
+        <DialogContent>
+            This application is designed to be used on Chrome. Using it on other browsers may cause inaccurate visual representations of the data.
+        </DialogContent>
+        <DialogActions>
+            <Button onClick={() => setOpenWarning(false)} color="primary">
+                I understand
+            </Button>
+        </DialogActions>
+    </Dialog>)
 
-    return <Modal
-        open={openWarning}>
-        <Header icon="warning sign" content="Warning" />
-        <Modal.Content>
-            <p>This application is designed to be used on Chrome.</p>
-            <p>Using it on other browsers may cause inaccurate visual representations of the data.</p>
-        </Modal.Content>
-        <Modal.Actions>
-            <Button onClick={() => setOpenWarning(false)}>I understand</Button>
-        </Modal.Actions>
-    </Modal>
 }
 
 export default BrowserWarning
