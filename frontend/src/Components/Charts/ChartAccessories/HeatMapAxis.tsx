@@ -59,7 +59,7 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
         .select(".y-axis")
         .attr(
             "transform",
-            `translate(${extraPairTotalWidth} ,${dimensionHeight - currentOffset.bottom})`
+            `translate(0 ,${dimensionHeight - currentOffset.bottom})`
         )
         .call(valueLabel as any)
         .call(g => g.select(".domain").remove())
