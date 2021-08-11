@@ -12,10 +12,12 @@ type Props = { surgeryList: any[] }
 const SurgerySearchBar: FC<Props> = ({ surgeryList }: Props) => {
     const store = useContext(Store)
     const styles = useStyles()
+    const [input, setInput] = useState("");
     const searchHandler = (input: any) => {
         if (input) {
             if (!store.state.proceduresSelection.includes(input.value)) {
                 store.selectionStore.updateProcedureSelection(input.value, false);
+                setInput("")
             }
         }
     }
@@ -25,9 +27,11 @@ const SurgerySearchBar: FC<Props> = ({ surgeryList }: Props) => {
                 <Autocomplete
                     options={surgeryList}
                     onChange={(e, v) => { searchHandler(v) }}
+                    value={input}
+
                     getOptionLabel={(option) => option.value}
                     renderInput={(params) =>
-                        <TextField {...params} label="Combo box" variant="outlined" />}
+                        <TextField {...params} label="Search Procedure" variant="outlined" />}
                 />
             </Container>
         </Grid>
