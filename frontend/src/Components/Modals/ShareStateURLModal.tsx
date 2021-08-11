@@ -1,47 +1,54 @@
-import { useEffect, useRef } from "react";
-import { FC, useState } from "react";
-import { Button, Icon, Message, Modal, Segment } from "semantic-ui-react";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, TextField } from "@material-ui/core";
+import { observer } from "mobx-react";
+import { FC, useContext, useState, useRef } from "react";
+import ClipboardJS from 'clipboard';
+import Store from "../../Interfaces/Store";
+import FileCopyIcon from '@material-ui/icons/FileCopy';
+import { Alert } from "@material-ui/lab";
+
 
 type Props = {
-    openURL: boolean;
     shareUrl: string;
 }
 
-const shareStateUrlModal: FC<Props> = ({ openURL, shareUrl }: Props) => {
+const ShareStateUrlModal: FC<Props> = ({ shareUrl }: Props) => {
 
-    const [openShareModal, setOpenShareModal] = useState<boolean>(false)
+    const store = useContext(Store);
     const urlRef = useRef(null);
+    new ClipboardJS(`.copy-clipboard`);
+    const [showAlert, setShowAlert] = useState(false)
 
-    useEffect(() => {
-        setOpenShareModal(openURL)
-    }, [openURL])
+    return (<div>
+        <Dialog open={store.configStore.openShareURLDialog} onClose={() => { store.configStore.openShareURLDialog = false }} >
+            <DialogTitle>Use the following URL to share your state</DialogTitle>
+            <DialogContent>
+                <DialogContentText>Length of URL: {shareUrl.length}</DialogContentText>
 
-    return <Modal
-        open={openShareModal}
-        onClose={() => { setOpenShareModal(false) }}
-    >
-        <Modal.Header>
-            Use the following URL to share your state
-        </Modal.Header>
-        <Modal.Content scrolling>
-            <Message info>Length of URL: {shareUrl.length}</Message>
-            <Segment
+            </DialogContent>
+            <TextField
                 ref={urlRef}
-                //   textAlign="justified"
-                style={{ wordWrap: 'anywhere' }}>
-                {shareUrl}
-            </Segment>
-        </Modal.Content>
-        <Modal.Actions>
-            <Button
-                icon
-                className="copy-clipboard"
-                data-clipboard-text={shareUrl}>
-                <Icon name="copy"></Icon>
-                Copy
-            </Button>
-        </Modal.Actions>
-    </Modal>
+                multiline
+                disabled
+                style={{ maxHeight: "300px", padding: "15px", overflow: "auto", wordBreak: "break-all" }}
+                value={shareUrl}
+            />
+            {/* Not sure why this doesn't work. the clipboard */}
+            <DialogActions>
+                <Button onClick={() => { store.configStore.openShareURLDialog = false }}>
+                    Close
+                </Button>
+                <Button startIcon={<FileCopyIcon />} data-clipboard-text={shareUrl} className="copy-clipboard" onClick={() => { setShowAlert(true) }}>
+                    Copy
+                </Button>
+
+            </DialogActions>
+        </Dialog>
+        <Snackbar open={showAlert} autoHideDuration={6000} onClose={() => { setShowAlert(false) }}>
+            <Alert onClose={() => { setShowAlert(false) }} severity="success">
+                Copied to clipboard
+            </Alert>
+        </Snackbar>
+    </div>)
 }
 
-export default shareStateUrlModal;
+export default observer(ShareStateUrlModal);

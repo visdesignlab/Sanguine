@@ -22,6 +22,7 @@ const App: FC = () => {
     const [hemoData, setHemoData] = useState<SingleCasePoint[]>([])
     const [outputFilteredData, setOutputFilteredDAta] = useState<SingleCasePoint[]>([])
 
+
     useEffect(() => {
         if (store.configStore.isLoggedIn && hemoData.length === 0) {
             //this need to also be checked to only do once. 

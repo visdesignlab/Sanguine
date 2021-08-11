@@ -1,5 +1,6 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, TextField } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
+import { observer } from "mobx-react";
 import { FC, useState, useContext } from "react";
 import Store from "../../Interfaces/Store";
 import { simulateAPIClick } from "../../Interfaces/UserManagement";
@@ -10,6 +11,7 @@ const SaveStateModal: FC = () => {
     const [stateName, setStateName] = useState("")
     const [errorMessage, setErrorMessage] = useState("")
     const [openErrorMessage, setOpenError] = useState(false);
+    const [openSuccessMessage, setOpenSuccessMessage] = useState(false);
 
     const saveState = () => {
         const csrftoken = simulateAPIClick()
@@ -28,6 +30,7 @@ const SaveStateModal: FC = () => {
                 body: JSON.stringify({ old_name: stateName, new_name: stateName, new_definition: store.provenance.exportState(false) })
             }).then(response => {
                 if (response.status === 200) {
+                    setOpenSuccessMessage(true)
                     store.configStore.openSaveStateDialog = false
                     setStateName("")
                     setErrorMessage("")
@@ -73,9 +76,7 @@ const SaveStateModal: FC = () => {
     }
 
     return <div>
-        <Dialog open={true
-            //    store.configStore.openSaveStateDialog
-        }>
+        <Dialog open={store.configStore.openSaveStateDialog}>
             <DialogTitle>Save the current state</DialogTitle>
             <DialogContent>
                 <DialogContentText>
@@ -93,7 +94,12 @@ const SaveStateModal: FC = () => {
                 An error occured: {errorMessage}
             </Alert>
         </Snackbar>
+        <Snackbar open={openSuccessMessage} autoHideDuration={6000} onClose={() => { setOpenSuccessMessage(false) }}>
+            <Alert onClose={() => { setOpenSuccessMessage(false); }} severity="success">
+                State saved!
+            </Alert>
+        </Snackbar>
     </div>
 }
 
-export default SaveStateModal
+export default observer(SaveStateModal)
