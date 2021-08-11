@@ -551,7 +551,7 @@ def patient_outcomes(request):
             VST.{FIELDS_IN_USE.get('patient_id')},
             VST.{FIELDS_IN_USE.get('visit_no')},
             CASE WHEN TOTAL_VENT_MINS > 1440 THEN 1 ELSE 0 END AS VENT_1440,
-            CASE WHEN PAT_EXPIRED = "Y" THEN 1 ELSE 0 END AS PAT_DEATH,
+            CASE WHEN PAT_EXPIRED = 'Y' THEN 1 ELSE 0 END AS PAT_DEATH,
             BLNG_OUTCOMES.STROKE,
             BLNG_OUTCOMES.ECMO,
             MEDS.TRANEXAMIC_ACID,
@@ -587,8 +587,8 @@ def patient_outcomes(request):
             SELECT
                 {FIELDS_IN_USE.get('patient_id')},
                 {FIELDS_IN_USE.get('visit_no')},
-                CASE WHEN SUM(CASE WHEN CODE IN ("I97.820", "997.02") THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS STROKE,
-                CASE WHEN SUM(CASE WHEN CODE IN ("33952", "33954", "33956", "33958", "33962", "33964", "33966", "33973", "33974", "33975", "33976", "33977", "33978", "33979", "33980", "33981", "33982", "33983", "33984", "33986", "33987", "33988", "33989") THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS ECMO
+                CASE WHEN SUM(CASE WHEN CODE IN ('I97.820', '997.02') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS STROKE,
+                CASE WHEN SUM(CASE WHEN CODE IN ('33952', '33954', '33956', '33958', '33962', '33964', '33966', '33973', '33974', '33975', '33976', '33977', '33978', '33979', '33980', '33981', '33982', '33983', '33984', '33986', '33987', '33988', '33989') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS ECMO
             FROM {TABLES_IN_USE.get('billing_codes')}
             WHERE {FIELDS_IN_USE.get('present_on_adm')} IS NULL
             GROUP BY {FIELDS_IN_USE.get('patient_id')}, {FIELDS_IN_USE.get('visit_no')}
