@@ -49,6 +49,7 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
         .call(aggregationLabel as any)
         .selectAll("text")
         .attr("transform", `translate(-${CaseRectWidth + 2},0)`)
+        .attr("cursor", "pointer")
         .on("click", (e, d: any) => {
             store.selectionStore.selectSet(xAggregationOption, d.toString(), !e.shiftKey)
         })
@@ -65,7 +66,6 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
         .call(g => g.selectAll(".tick").selectAll("line").remove());
 
     svgSelection
-        // .select(".axes")
         .select(".x-label")
         .attr("x", (dimensionWidth - extraPairTotalWidth) * 0.5)
         .attr("y", dimensionHeight - currentOffset.bottom + 20)
@@ -74,12 +74,10 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
         .attr("text-anchor", "middle")
         .attr("transform", `translate(${extraPairTotalWidth},0)`)
         .text(() => {
-            //const trailing = perCaseSelected ? " / Case" : "";
             return AcronymDictionary[yValueOption] ? AcronymDictionary[yValueOption] : yValueOption
         });
 
     svgSelection
-        //.select(".axes")
         .select(".y-label")
         .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("x", 0)

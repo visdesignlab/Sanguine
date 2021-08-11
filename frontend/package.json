@@ -20,7 +20,6 @@
         "@visdesignlab/trrack": "^2.0.0-alpha.10",
         "@welldone-software/why-did-you-render": "^6.2.0",
         "axios": "^0.21.1",
-        "clipboard": "^2.0.8",
         "d3": "^7.0.0",
         "jquery": "^3.6.0",
         "lineupjsx": "^4.0.0",

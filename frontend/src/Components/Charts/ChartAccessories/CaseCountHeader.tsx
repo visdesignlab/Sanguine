@@ -28,7 +28,6 @@ const CaseCountHeader: FC<Props> = ({ caseCount, yPos, zeroCaseNum, caseMax, hei
             y={yPos}
             width={CaseRectWidth}
             height={height}
-            // stroke={decideSinglePatientSelect(dataPoint) ? highlight_orange : "none"}
             strokeWidth={2}
         />
         <text
