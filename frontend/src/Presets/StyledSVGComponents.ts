@@ -30,10 +30,6 @@ export const ChartG = styled(`g`) <ChartGProps>`
     transform: translate(${props => (props.currentOffset.left + props.extraPairTotalWidth)}px,0px)
 `
 
-// interface HeatRectProp {
-//     isselected: boolean;
-// }
-//stroke: ${props => (props.isselected ? highlight_orange : `none`)};
 
 export const HeatMapRect = styled(`rect`)`
     y:0;

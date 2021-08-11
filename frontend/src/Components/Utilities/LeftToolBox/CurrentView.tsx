@@ -4,8 +4,8 @@ import { useContext } from "react"
 import { FC } from "react"
 import { defaultState } from "../../../Interfaces/DefaultState"
 import Store from "../../../Interfaces/Store"
-import { AcronymDictionary, OutcomeOptions, SurgeryUrgency } from "../../../Presets/DataDict"
-import { LeftToolBarListItem, StyledDate, Title, useStyles } from "../../../Presets/StyledComponents"
+import { AcronymDictionary, OutcomeOptions } from "../../../Presets/DataDict"
+import { StyledDate, Title, useStyles } from "../../../Presets/StyledComponents"
 import Container from "@material-ui/core/Container";
 import CloseIcon from '@material-ui/icons/Close';
 import List from "@material-ui/core/List";
@@ -29,11 +29,6 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
         }
     }
 
-    const calculateSelectedProcedureType = () => {
-        let output = store.state.surgeryUrgencySelection.map((d, i) => d ? i : -1)
-        output = output.filter(d => d > -1)
-        return output
-    }
 
     const generateSurgery = () => {
         let output: any[] = []

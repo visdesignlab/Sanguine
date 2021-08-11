@@ -14,7 +14,6 @@ import WrapperDumbbell from "./Charts/DumbbellChart/WrapperDumbbell";
 import WrapperHeatMap from "./Charts/HeatMap/WrapperHeatMap";
 import WrapperScatter from "./Charts/ScatterPlot/WrapperScatter";
 
-//type Props = { hemoData: SingleCasePoint[]; };
 
 const LayoutGenerator: FC = () => {
     const store = useContext(Store)
@@ -39,8 +38,6 @@ const LayoutGenerator: FC = () => {
                             xAggregationOption={layout.aggregatedBy}
 
                             annotationText={layout.notation}
-                        //     interventionDate={layout.interventionDate}
-                        // aggregatedOption={layout.aggregation}
                         />
                     </div>
                 );
@@ -64,10 +61,8 @@ const LayoutGenerator: FC = () => {
                 );
             case "SCATTER":
                 return (<div
-                    //onClick={this.onClickBlock.bind(this, layoutE.i)}
                     key={layout.i}
                     className={"parent-node" + layout.i}
-                // data-grid={layoutE}
                 >
                     <ChartStandardButtons chartID={layout.i} />
                     <WrapperScatter
@@ -102,17 +97,6 @@ const LayoutGenerator: FC = () => {
                 return (<div key={layout.i}
                     className={"parent-node" + layout.i}>
                     <ChartStandardButtons chartID={layout.i} />
-                    {/* <InterventionPlotVisualization
-                        extraPair={layout.extraPair}
-                        w={layout.w}
-                        hemoglobinDataSet={hemoData}
-                        aggregatedBy={layout.aggregatedBy}
-                        valueToVisualize={layout.valueToVisualize}
-                        chartId={layout.i}
-                        chartIndex={index}
-                        interventionDate={layout.interventionDate!}
-                        interventionPlotType={layout.comparisonChartType!}
-                        notation={layout.notation} /> */}
                 </div>);
 
         }
@@ -159,9 +143,6 @@ const LayoutGenerator: FC = () => {
                 cols={colData}
                 rowHeight={500}
                 width={0.95 * store.mainCompWidth}
-
-                //cols={2}
-                //breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                 layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
             >
                 {store.state.layoutArray.map((layoutE, i) => {

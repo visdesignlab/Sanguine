@@ -19,7 +19,6 @@ type Props = {
 const SingleDumbbell: FC<Props> = ({ xVal, dataPoint, isSelectSet, showGap, showPostop, showPreop, circleYValStart, circleYValEnd }: Props) => {
     const clickDumbbellHandler = (d: DumbbellDataPoint) => {
         console.log(d)
-        // actions.updateBrushPatientGroup([d.case], "ADD")
     }
     const yValCalculation = circleYValStart > circleYValEnd ? circleYValEnd : circleYValStart;
     const rectHeight = Math.abs(circleYValStart - circleYValEnd);
@@ -35,7 +34,6 @@ const SingleDumbbell: FC<Props> = ({ xVal, dataPoint, isSelectSet, showGap, show
                     y={yValCalculation}
                     height={rectHeight}
                     isselected={isSelectSet}
-                    // isselected={decideIfSelected(dataPoint) || decideIfSelectSet(dataPoint)}
                     display={showGap ? undefined : "none"}
                 />
                 <DumbbellCircle

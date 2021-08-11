@@ -38,13 +38,8 @@ const RegularModeMenu: FC = () => {
                 <Grid item xs >
                     {/* VDL LOGO */}
                     <a href="https://vdl.sci.utah.edu" target="_blank"><img
-                        // style={{ height: "40px" }}
-                        // size="small"
-                        // as='a'
-                        // target="_blank"
                         className={useStyles().img}
                         src="https://raw.githubusercontent.com/visdesignlab/visdesignlab.github.io/master/assets/images/logos/vdl.png"
-                    // href="https://vdl.sci.utah.edu"
                     /></a>
 
                 </Grid>

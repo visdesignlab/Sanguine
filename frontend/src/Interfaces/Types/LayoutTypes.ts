@@ -7,7 +7,6 @@ export type LayoutElement = {
     w: number,
     h: number,
     plotType: string,
-    //  aggregation?: string,
     extraPair?: string,
     interventionDate?: number,
     outcomeComparison?: string,

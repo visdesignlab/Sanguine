@@ -12,7 +12,6 @@ import Tooltip from '@material-ui/core/Tooltip';
 type Props = {
     valueScaleDomain: string;
     valueScaleRange: string;
-    // showZero: boolean;
     dataPoint: HeatMapDataPoint;
     howToTransform: string;
     bandwidth: number;
@@ -31,13 +30,11 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                 if (dataPoint.countDict[point]) {
                     const output = dataPoint.countDict[point].length
                     const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum
-                    // let content = output/caseCount
                     let disables = false;
                     let colorFill = output === 0 ? "white" : interpolateReds(HeatmapColorScale(output / caseCount))
                     if (!showZero && point as any === 0) {
                         colorFill = output === 0 ? "white" : interpolateGreys(HeatmapGreyScale(output / (dataPoint.caseCount)))
                         disables = true;
-                        /// content = output/dataPoint.caseCount
                     }
 
                     const outputContent = (output / caseCount < 0.01 && output > 0) ? "<1%" : format(".0%")(output / caseCount)
@@ -58,15 +55,6 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                                     width={valueScale().bandwidth()}
                                     height={bandwidth}
                                     key={dataPoint.aggregateAttribute + '-' + point}
-                                //  isselected={isSelected}
-                                //   isfiltered={isFiltered}
-                                // onClick={(e) => {
-                                //     actions.updateBrushPatientGroup(dataPoint.countDict[point], e.shiftKey ? "ADD" : "REPLACE", {
-                                //         setName: aggregatedBy,
-                                //         setValues: [dataPoint.aggregateAttribute],
-                                //         //setPatientIds: [dataPoint.patientIDList]
-                                //     })
-                                //}} 
                                 />
                             </Tooltip>
 

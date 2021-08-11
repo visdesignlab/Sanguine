@@ -22,7 +22,6 @@ export class ProjectConfigStore {
         this.rootStore = rootstore;
         makeAutoObservable(this)
         this._isLoggedIn = !(process.env.REACT_APP_REQUIRE_LOGIN === "true");
-        //TODO don't forget to change this;
         this._dataLoading = true;
         this._dataLoadingFailed = false;
         this._topMenuBarAddMode = false;

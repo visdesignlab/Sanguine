@@ -15,7 +15,6 @@ const SaveStateModal: FC = () => {
 
     const saveState = () => {
         const csrftoken = simulateAPIClick()
-        //does the following ACAO needs to change?
         if (store.configStore.checkIfInSavedState(stateName)) {
             fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
                 method: `PUT`,
