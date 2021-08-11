@@ -25,6 +25,11 @@ const CurrentSelected: FC = () => {
                         <ListItem alignItems="flex-start" style={{ width: "100%" }}>
                             <ListItemText primary="Current Brushed Patients"
                                 secondary={currentBrushedPatientGroup.length} />
+                            <ListItemSecondaryAction>
+                                <IconButton onClick={() => { store.selectionStore.updateBrush([]) }}>
+                                    <CloseIcon />
+                                </IconButton>
+                            </ListItemSecondaryAction>
                         </ListItem>
                         : <></>}
 
