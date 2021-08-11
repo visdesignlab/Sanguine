@@ -8,7 +8,6 @@ import { Tooltip } from "@material-ui/core";
 
 interface OwnProps {
     dataSet: any[];
-    //aggregatedScale: ScaleBand<string>;
     aggregationScaleDomain: string;
     aggregationScaleRange: string;
     medianSet: any;

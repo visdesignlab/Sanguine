@@ -38,7 +38,6 @@ const ExtraPairBasic: FC<Props> = ({ secondaryDataSet, dataSet, aggregationScale
                                 <rect
                                     x={0}
                                     y={aggregationScale()(val)}
-                                    // fill={interpolateGreys(caseScale(dataPoint.caseCount))}
                                     fill={!isNaN(dataVal.calculated) ? interpolateGreys(valueScale(dataVal.calculated)) : "white"}
                                     opacity={0.8}
                                     width={ExtraPairWidth.Basic}
