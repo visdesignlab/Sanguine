@@ -78,7 +78,7 @@ export const useStyles = makeStyles((theme: Theme) =>
         img: {
             margin: 'auto!important',
             display: 'block!important',
-            maxWidth: '100%',
+            maxWidth: '100%!important',
             height: "40px!important"
         },
         centerAlignment: {

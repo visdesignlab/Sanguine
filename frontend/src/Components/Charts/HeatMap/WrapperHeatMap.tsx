@@ -66,6 +66,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
         newExtraPairData.forEach((d) => {
             totalWidth += (ExtraPairWidth[d.type])
         })
+        console.log(totalWidth, ExtraPairWidth, newExtraPairData)
         setExtraPairTotalWidth(totalWidth)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData);
         // eslint-disable-next-line react-hooks/exhaustive-deps
