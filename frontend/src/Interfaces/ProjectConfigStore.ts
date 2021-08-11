@@ -15,6 +15,7 @@ export class ProjectConfigStore {
     openManageStateDialog: boolean;
     openShareURLDialog: boolean;
     openShareUIDDialog: boolean;
+    openCostInputModal: boolean;
     savedState: string[]
 
     constructor(rootstore: RootStore) {
@@ -30,6 +31,8 @@ export class ProjectConfigStore {
         this.openManageStateDialog = false;
         this.openShareURLDialog = false;
         this.openShareUIDDialog = false;
+        this.openCostInputModal = false;
+
         this.savedState = []
     }
 

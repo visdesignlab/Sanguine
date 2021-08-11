@@ -113,6 +113,10 @@ export const useStyles = makeStyles((theme: Theme) =>
             padding: "5px",
             backgroundColor: "white"
         },
+        tooltipFont: {
+            fontSize: "small",
+            textAlign: "center"
+        }
     }),
 );
 
