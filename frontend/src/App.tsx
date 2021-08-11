@@ -24,6 +24,7 @@ const App: FC = () => {
 
 
     useEffect(() => {
+        if (process.env.REACT_APP_REQUIRE_LOGIN !== "true") { cacheHemoData(); }
         if (store.configStore.isLoggedIn && hemoData.length === 0) {
             //this need to also be checked to only do once. 
             cacheHemoData();
@@ -71,7 +72,7 @@ const App: FC = () => {
     }, [surgeryUrgencySelection, outcomeFilter, hemoData, currentOutputFilterSet, currentSelectPatientGroup])
 
     async function cacheHemoData() {
-        whoamiAPICall(store)
+        //     whoamiAPICall(store)
         fetch(`${process.env.REACT_APP_QUERY_URL}hemoglobin`)
             .then((res) => res.json())
             .then(async (dataHemo) => {
