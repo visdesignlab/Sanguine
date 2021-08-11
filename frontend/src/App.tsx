@@ -59,7 +59,9 @@ const App: FC = () => {
 
     //Data Updates
     useDeepCompareEffect(() => {
-        console.log(store.state)
+        if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
+            whoamiAPICall(store)
+        }
         let patientIDSet: Set<number> | undefined;
         if (currentSelectPatientGroup.length > 0) {
             patientIDSet = new Set<number>()

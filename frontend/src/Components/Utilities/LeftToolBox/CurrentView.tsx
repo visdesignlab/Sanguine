@@ -1,4 +1,4 @@
-import { select, timeFormat } from "d3"
+import { select, style, timeFormat } from "d3"
 import { observer } from "mobx-react"
 import { useContext } from "react"
 import { FC } from "react"
@@ -9,9 +9,10 @@ import { StyledDate, Title, useStyles } from "../../../Presets/StyledComponents"
 import Container from "@material-ui/core/Container";
 import CloseIcon from '@material-ui/icons/Close';
 import List from "@material-ui/core/List";
-import { Box, Chip, ListItem, ListItemSecondaryAction, ListItemText, MenuItem, Select, Switch, Grid, IconButton } from "@material-ui/core";
+import { Box, Chip, ListItem, ListItemSecondaryAction, ListItemText, MenuItem, Select, Switch, Grid, IconButton, Tooltip } from "@material-ui/core";
 import { DropdownGenerator } from "../../../HelperFunctions/DropdownGenerator"
 import { SelectSet } from "../../../Interfaces/Types/SelectionTypes"
+import ErrorIcon from '@material-ui/icons/Error';
 
 type Props = { totalCaseNum: number }
 
@@ -40,12 +41,11 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                 stringArray.forEach((word, index) => {
                     if ((AcronymDictionary as any)[word]) {
                         output.push((
-                            <div className="tooltip" style={{ cursor: "help" }}>
-                                {word}
-                                <span className="tooltiptext">
-                                    {`${(AcronymDictionary as any)[word]}`}
-                                </span>
-                            </div>))
+                            <Tooltip title={<div className={styles.tooltipFont}>{(AcronymDictionary as any)[word]}</div>}>
+                                <div className="tooltip" style={{ cursor: "help" }}>
+                                    {word}
+                                </div>
+                            </Tooltip>))
                     } else {
                         output.push((<span>{`${index !== 0 ? " " : ""}${word}${index !== stringArray.length - 1 ? " " : ""}`}</span>))
                     }
@@ -107,13 +107,25 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                     </ListItem>
 
                     <ListItem key="AggreCaseCount">
-                        <ListItemText primary="Aggregated Cases"
+                        <ListItemText primary={<div>
+                            Aggregated Cases
+
+                        </div>}
                             secondary={`${store.chartStore.totalAggregatedCaseCount}/${totalCaseNum}`} />
+
                     </ListItem>
 
                     <ListItem key="IndiCaseCount">
                         <ListItemText primary="Individual Cases"
                             secondary={`${store.chartStore.totalIndividualCaseCount}/${totalCaseNum}`} />
+                        <ListItemSecondaryAction>
+                            <Tooltip title={<div className={styles.tooltipFont}>Case count can be reduced by both filter and empty data.</div>}>
+                                <IconButton size="small" disableRipple >
+                                    <ErrorIcon />
+                                </IconButton>
+
+                            </Tooltip>
+                        </ListItemSecondaryAction>
                     </ListItem>
 
                     <ListItem key="SurgeryList">
