@@ -1,20 +1,37 @@
-import { Button, Grid } from "@material-ui/core"
+import { Button, Grid, Menu, MenuItem } from "@material-ui/core"
 import { observer } from "mobx-react"
-import { FC, useEffect, useState } from "react"
-import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker"
+import { FC, useEffect, useState, useContext } from "react"
+import NestedMenuItem from "material-ui-nested-menu-item";
+import Store from "../../../Interfaces/Store"
 import { useStyles } from "../../../Presets/StyledComponents"
+import ManageStateDialog from "../../Modals/ManageStateDialog"
 import SaveStateModal from "../../Modals/SaveStateModal"
+import ShareStateURLModal from "../../Modals/ShareStateURLModal"
+import UIDInputModal from "../../Modals/UIDInputModal";
 
 const StateManagementSuite: FC = () => {
     const styles = useStyles();
-    const [listOfSavedState, setListOfSavedState] = useState<string[]>([])
+    const store = useContext(Store);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [shareUrl, setShareUrl] = useState(window.location.href);
+    const [selectedState, setSelectedState] = useState("")
+
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+    // const [listOfSavedState, setListOfSavedState] = useState<string[]>([])
 
     async function fetchSavedStates() {
         const res = await fetch(`${process.env.REACT_APP_QUERY_URL}state`)
         const result = await res.json()
         if (result) {
-            const resultList = result.map((d: any[]) => d)
-            stateUpdateWrapperUseJSON(listOfSavedState, resultList, setListOfSavedState)
+            const resultList = result.map((d: any[]) => d);
+            // stateUpdateWrapperUseJSON(listOfSavedState, resultList, setListOfSavedState)
+            store.configStore.savedState = resultList;
         }
     }
 
@@ -24,61 +41,67 @@ const StateManagementSuite: FC = () => {
             .then(result => {
                 if (result) {
                     const resultList = result.map((d: any[]) => d)
-                    stateUpdateWrapperUseJSON(listOfSavedState, resultList, setListOfSavedState)
+                    store.configStore.savedState = resultList;
                 }
             })
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
+    const loadSavedState = async (name: string) => {
+        const res = await (fetch(`${process.env.REACT_APP_QUERY_URL}state?name=${name}`))
+        const result = await res.json()
+        store.provenance.importState(result.definition)
+    }
+
     return (<Grid item xs>
         <div className={styles.centerAlignment}>
-            <Button variant="outlined" >State Management</Button>
+            <Button variant="outlined" onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true"  >State Management</Button>
+            <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
+                <NestedMenuItem parentMenuOpen={Boolean(anchorEl)} label="Load State">
+                    {store.configStore.savedState.map((d) => {
+                        return (
+                            <MenuItem
+                                key={`share${d}`}
+                                onClick={() => {
+                                    handleClose();
+                                    loadSavedState(d)
+                                }}>
+                                {d}
+                            </MenuItem>)
+                    })}
+                </NestedMenuItem>
+                <MenuItem onClick={() => { handleClose(); store.configStore.openSaveStateDialog = true; }}>Save State</MenuItem>
+                <MenuItem onClick={() => { handleClose(); store.configStore.openManageStateDialog = true; }}>Manage Saved States</MenuItem>
+                <MenuItem onClick={() => {
+                    setShareUrl(
+                        //Kiran says there is a bug with the exportState, so using exportState(false) for now
+                        `${window.location.href}#${store.provenance.exportState(false)}`,
+                    );
+                    handleClose(); store.configStore.openShareURLDialog = true;
+                }}>
+                    Share URL
+                </MenuItem>
+                <NestedMenuItem parentMenuOpen={Boolean(anchorEl)} label="Share States Through uID">
+                    {store.configStore.savedState.map((d) => {
+                        return (
+                            <MenuItem
+                                key={`share${d}`}
+                                onClick={() => {
+                                    handleClose();
+                                    store.configStore.openShareUIDDialog = true;
+                                    setSelectedState(d)
+                                }}>
+                                {d}
+                            </MenuItem>)
+                    })}
+                </NestedMenuItem>
+            </Menu>
         </div>
+        <ManageStateDialog />
         <SaveStateModal />
-        {/* <Dropdown button text="State Management"> */}
-        {/* <Dropdown.Menu>
-                    <Dropdown.Item >
-                        <Dropdown simple selectOnBlur={false} text="Load saved states"  >
-                            <Dropdown.Menu>
-                                {listOfSavedState.map((d) => {
-                                    return (<Dropdown.Item onClick={() => { loadSavedState(d) }} content={d} />)
-                                })}
-                            </Dropdown.Menu>
-                        </Dropdown>
-                    </Dropdown.Item>
-
-                    <Dropdown.Item >
-                        <Dropdown simple selectOnBlur={false} text="Share states with user"  >
-                            <Dropdown.Menu>
-                                {listOfSavedState.map((d) => {
-                                    return (<Dropdown.Item content={d} onClick={() => { shareSpecificState(d) }} />)
-                                })}
-                            </Dropdown.Menu>
-                        </Dropdown>
-
-                    </Dropdown.Item>
-
-                    <Dropdown.Item icon="share alternate"
-                        content="Share through URL"
-                        onClick={() => {
-                            setShareUrl(
-                                //Kiran says there is a bug with the exportState, so using exportState(false) for now
-                                `${window.location.href}#${provenance.exportState(false)}`,
-                            );
-                            setOpenShareModal(true)
-                        }}
-                    />
-                    <Dropdown.Item icon="save" content="Save State"
-                        onClick={() => { setOpenSaveStateModal(true) }} />
-
-                    <Dropdown.Item icon="setting" content="Manage saved states"
-                        onClick={() => {
-                            setOpenManageStateModal(true)
-                        }}
-                    />
-                </Dropdown.Menu> */}
-        {/* </Dropdown> */}
+        <ShareStateURLModal shareUrl={shareUrl} />
+        <UIDInputModal stateName={selectedState} />
     </Grid>)
 }
 

@@ -12,6 +12,9 @@ export class ProjectConfigStore {
     //this might not work with loading state. If not, just change this to part of state. 
     private _nextAddingIndex: number;
     openSaveStateDialog: boolean;
+    openManageStateDialog: boolean;
+    openShareURLDialog: boolean;
+    openShareUIDDialog: boolean;
     savedState: string[]
 
     constructor(rootstore: RootStore) {
@@ -24,6 +27,9 @@ export class ProjectConfigStore {
         this._topMenuBarAddMode = false;
         this._nextAddingIndex = this.rootStore.state.layoutArray.length
         this.openSaveStateDialog = false;
+        this.openManageStateDialog = false;
+        this.openShareURLDialog = false;
+        this.openShareUIDDialog = false;
         this.savedState = []
     }
 
