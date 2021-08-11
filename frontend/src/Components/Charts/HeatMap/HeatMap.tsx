@@ -110,6 +110,8 @@ const HeatMap: FC<Props> = ({ outcomeComparison, interventionDate, secondaryExtr
                                 yPos={(aggregationScale()(dataPoint.aggregateAttribute) || 0) + (secondaryData ? (aggregationScale().bandwidth() * 0.5) : 0)}
                                 height={(secondaryData ? 0.5 : 1) * aggregationScale().bandwidth()}
                                 zeroCaseNum={dataPoint.zeroCaseNum}
+                                showComparisonRect={secondaryData ? true : false}
+                                isFalseComparison={true}
                                 caseMax={caseMax} />
                         </ChartG>
                     </g>)
@@ -127,6 +129,8 @@ const HeatMap: FC<Props> = ({ outcomeComparison, interventionDate, secondaryExtr
                         />
                         <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
                             <CaseCountHeader
+                                showComparisonRect={true}
+                                isFalseComparison={false}
                                 caseCount={dataPoint.caseCount}
                                 yPos={aggregationScale()(dataPoint.aggregateAttribute) || 0}
                                 height={0.5 * aggregationScale().bandwidth()}
