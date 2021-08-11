@@ -11,6 +11,8 @@ export class ProjectConfigStore {
     private _topMenuBarAddMode: boolean;
     //this might not work with loading state. If not, just change this to part of state. 
     private _nextAddingIndex: number;
+    openSaveStateDialog: boolean;
+    savedState: string[]
 
     constructor(rootstore: RootStore) {
         this.rootStore = rootstore;
@@ -21,6 +23,16 @@ export class ProjectConfigStore {
         this._dataLoadingFailed = false;
         this._topMenuBarAddMode = false;
         this._nextAddingIndex = this.rootStore.state.layoutArray.length
+        this.openSaveStateDialog = false;
+        this.savedState = []
+    }
+
+    checkIfInSavedState = (stateName: string) => {
+        return this.savedState.includes(stateName)
+    }
+
+    addNewState = (stateName: string) => {
+        this.savedState.push(stateName)
     }
 
     get provenance() {
