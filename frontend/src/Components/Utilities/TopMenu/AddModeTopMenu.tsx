@@ -52,7 +52,6 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
     const confirmChartAddHandler = () => {
         if (checkValidInput()) {
             if (!(addingChartType === 4 && (!interventionDate))) {
-                //  console.log(addingChartType, typeDiction)
                 const newChart: LayoutElement = {
                     aggregatedBy: xAggreSelection, valueToVisualize: yValueSelection,
                     i: store.configStore.nextAddingIndex,
@@ -65,7 +64,6 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                     outcomeComparison: outcomeComparisonSelection
                 }
                 if (
-                    // plotType === "COST"|| 
                     typeDiction[addingChartType] === "HEATMAP" || typeDiction[addingChartType] === "INTERVENTION" || typeDiction[addingChartType] === "COST") {
                     newChart.extraPair = JSON.stringify([]);
                 }
@@ -73,7 +71,6 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                 store.chartStore.addNewChart(newChart)
                 store.configStore.topMenuBarAddMode = false;
                 setInterventionDate(undefined);
-                //setInterventionPlotType(undefined);
                 setXAggreSelection("")
                 setYValueSelection("")
                 setOutcomeComparisonSelection("")
@@ -116,16 +113,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
 
     const addBarChartMenuRewrite: any[] = [
         //For #0 Cost and Saving Chart
-        // <Grid item xs>
-        //     <div className={styles.centerAlignment}>
-        //         <FormControl required className={styles.formControl}>
-        //             <InputLabel>Aggregated by</InputLabel>
-        //             <Select onChange={(e) => { setXAggreSelection(e.target.value as string) }}>
-        //                 {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][1] : [])}
-        //             </Select>
-        //         </FormControl>
-        //     </div>
-        // </Grid>
+
         outputRegularOptions("Select Comparison", "Aggregated by", false)
         ,
 
@@ -154,32 +142,32 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         </Grid>
         ],
 
-        //For #4 Intervention Plot
+        //For #4 Intervention Plot. Date picker is bugged with different packages. Need to investigate
 
-        [outputRegularOptions("Select Value to Show", "Aggregated by", true),
+        // [outputRegularOptions("Select Value to Show", "Aggregated by", true),
 
-        <Grid item xs>
-            {/* <SemanticDatePicker
-                placeholder={"Intervention"}
-                minDate={store.state.rawDateRange[0] as any}
-                maxDate={store.state.rawDateRange[1] as any}
-                onChange={interventionHandler} /> */}
-            <div className={styles.centerAlignment}>
-                BUG
-                {/* <KeyboardDatePicker
-                    disableToolbar
-                    variant="inline"
-                    format="MM/dd/yyyy"
-                    margin="normal"
-                    id="date-picker-inline"
-                    label="Date picker inline"
-                    value={interventionDate}
-                    onChange={interventionHandler}
+        // <Grid item xs>
+        //     {/* <SemanticDatePicker
+        //         placeholder={"Intervention"}
+        //         minDate={store.state.rawDateRange[0] as any}
+        //         maxDate={store.state.rawDateRange[1] as any}
+        //         onChange={interventionHandler} /> */}
+        //     <div className={styles.centerAlignment}>
+        //         BUG
+        //         {/* <KeyboardDatePicker
+        //             disableToolbar
+        //             variant="inline"
+        //             format="MM/dd/yyyy"
+        //             margin="normal"
+        //             id="date-picker-inline"
+        //             label="Date picker inline"
+        //             value={interventionDate}
+        //             onChange={interventionHandler}
 
-                /> */}
-            </div>
-        </Grid>
-        ]
+        //         /> */}
+        //     </div>
+        // </Grid>
+        // ]
     ]
 
     return <div>

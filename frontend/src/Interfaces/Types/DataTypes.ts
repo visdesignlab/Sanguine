@@ -1,23 +1,3 @@
-// export type ComparisonDataPoint = {
-//     aggregateAttribute: any;
-//     //  preInKdeCal: any[];
-//     // postInKdeCal: any[];
-//     preTotalVal: number;
-//     postTotalVal: number;
-//     preCaseCount: number;
-//     postCaseCount: number;
-//     //  preInMedian: number;
-//     //postInMedian: number;
-//     preCountDict: any;
-//     postCountDict: any;
-//     preZeroCaseNum: number;
-//     postZeroCaseNum: number;
-//     prePatienIDList: number[];
-//     postPatienIDList: number[];
-//     preCaseIDList: number[];
-//     postCaseIDList: number[];
-// }
-
 
 export type BasicAggregatedDatePoint = {
     aggregateAttribute: any;

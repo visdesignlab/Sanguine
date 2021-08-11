@@ -11,8 +11,6 @@ import React from 'react';
 import { CssBaseline } from '@material-ui/core';
 import './index.css';
 
-// export const { provenance, actions } = setupProvenance();
-
 // document.onkeydown = e => {
 //     let mac = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
 //     if (!e.shiftKey && (mac ? e.metaKey : e.ctrlKey) && e.which === 90) {

@@ -10,15 +10,6 @@ export const LayoutDiv = styled.div`
 
 `;
 
-// export const SpecialPaddingColumn = styled(Grid.Column)`
-//   &&&&&{padding-left:5px;}
-// `;
-
-// export const ChartWrapperGrid = styled(Grid)`
-//     height:100%
-// `
-
-
 export const Title = styled.b`
     font-size:larger;
 `

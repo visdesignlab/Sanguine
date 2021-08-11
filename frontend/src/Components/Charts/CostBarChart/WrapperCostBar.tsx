@@ -115,7 +115,6 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
             cellSalvageVolume: (dataItem.CELL_SAVER_ML / dataItem.caseNum) || 0,
             totalVal: 0,
             zeroCaseNum: 0,
-            // patientIDList: [],
             caseIDList: Array.from(dataItem.caseIDList)
         }
         return newDataObj
@@ -189,7 +188,6 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
                     }
                 }
                 )
-                // console.log(temporaryDataHolder, secondaryTemporaryDataHolder)
                 let totalCaseCountTemp = 0;
                 let secondaryCaseCountTemp = 0;
                 Object.values(temporaryDataHolder).forEach((dataItem: any) => {
@@ -204,7 +202,6 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
                     outputData.push(newDataObj)
                 })
                 if (comparisonOption) {
-                    // console.log(secondaryTemporaryDataHolder)
                     Object.values(secondaryTemporaryDataHolder).forEach((dataItem: any) => {
                         let newDataObj = makeDataObj(dataItem);
                         secondaryCaseCountTemp += newDataObj.caseCount

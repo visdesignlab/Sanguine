@@ -7,13 +7,10 @@ export type ApplicationState = {
     rawDateRange: number[];
     proceduresSelection: string[];
     surgeryUrgencySelection: [boolean, boolean, boolean];
-    //rawproceduresSelection: string;
     totalAggregatedCaseCount: number;
     totalIndividualCaseCount: number;
-    // dumbbellSorted: boolean;
     currentSelectSet: SelectSet[];
     currentOutputFilterSet: SelectSet[];
-    // currentSelectPatient: SingleCasePoint[] | null;
     showZero: boolean;
     //This two are both case ids
     currentSelectPatientGroup: SingleCasePoint[];

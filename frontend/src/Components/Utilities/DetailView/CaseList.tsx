@@ -56,27 +56,3 @@ const CaseItem = styled(ListItem) <CaseItemProps>`
 `;
 
 
-{/* <Search
-            placeholder="Search a Case by ID"
-            //defaultValue={"Search Case"}
-            minCharacters={3}
-            onSearchChange={(e, output) => {
-                setSearchCaseVal(output.value || "")
-
-                if (output.value && output.value.length >= 3) {
-                    let searchResult = hemoData.filter((d: any) => d.CASE_ID.toString().includes(output.value))
-                    stateUpdateWrapperUseJSON(caseSearchResult, searchResult, setCaseSearchResult);
-                }
-            }
-            }
-            results={caseSearchResult.map(d => { return { title: d.CASE_ID } })}
-            onResultSelect={(e, resultSelection) => {
-                const selectedPat = caseSearchResult.filter((d: any) => d.CASE_ID === resultSelection.result.title)[0]
-                // const newSingleCasePoint: SingleCasePoint = selectedPat;
-                setSearchCaseVal("");
-                actions.updateBrushPatientGroup([selectedPat], "ADD");
-
-            }
-            }
-            value={searchCaseVal}
-        /> */}

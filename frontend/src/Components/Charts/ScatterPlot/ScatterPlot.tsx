@@ -77,7 +77,6 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
             if (brushLoc) {
                 let caseList: SingleCasePoint[] = [];
                 data.forEach((dataPoint) => {
-                    //  const cx = (xAxisScale())(d.xVal as any) || 0
                     const cx = xAggregationOption === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
                     const cy = yAxisScale()(dataPoint.yVal)
                     if (cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
