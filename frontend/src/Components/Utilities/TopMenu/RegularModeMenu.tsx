@@ -71,7 +71,7 @@ const RegularModeMenu: FC = () => {
 
                 <Grid item xs>
                     <div className={useStyles().centerAlignment}>
-                        <Button variant="outlined" >Preview Mode</Button>
+                        <Button variant="outlined" disabled>Preview Mode</Button>
                     </div>
                     {/* //    content="Preview Mode"
                     // onClick={() => { store!.previewMode = true }}  */}

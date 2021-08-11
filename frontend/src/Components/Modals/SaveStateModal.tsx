@@ -82,11 +82,11 @@ const SaveStateModal: FC = () => {
                 <DialogContentText>
                     Save the current state with a state name, and then click save.
                 </DialogContentText>
-                <TextField label="State Name" onChange={(e) => { setStateName(e.target.value) }} value={stateName} />
+                <TextField fullWidth label="State Name" onChange={(e) => { setStateName(e.target.value) }} value={stateName} />
             </DialogContent>
             <DialogActions>
                 <Button onClick={() => { store.configStore.openSaveStateDialog = false }}>Cancel</Button>
-                <Button onClick={() => { saveState() }}>Confirm</Button>
+                <Button color="primary" onClick={() => { saveState() }}>Confirm</Button>
             </DialogActions>
         </Dialog>
         <Snackbar open={openErrorMessage} autoHideDuration={6000} onClose={() => { setOpenError(false) }}>

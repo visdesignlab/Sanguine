@@ -54,7 +54,7 @@ const UIDInputModal: FC<Props> = ({ stateName }: Props) => {
     }
 
     return (<div>
-        <Dialog open={true}>
+        <Dialog open={store.configStore.openShareUIDDialog}>
             <DialogTitle>Share through uID</DialogTitle>
             <DialogContent>
                 <DialogContentText>
@@ -93,7 +93,7 @@ const UIDInputModal: FC<Props> = ({ stateName }: Props) => {
                     }}>
                         Cancel
                     </Button>
-                    <Button onClick={shareState}>
+                    <Button color="primary" onClick={shareState}>
                         Confirm
                     </Button>
                 </DialogActions>
