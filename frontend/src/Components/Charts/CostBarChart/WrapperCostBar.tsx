@@ -1,4 +1,4 @@
-import { Container, FormControl, FormHelperText, Grid, IconButton, Switch, Tooltip } from "@material-ui/core";
+import { Container, FormControl, FormHelperText, Grid, IconButton, Menu, MenuItem, Switch, Tooltip } from "@material-ui/core";
 import axios from "axios";
 import { sum } from "d3";
 import { observer } from "mobx-react";
@@ -17,6 +17,9 @@ import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import ExtraPairButtons from "../ChartAccessories/ExtraPairButtons";
 import StackedBarChart from "./StackedBarChart";
 import HelpIcon from '@material-ui/icons/Help';
+import MonetizationOnIcon from '@material-ui/icons/MonetizationOn';
+import { BloodComponentOptions } from "../../../Presets/DataDict";
+import CostInputDialog from "../../Modals/CostInputDialog";
 
 type Props = {
     xAggregatedOption: string;
@@ -41,19 +44,31 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
     const [maximumSavedNegative, setMinCost] = useState(0);
     const [extraPairData, setExtraPairData] = useState<ExtraPairPoint[]>([]);
     const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
-    const [costInput, setCostInput] = useState(0)
+
     const [dimensionHeight, setDimensionHeight] = useState(0)
     const [dimensionWidth, setDimensionWidth] = useState(0)
     const [extraPairTotalWidth, setExtraPairTotalWidth] = useState(0);
 
     const [costMode, setCostMode] = useState(true);
-    const [openCostInputModal, setOpenCostInputModal] = useState(false);
-    const [modalTitle, setModalTitle] = useState("");
+    const [bloodCostToChange, setBloodCostToChange] = useState("");
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
     const [secondaryExtraPairData, setSecondaryExtraPairData] = useState<ExtraPairPoint[]>([]);
     const [showPotential, setShowPotential] = useState(false);
     const [totalCaseCount, setTotalCaseCount] = useState(0);
     const [secondaryCaseCount, setSecondaryCaseCount] = useState(0);
+
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+
+
+    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
 
     useEffect(() => {
         if (extraPairArrayString) {
@@ -82,12 +97,10 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
         if (svgRef.current) {
             setDimensionHeight(svgRef.current.clientHeight);
             setDimensionWidth(svgRef.current.clientWidth)
-            //  setDimensionWidth(w === 1 ? 542.28 : 1146.97)
         }
     }, [layoutH, layoutW, store.mainCompWidth, svgRef]);
 
     const makeDataObj = (dataItem: any) => {
-        // console.log(dataItem)
         let newDataObj: CostBarChartDataPoint = {
             aggregateAttribute: dataItem.aggregateAttribute,
             dataArray: [
@@ -234,17 +247,34 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
                         chartId={chartId}
                         requireOutcome={false}
                         requireSecondary={true} />
+                    <Tooltip title={<div>  <p className={styles.tooltipFont}>Change blood component cost</p> </div>}>
+                        <IconButton onClick={handleClick}>
+                            <MonetizationOnIcon />
+                        </IconButton>
+                    </Tooltip>
+                    <Menu anchorEl={anchorEl} open={open}
+                        onClose={handleClose}
+                    >
+                        {BloodComponentOptions.map((bOption) => (
+                            <MenuItem key={bOption.key} onClick={() => {
+                                store.configStore.openCostInputModal = true;
+                                setBloodCostToChange(bOption.value);
+                                handleClose()
+                            }}>{bOption.text}</MenuItem>
+                        ))}
+                    </Menu>
                     <IconButton>
-                        <Tooltip title={<div>  <p style={{ fontSize: "small", textAlign: "center" }}>Stacked bar chart on the right of the dashed line shows per case cost for each unit types. The bars on the left of the dashed line shows the potential cost on RBC if not using cell salvage.</p> </div>}>
+                        <Tooltip title={<div>  <p className={styles.tooltipFont}>Stacked bar chart on the right of the dashed line shows per case cost for each unit types. The bars on the left of the dashed line shows the potential cost on RBC if not using cell salvage.</p> </div>}>
                             <HelpIcon />
                         </Tooltip>
                     </IconButton>
                     <FormControl>
                         <FormHelperText>Potential cost</FormHelperText>
-                        <Tooltip title={<div>  <p style={{ fontSize: "small", textAlign: "center" }}>Show potential RBC cost without cell salvage</p> </div>}>
+                        <Tooltip title={<div>  <p className={styles.tooltipFont}>Show potential RBC cost without cell salvage</p> </div>}>
                             <Switch checked={showPotential} onChange={(e) => { setShowPotential(e.target.checked) }} />
                         </Tooltip>
                     </FormControl>
+                    <CostInputDialog bloodComponent={bloodCostToChange} />
                 </div>
 
             </Grid>

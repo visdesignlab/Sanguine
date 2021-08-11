@@ -9,7 +9,6 @@ import { BloodComponentOptions } from "../../../Presets/DataDict";
 
 interface OwnProps {
     dataPoint: CostBarChartDataPoint;
-    // aggregatedBy: string;
     howToTransform: string;
     valueScaleDomain: string;
     valueScaleRange: string
