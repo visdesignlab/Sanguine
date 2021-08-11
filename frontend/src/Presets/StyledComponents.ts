@@ -78,7 +78,7 @@ export const useStyles = makeStyles((theme: Theme) =>
         img: {
             margin: 'auto!important',
             display: 'block!important',
-            maxWidth: '100%!important',
+            maxWidth: '100%',
             height: "40px!important"
         },
         centerAlignment: {
@@ -89,10 +89,10 @@ export const useStyles = makeStyles((theme: Theme) =>
 
         },
         containerWidth: {
-            width: "100%!important",
-            maxWidth: "none!important",
-            overflow: "auto!important",
-            height: "100%!important"
+            width: "100%",
+            maxWidth: "none",
+            overflow: "auto",
+            height: "100%"
         },
         gridWidth: {
             width: "inherit!important"
