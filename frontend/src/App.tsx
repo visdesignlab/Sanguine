@@ -50,7 +50,7 @@ const App: FC = () => {
 
     useIdleTimer({
         //the idle timer setting
-        timeout: 1000 * 60 * 30,
+        timeout: 1000 * 60 * 120,
         onIdle: handleOnIdle,
         onAction: handleOnAction,
         events: ["mousedown", "keydown"],
