@@ -1,12 +1,9 @@
 import { Divider, Grid, Menu, MenuItem, Button } from "@material-ui/core";
 import { isObservable } from "mobx";
 import { observer } from "mobx-react";
-import React from "react";
-import { useContext, useState } from "react";
-import { FC } from "react";
+import { useContext, useState, FC } from "react";
 import Store from "../../../Interfaces/Store";
 import { logoutHandler } from "../../../Interfaces/UserManagement";
-// import { blood_red } from "../../../Presets/Constants";
 import BugReportOutlinedIcon from '@material-ui/icons/BugReportOutlined';
 import { useStyles } from "../../../Presets/StyledComponents";
 import AddModeTopMenu from "./AddModeTopMenu";
@@ -17,7 +14,7 @@ const RegularModeMenu: FC = () => {
     const store = useContext(Store)
     const [addingChartType, setAddingChartType] = useState(-1)
 
-    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const addModeButtonHandler = (chartType: number) => {
         setAddingChartType(chartType)
