@@ -101,6 +101,8 @@ const StackedBarChart: FC<Props> = ({ outcomeComparison, caseCount, secondaryCas
                                     zeroCaseNum={0}
                                     yPos={(aggregationScale()(dp.aggregateAttribute) || 0) + (secondaryData ? (aggregationScale().bandwidth() * 0.5) : 0)}
                                     caseMax={caseMax}
+                                    showComparisonRect={secondaryData ? true : false}
+                                    isFalseComparison={true}
                                     caseCount={dp.caseCount} />
                             </ChartG>
                         </g>)
@@ -119,6 +121,8 @@ const StackedBarChart: FC<Props> = ({ outcomeComparison, caseCount, secondaryCas
                                 showPotential={showPotential} />
                             <ChartG extraPairTotalWidth={extraPairTotalWidth} currentOffset={currentOffset}>
                                 <CaseCountHeader
+                                    showComparisonRect={true}
+                                    isFalseComparison={false}
                                     height={0.5 * aggregationScale().bandwidth()}
                                     zeroCaseNum={0}
                                     yPos={(aggregationScale()(dp.aggregateAttribute) || 0)}
