@@ -6,8 +6,6 @@ import Store from "../../../Interfaces/Store";
 import CloseIcon from '@material-ui/icons/Close';
 import { SelectSet } from "../../../Interfaces/Types/SelectionTypes";
 import { AcronymDictionary } from "../../../Presets/DataDict";
-// import { Grid, Container, List, Button } from "semantic-ui-react";
-//import { AcronymDictionary } from "../../../Presets/DataDict";
 import { Title, useStyles } from "../../../Presets/StyledComponents";
 
 const CurrentSelected: FC = () => {
@@ -42,16 +40,6 @@ const CurrentSelected: FC = () => {
                         </ListItem>)
                     })}
 
-                    {/* {currentSelectSet.map((selectSet) => {
-                    return <FilterListIT
-                        key={`${selectSet.setName}currentselecting`}
-                        onClick={() => { actions.clearSelectSet(selectSet.setName) }}
-                    >
-                        <List.Header>{AcronymDictionary[selectSet.setName]}</List.Header>
-                        <List.Content floated="right"><DispearingIcon name="close" /></List.Content>
-                        <List.Content>{selectSet.setValues.sort().join(', ')}</List.Content>
-                    </FilterListIT>
-                })} */}
 
                 </List>
                 <ButtonGroup style={{ textAlign: "center" }}>

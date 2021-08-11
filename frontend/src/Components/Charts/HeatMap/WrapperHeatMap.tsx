@@ -84,8 +84,6 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
         setPreviousCancelToken(call);
-
-        //replace case_ids
         axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${store.dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${[].toString()}`, {
             cancelToken: call.token
         })
@@ -100,7 +98,6 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
                     })
                     hemoData.forEach((singleCase: SingleCasePoint) => {
                         if (caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
-                            //   caseDictionary[singleCase.CASE_ID] = true;
                             if (!temporaryDataHolder[singleCase[xAggregationOption]]) {
                                 temporaryDataHolder[singleCase[xAggregationOption]] = {
                                     aggregateAttribute: singleCase[xAggregationOption],
@@ -146,15 +143,12 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
         xAggregationOption,
         yValueOption,
         outcomeComparison,
-        // currentSelectPatientGroupIDs, 
-        // currentOutputFilterSet,
         hemoData])
 
     return (
         <Grid container direction="row" alignItems="center" className={styles.chartWrapper}>
 
             <Grid item xs={1}>
-                {/* <Menu icon vertical compact size="mini" borderless secondary widths={2} style={{}}> */}
                 <div>
                     <ExtraPairButtons disbleButton={width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
                     <ChartConfigMenu

@@ -67,11 +67,10 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
     const surgeryRow = (listItem: any, isSelected: boolean) => {
         return (
             <SurgeryListComp key={listItem.value} isSelected={isSelected} onClick={() => { store.selectionStore.updateProcedureSelection(listItem.value, isSelected) }}>
-                {/* <td> */}
+
                 <SurgeryDiv >
                     {listItem.value}
                 </SurgeryDiv>
-                {/* </td> */}
                 <td>
                     <ListSVG widthInput={0.3 * width}>
                         <SurgeryRect

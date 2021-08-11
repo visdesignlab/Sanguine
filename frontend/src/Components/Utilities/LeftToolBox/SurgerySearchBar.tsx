@@ -12,8 +12,6 @@ type Props = { surgeryList: any[] }
 const SurgerySearchBar: FC<Props> = ({ surgeryList }: Props) => {
     const store = useContext(Store)
     const styles = useStyles()
-    const [surgerySearchResult, setsurgerySearchResult] = useState<any[]>([]);
-    const [searchSurgeryVal, setSearchSurgeryVal] = useState("");
 
     const searchHandler = (input: any) => {
         if (input) {

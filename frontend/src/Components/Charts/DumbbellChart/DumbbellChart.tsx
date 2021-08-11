@@ -1,9 +1,10 @@
 
 import { select, median, range, scaleLinear, scaleOrdinal, axisLeft, ScaleOrdinal } from "d3"
 import { observer } from "mobx-react"
-import { FC, useCallback, useEffect, useState } from "react"
+import { FC, useCallback, useEffect, useState, useContext } from "react"
 import useDeepCompareEffect from "use-deep-compare-effect"
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker"
+import Store from "../../../Interfaces/Store"
 import { DumbbellDataPoint } from "../../../Interfaces/Types/DataTypes"
 import { OffsetDict, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, DumbbellMinimumWidth } from "../../../Presets/Constants"
 import { AcronymDictionary } from "../../../Presets/DataDict"
@@ -31,6 +32,9 @@ const DumbbellChart: FC<Props> = ({ data, valueToVisualize, dimensionHeight, dim
     const [datapointsDict, setDataPointDict] = useState<{ title: any, length: number }[]>([])
     const [resultRange, setResultRange] = useState<number[]>([])
     const [indicies, setIndicies] = useState([])
+
+    const store = useContext(Store);
+    const { currentSelectSet } = store.state
 
     const currentOffset = OffsetDict.minimum;
     const svgSelection = select(svg.current);
@@ -105,17 +109,6 @@ const DumbbellChart: FC<Props> = ({ data, valueToVisualize, dimensionHeight, dim
                 case "Postop":
                     tempSortedData = copyOfData.sort(
                         (a, b) => {
-                            // if (interventionDate) {
-                            //   const intervDate = typeof interventionDate === "string" ? timeParse("%Y-%m-%dT%H:%M:%S.%LZ")(interventionDate)! : interventionDate;
-                            //   if (a.case.DATE.getTime() < intervDate.getTime() &&
-                            //     b.case.DATE.getTime() > intervDate.getTime()) {
-                            //     return -1
-                            //   }
-                            //   else if (a.case.DATE.getTime() > intervDate.getTime() &&
-                            //     b.case.DATE.getTime() < intervDate.getTime()) {
-                            //     return 1
-                            //   }
-                            // }
                             if (a.yVal === b.yVal) {
                                 if (a.endXVal > b.endXVal) return 1;
                                 if (a.endXVal < b.endXVal) return -1;
@@ -241,7 +234,6 @@ const DumbbellChart: FC<Props> = ({ data, valueToVisualize, dimensionHeight, dim
         .attr("font-size", "11px")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
-        // .attr("transform", `translate(0 ,${currentOffset.top}`)
         .text(
             AcronymDictionary[valueToVisualize] ? AcronymDictionary[valueToVisualize] : valueToVisualize
         );
@@ -265,19 +257,19 @@ const DumbbellChart: FC<Props> = ({ data, valueToVisualize, dimensionHeight, dim
 
 
 
-    // const decideIfSelectSet = (d: DumbbellDataPoint) => {
-
-    //     if (currentSelectSet.length > 0) {
-    //         for (let selected of currentSelectSet) {
-    //             if (selected.setValues.includes((d.case[selected.setName]) as any)) { return true; }
-
-    //         }
-    //         return false;
-    //     }
-    //     else {
-    //         return false;
-    //     }
-    // }
+    const decideIfSelectSet = (d: DumbbellDataPoint) => {
+        if (currentSelectSet.length > 0) {
+            for (let selected of currentSelectSet) {
+                if (selected.setValues.includes((d.case[selected.setName]).toString())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        else {
+            return false;
+        }
+    }
 
     const generateDumbbells = () => {
         let selectedPatients: any[] = [];
@@ -287,8 +279,7 @@ const DumbbellChart: FC<Props> = ({ data, valueToVisualize, dimensionHeight, dim
 
 
             const xVal = (valueScale() as ScaleOrdinal<any, number>)(index)
-            const isSelectSet = false;
-            //    const isSelectSet = decideIfSelectSet(dataPoint);
+            const isSelectSet = decideIfSelectSet(dataPoint);
 
 
             if (xVal) {
