@@ -85,7 +85,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
             <Grid item xs>
                 <div className={styles.centerAlignment}>
                     <FormControl required={titleOneRequied} className={styles.formControl}>
-                        <InputLabel>{titleOne}</InputLabel>
+                        <InputLabel>{titleOne}{titleOneRequied ? "" : " (Optional)"}</InputLabel>
                         <Select
                             onChange={(e) => { setYValueSelection(e.target.value as string) }}>
                             {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][0] : [], !titleOneRequied)}
@@ -132,7 +132,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         <Grid item xs>
             <div className={styles.centerAlignment}>
                 <FormControl className={styles.formControl}>
-                    <InputLabel>Outcome/Intervention</InputLabel>
+                    <InputLabel>Outcome (Optional)</InputLabel>
                     <Select onChange={(e) => { console.log(outcomeComparisonSelection); setOutcomeComparisonSelection(e.target.value as string) }}
                     >
                         {DropdownGenerator(OutcomeOptions, true)}

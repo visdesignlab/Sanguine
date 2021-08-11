@@ -100,6 +100,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                         <ListItemSecondaryAction>
                             <Switch
                                 checked={store.state.showZero}
+                                color="primary"
                                 onChange={(e) => { store.configStore.toggleShowZero(e.target.checked) }}
                             />
                         </ListItemSecondaryAction>
