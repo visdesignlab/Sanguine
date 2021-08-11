@@ -97,12 +97,12 @@ logging.basicConfig(
 
 def index(request):
     if request.method == "GET":
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} GET: index User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: index User: {request.user}")
         return HttpResponse(
             "Bloodvis API endpoint. Please use the client application to access the data here."
         )
     else:
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} Method Not Allowed: {request.method} index User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} index User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -112,7 +112,7 @@ def index(request):
 )
 def get_attributes(request):
     if request.method == "GET":
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} GET: get_attributes User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: get_attributes User: {request.user}")
         # Get the list of allowed filter_selection names from the cpt function
         allowed_names = list(set([a[2] for a in cpt()]))
 
@@ -122,16 +122,16 @@ def get_attributes(request):
         # ,CASE WHEN PRIM_PROC_DESC LIKE "%REDO%" THEN 1 ELSE 0 END AS REDO
         command = f"""
             SELECT
-                {FIELDS_IN_USE.get("billing_code")},
-                {FIELDS_IN_USE.get("case_id")}
+                {FIELDS_IN_USE.get('billing_code')},
+                {FIELDS_IN_USE.get('case_id')}
             FROM (
                 SELECT
                     BLNG.*, SURG.*
-                FROM {TABLES_IN_USE.get("billing_codes")} BLNG
-                INNER JOIN {TABLES_IN_USE.get("surgery_case")} SURG
-                    ON (BLNG.{FIELDS_IN_USE.get("patient_id")} = SURG.{FIELDS_IN_USE.get("patient_id")})
-                    AND (BLNG.{FIELDS_IN_USE.get("visit_no")} = SURG.{FIELDS_IN_USE.get("visit_no")})
-                    AND (BLNG.{FIELDS_IN_USE.get("procedure_dtm")} = SURG.{FIELDS_IN_USE.get("case_date")})
+                FROM {TABLES_IN_USE.get('billing_codes')} BLNG
+                INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
+                    ON (BLNG.{FIELDS_IN_USE.get('patient_id')} = SURG.{FIELDS_IN_USE.get('patient_id')})
+                    AND (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')})
+                    AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
                 {filters_safe_sql}
             )
         """
@@ -157,7 +157,7 @@ def get_attributes(request):
         items = [{"value": k, "count": v} for k, v in items.items()]
         return JsonResponse({"result": items})
     else:
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} Method Not Allowed: {request.method} get_attributes User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} get_attributes User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -168,25 +168,25 @@ def get_attributes(request):
 def fetch_surgery(request):
     if request.method == "GET":
         # Get the values from the request
-        case_id = request.GET.get("case_id")
+        case_id = request.GET.get('case_id')
 
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} GET: fetch_surgery Params: case_id = {case_id} User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: fetch_surgery Params: case_id = {case_id} User: {request.user}")
 
         if not case_id:
             return HttpResponseBadRequest("case_id must be supplied.")
 
         command = f"""
         SELECT
-            SURG.{FIELDS_IN_USE.get("case_date")},
-            SURG.{FIELDS_IN_USE.get("surgery_start_time")},
-            SURG.{FIELDS_IN_USE.get("surgery_end_time")},
-            SURG.{FIELDS_IN_USE.get("surgery_elapsed")},
-            SURG.{FIELDS_IN_USE.get("surgery_type")},
-            SURG.{FIELDS_IN_USE.get("prim_proc_desc")},
-            SURG.{FIELDS_IN_USE.get("post_op_icu_los")}
+            SURG.{FIELDS_IN_USE.get('case_date')},
+            SURG.{FIELDS_IN_USE.get('surgery_start_time')},
+            SURG.{FIELDS_IN_USE.get('surgery_end_time')},
+            SURG.{FIELDS_IN_USE.get('surgery_elapsed')},
+            SURG.{FIELDS_IN_USE.get('surgery_type')},
+            SURG.{FIELDS_IN_USE.get('prim_proc_desc')},
+            SURG.{FIELDS_IN_USE.get('post_op_icu_los')}
         FROM
-            {TABLES_IN_USE.get("surgery_case")} SURG
-        WHERE SURG.{FIELDS_IN_USE.get("case_id")} = :id
+            {TABLES_IN_USE.get('surgery_case')} SURG
+        WHERE SURG.{FIELDS_IN_USE.get('case_id')} = :id
         """
 
         result = execute_sql(command, id=case_id)
@@ -198,7 +198,7 @@ def fetch_surgery(request):
 
         return JsonResponse({"result": data})
     else:
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} Method Not Allowed: {request.method} fetch_surgery User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} fetch_surgery User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -209,26 +209,26 @@ def fetch_surgery(request):
 def fetch_patient(request):
     if request.method == "GET":
         # Get the values from the request
-        patient_id = request.GET.get("patient_id")
+        patient_id = request.GET.get('patient_id')
 
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} GET: fetch_patient Params: patient_id = {patient_id} User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: fetch_patient Params: patient_id = {patient_id} User: {request.user}")
 
         if not patient_id:
             return HttpResponseBadRequest("patient_id must be supplied.")
 
         command = f"""
         SELECT
-            PATIENT.{FIELDS_IN_USE.get("birth_date")},
-            PATIENT.{FIELDS_IN_USE.get("gender_code")},
-            PATIENT.{FIELDS_IN_USE.get("gender_desc")},
-            PATIENT.{FIELDS_IN_USE.get("race_code")},
-            PATIENT.{FIELDS_IN_USE.get("race_desc")},
-            PATIENT.{FIELDS_IN_USE.get("ethnicity_code")},
-            PATIENT.{FIELDS_IN_USE.get("ethnicity_desc")},
-            PATIENT.{FIELDS_IN_USE.get("death_date")}
+            PATIENT.{FIELDS_IN_USE.get('birth_date')},
+            PATIENT.{FIELDS_IN_USE.get('gender_code')},
+            PATIENT.{FIELDS_IN_USE.get('gender_desc')},
+            PATIENT.{FIELDS_IN_USE.get('race_code')},
+            PATIENT.{FIELDS_IN_USE.get('race_desc')},
+            PATIENT.{FIELDS_IN_USE.get('ethnicity_code')},
+            PATIENT.{FIELDS_IN_USE.get('ethnicity_desc')},
+            PATIENT.{FIELDS_IN_USE.get('death_date')}
         FROM
-            {TABLES_IN_USE.get("patient")} PATIENT
-        WHERE PATIENT.{FIELDS_IN_USE.get("patient_id")} = :id
+            {TABLES_IN_USE.get('patient')} PATIENT
+        WHERE PATIENT.{FIELDS_IN_USE.get('patient_id')} = :id
         """
 
         result = execute_sql(command, id=patient_id)
@@ -240,7 +240,7 @@ def fetch_patient(request):
 
         return JsonResponse({"result": data})
     else:
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} Method Not Allowed: {request.method} fetch_patient User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} fetch_patient User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -251,22 +251,22 @@ def fetch_patient(request):
 def request_transfused_units(request):
     if request.method == "GET":
         # Get the required parameters from the query string
-        transfusion_type = request.GET.get("transfusion_type")
-        date_range = request.GET.get("date_range") or ""
+        transfusion_type = request.GET.get('transfusion_type')
+        date_range = request.GET.get('date_range') or ""
 
         # Get the optional parameters from the query string
-        aggregated_by = request.GET.get("aggregated_by")
-        patient_ids = request.GET.get("patient_ids") or ""
-        case_ids = request.GET.get("case_ids") or ""
-        filter_selection = request.GET.get("filter_selection") or ""
+        aggregated_by = request.GET.get('aggregated_by')
+        patient_ids = request.GET.get('patient_ids') or ""
+        case_ids = request.GET.get('case_ids') or ""
+        filter_selection = request.GET.get('filter_selection') or ""
 
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} GET: request_transfused_units Params: transfusion_type = {transfusion_type}, date_range = {date_range}, aggregated_by = {aggregated_by}, patient_ids = {patient_ids}, case_ids = {case_ids}, filter_selection = {filter_selection} User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: request_transfused_units Params: transfusion_type = {transfusion_type}, date_range = {date_range}, aggregated_by = {aggregated_by}, patient_ids = {patient_ids}, case_ids = {case_ids}, filter_selection = {filter_selection} User: {request.user}")
 
         # Parse the date_range and the filter selection
-        patient_ids = patient_ids.split(",") if patient_ids else []
-        case_ids = case_ids.split(",") if case_ids else []
-        date_range = [s for s in date_range.split(",")]
-        filter_selection = filter_selection.split(",")
+        patient_ids = patient_ids.split(',') if patient_ids else []
+        case_ids = case_ids.split(',') if case_ids else []
+        date_range = [s for s in date_range.split(',')]
+        filter_selection = filter_selection.split(',')
 
         # Check the required parameters are there
         if not (transfusion_type):
@@ -290,9 +290,9 @@ def request_transfused_units(request):
             "ALL_UNITS",
         ]
         aggregates = {
-            "YEAR": f"EXTRACT (YEAR FROM LIMITED_SURG.{FIELDS_IN_USE.get("case_date")})",
-            "SURGEON_ID": f"LIMITED_SURG.{FIELDS_IN_USE.get("surgeon_id")}",
-            "ANESTHESIOLOGIST_ID": f"LIMITED_SURG.{FIELDS_IN_USE.get("anest_id")}",
+            "YEAR": f"EXTRACT (YEAR FROM LIMITED_SURG.{FIELDS_IN_USE.get('case_date')})",
+            "SURGEON_ID": f"LIMITED_SURG.{FIELDS_IN_USE.get('surgeon_id')}",
+            "ANESTHESIOLOGIST_ID": f"LIMITED_SURG.{FIELDS_IN_USE.get('anest_id')}",
         }
         having_options = {
             "PRBC_UNITS": "HAVING SUM(PRBC_UNITS) < 200 OR SUM(PRBC_UNITS) IS NULL",
@@ -339,9 +339,9 @@ def request_transfused_units(request):
             )
 
         group_by = (
-            f"GROUP BY LIMITED_SURG.{FIELDS_IN_USE.get("surgeon_id")}, LIMITED_SURG.{FIELDS_IN_USE.get("anest_id")}, LIMITED_SURG.{FIELDS_IN_USE.get("patient_id")}, LIMITED_SURG.{FIELDS_IN_USE.get("case_id")}, {aggregates[aggregated_by]}"
+            f"GROUP BY LIMITED_SURG.{FIELDS_IN_USE.get('surgeon_id')}, LIMITED_SURG.{FIELDS_IN_USE.get('anest_id')}, LIMITED_SURG.{FIELDS_IN_USE.get('patient_id')}, LIMITED_SURG.{FIELDS_IN_USE.get('case_id')}, {aggregates[aggregated_by]}"
             if aggregated_by
-            else f"GROUP BY LIMITED_SURG.{FIELDS_IN_USE.get("surgeon_id")}, LIMITED_SURG.{FIELDS_IN_USE.get("anest_id")}, LIMITED_SURG.{FIELDS_IN_USE.get("patient_id")}, LIMITED_SURG.{FIELDS_IN_USE.get("case_id")}"
+            else f"GROUP BY LIMITED_SURG.{FIELDS_IN_USE.get('surgeon_id')}, LIMITED_SURG.{FIELDS_IN_USE.get('anest_id')}, LIMITED_SURG.{FIELDS_IN_USE.get('patient_id')}, LIMITED_SURG.{FIELDS_IN_USE.get('case_id')}"
         )
 
         # Generate the CPT filter sql
@@ -350,7 +350,7 @@ def request_transfused_units(request):
         # Generate the patient filters
         pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
         pat_filters_safe_sql = (
-            f"AND TRNSFSD.{FIELDS_IN_USE.get("patient_id")} IN ({",".join(pat_bind_names)}) "
+            f"AND TRNSFSD.{FIELDS_IN_USE.get('patient_id')} IN ({','.join(pat_bind_names)}) "
             if patient_ids != []
             else ""
         )
@@ -358,7 +358,7 @@ def request_transfused_units(request):
         # Generate case id filters
         case_bind_names = [f":case_id{str(i)}" for i in range(len(case_ids))]
         case_filters_safe_sql = (
-            f"AND TRNSFSD.{FIELDS_IN_USE.get("case_id")} IN ({",".join(case_bind_names)}) "
+            f"AND TRNSFSD.{FIELDS_IN_USE.get('case_id')} IN ({','.join(case_bind_names)}) "
             if case_ids != []
             else ""
         )
@@ -368,25 +368,25 @@ def request_transfused_units(request):
         # aggregated_by and transfusion_type
         command = f"""
         SELECT
-            LIMITED_SURG.{FIELDS_IN_USE.get("surgeon_id")},
-            LIMITED_SURG.{FIELDS_IN_USE.get("anest_id")},
-            LIMITED_SURG.{FIELDS_IN_USE.get("patient_id")},
-            LIMITED_SURG.{FIELDS_IN_USE.get("case_id")},
+            LIMITED_SURG.{FIELDS_IN_USE.get('surgeon_id')},
+            LIMITED_SURG.{FIELDS_IN_USE.get('anest_id')},
+            LIMITED_SURG.{FIELDS_IN_USE.get('patient_id')},
+            LIMITED_SURG.{FIELDS_IN_USE.get('case_id')},
             {transfusion_type}
-        FROM {TABLES_IN_USE.get("intra_op_trnsfsd")} TRNSFSD
+        FROM {TABLES_IN_USE.get('intra_op_trnsfsd')} TRNSFSD
         RIGHT JOIN (
             SELECT *
-            FROM {TABLES_IN_USE.get("surgery_case")}
-            WHERE {FIELDS_IN_USE.get("case_id")} IN (
-                SELECT {FIELDS_IN_USE.get("case_id")}
-                FROM {TABLES_IN_USE.get("billing_codes")} BLNG
-                INNER JOIN {TABLES_IN_USE.get("surgery_case")} SURG
-                    ON (BLNG.{FIELDS_IN_USE.get("patient_id")} = SURG.{FIELDS_IN_USE.get("patient_id")}) AND (BLNG.{FIELDS_IN_USE.get("visit_no")} = SURG.{FIELDS_IN_USE.get("visit_no")}) AND (BLNG.{FIELDS_IN_USE.get("procedure_dtm")} = SURG.{FIELDS_IN_USE.get("case_date")})
+            FROM {TABLES_IN_USE.get('surgery_case')}
+            WHERE {FIELDS_IN_USE.get('case_id')} IN (
+                SELECT {FIELDS_IN_USE.get('case_id')}
+                FROM {TABLES_IN_USE.get('billing_codes')} BLNG
+                INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
+                    ON (BLNG.{FIELDS_IN_USE.get('patient_id')} = SURG.{FIELDS_IN_USE.get('patient_id')}) AND (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')}) AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
                 {filters_safe_sql}
             )
         ) LIMITED_SURG
-            ON LIMITED_SURG.{FIELDS_IN_USE.get("case_id")} = TRNSFSD.{FIELDS_IN_USE.get("case_id")}
-        WHERE LIMITED_SURG.{FIELDS_IN_USE.get("case_date")} BETWEEN :min_time AND :max_time
+            ON LIMITED_SURG.{FIELDS_IN_USE.get('case_id')} = TRNSFSD.{FIELDS_IN_USE.get('case_id')}
+        WHERE LIMITED_SURG.{FIELDS_IN_USE.get('case_date')} BETWEEN :min_time AND :max_time
         {pat_filters_safe_sql} {case_filters_safe_sql}
         {group_by}
         {having_sql}
@@ -432,7 +432,7 @@ def request_transfused_units(request):
 
         return JsonResponse(cleaned, safe=False)
     else:
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} Method Not Allowed: {request.method} request_transfused_units User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} request_transfused_units User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -442,17 +442,17 @@ def request_transfused_units(request):
 )
 def test_results(request):
     if request.method == "GET":
-        case_ids = request.GET.get("case_ids") or ""
-        test_types = request.GET.get("test_types") or ""
+        case_ids = request.GET.get('case_ids') or ""
+        test_types = request.GET.get('test_types') or ""
 
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} GET: test_results Params: case_ids = {case_ids}, test_types = {test_types} User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: test_results Params: case_ids = {case_ids}, test_types = {test_types} User: {request.user}")
 
         if not case_ids:
             HttpResponseBadRequest("You must supply case_ids")
 
-        case_ids = case_ids.split(",")
+        case_ids = case_ids.split(',')
     else:
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} Method Not Allowed: {request.method} test_results User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} test_results User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -462,18 +462,18 @@ def test_results(request):
 )
 def risk_score(request):
     if request.method == "GET":
-        patient_ids = request.GET.get("patient_ids") or ""
+        patient_ids = request.GET.get('patient_ids') or ""
 
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} GET: risk_score Params: patient_ids = {patient_ids} User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: risk_score Params: patient_ids = {patient_ids} User: {request.user}")
 
         # Parse the ids
-        patient_ids = patient_ids.split(",") if patient_ids else []
+        patient_ids = patient_ids.split(',') if patient_ids else []
 
         if patient_ids:
             # Generate the patient filters
             pat_bind_names = [
                 f":pat_id{str(i)}" for i in range(len(patient_ids))]
-            pat_filters_safe_sql = f"AND DI_PAT_ID IN ({",".join(pat_bind_names)}) " if patient_ids != [
+            pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [
             ] else ""
         else:
             pat_bind_names = []
@@ -482,15 +482,15 @@ def risk_score(request):
         # Defined the sql command
         command = f"""
         SELECT
-            {FIELDS_IN_USE.get("patient_id")},
-            {FIELDS_IN_USE.get("visit_no")},
-            {FIELDS_IN_USE.get("apr_drg_weight")},
-            {FIELDS_IN_USE.get("apr_drg_code")},
-            {FIELDS_IN_USE.get("apr_drg_desc")},
-            {FIELDS_IN_USE.get("apr_drg_rom")},
-            {FIELDS_IN_USE.get("apr_drg_soi")}
+            {FIELDS_IN_USE.get('patient_id')},
+            {FIELDS_IN_USE.get('visit_no')},
+            {FIELDS_IN_USE.get('apr_drg_weight')},
+            {FIELDS_IN_USE.get('apr_drg_code')},
+            {FIELDS_IN_USE.get('apr_drg_desc')},
+            {FIELDS_IN_USE.get('apr_drg_rom')},
+            {FIELDS_IN_USE.get('apr_drg_soi')}
         FROM
-            {TABLES_IN_USE.get("visit")}
+            {TABLES_IN_USE.get('visit')}
         WHERE 1=1
             {pat_filters_safe_sql}
         """
@@ -514,7 +514,7 @@ def risk_score(request):
 
         return JsonResponse(result_list, safe=False)
     else:
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} Method Not Allowed: {request.method} risk_score User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} risk_score User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -524,12 +524,12 @@ def risk_score(request):
 )
 def patient_outcomes(request):
     if request.method == "GET":
-        patient_ids = request.GET.get("patient_ids") or ""
+        patient_ids = request.GET.get('patient_ids') or ""
 
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} GET: patient_outcomes Params: patient_ids = {patient_ids} User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: patient_outcomes Params: patient_ids = {patient_ids} User: {request.user}")
 
         # Parse the ids
-        patient_ids = patient_ids.split(",") if patient_ids else []
+        patient_ids = patient_ids.split(',') if patient_ids else []
 
         if patient_ids:
             # Generate the patient filters
@@ -537,7 +537,7 @@ def patient_outcomes(request):
                 f":pat_id{str(i)}" for i in range(len(patient_ids))
             ]
             pat_filters_safe_sql = (
-                f"AND VST.{FIELDS_IN_USE.get("patient_id")} IN ({",".join(pat_bind_names)}) "
+                f"AND VST.{FIELDS_IN_USE.get('patient_id')} IN ({','.join(pat_bind_names)}) "
                 if patient_ids != [] 
                 else ""
             )
@@ -548,8 +548,8 @@ def patient_outcomes(request):
         # Define the sql command
         command = f"""
         SELECT
-            VST.{FIELDS_IN_USE.get("patient_id")},
-            VST.{FIELDS_IN_USE.get("visit_no")},
+            VST.{FIELDS_IN_USE.get('patient_id')},
+            VST.{FIELDS_IN_USE.get('visit_no')},
             CASE WHEN TOTAL_VENT_MINS > 1440 THEN 1 ELSE 0 END AS VENT_1440,
             CASE WHEN PAT_EXPIRED = "Y" THEN 1 ELSE 0 END AS PAT_DEATH,
             BLNG_OUTCOMES.STROKE,
@@ -585,19 +585,19 @@ def patient_outcomes(request):
             {TABLES_IN_USE["visit"]} VST
         LEFT JOIN (
             SELECT
-                {FIELDS_IN_USE.get("patient_id")},
-                {FIELDS_IN_USE.get("visit_no")},
+                {FIELDS_IN_USE.get('patient_id')},
+                {FIELDS_IN_USE.get('visit_no')},
                 CASE WHEN SUM(CASE WHEN CODE IN ("I97.820", "997.02") THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS STROKE,
                 CASE WHEN SUM(CASE WHEN CODE IN ("33952", "33954", "33956", "33958", "33962", "33964", "33966", "33973", "33974", "33975", "33976", "33977", "33978", "33979", "33980", "33981", "33982", "33983", "33984", "33986", "33987", "33988", "33989") THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS ECMO
             FROM {TABLES_IN_USE["billing_codes"]}
-            WHERE {FIELDS_IN_USE.get("present_on_adm")} IS NULL
-            GROUP BY {FIELDS_IN_USE.get("patient_id")}, {FIELDS_IN_USE.get("visit_no")}
+            WHERE {FIELDS_IN_USE.get('present_on_adm')} IS NULL
+            GROUP BY {FIELDS_IN_USE.get('patient_id')}, {FIELDS_IN_USE.get('visit_no')}
         ) BLNG_OUTCOMES
-            ON VST.{FIELDS_IN_USE.get("patient_id")} = BLNG_OUTCOMES.{FIELDS_IN_USE.get("patient_id")} AND VST.{FIELDS_IN_USE.get("visit_no")} = BLNG_OUTCOMES.{FIELDS_IN_USE.get("visit_no")}
+            ON VST.{FIELDS_IN_USE.get('patient_id')} = BLNG_OUTCOMES.{FIELDS_IN_USE.get('patient_id')} AND VST.{FIELDS_IN_USE.get('visit_no')} = BLNG_OUTCOMES.{FIELDS_IN_USE.get('visit_no')}
         LEFT JOIN (
             SELECT
-                {FIELDS_IN_USE.get("patient_id")},
-                {FIELDS_IN_USE.get("visit_no")},
+                {FIELDS_IN_USE.get('patient_id')},
+                {FIELDS_IN_USE.get('visit_no')},
                 CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (31383, 310071, 301530) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS TRANEXAMIC_ACID,
                 CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (300167, 300168, 300725, 310033) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS AMICAR,
                 CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (800001, 59535, 400030, 5553, 23584, 73156, 23579, 23582) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS B12,
@@ -615,26 +615,26 @@ def patient_outcomes(request):
             FROM (
                 (
                     SELECT
-                        {FIELDS_IN_USE.get("patient_id")},
-                        {FIELDS_IN_USE.get("visit_no")},
-                        {FIELDS_IN_USE.get("medication_id")},
-                        {FIELDS_IN_USE.get("admin_dose")},
-                        {FIELDS_IN_USE.get("dose_unit_desc")}
+                        {FIELDS_IN_USE.get('patient_id')},
+                        {FIELDS_IN_USE.get('visit_no')},
+                        {FIELDS_IN_USE.get('medication_id')},
+                        {FIELDS_IN_USE.get('admin_dose')},
+                        {FIELDS_IN_USE.get('dose_unit_desc')}
                     FROM {TABLES_IN_USE["intraop_meds"]}
                 )
                 UNION ALL
                 (
                     SELECT
-                        {FIELDS_IN_USE.get("patient_id")},
-                        {FIELDS_IN_USE.get("visit_no")},
-                        {FIELDS_IN_USE.get("medication_id")},
-                        {FIELDS_IN_USE.get("admin_dose")},
-                        {FIELDS_IN_USE.get("dose_unit_desc")}
+                        {FIELDS_IN_USE.get('patient_id')},
+                        {FIELDS_IN_USE.get('visit_no')},
+                        {FIELDS_IN_USE.get('medication_id')},
+                        {FIELDS_IN_USE.get('admin_dose')},
+                        {FIELDS_IN_USE.get('dose_unit_desc')}
                     FROM {TABLES_IN_USE["extraop_meds"]}
                 ))
-            GROUP BY {FIELDS_IN_USE.get("patient_id")}, {FIELDS_IN_USE.get("visit_no")}
+            GROUP BY {FIELDS_IN_USE.get('patient_id')}, {FIELDS_IN_USE.get('visit_no')}
         ) MEDS
-            ON VST.{FIELDS_IN_USE.get("patient_id")} = MEDS.{FIELDS_IN_USE.get("patient_id")} AND VST.{FIELDS_IN_USE.get("visit_no")} = MEDS.{FIELDS_IN_USE.get("visit_no")}
+            ON VST.{FIELDS_IN_USE.get('patient_id')} = MEDS.{FIELDS_IN_USE.get('patient_id')} AND VST.{FIELDS_IN_USE.get('visit_no')} = MEDS.{FIELDS_IN_USE.get('visit_no')}
         WHERE 1=1
             {pat_filters_safe_sql}
         """
@@ -660,7 +660,7 @@ def patient_outcomes(request):
 
         return JsonResponse(result_list, safe=False)
     else:
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} Method Not Allowed: {request.method} patient_outcomes User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} patient_outcomes User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -670,111 +670,111 @@ def patient_outcomes(request):
 )
 def hemoglobin(request):
     if request.method == "GET":
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} GET: hemoglobin User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: hemoglobin User: {request.user}")
         command = f"""
         WITH
         LAB_HB AS (
             SELECT
-                V.{FIELDS_IN_USE.get("patient_id")},
-                V.{FIELDS_IN_USE.get("visit_no")},
-                V.{FIELDS_IN_USE.get("draw_dtm")},
-                V.{FIELDS_IN_USE.get("result_dtm")},
-                V.{FIELDS_IN_USE.get("result_code")},
-                V.{FIELDS_IN_USE.get("result_value")}
+                V.{FIELDS_IN_USE.get('patient_id')},
+                V.{FIELDS_IN_USE.get('visit_no')},
+                V.{FIELDS_IN_USE.get('draw_dtm')},
+                V.{FIELDS_IN_USE.get('result_dtm')},
+                V.{FIELDS_IN_USE.get('result_code')},
+                V.{FIELDS_IN_USE.get('result_value')}
             FROM
-                {TABLES_IN_USE.get("visit_labs")} V
-            WHERE UPPER(V.{FIELDS_IN_USE.get("result_desc")}) = "HEMOGLOBIN"
+                {TABLES_IN_USE.get('visit_labs')} V
+            WHERE UPPER(V.{FIELDS_IN_USE.get('result_desc')}) = "HEMOGLOBIN"
         ),
         PREOP_HB AS (
             SELECT
-                X.{FIELDS_IN_USE.get("patient_id")},
-                X.{FIELDS_IN_USE.get("visit_no")},
-                X.{FIELDS_IN_USE.get("case_id")},
-                X.{FIELDS_IN_USE.get("surgery_start_time")},
-                X.{FIELDS_IN_USE.get("surgery_end_time")},
+                X.{FIELDS_IN_USE.get('patient_id')},
+                X.{FIELDS_IN_USE.get('visit_no')},
+                X.{FIELDS_IN_USE.get('case_id')},
+                X.{FIELDS_IN_USE.get('surgery_start_time')},
+                X.{FIELDS_IN_USE.get('surgery_end_time')},
                 X.DI_PREOP_DRAW_DTM,
-                LH2.{FIELDS_IN_USE.get("result_value")}
+                LH2.{FIELDS_IN_USE.get('result_value')}
             FROM (
                 SELECT
-                    SC.{FIELDS_IN_USE.get("patient_id")},
-                    SC.{FIELDS_IN_USE.get("visit_no")},
-                    SC.{FIELDS_IN_USE.get("case_id")},
-                    SC.{FIELDS_IN_USE.get("surgery_start_time")},
-                    SC.{FIELDS_IN_USE.get("surgery_end_time")},
-                    MAX(LH.{FIELDS_IN_USE.get("draw_dtm")}) AS DI_PREOP_DRAW_DTM
+                    SC.{FIELDS_IN_USE.get('patient_id')},
+                    SC.{FIELDS_IN_USE.get('visit_no')},
+                    SC.{FIELDS_IN_USE.get('case_id')},
+                    SC.{FIELDS_IN_USE.get('surgery_start_time')},
+                    SC.{FIELDS_IN_USE.get('surgery_end_time')},
+                    MAX(LH.{FIELDS_IN_USE.get('draw_dtm')}) AS DI_PREOP_DRAW_DTM
                 FROM
-                    {TABLES_IN_USE.get("surgery_case")} SC
+                    {TABLES_IN_USE.get('surgery_case')} SC
                 INNER JOIN LAB_HB LH
-                    ON SC.{FIELDS_IN_USE.get("visit_no")} = LH.{FIELDS_IN_USE.get("visit_no")}
-                WHERE LH.{FIELDS_IN_USE.get("result_dtm")} < SC.{FIELDS_IN_USE.get("surgery_start_time")}
+                    ON SC.{FIELDS_IN_USE.get('visit_no')} = LH.{FIELDS_IN_USE.get('visit_no')}
+                WHERE LH.{FIELDS_IN_USE.get('result_dtm')} < SC.{FIELDS_IN_USE.get('surgery_start_time')}
                 GROUP BY
-                    SC.{FIELDS_IN_USE.get("patient_id")},
-                    SC.{FIELDS_IN_USE.get("visit_no")},
-                    SC.{FIELDS_IN_USE.get("case_id")},
-                    SC.{FIELDS_IN_USE.get("surgery_start_time")},
-                    SC.{FIELDS_IN_USE.get("surgery_end_time")}
+                    SC.{FIELDS_IN_USE.get('patient_id')},
+                    SC.{FIELDS_IN_USE.get('visit_no')},
+                    SC.{FIELDS_IN_USE.get('case_id')},
+                    SC.{FIELDS_IN_USE.get('surgery_start_time')},
+                    SC.{FIELDS_IN_USE.get('surgery_end_time')}
             ) X
             INNER JOIN LAB_HB LH2
-                ON X.{FIELDS_IN_USE.get("visit_no")} = LH2.{FIELDS_IN_USE.get("visit_no")}
-                AND X.DI_PREOP_DRAW_DTM = LH2.{FIELDS_IN_USE.get("draw_dtm")}
+                ON X.{FIELDS_IN_USE.get('visit_no')} = LH2.{FIELDS_IN_USE.get('visit_no')}
+                AND X.DI_PREOP_DRAW_DTM = LH2.{FIELDS_IN_USE.get('draw_dtm')}
         ),
         POSTOP_HB AS (
             SELECT
-                Z.{FIELDS_IN_USE.get("patient_id")},
-                Z.{FIELDS_IN_USE.get("visit_no")},
-                Z.{FIELDS_IN_USE.get("case_id")},
-                Z.{FIELDS_IN_USE.get("surgery_start_time")},
-                Z.{FIELDS_IN_USE.get("surgery_end_time")},
+                Z.{FIELDS_IN_USE.get('patient_id')},
+                Z.{FIELDS_IN_USE.get('visit_no')},
+                Z.{FIELDS_IN_USE.get('case_id')},
+                Z.{FIELDS_IN_USE.get('surgery_start_time')},
+                Z.{FIELDS_IN_USE.get('surgery_end_time')},
                 Z.DI_POSTOP_DRAW_DTM,
-                LH4.{FIELDS_IN_USE.get("result_value")}
+                LH4.{FIELDS_IN_USE.get('result_value')}
             FROM (
                 SELECT
-                    SC2.{FIELDS_IN_USE.get("patient_id")},
-                    SC2.{FIELDS_IN_USE.get("visit_no")},
-                    SC2.{FIELDS_IN_USE.get("case_id")},
-                    SC2.{FIELDS_IN_USE.get("surgery_start_time")},
-                    SC2.{FIELDS_IN_USE.get("surgery_end_time")},
-                    MIN(LH3.{FIELDS_IN_USE.get("draw_dtm")}) AS DI_POSTOP_DRAW_DTM
+                    SC2.{FIELDS_IN_USE.get('patient_id')},
+                    SC2.{FIELDS_IN_USE.get('visit_no')},
+                    SC2.{FIELDS_IN_USE.get('case_id')},
+                    SC2.{FIELDS_IN_USE.get('surgery_start_time')},
+                    SC2.{FIELDS_IN_USE.get('surgery_end_time')},
+                    MIN(LH3.{FIELDS_IN_USE.get('draw_dtm')}) AS DI_POSTOP_DRAW_DTM
                 FROM
-                    {TABLES_IN_USE.get("surgery_case")} SC2
+                    {TABLES_IN_USE.get('surgery_case')} SC2
                 INNER JOIN LAB_HB LH3
-                    ON SC2.{FIELDS_IN_USE.get("visit_no")} = LH3.{FIELDS_IN_USE.get("visit_no")}
-                WHERE LH3.{FIELDS_IN_USE.get("draw_dtm")} > SC2.{FIELDS_IN_USE.get("surgery_end_time")}
+                    ON SC2.{FIELDS_IN_USE.get('visit_no')} = LH3.{FIELDS_IN_USE.get('visit_no')}
+                WHERE LH3.{FIELDS_IN_USE.get('draw_dtm')} > SC2.{FIELDS_IN_USE.get('surgery_end_time')}
                 GROUP BY
-                    SC2.{FIELDS_IN_USE.get("patient_id")},
-                    SC2.{FIELDS_IN_USE.get("visit_no")},
-                    SC2.{FIELDS_IN_USE.get("case_id")},
-                    SC2.{FIELDS_IN_USE.get("surgery_start_time")},
-                    SC2.{FIELDS_IN_USE.get("surgery_end_time")}
+                    SC2.{FIELDS_IN_USE.get('patient_id')},
+                    SC2.{FIELDS_IN_USE.get('visit_no')},
+                    SC2.{FIELDS_IN_USE.get('case_id')},
+                    SC2.{FIELDS_IN_USE.get('surgery_start_time')},
+                    SC2.{FIELDS_IN_USE.get('surgery_end_time')}
             ) Z
             INNER JOIN LAB_HB LH4
-                ON Z.{FIELDS_IN_USE.get("visit_no")} = LH4.{FIELDS_IN_USE.get("visit_no")}
-                AND Z.DI_POSTOP_DRAW_DTM = LH4.{FIELDS_IN_USE.get("draw_dtm")}
+                ON Z.{FIELDS_IN_USE.get('visit_no')} = LH4.{FIELDS_IN_USE.get('visit_no')}
+                AND Z.DI_POSTOP_DRAW_DTM = LH4.{FIELDS_IN_USE.get('draw_dtm')}
         )
         SELECT
-            SC3.{FIELDS_IN_USE.get("patient_id")},
-            SC3.{FIELDS_IN_USE.get("case_id")},
-            SC3.{FIELDS_IN_USE.get("visit_no")},
-            SC3.{FIELDS_IN_USE.get("case_date")},
-            EXTRACT (YEAR from SC3.{FIELDS_IN_USE.get("case_date")}) YEAR,
-            EXTRACT (MONTH from SC3.{FIELDS_IN_USE.get("case_date")}) AS MONTH,
-            SC3.{FIELDS_IN_USE.get("surgery_start_time")},
-            SC3.{FIELDS_IN_USE.get("surgery_end_time")},
-            SC3.{FIELDS_IN_USE.get("surgery_elapsed")},
-            SC3.{FIELDS_IN_USE.get("surgery_type")},
-            SC3.{FIELDS_IN_USE.get("surgeon_id")},
-            SC3.{FIELDS_IN_USE.get("anest_id")},
-            SC3.{FIELDS_IN_USE.get("prim_proc_desc")},
-            SC3.{FIELDS_IN_USE.get("post_op_icu_los")},
-            SC3.{FIELDS_IN_USE.get("sched_site_desc")},
+            SC3.{FIELDS_IN_USE.get('patient_id')},
+            SC3.{FIELDS_IN_USE.get('case_id')},
+            SC3.{FIELDS_IN_USE.get('visit_no')},
+            SC3.{FIELDS_IN_USE.get('case_date')},
+            EXTRACT (YEAR from SC3.{FIELDS_IN_USE.get('case_date')}) YEAR,
+            EXTRACT (MONTH from SC3.{FIELDS_IN_USE.get('case_date')}) AS MONTH,
+            SC3.{FIELDS_IN_USE.get('surgery_start_time')},
+            SC3.{FIELDS_IN_USE.get('surgery_end_time')},
+            SC3.{FIELDS_IN_USE.get('surgery_elapsed')},
+            SC3.{FIELDS_IN_USE.get('surgery_type')},
+            SC3.{FIELDS_IN_USE.get('surgeon_id')},
+            SC3.{FIELDS_IN_USE.get('anest_id')},
+            SC3.{FIELDS_IN_USE.get('prim_proc_desc')},
+            SC3.{FIELDS_IN_USE.get('post_op_icu_los')},
+            SC3.{FIELDS_IN_USE.get('sched_site_desc')},
             MAX(CASE
                 WHEN PRE.DI_PREOP_DRAW_DTM IS NOT NULL
                 THEN PRE.DI_PREOP_DRAW_DTM
             END)
             AS DI_PREOP_DRAW_DTM,
             MAX(CASE
-                WHEN PRE.{FIELDS_IN_USE.get("result_value")} IS NOT NULL
-                THEN PRE.{FIELDS_IN_USE.get("result_value")}
+                WHEN PRE.{FIELDS_IN_USE.get('result_value')} IS NOT NULL
+                THEN PRE.{FIELDS_IN_USE.get('result_value')}
             END)
             AS PREOP_HEMO,
             MAX(CASE
@@ -783,31 +783,31 @@ def hemoglobin(request):
             END)
             AS DI_POSTOP_DRAW_DTM,
             MAX(CASE
-                WHEN POST.{FIELDS_IN_USE.get("result_value")} IS NOT NULL
-                THEN POST.{FIELDS_IN_USE.get("result_value")}
+                WHEN POST.{FIELDS_IN_USE.get('result_value')} IS NOT NULL
+                THEN POST.{FIELDS_IN_USE.get('result_value')}
             END)
             AS POSTOP_HEMO
         FROM
-            {TABLES_IN_USE.get("surgery_case")} SC3
+            {TABLES_IN_USE.get('surgery_case')} SC3
         LEFT OUTER JOIN PREOP_HB PRE
-            ON SC3.{FIELDS_IN_USE.get("case_id")} = PRE.{FIELDS_IN_USE.get("case_id")}
+            ON SC3.{FIELDS_IN_USE.get('case_id')} = PRE.{FIELDS_IN_USE.get('case_id')}
         LEFT OUTER JOIN POSTOP_HB POST
-            ON SC3.{FIELDS_IN_USE.get("case_id")} = POST.{FIELDS_IN_USE.get("case_id")}
-        GROUP BY SC3.{FIELDS_IN_USE.get("patient_id")},
-            SC3.{FIELDS_IN_USE.get("case_id")},
-            SC3.{FIELDS_IN_USE.get("visit_no")},
-            SC3.{FIELDS_IN_USE.get("case_date")},
-            EXTRACT (YEAR from SC3.{FIELDS_IN_USE.get("case_date")}),
-            EXTRACT (MONTH from SC3.{FIELDS_IN_USE.get("case_date")}),
-            SC3.{FIELDS_IN_USE.get("surgery_start_time")},
-            SC3.{FIELDS_IN_USE.get("surgery_end_time")},
-            SC3.{FIELDS_IN_USE.get("surgery_elapsed")},
-            SC3.{FIELDS_IN_USE.get("surgery_type")},
-            SC3.{FIELDS_IN_USE.get("surgeon_id")},
-            SC3.{FIELDS_IN_USE.get("anest_id")},
-            SC3.{FIELDS_IN_USE.get("prim_proc_desc")},
-            SC3.{FIELDS_IN_USE.get("post_op_icu_los")},
-            SC3.{FIELDS_IN_USE.get("sched_site_desc")}
+            ON SC3.{FIELDS_IN_USE.get('case_id')} = POST.{FIELDS_IN_USE.get('case_id')}
+        GROUP BY SC3.{FIELDS_IN_USE.get('patient_id')},
+            SC3.{FIELDS_IN_USE.get('case_id')},
+            SC3.{FIELDS_IN_USE.get('visit_no')},
+            SC3.{FIELDS_IN_USE.get('case_date')},
+            EXTRACT (YEAR from SC3.{FIELDS_IN_USE.get('case_date')}),
+            EXTRACT (MONTH from SC3.{FIELDS_IN_USE.get('case_date')}),
+            SC3.{FIELDS_IN_USE.get('surgery_start_time')},
+            SC3.{FIELDS_IN_USE.get('surgery_end_time')},
+            SC3.{FIELDS_IN_USE.get('surgery_elapsed')},
+            SC3.{FIELDS_IN_USE.get('surgery_type')},
+            SC3.{FIELDS_IN_USE.get('surgeon_id')},
+            SC3.{FIELDS_IN_USE.get('anest_id')},
+            SC3.{FIELDS_IN_USE.get('prim_proc_desc')},
+            SC3.{FIELDS_IN_USE.get('post_op_icu_los')},
+            SC3.{FIELDS_IN_USE.get('sched_site_desc')}
         """
 
         result = execute_sql(command)
@@ -830,7 +830,7 @@ def hemoglobin(request):
 
         return JsonResponse({"result": items})
     else:
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} Method Not Allowed: {request.method} hemoglobin User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} hemoglobin User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -841,10 +841,10 @@ def hemoglobin(request):
 def state(request):
     if request.method == "GET":
         # Get the name from the querystring
-        name = request.GET.get("name")
+        name = request.GET.get('name')
         user = request.user.id
 
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} GET: state Params: name = {name} User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: state Params: name = {name} User: {request.user}")
 
         if name:
             # Get the object from the database and all related StateAccess objects
@@ -873,11 +873,11 @@ def state(request):
 
     elif request.method == "POST":
         # Get the name and definition from the request
-        name = request.POST.get("name")
-        definition = request.POST.get("definition")
+        name = request.POST.get('name')
+        definition = request.POST.get('definition')
         owner = request.user.id
 
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} POST: state Params: name = {name} User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: state Params: name = {name} User: {request.user}")
 
         if State.objects.filter(name=name).exists():
             return HttpResponseBadRequest("a state with that name already exists, try another", 400)
@@ -894,11 +894,11 @@ def state(request):
     elif request.method == "PUT":
         # Get the required information from the request body
         put = ast.literal_eval(request.body.decode())
-        old_name = put.get("old_name")
-        new_name = put.get("new_name")
-        new_definition = put.get("new_definition")
+        old_name = put.get('old_name')
+        new_name = put.get('new_name')
+        new_definition = put.get('new_definition')
 
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} PUT: state Params: old_name = {old_name}, new_name = {new_name} User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} PUT: state Params: old_name = {old_name}, new_name = {new_name} User: {request.user}")
 
         states = [o.name for o in State.objects.all().filter(owner=request.user.id)]
         state_access = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="WR")]
@@ -921,9 +921,9 @@ def state(request):
     elif request.method == "DELETE":
         # Get the required information from the request body
         delete = ast.literal_eval(request.body.decode())
-        name = delete.get("name")
+        name = delete.get('name')
 
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} DELETE: state Params: name = {name} User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} DELETE: state Params: name = {name} User: {request.user}")
 
         # Delete the matching State object
         try:
@@ -941,7 +941,7 @@ def state(request):
         return HttpResponse("state object deleted", 200)
 
     else:
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} Method Not Allowed: {request.method} state User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} state User: {request.user}")
         return HttpResponseNotAllowed(
             ["GET", "POST", "PUT", "DELETE"],
             "Method Not Allowed"
@@ -954,11 +954,11 @@ def state(request):
 )
 def share_state(request):
     if request.method == "POST":
-        name = request.POST.get("name")
-        user = request.POST.get("user")
-        role = request.POST.get("role")
+        name = request.POST.get('name')
+        user = request.POST.get('user')
+        role = request.POST.get('role')
 
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} POST: share_state Params: name = {name}, user = {user}, role = {role} User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: share_state Params: name = {name}, user = {user}, role = {role} User: {request.user}")
 
         requesting_user = request.user.id
 
@@ -995,5 +995,5 @@ def share_state(request):
         return HttpResponse("Added new user to role", 201)
 
     else:
-        logging.info(f"{request.META.get("HTTP_X_FORWARDED_FOR")} Method Not Allowed: {request.method} share_state User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} share_state User: {request.user}")
         return HttpResponseNotAllowed(["POST"], "Method Not Allowed")
