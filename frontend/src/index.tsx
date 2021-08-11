@@ -24,10 +24,10 @@ import './index.css';
 //     }
 // }
 
-whyDidYouRender(React, {
-    trackAllPureComponents: true,
-    // exclude: [/XGrid|RowCells|GridCell/],
-});
+// whyDidYouRender(React, {
+//     trackAllPureComponents: true,
+//     // exclude: [/XGrid|RowCells|GridCell/],
+// });
 
 ReactDOM.render(
     <>

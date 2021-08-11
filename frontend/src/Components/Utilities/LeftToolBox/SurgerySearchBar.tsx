@@ -12,7 +12,6 @@ type Props = { surgeryList: any[] }
 const SurgerySearchBar: FC<Props> = ({ surgeryList }: Props) => {
     const store = useContext(Store)
     const styles = useStyles()
-
     const searchHandler = (input: any) => {
         if (input) {
             if (!store.state.proceduresSelection.includes(input.value)) {
