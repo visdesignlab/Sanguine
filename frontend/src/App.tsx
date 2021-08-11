@@ -27,6 +27,8 @@ const App: FC = () => {
         if (store.configStore.isLoggedIn && hemoData.length === 0) {
             //this need to also be checked to only do once. 
             cacheHemoData();
+        } else {
+            whoamiAPICall(store)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [store.configStore.isLoggedIn])
@@ -69,6 +71,7 @@ const App: FC = () => {
     }, [surgeryUrgencySelection, outcomeFilter, hemoData, currentOutputFilterSet, currentSelectPatientGroup])
 
     async function cacheHemoData() {
+        whoamiAPICall(store)
         fetch(`${process.env.REACT_APP_QUERY_URL}hemoglobin`)
             .then((res) => res.json())
             .then(async (dataHemo) => {
