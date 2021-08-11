@@ -68,7 +68,7 @@ export const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         formControl: {
             margin: theme.spacing(1),
-            minWidth: 200,
+            minWidth: "200px!important",
         },
         root: {
             '& > *': {
@@ -76,36 +76,36 @@ export const useStyles = makeStyles((theme: Theme) =>
             },
         },
         img: {
-            margin: 'auto',
-            display: 'block',
-            maxWidth: '100%',
-            height: "40px"
+            margin: 'auto!important',
+            display: 'block!important',
+            maxWidth: '100%!important',
+            height: "40px!important"
         },
         centerAlignment: {
             textAlign: "center"
         },
         tinyFont: {
-            fontSize: "xx-small"
+            fontSize: "xx-small!important"
 
         },
         containerWidth: {
-            width: "100%",
-            maxWidth: "none",
-            overflow: "auto",
-            height: "100%"
+            width: "100%!important",
+            maxWidth: "none!important",
+            overflow: "auto!important",
+            height: "100%!important"
         },
         gridWidth: {
-            width: "inherit"
+            width: "inherit!important"
         },
         chartWrapper: {
-            height: "100%"
+            height: "100%!important"
         },
         subheader: {
-            padding: "5px",
-            backgroundColor: "white"
+            padding: "5px!important",
+            backgroundColor: "white!important"
         },
         tooltipFont: {
-            fontSize: "small",
+            fontSize: "small!important",
             textAlign: "center"
         }
     }),
