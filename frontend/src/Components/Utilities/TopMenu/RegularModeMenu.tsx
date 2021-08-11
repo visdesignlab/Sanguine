@@ -11,6 +11,7 @@ import BugReportOutlinedIcon from '@material-ui/icons/BugReportOutlined';
 import { useStyles } from "../../../Presets/StyledComponents";
 import AddModeTopMenu from "./AddModeTopMenu";
 import UndoRedoButtons from "./UndoRedoButtons";
+import StateManagementSuite from "./StateManagementSuite";
 
 const RegularModeMenu: FC = () => {
     const store = useContext(Store)
@@ -66,54 +67,7 @@ const RegularModeMenu: FC = () => {
                     </div>
                 </Grid>
                 <Divider orientation="vertical" flexItem />
-                <Grid item xs>
-                    <div className={useStyles().centerAlignment}>
-                        <Button variant="outlined" >State Management</Button>
-                    </div>
-                    {/* <Dropdown button text="State Management"> */}
-                    {/* <Dropdown.Menu>
-                    <Dropdown.Item >
-                        <Dropdown simple selectOnBlur={false} text="Load saved states"  >
-                            <Dropdown.Menu>
-                                {listOfSavedState.map((d) => {
-                                    return (<Dropdown.Item onClick={() => { loadSavedState(d) }} content={d} />)
-                                })}
-                            </Dropdown.Menu>
-                        </Dropdown>
-                    </Dropdown.Item>
-
-                    <Dropdown.Item >
-                        <Dropdown simple selectOnBlur={false} text="Share states with user"  >
-                            <Dropdown.Menu>
-                                {listOfSavedState.map((d) => {
-                                    return (<Dropdown.Item content={d} onClick={() => { shareSpecificState(d) }} />)
-                                })}
-                            </Dropdown.Menu>
-                        </Dropdown>
-
-                    </Dropdown.Item>
-
-                    <Dropdown.Item icon="share alternate"
-                        content="Share through URL"
-                        onClick={() => {
-                            setShareUrl(
-                                //Kiran says there is a bug with the exportState, so using exportState(false) for now
-                                `${window.location.href}#${provenance.exportState(false)}`,
-                            );
-                            setOpenShareModal(true)
-                        }}
-                    />
-                    <Dropdown.Item icon="save" content="Save State"
-                        onClick={() => { setOpenSaveStateModal(true) }} />
-
-                    <Dropdown.Item icon="setting" content="Manage saved states"
-                        onClick={() => {
-                            setOpenManageStateModal(true)
-                        }}
-                    />
-                </Dropdown.Menu> */}
-                    {/* </Dropdown> */}
-                </Grid>
+                <StateManagementSuite />
 
                 {/* Preview Mode */}
                 <Divider orientation="vertical" flexItem />
