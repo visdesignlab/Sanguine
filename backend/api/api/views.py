@@ -683,7 +683,7 @@ def hemoglobin(request):
                 V.{FIELDS_IN_USE.get('result_value')}
             FROM
                 {TABLES_IN_USE.get('visit_labs')} V
-            WHERE UPPER(V.{FIELDS_IN_USE.get('result_desc')}) = "HEMOGLOBIN"
+            WHERE UPPER(V.{FIELDS_IN_USE.get('result_desc')}) = \'HEMOGLOBIN\'
         ),
         PREOP_HB AS (
             SELECT
