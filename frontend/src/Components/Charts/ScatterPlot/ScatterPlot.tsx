@@ -85,7 +85,7 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
                 })
 
                 //     !!!!!!!this is the code of checking brushed patient
-                if (caseList.length > 1000 || caseList.length === 0) {
+                if (caseList.length === 0) {
                     updateBrushLoc(null)
                     brushDef.move(svgSelection.select(".brush-layer"), null)
                     store.selectionStore.updateBrush([])
@@ -104,14 +104,20 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
 
     //Clear the brush
     useEffect(() => {
-        brushDef.move(svgSelection.select(".brush-layer"), null)
+        clearBrush()
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data])
 
+    const clearBrush = () => {
+        brushDef.move(svgSelection.select(".brush-layer"), null)
+    }
 
     useEffect(() => {
         let newbrushedCaseList = currentBrushedPatientGroup.map(d => d.CASE_ID)
         stateUpdateWrapperUseJSON(brushedCaseList, newbrushedCaseList, updatebrushedCaseList)
+        if (currentBrushedPatientGroup.length === 0) {
+            clearBrush()
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentBrushedPatientGroup])
 

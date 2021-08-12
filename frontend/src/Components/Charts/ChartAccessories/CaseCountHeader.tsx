@@ -3,7 +3,7 @@ import { observer } from "mobx-react"
 import { FC, useCallback, useContext } from "react"
 import { CaseScaleGenerator } from "../../../HelperFunctions/Scales"
 import Store from "../../../Interfaces/Store"
-import { CaseRectWidth } from "../../../Presets/Constants"
+import { CaseRectWidth, DifferentialSquareWidth, postop_color, preop_color } from "../../../Presets/Constants"
 
 type Props = {
     caseCount: number;
@@ -11,9 +11,11 @@ type Props = {
     yPos: number;
     caseMax: number;
     height: number;
+    showComparisonRect: boolean;
+    isFalseComparison: boolean;
 }
 
-const CaseCountHeader: FC<Props> = ({ caseCount, yPos, zeroCaseNum, caseMax, height }: Props) => {
+const CaseCountHeader: FC<Props> = ({ showComparisonRect, isFalseComparison, caseCount, yPos, zeroCaseNum, caseMax, height }: Props) => {
     const store = useContext(Store)
     const { showZero } = store.state;
 
@@ -24,20 +26,26 @@ const CaseCountHeader: FC<Props> = ({ caseCount, yPos, zeroCaseNum, caseMax, hei
     return (<g>
         <rect
             fill={interpolateGreys(caseScale()(store.state.showZero ? caseCount : (caseCount - zeroCaseNum)))}
-            x={-CaseRectWidth - 5}
+            x={-CaseRectWidth - (showComparisonRect ? 10 : 5)}
             y={yPos}
             width={CaseRectWidth}
             height={height}
-            strokeWidth={2}
-        />
+            strokeWidth={2} />
+        {showComparisonRect ?
+            <rect
+                fill={isFalseComparison ? postop_color : preop_color}
+                y={yPos}
+                height={height}
+                opacity={0.65}
+                width={DifferentialSquareWidth}
+                x={-10} /> : <></>}
         <text
             fill={caseScale()(store.state.showZero ? caseCount : (caseCount - zeroCaseNum)) > 0.4 ? "white" : "black"}
-            x={-20}
+            x={-20 - (showComparisonRect ? 5 : 0)}
             y={yPos + 0.5 * height}
             alignmentBaseline={"central"}
             textAnchor={"middle"}
-            fontSize="12px"
-        >
+            fontSize="12px">
             {showZero ? caseCount : (caseCount - zeroCaseNum)}
         </text>
     </g>)
