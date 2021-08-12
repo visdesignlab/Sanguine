@@ -89,14 +89,9 @@ const LayoutGenerator: FC = () => {
                         xAggregationOption={layout.aggregatedBy}
                         yValueOption={layout.valueToVisualize}
                         chartTypeIndexinArray={typeDiction.indexOf(layout.plotType)}
+                        comparisonDate={layout.outcomeComparison ? undefined : layout.interventionDate}
                         outcomeComparison={layout.outcomeComparison}
                     />
-                </div>);
-
-            case "INTERVENTION":
-                return (<div key={layout.i}
-                    className={"parent-node" + layout.i}>
-                    <ChartStandardButtons chartID={layout.i} />
                 </div>);
 
         }

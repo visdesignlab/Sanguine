@@ -91,7 +91,8 @@ const HeatMap: FC<Props> = ({ outcomeComparison, interventionDate, secondaryExtr
             interventionDate={interventionDate}
             firstTotal={firstTotal}
             secondTotal={secondTotal}
-            outcomeComparison={outcomeComparison} /> : <></>}
+            outcomeComparison={outcomeComparison}
+        /> : <></>}
 
         <g>
             {data.map((dataPoint) => {
