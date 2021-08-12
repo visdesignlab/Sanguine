@@ -35,8 +35,8 @@ const Dashboard: FC = () => {
                     <DetailView />
                 </Grid>
             </Grid>
-            <BrowserWarning />
-            <DataRetrieval />
+            {/* <BrowserWarning />
+            <DataRetrieval /> */}
         </div>
     )
 }
