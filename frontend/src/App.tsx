@@ -59,7 +59,6 @@ const App: FC = () => {
 
     //Data Updates
     useDeepCompareEffect(() => {
-        console.log(store.state)
         let patientIDSet: Set<number> | undefined;
         if (currentSelectPatientGroup.length > 0) {
             patientIDSet = new Set<number>()
@@ -72,7 +71,9 @@ const App: FC = () => {
     }, [surgeryUrgencySelection, outcomeFilter, hemoData, currentOutputFilterSet, currentSelectPatientGroup])
 
     async function cacheHemoData() {
-        //     whoamiAPICall(store)
+        if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
+            whoamiAPICall(store)
+        }
         fetch(`${process.env.REACT_APP_QUERY_URL}hemoglobin`)
             .then((res) => res.json())
             .then(async (dataHemo) => {
