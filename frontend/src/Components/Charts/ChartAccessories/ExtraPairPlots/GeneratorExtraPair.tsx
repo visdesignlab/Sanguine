@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { observer } from "mobx-react";
 import styled from "styled-components";
-import { select, max, format } from "d3";
+import { max, format } from "d3";
 import { ExtraPairPoint } from "../../../../Interfaces/Types/DataTypes";
 import { ExtraPairPadding, ExtraPairWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, OffsetDict } from "../../../../Presets/Constants";
 import { AcronymDictionary } from "../../../../Presets/DataDict";

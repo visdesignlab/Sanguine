@@ -1,6 +1,5 @@
 import { observer } from "mobx-react"
 import { FC, useContext } from "react"
-// import { Container, Grid } from "semantic-ui-react"
 import BrowserWarning from "./Components/Modals/BrowserWarning"
 import DataRetrieval from "./Components/Modals/DataRetrieval"
 import LeftToolBox from "./Components/Utilities/LeftToolBox/LeftToolBox"
@@ -35,8 +34,8 @@ const Dashboard: FC = () => {
                     <DetailView />
                 </Grid>
             </Grid>
-            {/* <BrowserWarning />
-            <DataRetrieval /> */}
+            <BrowserWarning />
+            <DataRetrieval />
         </div>
     )
 }
