@@ -1,7 +1,7 @@
-import { scaleBand, scaleLinear, select } from "d3";
-import { FC, useCallback, useEffect, useState } from "react"
+import { scaleBand, scaleLinear } from "d3";
+import { FC, useCallback, useState } from "react"
 import { CostBarChartDataPoint, ExtraPairPoint } from "../../../Interfaces/Types/DataTypes"
-import { greyScaleRange, OffsetDict } from "../../../Presets/Constants";
+import { OffsetDict } from "../../../Presets/Constants";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import useDeepCompareEffect from "use-deep-compare-effect";
 import { observer } from "mobx-react";
