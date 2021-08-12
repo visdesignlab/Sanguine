@@ -119,7 +119,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                         <ListItemText primary="Individual Cases"
                             secondary={`${store.chartStore.totalIndividualCaseCount}/${totalCaseNum}`} />
                         <ListItemSecondaryAction>
-                            <Tooltip title={<div className={styles.tooltipFont}>Case count can be reduced by both filter and empty data.</div>}>
+                            <Tooltip title={<div className={styles.tooltipFont}>Case count can be reduced by both filter and missing data.</div>}>
                                 <IconButton size="small" disableRipple >
                                     <ErrorIcon />
                                 </IconButton>
