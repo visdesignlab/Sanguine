@@ -110,7 +110,7 @@ const SaveStateModal: FC = () => {
             </DialogContent>
             <DialogActions>
                 <Button onClick={() => { store.configStore.openSaveStateDialog = false }}>Cancel</Button>
-                <Button color="primary" onClick={() => { saveState() }}>Confirm</Button>
+                <Button color="primary" disabled={stateName.length === 0} onClick={() => { saveState() }}>Confirm</Button>
             </DialogActions>
         </Dialog>
         <Snackbar open={openErrorMessage} autoHideDuration={6000} onClose={() => { setOpenError(false) }}>
