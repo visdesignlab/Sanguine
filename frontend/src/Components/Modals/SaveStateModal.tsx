@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, TextField } from "@material-ui/core";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormGroup, Snackbar, Switch, TextField } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import { observer } from "mobx-react";
 import { FC, useState, useContext } from "react";
@@ -12,6 +12,7 @@ const SaveStateModal: FC = () => {
     const [errorMessage, setErrorMessage] = useState("")
     const [openErrorMessage, setOpenError] = useState(false);
     const [openSuccessMessage, setOpenSuccessMessage] = useState(false);
+    const [publicAccess, setPublicAccess] = useState(false);
 
     const saveState = () => {
         const csrftoken = simulateAPIClick()
@@ -29,19 +30,14 @@ const SaveStateModal: FC = () => {
                 body: JSON.stringify({ old_name: stateName, new_name: stateName, new_definition: store.provenance.exportState(false) })
             }).then(response => {
                 if (response.status === 200) {
-                    setOpenSuccessMessage(true)
-                    store.configStore.openSaveStateDialog = false
-                    setStateName("")
-                    setErrorMessage("")
+                    onSuccess(false);
                 } else {
                     response.text().then(error => {
-                        setErrorMessage(error);
-                        console.error('There has been a problem with your fetch operation:', response.statusText);
+                        onFail(response.statusText);
                     })
                 }
             }).catch(error => {
-                setErrorMessage(error)
-                console.error('There has been a problem with your fetch operation:', error);
+                onFail(error.toString())
             })
         } else {
             fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
@@ -54,24 +50,39 @@ const SaveStateModal: FC = () => {
                     "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
                     "Access-Control-Allow-Credentials": "true",
                 },
-                body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&definition=${store.provenance.exportState(false)}`
+                body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&definition=${store.provenance.exportState(false)}&public=${publicAccess.toString()}`
+            }).then(response => {
+                if (response.status === 200) {
+                    onSuccess(true);
+                } else {
+                    response.text().then(error => {
+                        onFail(response.statusText);
+
+                    })
+                }
+            }).catch(error => {
+                onFail(error.toString());
             })
-                .then(response => {
-                    if (response.status === 200) {
-                        store.configStore.openSaveStateDialog = false;
-                        store.configStore.addNewState(stateName)
-                        setStateName("")
-                        setErrorMessage("")
-                    } else {
-                        response.text().then(error => {
-                            setErrorMessage(response.statusText);
-                            setOpenError(true)
-                            console.error('There has been a problem with your fetch operation:', response.statusText);
-                        })
-                    }
-                })
         }
 
+    }
+
+    const onSuccess = (newState: boolean) => {
+        store.configStore.openSaveStateDialog = false;
+        if (newState) {
+            store.configStore.addNewState(stateName);
+        }
+        setOpenSuccessMessage(true);
+        setStateName("")
+        setErrorMessage("")
+        setPublicAccess(false);
+        setOpenError(false)
+    }
+
+    const onFail = (errorMessage: string) => {
+        setErrorMessage(errorMessage)
+        setOpenError(true)
+        console.error('There has been a problem with your fetch operation:', errorMessage);
     }
 
     return <div>
@@ -79,9 +90,23 @@ const SaveStateModal: FC = () => {
             <DialogTitle>Save the current state</DialogTitle>
             <DialogContent>
                 <DialogContentText>
-                    Save the current state with a state name, and then click save.
+                    Save the current state with a state name, select the state privacy setting, and then click save.
                 </DialogContentText>
-                <TextField fullWidth label="State Name" onChange={(e) => { setStateName(e.target.value) }} value={stateName} />
+                <FormGroup>
+                    <TextField fullWidth label="State Name" onChange={(e) => { setStateName(e.target.value) }} value={stateName} />
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={publicAccess}
+                                onChange={(e) => { setPublicAccess(e.target.checked) }}
+                                name="state-privacy"
+                                color="primary"
+                            />
+                        }
+                        label={publicAccess ? "Public State" : "Private State"}
+                    />
+                </FormGroup>
+
             </DialogContent>
             <DialogActions>
                 <Button onClick={() => { store.configStore.openSaveStateDialog = false }}>Cancel</Button>
