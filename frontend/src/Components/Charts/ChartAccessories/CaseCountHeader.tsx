@@ -22,15 +22,7 @@ const CaseCountHeader: FC<Props> = ({ showComparisonRect, isFalseComparison, cas
     const caseScale = useCallback(() => {
         return CaseScaleGenerator(caseMax)
     }, [caseMax])
-    //         < rect
-    //     fill = { preop_color }
-    //     x = {- 15
-    // }
-    // y = { aggregationScale()(dataPoint.aggregateAttribute)}
-    // width = { differentialSquareWidth }
-    // opacity = { 0.65}
-    // height = { aggregationScale().bandwidth() * 0.47 }
-    //     />
+
     return (<g>
         <rect
             fill={interpolateGreys(caseScale()(store.state.showZero ? caseCount : (caseCount - zeroCaseNum)))}
