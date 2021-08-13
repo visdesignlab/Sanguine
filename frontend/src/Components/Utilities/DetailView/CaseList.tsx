@@ -52,5 +52,5 @@ interface CaseItemProps {
 }
 
 const CaseItem = styled(ListItem) <CaseItemProps>`
-  background:${props => props.isSelected ? "#ecbe8d" : 'none'};`
+  background:${props => props.isSelected ? "#ecbe8d" : 'none'};`;
 
