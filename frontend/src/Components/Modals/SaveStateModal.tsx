@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormGroup, Snackbar, Switch, TextField } from "@material-ui/core";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormGroup, Radio, RadioGroup, Snackbar, Switch, TextField } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 import { observer } from "mobx-react";
 import { FC, useState, useContext } from "react";
@@ -95,18 +95,28 @@ const SaveStateModal: FC = () => {
                 </DialogContentText>
                 <FormGroup>
                     <TextField fullWidth label="State Name" onChange={(e) => { setStateName(e.target.value) }} value={stateName} />
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={publicAccess}
-                                onChange={(e) => { setPublicAccess(e.target.checked) }}
-                                name="state-privacy"
-                                color="primary"
-                            />
-                        }
-                        label={publicAccess ? "Public State" : "Private State"}
-                    />
+                    <RadioGroup row onChange={(e) => { setPublicAccess(e.target.value === "PublicState") }} value={publicAccess ? "PublicState" : "PrivateState"}>
+                        <FormControlLabel
+                            value="PublicState"
+                            control={
+                                <Radio
+                                    name="state-public"
+                                    color="primary"
+                                />
+                            }
+                            label="Public State"
+                        />
+                        <FormControlLabel
+                            value="PrivateState"
+                            control={
+                                <Radio name="state-private" color="primary" />
+                            }
+                            label="Private State"
+                        />
+                    </RadioGroup>
                 </FormGroup>
+
+
 
             </DialogContent>
             <DialogActions>
