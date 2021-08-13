@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import { FC, useContext, useState } from "react";
 import Store from "../../Interfaces/Store";
 import { simulateAPIClick } from "../../Interfaces/UserManagement";
+import { SnackBarCloseTime } from "../../Presets/Constants";
 
 type Props = {
     stateName: string;
@@ -99,12 +100,12 @@ const UIDInputModal: FC<Props> = ({ stateName }: Props) => {
                 </DialogActions>
             </DialogContent>
         </Dialog>
-        <Snackbar open={openErrorMessage} autoHideDuration={6000} onClose={() => { setOpenErrorMessage(false) }}>
+        <Snackbar open={openErrorMessage} autoHideDuration={SnackBarCloseTime} onClose={() => { setOpenErrorMessage(false) }}>
             <Alert onClose={() => { setOpenErrorMessage(false); setErrorMessage("") }} severity="error">
                 An error occured: {errorMessage}
             </Alert>
         </Snackbar>
-        <Snackbar open={openSuccessMessage} autoHideDuration={6000} onClose={() => { setOpenSuccess(false) }}>
+        <Snackbar open={openSuccessMessage} autoHideDuration={SnackBarCloseTime} onClose={() => { setOpenSuccess(false) }}>
             <Alert onClose={() => { setOpenSuccess(false); }} severity="success">
                 State saved!
             </Alert>

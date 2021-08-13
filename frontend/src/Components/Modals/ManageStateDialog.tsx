@@ -6,6 +6,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import { simulateAPIClick } from "../../Interfaces/UserManagement";
 import { Alert } from "@material-ui/lab";
 import { observer } from "mobx-react";
+import { SnackBarCloseTime } from "../../Presets/Constants";
 
 const ManageStateDialog: FC = () => {
     const store = useContext(Store);
@@ -69,7 +70,7 @@ const ManageStateDialog: FC = () => {
                 </Button>
             </DialogActions>
         </Dialog>
-        <Snackbar open={openErrorMessage} autoHideDuration={6000} onClose={() => { setOpenError(false) }}>
+        <Snackbar open={openErrorMessage} autoHideDuration={SnackBarCloseTime} onClose={() => { setOpenError(false) }}>
             <Alert onClose={() => { setOpenError(false); setErrorMessage("") }} severity="error">
                 An error occured: {errorMessage}
             </Alert>

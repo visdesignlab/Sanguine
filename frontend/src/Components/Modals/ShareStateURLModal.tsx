@@ -5,6 +5,7 @@ import Store from "../../Interfaces/Store";
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import { Alert } from "@material-ui/lab";
 import { copyTextToClipboard } from "../../HelperFunctions/Clipboard";
+import { SnackBarCloseTime } from "../../Presets/Constants";
 
 
 type Props = {
@@ -45,7 +46,7 @@ const ShareStateUrlModal: FC<Props> = ({ shareUrl }: Props) => {
 
             </DialogActions>
         </Dialog>
-        <Snackbar open={showAlert} autoHideDuration={6000} onClose={() => { setShowAlert(false) }}>
+        <Snackbar open={showAlert} autoHideDuration={SnackBarCloseTime} onClose={() => { setShowAlert(false) }}>
             <Alert onClose={() => { setShowAlert(false) }} severity={errorOccured ? "error" : "success"}>
                 {errorOccured ? "An error occured. Please copy the URL manually." : "Copied to clipboard"}
             </Alert>
