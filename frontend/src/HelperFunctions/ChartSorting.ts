@@ -1,4 +1,4 @@
-import { BasicAggregatedDatePoint, HeatMapDataPoint } from "../Interfaces/Types/DataTypes";
+import { BasicAggregatedDatePoint } from "../Interfaces/Types/DataTypes";
 
 export const sortHelper = (data: BasicAggregatedDatePoint[], xAggregationOption: string, showZero: boolean, secondaryData?: BasicAggregatedDatePoint[]) => {
     let newCaseMax = 0;

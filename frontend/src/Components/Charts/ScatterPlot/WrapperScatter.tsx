@@ -1,6 +1,6 @@
-import { Container, Grid, IconButton, Menu, MenuItem } from "@material-ui/core";
+import { Container, Grid } from "@material-ui/core";
 import { observer } from "mobx-react";
-import { FC, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { FC, useContext, useLayoutEffect, useRef, useState } from "react";
 import { DataContext } from "../../../App";
 import Store from "../../../Interfaces/Store";
 import { ScatterDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";

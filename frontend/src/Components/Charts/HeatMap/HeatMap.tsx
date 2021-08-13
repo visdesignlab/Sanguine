@@ -4,11 +4,11 @@ import { FC, useState } from "react";
 import { sortHelper } from "../../../HelperFunctions/ChartSorting";
 import Store from "../../../Interfaces/Store";
 import { ExtraPairPoint, HeatMapDataPoint } from "../../../Interfaces/Types/DataTypes";
-import { BloodProductCap, DifferentialSquareWidth, ExtraPairPadding, ExtraPairWidth, OffsetDict, postop_color, preop_color } from "../../../Presets/Constants";
+import { BloodProductCap, OffsetDict } from "../../../Presets/Constants";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import { useCallback } from "react";
 import { AggregationScaleGenerator, ValueScaleGenerator } from "../../../HelperFunctions/Scales";
-import { range, timeFormat } from "d3";
+import { range } from "d3";
 import HeatMapAxis from "../ChartAccessories/HeatMapAxis";
 import { ChartG, HeatMapDividerLine } from "../../../Presets/StyledSVGComponents";
 import DualColorLegend from "../ChartAccessories/DualColorLegend";
@@ -91,7 +91,8 @@ const HeatMap: FC<Props> = ({ outcomeComparison, interventionDate, secondaryExtr
             interventionDate={interventionDate}
             firstTotal={firstTotal}
             secondTotal={secondTotal}
-            outcomeComparison={outcomeComparison} /> : <></>}
+            outcomeComparison={outcomeComparison}
+        /> : <></>}
 
         <g>
             {data.map((dataPoint) => {
