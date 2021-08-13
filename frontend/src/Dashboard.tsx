@@ -34,8 +34,12 @@ const Dashboard: FC = () => {
                     <DetailView />
                 </Grid>
             </Grid>
-            <BrowserWarning />
-            <DataRetrieval />
+            {(process.env.REACT_APP_REQUIRE_LOGIN === "true") ?
+                <>
+                    <BrowserWarning />
+                    <DataRetrieval />
+                </> : <></>}
+
         </div>
     )
 }

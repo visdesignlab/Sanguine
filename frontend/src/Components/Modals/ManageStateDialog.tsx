@@ -6,11 +6,13 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import { simulateAPIClick } from "../../Interfaces/UserManagement";
 import { Alert } from "@material-ui/lab";
 import { observer } from "mobx-react";
+import { SnackBarCloseTime } from "../../Presets/Constants";
 
 const ManageStateDialog: FC = () => {
     const store = useContext(Store);
     const [errorMessage, setErrorMessage] = useState("")
     const [openErrorMessage, setOpenError] = useState(false);
+    const [openSuccess, setOpenSuccess] = useState(false);
 
 
     const removeState = (stateName: string) => {
@@ -29,11 +31,10 @@ const ManageStateDialog: FC = () => {
         }).then(response => {
             if (response.status === 200) {
                 store.configStore.savedState = store.configStore.savedState.filter(d => d !== stateName)
-                store.configStore.openManageStateDialog = false
+                setOpenSuccess(true);
                 setErrorMessage("")
             } else {
                 response.text().then(error => {
-
                     setErrorMessage(response.statusText);
                     setOpenError(true)
                     console.error('There has been a problem with your fetch operation:', response.statusText);
@@ -69,9 +70,14 @@ const ManageStateDialog: FC = () => {
                 </Button>
             </DialogActions>
         </Dialog>
-        <Snackbar open={openErrorMessage} autoHideDuration={6000} onClose={() => { setOpenError(false) }}>
+        <Snackbar open={openErrorMessage} autoHideDuration={SnackBarCloseTime} onClose={() => { setOpenError(false) }}>
             <Alert onClose={() => { setOpenError(false); setErrorMessage("") }} severity="error">
                 An error occured: {errorMessage}
+            </Alert>
+        </Snackbar>
+        <Snackbar open={openSuccess} autoHideDuration={SnackBarCloseTime} onClose={() => { setOpenSuccess(false) }}>
+            <Alert onClose={() => { setOpenSuccess(false) }} severity="success">
+                Deletion succeed.
             </Alert>
         </Snackbar>
     </div>)
