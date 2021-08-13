@@ -876,10 +876,9 @@ def state(request):
         name = request.POST.get('name')
         definition = request.POST.get('definition')
         owner = request.user.id
-        public = request.POST.get("public")
+        public_request = request.POST.get("public")
 
-        if not public != "true":
-            public = False
+        public = True if public_request == "true" else False
 
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: state Params: name = {name}, public = {public} User: {request.user}")
 
@@ -901,7 +900,9 @@ def state(request):
         old_name = put.get('old_name')
         new_name = put.get('new_name')
         new_definition = put.get('new_definition')
-        new_public = put.get('new_public')
+        new_public_request = put.get('new_public')
+
+        new_public = True if new_public_request == "true" else False
 
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} PUT: state Params: old_name = {old_name}, new_name = {new_name} User: {request.user}")
 
