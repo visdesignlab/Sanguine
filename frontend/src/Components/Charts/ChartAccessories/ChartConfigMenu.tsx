@@ -2,7 +2,7 @@ import { useContext, useState } from "react";
 import { FC } from "react";
 
 import Store from "../../../Interfaces/Store";
-import { addOptions, BloodComponentOptions, OutcomeOptions, ScatterYOptions, typeDiction } from "../../../Presets/DataDict";
+import { addOptions, OutcomeOptions, typeDiction } from "../../../Presets/DataDict";
 import SettingsIcon from '@material-ui/icons/Settings';
 import NestedMenuItem from "material-ui-nested-menu-item";
 import { IconButton, Menu, MenuItem } from "@material-ui/core";
