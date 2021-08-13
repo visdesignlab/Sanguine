@@ -30,11 +30,9 @@ const ManageStateDialog: FC = () => {
         }).then(response => {
             if (response.status === 200) {
                 store.configStore.savedState = store.configStore.savedState.filter(d => d !== stateName)
-                store.configStore.openManageStateDialog = false
                 setErrorMessage("")
             } else {
                 response.text().then(error => {
-
                     setErrorMessage(response.statusText);
                     setOpenError(true)
                     console.error('There has been a problem with your fetch operation:', response.statusText);
