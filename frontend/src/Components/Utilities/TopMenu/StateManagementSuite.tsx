@@ -17,6 +17,7 @@ const StateManagementSuite: FC = () => {
     const [selectedState, setSelectedState] = useState("")
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        fetchSavedStates();
         setAnchorEl(event.currentTarget);
     };
 
@@ -25,15 +26,15 @@ const StateManagementSuite: FC = () => {
     };
     // // const [listOfSavedState, setListOfSavedState] = useState<string[]>([])
 
-    // async function fetchSavedStates() {
-    //     const res = await fetch(`${process.env.REACT_APP_QUERY_URL}state`)
-    //     const result = await res.json()
-    //     if (result) {
-    //         const resultList = result.map((d: any[]) => d);
-    //         // stateUpdateWrapperUseJSON(listOfSavedState, resultList, setListOfSavedState)
-    //         store.configStore.savedState = resultList;
-    //     }
-    // }
+    async function fetchSavedStates() {
+        const res = await fetch(`${process.env.REACT_APP_QUERY_URL}state`)
+        const result = await res.json()
+        if (result) {
+            const resultList = result.map((d: any[]) => d);
+            // stateUpdateWrapperUseJSON(listOfSavedState, resultList, setListOfSavedState)
+            store.configStore.savedState = resultList;
+        }
+    }
 
     useEffect(() => {
         fetch(`${process.env.REACT_APP_QUERY_URL}state`)

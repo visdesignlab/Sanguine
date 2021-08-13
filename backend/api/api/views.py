@@ -855,7 +855,7 @@ def state(request):
             state_access = StateAccess.objects.filter(state=state).filter(user=user)
 
             # Make sure that user is owner or at least reader
-            if not(str(state.owner) == str(user) or state_access):
+            if not(str(state.owner) == str(user) or state_access or state.public):
                 return HttpResponseBadRequest("Not authorized", 401)
 
             # Return the json for the state
@@ -865,8 +865,9 @@ def state(request):
             # Get the names of all the state objects that a user can access
             states = [o.name for o in State.objects.all().filter(owner=user)]
             state_access = [o.state.name for o in StateAccess.objects.filter(user=user)]
+            public_states = [o.name for o in State.objects.all().filter(public=True)]
 
-            response = set(states + state_access)
+            response = set(states + state_access + public_states)
 
             # Return the names as a list
             return JsonResponse(list(response), safe=False)
@@ -876,15 +877,18 @@ def state(request):
         name = request.POST.get('name')
         definition = request.POST.get('definition')
         owner = request.user.id
+        public_request = request.POST.get("public")
 
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: state Params: name = {name} User: {request.user}")
+        public = True if public_request == "true" else False
+
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: state Params: name = {name}, public = {public} User: {request.user}")
 
         if State.objects.filter(name=name).exists():
             return HttpResponseBadRequest("a state with that name already exists, try another", 400)
 
         if name and definition:  # owner is guaranteed by login
             # Create and save the new State object
-            new_state = State(name=name, definition=definition, owner=owner)
+            new_state = State(name=name, definition=definition, owner=owner, public=public)
             new_state.save()
 
             return HttpResponse("state object created", 200)
@@ -897,23 +901,29 @@ def state(request):
         old_name = put.get('old_name')
         new_name = put.get('new_name')
         new_definition = put.get('new_definition')
+        new_public_request = put.get('new_public')
+
+        new_public = True if new_public_request == "true" else False
 
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} PUT: state Params: old_name = {old_name}, new_name = {new_name} User: {request.user}")
 
-        states = [o.name for o in State.objects.all().filter(owner=request.user.id)]
-        state_access = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="WR")]
-        state_read_access = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="RE")]
-        allowed_states = response = set(states + state_access)
+        owned_states = [o.name for o in State.objects.all().filter(owner=request.user.id)]
+        public_states = [o.name for o in State.objects.all().filter(public=True)]
+        writable_states = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="WR")]
+        readable_states = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="RE")]
+        all_accessible_states = set(owned_states + public_states + writable_states + readable_states)
+        all_modifiable_states = set(owned_states + writable_states)
 
-        if old_name in state_read_access:
-            return HttpResponseBadRequest("Not authorized", 401)
-        elif old_name not in allowed_states:
+        if old_name not in all_accessible_states:
             return HttpResponseBadRequest("State not found", 404)
+        if old_name not in all_modifiable_states:
+            return HttpResponseBadRequest("Not authorized", 401)
 
         # Update the State object and save
         result = State.objects.get(name=old_name)
         result.name = new_name
         result.definition = new_definition
+        result.public = new_public
         result.save()
 
         return HttpResponse("state object updated", 200)
