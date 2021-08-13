@@ -12,6 +12,7 @@ const ManageStateDialog: FC = () => {
     const store = useContext(Store);
     const [errorMessage, setErrorMessage] = useState("")
     const [openErrorMessage, setOpenError] = useState(false);
+    const [openSuccess, setOpenSuccess] = useState(false);
 
 
     const removeState = (stateName: string) => {
@@ -30,6 +31,7 @@ const ManageStateDialog: FC = () => {
         }).then(response => {
             if (response.status === 200) {
                 store.configStore.savedState = store.configStore.savedState.filter(d => d !== stateName)
+                setOpenSuccess(true);
                 setErrorMessage("")
             } else {
                 response.text().then(error => {
@@ -71,6 +73,11 @@ const ManageStateDialog: FC = () => {
         <Snackbar open={openErrorMessage} autoHideDuration={SnackBarCloseTime} onClose={() => { setOpenError(false) }}>
             <Alert onClose={() => { setOpenError(false); setErrorMessage("") }} severity="error">
                 An error occured: {errorMessage}
+            </Alert>
+        </Snackbar>
+        <Snackbar open={openSuccess} autoHideDuration={SnackBarCloseTime} onClose={() => { setOpenSuccess(false) }}>
+            <Alert onClose={() => { setOpenSuccess(false) }} severity="success">
+                Deletion succeed.
             </Alert>
         </Snackbar>
     </div>)
