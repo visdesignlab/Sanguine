@@ -865,8 +865,9 @@ def state(request):
             # Get the names of all the state objects that a user can access
             states = [o.name for o in State.objects.all().filter(owner=user)]
             state_access = [o.state.name for o in StateAccess.objects.filter(user=user)]
+            public_states = [o.name for o in State.objects.all().filter(public=True)]
 
-            response = set(states + state_access)
+            response = set(states + state_access + public_states)
 
             # Return the names as a list
             return JsonResponse(list(response), safe=False)
