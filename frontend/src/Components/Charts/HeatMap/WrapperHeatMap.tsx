@@ -28,9 +28,10 @@ type Props = {
     yValueOption: string;
     chartTypeIndexinArray: number;
     outcomeComparison?: string;
+    comparisonDate?: number;
     annotationText: string;
 }
-const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH, layoutW, chartId, extraPairArrayString, xAggregationOption, yValueOption, chartTypeIndexinArray }: Props) => {
+const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH, layoutW, chartId, extraPairArrayString, xAggregationOption, yValueOption, chartTypeIndexinArray, comparisonDate }: Props) => {
     const hemoData = useContext(DataContext)
     const store = useContext(Store);
     const styles = useStyles();
@@ -49,6 +50,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
     const [secondaryCaseCount, setSecondaryCaseCount] = useState(0)
 
 
+
     useEffect(() => {
         if (extraPairArrayString) {
             stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPairArrayString), setExtraPairArray)
@@ -58,7 +60,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
 
     useDeepCompareEffect(() => {
         const newExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, data);
-        if (outcomeComparison) {
+        if (outcomeComparison || comparisonDate) {
             const newSecondaryExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, secondaryData);
             stateUpdateWrapperUseJSON(secondaryExtraPairData, newSecondaryExtraPairData, setSecondaryExtraPairData)
         }
@@ -69,7 +71,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
         setExtraPairTotalWidth(totalWidth)
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extraPairArray, data, hemoData, secondaryData, outcomeComparison]);
+    }, [extraPairArray, data, hemoData, secondaryData, outcomeComparison, comparisonDate]);
 
     useLayoutEffect(() => {
         if (svgRef.current) {
@@ -79,7 +81,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
     }, [layoutH, layoutW, store.mainCompWidth, svgRef]);
 
     useDeepCompareEffect(() => {
-        console.log("called")
+
         tokenCheckCancel(previousCancelToken)
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
@@ -111,7 +113,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
                                 }
                             }
 
-                            if (outcomeComparison && singleCase[outcomeComparison] > 0) {
+                            if ((outcomeComparison && singleCase[outcomeComparison] > 0) || (comparisonDate && singleCase.DATE < comparisonDate)) {
                                 secondaryTemporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
                                 secondaryTemporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.PATIENT_ID);
                             }
@@ -143,6 +145,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
         xAggregationOption,
         yValueOption,
         outcomeComparison,
+        comparisonDate,
         hemoData])
 
     return (
@@ -174,10 +177,11 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
                             yValueOption={yValueOption}
                             chartId={chartId}
                             extraPairDataSet={extraPairData}
-                            secondaryExtraPairDataSet={outcomeComparison ? secondaryExtraPairData : undefined}
-                            secondaryData={outcomeComparison ? secondaryData : undefined}
+                            secondaryExtraPairDataSet={(outcomeComparison || comparisonDate) ? secondaryExtraPairData : undefined}
+                            secondaryData={(outcomeComparison || comparisonDate) ? secondaryData : undefined}
                             firstTotal={caseCount}
                             secondTotal={secondaryCaseCount}
+                            interventionDate={comparisonDate}
                             outcomeComparison={outcomeComparison || ""}
                         />
                     </ChartSVG>

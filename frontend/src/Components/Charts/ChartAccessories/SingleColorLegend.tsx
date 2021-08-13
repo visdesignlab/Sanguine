@@ -1,9 +1,5 @@
-import {
-    FC,
-} from "react";
-import {
-    interpolateReds,
-} from "d3";
+import { FC } from "react";
+import { interpolateReds } from "d3";
 import { Third_Gray } from "../../../Presets/Constants";
 
 type Props = {

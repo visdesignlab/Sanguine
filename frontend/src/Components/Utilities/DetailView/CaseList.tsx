@@ -1,4 +1,3 @@
-
 import { Container, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, ListSubheader } from "@material-ui/core";
 import { FC, useContext } from "react";
 import Store from "../../../Interfaces/Store";
@@ -52,5 +51,5 @@ interface CaseItemProps {
 }
 
 const CaseItem = styled(ListItem) <CaseItemProps>`
-  background:${props => props.isSelected ? "#ecbe8d" : 'none'};`;
-
+  background:${props => props.isSelected ? "#ecbe8d" : 'none'};
+`;

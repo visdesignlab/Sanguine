@@ -3,6 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "dependencies": {
+        "@date-io/date-fns": "^1.3.13",
         "@material-ui/core": "^4.12.2",
         "@material-ui/icons": "^4.11.2",
         "@material-ui/lab": "^4.0.0-alpha.60",
@@ -19,6 +20,7 @@
         "@welldone-software/why-did-you-render": "^6.2.0",
         "axios": "^0.21.1",
         "d3": "^7.0.0",
+        "date-fns": "^2.23.0",
         "jquery": "^3.6.0",
         "material-ui-nested-menu-item": "^1.0.2",
         "mobx": "^6.3.2",

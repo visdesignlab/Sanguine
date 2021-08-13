@@ -1,8 +1,8 @@
-import { axisBottom, axisLeft, ScaleBand, scaleBand, select } from "d3";
+import { axisBottom, axisLeft, ScaleBand, select } from "d3";
 import { FC, useCallback } from "react"
 import { BloodProductCap, CaseRectWidth, CELL_SAVER_TICKS } from "../../../Presets/Constants";
 import { AcronymDictionary } from "../../../Presets/DataDict";
-import { AggregationScaleGenerator, CaseScaleGenerator, ValueScaleGeneratorFromDomainRange } from "../../../HelperFunctions/Scales";
+import { AggregationScaleGenerator, ValueScaleGeneratorFromDomainRange } from "../../../HelperFunctions/Scales";
 import { Offset } from "../../../Interfaces/Types/OffsetType";
 import { useContext } from "react";
 import Store from "../../../Interfaces/Store";

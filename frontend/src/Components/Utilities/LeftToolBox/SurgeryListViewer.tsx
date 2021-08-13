@@ -1,5 +1,5 @@
-import { Container, Grid, Box } from "@material-ui/core";
-import { axisTop, max, scaleLinear, select } from "d3";
+import { Container, Grid } from "@material-ui/core";
+import { axisTop, scaleLinear, select } from "d3";
 import { observer } from "mobx-react";
 import { useCallback, useContext, useEffect } from "react";
 import { FC, useLayoutEffect, useRef, useState } from "react";
