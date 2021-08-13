@@ -6,7 +6,6 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
     let totalCaseCount = 0;
     let outputData: HeatMapDataPoint[] = [];
     Object.values(temporaryDataHolder).forEach((computedData: any) => {
-        const patientIDArray: number[] = Array.from(computedData.patientIDList);
 
         let caseIDArray: number[] = [];
         let dataArray: SingleCasePoint[] = computedData.data;
@@ -81,7 +80,6 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
                     }
                     return (d[valueToVisualize] as number)
                 }),
-                // patientIDList: patientIDArray,
                 caseIDList: caseIDArray,
                 zeroCaseNum: zeroNum,
                 countDict: countDict,

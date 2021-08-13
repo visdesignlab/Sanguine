@@ -1,10 +1,9 @@
 import { observer } from "mobx-react";
 import { FC, useState } from "react";
 import { addOptions, OutcomeOptions, typeDiction } from "../../../Presets/DataDict";
-import {
-    KeyboardDatePicker,
-} from '@material-ui/pickers';
+import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers';
 import { useContext } from "react";
+import DateFnsUtils from '@date-io/date-fns';
 import Store from "../../../Interfaces/Store";
 import { LayoutElement } from "../../../Interfaces/Types/LayoutTypes";
 import Grid from "@material-ui/core/Grid";
@@ -27,7 +26,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
     const [xAggreSelection, setXAggreSelection] = useState<string>("")
     const [yValueSelection, setYValueSelection] = useState<string>("")
     const [outcomeComparisonSelection, setOutcomeComparisonSelection] = useState<string>("")
-    const [interventionDate, setInterventionDate] = useState<number | undefined>(undefined)
+    const [interventionDate, setInterventionDate] = useState<number | null>(null)
 
     const cancelChartAddHandler = () => {
         store.configStore.topMenuBarAddMode = false;
@@ -41,8 +40,9 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
 
         }
         else {
-            setInterventionDate(undefined)
+            setInterventionDate(null)
         }
+
     }
 
     const checkValidInput = () => {
@@ -61,16 +61,17 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                     y: Infinity,
                     plotType: typeDiction[addingChartType],
                     notation: "",
-                    outcomeComparison: outcomeComparisonSelection
+                    outcomeComparison: outcomeComparisonSelection,
+                    interventionDate: interventionDate ? interventionDate : undefined
                 }
                 if (
-                    typeDiction[addingChartType] === "HEATMAP" || typeDiction[addingChartType] === "INTERVENTION" || typeDiction[addingChartType] === "COST") {
+                    typeDiction[addingChartType] === "HEATMAP" || typeDiction[addingChartType] === "COST") {
                     newChart.extraPair = JSON.stringify([]);
                 }
 
                 store.chartStore.addNewChart(newChart)
                 store.configStore.topMenuBarAddMode = false;
-                setInterventionDate(undefined);
+                setInterventionDate(null);
                 setXAggreSelection("")
                 setYValueSelection("")
                 setOutcomeComparisonSelection("")
@@ -128,46 +129,39 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         //for #3 Heat Map
 
         [outputRegularOptions("Select Value to Show", "Aggregated by", true),
+        <>
+            <Grid item xs>
+                <div className={styles.centerAlignment}>
+                    <FormControl disabled={interventionDate ? true : false} className={styles.formControl}>
+                        <InputLabel>Outcome (Optional)</InputLabel>
+                        <Select onChange={(e) => { console.log(outcomeComparisonSelection); setOutcomeComparisonSelection(e.target.value as string) }}
+                        >
+                            {DropdownGenerator(OutcomeOptions, true)}
+                        </Select>
+                    </FormControl>
+                </div>
+            </Grid>
+            <Grid item xs>
+                <div className={styles.centerAlignment}>
+                    <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                        <KeyboardDatePicker
+                            disableToolbar
+                            variant="inline"
+                            format="MM/dd/yyyy"
 
-        <Grid item xs>
-            <div className={styles.centerAlignment}>
-                <FormControl className={styles.formControl}>
-                    <InputLabel>Outcome (Optional)</InputLabel>
-                    <Select onChange={(e) => { console.log(outcomeComparisonSelection); setOutcomeComparisonSelection(e.target.value as string) }}
-                    >
-                        {DropdownGenerator(OutcomeOptions, true)}
-                    </Select>
-                </FormControl>
-            </div>
-        </Grid>
+                            id="date-picker-inline"
+                            label="Comparison Date (Optional)"
+                            minDate={store.state.rawDateRange[0]}
+                            maxDate={store.state.rawDateRange[1]}
+                            disabled={outcomeComparisonSelection ? true : false}
+                            value={interventionDate}
+                            onChange={interventionHandler} />
+                    </MuiPickersUtilsProvider>
+
+                </div>
+            </Grid>
+        </>
         ],
-
-        //For #4 Intervention Plot. Date picker is bugged with different packages. Need to investigate
-
-        // [outputRegularOptions("Select Value to Show", "Aggregated by", true),
-
-        // <Grid item xs>
-        //     {/* <SemanticDatePicker
-        //         placeholder={"Intervention"}
-        //         minDate={store.state.rawDateRange[0] as any}
-        //         maxDate={store.state.rawDateRange[1] as any}
-        //         onChange={interventionHandler} /> */}
-        //     <div className={styles.centerAlignment}>
-        //         BUG
-        //         {/* <KeyboardDatePicker
-        //             disableToolbar
-        //             variant="inline"
-        //             format="MM/dd/yyyy"
-        //             margin="normal"
-        //             id="date-picker-inline"
-        //             label="Date picker inline"
-        //             value={interventionDate}
-        //             onChange={interventionHandler}
-
-        //         /> */}
-        //     </div>
-        // </Grid>
-        // ]
     ]
 
     return <div>

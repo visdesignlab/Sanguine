@@ -1,4 +1,4 @@
-import { select, style, timeFormat } from "d3"
+import { timeFormat } from "d3"
 import { observer } from "mobx-react"
 import { useContext } from "react"
 import { FC } from "react"
@@ -9,7 +9,7 @@ import { StyledDate, Title, useStyles } from "../../../Presets/StyledComponents"
 import Container from "@material-ui/core/Container";
 import CloseIcon from '@material-ui/icons/Close';
 import List from "@material-ui/core/List";
-import { Box, Chip, ListItem, ListItemSecondaryAction, ListItemText, MenuItem, Select, Switch, Grid, IconButton, Tooltip } from "@material-ui/core";
+import { Box, Chip, ListItem, ListItemSecondaryAction, ListItemText, Select, Switch, Grid, IconButton, Tooltip } from "@material-ui/core";
 import { DropdownGenerator } from "../../../HelperFunctions/DropdownGenerator"
 import { SelectSet } from "../../../Interfaces/Types/SelectionTypes"
 import ErrorIcon from '@material-ui/icons/Error';
