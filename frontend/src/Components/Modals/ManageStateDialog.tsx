@@ -3,6 +3,7 @@ import { Dialog, DialogTitle } from "@material-ui/core";
 import { FC, useContext, useState } from "react";
 import Store from "../../Interfaces/Store";
 import DeleteIcon from '@material-ui/icons/Delete';
+import EditIcon from '@material-ui/icons/Edit';
 import { simulateAPIClick } from "../../Interfaces/UserManagement";
 import { Alert } from "@material-ui/lab";
 import { observer } from "mobx-react";
@@ -47,6 +48,10 @@ const ManageStateDialog: FC = () => {
         })
     }
 
+    const changeStateAccess = (stateName: string) => {
+
+    }
+
     return (<div>
         <Dialog open={store.configStore.openManageStateDialog}>
             <DialogTitle>Manage Saved States</DialogTitle>
@@ -58,6 +63,9 @@ const ManageStateDialog: FC = () => {
                             <ListItemSecondaryAction>
                                 <IconButton onClick={() => { removeState(d) }}>
                                     <DeleteIcon />
+                                </IconButton>
+                                <IconButton onClick={() => { changeStateAccess(d) }}>
+                                    <EditIcon />
                                 </IconButton>
                             </ListItemSecondaryAction>
                         </ListItem>)
