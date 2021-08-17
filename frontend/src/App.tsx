@@ -18,7 +18,7 @@ export const DataContext = createContext<SingleCasePoint[]>([])
 
 const App: FC = () => {
     const store = useContext(Store);
-    const { surgeryUrgencySelection, outcomeFilter, currentSelectPatientGroup, currentOutputFilterSet } = store.state;
+    const { bloodComponentFilter, surgeryUrgencySelection, outcomeFilter, currentSelectPatientGroup, currentOutputFilterSet } = store.state;
     const [hemoData, setHemoData] = useState<SingleCasePoint[]>([])
     const [outputFilteredData, setOutputFilteredDAta] = useState<SingleCasePoint[]>([])
 
@@ -64,11 +64,11 @@ const App: FC = () => {
             patientIDSet = new Set<number>()
             currentSelectPatientGroup.forEach((d) => { patientIDSet!.add(d.CASE_ID) })
         }
-        const newFilteredData = hemoData.filter((eachcase: SingleCasePoint) => checkIfCriteriaMet(eachcase, surgeryUrgencySelection, outcomeFilter, currentOutputFilterSet, patientIDSet))
+        const newFilteredData = hemoData.filter((eachcase: SingleCasePoint) => checkIfCriteriaMet(eachcase, surgeryUrgencySelection, outcomeFilter, currentOutputFilterSet, bloodComponentFilter, patientIDSet))
 
 
         setOutputFilteredDAta(newFilteredData)
-    }, [surgeryUrgencySelection, outcomeFilter, hemoData, currentOutputFilterSet, currentSelectPatientGroup])
+    }, [surgeryUrgencySelection, outcomeFilter, hemoData, currentOutputFilterSet, bloodComponentFilter, currentSelectPatientGroup])
 
     async function cacheHemoData() {
         if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {

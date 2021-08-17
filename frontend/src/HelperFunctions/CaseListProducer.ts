@@ -1,28 +1,45 @@
 import { SingleCasePoint } from "../Interfaces/Types/DataTypes";
 import { SelectSet } from "../Interfaces/Types/SelectionTypes";
 
-export const checkIfCriteriaMet = (singleCase: SingleCasePoint, procedureUrgencyFilter: [boolean, boolean, boolean], outcomeFilter: string, currentOutputFilterSet: SelectSet[], patientIDSet?: Set<number>) => {
-    let criteriaMet = true;
+export const checkIfCriteriaMet = (singleCase: SingleCasePoint, procedureUrgencyFilter: [boolean, boolean, boolean], outcomeFilter: string, currentOutputFilterSet: SelectSet[], bloodComponentFilter: any, patientIDSet?: Set<number>) => {
+
     if (patientIDSet) {
-        criteriaMet = patientIDSet.has(singleCase.CASE_ID)
+        if (!patientIDSet.has(singleCase.CASE_ID)) {
+            return false
+        }
     }
     if (currentOutputFilterSet.length > 0) {
         for (let selectSet of currentOutputFilterSet) {
             if (!selectSet.setValues.includes((singleCase[selectSet.setName]).toString())) {
-                criteriaMet = false;
-                break;
+                return false;
             }
         }
     }
     if (!procedureUrgencyFilter[singleCase.SURGERY_TYPE]) {
-        criteriaMet = false;
+        return false;
     }
     if (outcomeFilter) {
         if (singleCase[outcomeFilter] === 0) {
-            criteriaMet = false;
+            return false;
         }
     }
-    return criteriaMet;
+    if (bloodComponentFilter.PRBC_UNITS[0] > singleCase.PRBC_UNITS || bloodComponentFilter.PRBC_UNITS[1] < singleCase.PRBC_UNITS) {
+        return false;
+    }
+    if (bloodComponentFilter.CELL_SAVER_ML[0] > singleCase.CELL_SAVER_ML || bloodComponentFilter.CELL_SAVER_ML[1] < singleCase.CELL_SAVER_ML) {
+        return false;
+    }
+    if (bloodComponentFilter.FFP_UNITS[0] > singleCase.FFP_UNITS || bloodComponentFilter.FFP_UNITS[1] < singleCase.FFP_UNITS) {
+        return false;
+    }
+    if (bloodComponentFilter.CRYO_UNITS[0] > singleCase.CRYO_UNITS || bloodComponentFilter.CRYO_UNITS[1] < singleCase.CRYO_UNITS) {
+        return false;
+    }
+    if (bloodComponentFilter.PLT_UNITS[0] > singleCase.PLT_UNITS || bloodComponentFilter.PLT_UNITS[1] < singleCase.PLT_UNITS) {
+        return false;
+    }
+
+    return true;
 }
 
 export const bloodComponentOutlierHandler = (input: number, yValueOption: string) => {
