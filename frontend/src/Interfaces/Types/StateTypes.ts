@@ -19,4 +19,5 @@ export type ApplicationState = {
     nextAddingIndex: number;
     layoutArray: LayoutElement[];
     currentSelectPatient: SingleCasePoint | null;
+    bloodComponentFilter: any;
 }

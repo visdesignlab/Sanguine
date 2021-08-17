@@ -112,11 +112,14 @@ const App: FC = () => {
                     };
                 });
 
+
+
                 resultHemo.forEach((ob: any, index: number) => {
 
                     if (transfused_dict[ob.CASE_ID]) {
                         const transfusedResult = transfused_dict[ob.CASE_ID];
                         const time = ((timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE))!.getTime())
+                        store.configStore.updateRange(transfusedResult)
                         const outputObj: SingleCasePoint = {
                             CASE_ID: ob.CASE_ID,
                             VISIT_ID: ob.VISIT_ID,

@@ -38,3 +38,5 @@ export const BloodProductCap: any = {
 }
 
 export const ExtraPairLimit = 5
+
+export const ManualInfinity = 5000000000;
