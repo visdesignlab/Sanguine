@@ -33,5 +33,9 @@ export const defaultState: ApplicationState = {
         CRYO_UNITS: [0, ManualInfinity],
         PLT_UNITS: [0, ManualInfinity],
         CELL_SAVER_ML: [0, ManualInfinity],
+    },
+    testValueFilter: {
+        PREOP_HGB: [0, ManualInfinity],
+        POSTOP_HGB: [0, ManualInfinity]
     }
 };

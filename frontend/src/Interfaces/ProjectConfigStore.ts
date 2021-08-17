@@ -1,5 +1,6 @@
 import { action, makeAutoObservable } from "mobx";
-import { changeBloodFilter, changeCostConfig, changeOutcomeFilter, changeSurgeryUrgencySelection, dateRangeChange, loadPreset, toggleShowZero } from "./Actions/ProjectConfigActions";
+import { BloodComponentOptions } from "../Presets/DataDict";
+import { changeBloodFilter, changeCostConfig, changeOutcomeFilter, changeSurgeryUrgencySelection, dateRangeChange, loadPreset, resetBloodFilter, toggleShowZero } from "./Actions/ProjectConfigActions";
 import { RootStore } from "./Store";
 import { LayoutElement } from "./Types/LayoutTypes";
 
@@ -17,7 +18,7 @@ export class ProjectConfigStore {
     openShareUIDDialog: boolean;
     openCostInputModal: boolean;
     savedState: string[];
-    bloodComponentRange: any;
+    filterRange: any;
 
     constructor(rootstore: RootStore) {
         this.rootStore = rootstore;
@@ -31,7 +32,7 @@ export class ProjectConfigStore {
         this.openShareURLDialog = false;
         this.openShareUIDDialog = false;
         this.openCostInputModal = false;
-        this.bloodComponentRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0 }
+        this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0 }
         this.savedState = []
         makeAutoObservable(this)
     }
@@ -45,11 +46,9 @@ export class ProjectConfigStore {
     }
 
     updateRange = (transfusedResult: any) => {
-        this.bloodComponentRange.PRBC_UNITS = transfusedResult.PRBC_UNITS > this.bloodComponentRange.PRBC_UNITS ? transfusedResult.PRBC_UNITS : this.bloodComponentRange.PRBC_UNITS;
-        this.bloodComponentRange.FFP_UNITS = transfusedResult.FFP_UNITS > this.bloodComponentRange.FFP_UNITS ? transfusedResult.FFP_UNITS : this.bloodComponentRange.FFP_UNITS;
-        this.bloodComponentRange.PLT_UNITS = transfusedResult.PLT_UNITS > this.bloodComponentRange.PLT_UNITS ? transfusedResult.PLT_UNITS : this.bloodComponentRange.PLT_UNITS;
-        this.bloodComponentRange.CRYO_UNITS = transfusedResult.CRYO_UNITS > this.bloodComponentRange.CRYO_UNITS ? transfusedResult.CRYO_UNITS : this.bloodComponentRange.CRYO_UNITS;
-        this.bloodComponentRange.CELL_SAVER_ML = transfusedResult.CELL_SAVER_ML > this.bloodComponentRange.CELL_SAVER_ML ? transfusedResult.CELL_SAVER_ML : this.bloodComponentRange.CELL_SAVER_ML;
+        BloodComponentOptions.forEach((d) => {
+            this.filterRange[d.key] = transfusedResult[d.key] > this.filterRange[d.key] ? transfusedResult[d.key] : this.filterRange[d.key];
+        })
     }
 
     get provenance() {
@@ -118,5 +117,8 @@ export class ProjectConfigStore {
     }
     changeBloodFilter(componentName: string, newRange: number[]) {
         this.provenance.apply(changeBloodFilter(componentName, newRange))
+    }
+    resetBloodFilter() {
+        this.provenance.apply(resetBloodFilter());
     }
 }

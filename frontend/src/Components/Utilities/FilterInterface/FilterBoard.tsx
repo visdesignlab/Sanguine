@@ -1,4 +1,4 @@
-import { Container, Grid, List, ListItem, ListItemText } from "@material-ui/core";
+import { Container, Grid, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Tooltip } from "@material-ui/core";
 import DateFnsUtils from '@date-io/date-fns';
 import { MuiPickersUtilsProvider, KeyboardDatePicker } from "@material-ui/pickers";
 import { observer } from "mobx-react";
@@ -6,22 +6,41 @@ import { FC, useContext, useState } from "react";
 import Store from "../../../Interfaces/Store";
 import RangePicker from "./RangePicker";
 import { Title } from "../../../Presets/StyledComponents";
+import { BloodComponentOptions } from "../../../Presets/DataDict";
+import ReplayIcon from '@material-ui/icons/Replay';
+import { defaultState } from "../../../Interfaces/DefaultState";
+import { useEffect } from "react";
 
 const FilterBoard: FC = () => {
 
     const store = useContext(Store)
-    const [beginDate, setBeginDate] = useState<number | null>(store.state.rawDateRange[0]);
-    const [endDate, setEndDate] = useState<number | null>(store.state.rawDateRange[1]);
+    const { rawDateRange } = store.state;
+    const [beginDate, setBeginDate] = useState<number | null>(rawDateRange[0]);
+    const [endDate, setEndDate] = useState<number | null>(rawDateRange[1]);
+
+    const resetDateFilter = () => {
+        setBeginDate(defaultState.rawDateRange[0]);
+        setEndDate(defaultState.rawDateRange[1]);
+        store.configStore.dateRangeChange(defaultState.rawDateRange);
+    }
 
     return <Container>
-        <Grid container direction="row">
-            <Grid item xs={6}>
+        <Grid container direction="row" justifyContent="space-evenly"
+            alignItems="flex-start" spacing={2}>
+            <Grid item xs={2}>
 
                 <List dense>
                     <ListItem>
-                        <Title>
+                        <ListItemText primary={<Title>
                             Pick Date Range
-                        </Title>
+                        </Title>} />
+                        <ListItemSecondaryAction>
+                            <Tooltip title="Reset">
+                                <IconButton onClick={resetDateFilter}>
+                                    <ReplayIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </ListItemSecondaryAction>
                     </ListItem>
                     <ListItem>
                         <ListItemText primary="Date From" secondary={<MuiPickersUtilsProvider utils={DateFnsUtils}>
@@ -29,14 +48,13 @@ const FilterBoard: FC = () => {
                                 disableToolbar
                                 variant="inline"
                                 format="MM/dd/yyyy"
-
                                 value={beginDate}
                                 onChange={(d) => {
                                     if (d) {
                                         setBeginDate(d.getTime());
-                                        store.configStore.dateRangeChange([d.getTime(), store.state.rawDateRange[1]])
+                                        store.configStore.dateRangeChange([d.getTime(), rawDateRange[1]])
                                     } else {
-                                        setBeginDate(store.state.rawDateRange[0])
+                                        setBeginDate(rawDateRange[0])
                                     }
                                 }} />
                         </MuiPickersUtilsProvider>} />
@@ -52,9 +70,9 @@ const FilterBoard: FC = () => {
                                     onChange={(d) => {
                                         if (d) {
                                             setEndDate(d.getTime());
-                                            store.configStore.dateRangeChange([store.state.rawDateRange[0], d.getTime()])
+                                            store.configStore.dateRangeChange([rawDateRange[0], d.getTime()])
                                         } else {
-                                            setEndDate(store.state.rawDateRange[1])
+                                            setEndDate(rawDateRange[1])
                                         }
                                     }} />
                             </MuiPickersUtilsProvider>} />
@@ -64,14 +82,23 @@ const FilterBoard: FC = () => {
 
 
             </Grid>
-            <Grid item xs={6} >
+            <Grid item xs={3} >
                 <List dense>
-                    <ListItem><Title>Blood Component Filter</Title></ListItem>
-                    <RangePicker label="PRBC_UNITS" />
-                    <RangePicker label="FFP_UNITS" />
-                    <RangePicker label="CRYO_UNITS" />
-                    <RangePicker label="PLT_UNITS" />
-                    <RangePicker label="CELL_SAVER_ML" />
+                    <ListItem>
+                        <ListItemText primary={<Title>Blood Component Filter</Title>} />
+                        <ListItemSecondaryAction>
+                            <Tooltip title="Reset">
+                                <IconButton onClick={() => { store.configStore.resetBloodFilter() }}>
+                                    <ReplayIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </ListItemSecondaryAction>
+                    </ListItem>
+                    {BloodComponentOptions.map((d) => {
+                        return (<RangePicker label={d.key} key={d.key} />)
+                    })}
+
+
                 </List>
             </Grid>
         </Grid>

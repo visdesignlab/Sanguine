@@ -21,16 +21,16 @@ const RangePicker: FC<Props> = ({ label }: Props) => {
     useDeepCompareEffect(() => {
 
         if (bloodComponentFilter[label][1] === ManualInfinity) {
-            setRangeValue([bloodComponentFilter[label][0], store.configStore.bloodComponentRange[label]])
+            setRangeValue([bloodComponentFilter[label][0], store.configStore.filterRange[label]])
         } else {
             setRangeValue([bloodComponentFilter[label][0], bloodComponentFilter[label][1]])
         }
-    }, [store.configStore.bloodComponentRange, bloodComponentFilter])
+    }, [store.configStore.filterRange, bloodComponentFilter])
 
     return (
         <ListItem>
             <ListItemText primary={AcronymDictionary[label] ? AcronymDictionary[label] : label} secondary={<Slider
-                max={(store.configStore.bloodComponentRange as any)[label]}
+                max={(store.configStore.filterRange as any)[label]}
                 min={0}
                 valueLabelDisplay="auto"
                 aria-labelledby="range-slider"
