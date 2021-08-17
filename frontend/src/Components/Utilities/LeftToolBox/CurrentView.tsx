@@ -21,37 +21,37 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
     const { surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet } = store.state;
     const styles = useStyles();
 
-    const onDateChange = (event: any, data: any) => {
-        if (!data.value) {
-            store.configStore.dateRangeChange(defaultState.rawDateRange)
-        }
-        else if (data.value.length > 1) {
-            store.configStore.dateRangeChange([data.value[0], data.value[1]])
-        }
-    }
+    // const onDateChange = (event: any, data: any) => {
+    //     if (!data.value) {
+    //         store.configStore.dateRangeChange(defaultState.rawDateRange)
+    //     }
+    //     else if (data.value.length > 1) {
+    //         store.configStore.dateRangeChange([data.value[0], data.value[1]])
+    //     }
+    // }
 
 
     const generateSurgery = () => {
         let output: any[] = []
         if (store.state.proceduresSelection.length === 0) {
-            output.push(<span>All</span>);
+            output.push(<span key={`all`}>All</span>);
         } else {
             store.state.proceduresSelection.forEach((d, i) => {
                 const stringArray = d.split(" ")
                 stringArray.forEach((word, index) => {
                     if ((AcronymDictionary as any)[word]) {
                         output.push((
-                            <Tooltip title={<div className={styles.tooltipFont}>{(AcronymDictionary as any)[word]}</div>}>
-                                <div className="tooltip" style={{ cursor: "help" }}>
+                            <Tooltip key={`${d}-${word}`} title={<div key={`${d}-${word}`} className={styles.tooltipFont}>{(AcronymDictionary as any)[word]}</div>}>
+                                <div className="tooltip" key={`${d}-${word}`} style={{ cursor: "help" }}>
                                     {word}
                                 </div>
                             </Tooltip>))
                     } else {
-                        output.push((<span>{`${index !== 0 ? " " : ""}${word}${index !== stringArray.length - 1 ? " " : ""}`}</span>))
+                        output.push((<span key={`${d}-${word}`}>{`${index !== 0 ? " " : ""}${word}${index !== stringArray.length - 1 ? " " : ""}`}</span>))
                     }
                 })
                 if (i !== store.state.proceduresSelection.length - 1) {
-                    output.push((<span>, </span>))
+                    output.push((<span key={`${d}-comma`}>, </span>))
                 }
             })
         }
@@ -69,10 +69,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
                     <ListItem alignItems="flex-start" style={{ width: "100%" }} key="Date">
                         <ListItemText primary="Date Range"
-                            secondary={<StyledDate
-                                onChange={onDateChange}
-                                placeholder={`${timeFormat("%Y-%m-%d")(new Date(store.state.rawDateRange[0]))} - ${timeFormat("%Y-%m-%d")(new Date(store.state.rawDateRange[1]))}`}
-                                type="range" />} />
+                            secondary={`${timeFormat("%b %d, %Y")(new Date(store.state.rawDateRange[0]))} - ${timeFormat("%b %d, %Y")(new Date(store.state.rawDateRange[1]))}`} />
 
                     </ListItem>
 
@@ -107,10 +104,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                     </ListItem>
 
                     <ListItem key="AggreCaseCount">
-                        <ListItemText primary={<div>
-                            Aggregated Cases
-
-                        </div>}
+                        <ListItemText primary="Aggregated Cases"
                             secondary={`${store.chartStore.totalAggregatedCaseCount}/${totalCaseNum}`} />
 
                     </ListItem>
@@ -142,11 +136,11 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                         </ListItem>) : <></>}
                     {currentOutputFilterSet.map((selectSet: SelectSet) => {
                         return (<ListItem key={`${selectSet.setName}selected`}>
-                            <ListItemText primary={AcronymDictionary[selectSet.setName] ? AcronymDictionary[selectSet.setName] : selectSet.setName}
+                            <ListItemText key={`${selectSet.setName}selected`} primary={AcronymDictionary[selectSet.setName] ? AcronymDictionary[selectSet.setName] : selectSet.setName}
                                 secondary={selectSet.setValues.sort().join(', ')} />
-                            <ListItemSecondaryAction>
-                                <IconButton onClick={() => { store.selectionStore.removeFilter(selectSet.setName) }}>
-                                    <CloseIcon />
+                            <ListItemSecondaryAction key={`${selectSet.setName}selected`}>
+                                <IconButton key={`${selectSet.setName}selected`} onClick={() => { store.selectionStore.removeFilter(selectSet.setName) }}>
+                                    <CloseIcon key={`${selectSet.setName}selected`} />
                                 </IconButton>
                             </ListItemSecondaryAction>
                         </ListItem>)

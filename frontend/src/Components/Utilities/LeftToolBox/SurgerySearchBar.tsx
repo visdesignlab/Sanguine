@@ -28,7 +28,7 @@ const SurgerySearchBar: FC<Props> = ({ surgeryList }: Props) => {
                     onChange={(e, v) => { searchHandler(v) }}
                     value={input}
 
-                    getOptionLabel={(option) => option.value}
+                    getOptionLabel={(option) => option.value || ""}
                     renderInput={(params) =>
                         <TextField {...params} label="Search Procedure" variant="outlined" />}
                 />

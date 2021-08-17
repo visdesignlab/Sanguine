@@ -10,9 +10,10 @@ export class ChartStore {
 
     constructor(rootstore: RootStore) {
         this.rootStore = rootstore;
-        makeAutoObservable(this);
+
         this._totalAggregatedCaseCount = 0;
         this._totalIndividualCaseCount = 0;
+        makeAutoObservable(this);
     }
     get provenance() {
         return this.rootStore.provenance

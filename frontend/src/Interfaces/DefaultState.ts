@@ -1,4 +1,5 @@
 
+import { ManualInfinity } from "../Presets/Constants";
 import { ApplicationState } from "./Types/StateTypes"
 
 const today = new Date()
@@ -25,5 +26,12 @@ export const defaultState: ApplicationState = {
         PLT_UNITS: 650,
         CELL_SAVER_ML: 300,
     },
-    currentSelectPatient: null
+    currentSelectPatient: null,
+    bloodComponentFilter: {
+        PRBC_UNITS: [0, ManualInfinity],
+        FFP_UNITS: [0, ManualInfinity],
+        CRYO_UNITS: [0, ManualInfinity],
+        PLT_UNITS: [0, ManualInfinity],
+        CELL_SAVER_ML: [0, ManualInfinity],
+    }
 };
