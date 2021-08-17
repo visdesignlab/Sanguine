@@ -15,31 +15,35 @@ const SaveStateModal: FC = () => {
     const [openSuccessMessage, setOpenSuccessMessage] = useState(false);
     const [publicAccess, setPublicAccess] = useState(false);
 
+
+
     const saveState = () => {
         const csrftoken = simulateAPIClick()
         if (store.configStore.checkIfInSavedState(stateName)) {
-            fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
-                method: `PUT`,
-                credentials: "include",
-                headers: {
-                    'Accept': 'application/x-www-form-urlencoded',
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': csrftoken || '',
-                    "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
-                    "Access-Control-Allow-Credentials": "true",
-                },
-                body: JSON.stringify({ old_name: stateName, new_name: stateName, new_definition: store.provenance.exportState(false) })
-            }).then(response => {
-                if (response.status === 200) {
-                    onSuccess(false);
-                } else {
-                    response.text().then(error => {
-                        onFail(response.statusText);
-                    })
-                }
-            }).catch(error => {
-                onFail(error.toString())
-            })
+            setErrorMessage("State name duplicate. Please rename.")
+            setOpenError(true);
+            // fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
+            //     method: `PUT`,
+            //     credentials: "include",
+            //     headers: {
+            //         'Accept': 'application/x-www-form-urlencoded',
+            //         'Content-Type': 'application/x-www-form-urlencoded',
+            //         'X-CSRFToken': csrftoken || '',
+            //         "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
+            //         "Access-Control-Allow-Credentials": "true",
+            //     },
+            //     body: JSON.stringify({ old_name: stateName, new_name: stateName, new_definition: store.provenance.exportState(false) })
+            // }).then(response => {
+            //     if (response.status === 200) {
+            //         onSuccess(false);
+            //     } else {
+            //         response.text().then(error => {
+            //             onFail(response.statusText);
+            //         })
+            //     }
+            // }).catch(error => {
+            //     onFail(error.toString())
+            // })
         } else {
             fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
                 method: 'POST',

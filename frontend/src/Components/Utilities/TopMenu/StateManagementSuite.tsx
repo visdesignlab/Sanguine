@@ -77,7 +77,7 @@ const StateManagementSuite: FC = () => {
                 <MenuItem onClick={() => {
                     setShareUrl(
                         //Kiran says there is a bug with the exportState, so using exportState(false) for now
-                        `${window.location.href}#${store.provenance.exportState(false)}`,
+                        `${window.location.href}?provState=${store.provenance.exportState(true)}`,
                     );
                     handleClose(); store.configStore.openShareURLDialog = true;
                 }}>
