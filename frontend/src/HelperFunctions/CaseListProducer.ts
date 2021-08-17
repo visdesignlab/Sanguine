@@ -1,5 +1,6 @@
 import { SingleCasePoint } from "../Interfaces/Types/DataTypes";
 import { SelectSet } from "../Interfaces/Types/SelectionTypes";
+import { BloodComponentOptions } from "../Presets/DataDict";
 
 export const checkIfCriteriaMet = (singleCase: SingleCasePoint, procedureUrgencyFilter: [boolean, boolean, boolean], outcomeFilter: string, currentOutputFilterSet: SelectSet[], bloodComponentFilter: any, patientIDSet?: Set<number>) => {
 
@@ -23,23 +24,13 @@ export const checkIfCriteriaMet = (singleCase: SingleCasePoint, procedureUrgency
             return false;
         }
     }
-    if (bloodComponentFilter.PRBC_UNITS[0] > singleCase.PRBC_UNITS || bloodComponentFilter.PRBC_UNITS[1] < singleCase.PRBC_UNITS) {
-        return false;
-    }
-    if (bloodComponentFilter.CELL_SAVER_ML[0] > singleCase.CELL_SAVER_ML || bloodComponentFilter.CELL_SAVER_ML[1] < singleCase.CELL_SAVER_ML) {
-        return false;
-    }
-    if (bloodComponentFilter.FFP_UNITS[0] > singleCase.FFP_UNITS || bloodComponentFilter.FFP_UNITS[1] < singleCase.FFP_UNITS) {
-        return false;
-    }
-    if (bloodComponentFilter.CRYO_UNITS[0] > singleCase.CRYO_UNITS || bloodComponentFilter.CRYO_UNITS[1] < singleCase.CRYO_UNITS) {
-        return false;
-    }
-    if (bloodComponentFilter.PLT_UNITS[0] > singleCase.PLT_UNITS || bloodComponentFilter.PLT_UNITS[1] < singleCase.PLT_UNITS) {
-        return false;
-    }
-
-    return true;
+    let toReturn = true;
+    BloodComponentOptions.forEach((d) => {
+        if (bloodComponentFilter[d.key][0] > singleCase[d.key] || bloodComponentFilter[d.key][1] < singleCase[d.key]) {
+            toReturn = false;
+        }
+    })
+    return toReturn;
 }
 
 export const bloodComponentOutlierHandler = (input: number, yValueOption: string) => {

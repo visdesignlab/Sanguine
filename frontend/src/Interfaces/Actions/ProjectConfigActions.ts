@@ -1,4 +1,5 @@
 import { createAction } from "@visdesignlab/trrack"
+import { defaultState } from "../DefaultState"
 import { ActionEvents } from "../Types/EventTypes"
 import { LayoutElement } from "../Types/LayoutTypes"
 import { ApplicationState } from "../Types/StateTypes"
@@ -34,3 +35,7 @@ export const changeSurgeryUrgencySelection = createAction<ApplicationState, [[bo
 export const changeBloodFilter = createAction<ApplicationState, [string, number[]], ActionEvents>((state, bloodComponentName, newRange) => {
     state.bloodComponentFilter[bloodComponentName] = newRange;
 }).setLabel("changeBloodFilter");
+
+export const resetBloodFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
+    state.bloodComponentFilter = defaultState.bloodComponentFilter;
+}).setLabel("resetBloodFilter");

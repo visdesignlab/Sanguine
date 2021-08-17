@@ -20,4 +20,5 @@ export type ApplicationState = {
     layoutArray: LayoutElement[];
     currentSelectPatient: SingleCasePoint | null;
     bloodComponentFilter: any;
+    testValueFilter: any;
 }
