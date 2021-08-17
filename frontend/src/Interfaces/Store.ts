@@ -22,7 +22,7 @@ export class RootStore {
         this.provenance = initProvenance<ApplicationState, ActionEvents>(
             defaultState,
             //Is this correct way to allow load from url?
-            // { loadFromUrl: true }
+            { loadFromUrl: true }
         )
 
 

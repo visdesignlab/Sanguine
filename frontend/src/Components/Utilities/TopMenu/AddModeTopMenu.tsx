@@ -55,7 +55,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
             if (!(addingChartType === 4 && (!interventionDate))) {
                 const newChart: LayoutElement = {
                     aggregatedBy: xAggreSelection, valueToVisualize: yValueSelection,
-                    i: store.configStore.nextAddingIndex,
+                    i: store.state.nextAddingIndex.toString(),
                     w: 1,
                     h: 1,
                     x: 0,
