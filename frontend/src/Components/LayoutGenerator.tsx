@@ -129,7 +129,7 @@ const LayoutGenerator: FC = () => {
 
     const panes = [
 
-        <div id="main-tab" style={{ height: "100%" }}>
+        <div id="main-tab" style={{ height: "90vh" }}>
             <WelcomeText show={store.state.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
             <Responsive
                 onResizeStop={(e, v) => { store.chartStore.onLayoutChange(e) }}
@@ -164,7 +164,7 @@ const LayoutGenerator: FC = () => {
                 <Tab label="Main" />
                 <Tab label="filter" />
             </Tabs>
-            <Container ref={tabRef} style={{ height: "90%", maxWidth: "none" }}>
+            <Container ref={tabRef} style={{ overflow: "auto", maxWidth: "none" }}>
                 {panes[tabValue]}
             </Container>
         </Container>

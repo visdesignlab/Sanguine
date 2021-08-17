@@ -10,8 +10,6 @@ export class ProjectConfigStore {
     private _dataLoading: boolean;
     private _dataLoadingFailed: boolean;
     private _topMenuBarAddMode: boolean;
-    //this might not work with loading state. If not, just change this to part of state. 
-    private _nextAddingIndex: number;
     openSaveStateDialog: boolean;
     openManageStateDialog: boolean;
     openShareURLDialog: boolean;
@@ -26,7 +24,6 @@ export class ProjectConfigStore {
         this._dataLoading = true;
         this._dataLoadingFailed = false;
         this._topMenuBarAddMode = false;
-        this._nextAddingIndex = this.rootStore.state.layoutArray.length
         this.openSaveStateDialog = false;
         this.openManageStateDialog = false;
         this.openShareURLDialog = false;
@@ -88,14 +85,6 @@ export class ProjectConfigStore {
 
     get topMenuBarAddMode() {
         return this._topMenuBarAddMode;
-    }
-
-    chartAdded() {
-        this._nextAddingIndex += 1
-    }
-
-    get nextAddingIndex() {
-        return this._nextAddingIndex.toString();
     }
 
 
