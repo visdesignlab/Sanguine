@@ -32,7 +32,5 @@ export const changeSurgeryUrgencySelection = createAction<ApplicationState, [[bo
 }).setLabel("changeUrgency");
 
 export const changeBloodFilter = createAction<ApplicationState, [string, number[]], ActionEvents>((state, bloodComponentName, newRange) => {
-    if (bloodComponentName === "PRBC_UNITS" || bloodComponentName === "FFP_UNITS" || bloodComponentName === "CRYO_UNITS" || bloodComponentName === "PLT_UNITS" || bloodComponentName === "CELL_SAVER_ML") {
-        state.bloodComponentFilter[bloodComponentName] = newRange
-    }
+    state.bloodComponentFilter[bloodComponentName] = newRange;
 }).setLabel("changeBloodFilter");
