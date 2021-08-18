@@ -1,8 +1,8 @@
 import { SingleCasePoint } from "../Interfaces/Types/DataTypes";
 import { SelectSet } from "../Interfaces/Types/SelectionTypes";
-import { BloodComponentOptions } from "../Presets/DataDict";
+import { BloodComponentOptions, ScatterYOptions } from "../Presets/DataDict";
 
-export const checkIfCriteriaMet = (singleCase: SingleCasePoint, procedureUrgencyFilter: [boolean, boolean, boolean], outcomeFilter: string, currentOutputFilterSet: SelectSet[], bloodComponentFilter: any, patientIDSet?: Set<number>) => {
+export const checkIfCriteriaMet = (singleCase: SingleCasePoint, procedureUrgencyFilter: [boolean, boolean, boolean], outcomeFilter: string, currentOutputFilterSet: SelectSet[], bloodComponentFilter: any, testValueFilter: any, patientIDSet?: Set<number>) => {
 
     if (patientIDSet) {
         if (!patientIDSet.has(singleCase.CASE_ID)) {
@@ -27,6 +27,11 @@ export const checkIfCriteriaMet = (singleCase: SingleCasePoint, procedureUrgency
     let toReturn = true;
     BloodComponentOptions.forEach((d) => {
         if (bloodComponentFilter[d.key][0] > singleCase[d.key] || bloodComponentFilter[d.key][1] < singleCase[d.key]) {
+            toReturn = false;
+        }
+    })
+    ScatterYOptions.forEach((d) => {
+        if (testValueFilter[d.key][0] > singleCase[d.key] || testValueFilter[d.key][1] < singleCase[d.key]) {
             toReturn = false;
         }
     })

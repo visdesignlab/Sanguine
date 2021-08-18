@@ -18,7 +18,7 @@ export const DataContext = createContext<SingleCasePoint[]>([])
 
 const App: FC = () => {
     const store = useContext(Store);
-    const { bloodComponentFilter, surgeryUrgencySelection, outcomeFilter, currentSelectPatientGroup, currentOutputFilterSet } = store.state;
+    const { bloodComponentFilter, surgeryUrgencySelection, outcomeFilter, currentSelectPatientGroup, currentOutputFilterSet, testValueFilter } = store.state;
     const [hemoData, setHemoData] = useState<SingleCasePoint[]>([])
     const [outputFilteredData, setOutputFilteredDAta] = useState<SingleCasePoint[]>([])
 
@@ -64,11 +64,11 @@ const App: FC = () => {
             patientIDSet = new Set<number>()
             currentSelectPatientGroup.forEach((d) => { patientIDSet!.add(d.CASE_ID) })
         }
-        const newFilteredData = hemoData.filter((eachcase: SingleCasePoint) => checkIfCriteriaMet(eachcase, surgeryUrgencySelection, outcomeFilter, currentOutputFilterSet, bloodComponentFilter, patientIDSet))
+        const newFilteredData = hemoData.filter((eachcase: SingleCasePoint) => checkIfCriteriaMet(eachcase, surgeryUrgencySelection, outcomeFilter, currentOutputFilterSet, bloodComponentFilter, testValueFilter, patientIDSet))
 
 
         setOutputFilteredDAta(newFilteredData)
-    }, [surgeryUrgencySelection, outcomeFilter, hemoData, currentOutputFilterSet, bloodComponentFilter, currentSelectPatientGroup])
+    }, [surgeryUrgencySelection, outcomeFilter, hemoData, currentOutputFilterSet, bloodComponentFilter, testValueFilter, currentSelectPatientGroup])
 
     async function cacheHemoData() {
         if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
@@ -120,6 +120,8 @@ const App: FC = () => {
                         const transfusedResult = transfused_dict[ob.CASE_ID];
                         const time = ((timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE))!.getTime())
                         store.configStore.updateRange(transfusedResult)
+                        store.configStore.updateTestValue("PREOP_HGB", +ob.HEMO[0])
+                        store.configStore.updateTestValue("POSTOP_HGB", +ob.HEMO[1])
                         const outputObj: SingleCasePoint = {
                             CASE_ID: ob.CASE_ID,
                             VISIT_ID: ob.VISIT_ID,
