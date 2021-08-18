@@ -4,9 +4,9 @@ import { MuiPickersUtilsProvider, KeyboardDatePicker } from "@material-ui/picker
 import { observer } from "mobx-react";
 import { FC, useContext, useState } from "react";
 import Store from "../../../Interfaces/Store";
-import RangePicker from "./RangePicker";
+import ComponentRangePicker from "./ComponentRangePicker";
 import { Title } from "../../../Presets/StyledComponents";
-import { BloodComponentOptions } from "../../../Presets/DataDict";
+import { BloodComponentOptions, ScatterYOptions } from "../../../Presets/DataDict";
 import ReplayIcon from '@material-ui/icons/Replay';
 import { defaultState } from "../../../Interfaces/DefaultState";
 import { useEffect } from "react";
@@ -95,10 +95,23 @@ const FilterBoard: FC = () => {
                         </ListItemSecondaryAction>
                     </ListItem>
                     {BloodComponentOptions.map((d) => {
-                        return (<RangePicker label={d.key} key={d.key} />)
+                        return (<ComponentRangePicker label={d.key} key={d.key} />)
                     })}
-
-
+                </List>
+                <List dense>
+                    <ListItem>
+                        <ListItemText primary={<Title>Test Value Filter</Title>} />
+                        <ListItemSecondaryAction>
+                            <Tooltip title="Reset">
+                                <IconButton onClick={() => { store.configStore.resetTestValueFilter() }}>
+                                    <ReplayIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </ListItemSecondaryAction>
+                    </ListItem>
+                    {ScatterYOptions.map((d) => {
+                        return (<ComponentRangePicker label={d.key} key={d.key} isTestValue={true} />)
+                    })}
                 </List>
             </Grid>
         </Grid>

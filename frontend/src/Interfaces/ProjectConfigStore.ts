@@ -1,6 +1,6 @@
 import { action, makeAutoObservable } from "mobx";
-import { BloodComponentOptions } from "../Presets/DataDict";
-import { changeBloodFilter, changeCostConfig, changeOutcomeFilter, changeSurgeryUrgencySelection, dateRangeChange, loadPreset, resetBloodFilter, toggleShowZero } from "./Actions/ProjectConfigActions";
+import { BloodComponentOptions, ScatterYOptions } from "../Presets/DataDict";
+import { changeBloodFilter, changeCostConfig, changeOutcomeFilter, changeSurgeryUrgencySelection, changeTestValueFilter, dateRangeChange, loadPreset, resetBloodFilter, resetTestValueFilter, toggleShowZero } from "./Actions/ProjectConfigActions";
 import { RootStore } from "./Store";
 import { LayoutElement } from "./Types/LayoutTypes";
 
@@ -32,7 +32,7 @@ export class ProjectConfigStore {
         this.openShareURLDialog = false;
         this.openShareUIDDialog = false;
         this.openCostInputModal = false;
-        this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0 }
+        this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0, PREOP_HGB: 0, POSTOP_HGB: 0 };
         this.savedState = []
         makeAutoObservable(this)
     }
@@ -48,7 +48,11 @@ export class ProjectConfigStore {
     updateRange = (transfusedResult: any) => {
         BloodComponentOptions.forEach((d) => {
             this.filterRange[d.key] = transfusedResult[d.key] > this.filterRange[d.key] ? transfusedResult[d.key] : this.filterRange[d.key];
-        })
+        });
+    }
+
+    updateTestValue = (label: string, value: number) => {
+        this.filterRange[label] = value > this.filterRange[label] ? value : this.filterRange[label]
     }
 
     get provenance() {
@@ -120,5 +124,12 @@ export class ProjectConfigStore {
     }
     resetBloodFilter() {
         this.provenance.apply(resetBloodFilter());
+    }
+
+    changeTestValueFilter(testValueName: string, newRange: number[]) {
+        this.provenance.apply(changeTestValueFilter(testValueName, newRange))
+    }
+    resetTestValueFilter() {
+        this.provenance.apply(resetTestValueFilter());
     }
 }

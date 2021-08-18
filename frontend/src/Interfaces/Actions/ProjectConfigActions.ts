@@ -39,3 +39,11 @@ export const changeBloodFilter = createAction<ApplicationState, [string, number[
 export const resetBloodFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
     state.bloodComponentFilter = defaultState.bloodComponentFilter;
 }).setLabel("resetBloodFilter");
+
+export const changeTestValueFilter = createAction<ApplicationState, [string, number[]], ActionEvents>((state, testName, newRange) => {
+    state.testValueFilter[testName] = newRange;
+}).setLabel("changeTestValueFilter");
+
+export const resetTestValueFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
+    state.testValueFilter = defaultState.testValueFilter;
+}).setLabel("resetTestValueFilter");
