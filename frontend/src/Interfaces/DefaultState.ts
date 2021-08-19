@@ -1,5 +1,6 @@
 
 import { ManualInfinity } from "../Presets/Constants";
+import { OutcomeOptionsStringArray } from "../Presets/DataDict";
 import { ApplicationState } from "./Types/StateTypes"
 
 const today = new Date()
@@ -8,7 +9,7 @@ today.setDate(today.getDate() + 1)
 export const defaultState: ApplicationState = {
     layoutArray: [],
     surgeryUrgencySelection: [true, true, true],
-    outcomeFilter: "",
+    outcomeFilter: [],
     rawDateRange: [new Date(2014, 0, 1).getTime(), today.getTime()],
     proceduresSelection: [],
     totalAggregatedCaseCount: 0,

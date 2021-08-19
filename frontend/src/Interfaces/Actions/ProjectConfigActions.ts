@@ -20,7 +20,7 @@ export const dateRangeChange = createAction<ApplicationState, [number[]], Action
     }
 }).setLabel("setDateRange")
 
-export const changeOutcomeFilter = createAction<ApplicationState, [string], ActionEvents>((state, newOutcomeFilter) => {
+export const changeOutcomeFilter = createAction<ApplicationState, [string[]], ActionEvents>((state, newOutcomeFilter) => {
     state.outcomeFilter = newOutcomeFilter;
 }).setLabel("setOutcomeFilter")
 

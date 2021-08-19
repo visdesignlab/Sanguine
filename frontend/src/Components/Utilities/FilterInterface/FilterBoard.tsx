@@ -9,7 +9,8 @@ import { Title } from "../../../Presets/StyledComponents";
 import { BloodComponentOptions, ScatterYOptions } from "../../../Presets/DataDict";
 import ReplayIcon from '@material-ui/icons/Replay';
 import { defaultState } from "../../../Interfaces/DefaultState";
-import { useEffect } from "react";
+import OutcomeChipGroup from "./OutcomeChipGroup";
+import SurgeryUrgencyChipGroup from "./SurgeryUrgencyChipGroup";
 
 const FilterBoard: FC = () => {
 
@@ -27,7 +28,7 @@ const FilterBoard: FC = () => {
     return <Container>
         <Grid container direction="row" justifyContent="space-evenly"
             alignItems="flex-start" spacing={2}>
-            <Grid item xs={2}>
+            <Grid item xs={3}>
 
                 <List dense>
                     <ListItem>
@@ -80,6 +81,39 @@ const FilterBoard: FC = () => {
                 </List>
 
 
+                <List dense>
+                    <ListItem>
+                        <ListItemText primary={<Title>
+                            Outcome / Intervention Filter
+                        </Title>} />
+                        <ListItemSecondaryAction>
+                            <Tooltip title="Clear All">
+                                <IconButton
+                                    onClick={() => { store.configStore.changeOutcomeFilter([]) }}
+                                >
+                                    <ReplayIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </ListItemSecondaryAction>
+                    </ListItem>
+                    <OutcomeChipGroup />
+                </List>
+
+                <List dense>
+                    <ListItem>
+                        <ListItemText primary={<Title>Surgery Urgency Filter</Title>} />
+                        <ListItemSecondaryAction>
+                            <Tooltip title="Clear All">
+                                <IconButton
+                                    onClick={() => { store.configStore.changeSurgeryUrgencySelection([true, true, true]) }}
+                                >
+                                    <ReplayIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </ListItemSecondaryAction>
+                    </ListItem>
+                    <SurgeryUrgencyChipGroup />
+                </List>
 
             </Grid>
             <Grid item xs={3} >

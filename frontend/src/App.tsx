@@ -24,8 +24,10 @@ const App: FC = () => {
 
 
     useEffect(() => {
-        if (process.env.REACT_APP_REQUIRE_LOGIN !== "true") { cacheHemoData(); }
-        if (store.configStore.isLoggedIn && hemoData.length === 0) {
+        if (process.env.REACT_APP_REQUIRE_LOGIN !== "true") {
+            cacheHemoData();
+        }
+        else if (store.configStore.isLoggedIn && hemoData.length === 0) {
             //this need to also be checked to only do once. 
             cacheHemoData();
         } else {

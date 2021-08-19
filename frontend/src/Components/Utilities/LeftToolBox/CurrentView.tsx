@@ -18,7 +18,7 @@ type Props = { totalCaseNum: number }
 
 const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
     const store = useContext(Store)
-    const { surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet } = store.state;
+    const { surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet, outcomeFilter } = store.state;
     const styles = useStyles();
 
     // const onDateChange = (event: any, data: any) => {
@@ -75,22 +75,18 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
                     <ListItem key="Outcomes">
                         <ListItemText primary="Outcomes/Interventions"
-                            secondary={
-                                <Select displayEmpty value={store.state.outcomeFilter} onChange={(e) => { store.configStore.changeOutcomeFilter((e.target.value as string)) }}  >
-                                    {DropdownGenerator(OutcomeOptions, true)}
-                                </Select>} />
+                            secondary={outcomeFilter.length > 0 ? (outcomeFilter.map((d, i) => `${AcronymDictionary[d] ? AcronymDictionary[d] : d} ${(i + 1) !== outcomeFilter.length ? "AND " : ""}`)) : "NONE"} />
                     </ListItem>
 
                     <ListItem key="Procedure Types">
-                        <ListItemText primary="Surgery Types" secondary={
-                            <Box className={useStyles().root}>
-                                <Chip size="small" label="Urgent" clickable color={surgeryUrgencySelection[0] ? "primary" : undefined}
-                                    onClick={() => { store.configStore.changeSurgeryUrgencySelection([!surgeryUrgencySelection[0], surgeryUrgencySelection[1], surgeryUrgencySelection[2]]) }} />
-                                <Chip size="small" label="Elective" clickable color={surgeryUrgencySelection[1] ? "primary" : undefined}
-                                    onClick={() => { store.configStore.changeSurgeryUrgencySelection([surgeryUrgencySelection[0], !surgeryUrgencySelection[1], surgeryUrgencySelection[2]]) }} />
-                                <Chip size="small" label="Emergent" clickable color={surgeryUrgencySelection[2] ? "primary" : undefined}
-                                    onClick={() => { store.configStore.changeSurgeryUrgencySelection([surgeryUrgencySelection[0], surgeryUrgencySelection[1], !surgeryUrgencySelection[2]]) }} /></Box>} />
+                        <ListItemText primary="Surgery Urgency" secondary={
+                            `${surgeryUrgencySelection[0] ? "Urgent, " : ""}
+                            ${surgeryUrgencySelection[1] ? "Elective, " : ""}
+                            ${surgeryUrgencySelection[2] ? "Emergent" : ""}`} />
                     </ListItem>
+
+                    {/* Should we rename this to "use alternative color scheme or something like that?" */}
+
                     <ListItem key="Show Zero">
                         <ListItemText primary="Show Zero Transfused"
                         ></ListItemText>
