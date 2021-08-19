@@ -21,15 +21,6 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
     const { surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet, outcomeFilter } = store.state;
     const styles = useStyles();
 
-    // const onDateChange = (event: any, data: any) => {
-    //     if (!data.value) {
-    //         store.configStore.dateRangeChange(defaultState.rawDateRange)
-    //     }
-    //     else if (data.value.length > 1) {
-    //         store.configStore.dateRangeChange([data.value[0], data.value[1]])
-    //     }
-    // }
-
 
     const generateSurgery = () => {
         let output: any[] = []
