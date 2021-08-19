@@ -106,7 +106,7 @@ export class ProjectConfigStore {
     changeCostConfig(componentName: string, newCost: number) {
         this.provenance.apply(changeCostConfig(componentName, newCost))
     }
-    changeOutcomeFilter(newOutcomeFilter: string) {
+    changeOutcomeFilter(newOutcomeFilter: string[]) {
         this.provenance.apply(changeOutcomeFilter(newOutcomeFilter))
     }
 
