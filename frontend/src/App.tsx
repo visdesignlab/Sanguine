@@ -24,13 +24,10 @@ const App: FC = () => {
 
 
     useEffect(() => {
-        if (process.env.REACT_APP_REQUIRE_LOGIN !== "true") {
+        if (process.env.REACT_APP_REQUIRE_LOGIN !== "true" || (store.configStore.isLoggedIn && hemoData.length === 0)) {
             cacheHemoData();
         }
-        else if (store.configStore.isLoggedIn && hemoData.length === 0) {
-            //this need to also be checked to only do once. 
-            cacheHemoData();
-        } else {
+        else {
             whoamiAPICall(store)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps

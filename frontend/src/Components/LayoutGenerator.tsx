@@ -148,7 +148,7 @@ const LayoutGenerator: FC = () => {
         </div >,
         <div id="filter-tab" style={{ height: "90vh" }}>
             <FilterBoard />
-            {/* <LineUpWrapper hemoglobinDataSet={hemoData} /> */}
+
 
         </div>
     ]

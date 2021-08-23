@@ -42,7 +42,7 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                     return (
                         <g>
                             <Tooltip
-                                title={<div key={dataPoint.aggregateAttribute + '-' + point} className="charttooltip">{outputContent}</div>}
+                                title={<div key={`${dataPoint.aggregateAttribute}-${point}`} className="charttooltip">{outputContent}</div>}
                                 arrow
                                 key={dataPoint.aggregateAttribute + '-' + point}
                                 placement="top"
