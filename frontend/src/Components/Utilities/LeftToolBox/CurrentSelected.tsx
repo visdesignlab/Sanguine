@@ -18,7 +18,7 @@ const CurrentSelected: FC = () => {
             <Container style={{ height: "15vh", overflow: "auto" }}>
                 <List dense>
                     <ListItem >
-                        <Title>Current Selected</Title>
+                        <Title>Currently Selected</Title>
                     </ListItem>
 
                     {currentBrushedPatientGroup.length > 0 ?

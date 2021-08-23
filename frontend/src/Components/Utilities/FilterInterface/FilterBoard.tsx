@@ -15,7 +15,7 @@ import SurgeryUrgencyChipGroup from "./SurgeryUrgencyChipGroup";
 const FilterBoard: FC = () => {
 
     const store = useContext(Store)
-    const { rawDateRange } = store.state;
+    const { rawDateRange, outcomeFilter, surgeryUrgencySelection, bloodComponentFilter, testValueFilter } = store.state;
     const [beginDate, setBeginDate] = useState<number | null>(rawDateRange[0]);
     const [endDate, setEndDate] = useState<number | null>(rawDateRange[1]);
 
@@ -23,6 +23,19 @@ const FilterBoard: FC = () => {
         setBeginDate(defaultState.rawDateRange[0]);
         setEndDate(defaultState.rawDateRange[1]);
         store.configStore.dateRangeChange(defaultState.rawDateRange);
+    }
+
+    const checkIfCanReset = (filterInput: any) => {
+
+        let canReset = false;
+
+        Object.entries(filterInput).map(([filterName, filterValue]) => {
+
+            if ((filterValue as any)[0] > 0 || ((filterValue as any)[1] < store.configStore.filterRange[filterName])) {
+                canReset = true
+            }
+        })
+        return canReset
     }
 
     return <Container>
@@ -37,7 +50,8 @@ const FilterBoard: FC = () => {
                         </Title>} />
                         <ListItemSecondaryAction>
                             <Tooltip title="Reset">
-                                <IconButton onClick={resetDateFilter}>
+                                <IconButton onClick={resetDateFilter}
+                                    disabled={(rawDateRange[0] === defaultState.rawDateRange[0]) && (rawDateRange[1] === defaultState.rawDateRange[1])}>
                                     <ReplayIcon />
                                 </IconButton>
                             </Tooltip>
@@ -90,6 +104,7 @@ const FilterBoard: FC = () => {
                             <Tooltip title="Clear All">
                                 <IconButton
                                     onClick={() => { store.configStore.changeOutcomeFilter([]) }}
+                                    disabled={outcomeFilter.length === 0}
                                 >
                                     <ReplayIcon />
                                 </IconButton>
@@ -106,6 +121,7 @@ const FilterBoard: FC = () => {
                             <Tooltip title="Clear All">
                                 <IconButton
                                     onClick={() => { store.configStore.changeSurgeryUrgencySelection([true, true, true]) }}
+                                    disabled={surgeryUrgencySelection[0] && surgeryUrgencySelection[1] && surgeryUrgencySelection[2]}
                                 >
                                     <ReplayIcon />
                                 </IconButton>
@@ -122,7 +138,8 @@ const FilterBoard: FC = () => {
                         <ListItemText primary={<Title>Blood Component Filter</Title>} />
                         <ListItemSecondaryAction>
                             <Tooltip title="Reset">
-                                <IconButton onClick={() => { store.configStore.resetBloodFilter() }}>
+                                <IconButton onClick={() => { store.configStore.resetBloodFilter() }}
+                                    disabled={!checkIfCanReset(bloodComponentFilter)}>
                                     <ReplayIcon />
                                 </IconButton>
                             </Tooltip>
@@ -137,7 +154,8 @@ const FilterBoard: FC = () => {
                         <ListItemText primary={<Title>Test Value Filter</Title>} />
                         <ListItemSecondaryAction>
                             <Tooltip title="Reset">
-                                <IconButton onClick={() => { store.configStore.resetTestValueFilter() }}>
+                                <IconButton onClick={() => { store.configStore.resetTestValueFilter() }}
+                                    disabled={!checkIfCanReset(testValueFilter)}>
                                     <ReplayIcon />
                                 </IconButton>
                             </Tooltip>
