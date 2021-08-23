@@ -12,7 +12,6 @@ export class ProjectConfigStore {
     private _topMenuBarAddMode: boolean;
     openSaveStateDialog: boolean;
     openManageStateDialog: boolean;
-    openShareURLDialog: boolean;
     openShareUIDDialog: boolean;
     openCostInputModal: boolean;
     savedState: string[];
@@ -26,7 +25,6 @@ export class ProjectConfigStore {
         this._topMenuBarAddMode = false;
         this.openSaveStateDialog = false;
         this.openManageStateDialog = false;
-        this.openShareURLDialog = false;
         this.openShareUIDDialog = false;
         this.openCostInputModal = false;
         this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0, PREOP_HGB: 0, POSTOP_HGB: 0 };
