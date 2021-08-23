@@ -5,7 +5,7 @@ import { FC } from "react"
 import { defaultState } from "../../../Interfaces/DefaultState"
 import Store from "../../../Interfaces/Store"
 import { AcronymDictionary, OutcomeOptions } from "../../../Presets/DataDict"
-import { StyledDate, Title, useStyles } from "../../../Presets/StyledComponents"
+import { Title, useStyles } from "../../../Presets/StyledComponents"
 import Container from "@material-ui/core/Container";
 import CloseIcon from '@material-ui/icons/Close';
 import List from "@material-ui/core/List";
@@ -75,8 +75,6 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                             ${surgeryUrgencySelection[1] ? "Elective, " : ""}
                             ${surgeryUrgencySelection[2] ? "Emergent" : ""}`} />
                     </ListItem>
-
-                    {/* Should we rename this to "use alternative color scheme or something like that?" */}
 
                     <ListItem key="Show Zero">
                         <ListItemText primary="Show Zero Transfused"
