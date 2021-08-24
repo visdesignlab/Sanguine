@@ -842,7 +842,7 @@ def state(request):
     if request.method == "GET":
         # Get the name from the querystring
         name = request.GET.get('name')
-        user = request.user.id
+        user = request.user
 
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: state Params: name = {name} User: {request.user}")
 
@@ -907,10 +907,10 @@ def state(request):
 
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} PUT: state Params: old_name = {old_name}, new_name = {new_name} User: {request.user}")
 
-        owned_states = [o.name for o in State.objects.all().filter(owner=request.user.id)]
+        owned_states = [o.name for o in State.objects.all().filter(owner=request.user)]
         public_states = [o.name for o in State.objects.all().filter(public=True)]
-        writable_states = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="WR")]
-        readable_states = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="RE")]
+        writable_states = [o.state.name for o in StateAccess.objects.filter(user=request.user).filter(role="WR")]
+        readable_states = [o.state.name for o in StateAccess.objects.filter(user=request.user).filter(role="RE")]
         all_accessible_states = set(owned_states + public_states + writable_states + readable_states)
         all_modifiable_states = set(owned_states + writable_states)
 
@@ -941,7 +941,7 @@ def state(request):
         except State.DoesNotExist:
             return HttpResponseBadRequest("State not found", 404)
 
-        if str(result.owner) != str(request.user.id):
+        if str(result.owner) != str(request.user):
             return HttpResponseBadRequest("Requester is not owner", 401)
 
         StateAccess.objects.all().filter(state_id=result.id).delete()
@@ -970,7 +970,7 @@ def share_state(request):
 
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: share_state Params: name = {name}, user = {user}, role = {role} User: {request.user}")
 
-        requesting_user = request.user.id
+        requesting_user = request.user
 
         try:
             state_object = State.objects.get(name=name)
