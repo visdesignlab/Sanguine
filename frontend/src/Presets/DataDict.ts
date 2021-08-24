@@ -24,6 +24,8 @@ export const OutcomeOptions = [
     { value: "TXA", key: "TXA", text: "Tranexamic Acid" },
     { value: "AMICAR", key: "AMICAR", text: "Amicar" }]
 
+export const OutcomeOptionsStringArray = ["DEATH", "VENT", "STROKE", "ECMO", "B12", "TXA", "AMICAR"]
+
 export const ExtraPairOptions = OutcomeOptions.concat([
     { text: "Preop Hemoglobin", key: "PREOP_HGB", value: "Preop HGB" },
     { text: "Postop Hemoglobin", key: "POSTOP_HGB", value: "POSTOP_HGB" },
@@ -107,3 +109,4 @@ export const HIPAA_Sensitive = new Set([
     "MONTH",
     "PATIENT_ID"
 ])
+

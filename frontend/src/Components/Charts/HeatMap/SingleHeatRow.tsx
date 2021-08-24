@@ -42,8 +42,9 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                     return (
                         <g>
                             <Tooltip
-                                title={<div className="charttooltip">{outputContent}</div>}
+                                title={<div key={`${dataPoint.aggregateAttribute}-${point}`} className="charttooltip">{outputContent}</div>}
                                 arrow
+                                key={dataPoint.aggregateAttribute + '-' + point}
                                 placement="top"
                                 hidden={output === 0}
                                 interactive>
@@ -64,6 +65,7 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                                 opacity={output === 0 ? 1 : 0}
                                 y1={0.5 * bandwidth}
                                 y2={0.5 * bandwidth}
+                                key={`${dataPoint.aggregateAttribute} - ${point}blank`}
                                 x1={valueScale()(point)! + 0.35 * valueScale().bandwidth()}
                                 x2={valueScale()(point)! + 0.65 * valueScale().bandwidth()} />
                         </g>

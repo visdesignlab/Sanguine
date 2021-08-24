@@ -19,19 +19,6 @@ body {
   color: #09d3ac;
 }
 
-/* .lineup>div>div{
-  flex:1 1 auto;
-} 
-
-.lineup>div{
-  display:flex;
-  height:800px
-} */
-
-#lineup-wrapper{
-/* display:flex; */
-  height:800px
-}
 .tooltip {
   position: relative;
   display: inline-block;

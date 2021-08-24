@@ -1,4 +1,6 @@
 
+import { ManualInfinity } from "../Presets/Constants";
+import { OutcomeOptionsStringArray } from "../Presets/DataDict";
 import { ApplicationState } from "./Types/StateTypes"
 
 const today = new Date()
@@ -7,7 +9,7 @@ today.setDate(today.getDate() + 1)
 export const defaultState: ApplicationState = {
     layoutArray: [],
     surgeryUrgencySelection: [true, true, true],
-    outcomeFilter: "",
+    outcomeFilter: [],
     rawDateRange: [new Date(2014, 0, 1).getTime(), today.getTime()],
     proceduresSelection: [],
     totalAggregatedCaseCount: 0,
@@ -25,5 +27,16 @@ export const defaultState: ApplicationState = {
         PLT_UNITS: 650,
         CELL_SAVER_ML: 300,
     },
-    currentSelectPatient: null
+    currentSelectPatient: null,
+    bloodComponentFilter: {
+        PRBC_UNITS: [0, ManualInfinity],
+        FFP_UNITS: [0, ManualInfinity],
+        CRYO_UNITS: [0, ManualInfinity],
+        PLT_UNITS: [0, ManualInfinity],
+        CELL_SAVER_ML: [0, ManualInfinity],
+    },
+    testValueFilter: {
+        PREOP_HGB: [0, ManualInfinity],
+        POSTOP_HGB: [0, ManualInfinity]
+    }
 };

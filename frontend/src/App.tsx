@@ -18,17 +18,16 @@ export const DataContext = createContext<SingleCasePoint[]>([])
 
 const App: FC = () => {
     const store = useContext(Store);
-    const { surgeryUrgencySelection, outcomeFilter, currentSelectPatientGroup, currentOutputFilterSet } = store.state;
+    const { bloodComponentFilter, surgeryUrgencySelection, outcomeFilter, currentSelectPatientGroup, currentOutputFilterSet, testValueFilter } = store.state;
     const [hemoData, setHemoData] = useState<SingleCasePoint[]>([])
     const [outputFilteredData, setOutputFilteredDAta] = useState<SingleCasePoint[]>([])
 
 
     useEffect(() => {
-        if (process.env.REACT_APP_REQUIRE_LOGIN !== "true") { cacheHemoData(); }
-        if (store.configStore.isLoggedIn && hemoData.length === 0) {
-            //this need to also be checked to only do once. 
+        if (process.env.REACT_APP_REQUIRE_LOGIN !== "true" || (store.configStore.isLoggedIn && hemoData.length === 0)) {
             cacheHemoData();
-        } else {
+        }
+        else {
             whoamiAPICall(store)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -64,11 +63,11 @@ const App: FC = () => {
             patientIDSet = new Set<number>()
             currentSelectPatientGroup.forEach((d) => { patientIDSet!.add(d.CASE_ID) })
         }
-        const newFilteredData = hemoData.filter((eachcase: SingleCasePoint) => checkIfCriteriaMet(eachcase, surgeryUrgencySelection, outcomeFilter, currentOutputFilterSet, patientIDSet))
+        const newFilteredData = hemoData.filter((eachcase: SingleCasePoint) => checkIfCriteriaMet(eachcase, surgeryUrgencySelection, outcomeFilter, currentOutputFilterSet, bloodComponentFilter, testValueFilter, patientIDSet))
 
 
         setOutputFilteredDAta(newFilteredData)
-    }, [surgeryUrgencySelection, outcomeFilter, hemoData, currentOutputFilterSet, currentSelectPatientGroup])
+    }, [surgeryUrgencySelection, outcomeFilter, hemoData, currentOutputFilterSet, bloodComponentFilter, testValueFilter, currentSelectPatientGroup])
 
     async function cacheHemoData() {
         if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
@@ -112,11 +111,16 @@ const App: FC = () => {
                     };
                 });
 
+
+
                 resultHemo.forEach((ob: any, index: number) => {
 
                     if (transfused_dict[ob.CASE_ID]) {
                         const transfusedResult = transfused_dict[ob.CASE_ID];
                         const time = ((timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE))!.getTime())
+                        store.configStore.updateRange(transfusedResult)
+                        store.configStore.updateTestValue("PREOP_HGB", +ob.HEMO[0])
+                        store.configStore.updateTestValue("POSTOP_HGB", +ob.HEMO[1])
                         const outputObj: SingleCasePoint = {
                             CASE_ID: ob.CASE_ID,
                             VISIT_ID: ob.VISIT_ID,

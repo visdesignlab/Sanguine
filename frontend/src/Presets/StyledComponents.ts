@@ -1,6 +1,5 @@
 
 import styled from "styled-components";
-import SemanticDatePicker from 'react-semantic-ui-datepickers';
 import { Basic_Gray, postop_color, preop_color, Third_Gray } from "./Constants";
 import ListItem from '@material-ui/core/ListItem';
 import { makeStyles, Theme, createStyles } from "@material-ui/core";
@@ -12,17 +11,12 @@ export const LayoutDiv = styled.div`
 
 export const Title = styled.b`
     font-size:larger;
-`
-
-export const StyledDate = styled(SemanticDatePicker)`
-  width:100%;
-`
+`;
 
 export const SurgeryNumText = styled(`text`)`
   text-anchor:end;
   alignment-baseline: middle;
-
-`
+`;
 
 
 export const SurgeryDiv = styled.td`
@@ -32,8 +26,7 @@ export const SurgeryDiv = styled.td`
   alignment-baseline: hanging;
   text-align:left;
   text-shadow: 2px 2px 5px white;
- 
-`
+`;
 
 
 interface SurgeryListProps {
