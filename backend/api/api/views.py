@@ -1035,7 +1035,7 @@ def state_unids(request):
             "users_and_roles": users_and_roles,
         }
 
-        return HttpResponse(response)
+        return JsonResponse(response)
     else:
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} state_permissions User: {request.user}")
         return HttpResponseNotAllowed(["POST"], "Method Not Allowed")
