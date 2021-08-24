@@ -13,6 +13,7 @@ import WrapperCostBar from "./Charts/CostBarChart/WrapperCostBar";
 import WrapperDumbbell from "./Charts/DumbbellChart/WrapperDumbbell";
 import WrapperHeatMap from "./Charts/HeatMap/WrapperHeatMap";
 import WrapperScatter from "./Charts/ScatterPlot/WrapperScatter";
+import FilterBoard from "./Utilities/FilterInterface/FilterBoard";
 
 
 const LayoutGenerator: FC = () => {
@@ -145,10 +146,10 @@ const LayoutGenerator: FC = () => {
                 })}
             </Responsive>
         </div >,
-        <div id="filter-tab">
-            <div className={"lineup"} id={"lineup-wrapper"}>
-                {/* <LineUpWrapper hemoglobinDataSet={hemoData} /> */}
-            </div>
+        <div id="filter-tab" style={{ height: "90vh" }}>
+            <FilterBoard />
+
+
         </div>
     ]
 

@@ -1,28 +1,41 @@
 import { SingleCasePoint } from "../Interfaces/Types/DataTypes";
 import { SelectSet } from "../Interfaces/Types/SelectionTypes";
+import { BloodComponentOptions, ScatterYOptions } from "../Presets/DataDict";
 
-export const checkIfCriteriaMet = (singleCase: SingleCasePoint, procedureUrgencyFilter: [boolean, boolean, boolean], outcomeFilter: string, currentOutputFilterSet: SelectSet[], patientIDSet?: Set<number>) => {
-    let criteriaMet = true;
+export const checkIfCriteriaMet = (singleCase: SingleCasePoint, procedureUrgencyFilter: [boolean, boolean, boolean], outcomeFilter: string[], currentOutputFilterSet: SelectSet[], bloodComponentFilter: any, testValueFilter: any, patientIDSet?: Set<number>) => {
+
     if (patientIDSet) {
-        criteriaMet = patientIDSet.has(singleCase.CASE_ID)
+        if (!patientIDSet.has(singleCase.CASE_ID)) {
+            return false
+        }
     }
     if (currentOutputFilterSet.length > 0) {
         for (let selectSet of currentOutputFilterSet) {
             if (!selectSet.setValues.includes((singleCase[selectSet.setName]).toString())) {
-                criteriaMet = false;
-                break;
+                return false;
             }
         }
     }
     if (!procedureUrgencyFilter[singleCase.SURGERY_TYPE]) {
-        criteriaMet = false;
+        return false;
     }
-    if (outcomeFilter) {
-        if (singleCase[outcomeFilter] === 0) {
-            criteriaMet = false;
+    let toReturn = true;
+    outcomeFilter.forEach((d) => {
+        if (singleCase[d] === 0) {
+            toReturn = false;
         }
-    }
-    return criteriaMet;
+    })
+    BloodComponentOptions.forEach((d) => {
+        if (bloodComponentFilter[d.key][0] > singleCase[d.key] || bloodComponentFilter[d.key][1] < singleCase[d.key]) {
+            toReturn = false;
+        }
+    })
+    ScatterYOptions.forEach((d) => {
+        if (testValueFilter[d.key][0] > singleCase[d.key] || testValueFilter[d.key][1] < singleCase[d.key]) {
+            toReturn = false;
+        }
+    })
+    return toReturn;
 }
 
 export const bloodComponentOutlierHandler = (input: number, yValueOption: string) => {
