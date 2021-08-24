@@ -989,16 +989,19 @@ def share_state(request):
             return HttpResponseBadRequest("User is already the owner of the state", 400)
 
         # Check that new user is not already reader/writer, role in allowed choices
-        state_access_object = StateAccess.objects.filter(state=state_object).get(user=user)
+        state_access_object = StateAccess.objects.filter(state=state_object).filter(user=user)
         roles = [a.role for a in state_access_object]
-        if role in roles:
-            return HttpResponseBadRequest("User already has that role on this state", 400)
-        elif role not in [a[1] for a in AccessLevel.choices()]:
-            return HttpResponseBadRequest(f"role must be in: {[a[1] for a in AccessLevel.choices()]}", 400)
-        else:
-            state_access_object.role = role
-            state_access_object.save()
-            return HttpResponse("Updated user role", 200)
+        if state_access_object.count() > 0:
+            if state_access_object.role == role:
+                return HttpResponseBadRequest("User already has that role on this state", 400)
+            elif role not in [a[1] for a in AccessLevel.choices()]:
+                return HttpResponseBadRequest(f"role must be in: {[a[1] for a in AccessLevel.choices()]}", 400)
+            elif state_access_object.count() == 1:
+                state_access_object.role = role
+                state_access_object.save()
+                return HttpResponse("Updated user role", 200)
+            else:
+                return HttpResponse("This user already has multiple access roles", status=500)
 
         # If all above passed, make the StateAccess object
         StateAccess.objects.create(
