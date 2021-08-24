@@ -36,4 +36,5 @@ urlpatterns = [
     path("api/patient_outcomes", views.patient_outcomes, name="patient_outcomes"),
     path("api/state", views.state, name="state"),
     path("api/share_state", views.share_state, name="share_state"),
+    path("api/state_unids", views.state_unids, name="state_unids"),
 ]
