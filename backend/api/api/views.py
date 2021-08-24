@@ -1011,3 +1011,31 @@ def share_state(request):
     else:
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} share_state User: {request.user}")
         return HttpResponseNotAllowed(["POST"], "Method Not Allowed")
+
+@conditional_login_required(
+    login_required,
+    os.getenv("REQUIRE_LOGINS") == "True"
+)
+def state_unids(request):
+    if request.method == "GET":
+        state_name = request.GET.get('state_name')
+
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: state_permissions Params: state_name = {state_name} User: {request.user}")
+
+        try:
+            state = State.objects.get(name=state_name)  # username = uid
+        except State.DoesNotExist:
+            return HttpResponseBadRequest("State not found", 404)
+        state_access = StateAccess.objects.filter(state=state)
+
+        users_and_roles = [(access.user, access.role) for access in state_access]
+
+        response = {
+            "owner": state.owner,
+            "users_and_roles": users_and_roles,
+        }
+
+        return HttpResponse(response)
+    else:
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} state_permissions User: {request.user}")
+        return HttpResponseNotAllowed(["POST"], "Method Not Allowed")
