@@ -876,7 +876,7 @@ def state(request):
         # Get the name and definition from the request
         name = request.POST.get('name')
         definition = request.POST.get('definition')
-        owner = request.user.id
+        owner = request.user
         public_request = request.POST.get("public")
 
         public = True if public_request == "true" else False
