@@ -22,6 +22,9 @@ const SaveStateModal: FC = () => {
         if (store.configStore.checkIfInSavedState(stateName)) {
             setErrorMessage("State name duplicate. Please rename.")
             setOpenError(true);
+
+            // Keep these for now. For the next PR i will make "udpate state" into a new button, so not allowing duplicate state name in "save state" dialog.
+
             // fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
             //     method: `PUT`,
             //     credentials: "include",
@@ -119,8 +122,6 @@ const SaveStateModal: FC = () => {
                         />
                     </RadioGroup>
                 </FormGroup>
-
-
 
             </DialogContent>
             <DialogActions>
