@@ -206,6 +206,17 @@ There are several routes set up for accessing the patient and surgery data. Here
       -F "role=WR"
     ```
 
+- Name: `/api/state_unids`
+  - Allowed Methods: `GET`
+  - Parameters:  
+    `state_name`: The name of the state object. 
+  - Description: Returns the owner of the workspace and all users with permissions. For users that are not the owner, this route returns their access level as 'RE' or 'WR'.
+  - Example:
+    ```
+    curl -X POST '127.0.0.1:8000/api/share_state' \ 
+      -F "state_name=example_state" 
+    ```
+
 ## Data Dictionary
 
 For Sanguine to work as expected, the application expects data in a specific format. See [data_dictionary.csv](api/data_dictionary.csv) for column descriptions. We required the following columns:
