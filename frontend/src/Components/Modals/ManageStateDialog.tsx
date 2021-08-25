@@ -8,12 +8,14 @@ import { simulateAPIClick } from "../../Interfaces/UserManagement";
 import { Alert } from "@material-ui/lab";
 import { observer } from "mobx-react";
 import { SnackBarCloseTime } from "../../Presets/Constants";
+import StateAccessControl from "./StateAccessControl";
 
 const ManageStateDialog: FC = () => {
     const store = useContext(Store);
     const [errorMessage, setErrorMessage] = useState("")
     const [openErrorMessage, setOpenError] = useState(false);
     const [openSuccess, setOpenSuccess] = useState(false);
+    const [stateNameToChange, setStateNameToChange] = useState("")
 
 
     const removeState = (stateName: string) => {
@@ -49,7 +51,9 @@ const ManageStateDialog: FC = () => {
     }
 
     const changeStateAccess = (stateName: string) => {
-
+        store.configStore.openManageStateDialog = false;
+        store.configStore.openStateAccessControl = true;
+        setStateNameToChange(stateName);
     }
 
     return (<div>
@@ -78,6 +82,7 @@ const ManageStateDialog: FC = () => {
                 </Button>
             </DialogActions>
         </Dialog>
+        <StateAccessControl stateName={stateNameToChange} />
         <Snackbar open={openErrorMessage} autoHideDuration={SnackBarCloseTime} onClose={() => { setOpenError(false) }}>
             <Alert onClose={() => { setOpenError(false); setErrorMessage("") }} severity="error">
                 An error occured: {errorMessage}
