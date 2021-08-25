@@ -20,9 +20,7 @@ export class RootStore {
         this._mainCompWidth = 0
 
         this.provenance = initProvenance<ApplicationState, ActionEvents>(
-            defaultState,
-            //Is this correct way to allow load from url?
-            { loadFromUrl: true }
+            defaultState
         )
 
 
