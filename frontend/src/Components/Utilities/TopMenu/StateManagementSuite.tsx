@@ -5,15 +5,13 @@ import NestedMenuItem from "material-ui-nested-menu-item";
 import Store from "../../../Interfaces/Store"
 import { useStyles } from "../../../Presets/StyledComponents"
 import ManageStateDialog from "../../Modals/ManageStateDialog"
-import SaveStateModal from "../../Modals/SaveStateModal"
-import ShareStateURLModal from "../../Modals/ShareStateURLModal"
+import SaveStateModal from "../../Modals/SaveStateModal";
 import UIDInputModal from "../../Modals/UIDInputModal";
 
 const StateManagementSuite: FC = () => {
     const styles = useStyles();
     const store = useContext(Store);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [shareUrl, setShareUrl] = useState(window.location.href);
     const [selectedState, setSelectedState] = useState("")
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -74,15 +72,6 @@ const StateManagementSuite: FC = () => {
                 </NestedMenuItem>
                 <MenuItem onClick={() => { handleClose(); store.configStore.openSaveStateDialog = true; }}>Save State</MenuItem>
                 <MenuItem onClick={() => { handleClose(); store.configStore.openManageStateDialog = true; }}>Manage Saved States</MenuItem>
-                <MenuItem onClick={() => {
-                    setShareUrl(
-                        //Kiran says there is a bug with the exportState, so using exportState(false) for now
-                        `${window.location.href}#${store.provenance.exportState(false)}`,
-                    );
-                    handleClose(); store.configStore.openShareURLDialog = true;
-                }}>
-                    Share URL
-                </MenuItem>
                 <NestedMenuItem parentMenuOpen={Boolean(anchorEl)} label="Share States Through uID">
                     {store.configStore.savedState.map((d) => {
                         return (
@@ -101,7 +90,6 @@ const StateManagementSuite: FC = () => {
         </div>
         <ManageStateDialog />
         <SaveStateModal />
-        <ShareStateURLModal shareUrl={shareUrl} />
         <UIDInputModal stateName={selectedState} />
     </Grid>)
 }

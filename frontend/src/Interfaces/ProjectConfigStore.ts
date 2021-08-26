@@ -10,13 +10,11 @@ export class ProjectConfigStore {
     private _dataLoading: boolean;
     private _dataLoadingFailed: boolean;
     private _topMenuBarAddMode: boolean;
-    //this might not work with loading state. If not, just change this to part of state. 
-    private _nextAddingIndex: number;
     openSaveStateDialog: boolean;
     openManageStateDialog: boolean;
-    openShareURLDialog: boolean;
     openShareUIDDialog: boolean;
     openCostInputModal: boolean;
+    openStateAccessControl: boolean;
     savedState: string[];
     filterRange: any;
 
@@ -26,12 +24,11 @@ export class ProjectConfigStore {
         this._dataLoading = true;
         this._dataLoadingFailed = false;
         this._topMenuBarAddMode = false;
-        this._nextAddingIndex = this.rootStore.state.layoutArray.length
         this.openSaveStateDialog = false;
         this.openManageStateDialog = false;
-        this.openShareURLDialog = false;
         this.openShareUIDDialog = false;
         this.openCostInputModal = false;
+        this.openStateAccessControl = false;
         this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0, PREOP_HGB: 0, POSTOP_HGB: 0 };
         this.savedState = []
         makeAutoObservable(this)
@@ -88,14 +85,6 @@ export class ProjectConfigStore {
 
     get topMenuBarAddMode() {
         return this._topMenuBarAddMode;
-    }
-
-    chartAdded() {
-        this._nextAddingIndex += 1
-    }
-
-    get nextAddingIndex() {
-        return this._nextAddingIndex.toString();
     }
 
 

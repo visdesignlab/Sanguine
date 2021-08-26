@@ -28,3 +28,6 @@ class StateAccess(models.Model):
         choices=AccessLevel.choices(),
         default=AccessLevel.READER,
     )
+
+    class Meta:
+        unique_together = ['state', 'user']

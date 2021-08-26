@@ -65,7 +65,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                     </ListItem>
 
                     <ListItem key="Outcomes">
-                        <ListItemText primary="Outcomes/Interventions"
+                        <ListItemText primary="Outcomes / Interventions"
                             secondary={outcomeFilter.length > 0 ? (outcomeFilter.map((d, i) => `${AcronymDictionary[d] ? AcronymDictionary[d] : d} ${(i + 1) !== outcomeFilter.length ? "AND " : ""}`)) : "NONE"} />
                     </ListItem>
 

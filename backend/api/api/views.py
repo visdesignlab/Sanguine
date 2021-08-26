@@ -842,7 +842,7 @@ def state(request):
     if request.method == "GET":
         # Get the name from the querystring
         name = request.GET.get('name')
-        user = request.user.id
+        user = request.user
 
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: state Params: name = {name} User: {request.user}")
 
@@ -876,7 +876,7 @@ def state(request):
         # Get the name and definition from the request
         name = request.POST.get('name')
         definition = request.POST.get('definition')
-        owner = request.user.id
+        owner = request.user
         public_request = request.POST.get("public")
 
         public = True if public_request == "true" else False
@@ -907,10 +907,10 @@ def state(request):
 
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} PUT: state Params: old_name = {old_name}, new_name = {new_name} User: {request.user}")
 
-        owned_states = [o.name for o in State.objects.all().filter(owner=request.user.id)]
+        owned_states = [o.name for o in State.objects.all().filter(owner=request.user)]
         public_states = [o.name for o in State.objects.all().filter(public=True)]
-        writable_states = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="WR")]
-        readable_states = [o.state.name for o in StateAccess.objects.filter(user=request.user.id).filter(role="RE")]
+        writable_states = [o.state.name for o in StateAccess.objects.filter(user=request.user).filter(role="WR")]
+        readable_states = [o.state.name for o in StateAccess.objects.filter(user=request.user).filter(role="RE")]
         all_accessible_states = set(owned_states + public_states + writable_states + readable_states)
         all_modifiable_states = set(owned_states + writable_states)
 
@@ -941,7 +941,7 @@ def state(request):
         except State.DoesNotExist:
             return HttpResponseBadRequest("State not found", 404)
 
-        if str(result.owner) != str(request.user.id):
+        if str(result.owner) != str(request.user):
             return HttpResponseBadRequest("Requester is not owner", 401)
 
         StateAccess.objects.all().filter(state_id=result.id).delete()
@@ -970,7 +970,10 @@ def share_state(request):
 
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: share_state Params: name = {name}, user = {user}, role = {role} User: {request.user}")
 
-        requesting_user = request.user.id
+        requesting_user = request.user
+
+        if role not in [a[1] for a in AccessLevel.choices()]:
+            return HttpResponseBadRequest(f"role must be in: {[a[1] for a in AccessLevel.choices()]}", 400)
 
         try:
             state_object = State.objects.get(name=name)
@@ -985,25 +988,57 @@ def share_state(request):
         # Make sure state exists, requesting users is owner, and new user is not owner, user exists
         if str(state_object.owner) != str(requesting_user):
             return HttpResponseBadRequest("Requesting user is not the owner", 400)
-        if str(state_object.owner) == str(user_object.id):
+        if str(state_object.owner) == str(user):
             return HttpResponseBadRequest("User is already the owner of the state", 400)
 
         # Check that new user is not already reader/writer, role in allowed choices
-        state_access_objects = StateAccess.objects.filter(state=state_object).filter(user=user)
-        roles = [a.role for a in state_access_objects]
-        if role in roles:
-            return HttpResponseBadRequest("User already has that role on this state", 400)
-        if role not in [a[1] for a in AccessLevel.choices()]:
-            return HttpResponseBadRequest(f"role must be in: {[a[1] for a in AccessLevel.choices()]}", 400)
+        state_access_object = StateAccess.objects.filter(state=state_object).filter(user=user)
+        roles = [a.role for a in state_access_object]
+        if state_access_object.count() > 0:
+            if state_access_object.count() == 1:
+                state_access_object = state_access_object.first()
+                state_access_object.role = role
+                state_access_object.save()
+                return HttpResponse("Updated user role", 200)
+            else:
+                return HttpResponse("This user already has multiple access roles", status=500)
 
         # If all above passed, make the StateAccess object
         StateAccess.objects.create(
             state=state_object,
-            user=user_object.id,
+            user=user,
             role=role,
         )
         return HttpResponse("Added new user to role", 201)
 
     else:
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} share_state User: {request.user}")
+        return HttpResponseNotAllowed(["POST"], "Method Not Allowed")
+
+@conditional_login_required(
+    login_required,
+    os.getenv("REQUIRE_LOGINS") == "True"
+)
+def state_unids(request):
+    if request.method == "GET":
+        state_name = request.GET.get('state_name')
+
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: state_permissions Params: state_name = {state_name} User: {request.user}")
+
+        try:
+            state = State.objects.get(name=state_name)  # username = uid
+        except State.DoesNotExist:
+            return HttpResponseBadRequest("State not found", 404)
+        state_access = StateAccess.objects.filter(state=state)
+
+        users_and_roles = [(access.user, access.role) for access in state_access]
+
+        response = {
+            "owner": state.owner,
+            "users_and_roles": users_and_roles,
+        }
+
+        return JsonResponse(response)
+    else:
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} state_permissions User: {request.user}")
         return HttpResponseNotAllowed(["POST"], "Method Not Allowed")

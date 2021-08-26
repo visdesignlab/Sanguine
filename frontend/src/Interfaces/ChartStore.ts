@@ -55,7 +55,6 @@ export class ChartStore {
     }
 
     addNewChart(newLayoutElement: LayoutElement) {
-        this.rootStore.configStore.chartAdded();
         this.provenance.apply(addNewChart(newLayoutElement));
     }
 
