@@ -996,7 +996,8 @@ def share_state(request):
         roles = [a.role for a in state_access_object]
         if state_access_object.count() > 0:
             if state_access_object.count() == 1:
-                state_access_object.first().role = role
+                state_access_object = state_access_object.first()
+                state_access_object.role = role
                 state_access_object.save()
                 return HttpResponse("Updated user role", 200)
             else:
