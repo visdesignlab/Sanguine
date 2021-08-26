@@ -18,7 +18,7 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
     const [openErrorMessage, setOpenErrorMessage] = useState(false);
     const [openSuccessMessage, setOpenSuccess] = useState(false)
 
-    useEffect(() => {
+    const makeStateAccessRequest = () => {
         if (stateName) {
             fetch(`${process.env.REACT_APP_QUERY_URL}state_unids?state_name=${stateName}`)
                 .then(response => response.json())
@@ -37,6 +37,10 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
 
                 });
         }
+    }
+
+    useEffect(() => {
+        makeStateAccessRequest()
     }, [stateName]);
 
     const changeAccess = (uID: string, newAccess: string, indexInArray: number) => {
@@ -58,9 +62,10 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
                     setOpenSuccess(true)
                     setErrorMessage("");
                     setOpenErrorMessage(false);
-                    let newAccessArray = accessArray;
-                    newAccessArray[indexInArray] = newAccess
-                    updateAccessArray(newAccessArray)
+                    // let newAccessArray = accessArray;
+                    // newAccessArray[indexInArray] = newAccess
+                    // updateAccessArray(newAccessArray)
+                    makeStateAccessRequest()
                 } else {
                     response.text().then(error => {
                         setErrorMessage(response.statusText);
