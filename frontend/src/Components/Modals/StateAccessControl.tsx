@@ -22,8 +22,8 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
         fetch(`${process.env.REACT_APP_QUERY_URL}state_unids?state_name=${stateName}`)
             .then(response => response.json())
             .then(function (data) {
-                const result = data.result;
-                let shareResult: any[] = result.users_and_roles;
+                //   const result = data.result;
+                let shareResult: any[] = data.users_and_roles;
                 let uID: string[] = []
                 let access: string[] = []
                 shareResult.forEach((user) => {
