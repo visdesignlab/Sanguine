@@ -31,8 +31,9 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
                         uID.push(user[0])
                         access.push(user[1])
                     })
-                    updateAccessArray(access);
                     updateUIDShared(uID);
+                    updateAccessArray(access);
+
 
                 });
         }
@@ -79,12 +80,12 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
             <DialogTitle>Manage {stateName} Access</DialogTitle>
             <DialogContent style={{ width: "300px" }}>
                 <List>{
-                    uIDShared.map((d, i) => {
-                        console.log(d, accessArray[i])
-                        return (<ListItem>
-                            <ListItemText primary={d} />
+                    accessArray.map((d, i) => {
+                        //     console.log(d, accessArray[i])
+                        return (<ListItem key={`${uIDShared[i]}-${d}`}>
+                            <ListItemText primary={uIDShared[i]} key={`${uIDShared[i]}`} />
                             <ListItemSecondaryAction>
-                                <RadioGroup row onChange={(e) => { changeAccess(d, e.target.value, i) }} value={accessArray[i]}>
+                                <RadioGroup row onChange={(e) => { changeAccess(uIDShared[i], e.target.value, i) }} value={d} key={`${uIDShared[i]}-${d}`}>
                                     <FormControlLabel
                                         value="WR"
                                         control={
