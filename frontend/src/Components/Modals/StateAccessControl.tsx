@@ -19,20 +19,22 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
     const [openSuccessMessage, setOpenSuccess] = useState(false)
 
     useEffect(() => {
-        fetch(`${process.env.REACT_APP_QUERY_URL}state_unids?state_name=${stateName}`)
-            .then(response => response.json())
-            .then(function (data) {
-                //   const result = data.result;
-                let shareResult: any[] = data.users_and_roles;
-                let uID: string[] = []
-                let access: string[] = []
-                shareResult.forEach((user) => {
-                    uID.push(user[0])
-                    access.push(user[1])
-                })
-                updateUIDShared(uID);
-                updateAccessArray(access);
-            });
+        if (stateName) {
+            fetch(`${process.env.REACT_APP_QUERY_URL}state_unids?state_name=${stateName}`)
+                .then(response => response.json())
+                .then(function (data) {
+                    //   const result = data.result;
+                    let shareResult: any[] = data.users_and_roles;
+                    let uID: string[] = []
+                    let access: string[] = []
+                    shareResult.forEach((user) => {
+                        uID.push(user[0])
+                        access.push(user[1])
+                    })
+                    updateUIDShared(uID);
+                    updateAccessArray(access);
+                });
+        }
     }, [stateName]);
 
     const changeAccess = (uID: string, newAccess: string, indexInArray: number) => {
@@ -77,6 +79,7 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
             <DialogContent style={{ width: "300px" }}>
                 <List>{
                     uIDShared.map((d, i) => {
+                        console.log(d, accessArray[i])
                         return (<ListItem>
                             <ListItemText primary={d} />
                             <ListItemSecondaryAction>
