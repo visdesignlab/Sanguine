@@ -31,8 +31,9 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
                         uID.push(user[0])
                         access.push(user[1])
                     })
-                    updateUIDShared(uID);
                     updateAccessArray(access);
+                    updateUIDShared(uID);
+
                 });
         }
     }, [stateName]);
