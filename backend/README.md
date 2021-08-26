@@ -195,15 +195,26 @@ There are several routes set up for accessing the patient and surgery data. Here
   - Allowed Methods: `POST`
   - Parameters:  
     `name`: The name of the state object.  
-    `role`: Role type. "WR" for writers and "RE" for readers.
+    `role`: Role type. "WR" for writers and "RE" for readers.  
     `user`: uid of person to share with.
-  - Description: Shares access of state to another user with reader or writer privileges.
+  - Description: Shares access of state to another user with reader or writer privileges. Making 2 requests will update the user to the most recent request role.
   - Example:
     ```
     curl -X POST '127.0.0.1:8000/api/share_state' \ 
       -F "name=example_state" \
       -F "user=test1" \
       -F "role=WR"
+    ```
+
+- Name: `/api/state_unids`
+  - Allowed Methods: `GET`
+  - Parameters:  
+    `state_name`: The name of the state object. 
+  - Description: Returns the owner of the workspace and all users with permissions. For users that are not the owner, this route returns their access level as 'RE' or 'WR'.
+  - Example:
+    ```
+    curl -X POST '127.0.0.1:8000/api/share_state' \ 
+      -F "state_name=example_state" 
     ```
 
 ## Data Dictionary
