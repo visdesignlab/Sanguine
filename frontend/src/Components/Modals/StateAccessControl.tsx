@@ -50,7 +50,7 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
                 "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
                 "Access-Control-Allow-Credentials": "true",
             },
-            body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&user=${`u${uID}`}&role=${newAccess}`
+            body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&user=${uID}&role=${newAccess}`
         })
             .then(response => {
                 if (response.status === 200) {
