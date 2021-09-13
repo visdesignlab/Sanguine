@@ -11,11 +11,11 @@ const DetailView: FC = () => {
     const { currentBrushedPatientGroup } = store.state
 
     return (
-        <Container style={{
-            visibility: currentBrushedPatientGroup.length > 0 ? "visible" : "hidden"
-        }}>
+        <Container
+            style={{ visibility: currentBrushedPatientGroup.length > 0 ? "visible" : "hidden" }}
+        >
             <CaseList />
-            <Divider orientation="horizontal" style={{ width: '100%', margin: "5px" }} />
+            <Divider orientation="horizontal" style={{ width: '100%' }} />
             <CaseInfo />
         </Container>
     )
