@@ -32,17 +32,17 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    return <Grid container spacing={2}>
+    return (<Grid container spacing={2}>
 
         <CurrentView totalCaseNum={totalCaseNum} />
-        <Divider orientation="horizontal" style={{ width: '100%' }} />
+        <Divider orientation="horizontal" style={{ width: '98%', }} />
         <CurrentSelected />
-        <Divider orientation="horizontal" style={{ width: '100%' }} />
+        <Divider orientation="horizontal" style={{ width: '98%' }} />
         <SurgerySearchBar surgeryList={surgeryList} />
-        <Divider orientation="horizontal" style={{ width: '100%' }} />
+        <Divider orientation="horizontal" style={{ width: '98%' }} />
         <SurgeryListViewer surgeryList={surgeryList} maxCaseCount={maxCaseCount} />
 
-    </Grid>
+    </Grid>)
 
 }
 
