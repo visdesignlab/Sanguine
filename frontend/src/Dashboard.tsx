@@ -22,7 +22,7 @@ const Dashboard: FC = () => {
             <Box id="Top-Bar">
                 <RegularModeMenu />
             </Box>
-            <Divider />
+
             <Grid container direction="row" >
                 <Grid item xs={2} id="Side-Bar">
                     <LeftToolBox totalCaseNum={hemoData.length} />
