@@ -76,34 +76,16 @@ const RegularModeMenu: FC = () => {
             <Typography className={styles.title} variant="h6" noWrap>
                 Sanguine
             </Typography>
+            <StateManagementSuite />
+
 
         </Toolbar>
 
         // <div className={useStyles().root}>
         //     <Grid container direction="row" justifyContent="space-around" alignItems="center">
-        //         <Grid item xs >
-        //             {/* VDL LOGO */}
-        //             <a href="https://vdl.sci.utah.edu" target="_blank"><img
-        //                 className={useStyles().img}
-        //                 src="https://raw.githubusercontent.com/visdesignlab/visdesignlab.github.io/master/assets/images/logos/vdl.png"
-        //             /></a>
+        //        
 
-        //         </Grid>
-
-        //         <Divider orientation="vertical" flexItem />
-        //         {/*Add Button */}
-        //         <Grid item xs >
-        //             <div className={useStyles().centerAlignment}>
-        //                 <Button color="primary" variant="contained" onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true" >Add</Button>
-        //                 <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
-        //                     <MenuItem onClick={() => handleClose(1)}>Dumbbell Chart</MenuItem>
-        //                     <MenuItem onClick={() => handleClose(2)}>Scatter Plot</MenuItem>
-        //                     <MenuItem onClick={() => handleClose(3)}>Heat Map</MenuItem>
-        //                     <MenuItem onClick={() => handleClose(0)}>Cost and Saving Chart</MenuItem>
-        //                 </Menu>
-        //             </div>
-        //         </Grid>
-        //         <Divider orientation="vertical" flexItem />
+        //        
         //         <StateManagementSuite />
 
         //         {/* Preview Mode */}

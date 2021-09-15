@@ -53,12 +53,12 @@ const StateManagementSuite: FC = () => {
         store.provenance.importState(result.definition)
     }
 
-    return (<Grid item xs>
+    return (
         <div className={styles.centerAlignment}>
-            <Button variant="outlined" onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true"  >State Management</Button>
+            <Button variant="outlined" onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true"  >States</Button>
             <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
                 <NestedMenuItem parentMenuOpen={Boolean(anchorEl)} label="Load State">
-                    {store.configStore.savedState.map((d) => {
+                    {store.configStore.savedState.length > 0 ? store.configStore.savedState.map((d) => {
                         return (
                             <MenuItem
                                 key={`share${d}`}
@@ -68,12 +68,12 @@ const StateManagementSuite: FC = () => {
                                 }}>
                                 {d}
                             </MenuItem>)
-                    })}
+                    }) : <MenuItem disabled>No Available</MenuItem>}
                 </NestedMenuItem>
                 <MenuItem onClick={() => { handleClose(); store.configStore.openSaveStateDialog = true; }}>Save State</MenuItem>
                 <MenuItem onClick={() => { handleClose(); store.configStore.openManageStateDialog = true; }}>Manage Saved States</MenuItem>
                 <NestedMenuItem parentMenuOpen={Boolean(anchorEl)} label="Share States Through uID">
-                    {store.configStore.savedState.map((d) => {
+                    {store.configStore.savedState.length > 0 ? store.configStore.savedState.map((d) => {
                         return (
                             <MenuItem
                                 key={`share${d}`}
@@ -84,14 +84,14 @@ const StateManagementSuite: FC = () => {
                                 }}>
                                 {d}
                             </MenuItem>)
-                    })}
+                    }) : <MenuItem disabled>No Available</MenuItem>}
                 </NestedMenuItem>
             </Menu>
+            <ManageStateDialog />
+            <SaveStateModal />
+            <UIDInputModal stateName={selectedState} />
         </div>
-        <ManageStateDialog />
-        <SaveStateModal />
-        <UIDInputModal stateName={selectedState} />
-    </Grid>)
+    )
 }
 
 export default observer(StateManagementSuite)
