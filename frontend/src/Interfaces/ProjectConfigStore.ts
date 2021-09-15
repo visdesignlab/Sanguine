@@ -15,6 +15,7 @@ export class ProjectConfigStore {
     openShareUIDDialog: boolean;
     openCostInputModal: boolean;
     openStateAccessControl: boolean;
+    openAboutDialog: boolean;
     savedState: string[];
     filterRange: any;
 
@@ -29,6 +30,7 @@ export class ProjectConfigStore {
         this.openShareUIDDialog = false;
         this.openCostInputModal = false;
         this.openStateAccessControl = false;
+        this.openAboutDialog = false;
         this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0, PREOP_HGB: 0, POSTOP_HGB: 0 };
         this.savedState = []
         makeAutoObservable(this)

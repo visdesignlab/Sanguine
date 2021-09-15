@@ -12,6 +12,7 @@ import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import UndoRedoButtons from "./UndoRedoButtons";
 import StateManagementSuite from "./StateManagementSuite";
 import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
+import InfoDialog from "../../Modals/InfoDialog";
 
 const RegularModeMenu: FC = () => {
     const store = useContext(Store)
@@ -59,11 +60,13 @@ const RegularModeMenu: FC = () => {
                     <MenuItem onClick={() => handleClose(0)}>Cost and Saving Chart</MenuItem>
                 </Menu>
             </div>
+
             <a href="https://healthcare.utah.edu" target="_blank">
                 <img
                     className={styles.img}
                     src="https://raw.githubusercontent.com/visdesignlab/Sanguine/UI-updates/images/u-of-u-health-social.png" />
             </a>
+
             <Typography className={styles.title} variant="h6" noWrap>
                 Sanguine
             </Typography>
@@ -93,9 +96,10 @@ const RegularModeMenu: FC = () => {
 
             <UndoRedoButtons />
 
-            <IconButton>
+            <IconButton onClick={() => { store.configStore.openAboutDialog = true; }}>
                 <InfoOutlinedIcon />
             </IconButton>
+            <InfoDialog />
 
             <a href="https://github.com/visdesignlab/Sanguine/issues" target="_blank" rel="noopener noreferrer">
                 <IconButton>
