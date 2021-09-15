@@ -94,7 +94,7 @@ export const useStyles = makeStyles((theme: Theme) =>
             overflow: "hidden",
             height: "100%",
             '&:hover': {
-                overflow: "auto"
+                overflow: "overlay"
             },
         },
         gridWidth: {

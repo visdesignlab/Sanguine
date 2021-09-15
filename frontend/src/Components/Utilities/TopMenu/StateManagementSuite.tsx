@@ -54,7 +54,7 @@ const StateManagementSuite: FC = () => {
     }
 
     return (
-        <div className={styles.centerAlignment}>
+        <div className={useStyles().centerAlignment}>
             <Button variant="outlined" onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true"  >States</Button>
             <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
                 <NestedMenuItem parentMenuOpen={Boolean(anchorEl)} label="Load State">
