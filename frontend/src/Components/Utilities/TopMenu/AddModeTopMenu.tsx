@@ -13,7 +13,7 @@ import ButtonGroup from "@material-ui/core/ButtonGroup";
 import Button from "@material-ui/core/Button";
 import Select from "@material-ui/core/Select";
 import { DropdownGenerator } from "../../../HelperFunctions/DropdownGenerator";
-import { FormControl, InputLabel } from "@material-ui/core";
+import { FormControl, InputLabel, Toolbar } from "@material-ui/core";
 import { ManualInfinity } from "../../../Presets/Constants";
 
 
@@ -84,32 +84,32 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
 
     const outputRegularOptions = (titleOne: string, titleTwo: string, titleOneRequied: boolean) => {
         return <>
-            <Grid item xs>
-                <div className={styles.centerAlignment}>
-                    <FormControl required={titleOneRequied} className={styles.formControl}>
-                        <InputLabel>{titleOne}{titleOneRequied ? "" : " (Optional)"}</InputLabel>
-                        <Select
-                            onChange={(e) => { setYValueSelection(e.target.value as string) }}>
-                            {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][0] : [], !titleOneRequied)}
-                        </Select>
-                    </FormControl>
 
-                </div>
-            </Grid>
-            <Divider orientation="vertical" flexItem />
+            <div className={styles.centerAlignment}>
+                <FormControl required={titleOneRequied} className={styles.formControl}>
+                    <InputLabel style={{ whiteSpace: "nowrap" }}>{titleOne}{titleOneRequied ? "" : " (Optional)"}</InputLabel>
+                    <Select
+                        onChange={(e) => { setYValueSelection(e.target.value as string) }}>
+                        {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][0] : [], !titleOneRequied)}
+                    </Select>
+                </FormControl>
 
-            <Grid item xs>
-                <div className={styles.centerAlignment}>
-                    <FormControl required className={styles.formControl}>
-                        <InputLabel>{titleTwo}</InputLabel>
-                        <Select
-                            onChange={(e) => { setXAggreSelection(e.target.value as string) }}>
-                            {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][1] : [])}
-                        </Select>
-                    </FormControl>
+            </div>
 
-                </div>
-            </Grid>
+            {/* <Divider orientation="vertical" flexItem /> */}
+
+
+            <div className={styles.centerAlignment}>
+                <FormControl required className={styles.formControl}>
+                    <InputLabel>{titleTwo}</InputLabel>
+                    <Select
+                        onChange={(e) => { setXAggreSelection(e.target.value as string) }}>
+                        {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][1] : [])}
+                    </Select>
+                </FormControl>
+
+            </div>
+
         </>
     }
 
@@ -131,64 +131,61 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
 
         [outputRegularOptions("Select Value to Show", "Aggregated by", true),
         <>
-            <Grid item xs>
-                <div className={styles.centerAlignment}>
-                    <FormControl disabled={interventionDate ? true : false} className={styles.formControl}>
-                        <InputLabel>Outcome (Optional)</InputLabel>
-                        <Select onChange={(e) => { console.log(outcomeComparisonSelection); setOutcomeComparisonSelection(e.target.value as string) }}
-                        >
-                            {DropdownGenerator(OutcomeOptions, true)}
-                        </Select>
-                    </FormControl>
-                </div>
-            </Grid>
-            <Grid item xs>
-                <div className={styles.centerAlignment}>
-                    <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                        <KeyboardDatePicker
-                            disableToolbar
-                            variant="inline"
-                            format="MM/dd/yyyy"
 
-                            id="date-picker-inline"
-                            label="Comparison Date (Optional)"
-                            minDate={store.state.rawDateRange[0]}
-                            maxDate={store.state.rawDateRange[1]}
-                            disabled={outcomeComparisonSelection ? true : false}
-                            value={interventionDate}
-                            onChange={interventionHandler} />
-                    </MuiPickersUtilsProvider>
+            <div className={styles.centerAlignment}>
+                <FormControl disabled={interventionDate ? true : false} className={styles.formControl}>
+                    <InputLabel>Outcome (Optional)</InputLabel>
+                    <Select onChange={(e) => { console.log(outcomeComparisonSelection); setOutcomeComparisonSelection(e.target.value as string) }}
+                    >
+                        {DropdownGenerator(OutcomeOptions, true)}
+                    </Select>
+                </FormControl>
+            </div>
 
-                </div>
-            </Grid>
+
+            <div className={styles.centerAlignment}>
+                <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                    <KeyboardDatePicker
+                        disableToolbar
+                        variant="inline"
+                        format="MM/dd/yyyy"
+
+                        id="date-picker-inline"
+                        label="Comparison Date (Optional)"
+                        minDate={store.state.rawDateRange[0]}
+                        maxDate={store.state.rawDateRange[1]}
+                        disabled={outcomeComparisonSelection ? true : false}
+                        value={interventionDate}
+                        onChange={interventionHandler} />
+                </MuiPickersUtilsProvider>
+
+            </div>
         </>
         ],
     ]
 
-    return <div>
-        <Grid container direction="row" justifyContent="space-around" alignItems="center">
-            {addBarChartMenuRewrite[addingChartType]}
-            <Divider orientation="vertical" flexItem />
-            <Grid item xs>
-                <div className={styles.centerAlignment}>
-                    <ButtonGroup>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            disabled={!checkValidInput()}
-                            onClick={confirmChartAddHandler}>
-                            Confirm
-                        </Button>
-                        <Button
-                            variant="contained"
-                            onClick={cancelChartAddHandler} >
-                            Cancel
-                        </Button>
-                    </ButtonGroup>
-                </div>
-            </Grid>
-        </Grid>
-    </div>
+    return <Toolbar className={styles.toolbarPaddingControl} style={{ justifyContent: "space-evenly" }}>
+        {addBarChartMenuRewrite[addingChartType]}
+        {/* <Divider orientation="vertical" flexItem /> */}
+
+        <div className={styles.centerAlignment}>
+            <ButtonGroup>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    disabled={!checkValidInput()}
+                    onClick={confirmChartAddHandler}>
+                    Confirm
+                </Button>
+                <Button
+                    variant="contained"
+                    onClick={cancelChartAddHandler} >
+                    Cancel
+                </Button>
+            </ButtonGroup>
+        </div>
+
+    </Toolbar>
 }
 
 export default observer(AddModeTopMenu)

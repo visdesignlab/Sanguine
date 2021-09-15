@@ -59,6 +59,12 @@ export const WelcomeText = styled(`text`) < WelcomeTextProps>`
 
 export const useStyles = makeStyles((theme: Theme) =>
     createStyles({
+        toolbarPaddingControl: {
+            '& > *': {
+                paddingLeft: "10px",
+                paddingRight: "10px"
+            },
+        },
         formControl: {
             margin: theme.spacing(1),
             minWidth: "200px!important",
@@ -70,9 +76,10 @@ export const useStyles = makeStyles((theme: Theme) =>
         },
         img: {
             margin: 'auto!important',
+
             display: 'block!important',
             maxWidth: '100%!important',
-            height: "40px!important"
+            height: "35px!important"
         },
         centerAlignment: {
             textAlign: "center"
@@ -84,8 +91,11 @@ export const useStyles = makeStyles((theme: Theme) =>
         containerWidth: {
             width: "100%",
             maxWidth: "none",
-            overflow: "auto",
-            height: "100%"
+            overflow: "hidden",
+            height: "100%",
+            '&:hover': {
+                overflow: "auto"
+            },
         },
         gridWidth: {
             width: "inherit!important"
@@ -100,7 +110,14 @@ export const useStyles = makeStyles((theme: Theme) =>
         tooltipFont: {
             fontSize: "small!important",
             textAlign: "center"
-        }
+        },
+        title: {
+            flexGrow: 1,
+            display: 'none',
+            [theme.breakpoints.up('sm')]: {
+                display: 'block',
+            },
+        },
     }),
 );
 
