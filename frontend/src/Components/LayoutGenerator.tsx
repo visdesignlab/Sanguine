@@ -129,35 +129,11 @@ const LayoutGenerator: FC = () => {
         }
     })
 
-    const panes = [
 
-        <div id="main-tab" style={{ height: "90vh" }}>
-            <WelcomeText show={store.state.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
-            <Responsive
-                onResizeStop={(e, v) => { store.chartStore.onLayoutChange(e) }}
-                onDragStop={(e, v) => { store.chartStore.onLayoutChange(e) }}
-                draggableHandle={".move-icon"}
-                className="layout"
-                cols={colData}
-                rowHeight={500}
-                width={0.95 * store.mainCompWidth}
-                layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
-            >
-                {store.state.layoutArray.map((layoutE, i) => {
-                    return createElement(layoutE, i);
-                })}
-            </Responsive>
-        </div >,
-        <div id="filter-tab" style={{ height: "90vh" }}>
-            <FilterBoard />
-
-
-        </div>
-    ]
 
     return (
         <Container className={styles.containerWidth}>
-            <Tabs
+            {/* <Tabs
                 value={tabValue}
                 onChange={handleChange}
                 indicatorColor="primary"
@@ -165,9 +141,25 @@ const LayoutGenerator: FC = () => {
                 centered>
                 <Tab label="Main" />
                 <Tab label="filter" />
-            </Tabs>
-            <Container ref={tabRef} style={{ overflow: "auto", maxWidth: "none" }}>
-                {panes[tabValue]}
+            </Tabs> */}
+            <Container ref={tabRef} style={{ height: "90vh", overflow: "auto", maxWidth: "none" }}>
+
+                <WelcomeText show={store.state.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
+                <Responsive
+                    onResizeStop={(e, v) => { store.chartStore.onLayoutChange(e) }}
+                    onDragStop={(e, v) => { store.chartStore.onLayoutChange(e) }}
+                    draggableHandle={".move-icon"}
+                    className="layout"
+                    cols={colData}
+                    rowHeight={500}
+                    width={0.95 * store.mainCompWidth}
+                    layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
+                >
+                    {store.state.layoutArray.map((layoutE, i) => {
+                        return createElement(layoutE, i);
+                    })}
+                </Responsive>
+
             </Container>
         </Container>
     )
