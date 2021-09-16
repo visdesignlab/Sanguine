@@ -1,6 +1,6 @@
 
 import styled from "styled-components";
-import { Basic_Gray, postop_color, preop_color, Third_Gray } from "./Constants";
+import { Basic_Gray, drawerWidth, postop_color, preop_color, Third_Gray } from "./Constants";
 import ListItem from '@material-ui/core/ListItem';
 import { makeStyles, Theme, createStyles } from "@material-ui/core";
 
@@ -59,6 +59,14 @@ export const WelcomeText = styled(`text`) < WelcomeTextProps>`
 
 export const useStyles = makeStyles((theme: Theme) =>
     createStyles({
+        drawer: {
+            width: drawerWidth,
+            flexShrink: 0,
+        },
+        drawerPaper: {
+            width: drawerWidth,
+            padding: "10px"
+        },
         toolbarPaddingControl: {
             '& > *': {
                 paddingLeft: "10px",

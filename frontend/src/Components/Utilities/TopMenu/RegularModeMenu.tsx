@@ -1,4 +1,4 @@
-import { Divider, Grid, Menu, MenuItem, Button, AppBar, Toolbar, Typography, IconButton } from "@material-ui/core";
+import { Divider, Grid, Menu, MenuItem, Button, AppBar, Toolbar, Typography, IconButton, Drawer } from "@material-ui/core";
 import { isObservable } from "mobx";
 import { observer } from "mobx-react";
 import { useContext, useState, FC } from "react";
@@ -10,15 +10,16 @@ import MenuIcon from '@material-ui/icons/Menu';
 import AddModeTopMenu from "./AddModeTopMenu";
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import UndoRedoButtons from "./UndoRedoButtons";
+
 import StateManagementSuite from "./StateManagementSuite";
 import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import InfoDialog from "../../Modals/InfoDialog";
+import FilterBoard from "../FilterInterface/FilterBoard";
 
 const RegularModeMenu: FC = () => {
     const store = useContext(Store)
     const styles = useStyles();
     const [addingChartType, setAddingChartType] = useState(-1)
-
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const addModeButtonHandler = (chartType: number) => {
@@ -36,14 +37,22 @@ const RegularModeMenu: FC = () => {
             addModeButtonHandler(input)
         }
     };
+    const handleDrawerOpen = () => {
+        store.configStore.openDrawer = true;
+    };
+
 
     const regularMenu = (
 
+        // <Button onClick={toggleDrawer(anchor, true)}>{anchor}</Button>
+        //   <Drawer anchor={anchor} open={state[anchor]} onClose={toggleDrawer(anchor, false)}>
+        //     {list(anchor)}
+        //   </Drawer>
 
         <Toolbar className={styles.toolbarPaddingControl}>
             <IconButton
                 edge="start"
-                //   className={classes.menuButton}
+                onClick={handleDrawerOpen}
                 color="inherit"
                 aria-label="open drawer"
             >
@@ -110,7 +119,7 @@ const RegularModeMenu: FC = () => {
             <IconButton onClick={() => { logoutHandler() }} >
                 <ExitToAppIcon />
             </IconButton>
-
+            <FilterBoard />
         </Toolbar>
 
     )
