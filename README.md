@@ -2,7 +2,7 @@
 
 This project is a collaboration between VDL and ARUP at University of Utah. We visualize blood usage in cardiac surgeries and associated patient and surgery attributes. Through this interactive visualization tool, we hope to offer clinical practitioners a better overall view on the use of blood, thus facilitating better patient outcomes. 
 
-![Interface image](https://github.com/visdesignlab/sanguine/blob/master/images/interface.png)
+![Interface image](https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/interface.png)
 
 
 ## Table of Contents
