@@ -80,7 +80,9 @@ const LayoutGenerator: FC = () => {
                 return (<div
                     key={layout.i}
                     className={"parent-node" + layout.i}>
-                    <ChartStandardButtons chartID={layout.i} />
+
+
+
                     <WrapperHeatMap
                         annotationText={layout.notation}
                         chartId={layout.i}
