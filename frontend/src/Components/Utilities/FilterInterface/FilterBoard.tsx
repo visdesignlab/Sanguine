@@ -8,7 +8,7 @@ import Store from "../../../Interfaces/Store";
 import ComponentRangePicker from "./ComponentRangePicker";
 import { Title, useStyles } from "../../../Presets/StyledComponents";
 import { BloodComponentOptions, ScatterYOptions } from "../../../Presets/DataDict";
-import ReplayIcon from '@material-ui/icons/Replay';
+import ClearAllIcon from '@material-ui/icons/ClearAll';
 import { defaultState } from "../../../Interfaces/DefaultState";
 import OutcomeChipGroup from "./OutcomeChipGroup";
 import SurgeryUrgencyChipGroup from "./SurgeryUrgencyChipGroup";
@@ -65,7 +65,7 @@ const FilterBoard: FC = () => {
                     <Tooltip title="Reset">
                         <IconButton onClick={resetDateFilter}
                             disabled={(rawDateRange[0] === defaultState.rawDateRange[0]) && (rawDateRange[1] === defaultState.rawDateRange[1])}>
-                            <ReplayIcon />
+                            <ClearAllIcon />
                         </IconButton>
                     </Tooltip>
                 </ListItemSecondaryAction>
@@ -119,7 +119,7 @@ const FilterBoard: FC = () => {
                             onClick={() => { store.configStore.changeOutcomeFilter([]) }}
                             disabled={outcomeFilter.length === 0}
                         >
-                            <ReplayIcon />
+                            <ClearAllIcon />
                         </IconButton>
                     </Tooltip>
                 </ListItemSecondaryAction>
@@ -136,7 +136,7 @@ const FilterBoard: FC = () => {
                             onClick={() => { store.configStore.changeSurgeryUrgencySelection([true, true, true]) }}
                             disabled={surgeryUrgencySelection[0] && surgeryUrgencySelection[1] && surgeryUrgencySelection[2]}
                         >
-                            <ReplayIcon />
+                            <ClearAllIcon />
                         </IconButton>
                     </Tooltip>
                 </ListItemSecondaryAction>
@@ -151,7 +151,7 @@ const FilterBoard: FC = () => {
                     <Tooltip title="Reset">
                         <IconButton onClick={() => { store.configStore.resetBloodFilter() }}
                             disabled={!checkIfCanReset(bloodComponentFilter)}>
-                            <ReplayIcon />
+                            <ClearAllIcon />
                         </IconButton>
                     </Tooltip>
                 </ListItemSecondaryAction>
@@ -167,7 +167,7 @@ const FilterBoard: FC = () => {
                     <Tooltip title="Reset">
                         <IconButton onClick={() => { store.configStore.resetTestValueFilter() }}
                             disabled={!checkIfCanReset(testValueFilter)}>
-                            <ReplayIcon />
+                            <ClearAllIcon />
                         </IconButton>
                     </Tooltip>
                 </ListItemSecondaryAction>

@@ -56,7 +56,7 @@ const StateManagementSuite: FC = () => {
         <div className={useStyles().centerAlignment}>
             <Button variant="outlined" onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true"  >States</Button>
             <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
-                <NestedMenuItem parentMenuOpen={Boolean(anchorEl)} label="Load State">
+                <NestedMenuItem parentMenuOpen={Boolean(anchorEl)} label="Load Saved State">
                     {store.configStore.savedState.length > 0 ? store.configStore.savedState.map((d) => {
                         return (
                             <MenuItem
@@ -68,6 +68,12 @@ const StateManagementSuite: FC = () => {
                                 {d}
                             </MenuItem>)
                     }) : <MenuItem disabled>No Available</MenuItem>}
+                </NestedMenuItem>
+                {/* TODO add presets. */}
+                <NestedMenuItem parentMenuOpen={Boolean(anchorEl)} label="Load from Preset">
+                    <MenuItem>Preset 1</MenuItem>
+                    <MenuItem>Preset 2</MenuItem>
+                    <MenuItem>Preset 3</MenuItem>
                 </NestedMenuItem>
                 <MenuItem onClick={() => { handleClose(); store.configStore.openSaveStateDialog = true; }}>Save State</MenuItem>
                 <MenuItem onClick={() => { handleClose(); store.configStore.openManageStateDialog = true; }}>Manage Saved States</MenuItem>
