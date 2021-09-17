@@ -1,10 +1,12 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, FormGroup, List, ListItem, ListItemSecondaryAction, ListItemText, Radio, RadioGroup, Snackbar, TextField } from "@material-ui/core";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, FormGroup, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Radio, RadioGroup, Snackbar, TextField } from "@material-ui/core";
+import AddIcon from '@material-ui/icons/Add';
 import { Alert } from "@material-ui/lab";
 import { observer } from "mobx-react";
 import { FC, useContext, useEffect, useState } from "react";
 import Store from "../../Interfaces/Store";
 import { simulateAPIClick } from "../../Interfaces/UserManagement";
 import { SnackBarCloseTime } from "../../Presets/Constants";
+import UIDInputModal from "./UIDInputModal";
 
 type Props = {
     stateName: string
@@ -112,7 +114,18 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
                             </ListItemSecondaryAction>
                         </ListItem>)
                     })}
+                    <ListItem>
+                        <ListItemText>
+                            <IconButton onClick={() => {
+                                store.configStore.openShareUIDDialog = true;
+                                store.configStore.openStateAccessControl = false
+                            }}>
+                                <AddIcon />
+                            </IconButton>
+                        </ListItemText>
+                    </ListItem>
                 </List>
+
             </DialogContent>
             <DialogActions>
                 <Button onClick={() => { store.configStore.openStateAccessControl = false }}>
@@ -130,6 +143,7 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
                 Change succeed.
             </Alert>
         </Snackbar>
+        <UIDInputModal stateName={stateName} />
     </div>)
 }
 

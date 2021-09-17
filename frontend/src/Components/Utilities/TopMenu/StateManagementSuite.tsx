@@ -6,13 +6,12 @@ import Store from "../../../Interfaces/Store"
 import { useStyles } from "../../../Presets/StyledComponents"
 import ManageStateDialog from "../../Modals/ManageStateDialog"
 import SaveStateModal from "../../Modals/SaveStateModal";
-import UIDInputModal from "../../Modals/UIDInputModal";
 
 const StateManagementSuite: FC = () => {
     const styles = useStyles();
     const store = useContext(Store);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedState, setSelectedState] = useState("")
+
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         fetchSavedStates();
@@ -72,24 +71,10 @@ const StateManagementSuite: FC = () => {
                 </NestedMenuItem>
                 <MenuItem onClick={() => { handleClose(); store.configStore.openSaveStateDialog = true; }}>Save State</MenuItem>
                 <MenuItem onClick={() => { handleClose(); store.configStore.openManageStateDialog = true; }}>Manage Saved States</MenuItem>
-                <NestedMenuItem parentMenuOpen={Boolean(anchorEl)} label="Share States Through uID">
-                    {store.configStore.savedState.length > 0 ? store.configStore.savedState.map((d) => {
-                        return (
-                            <MenuItem
-                                key={`share${d}`}
-                                onClick={() => {
-                                    handleClose();
-                                    store.configStore.openShareUIDDialog = true;
-                                    setSelectedState(d)
-                                }}>
-                                {d}
-                            </MenuItem>)
-                    }) : <MenuItem disabled>No Available</MenuItem>}
-                </NestedMenuItem>
             </Menu>
             <ManageStateDialog />
             <SaveStateModal />
-            <UIDInputModal stateName={selectedState} />
+
         </div>
     )
 }
