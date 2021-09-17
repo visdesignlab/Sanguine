@@ -12,7 +12,7 @@ const CaseList: FC = () => {
     const { currentBrushedPatientGroup, currentSelectPatient } = store.state
     const styles = useStyles();
 
-    return (<Container style={{ overflow: "auto", height: "15vh" }} >
+    return (<Container className={styles.containerWidth} style={{ height: "15vh", paddingTop: "0.5px" }} >
 
         <List dense>
 
