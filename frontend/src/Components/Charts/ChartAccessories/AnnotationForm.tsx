@@ -20,7 +20,7 @@ const AnnotationForm: FC<Props> = ({ annotationText, chartI }: Props) => {
 
     return (<div>
         <TextField
-            style={{ width: "91%" }}
+            style={{ width: "calc(100% - 30px)" }}
             id="outlined-multiline-static"
             label="Annotation"
             multiline
@@ -29,7 +29,7 @@ const AnnotationForm: FC<Props> = ({ annotationText, chartI }: Props) => {
             variant="outlined"
             onChange={(e) => { setFormInput(e.target.value) }}
         />
-        <IconButton onClick={() => { store.chartStore.changeNotation(chartI, formInput) }}>
+        <IconButton style={{ verticalAlign: "text-top" }} size="small" onClick={() => { store.chartStore.changeNotation(chartI, formInput) }}>
             <SaveIcon />
         </IconButton>
     </div>)
