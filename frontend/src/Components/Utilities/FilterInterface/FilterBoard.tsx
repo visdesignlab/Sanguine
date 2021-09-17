@@ -47,6 +47,7 @@ const FilterBoard: FC = () => {
         classes={{
             paper: styles.drawerPaper,
         }}
+        onClose={() => { store.configStore.openDrawer = false }}
         open={store.configStore.openDrawer}>
 
         <IconButton style={{ alignSelf: "end" }} onClick={() => { store.configStore.openDrawer = false }}>
