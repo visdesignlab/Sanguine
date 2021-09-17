@@ -120,7 +120,8 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
     }, [rawDateRange, proceduresSelection, hemoData, showZero, yValueOption, xAggregationOption]);
 
     return (<Container className={styles.chartWrapper}>
-        <div style={{ textAlign: "right" }}>
+        <div className={styles.chartAccessoryDiv}>
+            Scatterplot
             <ChartConfigMenu
                 xAggregationOption={xAggregationOption}
                 yValueOption={yValueOption}

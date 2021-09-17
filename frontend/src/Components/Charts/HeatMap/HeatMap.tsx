@@ -68,7 +68,8 @@ const HeatMap: FC<Props> = ({ outcomeComparison, interventionDate, secondaryExtr
     }, [dimensionWidth, extraPairTotalWidth, yValueOption, currentOffset]);
 
 
-    return (<>
+    return (<g>
+
         <HeatMapDividerLine dimensionHeight={dimensionHeight} currentOffset={currentOffset} />
         <HeatMapAxis
             svg={svg}
@@ -82,7 +83,7 @@ const HeatMap: FC<Props> = ({ outcomeComparison, interventionDate, secondaryExtr
             valueScaleDomain={JSON.stringify(valueScale().domain())}
             valueScaleRange={JSON.stringify(valueScale().range())}
             xAggregationOption={xAggregationOption} />
-        <g className="legend">
+        <g className="legend" transform="translate(0,5)">
             {outputGradientLegend(store.state.showZero, dimensionWidth)}
         </g>
 
@@ -151,7 +152,7 @@ const HeatMap: FC<Props> = ({ outcomeComparison, interventionDate, secondaryExtr
                 height={dimensionHeight} />
 
         </g>
-    </>)
+    </g>)
 }
 
 export default observer(HeatMap)

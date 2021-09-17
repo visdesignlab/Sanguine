@@ -17,6 +17,7 @@ export class ProjectConfigStore {
     openStateAccessControl: boolean;
     openAboutDialog: boolean;
     openDrawer: boolean;
+    largeFont: boolean;
     savedState: string[];
     filterRange: any;
 
@@ -24,6 +25,7 @@ export class ProjectConfigStore {
         this.rootStore = rootstore;
         this._isLoggedIn = !(process.env.REACT_APP_REQUIRE_LOGIN === "true");
         this._dataLoading = true;
+        this.largeFont = false;
         this._dataLoadingFailed = false;
         this._topMenuBarAddMode = false;
         this.openSaveStateDialog = false;

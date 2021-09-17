@@ -1,4 +1,4 @@
-import { Divider, Grid, Menu, MenuItem, Button, AppBar, Toolbar, Typography, IconButton, Drawer } from "@material-ui/core";
+import { Menu, MenuItem, Button, AppBar, Toolbar, Typography, IconButton } from "@material-ui/core";
 import { isObservable } from "mobx";
 import { observer } from "mobx-react";
 import { useContext, useState, FC } from "react";
@@ -10,7 +10,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import AddModeTopMenu from "./AddModeTopMenu";
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import UndoRedoButtons from "./UndoRedoButtons";
-
+import FormatSizeIcon from '@material-ui/icons/FormatSize';
 import StateManagementSuite from "./StateManagementSuite";
 import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import InfoDialog from "../../Modals/InfoDialog";
@@ -61,7 +61,7 @@ const RegularModeMenu: FC = () => {
 
 
             <div className={useStyles().centerAlignment}>
-                <Button variant="contained" onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true" >Add</Button>
+                <Button variant="contained" disableElevation onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true" >Add</Button>
                 <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
                     <MenuItem onClick={() => handleClose(1)}>Dumbbell Chart</MenuItem>
                     <MenuItem onClick={() => handleClose(2)}>Scatter Plot</MenuItem>
@@ -105,13 +105,17 @@ const RegularModeMenu: FC = () => {
 
             <UndoRedoButtons />
 
+            <IconButton onClick={() => { store.configStore.largeFont = !store.configStore.largeFont }} >
+                <FormatSizeIcon className={store.configStore.largeFont ? `` : styles.manualDisable} />
+            </IconButton>
+
             <IconButton onClick={() => { store.configStore.openAboutDialog = true; }}>
                 <InfoOutlinedIcon />
             </IconButton>
             <InfoDialog />
 
             <a href="https://github.com/visdesignlab/Sanguine/issues" target="_blank" rel="noopener noreferrer">
-                <IconButton>
+                <IconButton size="small">
                     <BugReportOutlinedIcon />
                 </IconButton>
             </a>

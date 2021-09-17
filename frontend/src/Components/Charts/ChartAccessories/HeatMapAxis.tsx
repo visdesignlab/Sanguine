@@ -1,11 +1,12 @@
 import { axisBottom, axisLeft, ScaleBand, select } from "d3";
 import { FC, useCallback } from "react"
-import { BloodProductCap, CaseRectWidth, CELL_SAVER_TICKS } from "../../../Presets/Constants";
+import { BloodProductCap, CaseRectWidth, CELL_SAVER_TICKS, largeFontSize, regularFontSize } from "../../../Presets/Constants";
 import { AcronymDictionary } from "../../../Presets/DataDict";
 import { AggregationScaleGenerator, ValueScaleGeneratorFromDomainRange } from "../../../HelperFunctions/Scales";
 import { Offset } from "../../../Interfaces/Types/OffsetType";
 import { useContext } from "react";
 import Store from "../../../Interfaces/Store";
+import { observer } from "mobx-react";
 
 type Props = {
     svg: React.RefObject<SVGSVGElement>;
@@ -70,7 +71,7 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
         .attr("x", (dimensionWidth - extraPairTotalWidth) * 0.5)
         .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("alignment-baseline", "hanging")
-        .attr("font-size", "11px")
+        .attr("font-size", store.configStore.largeFont ? largeFontSize : regularFontSize)
         .attr("text-anchor", "middle")
         .attr("transform", `translate(${extraPairTotalWidth},0)`)
         .text(() => {
@@ -81,7 +82,7 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
         .select(".y-label")
         .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("x", 0)
-        .attr("font-size", "11px")
+        .attr("font-size", store.configStore.largeFont ? largeFontSize : regularFontSize)
         .attr("text-anchor", "start")
         .attr("alignment-baseline", "hanging")
         .attr("transform", `translate(${extraPairTotalWidth},0)`)
@@ -89,12 +90,12 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
             AcronymDictionary[xAggregationOption] ? AcronymDictionary[xAggregationOption] : xAggregationOption
         );
 
-    return <g className="axes">
+    return (<g className="axes">
         <g className="x-axis"></g>
         <g className="y-axis"></g>
         <text className="x-label" />
         <text className="y-label" />
-    </g>
+    </g>)
 }
 
-export default HeatMapAxis
+export default observer(HeatMapAxis)

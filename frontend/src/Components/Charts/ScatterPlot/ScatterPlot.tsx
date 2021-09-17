@@ -6,7 +6,7 @@ import styled from "styled-components"
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker"
 import Store from "../../../Interfaces/Store"
 import { ScatterDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes"
-import { Basic_Gray, highlight_orange, OffsetDict, Third_Gray } from "../../../Presets/Constants"
+import { Basic_Gray, highlight_orange, largeFontSize, OffsetDict, regularFontSize, Third_Gray } from "../../../Presets/Constants"
 import { AcronymDictionary } from "../../../Presets/DataDict"
 import CustomizedAxisBand from "../ChartAccessories/CustomizedAxisBand"
 
@@ -139,7 +139,7 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
         .attr("x", -0.5 * height)
         .attr("y", currentOffset.margin - 10)
         .attr("transform", "rotate(-90)")
-        .attr("font-size", "11px")
+        .attr("font-size", store.configStore.largeFont ? largeFontSize : regularFontSize)
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
         .text(
@@ -160,7 +160,7 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
         .attr("y", height - currentOffset.bottom + 20)
         .attr("x", 0.5 * width + currentOffset.margin)
         .attr("alignment-baseline", "hanging")
-        .attr("font-size", "11px")
+        .attr("font-size", store.configStore.largeFont ? largeFontSize : regularFontSize)
         .attr("text-anchor", "middle")
         .text(AcronymDictionary[xAggregationOption] ? AcronymDictionary[xAggregationOption] : xAggregationOption);
 
