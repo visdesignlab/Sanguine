@@ -149,47 +149,40 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
         comparisonDate,
         hemoData])
 
-    return (
+    return (<Container className={styles.chartWrapper}>
+        <div style={{ textAlign: "right" }}>
+            <ExtraPairButtons disbleButton={width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
+            <ChartConfigMenu
+                xAggregationOption={xAggregationOption}
+                yValueOption={yValueOption}
+                chartTypeIndexinArray={chartTypeIndexinArray}
+                chartId={chartId}
 
-
-
-
-
-
-        <Container className={styles.chartWrapper}>
-            <div style={{ textAlign: "right" }}>
-                <ExtraPairButtons disbleButton={width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
-                <ChartConfigMenu
-                    xAggregationOption={xAggregationOption}
-                    yValueOption={yValueOption}
-                    chartTypeIndexinArray={chartTypeIndexinArray}
-                    chartId={chartId}
-
-                    requireOutcome={true}
-                    requireSecondary={true} />
-                <ChartStandardButtons chartID={chartId} />
-            </div>
-            <ChartSVG ref={svgRef}>
-                <HeatMap
-                    dimensionHeight={height}
-                    dimensionWidth={width}
-                    data={data}
-                    svg={svgRef}
-                    extraPairTotalWidth={extraPairTotalWidth}
-                    xAggregationOption={xAggregationOption}
-                    yValueOption={yValueOption}
-                    chartId={chartId}
-                    extraPairDataSet={extraPairData}
-                    secondaryExtraPairDataSet={(outcomeComparison || comparisonDate) ? secondaryExtraPairData : undefined}
-                    secondaryData={(outcomeComparison || comparisonDate) ? secondaryData : undefined}
-                    firstTotal={caseCount}
-                    secondTotal={secondaryCaseCount}
-                    interventionDate={comparisonDate}
-                    outcomeComparison={outcomeComparison || ""}
-                />
-            </ChartSVG>
-            <AnnotationForm chartI={chartId} annotationText={annotationText} />
-        </Container>
+                requireOutcome={true}
+                requireSecondary={true} />
+            <ChartStandardButtons chartID={chartId} />
+        </div>
+        <ChartSVG ref={svgRef}>
+            <HeatMap
+                dimensionHeight={height}
+                dimensionWidth={width}
+                data={data}
+                svg={svgRef}
+                extraPairTotalWidth={extraPairTotalWidth}
+                xAggregationOption={xAggregationOption}
+                yValueOption={yValueOption}
+                chartId={chartId}
+                extraPairDataSet={extraPairData}
+                secondaryExtraPairDataSet={(outcomeComparison || comparisonDate) ? secondaryExtraPairData : undefined}
+                secondaryData={(outcomeComparison || comparisonDate) ? secondaryData : undefined}
+                firstTotal={caseCount}
+                secondTotal={secondaryCaseCount}
+                interventionDate={comparisonDate}
+                outcomeComparison={outcomeComparison || ""}
+            />
+        </ChartSVG>
+        <AnnotationForm chartI={chartId} annotationText={annotationText} />
+    </Container>
 
 
     )

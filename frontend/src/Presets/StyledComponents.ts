@@ -132,26 +132,32 @@ export const useStyles = makeStyles((theme: Theme) =>
 export const useButtonStyles = makeStyles((theme: Theme) =>
     createStyles({
         preopButtonActive: {
+            fontSize: "xx-small!important",
             backgroundColor: preop_color,
             color: "white"
         },
         postopButtonActive: {
+            fontSize: "xx-small!important",
             backgroundColor: postop_color,
             color: "white"
         },
         gapButtonActive: {
+            fontSize: "xx-small!important",
             backgroundColor: Basic_Gray,
             color: "white"
         },
         preopButtonOutline: {
+            fontSize: "xx-small!important",
             color: preop_color,
             backgroundColor: "white"
         },
         postopButtonOutline: {
+            fontSize: "xx-small!important",
             color: postop_color,
             backgroundColor: "white"
         },
         gapButtonOutline: {
+            fontSize: "xx-small!important",
             color: Basic_Gray,
             backgroundColor: "white"
         }

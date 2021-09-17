@@ -30,14 +30,12 @@ const LayoutGenerator: FC = () => {
                 return (
                     <div key={layout.i} className={"parent-node" + layout.i}>
 
-                        <ChartStandardButtons chartID={layout.i} />
-                        <WrapperDumbbell
 
+                        <WrapperDumbbell
                             layoutW={layout.w}
                             chartId={layout.i}
                             layoutH={layout.h}
                             xAggregationOption={layout.aggregatedBy}
-
                             annotationText={layout.notation}
                         />
                     </div>
@@ -48,7 +46,7 @@ const LayoutGenerator: FC = () => {
                         key={layout.i}
                         className={"parent-node" + layout.i}
                     >
-                        <ChartStandardButtons chartID={layout.i} />
+
                         <WrapperCostBar
                             extraPairArrayString={layout.extraPair || ""}
                             layoutW={layout.w}
@@ -65,7 +63,7 @@ const LayoutGenerator: FC = () => {
                     key={layout.i}
                     className={"parent-node" + layout.i}
                 >
-                    <ChartStandardButtons chartID={layout.i} />
+
                     <WrapperScatter
                         xAggregationOption={layout.aggregatedBy}
                         layoutW={layout.w}

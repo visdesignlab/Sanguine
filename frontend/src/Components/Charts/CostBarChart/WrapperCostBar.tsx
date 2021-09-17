@@ -20,6 +20,7 @@ import HelpIcon from '@material-ui/icons/Help';
 import MonetizationOnIcon from '@material-ui/icons/MonetizationOn';
 import { BloodComponentOptions } from "../../../Presets/DataDict";
 import CostInputDialog from "../../Modals/CostInputDialog";
+import ChartStandardButtons from "../ChartStandardButtons";
 
 type Props = {
     xAggregatedOption: string;
@@ -232,77 +233,70 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [proceduresSelection, rawDateRange, xAggregatedOption, currentOutputFilterSet, costMode, BloodProductCost, hemoData]);
 
-    return (
-        <Grid container direction="row" alignItems="center" className={styles.chartWrapper}>
-            <Grid item xs={1}>
-                <div>
-                    <ExtraPairButtons disbleButton={dimensionWidth * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
-                    <ChartConfigMenu
-                        xAggregationOption={xAggregatedOption}
-                        yValueOption={""}
-                        chartTypeIndexinArray={0}
-                        chartId={chartId}
-                        requireOutcome={false}
-                        requireSecondary={true} />
-                    <Tooltip title={<div>  <p className={styles.tooltipFont}>Change blood component cost</p> </div>}>
-                        <IconButton onClick={handleClick}>
-                            <MonetizationOnIcon />
-                        </IconButton>
-                    </Tooltip>
-                    <Menu anchorEl={anchorEl} open={open}
-                        onClose={handleClose}
-                    >
-                        {BloodComponentOptions.map((bOption) => (
-                            <MenuItem key={bOption.key} onClick={() => {
-                                store.configStore.openCostInputModal = true;
-                                setBloodCostToChange(bOption.value);
-                                handleClose()
-                            }}>{bOption.text}</MenuItem>
-                        ))}
-                    </Menu>
-                    <IconButton>
-                        <Tooltip title={<div>  <p className={styles.tooltipFont}>Stacked bar chart on the right of the dashed line shows per case cost for each unit types. The bars on the left of the dashed line shows the potential cost on RBC if not using cell salvage.</p> </div>}>
-                            <HelpIcon />
-                        </Tooltip>
-                    </IconButton>
-                    <FormControl>
-                        <FormHelperText>Potential cost</FormHelperText>
-                        <Tooltip title={<div>  <p className={styles.tooltipFont}>Show potential RBC cost without cell salvage</p> </div>}>
-                            <Switch checked={showPotential} onChange={(e) => { setShowPotential(e.target.checked) }} />
-                        </Tooltip>
-                    </FormControl>
-                    <CostInputDialog bloodComponent={bloodCostToChange} />
-                </div>
+    return (<Container className={styles.chartWrapper}>
+        <div style={{ textAlign: "right" }}>
+            <FormControl style={{ verticalAlign: "middle" }}>
+                {/* <FormHelperText>Potential cost</FormHelperText> */}
+                <Tooltip title={<div>  <p className={styles.tooltipFont}>Show potential RBC cost without cell salvage</p> </div>}>
+                    <Switch checked={showPotential} onChange={(e) => { setShowPotential(e.target.checked) }} />
+                </Tooltip>
+            </FormControl>
+            <ExtraPairButtons disbleButton={dimensionWidth * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
+            <ChartConfigMenu
+                xAggregationOption={xAggregatedOption}
+                yValueOption={""}
+                chartTypeIndexinArray={0}
+                chartId={chartId}
+                requireOutcome={false}
+                requireSecondary={true} />
+            <Tooltip title={<div>  <p className={styles.tooltipFont}>Change blood component cost</p> </div>}>
+                <IconButton size="small" onClick={handleClick}>
+                    <MonetizationOnIcon />
+                </IconButton>
+            </Tooltip>
+            <Menu anchorEl={anchorEl} open={open}
+                onClose={handleClose}
+            >
+                {BloodComponentOptions.map((bOption) => (
+                    <MenuItem key={bOption.key} onClick={() => {
+                        store.configStore.openCostInputModal = true;
+                        setBloodCostToChange(bOption.value);
+                        handleClose()
+                    }}>{bOption.text}</MenuItem>
+                ))}
+            </Menu>
+            <IconButton size="small">
+                <Tooltip title={<div>  <p className={styles.tooltipFont}>Stacked bar chart on the right of the dashed line shows per case cost for each unit types. The bars on the left of the dashed line shows the potential cost on RBC if not using cell salvage.</p> </div>}>
+                    <HelpIcon />
+                </Tooltip>
+            </IconButton>
+            <CostInputDialog bloodComponent={bloodCostToChange} />
+            <ChartStandardButtons chartID={chartId} />
+        </div>
+        <ChartSVG ref={svgRef}>
+            <StackedBarChart
+                xAggregationOption={xAggregatedOption}
+                secondaryData={comparisonOption ? secondaryData : undefined}
+                svg={svgRef}
+                data={data}
+                caseCount={totalCaseCount}
+                secondaryCaseCount={secondaryCaseCount}
+                outcomeComparison={comparisonOption}
+                dimensionWidth={dimensionWidth}
+                dimensionHeight={dimensionHeight}
+                maximumCost={maximumCost}
+                maxSavedNegative={maximumSavedNegative}
+                costMode={costMode}
+                extraPairDataSet={extraPairData}
+                chartId={chartId}
+                secondaryExtraPairDataSet={comparisonOption ? secondaryExtraPairData : undefined}
+                extraPairTotalWidth={extraPairTotalWidth}
+                showPotential={showPotential} />
 
-            </Grid>
-            <Grid item xs={11} className={styles.chartWrapper}>
-                <Container className={styles.chartWrapper}>
-                    <ChartSVG ref={svgRef}>
-
-                        <StackedBarChart
-                            xAggregationOption={xAggregatedOption}
-                            secondaryData={comparisonOption ? secondaryData : undefined}
-                            svg={svgRef}
-                            data={data}
-                            caseCount={totalCaseCount}
-                            secondaryCaseCount={secondaryCaseCount}
-                            outcomeComparison={comparisonOption}
-                            dimensionWidth={dimensionWidth}
-                            dimensionHeight={dimensionHeight}
-                            maximumCost={maximumCost}
-                            maxSavedNegative={maximumSavedNegative}
-                            costMode={costMode}
-                            extraPairDataSet={extraPairData}
-                            chartId={chartId}
-                            secondaryExtraPairDataSet={comparisonOption ? secondaryExtraPairData : undefined}
-                            extraPairTotalWidth={extraPairTotalWidth}
-                            showPotential={showPotential} />
-
-                    </ChartSVG>
-                    <AnnotationForm chartI={chartId} annotationText={annotationText} />
-                </Container>
-            </Grid>
-        </Grid>)
+        </ChartSVG>
+        <AnnotationForm chartI={chartId} annotationText={annotationText} />
+    </Container>
+    )
 }
 
 export default observer(WrapperCostBar)
