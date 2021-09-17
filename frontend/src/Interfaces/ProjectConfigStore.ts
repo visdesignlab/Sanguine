@@ -1,5 +1,5 @@
-import { action, makeAutoObservable } from "mobx";
-import { BloodComponentOptions, ScatterYOptions } from "../Presets/DataDict";
+import { makeAutoObservable } from "mobx";
+import { BloodComponentOptions } from "../Presets/DataDict";
 import { changeBloodFilter, changeCostConfig, changeOutcomeFilter, changeSurgeryUrgencySelection, changeTestValueFilter, dateRangeChange, loadPreset, resetBloodFilter, resetTestValueFilter, toggleShowZero } from "./Actions/ProjectConfigActions";
 import { RootStore } from "./Store";
 import { LayoutElement } from "./Types/LayoutTypes";
@@ -126,5 +126,8 @@ export class ProjectConfigStore {
     }
     resetTestValueFilter() {
         this.provenance.apply(resetTestValueFilter());
+    }
+    resetAll() {
+        this.provenance.reset();
     }
 }

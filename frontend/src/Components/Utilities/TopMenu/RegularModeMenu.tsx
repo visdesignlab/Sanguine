@@ -1,4 +1,4 @@
-import { Menu, MenuItem, Button, AppBar, Toolbar, Typography, IconButton } from "@material-ui/core";
+import { Menu, MenuItem, Button, AppBar, Toolbar, Typography, IconButton, ButtonGroup, Tooltip } from "@material-ui/core";
 import { isObservable } from "mobx";
 import { observer } from "mobx-react";
 import { useContext, useState, FC } from "react";
@@ -14,6 +14,7 @@ import FormatSizeIcon from '@material-ui/icons/FormatSize';
 import StateManagementSuite from "./StateManagementSuite";
 import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import InfoDialog from "../../Modals/InfoDialog";
+import ClearAllIcon from '@material-ui/icons/ClearAll';
 import FilterBoard from "../FilterInterface/FilterBoard";
 
 const RegularModeMenu: FC = () => {
@@ -44,10 +45,7 @@ const RegularModeMenu: FC = () => {
 
     const regularMenu = (
 
-        // <Button onClick={toggleDrawer(anchor, true)}>{anchor}</Button>
-        //   <Drawer anchor={anchor} open={state[anchor]} onClose={toggleDrawer(anchor, false)}>
-        //     {list(anchor)}
-        //   </Drawer>
+
 
         <Toolbar className={styles.toolbarPaddingControl}>
             <IconButton
@@ -69,6 +67,7 @@ const RegularModeMenu: FC = () => {
                     <MenuItem onClick={() => handleClose(0)}>Cost and Saving Chart</MenuItem>
                 </Menu>
             </div>
+
 
             <a href="https://healthcare.utah.edu" target="_blank">
                 <img
@@ -102,6 +101,12 @@ const RegularModeMenu: FC = () => {
 
 
             <StateManagementSuite />
+
+            <Tooltip title={<div>  <p className={styles.tooltipFont}>Clear All</p></div>}>
+                <IconButton disabled={store.isAtRoot} onClick={() => { store.configStore.resetAll() }}>
+                    <ClearAllIcon />
+                </IconButton>
+            </Tooltip>
 
             <UndoRedoButtons />
 
