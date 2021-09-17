@@ -5,7 +5,7 @@ import { FC } from "react";
 import { generateRegularData } from "../../../HelperFunctions/ChartDataGenerator";
 import { generateExtrapairPlotData } from "../../../HelperFunctions/ExtraPairDataGenerator";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
-import { BloodProductCap, ExtraPairPadding, ExtraPairWidth, OffsetDict } from "../../../Presets/Constants";
+import { Basic_Gray, BloodProductCap, ExtraPairPadding, ExtraPairWidth, OffsetDict } from "../../../Presets/Constants";
 import Store from "../../../Interfaces/Store";
 import { ExtraPairPoint, HeatMapDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
 import { tokenCheckCancel } from "../../../Interfaces/UserManagement";
@@ -14,11 +14,12 @@ import HeatMap from "./HeatMap";
 import ExtraPairButtons from "../ChartAccessories/ExtraPairButtons";
 import useDeepCompareEffect from 'use-deep-compare-effect'
 import { DataContext } from "../../../App";
-import { Grid, Container } from "@material-ui/core";
+import { Grid, Container, Typography } from "@material-ui/core";
 import { useStyles } from "../../../Presets/StyledComponents";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import ChartStandardButtons from "../ChartStandardButtons";
+import { AcronymDictionary } from "../../../Presets/DataDict";
 
 type Props = {
     layoutW: number;
@@ -150,7 +151,8 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
         hemoData])
 
     return (<Container className={styles.chartWrapper}>
-        <div style={{ textAlign: "right" }}>
+        <div className={styles.chartAccessoryDiv}>
+            {`Heatmap${(outcomeComparison || comparisonDate) ? " with Comparison" : ""}`}
             <ExtraPairButtons disbleButton={width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
             <ChartConfigMenu
                 xAggregationOption={xAggregationOption}
@@ -161,6 +163,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
                 requireOutcome={true}
                 requireSecondary={true} />
             <ChartStandardButtons chartID={chartId} />
+
         </div>
         <ChartSVG ref={svgRef}>
             <HeatMap

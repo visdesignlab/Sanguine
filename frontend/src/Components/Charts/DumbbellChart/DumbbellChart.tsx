@@ -6,7 +6,7 @@ import useDeepCompareEffect from "use-deep-compare-effect"
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker"
 import Store from "../../../Interfaces/Store"
 import { DumbbellDataPoint } from "../../../Interfaces/Types/DataTypes"
-import { OffsetDict, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, DumbbellMinimumWidth } from "../../../Presets/Constants"
+import { OffsetDict, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, DumbbellMinimumWidth, largeFontSize, regularFontSize } from "../../../Presets/Constants"
 import { AcronymDictionary } from "../../../Presets/DataDict"
 import { DumbbellLine } from "../../../Presets/StyledSVGComponents"
 import CustomizedAxisOrdinal from "../ChartAccessories/CustomizedAxisOrdinal"
@@ -231,7 +231,7 @@ const DumbbellChart: FC<Props> = ({ data, valueToVisualize, dimensionHeight, dim
         .attr("display", null)
         .attr("y", dimensionHeight - currentOffset.bottom + 20)
         .attr("x", 0.5 * (dimensionWidth))
-        .attr("font-size", "11px")
+        .attr("font-size", store.configStore.largeFont ? largeFontSize : regularFontSize)
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
         .text(
@@ -251,7 +251,7 @@ const DumbbellChart: FC<Props> = ({ data, valueToVisualize, dimensionHeight, dim
         .attr("y", 0)
         .attr("transform", "rotate(-90)")
         .attr("alignment-baseline", "hanging")
-        .attr("font-size", "11px")
+        .attr("font-size", store.configStore.largeFont ? largeFontSize : regularFontSize)
         .attr("text-anchor", "middle")
         .text("Hemoglobin Value");
 
@@ -314,6 +314,7 @@ const DumbbellChart: FC<Props> = ({ data, valueToVisualize, dimensionHeight, dim
                 <text className="y-label" />
             </g>
             <g className="chart-comp" >
+
                 <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(HGB_HIGH_STANDARD)} y2={testValueScale()(HGB_HIGH_STANDARD)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
                 <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(HGB_LOW_STANDARD)} y2={testValueScale()(HGB_LOW_STANDARD)} style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }} />
 

@@ -234,7 +234,8 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
     }, [proceduresSelection, rawDateRange, xAggregatedOption, currentOutputFilterSet, costMode, BloodProductCost, hemoData]);
 
     return (<Container className={styles.chartWrapper}>
-        <div style={{ textAlign: "right" }}>
+        <div className={styles.chartAccessoryDiv}>
+            Cost and Saving Chart
             <FormControl style={{ verticalAlign: "middle" }}>
                 {/* <FormHelperText>Potential cost</FormHelperText> */}
                 <Tooltip title={<div>  <p className={styles.tooltipFont}>Show potential RBC cost without cell salvage</p> </div>}>

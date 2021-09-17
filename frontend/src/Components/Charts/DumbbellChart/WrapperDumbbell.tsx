@@ -166,8 +166,8 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
         </Grid>
         <Grid item xs={11} className={styles.chartWrapper}>
             <Container className={styles.chartWrapper}>
-                <div style={{ textAlign: "right" }}>
-
+                <div className={styles.chartAccessoryDiv}>
+                    Dumbbell Chart
                     <ChartConfigMenu
                         xAggregationOption={xAggregationOption}
                         yValueOption={"HGB_VALUE"}

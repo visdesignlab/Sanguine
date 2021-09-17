@@ -69,8 +69,8 @@ export const useStyles = makeStyles((theme: Theme) =>
         },
         toolbarPaddingControl: {
             '& > *': {
-                paddingLeft: "10px",
-                paddingRight: "10px"
+                paddingLeft: "6px",
+                paddingRight: "6px"
             },
         },
         formControl: {
@@ -81,6 +81,10 @@ export const useStyles = makeStyles((theme: Theme) =>
             '& > *': {
                 margin: theme.spacing(0.5),
             },
+        },
+        chartAccessoryDiv: {
+            textAlign: "right",
+            color: Basic_Gray
         },
         img: {
             margin: 'auto!important',
@@ -126,6 +130,9 @@ export const useStyles = makeStyles((theme: Theme) =>
                 display: 'block',
             },
         },
+        manualDisable: {
+            color: "rgba(0, 0, 0, 0.26)"
+        }
     }),
 );
 
