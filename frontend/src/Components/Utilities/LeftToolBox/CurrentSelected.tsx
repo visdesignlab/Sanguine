@@ -15,7 +15,7 @@ const CurrentSelected: FC = () => {
 
     return (
         <Grid item className={styles.gridWidth}>
-            <Container style={{ height: "15vh", overflow: "auto" }}>
+            <Container className={styles.containerWidth} style={{ height: "15vh", }}>
                 <List dense>
                     <ListItem >
                         <Title>Currently Selected</Title>

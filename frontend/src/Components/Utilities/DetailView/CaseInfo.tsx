@@ -64,7 +64,7 @@ const CaseInfo: FC = () => {
         fetchIndividualInformaiton()
 
     }, [currentSelectPatient])
-    return (<Container style={{ overflow: "auto", height: "80vh", visibility: currentSelectPatient ? "visible" : "hidden" }}>
+    return (<Container className={styles.containerWidth} style={{ height: "80vh", padding: "1px", visibility: currentSelectPatient ? "visible" : "hidden" }}>
 
         <List dense>
             <ListSubheader className={styles.subheader}>
