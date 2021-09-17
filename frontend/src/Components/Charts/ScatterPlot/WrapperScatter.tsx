@@ -12,6 +12,7 @@ import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import axios from "axios";
 import useDeepCompareEffect from "use-deep-compare-effect";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
+import ChartStandardButtons from "../ChartStandardButtons";
 
 type Props = {
     yValueOption: string;
@@ -118,35 +119,31 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
             });
     }, [rawDateRange, proceduresSelection, hemoData, showZero, yValueOption, xAggregationOption]);
 
-    return (
-        <Grid container direction="row" alignItems="center" className={styles.chartWrapper}>
-            <Grid item xs={1}>
-                <ChartConfigMenu
-                    xAggregationOption={xAggregationOption}
-                    yValueOption={yValueOption}
-                    chartTypeIndexinArray={2}
-                    chartId={chartId}
-                    requireOutcome={false}
-                    requireSecondary={true} />
-            </Grid>
-            <Grid item xs={11} className={styles.chartWrapper}>
-                <Container className={styles.chartWrapper}>
-                    <ChartSVG ref={svgRef}>
-                        <ScatterPlot
-                            xAggregationOption={xAggregationOption}
-                            xMax={xMax}
-                            xMin={xMin}
-                            yMax={yMax}
-                            yMin={yMin}
-                            yValueOption={yValueOption}
-                            data={data}
-                            width={width}
-                            height={height}
-                            svg={svgRef} />
-                    </ChartSVG>
-                    <AnnotationForm chartI={chartId} annotationText={annotationText} />
-                </Container>
-            </Grid>
-        </Grid>)
+    return (<Container className={styles.chartWrapper}>
+        <div style={{ textAlign: "right" }}>
+            <ChartConfigMenu
+                xAggregationOption={xAggregationOption}
+                yValueOption={yValueOption}
+                chartTypeIndexinArray={2}
+                chartId={chartId}
+                requireOutcome={false}
+                requireSecondary={true} />
+            <ChartStandardButtons chartID={chartId} />
+        </div>
+        <ChartSVG ref={svgRef}>
+            <ScatterPlot
+                xAggregationOption={xAggregationOption}
+                xMax={xMax}
+                xMin={xMin}
+                yMax={yMax}
+                yMin={yMin}
+                yValueOption={yValueOption}
+                data={data}
+                width={width}
+                height={height}
+                svg={svgRef} />
+        </ChartSVG>
+        <AnnotationForm chartI={chartId} annotationText={annotationText} />
+    </Container>)
 }
 export default observer(WrapperScatter)
