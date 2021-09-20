@@ -53,8 +53,8 @@ const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTyp
 
 
     return (
-        <div>
-            <IconButton onClick={handleClick}>
+        <>
+            <IconButton size="small" onClick={handleClick}>
                 <SettingsIcon />
             </IconButton>
             <Menu anchorEl={anchorEl} open={open}
@@ -87,7 +87,7 @@ const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTyp
                     ))}
                 </NestedMenuItem> : <></>}
             </Menu>
-        </div>)
+        </>)
 }
 
 export default observer(ChartConfigMenu);

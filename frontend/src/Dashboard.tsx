@@ -22,14 +22,16 @@ const Dashboard: FC = () => {
             <Box id="Top-Bar">
                 <RegularModeMenu />
             </Box>
-            <Divider />
-            <Grid container direction="row" justifyContent="space-between">
+
+            <Grid container direction="row" >
                 <Grid item xs={2} id="Side-Bar">
                     <LeftToolBox totalCaseNum={hemoData.length} />
                 </Grid>
+                <Divider orientation="vertical" flexItem style={{ marginRight: "-1px" }} />
                 <Grid item xs={8} id="Main-Body">
                     <LayoutGenerator />
                 </Grid>
+                <Divider orientation="vertical" flexItem style={{ marginRight: "-1px" }} />
                 <Grid item xs={2}>
                     <DetailView />
                 </Grid>

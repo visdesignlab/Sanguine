@@ -11,7 +11,7 @@ type Props = {
 const ChartStandardButtons: FC<Props> = ({ chartID }: Props) => {
     const store = useContext(Store)
     return (
-        <div style={{ textAlign: "right" }}>
+        < >
             <IconButton size="small" className="move-icon">
                 <OpenWithIcon />
             </IconButton>
@@ -19,7 +19,7 @@ const ChartStandardButtons: FC<Props> = ({ chartID }: Props) => {
                 <CloseIcon />
             </IconButton>
 
-        </div>)
+        </>)
 }
 
 export default ChartStandardButtons

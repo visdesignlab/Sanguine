@@ -1,25 +1,23 @@
-import Button from "@material-ui/core/Button";
 import ButtonGroup from "@material-ui/core/ButtonGroup";
 import { observer } from "mobx-react";
 import { FC, useContext } from "react";
 import RedoIcon from '@material-ui/icons/Redo';
 import UndoIcon from '@material-ui/icons/Undo';
 import Store from "../../../Interfaces/Store";
-import { useStyles } from "../../../Presets/StyledComponents";
+import { IconButton } from "@material-ui/core";
 
 const UndoRedoButtons: FC = () => {
     const store = useContext(Store);
 
-    return <div className={useStyles().centerAlignment}>
-        <ButtonGroup variant="outlined">
-            <Button endIcon={<UndoIcon />} disabled={store.isAtRoot} onClick={() => { store.provenance.undo() }}>
-                Undo
-            </Button>
+    return <ButtonGroup>
+        <IconButton disabled={store.isAtRoot} onClick={() => { store.provenance.undo() }}>
+            <UndoIcon />
+        </IconButton>
 
-            <Button endIcon={<RedoIcon />} disabled={store.isAtLatest} onClick={() => { store.provenance.redo() }}>
-                Redo
-            </Button>
-        </ButtonGroup>
-    </div>
+        <IconButton disabled={store.isAtLatest} onClick={() => { store.provenance.redo() }}>
+            <RedoIcon />
+        </IconButton>
+    </ButtonGroup>
+
 }
 export default observer(UndoRedoButtons)

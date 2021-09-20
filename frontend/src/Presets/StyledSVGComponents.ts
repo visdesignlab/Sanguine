@@ -3,7 +3,7 @@ import { Offset } from "../Interfaces/Types/OffsetType";
 import { Basic_Gray, highlight_orange, postop_color, preop_color } from "./Constants";
 
 export const ChartSVG = styled.svg`
-  height: 80%;
+  height: calc(100% - 100px);
   width: 100%;
 `;
 

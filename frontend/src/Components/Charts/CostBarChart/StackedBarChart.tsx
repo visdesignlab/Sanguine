@@ -1,7 +1,7 @@
 import { scaleBand, scaleLinear } from "d3";
 import { FC, useCallback, useState } from "react"
 import { CostBarChartDataPoint, ExtraPairPoint } from "../../../Interfaces/Types/DataTypes"
-import { OffsetDict } from "../../../Presets/Constants";
+import { Basic_Gray, OffsetDict } from "../../../Presets/Constants";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import useDeepCompareEffect from "use-deep-compare-effect";
 import { observer } from "mobx-react";
@@ -82,6 +82,7 @@ const StackedBarChart: FC<Props> = ({ outcomeComparison, caseCount, secondaryCas
                 valueScaleDomain={JSON.stringify(valueScale().domain())}
                 valueScaleRange={JSON.stringify(valueScale().range())}
                 xAggregationOption={xAggregationOption} />
+
             {outcomeComparison ? <ComparisonLegend dimensionWidth={dimensionWidth} firstTotal={caseCount} secondTotal={secondaryCaseCount} outcomeComparison={outcomeComparison} /> : <></>}
             <g className="chart-comp" >
                 {data.map((dp) => {
@@ -140,6 +141,13 @@ const StackedBarChart: FC<Props> = ({ outcomeComparison, caseCount, secondaryCas
                         aggregationScaleRange={JSON.stringify(aggregationScale().range())}
                         height={dimensionHeight} />
                 </g>
+                <line x1={valueScale()(0)}
+                    x2={valueScale()(0)}
+                    y1={dimensionHeight - currentOffset.bottom}
+                    y2={currentOffset.top}
+                    opacity={costMode ? 0.8 : 0} stroke={Basic_Gray}
+                    strokeWidth={3}
+                    strokeDasharray="5,5" />
             </g>
         </>
     )
