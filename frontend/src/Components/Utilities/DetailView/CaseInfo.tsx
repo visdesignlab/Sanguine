@@ -35,6 +35,7 @@ const CaseInfo: FC = () => {
         async function fetchIndividualInformaiton() {
 
             if (currentSelectPatient) {
+                stateUpdateWrapperUseJSON(individualInfo, null, setIndividualInfo)
                 const fetchResult = await fetch(`${process.env.REACT_APP_QUERY_URL}fetch_patient?patient_id=${currentSelectPatient.PATIENT_ID}`)
 
                 const fetchResultJson = await fetchResult.json();
@@ -63,7 +64,7 @@ const CaseInfo: FC = () => {
         fetchIndividualInformaiton()
 
     }, [currentSelectPatient])
-    return (<Container style={{ overflow: "auto", height: "85vh", visibility: currentSelectPatient ? "visible" : "hidden" }}>
+    return (<Container className={styles.containerWidth} style={{ height: "80vh", padding: "1px", visibility: currentSelectPatient ? "visible" : "hidden" }}>
 
         <List dense>
             <ListSubheader className={styles.subheader}>

@@ -39,4 +39,9 @@ export const BloodProductCap: any = {
 
 export const ExtraPairLimit = 5
 
+export const drawerWidth = 300
+
 export const ManualInfinity = 5000000000;
+
+export const regularFontSize = 11;
+export const largeFontSize = 14

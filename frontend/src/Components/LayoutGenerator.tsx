@@ -30,14 +30,12 @@ const LayoutGenerator: FC = () => {
                 return (
                     <div key={layout.i} className={"parent-node" + layout.i}>
 
-                        <ChartStandardButtons chartID={layout.i} />
-                        <WrapperDumbbell
 
+                        <WrapperDumbbell
                             layoutW={layout.w}
                             chartId={layout.i}
                             layoutH={layout.h}
                             xAggregationOption={layout.aggregatedBy}
-
                             annotationText={layout.notation}
                         />
                     </div>
@@ -48,7 +46,7 @@ const LayoutGenerator: FC = () => {
                         key={layout.i}
                         className={"parent-node" + layout.i}
                     >
-                        <ChartStandardButtons chartID={layout.i} />
+
                         <WrapperCostBar
                             extraPairArrayString={layout.extraPair || ""}
                             layoutW={layout.w}
@@ -65,7 +63,7 @@ const LayoutGenerator: FC = () => {
                     key={layout.i}
                     className={"parent-node" + layout.i}
                 >
-                    <ChartStandardButtons chartID={layout.i} />
+
                     <WrapperScatter
                         xAggregationOption={layout.aggregatedBy}
                         layoutW={layout.w}
@@ -80,7 +78,9 @@ const LayoutGenerator: FC = () => {
                 return (<div
                     key={layout.i}
                     className={"parent-node" + layout.i}>
-                    <ChartStandardButtons chartID={layout.i} />
+
+
+
                     <WrapperHeatMap
                         annotationText={layout.notation}
                         chartId={layout.i}
@@ -127,35 +127,11 @@ const LayoutGenerator: FC = () => {
         }
     })
 
-    const panes = [
 
-        <div id="main-tab" style={{ height: "90vh" }}>
-            <WelcomeText show={store.state.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
-            <Responsive
-                onResizeStop={(e, v) => { store.chartStore.onLayoutChange(e) }}
-                onDragStop={(e, v) => { store.chartStore.onLayoutChange(e) }}
-                draggableHandle={".move-icon"}
-                className="layout"
-                cols={colData}
-                rowHeight={500}
-                width={0.95 * store.mainCompWidth}
-                layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
-            >
-                {store.state.layoutArray.map((layoutE, i) => {
-                    return createElement(layoutE, i);
-                })}
-            </Responsive>
-        </div >,
-        <div id="filter-tab" style={{ height: "90vh" }}>
-            <FilterBoard />
-
-
-        </div>
-    ]
 
     return (
         <Container className={styles.containerWidth}>
-            <Tabs
+            {/* <Tabs
                 value={tabValue}
                 onChange={handleChange}
                 indicatorColor="primary"
@@ -163,9 +139,25 @@ const LayoutGenerator: FC = () => {
                 centered>
                 <Tab label="Main" />
                 <Tab label="filter" />
-            </Tabs>
-            <Container ref={tabRef} style={{ overflow: "auto", maxWidth: "none" }}>
-                {panes[tabValue]}
+            </Tabs> */}
+            <Container ref={tabRef} className={styles.containerWidth} style={{ height: "90vh" }}>
+
+                <WelcomeText show={store.state.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
+                <Responsive
+                    onResizeStop={(e, v) => { store.chartStore.onLayoutChange(e) }}
+                    onDragStop={(e, v) => { store.chartStore.onLayoutChange(e) }}
+                    draggableHandle={".move-icon"}
+                    className="layout"
+                    cols={colData}
+                    rowHeight={500}
+                    width={0.95 * store.mainCompWidth}
+                    layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
+                >
+                    {store.state.layoutArray.map((layoutE, i) => {
+                        return createElement(layoutE, i);
+                    })}
+                </Responsive>
+
             </Container>
         </Container>
     )

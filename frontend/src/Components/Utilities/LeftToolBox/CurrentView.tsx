@@ -51,7 +51,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
 
     return (
-        <Grid item className={styles.gridWidth}>
+        <Grid item className={styles.gridWidth} >
             <Container className={styles.containerWidth} style={{ height: "40vh" }}>
                 <List dense >
                     <ListItem style={{ textAlign: "left" }}>
@@ -75,7 +75,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                             ${surgeryUrgencySelection[1] ? "Elective, " : ""}
                             ${surgeryUrgencySelection[2] ? "Emergent" : ""}`} />
                     </ListItem>
-
+                    {/* TODO change this into "toggle axis" instead of "show zero" */}
                     <ListItem key="Show Zero">
                         <ListItemText primary="Show Zero Transfused"
                         ></ListItemText>
@@ -132,7 +132,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                     })}
                 </List>
             </Container>
-        </Grid>
+        </Grid >
     )
 
 

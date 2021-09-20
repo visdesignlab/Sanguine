@@ -1,5 +1,5 @@
-import { action, makeAutoObservable } from "mobx";
-import { BloodComponentOptions, ScatterYOptions } from "../Presets/DataDict";
+import { makeAutoObservable } from "mobx";
+import { BloodComponentOptions } from "../Presets/DataDict";
 import { changeBloodFilter, changeCostConfig, changeOutcomeFilter, changeSurgeryUrgencySelection, changeTestValueFilter, dateRangeChange, loadPreset, resetBloodFilter, resetTestValueFilter, toggleShowZero } from "./Actions/ProjectConfigActions";
 import { RootStore } from "./Store";
 import { LayoutElement } from "./Types/LayoutTypes";
@@ -15,6 +15,9 @@ export class ProjectConfigStore {
     openShareUIDDialog: boolean;
     openCostInputModal: boolean;
     openStateAccessControl: boolean;
+    openAboutDialog: boolean;
+    openDrawer: boolean;
+    largeFont: boolean;
     savedState: string[];
     filterRange: any;
 
@@ -22,13 +25,16 @@ export class ProjectConfigStore {
         this.rootStore = rootstore;
         this._isLoggedIn = !(process.env.REACT_APP_REQUIRE_LOGIN === "true");
         this._dataLoading = true;
+        this.largeFont = false;
         this._dataLoadingFailed = false;
         this._topMenuBarAddMode = false;
         this.openSaveStateDialog = false;
         this.openManageStateDialog = false;
         this.openShareUIDDialog = false;
+        this.openDrawer = false;
         this.openCostInputModal = false;
         this.openStateAccessControl = false;
+        this.openAboutDialog = false;
         this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0, PREOP_HGB: 0, POSTOP_HGB: 0 };
         this.savedState = []
         makeAutoObservable(this)
@@ -120,5 +126,8 @@ export class ProjectConfigStore {
     }
     resetTestValueFilter() {
         this.provenance.apply(resetTestValueFilter());
+    }
+    resetAll() {
+        this.provenance.reset();
     }
 }

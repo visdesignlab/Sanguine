@@ -15,6 +15,7 @@ import { ChartSVG } from "../../../Presets/StyledSVGComponents";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import useDeepCompareEffect from "use-deep-compare-effect";
+import ChartStandardButtons from "../ChartStandardButtons";
 
 type Props = {
     xAggregationOption: string;
@@ -124,7 +125,9 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
         <Grid item xs={1}>
 
             <div style={{ width: "max-content", padding: "2px" }}>Sort By</div>
-            <ButtonGroup variant="outlined" size="small" orientation="vertical">
+            <ButtonGroup variant="outlined" size="small"
+                aria-label="small outlined button group"
+                orientation="vertical">
                 <Button
                     className={sortMode === "Preop" ? buttonStyles.preopButtonActive : buttonStyles.preopButtonOutline}
                     onClick={() => { setSortMode("Preop") }}>
@@ -159,16 +162,21 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
                     Gap
                 </Button>
             </ButtonGroup>
-            <ChartConfigMenu
-                xAggregationOption={xAggregationOption}
-                yValueOption={"HGB_VALUE"}
-                chartTypeIndexinArray={1}
-                chartId={chartId}
-                requireOutcome={false}
-                requireSecondary={false} />
+
         </Grid>
         <Grid item xs={11} className={styles.chartWrapper}>
             <Container className={styles.chartWrapper}>
+                <div className={styles.chartAccessoryDiv}>
+                    Dumbbell Chart
+                    <ChartConfigMenu
+                        xAggregationOption={xAggregationOption}
+                        yValueOption={"HGB_VALUE"}
+                        chartTypeIndexinArray={1}
+                        chartId={chartId}
+                        requireOutcome={false}
+                        requireSecondary={false} />
+                    <ChartStandardButtons chartID={chartId} />
+                </div>
                 <ChartSVG ref={svgRef}>
 
                     <DumbbellChart data={data} svg={svgRef} showGap={showGap} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} valueToVisualize={xAggregationOption} dimensionWidth={width} dimensionHeight={height} xMin={xMin} xMax={xMax} />
