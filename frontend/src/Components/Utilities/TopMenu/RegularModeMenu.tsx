@@ -72,7 +72,7 @@ const RegularModeMenu: FC = () => {
             <a href="https://healthcare.utah.edu" target="_blank">
                 <img
                     className={styles.img}
-                    src="https://raw.githubusercontent.com/visdesignlab/Sanguine/UI-updates/images/u-of-u-health-social.png" />
+                    src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/u-of-u-health-social.png" />
             </a>
 
             <Typography className={styles.title} variant="h6" noWrap>
@@ -86,17 +86,16 @@ const RegularModeMenu: FC = () => {
                  // onClick={() => { store!.previewMode = true }} 
             </div> */}
 
-            {/* TODO : This will need to change when merging the branch 
-                All these logos don't look very appealing. Considering having an About page that have all the logos*/}
+           
             <a href="https://arup.utah.edu" target="_blank">
                 <img
                     className={styles.img}
-                    src="https://raw.githubusercontent.com/visdesignlab/Sanguine/UI-updates/images/ARUP-logo.png" />
+                    src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/ARUP-logo.png" />
             </a>
             <a href="https://vdl.sci.utah.edu" target="_blank">
                 <img
                     className={styles.img}
-                    src="https://raw.githubusercontent.com/visdesignlab/Sanguine/master/images/vdl.png" />
+                    src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/vdl.png" />
             </a>
 
 
