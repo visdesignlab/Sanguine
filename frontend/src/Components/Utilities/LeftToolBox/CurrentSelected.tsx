@@ -11,11 +11,11 @@ import { Title, useStyles } from "../../../Presets/StyledComponents";
 const CurrentSelected: FC = () => {
     const styles = useStyles();
     const store = useContext(Store);
-    const { currentBrushedPatientGroup, currentSelectSet, currentOutputFilterSet, currentSelectPatientGroup } = store.state
+    const { currentBrushedPatientGroup, currentSelectSet } = store.state
 
     return (
         <Grid item className={styles.gridWidth}>
-            <Container className={styles.containerWidth} style={{ height: "15vh", }}>
+            <Container className={styles.containerWidth} style={{ height: "20vh", }}>
                 <List dense>
                     <ListItem >
                         <Title>Currently Selected</Title>
@@ -47,22 +47,24 @@ const CurrentSelected: FC = () => {
 
 
                 </List>
-                <ButtonGroup style={{ textAlign: "center" }}>
+                <div style={{ textAlign: "center" }}>
                     <Button
+
                         disabled={!(currentSelectSet.length > 0 || currentBrushedPatientGroup.length > 0)}
                         variant="outlined"
-                        size="small"
+
                         className={styles.tinyFont}
                         onClick={() => { store.selectionStore.outputToFilter() }}
                     >Create Filter</Button>
-                    <Button
+                </div>
+                {/* <Button
                         disabled={!(currentOutputFilterSet.length > 0 || currentSelectPatientGroup.length > 0)}
                         variant="outlined"
                         size="small"
                         className={styles.tinyFont}
                         onClick={() => { store.selectionStore.clearAllFilter() }}
-                    >Clear Filter</Button>
-                </ButtonGroup>
+                    >Clear Filter</Button> */}
+
             </Container>
         </Grid>)
 }

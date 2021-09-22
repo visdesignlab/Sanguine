@@ -9,14 +9,17 @@ import './App.css'
 import LayoutGenerator from "./Components/LayoutGenerator"
 import { DataContext } from "./App"
 import Grid from "@material-ui/core/Grid"
-import { Box, Divider } from "@material-ui/core"
+import { Box, Divider, Snackbar } from "@material-ui/core"
 import DetailView from "./Components/Utilities/DetailView/DetailView"
-
+import { Alert } from "@material-ui/lab";
+import Store from "./Interfaces/Store"
+import { SnackBarCloseTime } from "./Presets/Constants"
 
 
 const Dashboard: FC = () => {
 
-    const hemoData = useContext(DataContext)
+    const hemoData = useContext(DataContext);
+    const store = useContext(Store);
     return (
         <div>
             <Box id="Top-Bar">
@@ -42,6 +45,11 @@ const Dashboard: FC = () => {
                     <DataRetrieval />
                 </> : <></>}
 
+            <Snackbar open={store.configStore.openNoteSaveSuccessMessage} autoHideDuration={SnackBarCloseTime} onClose={() => { store.configStore.openNoteSaveSuccessMessage = false }}>
+                <Alert onClose={() => { store.configStore.openNoteSaveSuccessMessage = false }} severity="success">
+                    Note saved locally!
+                </Alert>
+            </Snackbar>
         </div>
     )
 }

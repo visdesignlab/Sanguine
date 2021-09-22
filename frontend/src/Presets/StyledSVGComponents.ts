@@ -1,6 +1,10 @@
 import styled from "styled-components";
 import { Offset } from "../Interfaces/Types/OffsetType";
-import { Basic_Gray, highlight_orange, postop_color, preop_color } from "./Constants";
+import { Basic_Gray, highlight_orange, largeFontSize, postop_color, preop_color, regularFontSize } from "./Constants";
+
+export interface BiggerFontProps {
+    biggerFont: boolean
+}
 
 export const ChartSVG = styled.svg`
   height: calc(100% - 100px);
@@ -38,7 +42,7 @@ export const HeatMapRect = styled(`rect`)`
 `
 interface HeatMapDivideProp {
     currentOffset: Offset;
-    dimensionHeight: number
+    dimensionHeight: number;
 }
 
 export const HeatMapDividerLine = styled(`line`) <HeatMapDivideProp>`
@@ -81,11 +85,12 @@ export const DumbbellLine = styled(`line`) < AverageLineProps>`
     stroke-width:3px
     `
 
-export const AxisText = styled.text`
+export const AxisText = styled.text<BiggerFontProps>`
     fill:white;
     alignment-baseline: hanging;
     text-anchor: middle;
     y:0;
+    font-size:${props => props.biggerFont ? `${largeFontSize}px` : `${regularFontSize}px`};
 `
 
 export const CustomAxisLine = styled(`line`)`
