@@ -29,17 +29,17 @@ const DualColorLegend: FC<Props> = ({ dimensionWidth }) => {
             x={0.7 * (dimensionWidth)}
             y={10}
             width={0.2 * (dimensionWidth)}
-            height={7.5}
+            height={8}
             fill="url(#gradient1)" />
         <rect
             x={0.7 * (dimensionWidth)}
-            y={17.5}
+            y={18}
             width={0.2 * (dimensionWidth)}
-            height={7.5}
+            height={8}
             fill="url(#gradient2)" />
         <text
-            x={0.7 * (dimensionWidth)}
-            y={17.5}
+            x={0.7 * (dimensionWidth) - 2}
+            y={18}
             alignmentBaseline={"middle"}
             textAnchor={"end"}
             fontSize="11px"
@@ -47,8 +47,8 @@ const DualColorLegend: FC<Props> = ({ dimensionWidth }) => {
             0%
         </text>
         <text
-            x={0.9 * (dimensionWidth)}
-            y={17.5}
+            x={0.9 * (dimensionWidth) + 2}
+            y={18}
             alignmentBaseline={"middle"}
             textAnchor={"start"}
             fontSize="11px"
@@ -66,7 +66,7 @@ const DualColorLegend: FC<Props> = ({ dimensionWidth }) => {
         </text>
         <text
             x={0.8 * (dimensionWidth)}
-            y={7.5}
+            y={8}
             alignmentBaseline={"baseline"}
             textAnchor={"middle"}
             fontSize="11px"

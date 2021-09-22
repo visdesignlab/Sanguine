@@ -20,11 +20,11 @@ const SingleColorLegend: FC<Props> = ({ dimensionWidth }) => {
             x={0.7 * (dimensionWidth)}
             y={0}
             width={0.2 * (dimensionWidth)}
-            height={15}
+            height={16}
             fill="url(#gradient1)" />
         <text
-            x={0.7 * (dimensionWidth)}
-            y={7.5}
+            x={0.7 * (dimensionWidth) - 2}
+            y={8}
             alignmentBaseline={"middle"}
             textAnchor={"end"}
             fontSize="11px"
@@ -32,8 +32,8 @@ const SingleColorLegend: FC<Props> = ({ dimensionWidth }) => {
             0%
         </text>
         <text
-            x={0.9 * (dimensionWidth)}
-            y={7.5}
+            x={0.9 * (dimensionWidth) + 2}
+            y={8}
             alignmentBaseline={"middle"}
             textAnchor={"start"}
             fontSize="11px"
