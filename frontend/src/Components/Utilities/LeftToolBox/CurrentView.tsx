@@ -2,23 +2,20 @@ import { timeFormat } from "d3"
 import { observer } from "mobx-react"
 import { useContext } from "react"
 import { FC } from "react"
-import { defaultState } from "../../../Interfaces/DefaultState"
 import Store from "../../../Interfaces/Store"
-import { AcronymDictionary, OutcomeOptions } from "../../../Presets/DataDict"
+import { AcronymDictionary } from "../../../Presets/DataDict"
 import { Title, useStyles } from "../../../Presets/StyledComponents"
 import Container from "@material-ui/core/Container";
 
 import List from "@material-ui/core/List";
-import { Box, Chip, ListItem, ListItemSecondaryAction, ListItemText, Select, Switch, Grid, IconButton, Tooltip } from "@material-ui/core";
-import { DropdownGenerator } from "../../../HelperFunctions/DropdownGenerator"
-import { SelectSet } from "../../../Interfaces/Types/SelectionTypes"
+import { ListItem, ListItemSecondaryAction, ListItemText, Switch, Grid, IconButton, Tooltip } from "@material-ui/core";
+
 import ErrorIcon from '@material-ui/icons/Error';
 
 type Props = { totalCaseNum: number }
 
 const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
-    const store = useContext(Store)
-    const { surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet, outcomeFilter } = store.state;
+    const store = useContext(Store);
     const styles = useStyles();
 
 
@@ -64,12 +61,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
                     </ListItem>
 
-                    {/* <ListItem key="Procedure Types">
-                        <ListItemText primary="Surgery Urgency" secondary={
-                            `${surgeryUrgencySelection[0] ? "Urgent, " : ""}
-                            ${surgeryUrgencySelection[1] ? "Elective, " : ""}
-                            ${surgeryUrgencySelection[2] ? "Emergent" : ""}`} />
-                    </ListItem> */}
+
                     {/* TODO change this into "toggle axis" instead of "show zero" */}
                     <ListItem key="Show Zero">
                         <ListItemText primary="Show Zero Transfused"

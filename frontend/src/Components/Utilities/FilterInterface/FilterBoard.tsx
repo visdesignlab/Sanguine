@@ -1,11 +1,11 @@
-import { Container, Divider, Drawer, Grid, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Tooltip } from "@material-ui/core";
+import { Divider, Drawer, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Tooltip } from "@material-ui/core";
 import DateFnsUtils from '@date-io/date-fns';
 import CloseIcon from '@material-ui/icons/Close';
 import { MuiPickersUtilsProvider, KeyboardDatePicker } from "@material-ui/pickers";
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import { observer } from "mobx-react";
-import { FC, useContext, useEffect, useState } from "react";
-import { AcronymDictionary, OutcomeOptions } from "../../../Presets/DataDict"
+import { FC, useContext, useState } from "react";
+import { AcronymDictionary } from "../../../Presets/DataDict"
 import Store from "../../../Interfaces/Store";
 import ComponentRangePicker from "./ComponentRangePicker";
 import { Title, useStyles } from "../../../Presets/StyledComponents";
@@ -44,6 +44,28 @@ const FilterBoard: FC = () => {
         return canReset
     }
 
+    const enableClearAll = () => {
+        if (rawDateRange[0] !== defaultState.rawDateRange[0] || rawDateRange[1] !== defaultState.rawDateRange[1]) {
+            return true
+        }
+        if (outcomeFilter.length > 0) {
+            return true
+        }
+        if (!(surgeryUrgencySelection[0] && surgeryUrgencySelection[1] && surgeryUrgencySelection[2])) {
+            return true
+        }
+        if (currentSelectPatientGroup.length > 0 || currentOutputFilterSet.length > 0) {
+            return true
+        }
+        if (checkIfCanReset(testValueFilter)) {
+            return true
+        }
+        if (checkIfCanReset(bloodComponentFilter)) {
+            return true
+        }
+        return false;
+    }
+
     return <Drawer
         className={styles.drawer}
         anchor="left"
@@ -53,11 +75,22 @@ const FilterBoard: FC = () => {
         onClose={() => { store.configStore.openDrawer = false }}
         open={store.configStore.openDrawer}>
 
-        <IconButton style={{ alignSelf: "end" }} onClick={() => { store.configStore.openDrawer = false }}>
-            Filter
-            <ChevronLeftIcon />
-        </IconButton>
 
+        <div style={{ alignSelf: "end" }}>
+
+
+            <Title style={{ paddingRight: "20px" }}>
+                Filter
+            </Title>
+            <IconButton disabled={!enableClearAll()} onClick={() => { store.configStore.clearAllFilter() }}>
+                <Tooltip title="Clear All Filters">
+                    <ClearAllIcon />
+                </Tooltip>
+            </IconButton>
+            <IconButton onClick={() => { store.configStore.openDrawer = false }}>
+                <ChevronLeftIcon />
+            </IconButton>
+        </div>
         <Divider />
         <List dense>
             <ListItem>
@@ -65,12 +98,14 @@ const FilterBoard: FC = () => {
                     Pick Date Range
                 </Title>} />
                 <ListItemSecondaryAction>
-                    <Tooltip title="Reset">
-                        <IconButton onClick={resetDateFilter}
-                            disabled={(rawDateRange[0] === defaultState.rawDateRange[0]) && (rawDateRange[1] === defaultState.rawDateRange[1])}>
+
+                    <IconButton onClick={resetDateFilter}
+                        disabled={(rawDateRange[0] === defaultState.rawDateRange[0]) && (rawDateRange[1] === defaultState.rawDateRange[1])}>
+                        <Tooltip title="Reset">
                             <ClearAllIcon />
-                        </IconButton>
-                    </Tooltip>
+                        </Tooltip>
+                    </IconButton>
+
                 </ListItemSecondaryAction>
             </ListItem>
             <ListItem>
@@ -117,14 +152,16 @@ const FilterBoard: FC = () => {
                     Outcome / Intervention Filter
                 </Title>} />
                 <ListItemSecondaryAction>
-                    <Tooltip title="Clear All">
-                        <IconButton
-                            onClick={() => { store.configStore.changeOutcomeFilter([]) }}
-                            disabled={outcomeFilter.length === 0}
-                        >
+
+                    <IconButton
+                        onClick={() => { store.configStore.changeOutcomeFilter([]) }}
+                        disabled={outcomeFilter.length === 0}
+                    >
+                        <Tooltip title="Clear">
                             <ClearAllIcon />
-                        </IconButton>
-                    </Tooltip>
+                        </Tooltip>
+                    </IconButton>
+
                 </ListItemSecondaryAction>
             </ListItem>
             <OutcomeChipGroup />
@@ -134,14 +171,16 @@ const FilterBoard: FC = () => {
             <ListItem>
                 <ListItemText primary={<Title>Surgery Urgency Filter</Title>} />
                 <ListItemSecondaryAction>
-                    <Tooltip title="Clear All">
-                        <IconButton
-                            onClick={() => { store.configStore.changeSurgeryUrgencySelection([true, true, true]) }}
-                            disabled={surgeryUrgencySelection[0] && surgeryUrgencySelection[1] && surgeryUrgencySelection[2]}
-                        >
+
+                    <IconButton
+                        onClick={() => { store.configStore.changeSurgeryUrgencySelection([true, true, true]) }}
+                        disabled={surgeryUrgencySelection[0] && surgeryUrgencySelection[1] && surgeryUrgencySelection[2]}
+                    >
+                        <Tooltip title="Clear">
                             <ClearAllIcon />
-                        </IconButton>
-                    </Tooltip>
+                        </Tooltip>
+                    </IconButton>
+
                 </ListItemSecondaryAction>
             </ListItem>
             <SurgeryUrgencyChipGroup />
@@ -151,12 +190,14 @@ const FilterBoard: FC = () => {
             <ListItem>
                 <ListItemText primary={<Title>Selection Filter</Title>} />
                 <ListItemSecondaryAction>
-                    <Tooltip title="Clear All">
-                        <IconButton onClick={() => { store.selectionStore.clearSelectionFilter() }}
-                            disabled={currentSelectPatientGroup.length === 0 && currentOutputFilterSet.length === 0}>
+
+                    <IconButton onClick={() => { store.selectionStore.clearSelectionFilter() }}
+                        disabled={currentSelectPatientGroup.length === 0 && currentOutputFilterSet.length === 0}>
+                        <Tooltip title="Clear All">
                             <ClearAllIcon />
-                        </IconButton>
-                    </Tooltip>
+                        </Tooltip>
+                    </IconButton>
+
                 </ListItemSecondaryAction>
             </ListItem>
             {currentSelectPatientGroup.length > 0 ? (
@@ -191,12 +232,14 @@ const FilterBoard: FC = () => {
             <ListItem>
                 <ListItemText primary={<Title>Blood Component Filter</Title>} />
                 <ListItemSecondaryAction>
-                    <Tooltip title="Reset">
-                        <IconButton onClick={() => { store.configStore.resetBloodFilter() }}
-                            disabled={!checkIfCanReset(bloodComponentFilter)}>
+
+                    <IconButton onClick={() => { store.configStore.resetBloodFilter() }}
+                        disabled={!checkIfCanReset(bloodComponentFilter)}>
+                        <Tooltip title="Reset">
                             <ClearAllIcon />
-                        </IconButton>
-                    </Tooltip>
+                        </Tooltip>
+                    </IconButton>
+
                 </ListItemSecondaryAction>
             </ListItem>
             {BloodComponentOptions.map((d) => {
@@ -207,12 +250,14 @@ const FilterBoard: FC = () => {
             <ListItem>
                 <ListItemText primary={<Title>Test Value Filter</Title>} />
                 <ListItemSecondaryAction>
-                    <Tooltip title="Reset">
-                        <IconButton onClick={() => { store.configStore.resetTestValueFilter() }}
-                            disabled={!checkIfCanReset(testValueFilter)}>
+
+                    <IconButton onClick={() => { store.configStore.resetTestValueFilter() }}
+                        disabled={!checkIfCanReset(testValueFilter)}>
+                        <Tooltip title="Reset">
                             <ClearAllIcon />
-                        </IconButton>
-                    </Tooltip>
+                        </Tooltip>
+                    </IconButton>
+
                 </ListItemSecondaryAction>
             </ListItem>
             {ScatterYOptions.map((d) => {

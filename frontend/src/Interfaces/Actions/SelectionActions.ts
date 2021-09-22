@@ -1,4 +1,5 @@
 import { createAction } from "@visdesignlab/trrack";
+import { defaultState } from "../DefaultState";
 import { SingleCasePoint } from "../Types/DataTypes";
 import { ActionEvents } from "../Types/EventTypes";
 import { ApplicationState } from "../Types/StateTypes";
@@ -69,3 +70,4 @@ export const outputToFilter = createAction<ApplicationState, [], ActionEvents>((
 export const removeFilter = createAction<ApplicationState, [string], ActionEvents>((state, filterToRemove) => {
     state.currentOutputFilterSet = state.currentOutputFilterSet.filter(d => d.setName !== filterToRemove)
 }).setLabel("clearFilter");
+
