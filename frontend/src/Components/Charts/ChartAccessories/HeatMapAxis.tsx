@@ -49,11 +49,13 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
         )
         .call(aggregationLabel as any)
         .selectAll("text")
+        .attr("font-size", store.configStore.largeFont ? largeFontSize : regularFontSize)
         .attr("transform", `translate(-${CaseRectWidth + 2},0)`)
         .attr("cursor", "pointer")
         .on("click", (e, d: any) => {
             store.selectionStore.selectSet(xAggregationOption, d.toString(), !e.shiftKey)
         })
+
 
     svgSelection
         .select(".axes")
@@ -64,12 +66,13 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
         )
         .call(valueLabel as any)
         .call(g => g.select(".domain").remove())
-        .call(g => g.selectAll(".tick").selectAll("line").remove());
+        .call(g => g.selectAll(".tick").selectAll("line").remove())
+        .call(g => g.selectAll(".tick").selectAll("text").attr("font-size", store.configStore.largeFont ? largeFontSize : regularFontSize));
 
     svgSelection
         .select(".x-label")
         .attr("x", (dimensionWidth - extraPairTotalWidth) * 0.5)
-        .attr("y", dimensionHeight - currentOffset.bottom + 20)
+        .attr("y", dimensionHeight - currentOffset.bottom + 25)
         .attr("alignment-baseline", "hanging")
         .attr("font-size", store.configStore.largeFont ? largeFontSize : regularFontSize)
         .attr("text-anchor", "middle")
@@ -80,8 +83,8 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
 
     svgSelection
         .select(".y-label")
-        .attr("y", dimensionHeight - currentOffset.bottom + 20)
-        .attr("x", 0)
+        .attr("y", dimensionHeight - currentOffset.bottom + 25)
+        .attr("x", 20)
         .attr("font-size", store.configStore.largeFont ? largeFontSize : regularFontSize)
         .attr("text-anchor", "start")
         .attr("alignment-baseline", "hanging")
