@@ -1,7 +1,7 @@
 import { FC, useCallback, useContext } from "react";
 import { scaleLinear, format, interpolateGreys, scaleBand } from "d3";
 import { observer } from "mobx-react";
-import { Basic_Gray, ExtraPairWidth, greyScaleRange, largeFontSize, regularFontSize } from "../../../../Presets/Constants";
+import { Basic_Gray, ExtraPairWidth, greyScaleRange, largeFontSize } from "../../../../Presets/Constants";
 import { Tooltip } from "@material-ui/core";
 import Store from "../../../../Interfaces/Store";
 

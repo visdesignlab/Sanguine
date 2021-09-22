@@ -11,7 +11,7 @@ import { Title, useStyles } from "../../../Presets/StyledComponents";
 const CurrentSelected: FC = () => {
     const styles = useStyles();
     const store = useContext(Store);
-    const { currentBrushedPatientGroup, currentSelectSet, currentOutputFilterSet, currentSelectPatientGroup } = store.state
+    const { currentBrushedPatientGroup, currentSelectSet } = store.state
 
     return (
         <Grid item className={styles.gridWidth}>

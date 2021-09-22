@@ -3,7 +3,7 @@ import { observer } from "mobx-react"
 import { FC, useCallback, useContext } from "react"
 import { CaseScaleGenerator } from "../../../HelperFunctions/Scales"
 import Store from "../../../Interfaces/Store"
-import { CaseRectWidth, DifferentialSquareWidth, largeFontSize, postop_color, preop_color, regularFontSize } from "../../../Presets/Constants"
+import { CaseRectWidth, DifferentialSquareWidth, largeFontSize, postop_color, preop_color } from "../../../Presets/Constants"
 
 type Props = {
     caseCount: number;
