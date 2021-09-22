@@ -1,4 +1,4 @@
-import { Container, FormControl, FormHelperText, Grid, IconButton, Menu, MenuItem, Switch, Tooltip } from "@material-ui/core";
+import { Container, FormControl, IconButton, Menu, MenuItem, Switch, Tooltip } from "@material-ui/core";
 import axios from "axios";
 import { sum } from "d3";
 import { observer } from "mobx-react";
