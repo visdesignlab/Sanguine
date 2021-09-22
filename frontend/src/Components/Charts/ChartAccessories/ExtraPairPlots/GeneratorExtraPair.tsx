@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import styled from "styled-components";
 import { max, format } from "d3";
 import { ExtraPairPoint } from "../../../../Interfaces/Types/DataTypes";
-import { ExtraPairPadding, ExtraPairWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, largeFontSize, OffsetDict, regularFontSize } from "../../../../Presets/Constants";
+import { Basic_Gray, ExtraPairPadding, ExtraPairWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, largeFontSize, OffsetDict, regularFontSize } from "../../../../Presets/Constants";
 import { AcronymDictionary } from "../../../../Presets/DataDict";
 import { useContext } from "react";
 import Store from "../../../../Interfaces/Store";
@@ -62,13 +62,14 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
             <Tooltip title={tooltipText}>
                 <ExtraPairText
                     x={spacing / 2}
-                    y={height - currentOffset.bottom + 20}
+                    y={height - currentOffset.bottom + 28}
                     biggerFont={store.configStore.largeFont}
                     onClick={() => {
                         store.chartStore.removeExtraPair(chartId, nameInput)
                     }}
 
-                >{labelInput}</ExtraPairText>
+                >{labelInput}
+                    <tspan fontSize={10} fill={Basic_Gray} x={spacing / 2} dy="1.2em">x</tspan></ExtraPairText>
             </Tooltip>)
 
 
@@ -144,6 +145,6 @@ export default observer(ExtraPairPlotGenerator);
 const ExtraPairText = styled(`text`) <BiggerFontProps>`
   font-size: ${props => props.biggerFont ? `${largeFontSize}px` : `${regularFontSize}px`};
   text-anchor: middle;
-  alignment-baseline:hanging;
+  alignment-baseline:bottom;
   cursor:pointer;
 `

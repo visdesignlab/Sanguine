@@ -94,7 +94,7 @@ const RegularModeMenu: FC = () => {
 
 
             <div className={useStyles().centerAlignment}>
-                <Button variant="contained" disableElevation onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true" >Add</Button>
+                <Button color="primary" variant="contained" disableElevation onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true" >Add</Button>
                 <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
                     <MenuItem onClick={() => handleClose(1)}>Dumbbell Chart</MenuItem>
                     <MenuItem onClick={() => handleClose(2)}>Scatter Plot</MenuItem>
