@@ -25,7 +25,11 @@ const ExtraPairBar: FC<Props> = ({ secondaryDataSet, dataSet, aggregationScaleDo
     }, [aggregationScaleDomain, aggregationScaleRange])
 
     const valueScale = useCallback(() => {
-        const valueScale = scaleLinear().domain([0, max(Object.values(dataSet))]).range([0, ExtraPairWidth.BarChart])
+        let maxVal = max(Object.values(dataSet))
+        if (secondaryDataSet) {
+            maxVal = max(Object.values(secondaryDataSet).concat([maxVal]))
+        }
+        const valueScale = scaleLinear().domain([0, maxVal]).range([0, ExtraPairWidth.BarChart])
         return valueScale
     }, [dataSet])
 

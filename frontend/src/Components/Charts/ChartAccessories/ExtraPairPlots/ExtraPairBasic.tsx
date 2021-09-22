@@ -1,8 +1,9 @@
-import { FC, useCallback } from "react";
+import { FC, useCallback, useContext } from "react";
 import { scaleLinear, format, interpolateGreys, scaleBand } from "d3";
 import { observer } from "mobx-react";
-import { Basic_Gray, ExtraPairWidth, greyScaleRange } from "../../../../Presets/Constants";
+import { Basic_Gray, ExtraPairWidth, greyScaleRange, largeFontSize, regularFontSize } from "../../../../Presets/Constants";
 import { Tooltip } from "@material-ui/core";
+import Store from "../../../../Interfaces/Store";
 
 interface OwnProps {
     dataSet: any[];
@@ -14,7 +15,7 @@ interface OwnProps {
 export type Props = OwnProps;
 
 const ExtraPairBasic: FC<Props> = ({ secondaryDataSet, dataSet, aggregationScaleRange, aggregationScaleDomain }: Props) => {
-
+    const store = useContext(Store);
 
     const aggregationScale = useCallback(() => {
         const domain = JSON.parse(aggregationScaleDomain).map((d: number) => d.toString());
@@ -57,7 +58,7 @@ const ExtraPairBasic: FC<Props> = ({ secondaryDataSet, dataSet, aggregationScale
                                 opacity={!isNaN(dataVal.calculated) ? 1 : 0}
                                 fill={valueScale(dataVal.calculated) > 0.4 ? "white" : "black"}
                                 alignmentBaseline={"central"}
-                                fontSize="12px"
+                                fontSize={store.configStore.largeFont ? largeFontSize : 12}
                                 textAnchor={"middle"}>{Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? "<1%" : format(".0%")(dataVal.calculated)}</text>
                         </g>
                     )
@@ -90,7 +91,7 @@ const ExtraPairBasic: FC<Props> = ({ secondaryDataSet, dataSet, aggregationScale
                                 opacity={!isNaN(dataVal.calculated) ? 1 : 0}
                                 fill={valueScale(dataVal.calculated) > 0.4 ? "white" : "black"}
                                 alignmentBaseline={"central"}
-                                fontSize="12px"
+                                fontSize={store.configStore.largeFont ? largeFontSize : 12}
                                 textAnchor={"middle"}>{Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? "<1%" : format(".0%")(dataVal.calculated)}</text>
                         </g>
                     )

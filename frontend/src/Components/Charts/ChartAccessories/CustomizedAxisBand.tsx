@@ -1,10 +1,11 @@
-import { FC, useCallback } from "react";
+import { FC, useCallback, useContext } from "react";
 import { observer } from "mobx-react";
 import {
     scaleBand
 } from "d3";
 import { Basic_Gray, Secondary_Gray } from "../../../Presets/Constants";
 import { AxisText, CustomAxisLine, CustomAxisLineBox } from "../../../Presets/StyledSVGComponents";
+import Store from "../../../Interfaces/Store";
 
 
 interface OwnProps {
@@ -17,7 +18,7 @@ export type Props = OwnProps;
 
 const CustomizedAxisBand: FC<Props> = ({ scaleDomain, scaleRange, scalePadding }) => {
 
-
+    const store = useContext(Store);
 
     const scale = useCallback(() => {
         const domain = JSON.parse(scaleDomain);
@@ -39,7 +40,7 @@ const CustomizedAxisBand: FC<Props> = ({ scaleDomain, scaleRange, scalePadding }
                 <g>
                     <CustomAxisLine x1={x1} x2={x2} />
                     <CustomAxisLineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? Secondary_Gray : Basic_Gray} />
-                    <AxisText x={x1 + 0.5 * (x2 - x1)}>{number}</AxisText>
+                    <AxisText biggerFont={store.configStore.largeFont} x={x1 + 0.5 * (x2 - x1)}>{number}</AxisText>
                 </g>
             )
 

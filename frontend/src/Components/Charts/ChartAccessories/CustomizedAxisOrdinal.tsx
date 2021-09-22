@@ -1,4 +1,4 @@
-import { FC, useCallback } from "react";
+import { FC, useCallback, useContext } from "react";
 import { observer } from "mobx-react";
 import {
     ScaleOrdinal,
@@ -6,6 +6,7 @@ import {
 } from "d3";
 import { Basic_Gray, Secondary_Gray } from "../../../Presets/Constants";
 import { AxisText, CustomAxisLine, CustomAxisLineBox } from "../../../Presets/StyledSVGComponents";
+import Store from "../../../Interfaces/Store";
 
 interface OwnProps {
     scaleDomain: string;
@@ -15,7 +16,7 @@ interface OwnProps {
 export type Props = OwnProps;
 
 const CustomizedAxisOrdinal: FC<Props> = ({ numberList, scaleDomain, scaleRange }) => {
-
+    const store = useContext(Store);
     const scale = useCallback(() => {
         const domain = JSON.parse(scaleDomain);
         const range = JSON.parse(scaleRange)
@@ -36,7 +37,7 @@ const CustomizedAxisOrdinal: FC<Props> = ({ numberList, scaleDomain, scaleRange 
                     <g>
                         <CustomAxisLine x1={x1} x2={x2} />
                         <CustomAxisLineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? Secondary_Gray : Basic_Gray} />
-                        <AxisText x={x1 + 0.5 * (x2 - x1)}>{numberOb.num}</AxisText>
+                        <AxisText biggerFont={store.configStore.largeFont} x={x1 + 0.5 * (x2 - x1)}>{numberOb.num}</AxisText>
                     </g>)
             } else { return <></> }
         })}

@@ -12,6 +12,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
             let medianData = {} as any;
             let kdeMax_temp: any = 0
             switch (variable) {
+
                 case "TOTAL_TRANS":
                     //let newDataBar = {} as any;
                     data.forEach((dataPoint: BasicAggregatedDatePoint) => {
