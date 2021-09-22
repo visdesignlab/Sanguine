@@ -102,6 +102,8 @@ export const useStyles = makeStyles((theme: Theme) =>
         },
         containerWidth: {
             width: "100%",
+            paddingLeft: "5px",
+            paddingRight: "5px",
             maxWidth: "none",
             overflow: "hidden",
             height: "100%",
