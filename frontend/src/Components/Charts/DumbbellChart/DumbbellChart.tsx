@@ -240,8 +240,9 @@ const DumbbellChart: FC<Props> = ({ data, valueToVisualize, dimensionHeight, dim
     svgSelection.select('.axes')
         .select(".x-axis")
         .attr("transform", `translate(${currentOffset.left}, 0)`)
-        .call(testLabel as any);
-
+        .call(testLabel as any)
+        .selectAll("text")
+        .attr("font-size", store.configStore.largeFont ? largeFontSize : regularFontSize);
 
 
     svgSelection

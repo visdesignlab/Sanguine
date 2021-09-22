@@ -171,6 +171,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         <div className={styles.centerAlignment}>
             <ButtonGroup>
                 <Button
+                    disableElevation
                     variant="contained"
                     color="primary"
                     disabled={!checkValidInput()}
@@ -178,6 +179,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                     Confirm
                 </Button>
                 <Button
+                    disableElevation
                     variant="contained"
                     onClick={cancelChartAddHandler} >
                     Cancel

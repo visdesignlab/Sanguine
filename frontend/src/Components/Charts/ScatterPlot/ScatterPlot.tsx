@@ -130,7 +130,9 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
         .select(".y-axis")
         .attr("transform", `translate(${currentOffset.left}, 0)`)
         .attr('display', null)
-        .call(yAxisLabel as any);
+        .call(yAxisLabel as any)
+        .selectAll("text")
+        .attr("font-size", store.configStore.largeFont ? largeFontSize : regularFontSize);
 
     svgSelection
         .select(".axes")
@@ -149,7 +151,19 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
     if (xAggregationOption === "CELL_SAVER_ML") {
         svgSelection.select('.axes')
             .select(".x-axis")
-            .call(xAxisLabel as any);
+            .call(xAxisLabel as any)
+            .selectAll("text")
+            .attr("font-size", store.configStore.largeFont ? largeFontSize : regularFontSize);
+    }
+    else {
+        svgSelection.select('.axes')
+            .select(".x-axis")
+            .selectAll(".tick")
+            .remove();
+        svgSelection.select('.axes')
+            .select(".x-axis")
+            .selectAll(".domain")
+            .remove();
     }
 
 

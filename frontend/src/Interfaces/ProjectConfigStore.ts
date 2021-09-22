@@ -1,6 +1,6 @@
 import { makeAutoObservable } from "mobx";
 import { BloodComponentOptions } from "../Presets/DataDict";
-import { changeBloodFilter, changeCostConfig, changeOutcomeFilter, changeSurgeryUrgencySelection, changeTestValueFilter, dateRangeChange, loadPreset, resetBloodFilter, resetTestValueFilter, toggleShowZero } from "./Actions/ProjectConfigActions";
+import { changeBloodFilter, changeCostConfig, changeOutcomeFilter, changeSurgeryUrgencySelection, changeTestValueFilter, clearAllFilter, dateRangeChange, loadPreset, resetBloodFilter, resetTestValueFilter, toggleShowZero } from "./Actions/ProjectConfigActions";
 import { RootStore } from "./Store";
 import { LayoutElement } from "./Types/LayoutTypes";
 
@@ -17,6 +17,7 @@ export class ProjectConfigStore {
     openStateAccessControl: boolean;
     openAboutDialog: boolean;
     openDrawer: boolean;
+    openNoteSaveSuccessMessage: boolean;
     largeFont: boolean;
     savedState: string[];
     filterRange: any;
@@ -31,6 +32,7 @@ export class ProjectConfigStore {
         this.openSaveStateDialog = false;
         this.openManageStateDialog = false;
         this.openShareUIDDialog = false;
+        this.openNoteSaveSuccessMessage = false;
         this.openDrawer = false;
         this.openCostInputModal = false;
         this.openStateAccessControl = false;
@@ -129,5 +131,8 @@ export class ProjectConfigStore {
     }
     resetAll() {
         this.provenance.reset();
+    }
+    clearAllFilter() {
+        this.provenance.apply(clearAllFilter())
     }
 }

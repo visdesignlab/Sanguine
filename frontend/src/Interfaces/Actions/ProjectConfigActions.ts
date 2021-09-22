@@ -47,3 +47,13 @@ export const changeTestValueFilter = createAction<ApplicationState, [string, num
 export const resetTestValueFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
     state.testValueFilter = defaultState.testValueFilter;
 }).setLabel("resetTestValueFilter");
+
+export const clearAllFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
+    state.currentSelectPatientGroup = [];
+    state.currentOutputFilterSet = [];
+    state.rawDateRange = defaultState.rawDateRange;
+    state.outcomeFilter = [];
+    state.testValueFilter = defaultState.testValueFilter;
+    state.bloodComponentFilter = defaultState.bloodComponentFilter;
+    state.surgeryUrgencySelection = defaultState.surgeryUrgencySelection
+}).setLabel("clearAllFilter");

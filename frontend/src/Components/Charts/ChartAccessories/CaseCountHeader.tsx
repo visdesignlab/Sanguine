@@ -3,7 +3,7 @@ import { observer } from "mobx-react"
 import { FC, useCallback, useContext } from "react"
 import { CaseScaleGenerator } from "../../../HelperFunctions/Scales"
 import Store from "../../../Interfaces/Store"
-import { CaseRectWidth, DifferentialSquareWidth, postop_color, preop_color } from "../../../Presets/Constants"
+import { CaseRectWidth, DifferentialSquareWidth, largeFontSize, postop_color, preop_color } from "../../../Presets/Constants"
 
 type Props = {
     caseCount: number;
@@ -45,7 +45,7 @@ const CaseCountHeader: FC<Props> = ({ showComparisonRect, isFalseComparison, cas
             y={yPos + 0.5 * height}
             alignmentBaseline={"central"}
             textAnchor={"middle"}
-            fontSize="12px">
+            fontSize={store.configStore.largeFont ? largeFontSize : 12}>
             {showZero ? caseCount : (caseCount - zeroCaseNum)}
         </text>
     </g>)

@@ -1,4 +1,4 @@
-import { format, interpolateGreys, interpolateReds, ScaleBand, scaleBand } from "d3";
+import { format, interpolateGreys, interpolateReds, ScaleBand } from "d3";
 import { observer } from "mobx-react";
 import { FC, useCallback, useContext } from "react";
 import { HeatmapColorScale, HeatmapGreyScale, ValueScaleGeneratorFromDomainRange } from "../../../HelperFunctions/Scales";

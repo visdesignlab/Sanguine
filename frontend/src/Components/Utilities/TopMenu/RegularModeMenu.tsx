@@ -48,31 +48,35 @@ const RegularModeMenu: FC = () => {
 
 
         <Toolbar className={styles.toolbarPaddingControl}>
-            <IconButton
-                edge="start"
-                onClick={handleDrawerOpen}
-                color="inherit"
-                aria-label="open drawer"
-            >
-                <MenuIcon />
-            </IconButton>
+            <Tooltip title={<div>  <p className={styles.tooltipFont}>Filter</p></div>}>
+
+                <IconButton
+                    edge="start"
+                    onClick={handleDrawerOpen}
+                    color="inherit"
+                    aria-label="open drawer"
+                >
+                    <MenuIcon />
+                </IconButton>
+            </Tooltip>
 
 
-            <div className={useStyles().centerAlignment}>
-                <Button variant="contained" disableElevation onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true" >Add</Button>
-                <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
-                    <MenuItem onClick={() => handleClose(1)}>Dumbbell Chart</MenuItem>
-                    <MenuItem onClick={() => handleClose(2)}>Scatter Plot</MenuItem>
-                    <MenuItem onClick={() => handleClose(3)}>Heat Map</MenuItem>
-                    <MenuItem onClick={() => handleClose(0)}>Cost and Saving Chart</MenuItem>
-                </Menu>
-            </div>
 
 
             <a href="https://healthcare.utah.edu" target="_blank">
                 <img
                     className={styles.img}
                     src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/u-of-u-health-social.png" />
+            </a>
+            <a href="https://arup.utah.edu" target="_blank">
+                <img
+                    className={styles.img}
+                    src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/ARUP-logo.png" />
+            </a>
+            <a href="https://vdl.sci.utah.edu" target="_blank">
+                <img
+                    className={styles.img}
+                    src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/vdl.png" />
             </a>
 
             <Typography className={styles.title} variant="h6" noWrap>
@@ -86,46 +90,56 @@ const RegularModeMenu: FC = () => {
                  // onClick={() => { store!.previewMode = true }} 
             </div> */}
 
-           
-            <a href="https://arup.utah.edu" target="_blank">
-                <img
-                    className={styles.img}
-                    src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/ARUP-logo.png" />
-            </a>
-            <a href="https://vdl.sci.utah.edu" target="_blank">
-                <img
-                    className={styles.img}
-                    src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/vdl.png" />
-            </a>
 
+
+
+            <div className={useStyles().centerAlignment}>
+                <Button color="primary" variant="contained" disableElevation onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true" >Add</Button>
+                <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
+                    <MenuItem onClick={() => handleClose(1)}>Dumbbell Chart</MenuItem>
+                    <MenuItem onClick={() => handleClose(2)}>Scatter Plot</MenuItem>
+                    <MenuItem onClick={() => handleClose(3)}>Heat Map</MenuItem>
+                    <MenuItem onClick={() => handleClose(0)}>Cost and Saving Chart</MenuItem>
+                </Menu>
+            </div>
 
             <StateManagementSuite />
 
-            <Tooltip title={<div>  <p className={styles.tooltipFont}>Clear All</p></div>}>
-                <IconButton disabled={store.isAtRoot} onClick={() => { store.configStore.resetAll() }}>
+
+            <IconButton disabled={store.isAtRoot} onClick={() => { store.configStore.resetAll() }}>
+                <Tooltip title={<div>  <p className={styles.tooltipFont}>Clear All</p></div>}>
                     <ClearAllIcon />
-                </IconButton>
-            </Tooltip>
+                </Tooltip>
+            </IconButton>
+
 
             <UndoRedoButtons />
 
             <IconButton onClick={() => { store.configStore.largeFont = !store.configStore.largeFont }} >
-                <FormatSizeIcon className={store.configStore.largeFont ? `` : styles.manualDisable} />
+                <Tooltip title={<div>  <p className={styles.tooltipFont}>Change Font Size</p></div>}>
+                    <FormatSizeIcon className={store.configStore.largeFont ? `` : styles.manualDisable} />
+                </Tooltip>
             </IconButton>
 
             <IconButton onClick={() => { store.configStore.openAboutDialog = true; }}>
-                <InfoOutlinedIcon />
+                <Tooltip title={<div>  <p className={styles.tooltipFont}>About</p></div>}>
+                    <InfoOutlinedIcon />
+                </Tooltip>
             </IconButton>
             <InfoDialog />
 
             <a href="https://github.com/visdesignlab/Sanguine/issues" target="_blank" rel="noopener noreferrer">
                 <IconButton size="small">
-                    <BugReportOutlinedIcon />
+                    <Tooltip title={<div>  <p className={styles.tooltipFont}>Report a Bug</p></div>}>
+                        <BugReportOutlinedIcon />
+                    </Tooltip>
                 </IconButton>
             </a>
 
             <IconButton onClick={() => { logoutHandler() }} >
-                <ExitToAppIcon />
+                <Tooltip title={<div>  <p className={styles.tooltipFont}>Exit</p></div>}>
+                    <ExitToAppIcon />
+                </Tooltip>
             </IconButton>
             <FilterBoard />
         </Toolbar>

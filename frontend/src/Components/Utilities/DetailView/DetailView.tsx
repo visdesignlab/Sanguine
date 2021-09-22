@@ -1,4 +1,4 @@
-import { Container, Divider } from "@material-ui/core";
+import { Divider } from "@material-ui/core";
 import { observer } from "mobx-react";
 import { FC, useContext } from "react";
 import Store from "../../../Interfaces/Store";
@@ -9,8 +9,7 @@ import CaseList from "./CaseList";
 const DetailView: FC = () => {
 
     const store = useContext(Store);
-    const { currentBrushedPatientGroup } = store.state
-    const styles = useStyles();
+    const { currentBrushedPatientGroup } = store.state;
 
     return (
         <div
