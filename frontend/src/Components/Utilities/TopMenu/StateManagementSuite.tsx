@@ -10,6 +10,7 @@ import SaveStateModal from "../../Modals/SaveStateModal";
 const StateManagementSuite: FC = () => {
     const styles = useStyles();
     const store = useContext(Store);
+
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
 

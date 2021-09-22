@@ -1,9 +1,11 @@
 import { Container, Divider, Drawer, Grid, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Tooltip } from "@material-ui/core";
 import DateFnsUtils from '@date-io/date-fns';
+import CloseIcon from '@material-ui/icons/Close';
 import { MuiPickersUtilsProvider, KeyboardDatePicker } from "@material-ui/pickers";
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import { observer } from "mobx-react";
 import { FC, useContext, useEffect, useState } from "react";
+import { AcronymDictionary, OutcomeOptions } from "../../../Presets/DataDict"
 import Store from "../../../Interfaces/Store";
 import ComponentRangePicker from "./ComponentRangePicker";
 import { Title, useStyles } from "../../../Presets/StyledComponents";
@@ -12,13 +14,14 @@ import ClearAllIcon from '@material-ui/icons/ClearAll';
 import { defaultState } from "../../../Interfaces/DefaultState";
 import OutcomeChipGroup from "./OutcomeChipGroup";
 import SurgeryUrgencyChipGroup from "./SurgeryUrgencyChipGroup";
+import { SelectSet } from "../../../Interfaces/Types/SelectionTypes";
 
 
 const FilterBoard: FC = () => {
 
     const store = useContext(Store);
     const styles = useStyles()
-    const { rawDateRange, outcomeFilter, surgeryUrgencySelection, bloodComponentFilter, testValueFilter } = store.state;
+    const { rawDateRange, outcomeFilter, surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet, bloodComponentFilter, testValueFilter } = store.state;
     const [beginDate, setBeginDate] = useState<number | null>(rawDateRange[0]);
     const [endDate, setEndDate] = useState<number | null>(rawDateRange[1]);
 
@@ -142,6 +145,46 @@ const FilterBoard: FC = () => {
                 </ListItemSecondaryAction>
             </ListItem>
             <SurgeryUrgencyChipGroup />
+        </List>
+
+        <List dense>
+            <ListItem>
+                <ListItemText primary={<Title>Selection Filter</Title>} />
+                <ListItemSecondaryAction>
+                    <Tooltip title="Clear All">
+                        <IconButton onClick={() => { store.selectionStore.clearSelectionFilter() }}
+                            disabled={currentSelectPatientGroup.length === 0 && currentOutputFilterSet.length === 0}>
+                            <ClearAllIcon />
+                        </IconButton>
+                    </Tooltip>
+                </ListItemSecondaryAction>
+            </ListItem>
+            {currentSelectPatientGroup.length > 0 ? (
+                <ListItem key="PatientgroupSelected">
+                    <ListItemText primary="Cases Filtered" secondary={currentSelectPatientGroup.length} />
+                    <ListItemSecondaryAction>
+
+                        <IconButton onClick={() => { store.selectionStore.updateSelectedPatientGroup([]) }}>
+                            <Tooltip title="Remove">
+                                <CloseIcon />
+                            </Tooltip>
+                        </IconButton>
+
+                    </ListItemSecondaryAction>
+                </ListItem>) : <></>}
+            {currentOutputFilterSet.map((selectSet: SelectSet) => {
+                return (<ListItem key={`${selectSet.setName}selected`}>
+                    <ListItemText key={`${selectSet.setName}selected`} primary={AcronymDictionary[selectSet.setName] ? AcronymDictionary[selectSet.setName] : selectSet.setName}
+                        secondary={selectSet.setValues.sort().join(', ')} />
+                    <ListItemSecondaryAction key={`${selectSet.setName}selected`}>
+                        <IconButton key={`${selectSet.setName}selected`} onClick={() => { store.selectionStore.removeFilter(selectSet.setName) }}>
+                            <Tooltip title="Remove">
+                                <CloseIcon key={`${selectSet.setName}selected`} />
+                            </Tooltip>
+                        </IconButton>
+                    </ListItemSecondaryAction>
+                </ListItem>)
+            })}
         </List>
 
         <List dense>

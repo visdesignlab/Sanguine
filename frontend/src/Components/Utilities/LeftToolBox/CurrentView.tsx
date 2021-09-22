@@ -7,7 +7,7 @@ import Store from "../../../Interfaces/Store"
 import { AcronymDictionary, OutcomeOptions } from "../../../Presets/DataDict"
 import { Title, useStyles } from "../../../Presets/StyledComponents"
 import Container from "@material-ui/core/Container";
-import CloseIcon from '@material-ui/icons/Close';
+
 import List from "@material-ui/core/List";
 import { Box, Chip, ListItem, ListItemSecondaryAction, ListItemText, Select, Switch, Grid, IconButton, Tooltip } from "@material-ui/core";
 import { DropdownGenerator } from "../../../HelperFunctions/DropdownGenerator"
@@ -52,7 +52,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
     return (
         <Grid item className={styles.gridWidth} >
-            <Container className={styles.containerWidth} style={{ height: "40vh" }}>
+            <Container className={styles.containerWidth} style={{ height: "35vh" }}>
                 <List dense >
                     <ListItem style={{ textAlign: "left" }}>
                         <Title>Current View</Title>
@@ -64,17 +64,12 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
                     </ListItem>
 
-                    <ListItem key="Outcomes">
-                        <ListItemText primary="Outcomes / Interventions"
-                            secondary={outcomeFilter.length > 0 ? (outcomeFilter.map((d, i) => `${AcronymDictionary[d] ? AcronymDictionary[d] : d} ${(i + 1) !== outcomeFilter.length ? "AND " : ""}`)) : "NONE"} />
-                    </ListItem>
-
-                    <ListItem key="Procedure Types">
+                    {/* <ListItem key="Procedure Types">
                         <ListItemText primary="Surgery Urgency" secondary={
                             `${surgeryUrgencySelection[0] ? "Urgent, " : ""}
                             ${surgeryUrgencySelection[1] ? "Elective, " : ""}
                             ${surgeryUrgencySelection[2] ? "Emergent" : ""}`} />
-                    </ListItem>
+                    </ListItem> */}
                     {/* TODO change this into "toggle axis" instead of "show zero" */}
                     <ListItem key="Show Zero">
                         <ListItemText primary="Show Zero Transfused"
@@ -110,26 +105,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                     <ListItem key="SurgeryList">
                         <ListItemText primary="Procedure" secondary={generateSurgery()} />
                     </ListItem>
-                    {currentSelectPatientGroup.length > 0 ? (
-                        <ListItem key="PatientgroupSelected">
-                            <ListItemText primary="Cases Filtered" secondary={currentSelectPatientGroup.length} />
-                            <ListItemSecondaryAction>
-                                <IconButton onClick={() => { store.selectionStore.updateSelectedPatientGroup([]) }}>
-                                    <CloseIcon />
-                                </IconButton>
-                            </ListItemSecondaryAction>
-                        </ListItem>) : <></>}
-                    {currentOutputFilterSet.map((selectSet: SelectSet) => {
-                        return (<ListItem key={`${selectSet.setName}selected`}>
-                            <ListItemText key={`${selectSet.setName}selected`} primary={AcronymDictionary[selectSet.setName] ? AcronymDictionary[selectSet.setName] : selectSet.setName}
-                                secondary={selectSet.setValues.sort().join(', ')} />
-                            <ListItemSecondaryAction key={`${selectSet.setName}selected`}>
-                                <IconButton key={`${selectSet.setName}selected`} onClick={() => { store.selectionStore.removeFilter(selectSet.setName) }}>
-                                    <CloseIcon key={`${selectSet.setName}selected`} />
-                                </IconButton>
-                            </ListItemSecondaryAction>
-                        </ListItem>)
-                    })}
+
                 </List>
             </Container>
         </Grid >
