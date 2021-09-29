@@ -28,6 +28,8 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
                 setMaxCaseCount(tempMaxCaseCount)
                 tempSurgeryList.sort((a: any, b: any) => b.count - a.count)
                 stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList)
+            }).catch(r => {
+                console.log("failed to fetch required data")
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
