@@ -1,4 +1,4 @@
-import { Menu, MenuItem, Button, AppBar, Toolbar, Typography, IconButton, ButtonGroup, Tooltip } from "@material-ui/core";
+import { Menu, MenuItem, Button, AppBar, Toolbar, Typography, IconButton, ButtonGroup, Tooltip, ListItemIcon } from "@material-ui/core";
 import { isObservable } from "mobx";
 import { observer } from "mobx-react";
 import { useContext, useState, FC } from "react";
@@ -8,6 +8,7 @@ import BugReportOutlinedIcon from '@material-ui/icons/BugReportOutlined';
 import { useStyles } from "../../../Presets/StyledComponents";
 import MenuIcon from '@material-ui/icons/Menu';
 import AddModeTopMenu from "./AddModeTopMenu";
+import MoreVertIcon from '@material-ui/icons/MoreVert';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import UndoRedoButtons from "./UndoRedoButtons";
 import FormatSizeIcon from '@material-ui/icons/FormatSize';
@@ -16,12 +17,14 @@ import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import InfoDialog from "../../Modals/InfoDialog";
 import DeleteIcon from '@material-ui/icons/Delete';
 import FilterBoard from "../FilterInterface/FilterBoard";
+import MoreVert from "@material-ui/icons/MoreVert";
 
 const RegularModeMenu: FC = () => {
     const store = useContext(Store)
     const styles = useStyles();
     const [addingChartType, setAddingChartType] = useState(-1)
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [anchorMore, setAnchorMore] = useState<null | HTMLElement>(null);
 
     const addModeButtonHandler = (chartType: number) => {
         setAddingChartType(chartType)
@@ -31,6 +34,10 @@ const RegularModeMenu: FC = () => {
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
     };
+    const handleMoreClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorMore(event.currentTarget);
+    };
+    const handleMoreClose = () => { setAnchorMore(null) }
 
     const handleClose = (input?: number) => {
         setAnchorEl(null);
@@ -121,26 +128,35 @@ const RegularModeMenu: FC = () => {
                 </Tooltip>
             </IconButton>
 
-            <IconButton onClick={() => { store.configStore.openAboutDialog = true; }}>
-                <Tooltip title={<div>  <p className={styles.tooltipFont}>About</p></div>}>
-                    <InfoOutlinedIcon />
+            <IconButton onClick={handleMoreClick} >
+                <Tooltip title={<div>  <p className={styles.tooltipFont}>More</p></div>}>
+                    <MoreVert />
                 </Tooltip>
             </IconButton>
+            <Menu anchorEl={anchorMore} open={Boolean(anchorMore)} onClose={handleMoreClose} >
+
+                <a href="https://github.com/visdesignlab/Sanguine/issues" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: " black" }}>
+                    <MenuItem >
+                        <ListItemIcon>
+                            <BugReportOutlinedIcon />
+                        </ListItemIcon>
+                        Report a Bug
+                    </MenuItem>
+                </a>
+                <MenuItem onClick={() => { store.configStore.openAboutDialog = true; }}>
+                    <ListItemIcon>
+                        <InfoOutlinedIcon />
+                    </ListItemIcon>
+                    About
+                </MenuItem>
+                <MenuItem onClick={() => { logoutHandler() }}>
+                    <ListItemIcon>
+                        <ExitToAppIcon />
+                    </ListItemIcon>
+                    Log Out
+                </MenuItem>
+            </Menu>
             <InfoDialog />
-
-            <a href="https://github.com/visdesignlab/Sanguine/issues" target="_blank" rel="noopener noreferrer">
-                <IconButton size="small">
-                    <Tooltip title={<div>  <p className={styles.tooltipFont}>Report a Bug</p></div>}>
-                        <BugReportOutlinedIcon />
-                    </Tooltip>
-                </IconButton>
-            </a>
-
-            <IconButton onClick={() => { logoutHandler() }} >
-                <Tooltip title={<div>  <p className={styles.tooltipFont}>Exit</p></div>}>
-                    <ExitToAppIcon />
-                </Tooltip>
-            </IconButton>
             <FilterBoard />
         </Toolbar>
 
