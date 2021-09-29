@@ -14,7 +14,7 @@ import FormatSizeIcon from '@material-ui/icons/FormatSize';
 import StateManagementSuite from "./StateManagementSuite";
 import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import InfoDialog from "../../Modals/InfoDialog";
-import ClearAllIcon from '@material-ui/icons/ClearAll';
+import DeleteIcon from '@material-ui/icons/Delete';
 import FilterBoard from "../FilterInterface/FilterBoard";
 
 const RegularModeMenu: FC = () => {
@@ -94,7 +94,7 @@ const RegularModeMenu: FC = () => {
 
 
             <div className={useStyles().centerAlignment}>
-                <Button color="primary" variant="contained" disableElevation onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true" >Add</Button>
+                <Button color="primary" variant="contained" disableElevation onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true" >Add Chart</Button>
                 <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
                     <MenuItem onClick={() => handleClose(1)}>Dumbbell Chart</MenuItem>
                     <MenuItem onClick={() => handleClose(2)}>Scatter Plot</MenuItem>
@@ -106,9 +106,9 @@ const RegularModeMenu: FC = () => {
             <StateManagementSuite />
 
 
-            <IconButton disabled={store.isAtRoot} onClick={() => { store.configStore.resetAll() }}>
-                <Tooltip title={<div>  <p className={styles.tooltipFont}>Clear All</p></div>}>
-                    <ClearAllIcon />
+            <IconButton disabled={store.isAtRoot} onClick={() => { store.chartStore.clearAllCharts() }}>
+                <Tooltip title={<div>  <p className={styles.tooltipFont}>Clear All Charts</p></div>}>
+                    <DeleteIcon />
                 </Tooltip>
             </IconButton>
 

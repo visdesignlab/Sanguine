@@ -129,9 +129,7 @@ export class ProjectConfigStore {
     resetTestValueFilter() {
         this.provenance.apply(resetTestValueFilter());
     }
-    resetAll() {
-        this.provenance.reset();
-    }
+
     clearAllFilter() {
         this.provenance.apply(clearAllFilter())
     }

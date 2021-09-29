@@ -42,6 +42,8 @@ const StateManagementSuite: FC = () => {
                     const resultList = result.map((d: any[]) => d)
                     store.configStore.savedState = resultList;
                 }
+            }).catch(r => {
+                console.log("failed to fetch states")
             })
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
