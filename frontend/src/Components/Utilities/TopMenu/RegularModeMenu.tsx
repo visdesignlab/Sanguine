@@ -8,7 +8,7 @@ import BugReportOutlinedIcon from '@material-ui/icons/BugReportOutlined';
 import { useStyles } from "../../../Presets/StyledComponents";
 import MenuIcon from '@material-ui/icons/Menu';
 import AddModeTopMenu from "./AddModeTopMenu";
-import MoreVertIcon from '@material-ui/icons/MoreVert';
+import VpnKeyIcon from '@material-ui/icons/VpnKey';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import UndoRedoButtons from "./UndoRedoButtons";
 import FormatSizeIcon from '@material-ui/icons/FormatSize';
@@ -148,6 +148,12 @@ const RegularModeMenu: FC = () => {
                         <InfoOutlinedIcon />
                     </ListItemIcon>
                     About
+                </MenuItem>
+                <MenuItem onClick={() => { store.configStore.privateMode = !store.configStore.privateMode }} className={store.configStore.privateMode ? `` : styles.manualDisable}>
+                    <ListItemIcon>
+                        <VpnKeyIcon className={store.configStore.privateMode ? `` : styles.manualDisable} />
+                    </ListItemIcon>
+                    Private Mode
                 </MenuItem>
                 <MenuItem onClick={() => { logoutHandler() }}>
                     <ListItemIcon>

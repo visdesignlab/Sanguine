@@ -21,12 +21,14 @@ export class ProjectConfigStore {
     largeFont: boolean;
     savedState: string[];
     filterRange: any;
+    privateMode: boolean;
 
     constructor(rootstore: RootStore) {
         this.rootStore = rootstore;
         this._isLoggedIn = !(process.env.REACT_APP_REQUIRE_LOGIN === "true");
         this._dataLoading = true;
         this.largeFont = false;
+        this.privateMode = false;
         this._dataLoadingFailed = false;
         this._topMenuBarAddMode = false;
         this.openSaveStateDialog = false;
