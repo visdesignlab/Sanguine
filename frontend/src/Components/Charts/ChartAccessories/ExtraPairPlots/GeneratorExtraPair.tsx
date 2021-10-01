@@ -62,14 +62,15 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
             <Tooltip title={tooltipText}>
                 <ExtraPairText
                     x={spacing / 2}
-                    y={height - currentOffset.bottom + 28}
+                    y={height - currentOffset.bottom + 25}
                     biggerFont={store.configStore.largeFont}
                     onClick={() => {
                         store.chartStore.removeExtraPair(chartId, nameInput)
                     }}
-
-                >{labelInput}
-                    <tspan fontSize={10} fill={Basic_Gray} x={spacing / 2} dy="1.2em">x</tspan></ExtraPairText>
+                >
+                    {labelInput}
+                    <RemoveTSpan x={spacing / 2} dy="-0.5em" >x</RemoveTSpan>
+                </ExtraPairText>
             </Tooltip>)
 
 
@@ -142,9 +143,22 @@ export default observer(ExtraPairPlotGenerator);
 
 
 
+
+const RemoveTSpan = styled(`tspan`)`
+    font-size:10px;
+    fill:${Basic_Gray};
+    opacity:0;
+     &:hover{
+        opacity:1;
+     }
+`
+
 const ExtraPairText = styled(`text`) <BiggerFontProps>`
   font-size: ${props => props.biggerFont ? `${largeFontSize}px` : `${regularFontSize}px`};
   text-anchor: middle;
-  alignment-baseline:bottom;
+  alignment-baseline:hanging;
   cursor:pointer;
+    &:hover ${RemoveTSpan} {
+        opacity:1;
+  }
 `
