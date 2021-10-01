@@ -1,10 +1,10 @@
-import { Container } from "@material-ui/core"
-import Divider from "@material-ui/core/Divider"
-import Grid from "@material-ui/core/Grid"
+import { Grid, Tabs, Divider, Tab } from "@material-ui/core"
 import { max } from "d3"
 import { observer } from "mobx-react"
 import { FC, useEffect, useState } from "react"
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker"
+import { useStyles } from "../../../Presets/StyledComponents"
+import FilterBoard from "../FilterInterface/FilterBoard"
 import CurrentSelected from "./CurrentSelected"
 import CurrentView from "./CurrentView"
 import SurgeryListViewer from "./SurgeryListViewer"
@@ -16,6 +16,11 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
 
     const [surgeryList, setSurgeryList] = useState<any[]>([]);
     const [maxCaseCount, setMaxCaseCount] = useState(0);
+    const [tabValue, setTabValue] = useState(0);
+    const styles = useStyles();
+    const handleChange = (event: any, newValue: any) => {
+        setTabValue(newValue);
+    };
 
     useEffect(() => {
         fetch(`${process.env.REACT_APP_QUERY_URL}get_attributes`)
@@ -34,17 +39,32 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    return (<Grid container spacing={2}>
+    return (
 
-        <CurrentView totalCaseNum={totalCaseNum} />
-        <Divider orientation="horizontal" style={{ width: '98%', }} />
-        <CurrentSelected />
-        <Divider orientation="horizontal" style={{ width: '98%' }} />
-        <SurgerySearchBar surgeryList={surgeryList} />
-        <Divider orientation="horizontal" style={{ width: '98%' }} />
-        <SurgeryListViewer surgeryList={surgeryList} maxCaseCount={maxCaseCount} />
-
-    </Grid>)
+        <Grid spacing={2}>
+            <Tabs value={tabValue}
+                onChange={handleChange}
+                indicatorColor="primary"
+                textColor="primary"
+                centered>
+                <Tab label="Current View" />
+                <Tab label="Filter" />
+            </Tabs>
+            <div hidden={tabValue !== 0}>
+                <Grid container >
+                    <CurrentView totalCaseNum={totalCaseNum} />
+                    <Divider orientation="horizontal" style={{ width: '98%', }} />
+                    <CurrentSelected />
+                    <Divider orientation="horizontal" style={{ width: '98%' }} />
+                    <SurgerySearchBar surgeryList={surgeryList} />
+                    <Divider orientation="horizontal" style={{ width: '98%' }} />
+                    <SurgeryListViewer surgeryList={surgeryList} maxCaseCount={maxCaseCount} />
+                </Grid>
+            </div>
+            <div hidden={tabValue !== 1} style={{ height: "85vh" }}>
+                <FilterBoard />
+            </div>
+        </Grid>)
 
 }
 

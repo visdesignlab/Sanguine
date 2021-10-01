@@ -22,12 +22,11 @@ const SurgerySearchBar: FC<Props> = ({ surgeryList }: Props) => {
     }
     return (
         <Grid item className={styles.gridWidth}>
-            <Container>
+            <Container style={{ paddingTop: "10px", paddingBottom: "10px" }}>
                 <Autocomplete
                     options={surgeryList}
                     onChange={(e, v) => { searchHandler(v) }}
                     value={input}
-
                     getOptionLabel={(option) => option.value || ""}
                     renderInput={(params) =>
                         <TextField {...params} label="Search Procedure" variant="outlined" />}

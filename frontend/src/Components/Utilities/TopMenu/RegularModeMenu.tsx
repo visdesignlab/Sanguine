@@ -6,7 +6,6 @@ import Store from "../../../Interfaces/Store";
 import { logoutHandler } from "../../../Interfaces/UserManagement";
 import BugReportOutlinedIcon from '@material-ui/icons/BugReportOutlined';
 import { useStyles } from "../../../Presets/StyledComponents";
-import MenuIcon from '@material-ui/icons/Menu';
 import AddModeTopMenu from "./AddModeTopMenu";
 import VpnKeyIcon from '@material-ui/icons/VpnKey';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
@@ -16,7 +15,6 @@ import StateManagementSuite from "./StateManagementSuite";
 import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import InfoDialog from "../../Modals/InfoDialog";
 import DeleteIcon from '@material-ui/icons/Delete';
-import FilterBoard from "../FilterInterface/FilterBoard";
 import MoreVert from "@material-ui/icons/MoreVert";
 
 const RegularModeMenu: FC = () => {
@@ -45,9 +43,7 @@ const RegularModeMenu: FC = () => {
             addModeButtonHandler(input)
         }
     };
-    const handleDrawerOpen = () => {
-        store.configStore.openDrawer = true;
-    };
+
 
 
     const regularMenu = (
@@ -55,17 +51,7 @@ const RegularModeMenu: FC = () => {
 
 
         <Toolbar className={styles.toolbarPaddingControl}>
-            <Tooltip title={<div>  <p className={styles.tooltipFont}>Filter</p></div>}>
 
-                <IconButton
-                    edge="start"
-                    onClick={handleDrawerOpen}
-                    color="inherit"
-                    aria-label="open drawer"
-                >
-                    <MenuIcon />
-                </IconButton>
-            </Tooltip>
 
 
 
@@ -163,7 +149,7 @@ const RegularModeMenu: FC = () => {
                 </MenuItem>
             </Menu>
             <InfoDialog />
-            <FilterBoard />
+
         </Toolbar>
 
     )
