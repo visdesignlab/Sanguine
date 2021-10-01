@@ -2,7 +2,6 @@ import { Button, Container, IconButton, List, ListItem, ListItemSecondaryAction,
 import DateFnsUtils from '@date-io/date-fns';
 import CloseIcon from '@material-ui/icons/Close';
 import { MuiPickersUtilsProvider, KeyboardDatePicker } from "@material-ui/pickers";
-import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import { observer } from "mobx-react";
 import { FC, useContext, useState } from "react";
 import { AcronymDictionary } from "../../../Presets/DataDict"
