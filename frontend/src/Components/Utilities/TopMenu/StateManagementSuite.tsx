@@ -57,6 +57,7 @@ const StateManagementSuite: FC = () => {
         <div className={useStyles().centerAlignment}>
             <Button variant="outlined" onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true"  >States</Button>
             <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
+                <MenuItem>Update State?</MenuItem>
                 <NestedMenuItem parentMenuOpen={Boolean(anchorEl)} label="Load Saved State">
                     {store.configStore.savedState.length > 0 ? store.configStore.savedState.map((d) => {
                         return (
