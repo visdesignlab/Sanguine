@@ -122,20 +122,20 @@ const RegularModeMenu: FC = () => {
             <Menu anchorEl={anchorMore} open={Boolean(anchorMore)} onClose={handleMoreClose} >
 
                 <a href="https://github.com/visdesignlab/Sanguine/issues" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: " black" }}>
-                    <MenuItem >
+                    <MenuItem onClick={handleMoreClose}>
                         <ListItemIcon>
                             <BugReportOutlinedIcon />
                         </ListItemIcon>
                         Report a Bug
                     </MenuItem>
                 </a>
-                <MenuItem onClick={() => { store.configStore.openAboutDialog = true; }}>
+                <MenuItem onClick={() => { handleMoreClose(); store.configStore.openAboutDialog = true; }}>
                     <ListItemIcon>
                         <InfoOutlinedIcon />
                     </ListItemIcon>
                     About
                 </MenuItem>
-                <MenuItem onClick={() => { store.configStore.privateMode = !store.configStore.privateMode }} className={store.configStore.privateMode ? `` : styles.manualDisable}>
+                <MenuItem onClick={() => { handleMoreClose(); store.configStore.privateMode = !store.configStore.privateMode }} className={store.configStore.privateMode ? `` : styles.manualDisable}>
                     <ListItemIcon>
                         <VpnKeyIcon className={store.configStore.privateMode ? `` : styles.manualDisable} />
                     </ListItemIcon>
