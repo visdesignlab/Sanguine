@@ -2,6 +2,7 @@ import { Menu, MenuItem, Button, AppBar, Toolbar, Typography, IconButton, Button
 import { isObservable } from "mobx";
 import { observer } from "mobx-react";
 import { useContext, useState, FC } from "react";
+import InsertChartIcon from '@material-ui/icons/InsertChart';
 import Store from "../../../Interfaces/Store";
 import { logoutHandler } from "../../../Interfaces/UserManagement";
 import BugReportOutlinedIcon from '@material-ui/icons/BugReportOutlined';
@@ -87,7 +88,7 @@ const RegularModeMenu: FC = () => {
 
 
             <div className={useStyles().centerAlignment}>
-                <Button color="primary" variant="contained" disableElevation onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true" >Add Chart</Button>
+                <Button startIcon={<InsertChartIcon />} color="primary" variant="contained" disableElevation onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true" >Add Chart</Button>
                 <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
                     <MenuItem onClick={() => handleClose(1)}>Dumbbell Chart</MenuItem>
                     <MenuItem onClick={() => handleClose(2)}>Scatter Plot</MenuItem>
