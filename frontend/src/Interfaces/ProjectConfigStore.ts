@@ -16,7 +16,7 @@ export class ProjectConfigStore {
     openCostInputModal: boolean;
     openStateAccessControl: boolean;
     openAboutDialog: boolean;
-    openDrawer: boolean;
+
     openNoteSaveSuccessMessage: boolean;
     largeFont: boolean;
     savedState: string[];
@@ -35,7 +35,7 @@ export class ProjectConfigStore {
         this.openManageStateDialog = false;
         this.openShareUIDDialog = false;
         this.openNoteSaveSuccessMessage = false;
-        this.openDrawer = false;
+
         this.openCostInputModal = false;
         this.openStateAccessControl = false;
         this.openAboutDialog = false;
