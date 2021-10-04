@@ -23,7 +23,6 @@ const CaseList: FC = () => {
 
                     <IconButton edge="end"
                         onClick={() => {
-                            store.selectionStore.setCurrentSelectPatient(null);
                             store.selectionStore.updateBrush([])
                         }}>
                         <CloseIcon />
@@ -36,7 +35,10 @@ const CaseList: FC = () => {
                     <CaseItem button key={d.CASE_ID}
                         isSelected={(currentSelectPatient && currentSelectPatient.CASE_ID === d.CASE_ID) || false}
                         onClick={() => { store.selectionStore.setCurrentSelectPatient(d) }}>
-                        <ListItemText primary={d.CASE_ID} />
+                        <ListItemText primary={
+                            store.configStore.privateMode ? d.CASE_ID : "----------"
+
+                        } />
                     </CaseItem>
                 )
             })}

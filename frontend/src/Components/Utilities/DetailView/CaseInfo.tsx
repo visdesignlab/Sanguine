@@ -19,7 +19,7 @@ const CaseInfo: FC = () => {
         let result = [];
         if (individualInfo) {
             for (let [key, val] of Object.entries(individualInfo)) {
-                if (!HIPAA_Sensitive.has(key)) {
+                if (!HIPAA_Sensitive.has(key) || store.configStore.privateMode) {
                     result.push(
                         <ListItem>
                             <ListItemText primary={AcronymDictionary[key] ? AcronymDictionary[key] : key} secondary={val as string} />

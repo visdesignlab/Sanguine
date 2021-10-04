@@ -2,7 +2,6 @@ import { Divider } from "@material-ui/core";
 import { observer } from "mobx-react";
 import { FC, useContext } from "react";
 import Store from "../../../Interfaces/Store";
-import { useStyles } from "../../../Presets/StyledComponents";
 import CaseInfo from "./CaseInfo";
 import CaseList from "./CaseList";
 

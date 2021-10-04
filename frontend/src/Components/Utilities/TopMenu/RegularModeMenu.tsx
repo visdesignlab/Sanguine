@@ -1,27 +1,29 @@
-import { Menu, MenuItem, Button, AppBar, Toolbar, Typography, IconButton, ButtonGroup, Tooltip } from "@material-ui/core";
+import { Menu, MenuItem, Button, AppBar, Toolbar, Typography, IconButton, ButtonGroup, Tooltip, ListItemIcon } from "@material-ui/core";
 import { isObservable } from "mobx";
 import { observer } from "mobx-react";
 import { useContext, useState, FC } from "react";
+import InsertChartIcon from '@material-ui/icons/InsertChart';
 import Store from "../../../Interfaces/Store";
 import { logoutHandler } from "../../../Interfaces/UserManagement";
 import BugReportOutlinedIcon from '@material-ui/icons/BugReportOutlined';
 import { useStyles } from "../../../Presets/StyledComponents";
-import MenuIcon from '@material-ui/icons/Menu';
 import AddModeTopMenu from "./AddModeTopMenu";
+import VpnKeyIcon from '@material-ui/icons/VpnKey';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import UndoRedoButtons from "./UndoRedoButtons";
 import FormatSizeIcon from '@material-ui/icons/FormatSize';
 import StateManagementSuite from "./StateManagementSuite";
 import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import InfoDialog from "../../Modals/InfoDialog";
-import ClearAllIcon from '@material-ui/icons/ClearAll';
-import FilterBoard from "../FilterInterface/FilterBoard";
+import DeleteIcon from '@material-ui/icons/Delete';
+import MoreVert from "@material-ui/icons/MoreVert";
 
 const RegularModeMenu: FC = () => {
     const store = useContext(Store)
     const styles = useStyles();
     const [addingChartType, setAddingChartType] = useState(-1)
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [anchorMore, setAnchorMore] = useState<null | HTMLElement>(null);
 
     const addModeButtonHandler = (chartType: number) => {
         setAddingChartType(chartType)
@@ -31,6 +33,10 @@ const RegularModeMenu: FC = () => {
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
     };
+    const handleMoreClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorMore(event.currentTarget);
+    };
+    const handleMoreClose = () => { setAnchorMore(null) }
 
     const handleClose = (input?: number) => {
         setAnchorEl(null);
@@ -38,9 +44,7 @@ const RegularModeMenu: FC = () => {
             addModeButtonHandler(input)
         }
     };
-    const handleDrawerOpen = () => {
-        store.configStore.openDrawer = true;
-    };
+
 
 
     const regularMenu = (
@@ -48,17 +52,7 @@ const RegularModeMenu: FC = () => {
 
 
         <Toolbar className={styles.toolbarPaddingControl}>
-            <Tooltip title={<div>  <p className={styles.tooltipFont}>Filter</p></div>}>
 
-                <IconButton
-                    edge="start"
-                    onClick={handleDrawerOpen}
-                    color="inherit"
-                    aria-label="open drawer"
-                >
-                    <MenuIcon />
-                </IconButton>
-            </Tooltip>
 
 
 
@@ -94,7 +88,7 @@ const RegularModeMenu: FC = () => {
 
 
             <div className={useStyles().centerAlignment}>
-                <Button color="primary" variant="contained" disableElevation onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true" >Add</Button>
+                <Button startIcon={<InsertChartIcon />} color="primary" variant="contained" disableElevation onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true" >Add Chart</Button>
                 <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
                     <MenuItem onClick={() => handleClose(1)}>Dumbbell Chart</MenuItem>
                     <MenuItem onClick={() => handleClose(2)}>Scatter Plot</MenuItem>
@@ -106,9 +100,9 @@ const RegularModeMenu: FC = () => {
             <StateManagementSuite />
 
 
-            <IconButton disabled={store.isAtRoot} onClick={() => { store.configStore.resetAll() }}>
-                <Tooltip title={<div>  <p className={styles.tooltipFont}>Clear All</p></div>}>
-                    <ClearAllIcon />
+            <IconButton disabled={store.isAtRoot} onClick={() => { store.chartStore.clearAllCharts() }}>
+                <Tooltip title={<div>  <p className={styles.tooltipFont}>Clear All Charts</p></div>}>
+                    <DeleteIcon />
                 </Tooltip>
             </IconButton>
 
@@ -121,27 +115,42 @@ const RegularModeMenu: FC = () => {
                 </Tooltip>
             </IconButton>
 
-            <IconButton onClick={() => { store.configStore.openAboutDialog = true; }}>
-                <Tooltip title={<div>  <p className={styles.tooltipFont}>About</p></div>}>
-                    <InfoOutlinedIcon />
+            <IconButton onClick={handleMoreClick} >
+                <Tooltip title={<div>  <p className={styles.tooltipFont}>More</p></div>}>
+                    <MoreVert />
                 </Tooltip>
             </IconButton>
+            <Menu anchorEl={anchorMore} open={Boolean(anchorMore)} onClose={handleMoreClose} >
+
+                <a href="https://github.com/visdesignlab/Sanguine/issues" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: " black" }}>
+                    <MenuItem onClick={handleMoreClose}>
+                        <ListItemIcon>
+                            <BugReportOutlinedIcon />
+                        </ListItemIcon>
+                        Report a Bug
+                    </MenuItem>
+                </a>
+                <MenuItem onClick={() => { handleMoreClose(); store.configStore.openAboutDialog = true; }}>
+                    <ListItemIcon>
+                        <InfoOutlinedIcon />
+                    </ListItemIcon>
+                    About
+                </MenuItem>
+                <MenuItem onClick={() => { handleMoreClose(); store.configStore.privateMode = !store.configStore.privateMode }} className={store.configStore.privateMode ? `` : styles.manualDisable}>
+                    <ListItemIcon>
+                        <VpnKeyIcon className={store.configStore.privateMode ? `` : styles.manualDisable} />
+                    </ListItemIcon>
+                    Private Mode
+                </MenuItem>
+                <MenuItem onClick={() => { logoutHandler() }}>
+                    <ListItemIcon>
+                        <ExitToAppIcon />
+                    </ListItemIcon>
+                    Log Out
+                </MenuItem>
+            </Menu>
             <InfoDialog />
 
-            <a href="https://github.com/visdesignlab/Sanguine/issues" target="_blank" rel="noopener noreferrer">
-                <IconButton size="small">
-                    <Tooltip title={<div>  <p className={styles.tooltipFont}>Report a Bug</p></div>}>
-                        <BugReportOutlinedIcon />
-                    </Tooltip>
-                </IconButton>
-            </a>
-
-            <IconButton onClick={() => { logoutHandler() }} >
-                <Tooltip title={<div>  <p className={styles.tooltipFont}>Exit</p></div>}>
-                    <ExitToAppIcon />
-                </Tooltip>
-            </IconButton>
-            <FilterBoard />
         </Toolbar>
 
     )
