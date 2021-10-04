@@ -45,9 +45,9 @@ const Dashboard: FC = () => {
                     <DataRetrieval />
                 </> : <></>}
 
-            <Snackbar open={store.configStore.openNoteSaveSuccessMessage} autoHideDuration={SnackBarCloseTime} onClose={() => { store.configStore.openNoteSaveSuccessMessage = false }}>
-                <Alert onClose={() => { store.configStore.openNoteSaveSuccessMessage = false }} severity="success">
-                    Note saved locally!
+            <Snackbar open={store.configStore.openSnackBar} autoHideDuration={SnackBarCloseTime} onClose={() => { store.configStore.openSnackBar = false }}>
+                <Alert onClose={() => { store.configStore.openSnackBar = false }} severity={store.configStore.snackBarIsError ? "error" : "success"}>
+                    {store.configStore.snackBarMessage}
                 </Alert>
             </Snackbar>
         </div>

@@ -31,7 +31,9 @@ const AnnotationForm: FC<Props> = ({ annotationText, chartI }: Props) => {
             onBlur={() => {
                 if (formInput !== annotationText) {
                     store.chartStore.changeNotation(chartI, formInput);
-                    store.configStore.openNoteSaveSuccessMessage = true;
+                    store.configStore.openSnackBar = true;
+                    store.configStore.snackBarMessage = "Note Saved Locally."
+                    store.configStore.snackBarIsError = false;
                 }
             }}
             onChange={(e) => { setFormInput(e.target.value) }}
