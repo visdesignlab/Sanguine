@@ -22,6 +22,9 @@ export const updateProcedureSelection = createAction<ApplicationState, [string, 
 
 export const updateBrushPatient = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
     state.currentBrushedPatientGroup = caseList;
+    if (caseList.length === 0) {
+        state.currentSelectPatient = null;
+    }
 }).setLabel("updateBrush")
 
 export const setCurrentSelectPatient = createAction<ApplicationState, [SingleCasePoint | null], ActionEvents>((state, newCase) => {

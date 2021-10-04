@@ -23,7 +23,6 @@ const CaseList: FC = () => {
 
                     <IconButton edge="end"
                         onClick={() => {
-                            store.selectionStore.setCurrentSelectPatient(null);
                             store.selectionStore.updateBrush([])
                         }}>
                         <CloseIcon />
