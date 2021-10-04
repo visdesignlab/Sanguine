@@ -1,4 +1,4 @@
-import { Container, FormGroup, FormLabel, Grid, ListItem, ListItemText, Slider } from "@material-ui/core";
+import { ListItem, ListItemText, Slider } from "@material-ui/core";
 import { observer } from "mobx-react";
 import { FC, useState, useContext, useEffect } from "react";
 import useDeepCompareEffect from "use-deep-compare-effect";
@@ -33,14 +33,12 @@ const ComponentRangePicker: FC<Props> = ({ label, isTestValue }: Props) => {
                 setRangeValue([bloodComponentFilter[label][0], bloodComponentFilter[label][1]])
             }
         }
-
-
     }, [store.configStore.filterRange, bloodComponentFilter, testValueFilter])
 
     return (
         <ListItem>
             <ListItemText primary={AcronymDictionary[label] ? AcronymDictionary[label] : label} secondary={<Slider
-                max={(store.configStore.filterRange as any)[label]}
+                max={store.configStore.filterRange[label]}
                 min={0}
                 valueLabelDisplay="auto"
                 aria-labelledby="range-slider"
