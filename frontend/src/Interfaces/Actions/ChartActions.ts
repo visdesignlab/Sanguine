@@ -72,4 +72,11 @@ export const changeChart = createAction<ApplicationState, [string, string, strin
         }
         return d;
     })
-}).setLabel("changeChart")
+}).setLabel("changeChart");
+
+export const clearAllCharts = createAction<ApplicationState, [], ActionEvents>((state) => {
+    state.layoutArray = [];
+    state.currentBrushedPatientGroup = [];
+    state.currentSelectSet = [];
+    state.currentSelectPatient = null;
+}).setLabel("clearAllCharts")

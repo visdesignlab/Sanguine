@@ -22,8 +22,6 @@ export class RootStore {
         this.provenance = initProvenance<ApplicationState, ActionEvents>(
             defaultState
         )
-
-
         this.provenance.done();
         this.configStore = new ProjectConfigStore(this);
         this.chartStore = new ChartStore(this);

@@ -85,16 +85,21 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
                 })
 
                 //     !!!!!!!this is the code of checking brushed patient
+
                 if (caseList.length === 0) {
                     updateBrushLoc(null)
                     brushDef.move(svgSelection.select(".brush-layer"), null)
-                    store.selectionStore.updateBrush([])
+                    if (store.state.currentBrushedPatientGroup.length > 0) {
+                        store.selectionStore.updateBrush([])
+                    }
                 } else {
                     store.selectionStore.updateBrush(caseList)
                 }
             }
             else {
-                store.selectionStore.updateBrush([])
+                if (store.state.currentBrushedPatientGroup.length > 0) {
+                    store.selectionStore.updateBrush([])
+                }
             }
 
         }
