@@ -18,7 +18,6 @@ const CaseInfo: FC = () => {
     const generate_List_Items = () => {
         let result = [];
         if (individualInfo) {
-            console.log(individualInfo)
             for (let [key, val] of Object.entries(individualInfo)) {
                 if (!HIPAA_Sensitive.has(key) || store.configStore.privateMode) {
                     result.push(
