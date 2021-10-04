@@ -124,10 +124,7 @@ const FilterBoard: FC = () => {
                                 }} />
                         </MuiPickersUtilsProvider>} />
                 </ListItem>
-                {/* </List>
 
-
-        <List dense> */}
                 <ListItem>
                     <ListItemText primary={<Title>
                         Outcome / Intervention Filter
@@ -146,9 +143,7 @@ const FilterBoard: FC = () => {
                     </ListItemSecondaryAction>
                 </ListItem>
                 <OutcomeChipGroup />
-                {/* </List>
 
-        <List dense> */}
                 <ListItem>
                     <ListItemText primary={<Title>Surgery Urgency Filter</Title>} />
                     <ListItemSecondaryAction>
@@ -165,9 +160,7 @@ const FilterBoard: FC = () => {
                     </ListItemSecondaryAction>
                 </ListItem>
                 <SurgeryUrgencyChipGroup />
-                {/* </List>
 
-        <List dense> */}
                 <ListItem>
                     <ListItemText primary={<Title>Selection Filter</Title>} />
                     <ListItemSecondaryAction>
@@ -211,9 +204,7 @@ const FilterBoard: FC = () => {
                         </ListItem>)
                     })
                 }
-                {/* </List>
 
-        <List dense> */}
                 <ListItem>
                     <ListItemText primary={<Title>Blood Component Filter</Title>} />
                     <ListItemSecondaryAction>
@@ -232,8 +223,7 @@ const FilterBoard: FC = () => {
                         return (<ComponentRangePicker label={d.key} key={d.key} />)
                     })
                 }
-                {/* </List>
-        <List dense> */}
+
                 <ListItem>
                     <ListItemText primary={<Title>Test Value Filter</Title>} />
                     <ListItemSecondaryAction>
