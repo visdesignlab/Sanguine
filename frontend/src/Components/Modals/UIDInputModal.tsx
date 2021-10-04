@@ -1,10 +1,8 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormGroup, InputAdornment, Snackbar, Switch, TextField } from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormGroup, InputAdornment, Switch, TextField } from "@material-ui/core";
 import { observer } from "mobx-react";
 import { FC, useContext, useState } from "react";
 import Store from "../../Interfaces/Store";
 import { simulateAPIClick } from "../../Interfaces/UserManagement";
-import { SnackBarCloseTime } from "../../Presets/Constants";
 
 type Props = {
     stateName: string;
@@ -13,9 +11,6 @@ const UIDInputModal: FC<Props> = ({ stateName }: Props) => {
     const store = useContext(Store);
     const [uIDInput, setUIDInput] = useState("");
     const [writeAccess, setWriteAccess] = useState(false);
-    const [errorMessage, setErrorMessage] = useState("");
-    const [openErrorMessage, setOpenErrorMessage] = useState(false);
-    const [openSuccessMessage, setOpenSuccess] = useState(false)
 
     const shareState = () => {
         const csrftoken = simulateAPIClick()
@@ -33,21 +28,27 @@ const UIDInputModal: FC<Props> = ({ stateName }: Props) => {
         })
             .then(response => {
                 if (response.status === 200) {
-                    setOpenSuccess(true)
+
+                    store.configStore.snackBarIsError = false;
+                    store.configStore.snackBarMessage = "State shared successfully!";
+                    store.configStore.openSnackBar = true;
+
+
                     setUIDInput("");
                     setWriteAccess(false);
-                    setErrorMessage("");
-                    setOpenErrorMessage(false);
                     store.configStore.openShareUIDDialog = false;
                 } else {
                     response.text().then(error => {
-                        setErrorMessage(response.statusText);
-                        setOpenErrorMessage(true)
+                        store.configStore.snackBarIsError = true;
+                        store.configStore.snackBarMessage = `An error occurred: ${response.statusText}`
+                        store.configStore.openSnackBar = true;
                         console.error('There has been a problem with your fetch operation:', response.statusText);
                     })
                 }
             }).catch(error => {
-                setErrorMessage(error)
+                store.configStore.snackBarIsError = true;
+                store.configStore.snackBarMessage = `An error occurred: ${error}`
+                store.configStore.openSnackBar = true;
                 console.error('There has been a problem with your fetch operation:', error);
             })
 
@@ -100,16 +101,7 @@ const UIDInputModal: FC<Props> = ({ stateName }: Props) => {
                 </DialogActions>
             </DialogContent>
         </Dialog>
-        <Snackbar open={openErrorMessage} autoHideDuration={SnackBarCloseTime} onClose={() => { setOpenErrorMessage(false) }}>
-            <Alert onClose={() => { setOpenErrorMessage(false); setErrorMessage("") }} severity="error">
-                An error occured: {errorMessage}
-            </Alert>
-        </Snackbar>
-        <Snackbar open={openSuccessMessage} autoHideDuration={SnackBarCloseTime} onClose={() => { setOpenSuccess(false) }}>
-            <Alert onClose={() => { setOpenSuccess(false); }} severity="success">
-                State saved!
-            </Alert>
-        </Snackbar>
+
     </div>)
 }
 

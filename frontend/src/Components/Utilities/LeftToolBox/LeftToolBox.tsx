@@ -3,7 +3,6 @@ import { max } from "d3"
 import { observer } from "mobx-react"
 import { FC, useEffect, useState } from "react"
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker"
-import { useStyles } from "../../../Presets/StyledComponents"
 import FilterBoard from "../FilterInterface/FilterBoard"
 import CurrentSelected from "./CurrentSelected"
 import CurrentView from "./CurrentView"
@@ -17,7 +16,6 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
     const [surgeryList, setSurgeryList] = useState<any[]>([]);
     const [maxCaseCount, setMaxCaseCount] = useState(0);
     const [tabValue, setTabValue] = useState(0);
-    const styles = useStyles();
     const handleChange = (event: any, newValue: any) => {
         setTabValue(newValue);
     };

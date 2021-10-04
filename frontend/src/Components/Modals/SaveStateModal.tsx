@@ -1,30 +1,22 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormGroup, Radio, RadioGroup, Snackbar, TextField } from "@material-ui/core";
-import { Alert } from "@material-ui/lab";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormGroup, Radio, RadioGroup, TextField } from "@material-ui/core";
 import { observer } from "mobx-react";
-import { FC, useState, useContext } from "react";
+import { FC, useState, useContext, useEffect } from "react";
 import Store from "../../Interfaces/Store";
 import { simulateAPIClick } from "../../Interfaces/UserManagement";
-import { SnackBarCloseTime } from "../../Presets/Constants";
 
 
 const SaveStateModal: FC = () => {
     const store = useContext(Store);
     const [stateName, setStateName] = useState("")
-    const [errorMessage, setErrorMessage] = useState("")
-    const [openErrorMessage, setOpenError] = useState(false);
-    const [openSuccessMessage, setOpenSuccessMessage] = useState(false);
     const [publicAccess, setPublicAccess] = useState(false);
 
+    useEffect(() => {
+        setStateName(store.configStore.stateToUpdate);
+    }, [store.configStore.stateToUpdate])
 
-
-    const saveState = () => {
+    const saveNewState = () => {
         const csrftoken = simulateAPIClick()
-        if (store.configStore.checkIfInSavedState(stateName)) {
-            // setErrorMessage("State name duplicate. Please rename.")
-            // setOpenError(true);
-
-            // Keep these for now. For the next PR i will make "udpate state" into a new button, so not allowing duplicate state name in "save state" dialog.
-
+        if (store.configStore.stateToUpdate) {
             fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
                 method: `PUT`,
                 credentials: "include",
@@ -35,19 +27,27 @@ const SaveStateModal: FC = () => {
                     "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
                     "Access-Control-Allow-Credentials": "true",
                 },
-                body: JSON.stringify({ old_name: stateName, new_name: stateName, new_definition: store.provenance.exportState(false) })
+                body: JSON.stringify({ old_name: store.configStore.stateToUpdate, new_name: stateName, new_definition: store.provenance.exportState(false), new_public: publicAccess })
             }).then(response => {
+
                 if (response.status === 200) {
-                    onSuccess(false);
+                    store.configStore.stateToUpdate = "";
+                    onSuccess();
                 } else {
                     response.text().then(error => {
                         onFail(response.statusText);
                     })
                 }
             }).catch(error => {
-                onFail(error.toString())
+                onFail(error.toString());
             })
-        } else {
+        }
+        else if (store.configStore.checkIfInSavedState(stateName)) {
+            store.configStore.snackBarIsError = true;
+            store.configStore.snackBarMessage = "State name duplicate. Please rename.";
+            store.configStore.openSnackBar = true;
+        }
+        else {
             fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
                 method: 'POST',
                 credentials: "include",
@@ -61,11 +61,10 @@ const SaveStateModal: FC = () => {
                 body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&definition=${store.provenance.exportState(false)}&public=${publicAccess.toString()}`
             }).then(response => {
                 if (response.status === 200) {
-                    onSuccess(true);
+                    onSuccess();
                 } else {
                     response.text().then(error => {
                         onFail(response.statusText);
-
                     })
                 }
             }).catch(error => {
@@ -75,21 +74,19 @@ const SaveStateModal: FC = () => {
 
     }
 
-    const onSuccess = (newState: boolean) => {
+    const onSuccess = () => {
         store.configStore.openSaveStateDialog = false;
-        if (newState) {
-            store.configStore.addNewState(stateName);
-        }
-        setOpenSuccessMessage(true);
+        store.configStore.snackBarIsError = false;
+        store.configStore.snackBarMessage = "State saved!";
+        store.configStore.openSnackBar = true;
         setStateName("")
-        setErrorMessage("")
         setPublicAccess(false);
-        setOpenError(false)
     }
 
     const onFail = (errorMessage: string) => {
-        setErrorMessage(errorMessage)
-        setOpenError(true)
+        store.configStore.snackBarIsError = true;
+        store.configStore.snackBarMessage = `An error occurred: ${errorMessage}`;
+        store.configStore.openSnackBar = true;
         console.error('There has been a problem with your fetch operation:', errorMessage);
     }
 
@@ -125,20 +122,10 @@ const SaveStateModal: FC = () => {
 
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => { store.configStore.openSaveStateDialog = false }}>Cancel</Button>
-                <Button color="primary" disabled={stateName.length === 0} onClick={() => { saveState() }}>Confirm</Button>
+                <Button onClick={() => { store.configStore.stateToUpdate = ""; store.configStore.openSaveStateDialog = false }}>Cancel</Button>
+                <Button color="primary" disabled={stateName.length === 0} onClick={() => { saveNewState() }}>Confirm</Button>
             </DialogActions>
         </Dialog>
-        <Snackbar open={openErrorMessage} autoHideDuration={SnackBarCloseTime} onClose={() => { setOpenError(false) }}>
-            <Alert onClose={() => { setOpenError(false); setErrorMessage("") }} severity="error">
-                An error occured: {errorMessage}
-            </Alert>
-        </Snackbar>
-        <Snackbar open={openSuccessMessage} autoHideDuration={SnackBarCloseTime} onClose={() => { setOpenSuccessMessage(false) }}>
-            <Alert onClose={() => { setOpenSuccessMessage(false); }} severity="success">
-                State saved!
-            </Alert>
-        </Snackbar>
     </div>
 }
 
