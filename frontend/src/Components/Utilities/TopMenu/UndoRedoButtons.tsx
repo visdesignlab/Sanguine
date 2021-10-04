@@ -13,14 +13,14 @@ const UndoRedoButtons: FC = () => {
 
     return <ButtonGroup size="small">
 
-        <IconButton disabled={store.isAtRoot} onClick={() => { store.provenance.undo() }}>
+        <IconButton disabled={store.isAtRoot} onClick={() => { store.provenance.undo(); }}>
             <Tooltip title={<div>  <p className={styles.tooltipFont}>Undo</p></div>}>
                 <UndoIcon />
             </Tooltip>
         </IconButton>
 
 
-        <IconButton disabled={store.isAtLatest} onClick={() => { store.provenance.redo() }}>
+        <IconButton disabled={store.isAtLatest} onClick={() => { store.provenance.redo(); }}>
             <Tooltip title={<div>  <p className={styles.tooltipFont}>Redo</p></div>}>
                 <RedoIcon />
             </Tooltip>

@@ -1,5 +1,5 @@
 import { makeAutoObservable } from "mobx";
-import { addExtraPair, addNewChart, changeChart, changeNotation, onLayoutChange, removeChart, removeExtraPair } from "./Actions/ChartActions";
+import { addExtraPair, addNewChart, changeChart, changeNotation, clearAllCharts, onLayoutChange, removeChart, removeExtraPair } from "./Actions/ChartActions";
 import { RootStore } from "./Store";
 import { LayoutElement } from "./Types/LayoutTypes";
 
@@ -65,5 +65,9 @@ export class ChartStore {
 
     onLayoutChange(gridLayout: ReactGridLayout.Layout[]) {
         this.provenance.apply(onLayoutChange(gridLayout))
+    }
+
+    clearAllCharts() {
+        this.provenance.apply(clearAllCharts());
     }
 }

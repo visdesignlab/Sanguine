@@ -42,6 +42,8 @@ const StateManagementSuite: FC = () => {
                     const resultList = result.map((d: any[]) => d)
                     store.configStore.savedState = resultList;
                 }
+            }).catch(r => {
+                console.log("failed to fetch states")
             })
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -54,7 +56,7 @@ const StateManagementSuite: FC = () => {
     }
 
     return (
-        <div className={useStyles().centerAlignment}>
+        <div className={styles.centerAlignment}>
             <Button variant="outlined" onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true"  >States</Button>
             <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
                 <MenuItem>Update State?</MenuItem>
