@@ -32,7 +32,7 @@ const ExtraPairButtons: FC<Props> = ({ extraPairLength, chartId, disbleButton }:
 
     return (
         <>
-            <IconButton size="small" disabled={extraPairLength >= ExtraPairLimit || disbleButton} onClick={handleClick}>
+            <IconButton color="primary" size="small" disabled={extraPairLength >= ExtraPairLimit || disbleButton} onClick={handleClick}>
                 <InsertChartIcon />
             </IconButton>
             <Menu anchorEl={anchorEl} open={open}

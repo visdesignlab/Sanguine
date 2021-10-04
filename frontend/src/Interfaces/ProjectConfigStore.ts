@@ -16,24 +16,26 @@ export class ProjectConfigStore {
     openCostInputModal: boolean;
     openStateAccessControl: boolean;
     openAboutDialog: boolean;
-    openDrawer: boolean;
+
     openNoteSaveSuccessMessage: boolean;
     largeFont: boolean;
     savedState: string[];
     filterRange: any;
+    privateMode: boolean;
 
     constructor(rootstore: RootStore) {
         this.rootStore = rootstore;
         this._isLoggedIn = !(process.env.REACT_APP_REQUIRE_LOGIN === "true");
         this._dataLoading = true;
         this.largeFont = false;
+        this.privateMode = false;
         this._dataLoadingFailed = false;
         this._topMenuBarAddMode = false;
         this.openSaveStateDialog = false;
         this.openManageStateDialog = false;
         this.openShareUIDDialog = false;
         this.openNoteSaveSuccessMessage = false;
-        this.openDrawer = false;
+
         this.openCostInputModal = false;
         this.openStateAccessControl = false;
         this.openAboutDialog = false;
@@ -129,9 +131,7 @@ export class ProjectConfigStore {
     resetTestValueFilter() {
         this.provenance.apply(resetTestValueFilter());
     }
-    resetAll() {
-        this.provenance.reset();
-    }
+
     clearAllFilter() {
         this.provenance.apply(clearAllFilter())
     }
