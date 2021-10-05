@@ -49,7 +49,7 @@ export class ProjectConfigStore {
         this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0, PREOP_HGB: 0, POSTOP_HGB: 0 };
         this.stateToUpdate = ""
 
-        this.savedState = []
+        this.savedState = ["asdfkjhasdhahahahahahahlongstate"]
         makeAutoObservable(this)
     }
 
