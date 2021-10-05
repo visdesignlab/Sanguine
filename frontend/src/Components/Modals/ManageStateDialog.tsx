@@ -69,7 +69,7 @@ const ManageStateDialog: FC = () => {
                 <List>{
                     store.configStore.savedState.map((d) => {
                         return (<ListItem>
-                            <ListItemText primary={d} />
+                            <ListItemText primary={d} style={{ maxWidth: "375px" }} />
                             <ListItemSecondaryAction>
                                 <IconButton onClick={() => {
                                     store.configStore.openManageStateDialog = false;
@@ -80,7 +80,6 @@ const ManageStateDialog: FC = () => {
                                         <EditIcon />
                                     </Tooltip>
                                 </IconButton>
-
                                 <IconButton onClick={() => { changeStateAccess(d) }}>
                                     <Tooltip title={<div>  <p className={styles.tooltipFont}>Manage Sharing</p></div>}>
                                         <ShareIcon />
