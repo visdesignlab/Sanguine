@@ -12,7 +12,11 @@ const SaveStateModal: FC = () => {
 
     useEffect(() => {
         setStateName(store.configStore.stateToUpdate);
-    }, [store.configStore.stateToUpdate])
+    }, [store.configStore.stateToUpdate]);
+
+    function capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    };
 
     const saveNewState = () => {
         const csrftoken = simulateAPIClick()
@@ -27,7 +31,7 @@ const SaveStateModal: FC = () => {
                     "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
                     "Access-Control-Allow-Credentials": "true",
                 },
-                body: JSON.stringify({ old_name: store.configStore.stateToUpdate, new_name: stateName, new_definition: store.provenance.exportState(false), new_public: publicAccess })
+                body: JSON.stringify({ old_name: store.configStore.stateToUpdate, new_name: stateName, new_definition: store.provenance.exportState(false), new_public: capitalizeFirstLetter(publicAccess.toString()) })
             }).then(response => {
 
                 if (response.status === 200) {
