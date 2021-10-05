@@ -133,7 +133,7 @@ const RegularModeMenu: FC = () => {
             <StateManagementSuite />
 
 
-            <IconButton disabled={store.isAtRoot} onClick={() => { store.chartStore.clearAllCharts() }}>
+            <IconButton disabled={store.isAtRoot} onClick={() => { store.chartStore.clearAllCharts(); store.configStore.loadedStateName = "" }}>
                 <Tooltip title={<div>  <p className={styles.tooltipFont}>Clear All Charts</p></div>}>
                     <DeleteIcon />
                 </Tooltip>
