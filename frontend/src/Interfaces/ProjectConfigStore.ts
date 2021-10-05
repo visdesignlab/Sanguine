@@ -16,12 +16,15 @@ export class ProjectConfigStore {
     openCostInputModal: boolean;
     openStateAccessControl: boolean;
     openAboutDialog: boolean;
-
-    openNoteSaveSuccessMessage: boolean;
+    loadedStateName: string;
+    openSnackBar: boolean;
+    snackBarMessage: string;
     largeFont: boolean;
     savedState: string[];
     filterRange: any;
+    snackBarIsError: boolean;
     privateMode: boolean;
+    stateToUpdate: string;
 
     constructor(rootstore: RootStore) {
         this.rootStore = rootstore;
@@ -34,12 +37,18 @@ export class ProjectConfigStore {
         this.openSaveStateDialog = false;
         this.openManageStateDialog = false;
         this.openShareUIDDialog = false;
-        this.openNoteSaveSuccessMessage = false;
 
+        this.openSnackBar = false;
+        this.snackBarMessage = "";
+        this.snackBarIsError = false;
+
+        this.loadedStateName = ""
         this.openCostInputModal = false;
         this.openStateAccessControl = false;
         this.openAboutDialog = false;
         this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0, PREOP_HGB: 0, POSTOP_HGB: 0 };
+        this.stateToUpdate = ""
+
         this.savedState = []
         makeAutoObservable(this)
     }

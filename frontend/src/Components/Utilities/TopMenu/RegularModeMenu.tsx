@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 import { useContext, useState, FC } from "react";
 import InsertChartIcon from '@material-ui/icons/InsertChart';
 import Store from "../../../Interfaces/Store";
-import { logoutHandler } from "../../../Interfaces/UserManagement";
+import { logoutHandler, simulateAPIClick } from "../../../Interfaces/UserManagement";
 import BugReportOutlinedIcon from '@material-ui/icons/BugReportOutlined';
 import { useStyles } from "../../../Presets/StyledComponents";
 import AddModeTopMenu from "./AddModeTopMenu";
@@ -14,6 +14,7 @@ import UndoRedoButtons from "./UndoRedoButtons";
 import FormatSizeIcon from '@material-ui/icons/FormatSize';
 import StateManagementSuite from "./StateManagementSuite";
 import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
+import SaveIcon from '@material-ui/icons/Save';
 import InfoDialog from "../../Modals/InfoDialog";
 import DeleteIcon from '@material-ui/icons/Delete';
 import MoreVert from "@material-ui/icons/MoreVert";
@@ -46,15 +47,47 @@ const RegularModeMenu: FC = () => {
     };
 
 
+    const updateState = () => {
+        const csrftoken = simulateAPIClick()
+        fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
+            method: `PUT`,
+            credentials: "include",
+            headers: {
+                'Accept': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrftoken || '',
+                "Access-Control-Allow-Origin": 'https://bloodvis.chpc.utah.edu',
+                "Access-Control-Allow-Credentials": "true",
+            },
+            body: JSON.stringify({ old_name: store.configStore.loadedStateName, new_name: store.configStore.loadedStateName, new_definition: store.provenance.exportState(false) })
+        }).then(response => {
+            if (response.status === 200) {
+                store.configStore.snackBarIsError = false;
+                store.configStore.snackBarMessage = "State updated!";
+                store.configStore.openSnackBar = true;
+            } else {
+                response.text().then(error => {
+                    store.configStore.snackBarIsError = true;
+                    store.configStore.snackBarMessage = `An error occurred: ${response.statusText}`;
+                    store.configStore.openSnackBar = true;
+                })
+            }
+        }).catch(error => {
+            store.configStore.snackBarIsError = true;
+            store.configStore.snackBarMessage = `An error occurred: ${error}`;
+            store.configStore.openSnackBar = true;
+        })
+    }
+
+
+
+
 
     const regularMenu = (
 
 
 
         <Toolbar className={styles.toolbarPaddingControl}>
-
-
-
 
 
             <a href="https://healthcare.utah.edu" target="_blank">
@@ -100,9 +133,15 @@ const RegularModeMenu: FC = () => {
             <StateManagementSuite />
 
 
-            <IconButton disabled={store.isAtRoot} onClick={() => { store.chartStore.clearAllCharts() }}>
+            <IconButton disabled={store.isAtRoot} onClick={() => { store.chartStore.clearAllCharts(); store.configStore.loadedStateName = "" }}>
                 <Tooltip title={<div>  <p className={styles.tooltipFont}>Clear All Charts</p></div>}>
                     <DeleteIcon />
+                </Tooltip>
+            </IconButton>
+
+            <IconButton disabled={store.configStore.loadedStateName.length === 0} onClick={updateState}>
+                <Tooltip title={<div>  <p className={styles.tooltipFont}>{`Save to ${store.configStore.loadedStateName}`} </p></div>}>
+                    <SaveIcon />
                 </Tooltip>
             </IconButton>
 

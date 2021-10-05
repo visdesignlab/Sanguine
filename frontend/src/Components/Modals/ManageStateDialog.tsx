@@ -1,20 +1,18 @@
-import { Button, DialogActions, DialogContent, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Snackbar } from "@material-ui/core";
+import { Button, DialogActions, DialogContent, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Tooltip } from "@material-ui/core";
 import { Dialog, DialogTitle } from "@material-ui/core";
 import { FC, useContext, useState } from "react";
 import Store from "../../Interfaces/Store";
 import DeleteIcon from '@material-ui/icons/Delete';
+import ShareIcon from '@material-ui/icons/Share';
 import EditIcon from '@material-ui/icons/Edit';
 import { simulateAPIClick } from "../../Interfaces/UserManagement";
-import { Alert } from "@material-ui/lab";
 import { observer } from "mobx-react";
-import { SnackBarCloseTime } from "../../Presets/Constants";
 import StateAccessControl from "./StateAccessControl";
+import { useStyles } from "../../Presets/StyledComponents";
 
 const ManageStateDialog: FC = () => {
     const store = useContext(Store);
-    const [errorMessage, setErrorMessage] = useState("")
-    const [openErrorMessage, setOpenError] = useState(false);
-    const [openSuccess, setOpenSuccess] = useState(false);
+    const styles = useStyles();
     const [stateNameToChange, setStateNameToChange] = useState("")
 
 
@@ -33,19 +31,25 @@ const ManageStateDialog: FC = () => {
             body: JSON.stringify({ name: stateName })
         }).then(response => {
             if (response.status === 200) {
+                if (store.configStore.loadedStateName === stateName) {
+                    store.configStore.loadedStateName = "";
+                }
                 store.configStore.savedState = store.configStore.savedState.filter(d => d !== stateName)
-                setOpenSuccess(true);
-                setErrorMessage("")
+                store.configStore.snackBarIsError = false;
+                store.configStore.snackBarMessage = "Deletion succeed."
+                store.configStore.openSnackBar = true;
             } else {
                 response.text().then(error => {
-                    setErrorMessage(response.statusText);
-                    setOpenError(true)
+                    store.configStore.snackBarMessage = `An error occurred: ${response.statusText}`;
+                    store.configStore.snackBarIsError = true;
+                    store.configStore.openSnackBar = true;
                     console.error('There has been a problem with your fetch operation:', response.statusText);
                 })
             }
         }).catch(error => {
-            setErrorMessage(error)
-            setOpenError(true)
+            store.configStore.snackBarMessage = `An error occurred: ${error}`;
+            store.configStore.snackBarIsError = true;
+            store.configStore.openSnackBar = true;
             console.error('There has been a problem with your fetch operation:', error);
         })
     }
@@ -56,21 +60,37 @@ const ManageStateDialog: FC = () => {
         setStateNameToChange(stateName);
     }
 
-    return (<div>
-        <Dialog open={store.configStore.openManageStateDialog}>
+    // const changeStateName = ()
+
+    return (<div >
+        <Dialog open={store.configStore.openManageStateDialog} fullWidth>
             <DialogTitle>Manage Saved States</DialogTitle>
-            <DialogContent style={{ maxHeight: "300px" }}>
+            <DialogContent >
                 <List>{
                     store.configStore.savedState.map((d) => {
                         return (<ListItem>
-                            <ListItemText primary={d} />
+                            <ListItemText primary={d} style={{ maxWidth: "375px" }} />
                             <ListItemSecondaryAction>
-                                <IconButton onClick={() => { removeState(d) }}>
-                                    <DeleteIcon />
+                                <IconButton onClick={() => {
+                                    store.configStore.openManageStateDialog = false;
+                                    store.configStore.stateToUpdate = d;
+                                    store.configStore.openSaveStateDialog = true;
+                                }}>
+                                    <Tooltip title={<div>  <p className={styles.tooltipFont}>Edit State</p></div>}>
+                                        <EditIcon />
+                                    </Tooltip>
                                 </IconButton>
                                 <IconButton onClick={() => { changeStateAccess(d) }}>
-                                    <EditIcon />
+                                    <Tooltip title={<div>  <p className={styles.tooltipFont}>Manage Sharing</p></div>}>
+                                        <ShareIcon />
+                                    </Tooltip>
                                 </IconButton>
+                                <IconButton onClick={() => { removeState(d) }}>
+                                    <Tooltip title={<div>  <p className={styles.tooltipFont}>Delete State</p></div>}>
+                                        <DeleteIcon />
+                                    </Tooltip>
+                                </IconButton>
+
                             </ListItemSecondaryAction>
                         </ListItem>)
                     })}
@@ -83,16 +103,6 @@ const ManageStateDialog: FC = () => {
             </DialogActions>
         </Dialog>
         <StateAccessControl stateName={stateNameToChange} />
-        <Snackbar open={openErrorMessage} autoHideDuration={SnackBarCloseTime} onClose={() => { setOpenError(false) }}>
-            <Alert onClose={() => { setOpenError(false); setErrorMessage("") }} severity="error">
-                An error occured: {errorMessage}
-            </Alert>
-        </Snackbar>
-        <Snackbar open={openSuccess} autoHideDuration={SnackBarCloseTime} onClose={() => { setOpenSuccess(false) }}>
-            <Alert onClose={() => { setOpenSuccess(false) }} severity="success">
-                Deletion succeed.
-            </Alert>
-        </Snackbar>
     </div>)
 }
 
