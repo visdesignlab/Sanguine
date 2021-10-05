@@ -63,9 +63,9 @@ const ManageStateDialog: FC = () => {
     // const changeStateName = ()
 
     return (<div >
-        <Dialog open={store.configStore.openManageStateDialog} >
+        <Dialog open={store.configStore.openManageStateDialog} fullWidth>
             <DialogTitle>Manage Saved States</DialogTitle>
-            <DialogContent style={{ maxHeight: "300px", minWidth: "50vh" }}>
+            <DialogContent >
                 <List>{
                     store.configStore.savedState.map((d) => {
                         return (<ListItem>
