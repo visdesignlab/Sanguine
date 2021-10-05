@@ -32,6 +32,7 @@ const SaveStateModal: FC = () => {
 
                 if (response.status === 200) {
                     store.configStore.stateToUpdate = "";
+                    store.configStore.stateToUpdate = stateName;
                     onSuccess();
                 } else {
                     response.text().then(error => {
@@ -61,6 +62,7 @@ const SaveStateModal: FC = () => {
                 body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&definition=${store.provenance.exportState(false)}&public=${publicAccess.toString()}`
             }).then(response => {
                 if (response.status === 200) {
+                    store.configStore.stateToUpdate = stateName;
                     onSuccess();
                 } else {
                     response.text().then(error => {
