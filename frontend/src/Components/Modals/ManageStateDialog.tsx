@@ -62,7 +62,7 @@ const ManageStateDialog: FC = () => {
 
     // const changeStateName = ()
 
-    return (<div>
+    return (<div style={{ minWidth: "50vh" }}>
         <Dialog open={store.configStore.openManageStateDialog}>
             <DialogTitle>Manage Saved States</DialogTitle>
             <DialogContent style={{ maxHeight: "300px" }}>
