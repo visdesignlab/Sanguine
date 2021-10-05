@@ -104,6 +104,7 @@ const StateManagementSuite: FC = () => {
                         return (
                             <MenuItem
                                 key={`share${d}`}
+
                                 onClick={() => {
                                     handleClose();
                                     loadSavedState(d);
