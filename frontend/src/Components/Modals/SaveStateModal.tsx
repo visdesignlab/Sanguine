@@ -14,7 +14,7 @@ const SaveStateModal: FC = () => {
         setStateName(store.configStore.stateToUpdate);
     }, [store.configStore.stateToUpdate]);
 
-    function capitalizeFirstLetter(string) {
+    const capitalizeFirstLetter = (string: string) => {
         return string.charAt(0).toUpperCase() + string.slice(1);
     };
 
