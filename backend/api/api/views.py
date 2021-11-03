@@ -227,7 +227,8 @@ def fetch_surgery(request):
             # Use the first column of the query (visit_no), to get the index of data to update
             index = visit_nos.index(visit[0])
             cleaned_cpt = [cpt for cpt in cpts if cpt[1] == visit[1]]
-            #cleaned_cpt = cpts[cpts["db_code_desc"] == visit[1]]["clean_name"] if visit[1] in cpts["db_code_desc"] else None
+
+            # cleaned_cpt[0][2] since we want the first cpt that matched the description and the third field from the cpt table
             data[index]["cpt"] = list(set(data[index]["cpt"] + [cleaned_cpt[0][2]])) if cleaned_cpt else data[index]["cpt"]
 
         return JsonResponse({"result": data})
