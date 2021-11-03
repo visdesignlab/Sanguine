@@ -1,10 +1,9 @@
 
 import { ManualInfinity } from "../Presets/Constants";
-import { OutcomeOptionsStringArray } from "../Presets/DataDict";
-import { ApplicationState } from "./Types/StateTypes"
+import { ApplicationState } from "./Types/StateTypes";
 
-const today = new Date()
-today.setDate(today.getDate() + 1)
+const today = new Date();
+today.setDate(today.getDate() + 1);
 
 export const defaultState: ApplicationState = {
     layoutArray: [],
