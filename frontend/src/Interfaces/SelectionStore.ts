@@ -7,46 +7,46 @@ export class SelectionStore {
     rootStore: RootStore;
 
     constructor(rootStore: RootStore) {
-        this.rootStore = rootStore
-        makeAutoObservable(this)
+        this.rootStore = rootStore;
+        makeAutoObservable(this);
     }
 
-    get provenance() {
+    get provenance () {
         return this.rootStore.provenance;
     }
 
-    updateSelectedPatientGroup(caseList: SingleCasePoint[]) {
-        this.provenance.apply(updateSelectedPatientGroup(caseList))
+    updateSelectedPatientGroup (caseList: SingleCasePoint[]) {
+        this.provenance.apply(updateSelectedPatientGroup(caseList));
     }
 
-    updateProcedureSelection(newProcedures: string, removing: boolean) {
-        this.provenance.apply(updateProcedureSelection(newProcedures, removing))
+    updateProcedureSelection (newProcedures: string, removing: boolean) {
+        this.provenance.apply(updateProcedureSelection(newProcedures, removing));
     }
 
-    updateBrush(caseList: SingleCasePoint[]) {
-        this.provenance.apply(updateBrushPatient(caseList))
+    updateBrush (caseList: SingleCasePoint[]) {
+        this.provenance.apply(updateBrushPatient(caseList));
     }
 
-    setCurrentSelectPatient(newCase: SingleCasePoint | null) {
-        this.provenance.apply(setCurrentSelectPatient(newCase))
+    setCurrentSelectPatient (newCase: SingleCasePoint | null) {
+        this.provenance.apply(setCurrentSelectPatient(newCase));
     }
 
-    clearSelectionFilter() {
-        this.provenance.apply(clearSelectionFilter())
+    clearSelectionFilter () {
+        this.provenance.apply(clearSelectionFilter());
     }
 
-    outputToFilter() {
-        this.provenance.apply(outputToFilter())
+    outputToFilter () {
+        this.provenance.apply(outputToFilter());
     }
 
-    removeFilter(filterNameToRemove: string) {
-        this.provenance.apply(removeFilter(filterNameToRemove))
+    removeFilter (filterNameToRemove: string) {
+        this.provenance.apply(removeFilter(filterNameToRemove));
     }
 
-    selectSet(selectSetName: string, selectSetInput: string, replace: boolean) {
-        this.provenance.apply(selectSet(selectSetName, selectSetInput, replace))
+    selectSet (selectSetName: string, selectSetInput: string, replace: boolean) {
+        this.provenance.apply(selectSet(selectSetName, selectSetInput, replace));
     }
-    clearSet(selectSetName: string) {
-        this.provenance.apply(clearSet(selectSetName))
+    clearSet (selectSetName: string) {
+        this.provenance.apply(clearSet(selectSetName));
     }
 }

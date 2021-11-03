@@ -20,16 +20,16 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import MoreVert from "@material-ui/icons/MoreVert";
 
 const RegularModeMenu: FC = () => {
-    const store = useContext(Store)
+    const store = useContext(Store);
     const styles = useStyles();
-    const [addingChartType, setAddingChartType] = useState(-1)
+    const [addingChartType, setAddingChartType] = useState(-1);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [anchorMore, setAnchorMore] = useState<null | HTMLElement>(null);
 
     const addModeButtonHandler = (chartType: number) => {
-        setAddingChartType(chartType)
+        setAddingChartType(chartType);
         store.configStore.topMenuBarAddMode = true;
-    }
+    };
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -37,18 +37,18 @@ const RegularModeMenu: FC = () => {
     const handleMoreClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorMore(event.currentTarget);
     };
-    const handleMoreClose = () => { setAnchorMore(null) }
+    const handleMoreClose = () => { setAnchorMore(null); };
 
     const handleClose = (input?: number) => {
         setAnchorEl(null);
         if (input !== undefined) {
-            addModeButtonHandler(input)
+            addModeButtonHandler(input);
         }
     };
 
 
     const updateState = () => {
-        const csrftoken = simulateAPIClick()
+        const csrftoken = simulateAPIClick();
         fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
             method: `PUT`,
             credentials: "include",
@@ -70,14 +70,14 @@ const RegularModeMenu: FC = () => {
                     store.configStore.snackBarIsError = true;
                     store.configStore.snackBarMessage = `An error occurred: ${response.statusText}`;
                     store.configStore.openSnackBar = true;
-                })
+                });
             }
         }).catch(error => {
             store.configStore.snackBarIsError = true;
             store.configStore.snackBarMessage = `An error occurred: ${error}`;
             store.configStore.openSnackBar = true;
-        })
-    }
+        });
+    };
 
 
 
@@ -133,7 +133,7 @@ const RegularModeMenu: FC = () => {
             <StateManagementSuite />
 
 
-            <IconButton disabled={store.isAtRoot} onClick={() => { store.chartStore.clearAllCharts(); store.configStore.loadedStateName = "" }}>
+            <IconButton disabled={store.isAtRoot} onClick={() => { store.chartStore.clearAllCharts(); store.configStore.loadedStateName = ""; }}>
                 <Tooltip title={<div>  <p className={styles.tooltipFont}>Clear All Charts</p></div>}>
                     <DeleteIcon />
                 </Tooltip>
@@ -148,7 +148,7 @@ const RegularModeMenu: FC = () => {
 
             <UndoRedoButtons />
 
-            <IconButton onClick={() => { store.configStore.largeFont = !store.configStore.largeFont }} >
+            <IconButton onClick={() => { store.configStore.largeFont = !store.configStore.largeFont; }} >
                 <Tooltip title={<div>  <p className={styles.tooltipFont}>Change Font Size</p></div>}>
                     <FormatSizeIcon className={store.configStore.largeFont ? `` : styles.manualDisable} />
                 </Tooltip>
@@ -175,13 +175,13 @@ const RegularModeMenu: FC = () => {
                     </ListItemIcon>
                     About
                 </MenuItem>
-                <MenuItem onClick={() => { handleMoreClose(); store.configStore.privateMode = !store.configStore.privateMode }} className={store.configStore.privateMode ? `` : styles.manualDisable}>
+                <MenuItem onClick={() => { handleMoreClose(); store.configStore.privateMode = !store.configStore.privateMode; }} className={store.configStore.privateMode ? `` : styles.manualDisable}>
                     <ListItemIcon>
                         <VpnKeyIcon className={store.configStore.privateMode ? `` : styles.manualDisable} />
                     </ListItemIcon>
                     Private Mode
                 </MenuItem>
-                <MenuItem onClick={() => { logoutHandler() }}>
+                <MenuItem onClick={() => { logoutHandler(); }}>
                     <ListItemIcon>
                         <ExitToAppIcon />
                     </ListItemIcon>
@@ -192,22 +192,22 @@ const RegularModeMenu: FC = () => {
 
         </Toolbar>
 
-    )
+    );
 
     const configureOutput = () => {
-        console.log(isObservable(store.configStore.topMenuBarAddMode))
+        console.log(isObservable(store.configStore.topMenuBarAddMode));
         if (store.configStore.topMenuBarAddMode) {
 
-            return (<AddModeTopMenu addingChartType={addingChartType} />)
+            return (<AddModeTopMenu addingChartType={addingChartType} />);
         } else {
 
-            return regularMenu
+            return regularMenu;
         }
-    }
+    };
 
     return (<AppBar position="static" color="transparent" elevation={2} style={{ zIndex: 3 }}>
         {configureOutput()}
-    </AppBar>)
-}
+    </AppBar>);
+};
 
-export default observer(RegularModeMenu)
+export default observer(RegularModeMenu);

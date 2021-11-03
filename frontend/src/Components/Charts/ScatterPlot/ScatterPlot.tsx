@@ -1,14 +1,14 @@
-import { axisBottom, axisLeft, brush, deviation, mean, range, scaleBand, scaleLinear, select } from "d3"
-import { observer } from "mobx-react"
-import { useContext } from "react"
-import { FC, useCallback, useEffect, useState } from "react"
-import styled from "styled-components"
-import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker"
-import Store from "../../../Interfaces/Store"
-import { ScatterDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes"
-import { Basic_Gray, highlight_orange, largeFontSize, OffsetDict, regularFontSize, Third_Gray } from "../../../Presets/Constants"
-import { AcronymDictionary } from "../../../Presets/DataDict"
-import CustomizedAxisBand from "../ChartAccessories/CustomizedAxisBand"
+import { axisBottom, axisLeft, brush, deviation, mean, range, scaleBand, scaleLinear, select } from "d3";
+import { observer } from "mobx-react";
+import { useContext } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
+import styled from "styled-components";
+import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
+import Store from "../../../Interfaces/Store";
+import { ScatterDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
+import { Basic_Gray, highlight_orange, largeFontSize, OffsetDict, regularFontSize, Third_Gray } from "../../../Presets/Constants";
+import { AcronymDictionary } from "../../../Presets/DataDict";
+import CustomizedAxisBand from "../ChartAccessories/CustomizedAxisBand";
 
 type Props = {
     xAggregationOption: string;
@@ -16,27 +16,27 @@ type Props = {
     width: number;
     height: number;
     data: ScatterDataPoint[];
-    svg: React.RefObject<SVGSVGElement>
+    svg: React.RefObject<SVGSVGElement>;
     yMin: number;
     yMax: number;
     xMin: number;
     xMax: number;
-}
+};
 
 const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yValueOption, data, width, height, svg }: Props) => {
 
     const scalePadding = 0.2;
     const currentOffset = OffsetDict.minimum;
     const store = useContext(Store);
-    const { currentBrushedPatientGroup } = store.state
+    const { currentBrushedPatientGroup } = store.state;
     const svgSelection = select(svg.current);
-    const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null)
+    const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null);
     const [isFirstRender, updateIsFirstRender] = useState(true);
-    const [brushedCaseList, updatebrushedCaseList] = useState<number[]>([])
+    const [brushedCaseList, updatebrushedCaseList] = useState<number[]>([]);
 
     const updateBrush = (e: any) => {
-        updateBrushLoc(e.selection)
-    }
+        updateBrushLoc(e.selection);
+    };
 
 
     const xAxisScale = useCallback(() => {
@@ -52,7 +52,7 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
                 .padding(scalePadding);
         }
         return xAxisScale;
-    }, [xMax, xMin, width, currentOffset, xAggregationOption])
+    }, [xMax, xMin, width, currentOffset, xAggregationOption]);
 
     const yAxisScale = useCallback(() => {
 
@@ -62,7 +62,7 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
             .nice();
 
         return yAxisScale;
-    }, [yMax, yMin, height, currentOffset])
+    }, [yMax, yMin, height, currentOffset]);
 
     const brushDef = brush()
         .extent([[xAxisScale().range()[0], yAxisScale().range()[1]], [xAxisScale().range()[1], yAxisScale().range()[0]]])
@@ -77,54 +77,54 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
             if (brushLoc) {
                 let caseList: SingleCasePoint[] = [];
                 data.forEach((dataPoint) => {
-                    const cx = xAggregationOption === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
-                    const cy = yAxisScale()(dataPoint.yVal)
+                    const cx = xAggregationOption === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth());
+                    const cy = yAxisScale()(dataPoint.yVal);
                     if (cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
-                        caseList.push(dataPoint.case)
+                        caseList.push(dataPoint.case);
                     }
-                })
+                });
 
                 //     !!!!!!!this is the code of checking brushed patient
 
                 if (caseList.length === 0) {
-                    updateBrushLoc(null)
-                    brushDef.move(svgSelection.select(".brush-layer"), null)
+                    updateBrushLoc(null);
+                    brushDef.move(svgSelection.select(".brush-layer"), null);
                     if (store.state.currentBrushedPatientGroup.length > 0) {
-                        store.selectionStore.updateBrush([])
+                        store.selectionStore.updateBrush([]);
                     }
                 } else {
-                    store.selectionStore.updateBrush(caseList)
+                    store.selectionStore.updateBrush(caseList);
                 }
             }
             else {
                 if (store.state.currentBrushedPatientGroup.length > 0) {
-                    store.selectionStore.updateBrush([])
+                    store.selectionStore.updateBrush([]);
                 }
             }
 
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [brushLoc])
+    }, [brushLoc]);
 
 
     //Clear the brush
     useEffect(() => {
-        clearBrush()
+        clearBrush();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data])
+    }, [data]);
 
     const clearBrush = () => {
-        brushDef.move(svgSelection.select(".brush-layer"), null)
-    }
+        brushDef.move(svgSelection.select(".brush-layer"), null);
+    };
 
     useEffect(() => {
-        let newbrushedCaseList = currentBrushedPatientGroup.map(d => d.CASE_ID)
-        stateUpdateWrapperUseJSON(brushedCaseList, newbrushedCaseList, updatebrushedCaseList)
+        let newbrushedCaseList = currentBrushedPatientGroup.map(d => d.CASE_ID);
+        stateUpdateWrapperUseJSON(brushedCaseList, newbrushedCaseList, updatebrushedCaseList);
         if (currentBrushedPatientGroup.length === 0) {
-            clearBrush()
+            clearBrush();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentBrushedPatientGroup])
+    }, [currentBrushedPatientGroup]);
 
 
     const yAxisLabel = axisLeft(yAxisScale());
@@ -195,24 +195,24 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
         //     return false;
         // }
         return false;
-    }
+    };
 
 
     const generateScatterDots = () => {
         let selectedPatients: any[] = [];
         let unselectedPatients: any[] = [];
-        let brushedSet = new Set(brushedCaseList)
-        let medianSet: any = {}
+        let brushedSet = new Set(brushedCaseList);
+        let medianSet: any = {};
         data.forEach((dataPoint) => {
 
-            const cx = xAggregationOption === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth())
+            const cx = xAggregationOption === "CELL_SAVER_ML" ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth());
 
             if (medianSet[dataPoint.xVal]) {
-                medianSet[dataPoint.xVal].push(dataPoint.yVal)
+                medianSet[dataPoint.xVal].push(dataPoint.yVal);
             } else {
-                medianSet[dataPoint.xVal] = [dataPoint.yVal]
+                medianSet[dataPoint.xVal] = [dataPoint.yVal];
             }
-            const cy = yAxisScale()(dataPoint.yVal)
+            const cy = yAxisScale()(dataPoint.yVal);
             const isSelectSet = decideIfSelectSet(dataPoint);
             const isBrushed = brushedSet.has(dataPoint.case.CASE_ID);
 
@@ -221,7 +221,7 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
                     <ScatterDot cx={cx}
                         cy={cy}
                         isselected={isSelectSet}
-                        isbrushed={isBrushed || false} />)
+                        isbrushed={isBrushed || false} />);
             } else {
                 unselectedPatients.push(
                     <ScatterDot cx={cx}
@@ -231,15 +231,15 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
 
                 );
             }
-        })
-        let lineSet: any[] = []
+        });
+        let lineSet: any[] = [];
         if (xAggregationOption !== "CELL_SAVER_ML") {
 
             for (let [key, value] of Object.entries(medianSet)) {
-                const meanVal = mean(value as any) || 0
+                const meanVal = mean(value as any) || 0;
                 const std = deviation(value as any) || 0;
-                const lowerBound = meanVal - 1.96 * std / Math.sqrt((value as any).length)
-                const upperBound = meanVal + 1.96 * std / Math.sqrt((value as any).length)
+                const lowerBound = meanVal - 1.96 * std / Math.sqrt((value as any).length);
+                const upperBound = meanVal + 1.96 * std / Math.sqrt((value as any).length);
                 lineSet = lineSet.concat(
                     [<StatisticalLine
                         //  opacity={0.5}
@@ -254,11 +254,11 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
                         y2={yAxisScale()(upperBound)}
                         x2={xAxisScale()(parseInt(key)) + 0.5 * xAxisScale().bandwidth() || 0} />,
                     ]
-                )
+                );
             }
         }
-        return unselectedPatients.concat(selectedPatients).concat(lineSet)
-    }
+        return unselectedPatients.concat(selectedPatients).concat(lineSet);
+    };
 
     return <>
         <g className="chart-comp" >
@@ -277,8 +277,8 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
             <text className="y-label" />
         </g>
 
-    </>
-}
+    </>;
+};
 
 export default observer(ScatterPlot);
 
@@ -297,4 +297,4 @@ const ScatterDot = styled(`circle`) <DotProps>`
 const StatisticalLine = styled(`line`)`
     stroke-width: 3px;
     stroke: #3498d5;
-`
+`;

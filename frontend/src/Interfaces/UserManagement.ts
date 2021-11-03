@@ -5,31 +5,31 @@ export const getUser = () => {
     const userStr = sessionStorage.getItem('user');
     if (userStr) return JSON.parse(userStr);
     else return null;
-}
+};
 
 export const tokenCheckCancel = (previousCancelToken: any) => {
     if (previousCancelToken) {
-        previousCancelToken.cancel("cancel the call")
+        previousCancelToken.cancel("cancel the call");
     }
-}
+};
 
 export const getToken = () => {
     return sessionStorage.getItem('token') || null;
-}
+};
 
 // remove the token and user from the session storage
 export const removeUserSession = () => {
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('user');
-}
+};
 
 // set the token and user from the session storage
 export const setUserSession = (token: string, user: any) => {
     sessionStorage.setItem('token', token);
     sessionStorage.setItem('user', JSON.stringify(user));
-}
+};
 
-export function getCookie(name: string) {
+export function getCookie (name: string) {
     var cookieValue = null;
     if (document.cookie && document.cookie !== '') {
         var cookies = document.cookie.split(';');
@@ -60,19 +60,19 @@ export const whoamiAPICall = (store: RootStore) => {
             store.configStore.isLoggedIn = false;
             window.location.replace(`${process.env.REACT_APP_QUERY_URL}accounts/login/`);
         }
-    })
-}
+    });
+};
 
 export const simulateAPIClick = () => {
     fetch(`${process.env.REACT_APP_QUERY_URL}accounts/login/`, {
         method: 'GET',
         credentials: 'include',
-    })
+    });
     var csrftoken = getCookie('csrftoken');
-    return csrftoken
-}
+    return csrftoken;
+};
 
 export const logoutHandler = () => {
     window.location.replace(`${process.env.REACT_APP_QUERY_URL}accounts/logout`);
 
-}
+};

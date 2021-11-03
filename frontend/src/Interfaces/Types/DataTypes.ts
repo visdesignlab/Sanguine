@@ -6,29 +6,29 @@ export type BasicAggregatedDatePoint = {
     zeroCaseNum: number;
     // patientIDList: number[];
     caseIDList: number[];
-}
+};
 export type CostBarChartDataPoint = BasicAggregatedDatePoint & {
     dataArray: number[];
     cellSalvageUsage: number;
     cellSalvageVolume: number;
-}
+};
 
 export type CostCompareChartDataPoint = CostBarChartDataPoint & {
     withInterDataArray: number[];
     withInterCaseNum: number;
     withInterCellSalvageUsage: number;
     withInterCellSalvageVolume: number;
-}
+};
 
 
 export type BarChartDataPoint = BasicAggregatedDatePoint & {
-    actualDataPoints: any[]
+    actualDataPoints: any[];
     median: number;
-}
+};
 
 export type HeatMapDataPoint = BasicAggregatedDatePoint & {
     countDict: any;
-}
+};
 
 export type SingleCasePoint = {
     VISIT_ID: number;
@@ -57,20 +57,20 @@ export type SingleCasePoint = {
     AMICAR: number;
     SURGERY_TYPE: number;
     [key: string]: number | string;
-}
+};
 export type ScatterDataPoint = {
     xVal: number;
     yVal: number;
     randomFactor: number;
     case: SingleCasePoint;
-}
+};
 
 export type DumbbellDataPoint = {
     startXVal: number;
     endXVal: number;
     yVal: number;
     case: SingleCasePoint;
-}
+};
 
 export type ExtraPairPoint = {
     name: string;
@@ -79,7 +79,7 @@ export type ExtraPairPoint = {
     label: string;
     medianSet?: any;
     kdeMax?: number;
-}
+};
 
 export type ExtraPairInterventionPoint = {
     name: string;
@@ -92,5 +92,5 @@ export type ExtraPairInterventionPoint = {
     postMedianSet?: any;
     label: string;
     totalKdeMax?: number,
-    halfKdeMax?: number
-}
+    halfKdeMax?: number;
+};

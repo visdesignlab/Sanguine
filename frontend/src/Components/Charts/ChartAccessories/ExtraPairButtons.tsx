@@ -8,12 +8,12 @@ import { ExtraPairLimit } from "../../../Presets/Constants";
 
 
 type Props = {
-    extraPairLength: number
+    extraPairLength: number;
     chartId: string;
     disbleButton: boolean;
-}
+};
 const ExtraPairButtons: FC<Props> = ({ extraPairLength, chartId, disbleButton }: Props) => {
-    const store = useContext(Store)
+    const store = useContext(Store);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
@@ -27,8 +27,8 @@ const ExtraPairButtons: FC<Props> = ({ extraPairLength, chartId, disbleButton }:
 
     const extraPairHandling = (input: string) => {
         store.chartStore.addExtraPair(chartId, input);
-        handleClose()
-    }
+        handleClose();
+    };
 
     return (
         <>
@@ -39,11 +39,11 @@ const ExtraPairButtons: FC<Props> = ({ extraPairLength, chartId, disbleButton }:
                 onClose={handleClose}
             >
                 {ExtraPairOptions.map((option) => (
-                    <MenuItem key={option.key} onClick={() => { extraPairHandling(option.key) }}>{option.text}</MenuItem>
+                    <MenuItem key={option.key} onClick={() => { extraPairHandling(option.key); }}>{option.text}</MenuItem>
                 ))}
             </Menu>
 
-        </>)
-}
+        </>);
+};
 
-export default ExtraPairButtons
+export default ExtraPairButtons;

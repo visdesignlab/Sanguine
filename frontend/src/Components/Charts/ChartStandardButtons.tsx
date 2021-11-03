@@ -1,25 +1,25 @@
-import { IconButton } from "@material-ui/core"
-import { useContext } from "react"
-import { FC } from "react"
+import { IconButton } from "@material-ui/core";
+import { useContext } from "react";
+import { FC } from "react";
 import OpenWithIcon from '@material-ui/icons/OpenWith';
 import CloseIcon from '@material-ui/icons/Close';
 
-import Store from "../../Interfaces/Store"
+import Store from "../../Interfaces/Store";
 type Props = {
-    chartID: string
-}
+    chartID: string;
+};
 const ChartStandardButtons: FC<Props> = ({ chartID }: Props) => {
-    const store = useContext(Store)
+    const store = useContext(Store);
     return (
         < >
             <IconButton size="small" className="move-icon">
                 <OpenWithIcon />
             </IconButton>
-            <IconButton size="small" onClick={() => { store.chartStore.removeChart(chartID) }}>
+            <IconButton size="small" onClick={() => { store.chartStore.removeChart(chartID); }}>
                 <CloseIcon />
             </IconButton>
 
-        </>)
-}
+        </>);
+};
 
-export default ChartStandardButtons
+export default ChartStandardButtons;

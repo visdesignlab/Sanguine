@@ -1,26 +1,26 @@
-import { timeFormat, timeParse } from "d3"
-import { observer } from "mobx-react"
-import { createContext, useContext, useState } from "react"
-import { useEffect } from "react"
-import { FC } from "react"
-import { useIdleTimer } from "react-idle-timer"
-import Dashboard from "./Dashboard"
-import { defaultState } from "./Interfaces/DefaultState"
-import Store from "./Interfaces/Store"
-import { SingleCasePoint } from "./Interfaces/Types/DataTypes"
-import { logoutHandler, whoamiAPICall } from "./Interfaces/UserManagement"
-import { SurgeryUrgencyArray } from "./Presets/DataDict"
-import './App.css'
-import { checkIfCriteriaMet } from "./HelperFunctions/CaseListProducer"
-import useDeepCompareEffect from "use-deep-compare-effect"
+import { timeFormat, timeParse } from "d3";
+import { observer } from "mobx-react";
+import { createContext, useContext, useState } from "react";
+import { useEffect } from "react";
+import { FC } from "react";
+import { useIdleTimer } from "react-idle-timer";
+import Dashboard from "./Dashboard";
+import { defaultState } from "./Interfaces/DefaultState";
+import Store from "./Interfaces/Store";
+import { SingleCasePoint } from "./Interfaces/Types/DataTypes";
+import { logoutHandler, whoamiAPICall } from "./Interfaces/UserManagement";
+import { SurgeryUrgencyArray } from "./Presets/DataDict";
+import './App.css';
+import { checkIfCriteriaMet } from "./HelperFunctions/CaseListProducer";
+import useDeepCompareEffect from "use-deep-compare-effect";
 
-export const DataContext = createContext<SingleCasePoint[]>([])
+export const DataContext = createContext<SingleCasePoint[]>([]);
 
 const App: FC = () => {
     const store = useContext(Store);
     const { bloodComponentFilter, surgeryUrgencySelection, outcomeFilter, currentSelectPatientGroup, currentOutputFilterSet, testValueFilter } = store.state;
-    const [hemoData, setHemoData] = useState<SingleCasePoint[]>([])
-    const [outputFilteredData, setOutputFilteredDAta] = useState<SingleCasePoint[]>([])
+    const [hemoData, setHemoData] = useState<SingleCasePoint[]>([]);
+    const [outputFilteredData, setOutputFilteredDAta] = useState<SingleCasePoint[]>([]);
 
 
     useEffect(() => {
@@ -28,24 +28,24 @@ const App: FC = () => {
             cacheHemoData();
         }
         else {
-            whoamiAPICall(store)
+            whoamiAPICall(store);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [store.configStore.isLoggedIn])
+    }, [store.configStore.isLoggedIn]);
 
     const handleOnIdle = (event: any) => {
         // On idle log the user out
         if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
-            logoutHandler()
+            logoutHandler();
         }
 
-    }
+    };
 
     const handleOnAction = (event: any) => {
         if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
-            whoamiAPICall(store)
+            whoamiAPICall(store);
         }
-    }
+    };
 
     useIdleTimer({
         //the idle timer setting
@@ -54,36 +54,36 @@ const App: FC = () => {
         onAction: handleOnAction,
         events: ["mousedown", "keydown"],
         throttle: 1000 * 60
-    })
+    });
 
     //Data Updates
     useDeepCompareEffect(() => {
         let patientIDSet: Set<number> | undefined;
         if (currentSelectPatientGroup.length > 0) {
-            patientIDSet = new Set<number>()
-            currentSelectPatientGroup.forEach((d) => { patientIDSet!.add(d.CASE_ID) })
+            patientIDSet = new Set<number>();
+            currentSelectPatientGroup.forEach((d) => { patientIDSet!.add(d.CASE_ID); });
         }
-        const newFilteredData = hemoData.filter((eachcase: SingleCasePoint) => checkIfCriteriaMet(eachcase, surgeryUrgencySelection, outcomeFilter, currentOutputFilterSet, bloodComponentFilter, testValueFilter, patientIDSet))
+        const newFilteredData = hemoData.filter((eachcase: SingleCasePoint) => checkIfCriteriaMet(eachcase, surgeryUrgencySelection, outcomeFilter, currentOutputFilterSet, bloodComponentFilter, testValueFilter, patientIDSet));
 
 
-        setOutputFilteredDAta(newFilteredData)
-    }, [surgeryUrgencySelection, outcomeFilter, hemoData, currentOutputFilterSet, bloodComponentFilter, testValueFilter, currentSelectPatientGroup])
+        setOutputFilteredDAta(newFilteredData);
+    }, [surgeryUrgencySelection, outcomeFilter, hemoData, currentOutputFilterSet, bloodComponentFilter, testValueFilter, currentSelectPatientGroup]);
 
-    async function cacheHemoData() {
+    async function cacheHemoData () {
         if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
-            whoamiAPICall(store)
+            whoamiAPICall(store);
         }
         fetch(`${process.env.REACT_APP_QUERY_URL}hemoglobin`)
             .then((res) => res.json())
             .then(async (dataHemo) => {
                 const resultHemo = dataHemo.result;
-                const resTrans = await fetch(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(defaultState.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(defaultState.rawDateRange[1]))]}`)
+                const resTrans = await fetch(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(defaultState.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(defaultState.rawDateRange[1]))]}`);
                 const dataTrans = await resTrans.json();
                 const resRisk = await fetch(`${process.env.REACT_APP_QUERY_URL}risk_score`);
                 const dataRisk = await resRisk.json();
-                let riskOutcomeDict: any = {}
+                let riskOutcomeDict: any = {};
                 for (let obj of dataRisk) {
-                    riskOutcomeDict[obj.visit_no] = { DRG_WEIGHT: obj.apr_drg_weight }
+                    riskOutcomeDict[obj.visit_no] = { DRG_WEIGHT: obj.apr_drg_weight };
                 }
                 const resOutcome = await fetch(`${process.env.REACT_APP_QUERY_URL}patient_outcomes`);
                 const dataOutcome = await resOutcome.json();
@@ -117,10 +117,10 @@ const App: FC = () => {
 
                     if (transfused_dict[ob.CASE_ID]) {
                         const transfusedResult = transfused_dict[ob.CASE_ID];
-                        const time = ((timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE))!.getTime())
-                        store.configStore.updateRange(transfusedResult)
-                        store.configStore.updateTestValue("PREOP_HGB", +ob.HEMO[0])
-                        store.configStore.updateTestValue("POSTOP_HGB", +ob.HEMO[1])
+                        const time = ((timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE))!.getTime());
+                        store.configStore.updateRange(transfusedResult);
+                        store.configStore.updateTestValue("PREOP_HGB", +ob.HEMO[0]);
+                        store.configStore.updateTestValue("POSTOP_HGB", +ob.HEMO[1]);
                         const outputObj: SingleCasePoint = {
                             CASE_ID: ob.CASE_ID,
                             VISIT_ID: ob.VISIT_ID,
@@ -147,23 +147,23 @@ const App: FC = () => {
                             B12: riskOutcomeDict[ob.VISIT_ID].B12,
                             AMICAR: riskOutcomeDict[ob.VISIT_ID].AMICAR,
                             SURGERY_TYPE: SurgeryUrgencyArray.indexOf(ob.SURGERY_TYPE)
-                        }
-                        cacheData.push(outputObj)
+                        };
+                        cacheData.push(outputObj);
                     }
-                })
+                });
 
                 cacheData = cacheData.filter((d: any) => d);
-                setHemoData(cacheData)
+                setHemoData(cacheData);
                 store.configStore.dataLoading = false;
             }).catch((error) => {
                 store.configStore.dataLoadingFailed = true;
                 store.configStore.dataLoading = false;
-            })
+            });
     }
 
     return <DataContext.Provider value={outputFilteredData}>
         <Dashboard />
-    </DataContext.Provider>
-}
+    </DataContext.Provider>;
+};
 
-export default observer(App)
+export default observer(App);

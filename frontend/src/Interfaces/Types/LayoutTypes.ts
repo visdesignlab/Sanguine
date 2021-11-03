@@ -10,5 +10,5 @@ export type LayoutElement = {
     extraPair?: string,
     interventionDate?: number,
     outcomeComparison?: string,
-    notation: string
+    notation: string;
 }

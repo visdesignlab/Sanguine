@@ -7,7 +7,7 @@ import { simulateAPIClick } from "../../Interfaces/UserManagement";
 
 const SaveStateModal: FC = () => {
     const store = useContext(Store);
-    const [stateName, setStateName] = useState("")
+    const [stateName, setStateName] = useState("");
     const [publicAccess, setPublicAccess] = useState(false);
 
     useEffect(() => {
@@ -19,7 +19,7 @@ const SaveStateModal: FC = () => {
     };
 
     const saveNewState = () => {
-        const csrftoken = simulateAPIClick()
+        const csrftoken = simulateAPIClick();
         if (store.configStore.stateToUpdate) {
             fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
                 method: `PUT`,
@@ -41,11 +41,11 @@ const SaveStateModal: FC = () => {
                 } else {
                     response.text().then(error => {
                         onFail(response.statusText);
-                    })
+                    });
                 }
             }).catch(error => {
                 onFail(error.toString());
-            })
+            });
         }
         else if (store.configStore.checkIfInSavedState(stateName)) {
             store.configStore.snackBarIsError = true;
@@ -71,30 +71,30 @@ const SaveStateModal: FC = () => {
                 } else {
                     response.text().then(error => {
                         onFail(response.statusText);
-                    })
+                    });
                 }
             }).catch(error => {
                 onFail(error.toString());
-            })
+            });
         }
 
-    }
+    };
 
     const onSuccess = () => {
         store.configStore.openSaveStateDialog = false;
         store.configStore.snackBarIsError = false;
         store.configStore.snackBarMessage = "State saved!";
         store.configStore.openSnackBar = true;
-        setStateName("")
+        setStateName("");
         setPublicAccess(false);
-    }
+    };
 
     const onFail = (errorMessage: string) => {
         store.configStore.snackBarIsError = true;
         store.configStore.snackBarMessage = `An error occurred: ${errorMessage}`;
         store.configStore.openSnackBar = true;
         console.error('There has been a problem with your fetch operation:', errorMessage);
-    }
+    };
 
     return <div>
         <Dialog open={store.configStore.openSaveStateDialog}>
@@ -104,8 +104,8 @@ const SaveStateModal: FC = () => {
                     Save the current state with a state name, select the state privacy setting, and then click save.
                 </DialogContentText>
                 <FormGroup>
-                    <TextField fullWidth label="State Name" onChange={(e) => { setStateName(e.target.value) }} value={stateName} />
-                    <RadioGroup row onChange={(e) => { setPublicAccess(e.target.value === "PublicState") }} value={publicAccess ? "PublicState" : "PrivateState"}>
+                    <TextField fullWidth label="State Name" onChange={(e) => { setStateName(e.target.value); }} value={stateName} />
+                    <RadioGroup row onChange={(e) => { setPublicAccess(e.target.value === "PublicState"); }} value={publicAccess ? "PublicState" : "PrivateState"}>
                         <FormControlLabel
                             value="PublicState"
                             control={
@@ -128,11 +128,11 @@ const SaveStateModal: FC = () => {
 
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => { store.configStore.stateToUpdate = ""; store.configStore.openSaveStateDialog = false }}>Cancel</Button>
-                <Button color="primary" disabled={stateName.length === 0} onClick={() => { saveNewState() }}>Confirm</Button>
+                <Button onClick={() => { store.configStore.stateToUpdate = ""; store.configStore.openSaveStateDialog = false; }}>Cancel</Button>
+                <Button color="primary" disabled={stateName.length === 0} onClick={() => { saveNewState(); }}>Confirm</Button>
             </DialogActions>
         </Dialog>
-    </div>
-}
+    </div>;
+};
 
-export default observer(SaveStateModal)
+export default observer(SaveStateModal);

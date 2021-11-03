@@ -17,38 +17,38 @@ import { FormControl, InputLabel, Toolbar } from "@material-ui/core";
 import { ManualInfinity } from "../../../Presets/Constants";
 
 
-type Props = { addingChartType: number }
+type Props = { addingChartType: number; };
 
 const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
 
-    const store = useContext(Store)
+    const store = useContext(Store);
 
     const styles = useStyles();
-    const [xAggreSelection, setXAggreSelection] = useState<string>("")
-    const [yValueSelection, setYValueSelection] = useState<string>("")
-    const [outcomeComparisonSelection, setOutcomeComparisonSelection] = useState<string>("")
-    const [interventionDate, setInterventionDate] = useState<number | null>(null)
+    const [xAggreSelection, setXAggreSelection] = useState<string>("");
+    const [yValueSelection, setYValueSelection] = useState<string>("");
+    const [outcomeComparisonSelection, setOutcomeComparisonSelection] = useState<string>("");
+    const [interventionDate, setInterventionDate] = useState<number | null>(null);
 
     const cancelChartAddHandler = () => {
         store.configStore.topMenuBarAddMode = false;
         setXAggreSelection("");
         setYValueSelection("");
-    }
+    };
 
     const interventionHandler = (date: Date | null) => {
         if (date) {
-            setInterventionDate(date.getTime())
+            setInterventionDate(date.getTime());
 
         }
         else {
-            setInterventionDate(null)
+            setInterventionDate(null);
         }
 
-    }
+    };
 
     const checkValidInput = () => {
-        return (xAggreSelection.length > 0 && yValueSelection.length > 0 && addingChartType > 0) || (xAggreSelection.length > 0 && addingChartType === 0)
-    }
+        return (xAggreSelection.length > 0 && yValueSelection.length > 0 && addingChartType > 0) || (xAggreSelection.length > 0 && addingChartType === 0);
+    };
 
     const confirmChartAddHandler = () => {
         if (checkValidInput()) {
@@ -64,22 +64,22 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                     notation: "",
                     outcomeComparison: outcomeComparisonSelection,
                     interventionDate: interventionDate ? interventionDate : undefined
-                }
+                };
                 if (
                     typeDiction[addingChartType] === "HEATMAP" || typeDiction[addingChartType] === "COST") {
                     newChart.extraPair = JSON.stringify([]);
                 }
 
-                store.chartStore.addNewChart(newChart)
+                store.chartStore.addNewChart(newChart);
                 store.configStore.topMenuBarAddMode = false;
                 setInterventionDate(null);
-                setXAggreSelection("")
-                setYValueSelection("")
-                setOutcomeComparisonSelection("")
-                console.log(store.state)
+                setXAggreSelection("");
+                setYValueSelection("");
+                setOutcomeComparisonSelection("");
+                console.log(store.state);
             }
         }
-    }
+    };
 
 
     const outputRegularOptions = (titleOne: string, titleTwo: string, titleOneRequied: boolean) => {
@@ -89,7 +89,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                 <FormControl required={titleOneRequied} className={styles.formControl}>
                     <InputLabel style={{ whiteSpace: "nowrap" }}>{titleOne}{titleOneRequied ? "" : " (Optional)"}</InputLabel>
                     <Select
-                        onChange={(e) => { setYValueSelection(e.target.value as string) }}>
+                        onChange={(e) => { setYValueSelection(e.target.value as string); }}>
                         {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][0] : [], !titleOneRequied)}
                     </Select>
                 </FormControl>
@@ -103,15 +103,15 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                 <FormControl required className={styles.formControl}>
                     <InputLabel>{titleTwo}</InputLabel>
                     <Select
-                        onChange={(e) => { setXAggreSelection(e.target.value as string) }}>
+                        onChange={(e) => { setXAggreSelection(e.target.value as string); }}>
                         {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][1] : [])}
                     </Select>
                 </FormControl>
 
             </div>
 
-        </>
-    }
+        </>;
+    };
 
     const addBarChartMenuRewrite: any[] = [
         //For #0 Cost and Saving Chart
@@ -135,7 +135,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
             <div className={styles.centerAlignment}>
                 <FormControl disabled={interventionDate ? true : false} className={styles.formControl}>
                     <InputLabel>Outcome (Optional)</InputLabel>
-                    <Select onChange={(e) => { console.log(outcomeComparisonSelection); setOutcomeComparisonSelection(e.target.value as string) }}
+                    <Select onChange={(e) => { console.log(outcomeComparisonSelection); setOutcomeComparisonSelection(e.target.value as string); }}
                     >
                         {DropdownGenerator(OutcomeOptions, true)}
                     </Select>
@@ -162,7 +162,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
             </div>
         </>
         ],
-    ]
+    ];
 
     return <Toolbar className={styles.toolbarPaddingControl} style={{ justifyContent: "space-evenly" }}>
         {addBarChartMenuRewrite[addingChartType]}
@@ -187,7 +187,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
             </ButtonGroup>
         </div>
 
-    </Toolbar>
-}
+    </Toolbar>;
+};
 
-export default observer(AddModeTopMenu)
+export default observer(AddModeTopMenu);

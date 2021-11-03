@@ -1,5 +1,5 @@
 import { axisBottom, axisLeft, ScaleBand, select } from "d3";
-import { FC, useCallback } from "react"
+import { FC, useCallback } from "react";
 import { BloodProductCap, CaseRectWidth, CELL_SAVER_TICKS, largeFontSize, regularFontSize } from "../../../Presets/Constants";
 import { AcronymDictionary } from "../../../Presets/DataDict";
 import { AggregationScaleGenerator, ValueScaleGeneratorFromDomainRange } from "../../../HelperFunctions/Scales";
@@ -20,16 +20,16 @@ type Props = {
     valueScaleRange: string;
     xAggregationOption: string;
     isValueScaleBand: boolean;
-}
+};
 const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals, dimensionHeight, yValueOption, valueScaleRange, valueScaleDomain, xAggregationOption, dimensionWidth, isValueScaleBand }: Props) => {
 
-    const store = useContext(Store)
+    const store = useContext(Store);
     const aggregationScale = useCallback(() => {
-        return AggregationScaleGenerator(xVals, dimensionHeight, currentOffset)
+        return AggregationScaleGenerator(xVals, dimensionHeight, currentOffset);
     }, [dimensionHeight, xVals, currentOffset]);
 
     const valueScale = useCallback(() => {
-        return ValueScaleGeneratorFromDomainRange(valueScaleDomain, valueScaleRange, isValueScaleBand)
+        return ValueScaleGeneratorFromDomainRange(valueScaleDomain, valueScaleRange, isValueScaleBand);
     }, [valueScaleDomain, valueScaleRange]);
 
     const svgSelection = select(svg.current);
@@ -38,7 +38,7 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
     if (isValueScaleBand) {
         valueLabel = axisBottom(valueScale() as ScaleBand<string>).tickFormat((d, i) => yValueOption === "CELL_SAVER_ML" ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[yValueOption] ? `${d}+` : d));
     } else {
-        valueLabel = axisBottom(valueScale() as any)
+        valueLabel = axisBottom(valueScale() as any);
     }
     svgSelection
         .select(".axes")
@@ -53,8 +53,8 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
         .attr("transform", `translate(-${CaseRectWidth + 2},0)`)
         .attr("cursor", "pointer")
         .on("click", (e, d: any) => {
-            store.selectionStore.selectSet(xAggregationOption, d.toString(), !e.shiftKey)
-        })
+            store.selectionStore.selectSet(xAggregationOption, d.toString(), !e.shiftKey);
+        });
 
 
     svgSelection
@@ -78,7 +78,7 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
         .attr("text-anchor", "middle")
         .attr("transform", `translate(${extraPairTotalWidth},0)`)
         .text(() => {
-            return AcronymDictionary[yValueOption] ? AcronymDictionary[yValueOption] : yValueOption
+            return AcronymDictionary[yValueOption] ? AcronymDictionary[yValueOption] : yValueOption;
         });
 
     svgSelection
@@ -98,7 +98,7 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
         <g className="y-axis"></g>
         <text className="x-label" />
         <text className="y-label" />
-    </g>)
-}
+    </g>);
+};
 
-export default observer(HeatMapAxis)
+export default observer(HeatMapAxis);

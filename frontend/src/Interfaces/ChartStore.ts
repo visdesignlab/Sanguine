@@ -15,59 +15,59 @@ export class ChartStore {
         this._totalIndividualCaseCount = 0;
         makeAutoObservable(this);
     }
-    get provenance() {
-        return this.rootStore.provenance
+    get provenance () {
+        return this.rootStore.provenance;
     }
-    get totalIndividualCaseCount() {
-        return this._totalIndividualCaseCount
-    }
-
-    get totalAggregatedCaseCount() {
-        return this._totalAggregatedCaseCount
+    get totalIndividualCaseCount () {
+        return this._totalIndividualCaseCount;
     }
 
-    set totalIndividualCaseCount(input: number) {
-        this._totalIndividualCaseCount = input
+    get totalAggregatedCaseCount () {
+        return this._totalAggregatedCaseCount;
     }
 
-    set totalAggregatedCaseCount(input: number) {
-        this._totalAggregatedCaseCount = input
+    set totalIndividualCaseCount (input: number) {
+        this._totalIndividualCaseCount = input;
     }
 
-    addExtraPair(chartID: string, newExtraPair: string) {
-        this.provenance.apply(addExtraPair(chartID, newExtraPair))
+    set totalAggregatedCaseCount (input: number) {
+        this._totalAggregatedCaseCount = input;
     }
 
-    removeExtraPair(chartID: string, removingPairName: string) {
-        this.provenance.apply(removeExtraPair(chartID, removingPairName))
+    addExtraPair (chartID: string, newExtraPair: string) {
+        this.provenance.apply(addExtraPair(chartID, newExtraPair));
     }
 
-    removeChart(chartID: string) {
+    removeExtraPair (chartID: string, removingPairName: string) {
+        this.provenance.apply(removeExtraPair(chartID, removingPairName));
+    }
+
+    removeChart (chartID: string) {
         this.provenance.apply(removeChart(chartID));
         if (this.rootStore.state.layoutArray.length === 0) {
-            this.totalAggregatedCaseCount = 0
-            this.totalIndividualCaseCount = 0
+            this.totalAggregatedCaseCount = 0;
+            this.totalIndividualCaseCount = 0;
         }
     }
 
-    changeNotation(chartID: string, newNotation: string) {
-        this.provenance.apply(changeNotation(chartID, newNotation))
+    changeNotation (chartID: string, newNotation: string) {
+        this.provenance.apply(changeNotation(chartID, newNotation));
     }
 
-    addNewChart(newLayoutElement: LayoutElement) {
+    addNewChart (newLayoutElement: LayoutElement) {
         this.provenance.apply(addNewChart(newLayoutElement));
     }
 
-    changeChart(xAggregationSelection: string, yValueSelection: string, chartIndex: string, chartType: string, outcomeComparison?: string) {
-        this.provenance.apply(changeChart(xAggregationSelection, yValueSelection, chartIndex, chartType, outcomeComparison))
+    changeChart (xAggregationSelection: string, yValueSelection: string, chartIndex: string, chartType: string, outcomeComparison?: string) {
+        this.provenance.apply(changeChart(xAggregationSelection, yValueSelection, chartIndex, chartType, outcomeComparison));
     }
 
 
-    onLayoutChange(gridLayout: ReactGridLayout.Layout[]) {
-        this.provenance.apply(onLayoutChange(gridLayout))
+    onLayoutChange (gridLayout: ReactGridLayout.Layout[]) {
+        this.provenance.apply(onLayoutChange(gridLayout));
     }
 
-    clearAllCharts() {
+    clearAllCharts () {
         this.provenance.apply(clearAllCharts());
     }
 }
