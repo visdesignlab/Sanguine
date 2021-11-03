@@ -6,14 +6,14 @@ import { simulateAPIClick } from "../../Interfaces/UserManagement";
 
 type Props = {
     stateName: string;
-}
+};
 const UIDInputModal: FC<Props> = ({ stateName }: Props) => {
     const store = useContext(Store);
     const [uIDInput, setUIDInput] = useState("");
     const [writeAccess, setWriteAccess] = useState(false);
 
     const shareState = () => {
-        const csrftoken = simulateAPIClick()
+        const csrftoken = simulateAPIClick();
         fetch(`${process.env.REACT_APP_QUERY_URL}share_state`, {
             method: `POST`,
             credentials: "include",
@@ -40,20 +40,20 @@ const UIDInputModal: FC<Props> = ({ stateName }: Props) => {
                 } else {
                     response.text().then(error => {
                         store.configStore.snackBarIsError = true;
-                        store.configStore.snackBarMessage = `An error occurred: ${response.statusText}`
+                        store.configStore.snackBarMessage = `An error occurred: ${response.statusText}`;
                         store.configStore.openSnackBar = true;
                         console.error('There has been a problem with your fetch operation:', response.statusText);
-                    })
+                    });
                 }
             }).catch(error => {
                 store.configStore.snackBarIsError = true;
-                store.configStore.snackBarMessage = `An error occurred: ${error}`
+                store.configStore.snackBarMessage = `An error occurred: ${error}`;
                 store.configStore.openSnackBar = true;
                 console.error('There has been a problem with your fetch operation:', error);
-            })
+            });
 
 
-    }
+    };
 
     return (<div>
         <Dialog open={store.configStore.openShareUIDDialog}>
@@ -73,13 +73,13 @@ const UIDInputModal: FC<Props> = ({ stateName }: Props) => {
                             startAdornment: <InputAdornment position="start">u</InputAdornment>,
                         }}
                         value={uIDInput}
-                        onChange={(e) => { setUIDInput(e.target.value) }}
+                        onChange={(e) => { setUIDInput(e.target.value); }}
                     />
                     <FormControlLabel
                         control={
                             <Switch
                                 checked={writeAccess}
-                                onChange={(e) => { setWriteAccess(e.target.checked) }}
+                                onChange={(e) => { setWriteAccess(e.target.checked); }}
                                 name="WriteAccess"
                                 color="primary"
                             />
@@ -102,7 +102,7 @@ const UIDInputModal: FC<Props> = ({ stateName }: Props) => {
             </DialogContent>
         </Dialog>
 
-    </div>)
-}
+    </div>);
+};
 
-export default observer(UIDInputModal)
+export default observer(UIDInputModal);

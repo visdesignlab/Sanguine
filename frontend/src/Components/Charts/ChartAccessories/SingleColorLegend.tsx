@@ -4,7 +4,7 @@ import { Third_Gray } from "../../../Presets/Constants";
 
 type Props = {
     dimensionWidth: number;
-}
+};
 
 
 const SingleColorLegend: FC<Props> = ({ dimensionWidth }) => {
@@ -40,6 +40,6 @@ const SingleColorLegend: FC<Props> = ({ dimensionWidth }) => {
             fill={Third_Gray}>
             100%
         </text>
-    </g>
-}
+    </g>;
+};
 export default SingleColorLegend;

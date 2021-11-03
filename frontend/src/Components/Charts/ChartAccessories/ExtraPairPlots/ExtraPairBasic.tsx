@@ -22,8 +22,8 @@ const ExtraPairBasic: FC<Props> = ({ secondaryDataSet, dataSet, aggregationScale
         const range = JSON.parse(aggregationScaleRange);
 
         const aggregationScale = scaleBand().domain(domain).range(range).paddingInner(0.1);
-        return aggregationScale
-    }, [aggregationScaleDomain, aggregationScaleRange])
+        return aggregationScale;
+    }, [aggregationScaleDomain, aggregationScaleRange]);
 
     const valueScale = scaleLinear().domain([0, 1]).range(greyScaleRange);
 
@@ -61,7 +61,7 @@ const ExtraPairBasic: FC<Props> = ({ secondaryDataSet, dataSet, aggregationScale
                                 fontSize={store.configStore.largeFont ? largeFontSize : 12}
                                 textAnchor={"middle"}>{Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? "<1%" : format(".0%")(dataVal.calculated)}</text>
                         </g>
-                    )
+                    );
                 })}
             </g>
             <g>
@@ -94,11 +94,11 @@ const ExtraPairBasic: FC<Props> = ({ secondaryDataSet, dataSet, aggregationScale
                                 fontSize={store.configStore.largeFont ? largeFontSize : 12}
                                 textAnchor={"middle"}>{Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? "<1%" : format(".0%")(dataVal.calculated)}</text>
                         </g>
-                    )
+                    );
                 }) : <></>}
             </g>
         </>
-    )
-}
+    );
+};
 
 export default observer(ExtraPairBasic);

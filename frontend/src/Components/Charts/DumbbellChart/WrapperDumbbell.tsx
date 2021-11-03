@@ -23,7 +23,7 @@ type Props = {
     layoutH: number;
     layoutW: number;
     annotationText: string;
-}
+};
 const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartId, layoutH, layoutW }) => {
     const hemoData = useContext(DataContext);
     const store = useContext(Store);
@@ -49,7 +49,7 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
         if (svgRef.current) {
             setWidth(svgRef.current.clientWidth);
             // setWidth(w === 1 ? 542.28 : 1146.97)
-            setHeight(svgRef.current.clientHeight)
+            setHeight(svgRef.current.clientHeight);
         }
     }, [layoutH, layoutW, store.mainCompWidth, svgRef]);
 
@@ -57,7 +57,7 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
         tokenCheckCancel(previousCancelToken);
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
-        setPreviousCancelToken(call)
+        setPreviousCancelToken(call);
 
         let requestingAxis = xAggregationOption;
         if (!BloodProductCap[xAggregationOption]) {
@@ -90,12 +90,12 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
                 };
                 if (yAxisVal !== undefined && preop_hgb > 0 && postop_hgb > 0 && !existingCaseID.has(ob.CASE_ID)) {
                     if ((showZero) || (!showZero && yAxisVal > 0)) {
-                        yAxisVal = bloodComponentOutlierHandler(yAxisVal, xAggregationOption)
+                        yAxisVal = bloodComponentOutlierHandler(yAxisVal, xAggregationOption);
                         tempXMin = preop_hgb < tempXMin ? preop_hgb : tempXMin;
                         tempXMin = postop_hgb < tempXMin ? postop_hgb : tempXMin;
                         tempXMax = preop_hgb > tempXMax ? preop_hgb : tempXMax;
                         tempXMax = postop_hgb > tempXMax ? postop_hgb : tempXMax;
-                        existingCaseID.add(ob.CASE_ID)
+                        existingCaseID.add(ob.CASE_ID);
                         caseCount++;
                         let new_ob: DumbbellDataPoint = {
                             case: ob,
@@ -106,7 +106,7 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
                         return new_ob;
                     }
                 }
-            })
+            });
             let filteredDataOutput = (dataOutput.filter((d) => d)) as DumbbellDataPoint[];
             store.chartStore.totalIndividualCaseCount = caseCount;
             stateUpdateWrapperUseJSON(data, filteredDataOutput, setData);
@@ -119,7 +119,7 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
                 // handle error
             }
         });
-    }, [rawDateRange, proceduresSelection, hemoData, xAggregationOption, showZero])
+    }, [rawDateRange, proceduresSelection, hemoData, xAggregationOption, showZero]);
 
     return <Grid container direction="row" alignItems="center" className={styles.chartWrapper}>
         <Grid item xs={1}>
@@ -130,17 +130,17 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
                 orientation="vertical">
                 <Button
                     className={sortMode === "Preop" ? buttonStyles.preopButtonActive : buttonStyles.preopButtonOutline}
-                    onClick={() => { setSortMode("Preop") }}>
+                    onClick={() => { setSortMode("Preop"); }}>
                     Preop
                 </Button>
                 <Button
                     className={sortMode === "Postop" ? buttonStyles.postopButtonActive : buttonStyles.postopButtonOutline}
-                    onClick={() => { setSortMode("Postop") }}>
+                    onClick={() => { setSortMode("Postop"); }}>
                     Postop
                 </Button>
                 <Button
                     className={sortMode === "Gap" ? buttonStyles.gapButtonActive : buttonStyles.gapButtonOutline}
-                    onClick={() => { setSortMode("Gap") }}>
+                    onClick={() => { setSortMode("Gap"); }}>
                     Gap
                 </Button>
             </ButtonGroup>
@@ -148,17 +148,17 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
             <ButtonGroup size="small" orientation="vertical">
                 <Button
                     className={showPreop ? buttonStyles.preopButtonActive : buttonStyles.preopButtonOutline}
-                    onClick={() => { setShowPreop(!showPreop) }}>
+                    onClick={() => { setShowPreop(!showPreop); }}>
                     Preop
                 </Button>
                 <Button
                     className={showPostop ? buttonStyles.postopButtonActive : buttonStyles.postopButtonOutline}
-                    onClick={() => { setShowPostop(!showPostop) }}>
+                    onClick={() => { setShowPostop(!showPostop); }}>
                     Postop
                 </Button>
                 <Button
                     className={showGap ? buttonStyles.gapButtonActive : buttonStyles.gapButtonOutline}
-                    onClick={() => { setShowGap(!showGap) }}>
+                    onClick={() => { setShowGap(!showGap); }}>
                     Gap
                 </Button>
             </ButtonGroup>
@@ -185,7 +185,7 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
                 <AnnotationForm chartI={chartId} annotationText={annotationText} />
             </Container>
         </Grid>
-    </Grid>
-}
+    </Grid>;
+};
 
-export default observer(WrapperDumbbell)
+export default observer(WrapperDumbbell);

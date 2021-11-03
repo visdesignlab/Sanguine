@@ -18,7 +18,7 @@ const DetailView: FC = () => {
             <Divider orientation="horizontal" style={{ width: '100%' }} />
             <CaseInfo />
         </div>
-    )
-}
+    );
+};
 
-export default observer(DetailView)
+export default observer(DetailView);

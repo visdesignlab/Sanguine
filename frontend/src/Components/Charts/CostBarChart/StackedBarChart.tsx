@@ -1,6 +1,6 @@
 import { scaleBand, scaleLinear } from "d3";
-import { FC, useCallback, useState } from "react"
-import { CostBarChartDataPoint, ExtraPairPoint } from "../../../Interfaces/Types/DataTypes"
+import { FC, useCallback, useState } from "react";
+import { CostBarChartDataPoint, ExtraPairPoint } from "../../../Interfaces/Types/DataTypes";
 import { Basic_Gray, OffsetDict } from "../../../Presets/Constants";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import useDeepCompareEffect from "use-deep-compare-effect";
@@ -34,7 +34,7 @@ type Props = {
     extraPairDataSet: ExtraPairPoint[];
     extraPairTotalWidth: number;
     chartId: string;
-}
+};
 
 const StackedBarChart: FC<Props> = ({ outcomeComparison, caseCount, secondaryCaseCount, xAggregationOption, secondaryData, svg, data, dimensionWidth, dimensionHeight, maximumCost, maxSavedNegative, costMode, showPotential, extraPairDataSet, extraPairTotalWidth, secondaryExtraPairDataSet, chartId }: Props) => {
     const store = useContext(Store);
@@ -43,9 +43,9 @@ const StackedBarChart: FC<Props> = ({ outcomeComparison, caseCount, secondaryCas
     const [xVals, setXVals] = useState([]);
 
     useDeepCompareEffect(() => {
-        const [tempxVals, newCaseMax] = sortHelper(data, xAggregationOption, store.state.showZero, secondaryData)
+        const [tempxVals, newCaseMax] = sortHelper(data, xAggregationOption, store.state.showZero, secondaryData);
         stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
-        setCaseMax(newCaseMax as number)
+        setCaseMax(newCaseMax as number);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data, xAggregationOption, secondaryData]);
 
@@ -61,8 +61,8 @@ const StackedBarChart: FC<Props> = ({ outcomeComparison, caseCount, secondaryCas
     const valueScale = useCallback(() => {
         let valueScale = scaleLinear()
             .domain([maxSavedNegative, maximumCost])
-            .range([currentOffset.left + extraPairTotalWidth, dimensionWidth - currentOffset.right - currentOffset.margin])
-        return valueScale
+            .range([currentOffset.left + extraPairTotalWidth, dimensionWidth - currentOffset.right - currentOffset.margin]);
+        return valueScale;
     }, [dimensionWidth, maximumCost, maxSavedNegative, currentOffset, extraPairTotalWidth]);
 
 
@@ -106,10 +106,10 @@ const StackedBarChart: FC<Props> = ({ outcomeComparison, caseCount, secondaryCas
                                     isFalseComparison={true}
                                     caseCount={dp.caseCount} />
                             </ChartG>
-                        </g>)
+                        </g>);
                 })}
                 {secondaryData ? secondaryData.map((dp) => {
-                    console.log(dp)
+                    console.log(dp);
                     return (
                         <g>
                             <SingleStackedBar
@@ -130,7 +130,7 @@ const StackedBarChart: FC<Props> = ({ outcomeComparison, caseCount, secondaryCas
                                     caseMax={caseMax}
                                     caseCount={dp.caseCount} />
                             </ChartG>
-                        </g>)
+                        </g>);
                 }) : <></>}
                 <g className="extraPairChart">
                     <GeneratorExtraPair
@@ -150,7 +150,7 @@ const StackedBarChart: FC<Props> = ({ outcomeComparison, caseCount, secondaryCas
                     strokeDasharray="5,5" />
             </g>
         </>
-    )
-}
+    );
+};
 
 export default observer(StackedBarChart);

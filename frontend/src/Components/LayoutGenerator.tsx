@@ -1,6 +1,6 @@
-import { Container, Tab, Tabs } from "@material-ui/core";
+import { Container } from "@material-ui/core";
 import { observer } from "mobx-react";
-import { ChangeEvent, useContext, useState } from "react";
+import { useContext } from "react";
 import { FC, useRef, useLayoutEffect } from "react";
 import { Responsive } from "react-grid-layout";
 import 'react-grid-layout/css/styles.css';
@@ -8,21 +8,15 @@ import Store from "../Interfaces/Store";
 import { LayoutElement } from "../Interfaces/Types/LayoutTypes";
 import { typeDiction } from "../Presets/DataDict";
 import { useStyles, WelcomeText } from "../Presets/StyledComponents";
-import ChartStandardButtons from "./Charts/ChartStandardButtons";
 import WrapperCostBar from "./Charts/CostBarChart/WrapperCostBar";
 import WrapperDumbbell from "./Charts/DumbbellChart/WrapperDumbbell";
 import WrapperHeatMap from "./Charts/HeatMap/WrapperHeatMap";
 import WrapperScatter from "./Charts/ScatterPlot/WrapperScatter";
-import FilterBoard from "./Utilities/FilterInterface/FilterBoard";
 
 
 const LayoutGenerator: FC = () => {
-    const store = useContext(Store)
-    const [tabValue, setTabValue] = useState(0);
+    const store = useContext(Store);
     const styles = useStyles();
-    const handleChange = (event: ChangeEvent<{}>, newValue: any) => {
-        setTabValue(newValue);
-    };
 
     const createElement = (layout: LayoutElement, index: number) => {
         switch (layout.plotType) {
@@ -97,7 +91,7 @@ const LayoutGenerator: FC = () => {
 
         }
 
-    }
+    };
 
     const colData = {
         lg: 2,
@@ -107,45 +101,36 @@ const LayoutGenerator: FC = () => {
         xxs: 2
     };
     const generateGrid = () => {
-        let output = store.state.layoutArray.map(d => ({ w: d.w, h: d.h, x: d.x, y: d.y, i: d.i }))
-        const newStuff = output.map(d => ({ ...d }))
-        return newStuff
-    }
+        let output = store.state.layoutArray.map(d => ({ w: d.w, h: d.h, x: d.x, y: d.y, i: d.i }));
+        const newStuff = output.map(d => ({ ...d }));
+        return newStuff;
+    };
 
-    const tabRef = useRef(null)
+    const tabRef = useRef(null);
 
     useLayoutEffect(() => {
         if (tabRef.current) {
-            store.mainCompWidth = ((tabRef.current as any).clientWidth)
+            store.mainCompWidth = ((tabRef.current as any).clientWidth);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tabRef])
+    }, [tabRef]);
 
     window.addEventListener("resize", () => {
         if (tabRef.current) {
-            store.mainCompWidth = ((tabRef.current as any).clientWidth)
+            store.mainCompWidth = ((tabRef.current as any).clientWidth);
         }
-    })
+    });
 
 
 
     return (
         <Container className={styles.containerWidth}>
-            {/* <Tabs
-                value={tabValue}
-                onChange={handleChange}
-                indicatorColor="primary"
-                textColor="primary"
-                centered>
-                <Tab label="Main" />
-                <Tab label="filter" />
-            </Tabs> */}
             <Container ref={tabRef} className={styles.containerWidth} style={{ height: "90vh" }}>
 
                 <WelcomeText show={store.state.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
                 <Responsive
-                    onResizeStop={(e, v) => { store.chartStore.onLayoutChange(e) }}
-                    onDragStop={(e, v) => { store.chartStore.onLayoutChange(e) }}
+                    onResizeStop={(e, v) => { store.chartStore.onLayoutChange(e); }}
+                    onDragStop={(e, v) => { store.chartStore.onLayoutChange(e); }}
                     draggableHandle={".move-icon"}
                     className="layout"
                     cols={colData}
@@ -160,7 +145,7 @@ const LayoutGenerator: FC = () => {
 
             </Container>
         </Container>
-    )
-}
+    );
+};
 
 export default observer(LayoutGenerator);

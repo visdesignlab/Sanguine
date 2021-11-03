@@ -7,13 +7,13 @@ import { simulateAPIClick } from "../../Interfaces/UserManagement";
 import UIDInputModal from "./UIDInputModal";
 
 type Props = {
-    stateName: string
-}
+    stateName: string;
+};
 
 const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
 
     const [uIDShared, updateUIDShared] = useState<string[]>([]);
-    const [accessArray, updateAccessArray] = useState<string[]>([])
+    const [accessArray, updateAccessArray] = useState<string[]>([]);
 
     const makeStateAccessRequest = () => {
         if (stateName) {
@@ -22,25 +22,25 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
                 .then(function (data) {
                     //   const result = data.result;
                     let shareResult: any[] = data.users_and_roles;
-                    let uID: string[] = []
-                    let access: string[] = []
+                    let uID: string[] = [];
+                    let access: string[] = [];
                     shareResult.forEach((user) => {
-                        uID.push(user[0])
-                        access.push(user[1])
-                    })
+                        uID.push(user[0]);
+                        access.push(user[1]);
+                    });
                     updateUIDShared(uID);
                     updateAccessArray(access);
                 })
-                .catch(error => { console.log(error) });
+                .catch(error => { console.log(error); });
         }
-    }
+    };
 
     useEffect(() => {
-        makeStateAccessRequest()
+        makeStateAccessRequest();
     }, [stateName]);
 
     const changeAccess = (uID: string, newAccess: string, indexInArray: number) => {
-        const csrftoken = simulateAPIClick()
+        const csrftoken = simulateAPIClick();
         fetch(`${process.env.REACT_APP_QUERY_URL}share_state`, {
             method: `POST`,
             credentials: "include",
@@ -62,7 +62,7 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
                     // let newAccessArray = accessArray;
                     // newAccessArray[indexInArray] = newAccess
                     // updateAccessArray(newAccessArray)
-                    makeStateAccessRequest()
+                    makeStateAccessRequest();
                 } else {
                     response.text().then(error => {
 
@@ -71,17 +71,17 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
                         store.configStore.openSnackBar = true;
 
                         console.error('There has been a problem with your fetch operation:', response.statusText);
-                    })
+                    });
                 }
             }).catch(error => {
                 store.configStore.snackBarIsError = true;
                 store.configStore.snackBarMessage = `An error occurred: ${error}`;
                 store.configStore.openSnackBar = true;
                 console.error('There has been a problem with your fetch operation:', error);
-            })
-    }
+            });
+    };
 
-    const store = useContext(Store)
+    const store = useContext(Store);
     return (<div>
         <Dialog open={store.configStore.openStateAccessControl}>
             <DialogTitle>Manage {stateName} Access</DialogTitle>
@@ -92,7 +92,7 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
                         return (<ListItem key={`${uIDShared[i]}-${d}`}>
                             <ListItemText primary={uIDShared[i]} key={`${uIDShared[i]}`} />
                             <ListItemSecondaryAction>
-                                <RadioGroup row onChange={(e) => { changeAccess(uIDShared[i], e.target.value, i) }} value={d} key={`${uIDShared[i]}-${d}`}>
+                                <RadioGroup row onChange={(e) => { changeAccess(uIDShared[i], e.target.value, i); }} value={d} key={`${uIDShared[i]}-${d}`}>
                                     <FormControlLabel
                                         value="WR"
                                         control={
@@ -112,13 +112,13 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
                                     />
                                 </RadioGroup>
                             </ListItemSecondaryAction>
-                        </ListItem>)
+                        </ListItem>);
                     })}
                     <ListItem>
                         <ListItemText>
                             <IconButton onClick={() => {
                                 store.configStore.openShareUIDDialog = true;
-                                store.configStore.openStateAccessControl = false
+                                store.configStore.openStateAccessControl = false;
                             }}>
                                 <AddIcon />
                             </IconButton>
@@ -128,14 +128,14 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
 
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => { store.configStore.openStateAccessControl = false }}>
+                <Button onClick={() => { store.configStore.openStateAccessControl = false; }}>
                     Close
                 </Button>
             </DialogActions>
         </Dialog>
 
         <UIDInputModal stateName={stateName} />
-    </div>)
-}
+    </div>);
+};
 
 export default observer(StateAccessControl);

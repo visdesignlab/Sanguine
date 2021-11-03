@@ -5,7 +5,7 @@ import Store from "../../Interfaces/Store";
 
 type Props = {
     bloodComponent: string;
-}
+};
 const CostInputDialog: FC<Props> = ({ bloodComponent }: Props) => {
     const store = useContext(Store);
 
@@ -14,25 +14,25 @@ const CostInputDialog: FC<Props> = ({ bloodComponent }: Props) => {
     const saveCostInput = () => {
         store.configStore.changeCostConfig(bloodComponent, costInput);
         store.configStore.openCostInputModal = false;
-        setCostInput(0)
-    }
+        setCostInput(0);
+    };
 
     return (
         <Dialog open={store.configStore.openCostInputModal}>
             <DialogTitle>Change Cost for {bloodComponent}</DialogTitle>
             <DialogContent>
                 <DialogContentText>Current Cost for {bloodComponent} is ${store.state.BloodProductCost[bloodComponent]}</DialogContentText>
-                <TextField type="number" fullWidth label="New Cost" onChange={(e) => { setCostInput(parseInt(e.target.value)) }} value={costInput} />
+                <TextField type="number" fullWidth label="New Cost" onChange={(e) => { setCostInput(parseInt(e.target.value)); }} value={costInput} />
             </DialogContent>
 
             <DialogActions>
-                <Button onClick={() => { store.configStore.openCostInputModal = false }}>Cancel</Button>
+                <Button onClick={() => { store.configStore.openCostInputModal = false; }}>Cancel</Button>
                 <Button color="primary"
                     onClick={saveCostInput}>
                     Confirm
                 </Button>
             </DialogActions>
-        </Dialog>)
-}
+        </Dialog>);
+};
 
-export default observer(CostInputDialog)
+export default observer(CostInputDialog);

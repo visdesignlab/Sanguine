@@ -3,7 +3,7 @@ import { Offset } from "../Interfaces/Types/OffsetType";
 import { Basic_Gray, highlight_orange, largeFontSize, postop_color, preop_color, regularFontSize } from "./Constants";
 
 export interface BiggerFontProps {
-    biggerFont: boolean
+    biggerFont: boolean;
 }
 
 export const ChartSVG = styled.svg`
@@ -16,7 +16,7 @@ export const SurgeryRect = styled(`rect`)`
   height:15px;
   fill-opacity:0.4;
   fill:${postop_color};
-`
+`;
 interface ListSVGProps {
     widthInput: number;
 }
@@ -24,22 +24,22 @@ export const ListSVG = styled.svg<ListSVGProps>`
   height: 15px;
   padding-left:5px;
   width:${props => props.widthInput}px;
-`
+`;
 interface ChartGProps {
-    currentOffset: Offset
+    currentOffset: Offset;
     extraPairTotalWidth: number;
 }
 
 export const ChartG = styled(`g`) <ChartGProps>`
     transform: translate(${props => (props.currentOffset.left + props.extraPairTotalWidth)}px,0px)
-`
+`;
 
 
 export const HeatMapRect = styled(`rect`)`
     y:0;
     opacity:0.6;
     stroke-width:2;
-`
+`;
 interface HeatMapDivideProp {
     currentOffset: Offset;
     dimensionHeight: number;
@@ -52,7 +52,7 @@ export const HeatMapDividerLine = styled(`line`) <HeatMapDivideProp>`
     y2=${props => (props.dimensionHeight - props.currentOffset.bottom)};
     stroke: #e5e5e5;
     stroke-width:1;
-`
+`;
 
 interface DotProps {
 
@@ -83,7 +83,7 @@ export const DumbbellRect = styled(`rect`) <RectProps>`
 export const DumbbellLine = styled(`line`) < AverageLineProps>`
     stroke: ${props => (props.ispreop ? preop_color : postop_color)};
     stroke-width:3px
-    `
+    `;
 
 export const AxisText = styled.text<BiggerFontProps>`
     fill:white;
@@ -91,17 +91,17 @@ export const AxisText = styled.text<BiggerFontProps>`
     text-anchor: middle;
     y:0;
     font-size:${props => props.biggerFont ? `${largeFontSize}px` : `${regularFontSize}px`};
-`
+`;
 
 export const CustomAxisLine = styled(`line`)`
     stroke: #404040;
     stroke-width:2px;
     y1: 0;
     y2:0;
-`
+`;
 
 export const CustomAxisLineBox = styled(`rect`)`
     height: 13px;
     y:0px;
     opacity:0.75;
-`
+`;

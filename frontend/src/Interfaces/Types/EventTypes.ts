@@ -1,6 +1,6 @@
 export type ActionEvents =
     | 'Chart Change'
-    | 'Filter'
+    | 'Filter';;
     // changeChart,
     // toggleShowZero,
     // // toggleDumbbell,

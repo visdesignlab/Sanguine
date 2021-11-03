@@ -4,7 +4,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import { MuiPickersUtilsProvider, KeyboardDatePicker } from "@material-ui/pickers";
 import { observer } from "mobx-react";
 import { FC, useContext, useState } from "react";
-import { AcronymDictionary } from "../../../Presets/DataDict"
+import { AcronymDictionary } from "../../../Presets/DataDict";
 import Store from "../../../Interfaces/Store";
 import ComponentRangePicker from "./ComponentRangePicker";
 import { Title, useStyles } from "../../../Presets/StyledComponents";
@@ -28,7 +28,7 @@ const FilterBoard: FC = () => {
         setBeginDate(defaultState.rawDateRange[0]);
         setEndDate(defaultState.rawDateRange[1]);
         store.configStore.dateRangeChange(defaultState.rawDateRange);
-    }
+    };
 
     const checkIfCanReset = (filterInput: any) => {
 
@@ -37,33 +37,33 @@ const FilterBoard: FC = () => {
         Object.entries(filterInput).map(([filterName, filterValue]) => {
 
             if ((filterValue as any)[0] > 0 || ((filterValue as any)[1] < store.configStore.filterRange[filterName])) {
-                canReset = true
+                canReset = true;
             }
-        })
-        return canReset
-    }
+        });
+        return canReset;
+    };
 
     const enableClearAll = () => {
         if (rawDateRange[0] !== defaultState.rawDateRange[0] || rawDateRange[1] !== defaultState.rawDateRange[1]) {
-            return true
+            return true;
         }
         if (outcomeFilter.length > 0) {
-            return true
+            return true;
         }
         if (!(surgeryUrgencySelection[0] && surgeryUrgencySelection[1] && surgeryUrgencySelection[2])) {
-            return true
+            return true;
         }
         if (currentSelectPatientGroup.length > 0 || currentOutputFilterSet.length > 0) {
-            return true
+            return true;
         }
         if (checkIfCanReset(testValueFilter)) {
-            return true
+            return true;
         }
         if (checkIfCanReset(bloodComponentFilter)) {
-            return true
+            return true;
         }
         return false;
-    }
+    };
 
     return (
         <Container className={styles.containerWidth}>
@@ -71,7 +71,7 @@ const FilterBoard: FC = () => {
             < List dense >
                 <ListItem>
 
-                    <Button variant="outlined" size="small" disabled={!enableClearAll()} onClick={() => { store.configStore.clearAllFilter() }}>Clear All Filter Settings</Button>
+                    <Button variant="outlined" size="small" disabled={!enableClearAll()} onClick={() => { store.configStore.clearAllFilter(); }}>Clear All Filter Settings</Button>
 
                 </ListItem>
                 <ListItem>
@@ -99,9 +99,9 @@ const FilterBoard: FC = () => {
                             onChange={(d) => {
                                 if (d) {
                                     setBeginDate(d.getTime());
-                                    store.configStore.dateRangeChange([d.getTime(), rawDateRange[1]])
+                                    store.configStore.dateRangeChange([d.getTime(), rawDateRange[1]]);
                                 } else {
-                                    setBeginDate(rawDateRange[0])
+                                    setBeginDate(rawDateRange[0]);
                                 }
                             }} />
                     </MuiPickersUtilsProvider>} />
@@ -117,9 +117,9 @@ const FilterBoard: FC = () => {
                                 onChange={(d) => {
                                     if (d) {
                                         setEndDate(d.getTime());
-                                        store.configStore.dateRangeChange([rawDateRange[0], d.getTime()])
+                                        store.configStore.dateRangeChange([rawDateRange[0], d.getTime()]);
                                     } else {
-                                        setEndDate(rawDateRange[1])
+                                        setEndDate(rawDateRange[1]);
                                     }
                                 }} />
                         </MuiPickersUtilsProvider>} />
@@ -132,7 +132,7 @@ const FilterBoard: FC = () => {
                     <ListItemSecondaryAction>
 
                         <IconButton
-                            onClick={() => { store.configStore.changeOutcomeFilter([]) }}
+                            onClick={() => { store.configStore.changeOutcomeFilter([]); }}
                             disabled={outcomeFilter.length === 0}
                         >
                             <Tooltip title="Clear">
@@ -149,7 +149,7 @@ const FilterBoard: FC = () => {
                     <ListItemSecondaryAction>
 
                         <IconButton
-                            onClick={() => { store.configStore.changeSurgeryUrgencySelection([true, true, true]) }}
+                            onClick={() => { store.configStore.changeSurgeryUrgencySelection([true, true, true]); }}
                             disabled={surgeryUrgencySelection[0] && surgeryUrgencySelection[1] && surgeryUrgencySelection[2]}
                         >
                             <Tooltip title="Clear">
@@ -165,7 +165,7 @@ const FilterBoard: FC = () => {
                     <ListItemText primary={<Title>Selection Filter</Title>} />
                     <ListItemSecondaryAction>
 
-                        <IconButton onClick={() => { store.selectionStore.clearSelectionFilter() }}
+                        <IconButton onClick={() => { store.selectionStore.clearSelectionFilter(); }}
                             disabled={currentSelectPatientGroup.length === 0 && currentOutputFilterSet.length === 0}>
                             <Tooltip title="Clear All">
                                 <ReplayIcon />
@@ -180,7 +180,7 @@ const FilterBoard: FC = () => {
                             <ListItemText primary="Cases Filtered" secondary={currentSelectPatientGroup.length} />
                             <ListItemSecondaryAction>
 
-                                <IconButton onClick={() => { store.selectionStore.updateSelectedPatientGroup([]) }}>
+                                <IconButton onClick={() => { store.selectionStore.updateSelectedPatientGroup([]); }}>
                                     <Tooltip title="Remove">
                                         <CloseIcon />
                                     </Tooltip>
@@ -195,13 +195,13 @@ const FilterBoard: FC = () => {
                             <ListItemText key={`${selectSet.setName}selected`} primary={AcronymDictionary[selectSet.setName] ? AcronymDictionary[selectSet.setName] : selectSet.setName}
                                 secondary={selectSet.setValues.sort().join(', ')} />
                             <ListItemSecondaryAction key={`${selectSet.setName}selected`}>
-                                <IconButton key={`${selectSet.setName}selected`} onClick={() => { store.selectionStore.removeFilter(selectSet.setName) }}>
+                                <IconButton key={`${selectSet.setName}selected`} onClick={() => { store.selectionStore.removeFilter(selectSet.setName); }}>
                                     <Tooltip title="Remove">
                                         <CloseIcon key={`${selectSet.setName}selected`} />
                                     </Tooltip>
                                 </IconButton>
                             </ListItemSecondaryAction>
-                        </ListItem>)
+                        </ListItem>);
                     })
                 }
 
@@ -209,7 +209,7 @@ const FilterBoard: FC = () => {
                     <ListItemText primary={<Title>Blood Component Filter</Title>} />
                     <ListItemSecondaryAction>
 
-                        <IconButton onClick={() => { store.configStore.resetBloodFilter() }}
+                        <IconButton onClick={() => { store.configStore.resetBloodFilter(); }}
                             disabled={!checkIfCanReset(bloodComponentFilter)}>
                             <Tooltip title="Reset">
                                 <ReplayIcon />
@@ -220,7 +220,7 @@ const FilterBoard: FC = () => {
                 </ListItem>
                 {
                     BloodComponentOptions.map((d) => {
-                        return (<ComponentRangePicker label={d.key} key={d.key} />)
+                        return (<ComponentRangePicker label={d.key} key={d.key} />);
                     })
                 }
 
@@ -228,7 +228,7 @@ const FilterBoard: FC = () => {
                     <ListItemText primary={<Title>Test Value Filter</Title>} />
                     <ListItemSecondaryAction>
 
-                        <IconButton onClick={() => { store.configStore.resetTestValueFilter() }}
+                        <IconButton onClick={() => { store.configStore.resetTestValueFilter(); }}
                             disabled={!checkIfCanReset(testValueFilter)}>
                             <Tooltip title="Reset">
                                 <ReplayIcon />
@@ -239,12 +239,12 @@ const FilterBoard: FC = () => {
                 </ListItem>
                 {
                     ScatterYOptions.map((d) => {
-                        return (<ComponentRangePicker label={d.key} key={d.key} isTestValue={true} />)
+                        return (<ComponentRangePicker label={d.key} key={d.key} isTestValue={true} />);
                     })
                 }
             </List >
         </Container>
-    )
-}
+    );
+};
 
-export default observer(FilterBoard)
+export default observer(FilterBoard);

@@ -9,7 +9,7 @@ import { useStyles } from "../../../Presets/StyledComponents";
 const CaseList: FC = () => {
 
     const store = useContext(Store);
-    const { currentBrushedPatientGroup, currentSelectPatient } = store.state
+    const { currentBrushedPatientGroup, currentSelectPatient } = store.state;
     const styles = useStyles();
 
     return (<Container className={styles.containerWidth} style={{ height: "15vh", paddingTop: "0.5px" }} >
@@ -23,7 +23,7 @@ const CaseList: FC = () => {
 
                     <IconButton edge="end"
                         onClick={() => {
-                            store.selectionStore.updateBrush([])
+                            store.selectionStore.updateBrush([]);
                         }}>
                         <CloseIcon />
                     </IconButton>
@@ -34,19 +34,19 @@ const CaseList: FC = () => {
                 return (
                     <CaseItem button key={d.CASE_ID}
                         isSelected={(currentSelectPatient && currentSelectPatient.CASE_ID === d.CASE_ID) || false}
-                        onClick={() => { store.selectionStore.setCurrentSelectPatient(d) }}>
+                        onClick={() => { store.selectionStore.setCurrentSelectPatient(d); }}>
                         <ListItemText primary={
                             store.configStore.privateMode ? d.CASE_ID : "----------"
 
                         } />
                     </CaseItem>
-                )
+                );
             })}
 
         </List>
-    </Container>)
-}
-export default observer(CaseList)
+    </Container>);
+};
+export default observer(CaseList);
 
 interface CaseItemProps {
     isSelected: boolean;

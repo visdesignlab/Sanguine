@@ -10,63 +10,63 @@ import { ListSVG, SurgeryRect } from "../../../Presets/StyledSVGComponents";
 
 type Props = {
     surgeryList: any[];
-    maxCaseCount: number
-}
+    maxCaseCount: number;
+};
 
 const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
-    const store = useContext(Store)
+    const store = useContext(Store);
     const [width, setWidth] = useState(0);
     const [itemSelected, setItemSelected] = useState<any[]>([]);
     const [itemUnselected, setItemUnselected] = useState<any[]>([]);
 
-    const styles = useStyles()
+    const styles = useStyles();
 
     const caseScale = useCallback(() => {
-        const caseScale = scaleLinear().domain([0, maxCaseCount]).range([2, 0.3 * width - 15])
+        const caseScale = scaleLinear().domain([0, maxCaseCount]).range([2, 0.3 * width - 15]);
         return caseScale;
     }, [maxCaseCount, width]);
 
 
-    const surgeryViewRef = useRef(null)
+    const surgeryViewRef = useRef(null);
 
     useLayoutEffect(() => {
-        console.log(surgeryViewRef)
+        console.log(surgeryViewRef);
         if (surgeryViewRef.current) {
-            setWidth((surgeryViewRef.current as any).offsetWidth)
-            console.log(width)
+            setWidth((surgeryViewRef.current as any).offsetWidth);
+            console.log(width);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [surgeryViewRef])
+    }, [surgeryViewRef]);
 
     window.addEventListener("resize", () => {
         if (surgeryViewRef.current) {
-            setWidth((surgeryViewRef.current as any).offsetWidth)
+            setWidth((surgeryViewRef.current as any).offsetWidth);
         }
-    })
+    });
 
-    select('#surgeryCaseScale').call(axisTop(caseScale()).ticks(3) as any)
+    select('#surgeryCaseScale').call(axisTop(caseScale()).ticks(3) as any);
 
 
 
     useEffect(() => {
-        let newItemSelected: any[] = []
-        let newItemUnselected: any[] = []
+        let newItemSelected: any[] = [];
+        let newItemUnselected: any[] = [];
         surgeryList.forEach((d: any) => {
             if (store.state.proceduresSelection.includes(d.value)) {
-                newItemSelected.push(d)
+                newItemSelected.push(d);
             }
             else {
-                newItemUnselected.push(d)
+                newItemUnselected.push(d);
             }
-        })
-        stateUpdateWrapperUseJSON(itemSelected, newItemSelected, setItemSelected)
-        stateUpdateWrapperUseJSON(itemUnselected, newItemUnselected, setItemUnselected)
+        });
+        stateUpdateWrapperUseJSON(itemSelected, newItemSelected, setItemSelected);
+        stateUpdateWrapperUseJSON(itemUnselected, newItemUnselected, setItemUnselected);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [store.state.proceduresSelection, surgeryList])
+    }, [store.state.proceduresSelection, surgeryList]);
 
     const surgeryRow = (listItem: any, isSelected: boolean) => {
         return (
-            <SurgeryListComp key={listItem.value} isSelected={isSelected} onClick={() => { store.selectionStore.updateProcedureSelection(listItem.value, isSelected) }}>
+            <SurgeryListComp key={listItem.value} isSelected={isSelected} onClick={() => { store.selectionStore.updateProcedureSelection(listItem.value, isSelected); }}>
 
                 <SurgeryDiv >
                     {listItem.value}
@@ -80,8 +80,8 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
                         <SurgeryNumText y={9} x={caseScale().range()[1]}>{listItem.count}</SurgeryNumText>
                     </ListSVG>
                 </td>
-            </SurgeryListComp>)
-    }
+            </SurgeryListComp>);
+    };
 
 
     return <Grid item className={styles.gridWidth}>
@@ -100,17 +100,17 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
                     </th>
                 </tr>
                 {itemSelected.map((listItem: any) => {
-                    return surgeryRow(listItem, true)
+                    return surgeryRow(listItem, true);
                 })}
                 {itemUnselected.map((listItem: any) => {
-                    return surgeryRow(listItem, false)
+                    return surgeryRow(listItem, false);
                 })}
 
             </table>
 
         </Container>
-    </Grid>
+    </Grid>;
 
-}
-export default observer(SurgeryListViewer)
+};
+export default observer(SurgeryListViewer);
 

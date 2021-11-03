@@ -1,10 +1,10 @@
-import { timeFormat } from "d3"
-import { observer } from "mobx-react"
-import { useContext } from "react"
-import { FC } from "react"
-import Store from "../../../Interfaces/Store"
-import { AcronymDictionary } from "../../../Presets/DataDict"
-import { Title, useStyles } from "../../../Presets/StyledComponents"
+import { timeFormat } from "d3";
+import { observer } from "mobx-react";
+import { useContext } from "react";
+import { FC } from "react";
+import Store from "../../../Interfaces/Store";
+import { AcronymDictionary } from "../../../Presets/DataDict";
+import { Title, useStyles } from "../../../Presets/StyledComponents";
 import Container from "@material-ui/core/Container";
 
 import List from "@material-ui/core/List";
@@ -12,7 +12,7 @@ import { ListItem, ListItemSecondaryAction, ListItemText, Switch, Grid, IconButt
 
 import ErrorIcon from '@material-ui/icons/Error';
 
-type Props = { totalCaseNum: number }
+type Props = { totalCaseNum: number; };
 
 const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
     const store = useContext(Store);
@@ -20,12 +20,12 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
 
     const generateSurgery = () => {
-        let output: any[] = []
+        let output: any[] = [];
         if (store.state.proceduresSelection.length === 0) {
             output.push(<span key={`all`}>All</span>);
         } else {
             store.state.proceduresSelection.forEach((d, i) => {
-                const stringArray = d.split(" ")
+                const stringArray = d.split(" ");
                 stringArray.forEach((word, index) => {
                     if ((AcronymDictionary as any)[word]) {
                         output.push((
@@ -33,18 +33,18 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                                 <div className="tooltip" key={`${d}-${word}`} style={{ cursor: "help" }}>
                                     {word}
                                 </div>
-                            </Tooltip>))
+                            </Tooltip>));
                     } else {
-                        output.push((<span key={`${d}-${word}`}>{`${index !== 0 ? " " : ""}${word}${index !== stringArray.length - 1 ? " " : ""}`}</span>))
+                        output.push((<span key={`${d}-${word}`}>{`${index !== 0 ? " " : ""}${word}${index !== stringArray.length - 1 ? " " : ""}`}</span>));
                     }
-                })
+                });
                 if (i !== store.state.proceduresSelection.length - 1) {
-                    output.push((<span key={`${d}-comma`}>, </span>))
+                    output.push((<span key={`${d}-comma`}>, </span>));
                 }
-            })
+            });
         }
-        return output
-    }
+        return output;
+    };
 
 
     return (
@@ -70,7 +70,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                             <Switch
                                 checked={store.state.showZero}
                                 color="primary"
-                                onChange={(e) => { store.configStore.toggleShowZero(e.target.checked) }}
+                                onChange={(e) => { store.configStore.toggleShowZero(e.target.checked); }}
                             />
                         </ListItemSecondaryAction>
                     </ListItem>
@@ -101,11 +101,11 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                 </List>
             </Container>
         </Grid >
-    )
+    );
 
 
 
 
-}
+};
 
-export default observer(CurrentView)
+export default observer(CurrentView);

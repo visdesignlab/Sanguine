@@ -21,13 +21,13 @@ type Props = {
     layoutW: number;
     layoutH: number;
     annotationText: string;
-}
+};
 const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationOption, chartId, layoutW, layoutH }: Props) => {
 
     const hemoData = useContext(DataContext);
     const store = useContext(Store);
     const styles = useStyles();
-    const { proceduresSelection, showZero, rawDateRange } = store.state
+    const { proceduresSelection, showZero, rawDateRange } = store.state;
 
     const svgRef = useRef<SVGSVGElement>(null);
     const [width, setWidth] = useState(layoutW === 1 ? 542.28 : 1146.97);
@@ -37,18 +37,18 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
     const [xMax, setXMax] = useState(0);
     const [yMin, setYMin] = useState(0);
     const [yMax, setYMax] = useState(0);
-    const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
+    const [previousCancelToken, setPreviousCancelToken] = useState<any>(null);
 
     useLayoutEffect(() => {
         if (svgRef.current) {
             setWidth(svgRef.current.clientWidth);
-            setHeight(svgRef.current.clientHeight)
+            setHeight(svgRef.current.clientHeight);
         }
     }, [layoutH, layoutW, store.mainCompWidth, svgRef]);
 
     useDeepCompareEffect(() => {
         if (previousCancelToken) {
-            previousCancelToken.cancel("cancel the call?")
+            previousCancelToken.cancel("cancel the call?");
         }
 
         let transfused_dict = {} as any;
@@ -59,7 +59,7 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
             cancelToken: call.token
         })
             .then(function (response) {
-                const transfusedDataResult = response.data
+                const transfusedDataResult = response.data;
                 transfusedDataResult.forEach((element: any) => {
                     transfused_dict[element.case_id] = {
                         transfused: element.transfused_units || 0
@@ -72,18 +72,18 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
                 if (hemoData) {
                     let castData: any[] = hemoData.map((ob: SingleCasePoint) => {
 
-                        const yValue = yValueOption === "PREOP_HGB" ? ob.PREOP_HGB : ob.POSTOP_HGB
-                        let xValue
+                        const yValue = yValueOption === "PREOP_HGB" ? ob.PREOP_HGB : ob.POSTOP_HGB;
+                        let xValue;
                         if (transfused_dict[ob.CASE_ID]) {
                             xValue = transfused_dict[ob.CASE_ID].transfused;
                         };
 
                         if ((yValue && showZero && transfused_dict[ob.CASE_ID]) || (!showZero && yValue && xValue > 0)) {
                             if ((xValue > 100 && xAggregationOption === "PRBC_UNITS")) {
-                                xValue -= 999
+                                xValue -= 999;
                             }
                             if ((xValue > 100 && xAggregationOption === "PLT_UNITS")) {
-                                xValue -= 245
+                                xValue -= 245;
                             }
                             tempYMin = yValue < tempYMin ? yValue : tempYMin;
                             tempYMax = yValue > tempYMax ? yValue : tempYMax;
@@ -97,12 +97,12 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
                             };
                             return new_ob;
                             //}
-                        } else { return undefined }
+                        } else { return undefined; }
                     });
 
-                    castData = castData.filter((d: any) => d)
+                    castData = castData.filter((d: any) => d);
 
-                    store.chartStore.totalIndividualCaseCount = castData.length
+                    store.chartStore.totalIndividualCaseCount = castData.length;
                     stateUpdateWrapperUseJSON(data, castData, setData);
                     setXMax(tempXMax);
                     setXMin(tempXMin);
@@ -145,6 +145,6 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
                 svg={svgRef} />
         </ChartSVG>
         <AnnotationForm chartI={chartId} annotationText={annotationText} />
-    </Container>)
-}
-export default observer(WrapperScatter)
+    </Container>);
+};
+export default observer(WrapperScatter);

@@ -39,11 +39,11 @@ export const SurgeryListComp = styled(`tr`) <SurgeryListProps>`
   &:hover{
     background:#faeee1;
   }
-`
+`;
 
 export const LeftToolBarListItem = styled(ListItem)`
   
-`
+`;
 
 interface WelcomeTextProps {
     show: boolean;
@@ -55,7 +55,7 @@ export const WelcomeText = styled(`text`) < WelcomeTextProps>`
     fill:${Third_Gray};
     opacity:0.25;
     margin:20px;
-`
+`;
 
 export const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -170,4 +170,4 @@ export const useButtonStyles = makeStyles((theme: Theme) =>
             color: Basic_Gray,
             backgroundColor: "white"
         }
-    }))
+    }));

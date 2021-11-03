@@ -1,4 +1,4 @@
-function fallbackCopyTextToClipboard(text: string) {
+function fallbackCopyTextToClipboard (text: string) {
     var textArea = document.createElement("textarea");
     textArea.value = text;
 
@@ -14,24 +14,24 @@ function fallbackCopyTextToClipboard(text: string) {
     try {
         var successful = document.execCommand('copy');
         document.body.removeChild(textArea);
-        return successful
+        return successful;
 
     } catch (err) {
         document.body.removeChild(textArea);
-        return false
+        return false;
     }
 }
 
-export function copyTextToClipboard(text: string) {
+export function copyTextToClipboard (text: string) {
     if (!navigator.clipboard) {
-        console.log(1)
+        console.log(1);
         return fallbackCopyTextToClipboard(text);;
     }
 
     let output = navigator.clipboard.writeText(text).then(function () {
-        return true
+        return true;
     }, function (err) {
-        return false
+        return false;
     });
-    return output
+    return output;
 }

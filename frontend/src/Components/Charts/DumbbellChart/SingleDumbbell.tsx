@@ -1,6 +1,6 @@
 import { Tooltip } from "@material-ui/core";
 import { observer } from "mobx-react";
-import { FC } from "react"
+import { FC } from "react";
 import { DumbbellDataPoint } from "../../../Interfaces/Types/DataTypes";
 import { DumbbellCircle, DumbbellRect } from "../../../Presets/StyledSVGComponents";
 type Props = {
@@ -13,13 +13,13 @@ type Props = {
     showPostop: boolean;
     showGap: boolean;
     circleYValStart: number;
-    circleYValEnd: number
-}
+    circleYValEnd: number;
+};
 
 const SingleDumbbell: FC<Props> = ({ xVal, dataPoint, isSelectSet, showGap, showPostop, showPreop, circleYValStart, circleYValEnd }: Props) => {
     const clickDumbbellHandler = (d: DumbbellDataPoint) => {
-        console.log(d)
-    }
+        console.log(d);
+    };
     const yValCalculation = circleYValStart > circleYValEnd ? circleYValEnd : circleYValStart;
     const rectHeight = Math.abs(circleYValStart - circleYValEnd);
     return (
@@ -59,7 +59,7 @@ const SingleDumbbell: FC<Props> = ({ xVal, dataPoint, isSelectSet, showGap, show
                     display={showPostop ? undefined : "none"}
                 />
             </g>
-        </Tooltip>)
-}
+        </Tooltip>);
+};
 
-export default observer(SingleDumbbell)
+export default observer(SingleDumbbell);
