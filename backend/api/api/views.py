@@ -38,6 +38,7 @@ DE_IDENT_FIELDS = {
     "billing_code": "CODE",
     "case_date": "DI_CASE_DATE",
     "case_id": "DI_CASE_ID",
+    "code_desc": "CODE_DESC",
     "death_date": "DI_DEATH_DATE",
     "dose_unit_desc": "DOSE_UNIT_DESC",
     "draw_dtm": "DI_DRAW_DTM",
@@ -177,6 +178,7 @@ def fetch_surgery(request):
 
         command = f"""
         SELECT
+            SURG.{FIELDS_IN_USE.get('visit_no')},
             SURG.{FIELDS_IN_USE.get('case_date')},
             SURG.{FIELDS_IN_USE.get('surgery_start_time')},
             SURG.{FIELDS_IN_USE.get('surgery_end_time')},
@@ -192,9 +194,40 @@ def fetch_surgery(request):
         result = execute_sql(command, id=case_id)
         data_dict = data_dictionary()
         data = [
-            dict(zip([data_dict[key[0]] for key in result.description], row))
+            dict(zip([data_dict[key[0]] for key in result.description[1:]] + ["cpt"], row[1:] + [[]]))
             for row in result
         ]
+
+        # Get the CPT information for each visit number
+        visit_nos = [row[0] for row in result]
+        visit_bind_names = [f":visit_no{str(i)}" for i in range(len(visit_nos))]
+        visit_filters_safe_sql = (
+            f"AND BLNG.{FIELDS_IN_USE.get('visit_no')} IN ({','.join(visit_bind_names)}) "
+            if visit_nos != []
+            else ""
+        )
+
+        visit_command = f"""
+            SELECT
+                BLNG.{FIELDS_IN_USE.get('visit_no')},
+                BLNG.{FIELDS_IN_USE.get('code_desc')}
+            FROM CLIN_DM.BPU_CTS_DI_BILL_CODES_092920 BLNG
+            WHERE 1=1
+            {visit_filters_safe_sql}
+        """
+
+        visit_result = execute_sql(
+            visit_command,
+            zip(visit_bind_names, visit_nos),
+        )
+
+        cpts = cpt()
+
+        for visit in visit_result:
+            # Use the first column of the query (visit_no), to get the index of data to update
+            index = visit_nos.index(visit[0])
+            cleaned_cpt = cpts[cpts["db_code_desc"] == visit[1]]["clean_name"] if visit[1] in cpts["db_code_desc"] else None
+            data[index]["cpt"] = list(set(data[index]["cpt"] + []))
 
         return JsonResponse({"result": data})
     else:
