@@ -11,7 +11,7 @@ import { Title, useStyles } from "../../../Presets/StyledComponents";
 const CurrentSelected: FC = () => {
     const styles = useStyles();
     const store = useContext(Store);
-    const { currentBrushedPatientGroup, currentSelectSet } = store.state
+    const { currentBrushedPatientGroup, currentSelectSet } = store.state;
 
     return (
         <Grid item className={styles.gridWidth}>
@@ -26,7 +26,7 @@ const CurrentSelected: FC = () => {
                             <ListItemText primary="Current Brushed Patients"
                                 secondary={currentBrushedPatientGroup.length} />
                             <ListItemSecondaryAction>
-                                <IconButton onClick={() => { store.selectionStore.updateBrush([]) }}>
+                                <IconButton onClick={() => { store.selectionStore.updateBrush([]); }}>
                                     <CloseIcon />
                                 </IconButton>
                             </ListItemSecondaryAction>
@@ -38,11 +38,11 @@ const CurrentSelected: FC = () => {
                             <ListItemText primary={AcronymDictionary[selectSet.setName] ? AcronymDictionary[selectSet.setName] : selectSet.setName}
                                 secondary={selectSet.setValues.sort().join(', ')} />
                             <ListItemSecondaryAction>
-                                <IconButton onClick={() => { store.selectionStore.clearSet(selectSet.setName) }}>
+                                <IconButton onClick={() => { store.selectionStore.clearSet(selectSet.setName); }}>
                                     <CloseIcon />
                                 </IconButton>
                             </ListItemSecondaryAction>
-                        </ListItem>)
+                        </ListItem>);
                     })}
 
 
@@ -54,7 +54,7 @@ const CurrentSelected: FC = () => {
                         variant="outlined"
 
                         className={styles.tinyFont}
-                        onClick={() => { store.selectionStore.outputToFilter() }}
+                        onClick={() => { store.selectionStore.outputToFilter(); }}
                     >Create Filter</Button>
                 </div>
                 {/* <Button
@@ -66,7 +66,7 @@ const CurrentSelected: FC = () => {
                     >Clear Filter</Button> */}
 
             </Container>
-        </Grid>)
-}
+        </Grid>);
+};
 
-export default observer(CurrentSelected)
+export default observer(CurrentSelected);

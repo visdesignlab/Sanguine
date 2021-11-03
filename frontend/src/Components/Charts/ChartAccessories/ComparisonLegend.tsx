@@ -13,11 +13,11 @@ type Props = {
     firstTotal: number;
     secondTotal: number;
     outcomeComparison: string;
-}
+};
 
 const ComparisonLegend: FC<Props> = ({ outcomeComparison, dimensionWidth, interventionDate, firstTotal, secondTotal }: Props) => {
     const currentOffset = OffsetDict.regular;
-    const store = useContext(Store)
+    const store = useContext(Store);
     return (<g>
         <g transform="translate(0,4)">
             <rect x={0.2 * (dimensionWidth)}
@@ -55,10 +55,10 @@ const ComparisonLegend: FC<Props> = ({ outcomeComparison, dimensionWidth, interv
             <ComparisonDiv biggerFont={store.configStore.largeFont}>{interventionDate ? `Intervention:` : `Comparing:`}</ComparisonDiv>
             <ComparisonDiv biggerFont={store.configStore.largeFont}>{interventionDate ? timeFormat("%Y-%m-%d")(new Date(interventionDate)) : (AcronymDictionary[outcomeComparison || ""]) || outcomeComparison}</ComparisonDiv>
         </foreignObject>
-    </g>)
-}
+    </g>);
+};
 
-export default observer(ComparisonLegend)
+export default observer(ComparisonLegend);
 
 
 

@@ -26,7 +26,7 @@ const InfoDialog: FC = () => {
                 Close
             </Button>
         </DialogActions>
-    </Dialog>)
-}
+    </Dialog>);
+};
 
-export default observer(InfoDialog)
+export default observer(InfoDialog);

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { FC } from "react";
 
 const BrowserWarning: FC = () => {
-    const [openWarning, setOpenWarning] = useState(false)
+    const [openWarning, setOpenWarning] = useState(false);
 
     //https://stackoverflow.com/questions/4565112/javascript-how-to-find-out-if-the-user-browser-is-chrome/13348618#13348618
     const isChrome = () => {
@@ -23,15 +23,15 @@ const BrowserWarning: FC = () => {
             isOpera === false &&
             isIEedge === false
         ) {
-            return true
+            return true;
         } else {
             return false;
         }
-    }
+    };
 
     useEffect(() => {
-        setOpenWarning(!isChrome())
-    }, [])
+        setOpenWarning(!isChrome());
+    }, []);
 
     return (<Dialog open={openWarning}>
         <DialogTitle >Browser Incompatible</DialogTitle>
@@ -45,6 +45,6 @@ const BrowserWarning: FC = () => {
                 I understand
             </Button>
         </DialogActions>
-    </Dialog>)
-}
-export default BrowserWarning
+    </Dialog>);
+};
+export default BrowserWarning;

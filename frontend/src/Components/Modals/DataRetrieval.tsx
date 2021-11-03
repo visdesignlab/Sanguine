@@ -7,10 +7,10 @@ import Store from "../../Interfaces/Store";
 
 type Props = {
     errorMessage?: string;
-}
+};
 
 const DataRetrievalModal: FC<Props> = ({ errorMessage }: Props) => {
-    const store = useContext(Store)
+    const store = useContext(Store);
     return <Dialog open={store.configStore.dataLoading || store.configStore.dataLoadingFailed
     } >
         {store.configStore.dataLoadingFailed ?
@@ -38,6 +38,6 @@ const DataRetrievalModal: FC<Props> = ({ errorMessage }: Props) => {
                     </Grid>
                 </DialogContent>
             </>)}
-    </Dialog>
-}
-export default observer(DataRetrievalModal)
+    </Dialog>;
+};
+export default observer(DataRetrievalModal);

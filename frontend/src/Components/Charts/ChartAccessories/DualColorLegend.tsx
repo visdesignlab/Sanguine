@@ -9,7 +9,7 @@ import { Third_Gray } from "../../../Presets/Constants";
 
 type Props = {
     dimensionWidth: number;
-}
+};
 
 const DualColorLegend: FC<Props> = ({ dimensionWidth }) => {
     return <g>
@@ -74,6 +74,6 @@ const DualColorLegend: FC<Props> = ({ dimensionWidth }) => {
             % out of patients with 1+ transfusions
         </text>
 
-    </g>
-}
+    </g>;
+};
 export default DualColorLegend;

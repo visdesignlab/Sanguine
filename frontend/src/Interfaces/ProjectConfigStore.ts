@@ -42,106 +42,106 @@ export class ProjectConfigStore {
         this.snackBarMessage = "";
         this.snackBarIsError = false;
 
-        this.loadedStateName = ""
+        this.loadedStateName = "";
         this.openCostInputModal = false;
         this.openStateAccessControl = false;
         this.openAboutDialog = false;
         this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0, PREOP_HGB: 0, POSTOP_HGB: 0 };
-        this.stateToUpdate = ""
+        this.stateToUpdate = "";
 
-        this.savedState = []
-        makeAutoObservable(this)
+        this.savedState = [];
+        makeAutoObservable(this);
     }
 
     checkIfInSavedState = (stateName: string) => {
-        return this.savedState.includes(stateName)
-    }
+        return this.savedState.includes(stateName);
+    };
 
     addNewState = (stateName: string) => {
-        this.savedState.push(stateName)
-    }
+        this.savedState.push(stateName);
+    };
 
     updateRange = (transfusedResult: any) => {
         BloodComponentOptions.forEach((d) => {
             this.filterRange[d.key] = transfusedResult[d.key] > this.filterRange[d.key] ? transfusedResult[d.key] : this.filterRange[d.key];
         });
-    }
+    };
 
     updateTestValue = (label: string, value: number) => {
-        this.filterRange[label] = value > this.filterRange[label] ? value : this.filterRange[label]
+        this.filterRange[label] = value > this.filterRange[label] ? value : this.filterRange[label];
+    };
+
+    get provenance () {
+        return this.rootStore.provenance;
     }
 
-    get provenance() {
-        return this.rootStore.provenance
+    set isLoggedIn (input: boolean) {
+        this._isLoggedIn = input;
     }
 
-    set isLoggedIn(input: boolean) {
-        this._isLoggedIn = input
-    }
-
-    get isLoggedIn() {
+    get isLoggedIn () {
         return this._isLoggedIn;
     }
-    set dataLoading(input: boolean) {
-        this._dataLoading = input
+    set dataLoading (input: boolean) {
+        this._dataLoading = input;
     }
 
-    get dataLoading() {
+    get dataLoading () {
         return this._dataLoading;
     }
-    set dataLoadingFailed(input: boolean) {
-        this._dataLoadingFailed = input
+    set dataLoadingFailed (input: boolean) {
+        this._dataLoadingFailed = input;
     }
 
-    get dataLoadingFailed() {
+    get dataLoadingFailed () {
         return this._dataLoadingFailed;
     }
 
-    set topMenuBarAddMode(input: boolean) {
-        console.log(input)
-        this._topMenuBarAddMode = input
+    set topMenuBarAddMode (input: boolean) {
+        console.log(input);
+        this._topMenuBarAddMode = input;
     }
 
-    get topMenuBarAddMode() {
+    get topMenuBarAddMode () {
         return this._topMenuBarAddMode;
     }
 
 
-    changeSurgeryUrgencySelection(input: [boolean, boolean, boolean]) {
-        this.provenance.apply(changeSurgeryUrgencySelection(input))
+    changeSurgeryUrgencySelection (input: [boolean, boolean, boolean]) {
+        this.provenance.apply(changeSurgeryUrgencySelection(input));
     }
 
-    changeCostConfig(componentName: string, newCost: number) {
-        this.provenance.apply(changeCostConfig(componentName, newCost))
+    changeCostConfig (componentName: string, newCost: number) {
+        this.provenance.apply(changeCostConfig(componentName, newCost));
     }
-    changeOutcomeFilter(newOutcomeFilter: string[]) {
-        this.provenance.apply(changeOutcomeFilter(newOutcomeFilter))
+    changeOutcomeFilter (newOutcomeFilter: string[]) {
+        this.provenance.apply(changeOutcomeFilter(newOutcomeFilter));
     }
 
-    toggleShowZero(showZero: boolean) {
-        this.provenance.apply(toggleShowZero(showZero))
+    toggleShowZero (showZero: boolean) {
+        this.provenance.apply(toggleShowZero(showZero));
     }
-    dateRangeChange(dateRange: number[]) {
-        this.provenance.apply(dateRangeChange(dateRange))
+    dateRangeChange (dateRange: number[]) {
+        this.provenance.apply(dateRangeChange(dateRange));
     }
-    loadPreset(layoutInput: LayoutElement[]) {
-        this.provenance.apply(loadPreset(layoutInput))
+    loadPreset (layoutInput: LayoutElement[]) {
+        this.provenance.apply(loadPreset(layoutInput));
     }
-    changeBloodFilter(componentName: string, newRange: number[]) {
-        this.provenance.apply(changeBloodFilter(componentName, newRange))
+    changeBloodFilter (componentName: string, newRange: number[]) {
+        this.provenance.apply(changeBloodFilter(componentName, newRange));
     }
-    resetBloodFilter() {
+    resetBloodFilter () {
         this.provenance.apply(resetBloodFilter());
     }
 
-    changeTestValueFilter(testValueName: string, newRange: number[]) {
-        this.provenance.apply(changeTestValueFilter(testValueName, newRange))
+    changeTestValueFilter (testValueName: string, newRange: number[]) {
+        this.provenance.apply(changeTestValueFilter(testValueName, newRange));
     }
-    resetTestValueFilter() {
+    resetTestValueFilter () {
         this.provenance.apply(resetTestValueFilter());
     }
 
-    clearAllFilter() {
-        this.provenance.apply(clearAllFilter())
+    clearAllFilter () {
+        this.provenance.apply(clearAllFilter());
     }
 }

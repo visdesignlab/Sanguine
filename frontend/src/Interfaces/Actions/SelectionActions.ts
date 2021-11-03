@@ -8,24 +8,24 @@ import { ApplicationState } from "../Types/StateTypes";
 //This is a filter
 export const updateSelectedPatientGroup = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
     state.currentSelectPatientGroup = caseList;
-    console.log(state)
-}).setLabel("updatePatientGroup")
+    console.log(state);
+}).setLabel("updatePatientGroup");
 
 export const updateProcedureSelection = createAction<ApplicationState, [string, boolean], ActionEvents>((state, newProcedureSelection, removing) => {
     if (removing) {
-        state.proceduresSelection = state.proceduresSelection.filter(d => d !== newProcedureSelection)
+        state.proceduresSelection = state.proceduresSelection.filter(d => d !== newProcedureSelection);
     }
     else {
-        state.proceduresSelection.push(newProcedureSelection)
+        state.proceduresSelection.push(newProcedureSelection);
     }
-}).setLabel("updateProcedureSelection")
+}).setLabel("updateProcedureSelection");
 
 export const updateBrushPatient = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
     state.currentBrushedPatientGroup = caseList;
     if (caseList.length === 0) {
         state.currentSelectPatient = null;
     }
-}).setLabel("updateBrush")
+}).setLabel("updateBrush");
 
 export const setCurrentSelectPatient = createAction<ApplicationState, [SingleCasePoint | null], ActionEvents>((state, newCase) => {
     state.currentSelectPatient = newCase;
@@ -38,39 +38,39 @@ export const selectSet = createAction<ApplicationState, [string, string, boolean
         state.currentSelectSet = state.currentSelectSet.map(d => {
             if (d.setName === selectSetName) {
                 if (replace) {
-                    return { setName: selectSetName, setValues: [selectSetInput] }
+                    return { setName: selectSetName, setValues: [selectSetInput] };
                 }
                 else if (!d.setValues.includes(selectSetInput)) {
-                    return { setName: selectSetName, setValues: d.setValues.concat([selectSetInput]) }
+                    return { setName: selectSetName, setValues: d.setValues.concat([selectSetInput]) };
                 } else {
-                    return d
+                    return d;
                 }
             } else {
-                return d
+                return d;
             }
-        })
+        });
     } else {
-        state.currentSelectSet.push({ setName: selectSetName, setValues: [selectSetInput] })
+        state.currentSelectSet.push({ setName: selectSetName, setValues: [selectSetInput] });
     }
-}).setLabel("addToSelected")
+}).setLabel("addToSelected");
 
 export const clearSet = createAction<ApplicationState, [string], ActionEvents>((state, selectNameToRemove) => {
-    state.currentSelectSet = state.currentSelectSet.filter(d => d.setName !== selectNameToRemove)
-}).setLabel("selectSetToRemove")
+    state.currentSelectSet = state.currentSelectSet.filter(d => d.setName !== selectNameToRemove);
+}).setLabel("selectSetToRemove");
 
 export const clearSelectionFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
     state.currentSelectPatientGroup = [];
-    state.currentOutputFilterSet = []
+    state.currentOutputFilterSet = [];
 }).setLabel("clearSelectionFilter");
 
 export const outputToFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
     state.currentOutputFilterSet = state.currentSelectSet;
-    state.currentSelectSet = []
+    state.currentSelectSet = [];
     state.currentSelectPatientGroup = state.currentBrushedPatientGroup;
     state.currentBrushedPatientGroup = [];
 }).setLabel("createFilter");
 
 export const removeFilter = createAction<ApplicationState, [string], ActionEvents>((state, filterToRemove) => {
-    state.currentOutputFilterSet = state.currentOutputFilterSet.filter(d => d.setName !== filterToRemove)
+    state.currentOutputFilterSet = state.currentOutputFilterSet.filter(d => d.setName !== filterToRemove);
 }).setLabel("clearFilter");
 

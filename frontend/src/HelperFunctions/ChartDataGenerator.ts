@@ -14,11 +14,11 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
         zeroNum = dataArray.filter((d) => {
             if (!showZero) {
                 if (d[valueToVisualize] > 0) {
-                    caseIDArray.push(d.CASE_ID)
+                    caseIDArray.push(d.CASE_ID);
                 }
             }
             else {
-                caseIDArray.push(d.CASE_ID)
+                caseIDArray.push(d.CASE_ID);
             }
             return d[valueToVisualize] === 0;
         }).length;
@@ -26,7 +26,7 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
         totalCaseCount += caseIDArray.length;
 
         let countDict = {} as any;
-        const cap: number = BloodProductCap[valueToVisualize]
+        const cap: number = BloodProductCap[valueToVisualize];
 
         if (valueToVisualize === "CELL_SAVER_ML") {
             countDict[-1] = [];
@@ -41,29 +41,29 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
 
         dataArray.forEach((d: SingleCasePoint) => {
 
-            let transfusionOutput = d[valueToVisualize] as number
+            let transfusionOutput = d[valueToVisualize] as number;
             if (valueToVisualize === "PRBC_UNITS" && d[valueToVisualize] > 100) {
-                transfusionOutput = (d[valueToVisualize] - 999)
+                transfusionOutput = (d[valueToVisualize] - 999);
             } else if (d[valueToVisualize] > 100 && valueToVisualize === "PLT_UNITS") {
-                transfusionOutput = (d[valueToVisualize] - 245)
+                transfusionOutput = (d[valueToVisualize] - 245);
             }
 
             if (valueToVisualize === "CELL_SAVER_ML") {
-                const roundedAnswer = Math.floor(transfusionOutput / 100) * 100
+                const roundedAnswer = Math.floor(transfusionOutput / 100) * 100;
                 if (transfusionOutput === 0) {
-                    countDict[-1].push(d)
+                    countDict[-1].push(d);
                 }
                 else if (roundedAnswer > cap) {
-                    countDict[cap].push(d)
+                    countDict[cap].push(d);
                 }
                 else {
-                    countDict[roundedAnswer].push(d)
+                    countDict[roundedAnswer].push(d);
                 }
             } else {
                 if ((transfusionOutput) > cap) {
-                    countDict[cap].push(d)
+                    countDict[cap].push(d);
                 } else {
-                    countDict[(transfusionOutput)].push(d)
+                    countDict[(transfusionOutput)].push(d);
                 }
             }
 
@@ -74,20 +74,20 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
                 aggregateAttribute: computedData.aggregateAttribute,
                 totalVal: sum(dataArray, d => {
                     if (valueToVisualize === "PRBC_UNITS" && d[valueToVisualize] > 100) {
-                        return (d[valueToVisualize] - 999)
+                        return (d[valueToVisualize] - 999);
                     } else if (d[valueToVisualize] > 100 && valueToVisualize === "PLT_UNITS") {
-                        return (d[valueToVisualize] - 245)
+                        return (d[valueToVisualize] - 245);
                     }
-                    return (d[valueToVisualize] as number)
+                    return (d[valueToVisualize] as number);
                 }),
                 caseIDList: caseIDArray,
                 zeroCaseNum: zeroNum,
                 countDict: countDict,
                 caseCount: dataArray.length
             }
-        )
+        );
     });
 
-    return [totalCaseCount, outputData]
+    return [totalCaseCount, outputData];
 
-}
+};

@@ -1,15 +1,15 @@
-import { Grid, Tabs, Divider, Tab } from "@material-ui/core"
-import { max } from "d3"
-import { observer } from "mobx-react"
-import { FC, useEffect, useState } from "react"
-import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker"
-import FilterBoard from "../FilterInterface/FilterBoard"
-import CurrentSelected from "./CurrentSelected"
-import CurrentView from "./CurrentView"
-import SurgeryListViewer from "./SurgeryListViewer"
-import SurgerySearchBar from "./SurgerySearchBar"
+import { Grid, Tabs, Divider, Tab } from "@material-ui/core";
+import { max } from "d3";
+import { observer } from "mobx-react";
+import { FC, useEffect, useState } from "react";
+import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
+import FilterBoard from "../FilterInterface/FilterBoard";
+import CurrentSelected from "./CurrentSelected";
+import CurrentView from "./CurrentView";
+import SurgeryListViewer from "./SurgeryListViewer";
+import SurgerySearchBar from "./SurgerySearchBar";
 
-type Props = { totalCaseNum: number }
+type Props = { totalCaseNum: number; };
 
 const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
 
@@ -28,11 +28,11 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
                 let tempSurgeryList: any[] = result;
                 let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
                 tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
-                setMaxCaseCount(tempMaxCaseCount)
-                tempSurgeryList.sort((a: any, b: any) => b.count - a.count)
-                stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList)
+                setMaxCaseCount(tempMaxCaseCount);
+                tempSurgeryList.sort((a: any, b: any) => b.count - a.count);
+                stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList);
             }).catch(r => {
-                console.log("failed to fetch required data")
+                console.log("failed to fetch required data");
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -49,7 +49,7 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
         </Grid>
     </div>, <div hidden={tabValue !== 1} style={{ height: "85vh" }}>
         <FilterBoard />
-    </div>]
+    </div>];
 
     return (
 
@@ -63,8 +63,8 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
                 <Tab label="Filter" />
             </Tabs>
             {panes[tabValue]}
-        </Grid>)
+        </Grid>);
 
-}
+};
 
-export default observer(LeftToolBox)
+export default observer(LeftToolBox);

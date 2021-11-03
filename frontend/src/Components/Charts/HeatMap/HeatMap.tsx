@@ -36,35 +36,35 @@ type Props = {
     firstTotal: number;
     secondTotal: number;
     outcomeComparison: string;
-}
+};
 
 const HeatMap: FC<Props> = ({ outcomeComparison, interventionDate, secondaryExtraPairDataSet, dimensionHeight, secondaryData, dimensionWidth, xAggregationOption, yValueOption, chartId, data, svg, extraPairDataSet, extraPairTotalWidth, firstTotal, secondTotal }: Props) => {
-    const store = useContext(Store)
+    const store = useContext(Store);
     const currentOffset = OffsetDict.regular;
     const [xVals, setXVals] = useState<any[]>([]);
     const [caseMax, setCaseMax] = useState(0);
 
 
     useDeepCompareEffect(() => {
-        const [tempxVals, newCaseMax] = sortHelper(data, xAggregationOption, store.state.showZero, secondaryData)
+        const [tempxVals, newCaseMax] = sortHelper(data, xAggregationOption, store.state.showZero, secondaryData);
         stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
-        setCaseMax(newCaseMax as number)
+        setCaseMax(newCaseMax as number);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data, store.state.showZero, xAggregationOption, secondaryData])
+    }, [data, store.state.showZero, xAggregationOption, secondaryData]);
 
     const aggregationScale = useCallback(() => {
-        return AggregationScaleGenerator(xVals, dimensionHeight, currentOffset)
-    }, [dimensionHeight, xVals, currentOffset])
+        return AggregationScaleGenerator(xVals, dimensionHeight, currentOffset);
+    }, [dimensionHeight, xVals, currentOffset]);
 
     const valueScale = useCallback(() => {
-        let outputRange
+        let outputRange;
         if (yValueOption === "CELL_SAVER_ML") {
-            outputRange = [-1].concat(range(0, BloodProductCap[yValueOption] + 100, 100))
+            outputRange = [-1].concat(range(0, BloodProductCap[yValueOption] + 100, 100));
 
         } else {
-            outputRange = range(0, BloodProductCap[yValueOption] + 1)
+            outputRange = range(0, BloodProductCap[yValueOption] + 1);
         }
-        return ValueScaleGenerator(outputRange, currentOffset, dimensionWidth, extraPairTotalWidth)
+        return ValueScaleGenerator(outputRange, currentOffset, dimensionWidth, extraPairTotalWidth);
     }, [dimensionWidth, extraPairTotalWidth, yValueOption, currentOffset]);
 
 
@@ -116,7 +116,7 @@ const HeatMap: FC<Props> = ({ outcomeComparison, interventionDate, secondaryExtr
                                 isFalseComparison={true}
                                 caseMax={caseMax} />
                         </ChartG>
-                    </g>)
+                    </g>);
             })}
             {secondaryData ? secondaryData.map((dataPoint) => {
                 return (
@@ -139,7 +139,7 @@ const HeatMap: FC<Props> = ({ outcomeComparison, interventionDate, secondaryExtr
                                 zeroCaseNum={dataPoint.zeroCaseNum}
                                 caseMax={caseMax} />
                         </ChartG>
-                    </g>)
+                    </g>);
             }) : <></>}
         </g>
         <g className="extraPairChart">
@@ -152,16 +152,16 @@ const HeatMap: FC<Props> = ({ outcomeComparison, interventionDate, secondaryExtr
                 height={dimensionHeight} />
 
         </g>
-    </g>)
-}
+    </g>);
+};
 
-export default observer(HeatMap)
+export default observer(HeatMap);
 
 export const outputGradientLegend = (showZero: boolean, dimensionWidth: number) => {
     if (!showZero) {
-        return <DualColorLegend dimensionWidth={dimensionWidth} />
+        return <DualColorLegend dimensionWidth={dimensionWidth} />;
     } else {
-        return <SingleColorLegend dimensionWidth={dimensionWidth} />
+        return <SingleColorLegend dimensionWidth={dimensionWidth} />;
     }
-}
+};
 

@@ -22,7 +22,7 @@ const CustomizedAxisBand: FC<Props> = ({ scaleDomain, scaleRange, scalePadding }
 
     const scale = useCallback(() => {
         const domain = JSON.parse(scaleDomain);
-        const range = JSON.parse(scaleRange)
+        const range = JSON.parse(scaleRange);
 
         let scale = scaleBand()
             .domain(domain as any)
@@ -30,7 +30,7 @@ const CustomizedAxisBand: FC<Props> = ({ scaleDomain, scaleRange, scalePadding }
             .padding(scalePadding);
 
         return scale;
-    }, [scaleDomain, scaleRange, scalePadding])
+    }, [scaleDomain, scaleRange, scalePadding]);
 
     return <>
         {scale().domain().map((number, ind) => {
@@ -42,9 +42,9 @@ const CustomizedAxisBand: FC<Props> = ({ scaleDomain, scaleRange, scalePadding }
                     <CustomAxisLineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? Secondary_Gray : Basic_Gray} />
                     <AxisText biggerFont={store.configStore.largeFont} x={x1 + 0.5 * (x2 - x1)}>{number}</AxisText>
                 </g>
-            )
+            );
 
         })}
-    </>
-}
+    </>;
+};
 export default observer(CustomizedAxisBand);
