@@ -194,12 +194,12 @@ def fetch_surgery(request):
         result = execute_sql(command, id=case_id)
         data_dict = data_dictionary()
         data = [
-            dict(zip([data_dict[key[0]] for key in result.description[1:]] + ["cpt"], row[1:] + [[]]))
+            dict(zip([data_dict[key[0]] for key in result.description] + ["cpt"], list(row) + [[]]))
             for row in result
         ]
 
         # Get the CPT information for each visit number
-        visit_nos = [row[0] for row in result]
+        visit_nos = [d["Hospital Visit Number"] for d in data]
         visit_bind_names = [f":visit_no{str(i)}" for i in range(len(visit_nos))]
         visit_filters_safe_sql = (
             f"AND BLNG.{FIELDS_IN_USE.get('visit_no')} IN ({','.join(visit_bind_names)}) "
@@ -218,7 +218,7 @@ def fetch_surgery(request):
 
         visit_result = execute_sql(
             visit_command,
-            zip(visit_bind_names, visit_nos),
+            dict(zip(visit_bind_names, visit_nos)),
         )
 
         cpts = cpt()
@@ -226,8 +226,9 @@ def fetch_surgery(request):
         for visit in visit_result:
             # Use the first column of the query (visit_no), to get the index of data to update
             index = visit_nos.index(visit[0])
-            cleaned_cpt = cpts[cpts["db_code_desc"] == visit[1]]["clean_name"] if visit[1] in cpts["db_code_desc"] else None
-            data[index]["cpt"] = list(set(data[index]["cpt"] + []))
+            cleaned_cpt = [cpt for cpt in cpts if cpt[1] == visit[1]]
+            #cleaned_cpt = cpts[cpts["db_code_desc"] == visit[1]]["clean_name"] if visit[1] in cpts["db_code_desc"] else None
+            data[index]["cpt"] = list(set(data[index]["cpt"] + [cleaned_cpt[0][2]])) if cleaned_cpt else data[index]["cpt"]
 
         return JsonResponse({"result": data})
     else:
