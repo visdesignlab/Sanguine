@@ -1,9 +1,9 @@
-import { interpolateGreys } from "d3"
-import { observer } from "mobx-react"
-import { FC, useCallback, useContext } from "react"
-import { CaseScaleGenerator } from "../../../HelperFunctions/Scales"
-import Store from "../../../Interfaces/Store"
-import { CaseRectWidth, DifferentialSquareWidth, largeFontSize, postop_color, preop_color } from "../../../Presets/Constants"
+import { interpolateGreys } from "d3";
+import { observer } from "mobx-react";
+import { FC, useCallback, useContext } from "react";
+import { CaseScaleGenerator } from "../../../HelperFunctions/Scales";
+import Store from "../../../Interfaces/Store";
+import { CaseRectWidth, DifferentialSquareWidth, largeFontSize, postop_color, preop_color } from "../../../Presets/Constants";
 
 type Props = {
     caseCount: number;
@@ -13,15 +13,15 @@ type Props = {
     height: number;
     showComparisonRect: boolean;
     isFalseComparison: boolean;
-}
+};
 
 const CaseCountHeader: FC<Props> = ({ showComparisonRect, isFalseComparison, caseCount, yPos, zeroCaseNum, caseMax, height }: Props) => {
-    const store = useContext(Store)
+    const store = useContext(Store);
     const { showZero } = store.state;
 
     const caseScale = useCallback(() => {
-        return CaseScaleGenerator(caseMax)
-    }, [caseMax])
+        return CaseScaleGenerator(caseMax);
+    }, [caseMax]);
 
     return (<g>
         <rect
@@ -48,7 +48,7 @@ const CaseCountHeader: FC<Props> = ({ showComparisonRect, isFalseComparison, cas
             fontSize={store.configStore.largeFont ? largeFontSize : 12}>
             {showZero ? caseCount : (caseCount - zeroCaseNum)}
         </text>
-    </g>)
-}
+    </g>);
+};
 
-export default observer(CaseCountHeader)
+export default observer(CaseCountHeader);

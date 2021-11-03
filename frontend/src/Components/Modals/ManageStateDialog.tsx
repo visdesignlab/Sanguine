@@ -13,11 +13,11 @@ import { useStyles } from "../../Presets/StyledComponents";
 const ManageStateDialog: FC = () => {
     const store = useContext(Store);
     const styles = useStyles();
-    const [stateNameToChange, setStateNameToChange] = useState("")
+    const [stateNameToChange, setStateNameToChange] = useState("");
 
 
     const removeState = (stateName: string) => {
-        const csrftoken = simulateAPIClick()
+        const csrftoken = simulateAPIClick();
         fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
             method: 'DELETE',
             credentials: "include",
@@ -34,9 +34,9 @@ const ManageStateDialog: FC = () => {
                 if (store.configStore.loadedStateName === stateName) {
                     store.configStore.loadedStateName = "";
                 }
-                store.configStore.savedState = store.configStore.savedState.filter(d => d !== stateName)
+                store.configStore.savedState = store.configStore.savedState.filter(d => d !== stateName);
                 store.configStore.snackBarIsError = false;
-                store.configStore.snackBarMessage = "Deletion succeed."
+                store.configStore.snackBarMessage = "Deletion succeed.";
                 store.configStore.openSnackBar = true;
             } else {
                 response.text().then(error => {
@@ -44,21 +44,21 @@ const ManageStateDialog: FC = () => {
                     store.configStore.snackBarIsError = true;
                     store.configStore.openSnackBar = true;
                     console.error('There has been a problem with your fetch operation:', response.statusText);
-                })
+                });
             }
         }).catch(error => {
             store.configStore.snackBarMessage = `An error occurred: ${error}`;
             store.configStore.snackBarIsError = true;
             store.configStore.openSnackBar = true;
             console.error('There has been a problem with your fetch operation:', error);
-        })
-    }
+        });
+    };
 
     const changeStateAccess = (stateName: string) => {
         store.configStore.openManageStateDialog = false;
         store.configStore.openStateAccessControl = true;
         setStateNameToChange(stateName);
-    }
+    };
 
     // const changeStateName = ()
 
@@ -80,30 +80,30 @@ const ManageStateDialog: FC = () => {
                                         <EditIcon />
                                     </Tooltip>
                                 </IconButton>
-                                <IconButton onClick={() => { changeStateAccess(d) }}>
+                                <IconButton onClick={() => { changeStateAccess(d); }}>
                                     <Tooltip title={<div>  <p className={styles.tooltipFont}>Manage Sharing</p></div>}>
                                         <ShareIcon />
                                     </Tooltip>
                                 </IconButton>
-                                <IconButton onClick={() => { removeState(d) }}>
+                                <IconButton onClick={() => { removeState(d); }}>
                                     <Tooltip title={<div>  <p className={styles.tooltipFont}>Delete State</p></div>}>
                                         <DeleteIcon />
                                     </Tooltip>
                                 </IconButton>
 
                             </ListItemSecondaryAction>
-                        </ListItem>)
+                        </ListItem>);
                     })}
                 </List>
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => { store.configStore.openManageStateDialog = false }}>
+                <Button onClick={() => { store.configStore.openManageStateDialog = false; }}>
                     Close
                 </Button>
             </DialogActions>
         </Dialog>
         <StateAccessControl stateName={stateNameToChange} />
-    </div>)
-}
+    </div>);
+};
 
 export default observer(ManageStateDialog);

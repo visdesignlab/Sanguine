@@ -12,7 +12,7 @@ import { tokenCheckCancel } from "../../../Interfaces/UserManagement";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
 import HeatMap from "./HeatMap";
 import ExtraPairButtons from "../ChartAccessories/ExtraPairButtons";
-import useDeepCompareEffect from 'use-deep-compare-effect'
+import useDeepCompareEffect from 'use-deep-compare-effect';
 import { DataContext } from "../../../App";
 import { Grid, Container, Typography } from "@material-ui/core";
 import { useStyles } from "../../../Presets/StyledComponents";
@@ -32,9 +32,9 @@ type Props = {
     outcomeComparison?: string;
     comparisonDate?: number;
     annotationText: string;
-}
+};
 const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH, layoutW, chartId, extraPairArrayString, xAggregationOption, yValueOption, chartTypeIndexinArray, comparisonDate }: Props) => {
-    const hemoData = useContext(DataContext)
+    const hemoData = useContext(DataContext);
     const store = useContext(Store);
     const styles = useStyles();
     const { surgeryUrgencySelection, rawDateRange, proceduresSelection } = store.state;
@@ -46,31 +46,31 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
     const [data, setData] = useState<HeatMapDataPoint[]>([]);
     const [secondaryData, setSecondaryData] = useState<HeatMapDataPoint[]>([]);
     const [secondaryExtraPairData, setSecondaryExtraPairData] = useState<ExtraPairPoint[]>([]);
-    const [previousCancelToken, setPreviousCancelToken] = useState<any>(null)
+    const [previousCancelToken, setPreviousCancelToken] = useState<any>(null);
     const [extraPairTotalWidth, setExtraPairTotalWidth] = useState(0);
     const [caseCount, setCaseCount] = useState(0);
-    const [secondaryCaseCount, setSecondaryCaseCount] = useState(0)
+    const [secondaryCaseCount, setSecondaryCaseCount] = useState(0);
 
 
 
     useEffect(() => {
         if (extraPairArrayString) {
-            stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPairArrayString), setExtraPairArray)
+            stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPairArrayString), setExtraPairArray);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extraPairArrayString])
+    }, [extraPairArrayString]);
 
     useDeepCompareEffect(() => {
         const newExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, data);
         if (outcomeComparison || comparisonDate) {
             const newSecondaryExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, secondaryData);
-            stateUpdateWrapperUseJSON(secondaryExtraPairData, newSecondaryExtraPairData, setSecondaryExtraPairData)
+            stateUpdateWrapperUseJSON(secondaryExtraPairData, newSecondaryExtraPairData, setSecondaryExtraPairData);
         }
         let totalWidth = newExtraPairData.length > 0 ? (newExtraPairData.length + 1) * ExtraPairPadding : 0;
         newExtraPairData.forEach((d) => {
-            totalWidth += (ExtraPairWidth[d.type])
-        })
-        setExtraPairTotalWidth(totalWidth)
+            totalWidth += (ExtraPairWidth[d.type]);
+        });
+        setExtraPairTotalWidth(totalWidth);
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [extraPairArray, data, hemoData, secondaryData, outcomeComparison, comparisonDate]);
@@ -84,7 +84,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
 
     useDeepCompareEffect(() => {
 
-        tokenCheckCancel(previousCancelToken)
+        tokenCheckCancel(previousCancelToken);
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
         setPreviousCancelToken(call);
@@ -99,7 +99,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
                     let secondaryTemporaryDataHolder: any = {};
                     response.data.forEach((element: any) => {
                         caseSetReturnedFromQuery.add(element.case_id);
-                    })
+                    });
                     hemoData.forEach((singleCase: SingleCasePoint) => {
                         if (caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
                             if (!temporaryDataHolder[singleCase[xAggregationOption]]) {
@@ -107,12 +107,12 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
                                     aggregateAttribute: singleCase[xAggregationOption],
                                     data: [],
                                     patientIDList: new Set(),
-                                }
+                                };
                                 secondaryTemporaryDataHolder[singleCase[xAggregationOption]] = {
                                     aggregateAttribute: singleCase[xAggregationOption],
                                     data: [],
                                     patientIDList: new Set(),
-                                }
+                                };
                             }
 
                             if ((outcomeComparison && singleCase[outcomeComparison] > 0) || (comparisonDate && singleCase.DATE < comparisonDate)) {
@@ -124,14 +124,14 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
                                 temporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.PATIENT_ID);
                             }
                         }
-                    })
+                    });
                     const [caseCount, outputData] = generateRegularData(temporaryDataHolder, store.state.showZero, yValueOption);
                     const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, store.state.showZero, yValueOption);
                     stateUpdateWrapperUseJSON(data, outputData, setData);
                     stateUpdateWrapperUseJSON(secondaryData, secondOutputData, setSecondaryData);
                     store.chartStore.totalAggregatedCaseCount = (caseCount as number) + (secondCaseCount as number);
                     setCaseCount(caseCount as number);
-                    setSecondaryCaseCount(secondCaseCount as number)
+                    setSecondaryCaseCount(secondCaseCount as number);
                 }
             })
             .catch(function (thrown) {
@@ -148,7 +148,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
         yValueOption,
         outcomeComparison,
         comparisonDate,
-        hemoData])
+        hemoData]);
 
     return (<Container className={styles.chartWrapper}>
         <div className={styles.chartAccessoryDiv}>
@@ -188,7 +188,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
     </Container>
 
 
-    )
-}
+    );
+};
 
-export default observer(WrapperHeatMap)
+export default observer(WrapperHeatMap);

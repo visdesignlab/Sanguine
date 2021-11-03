@@ -26,7 +26,7 @@ const UndoRedoButtons: FC = () => {
             </Tooltip>
         </IconButton>
 
-    </ButtonGroup>
+    </ButtonGroup>;
 
-}
-export default observer(UndoRedoButtons)
+};
+export default observer(UndoRedoButtons);

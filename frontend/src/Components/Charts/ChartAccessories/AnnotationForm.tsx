@@ -1,6 +1,6 @@
-import { TextField } from "@material-ui/core"
-import { observer } from "mobx-react"
-import { FC, useState, useContext } from "react"
+import { TextField } from "@material-ui/core";
+import { observer } from "mobx-react";
+import { FC, useState, useContext } from "react";
 import Store from "../../../Interfaces/Store";
 import { useEffect } from "react";
 
@@ -8,16 +8,16 @@ import { useEffect } from "react";
 type Props = {
     annotationText: string;
     chartI: string;
-}
+};
 
 const AnnotationForm: FC<Props> = ({ annotationText, chartI }: Props) => {
-    const [formInput, setFormInput] = useState(annotationText)
+    const [formInput, setFormInput] = useState(annotationText);
     const store = useContext(Store);
 
 
     useEffect(() => {
         setFormInput(annotationText);
-    }, [annotationText])
+    }, [annotationText]);
 
     return (<div>
         <TextField
@@ -32,15 +32,15 @@ const AnnotationForm: FC<Props> = ({ annotationText, chartI }: Props) => {
                 if (formInput !== annotationText) {
                     store.chartStore.changeNotation(chartI, formInput);
                     store.configStore.openSnackBar = true;
-                    store.configStore.snackBarMessage = "Note Saved Locally."
+                    store.configStore.snackBarMessage = "Note Saved Locally.";
                     store.configStore.snackBarIsError = false;
                 }
             }}
-            onChange={(e) => { setFormInput(e.target.value) }}
+            onChange={(e) => { setFormInput(e.target.value); }}
         />
 
     </div>
-    )
-}
+    );
+};
 
 export default observer(AnnotationForm);

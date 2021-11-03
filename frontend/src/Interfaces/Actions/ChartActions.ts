@@ -9,12 +9,12 @@ export const addExtraPair = createAction<ApplicationState, [string, string], Act
             if (!d.extraPair.includes(newExtraPair)) {
                 let originalArray = JSON.parse(d.extraPair);
                 originalArray.push(newExtraPair);
-                d.extraPair = JSON.stringify(originalArray)
+                d.extraPair = JSON.stringify(originalArray);
             }
         }
         return d;
-    })
-}).setLabel("addExtraPair")
+    });
+}).setLabel("addExtraPair");
 
 export const removeExtraPair = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, removingPairName) => {
     state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
@@ -22,43 +22,43 @@ export const removeExtraPair = createAction<ApplicationState, [string, string], 
             let originalArray = JSON.parse(d.extraPair);
 
             let newArray = (originalArray.filter((l: string) => {
-                return (l !== removingPairName)
-            }))
-            d.extraPair = JSON.stringify(newArray)
+                return (l !== removingPairName);
+            }));
+            d.extraPair = JSON.stringify(newArray);
         }
-        return d
-    })
-}).setLabel("removeExtraPair")
+        return d;
+    });
+}).setLabel("removeExtraPair");
 
 //change the case num when this changes in store instead of here
 export const removeChart = createAction<ApplicationState, [string], ActionEvents>((state, indexToRemove) => {
     state.layoutArray = state.layoutArray.filter(d => d.i !== indexToRemove);
-}).setLabel("removeChart")
+}).setLabel("removeChart");
 
 export const changeNotation = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, newNotation) => {
     state.layoutArray = state.layoutArray.map(d => {
         if (d.i === chartID) {
             d.notation = newNotation;
         }
-        return d
-    })
-}).setLabel("changeNotation")
+        return d;
+    });
+}).setLabel("changeNotation");
 
 export const addNewChart = createAction<ApplicationState, [LayoutElement], ActionEvents>((state: ApplicationState, input) => {
-    state.layoutArray.push(input)
-    state.nextAddingIndex += 1
-}).setLabel("AddChart")
+    state.layoutArray.push(input);
+    state.nextAddingIndex += 1;
+}).setLabel("AddChart");
 
 export const onLayoutChange = createAction<ApplicationState, [ReactGridLayout.Layout[]], ActionEvents>((state, data) => {
     data.forEach((gridLayout: any) => {
-        let match = state.layoutArray.filter(d => d.i === gridLayout.i)[0]
+        let match = state.layoutArray.filter(d => d.i === gridLayout.i)[0];
         match.w = gridLayout.w;
         match.h = gridLayout.h;
         match.x = gridLayout.x;
         match.y = gridLayout.y;
-    })
-    state.layoutArray = JSON.parse(JSON.stringify(state.layoutArray))
-}).setLabel("LayoutChange")
+    });
+    state.layoutArray = JSON.parse(JSON.stringify(state.layoutArray));
+}).setLabel("LayoutChange");
 
 export const changeChart = createAction<ApplicationState, [string, string, string, string, string?], ActionEvents>((state, xAggregationSelection, yValueSelection, chartIndex, chartType, outcomeComparison?) => {
     state.layoutArray = state.layoutArray.map((d) => {
@@ -71,7 +71,7 @@ export const changeChart = createAction<ApplicationState, [string, string, strin
             }
         }
         return d;
-    })
+    });
 }).setLabel("changeChart");
 
 export const clearAllCharts = createAction<ApplicationState, [], ActionEvents>((state) => {
@@ -79,4 +79,4 @@ export const clearAllCharts = createAction<ApplicationState, [], ActionEvents>((
     state.currentBrushedPatientGroup = [];
     state.currentSelectSet = [];
     state.currentSelectPatient = null;
-}).setLabel("clearAllCharts")
+}).setLabel("clearAllCharts");

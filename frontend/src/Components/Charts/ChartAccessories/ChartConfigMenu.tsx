@@ -16,11 +16,11 @@ type Props = {
     chartTypeIndexinArray: number;
     chartId: string;
     requireOutcome: boolean;
-    requireSecondary: boolean
-}
+    requireSecondary: boolean;
+};
 
 const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTypeIndexinArray, requireOutcome, chartId, requireSecondary }: Props) => {
-    const store = useContext(Store)
+    const store = useContext(Store);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
@@ -34,21 +34,21 @@ const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTyp
     };
 
     const changeXAxis = (value: string) => {
-        store.chartStore.changeChart(value, yValueOption, chartId, typeDiction[chartTypeIndexinArray])
-        handleClose()
-    }
+        store.chartStore.changeChart(value, yValueOption, chartId, typeDiction[chartTypeIndexinArray]);
+        handleClose();
+    };
 
     const changeYAxis = (value: string) => {
-        store.chartStore.changeChart(xAggregationOption, value, chartId, typeDiction[chartTypeIndexinArray])
-        handleClose()
-    }
+        store.chartStore.changeChart(xAggregationOption, value, chartId, typeDiction[chartTypeIndexinArray]);
+        handleClose();
+    };
 
     const changeOutcome = (value: string) => {
-        store.chartStore.changeChart(xAggregationOption, yValueOption, chartId, "HEATMAP", value)
-        handleClose()
-    }
+        store.chartStore.changeChart(xAggregationOption, yValueOption, chartId, "HEATMAP", value);
+        handleClose();
+    };
 
-    const OutcomeDropdownOptions = OutcomeOptions.concat({ value: "NONE", key: "NONE", text: "None" })
+    const OutcomeDropdownOptions = OutcomeOptions.concat({ value: "NONE", key: "NONE", text: "None" });
 
 
 
@@ -66,7 +66,7 @@ const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTyp
                 >
 
                     {addOptions[chartTypeIndexinArray][1].map((option) => (
-                        <MenuItem key={option.key} onClick={() => { changeXAxis(option.key) }}>{option.text}</MenuItem>
+                        <MenuItem key={option.key} onClick={() => { changeXAxis(option.key); }}>{option.text}</MenuItem>
                     ))}
                 </NestedMenuItem>
                 {requireSecondary ? <NestedMenuItem
@@ -74,20 +74,20 @@ const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTyp
                     parentMenuOpen={open}
                 >
                     {addOptions[chartTypeIndexinArray][0].map((option) => (
-                        <MenuItem key={option.key} onClick={() => { changeYAxis(option.key) }}>{option.text}</MenuItem>
+                        <MenuItem key={option.key} onClick={() => { changeYAxis(option.key); }}>{option.text}</MenuItem>
                     ))}
-                    {chartTypeIndexinArray === 0 ? <MenuItem key={"NONE"} onClick={() => { changeYAxis("") }}>None</MenuItem> : <></>}
+                    {chartTypeIndexinArray === 0 ? <MenuItem key={"NONE"} onClick={() => { changeYAxis(""); }}>None</MenuItem> : <></>}
                 </NestedMenuItem> : <></>}
                 {requireOutcome ? <NestedMenuItem
                     label="Change Outcome Comparison"
                     parentMenuOpen={open}
                 >
                     {OutcomeDropdownOptions.map((option) => (
-                        <MenuItem key={option.key} onClick={() => { changeOutcome(option.key) }}>{option.text}</MenuItem>
+                        <MenuItem key={option.key} onClick={() => { changeOutcome(option.key); }}>{option.text}</MenuItem>
                     ))}
                 </NestedMenuItem> : <></>}
             </Menu>
-        </>)
-}
+        </>);
+};
 
 export default observer(ChartConfigMenu);

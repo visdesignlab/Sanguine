@@ -35,12 +35,12 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
         let spacing = 0;
         switch (type) {
             case "Basic":
-                explanation = `Percentage of Patients`
-                spacing = ExtraPairWidth.Basic
+                explanation = `Percentage of Patients`;
+                spacing = ExtraPairWidth.Basic;
                 break;
             case "Violin":
                 explanation = nameInput === "RISK" ? `Scaled 0-30` : (`Scaled 0-18, line at ${nameInput === "Preop HGB" ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD}`);
-                spacing = ExtraPairWidth.Violin
+                spacing = ExtraPairWidth.Violin;
                 break;
             case "Bar":
                 let maximum = max(Object.values(extraPairDataSet.data));
@@ -55,7 +55,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
                 {explanation}</p>
 
             <p style={{ fontSize: "x-small", textAlign: "center" }}>Click to remove</p>
-        </div>
+        </div>;
 
 
         return (
@@ -65,19 +65,19 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
                     y={height - currentOffset.bottom + 25}
                     biggerFont={store.configStore.largeFont}
                     onClick={() => {
-                        store.chartStore.removeExtraPair(chartId, nameInput)
+                        store.chartStore.removeExtraPair(chartId, nameInput);
                     }}
                 >
                     {labelInput}
                     <RemoveTSpan x={spacing / 2} dy="-0.5em" >x</RemoveTSpan>
                 </ExtraPairText>
-            </Tooltip>)
+            </Tooltip>);
 
 
-    }
+    };
 
-    let transferedDistance = 0
-    let returningComponents: any = []
+    let transferedDistance = 0;
+    let returningComponents: any = [];
 
     extraPairDataSet.forEach((pairData, index) => {
         let temporarySecondary = secondaryExtraPairDataSet;
@@ -86,8 +86,8 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
         }
         switch (pairData.type) {
             case "Violin":
-                transferedDistance += (ExtraPairWidth.Violin + ExtraPairPadding)
-                const calculatedKdeMax = temporarySecondary ? Math.max(pairData.kdeMax || 0, temporarySecondary[index].kdeMax || 0) : (pairData.kdeMax || 0)
+                transferedDistance += (ExtraPairWidth.Violin + ExtraPairPadding);
+                const calculatedKdeMax = temporarySecondary ? Math.max(pairData.kdeMax || 0, temporarySecondary[index].kdeMax || 0) : (pairData.kdeMax || 0);
                 returningComponents.push(
                     <g transform={`translate(${transferedDistance - (ExtraPairWidth.Violin)},0)`}>
                         <ExtraPairViolin
@@ -104,7 +104,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
                 break;
 
             case "BarChart":
-                transferedDistance += (ExtraPairWidth.BarChart + ExtraPairPadding)
+                transferedDistance += (ExtraPairWidth.BarChart + ExtraPairPadding);
                 returningComponents.push(<g transform={`translate(${transferedDistance - (ExtraPairWidth.BarChart)},0)`}>
                     <ExtraPairBar
                         aggregationScaleDomain={aggregationScaleDomain}
@@ -118,7 +118,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
             case "Basic":
                 transferedDistance += (ExtraPairWidth.Basic + ExtraPairPadding);
 
-                console.log(secondaryExtraPairDataSet)
+                console.log(secondaryExtraPairDataSet);
                 returningComponents.push(<g transform={`translate(${transferedDistance - (ExtraPairWidth.Basic)},0)`}>
 
                     <ExtraPairBasic
@@ -131,9 +131,9 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
                 break;
 
         }
-    })
-    return returningComponents
-}
+    });
+    return returningComponents;
+};
 
 
 
@@ -151,7 +151,7 @@ const RemoveTSpan = styled(`tspan`)`
      &:hover{
         opacity:1;
      }
-`
+`;
 
 const ExtraPairText = styled(`text`) <BiggerFontProps>`
   font-size: ${props => props.biggerFont ? `${largeFontSize}px` : `${regularFontSize}px`};
@@ -161,4 +161,4 @@ const ExtraPairText = styled(`text`) <BiggerFontProps>`
     &:hover ${RemoveTSpan} {
         opacity:1;
   }
-`
+`;

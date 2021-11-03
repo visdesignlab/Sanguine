@@ -8,8 +8,8 @@ import { AcronymDictionary } from "../../../Presets/DataDict";
 
 type Props = {
     label: string;
-    isTestValue?: boolean
-}
+    isTestValue?: boolean;
+};
 
 const ComponentRangePicker: FC<Props> = ({ label, isTestValue }: Props) => {
 
@@ -22,18 +22,18 @@ const ComponentRangePicker: FC<Props> = ({ label, isTestValue }: Props) => {
     useDeepCompareEffect(() => {
         if (isTestValue) {
             if (testValueFilter[label][1] === ManualInfinity) {
-                setRangeValue([testValueFilter[label][0], store.configStore.filterRange[label]])
+                setRangeValue([testValueFilter[label][0], store.configStore.filterRange[label]]);
             } else {
-                setRangeValue([testValueFilter[label][0], testValueFilter[label][1]])
+                setRangeValue([testValueFilter[label][0], testValueFilter[label][1]]);
             }
         } else {
             if (bloodComponentFilter[label][1] === ManualInfinity) {
-                setRangeValue([bloodComponentFilter[label][0], store.configStore.filterRange[label]])
+                setRangeValue([bloodComponentFilter[label][0], store.configStore.filterRange[label]]);
             } else {
-                setRangeValue([bloodComponentFilter[label][0], bloodComponentFilter[label][1]])
+                setRangeValue([bloodComponentFilter[label][0], bloodComponentFilter[label][1]]);
             }
         }
-    }, [store.configStore.filterRange, bloodComponentFilter, testValueFilter])
+    }, [store.configStore.filterRange, bloodComponentFilter, testValueFilter]);
 
     return (
         <ListItem>
@@ -46,9 +46,9 @@ const ComponentRangePicker: FC<Props> = ({ label, isTestValue }: Props) => {
                 step={isTestValue ? 0.1 : (label === "CELL_SAVER_ML" ? 1000 : undefined)}
                 onChangeCommitted={(e, nV) => {
                     if (isTestValue) {
-                        store.configStore.changeTestValueFilter(label, (nV as number[]))
+                        store.configStore.changeTestValueFilter(label, (nV as number[]));
                     } else {
-                        store.configStore.changeBloodFilter(label, (nV as number[]))
+                        store.configStore.changeBloodFilter(label, (nV as number[]));
                     }
                 }}
                 onChange={(e, nV) => {
@@ -58,7 +58,7 @@ const ComponentRangePicker: FC<Props> = ({ label, isTestValue }: Props) => {
 
 
 
-        </ListItem>)
-}
+        </ListItem>);
+};
 
 export default observer(ComponentRangePicker);

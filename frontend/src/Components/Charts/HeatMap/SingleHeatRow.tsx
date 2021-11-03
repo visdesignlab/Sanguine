@@ -15,29 +15,29 @@ type Props = {
     dataPoint: HeatMapDataPoint;
     howToTransform: string;
     bandwidth: number;
-}
+};
 const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange, howToTransform, bandwidth }: Props) => {
 
-    const { showZero } = useContext(Store).state
+    const { showZero } = useContext(Store).state;
     const valueScale = useCallback(() => {
 
-        return (ValueScaleGeneratorFromDomainRange(valueScaleDomain, valueScaleRange, true) as ScaleBand<string>)
+        return (ValueScaleGeneratorFromDomainRange(valueScaleDomain, valueScaleRange, true) as ScaleBand<string>);
     }, [valueScaleDomain, valueScaleRange]);
 
     return (
         <>
             {valueScale().domain().map(point => {
                 if (dataPoint.countDict[point]) {
-                    const output = dataPoint.countDict[point].length
-                    const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum
+                    const output = dataPoint.countDict[point].length;
+                    const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum;
                     let disables = false;
-                    let colorFill = output === 0 ? "white" : interpolateReds(HeatmapColorScale(output / caseCount))
+                    let colorFill = output === 0 ? "white" : interpolateReds(HeatmapColorScale(output / caseCount));
                     if (!showZero && point as any === 0) {
-                        colorFill = output === 0 ? "white" : interpolateGreys(HeatmapGreyScale(output / (dataPoint.caseCount)))
+                        colorFill = output === 0 ? "white" : interpolateGreys(HeatmapGreyScale(output / (dataPoint.caseCount)));
                         disables = true;
                     }
 
-                    const outputContent = (output / caseCount < 0.01 && output > 0) ? "<1%" : format(".0%")(output / caseCount)
+                    const outputContent = (output / caseCount < 0.01 && output > 0) ? "<1%" : format(".0%")(output / caseCount);
 
                     return (
                         <g>
@@ -69,13 +69,13 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                                 x1={valueScale()(point)! + 0.35 * valueScale().bandwidth()}
                                 x2={valueScale()(point)! + 0.65 * valueScale().bandwidth()} />
                         </g>
-                    )
+                    );
                 } else {
-                    return <></>
+                    return <></>;
                 }
             })}
         </>
-    )
-}
+    );
+};
 
-export default observer(SingleHeatRow)
+export default observer(SingleHeatRow);

@@ -1,10 +1,10 @@
-import { Button, Menu, MenuItem } from "@material-ui/core"
-import { observer } from "mobx-react"
-import { FC, useEffect, useState, useContext } from "react"
+import { Button, Menu, MenuItem } from "@material-ui/core";
+import { observer } from "mobx-react";
+import { FC, useEffect, useState, useContext } from "react";
 import NestedMenuItem from "material-ui-nested-menu-item";
-import Store from "../../../Interfaces/Store"
-import { useStyles } from "../../../Presets/StyledComponents"
-import ManageStateDialog from "../../Modals/ManageStateDialog"
+import Store from "../../../Interfaces/Store";
+import { useStyles } from "../../../Presets/StyledComponents";
+import ManageStateDialog from "../../Modals/ManageStateDialog";
 import SaveStateModal from "../../Modals/SaveStateModal";
 
 const StateManagementSuite: FC = () => {
@@ -24,17 +24,17 @@ const StateManagementSuite: FC = () => {
     };
     // // const [listOfSavedState, setListOfSavedState] = useState<string[]>([])
 
-    async function fetchSavedStates() {
+    async function fetchSavedStates () {
         fetch(`${process.env.REACT_APP_QUERY_URL}state`)
             .then(result => result.json())
             .then(result => {
                 if (result) {
-                    const resultList = result.map((d: any[]) => d)
+                    const resultList = result.map((d: any[]) => d);
                     store.configStore.savedState = resultList;
                 }
             }).catch(r => {
-                console.log("failed to fetch states")
-            })
+                console.log("failed to fetch states");
+            });
     }
 
     useEffect(() => {
@@ -42,21 +42,21 @@ const StateManagementSuite: FC = () => {
             .then(result => result.json())
             .then(result => {
                 if (result) {
-                    const resultList = result.map((d: any[]) => d)
+                    const resultList = result.map((d: any[]) => d);
                     store.configStore.savedState = resultList;
                 }
             }).catch(r => {
-                console.log("failed to fetch states")
-            })
+                console.log("failed to fetch states");
+            });
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, []);
 
     const loadSavedState = async (name: string) => {
-        const res = await (fetch(`${process.env.REACT_APP_QUERY_URL}state?name=${name}`))
-        const result = await res.json()
-        store.provenance.importState(result.definition)
-    }
+        const res = await (fetch(`${process.env.REACT_APP_QUERY_URL}state?name=${name}`));
+        const result = await res.json();
+        store.provenance.importState(result.definition);
+    };
 
 
 
@@ -79,7 +79,7 @@ const StateManagementSuite: FC = () => {
                                     store.configStore.loadedStateName = d;
                                 }}>
                                 {d}
-                            </MenuItem>)
+                            </MenuItem>);
                     }) : <MenuItem disabled>No Available</MenuItem>}
                 </NestedMenuItem>
 
@@ -97,7 +97,7 @@ const StateManagementSuite: FC = () => {
             <SaveStateModal />
 
         </div>
-    )
-}
+    );
+};
 
-export default observer(StateManagementSuite)
+export default observer(StateManagementSuite);

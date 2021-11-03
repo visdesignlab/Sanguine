@@ -1,19 +1,19 @@
-import { observer } from "mobx-react"
-import { FC, useContext } from "react"
-import BrowserWarning from "./Components/Modals/BrowserWarning"
-import DataRetrieval from "./Components/Modals/DataRetrieval"
-import LeftToolBox from "./Components/Utilities/LeftToolBox/LeftToolBox"
-import RegularModeMenu from "./Components/Utilities/TopMenu/RegularModeMenu"
+import { observer } from "mobx-react";
+import { FC, useContext } from "react";
+import BrowserWarning from "./Components/Modals/BrowserWarning";
+import DataRetrieval from "./Components/Modals/DataRetrieval";
+import LeftToolBox from "./Components/Utilities/LeftToolBox/LeftToolBox";
+import RegularModeMenu from "./Components/Utilities/TopMenu/RegularModeMenu";
 
-import './App.css'
-import LayoutGenerator from "./Components/LayoutGenerator"
-import { DataContext } from "./App"
-import Grid from "@material-ui/core/Grid"
-import { Box, Divider, Snackbar } from "@material-ui/core"
-import DetailView from "./Components/Utilities/DetailView/DetailView"
+import './App.css';
+import LayoutGenerator from "./Components/LayoutGenerator";
+import { DataContext } from "./App";
+import Grid from "@material-ui/core/Grid";
+import { Box, Divider, Snackbar } from "@material-ui/core";
+import DetailView from "./Components/Utilities/DetailView/DetailView";
 import { Alert } from "@material-ui/lab";
-import Store from "./Interfaces/Store"
-import { SnackBarCloseTime } from "./Presets/Constants"
+import Store from "./Interfaces/Store";
+import { SnackBarCloseTime } from "./Presets/Constants";
 
 
 const Dashboard: FC = () => {
@@ -45,12 +45,12 @@ const Dashboard: FC = () => {
                     <DataRetrieval />
                 </> : <></>}
 
-            <Snackbar open={store.configStore.openSnackBar} autoHideDuration={SnackBarCloseTime} onClose={() => { store.configStore.openSnackBar = false }}>
-                <Alert onClose={() => { store.configStore.openSnackBar = false }} severity={store.configStore.snackBarIsError ? "error" : "success"}>
+            <Snackbar open={store.configStore.openSnackBar} autoHideDuration={SnackBarCloseTime} onClose={() => { store.configStore.openSnackBar = false; }}>
+                <Alert onClose={() => { store.configStore.openSnackBar = false; }} severity={store.configStore.snackBarIsError ? "error" : "success"}>
                     {store.configStore.snackBarMessage}
                 </Alert>
             </Snackbar>
         </div>
-    )
-}
-export default observer(Dashboard)
+    );
+};
+export default observer(Dashboard);

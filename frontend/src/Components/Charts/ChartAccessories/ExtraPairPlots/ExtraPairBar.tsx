@@ -21,17 +21,17 @@ const ExtraPairBar: FC<Props> = ({ secondaryDataSet, dataSet, aggregationScaleDo
         const domain = JSON.parse(aggregationScaleDomain).map((d: number) => d.toString());;
         const range = JSON.parse(aggregationScaleRange);
         const aggregationScale = scaleBand().domain(domain).range(range).paddingInner(0.1);
-        return aggregationScale
-    }, [aggregationScaleDomain, aggregationScaleRange])
+        return aggregationScale;
+    }, [aggregationScaleDomain, aggregationScaleRange]);
 
     const valueScale = useCallback(() => {
-        let maxVal = max(Object.values(dataSet))
+        let maxVal = max(Object.values(dataSet));
         if (secondaryDataSet) {
-            maxVal = max(Object.values(secondaryDataSet).concat([maxVal]))
+            maxVal = max(Object.values(secondaryDataSet).concat([maxVal]));
         }
-        const valueScale = scaleLinear().domain([0, maxVal]).range([0, ExtraPairWidth.BarChart])
-        return valueScale
-    }, [dataSet])
+        const valueScale = scaleLinear().domain([0, maxVal]).range([0, ExtraPairWidth.BarChart]);
+        return valueScale;
+    }, [dataSet]);
 
     return (
         <>
@@ -47,7 +47,7 @@ const ExtraPairBar: FC<Props> = ({ secondaryDataSet, dataSet, aggregationScaleDo
                                 width={valueScale()(dataVal)}
                                 height={(secondaryDataSet ? 0.5 : 1) * aggregationScale().bandwidth()} />
                         </Tooltip>
-                    )
+                    );
                 })}
             </g>
             <g>
@@ -62,11 +62,11 @@ const ExtraPairBar: FC<Props> = ({ secondaryDataSet, dataSet, aggregationScaleDo
                                 width={valueScale()(dataVal)}
                                 height={aggregationScale().bandwidth() * 0.5} />
                         </Tooltip>
-                    )
+                    );
                 }) : <></>}
             </g>
         </>
-    )
-}
+    );
+};
 
 export default (observer(ExtraPairBar));
