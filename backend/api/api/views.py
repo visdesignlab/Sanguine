@@ -7,7 +7,9 @@ from django.http import (
     HttpResponse,
     JsonResponse,
     HttpResponseBadRequest,
-    HttpResponseNotAllowed
+    HttpResponseNotAllowed,
+    HttpResponseNotFound,
+    HttpResponseForbidden
 )
 from django.forms.models import model_to_dict
 from django.contrib.auth.models import User
@@ -886,12 +888,12 @@ def state(request):
             try:
                 state = State.objects.get(name=name)  # username = uid
             except State.DoesNotExist:
-                return HttpResponseBadRequest("State not found", 404)
+                return HttpResponseNotFound("State not found")
             state_access = StateAccess.objects.filter(state=state).filter(user=user)
 
             # Make sure that user is owner or at least reader
             if not(str(state.owner) == str(user) or state_access or state.public):
-                return HttpResponseBadRequest("Not authorized", 401)
+                return HttpResponseForbidden("Not authorized")
 
             # Return the json for the state
             return JsonResponse(model_to_dict(state))
@@ -919,7 +921,7 @@ def state(request):
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: state Params: name = {name}, public = {public} User: {request.user}")
 
         if State.objects.filter(name=name).exists():
-            return HttpResponseBadRequest("a state with that name already exists, try another", 400)
+            return HttpResponseBadRequest("a state with that name already exists, try another")
 
         if name and definition:  # owner is guaranteed by login
             # Create and save the new State object
@@ -928,7 +930,7 @@ def state(request):
 
             return HttpResponse("state object created", 200)
         else:
-            return HttpResponseBadRequest("missing params: [name, definition, owner]", 400)
+            return HttpResponseBadRequest("missing params: [name, definition, owner]")
 
     elif request.method == "PUT":
         # Get the required information from the request body
@@ -950,9 +952,9 @@ def state(request):
         all_modifiable_states = set(owned_states + writable_states)
 
         if old_name not in all_accessible_states:
-            return HttpResponseBadRequest("State not found", 404)
+            return HttpResponseNotFound("State not found")
         if old_name not in all_modifiable_states:
-            return HttpResponseBadRequest("Not authorized", 401)
+            return HttpResponseForbidden("Not authorized")
 
         # Update the State object and save
         result = State.objects.get(name=old_name)
@@ -974,10 +976,10 @@ def state(request):
         try:
             result = State.objects.get(name=name)  # username = uid
         except State.DoesNotExist:
-            return HttpResponseBadRequest("State not found", 404)
+            return HttpResponseNotFound("State not found")
 
         if str(result.owner) != str(request.user):
-            return HttpResponseBadRequest("Requester is not owner", 401)
+            return HttpResponseForbidden("Requester is not owner")
 
         StateAccess.objects.all().filter(state_id=result.id).delete()
 
@@ -1008,23 +1010,23 @@ def share_state(request):
         requesting_user = request.user
 
         if role not in [a[1] for a in AccessLevel.choices()]:
-            return HttpResponseBadRequest(f"role must be in: {[a[1] for a in AccessLevel.choices()]}", 400)
+            return HttpResponseBadRequest(f"role must be in: {[a[1] for a in AccessLevel.choices()]}")
 
         try:
             state_object = State.objects.get(name=name)
         except State.DoesNotExist:
-            return HttpResponseBadRequest("State not found", 404)
+            return HttpResponseNotFound("State not found")
 
         try:
             user_object = User.objects.get(username=user)  # username = uid
         except User.DoesNotExist:
-            return HttpResponseBadRequest("User does not exist", 400)
+            return HttpResponseBadRequest("User does not exist")
 
         # Make sure state exists, requesting users is owner, and new user is not owner, user exists
         if str(state_object.owner) != str(requesting_user):
-            return HttpResponseBadRequest("Requesting user is not the owner", 400)
+            return HttpResponseForbidden("Requesting user is not the owner")
         if str(state_object.owner) == str(user):
-            return HttpResponseBadRequest("User is already the owner of the state", 400)
+            return HttpResponseBadRequest("User is already the owner of the state")
 
         # Check that new user is not already reader/writer, role in allowed choices
         state_access_object = StateAccess.objects.filter(state=state_object).filter(user=user)
@@ -1063,7 +1065,7 @@ def state_unids(request):
         try:
             state = State.objects.get(name=state_name)  # username = uid
         except State.DoesNotExist:
-            return HttpResponseBadRequest("State not found", 404)
+            return HttpResponseNotFound("State not found")
         state_access = StateAccess.objects.filter(state=state)
 
         users_and_roles = [(access.user, access.role) for access in state_access]
