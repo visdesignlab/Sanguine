@@ -98,6 +98,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
                             dataSet={pairData.data}
                             name={pairData.name}
                             secondaryDataSet={temporarySecondary ? temporarySecondary[index].data : undefined}
+                            secondaryMedianSet={temporarySecondary ? temporarySecondary[index].medianSet : undefined}
                         />
                         {extraPairTextGenerator(pairData.name, pairData.label, "Violin", pairData)}
                     </g>);
@@ -118,7 +119,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
             case "Basic":
                 transferedDistance += (ExtraPairWidth.Basic + ExtraPairPadding);
 
-                console.log(secondaryExtraPairDataSet);
+
                 returningComponents.push(<g transform={`translate(${transferedDistance - (ExtraPairWidth.Basic)},0)`}>
 
                     <ExtraPairBasic

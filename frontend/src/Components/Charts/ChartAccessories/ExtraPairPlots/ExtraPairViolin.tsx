@@ -14,11 +14,12 @@ interface OwnProps {
     kdeMax: number;
     name: string;
     secondaryDataSet?: any[];
+    secondaryMedianSet?: any;
 }
 
 export type Props = OwnProps;
 
-const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, aggregationScaleRange, medianSet, name, secondaryDataSet }: Props) => {
+const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, aggregationScaleRange, medianSet, name, secondaryDataSet, secondaryMedianSet }: Props) => {
 
     const aggregationScale = useCallback(() => {
         const domain = JSON.parse(aggregationScaleDomain).map((d: number) => d.toString());;
@@ -98,7 +99,7 @@ const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, a
                 {secondaryDataSet ? Object.entries(secondaryDataSet).map(([val, result]) => {
                     return (
                         <g>
-                            <Tooltip title={`median ${format(".2f")(medianSet[val])}`}>
+                            <Tooltip title={`median ${format(".2f")(secondaryMedianSet[val])}`}>
                                 <g>
                                     {generateViolin(result.dataPoints, result.kdeArray, val)}
                                 </g>

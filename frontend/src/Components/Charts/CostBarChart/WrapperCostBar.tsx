@@ -144,48 +144,50 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
                     caseSetReturnedFromQuery.add(element.case_id);
                 });
                 hemoData.forEach((singleCase: SingleCasePoint) => {
-                    if (!temporaryDataHolder[singleCase[xAggregatedOption]]) {
-                        temporaryDataHolder[singleCase[xAggregatedOption]] = {
-                            aggregateAttribute: singleCase[xAggregatedOption],
-                            PRBC_UNITS: 0,
-                            FFP_UNITS: 0,
-                            CRYO_UNITS: 0,
-                            PLT_UNITS: 0,
-                            CELL_SAVER_ML: 0,
-                            caseNum: 0,
-                            SALVAGE_USAGE: 0,
-                            caseIDList: new Set()
-                        };
-                        secondaryTemporaryDataHolder[singleCase[xAggregatedOption]] = {
-                            aggregateAttribute: singleCase[xAggregatedOption],
-                            PRBC_UNITS: 0,
-                            FFP_UNITS: 0,
-                            CRYO_UNITS: 0,
-                            PLT_UNITS: 0,
-                            CELL_SAVER_ML: 0,
-                            caseNum: 0,
-                            SALVAGE_USAGE: 0,
-                            caseIDList: new Set()
-                        };
-                    }
-                    if (comparisonOption && singleCase[comparisonOption] > 0) {
-                        secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].PRBC_UNITS += singleCase.PRBC_UNITS;
-                        secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].FFP_UNITS += singleCase.FFP_UNITS;
-                        secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].CRYO_UNITS += singleCase.CRYO_UNITS;
-                        secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].PLT_UNITS += singleCase.PLT_UNITS;
-                        secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
-                        secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0);
-                        secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].caseNum += 1;
-                        secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].caseIDList.add(singleCase.CASE_ID);
-                    } else {
-                        temporaryDataHolder[singleCase[xAggregatedOption]].PRBC_UNITS += singleCase.PRBC_UNITS;
-                        temporaryDataHolder[singleCase[xAggregatedOption]].FFP_UNITS += singleCase.FFP_UNITS;
-                        temporaryDataHolder[singleCase[xAggregatedOption]].CRYO_UNITS += singleCase.CRYO_UNITS;
-                        temporaryDataHolder[singleCase[xAggregatedOption]].PLT_UNITS += singleCase.PLT_UNITS;
-                        temporaryDataHolder[singleCase[xAggregatedOption]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
-                        temporaryDataHolder[singleCase[xAggregatedOption]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0);
-                        temporaryDataHolder[singleCase[xAggregatedOption]].caseNum += 1;
-                        temporaryDataHolder[singleCase[xAggregatedOption]].caseIDList.add(singleCase.CASE_ID);
+                    if (caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
+                        if (!temporaryDataHolder[singleCase[xAggregatedOption]]) {
+                            temporaryDataHolder[singleCase[xAggregatedOption]] = {
+                                aggregateAttribute: singleCase[xAggregatedOption],
+                                PRBC_UNITS: 0,
+                                FFP_UNITS: 0,
+                                CRYO_UNITS: 0,
+                                PLT_UNITS: 0,
+                                CELL_SAVER_ML: 0,
+                                caseNum: 0,
+                                SALVAGE_USAGE: 0,
+                                caseIDList: new Set()
+                            };
+                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]] = {
+                                aggregateAttribute: singleCase[xAggregatedOption],
+                                PRBC_UNITS: 0,
+                                FFP_UNITS: 0,
+                                CRYO_UNITS: 0,
+                                PLT_UNITS: 0,
+                                CELL_SAVER_ML: 0,
+                                caseNum: 0,
+                                SALVAGE_USAGE: 0,
+                                caseIDList: new Set()
+                            };
+                        }
+                        if (comparisonOption && singleCase[comparisonOption] > 0) {
+                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].PRBC_UNITS += singleCase.PRBC_UNITS;
+                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].FFP_UNITS += singleCase.FFP_UNITS;
+                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].CRYO_UNITS += singleCase.CRYO_UNITS;
+                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].PLT_UNITS += singleCase.PLT_UNITS;
+                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
+                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0);
+                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].caseNum += 1;
+                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].caseIDList.add(singleCase.CASE_ID);
+                        } else {
+                            temporaryDataHolder[singleCase[xAggregatedOption]].PRBC_UNITS += singleCase.PRBC_UNITS;
+                            temporaryDataHolder[singleCase[xAggregatedOption]].FFP_UNITS += singleCase.FFP_UNITS;
+                            temporaryDataHolder[singleCase[xAggregatedOption]].CRYO_UNITS += singleCase.CRYO_UNITS;
+                            temporaryDataHolder[singleCase[xAggregatedOption]].PLT_UNITS += singleCase.PLT_UNITS;
+                            temporaryDataHolder[singleCase[xAggregatedOption]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
+                            temporaryDataHolder[singleCase[xAggregatedOption]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0);
+                            temporaryDataHolder[singleCase[xAggregatedOption]].caseNum += 1;
+                            temporaryDataHolder[singleCase[xAggregatedOption]].caseIDList.add(singleCase.CASE_ID);
+                        }
                     }
                 }
                 );
