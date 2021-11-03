@@ -22,9 +22,9 @@ export const OutcomeOptions = [
     { value: "ECMO", key: "ECMO", text: "ECMO" },
     { value: "B12", key: "B12", text: "B12" },
     { value: "TXA", key: "TXA", text: "Tranexamic Acid" },
-    { value: "AMICAR", key: "AMICAR", text: "Amicar" }]
+    { value: "AMICAR", key: "AMICAR", text: "Amicar" }];
 
-export const OutcomeOptionsStringArray = ["DEATH", "VENT", "STROKE", "ECMO", "B12", "TXA", "AMICAR"]
+export const OutcomeOptionsStringArray = ["DEATH", "VENT", "STROKE", "ECMO", "B12", "TXA", "AMICAR"];
 
 export const ExtraPairOptions = OutcomeOptions.concat([
     { text: "Preop Hemoglobin", key: "PREOP_HGB", value: "Preop HGB" },
@@ -33,17 +33,17 @@ export const ExtraPairOptions = OutcomeOptions.concat([
     { text: "Per Case Transfusion", key: "PER_CASE", value: "PER_CASE" },
     { text: "Zero Transfusion Cases", key: "ZERO_TRANS", value: "ZERO_TRANS" },
     { text: "DRG Weight (Risk)", key: "RISK", value: "RISK" }
-])
+]);
 
 export const SurgeryUrgency = [
     { value: 0, key: 0, text: "Urgent" },
     { value: 1, key: 1, text: "Elective" },
-    { value: 2, key: 2, text: "Emergent" }]
+    { value: 2, key: 2, text: "Emergent" }];
 
 
-export const dumbbellFacetOptions = BloodComponentOptions.slice(0, 4).concat(AggregationOptions).concat([{ value: "QUARTER", key: "QUARTER", text: "Quarter" }])
+export const dumbbellFacetOptions = BloodComponentOptions.slice(0, 4).concat(AggregationOptions).concat([{ value: "QUARTER", key: "QUARTER", text: "Quarter" }]);
 
-const dumbbellValueOptions = [{ value: "HGB_VALUE", key: "HGB_VALUE", text: "Hemoglobin Value" }]
+const dumbbellValueOptions = [{ value: "HGB_VALUE", key: "HGB_VALUE", text: "Hemoglobin Value" }];
 
 export const typeDiction = ["COST", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION"];
 
@@ -53,9 +53,9 @@ export const addOptions = [
     [ScatterYOptions, BloodComponentOptions],
     [BloodComponentOptions, AggregationOptions],
     [BloodComponentOptions, [AggregationOptions[0], AggregationOptions[2]]]
-]
+];
 
-export const SurgeryUrgencyArray = ["Urgent", "Elective", "Emergent"]
+export const SurgeryUrgencyArray = ["Urgent", "Elective", "Emergent"];
 
 export const AcronymDictionary: any = {
     CABG: "Coronary Artery Bypass Grafting",
@@ -89,7 +89,7 @@ export const AcronymDictionary: any = {
     POSTOP_HGB: "Postoperative Hemoglobin Value",
     DRG_WEIGHT: "Diagnosis-related Group Weight",
     COST: "Blood Component Cost per Case"
-}
+};
 
 export const HIPAA_Sensitive = new Set([
     "Gender (M/F)",
@@ -107,6 +107,7 @@ export const HIPAA_Sensitive = new Set([
     "VISIT_ID",
     "DATE",
     "MONTH",
-    "PATIENT_ID"
-])
+    "PATIENT_ID",
+    "Hospital Visit Number"
+]);
 
