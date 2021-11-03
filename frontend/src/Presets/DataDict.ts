@@ -107,6 +107,7 @@ export const HIPAA_Sensitive = new Set([
     "VISIT_ID",
     "DATE",
     "MONTH",
-    "PATIENT_ID"
+    "PATIENT_ID",
+    "Hospital Visit Number"
 ]);
 

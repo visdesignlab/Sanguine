@@ -1,6 +1,5 @@
 
 import { ManualInfinity } from "../Presets/Constants";
-import { OutcomeOptionsStringArray } from "../Presets/DataDict";
 import { ApplicationState } from "./Types/StateTypes";
 
 const today = new Date();
