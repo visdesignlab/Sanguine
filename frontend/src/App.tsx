@@ -69,7 +69,7 @@ const App: FC = () => {
         setOutputFilteredDAta(newFilteredData);
     }, [surgeryUrgencySelection, outcomeFilter, hemoData, currentOutputFilterSet, bloodComponentFilter, testValueFilter, currentSelectPatientGroup]);
 
-    async function cacheHemoData () {
+    async function cacheHemoData() {
         if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
             whoamiAPICall(store);
         }
@@ -139,7 +139,7 @@ const App: FC = () => {
                             MONTH: ob.MONTH,
                             DATE: time,
                             VENT: riskOutcomeDict[ob.VISIT_ID].VENT,
-                            DRG_WEIGHT: riskOutcomeDict[ob.VISIT_ID].DRG_WEIGHT || 0,
+                            DRG_WEIGHT: riskOutcomeDict[ob.VISIT_ID].DRG_WEIGHT || NaN,
                             DEATH: riskOutcomeDict[ob.VISIT_ID].DEATH,
                             ECMO: riskOutcomeDict[ob.VISIT_ID].ECMO,
                             STROKE: riskOutcomeDict[ob.VISIT_ID].STROKE,
