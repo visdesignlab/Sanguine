@@ -4,7 +4,6 @@ export const sortHelper = (data: BasicAggregatedDatePoint[], xAggregationOption:
     let newCaseMax = 0;
     let dataXVals: string[] = [];
     if (secondaryData) {
-        console.log(secondaryData);
         let dataToObj: any = {};
 
         secondaryData.map((d) => {
