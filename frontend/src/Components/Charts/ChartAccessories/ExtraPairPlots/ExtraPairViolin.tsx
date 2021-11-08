@@ -3,7 +3,7 @@ import { FC, useCallback, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { observer } from "mobx-react";
 import { scaleLinear, line, curveCatmullRom, format, scaleBand, select, axisBottom } from "d3";
-import { Basic_Gray, ExtraPairWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD } from "../../../../Presets/Constants";
+import { Basic_Gray, ExtraPairWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, Third_Gray } from "../../../../Presets/Constants";
 import { Tooltip } from "@material-ui/core";
 
 interface OwnProps {
@@ -28,8 +28,6 @@ const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, a
         return aggregationScale;
     }, [aggregationScaleDomain, aggregationScaleRange]);
 
-
-    console.log(secondaryDataSet);
     const valueScale = scaleLinear().domain([0, 18]).range([0, ExtraPairWidth.Violin]);
     if (name === "RISK") {
         valueScale.domain([0, 30]);
@@ -56,14 +54,31 @@ const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, a
     }, [svgRef, valueScale]);
 
     const generateViolin = (dataPoints: any, pdArray: any, aggregationAttribute: string) => {
-        if (dataPoints.length > 5) {
+        const validDP = dataPoints.filter((d: any) => d);
+        if (validDP.length > 5) {
             return <ViolinLine
                 d={lineFunction()(pdArray)!}
                 transform={`translate(0,${aggregationScale()(aggregationAttribute)!})`}
             />;
-        } else {
+        }
+        else if (validDP.length === 0) {
+            return <line
+                opacity={0.75}
+                strokeWidth={1.5}
+                stroke={Third_Gray}
+                x1={0.3 * valueScale.range()[1]}
+                x2={0.7 * valueScale.range()[1]}
+                y1={aggregationScale().bandwidth() * 0.5 + (aggregationScale()(aggregationAttribute) || 0)}
+                y2={aggregationScale().bandwidth() * 0.5 + (aggregationScale()(aggregationAttribute) || 0)} />;
+        }
+        else {
             const result = dataPoints.map((d: any) => {
-                return <circle r={2} fill={Basic_Gray} cx={valueScale(d)} cy={(aggregationScale()(aggregationAttribute) || 0) + Math.random() * aggregationScale().bandwidth() * 0.5 + aggregationScale().bandwidth() * 0.25} />;
+                return <circle
+                    r={2}
+                    fill={Basic_Gray}
+                    opacity={d ? 1 : 0}
+                    cx={valueScale(d)}
+                    cy={(aggregationScale()(aggregationAttribute) || 0) + Math.random() * aggregationScale().bandwidth() * 0.5 + aggregationScale().bandwidth() * 0.25} />;
             });
 
             return <g>{result}</g>;
@@ -84,10 +99,10 @@ const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, a
                 y2={aggregationScale().range()[1] - 0.25 * aggregationScale().bandwidth()} />
             <g transform={`translate(0,${secondaryDataSet ? aggregationScale().bandwidth() * 0.25 : 0})`}>
                 {Object.entries(dataSet).map(([val, result]) => {
-
+                    const tooltipMessage = medianSet[val] ? `Median ${format(".2f")(medianSet[val])}` : 'No data avalaible.';
                     return (
                         <g>
-                            <Tooltip title={`median ${format(".2f")(medianSet[val])}`}>
+                            <Tooltip title={tooltipMessage}>
                                 {generateViolin(result.dataPoints, result.kdeArray, val)}
                             </Tooltip>
 
@@ -97,9 +112,10 @@ const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, a
             </g >
             <g transform={`translate(0,${-aggregationScale().bandwidth() * 0.25})`}>
                 {secondaryDataSet ? Object.entries(secondaryDataSet).map(([val, result]) => {
+                    const secondaryTooltipMessage = secondaryMedianSet[val] ? `Median ${format(".2f")(secondaryMedianSet[val])}` : 'No data avalaible.';
                     return (
                         <g>
-                            <Tooltip title={`median ${format(".2f")(secondaryMedianSet[val])}`}>
+                            <Tooltip title={secondaryTooltipMessage}>
                                 <g>
                                     {generateViolin(result.dataPoints, result.kdeArray, val)}
                                 </g>
