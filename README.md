@@ -49,14 +49,14 @@ Link the systemd service files to the correct place for the user
 sudo systemctl status api.service
 sudo systemctl start api.service
 
-# Restart the api
-sudo systemctl restart api.service
-
 # Start/restart the frontend
 cd frontend
 /usr/bin/scl enable rh-nodejs10 -- npm run build
 sudo /usr/bin/rsync -av /uufs/chpc.utah.edu/common/HIPAA/IRB_00124248/deployed-app/bloodvis/frontend/build/* /var/www/html
 sudo /usr/bin/chown -R apache. /var/www/html
 sudo systemctl restart httpd24-httpd
+
+# Restart the api
+sudo systemctl restart api.service
 ```
 
