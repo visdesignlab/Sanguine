@@ -192,59 +192,47 @@ def fetch_surgery(request):
             return HttpResponseBadRequest("case_id must be supplied.")
 
         command = f"""
-        SELECT
-            SURG.{FIELDS_IN_USE.get('visit_no')},
-            SURG.{FIELDS_IN_USE.get('case_date')},
-            SURG.{FIELDS_IN_USE.get('surgery_start_time')},
-            SURG.{FIELDS_IN_USE.get('surgery_end_time')},
-            SURG.{FIELDS_IN_USE.get('surgery_elapsed')},
-            SURG.{FIELDS_IN_USE.get('surgery_type')},
-            SURG.{FIELDS_IN_USE.get('prim_proc_desc')},
-            SURG.{FIELDS_IN_USE.get('post_op_icu_los')}
-        FROM
-            {TABLES_IN_USE.get('surgery_case')} SURG
-        WHERE SURG.{FIELDS_IN_USE.get('case_id')} = :id
+        with 
+            codes as (
+                SELECT
+                    BLNG.{FIELDS_IN_USE.get('visit_no')} || ', ' || BLNG.{FIELDS_IN_USE.get('procedure_dtm')} as comb,
+                    LISTAGG(BLNG.{FIELDS_IN_USE.get('code_desc')}, ', ') as codes
+                FROM {TABLES_IN_USE.get('billing_codes')} BLNG
+                group by {FIELDS_IN_USE.get('visit_no')} || ', ' || {FIELDS_IN_USE.get('procedure_dtm')}
+            ),
+            surg_cases as (
+                SELECT 
+                    TO_CHAR(SURG.{FIELDS_IN_USE.get('visit_no')}) || ', ' || TO_CHAR(SURG.{FIELDS_IN_USE.get('case_date')}) as comb,
+                    SURG.{FIELDS_IN_USE.get('case_id')},
+                    SURG.{FIELDS_IN_USE.get('visit_no')},
+                    SURG.{FIELDS_IN_USE.get('case_date')},
+                    SURG.{FIELDS_IN_USE.get('surgery_start_time')},
+                    SURG.{FIELDS_IN_USE.get('surgery_end_time')},
+                    SURG.{FIELDS_IN_USE.get('surgery_elapsed')},
+                    SURG.{FIELDS_IN_USE.get('surgery_type')},
+                    SURG.{FIELDS_IN_USE.get('prim_proc_desc')},
+                    SURG.{FIELDS_IN_USE.get('post_op_icu_los')}
+                FROM {TABLES_IN_USE.get('surgery_case')} SURG
+                WHERE SURG.{FIELDS_IN_USE.get('case_id')} = :id
+            )
+        SELECT surg_cases.*, codes.codes
+        FROM surg_cases
+        INNER JOIN codes ON surg_cases.comb = codes.comb
         """
 
         result = execute_sql(command, id=case_id)
         data_dict = data_dictionary()
         data = [
-            dict(zip([data_dict[key[0]] for key in result.description] + ["cpt"], list(row) + [[]]))
+            dict(zip([data_dict[key[0]] for key in result.description[1:]] + ["cpt"], list(row[1:]) + [[]]))
             for row in result
         ]
 
-        # Get the CPT information for each visit number
-        visit_nos = [d["Hospital Visit Number"] for d in data]
-        visit_bind_names = [f":visit_no{str(i)}" for i in range(len(visit_nos))]
-        visit_filters_safe_sql = (
-            f"AND BLNG.{FIELDS_IN_USE.get('visit_no')} IN ({','.join(visit_bind_names)}) "
-            if visit_nos != []
-            else ""
-        )
-
-        visit_command = f"""
-            SELECT
-                BLNG.{FIELDS_IN_USE.get('visit_no')},
-                BLNG.{FIELDS_IN_USE.get('code_desc')}
-            FROM CLIN_DM.BPU_CTS_DI_BILL_CODES_092920 BLNG
-            WHERE 1=1
-            {visit_filters_safe_sql}
-        """
-
-        visit_result = execute_sql(
-            visit_command,
-            dict(zip(visit_bind_names, visit_nos)),
-        )
-
         cpts = cpt()
+        cleaned_cpt = list(set([cpt[2] for cpt in cpts if cpt[1] in data[0]["CODES"]]))
 
-        for visit in visit_result:
-            # Use the first column of the query (visit_no), to get the index of data to update
-            index = visit_nos.index(visit[0])
-            cleaned_cpt = [cpt for cpt in cpts if cpt[1] == visit[1]]
-
-            # cleaned_cpt[0][2] since we want the first cpt that matched the description and the third field from the cpt table
-            data[index]["cpt"] = list(set(data[index]["cpt"] + [cleaned_cpt[0][2]])) if cleaned_cpt else data[index]["cpt"]
+        # cleaned_cpt[0][2] since we want the first cpt that matched the description and the third field from the cpt table
+        data[0]["cpt"] = cleaned_cpt if cleaned_cpt else []
+        del data[0]["CODES"]
 
         return JsonResponse({"result": data})
     else:
