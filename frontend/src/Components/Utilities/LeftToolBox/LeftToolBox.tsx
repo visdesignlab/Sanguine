@@ -3,6 +3,7 @@ import { max } from "d3";
 import { observer } from "mobx-react";
 import { FC, useEffect, useState } from "react";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
+import { ProcedureEntry } from "../../../Interfaces/Types/DataTypes";
 import FilterBoard from "../FilterInterface/FilterBoard";
 import CurrentSelected from "./CurrentSelected";
 import CurrentView from "./CurrentView";
@@ -13,7 +14,7 @@ type Props = { totalCaseNum: number; };
 
 const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
 
-    const [surgeryList, setSurgeryList] = useState<any[]>([]);
+    const [surgeryList, setSurgeryList] = useState<ProcedureEntry[]>([]);
     const [maxCaseCount, setMaxCaseCount] = useState(0);
     const [tabValue, setTabValue] = useState(0);
     const handleChange = (event: any, newValue: any) => {
@@ -25,11 +26,12 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
             .then(response => response.json())
             .then(function (data) {
                 const result = data.result;
-                let tempSurgeryList: any[] = result;
+                // Further process the outcome from the query. This would include a procedure and a list of overlap.
+                let tempSurgeryList: ProcedureEntry[] = result;
                 let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
                 tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
                 setMaxCaseCount(tempMaxCaseCount);
-                tempSurgeryList.sort((a: any, b: any) => b.count - a.count);
+                tempSurgeryList.sort((a: ProcedureEntry, b: ProcedureEntry) => b.count - a.count);
                 stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList);
             }).catch(r => {
                 console.log("failed to fetch required data");
