@@ -5,11 +5,12 @@ import { useCallback, useContext, useEffect } from "react";
 import { FC, useLayoutEffect, useRef, useState } from "react";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
+import { ProcedureEntry } from "../../../Interfaces/Types/DataTypes";
 import { SurgeryDiv, SurgeryListComp, SurgeryNumText, useStyles } from "../../../Presets/StyledComponents";
 import { ListSVG, SurgeryRect } from "../../../Presets/StyledSVGComponents";
 
 type Props = {
-    surgeryList: any[];
+    surgeryList: ProcedureEntry[];
     maxCaseCount: number;
 };
 
@@ -49,10 +50,10 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
 
 
     useEffect(() => {
-        let newItemSelected: any[] = [];
-        let newItemUnselected: any[] = [];
-        surgeryList.forEach((d: any) => {
-            if (store.state.proceduresSelection.includes(d.value)) {
+        let newItemSelected: ProcedureEntry[] = [];
+        let newItemUnselected: ProcedureEntry[] = [];
+        surgeryList.forEach((d: ProcedureEntry) => {
+            if (store.state.proceduresSelection.includes(d.procedureName)) {
                 newItemSelected.push(d);
             }
             else {
