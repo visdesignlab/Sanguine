@@ -66,9 +66,11 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
     }, [store.state.proceduresSelection, surgeryList]);
 
     const findIfSubProcedureSelected = (subProcedureName: string, parentProcedureName: string) => {
-        const overlapList = store.state.proceduresSelection.filter(d => d.procedureName === parentProcedureName)[0].overlapList;
-        if (overlapList) {
-            return overlapList.filter(d => d.procedureName === subProcedureName).length > 0;
+        if (store.state.proceduresSelection.filter(d => d.procedureName === parentProcedureName).length > 0) {
+            const overlapList = store.state.proceduresSelection.filter(d => d.procedureName === parentProcedureName)[0].overlapList;
+            if (overlapList) {
+                return overlapList.filter(d => d.procedureName === subProcedureName).length > 0;
+            }
         }
         return false;
     };
