@@ -1,11 +1,11 @@
-import { SingleCasePoint } from "./DataTypes";
+import { ProcedureEntry, SingleCasePoint } from "./DataTypes";
 import { LayoutElement } from "./LayoutTypes";
 import { SelectSet } from "./SelectionTypes";
 
 export type ApplicationState = {
     outcomeFilter: string[];
     rawDateRange: number[];
-    proceduresSelection: string[];
+    proceduresSelection: ProcedureEntry[];
     surgeryUrgencySelection: [boolean, boolean, boolean];
     totalAggregatedCaseCount: number;
     totalIndividualCaseCount: number;

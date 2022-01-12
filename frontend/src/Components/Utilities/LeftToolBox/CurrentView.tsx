@@ -25,7 +25,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
             output.push(<span key={`all`}>All</span>);
         } else {
             store.state.proceduresSelection.forEach((d, i) => {
-                const stringArray = d.split(" ");
+                const stringArray = d.procedureName.split(" ");
                 stringArray.forEach((word, index) => {
                     if ((AcronymDictionary as any)[word]) {
                         output.push((

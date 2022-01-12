@@ -17,8 +17,8 @@ type Props = {
 const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
     const store = useContext(Store);
     const [width, setWidth] = useState(0);
-    const [itemSelected, setItemSelected] = useState<any[]>([]);
-    const [itemUnselected, setItemUnselected] = useState<any[]>([]);
+    const [itemSelected, setItemSelected] = useState<ProcedureEntry[]>([]);
+    const [itemUnselected, setItemUnselected] = useState<ProcedureEntry[]>([]);
 
     const styles = useStyles();
 
@@ -52,12 +52,12 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
     useEffect(() => {
         let newItemSelected: ProcedureEntry[] = [];
         let newItemUnselected: ProcedureEntry[] = [];
-        surgeryList.forEach((d: ProcedureEntry) => {
-            if (store.state.proceduresSelection.includes(d.procedureName)) {
-                newItemSelected.push(d);
+        surgeryList.forEach((item: ProcedureEntry) => {
+            if (store.state.proceduresSelection.filter(d => d.procedureName === item.procedureName).length > 0) {
+                newItemSelected.push(item);
             }
             else {
-                newItemUnselected.push(d);
+                newItemUnselected.push(item);
             }
         });
         stateUpdateWrapperUseJSON(itemSelected, newItemSelected, setItemSelected);
@@ -65,12 +65,28 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [store.state.proceduresSelection, surgeryList]);
 
-    const surgeryRow = (listItem: any, isSelected: boolean) => {
+    const findIfSubProcedureSelected = (subProcedureName: string, parentProcedureName: string) => {
+        const overlapList = store.state.proceduresSelection.filter(d => d.procedureName === parentProcedureName)[0].overlapList;
+        if (overlapList) {
+            return overlapList.filter(d => d.procedureName === subProcedureName).length > 0;
+        }
+        return false;
+    };
+
+
+    const surgeryRow = (listItem: ProcedureEntry, isSelected: boolean, isSubSurgery: boolean, parentSurgery?: string) => {
         return (
-            <SurgeryListComp key={listItem.value} isSelected={isSelected} onClick={() => { store.selectionStore.updateProcedureSelection(listItem.value, isSelected); }}>
+            <SurgeryListComp key={listItem.procedureName} isSelected={isSelected}
+                onClick={() => {
+                    if (!isSubSurgery) {
+                        store.selectionStore.updateProcedureSelection(listItem, isSelected);
+                    } else {
+                        store.selectionStore.updateProcedureSelection(listItem, false, parentSurgery);
+                    }
+                }}>
 
                 <SurgeryDiv >
-                    {listItem.value}
+                    {isSubSurgery ? `-> ${listItem.procedureName}` : listItem.procedureName}
                 </SurgeryDiv>
                 <td>
                     <ListSVG widthInput={0.3 * width}>
@@ -83,6 +99,8 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
                 </td>
             </SurgeryListComp>);
     };
+
+
 
 
     return <Grid item className={styles.gridWidth}>
@@ -100,11 +118,19 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
                         </svg>
                     </th>
                 </tr>
-                {itemSelected.map((listItem: any) => {
-                    return surgeryRow(listItem, true);
+                {itemSelected.flatMap((listItem: ProcedureEntry) => {
+                    if (listItem.overlapList) {
+                        return [surgeryRow(listItem, true, false)].concat(listItem.overlapList?.map((subItem: ProcedureEntry) => {
+                            // Find if the surgery sub row is selected
+                            return surgeryRow(subItem, findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName), true, listItem.procedureName);
+                        }));
+                    } else {
+                        return [surgeryRow(listItem, true, false)];
+                    }
+
                 })}
-                {itemUnselected.map((listItem: any) => {
-                    return surgeryRow(listItem, false);
+                {itemUnselected.map((listItem: ProcedureEntry) => {
+                    return surgeryRow(listItem, false, false);
                 })}
 
             </table>

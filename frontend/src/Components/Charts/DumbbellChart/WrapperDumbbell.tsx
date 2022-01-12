@@ -65,6 +65,9 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
         }
 
         //replace case_ids
+
+        //TODO proceduresSelection.toString() need to work with new backend
+
         axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=${requestingAxis}&date_range=${store.dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${[].toString()}`, {
             cancelToken: call.token
         }).then(function (response) {
