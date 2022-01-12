@@ -14,7 +14,19 @@ type Props = { totalCaseNum: number; };
 
 const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
 
-    const [surgeryList, setSurgeryList] = useState<ProcedureEntry[]>([]);
+    //Temporary Test
+    // delete this when backend is implemented
+    const testSurgeryList = [{
+        procedureName: "PA",
+        count: 20,
+        overlapList: [{ procedureName: "SA", count: 5 }],
+    }, {
+        procedureName: "PB",
+        count: 10,
+        overlapList: [{ procedureName: "SB", count: 5 }],
+    }];
+
+    const [surgeryList, setSurgeryList] = useState<ProcedureEntry[]>(testSurgeryList);
     const [maxCaseCount, setMaxCaseCount] = useState(0);
     const [tabValue, setTabValue] = useState(0);
     const handleChange = (event: any, newValue: any) => {
@@ -26,8 +38,16 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
             .then(response => response.json())
             .then(function (data) {
                 const result = data.result;
-                // Further process the outcome from the query. This would include a procedure and a list of overlap.
+
+                // TODO Further process the outcome from the query. This would include a procedure and a list of overlap.
+                // The ProcedureEntry expect to be a type as:
+                // {
+                //     procedureName: string;
+                //     count: number;
+                //     overlapList ?: ProcedureEntry[]; ---> this is the overlap part
+                // };
                 let tempSurgeryList: ProcedureEntry[] = result;
+
                 let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
                 tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
                 setMaxCaseCount(tempMaxCaseCount);
@@ -49,7 +69,8 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
             <Divider orientation="horizontal" style={{ width: '98%' }} />
             <SurgeryListViewer surgeryList={surgeryList} maxCaseCount={maxCaseCount} />
         </Grid>
-    </div>, <div hidden={tabValue !== 1} style={{ height: "85vh" }}>
+    </div>,
+    <div hidden={tabValue !== 1} style={{ height: "85vh" }}>
         <FilterBoard />
     </div>];
 

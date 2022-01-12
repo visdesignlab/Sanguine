@@ -55,6 +55,9 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
         setPreviousCancelToken(call);
+
+        //TODO proceduresSelection.toString() need to work with new backend
+
         axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=${xAggregationOption}&date_range=${store.dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${[].toString()}`, {
             cancelToken: call.token
         })
