@@ -80,7 +80,7 @@ There are several routes set up for accessing the patient and surgery data. Here
 - Name: `/api/get_attributes`
   - Allowed Methods: `GET`
   - Parameters: `None`
-  - Description: Gets all the procedure names and their frequency.
+  - Description: Gets all the procedure names, their frequency, and how the co-occur with other procedures.
   - Example:
     ```
     curl '127.0.0.1:8000/api/get_attributes'
