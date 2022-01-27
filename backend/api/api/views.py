@@ -2,7 +2,7 @@ import ast
 import os
 import logging
 
-from collections import Counter
+from collections import Counter, defaultdict
 from django.http import (
     HttpResponse,
     JsonResponse,
@@ -125,18 +125,15 @@ def get_attributes(request):
         # ,CASE WHEN PRIM_PROC_DESC LIKE "%REDO%" THEN 1 ELSE 0 END AS REDO
         command = f"""
             SELECT
-                {FIELDS_IN_USE.get('billing_code')},
+                LISTAGG({FIELDS_IN_USE.get('billing_code')}, ',') as codes,
                 {FIELDS_IN_USE.get('case_id')}
-            FROM (
-                SELECT
-                    BLNG.*, SURG.*
-                FROM {TABLES_IN_USE.get('billing_codes')} BLNG
-                INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
-                    ON (BLNG.{FIELDS_IN_USE.get('patient_id')} = SURG.{FIELDS_IN_USE.get('patient_id')})
-                    AND (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')})
-                    AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
-                {filters_safe_sql}
-            )
+            FROM {TABLES_IN_USE.get('billing_codes')} BLNG
+            INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
+                ON (BLNG.{FIELDS_IN_USE.get('patient_id')} = SURG.{FIELDS_IN_USE.get('patient_id')})
+                AND (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')})
+                AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
+            {filters_safe_sql}
+            GROUP BY {FIELDS_IN_USE.get('case_id')}
         """
 
         result = execute_sql(
@@ -144,21 +141,31 @@ def get_attributes(request):
             dict(zip(bind_names, filters))
         )
 
-        # Return the result, the multi-selector component
-        # in React requires the below format
-        items = [
-            {
-                "procedure": [x[2] for x in cpt() if x[0] == str(row[0])][0],
-                "id": row[1]
-            } for row in result
-        ]
-        # Remove duplicated dicts (stops the double counting)
-        items = [dict(t) for t in {tuple(d.items()) for d in items}]
+        # Unpack the iterator
+        items = [row for row in result]
 
-        # Count the number of occurrences of each type of procedure
-        items = dict(Counter(i["procedure"] for i in items))
-        items = [{"value": k, "count": v} for k, v in items.items()]
-        return JsonResponse({"result": items})
+        # Make co-occurrences list
+        cpt = cpt()
+        mapping = {x[0]: x[2] for x in cpt}
+        procedures_in_case = [sorted(list(set([mapping[y] for y in x[0].split(",")]))) for x in items]
+
+        # Count the number of times each procedure co-occurred
+        co_occur_counts = defaultdict(Counter)
+        for l in procedures_in_case:
+            for e in l:
+                co_occur_counts[e].update(el for el in l if el is not e)
+
+        # Count the raw number of procedures done
+        total_counts = Counter([item for sublist in procedures_in_case for item in sublist])
+
+        # Combine the raw count with co-occurrences
+        combined_counts = [{
+            "procedureName": proc_name,
+            "count": total_counts[proc_name],
+            "overlapList": co_occur_counts[proc_name],
+        } for proc_name in total_counts]
+
+        return JsonResponse({"result": combined_counts})
     else:
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} get_attributes User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
