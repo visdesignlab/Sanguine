@@ -27,7 +27,7 @@ urlpatterns = [
     path("api/whoami", auth_utils.whoami, name="whoami"),
 
     path("api/", views.index, name="index"),
-    path("api/get_attributes", views.get_attributes, name="get_attributes"),
+    path("api/get_procedure_counts", views.get_procedure_counts, name="get_procedure_counts"),
     path("api/hemoglobin", views.hemoglobin, name="hemoglobin"),
     path("api/request_transfused_units", views.request_transfused_units, name="request_transfused_units"),
     path("api/fetch_surgery", views.fetch_surgery, name="fetch_surgery"),

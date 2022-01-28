@@ -113,9 +113,9 @@ def index(request):
     login_required,
     os.getenv("REQUIRE_LOGINS") == "True"
 )
-def get_attributes(request):
+def get_procedure_counts(request):
     if request.method == "GET":
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: get_attributes User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: get_procedure_counts User: {request.user}")
         # Get the list of allowed filter_selection names from the cpt function
         allowed_names = list(set([a[2] for a in cpt()]))
 
@@ -167,7 +167,7 @@ def get_attributes(request):
 
         return JsonResponse({"result": combined_counts})
     else:
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} get_attributes User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} get_procedure_counts User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 

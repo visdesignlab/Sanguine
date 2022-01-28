@@ -34,7 +34,7 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
     };
 
     useEffect(() => {
-        fetch(`${process.env.REACT_APP_QUERY_URL}get_attributes`)
+        fetch(`${process.env.REACT_APP_QUERY_URL}get_procedure_counts`)
             .then(response => response.json())
             .then(function (data) {
                 const result = data.result;
