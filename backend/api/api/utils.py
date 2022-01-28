@@ -75,16 +75,8 @@ def get_bind_names(filters):
     return [f":filters{str(i)}" for i in range(len(filters))]
 
 
-def get_filters(filter_selection):
-    if not isinstance(filter_selection, list):
-        raise TypeError("get_filters was not passed a list")
-
-    # If no filers, get all cpt codes
-    if filter_selection == [""]:
-        filters = [a[0] for a in cpt()]
-    else:
-        filters = [a[0] for a in cpt() if a[2] in filter_selection]
-
+def get_all_cpt_code_filters():
+    filters = [a[0] for a in cpt()]
     bind_names = get_bind_names(filters)
     filters_safe_sql = f"WHERE CODE IN ({','.join(bind_names)}) "
 
