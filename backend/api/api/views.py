@@ -145,8 +145,8 @@ def get_procedure_counts(request):
         items = [row for row in result]
 
         # Make co-occurrences list
-        cpt = cpt()
-        mapping = {x[0]: x[2] for x in cpt}
+        cpt_codes_csv = cpt()
+        mapping = {x[0]: x[2] for x in cpt_codes_csv}
         procedures_in_case = [sorted(list(set([mapping[y] for y in x[0].split(",")]))) for x in items]
 
         # Count the number of times each procedure co-occurred
