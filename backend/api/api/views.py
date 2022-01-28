@@ -22,7 +22,7 @@ from api.utils import (
     cpt,
     execute_sql,
     get_all_by_agg,
-    get_filters,
+    get_all_cpt_code_filters,
     output_quarter,
     validate_dates
 )
@@ -116,10 +116,8 @@ def index(request):
 def get_procedure_counts(request):
     if request.method == "GET":
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: get_procedure_counts User: {request.user}")
-        # Get the list of allowed filter_selection names from the cpt function
-        allowed_names = list(set([a[2] for a in cpt()]))
 
-        filters, bind_names, filters_safe_sql = get_filters(allowed_names)
+        filters, bind_names, filters_safe_sql = get_all_cpt_code_filters()
 
         # Make the connection and execute the command
         # ,CASE WHEN PRIM_PROC_DESC LIKE "%REDO%" THEN 1 ELSE 0 END AS REDO
@@ -136,18 +134,17 @@ def get_procedure_counts(request):
             GROUP BY {FIELDS_IN_USE.get('case_id')}
         """
 
-        result = execute_sql(
-            command,
-            dict(zip(bind_names, filters))
+        result = list(
+            execute_sql(
+                command,
+                dict(zip(bind_names, filters))
+            )
         )
-
-        # Unpack the iterator
-        items = [row for row in result]
 
         # Make co-occurrences list
         cpt_codes_csv = cpt()
         mapping = {x[0]: x[2] for x in cpt_codes_csv}
-        procedures_in_case = [sorted(list(set([mapping[y] for y in x[0].split(",")]))) for x in items]
+        procedures_in_case = [sorted(list(set([mapping[y] for y in x[0].split(",")]))) for x in result]
 
         # Count the number of times each procedure co-occurred
         co_occur_counts = defaultdict(Counter)
