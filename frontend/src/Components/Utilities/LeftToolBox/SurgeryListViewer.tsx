@@ -31,10 +31,8 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
     const surgeryViewRef = useRef(null);
 
     useLayoutEffect(() => {
-        console.log(surgeryViewRef);
         if (surgeryViewRef.current) {
             setWidth((surgeryViewRef.current as any).offsetWidth);
-            console.log(width);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [surgeryViewRef]);
@@ -46,8 +44,6 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
     });
 
     select('#surgeryCaseScale').call(axisTop(caseScale()).ticks(3) as any);
-
-
 
     useEffect(() => {
         let newItemSelected: ProcedureEntry[] = [];
