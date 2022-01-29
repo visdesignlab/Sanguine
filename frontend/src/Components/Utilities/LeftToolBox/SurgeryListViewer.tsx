@@ -74,7 +74,7 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
 
     const surgeryRow = (listItem: ProcedureEntry, isSelected: boolean, isSubSurgery: boolean, parentSurgery?: string) => {
         return (
-            <SurgeryListComp key={listItem.procedureName} isSelected={isSelected}
+            <SurgeryListComp key={`${isSubSurgery ? parentSurgery! + '-' : ''}${listItem.procedureName}`} isSelected={isSelected}
                 onClick={() => {
                     if (!isSubSurgery) {
                         store.selectionStore.updateProcedureSelection(listItem, isSelected);

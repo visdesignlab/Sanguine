@@ -20,6 +20,7 @@ import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import ChartStandardButtons from "../ChartStandardButtons";
 import { AcronymDictionary } from "../../../Presets/DataDict";
+import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
 
 type Props = {
     layoutW: number;
@@ -89,9 +90,16 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
         const call = cancelToken.source();
         setPreviousCancelToken(call);
 
-        //TODO proceduresSelection.toString() need to work with new backend
+        // Generate the string for procedure selection
 
-        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${store.dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${[].toString()}`, {
+        let procedureString;
+        if (proceduresSelection.length === 0) {
+            procedureString = ProcedureStringGenerator(store.configStore.allProcedures);
+        }
+        else { procedureString = ProcedureStringGenerator(proceduresSelection); }
+
+
+        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${store.dateRange}&filter_selection=${procedureString}&case_ids=${[].toString()}`, {
             cancelToken: call.token
         })
             .then(function (response) {

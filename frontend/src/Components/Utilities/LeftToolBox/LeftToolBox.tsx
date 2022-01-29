@@ -1,8 +1,9 @@
 import { Grid, Tabs, Divider, Tab } from "@material-ui/core";
 import { max } from "d3";
 import { observer } from "mobx-react";
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useState, useContext } from "react";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
+import Store from "../../../Interfaces/Store";
 import { ProcedureEntry } from "../../../Interfaces/Types/DataTypes";
 import FilterBoard from "../FilterInterface/FilterBoard";
 import CurrentSelected from "./CurrentSelected";
@@ -14,8 +15,7 @@ type Props = { totalCaseNum: number; };
 
 const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
 
-
-
+    const store = useContext(Store);
     const [surgeryList, setSurgeryList] = useState<ProcedureEntry[]>([]);
     const [maxCaseCount, setMaxCaseCount] = useState(0);
     const [tabValue, setTabValue] = useState(0);
@@ -44,9 +44,14 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
                 });
                 let tempSurgeryList: ProcedureEntry[] = result;
                 let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
+
                 tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
                 setMaxCaseCount(tempMaxCaseCount);
                 tempSurgeryList.sort((a: ProcedureEntry, b: ProcedureEntry) => b.count - a.count);
+
+                //Code to save all procedure
+                store.configStore.setAllProcedures(tempSurgeryList);
+
                 stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList);
             }).catch(r => {
                 console.log("failed to fetch required data");
@@ -86,3 +91,5 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
 };
 
 export default observer(LeftToolBox);
+
+

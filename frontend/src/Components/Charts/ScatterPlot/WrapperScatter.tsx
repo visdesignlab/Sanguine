@@ -13,6 +13,7 @@ import axios from "axios";
 import useDeepCompareEffect from "use-deep-compare-effect";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import ChartStandardButtons from "../ChartStandardButtons";
+import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
 
 type Props = {
     yValueOption: string;
@@ -56,9 +57,13 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
         const call = cancelToken.source();
         setPreviousCancelToken(call);
 
-        //TODO proceduresSelection.toString() need to work with new backend
+        let procedureString;
+        if (proceduresSelection.length === 0) {
+            procedureString = ProcedureStringGenerator(store.configStore.allProcedures);
+        }
+        else { procedureString = ProcedureStringGenerator(proceduresSelection); }
 
-        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=${xAggregationOption}&date_range=${store.dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${[].toString()}`, {
+        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=${xAggregationOption}&date_range=${store.dateRange}&filter_selection=${procedureString}&case_ids=${[].toString()}`, {
             cancelToken: call.token
         })
             .then(function (response) {
