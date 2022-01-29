@@ -405,11 +405,11 @@ def request_transfused_units(request):
 
         # Extract the procedure names to search for and their combinations
         and_combinations_list = [x.replace("(", "").replace(")", "").split(" AND ") for x in filter_selection]
-        procedure_names = list(set([x for y in and_or_combinations_list for x in y]))
+        procedure_names = list(set([x for y in and_combinations_list for x in y]))
 
         # Generate the sum statements to find which cases match the requested procedures
         sum_code_statements, sum_code_binds = get_sum_proc_code_filters(procedure_names, FIELDS_IN_USE.get('billing_code'))
-        ",\n".join(sum_statements)
+        joined_sum_code_statements = ",\n".join(sum_code_statements)
 
         # Generate the AND/OR filtering logic to find people with procedure or combination procedures
         and_strings, and_binds, and_bind_values = get_and_statements(and_combinations_list)
@@ -423,7 +423,7 @@ def request_transfused_units(request):
         WITH CASE_IDS_WITH_CODE_COUNT AS (
             SELECT
                 {FIELDS_IN_USE.get('case_id')},
-                {sum_code_statements}
+                {joined_sum_code_statements}
             FROM {TABLES_IN_USE.get('billing_codes')} BLNG
             INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
                 ON (BLNG.{FIELDS_IN_USE.get('patient_id')} = SURG.{FIELDS_IN_USE.get('patient_id')})
