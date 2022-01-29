@@ -7,7 +7,6 @@ import { ApplicationState } from "../Types/StateTypes";
 //This is a filter
 export const updateSelectedPatientGroup = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
     state.currentSelectPatientGroup = caseList;
-    console.log(state);
 }).setLabel("updatePatientGroup");
 
 // "removing" only applies to parent procedure
@@ -28,12 +27,11 @@ export const updateProcedureSelection = createAction<ApplicationState, [Procedur
         // const procedureExist = parentProcedureItem.
     }
     else {
-
         if (removing) {
             state.proceduresSelection = state.proceduresSelection.filter(d => d.procedureName !== newProcedureSelection.procedureName);
         }
         else {
-            state.proceduresSelection.push(newProcedureSelection);
+            state.proceduresSelection.push({ procedureName: newProcedureSelection.procedureName, count: newProcedureSelection.count, overlapList: [] });
         }
     }
 }).setLabel("updateProcedureSelection");
