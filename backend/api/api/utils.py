@@ -86,18 +86,15 @@ def get_sum_proc_code_filters(procedure_names, blng_code_field):
     all_cpt = cpt()
 
     sum_code_statements = []
-    bind_names = []
     for index, proc_name in enumerate(procedure_names): 
         filters = [a[0] for a in all_cpt if a[2] == proc_name]
         joined_filters = "','".join(filters)
         sum_code_statements.append(f"SUM(CASE WHEN {blng_code_field} IN ('{joined_filters}') THEN 1 ELSE 0 END) AS \"{index}\"")
 
-    return sum_code_statements, bind_names
+    return sum_code_statements
 
 def get_and_statements(and_combinations_list, procedure_names):
     and_statements = []
-    bind_names = []
-    bind_values = []
     for index, and_combo in enumerate(and_combinations_list): 
         if len(and_combo) > 1:
             and_statement = f"(\"{procedure_names.index(and_combo[0])}\" > 0 AND \"{procedure_names.index(and_combo[1])}\" > 0)" 
