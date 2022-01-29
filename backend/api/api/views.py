@@ -404,7 +404,7 @@ def request_transfused_units(request):
         )
 
         # Extract the procedure names to search for and their combinations
-        and_combinations_list = [s.replace("(", "").replace(")", "").split(" AND ") for x in filter_selection]
+        and_combinations_list = [x.replace("(", "").replace(")", "").split(" AND ") for x in filter_selection]
         procedure_names = list(set([x for y in and_or_combinations_list for x in y]))
 
         # Generate the sum statements to find which cases match the requested procedures
