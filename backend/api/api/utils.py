@@ -82,6 +82,37 @@ def get_all_cpt_code_filters():
 
     return filters, bind_names, filters_safe_sql
 
+def get_sum_proc_code_filters(procedure_names, blng_code_field):
+    all_cpt = cpt()
+
+    sum_code_statements = []
+    bind_names = []
+    for index, proc_name in enumerate(procedure_names): 
+        filters = [a[0] for a in all_cpt if a[2] == proc_name]
+        joined_filters = "','".join(filters)
+        sum_code_statements.append(f"SUM(CASE WHEN {blng_code_field} IN ('{joined_filters}') THEN 1 ELSE 0 END) AS :sum_col_{index}")
+        bind_names.append(f":sum_col_{index}")
+
+    return sum_code_statements, bind_names
+
+def get_and_statements(and_combinations_list):
+    and_statements = []
+    bind_names = []
+    bind_values = []
+    for index, and_combo in enumerate(and_combinations_list): 
+        if len(and_combo) > 1:
+            and_statement = f"(:and_col_{index}_0 > 0 AND :and_col_{index}_1 > 0)"  
+            bind_names.extend([f":and_col_{index}_0", f":and_col_{index}_1"])
+            bind_values.extend([and_combo[0], and_combo[1]])
+        else:
+            and_statement = f"(:and_col_{index} > 0)"
+            bind_names.append(f":and_col_{index}")
+            bind_values.append(and_combo[0])
+        
+        and_statements.append(and_statement)
+    
+    return and_statements, bind_names, bind_values
+
 
 def output_quarter(number):
     if number > 0 and number < 4:
