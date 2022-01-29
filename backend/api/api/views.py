@@ -23,6 +23,8 @@ from api.utils import (
     execute_sql,
     get_all_by_agg,
     get_all_cpt_code_filters,
+    get_sum_proc_code_filters,
+    get_and_statements,
     output_quarter,
     validate_dates
 )
@@ -307,7 +309,7 @@ def request_transfused_units(request):
         patient_ids = patient_ids.split(',') if patient_ids else []
         case_ids = case_ids.split(',') if case_ids else []
         date_range = [s for s in date_range.split(',')]
-        filter_selection = filter_selection.split(',')
+        filter_selection = filter_selection.split(' OR ')
 
         # Check the required parameters are there
         if not (transfusion_type):
@@ -385,9 +387,6 @@ def request_transfused_units(request):
             else f"GROUP BY LIMITED_SURG.{FIELDS_IN_USE.get('surgeon_id')}, LIMITED_SURG.{FIELDS_IN_USE.get('anest_id')}, LIMITED_SURG.{FIELDS_IN_USE.get('patient_id')}, LIMITED_SURG.{FIELDS_IN_USE.get('case_id')}"
         )
 
-        # Generate the CPT filter sql
-        filters, bind_names, filters_safe_sql = get_filters(filter_selection)
-
         # Generate the patient filters
         pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
         pat_filters_safe_sql = (
@@ -404,10 +403,35 @@ def request_transfused_units(request):
             else ""
         )
 
+        # Extract the procedure names to search for and their combinations
+        and_combinations_list = [s.replace("(", "").replace(")", "").split(" AND ") for x in filter_selection]
+        procedure_names = list(set([x for y in and_or_combinations_list for x in y]))
+
+        # Generate the sum statements to find which cases match the requested procedures
+        sum_code_statements, sum_code_binds = get_sum_proc_code_filters(procedure_names, FIELDS_IN_USE.get('billing_code'))
+        ",\n".join(sum_statements)
+
+        # Generate the AND/OR filtering logic to find people with procedure or combination procedures
+        and_strings, and_binds, and_bind_values = get_and_statements(and_combinations_list)
+        and_or_combinations_string = "\nOR\n".join(and_strings)
+        
+
         # Build the sql query
         # Safe to use format strings since there are limited options for
         # aggregated_by and transfusion_type
         command = f"""
+        WITH CASE_IDS_WITH_CODE_COUNT AS (
+            SELECT
+                {FIELDS_IN_USE.get('case_id')},
+                {sum_code_statements}
+            FROM {TABLES_IN_USE.get('billing_codes')} BLNG
+            INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
+                ON (BLNG.{FIELDS_IN_USE.get('patient_id')} = SURG.{FIELDS_IN_USE.get('patient_id')})
+                AND (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')})
+                AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
+            GROUP BY {FIELDS_IN_USE.get('case_id')}
+        )
+        
         SELECT
             LIMITED_SURG.{FIELDS_IN_USE.get('surgeon_id')},
             LIMITED_SURG.{FIELDS_IN_USE.get('anest_id')},
@@ -420,10 +444,9 @@ def request_transfused_units(request):
             FROM {TABLES_IN_USE.get('surgery_case')}
             WHERE {FIELDS_IN_USE.get('case_id')} IN (
                 SELECT {FIELDS_IN_USE.get('case_id')}
-                FROM {TABLES_IN_USE.get('billing_codes')} BLNG
-                INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
-                    ON (BLNG.{FIELDS_IN_USE.get('patient_id')} = SURG.{FIELDS_IN_USE.get('patient_id')}) AND (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')}) AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
-                {filters_safe_sql}
+                FROM CASE_IDS_WITH_CODE_COUNT
+                WHERE 
+                    {and_or_combinations_string}
             )
         ) LIMITED_SURG
             ON LIMITED_SURG.{FIELDS_IN_USE.get('case_id')} = TRNSFSD.{FIELDS_IN_USE.get('case_id')}
@@ -437,8 +460,8 @@ def request_transfused_units(request):
         result = execute_sql(
             command,
             dict(
-                zip(bind_names + pat_bind_names + case_bind_names,
-                    filters + patient_ids + case_ids),
+                zip(pat_bind_names + case_bind_names + sum_code_binds + and_binds,
+                    patient_ids + case_ids + procedure_names + and_bind_values),
                 min_time=min_time,
                 max_time=max_time
             )
