@@ -408,11 +408,11 @@ def request_transfused_units(request):
         procedure_names = list(set([x for y in and_combinations_list for x in y]))
 
         # Generate the sum statements to find which cases match the requested procedures
-        sum_code_statements, sum_code_binds = get_sum_proc_code_filters(procedure_names, FIELDS_IN_USE.get('billing_code'))
+        sum_code_statements = get_sum_proc_code_filters(procedure_names, FIELDS_IN_USE.get('billing_code'))
         joined_sum_code_statements = ",\n".join(sum_code_statements)
 
         # Generate the AND/OR filtering logic to find people with procedure or combination procedures
-        and_strings, and_binds, and_bind_values = get_and_statements(and_combinations_list)
+        and_strings = get_and_statements(and_combinations_list, procedure_names)
         and_or_combinations_string = "\nOR\n".join(and_strings)
         
 
@@ -460,8 +460,8 @@ def request_transfused_units(request):
         result = execute_sql(
             command,
             dict(
-                zip(pat_bind_names + case_bind_names + sum_code_binds + and_binds,
-                    patient_ids + case_ids + procedure_names + and_bind_values),
+                zip(pat_bind_names + case_bind_names,
+                    patient_ids + case_ids),
                 min_time=min_time,
                 max_time=max_time
             )
