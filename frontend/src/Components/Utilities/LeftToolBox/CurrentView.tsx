@@ -19,14 +19,12 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
     const store = useContext(Store);
     const styles = useStyles();
 
-
     const generateSurgery = () => {
         let output: any[] = [];
         if (store.state.proceduresSelection.length === 0) {
             output.push(<span key={`all`}>All</span>);
         } else {
             const procedureString = ProcedureStringGenerator(store.state.proceduresSelection).replace(/%20/g, " ");
-            // str.replace(/blue/g, "red");
             const stringArray = procedureString.split(" ");
 
             stringArray.forEach((word, index) => {
@@ -45,7 +43,6 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
         }
         return output;
     };
-
 
     return (
         <Grid item className={styles.gridWidth} >
