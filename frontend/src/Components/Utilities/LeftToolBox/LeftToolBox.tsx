@@ -49,9 +49,6 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
                 setMaxCaseCount(tempMaxCaseCount);
                 tempSurgeryList.sort((a: ProcedureEntry, b: ProcedureEntry) => b.count - a.count);
 
-                //Code to save all procedure
-                store.configStore.setAllProcedures(tempSurgeryList);
-
                 stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList);
             }).catch(r => {
                 console.log("failed to fetch required data");

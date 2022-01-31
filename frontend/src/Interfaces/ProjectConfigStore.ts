@@ -26,7 +26,6 @@ export class ProjectConfigStore {
     snackBarIsError: boolean;
     privateMode: boolean;
     stateToUpdate: string;
-    allProcedures: ProcedureEntry[];
 
     constructor(rootstore: RootStore) {
         this.rootStore = rootstore;
@@ -51,7 +50,6 @@ export class ProjectConfigStore {
         this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0, PREOP_HGB: 0, POSTOP_HGB: 0 };
         this.stateToUpdate = "";
 
-        this.allProcedures = [];
 
         this.savedState = [];
         makeAutoObservable(this);
@@ -71,11 +69,6 @@ export class ProjectConfigStore {
         });
     };
 
-    setAllProcedures = (procedureList: ProcedureEntry[]) => {
-        this.allProcedures = procedureList.map((d) => {
-            return { procedureName: d.procedureName, count: d.count, overlapList: [] };
-        });
-    };
 
     updateTestValue = (label: string, value: number) => {
         this.filterRange[label] = value > this.filterRange[label] ? value : this.filterRange[label];
@@ -108,7 +101,6 @@ export class ProjectConfigStore {
     }
 
     set topMenuBarAddMode(input: boolean) {
-        console.log(input);
         this._topMenuBarAddMode = input;
     }
 

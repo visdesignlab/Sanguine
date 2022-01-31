@@ -109,7 +109,7 @@ const StackedBarChart: FC<Props> = ({ outcomeComparison, caseCount, secondaryCas
                         </g>);
                 })}
                 {secondaryData ? secondaryData.map((dp) => {
-                    console.log(dp);
+
                     return (
                         <g>
                             <SingleStackedBar
