@@ -32,7 +32,7 @@ const App: FC = () => {
             whoamiAPICall(store);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [store.configStore.isLoggedIn, store.configStore.allProcedures]);
+    }, [store.configStore.isLoggedIn]);
 
     const handleOnIdle = (event: any) => {
         // On idle log the user out
@@ -79,9 +79,7 @@ const App: FC = () => {
             .then(async (dataHemo) => {
                 const resultHemo = dataHemo.result;
 
-                const procedureString = ProcedureStringGenerator(store.configStore.allProcedures);
-
-                const resTrans = await fetch(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(defaultState.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(defaultState.rawDateRange[1]))]}&filter_selection=${procedureString}`);
+                const resTrans = await fetch(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(defaultState.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(defaultState.rawDateRange[1]))]}`);
                 const dataTrans = await resTrans.json();
                 const resRisk = await fetch(`${process.env.REACT_APP_QUERY_URL}risk_score`);
                 const dataRisk = await resRisk.json();

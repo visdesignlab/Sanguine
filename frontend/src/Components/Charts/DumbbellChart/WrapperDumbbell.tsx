@@ -67,13 +67,7 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
 
         //replace case_ids
 
-        let procedureString;
-        if (proceduresSelection.length === 0) {
-            procedureString = ProcedureStringGenerator(store.configStore.allProcedures);
-        }
-        else { procedureString = ProcedureStringGenerator(proceduresSelection); }
-
-        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=${requestingAxis}&date_range=${store.dateRange}&filter_selection=${procedureString}&case_ids=${[].toString()}`, {
+        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=${requestingAxis}&date_range=${store.dateRange}&filter_selection=${ProcedureStringGenerator(proceduresSelection)}&case_ids=${[].toString()}`, {
             cancelToken: call.token
         }).then(function (response) {
             const transfusionDataResponse = response.data;

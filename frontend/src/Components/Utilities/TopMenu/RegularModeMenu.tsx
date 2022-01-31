@@ -114,7 +114,7 @@ const RegularModeMenu: FC = () => {
             {/* <div className={useStyles().centerAlignment}>
                 <Button variant="outlined" disabled>Preview Mode</Button>
                 //    content="Preview Mode"
-                 // onClick={() => { store!.previewMode = true }} 
+                 // onClick={() => { store!.previewMode = true }}
             </div> */}
 
 
@@ -195,7 +195,6 @@ const RegularModeMenu: FC = () => {
     );
 
     const configureOutput = () => {
-        console.log(isObservable(store.configStore.topMenuBarAddMode));
         if (store.configStore.topMenuBarAddMode) {
 
             return (<AddModeTopMenu addingChartType={addingChartType} />);

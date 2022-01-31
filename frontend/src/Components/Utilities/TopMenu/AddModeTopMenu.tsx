@@ -74,7 +74,6 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                 setXAggreSelection("");
                 setYValueSelection("");
                 setOutcomeComparisonSelection("");
-                console.log(store.state);
             }
         }
     };
