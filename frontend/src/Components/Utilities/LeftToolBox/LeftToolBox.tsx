@@ -1,8 +1,10 @@
 import { Grid, Tabs, Divider, Tab } from "@material-ui/core";
 import { max } from "d3";
 import { observer } from "mobx-react";
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useState, useContext } from "react";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
+import Store from "../../../Interfaces/Store";
+import { ProcedureEntry } from "../../../Interfaces/Types/DataTypes";
 import FilterBoard from "../FilterInterface/FilterBoard";
 import CurrentSelected from "./CurrentSelected";
 import CurrentView from "./CurrentView";
@@ -13,7 +15,8 @@ type Props = { totalCaseNum: number; };
 
 const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
 
-    const [surgeryList, setSurgeryList] = useState<any[]>([]);
+    const store = useContext(Store);
+    const [surgeryList, setSurgeryList] = useState<ProcedureEntry[]>([]);
     const [maxCaseCount, setMaxCaseCount] = useState(0);
     const [tabValue, setTabValue] = useState(0);
     const handleChange = (event: any, newValue: any) => {
@@ -21,15 +24,31 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
     };
 
     useEffect(() => {
-        fetch(`${process.env.REACT_APP_QUERY_URL}get_attributes`)
+        fetch(`${process.env.REACT_APP_QUERY_URL}get_procedure_counts`)
             .then(response => response.json())
             .then(function (data) {
-                const result = data.result;
-                let tempSurgeryList: any[] = result;
+                //Process the result into the data type required.
+                const result = data.result.map((procedureInput: any) => {
+                    const procedureOverlapList = Object.keys(procedureInput.overlapList).map(subProcedureName => {
+                        return {
+                            procedureName: subProcedureName,
+                            count: procedureInput.overlapList[subProcedureName],
+                        };
+                    });
+                    procedureOverlapList.sort((a: ProcedureEntry, b: ProcedureEntry) => b.count - a.count);
+                    return {
+                        procedureName: procedureInput.procedureName,
+                        count: procedureInput.count,
+                        overlapList: procedureOverlapList
+                    };
+                });
+                let tempSurgeryList: ProcedureEntry[] = result;
                 let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
+
                 tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
                 setMaxCaseCount(tempMaxCaseCount);
-                tempSurgeryList.sort((a: any, b: any) => b.count - a.count);
+                tempSurgeryList.sort((a: ProcedureEntry, b: ProcedureEntry) => b.count - a.count);
+
                 stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList);
             }).catch(r => {
                 console.log("failed to fetch required data");
@@ -47,7 +66,8 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
             <Divider orientation="horizontal" style={{ width: '98%' }} />
             <SurgeryListViewer surgeryList={surgeryList} maxCaseCount={maxCaseCount} />
         </Grid>
-    </div>, <div hidden={tabValue !== 1} style={{ height: "85vh" }}>
+    </div>,
+    <div hidden={tabValue !== 1} style={{ height: "85vh" }}>
         <FilterBoard />
     </div>];
 
@@ -68,3 +88,5 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
 };
 
 export default observer(LeftToolBox);
+
+

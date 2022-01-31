@@ -16,6 +16,7 @@ import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import useDeepCompareEffect from "use-deep-compare-effect";
 import ChartStandardButtons from "../ChartStandardButtons";
+import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
 
 type Props = {
     xAggregationOption: string;
@@ -65,7 +66,8 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
         }
 
         //replace case_ids
-        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=${requestingAxis}&date_range=${store.dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${[].toString()}`, {
+
+        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=${requestingAxis}&date_range=${store.dateRange}&filter_selection=${ProcedureStringGenerator(proceduresSelection)}&case_ids=${[].toString()}`, {
             cancelToken: call.token
         }).then(function (response) {
             const transfusionDataResponse = response.data;

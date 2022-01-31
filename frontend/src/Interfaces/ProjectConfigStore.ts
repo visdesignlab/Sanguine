@@ -2,6 +2,7 @@ import { makeAutoObservable } from "mobx";
 import { BloodComponentOptions } from "../Presets/DataDict";
 import { changeBloodFilter, changeCostConfig, changeOutcomeFilter, changeSurgeryUrgencySelection, changeTestValueFilter, clearAllFilter, dateRangeChange, loadPreset, resetBloodFilter, resetTestValueFilter, toggleShowZero } from "./Actions/ProjectConfigActions";
 import { RootStore } from "./Store";
+import { ProcedureEntry } from "./Types/DataTypes";
 import { LayoutElement } from "./Types/LayoutTypes";
 
 export class ProjectConfigStore {
@@ -49,6 +50,7 @@ export class ProjectConfigStore {
         this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0, PREOP_HGB: 0, POSTOP_HGB: 0 };
         this.stateToUpdate = "";
 
+
         this.savedState = [];
         makeAutoObservable(this);
     }
@@ -67,81 +69,81 @@ export class ProjectConfigStore {
         });
     };
 
+
     updateTestValue = (label: string, value: number) => {
         this.filterRange[label] = value > this.filterRange[label] ? value : this.filterRange[label];
     };
 
-    get provenance () {
+    get provenance() {
         return this.rootStore.provenance;
     }
 
-    set isLoggedIn (input: boolean) {
+    set isLoggedIn(input: boolean) {
         this._isLoggedIn = input;
     }
 
-    get isLoggedIn () {
+    get isLoggedIn() {
         return this._isLoggedIn;
     }
-    set dataLoading (input: boolean) {
+    set dataLoading(input: boolean) {
         this._dataLoading = input;
     }
 
-    get dataLoading () {
+    get dataLoading() {
         return this._dataLoading;
     }
-    set dataLoadingFailed (input: boolean) {
+    set dataLoadingFailed(input: boolean) {
         this._dataLoadingFailed = input;
     }
 
-    get dataLoadingFailed () {
+    get dataLoadingFailed() {
         return this._dataLoadingFailed;
     }
 
-    set topMenuBarAddMode (input: boolean) {
-        console.log(input);
+    set topMenuBarAddMode(input: boolean) {
         this._topMenuBarAddMode = input;
     }
 
-    get topMenuBarAddMode () {
+    get topMenuBarAddMode() {
         return this._topMenuBarAddMode;
     }
 
 
-    changeSurgeryUrgencySelection (input: [boolean, boolean, boolean]) {
+    changeSurgeryUrgencySelection(input: [boolean, boolean, boolean]) {
         this.provenance.apply(changeSurgeryUrgencySelection(input));
     }
 
-    changeCostConfig (componentName: string, newCost: number) {
+    changeCostConfig(componentName: string, newCost: number) {
         this.provenance.apply(changeCostConfig(componentName, newCost));
     }
-    changeOutcomeFilter (newOutcomeFilter: string[]) {
+    changeOutcomeFilter(newOutcomeFilter: string[]) {
         this.provenance.apply(changeOutcomeFilter(newOutcomeFilter));
     }
 
-    toggleShowZero (showZero: boolean) {
+    toggleShowZero(showZero: boolean) {
         this.provenance.apply(toggleShowZero(showZero));
     }
-    dateRangeChange (dateRange: number[]) {
+    dateRangeChange(dateRange: number[]) {
         this.provenance.apply(dateRangeChange(dateRange));
     }
-    loadPreset (layoutInput: LayoutElement[]) {
+    loadPreset(layoutInput: LayoutElement[]) {
         this.provenance.apply(loadPreset(layoutInput));
     }
-    changeBloodFilter (componentName: string, newRange: number[]) {
+    changeBloodFilter(componentName: string, newRange: number[]) {
         this.provenance.apply(changeBloodFilter(componentName, newRange));
     }
-    resetBloodFilter () {
+    resetBloodFilter() {
         this.provenance.apply(resetBloodFilter());
     }
 
-    changeTestValueFilter (testValueName: string, newRange: number[]) {
+    changeTestValueFilter(testValueName: string, newRange: number[]) {
         this.provenance.apply(changeTestValueFilter(testValueName, newRange));
     }
-    resetTestValueFilter () {
+    resetTestValueFilter() {
         this.provenance.apply(resetTestValueFilter());
     }
 
-    clearAllFilter () {
+    clearAllFilter() {
         this.provenance.apply(clearAllFilter());
     }
 }

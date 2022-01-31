@@ -1,6 +1,5 @@
 import { createAction } from "@visdesignlab/trrack";
-import { defaultState } from "../DefaultState";
-import { SingleCasePoint } from "../Types/DataTypes";
+import { ProcedureEntry, SingleCasePoint } from "../Types/DataTypes";
 import { ActionEvents } from "../Types/EventTypes";
 import { ApplicationState } from "../Types/StateTypes";
 
@@ -8,15 +7,32 @@ import { ApplicationState } from "../Types/StateTypes";
 //This is a filter
 export const updateSelectedPatientGroup = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
     state.currentSelectPatientGroup = caseList;
-    console.log(state);
 }).setLabel("updatePatientGroup");
 
-export const updateProcedureSelection = createAction<ApplicationState, [string, boolean], ActionEvents>((state, newProcedureSelection, removing) => {
-    if (removing) {
-        state.proceduresSelection = state.proceduresSelection.filter(d => d !== newProcedureSelection);
+// "removing" only applies to parent procedure
+export const updateProcedureSelection = createAction<ApplicationState, [ProcedureEntry, boolean, string?], ActionEvents>((state, newProcedureSelection, removing, parentProcedure?) => {
+    // if there is a parentProcedure, then this parent procedure must be already selected
+    if (parentProcedure) {
+        // find the parent procedure
+        const overlapList = state.proceduresSelection.filter(d => d.procedureName === parentProcedure)[0].overlapList;
+        if (overlapList) {
+            if (overlapList.filter(d => d.procedureName === newProcedureSelection.procedureName).length > 0) {
+                // this procedure was selected, we need to remove it
+                state.proceduresSelection.filter(d => d.procedureName === parentProcedure)[0].overlapList = overlapList.filter(d => d.procedureName !== newProcedureSelection.procedureName);
+            } else {
+                // this procedure wasn't selected, add it.
+                state.proceduresSelection.filter(d => d.procedureName === parentProcedure)[0].overlapList?.push(newProcedureSelection);
+            }
+        }
+        // const procedureExist = parentProcedureItem.
     }
     else {
-        state.proceduresSelection.push(newProcedureSelection);
+        if (removing) {
+            state.proceduresSelection = state.proceduresSelection.filter(d => d.procedureName !== newProcedureSelection.procedureName);
+        }
+        else {
+            state.proceduresSelection.push({ procedureName: newProcedureSelection.procedureName, count: newProcedureSelection.count, overlapList: [] });
+        }
     }
 }).setLabel("updateProcedureSelection");
 
