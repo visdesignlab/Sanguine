@@ -404,16 +404,26 @@ def request_transfused_units(request):
         )
 
         # Extract the procedure names to search for and their combinations
-        and_combinations_list = [x.replace("(", "").replace(")", "").split(" AND ") for x in filter_selection]
-        procedure_names = list(set([x for y in and_combinations_list for x in y]))
+        if filter_selection == ['']:
+            all_cpt_codes, _, _ = get_all_cpt_code_filters()
+            cpts_joined = "','".join(all_cpt_codes)
+            joined_sum_code_statements = f"{FIELDS_IN_USE.get('billing_code')}"
+            and_or_combinations_string = f"{FIELDS_IN_USE.get('billing_code')} IN ('{cpts_joined}')"
+            with_case_group = ""
+        else:
+            and_combinations_list = [x.replace("(", "").replace(")", "").split(" AND ") for x in filter_selection]
+            procedure_names = list(set([x for y in and_combinations_list for x in y]))
 
-        # Generate the sum statements to find which cases match the requested procedures
-        sum_code_statements = get_sum_proc_code_filters(procedure_names, FIELDS_IN_USE.get('billing_code'))
-        joined_sum_code_statements = ",\n".join(sum_code_statements)
+            # Generate the sum statements to find which cases match the requested procedures
+            sum_code_statements = get_sum_proc_code_filters(procedure_names, FIELDS_IN_USE.get('billing_code'))
+            joined_sum_code_statements = ",\n".join(sum_code_statements)
 
-        # Generate the AND/OR filtering logic to find people with procedure or combination procedures
-        and_strings = get_and_statements(and_combinations_list, procedure_names)
-        and_or_combinations_string = "\nOR\n".join(and_strings)
+            # Generate the AND/OR filtering logic to find people with procedure or combination procedures
+            and_strings = get_and_statements(and_combinations_list, procedure_names)
+            and_or_combinations_string = "\nOR\n".join(and_strings)
+
+            # Enable group by
+            with_case_group = f"GROUP BY {FIELDS_IN_USE.get('case_id')}"
         
 
         # Build the sql query
@@ -429,7 +439,7 @@ def request_transfused_units(request):
                 ON (BLNG.{FIELDS_IN_USE.get('patient_id')} = SURG.{FIELDS_IN_USE.get('patient_id')})
                 AND (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')})
                 AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
-            GROUP BY {FIELDS_IN_USE.get('case_id')}
+            {with_case_group}
         )
         
         SELECT
