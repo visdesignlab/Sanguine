@@ -11,6 +11,7 @@ import List from "@material-ui/core/List";
 import { ListItem, ListItemSecondaryAction, ListItemText, Switch, Grid, IconButton, Tooltip } from "@material-ui/core";
 
 import ErrorIcon from '@material-ui/icons/Error';
+import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
 
 type Props = { totalCaseNum: number; };
 
@@ -18,34 +19,30 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
     const store = useContext(Store);
     const styles = useStyles();
 
-
     const generateSurgery = () => {
         let output: any[] = [];
         if (store.state.proceduresSelection.length === 0) {
             output.push(<span key={`all`}>All</span>);
         } else {
-            store.state.proceduresSelection.forEach((d, i) => {
-                const stringArray = d.procedureName.split(" ");
-                stringArray.forEach((word, index) => {
-                    if ((AcronymDictionary as any)[word]) {
-                        output.push((
-                            <Tooltip key={`${d}-${word}`} title={<div key={`${d}-${word}`} className={styles.tooltipFont}>{(AcronymDictionary as any)[word]}</div>}>
-                                <div className="tooltip" key={`${d}-${word}`} style={{ cursor: "help" }}>
-                                    {word}
-                                </div>
-                            </Tooltip>));
-                    } else {
-                        output.push((<span key={`${d}-${word}`}>{`${index !== 0 ? " " : ""}${word}${index !== stringArray.length - 1 ? " " : ""}`}</span>));
-                    }
-                });
-                if (i !== store.state.proceduresSelection.length - 1) {
-                    output.push((<span key={`${d}-comma`}>, </span>));
+            const procedureString = ProcedureStringGenerator(store.state.proceduresSelection).replace(/%20/g, " ");
+            const stringArray = procedureString.split(" ");
+
+            stringArray.forEach((word, index) => {
+                const wordWithoutSymbol = word.replace(/[^a-zA-Z ]/g, "");
+                if ((AcronymDictionary as any)[wordWithoutSymbol]) {
+                    output.push((
+                        <Tooltip key={`${index}-${word}`} title={<div key={`${index}-${word}`} className={styles.tooltipFont}>{(AcronymDictionary as any)[wordWithoutSymbol]}</div>}>
+                            <div className="tooltip" key={`${index}-${word}`} style={{ cursor: "help" }}>
+                                {word}
+                            </div>
+                        </Tooltip>));
+                } else {
+                    output.push((<span style={{ color: `${word === 'AND' || word === 'OR' ? 'lightcoral' : undefined}` }} key={`${index}-${word}`}>{`${index !== 0 ? " " : ""}${word}${index !== stringArray.length - 1 ? " " : ""}`}</span>));
                 }
             });
         }
         return output;
     };
-
 
     return (
         <Grid item className={styles.gridWidth} >
