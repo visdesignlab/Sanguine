@@ -1,3 +1,8 @@
+export type ProcedureEntry = {
+    procedureName: string;
+    count: number;
+    overlapList?: ProcedureEntry[];
+};
 
 export type BasicAggregatedDatePoint = {
     aggregateAttribute: any;

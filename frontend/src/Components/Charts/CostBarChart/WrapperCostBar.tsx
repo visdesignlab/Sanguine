@@ -21,6 +21,7 @@ import MonetizationOnIcon from '@material-ui/icons/MonetizationOn';
 import { BloodComponentOptions } from "../../../Presets/DataDict";
 import CostInputDialog from "../../Modals/CostInputDialog";
 import ChartStandardButtons from "../ChartStandardButtons";
+import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
 
 type Props = {
     xAggregatedOption: string;
@@ -135,7 +136,10 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
         const cancelToken = axios.CancelToken;
         const call = cancelToken.source();
         setPreviousCancelToken(call);
-        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${store.dateRange}&filter_selection=${proceduresSelection.toString()}&case_ids=${[].toString()}`, {
+
+
+
+        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${store.dateRange}&filter_selection=${ProcedureStringGenerator(proceduresSelection)}&case_ids=${[].toString()}`, {
             cancelToken: call.token
         }).then(function (response) {
             const dataResult = response.data;

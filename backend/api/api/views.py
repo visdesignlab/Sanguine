@@ -2,7 +2,7 @@ import ast
 import os
 import logging
 
-from collections import Counter
+from collections import Counter, defaultdict
 from django.http import (
     HttpResponse,
     JsonResponse,
@@ -22,7 +22,9 @@ from api.utils import (
     cpt,
     execute_sql,
     get_all_by_agg,
-    get_filters,
+    get_all_cpt_code_filters,
+    get_sum_proc_code_filters,
+    get_and_statements,
     output_quarter,
     validate_dates
 )
@@ -113,54 +115,58 @@ def index(request):
     login_required,
     os.getenv("REQUIRE_LOGINS") == "True"
 )
-def get_attributes(request):
+def get_procedure_counts(request):
     if request.method == "GET":
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: get_attributes User: {request.user}")
-        # Get the list of allowed filter_selection names from the cpt function
-        allowed_names = list(set([a[2] for a in cpt()]))
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: get_procedure_counts User: {request.user}")
 
-        filters, bind_names, filters_safe_sql = get_filters(allowed_names)
+        filters, bind_names, filters_safe_sql = get_all_cpt_code_filters()
 
         # Make the connection and execute the command
         # ,CASE WHEN PRIM_PROC_DESC LIKE "%REDO%" THEN 1 ELSE 0 END AS REDO
         command = f"""
             SELECT
-                {FIELDS_IN_USE.get('billing_code')},
+                LISTAGG({FIELDS_IN_USE.get('billing_code')}, ',') as codes,
                 {FIELDS_IN_USE.get('case_id')}
-            FROM (
-                SELECT
-                    BLNG.*, SURG.*
-                FROM {TABLES_IN_USE.get('billing_codes')} BLNG
-                INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
-                    ON (BLNG.{FIELDS_IN_USE.get('patient_id')} = SURG.{FIELDS_IN_USE.get('patient_id')})
-                    AND (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')})
-                    AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
-                {filters_safe_sql}
-            )
+            FROM {TABLES_IN_USE.get('billing_codes')} BLNG
+            INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
+                ON (BLNG.{FIELDS_IN_USE.get('patient_id')} = SURG.{FIELDS_IN_USE.get('patient_id')})
+                AND (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')})
+                AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
+            {filters_safe_sql}
+            GROUP BY {FIELDS_IN_USE.get('case_id')}
         """
 
-        result = execute_sql(
-            command,
-            dict(zip(bind_names, filters))
+        result = list(
+            execute_sql(
+                command,
+                dict(zip(bind_names, filters))
+            )
         )
 
-        # Return the result, the multi-selector component
-        # in React requires the below format
-        items = [
-            {
-                "procedure": [x[2] for x in cpt() if x[0] == str(row[0])][0],
-                "id": row[1]
-            } for row in result
-        ]
-        # Remove duplicated dicts (stops the double counting)
-        items = [dict(t) for t in {tuple(d.items()) for d in items}]
+        # Make co-occurrences list
+        cpt_codes_csv = cpt()
+        mapping = {x[0]: x[2] for x in cpt_codes_csv}
+        procedures_in_case = [sorted(list(set([mapping[y] for y in x[0].split(",")]))) for x in result]
 
-        # Count the number of occurrences of each type of procedure
-        items = dict(Counter(i["procedure"] for i in items))
-        items = [{"value": k, "count": v} for k, v in items.items()]
-        return JsonResponse({"result": items})
+        # Count the number of times each procedure co-occurred
+        co_occur_counts = defaultdict(Counter)
+        for l in procedures_in_case:
+            for e in l:
+                co_occur_counts[e].update(el for el in l if el is not e)
+
+        # Count the raw number of procedures done
+        total_counts = Counter([item for sublist in procedures_in_case for item in sublist])
+
+        # Combine the raw count with co-occurrences
+        combined_counts = [{
+            "procedureName": proc_name,
+            "count": total_counts[proc_name],
+            "overlapList": co_occur_counts[proc_name],
+        } for proc_name in total_counts]
+
+        return JsonResponse({"result": combined_counts})
     else:
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} get_attributes User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} get_procedure_counts User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
@@ -303,7 +309,7 @@ def request_transfused_units(request):
         patient_ids = patient_ids.split(',') if patient_ids else []
         case_ids = case_ids.split(',') if case_ids else []
         date_range = [s for s in date_range.split(',')]
-        filter_selection = filter_selection.split(',')
+        filter_selection = filter_selection.split(' OR ')
 
         # Check the required parameters are there
         if not (transfusion_type):
@@ -381,9 +387,6 @@ def request_transfused_units(request):
             else f"GROUP BY LIMITED_SURG.{FIELDS_IN_USE.get('surgeon_id')}, LIMITED_SURG.{FIELDS_IN_USE.get('anest_id')}, LIMITED_SURG.{FIELDS_IN_USE.get('patient_id')}, LIMITED_SURG.{FIELDS_IN_USE.get('case_id')}"
         )
 
-        # Generate the CPT filter sql
-        filters, bind_names, filters_safe_sql = get_filters(filter_selection)
-
         # Generate the patient filters
         pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
         pat_filters_safe_sql = (
@@ -400,10 +403,45 @@ def request_transfused_units(request):
             else ""
         )
 
+        # Extract the procedure names to search for and their combinations
+        if filter_selection == ['']:
+            all_cpt_codes, _, _ = get_all_cpt_code_filters()
+            cpts_joined = "','".join(all_cpt_codes)
+            joined_sum_code_statements = f"{FIELDS_IN_USE.get('billing_code')}"
+            and_or_combinations_string = f"{FIELDS_IN_USE.get('billing_code')} IN ('{cpts_joined}')"
+            with_case_group = ""
+        else:
+            and_combinations_list = [x.replace("(", "").replace(")", "").split(" AND ") for x in filter_selection]
+            procedure_names = list(set([x for y in and_combinations_list for x in y]))
+
+            # Generate the sum statements to find which cases match the requested procedures
+            sum_code_statements = get_sum_proc_code_filters(procedure_names, FIELDS_IN_USE.get('billing_code'))
+            joined_sum_code_statements = ",\n".join(sum_code_statements)
+
+            # Generate the AND/OR filtering logic to find people with procedure or combination procedures
+            and_strings = get_and_statements(and_combinations_list, procedure_names)
+            and_or_combinations_string = "\nOR\n".join(and_strings)
+
+            # Enable group by
+            with_case_group = f"GROUP BY {FIELDS_IN_USE.get('case_id')}"
+        
+
         # Build the sql query
         # Safe to use format strings since there are limited options for
         # aggregated_by and transfusion_type
         command = f"""
+        WITH CASE_IDS_WITH_CODE_COUNT AS (
+            SELECT
+                {FIELDS_IN_USE.get('case_id')},
+                {joined_sum_code_statements}
+            FROM {TABLES_IN_USE.get('billing_codes')} BLNG
+            INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
+                ON (BLNG.{FIELDS_IN_USE.get('patient_id')} = SURG.{FIELDS_IN_USE.get('patient_id')})
+                AND (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')})
+                AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
+            {with_case_group}
+        )
+        
         SELECT
             LIMITED_SURG.{FIELDS_IN_USE.get('surgeon_id')},
             LIMITED_SURG.{FIELDS_IN_USE.get('anest_id')},
@@ -416,10 +454,9 @@ def request_transfused_units(request):
             FROM {TABLES_IN_USE.get('surgery_case')}
             WHERE {FIELDS_IN_USE.get('case_id')} IN (
                 SELECT {FIELDS_IN_USE.get('case_id')}
-                FROM {TABLES_IN_USE.get('billing_codes')} BLNG
-                INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
-                    ON (BLNG.{FIELDS_IN_USE.get('patient_id')} = SURG.{FIELDS_IN_USE.get('patient_id')}) AND (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')}) AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
-                {filters_safe_sql}
+                FROM CASE_IDS_WITH_CODE_COUNT
+                WHERE 
+                    {and_or_combinations_string}
             )
         ) LIMITED_SURG
             ON LIMITED_SURG.{FIELDS_IN_USE.get('case_id')} = TRNSFSD.{FIELDS_IN_USE.get('case_id')}
@@ -433,8 +470,8 @@ def request_transfused_units(request):
         result = execute_sql(
             command,
             dict(
-                zip(bind_names + pat_bind_names + case_bind_names,
-                    filters + patient_ids + case_ids),
+                zip(pat_bind_names + case_bind_names,
+                    patient_ids + case_ids),
                 min_time=min_time,
                 max_time=max_time
             )

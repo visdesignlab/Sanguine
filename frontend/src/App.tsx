@@ -13,6 +13,7 @@ import { SurgeryUrgencyArray } from "./Presets/DataDict";
 import './App.css';
 import { checkIfCriteriaMet } from "./HelperFunctions/CaseListProducer";
 import useDeepCompareEffect from "use-deep-compare-effect";
+import { ProcedureStringGenerator } from "./HelperFunctions/ProcedureStringGenerator";
 
 export const DataContext = createContext<SingleCasePoint[]>([]);
 
@@ -77,6 +78,7 @@ const App: FC = () => {
             .then((res) => res.json())
             .then(async (dataHemo) => {
                 const resultHemo = dataHemo.result;
+
                 const resTrans = await fetch(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(defaultState.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(defaultState.rawDateRange[1]))]}`);
                 const dataTrans = await resTrans.json();
                 const resRisk = await fetch(`${process.env.REACT_APP_QUERY_URL}risk_score`);

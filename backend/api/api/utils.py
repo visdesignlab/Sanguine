@@ -75,20 +75,35 @@ def get_bind_names(filters):
     return [f":filters{str(i)}" for i in range(len(filters))]
 
 
-def get_filters(filter_selection):
-    if not isinstance(filter_selection, list):
-        raise TypeError("get_filters was not passed a list")
-
-    # If no filers, get all cpt codes
-    if filter_selection == [""]:
-        filters = [a[0] for a in cpt()]
-    else:
-        filters = [a[0] for a in cpt() if a[2] in filter_selection]
-
+def get_all_cpt_code_filters():
+    filters = [a[0] for a in cpt()]
     bind_names = get_bind_names(filters)
     filters_safe_sql = f"WHERE CODE IN ({','.join(bind_names)}) "
 
     return filters, bind_names, filters_safe_sql
+
+def get_sum_proc_code_filters(procedure_names, blng_code_field):
+    all_cpt = cpt()
+
+    sum_code_statements = []
+    for index, proc_name in enumerate(procedure_names): 
+        filters = [a[0] for a in all_cpt if a[2] == proc_name]
+        joined_filters = "','".join(filters)
+        sum_code_statements.append(f"SUM(CASE WHEN {blng_code_field} IN ('{joined_filters}') THEN 1 ELSE 0 END) AS \"{index}\"")
+
+    return sum_code_statements
+
+def get_and_statements(and_combinations_list, procedure_names):
+    and_statements = []
+    for index, and_combo in enumerate(and_combinations_list): 
+        if len(and_combo) > 1:
+            and_statement = f"(\"{procedure_names.index(and_combo[0])}\" > 0 AND \"{procedure_names.index(and_combo[1])}\" > 0)" 
+        else:
+            and_statement = f"(\"{procedure_names.index(and_combo[0])}\" > 0)"
+        
+        and_statements.append(and_statement)
+    
+    return and_statements
 
 
 def output_quarter(number):

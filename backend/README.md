@@ -77,13 +77,13 @@ There are several routes set up for accessing the patient and surgery data. Here
     curl '127.0.0.1:8000/api'
     ```
 
-- Name: `/api/get_attributes`
+- Name: `/api/get_procedure_counts`
   - Allowed Methods: `GET`
   - Parameters: `None`
-  - Description: Gets all the procedure names and their frequency.
+  - Description: Gets all the procedure names, their frequency, and how the co-occur with other procedures.
   - Example:
     ```
-    curl '127.0.0.1:8000/api/get_attributes'
+    curl '127.0.0.1:8000/api/get_procedure_counts'
     ```
 
 - Name: `/api/hemoglobin`
@@ -105,7 +105,7 @@ There are several routes set up for accessing the patient and surgery data. Here
         `aggregated_by`: One of YEAR, SURGEON_ID, ANESTHESIOLOGIST_ID.  
         `patient_ids`: A comma separated list of patient ids.  
         `case_ids`: A comma separated list of case ids.  
-        `filter_selection`: A comma separated list of procedures to filter by.
+        `filter_selection`: A query of the format "(proc1) OR (proc2 AND proc3) OR ...". any and clause is optional and allows for querying overlapping cases (e.g. surgery cases with ECMO AND CABG).
   - Description: Returns the number of transfused units in several different ways. 1) the transfused units for each case or 2), if it's aggregated, returns the different values for the aggregation along with the transfused units grouped by it and the case ids for that aggregated value.
   - Example:
     ```
@@ -119,7 +119,7 @@ There are several routes set up for accessing the patient and surgery data. Here
       aggregated_by=YEAR&
       patient_ids=68175619,14711172,35383429,632559101&
       case_ids=85103152,123&
-      filter_selection=Musculoskeletal Thoracic Procedure,Thoracotomy/Lung Procedure'
+      filter_selection=(CABG AND ECMO) OR (TAVR AND Musculoskeletal Thoracic Procedure)'
     ```
 
 - Name: `/api/fetch_surgery`
