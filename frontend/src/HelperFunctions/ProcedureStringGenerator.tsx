@@ -2,6 +2,10 @@ import { ProcedureEntry } from "../Interfaces/Types/DataTypes";
 
 export const ProcedureStringGenerator = (procedureList: ProcedureEntry[]) => {
 
+    if (procedureList.length === 0) {
+        return '';
+    }
+
     return procedureList.map((procedure) => {
         if (procedure.overlapList && procedure.overlapList.length > 0) {
             const subStringArray = procedure.overlapList.map((subProcedure) => {
