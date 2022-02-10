@@ -157,11 +157,18 @@ def get_procedure_counts(request):
         # Count the raw number of procedures done
         total_counts = Counter([item for sublist in procedures_in_case for item in sublist])
 
+        # Get the CPTs that happened alone (didn't have any other co-occurrences)
+        all_single_cpt_cases = [y for y in [set(x) for x in procedures_in_case] if len(y) ==1]
+        exclusive_counts = Counter([item for sublist in all_single_cpt_cases for item in sublist])
+
         # Combine the raw count with co-occurrences
         combined_counts = [{
             "procedureName": proc_name,
             "count": total_counts[proc_name],
-            "overlapList": co_occur_counts[proc_name],
+            "overlapList": {
+                **co_occur_counts[proc_name],
+                **{f"Only {proc_name}": exclusive_counts[proc_name]},
+            }
         } for proc_name in total_counts]
 
         return JsonResponse({"result": combined_counts})
