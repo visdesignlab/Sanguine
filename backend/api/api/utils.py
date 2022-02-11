@@ -82,27 +82,48 @@ def get_all_cpt_code_filters():
 
     return filters, bind_names, filters_safe_sql
 
+
 def get_sum_proc_code_filters(procedure_names, blng_code_field):
     all_cpt = cpt()
-
     sum_code_statements = []
+
     for index, proc_name in enumerate(procedure_names): 
-        filters = [a[0] for a in all_cpt if a[2] == proc_name]
-        joined_filters = "','".join(filters)
-        sum_code_statements.append(f"SUM(CASE WHEN {blng_code_field} IN ('{joined_filters}') THEN 1 ELSE 0 END) AS \"{index}\"")
+        # For only queries, we need to generate 2 queries so we can check for codes not in desired
+        if "Only" in proc_name:
+            filters = [a[0] for a in all_cpt if a[2] == proc_name.replace("Only ","")]
+            complement_filters = [a[0] for a in all_cpt if a[2] != proc_name.replace("Only ","")]
+            joined_filters = "','".join(filters)
+            joined_complement_filters = "','".join(complement_filters)
+            sum_code_statements.append(f"SUM(CASE WHEN {blng_code_field} IN ('{joined_filters}') THEN 1 ELSE 0 END) AS \"{index}\"")
+            sum_code_statements.append(f"SUM(CASE WHEN {blng_code_field} IN ('{joined_complement_filters}') THEN 1 ELSE 0 END) AS \"{index}-only\"")
+        else:
+            filters = [a[0] for a in all_cpt if a[2] == proc_name]
+            joined_filters = "','".join(filters)
+            sum_code_statements.append(f"SUM(CASE WHEN {blng_code_field} IN ('{joined_filters}') THEN 1 ELSE 0 END) AS \"{index}\"")
 
     return sum_code_statements
 
+
+def and_statement_handle_only(and_combo_singular, procedure_names):
+    if "Only" in and_combo_singular:
+        and_statement = f"\"{procedure_names.index(and_combo_singular)}\" > 0 AND \"{procedure_names.index(and_combo_singular)}-only\" = 0"
+    else:
+        and_statement = f"\"{procedure_names.index(and_combo_singular)}\" > 0"
+
+    return and_statement
+
+
 def get_and_statements(and_combinations_list, procedure_names):
     and_statements = []
+
     for index, and_combo in enumerate(and_combinations_list): 
         if len(and_combo) > 1:
-            and_statement = f"(\"{procedure_names.index(and_combo[0])}\" > 0 AND \"{procedure_names.index(and_combo[1])}\" > 0)" 
+            and_statement = f"({and_statement_handle_only(and_combo[0], procedure_names)} AND {and_statement_handle_only(and_combo[1], procedure_names)})" 
         else:
-            and_statement = f"(\"{procedure_names.index(and_combo[0])}\" > 0)"
-        
+            and_statement = f"({and_statement_handle_only(and_combo[0], procedure_names)})"
+
         and_statements.append(and_statement)
-    
+
     return and_statements
 
 
