@@ -84,7 +84,7 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
                 }}>
 
                 <SurgeryDiv >
-                    {isSubSurgery ? `-> ${listItem.procedureName}` : listItem.procedureName}
+                    {isSubSurgery ? <>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{listItem.procedureName}</> : <>{isSelected ? `▼` : `►`}{listItem.procedureName}</>}
                 </SurgeryDiv>
                 <td>
                     <ListSVG widthInput={0.3 * width}>
