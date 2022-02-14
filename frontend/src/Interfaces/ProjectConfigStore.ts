@@ -2,7 +2,6 @@ import { makeAutoObservable } from "mobx";
 import { BloodComponentOptions } from "../Presets/DataDict";
 import { changeBloodFilter, changeCostConfig, changeOutcomeFilter, changeSurgeryUrgencySelection, changeTestValueFilter, clearAllFilter, dateRangeChange, loadPreset, resetBloodFilter, resetTestValueFilter, toggleShowZero } from "./Actions/ProjectConfigActions";
 import { RootStore } from "./Store";
-import { ProcedureEntry } from "./Types/DataTypes";
 import { LayoutElement } from "./Types/LayoutTypes";
 
 export class ProjectConfigStore {
