@@ -13,7 +13,6 @@ import { SurgeryUrgencyArray } from "./Presets/DataDict";
 import './App.css';
 import { checkIfCriteriaMet } from "./HelperFunctions/CaseListProducer";
 import useDeepCompareEffect from "use-deep-compare-effect";
-import { ProcedureStringGenerator } from "./HelperFunctions/ProcedureStringGenerator";
 
 export const DataContext = createContext<SingleCasePoint[]>([]);
 
