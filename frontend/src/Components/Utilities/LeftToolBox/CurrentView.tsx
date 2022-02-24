@@ -46,7 +46,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
     return (
         <Grid item className={styles.gridWidth} >
-            <Container className={styles.containerWidth} style={{ height: "35vh" }}>
+            <Container className={styles.containerWidth} style={{ height: "30vh" }}>
                 <List dense >
                     <ListItem style={{ textAlign: "left" }}>
                         <Title>Current View</Title>
