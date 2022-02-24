@@ -26,6 +26,9 @@ export const SurgeryDiv = styled.td`
   alignment-baseline: hanging;
   text-align:left;
   text-shadow: 2px 2px 5px white;
+  &:hover{
+    overflow: visible;
+  }
 `;
 
 
@@ -42,7 +45,7 @@ export const SurgeryListComp = styled(`tr`) <SurgeryListProps>`
 `;
 
 export const LeftToolBarListItem = styled(ListItem)`
-  
+
 `;
 
 interface WelcomeTextProps {

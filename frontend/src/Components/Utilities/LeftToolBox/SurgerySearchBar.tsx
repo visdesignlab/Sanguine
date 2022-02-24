@@ -5,6 +5,7 @@ import { FC, useState } from "react";
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import Store from "../../../Interfaces/Store";
 import { useStyles } from "../../../Presets/StyledComponents";
+import { ProcedureEntry } from "../../../Interfaces/Types/DataTypes";
 
 type Props = { surgeryList: any[]; };
 
@@ -12,22 +13,24 @@ const SurgerySearchBar: FC<Props> = ({ surgeryList }: Props) => {
     const store = useContext(Store);
     const styles = useStyles();
     const [input, setInput] = useState("");
-    const searchHandler = (input: any) => {
+
+    const searchHandler = (input: ProcedureEntry) => {
         if (input) {
-            if (!store.state.proceduresSelection.includes(input.value)) {
-                store.selectionStore.updateProcedureSelection(input.value, false);
+            if (store.state.proceduresSelection.filter(d => d.procedureName === input.procedureName).length === 0) {
+                store.selectionStore.updateProcedureSelection(input, false);
                 setInput("");
             }
         }
     };
+
     return (
         <Grid item className={styles.gridWidth}>
-            <Container style={{ paddingTop: "10px", paddingBottom: "10px" }}>
+            <Container style={{ paddingTop: "5px", paddingBottom: "5px" }}>
                 <Autocomplete
                     options={surgeryList}
                     onChange={(e, v) => { searchHandler(v); }}
                     value={input}
-                    getOptionLabel={(option) => option.value || ""}
+                    getOptionLabel={(option) => option.procedureName || ""}
                     renderInput={(params) =>
                         <TextField {...params} label="Search Procedure" variant="outlined" />}
                 />
