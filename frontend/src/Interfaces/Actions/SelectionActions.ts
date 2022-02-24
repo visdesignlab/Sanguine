@@ -14,24 +14,14 @@ export const updateProcedureSelection = createAction<ApplicationState, [Procedur
     // if there is a parentProcedure, then this parent procedure must be already selected
     if (parentProcedure) {
         // find the parent procedure
-        let overlapList = state.proceduresSelection.filter(d => d.procedureName === parentProcedure)[0].overlapList;
+        const overlapList = state.proceduresSelection.filter(d => d.procedureName === parentProcedure)[0].overlapList;
         if (overlapList) {
-            // check if only is selected
-            if (overlapList.filter(d => d.procedureName.includes('Only'))) {
-                overlapList = overlapList.filter(d => !d.procedureName.includes('Only'));
-            }
-
             if (overlapList.filter(d => d.procedureName === newProcedureSelection.procedureName).length > 0) {
                 // this procedure was selected, we need to remove it
                 state.proceduresSelection.filter(d => d.procedureName === parentProcedure)[0].overlapList = overlapList.filter(d => d.procedureName !== newProcedureSelection.procedureName);
             } else {
                 // this procedure wasn't selected, add it.
-                if (newProcedureSelection.procedureName.includes('Only')) {
-                    state.proceduresSelection.filter(d => d.procedureName === parentProcedure)[0].overlapList = [newProcedureSelection];
-                } else {
-                    state.proceduresSelection.filter(d => d.procedureName === parentProcedure)[0].overlapList = overlapList;
-                    state.proceduresSelection.filter(d => d.procedureName === parentProcedure)[0].overlapList?.push(newProcedureSelection);
-                }
+                state.proceduresSelection.filter(d => d.procedureName === parentProcedure)[0].overlapList?.push(newProcedureSelection);
             }
         }
         // const procedureExist = parentProcedureItem.
