@@ -19,6 +19,7 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
     const [width, setWidth] = useState(0);
     const [itemSelected, setItemSelected] = useState<ProcedureEntry[]>([]);
     const [itemUnselected, setItemUnselected] = useState<ProcedureEntry[]>([]);
+    const [expandedList, setExpandedList] = useState<string[]>([]);
 
     const styles = useStyles();
 
@@ -85,16 +86,30 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
     const surgeryRow = (listItem: ProcedureEntry, isSelected: boolean, isSubSurgery: boolean, highlighted: boolean, parentSurgery?: string) => {
         return (
             <SurgeryListComp key={`${isSubSurgery ? parentSurgery! + '-' : ''}${listItem.procedureName}`} isSelected={highlighted}
-                onClick={() => {
-                    if (!isSubSurgery) {
-                        store.selectionStore.updateProcedureSelection(listItem, isSelected);
-                    } else {
-                        store.selectionStore.updateProcedureSelection(listItem, false, parentSurgery);
-                    }
-                }}>
+            >
 
                 <SurgeryDiv >
-                    {isSubSurgery ? <>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{listItem.procedureName}</> : <>{isSelected ? `▼` : `►`}{listItem.procedureName}</>}
+                    {isSubSurgery ?
+                        <> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{listItem.procedureName.includes('Only') ? '' : '+'}
+                            <span onClick={() => { store.selectionStore.updateProcedureSelection(listItem, false, parentSurgery); }}>
+                                {listItem.procedureName}</span>
+                        </> :
+                        <>
+                            <span onClick={() => {
+                                if (expandedList.includes(listItem.procedureName)) {
+                                    setExpandedList(expandedList.filter(d => d !== listItem.procedureName));
+                                } else {
+                                    setExpandedList([...expandedList, listItem.procedureName]);
+                                }
+                            }}>
+                                {expandedList.includes(listItem.procedureName) ? `▼` : `►`}
+                            </span>
+                            <span onClick={() => {
+                                store.selectionStore.updateProcedureSelection(listItem, isSelected);
+                            }}>
+                                {listItem.procedureName}
+                            </span>
+                        </>}
                 </SurgeryDiv>
                 <td>
                     <ListSVG widthInput={0.3 * width}>
@@ -107,8 +122,6 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
                 </td>
             </SurgeryListComp>);
     };
-
-
 
 
     return <Grid item className={styles.gridWidth}>
@@ -127,18 +140,26 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
                     </th>
                 </tr>
                 {itemSelected.flatMap((listItem: ProcedureEntry) => {
-                    if (listItem.overlapList) {
-                        return [surgeryRow(listItem, true, false, !findIfSelectedSubProcedureExist(listItem.procedureName))].concat(listItem.overlapList?.map((subItem: ProcedureEntry) => {
-                            // Find if the surgery sub row is selected
+                    if (expandedList.includes(listItem.procedureName) && listItem.overlapList) {
+                        return [surgeryRow(listItem, true, false, !findIfSelectedSubProcedureExist(listItem.procedureName))].concat(listItem.overlapList.map((subItem: ProcedureEntry) => {
+
                             return surgeryRow(subItem, findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName), true, findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName), listItem.procedureName);
+
                         }));
                     } else {
                         return [surgeryRow(listItem, true, false, true)];
                     }
 
                 })}
-                {itemUnselected.map((listItem: ProcedureEntry) => {
-                    return surgeryRow(listItem, false, false, false);
+                {itemUnselected.flatMap((listItem: ProcedureEntry) => {
+                    if (expandedList.includes(listItem.procedureName) && listItem.overlapList) {
+                        return [surgeryRow(listItem, false, false, false)].concat(listItem.overlapList.map((subItem: ProcedureEntry) => {
+
+                            return surgeryRow(subItem, false, true, false, listItem.procedureName);
+
+                        }));
+                    }
+                    return [surgeryRow(listItem, false, false, false)];
                 })}
 
             </table>
