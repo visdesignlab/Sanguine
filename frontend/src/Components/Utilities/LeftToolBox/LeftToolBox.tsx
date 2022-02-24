@@ -35,7 +35,15 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
                             count: procedureInput.overlapList[subProcedureName],
                         };
                     });
-                    procedureOverlapList.sort((a: ProcedureEntry, b: ProcedureEntry) => b.count - a.count);
+                    procedureOverlapList.sort((a: ProcedureEntry, b: ProcedureEntry) => {
+                        if (a.procedureName.includes('Only')) {
+                            return -1;
+                        } else if (b.procedureName.includes('Only')) {
+                            return 1;
+                        }
+
+                        return b.count - a.count;
+                    });
                     return {
                         procedureName: procedureInput.procedureName,
                         count: procedureInput.count,
