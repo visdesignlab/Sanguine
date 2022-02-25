@@ -85,7 +85,9 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
 
     const surgeryRow = (listItem: ProcedureEntry, isSelected: boolean, isSubSurgery: boolean, highlighted: boolean, parentSurgery?: string) => {
         return (
-            <SurgeryListComp key={`${isSubSurgery ? parentSurgery! + '-' : ''}${listItem.procedureName}`} isSelected={highlighted}
+            <SurgeryListComp
+                key={`${isSubSurgery ? parentSurgery! + '-' : ''}${listItem.procedureName}`}
+                isSelected={highlighted}
             >
 
                 <SurgeryDiv >
