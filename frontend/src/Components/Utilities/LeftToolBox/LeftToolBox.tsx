@@ -1,9 +1,8 @@
 import { Grid, Tabs, Divider, Tab } from "@material-ui/core";
 import { max } from "d3";
 import { observer } from "mobx-react";
-import { FC, useEffect, useState, useContext } from "react";
+import { FC, useEffect, useState } from "react";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
-import Store from "../../../Interfaces/Store";
 import { ProcedureEntry } from "../../../Interfaces/Types/DataTypes";
 import FilterBoard from "../FilterInterface/FilterBoard";
 import CurrentSelected from "./CurrentSelected";
@@ -15,7 +14,6 @@ type Props = { totalCaseNum: number; };
 
 const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
 
-    const store = useContext(Store);
     const [surgeryList, setSurgeryList] = useState<ProcedureEntry[]>([]);
     const [maxCaseCount, setMaxCaseCount] = useState(0);
     const [tabValue, setTabValue] = useState(0);
