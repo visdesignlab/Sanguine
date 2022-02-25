@@ -11,7 +11,6 @@ export const updateSelectedPatientGroup = createAction<ApplicationState, [Single
 
 // "removing" only applies to parent procedure
 export const updateProcedureSelection = createAction<ApplicationState, [ProcedureEntry, boolean, string?], ActionEvents>((state, newProcedureSelection, removing, parentProcedure?) => {
-    console.log(newProcedureSelection, removing, parentProcedure);
     // if there is a parentProcedure, then this parent procedure must be already selected
     if (parentProcedure) {
         // find the parent procedure

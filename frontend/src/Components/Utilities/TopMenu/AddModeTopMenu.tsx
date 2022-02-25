@@ -132,7 +132,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
             <div className={styles.centerAlignment}>
                 <FormControl disabled={interventionDate ? true : false} className={styles.formControl}>
                     <InputLabel>Outcome (Optional)</InputLabel>
-                    <Select onChange={(e) => { console.log(outcomeComparisonSelection); setOutcomeComparisonSelection(e.target.value as string); }}
+                    <Select onChange={(e) => { setOutcomeComparisonSelection(e.target.value as string); }}
                     >
                         {DropdownGenerator(OutcomeOptions, true)}
                     </Select>
