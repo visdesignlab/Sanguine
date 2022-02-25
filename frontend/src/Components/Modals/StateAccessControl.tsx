@@ -88,7 +88,6 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
             <DialogContent style={{ width: "300px" }}>
                 <List>{
                     accessArray.map((d, i) => {
-                        //     console.log(d, accessArray[i])
                         return (<ListItem key={`${uIDShared[i]}-${d}`}>
                             <ListItemText primary={uIDShared[i]} key={`${uIDShared[i]}`} />
                             <ListItemSecondaryAction>
