@@ -35,6 +35,9 @@ export const updateProcedureSelection = createAction<ApplicationState, [Procedur
         }
         // const procedureExist = parentProcedureItem.
     }
+    else if (removing && state.proceduresSelection.filter(d => d.procedureName === newProcedureSelection.procedureName)[0].overlapList!.length > 0) {
+        state.proceduresSelection.filter(d => d.procedureName === newProcedureSelection.procedureName)[0].overlapList = [];
+    }
     else {
         if (removing) {
             state.proceduresSelection = state.proceduresSelection.filter(d => d.procedureName !== newProcedureSelection.procedureName);
