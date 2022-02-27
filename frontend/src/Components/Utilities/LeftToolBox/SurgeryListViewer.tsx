@@ -91,6 +91,7 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
             >
 
                 <SurgeryDiv >
+
                     {isSubSurgery ?
                         <> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{listItem.procedureName.includes('Only') ? '' : '+'}
                             <span onClick={() => { store.selectionStore.updateProcedureSelection(listItem, false, parentSurgery); }}>
@@ -112,6 +113,7 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
                                 {listItem.procedureName}
                             </span>
                         </>}
+
                 </SurgeryDiv>
                 <td>
                     <ListSVG widthInput={0.3 * width}>
