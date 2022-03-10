@@ -32,6 +32,7 @@ from api.utils import (
 
 DE_IDENT_FIELDS = {
     "admin_dose": "ADMIN_DOSE",
+    "admission_dtm": "DI_ADM_DTM",
     "anest_id": "ANESTH_PROV_DWID",
     "apr_drg_weight": "APR_DRG_WEIGHT",
     "apr_drg_code": "APR_DRG_CODE",
@@ -44,6 +45,7 @@ DE_IDENT_FIELDS = {
     "case_id": "DI_CASE_ID",
     "code_desc": "CODE_DESC",
     "death_date": "DI_DEATH_DATE",
+    "discharge_dtm": "DI_DSCH_DTM",
     "dose_unit_desc": "DOSE_UNIT_DESC",
     "draw_dtm": "DI_DRAW_DTM",
     "ethnicity_code": "ETHNICITY_CODE",
@@ -557,7 +559,8 @@ def risk_score(request):
             {FIELDS_IN_USE.get('apr_drg_code')},
             {FIELDS_IN_USE.get('apr_drg_desc')},
             {FIELDS_IN_USE.get('apr_drg_rom')},
-            {FIELDS_IN_USE.get('apr_drg_soi')}
+            {FIELDS_IN_USE.get('apr_drg_soi')},
+            round({FIELDS_IN_USE.get('discharge_dtm')} - {FIELDS_IN_USE.get('admission_dtm')})
         FROM
             {TABLES_IN_USE.get('visit')}
         WHERE 1=1
@@ -579,6 +582,7 @@ def risk_score(request):
                 "apr_drg_desc": row[4],
                 "apr_drg_rom": row[5],
                 "apr_drg_soi": row[6],
+                "total_los": row[7],
             })
 
         return JsonResponse(result_list, safe=False)
