@@ -645,11 +645,11 @@ def patient_outcomes(request):
                 OR MEDS.HEPARIN = 1
                 OR MEDS.FONDAPARINUX = 1
                 OR MEDS.BIVALIRUDIN = 1
-            THEN 1 ELSE 0 END AS ANTICOAGULENT,
+            THEN 1 ELSE 0 END AS ANTICOAGULANT,
             CASE
                 WHEN MEDS.CLOPIDOGREL = 1
                 OR MEDS.TICAGRELOR = 1
-            THEN 1 ELSE 0 END AS ANTI_PLATELET
+            THEN 1 ELSE 0 END AS ANTIPLATELET
         FROM
             {TABLES_IN_USE.get('visit')} VST
         LEFT JOIN (
@@ -725,6 +725,10 @@ def patient_outcomes(request):
                 "tranexamic_acid": row[6],
                 "AMICAR": row[7],
                 "B12": row[8],
+                "oral_iron": row[18],
+                "iv_iron": row[19],
+                "anticoagulant": row[20],
+                "antiplatelet": row[21],
             })
 
         return JsonResponse(result_list, safe=False)
