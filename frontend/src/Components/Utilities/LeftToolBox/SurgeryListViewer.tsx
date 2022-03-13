@@ -8,6 +8,7 @@ import Store from "../../../Interfaces/Store";
 import { ProcedureEntry } from "../../../Interfaces/Types/DataTypes";
 import { SurgeryDiv, SurgeryListComp, SurgeryNumText, useStyles } from "../../../Presets/StyledComponents";
 import { ListSVG, SurgeryRect } from "../../../Presets/StyledSVGComponents";
+import SurgeryRow from "./SurgeryRow";
 
 type Props = {
     surgeryList: ProcedureEntry[];
@@ -82,52 +83,6 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
         return false;
     };
 
-
-    const surgeryRow = (listItem: ProcedureEntry, isSelected: boolean, isSubSurgery: boolean, highlighted: boolean, parentSurgery?: string) => {
-        return (
-            <SurgeryListComp
-                key={`${isSubSurgery ? parentSurgery! + '-' : ''}${listItem.procedureName}`}
-                isSelected={highlighted}
-            >
-
-                <SurgeryDiv >
-
-                    {isSubSurgery ?
-                        <> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{listItem.procedureName.includes('Only') ? '' : '+'}
-                            <span onClick={() => { store.selectionStore.updateProcedureSelection(listItem, false, parentSurgery); }}>
-                                {listItem.procedureName}</span>
-                        </> :
-                        <>
-                            <span onClick={() => {
-                                if (expandedList.includes(listItem.procedureName)) {
-                                    setExpandedList(expandedList.filter(d => d !== listItem.procedureName));
-                                } else {
-                                    setExpandedList([...expandedList, listItem.procedureName]);
-                                }
-                            }}>
-                                {expandedList.includes(listItem.procedureName) ? `▼` : `►`}
-                            </span>
-                            <span onClick={() => {
-                                store.selectionStore.updateProcedureSelection(listItem, isSelected);
-                            }}>
-                                {listItem.procedureName}
-                            </span>
-                        </>}
-
-                </SurgeryDiv>
-                <td>
-                    <ListSVG widthInput={0.3 * width}>
-                        <SurgeryRect
-                            x={caseScale().range()[0]}
-                            width={caseScale()(listItem.count) - caseScale().range()[0]}
-                        />
-                        <SurgeryNumText y={9} x={caseScale().range()[1]}>{listItem.count}</SurgeryNumText>
-                    </ListSVG>
-                </td>
-            </SurgeryListComp>);
-    };
-
-
     return <Grid item className={styles.gridWidth}>
         <Container ref={surgeryViewRef} style={{ height: "30vh" }} className={styles.containerWidth} >
             <table style={{ width: "100%", tableLayout: "fixed" }}>
@@ -145,25 +100,84 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
                 </tr>
                 {itemSelected.flatMap((listItem: ProcedureEntry) => {
                     if (expandedList.includes(listItem.procedureName) && listItem.overlapList) {
-                        return [surgeryRow(listItem, true, false, !findIfSelectedSubProcedureExist(listItem.procedureName))].concat(listItem.overlapList.map((subItem: ProcedureEntry) => {
+                        return [<SurgeryRow
+                            expandedList={expandedList}
+                            setExpandedList={setExpandedList}
+                            listItem={listItem}
+                            isSelected={true}
+                            isSubSurgery={false}
+                            highlighted={!findIfSelectedSubProcedureExist(listItem.procedureName)}
+                            caseScaleDomain={JSON.stringify(caseScale().domain())}
+                            width={width}
+                            caseScaleRange={JSON.stringify(caseScale().range())} />
 
-                            return surgeryRow(subItem, findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName), true, findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName), listItem.procedureName);
+                        ].concat(listItem.overlapList.map((subItem: ProcedureEntry) => {
+                            return <SurgeryRow
+                                expandedList={expandedList}
+                                setExpandedList={setExpandedList}
+                                listItem={subItem}
+                                isSelected={findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName)}
+                                isSubSurgery={true}
+                                highlighted={findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName)}
+                                parentSurgery={listItem.procedureName}
+                                caseScaleDomain={JSON.stringify(caseScale().domain())}
+                                width={width}
+                                caseScaleRange={JSON.stringify(caseScale().range())} />;
 
                         }));
                     } else {
-                        return [surgeryRow(listItem, true, false, true)];
+                        return [
+                            <SurgeryRow
+                                expandedList={expandedList}
+                                setExpandedList={setExpandedList}
+                                listItem={listItem}
+                                isSelected={true}
+                                isSubSurgery={false}
+                                highlighted={true}
+                                caseScaleDomain={JSON.stringify(caseScale().domain())}
+                                width={width}
+                                caseScaleRange={JSON.stringify(caseScale().range())} />
+                        ];
                     }
 
                 })}
                 {itemUnselected.flatMap((listItem: ProcedureEntry) => {
                     if (expandedList.includes(listItem.procedureName) && listItem.overlapList) {
-                        return [surgeryRow(listItem, false, false, false)].concat(listItem.overlapList.map((subItem: ProcedureEntry) => {
-
-                            return surgeryRow(subItem, false, true, false, listItem.procedureName);
-
+                        return [<SurgeryRow
+                            listItem={listItem}
+                            expandedList={expandedList}
+                            setExpandedList={setExpandedList}
+                            isSelected={false}
+                            isSubSurgery={false}
+                            highlighted={false}
+                            caseScaleDomain={JSON.stringify(caseScale().domain())}
+                            width={width}
+                            caseScaleRange={JSON.stringify(caseScale().range())} />
+                        ].concat(listItem.overlapList.map((subItem: ProcedureEntry) => {
+                            return <SurgeryRow
+                                listItem={subItem}
+                                isSelected={false}
+                                expandedList={expandedList}
+                                setExpandedList={setExpandedList}
+                                isSubSurgery={true}
+                                highlighted={false}
+                                parentSurgery={listItem.procedureName}
+                                caseScaleDomain={JSON.stringify(caseScale().domain())}
+                                width={width}
+                                caseScaleRange={JSON.stringify(caseScale().range())} />;
                         }));
                     }
-                    return [surgeryRow(listItem, false, false, false)];
+                    return [<SurgeryRow
+                        listItem={listItem}
+                        expandedList={expandedList}
+                        setExpandedList={setExpandedList}
+                        isSelected={false}
+                        isSubSurgery={false}
+                        highlighted={false}
+                        caseScaleDomain={JSON.stringify(caseScale().domain())}
+                        width={width}
+                        caseScaleRange={JSON.stringify(caseScale().range())} />
+                    ];
                 })}
 
             </table>
