@@ -44,7 +44,7 @@ const SurgeryRow: FC<Props> = ({ listItem, width, isSelected, expandedList, setE
     const store = useContext(Store);
 
     return (<SurgeryListComp
-        key={`${isSubSurgery ? parentSurgery! + '-' : ''}${listItem.procedureName}`}
+        key={`${isSubSurgery && parentSurgery ? parentSurgery + '-' : ''}${listItem.procedureName}`}
         isSelected={highlighted}
     >
 
