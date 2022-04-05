@@ -88,7 +88,7 @@ const App: FC = () => {
                 }
                 const resOutcome = await fetch(`${process.env.REACT_APP_QUERY_URL}patient_outcomes`);
                 const dataOutcome = await resOutcome.json();
-
+                console.log(dataOutcome);
                 for (let obj of dataOutcome) {
                     riskOutcomeDict[obj.visit_no].VENT = obj.gr_than_1440_vent || 0;
                     riskOutcomeDict[obj.visit_no].DEATH = obj.patient_death || 0;
@@ -97,6 +97,8 @@ const App: FC = () => {
                     riskOutcomeDict[obj.visit_no].AMICAR = obj.AMICAR || 0;
                     riskOutcomeDict[obj.visit_no].B12 = obj.B12 || 0;
                     riskOutcomeDict[obj.visit_no].TXA = obj.tranexamic_acid || 0;
+                    riskOutcomeDict[obj.visit_no].ORALIRON = obj.oral_iron || 0;
+                    riskOutcomeDict[obj.visit_no].IVIRON = obj.iv_iron || 0;
                 }
 
                 let transfused_dict = {} as any;
@@ -146,6 +148,8 @@ const App: FC = () => {
                             STROKE: riskOutcomeDict[ob.VISIT_ID].STROKE,
                             TXA: riskOutcomeDict[ob.VISIT_ID].TXA,
                             B12: riskOutcomeDict[ob.VISIT_ID].B12,
+                            ORALIRON: riskOutcomeDict[ob.VISIT_ID].ORALIRON,
+                            IVIRON: riskOutcomeDict[ob.VISIT_ID].IVIRON,
                             AMICAR: riskOutcomeDict[ob.VISIT_ID].AMICAR,
                             SURGERY_TYPE: SurgeryUrgencyArray.indexOf(ob.SURGERY_TYPE)
                         };

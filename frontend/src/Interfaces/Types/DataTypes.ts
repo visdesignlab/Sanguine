@@ -60,6 +60,8 @@ export type SingleCasePoint = {
     B12: number;
     TXA: number;
     AMICAR: number;
+    ORALIRON: number;
+    IVIRON: number;
     SURGERY_TYPE: number;
     [key: string]: number | string;
 };

@@ -17,6 +17,8 @@ export const ScatterYOptions = [
 
 export const OutcomeOptions = [
     { value: "DEATH", key: "DEATH", text: "Death" },
+    { value: "ORALIRON", key: "ORALIRON", text: "Oral Iron" },
+    { value: "IVIRON", key: "IVIRON", text: "IV Iron" },
     { value: "VENT", key: "VENT", text: "Ventilator Over 24hr" },
     { value: "STROKE", key: "STROKE", text: "Stroke" },
     { value: "ECMO", key: "ECMO", text: "ECMO" },
@@ -24,7 +26,7 @@ export const OutcomeOptions = [
     { value: "TXA", key: "TXA", text: "Tranexamic Acid" },
     { value: "AMICAR", key: "AMICAR", text: "Amicar" }];
 
-export const OutcomeOptionsStringArray = ["DEATH", "VENT", "STROKE", "ECMO", "B12", "TXA", "AMICAR"];
+export const OutcomeOptionsStringArray = ["DEATH", "VENT", "STROKE", "ECMO", "B12", "TXA", "AMICAR", "ORALIRON", "IVIRON"];
 
 export const ExtraPairOptions = OutcomeOptions.concat([
     { text: "Preop Hemoglobin", key: "PREOP_HGB", value: "Preop HGB" },
