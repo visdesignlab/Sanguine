@@ -63,6 +63,7 @@ export type SingleCasePoint = {
     ORALIRON: number;
     IVIRON: number;
     SURGERY_TYPE: number;
+    TOTAL_LOS: number;
     [key: string]: number | string;
 };
 export type ScatterDataPoint = {
@@ -86,6 +87,7 @@ export type ExtraPairPoint = {
     label: string;
     medianSet?: any;
     kdeMax?: number;
+    valueMax?: number;
 };
 
 export type ExtraPairInterventionPoint = {
@@ -100,4 +102,17 @@ export type ExtraPairInterventionPoint = {
     label: string;
     totalKdeMax?: number,
     halfKdeMax?: number;
+};
+
+export type FilterType = {
+    PREOP_HGB: [number, number],
+    POSTOP_HGB: [number, number],
+    PRBC_UNITS: [number, number],
+    FFP_UNITS: [number, number],
+    CRYO_UNITS: [number, number],
+    PLT_UNITS: [number, number],
+    CELL_SAVER_ML: [number, number],
+    DRG_WEIGHT: [number, number],
+    TOTAL_LOS: [number, number];
+    [key: string]: [number, number];
 };

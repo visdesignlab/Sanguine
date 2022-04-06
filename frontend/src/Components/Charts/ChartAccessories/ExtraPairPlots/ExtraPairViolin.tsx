@@ -13,13 +13,14 @@ interface OwnProps {
     medianSet: any;
     kdeMax: number;
     name: string;
+    valueMax: number;
     secondaryDataSet?: any[];
     secondaryMedianSet?: any;
 }
 
-export type Props = OwnProps;
+type Props = OwnProps;
 
-const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, aggregationScaleRange, medianSet, name, secondaryDataSet, secondaryMedianSet }: Props) => {
+const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, aggregationScaleRange, medianSet, name, secondaryDataSet, secondaryMedianSet, valueMax }: Props) => {
 
     const aggregationScale = useCallback(() => {
         const domain = JSON.parse(aggregationScaleDomain).map((d: number) => d.toString());;
@@ -28,10 +29,12 @@ const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, a
         return aggregationScale;
     }, [aggregationScaleDomain, aggregationScaleRange]);
 
-    const valueScale = scaleLinear().domain([0, 18]).range([0, ExtraPairWidth.Violin]);
-    if (name === "RISK") {
-        valueScale.domain([0, 30]);
-    }
+    // const valueScale =
+
+    const valueScale = useCallback(() => {
+        return scaleLinear().domain([0, valueMax]).range([0, ExtraPairWidth.Violin]);
+    }, [valueMax]);
+
 
     const lineFunction = useCallback(() => {
         const calculatedKdeRange = secondaryDataSet ? [-0.25 * aggregationScale().bandwidth(), 0.25 * aggregationScale().bandwidth()] : [-0.5 * aggregationScale().bandwidth(), 0.5 * aggregationScale().bandwidth()];
@@ -41,15 +44,15 @@ const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, a
         const lineFunction = line()
             .curve(curveCatmullRom)
             .y((d: any) => kdeScale(d.y) + 0.5 * aggregationScale().bandwidth())
-            .x((d: any) => valueScale(d.x));
+            .x((d: any) => valueScale()(d.x));
         return lineFunction;
-    }, [aggregationScale, valueScale, kdeMax]);
+    }, [secondaryDataSet, aggregationScale, kdeMax, valueScale]);
 
     const svgRef = useRef<SVGSVGElement>(null);
 
     useEffect(() => {
         const svgSelection = select(svgRef.current);
-        const scaleLabel = axisBottom(valueScale).ticks(3);
+        const scaleLabel = axisBottom(valueScale()).ticks(3);
         svgSelection.select(".axis").call(scaleLabel as any);
     }, [svgRef, valueScale]);
 
@@ -66,8 +69,8 @@ const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, a
                 opacity={0.75}
                 strokeWidth={1.5}
                 stroke={Third_Gray}
-                x1={0.3 * valueScale.range()[1]}
-                x2={0.7 * valueScale.range()[1]}
+                x1={0.3 * valueScale().range()[1]}
+                x2={0.7 * valueScale().range()[1]}
                 y1={aggregationScale().bandwidth() * 0.5 + (aggregationScale()(aggregationAttribute) || 0)}
                 y2={aggregationScale().bandwidth() * 0.5 + (aggregationScale()(aggregationAttribute) || 0)} />;
         }
@@ -77,7 +80,7 @@ const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, a
                     r={2}
                     fill={Basic_Gray}
                     opacity={d ? 1 : 0}
-                    cx={valueScale(d)}
+                    cx={valueScale()(d)}
                     cy={(aggregationScale()(aggregationAttribute) || 0) + Math.random() * aggregationScale().bandwidth() * 0.5 + aggregationScale().bandwidth() * 0.25} />;
             });
 
@@ -92,9 +95,9 @@ const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, a
                 <g className="axis" />
             </g>
             <line style={{ stroke: "#e5ab73", strokeWidth: "2", strokeDasharray: "5,5" }}
-                x1={valueScale(name === "Preop HGB" ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
-                x2={valueScale(name === "Preop HGB" ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
-                opacity={name === "RISK" ? 0 : 1}
+                x1={valueScale()(name === "PREOP_HGB" ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
+                x2={valueScale()(name === "PREOP_HGB" ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
+                opacity={name === "PREOP_HGB" || name === "POSTOP_HGB" ? 1 : 0}
                 y1={aggregationScale().range()[0]}
                 y2={aggregationScale().range()[1] - 0.25 * aggregationScale().bandwidth()} />
             <g transform={`translate(0,${secondaryDataSet ? aggregationScale().bandwidth() * 0.25 : 0})`}>

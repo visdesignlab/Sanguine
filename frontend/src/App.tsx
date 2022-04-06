@@ -7,7 +7,7 @@ import { useIdleTimer } from "react-idle-timer";
 import Dashboard from "./Dashboard";
 import { defaultState } from "./Interfaces/DefaultState";
 import Store from "./Interfaces/Store";
-import { SingleCasePoint } from "./Interfaces/Types/DataTypes";
+import { FilterType, SingleCasePoint } from "./Interfaces/Types/DataTypes";
 import { logoutHandler, whoamiAPICall } from "./Interfaces/UserManagement";
 import { SurgeryUrgencyArray } from "./Presets/DataDict";
 import './App.css';
@@ -18,7 +18,7 @@ export const DataContext = createContext<SingleCasePoint[]>([]);
 
 const App: FC = () => {
     const store = useContext(Store);
-    const { bloodComponentFilter, surgeryUrgencySelection, outcomeFilter, currentSelectPatientGroup, currentOutputFilterSet, testValueFilter } = store.state;
+    const { allFilters, surgeryUrgencySelection, outcomeFilter, currentSelectPatientGroup, currentOutputFilterSet } = store.state;
     const [hemoData, setHemoData] = useState<SingleCasePoint[]>([]);
     const [outputFilteredData, setOutputFilteredDAta] = useState<SingleCasePoint[]>([]);
 
@@ -63,11 +63,11 @@ const App: FC = () => {
             patientIDSet = new Set<number>();
             currentSelectPatientGroup.forEach((d) => { patientIDSet!.add(d.CASE_ID); });
         }
-        const newFilteredData = hemoData.filter((eachcase: SingleCasePoint) => checkIfCriteriaMet(eachcase, surgeryUrgencySelection, outcomeFilter, currentOutputFilterSet, bloodComponentFilter, testValueFilter, patientIDSet));
+        const newFilteredData = hemoData.filter((eachcase: SingleCasePoint) => checkIfCriteriaMet(eachcase, surgeryUrgencySelection, outcomeFilter, currentOutputFilterSet, allFilters, patientIDSet));
 
 
         setOutputFilteredDAta(newFilteredData);
-    }, [surgeryUrgencySelection, outcomeFilter, hemoData, currentOutputFilterSet, bloodComponentFilter, testValueFilter, currentSelectPatientGroup]);
+    }, [surgeryUrgencySelection, outcomeFilter, hemoData, currentOutputFilterSet, allFilters, currentSelectPatientGroup]);
 
     async function cacheHemoData() {
         if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
@@ -78,17 +78,30 @@ const App: FC = () => {
             .then(async (dataHemo) => {
                 const resultHemo = dataHemo.result;
 
+                // console.log('hemo');
+                // console.log(resultHemo);
+
                 const resTrans = await fetch(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(defaultState.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(defaultState.rawDateRange[1]))]}`);
                 const dataTrans = await resTrans.json();
                 const resRisk = await fetch(`${process.env.REACT_APP_QUERY_URL}risk_score`);
                 const dataRisk = await resRisk.json();
+
+                // console.log('risk score');
+                // console.log(dataRisk);
+
                 let riskOutcomeDict: any = {};
                 for (let obj of dataRisk) {
-                    riskOutcomeDict[obj.visit_no] = { DRG_WEIGHT: obj.apr_drg_weight };
+                    riskOutcomeDict[obj.visit_no] = {
+                        DRG_WEIGHT: obj.apr_drg_weight,
+                        TOTAL_LOS: obj.total_los
+                    };
                 }
                 const resOutcome = await fetch(`${process.env.REACT_APP_QUERY_URL}patient_outcomes`);
                 const dataOutcome = await resOutcome.json();
-                console.log(dataOutcome);
+
+                // console.log('patient');
+                // console.log(dataOutcome);
+
                 for (let obj of dataOutcome) {
                     riskOutcomeDict[obj.visit_no].VENT = obj.gr_than_1440_vent || 0;
                     riskOutcomeDict[obj.visit_no].DEATH = obj.patient_death || 0;
@@ -114,16 +127,44 @@ const App: FC = () => {
                     };
                 });
 
-
+                const tempFilterRange: FilterType = {
+                    PREOP_HGB: [0, 0],
+                    POSTOP_HGB: [0, 0],
+                    PRBC_UNITS: [0, 0],
+                    FFP_UNITS: [0, 0],
+                    CRYO_UNITS: [0, 0],
+                    PLT_UNITS: [0, 0],
+                    CELL_SAVER_ML: [0, 0],
+                    DRG_WEIGHT: [0, 0],
+                    TOTAL_LOS: [0, 0]
+                };
 
                 resultHemo.forEach((ob: any, index: number) => {
 
                     if (transfused_dict[ob.CASE_ID]) {
                         const transfusedResult = transfused_dict[ob.CASE_ID];
                         const time = ((timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE))!.getTime());
-                        store.configStore.updateRange(transfusedResult);
-                        store.configStore.updateTestValue("PREOP_HGB", +ob.HEMO[0]);
-                        store.configStore.updateTestValue("POSTOP_HGB", +ob.HEMO[1]);
+
+                        // store.configStore.updateRange(transfusedResult);
+                        // store.configStore.updateTestValue("PREOP_HGB", +ob.HEMO[0]);
+                        // store.configStore.updateTestValue("POSTOP_HGB", +ob.HEMO[1]);
+                        Object.keys(transfusedResult).forEach((d) => {
+                            tempFilterRange[d] = [0, tempFilterRange[d][1] > transfusedResult[d] ? tempFilterRange[d][1] : transfusedResult[d]];
+                        });
+
+                        tempFilterRange.PREOP_HGB = [0, tempFilterRange.PREOP_HGB[1] > +ob.HEMO[0] ? tempFilterRange.PREOP_HGB[1] : +ob.HEMO[0]];
+
+                        tempFilterRange.POSTOP_HGB = [0, tempFilterRange.POSTOP_HGB[1] > +ob.HEMO[1] ? tempFilterRange.POSTOP_HGB[1] : +ob.HEMO[1]];
+
+                        if (riskOutcomeDict[ob.VISIT_ID].DRG_WEIGHT) {
+                            tempFilterRange.DRG_WEIGHT = [0, tempFilterRange.DRG_WEIGHT[1] > riskOutcomeDict[ob.VISIT_ID].DRG_WEIGHT ? tempFilterRange.DRG_WEIGHT[1] : riskOutcomeDict[ob.VISIT_ID].DRG_WEIGHT];
+                        }
+
+                        if (riskOutcomeDict[ob.VISIT_ID].TOTAL_LOS) {
+                            tempFilterRange.TOTAL_LOS = [0, tempFilterRange.TOTAL_LOS[1] > riskOutcomeDict[ob.VISIT_ID].TOTAL_LOS ? tempFilterRange.TOTAL_LOS[1] : riskOutcomeDict[ob.VISIT_ID].TOTAL_LOS];
+                        }
+
+
                         const outputObj: SingleCasePoint = {
                             CASE_ID: ob.CASE_ID,
                             VISIT_ID: ob.VISIT_ID,
@@ -151,11 +192,14 @@ const App: FC = () => {
                             ORALIRON: riskOutcomeDict[ob.VISIT_ID].ORALIRON,
                             IVIRON: riskOutcomeDict[ob.VISIT_ID].IVIRON,
                             AMICAR: riskOutcomeDict[ob.VISIT_ID].AMICAR,
-                            SURGERY_TYPE: SurgeryUrgencyArray.indexOf(ob.SURGERY_TYPE)
+                            SURGERY_TYPE: SurgeryUrgencyArray.indexOf(ob.SURGERY_TYPE),
+                            TOTAL_LOS: riskOutcomeDict[ob.VISIT_ID].TOTAL_LOS || 0
                         };
                         cacheData.push(outputObj);
                     }
                 });
+
+                store.configStore.updateRange(tempFilterRange);
 
                 cacheData = cacheData.filter((d: any) => d);
                 setHemoData(cacheData);

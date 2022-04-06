@@ -1,4 +1,4 @@
-import { Box, Chip, ListItem, ListItemText } from "@material-ui/core";
+import { Box, Chip, } from "@material-ui/core";
 import { observer } from "mobx-react";
 import { FC, useContext } from "react";
 import Store from "../../../Interfaces/Store";

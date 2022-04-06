@@ -4,11 +4,10 @@ import CloseIcon from '@material-ui/icons/Close';
 import { MuiPickersUtilsProvider, KeyboardDatePicker } from "@material-ui/pickers";
 import { observer } from "mobx-react";
 import { FC, useContext, useState } from "react";
-import { AcronymDictionary } from "../../../Presets/DataDict";
+import { AcronymDictionary, BloodComponentStringArray, CaseAttributeValueStringArray, TestOptionStringArray } from "../../../Presets/DataDict";
 import Store from "../../../Interfaces/Store";
 import ComponentRangePicker from "./ComponentRangePicker";
 import { Title, useStyles } from "../../../Presets/StyledComponents";
-import { BloodComponentOptions, ScatterYOptions } from "../../../Presets/DataDict";
 import ReplayIcon from '@material-ui/icons/Replay';
 import { defaultState } from "../../../Interfaces/DefaultState";
 import OutcomeChipGroup from "./OutcomeChipGroup";
@@ -20,7 +19,7 @@ const FilterBoard: FC = () => {
 
     const store = useContext(Store);
     const styles = useStyles();
-    const { rawDateRange, outcomeFilter, surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet, bloodComponentFilter, testValueFilter } = store.state;
+    const { rawDateRange, outcomeFilter, surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet, allFilters } = store.state;
     const [beginDate, setBeginDate] = useState<number | null>(rawDateRange[0]);
     const [endDate, setEndDate] = useState<number | null>(rawDateRange[1]);
 
@@ -30,13 +29,14 @@ const FilterBoard: FC = () => {
         store.configStore.dateRangeChange(defaultState.rawDateRange);
     };
 
-    const checkIfCanReset = (filterInput: any) => {
+    const checkIfCanReset = (filterName: string[]) => {
 
         let canReset = false;
 
-        Object.entries(filterInput).map(([filterName, filterValue]) => {
 
-            if ((filterValue as any)[0] > 0 || ((filterValue as any)[1] < store.configStore.filterRange[filterName])) {
+        filterName.forEach((d) => {
+            const filterResult = allFilters[d];
+            if (filterResult[0] > 0 || filterResult[1] < store.configStore.filterRange[d][1]) {
                 canReset = true;
             }
         });
@@ -56,10 +56,7 @@ const FilterBoard: FC = () => {
         if (currentSelectPatientGroup.length > 0 || currentOutputFilterSet.length > 0) {
             return true;
         }
-        if (checkIfCanReset(testValueFilter)) {
-            return true;
-        }
-        if (checkIfCanReset(bloodComponentFilter)) {
+        if (checkIfCanReset([...CaseAttributeValueStringArray, ...BloodComponentStringArray, ...TestOptionStringArray])) {
             return true;
         }
         return false;
@@ -209,8 +206,9 @@ const FilterBoard: FC = () => {
                     <ListItemText primary={<Title>Blood Component Filter</Title>} />
                     <ListItemSecondaryAction>
 
-                        <IconButton onClick={() => { store.configStore.resetBloodFilter(); }}
-                            disabled={!checkIfCanReset(bloodComponentFilter)}>
+                        <IconButton
+                            onClick={() => { store.configStore.resetSelectedFilter(BloodComponentStringArray); }}
+                            disabled={!checkIfCanReset(BloodComponentStringArray)}>
                             <Tooltip title="Reset">
                                 <ReplayIcon />
                             </Tooltip>
@@ -219,8 +217,8 @@ const FilterBoard: FC = () => {
                     </ListItemSecondaryAction>
                 </ListItem>
                 {
-                    BloodComponentOptions.map((d) => {
-                        return (<ComponentRangePicker label={d.key} key={d.key} />);
+                    BloodComponentStringArray.map((d) => {
+                        return (<ComponentRangePicker label={d} key={d} />);
                     })
                 }
 
@@ -228,8 +226,8 @@ const FilterBoard: FC = () => {
                     <ListItemText primary={<Title>Test Value Filter</Title>} />
                     <ListItemSecondaryAction>
 
-                        <IconButton onClick={() => { store.configStore.resetTestValueFilter(); }}
-                            disabled={!checkIfCanReset(testValueFilter)}>
+                        <IconButton onClick={() => { store.configStore.resetSelectedFilter(TestOptionStringArray); }}
+                            disabled={!checkIfCanReset(TestOptionStringArray)}>
                             <Tooltip title="Reset">
                                 <ReplayIcon />
                             </Tooltip>
@@ -238,11 +236,32 @@ const FilterBoard: FC = () => {
                     </ListItemSecondaryAction>
                 </ListItem>
                 {
-                    ScatterYOptions.map((d) => {
-                        return (<ComponentRangePicker label={d.key} key={d.key} isTestValue={true} />);
+                    TestOptionStringArray.map((d) => {
+                        return (<ComponentRangePicker label={d} key={d} />);
+                    })
+                }
+
+                <ListItem>
+                    <ListItemText primary={<Title>Attribute Filter</Title>} />
+                    <ListItemSecondaryAction>
+
+                        <IconButton onClick={() => { store.configStore.resetSelectedFilter(CaseAttributeValueStringArray); }}
+                            disabled={!checkIfCanReset(CaseAttributeValueStringArray)}>
+                            <Tooltip title="Reset">
+                                <ReplayIcon />
+                            </Tooltip>
+                        </IconButton>
+
+                    </ListItemSecondaryAction>
+                </ListItem>
+                {
+                    CaseAttributeValueStringArray.map((d) => {
+                        return (<ComponentRangePicker label={d} key={d} />);
                     })
                 }
             </List >
+
+
         </Container>
     );
 };

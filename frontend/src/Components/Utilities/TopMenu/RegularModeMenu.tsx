@@ -1,5 +1,4 @@
-import { Menu, MenuItem, Button, AppBar, Toolbar, Typography, IconButton, ButtonGroup, Tooltip, ListItemIcon } from "@material-ui/core";
-import { isObservable } from "mobx";
+import { Menu, MenuItem, Button, AppBar, Toolbar, Typography, IconButton, Tooltip, ListItemIcon } from "@material-ui/core";
 import { observer } from "mobx-react";
 import { useContext, useState, FC } from "react";
 import InsertChartIcon from '@material-ui/icons/InsertChart';
@@ -90,19 +89,22 @@ const RegularModeMenu: FC = () => {
         <Toolbar className={styles.toolbarPaddingControl}>
 
 
-            <a href="https://healthcare.utah.edu" target="_blank">
+            <a href="https://healthcare.utah.edu" target="_blank" rel="noreferrer">
                 <img
                     className={styles.img}
+                    alt="University of Utah Health Logo"
                     src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/u-of-u-health-social.png" />
             </a>
-            <a href="https://arup.utah.edu" target="_blank">
+            <a href="https://arup.utah.edu" target="_blank" rel="noreferrer">
                 <img
                     className={styles.img}
+                    alt="ARUP Logo"
                     src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/ARUP-logo.png" />
             </a>
-            <a href="https://vdl.sci.utah.edu" target="_blank">
+            <a href="https://vdl.sci.utah.edu" target="_blank" rel="noreferrer">
                 <img
                     className={styles.img}
+                    alt="VDL Logo"
                     src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/vdl.png" />
             </a>
 

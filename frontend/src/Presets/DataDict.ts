@@ -1,19 +1,9 @@
 
-export const BloodComponentOptions = [
-    { value: "PRBC_UNITS", key: "PRBC_UNITS", text: "Intraoperative RBCs Transfused" },
-    { value: "FFP_UNITS", key: "FFP_UNITS", text: "Intraoperative FFP Transfused" },
-    { value: "PLT_UNITS", key: "PLT_UNITS", text: "Intraoperative Platelets Transfused" },
-    { value: "CRYO_UNITS", key: "CRYO_UNITS", text: "Intraoperative Cryo Transfused" },
-    { value: "CELL_SAVER_ML", key: "CELL_SAVER_ML", text: "Cell Salvage Volume (ml)" }];
-
 const AggregationOptions = [
     { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
     { value: "YEAR", key: "YEAR", text: "Year" },
     { value: "ANESTHESIOLOGIST_ID", key: "ANESTHESIOLOGIST_ID", text: "Anesthesiologist ID" }];
 
-export const ScatterYOptions = [
-    { value: "PREOP_HGB", key: "PREOP_HGB", text: "Preoperative Hemoglobin Value" },
-    { value: "POSTOP_HGB", key: "POSTOP_HGB", text: "Postoperative Hemoglobin Value" }];
 
 export const OutcomeOptions = [
     { value: "DEATH", key: "DEATH", text: "Death" },
@@ -28,13 +18,20 @@ export const OutcomeOptions = [
 
 export const OutcomeOptionsStringArray = ["DEATH", "VENT", "STROKE", "ECMO", "B12", "TXA", "AMICAR", "ORALIRON", "IVIRON"];
 
+export const BloodComponentStringArray = ['PRBC_UNITS', 'FFP_UNITS', 'PLT_UNITS', 'CRYO_UNITS', 'CELL_SAVER_ML'];
+
+export const TestOptionStringArray = ['PREOP_HGB', 'POSTOP_HGB'];
+
+export const CaseAttributeValueStringArray = ['TOTAL_LOS', 'DRG_WEIGHT'];
+
 export const ExtraPairOptions = OutcomeOptions.concat([
     { text: "Preop Hemoglobin", key: "PREOP_HGB", value: "Preop HGB" },
     { text: "Postop Hemoglobin", key: "POSTOP_HGB", value: "POSTOP_HGB" },
     { text: "Total Transfusion", key: "TOTAL_TRANS", value: "TOTAL_TRANS" },
     { text: "Per Case Transfusion", key: "PER_CASE", value: "PER_CASE" },
     { text: "Zero Transfusion Cases", key: "ZERO_TRANS", value: "ZERO_TRANS" },
-    { text: "DRG Weight (Risk)", key: "RISK", value: "RISK" }
+    { text: "DRG Weight (Risk)", key: "DRG_WEIGHT", value: "DRG_WEIGHT" },
+    { text: 'Length of Stay', key: 'TOTAL_LOS', value: 'TOTAL_LOS' }
 ]);
 
 export const SurgeryUrgency = [
@@ -43,19 +40,11 @@ export const SurgeryUrgency = [
     { value: 2, key: 2, text: "Emergent" }];
 
 
-export const dumbbellFacetOptions = BloodComponentOptions.slice(0, 4).concat(AggregationOptions).concat([{ value: "QUARTER", key: "QUARTER", text: "Quarter" }]);
+
 
 const dumbbellValueOptions = [{ value: "HGB_VALUE", key: "HGB_VALUE", text: "Hemoglobin Value" }];
 
 export const typeDiction = ["COST", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENTION"];
-
-export const addOptions = [
-    [OutcomeOptions.slice(4, 7), AggregationOptions],
-    [dumbbellValueOptions, dumbbellFacetOptions],
-    [ScatterYOptions, BloodComponentOptions],
-    [BloodComponentOptions, AggregationOptions],
-    [BloodComponentOptions, [AggregationOptions[0], AggregationOptions[2]]]
-];
 
 export const SurgeryUrgencyArray = ["Urgent", "Elective", "Emergent"];
 
@@ -90,7 +79,8 @@ export const AcronymDictionary: any = {
     PREOP_HGB: "Preoperative Hemoglobin Value",
     POSTOP_HGB: "Postoperative Hemoglobin Value",
     DRG_WEIGHT: "Diagnosis-related Group Weight",
-    COST: "Blood Component Cost per Case"
+    COST: "Blood Component Cost per Case",
+    TOTAL_LOS: "Total Length of Stay"
 };
 
 export const HIPAA_Sensitive = new Set([
@@ -113,3 +103,29 @@ export const HIPAA_Sensitive = new Set([
     "Hospital Visit Number"
 ]);
 
+export const BloodComponentOptions = () => {
+    return BloodComponentStringArray.map((d) => {
+        return {
+            value: d, key: d, text: AcronymDictionary[d]
+        };
+    });
+};
+
+const produceMenuOptions = (stringInput: string[]) => {
+    return stringInput.map((d) => {
+        return {
+            value: d, key: d, text: AcronymDictionary[d]
+        };
+    });
+};
+
+export const dumbbellFacetOptions = produceMenuOptions(BloodComponentStringArray).slice(0, 4).concat(AggregationOptions).concat([{ value: "QUARTER", key: "QUARTER", text: "Quarter" }]);
+
+
+export const addOptions = [
+    [OutcomeOptions.slice(4, 7), AggregationOptions],
+    [dumbbellValueOptions, dumbbellFacetOptions],
+    [produceMenuOptions(TestOptionStringArray), produceMenuOptions(BloodComponentStringArray)],
+    [produceMenuOptions(BloodComponentStringArray), AggregationOptions],
+    [produceMenuOptions(BloodComponentStringArray), [AggregationOptions[0], AggregationOptions[2]]]
+];

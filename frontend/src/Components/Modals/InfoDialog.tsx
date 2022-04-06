@@ -10,13 +10,13 @@ const InfoDialog: FC = () => {
         <DialogContent>
             <DialogContentText>
                 <Typography gutterBottom>
-                    This project is a collaboration between <a href="https://vdl.sci.utah.edu/" target="_blank">Visualization Design Lab</a> and <a href="https://www.aruplab.com/" target="_blank">ARUP Lab</a> at University of Utah. We visualize blood usage in cardiac surgeries and associated patient and surgery attributes. Through this interactive visualization tool, we hope to offer clinical practitioners a better overall view on the use of blood, thus facilitating better patient outcomes.
+                    This project is a collaboration between <a href="https://vdl.sci.utah.edu/" target="_blank" rel="noreferrer">Visualization Design Lab</a> and <a href="https://www.aruplab.com/" target="_blank" rel="noreferrer">ARUP Lab</a> at University of Utah. We visualize blood usage in cardiac surgeries and associated patient and surgery attributes. Through this interactive visualization tool, we hope to offer clinical practitioners a better overall view on the use of blood, thus facilitating better patient outcomes.
                 </Typography>
                 <Typography gutterBottom>
-                    We have published paper on this project in <i>Information Visualization</i>. Check out the paper on <a href="https://vdl.sci.utah.edu/publications/2021_ivi_sanguine/" target="_blank">our website</a> or through the <a href="https://doi.org/10.1177/14738716211028565" target="_blank">publisher's site</a>. Here is a <a href="https://youtu.be/DhTNyvCJgtM" target="_blank">video</a> accompanied with the publication.
+                    We have published paper on this project in <i>Information Visualization</i>. Check out the paper on <a href="https://vdl.sci.utah.edu/publications/2021_ivi_sanguine/" target="_blank" rel="noreferrer">our website</a> or through the <a href="https://doi.org/10.1177/14738716211028565" target="_blank" rel="noreferrer">publisher's site</a>. Here is a <a href="https://youtu.be/DhTNyvCJgtM" target="_blank" rel="noreferrer">video</a> accompanied with the publication.
                 </Typography>
                 <Typography gutterBottom>
-                    <b>Team behind Sanguine</b>: <a href="https://vdl.sci.utah.edu/team/lin" target="_blank">Haihan Lin</a>, <a href="https://jackwilburn.xyz/" target="_blank">Jack Wilburn</a>, <a href="https://www.aruplab.com/experts/metcalf" target="_blank">Ryan A. Metcalf</a>, and <a href="https://vdl.sci.utah.edu/team/lex/" target="_blank">Alexander Lex</a>.
+                    <b>Team behind Sanguine</b>: <a href="https://vdl.sci.utah.edu/team/lin" target="_blank" rel="noreferrer">Haihan Lin</a>, <a href="https://jackwilburn.xyz/" target="_blank" rel="noreferrer">Jack Wilburn</a>, <a href="https://www.aruplab.com/experts/metcalf" target="_blank" rel="noreferrer">Ryan A. Metcalf</a>, and <a href="https://vdl.sci.utah.edu/team/lex/" target="_blank" rel="noreferrer">Alexander Lex</a>.
                 </Typography>
 
             </DialogContentText>

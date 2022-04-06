@@ -1,7 +1,8 @@
 import { makeAutoObservable } from "mobx";
-import { BloodComponentOptions } from "../Presets/DataDict";
-import { changeBloodFilter, changeCostConfig, changeOutcomeFilter, changeSurgeryUrgencySelection, changeTestValueFilter, clearAllFilter, dateRangeChange, loadPreset, resetBloodFilter, resetTestValueFilter, toggleShowZero } from "./Actions/ProjectConfigActions";
+import { changeCostConfig, changeFilter, changeOutcomeFilter, changeSurgeryUrgencySelection, clearAllFilter, dateRangeChange, loadPreset, resetSelectedFilter, toggleShowZero } from "./Actions/ProjectConfigActions";
+import { defaultState } from "./DefaultState";
 import { RootStore } from "./Store";
+import { FilterType } from "./Types/DataTypes";
 import { LayoutElement } from "./Types/LayoutTypes";
 
 export class ProjectConfigStore {
@@ -10,6 +11,8 @@ export class ProjectConfigStore {
     private _dataLoading: boolean;
     private _dataLoadingFailed: boolean;
     private _topMenuBarAddMode: boolean;
+
+    //TODO simplify the bunch of open/close states
     openSaveStateDialog: boolean;
     openManageStateDialog: boolean;
     openShareUIDDialog: boolean;
@@ -21,7 +24,7 @@ export class ProjectConfigStore {
     snackBarMessage: string;
     largeFont: boolean;
     savedState: string[];
-    filterRange: any;
+    filterRange: FilterType;
     snackBarIsError: boolean;
     privateMode: boolean;
     stateToUpdate: string;
@@ -37,16 +40,14 @@ export class ProjectConfigStore {
         this.openSaveStateDialog = false;
         this.openManageStateDialog = false;
         this.openShareUIDDialog = false;
-
         this.openSnackBar = false;
         this.snackBarMessage = "";
         this.snackBarIsError = false;
-
         this.loadedStateName = "";
         this.openCostInputModal = false;
         this.openStateAccessControl = false;
         this.openAboutDialog = false;
-        this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0, PREOP_HGB: 0, POSTOP_HGB: 0 };
+        this.filterRange = defaultState.allFilters;
         this.stateToUpdate = "";
 
 
@@ -62,16 +63,23 @@ export class ProjectConfigStore {
         this.savedState.push(stateName);
     };
 
-    updateRange = (transfusedResult: any) => {
-        BloodComponentOptions.forEach((d) => {
-            this.filterRange[d.key] = transfusedResult[d.key] > this.filterRange[d.key] ? transfusedResult[d.key] : this.filterRange[d.key];
+    updateRange = (newFilterRange: FilterType) => {
+        Object.keys(newFilterRange).forEach((filterName) => {
+            this.filterRange[filterName] = [Math.floor(newFilterRange[filterName][0]), Math.ceil(newFilterRange[filterName][1])];
         });
+        // this.filterRange = newFilterRange;
     };
 
+    // updateRange = (transfusedResult: any) => {
+    //     BloodComponentStringArray.forEach((d) => {
+    //         this.filterRange[d.key] = transfusedResult[d.key] > this.filterRange[d.key] ? transfusedResult[d.key] : this.filterRange[d.key];
+    //     });
+    // };
 
-    updateTestValue = (label: string, value: number) => {
-        this.filterRange[label] = value > this.filterRange[label] ? value : this.filterRange[label];
-    };
+
+    // updateTestValue = (label: string, value: number) => {
+    //     this.filterRange[label] = value > this.filterRange[label] ? value : this.filterRange[label];
+    // };
 
     get provenance() {
         return this.rootStore.provenance;
@@ -128,18 +136,13 @@ export class ProjectConfigStore {
     loadPreset(layoutInput: LayoutElement[]) {
         this.provenance.apply(loadPreset(layoutInput));
     }
-    changeBloodFilter(componentName: string, newRange: number[]) {
-        this.provenance.apply(changeBloodFilter(componentName, newRange));
-    }
-    resetBloodFilter() {
-        this.provenance.apply(resetBloodFilter());
+
+    changeFilter(filterName: string, newRange: [number, number]) {
+        this.provenance.apply(changeFilter(filterName, newRange));
     }
 
-    changeTestValueFilter(testValueName: string, newRange: number[]) {
-        this.provenance.apply(changeTestValueFilter(testValueName, newRange));
-    }
-    resetTestValueFilter() {
-        this.provenance.apply(resetTestValueFilter());
+    resetSelectedFilter(filterNames: string[]) {
+        this.provenance.apply(resetSelectedFilter(filterNames));
     }
 
     clearAllFilter() {

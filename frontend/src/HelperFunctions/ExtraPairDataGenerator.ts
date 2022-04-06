@@ -34,43 +34,34 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
                     });
                     newExtraPairData.push({ name: "ZERO_TRANS", label: "Zero %", data: newData, type: "Basic" });
                     break;
-
+                case 'IVIRON':
+                case 'ORALIRON':
                 case "DEATH":
-                    newExtraPairData.push(outcomeDataGenerate(aggregatedBy, "DEATH", "Death", data, hemoglobinDataSet));
-                    break;
                 case "VENT":
-                    newExtraPairData.push(outcomeDataGenerate(aggregatedBy, "VENT", "Vent", data, hemoglobinDataSet));
-                    break;
                 case "ECMO":
-                    newExtraPairData.push(outcomeDataGenerate(aggregatedBy, "ECMO", "ECMO", data, hemoglobinDataSet));
-                    break;
                 case "STROKE":
-                    newExtraPairData.push(outcomeDataGenerate(aggregatedBy, "STROKE", "Stroke", data, hemoglobinDataSet));
-                    break;
                 case "AMICAR":
-                    newExtraPairData.push(outcomeDataGenerate(aggregatedBy, "AMICAR", "Amicar", data, hemoglobinDataSet));
-                    break;
                 case "B12":
-                    newExtraPairData.push(outcomeDataGenerate(aggregatedBy, "B12", "B12", data, hemoglobinDataSet));
-                    break;
                 case "TXA":
-                    newExtraPairData.push(outcomeDataGenerate(aggregatedBy, "TXA", "TXA", data, hemoglobinDataSet));
+                    newExtraPairData.push(outcomeDataGenerate(aggregatedBy, variable, variable, data, hemoglobinDataSet));
                     break;
-
-                case "RISK":
+                case 'TOTAL_LOS':
+                case "DRG_WEIGHT":
                     // let temporaryDataHolder: any = {}
                     data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         temporaryDataHolder[dataPoint.aggregateAttribute] = [];
                         caseDictionary[dataPoint.aggregateAttribute] = new Set(dataPoint.caseIDList);
                     });
+                    let valueMax = 0;
                     hemoglobinDataSet.forEach((ob: any) => {
                         if (temporaryDataHolder[ob[aggregatedBy]] && caseDictionary[ob[aggregatedBy]].has(ob.CASE_ID)) {
-                            temporaryDataHolder[ob[aggregatedBy]].push(ob.DRG_WEIGHT);
+                            temporaryDataHolder[ob[aggregatedBy]].push(ob[variable]);
+                            valueMax = valueMax > ob[variable] ? valueMax : ob[variable];
                         }
                     });
                     for (const [key, value] of Object.entries(temporaryDataHolder)) {
                         medianData[key] = median(value as any);
-                        let pd = createpd(value, { min: 0, max: 30 });
+                        let pd = createpd(value, { min: 0, max: variable === 'DRG_WEIGHT' ? 30 : valueMax });
                         pd = [{ x: 0, y: 0 }].concat(pd);
 
                         if ((value as any).length > 5) {
@@ -84,9 +75,9 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
                         pd = pd.concat(reversePd);
                         newData[key] = { kdeArray: pd, dataPoints: value };
                     }
-                    newExtraPairData.push({ name: "RISK", label: "DRG Weight", data: newData, type: "Violin", medianSet: medianData, kdeMax: kdeMax_temp });
+                    newExtraPairData.push({ name: variable, label: variable, data: newData, type: "Violin", medianSet: medianData, kdeMax: kdeMax_temp, valueMax: variable === 'DRG_WEIGHT' ? 30 : valueMax });
                     break;
-
+                case "POSTOP_HGB":
                 case "PREOP_HGB":
                     data.forEach((dataPoint: BasicAggregatedDatePoint) => {
                         newData[dataPoint.aggregateAttribute] = [];
@@ -94,7 +85,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
                     });
 
                     hemoglobinDataSet.forEach((ob: SingleCasePoint) => {
-                        const resultValue = ob.PREOP_HGB;
+                        const resultValue = ob[variable];
                         if (newData[ob[aggregatedBy]] && resultValue > 0 && caseDictionary[ob[aggregatedBy]].has(ob.CASE_ID)) {
                             newData[ob[aggregatedBy]].push(resultValue);
                         }
@@ -115,37 +106,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
                         pd = pd.concat(reversePd);
                         newData[prop] = { kdeArray: pd, dataPoints: newData[prop] };
                     }
-                    newExtraPairData.push({ name: "PREOP_HGB", label: "Preop HGB", data: newData, type: "Violin", medianSet: medianData, kdeMax: kdeMax_temp });
-                    break;
-                case "POSTOP_HGB":
-                    //let newData = {} as any;
-                    data.forEach((dataPoint: BasicAggregatedDatePoint) => {
-                        newData[dataPoint.aggregateAttribute] = [];
-                        caseDictionary[dataPoint.aggregateAttribute] = new Set(dataPoint.caseIDList);
-                    });
-                    hemoglobinDataSet.forEach((ob: any) => {
-                        const resultValue = parseFloat(ob.POSTOP_HGB);
-                        if (newData[ob[aggregatedBy]] && resultValue > 0 && caseDictionary[ob[aggregatedBy]].has(ob.CASE_ID)) {
-                            newData[ob[aggregatedBy]].push(resultValue);
-                        }
-                    });
-                    for (let prop in newData) {
-                        medianData[prop] = median(newData[prop]);
-                        let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
-                        pd = [{ x: 0, y: 0 }].concat(pd);
-
-                        if ((newData[prop] as any).length > 5) {
-                            kdeMax_temp = (max(pd, (val: any) => val.y) as any) > kdeMax_temp ? max(pd, (val: any) => val.y) : kdeMax_temp;
-                        }
-
-                        let reversePd = pd.map((pair: any) => {
-
-                            return { x: pair.x, y: -pair.y };
-                        }).reverse();
-                        pd = pd.concat(reversePd);
-                        newData[prop] = { kdeArray: pd, dataPoints: newData[prop] };
-                    }
-                    newExtraPairData.push({ name: "POSTOP_HGB", label: "Postop HGB", data: newData, type: "Violin", medianSet: medianData, kdeMax: kdeMax_temp });
+                    newExtraPairData.push({ name: variable, label: variable, data: newData, type: "Violin", medianSet: medianData, kdeMax: kdeMax_temp, valueMax: 18 });
                     break;
                 default:
                     break;
