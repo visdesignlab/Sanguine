@@ -15,9 +15,9 @@ export const SnackBarCloseTime = 5000;
 export const HGB_HIGH_STANDARD = 13;
 export const colorProfile = ["#d7191c", "#abd9e9", "#fdae61", "#2c7bb6", "#e1e100"];
 export const OffsetDict = {
-    regular: { left: 90, bottom: 40, right: 10, top: 40, margin: 10 } as Offset,
+    regular: { left: 110, bottom: 40, right: 10, top: 40, margin: 10 } as Offset,
     minimum: { left: 35, bottom: 40, right: 10, top: 40, margin: 10 } as Offset,
-    intervention: { left: 100, bottom: 40, right: 10, top: 40, margin: 10 } as Offset
+    intervention: { left: 120, bottom: 40, right: 10, top: 40, margin: 10 } as Offset
 };
 
 export const CELL_SAVER_TICKS = ["0", "0-1h", "1h-2h", "2h-3h", "3h-4h", "4h-5h", "5h-6h", "6h-7h", "7h-8h", "8h-9h", "9h-1k", "1k+"];
