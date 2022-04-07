@@ -1,6 +1,7 @@
 import ast
 import os
 import logging
+import csv
 
 from collections import Counter, defaultdict
 from django.http import (
@@ -1112,3 +1113,33 @@ def state_unids(request):
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} state_unids User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
+
+@conditional_login_required(
+    login_required,
+    os.getenv("REQUIRE_LOGINS") == "True"
+)
+def surgeon_anest_names(request):
+    if request.method == "GET":
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: surgeon_names Params: none User: {request.user}")
+
+        # Import the mappings between surgeon ID and name
+        surgeon_mapping = {}
+
+        with open("SURGEON_LOOKUP_040422.csv", "r") as file:
+            read_csv = csv.reader(file, delimiter=",")
+            for row in read_csv:
+                surgeon_mapping[row[0]] = row[1]
+
+        # Import the mappings between anesthesiologist ID and name
+        anest_mapping = {}
+
+        with open("ANESTH_LOOKUP_040422.csv", "r") as file:
+            read_csv = csv.reader(file, delimiter=",")
+            for row in read_csv:
+                anest_mapping[row[0]] = row[1]
+
+        response = {"surgeon": surgeon_mapping, "anest": anest_mapping}
+        return JsonResponse(response)
+    else:
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} surgeon_names User: {request.user}")
+        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
