@@ -1092,7 +1092,7 @@ def state_unids(request):
     if request.method == "GET":
         state_name = request.GET.get('state_name')
 
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: state_permissions Params: state_name = {state_name} User: {request.user}")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} POST: state_unids Params: state_name = {state_name} User: {request.user}")
 
         try:
             state = State.objects.get(name=state_name)  # username = uid
@@ -1109,5 +1109,6 @@ def state_unids(request):
 
         return JsonResponse(response)
     else:
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} state_permissions User: {request.user}")
-        return HttpResponseNotAllowed(["POST"], "Method Not Allowed")
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} state_unids User: {request.user}")
+        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
+
