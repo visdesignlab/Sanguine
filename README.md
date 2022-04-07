@@ -49,6 +49,11 @@ Link the systemd service files to the correct place for the user
 sudo systemctl status api.service
 sudo systemctl start api.service
 
+ln -s ../ANESTH_LOOKUP_040422.csv backend/api/ANESTH_LOOKUP_040422.csv
+ln -s ../SURGEON_LOOKUP_040422.csv backend/api/SURGEON_LOOKUP_040422.csv
+ln -s ../data_dictionary.csv backend/api/data_dictionary.csv
+ln -s ../cpt_codes_cleaned.csv backend/api/cpt_codes_cleaned.csv
+
 # Start/restart the frontend
 cd frontend
 /usr/bin/scl enable rh-nodejs10 -- npm run build
