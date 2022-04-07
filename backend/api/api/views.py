@@ -193,7 +193,7 @@ def fetch_surgery(request):
             return HttpResponseBadRequest("case_id must be supplied.")
 
         command = f"""
-        with 
+        with
             codes as (
                 SELECT
                     BLNG.{FIELDS_IN_USE.get('visit_no')} || ', ' || BLNG.{FIELDS_IN_USE.get('procedure_dtm')} as comb,
@@ -202,7 +202,7 @@ def fetch_surgery(request):
                 group by {FIELDS_IN_USE.get('visit_no')} || ', ' || {FIELDS_IN_USE.get('procedure_dtm')}
             ),
             surg_cases as (
-                SELECT 
+                SELECT
                     TO_CHAR(SURG.{FIELDS_IN_USE.get('visit_no')}) || ', ' || TO_CHAR(SURG.{FIELDS_IN_USE.get('case_date')}) as comb,
                     SURG.{FIELDS_IN_USE.get('case_id')},
                     SURG.{FIELDS_IN_USE.get('visit_no')},
@@ -420,7 +420,7 @@ def request_transfused_units(request):
 
             # Enable group by
             with_case_group = f"GROUP BY {FIELDS_IN_USE.get('case_id')}"
-        
+
 
         # Build the sql query
         # Safe to use format strings since there are limited options for
@@ -437,7 +437,7 @@ def request_transfused_units(request):
                 AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
             {with_case_group}
         )
-        
+
         SELECT
             LIMITED_SURG.{FIELDS_IN_USE.get('surgeon_id')},
             LIMITED_SURG.{FIELDS_IN_USE.get('anest_id')},
@@ -451,7 +451,7 @@ def request_transfused_units(request):
             WHERE {FIELDS_IN_USE.get('case_id')} IN (
                 SELECT {FIELDS_IN_USE.get('case_id')}
                 FROM CASE_IDS_WITH_CODE_COUNT
-                WHERE 
+                WHERE
                     {and_or_combinations_string}
             )
         ) LIMITED_SURG
@@ -608,7 +608,7 @@ def patient_outcomes(request):
             ]
             pat_filters_safe_sql = (
                 f"AND VST.{FIELDS_IN_USE.get('patient_id')} IN ({','.join(pat_bind_names)}) "
-                if patient_ids != [] 
+                if patient_ids != []
                 else ""
             )
         else:
@@ -1138,7 +1138,7 @@ def surgeon_anest_names(request):
             for row in read_csv:
                 anest_mapping[row[0]] = row[1]
 
-        response = {"surgeon": surgeon_mapping, "anest": anest_mapping}
+        response = {"SURGEON_ID": surgeon_mapping, "ANESTHESIOLOGIST_ID": anest_mapping}
         return JsonResponse(response)
     else:
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} surgeon_names User: {request.user}")

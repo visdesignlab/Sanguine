@@ -25,6 +25,7 @@ export class ProjectConfigStore {
     snackBarIsError: boolean;
     privateMode: boolean;
     stateToUpdate: string;
+    nameDictionary: any;
 
     constructor(rootstore: RootStore) {
         this.rootStore = rootstore;
@@ -49,13 +50,17 @@ export class ProjectConfigStore {
         this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0, PREOP_HGB: 0, POSTOP_HGB: 0 };
         this.stateToUpdate = "";
 
-
+        this.nameDictionary = {};
         this.savedState = [];
         makeAutoObservable(this);
     }
 
     checkIfInSavedState = (stateName: string) => {
         return this.savedState.includes(stateName);
+    };
+
+    updateNameDictionary = (newNameDictionary: any) => {
+        this.nameDictionary = newNameDictionary;
     };
 
     addNewState = (stateName: string) => {

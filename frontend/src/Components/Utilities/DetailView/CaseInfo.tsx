@@ -15,6 +15,14 @@ const CaseInfo: FC = () => {
     const styles = useStyles();
     const { currentSelectPatient } = store.state;
 
+    const swapName = (key: string, value: any) => {
+        if (store.configStore.nameDictionary[key] && store.configStore.privateMode) {
+            const name = store.configStore.nameDictionary[key][value];
+            return name ? `${name.slice(0, 1)}${name.slice(1).toLowerCase()}` : value;
+        }
+        return value as string;
+    };
+
     const generate_List_Items = () => {
         let result = [];
         if (individualInfo) {
@@ -22,7 +30,7 @@ const CaseInfo: FC = () => {
                 if (!HIPAA_Sensitive.has(key) || store.configStore.privateMode) {
                     result.push(
                         <ListItem>
-                            <ListItemText primary={AcronymDictionary[key] ? AcronymDictionary[key] : key} secondary={val as string} />
+                            <ListItemText primary={AcronymDictionary[key] ? AcronymDictionary[key] : key} secondary={swapName(key, val)} />
                         </ListItem>
                     );
                 }
@@ -32,7 +40,7 @@ const CaseInfo: FC = () => {
     };
 
     useEffect(() => {
-        async function fetchIndividualInformaiton () {
+        async function fetchIndividualInformaiton() {
 
             if (currentSelectPatient) {
                 stateUpdateWrapperUseJSON(individualInfo, null, setIndividualInfo);
