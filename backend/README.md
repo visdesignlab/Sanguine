@@ -213,8 +213,17 @@ There are several routes set up for accessing the patient and surgery data. Here
   - Description: Returns the owner of the workspace and all users with permissions. For users that are not the owner, this route returns their access level as 'RE' or 'WR'.
   - Example:
     ```
-    curl -X POST '127.0.0.1:8000/api/share_state' \ 
+    curl -X GET '127.0.0.1:8000/api/state_unids' \ 
       -F "state_name=example_state" 
+    ```
+
+- Name: `/api/surgeon_anest_names`
+  - Allowed Methods: `GET`
+  - Parameters: None
+  - Description: Returns the mapping between surgeon ID and name and anesthesiologist ID and name.
+  - Example:
+    ```
+    curl -X GET '127.0.0.1:8000/api/surgeon_anest_names'
     ```
 
 ## Data Dictionary
