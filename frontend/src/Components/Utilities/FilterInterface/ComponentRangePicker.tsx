@@ -1,6 +1,6 @@
 import { ListItem, ListItemText, Slider } from "@material-ui/core";
 import { observer } from "mobx-react";
-import { FC, useState, useContext, useEffect } from "react";
+import { FC, useState, useContext } from "react";
 import useDeepCompareEffect from "use-deep-compare-effect";
 import Store from "../../../Interfaces/Store";
 import { ManualInfinity } from "../../../Presets/Constants";
@@ -40,6 +40,16 @@ const ComponentRangePicker: FC<Props> = ({ label, isTestValue }: Props) => {
             <ListItemText primary={AcronymDictionary[label] ? AcronymDictionary[label] : label} secondary={<Slider
                 max={store.configStore.filterRange[label]}
                 min={0}
+                marks={[
+                    {
+                        value: 0,
+                        label: 0,
+                    },
+                    {
+                        value: store.configStore.filterRange[label],
+                        label: store.configStore.filterRange[label],
+                    }
+                ]}
                 valueLabelDisplay="auto"
                 aria-labelledby="range-slider"
                 value={rangeValue}
@@ -53,7 +63,6 @@ const ComponentRangePicker: FC<Props> = ({ label, isTestValue }: Props) => {
                 }}
                 onChange={(e, nV) => {
                     setRangeValue((nV as number[]));
-
                 }} />} />
 
 
