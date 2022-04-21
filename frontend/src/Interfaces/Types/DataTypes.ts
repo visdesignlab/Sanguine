@@ -64,6 +64,7 @@ export type SingleCasePoint = {
     IVIRON: number;
     SURGERY_TYPE: number;
     TOTAL_LOS: number;
+    RENAL_FAILURE: number;
     [key: string]: number | string;
 };
 export type ScatterDataPoint = {

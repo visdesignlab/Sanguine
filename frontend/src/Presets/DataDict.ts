@@ -13,10 +13,11 @@ export const OutcomeOptions = [
     { value: "STROKE", key: "STROKE", text: "Stroke" },
     { value: "ECMO", key: "ECMO", text: "ECMO" },
     { value: "B12", key: "B12", text: "B12" },
+    { value: 'RENAL_FAILURE', key: 'RENAL_FAILURE', text: 'Renal Failure' },
     { value: "TXA", key: "TXA", text: "Tranexamic Acid" },
     { value: "AMICAR", key: "AMICAR", text: "Amicar" }];
 
-export const OutcomeOptionsStringArray = ["DEATH", "VENT", "STROKE", "ECMO", "B12", "TXA", "AMICAR", "ORALIRON", "IVIRON"];
+export const OutcomeOptionsStringArray = ["DEATH", "VENT", "STROKE", "ECMO", "B12", "TXA", "AMICAR", "ORALIRON", "IVIRON", "RENAL_FAILURE"];
 
 export const BloodComponentStringArray = ['PRBC_UNITS', 'FFP_UNITS', 'PLT_UNITS', 'CRYO_UNITS', 'CELL_SAVER_ML'];
 
@@ -49,6 +50,7 @@ export const typeDiction = ["COST", "DUMBBELL", "SCATTER", "HEATMAP", "INTERVENT
 export const SurgeryUrgencyArray = ["Urgent", "Elective", "Emergent"];
 
 export const AcronymDictionary: any = {
+    RENAL_FAILURE: 'Renal Failure',
     CABG: "Coronary Artery Bypass Grafting",
     TAVR: "Transcatheter Aortic Valve Replacement",
     VAD: "Ventricular Assist Devices",
@@ -80,7 +82,9 @@ export const AcronymDictionary: any = {
     POSTOP_HGB: "Postoperative Hemoglobin Value",
     DRG_WEIGHT: "Diagnosis-related Group Weight",
     COST: "Blood Component Cost per Case",
-    TOTAL_LOS: "Total Length of Stay"
+    TOTAL_LOS: "Total Length of Stay",
+    ORALIRON: 'Oral Iron',
+    IVIRON: 'IV Iron',
 };
 
 export const HIPAA_Sensitive = new Set([

@@ -112,6 +112,7 @@ const App: FC = () => {
                     riskOutcomeDict[obj.visit_no].TXA = obj.tranexamic_acid || 0;
                     riskOutcomeDict[obj.visit_no].ORALIRON = obj.oral_iron || 0;
                     riskOutcomeDict[obj.visit_no].IVIRON = obj.iv_iron || 0;
+                    riskOutcomeDict[obj.visit_no].RENAL_FAILURE = obj.renal_failure || 0;
                 }
 
                 let transfused_dict = {} as any;
@@ -193,7 +194,8 @@ const App: FC = () => {
                             IVIRON: riskOutcomeDict[ob.VISIT_ID].IVIRON,
                             AMICAR: riskOutcomeDict[ob.VISIT_ID].AMICAR,
                             SURGERY_TYPE: SurgeryUrgencyArray.indexOf(ob.SURGERY_TYPE),
-                            TOTAL_LOS: riskOutcomeDict[ob.VISIT_ID].TOTAL_LOS || 0
+                            TOTAL_LOS: riskOutcomeDict[ob.VISIT_ID].TOTAL_LOS || 0,
+                            RENAL_FAILURE: riskOutcomeDict[ob.VISIT_ID].RENAL_FAILURE,
                         };
                         cacheData.push(outputObj);
                     }

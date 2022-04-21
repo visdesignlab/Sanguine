@@ -41,7 +41,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
                 case "ECMO":
                 case "STROKE":
                 case "AMICAR":
-                case "B12":
+                case "RENAL_FAILURE":
                 case "TXA":
                     newExtraPairData.push(outcomeDataGenerate(aggregatedBy, variable, variable, data, hemoglobinDataSet));
                     break;

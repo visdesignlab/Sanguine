@@ -39,7 +39,7 @@ const ComparisonLegend: FC<Props> = ({ outcomeComparison, dimensionWidth, interv
                 textAnchor={"start"}
                 fontSize={store.configStore.largeFont ? largeFontSize : regularFontSize}
                 fill={"black"}>
-                {` ${interventionDate ? `Pre Intervene` : `True`} ${firstTotal}/${firstTotal + secondTotal}`}
+                {` ${interventionDate ? `Pre Intervene` : `True`} ${secondTotal}/${firstTotal + secondTotal}`}
             </text>
             <text
                 x={0.2 * (dimensionWidth) + DifferentialSquareWidth + 1}
@@ -48,7 +48,7 @@ const ComparisonLegend: FC<Props> = ({ outcomeComparison, dimensionWidth, interv
                 textAnchor={"start"}
                 fontSize={store.configStore.largeFont ? largeFontSize : regularFontSize}
                 fill={"black"}>
-                {`${interventionDate ? `Post Intervene` : `False`} ${secondTotal}/${firstTotal + secondTotal}`}
+                {`${interventionDate ? `Post Intervene` : `False`} ${firstTotal}/${firstTotal + secondTotal}`}
             </text>
         </g>
         <foreignObject x={0.0 * (dimensionWidth)} y={0} width={0.2 * dimensionWidth} height={currentOffset.top}>
