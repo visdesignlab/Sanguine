@@ -24,7 +24,7 @@ class StateAccess(models.Model):
     state = models.ForeignKey(State, on_delete=models.CASCADE)
     user = models.CharField(max_length=128)
     role = models.CharField(
-        max_length=2,
+        max_length=6,
         choices=AccessLevel.choices(),
         default=AccessLevel.READER,
     )
