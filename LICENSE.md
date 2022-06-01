@@ -1,6 +1,6 @@
 BSD 3-Clause License
 
-Copyright (c) 2022, Visualization Design Lab
+Copyright (c) 2022, University of Utah
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
