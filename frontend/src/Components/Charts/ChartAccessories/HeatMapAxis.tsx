@@ -30,7 +30,7 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
 
     const valueScale = useCallback(() => {
         return ValueScaleGeneratorFromDomainRange(valueScaleDomain, valueScaleRange, isValueScaleBand);
-    }, [valueScaleDomain, valueScaleRange]);
+    }, [valueScaleDomain, valueScaleRange, isValueScaleBand]);
 
     const svgSelection = select(svg.current);
     const aggregationLabel = axisLeft(aggregationScale());
