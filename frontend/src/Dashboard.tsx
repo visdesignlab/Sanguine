@@ -15,6 +15,7 @@ import { Alert } from "@material-ui/lab";
 import Store from "./Interfaces/Store";
 import { SnackBarCloseTime } from "./Presets/Constants";
 import TabPanel from "./Components/Utilities/TabPanel";
+import WrapperSankey from "./Components/Charts/Sankey/WrapperSankey";
 
 
 const Dashboard: FC = () => {
@@ -59,7 +60,7 @@ const Dashboard: FC = () => {
                         value={tabValue}
                         index={1}
                         children={
-                            <div>stuff here</div>
+                            <WrapperSankey />
                         }
                         styling={undefined} />
                 </Grid>
