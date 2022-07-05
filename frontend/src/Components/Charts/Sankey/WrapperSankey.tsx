@@ -219,14 +219,15 @@ const WrapperSankey: FC<Props> = () => {
                     ))}
                 </DragDropContext>
             </div>
-            <Chart
-                width={700}
-                height={'350px'}
+            {sankeyData.length > 1 ? <Chart
+                width={1000}
+                height={'600px'}
                 chartType="Sankey"
                 loader={<div>Loading Chart</div>}
                 data={sankeyData}
                 rootProps={{ 'data-testid': '1' }}
-            />
+            /> : <></>}
+
         </div>
     );
 };
