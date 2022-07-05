@@ -49,7 +49,7 @@ const WrapperSankey: FC<Props> = () => {
     // with the first element being the attribute selected, and second element not selected
     const [attributeOptions, setAttributeOptions] = useState([[], OutcomeOptions]);
 
-    function onDragEnd(result: DropResult) {
+    const onDragEnd = (result: DropResult) => {
         const { source, destination } = result;
 
         // dropped outside the list
@@ -58,7 +58,6 @@ const WrapperSankey: FC<Props> = () => {
         }
         const sInd = +source.droppableId;
         const dInd = +destination.droppableId;
-
         const newState = [...attributeOptions];
         if (sInd === dInd) {
             const items = reorder(attributeOptions[sInd], source.index, destination.index);
@@ -66,14 +65,13 @@ const WrapperSankey: FC<Props> = () => {
 
         } else {
             const result = move(attributeOptions[sInd], attributeOptions[dInd], source, destination);
-
             newState[sInd] = result[sInd];
             newState[dInd] = result[dInd];
-
-
         }
         setAttributeOptions(newState);
-    }
+
+        //TODO next step: assembling data for the sankey
+    };
     const styles = useStyles();
 
 
@@ -101,7 +99,10 @@ const WrapperSankey: FC<Props> = () => {
                                             index={index}
                                         >
                                             {(provided, snapshot) => (
-                                                <Chip label={item.text} ref={provided.innerRef}
+                                                <Chip
+                                                    label={item.text}
+                                                    clickable
+                                                    ref={provided.innerRef}
                                                     {...provided.draggableProps}
                                                     {...provided.dragHandleProps} />
 
