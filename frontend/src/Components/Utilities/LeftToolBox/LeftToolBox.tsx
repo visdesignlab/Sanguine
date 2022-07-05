@@ -65,7 +65,7 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
 
     return (
 
-        <Grid spacing={2}>
+        <Grid >
             <Tabs value={tabValue}
                 onChange={handleChange}
                 indicatorColor="primary"
