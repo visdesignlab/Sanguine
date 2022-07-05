@@ -28,6 +28,7 @@
         "node-sass": "^7.0.0",
         "pdfast": "^0.2.0",
         "react": "^17.0.2",
+        "react-beautiful-dnd": "^13.1.0",
         "react-dom": "^17.0.2",
         "react-google-charts": "^4.0.0",
         "react-grid-layout": "^1.2.5",
@@ -60,6 +61,7 @@
         ]
     },
     "devDependencies": {
-        "@types/node": "^15.14.1"
+        "@types/node": "^15.14.1",
+        "@types/react-beautiful-dnd": "^13.1.2"
     }
 }
