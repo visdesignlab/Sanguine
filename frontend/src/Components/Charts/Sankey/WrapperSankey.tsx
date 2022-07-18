@@ -1,10 +1,8 @@
 import { Chip } from "@material-ui/core";
 import { observer } from "mobx-react";
-import { FC, useContext, useEffect, useLayoutEffect, useState } from "react";
+import { FC, useContext, useEffect, useState } from "react";
 import Chart from 'react-google-charts';
 import { DragDropContext, Draggable, DraggableLocation, Droppable, DropResult } from 'react-beautiful-dnd';
-
-import { BloodComponentOptions, OutcomeOptions } from "../../../Presets/DataDict";
 import { DropdownInputTypes } from "../../../Interfaces/Types/DropdownInputType";
 import { useStyles } from "../../../Presets/StyledComponents";
 import { DataContext } from "../../../App";
@@ -21,17 +19,6 @@ type Props = {
 
 
 const WrapperSankey: FC<Props> = () => {
-
-    // const sankeyData = [
-    //     ['From', 'To', 'Weight'],
-    //     ['A', 'X', 5],
-    //     ['A', 'Y', 7],
-    //     ['A', 'Z', 6],
-    //     ['B', 'X', 2],
-    //     ['B', 'Y', 9],
-    //     ['B', 'Z', 4],
-    //     ['X', 'C', 2]
-    // ];
 
     const styles = useStyles();
     const hemoData = useContext(DataContext);
@@ -179,7 +166,7 @@ const WrapperSankey: FC<Props> = () => {
 
 
     return (
-        <div className="container mt-5">
+        <div style={{ minHeight: 800, width: "100%", padding: 10 }}>
             <div>
                 <DragDropContext onDragEnd={onDragEnd}>
                     {attributeOptions.map((options, ind) => (
@@ -219,15 +206,16 @@ const WrapperSankey: FC<Props> = () => {
                     ))}
                 </DragDropContext>
             </div>
-            {sankeyData.length > 1 ? <Chart
-                width={1000}
-                height={'600px'}
-                chartType="Sankey"
-                loader={<div>Loading Chart</div>}
-                data={sankeyData}
-                rootProps={{ 'data-testid': '1' }}
-            /> : <></>}
-
+            <div >
+                {sankeyData.length > 1 ? <Chart
+                    width={1000}
+                    height={'600px'}
+                    chartType="Sankey"
+                    loader={<div>Loading Chart</div>}
+                    data={sankeyData}
+                    rootProps={{ 'data-testid': '1' }}
+                /> : <></>}
+            </div>
         </div>
     );
 };
