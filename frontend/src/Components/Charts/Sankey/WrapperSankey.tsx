@@ -1,4 +1,4 @@
-import { Chip } from "@material-ui/core";
+import { Chip, Typography } from "@material-ui/core";
 import { observer } from "mobx-react";
 import { FC, useContext, useEffect, useState } from "react";
 import Chart from 'react-google-charts';
@@ -167,7 +167,10 @@ const WrapperSankey: FC<Props> = () => {
 
     return (
         <div style={{ minHeight: 800, width: "100%", padding: 10 }}>
-            <div>
+            <Typography className={`${styles.centerAlignment}`} variant="h6">
+                Outcome, Transfusion, and Result Distribution
+            </Typography>
+            <div style={{ paddingTop: 5 }}>
                 <DragDropContext onDragEnd={onDragEnd}>
                     {attributeOptions.map((options, ind) => (
                         <Droppable
@@ -206,16 +209,17 @@ const WrapperSankey: FC<Props> = () => {
                     ))}
                 </DragDropContext>
             </div>
-            <div >
-                {sankeyData.length > 1 ? <Chart
-                    width={1000}
+            {sankeyData.length > 0 ?
+                <Chart
+                    width={'1000px'}
                     height={'600px'}
                     chartType="Sankey"
                     loader={<div>Loading Chart</div>}
                     data={sankeyData}
                     rootProps={{ 'data-testid': '1' }}
-                /> : <></>}
-            </div>
+                />
+                : <></>}
+
         </div>
     );
 };
