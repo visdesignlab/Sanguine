@@ -30,7 +30,7 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
 
     const valueScale = useCallback(() => {
         return ValueScaleGeneratorFromDomainRange(valueScaleDomain, valueScaleRange, isValueScaleBand);
-    }, [valueScaleDomain, valueScaleRange]);
+    }, [valueScaleDomain, valueScaleRange, isValueScaleBand]);
 
     const svgSelection = select(svg.current);
     const aggregationLabel = axisLeft(aggregationScale());
@@ -100,12 +100,13 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
             AcronymDictionary[xAggregationOption] ? AcronymDictionary[xAggregationOption] : xAggregationOption
         );
 
-    return (<g className="axes">
-        <g className="x-axis"></g>
-        <g className="y-axis"></g>
-        <text className="x-label" />
-        <text className="y-label" />
-    </g>);
+    return (
+        <g className="axes">
+            <g className="x-axis"></g>
+            <g className="y-axis"></g>
+            <text className="x-label" />
+            <text className="y-label" />
+        </g>);
 };
 
 export default observer(HeatMapAxis);
