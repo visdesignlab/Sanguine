@@ -19,7 +19,6 @@ import { useStyles } from "../../../Presets/StyledComponents";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import ChartStandardButtons from "../ChartStandardButtons";
-import { AcronymDictionary } from "../../../Presets/DataDict";
 import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
 
 type Props = {
