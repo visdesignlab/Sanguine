@@ -214,6 +214,7 @@ const WrapperSankey: FC<Props> = () => {
                     width={'1000px'}
                     height={'600px'}
                     chartType="Sankey"
+                    options={{ sankey: { iterations: 0 } }}
                     loader={<div>Loading Chart</div>}
                     data={sankeyData}
                     rootProps={{ 'data-testid': '1' }}
