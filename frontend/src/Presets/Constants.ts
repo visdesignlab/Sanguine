@@ -42,6 +42,7 @@ export const BloodProductGroup: { [key: string]: number[]; } = {
   FFP_UNITS: [0, 3, 6],
   CRYO_UNITS: [0, 1, 2, 3],
   PLT_UNITS: [0, 2, 5],
+  CELL_SAVER_ML: [0, 400, 800]
 };
 
 export const ExtraPairLimit = 5;
