@@ -7,7 +7,7 @@ import { DropdownInputTypes } from "../../../Interfaces/Types/DropdownInputType"
 import { useStyles } from "../../../Presets/StyledComponents";
 import { DataContext } from "../../../App";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
-import { BloodProductCap, BloodProductGroup, ManualInfinity } from "../../../Presets/Constants";
+import { BloodProductGroup, ManualInfinity } from "../../../Presets/Constants";
 import { min, max } from "d3";
 
 type Props = {
@@ -94,7 +94,7 @@ const WrapperSankey: FC<Props> = () => {
     const sankeyObj: any = {};
 
     const allOptions = attributeOptions[0].map(({ key }) => {
-      if (!BloodProductCap[key]) {
+      if (!BloodProductGroup[key]) {
         return [key, ['true', 'false']];
       } else {
         return [key, BloodProductGroup[key].map((d, i) => {
@@ -135,18 +135,18 @@ const WrapperSankey: FC<Props> = () => {
 
           const nextKey = attributeOptions[0][index + 1]['key'];
 
-          if (BloodProductCap[key]) {
+          if (BloodProductGroup[key]) {
             // Add grouping of units
             // easiest case: the units is bigger than all grouping
 
-            // from = singleCase[key] < BloodProductCap[key] ? `${key}-${singleCase[key]}` : `${key}-${BloodProductCap[key]}+`;
+            // from = singleCase[key] < BloodProductGroup[key] ? `${key}-${singleCase[key]}` : `${key}-${BloodProductGroup[key]}+`;
             from = findBloodGroup(singleCase[key] as number, key);
           } else {
             from = singleCase[key] ? `${key}-true` : `${key}-false`;
           }
-          if (BloodProductCap[nextKey]) {
+          if (BloodProductGroup[nextKey]) {
             // Add grouping of units
-            // to = singleCase[nextKey] < BloodProductCap[nextKey] ? `${nextKey}-${singleCase[nextKey]}` : `${nextKey}-${BloodProductCap[nextKey]}+`;
+            // to = singleCase[nextKey] < BloodProductGroup[nextKey] ? `${nextKey}-${singleCase[nextKey]}` : `${nextKey}-${BloodProductGroup[nextKey]}+`;
             to = findBloodGroup(singleCase[nextKey] as number, nextKey);
           } else {
             to = singleCase[nextKey] ? `${nextKey}-true` : `${nextKey}-false`;
