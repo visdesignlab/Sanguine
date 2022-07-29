@@ -20,67 +20,71 @@ import WrapperSankey from "./Components/Charts/Sankey/WrapperSankey";
 
 const Dashboard: FC = () => {
 
-    const hemoData = useContext(DataContext);
-    const store = useContext(Store);
-    const [tabValue, setTabValue] = useState(0);
+  const hemoData = useContext(DataContext);
+  const store = useContext(Store);
+  const [tabValue, setTabValue] = useState(0);
 
-    const handleChange = (event: any, newValue: any) => {
-        setTabValue(newValue);
-    };
+  const handleChange = (event: any, newValue: any) => {
+    setTabValue(newValue);
+  };
 
 
-    return (
-        <div>
-            <Box id="Top-Bar">
-                <RegularModeMenu />
-            </Box>
+  return (
+    <div>
+      <Box id="Top-Bar">
+        <RegularModeMenu />
+      </Box>
 
-            <Grid container direction="row" >
-                <Grid item xs={2} id="Side-Bar">
-                    <LeftToolBox totalCaseNum={hemoData.length} />
+      <Grid container direction="row" >
+        <Grid item xs={2} id="Side-Bar">
+          <LeftToolBox totalCaseNum={hemoData.length} />
+        </Grid>
+        <Divider orientation="vertical" flexItem style={{ marginRight: "-1px" }} />
+        <Grid item xs={10} >
+          <Tabs value={tabValue}
+            onChange={handleChange}
+            indicatorColor="primary"
+            textColor="primary"
+            centered>
+            <Tab label="Main Dashboard" />
+            <Tab label="Sankey" />
+          </Tabs>
+          <TabPanel
+            value={tabValue}
+            index={0}
+            children={
+              <Grid container direction="row">
+                <Grid item xs={9}>
+                  <LayoutGenerator />
                 </Grid>
                 <Divider orientation="vertical" flexItem style={{ marginRight: "-1px" }} />
-                <Grid item xs={8} id="Main-Body">
-                    <Tabs value={tabValue}
-                        onChange={handleChange}
-                        indicatorColor="primary"
-                        textColor="primary"
-                        centered>
-                        <Tab label="Main Dashboard" />
-                        <Tab label="Sankey" />
-                    </Tabs>
-                    <TabPanel
-                        value={tabValue}
-                        index={0}
-                        children={
-                            <LayoutGenerator />
-                        }
-                        styling={undefined} />
-                    <TabPanel
-                        value={tabValue}
-                        index={1}
-                        children={
-                            <WrapperSankey />
-                        }
-                        styling={undefined} />
+                <Grid item xs={3}>
+                  <DetailView />
                 </Grid>
-                <Divider orientation="vertical" flexItem style={{ marginRight: "-1px" }} />
-                <Grid item xs={2}>
-                    <DetailView />
-                </Grid>
-            </Grid>
-            {(process.env.REACT_APP_REQUIRE_LOGIN === "true") ?
-                <>
-                    <BrowserWarning />
-                    <DataRetrieval />
-                </> : <></>}
+              </Grid>
+            }
+            styling={undefined} />
+          <TabPanel
+            value={tabValue}
+            index={1}
+            children={
+              <WrapperSankey />
+            }
+            styling={undefined} />
+        </Grid>
+      </Grid>
+      {(process.env.REACT_APP_REQUIRE_LOGIN === "true") ?
+        <>
+          <BrowserWarning />
+          <DataRetrieval />
+        </> : <></>}
 
-            <Snackbar open={store.configStore.openSnackBar} autoHideDuration={SnackBarCloseTime} onClose={() => { store.configStore.openSnackBar = false; }}>
-                <Alert onClose={() => { store.configStore.openSnackBar = false; }} severity={store.configStore.snackBarIsError ? "error" : "success"}>
-                    {store.configStore.snackBarMessage}
-                </Alert>
-            </Snackbar>
-        </div>
-    );
+      <Snackbar open={store.configStore.openSnackBar} autoHideDuration={SnackBarCloseTime} onClose={() => { store.configStore.openSnackBar = false; }}>
+        <Alert onClose={() => { store.configStore.openSnackBar = false; }} severity={store.configStore.snackBarIsError ? "error" : "success"}>
+          {store.configStore.snackBarMessage}
+        </Alert>
+      </Snackbar>
+    </div>
+  );
 };
 export default observer(Dashboard);
