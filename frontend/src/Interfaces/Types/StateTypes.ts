@@ -1,4 +1,4 @@
-import { ProcedureEntry, SingleCasePoint } from "./DataTypes";
+import { FilterType, ProcedureEntry, SingleCasePoint } from "./DataTypes";
 import { LayoutElement } from "./LayoutTypes";
 import { SelectSet } from "./SelectionTypes";
 
@@ -19,6 +19,5 @@ export type ApplicationState = {
     nextAddingIndex: number;
     layoutArray: LayoutElement[];
     currentSelectPatient: SingleCasePoint | null;
-    bloodComponentFilter: any;
-    testValueFilter: any;
+    allFilters: FilterType;
 };

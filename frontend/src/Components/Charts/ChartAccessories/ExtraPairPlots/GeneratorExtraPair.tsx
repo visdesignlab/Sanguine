@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import styled from "styled-components";
 import { max, format } from "d3";
 import { ExtraPairPoint } from "../../../../Interfaces/Types/DataTypes";
-import { Basic_Gray, ExtraPairPadding, ExtraPairWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, largeFontSize, OffsetDict, regularFontSize } from "../../../../Presets/Constants";
+import { Basic_Gray, ExtraPairPadding, ExtraPairWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, largeFontSize, ManualInfinity, OffsetDict, regularFontSize } from "../../../../Presets/Constants";
 import { AcronymDictionary } from "../../../../Presets/DataDict";
 import { useContext } from "react";
 import Store from "../../../../Interfaces/Store";
@@ -39,7 +39,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
                 spacing = ExtraPairWidth.Basic;
                 break;
             case "Violin":
-                explanation = nameInput === "RISK" ? `Scaled 0-30` : (`Scaled 0-18, line at ${nameInput === "Preop HGB" ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD}`);
+                explanation = nameInput === "DRG_WEIGHT" ? `Scaled 0-30` : (`Scaled 0-18, line at ${nameInput === "Preop HGB" ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD}`);
                 spacing = ExtraPairWidth.Violin;
                 break;
             case "Bar":
@@ -97,6 +97,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
                             kdeMax={calculatedKdeMax}
                             dataSet={pairData.data}
                             name={pairData.name}
+                            valueMax={pairData.valueMax ? pairData.valueMax : ManualInfinity}
                             secondaryDataSet={temporarySecondary ? temporarySecondary[index].data : undefined}
                             secondaryMedianSet={temporarySecondary ? temporarySecondary[index].medianSet : undefined}
                         />

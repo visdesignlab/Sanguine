@@ -264,7 +264,7 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
             <Menu anchorEl={anchorEl} open={open}
                 onClose={handleClose}
             >
-                {BloodComponentOptions.map((bOption) => (
+                {BloodComponentOptions().map((bOption) => (
                     <MenuItem key={bOption.key} onClick={() => {
                         store.configStore.openCostInputModal = true;
                         setBloodCostToChange(bOption.value);

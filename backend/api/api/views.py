@@ -33,6 +33,7 @@ from api.utils import (
 
 DE_IDENT_FIELDS = {
     "admin_dose": "ADMIN_DOSE",
+    "admission_dtm": "DI_ADM_DTM",
     "anest_id": "ANESTH_PROV_DWID",
     "apr_drg_weight": "APR_DRG_WEIGHT",
     "apr_drg_code": "APR_DRG_CODE",
@@ -45,6 +46,7 @@ DE_IDENT_FIELDS = {
     "case_id": "DI_CASE_ID",
     "code_desc": "CODE_DESC",
     "death_date": "DI_DEATH_DATE",
+    "discharge_dtm": "DI_DSCH_DTM",
     "dose_unit_desc": "DOSE_UNIT_DESC",
     "draw_dtm": "DI_DRAW_DTM",
     "ethnicity_code": "ETHNICITY_CODE",
@@ -59,6 +61,7 @@ DE_IDENT_FIELDS = {
     "procedure_dtm": "DI_PROC_DTM",
     "race_code": "RACE_CODE",
     "race_desc": "RACE_DESC",
+    "ref_lower_limit": "REF_LOWER_LIMIT",
     "result_code": "RESULT_CODE",
     "result_desc": "RESULT_DESC",
     "result_dtm": "DI_RESULT_DTM",
@@ -558,7 +561,8 @@ def risk_score(request):
             {FIELDS_IN_USE.get('apr_drg_code')},
             {FIELDS_IN_USE.get('apr_drg_desc')},
             {FIELDS_IN_USE.get('apr_drg_rom')},
-            {FIELDS_IN_USE.get('apr_drg_soi')}
+            {FIELDS_IN_USE.get('apr_drg_soi')},
+            round({FIELDS_IN_USE.get('discharge_dtm')} - {FIELDS_IN_USE.get('admission_dtm')})
         FROM
             {TABLES_IN_USE.get('visit')}
         WHERE 1=1
@@ -580,6 +584,7 @@ def risk_score(request):
                 "apr_drg_desc": row[4],
                 "apr_drg_rom": row[5],
                 "apr_drg_soi": row[6],
+                "total_los": row[7],
             })
 
         return JsonResponse(result_list, safe=False)
@@ -617,43 +622,7 @@ def patient_outcomes(request):
 
         # Define the sql command
         command = f"""
-        SELECT
-            VST.{FIELDS_IN_USE.get('patient_id')},
-            VST.{FIELDS_IN_USE.get('visit_no')},
-            CASE WHEN TOTAL_VENT_MINS > 1440 THEN 1 ELSE 0 END AS VENT_1440,
-            CASE WHEN PAT_EXPIRED = 'Y' THEN 1 ELSE 0 END AS PAT_DEATH,
-            BLNG_OUTCOMES.STROKE,
-            BLNG_OUTCOMES.ECMO,
-            MEDS.TRANEXAMIC_ACID,
-            MEDS.AMICAR,
-            MEDS.B12,
-            MEDS.WARFARIN,
-            MEDS.DABIGATRAN,
-            MEDS.RIVAROXABAN,
-            MEDS.APIXABAN,
-            MEDS.HEPARIN,
-            MEDS.FONDAPARINUX,
-            MEDS.BIVALIRUDIN,
-            MEDS.CLOPIDOGREL,
-            MEDS.TICAGRELOR,
-            MEDS.IRON_ORAL,
-            MEDS.IRON_IV,
-            CASE
-                WHEN MEDS.WARFARIN = 1
-                OR MEDS.DABIGATRAN = 1
-                OR MEDS.RIVAROXABAN = 1
-                OR MEDS.APIXABAN = 1
-                OR MEDS.HEPARIN = 1
-                OR MEDS.FONDAPARINUX = 1
-                OR MEDS.BIVALIRUDIN = 1
-            THEN 1 ELSE 0 END AS ANTICOAGULENT,
-            CASE
-                WHEN MEDS.CLOPIDOGREL = 1
-                OR MEDS.TICAGRELOR = 1
-            THEN 1 ELSE 0 END AS ANTI_PLATELET
-        FROM
-            {TABLES_IN_USE.get('visit')} VST
-        LEFT JOIN (
+        WITH BLNG_OUTCOMES AS (
             SELECT
                 {FIELDS_IN_USE.get('patient_id')},
                 {FIELDS_IN_USE.get('visit_no')},
@@ -662,9 +631,9 @@ def patient_outcomes(request):
             FROM {TABLES_IN_USE.get('billing_codes')}
             WHERE {FIELDS_IN_USE.get('present_on_adm')} IS NULL
             GROUP BY {FIELDS_IN_USE.get('patient_id')}, {FIELDS_IN_USE.get('visit_no')}
-        ) BLNG_OUTCOMES
-            ON VST.{FIELDS_IN_USE.get('patient_id')} = BLNG_OUTCOMES.{FIELDS_IN_USE.get('patient_id')} AND VST.{FIELDS_IN_USE.get('visit_no')} = BLNG_OUTCOMES.{FIELDS_IN_USE.get('visit_no')}
-        LEFT JOIN (
+        ),
+
+        MEDS AS (
             SELECT
                 {FIELDS_IN_USE.get('patient_id')},
                 {FIELDS_IN_USE.get('visit_no')},
@@ -703,8 +672,67 @@ def patient_outcomes(request):
                     FROM {TABLES_IN_USE.get('extraop_meds')}
                 ))
             GROUP BY {FIELDS_IN_USE.get('patient_id')}, {FIELDS_IN_USE.get('visit_no')}
-        ) MEDS
+        ),
+
+        LABS AS (
+            SELECT
+                {FIELDS_IN_USE.get('patient_id')},
+                {FIELDS_IN_USE.get('visit_no')},
+                CASE WHEN SUM(CASE WHEN {FIELDS_IN_USE.get('result_desc')} = 'Creatinine, Serum or Plasma' AND TO_NUMBER({FIELDS_IN_USE.get('result_value')}) > 4 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS RENAL_FAILURE,
+                CASE WHEN SUM(CASE WHEN {FIELDS_IN_USE.get('result_desc')} = 'Ferritin' AND TO_NUMBER({FIELDS_IN_USE.get('result_value')}) < {FIELDS_IN_USE.get('ref_lower_limit')} THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS LOW_FERRITIN
+            FROM {TABLES_IN_USE.get('visit_labs')}
+            WHERE REGEXP_LIKE ({FIELDS_IN_USE.get('result_value')},'^-?\d+(\.\d+)?$') -- result is a number (allows us to use TO_NUMBER above)
+                AND (
+                    {FIELDS_IN_USE.get('result_desc')} = 'Creatinine, Serum or Plasma' 
+                    OR {FIELDS_IN_USE.get('result_desc')} = 'Ferritin' 
+                )
+            GROUP BY {FIELDS_IN_USE.get('patient_id')}, {FIELDS_IN_USE.get('visit_no')}
+        )
+
+        SELECT
+            VST.{FIELDS_IN_USE.get('patient_id')},
+            VST.{FIELDS_IN_USE.get('visit_no')},
+            CASE WHEN TOTAL_VENT_MINS > 1440 THEN 1 ELSE 0 END AS VENT_1440,
+            CASE WHEN PAT_EXPIRED = 'Y' THEN 1 ELSE 0 END AS PAT_DEATH,
+            BLNG_OUTCOMES.STROKE,
+            BLNG_OUTCOMES.ECMO,
+            MEDS.TRANEXAMIC_ACID,
+            MEDS.AMICAR,
+            MEDS.B12,
+            MEDS.WARFARIN,
+            MEDS.DABIGATRAN,
+            MEDS.RIVAROXABAN,
+            MEDS.APIXABAN,
+            MEDS.HEPARIN,
+            MEDS.FONDAPARINUX,
+            MEDS.BIVALIRUDIN,
+            MEDS.CLOPIDOGREL,
+            MEDS.TICAGRELOR,
+            MEDS.IRON_ORAL,
+            MEDS.IRON_IV,
+            CASE
+                WHEN MEDS.WARFARIN = 1
+                OR MEDS.DABIGATRAN = 1
+                OR MEDS.RIVAROXABAN = 1
+                OR MEDS.APIXABAN = 1
+                OR MEDS.HEPARIN = 1
+                OR MEDS.FONDAPARINUX = 1
+                OR MEDS.BIVALIRUDIN = 1
+            THEN 1 ELSE 0 END AS ANTICOAGULANT,
+            CASE
+                WHEN MEDS.CLOPIDOGREL = 1
+                OR MEDS.TICAGRELOR = 1
+            THEN 1 ELSE 0 END AS ANTIPLATELET,
+            LABS.RENAL_FAILURE,
+            LABS.LOW_FERRITIN
+        FROM
+            {TABLES_IN_USE.get('visit')} VST
+        LEFT JOIN BLNG_OUTCOMES
+            ON VST.{FIELDS_IN_USE.get('patient_id')} = BLNG_OUTCOMES.{FIELDS_IN_USE.get('patient_id')} AND VST.{FIELDS_IN_USE.get('visit_no')} = BLNG_OUTCOMES.{FIELDS_IN_USE.get('visit_no')}
+        LEFT JOIN  MEDS
             ON VST.{FIELDS_IN_USE.get('patient_id')} = MEDS.{FIELDS_IN_USE.get('patient_id')} AND VST.{FIELDS_IN_USE.get('visit_no')} = MEDS.{FIELDS_IN_USE.get('visit_no')}
+        LEFT JOIN  LABS
+            ON VST.{FIELDS_IN_USE.get('patient_id')} = LABS.{FIELDS_IN_USE.get('patient_id')} AND VST.{FIELDS_IN_USE.get('visit_no')} = LABS.{FIELDS_IN_USE.get('visit_no')}
         WHERE 1=1
             {pat_filters_safe_sql}
         """
@@ -726,6 +754,11 @@ def patient_outcomes(request):
                 "tranexamic_acid": row[6],
                 "AMICAR": row[7],
                 "B12": row[8],
+                "oral_iron": row[18],
+                "iv_iron": row[19],
+                "anticoagulant": row[20],
+                "antiplatelet": row[21],
+                "renal_failure": row[22],
             })
 
         return JsonResponse(result_list, safe=False)

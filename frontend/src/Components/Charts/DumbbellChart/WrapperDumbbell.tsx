@@ -108,6 +108,7 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
                         return new_ob;
                     }
                 }
+                return undefined;
             });
             let filteredDataOutput = (dataOutput.filter((d) => d)) as DumbbellDataPoint[];
             store.chartStore.totalIndividualCaseCount = caseCount;

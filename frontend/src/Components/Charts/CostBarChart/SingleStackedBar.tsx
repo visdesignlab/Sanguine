@@ -5,7 +5,7 @@ import { FC, useCallback, useContext } from "react";
 import Store from "../../../Interfaces/Store";
 import { CostBarChartDataPoint } from "../../../Interfaces/Types/DataTypes";
 import { colorProfile } from "../../../Presets/Constants";
-import { BloodComponentOptions } from "../../../Presets/DataDict";
+import { BloodComponentStringArray } from "../../../Presets/DataDict";
 
 interface OwnProps {
     dataPoint: CostBarChartDataPoint;
@@ -37,7 +37,7 @@ const SingleStackedBar: FC<Props> = ({ howToTransform, dataPoint, showPotential,
         if (!costMode) {
             outputElements = dataPoint.dataArray.map((point, index) => {
                 return (
-                    <Tooltip title={`${BloodComponentOptions[index].key}: ${costMode ? format("$.2f")(point) : format(".4r")(point)}`}>
+                    <Tooltip title={`${BloodComponentStringArray[index]}: ${costMode ? format("$.2f")(point) : format(".4r")(point)}`}>
                         <rect
                             x={valueScale()(sum(dataPoint.dataArray.slice(0, index)))}
                             transform={howToTransform}
@@ -51,7 +51,7 @@ const SingleStackedBar: FC<Props> = ({ howToTransform, dataPoint, showPotential,
         else {
             outputElements = dataPoint.dataArray.slice(0, 4).map((point, index) => {
                 return (
-                    <Tooltip title={`${BloodComponentOptions[index].key}: ${costMode ? format("$.2f")(point) : format(".4r")(point)}`}>
+                    <Tooltip title={`${BloodComponentStringArray[index]}: ${costMode ? format("$.2f")(point) : format(".4r")(point)}`}>
                         <rect
                             x={valueScale()(sum(dataPoint.dataArray.slice(0, index)))}
                             transform={howToTransform}

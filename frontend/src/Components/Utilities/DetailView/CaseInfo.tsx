@@ -73,6 +73,7 @@ const CaseInfo: FC = () => {
         }
         fetchIndividualInformaiton();
 
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentSelectPatient]);
     return (<Container className={styles.containerWidth} style={{ height: "80vh", padding: "1px", visibility: currentSelectPatient ? "visible" : "hidden" }}>
 

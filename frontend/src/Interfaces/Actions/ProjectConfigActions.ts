@@ -32,28 +32,22 @@ export const changeSurgeryUrgencySelection = createAction<ApplicationState, [[bo
     state.surgeryUrgencySelection = surgeryUrgencyInput;
 }).setLabel("changeUrgency");
 
-export const changeBloodFilter = createAction<ApplicationState, [string, number[]], ActionEvents>((state, bloodComponentName, newRange) => {
-    state.bloodComponentFilter[bloodComponentName] = newRange;
-}).setLabel("changeBloodFilter");
 
-export const resetBloodFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
-    state.bloodComponentFilter = defaultState.bloodComponentFilter;
-}).setLabel("resetBloodFilter");
+export const changeFilter = createAction<ApplicationState, [string, [number, number]], ActionEvents>((state, filterName, newRange) => {
+    state.allFilters[filterName] = newRange;
+}).setLabel("changeFilter");
 
-export const changeTestValueFilter = createAction<ApplicationState, [string, number[]], ActionEvents>((state, testName, newRange) => {
-    state.testValueFilter[testName] = newRange;
-}).setLabel("changeTestValueFilter");
-
-export const resetTestValueFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
-    state.testValueFilter = defaultState.testValueFilter;
-}).setLabel("resetTestValueFilter");
+export const resetSelectedFilter = createAction<ApplicationState, [string[]], ActionEvents>((state, filterNames) => {
+    filterNames.forEach((d) => {
+        state.allFilters[d] = defaultState.allFilters[d];
+    });
+}).setLabel("resetSelectedFilter");
 
 export const clearAllFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
     state.currentSelectPatientGroup = [];
     state.currentOutputFilterSet = [];
     state.rawDateRange = defaultState.rawDateRange;
     state.outcomeFilter = [];
-    state.testValueFilter = defaultState.testValueFilter;
-    state.bloodComponentFilter = defaultState.bloodComponentFilter;
+    state.allFilters = defaultState.allFilters;
     state.surgeryUrgencySelection = defaultState.surgeryUrgencySelection;
 }).setLabel("clearAllFilter");
