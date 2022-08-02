@@ -61,6 +61,7 @@ DE_IDENT_FIELDS = {
     "procedure_dtm": "DI_PROC_DTM",
     "race_code": "RACE_CODE",
     "race_desc": "RACE_DESC",
+    "ref_lower_limit": "REF_LOWER_LIMIT",
     "result_code": "RESULT_CODE",
     "result_desc": "RESULT_DESC",
     "result_dtm": "DI_RESULT_DTM",
@@ -677,9 +678,14 @@ def patient_outcomes(request):
             SELECT
                 {FIELDS_IN_USE.get('patient_id')},
                 {FIELDS_IN_USE.get('visit_no')},
-                CASE WHEN SUM(CASE WHEN TO_NUMBER({FIELDS_IN_USE.get('result_value')}) > 4 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS RENAL_FAILURE
+                CASE WHEN SUM(CASE WHEN {FIELDS_IN_USE.get('result_desc')} = 'Creatinine, Serum or Plasma' AND TO_NUMBER({FIELDS_IN_USE.get('result_value')}) > 4 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS RENAL_FAILURE,
+                CASE WHEN SUM(CASE WHEN {FIELDS_IN_USE.get('result_desc')} = 'Ferritin' AND TO_NUMBER({FIELDS_IN_USE.get('result_value')}) < {FIELDS_IN_USE.get('ref_lower_limit')} THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS LOW_FERRITIN
             FROM {TABLES_IN_USE.get('visit_labs')}
-            WHERE REGEXP_LIKE ({FIELDS_IN_USE.get('result_value')},'^-?\d+(\.\d+)?$') AND {FIELDS_IN_USE.get('result_desc')} = 'Creatinine, Serum or Plasma' 
+            WHERE REGEXP_LIKE ({FIELDS_IN_USE.get('result_value')},'^-?\d+(\.\d+)?$') -- result is a number (allows us to use TO_NUMBER above)
+                AND (
+                    {FIELDS_IN_USE.get('result_desc')} = 'Creatinine, Serum or Plasma' 
+                    OR {FIELDS_IN_USE.get('result_desc')} = 'Ferritin' 
+                )
             GROUP BY {FIELDS_IN_USE.get('patient_id')}, {FIELDS_IN_USE.get('visit_no')}
         )
 
@@ -717,7 +723,8 @@ def patient_outcomes(request):
                 WHEN MEDS.CLOPIDOGREL = 1
                 OR MEDS.TICAGRELOR = 1
             THEN 1 ELSE 0 END AS ANTIPLATELET,
-            LABS.RENAL_FAILURE
+            LABS.RENAL_FAILURE,
+            LABS.LOW_FERRITIN
         FROM
             {TABLES_IN_USE.get('visit')} VST
         LEFT JOIN BLNG_OUTCOMES
