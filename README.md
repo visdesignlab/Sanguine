@@ -56,6 +56,7 @@ ln -s ../cpt_codes_cleaned.csv backend/api/cpt_codes_cleaned.csv
 
 # Start/restart the frontend
 cd frontend
+/usr/bin/scl enable rh-nodejs10 -- npm install
 /usr/bin/scl enable rh-nodejs10 -- npm run build
 sudo /usr/bin/rsync -av /uufs/chpc.utah.edu/common/HIPAA/IRB_00124248/deployed-app/bloodvis/frontend/build/* /var/www/html
 sudo /usr/bin/chown -R apache. /var/www/html
