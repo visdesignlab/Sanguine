@@ -99,8 +99,10 @@ const App: FC = () => {
                 const resOutcome = await fetch(`${process.env.REACT_APP_QUERY_URL}patient_outcomes`);
                 const dataOutcome = await resOutcome.json();
 
-                // console.log('patient');
-                // console.log(dataOutcome);
+                const nameDictFetch = await fetch(`${process.env.REACT_APP_QUERY_URL}surgeon_anest_names`);
+                const nameDict = await nameDictFetch.json();
+
+                store.configStore.updateNameDictionary(nameDict);
 
                 for (let obj of dataOutcome) {
                     riskOutcomeDict[obj.visit_no].VENT = obj.gr_than_1440_vent || 0;

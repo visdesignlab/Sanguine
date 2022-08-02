@@ -30,7 +30,7 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
 
     const valueScale = useCallback(() => {
         return ValueScaleGeneratorFromDomainRange(valueScaleDomain, valueScaleRange, isValueScaleBand);
-    }, [isValueScaleBand, valueScaleDomain, valueScaleRange]);
+    }, [valueScaleDomain, valueScaleRange, isValueScaleBand]);
 
     const svgSelection = select(svg.current);
     const aggregationLabel = axisLeft(aggregationScale());
@@ -51,6 +51,13 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
         .selectAll("text")
         .attr("font-size", store.configStore.largeFont ? largeFontSize : regularFontSize)
         .attr("transform", `translate(-${CaseRectWidth + 2},0)`)
+        .text((d: any) => {
+            if (store.configStore.nameDictionary[xAggregationOption] && store.configStore.privateMode) {
+                const name = store.configStore.nameDictionary[xAggregationOption][d];
+                return name ? `${name.slice(0, 1)}${name.slice(1).toLowerCase()}` : d;
+            }
+            return d;
+        })
         .attr("cursor", "pointer")
         .on("click", (e, d: any) => {
             store.selectionStore.selectSet(xAggregationOption, d.toString(), !e.shiftKey);
@@ -93,12 +100,13 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
             AcronymDictionary[xAggregationOption] ? AcronymDictionary[xAggregationOption] : xAggregationOption
         );
 
-    return (<g className="axes">
-        <g className="x-axis"></g>
-        <g className="y-axis"></g>
-        <text className="x-label" />
-        <text className="y-label" />
-    </g>);
+    return (
+        <g className="axes">
+            <g className="x-axis"></g>
+            <g className="y-axis"></g>
+            <text className="x-label" />
+            <text className="y-label" />
+        </g>);
 };
 
 export default observer(HeatMapAxis);
