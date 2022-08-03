@@ -1,8 +1,8 @@
+import styled from "@emotion/styled";
 import { axisBottom, axisLeft, brush, deviation, mean, range, scaleBand, scaleLinear, select } from "d3";
 import { observer } from "mobx-react";
 import { useContext } from "react";
 import { FC, useCallback, useEffect, useState } from "react";
-import styled from "styled-components";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
 import { ScatterDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";

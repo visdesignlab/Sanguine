@@ -1,3 +1,4 @@
+import { Tooltip } from "@mui/material";
 import { format, interpolateGreys, interpolateReds, ScaleBand } from "d3";
 import { observer } from "mobx-react";
 import { FC, useCallback, useContext } from "react";
@@ -6,7 +7,6 @@ import Store from "../../../Interfaces/Store";
 import { HeatMapDataPoint } from "../../../Interfaces/Types/DataTypes";
 import { Basic_Gray } from "../../../Presets/Constants";
 import { HeatMapRect } from "../../../Presets/StyledSVGComponents";
-import Tooltip from '@material-ui/core/Tooltip';
 
 
 type Props = {
@@ -47,7 +47,7 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                                 key={dataPoint.aggregateAttribute + '-' + point}
                                 placement="top"
                                 hidden={output === 0}
-                                interactive>
+                            >
 
                                 <HeatMapRect
                                     fill={colorFill}

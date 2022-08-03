@@ -1,9 +1,10 @@
-import { Container, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, ListSubheader } from "@mui/material";
+import { IconButton, List, ListItem, ListItemSecondaryAction, ListItemText } from "@mui/material";
 import { FC, useContext } from "react";
 import Store from "../../../Interfaces/Store";
 import CloseIcon from '@mui/icons-material/Close';
 import { observer } from "mobx-react";
 import styled from '@emotion/styled';
+import { CaseListSubheader, UtilityContainer } from "../../../Presets/StyledComponents";
 
 
 const CaseList: FC = () => {
@@ -12,11 +13,11 @@ const CaseList: FC = () => {
     const { currentBrushedPatientGroup, currentSelectPatient } = store.state;
 
 
-    return (<Container className={styles.containerWidth} style={{ height: "15vh", paddingTop: "0.5px" }} >
+    return (<UtilityContainer style={{ height: "15vh", paddingTop: "0.5px" }} >
 
         <List dense>
 
-            <ListSubheader className={styles.subheader}>
+            <CaseListSubheader>
 
                 <ListItemText primary={`Selected Cases`} />
                 <ListItemSecondaryAction>
@@ -28,7 +29,7 @@ const CaseList: FC = () => {
                         <CloseIcon />
                     </IconButton>
                 </ListItemSecondaryAction>
-            </ListSubheader>
+            </CaseListSubheader>
 
             {currentBrushedPatientGroup.map(d => {
                 return (
@@ -46,7 +47,7 @@ const CaseList: FC = () => {
             })}
 
         </List>
-    </Container>);
+    </UtilityContainer>);
 };
 export default observer(CaseList);
 

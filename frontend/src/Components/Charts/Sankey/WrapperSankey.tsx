@@ -1,3 +1,4 @@
+/** @jsxImportSource @emotion/react */
 import { Chip, Typography } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useContext, useEffect, useState } from "react";
@@ -8,16 +9,10 @@ import { DataContext } from "../../../App";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import { BloodProductCap } from "../../../Presets/Constants";
 import { range } from "d3-array";
+import { allCss } from "../../../Presets/StyledComponents";
 
 
-
-type Props = {
-
-};
-
-
-
-const WrapperSankey: FC<Props> = () => {
+const WrapperSankey: FC = () => {
 
     const hemoData = useContext(DataContext);
 
@@ -165,7 +160,7 @@ const WrapperSankey: FC<Props> = () => {
 
     return (
         <div style={{ minHeight: 800, width: "100%", padding: 10 }}>
-            <Typography className={`${styles.centerAlignment}`} variant="h6">
+            <Typography style={{ textAlign: 'center' }} variant="h6">
                 Outcome, Transfusion, and Result Distribution
             </Typography>
             <div style={{ paddingTop: 5 }}>
@@ -177,7 +172,7 @@ const WrapperSankey: FC<Props> = () => {
                             droppableId={`${ind}`}>
                             {(provided, snapshot) => (
                                 <div ref={provided.innerRef}
-                                    className={styles.root}
+                                    css={allCss.root}
                                     style={{ display: "flex", minHeight: '40px' }}
                                     {...provided.droppableProps}
                                 >
@@ -207,18 +202,20 @@ const WrapperSankey: FC<Props> = () => {
                     ))}
                 </DragDropContext>
             </div>
-            {sankeyData.length > 0 ?
-                <Chart
-                    width={'1000px'}
-                    height={'600px'}
-                    chartType="Sankey"
-                    loader={<div>Loading Chart</div>}
-                    data={sankeyData}
-                    rootProps={{ 'data-testid': '1' }}
-                />
-                : <></>}
+            {
+                sankeyData.length > 0 ?
+                    <Chart
+                        width={'1000px'}
+                        height={'600px'}
+                        chartType="Sankey"
+                        loader={<div>Loading Chart</div>}
+                        data={sankeyData}
+                        rootProps={{ 'data-testid': '1' }}
+                    />
+                    : <></>
+            }
 
-        </div>
+        </div >
     );
 };
 
