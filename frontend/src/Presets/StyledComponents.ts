@@ -1,6 +1,6 @@
 
 import { Basic_Gray, Third_Gray } from "./Constants";
-import { Container, ListSubheader } from "@mui/material";
+import { Chip, Container, ListSubheader } from "@mui/material";
 import styled from "@emotion/styled";
 import { css } from '@emotion/react';
 
@@ -39,6 +39,10 @@ export const SurgeryDiv = styled.td`
     overflow: visible;
   }
 `;
+
+export const FilterChip = styled(Chip)({
+    margin: '3px'
+});
 
 export const ChartWrapperContainer = styled(Container)({
     height: "100%!important"

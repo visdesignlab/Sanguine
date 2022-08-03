@@ -81,23 +81,26 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         return <>
 
             <CenterAlignedDiv>
-                <StyledFormControl required={titleOneRequied} >
-                    <InputLabel style={{ whiteSpace: "nowrap" }}>{titleOne}{titleOneRequied ? "" : " (Optional)"}</InputLabel>
+                <StyledFormControl variant="standard" required={titleOneRequied} >
+                    <InputLabel
+                    // style={{ whiteSpace: "nowrap" }}
+                    >{titleOne}{titleOneRequied ? "" : " (Optional)"}</InputLabel>
                     <Select
+                        value={yValueSelection}
+                        label={`${titleOne}${titleOneRequied ? "" : " (Optional)"}`}
                         onChange={(e) => { setYValueSelection(e.target.value as string); }}>
                         {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][0] : [], !titleOneRequied)}
                     </Select>
                 </StyledFormControl>
-
             </CenterAlignedDiv>
-
-            {/* <Divider orientation="vertical" flexItem /> */}
 
 
             <CenterAlignedDiv>
-                <StyledFormControl required >
+                <StyledFormControl required variant="standard" >
                     <InputLabel>{titleTwo}</InputLabel>
                     <Select
+                        label={titleTwo}
+                        value={xAggreSelection}
                         onChange={(e) => { setXAggreSelection(e.target.value as string); }}>
                         {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][1] : [])}
                     </Select>
@@ -128,9 +131,12 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         <>
 
             <CenterAlignedDiv>
-                <StyledFormControl disabled={interventionDate ? true : false} >
+                <StyledFormControl variant="standard" disabled={interventionDate ? true : false} >
                     <InputLabel>Outcome (Optional)</InputLabel>
-                    <Select onChange={(e) => { setOutcomeComparisonSelection(e.target.value as string); }}
+                    <Select
+                        value={outcomeComparisonSelection}
+                        label='Outcome (Optional)'
+                        onChange={(e) => { setOutcomeComparisonSelection(e.target.value as string); }}
                     >
                         {DropdownGenerator(OutcomeOptions, true)}
                     </Select>
@@ -142,7 +148,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                     <DesktopDatePicker
                         inputFormat="MM/dd/yyyy"
-                        renderInput={(params) => <TextField {...params} />}
+                        renderInput={(params) => <TextField style={{ minWidth: '250px' }} variant="standard" {...params} />}
                         label="Comparison Date (Optional)"
                         minDate={store.state.rawDateRange[0]}
                         maxDate={store.state.rawDateRange[1]}
@@ -185,6 +191,6 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
 export default observer(AddModeTopMenu);
 
 const StyledFormControl = styled(FormControl)({
-    margin: '1rem',
+    // margin: '1rem',
     minWidth: "200px!important",
 });

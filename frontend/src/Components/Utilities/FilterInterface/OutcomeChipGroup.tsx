@@ -1,10 +1,9 @@
-/** @jsxImportSource @emotion/react */
 import { Box, Chip } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useContext } from "react";
 import Store from "../../../Interfaces/Store";
 import { OutcomeOptions } from "../../../Presets/DataDict";
-import { allCss } from "../../../Presets/StyledComponents";
+import { FilterChip } from "../../../Presets/StyledComponents";
 
 
 const OutcomeChipGroup: FC = () => {
@@ -19,9 +18,10 @@ const OutcomeChipGroup: FC = () => {
         }
     };
 
-    return (<Box css={allCss.root}>
+    return (<Box>
         {OutcomeOptions.map((d) => (
-            <Chip
+            <FilterChip
+                style={{ margin: '3px' }}
                 label={d.text}
                 key={d.key}
                 clickable
