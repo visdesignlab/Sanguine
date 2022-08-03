@@ -1,4 +1,5 @@
-import { Container, Grid } from "@material-ui/core";
+/** @jsxImportSource @emotion/react */
+import { Container, Grid } from "@mui/material";
 import { axisTop, scaleLinear, select } from "d3";
 import { observer } from "mobx-react";
 import { useCallback, useContext, useEffect } from "react";
@@ -6,8 +7,7 @@ import { FC, useLayoutEffect, useRef, useState } from "react";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
 import { ProcedureEntry } from "../../../Interfaces/Types/DataTypes";
-import { SurgeryDiv, SurgeryListComp, SurgeryNumText, useStyles } from "../../../Presets/StyledComponents";
-import { ListSVG, SurgeryRect } from "../../../Presets/StyledSVGComponents";
+import { allCss } from "../../../Presets/StyledComponents";
 import SurgeryRow from "./SurgeryRow";
 
 type Props = {
@@ -22,7 +22,7 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
     const [itemUnselected, setItemUnselected] = useState<ProcedureEntry[]>([]);
     const [expandedList, setExpandedList] = useState<string[]>([]);
 
-    const styles = useStyles();
+
 
     const caseScale = useCallback(() => {
         const caseScale = scaleLinear().domain([0, maxCaseCount]).range([2, 0.3 * width - 15]);
@@ -83,8 +83,8 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
         return false;
     };
 
-    return <Grid item className={styles.gridWidth}>
-        <Container ref={surgeryViewRef} style={{ height: "30vh" }} className={styles.containerWidth} >
+    return <Grid item css={allCss.gridWidth}>
+        <Container ref={surgeryViewRef} style={{ height: "30vh" }} css={allCss.containerWidth} >
             <table style={{ width: "100%", tableLayout: "fixed" }}>
                 <colgroup>
                     <col span={1} style={{ width: "60%" }} />

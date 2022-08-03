@@ -1,8 +1,8 @@
 
-import styled from "styled-components";
-import { Basic_Gray, drawerWidth, postop_color, preop_color, Third_Gray } from "./Constants";
-import ListItem from '@material-ui/core/ListItem';
-import { makeStyles, Theme, createStyles } from "@material-ui/core";
+import { Basic_Gray, drawerWidth, Third_Gray } from "./Constants";
+import { makeStyles, Theme, createStyles, ListItem, Container } from "@mui/material";
+import styled from "@emotion/styled";
+import { css } from '@emotion/react';
 
 export const LayoutDiv = styled.div`
   width: 100vw;
@@ -19,6 +19,11 @@ export const SurgeryNumText = styled(`text`)`
 `;
 
 
+export const CenterAlignedDiv = styled.div({
+    textAlign: "center"
+});
+
+
 export const SurgeryDiv = styled.td`
   overflow: hidden;
   white-space: nowrap;
@@ -31,6 +36,14 @@ export const SurgeryDiv = styled.td`
   }
 `;
 
+export const ChartWrapperContainer = styled(Container)({
+    height: "100%!important"
+});
+
+export const ChartAccessoryDiv = styled.div({
+    textAlign: "right",
+    color: Basic_Gray
+});
 
 interface SurgeryListProps {
     isSelected: boolean;
@@ -44,10 +57,6 @@ export const SurgeryListComp = styled(`tr`) <SurgeryListProps>`
   }
 `;
 
-export const LeftToolBarListItem = styled(ListItem)`
-
-`;
-
 interface WelcomeTextProps {
     show: boolean;
 }
@@ -59,6 +68,53 @@ export const WelcomeText = styled(`text`) < WelcomeTextProps>`
     opacity:0.25;
     margin:20px;
 `;
+
+
+
+export const allCss = {
+    chartWrapper: {
+        height: "100%!important",
+    },
+    toolbarPaddingControl: css({
+        '& > *': {
+            paddingLeft: "6px",
+            paddingRight: "6px"
+        },
+    }),
+    tooltipFont: css({
+        fontSize: "small!important",
+        textAlign: "center",
+    }),
+    root: css({
+        '& > *': {
+            margin: '0.5rem',
+        },
+    }),
+    centerAlignment: css({
+        textAlign: "center"
+    }),
+    containerWidth: css({
+        width: "100%",
+        paddingLeft: "5px",
+        paddingRight: "5px",
+        maxWidth: "none",
+        overflow: "hidden",
+        height: "100%",
+        '&:hover': {
+            overflow: "overlay"
+        },
+    }),
+    gridWidth: css({
+        width: "inherit!important"
+    }),
+    subheader: css({
+        padding: "5px!important",
+        backgroundColor: "white!important"
+    }),
+    manualDisable: css({
+        color: "rgba(0, 0, 0, 0.26)"
+    })
+};
 
 export const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -140,37 +196,3 @@ export const useStyles = makeStyles((theme: Theme) =>
         }
     }),
 );
-
-export const useButtonStyles = makeStyles((theme: Theme) =>
-    createStyles({
-        preopButtonActive: {
-            fontSize: "xx-small!important",
-            backgroundColor: preop_color,
-            color: "white"
-        },
-        postopButtonActive: {
-            fontSize: "xx-small!important",
-            backgroundColor: postop_color,
-            color: "white"
-        },
-        gapButtonActive: {
-            fontSize: "xx-small!important",
-            backgroundColor: Basic_Gray,
-            color: "white"
-        },
-        preopButtonOutline: {
-            fontSize: "xx-small!important",
-            color: preop_color,
-            backgroundColor: "white"
-        },
-        postopButtonOutline: {
-            fontSize: "xx-small!important",
-            color: postop_color,
-            backgroundColor: "white"
-        },
-        gapButtonOutline: {
-            fontSize: "xx-small!important",
-            color: Basic_Gray,
-            backgroundColor: "white"
-        }
-    }));

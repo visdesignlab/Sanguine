@@ -1,18 +1,19 @@
-import { Button, DialogActions, DialogContent, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Tooltip } from "@material-ui/core";
-import { Dialog, DialogTitle } from "@material-ui/core";
+/** @jsxImportSource @emotion/react */
+import { Button, DialogActions, DialogContent, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Tooltip } from "@mui/material";
+import { Dialog, DialogTitle } from "@mui/material";
 import { FC, useContext, useState } from "react";
 import Store from "../../Interfaces/Store";
-import DeleteIcon from '@material-ui/icons/Delete';
-import ShareIcon from '@material-ui/icons/Share';
-import EditIcon from '@material-ui/icons/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ShareIcon from '@mui/icons-material/Share';
+import EditIcon from '@mui/icons-material/Edit';
 import { simulateAPIClick } from "../../Interfaces/UserManagement";
 import { observer } from "mobx-react";
 import StateAccessControl from "./StateAccessControl";
-import { useStyles } from "../../Presets/StyledComponents";
+import { allCss } from "../../Presets/StyledComponents";
 
 const ManageStateDialog: FC = () => {
     const store = useContext(Store);
-    const styles = useStyles();
+
     const [stateNameToChange, setStateNameToChange] = useState("");
 
 
@@ -76,17 +77,17 @@ const ManageStateDialog: FC = () => {
                                     store.configStore.stateToUpdate = d;
                                     store.configStore.openSaveStateDialog = true;
                                 }}>
-                                    <Tooltip title={<div>  <p className={styles.tooltipFont}>Edit State</p></div>}>
+                                    <Tooltip title={<div>  <p css={allCss.tooltipFont}>Edit State</p></div>}>
                                         <EditIcon />
                                     </Tooltip>
                                 </IconButton>
                                 <IconButton onClick={() => { changeStateAccess(d); }}>
-                                    <Tooltip title={<div>  <p className={styles.tooltipFont}>Manage Sharing</p></div>}>
+                                    <Tooltip title={<div>  <p css={allCss.tooltipFont}>Manage Sharing</p></div>}>
                                         <ShareIcon />
                                     </Tooltip>
                                 </IconButton>
                                 <IconButton onClick={() => { removeState(d); }}>
-                                    <Tooltip title={<div>  <p className={styles.tooltipFont}>Delete State</p></div>}>
+                                    <Tooltip title={<div>  <p css={allCss.tooltipFont}>Delete State</p></div>}>
                                         <DeleteIcon />
                                     </Tooltip>
                                 </IconButton>

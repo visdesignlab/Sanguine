@@ -1,18 +1,18 @@
-import { CircularProgress, Container, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, ListSubheader } from "@material-ui/core";
+import { CircularProgress, Container, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, ListSubheader } from "@mui/material";
 import { observer } from "mobx-react";
 import { useContext } from "react";
 import { FC, useEffect, useState } from "react";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
-import CloseIcon from '@material-ui/icons/Close';
+import CloseIcon from '@mui/icons-material/Close';
 import { AcronymDictionary, HIPAA_Sensitive, SurgeryUrgencyArray } from "../../../Presets/DataDict";
-import { useStyles } from "../../../Presets/StyledComponents";
+
 
 const CaseInfo: FC = () => {
 
     const [individualInfo, setIndividualInfo] = useState<any>(null);
     const store = useContext(Store);
-    const styles = useStyles();
+
     const { currentSelectPatient } = store.state;
 
     const swapName = (key: string, value: any) => {

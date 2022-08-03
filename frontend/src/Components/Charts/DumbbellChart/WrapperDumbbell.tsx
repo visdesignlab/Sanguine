@@ -1,4 +1,5 @@
-import { Button, ButtonGroup, Container, Grid } from "@material-ui/core";
+/** @jsxImportSource @emotion/react */
+import { Button, ButtonGroup, Grid } from "@mui/material";
 import axios from "axios";
 import { observer } from "mobx-react";
 import { FC, useContext, useLayoutEffect, useRef, useState } from "react";
@@ -8,8 +9,8 @@ import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
 import { DumbbellDataPoint } from "../../../Interfaces/Types/DataTypes";
 import { tokenCheckCancel } from "../../../Interfaces/UserManagement";
-import { BloodProductCap } from "../../../Presets/Constants";
-import { useButtonStyles, useStyles } from "../../../Presets/StyledComponents";
+import { Basic_Gray, BloodProductCap, postop_color, preop_color } from "../../../Presets/Constants";
+import { css } from '@emotion/react';
 import DumbbellChart from "./DumbbellChart";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
@@ -17,6 +18,7 @@ import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import useDeepCompareEffect from "use-deep-compare-effect";
 import ChartStandardButtons from "../ChartStandardButtons";
 import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
+import { allCss, ChartAccessoryDiv, ChartWrapperContainer } from "../../../Presets/StyledComponents";
 
 type Props = {
     xAggregationOption: string;
@@ -28,8 +30,6 @@ type Props = {
 const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartId, layoutH, layoutW }) => {
     const hemoData = useContext(DataContext);
     const store = useContext(Store);
-    const styles = useStyles();
-    const buttonStyles = useButtonStyles();
     const { proceduresSelection, showZero, rawDateRange } = store.state;
     const svgRef = useRef<SVGSVGElement>(null);
     const [width, setWidth] = useState(0);
@@ -123,7 +123,7 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
         });
     }, [rawDateRange, proceduresSelection, hemoData, xAggregationOption, showZero]);
 
-    return <Grid container direction="row" alignItems="center" className={styles.chartWrapper}>
+    return <Grid container direction="row" alignItems="center" css={allCss.chartWrapper}>
         <Grid item xs={1}>
 
             <div style={{ width: "max-content", padding: "2px" }}>Sort By</div>
@@ -131,17 +131,17 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
                 aria-label="small outlined button group"
                 orientation="vertical">
                 <Button
-                    className={sortMode === "Preop" ? buttonStyles.preopButtonActive : buttonStyles.preopButtonOutline}
+                    css={sortMode === "Preop" ? ButtonStyles.preopButtonActive : ButtonStyles.preopButtonOutline}
                     onClick={() => { setSortMode("Preop"); }}>
                     Preop
                 </Button>
                 <Button
-                    className={sortMode === "Postop" ? buttonStyles.postopButtonActive : buttonStyles.postopButtonOutline}
+                    css={sortMode === "Postop" ? ButtonStyles.postopButtonActive : ButtonStyles.postopButtonOutline}
                     onClick={() => { setSortMode("Postop"); }}>
                     Postop
                 </Button>
                 <Button
-                    className={sortMode === "Gap" ? buttonStyles.gapButtonActive : buttonStyles.gapButtonOutline}
+                    css={sortMode === "Gap" ? ButtonStyles.gapButtonActive : ButtonStyles.gapButtonOutline}
                     onClick={() => { setSortMode("Gap"); }}>
                     Gap
                 </Button>
@@ -149,26 +149,26 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
             <div style={{ width: "max-content", padding: "2px" }}>Show</div>
             <ButtonGroup size="small" orientation="vertical">
                 <Button
-                    className={showPreop ? buttonStyles.preopButtonActive : buttonStyles.preopButtonOutline}
+                    css={showPreop ? ButtonStyles.preopButtonActive : ButtonStyles.preopButtonOutline}
                     onClick={() => { setShowPreop(!showPreop); }}>
                     Preop
                 </Button>
                 <Button
-                    className={showPostop ? buttonStyles.postopButtonActive : buttonStyles.postopButtonOutline}
+                    css={showPostop ? ButtonStyles.postopButtonActive : ButtonStyles.postopButtonOutline}
                     onClick={() => { setShowPostop(!showPostop); }}>
                     Postop
                 </Button>
                 <Button
-                    className={showGap ? buttonStyles.gapButtonActive : buttonStyles.gapButtonOutline}
+                    css={showGap ? ButtonStyles.gapButtonActive : ButtonStyles.gapButtonOutline}
                     onClick={() => { setShowGap(!showGap); }}>
                     Gap
                 </Button>
             </ButtonGroup>
 
         </Grid>
-        <Grid item xs={11} className={styles.chartWrapper}>
-            <Container className={styles.chartWrapper}>
-                <div className={styles.chartAccessoryDiv}>
+        <Grid item xs={11} css={allCss.chartWrapper}>
+            <ChartWrapperContainer>
+                <ChartAccessoryDiv>
                     Dumbbell Chart
                     <ChartConfigMenu
                         xAggregationOption={xAggregationOption}
@@ -178,16 +178,50 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
                         requireOutcome={false}
                         requireSecondary={false} />
                     <ChartStandardButtons chartID={chartId} />
-                </div>
+                </ChartAccessoryDiv>
                 <ChartSVG ref={svgRef}>
 
                     <DumbbellChart data={data} svg={svgRef} showGap={showGap} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} valueToVisualize={xAggregationOption} dimensionWidth={width} dimensionHeight={height} xMin={xMin} xMax={xMax} />
 
                 </ChartSVG>
                 <AnnotationForm chartI={chartId} annotationText={annotationText} />
-            </Container>
+            </ChartWrapperContainer>
         </Grid>
     </Grid>;
 };
 
 export default observer(WrapperDumbbell);
+
+
+const ButtonStyles = {
+    preopButtonActive: css({
+        fontSize: "xx-small!important",
+        backgroundColor: preop_color,
+        color: "white"
+    }),
+    postopButtonActive: css({
+        fontSize: "xx-small!important",
+        backgroundColor: postop_color,
+        color: "white"
+    }),
+    gapButtonActive: css({
+        fontSize: "xx-small!important",
+        backgroundColor: Basic_Gray,
+        color: "white"
+    }),
+    preopButtonOutline: css({
+        fontSize: "xx-small!important",
+        color: preop_color,
+        backgroundColor: "white"
+    }),
+    postopButtonOutline: css({
+        fontSize: "xx-small!important",
+        color: postop_color,
+        backgroundColor: "white"
+    }),
+    gapButtonOutline: css({
+        fontSize: "xx-small!important",
+        color: Basic_Gray,
+        backgroundColor: "white"
+    })
+};

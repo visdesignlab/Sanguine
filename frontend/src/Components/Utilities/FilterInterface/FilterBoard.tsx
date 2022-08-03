@@ -1,6 +1,6 @@
-import { Button, Container, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Tooltip } from "@material-ui/core";
+import { Button, Container, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Tooltip } from "@mui/material";
 import DateFnsUtils from '@date-io/date-fns';
-import CloseIcon from '@material-ui/icons/Close';
+import CloseIcon from '@mui/icons-material/Close';
 import { MuiPickersUtilsProvider, KeyboardDatePicker } from "@material-ui/pickers";
 import { observer } from "mobx-react";
 import { FC, useContext, useState } from "react";
@@ -9,7 +9,7 @@ import Store from "../../../Interfaces/Store";
 import ComponentRangePicker from "./ComponentRangePicker";
 import { Title, useStyles } from "../../../Presets/StyledComponents";
 import { BloodComponentOptions, ScatterYOptions } from "../../../Presets/DataDict";
-import ReplayIcon from '@material-ui/icons/Replay';
+import ReplayIcon from '@mui/icons-material/Replay';
 import { defaultState } from "../../../Interfaces/DefaultState";
 import OutcomeChipGroup from "./OutcomeChipGroup";
 import SurgeryUrgencyChipGroup from "./SurgeryUrgencyChipGroup";
@@ -19,7 +19,7 @@ import { SelectSet } from "../../../Interfaces/Types/SelectionTypes";
 const FilterBoard: FC = () => {
 
     const store = useContext(Store);
-    const styles = useStyles();
+
     const { rawDateRange, outcomeFilter, surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet, bloodComponentFilter, testValueFilter } = store.state;
     const [beginDate, setBeginDate] = useState<number | null>(rawDateRange[0]);
     const [endDate, setEndDate] = useState<number | null>(rawDateRange[1]);

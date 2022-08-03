@@ -1,14 +1,14 @@
-import { Button, Menu, MenuItem } from "@material-ui/core";
+import { Button, Menu, MenuItem } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useEffect, useState, useContext } from "react";
 import NestedMenuItem from "material-ui-nested-menu-item";
 import Store from "../../../Interfaces/Store";
-import { useStyles } from "../../../Presets/StyledComponents";
+
 import ManageStateDialog from "../../Modals/ManageStateDialog";
 import SaveStateModal from "../../Modals/SaveStateModal";
 
 const StateManagementSuite: FC = () => {
-    const styles = useStyles();
+
     const store = useContext(Store);
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -24,7 +24,7 @@ const StateManagementSuite: FC = () => {
     };
     // // const [listOfSavedState, setListOfSavedState] = useState<string[]>([])
 
-    async function fetchSavedStates () {
+    async function fetchSavedStates() {
         fetch(`${process.env.REACT_APP_QUERY_URL}state`)
             .then(result => result.json())
             .then(result => {

@@ -1,4 +1,5 @@
-import { Container } from "@material-ui/core";
+/** @jsxImportSource @emotion/react */
+import { Container } from "@mui/material";
 import { observer } from "mobx-react";
 import { useContext } from "react";
 import { FC, useRef, useLayoutEffect } from "react";
@@ -7,7 +8,7 @@ import 'react-grid-layout/css/styles.css';
 import Store from "../Interfaces/Store";
 import { LayoutElement } from "../Interfaces/Types/LayoutTypes";
 import { typeDiction } from "../Presets/DataDict";
-import { useStyles, WelcomeText } from "../Presets/StyledComponents";
+import { allCss, WelcomeText } from "../Presets/StyledComponents";
 import WrapperCostBar from "./Charts/CostBarChart/WrapperCostBar";
 import WrapperDumbbell from "./Charts/DumbbellChart/WrapperDumbbell";
 import WrapperHeatMap from "./Charts/HeatMap/WrapperHeatMap";
@@ -16,7 +17,7 @@ import WrapperScatter from "./Charts/ScatterPlot/WrapperScatter";
 
 const LayoutGenerator: FC = () => {
     const store = useContext(Store);
-    const styles = useStyles();
+
 
     const createElement = (layout: LayoutElement, index: number) => {
         switch (layout.plotType) {
@@ -124,8 +125,8 @@ const LayoutGenerator: FC = () => {
 
 
     return (
-        <Container className={styles.containerWidth}>
-            <Container ref={tabRef} className={styles.containerWidth} style={{ height: "90vh" }}>
+        <Container css={allCss.containerWidth}>
+            <Container ref={tabRef} css={allCss.containerWidth} style={{ height: "90vh" }}>
 
                 <WelcomeText show={store.state.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
                 <Responsive
