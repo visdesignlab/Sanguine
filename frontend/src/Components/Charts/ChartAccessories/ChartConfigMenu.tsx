@@ -3,9 +3,9 @@ import { FC } from "react";
 
 import Store from "../../../Interfaces/Store";
 import { addOptions, OutcomeOptions, typeDiction } from "../../../Presets/DataDict";
-import SettingsIcon from '@material-ui/icons/Settings';
+import SettingsIcon from '@mui/icons-material/Settings';
 import NestedMenuItem from "material-ui-nested-menu-item";
-import { IconButton, Menu, MenuItem } from "@material-ui/core";
+import { IconButton, Menu, MenuItem } from "@mui/material";
 import { observer } from "mobx-react";
 
 

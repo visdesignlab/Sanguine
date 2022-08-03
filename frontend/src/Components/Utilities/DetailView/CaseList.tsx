@@ -1,16 +1,16 @@
-import { Container, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, ListSubheader } from "@material-ui/core";
+import { Container, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, ListSubheader } from "@mui/material";
 import { FC, useContext } from "react";
 import Store from "../../../Interfaces/Store";
-import styled from "styled-components";
-import CloseIcon from '@material-ui/icons/Close';
+import CloseIcon from '@mui/icons-material/Close';
 import { observer } from "mobx-react";
-import { useStyles } from "../../../Presets/StyledComponents";
+import styled from '@emotion/styled';
+
 
 const CaseList: FC = () => {
 
     const store = useContext(Store);
     const { currentBrushedPatientGroup, currentSelectPatient } = store.state;
-    const styles = useStyles();
+
 
     return (<Container className={styles.containerWidth} style={{ height: "15vh", paddingTop: "0.5px" }} >
 
@@ -32,7 +32,9 @@ const CaseList: FC = () => {
 
             {currentBrushedPatientGroup.map(d => {
                 return (
-                    <CaseItem button key={d.CASE_ID}
+                    <CaseItem
+                        // TODO check this
+                        key={d.CASE_ID}
                         isSelected={(currentSelectPatient && currentSelectPatient.CASE_ID === d.CASE_ID) || false}
                         onClick={() => { store.selectionStore.setCurrentSelectPatient(d); }}>
                         <ListItemText primary={

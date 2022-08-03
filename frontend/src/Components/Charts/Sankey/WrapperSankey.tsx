@@ -1,10 +1,9 @@
-import { Chip, Typography } from "@material-ui/core";
+import { Chip, Typography } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useContext, useEffect, useState } from "react";
 import Chart from 'react-google-charts';
 import { DragDropContext, Draggable, DraggableLocation, Droppable, DropResult } from 'react-beautiful-dnd';
 import { DropdownInputTypes } from "../../../Interfaces/Types/DropdownInputType";
-import { useStyles } from "../../../Presets/StyledComponents";
 import { DataContext } from "../../../App";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import { BloodProductCap } from "../../../Presets/Constants";
@@ -20,14 +19,13 @@ type Props = {
 
 const WrapperSankey: FC<Props> = () => {
 
-    const styles = useStyles();
     const hemoData = useContext(DataContext);
 
     const [sankeyData, updateSankeyData] = useState<(string | number)[][]>([]);
 
     /**
- * Moves an item from one list to another list.
- */
+  * Moves an item from one list to another list.
+  */
     const move = (source: DropdownInputTypes[], destination: DropdownInputTypes[], droppableSource: DraggableLocation, droppableDestination: DraggableLocation) => {
         const sourceClone = Array.from(source);
         const destClone = Array.from(destination);

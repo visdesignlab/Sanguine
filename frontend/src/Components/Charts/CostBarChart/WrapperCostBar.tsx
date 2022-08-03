@@ -1,4 +1,4 @@
-import { Container, FormControl, IconButton, Menu, MenuItem, Switch, Tooltip } from "@material-ui/core";
+import { FormControl, IconButton, Menu, MenuItem, Switch, Tooltip } from "@mui/material";
 import axios from "axios";
 import { sum } from "d3";
 import { observer } from "mobx-react";
@@ -10,18 +10,18 @@ import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
 import { CostBarChartDataPoint, ExtraPairPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
 import { ExtraPairPadding, ExtraPairWidth } from "../../../Presets/Constants";
-import { useStyles } from "../../../Presets/StyledComponents";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import ExtraPairButtons from "../ChartAccessories/ExtraPairButtons";
 import StackedBarChart from "./StackedBarChart";
-import HelpIcon from '@material-ui/icons/Help';
-import MonetizationOnIcon from '@material-ui/icons/MonetizationOn';
+import HelpIcon from '@mui/icons-material/Help';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import { BloodComponentOptions } from "../../../Presets/DataDict";
 import CostInputDialog from "../../Modals/CostInputDialog";
 import ChartStandardButtons from "../ChartStandardButtons";
 import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
+import { ChartAccessoryDiv, ChartWrapperContainer } from "../../../Presets/StyledComponents";
 
 type Props = {
     xAggregatedOption: string;
@@ -36,7 +36,7 @@ type Props = {
 const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggregatedOption, chartId, layoutH, layoutW, comparisonOption }: Props) => {
     const store = useContext(Store);
     const hemoData = useContext(DataContext);
-    const styles = useStyles();
+
     const { proceduresSelection, BloodProductCost, currentOutputFilterSet, rawDateRange } = store.state;
 
     const svgRef = useRef<SVGSVGElement>(null);
@@ -239,12 +239,12 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [proceduresSelection, rawDateRange, xAggregatedOption, currentOutputFilterSet, costMode, BloodProductCost, hemoData]);
 
-    return (<Container className={styles.chartWrapper}>
-        <div className={styles.chartAccessoryDiv}>
+    return (<ChartWrapperContainer>
+        <ChartAccessoryDiv>
             Cost and Saving Chart
             <FormControl style={{ verticalAlign: "middle" }}>
                 {/* <FormHelperText>Potential cost</FormHelperText> */}
-                <Tooltip title={<div>  <p className={styles.tooltipFont}>Show potential RBC cost without cell salvage</p> </div>}>
+                <Tooltip title='Show potential RBC cost without cell salvage'>
                     <Switch checked={showPotential} onChange={(e) => { setShowPotential(e.target.checked); }} />
                 </Tooltip>
             </FormControl>
@@ -256,7 +256,7 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
                 chartId={chartId}
                 requireOutcome={false}
                 requireSecondary={true} />
-            <Tooltip title={<div>  <p className={styles.tooltipFont}>Change blood component cost</p> </div>}>
+            <Tooltip title='Change blood component cost'>
                 <IconButton size="small" onClick={handleClick}>
                     <MonetizationOnIcon />
                 </IconButton>
@@ -273,13 +273,13 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
                 ))}
             </Menu>
             <IconButton size="small">
-                <Tooltip title={<div>  <p className={styles.tooltipFont}>Stacked bar chart on the right of the dashed line shows per case cost for each unit types. The bars on the left of the dashed line shows the potential cost on RBC if not using cell salvage.</p> </div>}>
+                <Tooltip title='Stacked bar chart on the right of the dashed line shows per case cost for each unit types. The bars on the left of the dashed line shows the potential cost on RBC if not using cell salvage.'>
                     <HelpIcon />
                 </Tooltip>
             </IconButton>
             <CostInputDialog bloodComponent={bloodCostToChange} />
             <ChartStandardButtons chartID={chartId} />
-        </div>
+        </ChartAccessoryDiv>
         <ChartSVG ref={svgRef}>
             <StackedBarChart
                 xAggregationOption={xAggregatedOption}
@@ -302,7 +302,7 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
 
         </ChartSVG>
         <AnnotationForm chartI={chartId} annotationText={annotationText} />
-    </Container>
+    </ChartWrapperContainer>
     );
 };
 

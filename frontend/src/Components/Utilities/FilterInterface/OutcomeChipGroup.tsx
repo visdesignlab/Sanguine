@@ -1,9 +1,11 @@
-import { Box, Chip } from "@material-ui/core";
+/** @jsxImportSource @emotion/react */
+import { Box, Chip } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useContext } from "react";
 import Store from "../../../Interfaces/Store";
 import { OutcomeOptions } from "../../../Presets/DataDict";
-import { useStyles } from "../../../Presets/StyledComponents";
+import { allCss } from "../../../Presets/StyledComponents";
+
 
 const OutcomeChipGroup: FC = () => {
     const store = useContext(Store);
@@ -17,7 +19,7 @@ const OutcomeChipGroup: FC = () => {
         }
     };
 
-    return (<Box className={useStyles().root}>
+    return (<Box css={allCss.root}>
         {OutcomeOptions.map((d) => (
             <Chip
                 label={d.text}

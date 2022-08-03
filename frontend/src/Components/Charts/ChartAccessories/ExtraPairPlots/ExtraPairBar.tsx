@@ -1,9 +1,8 @@
 import { FC, useCallback } from "react";
-
 import { scaleLinear, max, format, scaleBand } from "d3";
 import { ExtraPairWidth } from "../../../../Presets/Constants";
 import { observer } from "mobx-react";
-import { Tooltip } from "@material-ui/core";
+import { Tooltip } from "@mui/material";
 
 
 interface OwnProps {

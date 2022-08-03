@@ -1,8 +1,8 @@
-import { IconButton } from "@material-ui/core";
+import { IconButton } from "@mui/material";
 import { useContext } from "react";
 import { FC } from "react";
-import OpenWithIcon from '@material-ui/icons/OpenWith';
-import CloseIcon from '@material-ui/icons/Close';
+import OpenWithIcon from '@mui/icons-material/OpenWith';
+import CloseIcon from '@mui/icons-material/Close';
 
 import Store from "../../Interfaces/Store";
 type Props = {

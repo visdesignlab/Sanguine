@@ -1,7 +1,7 @@
-import { IconButton, Menu, MenuItem } from "@material-ui/core";
+import { IconButton, Menu, MenuItem } from "@mui/material";
 import { useContext } from "react";
 import { FC, useState } from "react";
-import InsertChartIcon from '@material-ui/icons/InsertChart';
+import InsertChartIcon from '@mui/icons-material/InsertChart';
 import Store from "../../../Interfaces/Store";
 import { ExtraPairOptions } from "../../../Presets/DataDict";
 import { ExtraPairLimit } from "../../../Presets/Constants";

@@ -1,23 +1,20 @@
+/** @jsxImportSource @emotion/react */
 import { timeFormat } from "d3";
 import { observer } from "mobx-react";
 import { useContext } from "react";
 import { FC } from "react";
 import Store from "../../../Interfaces/Store";
 import { AcronymDictionary } from "../../../Presets/DataDict";
-import { Title, useStyles } from "../../../Presets/StyledComponents";
-import Container from "@material-ui/core/Container";
-
-import List from "@material-ui/core/List";
-import { ListItem, ListItemSecondaryAction, ListItemText, Switch, Grid, IconButton, Tooltip } from "@material-ui/core";
-
-import ErrorIcon from '@material-ui/icons/Error';
+import { allCss, Title } from "../../../Presets/StyledComponents";
+import { ListItem, ListItemSecondaryAction, ListItemText, Switch, Grid, IconButton, Tooltip, Container } from "@mui/material";
+import ErrorIcon from '@mui/icons-material/Error';
 import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
 
 type Props = { totalCaseNum: number; };
 
 const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
     const store = useContext(Store);
-    const styles = useStyles();
+
 
     const generateSurgery = () => {
         let output: any[] = [];
@@ -45,8 +42,8 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
     };
 
     return (
-        <Grid item className={styles.gridWidth} >
-            <Container className={styles.containerWidth} style={{ height: "30vh" }}>
+        <Grid item css={allCss.gridWidth} >
+            <Container css={styles.containerWidth} style={{ height: "30vh" }}>
                 <List dense >
                     <ListItem style={{ textAlign: "left" }}>
                         <Title>Current View</Title>

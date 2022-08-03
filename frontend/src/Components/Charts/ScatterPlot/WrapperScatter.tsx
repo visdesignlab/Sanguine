@@ -1,10 +1,12 @@
-import { Container } from "@material-ui/core";
+/** @jsxImportSource @emotion/react */
+
+import { Container } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useContext, useLayoutEffect, useRef, useState } from "react";
 import { DataContext } from "../../../App";
 import Store from "../../../Interfaces/Store";
 import { ScatterDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
-import { useStyles } from "../../../Presets/StyledComponents";
+
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
 import ScatterPlot from "./ScatterPlot";
@@ -14,6 +16,7 @@ import useDeepCompareEffect from "use-deep-compare-effect";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import ChartStandardButtons from "../ChartStandardButtons";
 import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
+import { allCss } from "../../../Presets/StyledComponents";
 
 type Props = {
     yValueOption: string;
@@ -27,7 +30,7 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
 
     const hemoData = useContext(DataContext);
     const store = useContext(Store);
-    const styles = useStyles();
+
     const { proceduresSelection, showZero, rawDateRange } = store.state;
 
     const svgRef = useRef<SVGSVGElement>(null);
@@ -122,8 +125,8 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
             });
     }, [rawDateRange, proceduresSelection, hemoData, showZero, yValueOption, xAggregationOption]);
 
-    return (<Container className={styles.chartWrapper}>
-        <div className={styles.chartAccessoryDiv}>
+    return (<Container css={allCss.chartWrapper}>
+        <div css={allCss.chartAccessoryDiv}>
             Scatterplot
             <ChartConfigMenu
                 xAggregationOption={xAggregationOption}

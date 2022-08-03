@@ -1,18 +1,18 @@
+/** @jsxImportSource @emotion/react */
 import { observer } from "mobx-react";
 import { FC, useState } from "react";
 import { addOptions, OutcomeOptions, typeDiction } from "../../../Presets/DataDict";
-import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers';
 import { useContext } from "react";
 import DateFnsUtils from '@date-io/date-fns';
 import Store from "../../../Interfaces/Store";
 import { LayoutElement } from "../../../Interfaces/Types/LayoutTypes";
-import { useStyles } from "../../../Presets/StyledComponents";
-import ButtonGroup from "@material-ui/core/ButtonGroup";
-import Button from "@material-ui/core/Button";
-import Select from "@material-ui/core/Select";
 import { DropdownGenerator } from "../../../HelperFunctions/DropdownGenerator";
-import { FormControl, InputLabel, Toolbar } from "@material-ui/core";
+import { Button, ButtonGroup, FormControl, InputLabel, Select, Toolbar } from "@mui/material";
 import { ManualInfinity } from "../../../Presets/Constants";
+import styled from "@emotion/styled";
+import { MuiPickersUtilsProvider, KeyboardDatePicker } from "@material-ui/pickers";
+import { styles } from "@material-ui/pickers/views/Calendar/Calendar";
+import { allCss, CenterAlignedDiv } from "../../../Presets/StyledComponents";
 
 
 type Props = { addingChartType: number; };
@@ -21,7 +21,6 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
 
     const store = useContext(Store);
 
-    const styles = useStyles();
     const [xAggreSelection, setXAggreSelection] = useState<string>("");
     const [yValueSelection, setYValueSelection] = useState<string>("");
     const [outcomeComparisonSelection, setOutcomeComparisonSelection] = useState<string>("");
@@ -82,30 +81,30 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
     const outputRegularOptions = (titleOne: string, titleTwo: string, titleOneRequied: boolean) => {
         return <>
 
-            <div className={styles.centerAlignment}>
-                <FormControl required={titleOneRequied} className={styles.formControl}>
+            <CenterAlignedDiv>
+                <StyledFormControl required={titleOneRequied} >
                     <InputLabel style={{ whiteSpace: "nowrap" }}>{titleOne}{titleOneRequied ? "" : " (Optional)"}</InputLabel>
                     <Select
                         onChange={(e) => { setYValueSelection(e.target.value as string); }}>
                         {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][0] : [], !titleOneRequied)}
                     </Select>
-                </FormControl>
+                </StyledFormControl>
 
-            </div>
+            </CenterAlignedDiv>
 
             {/* <Divider orientation="vertical" flexItem /> */}
 
 
-            <div className={styles.centerAlignment}>
-                <FormControl required className={styles.formControl}>
+            <CenterAlignedDiv>
+                <StyledFormControl required >
                     <InputLabel>{titleTwo}</InputLabel>
                     <Select
                         onChange={(e) => { setXAggreSelection(e.target.value as string); }}>
                         {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][1] : [])}
                     </Select>
-                </FormControl>
+                </StyledFormControl>
 
-            </div>
+            </CenterAlignedDiv>
 
         </>;
     };
@@ -129,18 +128,18 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         [outputRegularOptions("Select Value to Show", "Aggregated by", true),
         <>
 
-            <div className={styles.centerAlignment}>
-                <FormControl disabled={interventionDate ? true : false} className={styles.formControl}>
+            <CenterAlignedDiv>
+                <StyledFormControl disabled={interventionDate ? true : false} >
                     <InputLabel>Outcome (Optional)</InputLabel>
                     <Select onChange={(e) => { setOutcomeComparisonSelection(e.target.value as string); }}
                     >
                         {DropdownGenerator(OutcomeOptions, true)}
                     </Select>
-                </FormControl>
-            </div>
+                </StyledFormControl>
+            </CenterAlignedDiv>
 
 
-            <div className={styles.centerAlignment}>
+            <CenterAlignedDiv>
                 <MuiPickersUtilsProvider utils={DateFnsUtils}>
                     <KeyboardDatePicker
                         disableToolbar
@@ -156,16 +155,16 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                         onChange={interventionHandler} />
                 </MuiPickersUtilsProvider>
 
-            </div>
+            </CenterAlignedDiv>
         </>
         ],
     ];
 
-    return <Toolbar className={styles.toolbarPaddingControl} style={{ justifyContent: "space-evenly" }}>
+    return <Toolbar css={allCss.toolbarPaddingControl} style={{ justifyContent: "space-evenly" }}>
         {addBarChartMenuRewrite[addingChartType]}
         {/* <Divider orientation="vertical" flexItem /> */}
 
-        <div className={styles.centerAlignment}>
+        <CenterAlignedDiv>
             <ButtonGroup>
                 <Button
                     disableElevation
@@ -182,9 +181,14 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                     Cancel
                 </Button>
             </ButtonGroup>
-        </div>
+        </CenterAlignedDiv>
 
     </Toolbar>;
 };
 
 export default observer(AddModeTopMenu);
+
+const StyledFormControl = styled(FormControl)({
+    margin: '1rem',
+    minWidth: "200px!important",
+});

@@ -14,12 +14,11 @@ import HeatMap from "./HeatMap";
 import ExtraPairButtons from "../ChartAccessories/ExtraPairButtons";
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import { DataContext } from "../../../App";
-import { Grid, Container, Typography } from "@material-ui/core";
-import { useStyles } from "../../../Presets/StyledComponents";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import ChartStandardButtons from "../ChartStandardButtons";
 import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
+import { ChartAccessoryDiv, ChartWrapperContainer } from "../../../Presets/StyledComponents";
 
 type Props = {
     layoutW: number;
@@ -36,7 +35,7 @@ type Props = {
 const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH, layoutW, chartId, extraPairArrayString, xAggregationOption, yValueOption, chartTypeIndexinArray, comparisonDate }: Props) => {
     const hemoData = useContext(DataContext);
     const store = useContext(Store);
-    const styles = useStyles();
+
     const { surgeryUrgencySelection, rawDateRange, proceduresSelection } = store.state;
     const svgRef = useRef<SVGSVGElement>(null);
     const [width, setWidth] = useState(0);
@@ -152,8 +151,8 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
         comparisonDate,
         hemoData]);
 
-    return (<Container className={styles.chartWrapper}>
-        <div className={styles.chartAccessoryDiv}>
+    return (<ChartWrapperContainer>
+        <ChartAccessoryDiv>
             {`Heatmap${(outcomeComparison || comparisonDate) ? " with Comparison" : ""}`}
             <ExtraPairButtons disbleButton={width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
             <ChartConfigMenu
@@ -166,7 +165,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
                 requireSecondary={true} />
             <ChartStandardButtons chartID={chartId} />
 
-        </div>
+        </ChartAccessoryDiv>
         <ChartSVG ref={svgRef}>
             <HeatMap
                 dimensionHeight={height}
@@ -187,7 +186,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
             />
         </ChartSVG>
         <AnnotationForm chartI={chartId} annotationText={annotationText} />
-    </Container>
+    </ChartWrapperContainer>
 
 
     );

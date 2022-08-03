@@ -1,17 +1,17 @@
-import { Container, Grid, TextField } from "@material-ui/core";
+import { Container, Grid, TextField } from "@mui/material";
 import { observer } from "mobx-react";
 import { useContext } from "react";
 import { FC, useState } from "react";
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import Store from "../../../Interfaces/Store";
-import { useStyles } from "../../../Presets/StyledComponents";
+
 import { ProcedureEntry } from "../../../Interfaces/Types/DataTypes";
 
 type Props = { surgeryList: any[]; };
 
 const SurgerySearchBar: FC<Props> = ({ surgeryList }: Props) => {
     const store = useContext(Store);
-    const styles = useStyles();
+
     const [input, setInput] = useState("");
 
     const searchHandler = (input: ProcedureEntry) => {
