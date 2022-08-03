@@ -1,66 +1,67 @@
 {
-  "name": "bloodvis_front",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@date-io/date-fns": "^1.3.13",
-    "@emotion/react": "^11.10.0",
-    "@emotion/styled": "^11.10.0",
-    "@material-ui/pickers": "^3.3.10",
-    "@mui/icons-material": "^5.8.4",
-    "@mui/material": "^5.9.3",
-    "@types/d3": "^7.0.0",
-    "@types/jest": "26.0.23",
-    "@types/jquery": "^3.5.5",
-    "@types/react": "^17.0.11",
-    "@types/react-dom": "17.0.8",
-    "@types/react-grid-layout": "^1.1.1",
-    "@types/react-native": "^0.64.10",
-    "@visdesignlab/trrack": "^2.0.0-alpha.10",
-    "axios": "^0.21.2",
-    "d3": "^7.0.0",
-    "date-fns": "^2.23.0",
-    "jquery": "^3.6.0",
-    "mobx": "^6.3.2",
-    "mobx-react": "^7.2.0",
-    "mui-nested-menu": "^2.1.2",
-    "node-sass": "^7.0.0",
-    "pdfast": "^0.2.0",
-    "react": "^17.0.2",
-    "react-beautiful-dnd": "^13.1.0",
-    "react-dom": "^17.0.2",
-    "react-google-charts": "^4.0.0",
-    "react-grid-layout": "^1.2.5",
-    "react-idle-timer": "^4.6.4",
-    "react-scripts": "^4.0.3",
-    "typescript": "^4.3.4",
-    "use-deep-compare-effect": "^1.6.1"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "deploy": "PORT=8080 react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "devDependencies": {
-    "@types/node": "^15.14.1",
-    "@types/react-beautiful-dnd": "^13.1.2",
-    "@welldone-software/why-did-you-render": "^6.2.0"
-  }
+    "name": "bloodvis_front",
+    "version": "0.1.0",
+    "private": true,
+    "dependencies": {
+        "@emotion/react": "^11.10.0",
+        "@emotion/styled": "^11.10.0",
+        "@mui/icons-material": "^5.8.4",
+        "@mui/material": "^5.9.3",
+        "@mui/x-date-pickers": "^5.0.0-beta.3",
+        "@types/d3": "^7.0.0",
+        "@types/jest": "26.0.23",
+        "@types/jquery": "^3.5.5",
+        "@types/react": "^17.0.11",
+        "@types/react-dom": "17.0.8",
+        "@types/react-grid-layout": "^1.1.1",
+        "@types/react-native": "^0.64.10",
+        "@visdesignlab/trrack": "^2.0.0-alpha.10",
+        "add": "^2.0.6",
+        "axios": "^0.21.2",
+        "d3": "^7.0.0",
+        "date-fns": "^2.29.1",
+        "jquery": "^3.6.0",
+        "mobx": "^6.3.2",
+        "mobx-react": "^7.2.0",
+        "mui-nested-menu": "^2.1.2",
+        "node-sass": "^7.0.0",
+        "pdfast": "^0.2.0",
+        "react": "^17.0.2",
+        "react-beautiful-dnd": "^13.1.0",
+        "react-dom": "^17.0.2",
+        "react-google-charts": "^4.0.0",
+        "react-grid-layout": "^1.2.5",
+        "react-idle-timer": "^4.6.4",
+        "react-scripts": "^5.0.1",
+        "typescript": "^4.3.4",
+        "use-deep-compare-effect": "^1.6.1",
+        "yarn": "^1.22.19"
+    },
+    "scripts": {
+        "start": "react-scripts start",
+        "deploy": "PORT=8080 react-scripts start",
+        "build": "react-scripts build",
+        "test": "react-scripts test",
+        "eject": "react-scripts eject"
+    },
+    "eslintConfig": {
+        "extends": "react-app"
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    },
+    "devDependencies": {
+        "@types/node": "^15.14.1",
+        "@types/react-beautiful-dnd": "^13.1.2",
+        "@welldone-software/why-did-you-render": "^6.2.0"
+    }
 }

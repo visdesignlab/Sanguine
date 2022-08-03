@@ -8,7 +8,7 @@ import 'react-grid-layout/css/styles.css';
 import Store from "../Interfaces/Store";
 import { LayoutElement } from "../Interfaces/Types/LayoutTypes";
 import { typeDiction } from "../Presets/DataDict";
-import { allCss, WelcomeText } from "../Presets/StyledComponents";
+import { allCss, UtilityContainer, WelcomeText } from "../Presets/StyledComponents";
 import WrapperCostBar from "./Charts/CostBarChart/WrapperCostBar";
 import WrapperDumbbell from "./Charts/DumbbellChart/WrapperDumbbell";
 import WrapperHeatMap from "./Charts/HeatMap/WrapperHeatMap";
@@ -125,27 +125,25 @@ const LayoutGenerator: FC = () => {
 
 
     return (
-        <Container css={allCss.containerWidth}>
-            <Container ref={tabRef} css={allCss.containerWidth} style={{ height: "90vh" }}>
+        <UtilityContainer ref={tabRef} style={{ height: "90vh" }}>
 
-                <WelcomeText show={store.state.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
-                <Responsive
-                    onResizeStop={(e, v) => { store.chartStore.onLayoutChange(e); }}
-                    onDragStop={(e, v) => { store.chartStore.onLayoutChange(e); }}
-                    draggableHandle={".move-icon"}
-                    className="layout"
-                    cols={colData}
-                    rowHeight={500}
-                    width={0.95 * store.mainCompWidth}
-                    layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
-                >
-                    {store.state.layoutArray.map((layoutE, i) => {
-                        return createElement(layoutE, i);
-                    })}
-                </Responsive>
+            <WelcomeText show={store.state.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
+            <Responsive
+                onResizeStop={(e, v) => { store.chartStore.onLayoutChange(e); }}
+                onDragStop={(e, v) => { store.chartStore.onLayoutChange(e); }}
+                draggableHandle={".move-icon"}
+                className="layout"
+                cols={colData}
+                rowHeight={500}
+                width={0.95 * store.mainCompWidth}
+                layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
+            >
+                {store.state.layoutArray.map((layoutE, i) => {
+                    return createElement(layoutE, i);
+                })}
+            </Responsive>
 
-            </Container>
-        </Container>
+        </UtilityContainer>
     );
 };
 

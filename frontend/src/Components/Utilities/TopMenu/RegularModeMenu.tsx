@@ -6,7 +6,6 @@ import InsertChartIcon from '@mui/icons-material/InsertChart';
 import Store from "../../../Interfaces/Store";
 import { logoutHandler, simulateAPIClick } from "../../../Interfaces/UserManagement";
 import BugReportOutlinedIcon from '@mui/icons-material/BugReportOutlined';
-
 import AddModeTopMenu from "./AddModeTopMenu";
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
@@ -93,32 +92,29 @@ const RegularModeMenu: FC = () => {
         <Toolbar css={allCss.toolbarPaddingControl}>
 
 
-            <a href="https://healthcare.utah.edu" target="_blank">
+            <a href="https://healthcare.utah.edu" target="_blank" rel="noopener noreferrer" >
                 <StyledImage
                     src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/u-of-u-health-social.png" />
             </a>
-            <a href="https://arup.utah.edu" target="_blank">
+            <a href="https://arup.utah.edu" target="_blank" rel="noopener noreferrer">
                 <StyledImage
                     src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/ARUP-logo.png" />
             </a>
-            <a href="https://vdl.sci.utah.edu" target="_blank">
+            <a href="https://vdl.sci.utah.edu" target="_blank" rel="noopener noreferrer">
                 <StyledImage
                     src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/vdl.png" />
             </a>
 
-            <TitleTypography variant="h6" noWrap>
+            <TitleTypography variant="h6">
                 Sanguine
             </TitleTypography>
 
             {/* Preview Mode */}
-            {/* <div className={useStyles().centerAlignment}>
+            {/* <div className={allCss.centerAlignment}>
                 <Button variant="outlined" disabled>Preview Mode</Button>
                 //    content="Preview Mode"
                  // onClick={() => { store!.previewMode = true }}
             </div> */}
-
-
-
 
             <CenterAlignedDiv>
                 <Button startIcon={<InsertChartIcon />} color="primary" variant="contained" disableElevation onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true" >Add Chart</Button>
@@ -134,13 +130,13 @@ const RegularModeMenu: FC = () => {
 
 
             <IconButton disabled={store.isAtRoot} onClick={() => { store.chartStore.clearAllCharts(); store.configStore.loadedStateName = ""; }}>
-                <Tooltip title={<div>  <p css={allCss.tooltipFont}>Clear All Charts</p></div>}>
+                <Tooltip title='Clear All Charts'>
                     <DeleteIcon />
                 </Tooltip>
             </IconButton>
 
             <IconButton disabled={store.configStore.loadedStateName.length === 0} onClick={updateState}>
-                <Tooltip title={<div>  <p css={allCss.tooltipFont}>{`Save to ${store.configStore.loadedStateName}`} </p></div>}>
+                <Tooltip title={`Save to ${store.configStore.loadedStateName}`}>
                     <SaveIcon />
                 </Tooltip>
             </IconButton>
@@ -149,13 +145,13 @@ const RegularModeMenu: FC = () => {
             <UndoRedoButtons />
 
             <IconButton onClick={() => { store.configStore.largeFont = !store.configStore.largeFont; }} >
-                <Tooltip title={<div>  <p css={allCss.tooltipFont}>Change Font Size</p></div>}>
+                <Tooltip title='Change Font Size'>
                     <FormatSizeIcon css={store.configStore.largeFont ? `` : allCss.manualDisable} />
                 </Tooltip>
             </IconButton>
 
             <IconButton onClick={handleMoreClick} >
-                <Tooltip title={<div>  <p css={allCss.tooltipFont}>More</p></div>}>
+                <Tooltip title='More'>
                     <MoreVertIcon />
                 </Tooltip>
             </IconButton>
@@ -204,7 +200,7 @@ const RegularModeMenu: FC = () => {
         }
     };
 
-    return (<AppBar position="static" color="transparent" elevation={2} style={{ zIndex: 3 }}>
+    return (<AppBar position="static" color="transparent" elevation={2} >
         {configureOutput()}
     </AppBar>);
 };
@@ -222,8 +218,4 @@ const StyledImage = styled.img({
 
 const TitleTypography = styled(Typography)({
     flexGrow: 1,
-    display: 'none',
-    // [theme.breakpoints.up('sm')]: {
-    //     display: 'block',
-    // },
 });

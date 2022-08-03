@@ -1,19 +1,19 @@
-import { Button, Container, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Tooltip } from "@mui/material";
-import DateFnsUtils from '@date-io/date-fns';
+import { Button, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, TextField, Tooltip } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
-import { MuiPickersUtilsProvider, KeyboardDatePicker } from "@material-ui/pickers";
 import { observer } from "mobx-react";
 import { FC, useContext, useState } from "react";
 import { AcronymDictionary } from "../../../Presets/DataDict";
 import Store from "../../../Interfaces/Store";
 import ComponentRangePicker from "./ComponentRangePicker";
-import { Title, useStyles } from "../../../Presets/StyledComponents";
+import { Title, UtilityContainer } from "../../../Presets/StyledComponents";
 import { BloodComponentOptions, ScatterYOptions } from "../../../Presets/DataDict";
 import ReplayIcon from '@mui/icons-material/Replay';
 import { defaultState } from "../../../Interfaces/DefaultState";
 import OutcomeChipGroup from "./OutcomeChipGroup";
 import SurgeryUrgencyChipGroup from "./SurgeryUrgencyChipGroup";
 import { SelectSet } from "../../../Interfaces/Types/SelectionTypes";
+import { DesktopDatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 
 const FilterBoard: FC = () => {
@@ -66,13 +66,10 @@ const FilterBoard: FC = () => {
     };
 
     return (
-        <Container className={styles.containerWidth}>
-
+        <UtilityContainer>
             < List dense >
                 <ListItem>
-
                     <Button variant="outlined" size="small" disabled={!enableClearAll()} onClick={() => { store.configStore.clearAllFilter(); }}>Clear All Filter Settings</Button>
-
                 </ListItem>
                 <ListItem>
                     <ListItemText primary={<Title>
@@ -90,39 +87,38 @@ const FilterBoard: FC = () => {
                     </ListItemSecondaryAction>
                 </ListItem>
                 <ListItem>
-                    <ListItemText primary="Date From" secondary={<MuiPickersUtilsProvider utils={DateFnsUtils}>
-                        <KeyboardDatePicker
-                            disableToolbar
-                            variant="inline"
-                            format="MM/dd/yyyy"
-                            value={beginDate}
-                            onChange={(d) => {
-                                if (d) {
-                                    setBeginDate(d.getTime());
-                                    store.configStore.dateRangeChange([d.getTime(), rawDateRange[1]]);
-                                } else {
-                                    setBeginDate(rawDateRange[0]);
-                                }
-                            }} />
-                    </MuiPickersUtilsProvider>} />
+                    <ListItemText primary="Date From" secondary={
+                        <LocalizationProvider dateAdapter={AdapterDateFns}>
+                            <DesktopDatePicker
+                                inputFormat="MM/dd/yyyy"
+                                value={beginDate}
+                                renderInput={(params) => <TextField {...params} />}
+                                onChange={(d) => {
+                                    if (d) {
+                                        setBeginDate(d);
+                                        store.configStore.dateRangeChange([d, rawDateRange[1]]);
+                                    } else {
+                                        setBeginDate(rawDateRange[0]);
+                                    }
+                                }} />
+                        </LocalizationProvider>} />
                 </ListItem>
                 <ListItem>
                     <ListItemText primary="To" secondary={
-                        <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                            <KeyboardDatePicker
-                                disableToolbar
-                                variant="inline"
-                                format="MM/dd/yyyy"
+                        <LocalizationProvider dateAdapter={AdapterDateFns}>
+                            <DesktopDatePicker
+                                inputFormat="MM/dd/yyyy"
                                 value={endDate}
+                                renderInput={(params) => <TextField {...params} />}
                                 onChange={(d) => {
                                     if (d) {
-                                        setEndDate(d.getTime());
-                                        store.configStore.dateRangeChange([rawDateRange[0], d.getTime()]);
+                                        setEndDate(d);
+                                        store.configStore.dateRangeChange([rawDateRange[0], d]);
                                     } else {
                                         setEndDate(rawDateRange[1]);
                                     }
                                 }} />
-                        </MuiPickersUtilsProvider>} />
+                        </LocalizationProvider>} />
                 </ListItem>
 
                 <ListItem>
@@ -243,7 +239,7 @@ const FilterBoard: FC = () => {
                     })
                 }
             </List >
-        </Container>
+        </UtilityContainer>
     );
 };
 

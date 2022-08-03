@@ -3,16 +3,15 @@ import { observer } from "mobx-react";
 import { FC, useState } from "react";
 import { addOptions, OutcomeOptions, typeDiction } from "../../../Presets/DataDict";
 import { useContext } from "react";
-import DateFnsUtils from '@date-io/date-fns';
 import Store from "../../../Interfaces/Store";
 import { LayoutElement } from "../../../Interfaces/Types/LayoutTypes";
 import { DropdownGenerator } from "../../../HelperFunctions/DropdownGenerator";
-import { Button, ButtonGroup, FormControl, InputLabel, Select, Toolbar } from "@mui/material";
+import { Button, ButtonGroup, FormControl, InputLabel, Select, Toolbar, TextField } from "@mui/material";
 import { ManualInfinity } from "../../../Presets/Constants";
 import styled from "@emotion/styled";
-import { MuiPickersUtilsProvider, KeyboardDatePicker } from "@material-ui/pickers";
-import { styles } from "@material-ui/pickers/views/Calendar/Calendar";
 import { allCss, CenterAlignedDiv } from "../../../Presets/StyledComponents";
+import { DesktopDatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 
 type Props = { addingChartType: number; };
@@ -32,9 +31,9 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         setYValueSelection("");
     };
 
-    const interventionHandler = (date: Date | null) => {
+    const interventionHandler = (date: number | null) => {
         if (date) {
-            setInterventionDate(date.getTime());
+            setInterventionDate(date);
 
         }
         else {
@@ -140,20 +139,17 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
 
 
             <CenterAlignedDiv>
-                <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                    <KeyboardDatePicker
-                        disableToolbar
-                        variant="inline"
-                        format="MM/dd/yyyy"
-
-                        id="date-picker-inline"
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <DesktopDatePicker
+                        inputFormat="MM/dd/yyyy"
+                        renderInput={(params) => <TextField {...params} />}
                         label="Comparison Date (Optional)"
                         minDate={store.state.rawDateRange[0]}
                         maxDate={store.state.rawDateRange[1]}
                         disabled={outcomeComparisonSelection ? true : false}
                         value={interventionDate}
                         onChange={interventionHandler} />
-                </MuiPickersUtilsProvider>
+                </LocalizationProvider>
 
             </CenterAlignedDiv>
         </>

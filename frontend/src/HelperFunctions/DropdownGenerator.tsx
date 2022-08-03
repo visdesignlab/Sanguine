@@ -1,5 +1,4 @@
-
-import MenuItem from "@material-ui/core/MenuItem";
+import { MenuItem } from "@mui/material";
 import { DropdownInputTypes } from "../Interfaces/Types/DropdownInputType";
 
 export const DropdownGenerator = (input: DropdownInputTypes[], withNone?: boolean) => {

@@ -1,10 +1,9 @@
 import { useContext, useState } from "react";
 import { FC } from "react";
-
 import Store from "../../../Interfaces/Store";
 import { addOptions, OutcomeOptions, typeDiction } from "../../../Presets/DataDict";
 import SettingsIcon from '@mui/icons-material/Settings';
-import NestedMenuItem from "material-ui-nested-menu-item";
+import { NestedMenuItem } from "mui-nested-menu";
 import { IconButton, Menu, MenuItem } from "@mui/material";
 import { observer } from "mobx-react";
 

@@ -5,8 +5,8 @@ import { useContext } from "react";
 import { FC } from "react";
 import Store from "../../../Interfaces/Store";
 import { AcronymDictionary } from "../../../Presets/DataDict";
-import { allCss, Title } from "../../../Presets/StyledComponents";
-import { ListItem, ListItemSecondaryAction, ListItemText, Switch, Grid, IconButton, Tooltip, Container } from "@mui/material";
+import { allCss, Title, UtilityContainer } from "../../../Presets/StyledComponents";
+import { ListItem, List, ListItemSecondaryAction, ListItemText, Switch, Grid, IconButton, Tooltip, Container } from "@mui/material";
 import ErrorIcon from '@mui/icons-material/Error';
 import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
 
@@ -28,7 +28,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                 const wordWithoutSymbol = word.replace(/[^a-zA-Z ]/g, "");
                 if ((AcronymDictionary as any)[wordWithoutSymbol]) {
                     output.push((
-                        <Tooltip key={`${index}-${word}`} title={<div key={`${index}-${word}`} className={styles.tooltipFont}>{(AcronymDictionary as any)[wordWithoutSymbol]}</div>}>
+                        <Tooltip key={`${index}-${word}`} title={<div key={`${index}-${word}`}>{(AcronymDictionary as any)[wordWithoutSymbol]}</div>}>
                             <div className="tooltip" key={`${index}-${word}`} style={{ cursor: "help" }}>
                                 {word}
                             </div>
@@ -43,7 +43,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
     return (
         <Grid item css={allCss.gridWidth} >
-            <Container css={styles.containerWidth} style={{ height: "30vh" }}>
+            <UtilityContainer style={{ height: "30vh" }}>
                 <List dense >
                     <ListItem style={{ textAlign: "left" }}>
                         <Title>Current View</Title>
@@ -79,7 +79,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                         <ListItemText primary="Individual Cases"
                             secondary={`${store.chartStore.totalIndividualCaseCount}/${totalCaseNum}`} />
                         <ListItemSecondaryAction>
-                            <Tooltip title={<div className={styles.tooltipFont}>Case count can be reduced by both filter and missing data.</div>}>
+                            <Tooltip title='Case count can be reduced by both filter and missing data.'>
                                 <IconButton size="small" disableRipple >
                                     <ErrorIcon />
                                 </IconButton>
@@ -93,7 +93,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                     </ListItem>
 
                 </List>
-            </Container>
+            </UtilityContainer>
         </Grid >
     );
 

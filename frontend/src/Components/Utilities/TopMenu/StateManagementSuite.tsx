@@ -1,11 +1,11 @@
 import { Button, Menu, MenuItem } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useEffect, useState, useContext } from "react";
-import NestedMenuItem from "material-ui-nested-menu-item";
+import { NestedMenuItem } from "mui-nested-menu";
 import Store from "../../../Interfaces/Store";
-
 import ManageStateDialog from "../../Modals/ManageStateDialog";
 import SaveStateModal from "../../Modals/SaveStateModal";
+import { CenterAlignedDiv } from "../../../Presets/StyledComponents";
 
 const StateManagementSuite: FC = () => {
 
@@ -63,7 +63,7 @@ const StateManagementSuite: FC = () => {
 
 
     return (
-        <div className={styles.centerAlignment}>
+        <CenterAlignedDiv>
             <Button variant="outlined" onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true"  >States</Button>
             <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
 
@@ -96,7 +96,7 @@ const StateManagementSuite: FC = () => {
             <ManageStateDialog />
             <SaveStateModal />
 
-        </div>
+        </CenterAlignedDiv>
     );
 };
 
