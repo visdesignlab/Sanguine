@@ -92,7 +92,7 @@ const FilterBoard: FC = () => {
                             <DesktopDatePicker
                                 inputFormat="MM/dd/yyyy"
                                 value={beginDate}
-                                renderInput={(params) => <TextField {...params} />}
+                                renderInput={(params) => <TextField variant="standard" {...params} />}
                                 onChange={(d) => {
                                     if (d) {
                                         setBeginDate(d);
@@ -109,7 +109,7 @@ const FilterBoard: FC = () => {
                             <DesktopDatePicker
                                 inputFormat="MM/dd/yyyy"
                                 value={endDate}
-                                renderInput={(params) => <TextField {...params} />}
+                                renderInput={(params) => <TextField variant="standard" {...params} />}
                                 onChange={(d) => {
                                     if (d) {
                                         setEndDate(d);
