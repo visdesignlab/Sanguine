@@ -14,7 +14,7 @@ export const CaseListSubheader = styled(ListSubheader)({
 });
 
 export const Title = styled.b`
-    font-size:larger;
+    font-size:large;
 `;
 
 export const SurgeryNumText = styled(`text`)`
