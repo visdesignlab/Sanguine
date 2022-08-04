@@ -10,10 +10,9 @@ import Store from "../../../../Interfaces/Store";
 import ExtraPairViolin from "./ExtraPairViolin";
 import ExtraPairBar from "./ExtraPairBar";
 import ExtraPairBasic from "./ExtraPairBasic";
-import { Tooltip } from "@mui/material";
+import { styled, Tooltip } from "@mui/material";
 import { BiggerFontProps } from "../../../../Presets/StyledSVGComponents";
 import { allCss } from "../../../../Presets/StyledComponents";
-import styled from "@emotion/styled";
 
 
 interface OwnProps {
@@ -154,7 +153,8 @@ const ExtraPairText = styled(`text`) <BiggerFontProps>`
   text-anchor: middle;
   alignment-baseline:hanging;
   cursor:pointer;
-    &:hover ${RemoveTSpan} {
+    &:hover tspan {
         opacity:1;
   }
 `;
+
