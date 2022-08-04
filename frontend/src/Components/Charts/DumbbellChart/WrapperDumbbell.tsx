@@ -19,6 +19,7 @@ import useDeepCompareEffect from "use-deep-compare-effect";
 import ChartStandardButtons from "../ChartStandardButtons";
 import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
 import { allCss, ChartAccessoryDiv, ChartWrapperContainer } from "../../../Presets/StyledComponents";
+import styled from '@emotion/styled';
 
 type Props = {
     xAggregationOption: string;
@@ -125,7 +126,7 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
 
     return <Grid container direction="row" alignItems="center" style={{ height: "100%" }}>
         <Grid item xs={1}>
-            <div style={{ width: "max-content", padding: "2px" }}>Sort By</div>
+            <DumbbellUtilTitle >Sort By</DumbbellUtilTitle>
             <ButtonGroup variant="outlined" size="small"
                 aria-label="small outlined button group"
                 orientation="vertical">
@@ -145,7 +146,7 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
                     Gap
                 </Button>
             </ButtonGroup>
-            <div style={{ width: "max-content", padding: "2px" }}>Show</div>
+            <DumbbellUtilTitle>Show</DumbbellUtilTitle>
             <ButtonGroup size="small" orientation="vertical">
                 <Button
                     css={showPreop ? ButtonStyles.preopButtonActive : ButtonStyles.preopButtonOutline}
@@ -195,17 +196,26 @@ const ButtonStyles = {
     preopButtonActive: css({
         fontSize: "xx-small!important",
         backgroundColor: preop_color,
-        color: "white"
+        color: "white",
+        '&:hover': {
+            backgroundColor: '#2acc74'
+        }
     }),
     postopButtonActive: css({
         fontSize: "xx-small!important",
         backgroundColor: postop_color,
-        color: "white"
+        color: "white",
+        '&:hover': {
+            backgroundColor: '#2a82cc'
+        }
     }),
     gapButtonActive: css({
         fontSize: "xx-small!important",
         backgroundColor: Basic_Gray,
-        color: "white"
+        color: "white",
+        '&:hover': {
+            backgroundColor: '#7b7b7b'
+        }
     }),
     preopButtonOutline: css({
         fontSize: "xx-small!important",
@@ -223,3 +233,9 @@ const ButtonStyles = {
         backgroundColor: "white"
     })
 };
+
+const DumbbellUtilTitle = styled.div({
+    width: "max-content",
+    padding: "2px",
+    fontSize: '0.8rem'
+});
