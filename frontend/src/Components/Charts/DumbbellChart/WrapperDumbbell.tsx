@@ -123,9 +123,8 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
         });
     }, [rawDateRange, proceduresSelection, hemoData, xAggregationOption, showZero]);
 
-    return <Grid container direction="row" alignItems="center" css={allCss.chartWrapper}>
+    return <Grid container direction="row" alignItems="center" style={{ height: "100%" }}>
         <Grid item xs={1}>
-
             <div style={{ width: "max-content", padding: "2px" }}>Sort By</div>
             <ButtonGroup variant="outlined" size="small"
                 aria-label="small outlined button group"
@@ -166,7 +165,7 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
             </ButtonGroup>
 
         </Grid>
-        <Grid item xs={11} css={allCss.chartWrapper}>
+        <Grid item xs={11} style={{ height: "100%" }}>
             <ChartWrapperContainer>
                 <ChartAccessoryDiv>
                     Dumbbell Chart
@@ -180,7 +179,6 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
                     <ChartStandardButtons chartID={chartId} />
                 </ChartAccessoryDiv>
                 <ChartSVG ref={svgRef}>
-
                     <DumbbellChart data={data} svg={svgRef} showGap={showGap} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} valueToVisualize={xAggregationOption} dimensionWidth={width} dimensionHeight={height} xMin={xMin} xMax={xMax} />
 
                 </ChartSVG>

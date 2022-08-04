@@ -94,9 +94,6 @@ export const UtilityContainer = styled(Container)({
 
 
 export const allCss = {
-    chartWrapper: {
-        height: "100%!important",
-    },
     toolbarPaddingControl: css({
         '& > *': {
             paddingLeft: "6px",

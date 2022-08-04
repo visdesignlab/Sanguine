@@ -1,5 +1,3 @@
-/** @jsxImportSource @emotion/react */
-
 import { Container } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useContext, useLayoutEffect, useRef, useState } from "react";
@@ -16,7 +14,7 @@ import useDeepCompareEffect from "use-deep-compare-effect";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import ChartStandardButtons from "../ChartStandardButtons";
 import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
-import { allCss } from "../../../Presets/StyledComponents";
+import { ChartWrapperContainer } from "../../../Presets/StyledComponents";
 import styled from "@emotion/styled";
 import { Basic_Gray } from "../../../Presets/Constants";
 
@@ -127,7 +125,7 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
             });
     }, [rawDateRange, proceduresSelection, hemoData, showZero, yValueOption, xAggregationOption]);
 
-    return (<Container css={allCss.chartWrapper}>
+    return (<ChartWrapperContainer>
         <ChartAccessoryDiv>
             Scatterplot
             <ChartConfigMenu
@@ -153,7 +151,7 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
                 svg={svgRef} />
         </ChartSVG>
         <AnnotationForm chartI={chartId} annotationText={annotationText} />
-    </Container>);
+    </ChartWrapperContainer>);
 };
 export default observer(WrapperScatter);
 
