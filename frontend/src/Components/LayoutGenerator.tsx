@@ -1,5 +1,4 @@
 /** @jsxImportSource @emotion/react */
-import { Container } from "@mui/material";
 import { observer } from "mobx-react";
 import { useContext } from "react";
 import { FC, useRef, useLayoutEffect } from "react";
@@ -8,7 +7,7 @@ import 'react-grid-layout/css/styles.css';
 import Store from "../Interfaces/Store";
 import { LayoutElement } from "../Interfaces/Types/LayoutTypes";
 import { typeDiction } from "../Presets/DataDict";
-import { allCss, UtilityContainer, WelcomeText } from "../Presets/StyledComponents";
+import { UtilityContainer, WelcomeText } from "../Presets/StyledComponents";
 import WrapperCostBar from "./Charts/CostBarChart/WrapperCostBar";
 import WrapperDumbbell from "./Charts/DumbbellChart/WrapperDumbbell";
 import WrapperHeatMap from "./Charts/HeatMap/WrapperHeatMap";
