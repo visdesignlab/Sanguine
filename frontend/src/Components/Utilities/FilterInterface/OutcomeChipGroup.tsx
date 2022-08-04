@@ -1,4 +1,4 @@
-import { Box, Chip } from "@mui/material";
+import { Box } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useContext } from "react";
 import Store from "../../../Interfaces/Store";

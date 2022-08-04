@@ -5,7 +5,7 @@ import { useContext } from "react";
 import Store from "../../../Interfaces/Store";
 import { LayoutElement } from "../../../Interfaces/Types/LayoutTypes";
 import { DropdownGenerator } from "../../../HelperFunctions/DropdownGenerator";
-import { Button, ButtonGroup, FormControl, InputLabel, Select, Toolbar, TextField } from "@mui/material";
+import { Button, ButtonGroup, FormControl, InputLabel, Select, TextField } from "@mui/material";
 import { ManualInfinity } from "../../../Presets/Constants";
 import styled from "@emotion/styled";
 import { PaddedToolBar, CenterAlignedDiv } from "../../../Presets/StyledComponents";

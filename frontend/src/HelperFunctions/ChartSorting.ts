@@ -6,13 +6,13 @@ export const sortHelper = (data: BasicAggregatedDatePoint[], xAggregationOption:
     if (secondaryData) {
         let dataToObj: any = {};
 
-        secondaryData.map((d) => {
+        secondaryData.forEach((d) => {
             const calcualtedCaseCount = d.caseCount - (showZero ? 0 : d.zeroCaseNum);
             dataToObj[d.aggregateAttribute] = calcualtedCaseCount;
             newCaseMax = newCaseMax > calcualtedCaseCount ? newCaseMax : calcualtedCaseCount;
             dataXVals.push(d.aggregateAttribute);
         });
-        data.map((d) => {
+        data.forEach((d) => {
             const calcualtedCaseCount = d.caseCount - (showZero ? 0 : d.zeroCaseNum);
             if (dataToObj[d.aggregateAttribute]) {
                 dataToObj[d.aggregateAttribute] += calcualtedCaseCount;

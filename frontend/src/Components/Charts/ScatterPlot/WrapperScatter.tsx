@@ -1,10 +1,8 @@
-import { Container } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useContext, useLayoutEffect, useRef, useState } from "react";
 import { DataContext } from "../../../App";
 import Store from "../../../Interfaces/Store";
 import { ScatterDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
-
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
 import ScatterPlot from "./ScatterPlot";

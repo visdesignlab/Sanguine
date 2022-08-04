@@ -5,7 +5,7 @@ import { FC } from "react";
 import Store from "../../../Interfaces/Store";
 import { AcronymDictionary } from "../../../Presets/DataDict";
 import { InheritWidthGrid, Title, UtilityContainer } from "../../../Presets/StyledComponents";
-import { ListItem, List, ListItemSecondaryAction, ListItemText, Switch, Grid, IconButton, Tooltip } from "@mui/material";
+import { ListItem, List, ListItemSecondaryAction, ListItemText, Switch, IconButton, Tooltip } from "@mui/material";
 import ErrorIcon from '@mui/icons-material/Error';
 import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
 
