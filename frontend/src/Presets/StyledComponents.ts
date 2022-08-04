@@ -17,10 +17,11 @@ export const Title = styled.b`
     font-size:large;
 `;
 
-export const SurgeryNumText = styled(`text`)`
-  text-anchor:end;
-  alignment-baseline: middle;
-`;
+export const SurgeryNumText = styled(`text`)({
+    textAnchor: 'end',
+    alignmentBaseline: 'middle',
+    fontSize: '0.875rem',
+});
 
 
 export const CenterAlignedDiv = styled.div({
@@ -30,6 +31,7 @@ export const CenterAlignedDiv = styled.div({
 
 export const SurgeryDiv = styled.td`
   overflow: hidden;
+  font-size:0.875rem;
   white-space: nowrap;
   text-overflow: ellipsis;
   alignment-baseline: hanging;
