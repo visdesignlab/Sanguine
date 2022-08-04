@@ -4,7 +4,7 @@ import Store from "../../../Interfaces/Store";
 import { addOptions, OutcomeOptions, typeDiction } from "../../../Presets/DataDict";
 import SettingsIcon from '@mui/icons-material/Settings';
 import { NestedMenuItem } from "mui-nested-menu";
-import { IconButton, Menu, MenuItem } from "@mui/material";
+import { IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
 import { observer } from "mobx-react";
 
 
@@ -53,9 +53,11 @@ const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTyp
 
     return (
         <>
-            <IconButton size="small" onClick={handleClick}>
-                <SettingsIcon />
-            </IconButton>
+            <Tooltip title='Update chart attributes'>
+                <IconButton size="small" onClick={handleClick}>
+                    <SettingsIcon />
+                </IconButton>
+            </Tooltip>
             <Menu anchorEl={anchorEl} open={open}
                 onClose={handleClose}
             >

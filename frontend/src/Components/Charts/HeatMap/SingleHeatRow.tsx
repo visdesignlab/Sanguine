@@ -40,15 +40,14 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                     const outputContent = (output / caseCount < 0.01 && output > 0) ? "<1%" : format(".0%")(output / caseCount);
 
                     return (
-                        <g>
+                        <g key={`${dataPoint.aggregateAttribute}-${point}`}>
                             <Tooltip
-                                title={<div key={`${dataPoint.aggregateAttribute}-${point}`} className="charttooltip">{outputContent}</div>}
+                                title={<div className="charttooltip" children={`${output}, ${outputContent}`} />}
                                 arrow
                                 key={dataPoint.aggregateAttribute + '-' + point}
                                 placement="top"
                                 hidden={output === 0}
                             >
-
                                 <HeatMapRect
                                     fill={colorFill}
                                     x={valueScale()(point)}
@@ -58,7 +57,6 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                                     key={dataPoint.aggregateAttribute + '-' + point}
                                 />
                             </Tooltip>
-
                             <line transform={howToTransform}
                                 strokeWidth={0.5}
                                 stroke={Basic_Gray}
