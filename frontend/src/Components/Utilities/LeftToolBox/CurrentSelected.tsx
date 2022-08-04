@@ -1,4 +1,4 @@
-import { List, Grid, ListItem, Button, ListItemText, IconButton, ListItemSecondaryAction } from "@mui/material";
+import { List, ListItem, Button, ListItemText, IconButton, ListItemSecondaryAction } from "@mui/material";
 import { observer } from "mobx-react";
 import { useContext } from "react";
 import { FC } from "react";

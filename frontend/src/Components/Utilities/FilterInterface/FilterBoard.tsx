@@ -34,7 +34,7 @@ const FilterBoard: FC = () => {
 
         let canReset = false;
 
-        Object.entries(filterInput).map(([filterName, filterValue]) => {
+        Object.entries(filterInput).forEach(([filterName, filterValue]) => {
 
             if ((filterValue as any)[0] > 0 || ((filterValue as any)[1] < store.configStore.filterRange[filterName])) {
                 canReset = true;

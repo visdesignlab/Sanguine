@@ -3,7 +3,6 @@ import { FC, useContext } from "react";
 import Store from "../../../Interfaces/Store";
 import CloseIcon from '@mui/icons-material/Close';
 import { observer } from "mobx-react";
-import styled from '@emotion/styled';
 import { CaseListSubheader, UtilityContainer } from "../../../Presets/StyledComponents";
 
 

@@ -5,7 +5,7 @@ import { FC } from "react";
 import { generateRegularData } from "../../../HelperFunctions/ChartDataGenerator";
 import { generateExtrapairPlotData } from "../../../HelperFunctions/ExtraPairDataGenerator";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
-import { Basic_Gray, BloodProductCap, ExtraPairPadding, ExtraPairWidth, OffsetDict } from "../../../Presets/Constants";
+import { ExtraPairPadding, ExtraPairWidth, } from "../../../Presets/Constants";
 import Store from "../../../Interfaces/Store";
 import { ExtraPairPoint, HeatMapDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
 import { tokenCheckCancel } from "../../../Interfaces/UserManagement";

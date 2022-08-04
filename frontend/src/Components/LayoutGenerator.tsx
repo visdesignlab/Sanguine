@@ -1,4 +1,3 @@
-/** @jsxImportSource @emotion/react */
 import { observer } from "mobx-react";
 import { useContext } from "react";
 import { FC, useRef, useLayoutEffect } from "react";
@@ -125,7 +124,6 @@ const LayoutGenerator: FC = () => {
 
     return (
         <UtilityContainer ref={tabRef} style={{ height: "90vh" }}>
-
             <WelcomeText show={store.state.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
             <Responsive
                 onResizeStop={(e, v) => { store.chartStore.onLayoutChange(e); }}

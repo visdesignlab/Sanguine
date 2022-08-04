@@ -30,11 +30,11 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                 if (dataPoint.countDict[point]) {
                     const output = dataPoint.countDict[point].length;
                     const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum;
-                    let disables = false;
+                    // let disables = false;
                     let colorFill = output === 0 ? "white" : interpolateReds(HeatmapColorScale(output / caseCount));
                     if (!showZero && point as any === 0) {
                         colorFill = output === 0 ? "white" : interpolateGreys(HeatmapGreyScale(output / (dataPoint.caseCount)));
-                        disables = true;
+                        // disables = true;
                     }
 
                     const outputContent = (output / caseCount < 0.01 && output > 0) ? "<1%" : format(".0%")(output / caseCount);
