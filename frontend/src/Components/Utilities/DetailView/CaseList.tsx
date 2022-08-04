@@ -1,4 +1,4 @@
-import { IconButton, List, ListItem, ListItemSecondaryAction, ListItemText } from "@mui/material";
+import { IconButton, List, ListItem, ListItemButton, ListItemSecondaryAction, ListItemText } from "@mui/material";
 import { FC, useContext } from "react";
 import Store from "../../../Interfaces/Store";
 import CloseIcon from '@mui/icons-material/Close';
@@ -15,13 +15,12 @@ const CaseList: FC = () => {
 
     return (<UtilityContainer style={{ height: "15vh", paddingTop: "0.5px" }} >
 
-        <List dense>
+        <List dense component="nav">
 
             <CaseListSubheader>
 
                 <ListItemText primary={`Selected Cases`} />
                 <ListItemSecondaryAction>
-
                     <IconButton edge="end"
                         onClick={() => {
                             store.selectionStore.updateBrush([]);
@@ -33,16 +32,15 @@ const CaseList: FC = () => {
 
             {currentBrushedPatientGroup.map(d => {
                 return (
-                    <CaseItem
-                        // TODO check this
+                    <ListItem
                         key={d.CASE_ID}
-                        isSelected={(currentSelectPatient && currentSelectPatient.CASE_ID === d.CASE_ID) || false}
-                        onClick={() => { store.selectionStore.setCurrentSelectPatient(d); }}>
-                        <ListItemText primary={
-                            store.configStore.privateMode ? d.CASE_ID : "----------"
-
-                        } />
-                    </CaseItem>
+                        selected={(currentSelectPatient && currentSelectPatient.CASE_ID === d.CASE_ID) || false}>
+                        <ListItemButton onClick={() => store.selectionStore.setCurrentSelectPatient(d)}>
+                            <ListItemText primary={
+                                store.configStore.privateMode ? d.CASE_ID : "----------"
+                            } />
+                        </ListItemButton>
+                    </ListItem>
                 );
             })}
 
@@ -50,11 +48,3 @@ const CaseList: FC = () => {
     </UtilityContainer>);
 };
 export default observer(CaseList);
-
-interface CaseItemProps {
-    isSelected: boolean;
-}
-
-const CaseItem = styled(ListItem) <CaseItemProps>`
-  background:${props => props.isSelected ? "#ecbe8d" : 'none'};
-`;

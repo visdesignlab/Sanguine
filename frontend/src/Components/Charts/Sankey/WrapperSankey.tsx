@@ -1,5 +1,5 @@
 /** @jsxImportSource @emotion/react */
-import { Chip, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useContext, useEffect, useState } from "react";
 import Chart from 'react-google-charts';
@@ -9,7 +9,7 @@ import { DataContext } from "../../../App";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import { BloodProductCap } from "../../../Presets/Constants";
 import { range } from "d3-array";
-import { allCss } from "../../../Presets/StyledComponents";
+import { allCss, FilterChip } from "../../../Presets/StyledComponents";
 
 
 const WrapperSankey: FC = () => {
@@ -184,7 +184,7 @@ const WrapperSankey: FC = () => {
                                             index={index}
                                         >
                                             {(provided, snapshot) => (
-                                                <Chip
+                                                <FilterChip
                                                     label={item.text}
                                                     clickable
                                                     ref={provided.innerRef}
