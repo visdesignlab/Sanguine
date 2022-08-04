@@ -1,6 +1,6 @@
 
 import { Basic_Gray, Third_Gray } from "./Constants";
-import { Chip, Container, ListSubheader } from "@mui/material";
+import { Chip, Container, Grid, ListSubheader, Toolbar } from "@mui/material";
 import styled from "@emotion/styled";
 import { css } from '@emotion/react';
 
@@ -91,35 +91,18 @@ export const UtilityContainer = styled(Container)({
     },
 });
 
+export const InheritWidthGrid = styled(Grid)({
+    width: "inherit!important"
+});
 
+export const PaddedToolBar = styled(Toolbar)({
+    '& > *': {
+        paddingLeft: "6px",
+        paddingRight: "6px"
+    },
+});
 
-export const allCss = {
-    toolbarPaddingControl: css({
-        '& > *': {
-            paddingLeft: "6px",
-            paddingRight: "6px"
-        },
-    }),
-    tooltipFont: css({
-        fontSize: "small!important",
-        textAlign: "center",
-    }),
-    root: css({
-        '& > *': {
-            margin: '0.5rem',
-        },
-    }),
-    centerAlignment: css({
-        textAlign: "center"
-    }),
-    gridWidth: css({
-        width: "inherit!important"
-    }),
-    subheader: css({
-        padding: "5px!important",
-        backgroundColor: "white!important"
-    }),
-    manualDisable: css({
-        color: "rgba(0, 0, 0, 0.26)"
-    })
-};
+export const BiggerTooltip = styled.div({
+    fontSize: "small!important",
+    textAlign: "center",
+});

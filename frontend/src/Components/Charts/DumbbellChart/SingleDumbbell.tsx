@@ -1,9 +1,8 @@
-/** @jsxImportSource @emotion/react */
 import { Tooltip } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC } from "react";
 import { DumbbellDataPoint } from "../../../Interfaces/Types/DataTypes";
-import { allCss } from "../../../Presets/StyledComponents";
+import { BiggerTooltip } from "../../../Presets/StyledComponents";
 import { DumbbellCircle, DumbbellRect } from "../../../Presets/StyledSVGComponents";
 
 
@@ -26,7 +25,7 @@ const SingleDumbbell: FC<Props> = ({ xVal, dataPoint, isSelectSet, showGap, show
     const rectHeight = Math.abs(circleYValStart - circleYValEnd);
     return (
         <Tooltip
-            title={<div css={allCss.tooltipFont}>{`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}</div>}
+            title={<BiggerTooltip children={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`} />}
             arrow
             placement="top">
             <g >

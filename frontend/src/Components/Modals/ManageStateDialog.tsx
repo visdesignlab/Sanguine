@@ -1,4 +1,3 @@
-/** @jsxImportSource @emotion/react */
 import { Button, DialogActions, DialogContent, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Tooltip } from "@mui/material";
 import { Dialog, DialogTitle } from "@mui/material";
 import { FC, useContext, useState } from "react";
@@ -9,7 +8,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { simulateAPIClick } from "../../Interfaces/UserManagement";
 import { observer } from "mobx-react";
 import StateAccessControl from "./StateAccessControl";
-import { allCss } from "../../Presets/StyledComponents";
+import { BiggerTooltip } from "../../Presets/StyledComponents";
 
 const ManageStateDialog: FC = () => {
     const store = useContext(Store);
@@ -77,17 +76,17 @@ const ManageStateDialog: FC = () => {
                                     store.configStore.stateToUpdate = d;
                                     store.configStore.openSaveStateDialog = true;
                                 }}>
-                                    <Tooltip title={<div>  <p css={allCss.tooltipFont}>Edit State</p></div>}>
+                                    <Tooltip title={<BiggerTooltip children='Edit State' />}>
                                         <EditIcon />
                                     </Tooltip>
                                 </IconButton>
                                 <IconButton onClick={() => { changeStateAccess(d); }}>
-                                    <Tooltip title={<div>  <p css={allCss.tooltipFont}>Manage Sharing</p></div>}>
+                                    <Tooltip title={<BiggerTooltip children='Manage Sharing' />}>
                                         <ShareIcon />
                                     </Tooltip>
                                 </IconButton>
                                 <IconButton onClick={() => { removeState(d); }}>
-                                    <Tooltip title={<div>  <p css={allCss.tooltipFont}>Delete State</p></div>}>
+                                    <Tooltip title={<BiggerTooltip children='Delete State' />}>
                                         <DeleteIcon />
                                     </Tooltip>
                                 </IconButton>

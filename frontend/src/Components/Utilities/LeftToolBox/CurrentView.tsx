@@ -1,12 +1,11 @@
-/** @jsxImportSource @emotion/react */
 import { timeFormat } from "d3";
 import { observer } from "mobx-react";
 import { useContext } from "react";
 import { FC } from "react";
 import Store from "../../../Interfaces/Store";
 import { AcronymDictionary } from "../../../Presets/DataDict";
-import { allCss, Title, UtilityContainer } from "../../../Presets/StyledComponents";
-import { ListItem, List, ListItemSecondaryAction, ListItemText, Switch, Grid, IconButton, Tooltip, Container } from "@mui/material";
+import { InheritWidthGrid, Title, UtilityContainer } from "../../../Presets/StyledComponents";
+import { ListItem, List, ListItemSecondaryAction, ListItemText, Switch, Grid, IconButton, Tooltip } from "@mui/material";
 import ErrorIcon from '@mui/icons-material/Error';
 import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
 
@@ -42,7 +41,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
     };
 
     return (
-        <Grid item css={allCss.gridWidth} >
+        <InheritWidthGrid item >
             <UtilityContainer style={{ height: "30vh" }}>
                 <List dense >
                     <ListItem style={{ textAlign: "left" }}>
@@ -94,7 +93,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
                 </List>
             </UtilityContainer>
-        </Grid >
+        </InheritWidthGrid >
     );
 
 

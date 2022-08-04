@@ -1,4 +1,3 @@
-/** @jsxImportSource @emotion/react */
 import { List, Grid, ListItem, Button, ListItemText, IconButton, ListItemSecondaryAction } from "@mui/material";
 import { observer } from "mobx-react";
 import { useContext } from "react";
@@ -7,7 +6,7 @@ import Store from "../../../Interfaces/Store";
 import CloseIcon from '@mui/icons-material/Close';
 import { SelectSet } from "../../../Interfaces/Types/SelectionTypes";
 import { AcronymDictionary } from "../../../Presets/DataDict";
-import { allCss, CenterAlignedDiv, Title, UtilityContainer } from "../../../Presets/StyledComponents";
+import { InheritWidthGrid, CenterAlignedDiv, Title, UtilityContainer } from "../../../Presets/StyledComponents";
 import styled from "@emotion/styled";
 
 const CurrentSelected: FC = () => {
@@ -16,7 +15,7 @@ const CurrentSelected: FC = () => {
     const { currentBrushedPatientGroup, currentSelectSet } = store.state;
 
     return (
-        <Grid item css={allCss.gridWidth}>
+        <InheritWidthGrid item>
             <UtilityContainer style={{ height: "20vh", }}>
                 <List dense>
                     <ListItem >
@@ -66,7 +65,7 @@ const CurrentSelected: FC = () => {
                     >Clear Filter</Button> */}
 
             </UtilityContainer>
-        </Grid>);
+        </InheritWidthGrid>);
 };
 
 export default observer(CurrentSelected);
