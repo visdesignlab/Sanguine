@@ -1,4 +1,3 @@
-/** @jsxImportSource @emotion/react */
 import { observer } from "mobx-react";
 import { FC, useState } from "react";
 import { addOptions, OutcomeOptions, typeDiction } from "../../../Presets/DataDict";
@@ -9,7 +8,7 @@ import { DropdownGenerator } from "../../../HelperFunctions/DropdownGenerator";
 import { Button, ButtonGroup, FormControl, InputLabel, Select, Toolbar, TextField } from "@mui/material";
 import { ManualInfinity } from "../../../Presets/Constants";
 import styled from "@emotion/styled";
-import { allCss, CenterAlignedDiv } from "../../../Presets/StyledComponents";
+import { PaddedToolBar, CenterAlignedDiv } from "../../../Presets/StyledComponents";
 import { DesktopDatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
@@ -162,7 +161,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         ],
     ];
 
-    return <Toolbar css={allCss.toolbarPaddingControl} style={{ justifyContent: "space-evenly" }}>
+    return <PaddedToolBar style={{ justifyContent: "space-evenly" }}>
         {addBarChartMenuRewrite[addingChartType]}
         {/* <Divider orientation="vertical" flexItem /> */}
 
@@ -185,7 +184,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
             </ButtonGroup>
         </CenterAlignedDiv>
 
-    </Toolbar>;
+    </PaddedToolBar>;
 };
 
 export default observer(AddModeTopMenu);

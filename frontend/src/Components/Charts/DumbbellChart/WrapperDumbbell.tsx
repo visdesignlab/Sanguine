@@ -18,7 +18,7 @@ import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import useDeepCompareEffect from "use-deep-compare-effect";
 import ChartStandardButtons from "../ChartStandardButtons";
 import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
-import { allCss, ChartAccessoryDiv, ChartWrapperContainer } from "../../../Presets/StyledComponents";
+import { ChartAccessoryDiv, ChartWrapperContainer } from "../../../Presets/StyledComponents";
 import styled from '@emotion/styled';
 
 type Props = {

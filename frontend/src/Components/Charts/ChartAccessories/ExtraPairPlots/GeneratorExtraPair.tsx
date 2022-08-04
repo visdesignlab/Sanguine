@@ -12,7 +12,7 @@ import ExtraPairBar from "./ExtraPairBar";
 import ExtraPairBasic from "./ExtraPairBasic";
 import { styled, Tooltip } from "@mui/material";
 import { BiggerFontProps } from "../../../../Presets/StyledSVGComponents";
-import { allCss } from "../../../../Presets/StyledComponents";
+import { BiggerTooltip } from "../../../../Presets/StyledComponents";
 
 
 interface OwnProps {
@@ -50,14 +50,12 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
                 break;
         }
 
-        let tooltipText = <div>
-            <p css={allCss.tooltipFont}>{AcronymDictionary[nameInput] ? `${AcronymDictionary[nameInput]}` : undefined}
-                {AcronymDictionary[nameInput] ? <br /> : <></>}
-                {explanation}</p>
-
-            <p css={allCss.tooltipFont}>Click to remove</p>
-        </div>;
-
+        let tooltipText = <BiggerTooltip>
+            {AcronymDictionary[nameInput] ? `${AcronymDictionary[nameInput]}` : undefined}
+            {AcronymDictionary[nameInput] ? <br /> : <></>}
+            {explanation} <br />
+            (Click to remove)
+        </BiggerTooltip>;
 
         return (
             <Tooltip title={tooltipText}>

@@ -1,4 +1,3 @@
-/** @jsxImportSource @emotion/react */
 import { Typography } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useContext, useEffect, useState } from "react";
@@ -9,7 +8,7 @@ import { DataContext } from "../../../App";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import { BloodProductCap } from "../../../Presets/Constants";
 import { range } from "d3-array";
-import { allCss, FilterChip } from "../../../Presets/StyledComponents";
+import { FilterChip } from "../../../Presets/StyledComponents";
 
 
 const WrapperSankey: FC = () => {
@@ -172,11 +171,13 @@ const WrapperSankey: FC = () => {
                             droppableId={`${ind}`}>
                             {(provided, snapshot) => (
                                 <div ref={provided.innerRef}
-                                    css={allCss.root}
                                     style={{ display: "flex", minHeight: '40px' }}
                                     {...provided.droppableProps}
                                 >
-                                    <label className="MuiFormLabel-root MuiInputLabel-root MuiInputLabel-shrink MuiFormLabel-filled">{ind === 0 ? "Included" : "Not Included"}</label>
+                                    <label style={{ alignSelf: 'center' }}
+                                        className="MuiFormLabel-root MuiInputLabel-root MuiInputLabel-shrink MuiFormLabel-filled">
+                                        {ind === 0 ? "Included" : "Not Included"}
+                                    </label>
                                     {options.map((item, index) => (
                                         <Draggable
                                             key={`${item.key}-draggable`}

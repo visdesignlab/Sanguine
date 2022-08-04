@@ -1,5 +1,3 @@
-/** @jsxImportSource @emotion/react */
-import { Grid } from "@mui/material";
 import { axisTop, scaleLinear, select } from "d3";
 import { observer } from "mobx-react";
 import { useCallback, useContext, useEffect } from "react";
@@ -7,7 +5,7 @@ import { FC, useLayoutEffect, useRef, useState } from "react";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
 import { ProcedureEntry } from "../../../Interfaces/Types/DataTypes";
-import { allCss, UtilityContainer } from "../../../Presets/StyledComponents";
+import { InheritWidthGrid, UtilityContainer } from "../../../Presets/StyledComponents";
 import SurgeryRow from "./SurgeryRow";
 
 type Props = {
@@ -83,7 +81,7 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
         return false;
     };
 
-    return <Grid item css={allCss.gridWidth}>
+    return <InheritWidthGrid item >
         <UtilityContainer ref={surgeryViewRef} style={{ height: "30vh" }} >
             <table style={{ width: "100%", tableLayout: "fixed" }}>
                 <colgroup>
@@ -186,7 +184,7 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
             </table>
 
         </UtilityContainer>
-    </Grid>;
+    </InheritWidthGrid>;
 
 };
 export default observer(SurgeryListViewer);

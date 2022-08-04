@@ -1,5 +1,5 @@
 /** @jsxImportSource @emotion/react */
-import { Menu, MenuItem, Button, AppBar, Toolbar, Typography, IconButton, ButtonGroup, Tooltip, ListItemIcon } from "@mui/material";
+import { Menu, MenuItem, Button, AppBar, Typography, IconButton, Tooltip, ListItemIcon } from "@mui/material";
 import { observer } from "mobx-react";
 import { useContext, useState, FC } from "react";
 import InsertChartIcon from '@mui/icons-material/InsertChart';
@@ -18,8 +18,8 @@ import InfoDialog from "../../Modals/InfoDialog";
 import DeleteIcon from '@mui/icons-material/Delete';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import styled from "@emotion/styled";
-import { allCss, CenterAlignedDiv } from "../../../Presets/StyledComponents";
-
+import { PaddedToolBar, CenterAlignedDiv } from "../../../Presets/StyledComponents";
+import { css } from '@emotion/react';
 
 
 const RegularModeMenu: FC = () => {
@@ -89,7 +89,7 @@ const RegularModeMenu: FC = () => {
 
 
 
-        <Toolbar css={allCss.toolbarPaddingControl}>
+        <PaddedToolBar>
 
 
             <a href="https://healthcare.utah.edu" target="_blank" rel="noopener noreferrer" >
@@ -146,7 +146,7 @@ const RegularModeMenu: FC = () => {
 
             <IconButton onClick={() => { store.configStore.largeFont = !store.configStore.largeFont; }} >
                 <Tooltip title='Change Font Size'>
-                    <FormatSizeIcon css={store.configStore.largeFont ? `` : allCss.manualDisable} />
+                    <FormatSizeIcon css={store.configStore.largeFont ? `` : ManualDisableCSS} />
                 </Tooltip>
             </IconButton>
 
@@ -171,9 +171,9 @@ const RegularModeMenu: FC = () => {
                     </ListItemIcon>
                     About
                 </MenuItem>
-                <MenuItem onClick={() => { handleMoreClose(); store.configStore.privateMode = !store.configStore.privateMode; }} css={store.configStore.privateMode ? `` : allCss.manualDisable}>
+                <MenuItem onClick={() => { handleMoreClose(); store.configStore.privateMode = !store.configStore.privateMode; }} css={store.configStore.privateMode ? `` : ManualDisableCSS}>
                     <ListItemIcon>
-                        <VpnKeyIcon css={store.configStore.privateMode ? `` : allCss.manualDisable} />
+                        <VpnKeyIcon css={store.configStore.privateMode ? `` : ManualDisableCSS} />
                     </ListItemIcon>
                     Private Mode
                 </MenuItem>
@@ -186,7 +186,7 @@ const RegularModeMenu: FC = () => {
             </Menu>
             <InfoDialog />
 
-        </Toolbar>
+        </PaddedToolBar>
 
     );
 
@@ -218,4 +218,8 @@ const StyledImage = styled.img({
 
 const TitleTypography = styled(Typography)({
     flexGrow: 1,
+});
+
+const ManualDisableCSS = css({
+    color: "rgba(0, 0, 0, 0.26)"
 });
