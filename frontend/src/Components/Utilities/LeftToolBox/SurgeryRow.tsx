@@ -52,7 +52,6 @@ const SurgeryRow: FC<Props> = ({ listItem, width, isSelected, expandedList, setE
             {isSubSurgery ?
                 <> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{listItem.procedureName.includes('Only') ? '' : '+'}
                     <span
-
                         onMouseOver={mouseOverHandler}
                         onMouseLeave={mouseLeaveHandler}
                         onClick={() => { store.selectionStore.updateProcedureSelection(listItem, false, parentSurgery); }}>
