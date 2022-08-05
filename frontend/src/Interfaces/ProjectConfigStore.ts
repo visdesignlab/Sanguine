@@ -25,11 +25,9 @@ export class ProjectConfigStore {
         this.largeFont = false;
         this.privateMode = false;
         this._topMenuBarAddMode = false;
-
         this.openSnackBar = false;
         this.snackBarMessage = "";
         this.snackBarIsError = false;
-
         this.loadedStateName = "";
         this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0, PREOP_HGB: 0, POSTOP_HGB: 0 };
         this.stateToUpdate = "";

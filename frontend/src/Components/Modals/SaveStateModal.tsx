@@ -5,11 +5,11 @@ import Store from "../../Interfaces/Store";
 import { simulateAPIClick } from "../../Interfaces/UserManagement";
 
 type Props = {
-    openSaveState: boolean,
-    setOpenSaveState: (input: boolean) => void;
+    visible: boolean,
+    setVisibility: (input: boolean) => void;
 };
 
-const SaveStateModal: FC<Props> = ({ openSaveState, setOpenSaveState }: Props) => {
+const SaveStateModal: FC<Props> = ({ visible, setVisibility }: Props) => {
     const store = useContext(Store);
     const [stateName, setStateName] = useState("");
     const [publicAccess, setPublicAccess] = useState(false);
@@ -86,7 +86,7 @@ const SaveStateModal: FC<Props> = ({ openSaveState, setOpenSaveState }: Props) =
     };
 
     const onSuccess = () => {
-        setOpenSaveState(false);
+        setVisibility(false);
         store.configStore.snackBarIsError = false;
         store.configStore.snackBarMessage = "State saved!";
         store.configStore.openSnackBar = true;
@@ -102,7 +102,7 @@ const SaveStateModal: FC<Props> = ({ openSaveState, setOpenSaveState }: Props) =
     };
 
     return <div>
-        <Dialog open={openSaveState}>
+        <Dialog open={visible}>
             <DialogTitle>Save the current state</DialogTitle>
             <DialogContent>
                 <DialogContentText>
@@ -133,7 +133,7 @@ const SaveStateModal: FC<Props> = ({ openSaveState, setOpenSaveState }: Props) =
 
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => { store.configStore.stateToUpdate = ""; setOpenSaveState(false); }}>Cancel</Button>
+                <Button onClick={() => { store.configStore.stateToUpdate = ""; setVisibility(false); }}>Cancel</Button>
                 <Button color="primary" disabled={stateName.length === 0} onClick={() => { saveNewState(); }}>Confirm</Button>
             </DialogActions>
         </Dialog>

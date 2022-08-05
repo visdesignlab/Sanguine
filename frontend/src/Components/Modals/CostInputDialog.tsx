@@ -5,22 +5,22 @@ import Store from "../../Interfaces/Store";
 
 type Props = {
     bloodComponent: string;
-    openCostInputDialog: boolean;
-    setDialog: (input: boolean) => void;
+    visible: boolean;
+    setVisibility: (input: boolean) => void;
 };
-const CostInputDialog: FC<Props> = ({ bloodComponent, openCostInputDialog, setDialog }: Props) => {
+const CostInputDialog: FC<Props> = ({ bloodComponent, visible, setVisibility }: Props) => {
     const store = useContext(Store);
 
     const [costInput, setCostInput] = useState(0);
 
     const saveCostInput = () => {
         store.configStore.changeCostConfig(bloodComponent, costInput);
-        setDialog(false);
+        setVisibility(false);
         setCostInput(0);
     };
 
     return (
-        <Dialog open={openCostInputDialog}>
+        <Dialog open={visible}>
             <DialogTitle>Change Cost for {bloodComponent}</DialogTitle>
             <DialogContent>
                 <DialogContentText>Current Cost for {bloodComponent} is ${store.state.BloodProductCost[bloodComponent]}</DialogContentText>
@@ -28,7 +28,7 @@ const CostInputDialog: FC<Props> = ({ bloodComponent, openCostInputDialog, setDi
             </DialogContent>
 
             <DialogActions>
-                <Button onClick={() => setDialog(false)}>Cancel</Button>
+                <Button onClick={() => setVisibility(false)}>Cancel</Button>
                 <Button color="primary"
                     onClick={saveCostInput}>
                     Confirm

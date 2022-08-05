@@ -6,10 +6,10 @@ import { simulateAPIClick } from "../../Interfaces/UserManagement";
 
 type Props = {
     stateName: string;
-    openUIDDialog: boolean;
-    setOpenUIDDialog: (input: boolean) => void;
+    visible: boolean;
+    setVisibility: (input: boolean) => void;
 };
-const UIDInputModal: FC<Props> = ({ stateName, openUIDDialog, setOpenUIDDialog }: Props) => {
+const UIDInputModal: FC<Props> = ({ stateName, visible, setVisibility }: Props) => {
     const store = useContext(Store);
     const [uIDInput, setUIDInput] = useState("");
     const [writeAccess, setWriteAccess] = useState(false);
@@ -38,7 +38,7 @@ const UIDInputModal: FC<Props> = ({ stateName, openUIDDialog, setOpenUIDDialog }
 
                     setUIDInput("");
                     setWriteAccess(false);
-                    setOpenUIDDialog(false);
+                    setVisibility(false);
                 } else {
                     response.text().then(error => {
                         store.configStore.snackBarIsError = true;
@@ -58,7 +58,7 @@ const UIDInputModal: FC<Props> = ({ stateName, openUIDDialog, setOpenUIDDialog }
     };
 
     return (<div>
-        <Dialog open={openUIDDialog}>
+        <Dialog open={visible}>
             <DialogTitle>Share through uID</DialogTitle>
             <DialogContent>
                 <DialogContentText>
@@ -93,7 +93,7 @@ const UIDInputModal: FC<Props> = ({ stateName, openUIDDialog, setOpenUIDDialog }
                     <Button onClick={() => {
                         setUIDInput("");
                         setWriteAccess(false);
-                        setOpenUIDDialog(false);
+                        setVisibility(false);
                     }}>
                         Cancel
                     </Button>
