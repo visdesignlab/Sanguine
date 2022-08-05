@@ -3,9 +3,12 @@ import { observer } from "mobx-react";
 import { FC, useContext } from "react";
 import Store from "../../Interfaces/Store";
 
-const InfoDialog: FC = () => {
-    const store = useContext(Store);
-    return (<Dialog open={store.configStore.openAboutDialog}>
+type Props = {
+    openAbout: boolean;
+    setOpenAbout: (input: boolean) => void;
+};
+const InfoDialog: FC<Props> = ({ openAbout, setOpenAbout }: Props) => {
+    return (<Dialog open={openAbout}>
         <DialogTitle >About Sanguine</DialogTitle>
         <DialogContent>
             <DialogContentText>
@@ -22,7 +25,7 @@ const InfoDialog: FC = () => {
             </DialogContentText>
         </DialogContent>
         <DialogActions>
-            <Button onClick={() => store.configStore.openAboutDialog = false} color="primary">
+            <Button onClick={() => setOpenAbout(false)} color="primary">
                 Close
             </Button>
         </DialogActions>

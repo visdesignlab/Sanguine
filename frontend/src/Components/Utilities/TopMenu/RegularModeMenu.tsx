@@ -28,6 +28,11 @@ const RegularModeMenu: FC = () => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [anchorMore, setAnchorMore] = useState<null | HTMLElement>(null);
 
+    const [openAbout, setOpenAbout] = useState(false);
+
+    const passSetOpenAbout = (input: boolean) => {
+        setOpenAbout(input);
+    };
     const addModeButtonHandler = (chartType: number) => {
         setAddingChartType(chartType);
         store.configStore.topMenuBarAddMode = true;
@@ -165,7 +170,7 @@ const RegularModeMenu: FC = () => {
                         Report a Bug
                     </MenuItem>
                 </a>
-                <MenuItem onClick={() => { handleMoreClose(); store.configStore.openAboutDialog = true; }}>
+                <MenuItem onClick={() => { handleMoreClose(); setOpenAbout(true); }}>
                     <ListItemIcon>
                         <InfoOutlinedIcon />
                     </ListItemIcon>
@@ -184,7 +189,7 @@ const RegularModeMenu: FC = () => {
                     Log Out
                 </MenuItem>
             </Menu>
-            <InfoDialog />
+            <InfoDialog setOpenAbout={passSetOpenAbout} openAbout={openAbout} />
 
         </PaddedToolBar>
 

@@ -13,6 +13,8 @@ import { SurgeryUrgencyArray } from "./Presets/DataDict";
 import './App.css';
 import { checkIfCriteriaMet } from "./HelperFunctions/CaseListProducer";
 import useDeepCompareEffect from "use-deep-compare-effect";
+import BrowserWarning from "./Components/Modals/BrowserWarning";
+import DataRetrieval from "./Components/Modals/DataRetrieval";
 
 export const DataContext = createContext<SingleCasePoint[]>([]);
 
@@ -22,6 +24,8 @@ const App: FC = () => {
     const [hemoData, setHemoData] = useState<SingleCasePoint[]>([]);
     const [outputFilteredData, setOutputFilteredDAta] = useState<SingleCasePoint[]>([]);
 
+    const [dataLoading, setDataLoading] = useState(true);
+    const [dataLoadingFailed, setDataLoadingFailed] = useState(false);
 
     useEffect(() => {
         if (process.env.REACT_APP_REQUIRE_LOGIN !== "true" || (store.configStore.isLoggedIn && hemoData.length === 0)) {
@@ -160,15 +164,20 @@ const App: FC = () => {
 
                 cacheData = cacheData.filter((d: any) => d);
                 setHemoData(cacheData);
-                store.configStore.dataLoading = false;
+                setDataLoading(false);
             }).catch((error) => {
-                store.configStore.dataLoadingFailed = true;
-                store.configStore.dataLoading = false;
+                setDataLoadingFailed(true);
+                setDataLoading(false);
             });
     }
 
     return <DataContext.Provider value={outputFilteredData}>
         <Dashboard />
+        {(process.env.REACT_APP_REQUIRE_LOGIN === "true") ?
+            <>
+                <BrowserWarning />
+                <DataRetrieval dataLoading={dataLoading} dataLoadingFailed={dataLoadingFailed} />
+            </> : <></>}
     </DataContext.Provider>;
 };
 

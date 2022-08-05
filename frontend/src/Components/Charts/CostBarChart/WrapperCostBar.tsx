@@ -71,6 +71,12 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
         setAnchorEl(null);
     };
 
+    const [openCostInputDialog, setOpenCostInputDialog] = useState(false);
+
+    const passSetOpenCostInputDialog = (input: boolean) => {
+        setOpenCostInputDialog(input);
+    };
+
 
     useEffect(() => {
         if (extraPairArrayString) {
@@ -266,7 +272,7 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
             >
                 {BloodComponentOptions.map((bOption) => (
                     <MenuItem key={bOption.key} onClick={() => {
-                        store.configStore.openCostInputModal = true;
+                        setOpenCostInputDialog(true);
                         setBloodCostToChange(bOption.value);
                         handleClose();
                     }}>{bOption.text}</MenuItem>
@@ -277,7 +283,7 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
                     <HelpIcon />
                 </Tooltip>
             </IconButton>
-            <CostInputDialog bloodComponent={bloodCostToChange} />
+            <CostInputDialog bloodComponent={bloodCostToChange} openCostInputDialog={openCostInputDialog} setDialog={passSetOpenCostInputDialog} />
             <ChartStandardButtons chartID={chartId} />
         </ChartAccessoryDiv>
         <ChartSVG ref={svgRef}>
