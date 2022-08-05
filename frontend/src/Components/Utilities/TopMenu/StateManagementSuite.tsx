@@ -10,9 +10,18 @@ import { CenterAlignedDiv } from "../../../Presets/StyledComponents";
 const StateManagementSuite: FC = () => {
 
     const store = useContext(Store);
+    const [openSaveState, setOpenSaveState] = useState(false);
+    const [openManageState, setOpenManageState] = useState(false);
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
+    const passSetOpenSaveState = (input: boolean) => {
+        setOpenSaveState(input);
+    };
+
+    const passSetOpenManageState = (input: boolean) => {
+        setOpenManageState(input);
+    };
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         fetchSavedStates();
@@ -90,11 +99,11 @@ const StateManagementSuite: FC = () => {
                     <MenuItem>Preset 2</MenuItem>
                     <MenuItem>Preset 3</MenuItem>
                 </NestedMenuItem>
-                <MenuItem onClick={() => { handleClose(); store.configStore.openSaveStateDialog = true; }}>Save as a New State</MenuItem>
-                <MenuItem onClick={() => { handleClose(); store.configStore.openManageStateDialog = true; }}>Manage Saved States</MenuItem>
+                <MenuItem onClick={() => { handleClose(); setOpenSaveState(true); }}>Save as a New State</MenuItem>
+                <MenuItem onClick={() => { handleClose(); setOpenManageState(true); }}>Manage Saved States</MenuItem>
             </Menu>
-            <ManageStateDialog />
-            <SaveStateModal />
+            <ManageStateDialog setOpenManageState={passSetOpenManageState} openManageState={openManageState} setOpenSaveState={passSetOpenSaveState} />
+            <SaveStateModal openSaveState={openSaveState} setOpenSaveState={passSetOpenSaveState} />
 
         </CenterAlignedDiv>
     );

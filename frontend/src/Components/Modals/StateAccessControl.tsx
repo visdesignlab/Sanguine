@@ -8,12 +8,20 @@ import UIDInputModal from "./UIDInputModal";
 
 type Props = {
     stateName: string;
+    openStateAccessControl: boolean;
+    setOpenStateAccessControl: (input: boolean) => void;
 };
 
-const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
+const StateAccessControl: FC<Props> = ({ stateName, openStateAccessControl, setOpenStateAccessControl }: Props) => {
 
     const [uIDShared, updateUIDShared] = useState<string[]>([]);
     const [accessArray, updateAccessArray] = useState<string[]>([]);
+
+    const [openShareUIDDialog, setOpenUIDDialog] = useState(false);
+
+    const passSetOpenUIDDialog = (input: boolean) => {
+        setOpenUIDDialog(input);
+    };
 
     const makeStateAccessRequest = () => {
         if (stateName) {
@@ -83,7 +91,7 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
 
     const store = useContext(Store);
     return (<div>
-        <Dialog open={store.configStore.openStateAccessControl}>
+        <Dialog open={openStateAccessControl}>
             <DialogTitle>Manage {stateName} Access</DialogTitle>
             <DialogContent style={{ width: "300px" }}>
                 <List>{
@@ -116,8 +124,8 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
                     <ListItem>
                         <ListItemText>
                             <IconButton onClick={() => {
-                                store.configStore.openShareUIDDialog = true;
-                                store.configStore.openStateAccessControl = false;
+                                setOpenUIDDialog(true);
+                                setOpenStateAccessControl(false);
                             }}>
                                 <AddIcon />
                             </IconButton>
@@ -127,13 +135,13 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
 
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => { store.configStore.openStateAccessControl = false; }}>
+                <Button onClick={() => setOpenStateAccessControl(false)}>
                     Close
                 </Button>
             </DialogActions>
         </Dialog>
 
-        <UIDInputModal stateName={stateName} />
+        <UIDInputModal openUIDDialog={openShareUIDDialog} setOpenUIDDialog={passSetOpenUIDDialog} stateName={stateName} />
     </div>);
 };
 

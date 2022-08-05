@@ -10,11 +10,22 @@ import { observer } from "mobx-react";
 import StateAccessControl from "./StateAccessControl";
 import { BiggerTooltip } from "../../Presets/StyledComponents";
 
-const ManageStateDialog: FC = () => {
+type Props = {
+    setOpenSaveState: (input: boolean) => void;
+    setOpenManageState: (input: boolean) => void;
+    openManageState: boolean;
+};
+
+const ManageStateDialog: FC<Props> = ({ setOpenSaveState, setOpenManageState, openManageState }: Props) => {
     const store = useContext(Store);
 
     const [stateNameToChange, setStateNameToChange] = useState("");
 
+    const [openStateAccessControl, setOpenStateAccessControl] = useState(false);
+
+    const passSetOpenStateAccess = (input: boolean) => {
+        setOpenStateAccessControl(input);
+    };
 
     const removeState = (stateName: string) => {
         const csrftoken = simulateAPIClick();
@@ -55,15 +66,15 @@ const ManageStateDialog: FC = () => {
     };
 
     const changeStateAccess = (stateName: string) => {
-        store.configStore.openManageStateDialog = false;
-        store.configStore.openStateAccessControl = true;
+        setOpenManageState(false);
+        setOpenStateAccessControl(true);
         setStateNameToChange(stateName);
     };
 
     // const changeStateName = ()
 
     return (<div >
-        <Dialog open={store.configStore.openManageStateDialog} fullWidth>
+        <Dialog open={openManageState} fullWidth>
             <DialogTitle>Manage Saved States</DialogTitle>
             <DialogContent >
                 <List>{
@@ -72,9 +83,9 @@ const ManageStateDialog: FC = () => {
                             <ListItemText primary={d} style={{ maxWidth: "375px" }} />
                             <ListItemSecondaryAction>
                                 <IconButton onClick={() => {
-                                    store.configStore.openManageStateDialog = false;
+                                    setOpenManageState(false);
                                     store.configStore.stateToUpdate = d;
-                                    store.configStore.openSaveStateDialog = true;
+                                    setOpenSaveState(true);
                                 }}>
                                     <Tooltip title={<BiggerTooltip children='Edit State' />}>
                                         <EditIcon />
@@ -97,12 +108,12 @@ const ManageStateDialog: FC = () => {
                 </List>
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => { store.configStore.openManageStateDialog = false; }}>
+                <Button onClick={() => setOpenManageState(false)}>
                     Close
                 </Button>
             </DialogActions>
         </Dialog>
-        <StateAccessControl stateName={stateNameToChange} />
+        <StateAccessControl openStateAccessControl={openStateAccessControl} setOpenStateAccessControl={passSetOpenStateAccess} stateName={stateNameToChange} />
     </div>);
 };
 
