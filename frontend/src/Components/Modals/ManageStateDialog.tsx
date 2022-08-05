@@ -12,20 +12,16 @@ import { BiggerTooltip } from "../../Presets/StyledComponents";
 
 type Props = {
     setOpenSaveState: (input: boolean) => void;
-    setOpenManageState: (input: boolean) => void;
-    openManageState: boolean;
+    setVisbility: (input: boolean) => void;
+    visible: boolean;
 };
 
-const ManageStateDialog: FC<Props> = ({ setOpenSaveState, setOpenManageState, openManageState }: Props) => {
+const ManageStateDialog: FC<Props> = ({ setOpenSaveState, setVisbility, visible }: Props) => {
     const store = useContext(Store);
 
     const [stateNameToChange, setStateNameToChange] = useState("");
 
     const [openStateAccessControl, setOpenStateAccessControl] = useState(false);
-
-    const passSetOpenStateAccess = (input: boolean) => {
-        setOpenStateAccessControl(input);
-    };
 
     const removeState = (stateName: string) => {
         const csrftoken = simulateAPIClick();
@@ -66,7 +62,7 @@ const ManageStateDialog: FC<Props> = ({ setOpenSaveState, setOpenManageState, op
     };
 
     const changeStateAccess = (stateName: string) => {
-        setOpenManageState(false);
+        setVisbility(false);
         setOpenStateAccessControl(true);
         setStateNameToChange(stateName);
     };
@@ -74,7 +70,7 @@ const ManageStateDialog: FC<Props> = ({ setOpenSaveState, setOpenManageState, op
     // const changeStateName = ()
 
     return (<div >
-        <Dialog open={openManageState} fullWidth>
+        <Dialog open={visible} fullWidth>
             <DialogTitle>Manage Saved States</DialogTitle>
             <DialogContent >
                 <List>{
@@ -83,7 +79,7 @@ const ManageStateDialog: FC<Props> = ({ setOpenSaveState, setOpenManageState, op
                             <ListItemText primary={d} style={{ maxWidth: "375px" }} />
                             <ListItemSecondaryAction>
                                 <IconButton onClick={() => {
-                                    setOpenManageState(false);
+                                    setVisbility(false);
                                     store.configStore.stateToUpdate = d;
                                     setOpenSaveState(true);
                                 }}>
@@ -108,12 +104,12 @@ const ManageStateDialog: FC<Props> = ({ setOpenSaveState, setOpenManageState, op
                 </List>
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => setOpenManageState(false)}>
+                <Button onClick={() => setVisbility(false)}>
                     Close
                 </Button>
             </DialogActions>
         </Dialog>
-        <StateAccessControl openStateAccessControl={openStateAccessControl} setOpenStateAccessControl={passSetOpenStateAccess} stateName={stateNameToChange} />
+        <StateAccessControl openStateAccessControl={openStateAccessControl} setOpenStateAccessControl={setOpenStateAccessControl} stateName={stateNameToChange} />
     </div>);
 };
 

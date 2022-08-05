@@ -73,10 +73,6 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
 
     const [openCostInputDialog, setOpenCostInputDialog] = useState(false);
 
-    const passSetOpenCostInputDialog = (input: boolean) => {
-        setOpenCostInputDialog(input);
-    };
-
 
     useEffect(() => {
         if (extraPairArrayString) {
@@ -283,7 +279,7 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
                     <HelpIcon />
                 </Tooltip>
             </IconButton>
-            <CostInputDialog bloodComponent={bloodCostToChange} openCostInputDialog={openCostInputDialog} setDialog={passSetOpenCostInputDialog} />
+            <CostInputDialog bloodComponent={bloodCostToChange} visible={openCostInputDialog} setVisibility={setOpenCostInputDialog} />
             <ChartStandardButtons chartID={chartId} />
         </ChartAccessoryDiv>
         <ChartSVG ref={svgRef}>

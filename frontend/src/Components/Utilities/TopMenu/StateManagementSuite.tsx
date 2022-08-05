@@ -15,13 +15,7 @@ const StateManagementSuite: FC = () => {
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-    const passSetOpenSaveState = (input: boolean) => {
-        setOpenSaveState(input);
-    };
 
-    const passSetOpenManageState = (input: boolean) => {
-        setOpenManageState(input);
-    };
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         fetchSavedStates();
@@ -102,8 +96,8 @@ const StateManagementSuite: FC = () => {
                 <MenuItem onClick={() => { handleClose(); setOpenSaveState(true); }}>Save as a New State</MenuItem>
                 <MenuItem onClick={() => { handleClose(); setOpenManageState(true); }}>Manage Saved States</MenuItem>
             </Menu>
-            <ManageStateDialog setOpenManageState={passSetOpenManageState} openManageState={openManageState} setOpenSaveState={passSetOpenSaveState} />
-            <SaveStateModal openSaveState={openSaveState} setOpenSaveState={passSetOpenSaveState} />
+            <ManageStateDialog setVisbility={setOpenManageState} visible={openManageState} setOpenSaveState={setOpenSaveState} />
+            <SaveStateModal visible={openSaveState} setVisibility={setOpenSaveState} />
 
         </CenterAlignedDiv>
     );

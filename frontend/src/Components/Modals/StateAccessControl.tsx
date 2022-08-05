@@ -141,7 +141,7 @@ const StateAccessControl: FC<Props> = ({ stateName, openStateAccessControl, setO
             </DialogActions>
         </Dialog>
 
-        <UIDInputModal openUIDDialog={openShareUIDDialog} setOpenUIDDialog={passSetOpenUIDDialog} stateName={stateName} />
+        <UIDInputModal visible={openShareUIDDialog} setVisibility={passSetOpenUIDDialog} stateName={stateName} />
     </div>);
 };
 
