@@ -166,18 +166,14 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         {/* <Divider orientation="vertical" flexItem /> */}
 
         <CenterAlignedDiv>
-            <ButtonGroup>
+            <ButtonGroup disableElevation variant="contained" color="primary">
                 <Button
-                    disableElevation
-                    variant="contained"
-                    color="primary"
+
                     disabled={!checkValidInput()}
                     onClick={confirmChartAddHandler}>
                     Confirm
                 </Button>
                 <Button
-                    disableElevation
-                    variant="contained"
                     onClick={cancelChartAddHandler} >
                     Cancel
                 </Button>
