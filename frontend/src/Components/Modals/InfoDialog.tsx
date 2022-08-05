@@ -1,7 +1,6 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Typography } from "@mui/material";
 import { observer } from "mobx-react";
-import { FC, useContext } from "react";
-import Store from "../../Interfaces/Store";
+import { FC } from "react";
 
 type Props = {
     openAbout: boolean;
