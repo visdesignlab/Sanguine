@@ -1,6 +1,6 @@
+/** @jsxImportSource @emotion/react */
 import { FC } from "react";
 import { observer } from "mobx-react";
-import styled from "styled-components";
 import { max, format } from "d3";
 import { ExtraPairPoint } from "../../../../Interfaces/Types/DataTypes";
 import { Basic_Gray, ExtraPairPadding, ExtraPairWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, largeFontSize, OffsetDict, regularFontSize } from "../../../../Presets/Constants";
@@ -10,8 +10,9 @@ import Store from "../../../../Interfaces/Store";
 import ExtraPairViolin from "./ExtraPairViolin";
 import ExtraPairBar from "./ExtraPairBar";
 import ExtraPairBasic from "./ExtraPairBasic";
-import { Tooltip } from "@material-ui/core";
+import { styled, Tooltip } from "@mui/material";
 import { BiggerFontProps } from "../../../../Presets/StyledSVGComponents";
+import { BiggerTooltip } from "../../../../Presets/StyledComponents";
 
 
 interface OwnProps {
@@ -49,14 +50,12 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
                 break;
         }
 
-        let tooltipText = <div>
-            <p style={{ fontSize: "small", textAlign: "center" }}>{AcronymDictionary[nameInput] ? `${AcronymDictionary[nameInput]}` : undefined}
-                {AcronymDictionary[nameInput] ? <br /> : <></>}
-                {explanation}</p>
-
-            <p style={{ fontSize: "x-small", textAlign: "center" }}>Click to remove</p>
-        </div>;
-
+        let tooltipText = <BiggerTooltip>
+            {AcronymDictionary[nameInput] ? `${AcronymDictionary[nameInput]}` : undefined}
+            {AcronymDictionary[nameInput] ? <br /> : <></>}
+            {explanation} <br />
+            (Click to remove)
+        </BiggerTooltip>;
 
         return (
             <Tooltip title={tooltipText}>
@@ -136,14 +135,7 @@ const ExtraPairPlotGenerator: FC<Props> = ({ extraPairDataSet, secondaryExtraPai
     return returningComponents;
 };
 
-
-
-
-
 export default observer(ExtraPairPlotGenerator);
-
-
-
 
 const RemoveTSpan = styled(`tspan`)`
     font-size:10px;
@@ -159,7 +151,8 @@ const ExtraPairText = styled(`text`) <BiggerFontProps>`
   text-anchor: middle;
   alignment-baseline:hanging;
   cursor:pointer;
-    &:hover ${RemoveTSpan} {
+    &:hover tspan {
         opacity:1;
   }
 `;
+

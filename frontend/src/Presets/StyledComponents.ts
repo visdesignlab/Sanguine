@@ -1,26 +1,36 @@
 
-import styled from "styled-components";
-import { Basic_Gray, drawerWidth, postop_color, preop_color, Third_Gray } from "./Constants";
-import ListItem from '@material-ui/core/ListItem';
-import { makeStyles, Theme, createStyles } from "@material-ui/core";
+import { Basic_Gray, Third_Gray } from "./Constants";
+import { Chip, Container, Grid, ListSubheader, Toolbar } from "@mui/material";
+import styled from "@emotion/styled";
 
 export const LayoutDiv = styled.div`
   width: 100vw;
-
 `;
+
+export const CaseListSubheader = styled(ListSubheader)({
+    padding: "5px!important",
+    backgroundColor: "white!important"
+});
 
 export const Title = styled.b`
-    font-size:larger;
+    font-size:large;
 `;
 
-export const SurgeryNumText = styled(`text`)`
-  text-anchor:end;
-  alignment-baseline: middle;
-`;
+export const SurgeryNumText = styled(`text`)({
+    textAnchor: 'end',
+    alignmentBaseline: 'middle',
+    fontSize: '0.875rem',
+});
+
+
+export const CenterAlignedDiv = styled.div({
+    textAlign: "center"
+});
 
 
 export const SurgeryDiv = styled.td`
   overflow: hidden;
+  font-size:0.875rem;
   white-space: nowrap;
   text-overflow: ellipsis;
   alignment-baseline: hanging;
@@ -31,6 +41,18 @@ export const SurgeryDiv = styled.td`
   }
 `;
 
+export const FilterChip = styled(Chip)({
+    margin: '3px'
+});
+
+export const ChartWrapperContainer = styled(Container)({
+    height: "100%!important"
+});
+
+export const ChartAccessoryDiv = styled.div({
+    textAlign: "right",
+    color: Basic_Gray
+});
 
 interface SurgeryListProps {
     isSelected: boolean;
@@ -42,10 +64,6 @@ export const SurgeryListComp = styled(`tr`) <SurgeryListProps>`
   &:hover{
     background:#faeee1;
   }
-`;
-
-export const LeftToolBarListItem = styled(ListItem)`
-
 `;
 
 interface WelcomeTextProps {
@@ -60,117 +78,30 @@ export const WelcomeText = styled(`text`) < WelcomeTextProps>`
     margin:20px;
 `;
 
-export const useStyles = makeStyles((theme: Theme) =>
-    createStyles({
-        drawer: {
-            width: drawerWidth,
-            flexShrink: 0,
-        },
-        drawerPaper: {
-            width: drawerWidth,
-            padding: "10px"
-        },
-        toolbarPaddingControl: {
-            '& > *': {
-                paddingLeft: "6px",
-                paddingRight: "6px"
-            },
-        },
-        formControl: {
-            margin: theme.spacing(1),
-            minWidth: "200px!important",
-        },
-        root: {
-            '& > *': {
-                margin: theme.spacing(0.5),
-            },
-        },
-        chartAccessoryDiv: {
-            textAlign: "right",
-            color: Basic_Gray
-        },
-        img: {
-            margin: 'auto!important',
+export const UtilityContainer = styled(Container)({
+    width: "100%",
+    paddingLeft: "5px!important",
+    paddingRight: "5px!important",
+    maxWidth: "none",
+    overflow: "hidden",
+    height: "100%",
+    '&:hover': {
+        overflow: "overlay"
+    },
+});
 
-            display: 'block!important',
-            maxWidth: '100%!important',
-            height: "35px!important"
-        },
-        centerAlignment: {
-            textAlign: "center"
-        },
-        tinyFont: {
-            fontSize: "xx-small!important"
+export const InheritWidthGrid = styled(Grid)({
+    width: "inherit!important"
+});
 
-        },
-        containerWidth: {
-            width: "100%",
-            paddingLeft: "5px",
-            paddingRight: "5px",
-            maxWidth: "none",
-            overflow: "hidden",
-            height: "100%",
-            '&:hover': {
-                overflow: "overlay"
-            },
-        },
-        gridWidth: {
-            width: "inherit!important"
-        },
-        chartWrapper: {
-            height: "100%!important"
-        },
-        subheader: {
-            padding: "5px!important",
-            backgroundColor: "white!important"
-        },
-        tooltipFont: {
-            fontSize: "small!important",
-            textAlign: "center"
-        },
-        title: {
-            flexGrow: 1,
-            display: 'none',
-            [theme.breakpoints.up('sm')]: {
-                display: 'block',
-            },
-        },
-        manualDisable: {
-            color: "rgba(0, 0, 0, 0.26)"
-        }
-    }),
-);
+export const PaddedToolBar = styled(Toolbar)({
+    '& > *': {
+        paddingLeft: "6px",
+        paddingRight: "6px"
+    },
+});
 
-export const useButtonStyles = makeStyles((theme: Theme) =>
-    createStyles({
-        preopButtonActive: {
-            fontSize: "xx-small!important",
-            backgroundColor: preop_color,
-            color: "white"
-        },
-        postopButtonActive: {
-            fontSize: "xx-small!important",
-            backgroundColor: postop_color,
-            color: "white"
-        },
-        gapButtonActive: {
-            fontSize: "xx-small!important",
-            backgroundColor: Basic_Gray,
-            color: "white"
-        },
-        preopButtonOutline: {
-            fontSize: "xx-small!important",
-            color: preop_color,
-            backgroundColor: "white"
-        },
-        postopButtonOutline: {
-            fontSize: "xx-small!important",
-            color: postop_color,
-            backgroundColor: "white"
-        },
-        gapButtonOutline: {
-            fontSize: "xx-small!important",
-            color: Basic_Gray,
-            backgroundColor: "white"
-        }
-    }));
+export const BiggerTooltip = styled.div({
+    fontSize: "small!important",
+    textAlign: "center",
+});

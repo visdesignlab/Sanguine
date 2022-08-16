@@ -1,20 +1,27 @@
-import { Button, DialogActions, DialogContent, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Tooltip } from "@material-ui/core";
-import { Dialog, DialogTitle } from "@material-ui/core";
+import { Button, DialogActions, DialogContent, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Tooltip } from "@mui/material";
+import { Dialog, DialogTitle } from "@mui/material";
 import { FC, useContext, useState } from "react";
 import Store from "../../Interfaces/Store";
-import DeleteIcon from '@material-ui/icons/Delete';
-import ShareIcon from '@material-ui/icons/Share';
-import EditIcon from '@material-ui/icons/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ShareIcon from '@mui/icons-material/Share';
+import EditIcon from '@mui/icons-material/Edit';
 import { simulateAPIClick } from "../../Interfaces/UserManagement";
 import { observer } from "mobx-react";
 import StateAccessControl from "./StateAccessControl";
-import { useStyles } from "../../Presets/StyledComponents";
+import { BiggerTooltip } from "../../Presets/StyledComponents";
 
-const ManageStateDialog: FC = () => {
+type Props = {
+    setOpenSaveState: (input: boolean) => void;
+    setVisbility: (input: boolean) => void;
+    visible: boolean;
+};
+
+const ManageStateDialog: FC<Props> = ({ setOpenSaveState, setVisbility, visible }: Props) => {
     const store = useContext(Store);
-    const styles = useStyles();
+
     const [stateNameToChange, setStateNameToChange] = useState("");
 
+    const [openStateAccessControl, setOpenStateAccessControl] = useState(false);
 
     const removeState = (stateName: string) => {
         const csrftoken = simulateAPIClick();
@@ -55,15 +62,15 @@ const ManageStateDialog: FC = () => {
     };
 
     const changeStateAccess = (stateName: string) => {
-        store.configStore.openManageStateDialog = false;
-        store.configStore.openStateAccessControl = true;
+        setVisbility(false);
+        setOpenStateAccessControl(true);
         setStateNameToChange(stateName);
     };
 
     // const changeStateName = ()
 
     return (<div >
-        <Dialog open={store.configStore.openManageStateDialog} fullWidth>
+        <Dialog open={visible} fullWidth>
             <DialogTitle>Manage Saved States</DialogTitle>
             <DialogContent >
                 <List>{
@@ -72,21 +79,21 @@ const ManageStateDialog: FC = () => {
                             <ListItemText primary={d} style={{ maxWidth: "375px" }} />
                             <ListItemSecondaryAction>
                                 <IconButton onClick={() => {
-                                    store.configStore.openManageStateDialog = false;
+                                    setVisbility(false);
                                     store.configStore.stateToUpdate = d;
-                                    store.configStore.openSaveStateDialog = true;
+                                    setOpenSaveState(true);
                                 }}>
-                                    <Tooltip title={<div>  <p className={styles.tooltipFont}>Edit State</p></div>}>
+                                    <Tooltip title={<BiggerTooltip children='Edit State' />}>
                                         <EditIcon />
                                     </Tooltip>
                                 </IconButton>
                                 <IconButton onClick={() => { changeStateAccess(d); }}>
-                                    <Tooltip title={<div>  <p className={styles.tooltipFont}>Manage Sharing</p></div>}>
+                                    <Tooltip title={<BiggerTooltip children='Manage Sharing' />}>
                                         <ShareIcon />
                                     </Tooltip>
                                 </IconButton>
                                 <IconButton onClick={() => { removeState(d); }}>
-                                    <Tooltip title={<div>  <p className={styles.tooltipFont}>Delete State</p></div>}>
+                                    <Tooltip title={<BiggerTooltip children='Delete State' />}>
                                         <DeleteIcon />
                                     </Tooltip>
                                 </IconButton>
@@ -97,12 +104,12 @@ const ManageStateDialog: FC = () => {
                 </List>
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => { store.configStore.openManageStateDialog = false; }}>
+                <Button onClick={() => setVisbility(false)}>
                     Close
                 </Button>
             </DialogActions>
         </Dialog>
-        <StateAccessControl stateName={stateNameToChange} />
+        <StateAccessControl openStateAccessControl={openStateAccessControl} setOpenStateAccessControl={setOpenStateAccessControl} stateName={stateNameToChange} />
     </div>);
 };
 

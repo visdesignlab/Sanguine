@@ -1,7 +1,7 @@
+import styled from "@emotion/styled";
 import { timeFormat } from "d3";
 import { observer } from "mobx-react";
 import { FC, useContext } from "react";
-import styled from "styled-components";
 import Store from "../../../Interfaces/Store";
 import { DifferentialSquareWidth, preop_color, postop_color, OffsetDict, largeFontSize, regularFontSize } from "../../../Presets/Constants";
 import { AcronymDictionary } from "../../../Presets/DataDict";

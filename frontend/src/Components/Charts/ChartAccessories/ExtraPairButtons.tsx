@@ -1,7 +1,7 @@
-import { IconButton, Menu, MenuItem } from "@material-ui/core";
+import { IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
 import { useContext } from "react";
 import { FC, useState } from "react";
-import InsertChartIcon from '@material-ui/icons/InsertChart';
+import InsertChartIcon from '@mui/icons-material/InsertChart';
 import Store from "../../../Interfaces/Store";
 import { ExtraPairOptions } from "../../../Presets/DataDict";
 import { ExtraPairLimit } from "../../../Presets/Constants";
@@ -32,9 +32,11 @@ const ExtraPairButtons: FC<Props> = ({ extraPairLength, chartId, disbleButton }:
 
     return (
         <>
-            <IconButton color="primary" size="small" disabled={extraPairLength >= ExtraPairLimit || disbleButton} onClick={handleClick}>
-                <InsertChartIcon />
-            </IconButton>
+            <Tooltip title='Add additional attributes to the left of the chart'>
+                <IconButton color="primary" size="small" disabled={extraPairLength >= ExtraPairLimit || disbleButton} onClick={handleClick}>
+                    <InsertChartIcon />
+                </IconButton>
+            </Tooltip>
             <Menu anchorEl={anchorEl} open={open}
                 onClose={handleClose}
             >

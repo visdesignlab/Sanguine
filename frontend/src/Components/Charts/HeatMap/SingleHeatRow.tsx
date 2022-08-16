@@ -1,3 +1,4 @@
+import { Tooltip } from "@mui/material";
 import { format, interpolateGreys, interpolateReds, ScaleBand } from "d3";
 import { observer } from "mobx-react";
 import { FC, useCallback, useContext } from "react";
@@ -6,7 +7,6 @@ import Store from "../../../Interfaces/Store";
 import { HeatMapDataPoint } from "../../../Interfaces/Types/DataTypes";
 import { Basic_Gray } from "../../../Presets/Constants";
 import { HeatMapRect } from "../../../Presets/StyledSVGComponents";
-import Tooltip from '@material-ui/core/Tooltip';
 
 
 type Props = {
@@ -30,25 +30,24 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                 if (dataPoint.countDict[point]) {
                     const output = dataPoint.countDict[point].length;
                     const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum;
-                    let disables = false;
+                    // let disables = false;
                     let colorFill = output === 0 ? "white" : interpolateReds(HeatmapColorScale(output / caseCount));
                     if (!showZero && point as any === 0) {
                         colorFill = output === 0 ? "white" : interpolateGreys(HeatmapGreyScale(output / (dataPoint.caseCount)));
-                        disables = true;
+                        // disables = true;
                     }
 
                     const outputContent = (output / caseCount < 0.01 && output > 0) ? "<1%" : format(".0%")(output / caseCount);
 
                     return (
-                        <g>
+                        <g key={`${dataPoint.aggregateAttribute}-${point}`}>
                             <Tooltip
-                                title={<div key={`${dataPoint.aggregateAttribute}-${point}`} className="charttooltip">{outputContent}</div>}
+                                title={<div className="charttooltip" children={`${output}, ${outputContent}`} />}
                                 arrow
                                 key={dataPoint.aggregateAttribute + '-' + point}
                                 placement="top"
                                 hidden={output === 0}
-                                interactive>
-
+                            >
                                 <HeatMapRect
                                     fill={colorFill}
                                     x={valueScale()(point)}
@@ -58,7 +57,6 @@ const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange
                                     key={dataPoint.aggregateAttribute + '-' + point}
                                 />
                             </Tooltip>
-
                             <line transform={howToTransform}
                                 strokeWidth={0.5}
                                 stroke={Basic_Gray}

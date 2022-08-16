@@ -1,11 +1,10 @@
 import { useContext, useState } from "react";
 import { FC } from "react";
-
 import Store from "../../../Interfaces/Store";
 import { addOptions, OutcomeOptions, typeDiction } from "../../../Presets/DataDict";
-import SettingsIcon from '@material-ui/icons/Settings';
-import NestedMenuItem from "material-ui-nested-menu-item";
-import { IconButton, Menu, MenuItem } from "@material-ui/core";
+import SettingsIcon from '@mui/icons-material/Settings';
+import { NestedMenuItem } from "mui-nested-menu";
+import { IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
 import { observer } from "mobx-react";
 
 
@@ -54,17 +53,16 @@ const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTyp
 
     return (
         <>
-            <IconButton size="small" onClick={handleClick}>
-                <SettingsIcon />
-            </IconButton>
+            <Tooltip title='Update chart attributes'>
+                <IconButton size="small" onClick={handleClick}>
+                    <SettingsIcon />
+                </IconButton>
+            </Tooltip>
             <Menu anchorEl={anchorEl} open={open}
-                onClose={handleClose}
-            >
+                onClose={handleClose}>
                 <NestedMenuItem
                     label="Change Aggregation"
-                    parentMenuOpen={open}
-                >
-
+                    parentMenuOpen={open}>
                     {addOptions[chartTypeIndexinArray][1].map((option) => (
                         <MenuItem key={option.key} onClick={() => { changeXAxis(option.key); }}>{option.text}</MenuItem>
                     ))}
@@ -77,7 +75,7 @@ const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTyp
                         <MenuItem key={option.key} onClick={() => { changeYAxis(option.key); }}>{option.text}</MenuItem>
                     ))}
                     {chartTypeIndexinArray === 0 ? <MenuItem key={"NONE"} onClick={() => { changeYAxis(""); }}>None</MenuItem> : <></>}
-                </NestedMenuItem> : <></>}
+                </NestedMenuItem> : []}
                 {requireOutcome ? <NestedMenuItem
                     label="Change Outcome Comparison"
                     parentMenuOpen={open}
@@ -85,7 +83,7 @@ const ChartConfigMenu: FC<Props> = ({ xAggregationOption, yValueOption, chartTyp
                     {OutcomeDropdownOptions.map((option) => (
                         <MenuItem key={option.key} onClick={() => { changeOutcome(option.key); }}>{option.text}</MenuItem>
                     ))}
-                </NestedMenuItem> : <></>}
+                </NestedMenuItem> : []}
             </Menu>
         </>);
 };

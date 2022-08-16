@@ -1,10 +1,9 @@
 import { FC, useCallback, useRef, useEffect } from "react";
-
-import styled from "styled-components";
 import { observer } from "mobx-react";
 import { scaleLinear, line, curveCatmullRom, format, scaleBand, select, axisBottom } from "d3";
 import { Basic_Gray, ExtraPairWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, Third_Gray } from "../../../../Presets/Constants";
-import { Tooltip } from "@material-ui/core";
+import { Tooltip } from "@mui/material";
+import styled from "@emotion/styled";
 
 interface OwnProps {
     dataSet: any[];
@@ -43,6 +42,7 @@ const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, a
             .y((d: any) => kdeScale(d.y) + 0.5 * aggregationScale().bandwidth())
             .x((d: any) => valueScale(d.x));
         return lineFunction;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [aggregationScale, valueScale, kdeMax]);
 
     const svgRef = useRef<SVGSVGElement>(null);

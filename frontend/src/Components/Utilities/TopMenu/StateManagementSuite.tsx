@@ -1,17 +1,20 @@
-import { Button, Menu, MenuItem } from "@material-ui/core";
+import { Button, Menu, MenuItem } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useEffect, useState, useContext } from "react";
-import NestedMenuItem from "material-ui-nested-menu-item";
+import { NestedMenuItem } from "mui-nested-menu";
 import Store from "../../../Interfaces/Store";
-import { useStyles } from "../../../Presets/StyledComponents";
 import ManageStateDialog from "../../Modals/ManageStateDialog";
 import SaveStateModal from "../../Modals/SaveStateModal";
+import { CenterAlignedDiv } from "../../../Presets/StyledComponents";
 
 const StateManagementSuite: FC = () => {
-    const styles = useStyles();
+
     const store = useContext(Store);
+    const [openSaveState, setOpenSaveState] = useState(false);
+    const [openManageState, setOpenManageState] = useState(false);
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
 
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -24,7 +27,7 @@ const StateManagementSuite: FC = () => {
     };
     // // const [listOfSavedState, setListOfSavedState] = useState<string[]>([])
 
-    async function fetchSavedStates () {
+    async function fetchSavedStates() {
         fetch(`${process.env.REACT_APP_QUERY_URL}state`)
             .then(result => result.json())
             .then(result => {
@@ -63,7 +66,7 @@ const StateManagementSuite: FC = () => {
 
 
     return (
-        <div className={styles.centerAlignment}>
+        <CenterAlignedDiv>
             <Button variant="outlined" onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true"  >States</Button>
             <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
 
@@ -90,13 +93,13 @@ const StateManagementSuite: FC = () => {
                     <MenuItem>Preset 2</MenuItem>
                     <MenuItem>Preset 3</MenuItem>
                 </NestedMenuItem>
-                <MenuItem onClick={() => { handleClose(); store.configStore.openSaveStateDialog = true; }}>Save as a New State</MenuItem>
-                <MenuItem onClick={() => { handleClose(); store.configStore.openManageStateDialog = true; }}>Manage Saved States</MenuItem>
+                <MenuItem onClick={() => { handleClose(); setOpenSaveState(true); }}>Save as a New State</MenuItem>
+                <MenuItem onClick={() => { handleClose(); setOpenManageState(true); }}>Manage Saved States</MenuItem>
             </Menu>
-            <ManageStateDialog />
-            <SaveStateModal />
+            <ManageStateDialog setVisbility={setOpenManageState} visible={openManageState} setOpenSaveState={setOpenSaveState} />
+            <SaveStateModal visible={openSaveState} setVisibility={setOpenSaveState} />
 
-        </div>
+        </CenterAlignedDiv>
     );
 };
 

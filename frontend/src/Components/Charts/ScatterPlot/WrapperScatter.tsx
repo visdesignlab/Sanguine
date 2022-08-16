@@ -1,10 +1,8 @@
-import { Container } from "@material-ui/core";
 import { observer } from "mobx-react";
 import { FC, useContext, useLayoutEffect, useRef, useState } from "react";
 import { DataContext } from "../../../App";
 import Store from "../../../Interfaces/Store";
 import { ScatterDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
-import { useStyles } from "../../../Presets/StyledComponents";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
 import ScatterPlot from "./ScatterPlot";
@@ -14,6 +12,9 @@ import useDeepCompareEffect from "use-deep-compare-effect";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import ChartStandardButtons from "../ChartStandardButtons";
 import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
+import { ChartWrapperContainer } from "../../../Presets/StyledComponents";
+import styled from "@emotion/styled";
+import { Basic_Gray } from "../../../Presets/Constants";
 
 type Props = {
     yValueOption: string;
@@ -27,7 +28,7 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
 
     const hemoData = useContext(DataContext);
     const store = useContext(Store);
-    const styles = useStyles();
+
     const { proceduresSelection, showZero, rawDateRange } = store.state;
 
     const svgRef = useRef<SVGSVGElement>(null);
@@ -122,8 +123,8 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
             });
     }, [rawDateRange, proceduresSelection, hemoData, showZero, yValueOption, xAggregationOption]);
 
-    return (<Container className={styles.chartWrapper}>
-        <div className={styles.chartAccessoryDiv}>
+    return (<ChartWrapperContainer>
+        <ChartAccessoryDiv>
             Scatterplot
             <ChartConfigMenu
                 xAggregationOption={xAggregationOption}
@@ -133,7 +134,7 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
                 requireOutcome={false}
                 requireSecondary={true} />
             <ChartStandardButtons chartID={chartId} />
-        </div>
+        </ChartAccessoryDiv>
         <ChartSVG ref={svgRef}>
             <ScatterPlot
                 xAggregationOption={xAggregationOption}
@@ -148,6 +149,11 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
                 svg={svgRef} />
         </ChartSVG>
         <AnnotationForm chartI={chartId} annotationText={annotationText} />
-    </Container>);
+    </ChartWrapperContainer>);
 };
 export default observer(WrapperScatter);
+
+const ChartAccessoryDiv = styled.div({
+    textAlign: "right",
+    color: Basic_Gray
+});

@@ -1,17 +1,14 @@
 import { observer } from "mobx-react";
 import { FC, useContext, useState } from "react";
-import BrowserWarning from "./Components/Modals/BrowserWarning";
-import DataRetrieval from "./Components/Modals/DataRetrieval";
+
 import LeftToolBox from "./Components/Utilities/LeftToolBox/LeftToolBox";
 import RegularModeMenu from "./Components/Utilities/TopMenu/RegularModeMenu";
 
 import './App.css';
 import LayoutGenerator from "./Components/LayoutGenerator";
 import { DataContext } from "./App";
-import Grid from "@material-ui/core/Grid";
-import { Box, Divider, Snackbar, Tab, Tabs } from "@material-ui/core";
+import { Box, Divider, Snackbar, Tab, Tabs, Alert, Grid } from "@mui/material";
 import DetailView from "./Components/Utilities/DetailView/DetailView";
-import { Alert } from "@material-ui/lab";
 import Store from "./Interfaces/Store";
 import { SnackBarCloseTime } from "./Presets/Constants";
 import TabPanel from "./Components/Utilities/TabPanel";
@@ -69,11 +66,7 @@ const Dashboard: FC = () => {
                     <DetailView />
                 </Grid>
             </Grid>
-            {(process.env.REACT_APP_REQUIRE_LOGIN === "true") ?
-                <>
-                    <BrowserWarning />
-                    <DataRetrieval />
-                </> : <></>}
+
 
             <Snackbar open={store.configStore.openSnackBar} autoHideDuration={SnackBarCloseTime} onClose={() => { store.configStore.openSnackBar = false; }}>
                 <Alert onClose={() => { store.configStore.openSnackBar = false; }} severity={store.configStore.snackBarIsError ? "error" : "success"}>

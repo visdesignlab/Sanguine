@@ -1,13 +1,14 @@
-import { Tooltip } from "@material-ui/core";
+import { Tooltip } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC } from "react";
 import { DumbbellDataPoint } from "../../../Interfaces/Types/DataTypes";
+import { BiggerTooltip } from "../../../Presets/StyledComponents";
 import { DumbbellCircle, DumbbellRect } from "../../../Presets/StyledSVGComponents";
+
+
 type Props = {
     xVal: number;
-
     dataPoint: DumbbellDataPoint;
-
     isSelectSet: boolean;
     showPreop: boolean;
     showPostop: boolean;
@@ -24,10 +25,9 @@ const SingleDumbbell: FC<Props> = ({ xVal, dataPoint, isSelectSet, showGap, show
     const rectHeight = Math.abs(circleYValStart - circleYValEnd);
     return (
         <Tooltip
-            title={<div className="charttooltip">{`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}</div>}
+            title={<BiggerTooltip children={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`} />}
             arrow
-            placement="top"
-            interactive>
+            placement="top">
             <g >
                 <DumbbellRect
                     x={xVal - 1}

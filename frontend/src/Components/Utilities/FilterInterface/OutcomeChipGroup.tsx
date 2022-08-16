@@ -1,9 +1,10 @@
-import { Box, Chip } from "@material-ui/core";
+import { Box } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useContext } from "react";
 import Store from "../../../Interfaces/Store";
 import { OutcomeOptions } from "../../../Presets/DataDict";
-import { useStyles } from "../../../Presets/StyledComponents";
+import { FilterChip } from "../../../Presets/StyledComponents";
+
 
 const OutcomeChipGroup: FC = () => {
     const store = useContext(Store);
@@ -17,9 +18,10 @@ const OutcomeChipGroup: FC = () => {
         }
     };
 
-    return (<Box className={useStyles().root}>
+    return (<Box>
         {OutcomeOptions.map((d) => (
-            <Chip
+            <FilterChip
+                style={{ margin: '3px' }}
                 label={d.text}
                 key={d.key}
                 clickable

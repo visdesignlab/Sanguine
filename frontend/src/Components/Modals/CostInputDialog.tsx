@@ -1,24 +1,26 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from "@material-ui/core";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useContext, useState } from "react";
 import Store from "../../Interfaces/Store";
 
 type Props = {
     bloodComponent: string;
+    visible: boolean;
+    setVisibility: (input: boolean) => void;
 };
-const CostInputDialog: FC<Props> = ({ bloodComponent }: Props) => {
+const CostInputDialog: FC<Props> = ({ bloodComponent, visible, setVisibility }: Props) => {
     const store = useContext(Store);
 
     const [costInput, setCostInput] = useState(0);
 
     const saveCostInput = () => {
         store.configStore.changeCostConfig(bloodComponent, costInput);
-        store.configStore.openCostInputModal = false;
+        setVisibility(false);
         setCostInput(0);
     };
 
     return (
-        <Dialog open={store.configStore.openCostInputModal}>
+        <Dialog open={visible}>
             <DialogTitle>Change Cost for {bloodComponent}</DialogTitle>
             <DialogContent>
                 <DialogContentText>Current Cost for {bloodComponent} is ${store.state.BloodProductCost[bloodComponent]}</DialogContentText>
@@ -26,7 +28,7 @@ const CostInputDialog: FC<Props> = ({ bloodComponent }: Props) => {
             </DialogContent>
 
             <DialogActions>
-                <Button onClick={() => { store.configStore.openCostInputModal = false; }}>Cancel</Button>
+                <Button onClick={() => setVisibility(false)}>Cancel</Button>
                 <Button color="primary"
                     onClick={saveCostInput}>
                     Confirm

@@ -7,15 +7,7 @@ import { LayoutElement } from "./Types/LayoutTypes";
 export class ProjectConfigStore {
     rootStore: RootStore;
     private _isLoggedIn: boolean;
-    private _dataLoading: boolean;
-    private _dataLoadingFailed: boolean;
     private _topMenuBarAddMode: boolean;
-    openSaveStateDialog: boolean;
-    openManageStateDialog: boolean;
-    openShareUIDDialog: boolean;
-    openCostInputModal: boolean;
-    openStateAccessControl: boolean;
-    openAboutDialog: boolean;
     loadedStateName: string;
     openSnackBar: boolean;
     snackBarMessage: string;
@@ -30,23 +22,13 @@ export class ProjectConfigStore {
     constructor(rootstore: RootStore) {
         this.rootStore = rootstore;
         this._isLoggedIn = !(process.env.REACT_APP_REQUIRE_LOGIN === "true");
-        this._dataLoading = true;
         this.largeFont = false;
         this.privateMode = false;
-        this._dataLoadingFailed = false;
         this._topMenuBarAddMode = false;
-        this.openSaveStateDialog = false;
-        this.openManageStateDialog = false;
-        this.openShareUIDDialog = false;
-
         this.openSnackBar = false;
         this.snackBarMessage = "";
         this.snackBarIsError = false;
-
         this.loadedStateName = "";
-        this.openCostInputModal = false;
-        this.openStateAccessControl = false;
-        this.openAboutDialog = false;
         this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0, PREOP_HGB: 0, POSTOP_HGB: 0 };
         this.stateToUpdate = "";
 
@@ -89,20 +71,7 @@ export class ProjectConfigStore {
     get isLoggedIn() {
         return this._isLoggedIn;
     }
-    set dataLoading(input: boolean) {
-        this._dataLoading = input;
-    }
 
-    get dataLoading() {
-        return this._dataLoading;
-    }
-    set dataLoadingFailed(input: boolean) {
-        this._dataLoadingFailed = input;
-    }
-
-    get dataLoadingFailed() {
-        return this._dataLoadingFailed;
-    }
 
     set topMenuBarAddMode(input: boolean) {
         this._topMenuBarAddMode = input;

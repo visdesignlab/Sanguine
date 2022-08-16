@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled from "@emotion/styled";
 import { Offset } from "../Interfaces/Types/OffsetType";
 import { Basic_Gray, highlight_orange, largeFontSize, postop_color, preop_color, regularFontSize } from "./Constants";
 

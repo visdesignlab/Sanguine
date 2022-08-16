@@ -1,14 +1,19 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormGroup, Radio, RadioGroup, TextField } from "@material-ui/core";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormGroup, Radio, RadioGroup, TextField } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useState, useContext, useEffect } from "react";
 import Store from "../../Interfaces/Store";
 import { simulateAPIClick } from "../../Interfaces/UserManagement";
 
+type Props = {
+    visible: boolean,
+    setVisibility: (input: boolean) => void;
+};
 
-const SaveStateModal: FC = () => {
+const SaveStateModal: FC<Props> = ({ visible, setVisibility }: Props) => {
     const store = useContext(Store);
     const [stateName, setStateName] = useState("");
     const [publicAccess, setPublicAccess] = useState(false);
+
 
     useEffect(() => {
         setStateName(store.configStore.stateToUpdate);
@@ -81,7 +86,7 @@ const SaveStateModal: FC = () => {
     };
 
     const onSuccess = () => {
-        store.configStore.openSaveStateDialog = false;
+        setVisibility(false);
         store.configStore.snackBarIsError = false;
         store.configStore.snackBarMessage = "State saved!";
         store.configStore.openSnackBar = true;
@@ -97,7 +102,7 @@ const SaveStateModal: FC = () => {
     };
 
     return <div>
-        <Dialog open={store.configStore.openSaveStateDialog}>
+        <Dialog open={visible}>
             <DialogTitle>Save the current state</DialogTitle>
             <DialogContent>
                 <DialogContentText>
@@ -128,7 +133,7 @@ const SaveStateModal: FC = () => {
 
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => { store.configStore.stateToUpdate = ""; store.configStore.openSaveStateDialog = false; }}>Cancel</Button>
+                <Button onClick={() => { store.configStore.stateToUpdate = ""; setVisibility(false); }}>Cancel</Button>
                 <Button color="primary" disabled={stateName.length === 0} onClick={() => { saveNewState(); }}>Confirm</Button>
             </DialogActions>
         </Dialog>
