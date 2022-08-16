@@ -1,18 +1,19 @@
-import { CircularProgress, Container, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, ListSubheader } from "@material-ui/core";
+import { CircularProgress, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText } from "@mui/material";
 import { observer } from "mobx-react";
 import { useContext } from "react";
 import { FC, useEffect, useState } from "react";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
-import CloseIcon from '@material-ui/icons/Close';
+import CloseIcon from '@mui/icons-material/Close';
 import { AcronymDictionary, HIPAA_Sensitive, SurgeryUrgencyArray } from "../../../Presets/DataDict";
-import { useStyles } from "../../../Presets/StyledComponents";
+import { UtilityContainer, CaseListSubheader, CenterAlignedDiv } from "../../../Presets/StyledComponents";
+
 
 const CaseInfo: FC = () => {
 
     const [individualInfo, setIndividualInfo] = useState<any>(null);
     const store = useContext(Store);
-    const styles = useStyles();
+
     const { currentSelectPatient } = store.state;
 
     const swapName = (key: string, value: any) => {
@@ -73,11 +74,12 @@ const CaseInfo: FC = () => {
         }
         fetchIndividualInformaiton();
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentSelectPatient]);
-    return (<Container className={styles.containerWidth} style={{ height: "80vh", padding: "1px", visibility: currentSelectPatient ? "visible" : "hidden" }}>
+    return (<UtilityContainer style={{ height: "80vh", padding: "1px", visibility: currentSelectPatient ? "visible" : "hidden" }}>
 
         <List dense>
-            <ListSubheader className={styles.subheader}>
+            <CaseListSubheader>
                 <ListItemText primary={`Case Info`} />
                 <ListItemSecondaryAction>
 
@@ -89,10 +91,10 @@ const CaseInfo: FC = () => {
                     </IconButton>
                 </ListItemSecondaryAction>
 
-            </ListSubheader>
-            {individualInfo ? generate_List_Items() : <Container className={styles.centerAlignment}><CircularProgress /></Container>}
+            </CaseListSubheader>
+            {individualInfo ? generate_List_Items() : <CenterAlignedDiv><CircularProgress /></CenterAlignedDiv>}
         </List>
-    </Container>);
+    </UtilityContainer>);
 };
 
 export default observer(CaseInfo);

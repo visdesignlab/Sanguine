@@ -35,8 +35,8 @@ We restrict who can access this application through Utah's CAS server, using duo
 
 1. `cd` to the frontend folder
 1. Configure your .env file with the correct parameters based on the the .env.default
-1. Run `npm install`
-1. Run `npm run start`
+1. Run `yarn install`
+1. Run `yarn start`
 
 
 ## Deployment docs
@@ -56,7 +56,8 @@ ln -s ../cpt_codes_cleaned.csv backend/api/cpt_codes_cleaned.csv
 
 # Start/restart the frontend
 cd frontend
-/usr/bin/scl enable rh-nodejs10 -- npm run build
+/usr/bin/scl enable rh-nodejs10 -- yarn
+/usr/bin/scl enable rh-nodejs10 -- yarn build
 sudo /usr/bin/rsync -av /uufs/chpc.utah.edu/common/HIPAA/IRB_00124248/deployed-app/bloodvis/frontend/build/* /var/www/html
 sudo /usr/bin/chown -R apache. /var/www/html
 sudo systemctl restart httpd24-httpd

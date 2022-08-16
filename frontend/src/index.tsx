@@ -1,5 +1,3 @@
-// import "./wdyr"
-import whyDidYouRender from '@welldone-software/why-did-you-render';
 import ReactDOM from 'react-dom';
 
 import App from './App';
@@ -7,8 +5,8 @@ import * as serviceWorker from './serviceWorker';
 import 'mobx-react-lite/batchingForReactDom';
 
 import React from 'react';
-import { CssBaseline } from '@material-ui/core';
 import './index.css';
+import CssBaseline from '@mui/material/CssBaseline';
 
 // document.onkeydown = e => {
 //     let mac = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);

@@ -1,19 +1,17 @@
-import { CircularProgress, Dialog, DialogContent, DialogContentText, DialogTitle, Grid } from "@material-ui/core";
+import { CircularProgress, Dialog, DialogContent, DialogContentText, DialogTitle, Grid } from "@mui/material";
 import { observer } from "mobx-react";
-import { useContext } from "react";
 import { FC } from "react";
-
-import Store from "../../Interfaces/Store";
 
 type Props = {
     errorMessage?: string;
+    dataLoading: boolean;
+    dataLoadingFailed: boolean;
 };
 
-const DataRetrievalModal: FC<Props> = ({ errorMessage }: Props) => {
-    const store = useContext(Store);
-    return <Dialog open={store.configStore.dataLoading || store.configStore.dataLoadingFailed
+const DataRetrievalModal: FC<Props> = ({ errorMessage, dataLoading, dataLoadingFailed }: Props) => {
+    return <Dialog open={dataLoading || dataLoadingFailed
     } >
-        {store.configStore.dataLoadingFailed ?
+        {dataLoadingFailed ?
             (<>
                 <DialogTitle>Failed</DialogTitle>
                 <DialogContent >

@@ -1,31 +1,38 @@
-import { Menu, MenuItem, Button, AppBar, Toolbar, Typography, IconButton, ButtonGroup, Tooltip, ListItemIcon } from "@material-ui/core";
-import { isObservable } from "mobx";
+/** @jsxImportSource @emotion/react */
+import { Menu, MenuItem, Button, AppBar, Typography, IconButton, Tooltip, ListItemIcon } from "@mui/material";
 import { observer } from "mobx-react";
 import { useContext, useState, FC } from "react";
-import InsertChartIcon from '@material-ui/icons/InsertChart';
+import InsertChartIcon from '@mui/icons-material/InsertChart';
 import Store from "../../../Interfaces/Store";
 import { logoutHandler, simulateAPIClick } from "../../../Interfaces/UserManagement";
-import BugReportOutlinedIcon from '@material-ui/icons/BugReportOutlined';
-import { useStyles } from "../../../Presets/StyledComponents";
+import BugReportOutlinedIcon from '@mui/icons-material/BugReportOutlined';
 import AddModeTopMenu from "./AddModeTopMenu";
-import VpnKeyIcon from '@material-ui/icons/VpnKey';
-import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import UndoRedoButtons from "./UndoRedoButtons";
-import FormatSizeIcon from '@material-ui/icons/FormatSize';
+import FormatSizeIcon from '@mui/icons-material/FormatSize';
 import StateManagementSuite from "./StateManagementSuite";
-import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
-import SaveIcon from '@material-ui/icons/Save';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import SaveIcon from '@mui/icons-material/Save';
 import InfoDialog from "../../Modals/InfoDialog";
-import DeleteIcon from '@material-ui/icons/Delete';
-import MoreVert from "@material-ui/icons/MoreVert";
+import DeleteIcon from '@mui/icons-material/Delete';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import styled from "@emotion/styled";
+import { PaddedToolBar, CenterAlignedDiv } from "../../../Presets/StyledComponents";
+import { css } from '@emotion/react';
+
 
 const RegularModeMenu: FC = () => {
     const store = useContext(Store);
-    const styles = useStyles();
     const [addingChartType, setAddingChartType] = useState(-1);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [anchorMore, setAnchorMore] = useState<null | HTMLElement>(null);
 
+    const [openAbout, setOpenAbout] = useState(false);
+
+    const passSetOpenAbout = (input: boolean) => {
+        setOpenAbout(input);
+    };
     const addModeButtonHandler = (chartType: number) => {
         setAddingChartType(chartType);
         store.configStore.topMenuBarAddMode = true;
@@ -87,40 +94,34 @@ const RegularModeMenu: FC = () => {
 
 
 
-        <Toolbar className={styles.toolbarPaddingControl}>
+        <PaddedToolBar>
 
 
-            <a href="https://healthcare.utah.edu" target="_blank">
-                <img
-                    className={styles.img}
+            <a href="https://healthcare.utah.edu" target="_blank" rel="noopener noreferrer" >
+                <StyledImage
                     src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/u-of-u-health-social.png" />
             </a>
-            <a href="https://arup.utah.edu" target="_blank">
-                <img
-                    className={styles.img}
+            <a href="https://arup.utah.edu" target="_blank" rel="noopener noreferrer">
+                <StyledImage
                     src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/ARUP-logo.png" />
             </a>
-            <a href="https://vdl.sci.utah.edu" target="_blank">
-                <img
-                    className={styles.img}
+            <a href="https://vdl.sci.utah.edu" target="_blank" rel="noopener noreferrer">
+                <StyledImage
                     src="https://raw.githubusercontent.com/visdesignlab/Sanguine/main/images/vdl.png" />
             </a>
 
-            <Typography className={styles.title} variant="h6" noWrap>
+            <TitleTypography variant="h6">
                 Sanguine
-            </Typography>
+            </TitleTypography>
 
             {/* Preview Mode */}
-            {/* <div className={useStyles().centerAlignment}>
+            {/* <div className={allCss.centerAlignment}>
                 <Button variant="outlined" disabled>Preview Mode</Button>
                 //    content="Preview Mode"
                  // onClick={() => { store!.previewMode = true }}
             </div> */}
 
-
-
-
-            <div className={useStyles().centerAlignment}>
+            <CenterAlignedDiv>
                 <Button startIcon={<InsertChartIcon />} color="primary" variant="contained" disableElevation onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true" >Add Chart</Button>
                 <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
                     <MenuItem onClick={() => handleClose(1)}>Dumbbell Chart</MenuItem>
@@ -128,19 +129,19 @@ const RegularModeMenu: FC = () => {
                     <MenuItem onClick={() => handleClose(3)}>Heat Map</MenuItem>
                     <MenuItem onClick={() => handleClose(0)}>Cost and Saving Chart</MenuItem>
                 </Menu>
-            </div>
+            </CenterAlignedDiv>
 
             <StateManagementSuite />
 
 
             <IconButton disabled={store.isAtRoot} onClick={() => { store.chartStore.clearAllCharts(); store.configStore.loadedStateName = ""; }}>
-                <Tooltip title={<div>  <p className={styles.tooltipFont}>Clear All Charts</p></div>}>
+                <Tooltip title='Clear All Charts'>
                     <DeleteIcon />
                 </Tooltip>
             </IconButton>
 
             <IconButton disabled={store.configStore.loadedStateName.length === 0} onClick={updateState}>
-                <Tooltip title={<div>  <p className={styles.tooltipFont}>{`Save to ${store.configStore.loadedStateName}`} </p></div>}>
+                <Tooltip title={`Save to ${store.configStore.loadedStateName}`}>
                     <SaveIcon />
                 </Tooltip>
             </IconButton>
@@ -149,14 +150,14 @@ const RegularModeMenu: FC = () => {
             <UndoRedoButtons />
 
             <IconButton onClick={() => { store.configStore.largeFont = !store.configStore.largeFont; }} >
-                <Tooltip title={<div>  <p className={styles.tooltipFont}>Change Font Size</p></div>}>
-                    <FormatSizeIcon className={store.configStore.largeFont ? `` : styles.manualDisable} />
+                <Tooltip title='Change Font Size'>
+                    <FormatSizeIcon css={store.configStore.largeFont ? `` : ManualDisableCSS} />
                 </Tooltip>
             </IconButton>
 
             <IconButton onClick={handleMoreClick} >
-                <Tooltip title={<div>  <p className={styles.tooltipFont}>More</p></div>}>
-                    <MoreVert />
+                <Tooltip title='More'>
+                    <MoreVertIcon />
                 </Tooltip>
             </IconButton>
             <Menu anchorEl={anchorMore} open={Boolean(anchorMore)} onClose={handleMoreClose} >
@@ -169,15 +170,15 @@ const RegularModeMenu: FC = () => {
                         Report a Bug
                     </MenuItem>
                 </a>
-                <MenuItem onClick={() => { handleMoreClose(); store.configStore.openAboutDialog = true; }}>
+                <MenuItem onClick={() => { handleMoreClose(); setOpenAbout(true); }}>
                     <ListItemIcon>
                         <InfoOutlinedIcon />
                     </ListItemIcon>
                     About
                 </MenuItem>
-                <MenuItem onClick={() => { handleMoreClose(); store.configStore.privateMode = !store.configStore.privateMode; }} className={store.configStore.privateMode ? `` : styles.manualDisable}>
+                <MenuItem onClick={() => { handleMoreClose(); store.configStore.privateMode = !store.configStore.privateMode; }} css={store.configStore.privateMode ? `` : ManualDisableCSS}>
                     <ListItemIcon>
-                        <VpnKeyIcon className={store.configStore.privateMode ? `` : styles.manualDisable} />
+                        <VpnKeyIcon css={store.configStore.privateMode ? `` : ManualDisableCSS} />
                     </ListItemIcon>
                     Private Mode
                 </MenuItem>
@@ -188,9 +189,9 @@ const RegularModeMenu: FC = () => {
                     Log Out
                 </MenuItem>
             </Menu>
-            <InfoDialog />
+            <InfoDialog setOpenAbout={passSetOpenAbout} openAbout={openAbout} />
 
-        </Toolbar>
+        </PaddedToolBar>
 
     );
 
@@ -204,9 +205,26 @@ const RegularModeMenu: FC = () => {
         }
     };
 
-    return (<AppBar position="static" color="transparent" elevation={2} style={{ zIndex: 3 }}>
+    return (<AppBar position="static" color="transparent" elevation={2} >
         {configureOutput()}
     </AppBar>);
 };
 
+
+
 export default observer(RegularModeMenu);
+
+const StyledImage = styled.img({
+    margin: 'auto!important',
+    display: 'block!important',
+    maxWidth: '100%!important',
+    height: "35px!important"
+});
+
+const TitleTypography = styled(Typography)({
+    flexGrow: 1,
+});
+
+const ManualDisableCSS = css({
+    color: "rgba(0, 0, 0, 0.26)"
+});

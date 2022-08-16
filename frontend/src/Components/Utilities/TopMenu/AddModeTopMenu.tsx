@@ -1,18 +1,16 @@
 import { observer } from "mobx-react";
 import { FC, useState } from "react";
 import { addOptions, OutcomeOptions, typeDiction } from "../../../Presets/DataDict";
-import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers';
 import { useContext } from "react";
-import DateFnsUtils from '@date-io/date-fns';
 import Store from "../../../Interfaces/Store";
 import { LayoutElement } from "../../../Interfaces/Types/LayoutTypes";
-import { useStyles } from "../../../Presets/StyledComponents";
-import ButtonGroup from "@material-ui/core/ButtonGroup";
-import Button from "@material-ui/core/Button";
-import Select from "@material-ui/core/Select";
 import { DropdownGenerator } from "../../../HelperFunctions/DropdownGenerator";
-import { FormControl, InputLabel, Toolbar } from "@material-ui/core";
+import { Button, ButtonGroup, FormControl, InputLabel, Select, TextField } from "@mui/material";
 import { ManualInfinity } from "../../../Presets/Constants";
+import styled from "@emotion/styled";
+import { PaddedToolBar, CenterAlignedDiv } from "../../../Presets/StyledComponents";
+import { DesktopDatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 
 type Props = { addingChartType: number; };
@@ -21,7 +19,6 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
 
     const store = useContext(Store);
 
-    const styles = useStyles();
     const [xAggreSelection, setXAggreSelection] = useState<string>("");
     const [yValueSelection, setYValueSelection] = useState<string>("");
     const [outcomeComparisonSelection, setOutcomeComparisonSelection] = useState<string>("");
@@ -33,9 +30,9 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         setYValueSelection("");
     };
 
-    const interventionHandler = (date: Date | null) => {
+    const interventionHandler = (date: number | null) => {
         if (date) {
-            setInterventionDate(date.getTime());
+            setInterventionDate(date);
 
         }
         else {
@@ -82,30 +79,33 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
     const outputRegularOptions = (titleOne: string, titleTwo: string, titleOneRequied: boolean) => {
         return <>
 
-            <div className={styles.centerAlignment}>
-                <FormControl required={titleOneRequied} className={styles.formControl}>
-                    <InputLabel style={{ whiteSpace: "nowrap" }}>{titleOne}{titleOneRequied ? "" : " (Optional)"}</InputLabel>
+            <CenterAlignedDiv>
+                <StyledFormControl variant="standard" required={titleOneRequied} >
+                    <InputLabel
+                    // style={{ whiteSpace: "nowrap" }}
+                    >{titleOne}{titleOneRequied ? "" : " (Optional)"}</InputLabel>
                     <Select
+                        value={yValueSelection}
+                        label={`${titleOne}${titleOneRequied ? "" : " (Optional)"}`}
                         onChange={(e) => { setYValueSelection(e.target.value as string); }}>
                         {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][0] : [], !titleOneRequied)}
                     </Select>
-                </FormControl>
-
-            </div>
-
-            {/* <Divider orientation="vertical" flexItem /> */}
+                </StyledFormControl>
+            </CenterAlignedDiv>
 
 
-            <div className={styles.centerAlignment}>
-                <FormControl required className={styles.formControl}>
+            <CenterAlignedDiv>
+                <StyledFormControl required variant="standard" >
                     <InputLabel>{titleTwo}</InputLabel>
                     <Select
+                        label={titleTwo}
+                        value={xAggreSelection}
                         onChange={(e) => { setXAggreSelection(e.target.value as string); }}>
                         {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][1] : [])}
                     </Select>
-                </FormControl>
+                </StyledFormControl>
 
-            </div>
+            </CenterAlignedDiv>
 
         </>;
     };
@@ -129,62 +129,63 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
         [outputRegularOptions("Select Value to Show", "Aggregated by", true),
         <>
 
-            <div className={styles.centerAlignment}>
-                <FormControl disabled={interventionDate ? true : false} className={styles.formControl}>
+            <CenterAlignedDiv>
+                <StyledFormControl variant="standard" disabled={interventionDate ? true : false} >
                     <InputLabel>Outcome (Optional)</InputLabel>
-                    <Select onChange={(e) => { setOutcomeComparisonSelection(e.target.value as string); }}
+                    <Select
+                        value={outcomeComparisonSelection}
+                        label='Outcome (Optional)'
+                        onChange={(e) => { setOutcomeComparisonSelection(e.target.value as string); }}
                     >
                         {DropdownGenerator(OutcomeOptions, true)}
                     </Select>
-                </FormControl>
-            </div>
+                </StyledFormControl>
+            </CenterAlignedDiv>
 
 
-            <div className={styles.centerAlignment}>
-                <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                    <KeyboardDatePicker
-                        disableToolbar
-                        variant="inline"
-                        format="MM/dd/yyyy"
-
-                        id="date-picker-inline"
+            <CenterAlignedDiv>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <DesktopDatePicker
+                        inputFormat="MM/dd/yyyy"
+                        renderInput={(params) => <TextField style={{ minWidth: '250px' }} variant="standard" {...params} />}
                         label="Comparison Date (Optional)"
                         minDate={store.state.rawDateRange[0]}
                         maxDate={store.state.rawDateRange[1]}
                         disabled={outcomeComparisonSelection ? true : false}
                         value={interventionDate}
                         onChange={interventionHandler} />
-                </MuiPickersUtilsProvider>
+                </LocalizationProvider>
 
-            </div>
+            </CenterAlignedDiv>
         </>
         ],
     ];
 
-    return <Toolbar className={styles.toolbarPaddingControl} style={{ justifyContent: "space-evenly" }}>
+    return <PaddedToolBar style={{ justifyContent: "space-evenly" }}>
         {addBarChartMenuRewrite[addingChartType]}
         {/* <Divider orientation="vertical" flexItem /> */}
 
-        <div className={styles.centerAlignment}>
-            <ButtonGroup>
+        <CenterAlignedDiv>
+            <ButtonGroup disableElevation variant="contained" color="primary">
                 <Button
-                    disableElevation
-                    variant="contained"
-                    color="primary"
+
                     disabled={!checkValidInput()}
                     onClick={confirmChartAddHandler}>
                     Confirm
                 </Button>
                 <Button
-                    disableElevation
-                    variant="contained"
                     onClick={cancelChartAddHandler} >
                     Cancel
                 </Button>
             </ButtonGroup>
-        </div>
+        </CenterAlignedDiv>
 
-    </Toolbar>;
+    </PaddedToolBar>;
 };
 
 export default observer(AddModeTopMenu);
+
+const StyledFormControl = styled(FormControl)({
+    // margin: '1rem',
+    minWidth: "200px!important",
+});

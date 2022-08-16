@@ -1,5 +1,5 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Radio, RadioGroup, } from "@material-ui/core";
-import AddIcon from '@material-ui/icons/Add';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, Radio, RadioGroup, } from "@mui/material";
+import AddIcon from '@mui/icons-material/Add';
 import { observer } from "mobx-react";
 import { FC, useContext, useEffect, useState } from "react";
 import Store from "../../Interfaces/Store";
@@ -8,12 +8,20 @@ import UIDInputModal from "./UIDInputModal";
 
 type Props = {
     stateName: string;
+    openStateAccessControl: boolean;
+    setOpenStateAccessControl: (input: boolean) => void;
 };
 
-const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
+const StateAccessControl: FC<Props> = ({ stateName, openStateAccessControl, setOpenStateAccessControl }: Props) => {
 
     const [uIDShared, updateUIDShared] = useState<string[]>([]);
     const [accessArray, updateAccessArray] = useState<string[]>([]);
+
+    const [openShareUIDDialog, setOpenUIDDialog] = useState(false);
+
+    const passSetOpenUIDDialog = (input: boolean) => {
+        setOpenUIDDialog(input);
+    };
 
     const makeStateAccessRequest = () => {
         if (stateName) {
@@ -37,6 +45,7 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
 
     useEffect(() => {
         makeStateAccessRequest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [stateName]);
 
     const changeAccess = (uID: string, newAccess: string, indexInArray: number) => {
@@ -83,7 +92,7 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
 
     const store = useContext(Store);
     return (<div>
-        <Dialog open={store.configStore.openStateAccessControl}>
+        <Dialog open={openStateAccessControl}>
             <DialogTitle>Manage {stateName} Access</DialogTitle>
             <DialogContent style={{ width: "300px" }}>
                 <List>{
@@ -116,8 +125,8 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
                     <ListItem>
                         <ListItemText>
                             <IconButton onClick={() => {
-                                store.configStore.openShareUIDDialog = true;
-                                store.configStore.openStateAccessControl = false;
+                                setOpenUIDDialog(true);
+                                setOpenStateAccessControl(false);
                             }}>
                                 <AddIcon />
                             </IconButton>
@@ -127,13 +136,13 @@ const StateAccessControl: FC<Props> = ({ stateName }: Props) => {
 
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => { store.configStore.openStateAccessControl = false; }}>
+                <Button onClick={() => setOpenStateAccessControl(false)}>
                     Close
                 </Button>
             </DialogActions>
         </Dialog>
 
-        <UIDInputModal stateName={stateName} />
+        <UIDInputModal visible={openShareUIDDialog} setVisibility={passSetOpenUIDDialog} stateName={stateName} />
     </div>);
 };
 

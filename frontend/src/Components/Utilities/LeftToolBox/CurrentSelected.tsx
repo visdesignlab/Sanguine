@@ -1,21 +1,22 @@
-import { Container, List, Grid, ListItem, Button, ButtonGroup, ListItemText, IconButton, ListItemSecondaryAction } from "@material-ui/core";
+import { List, ListItem, Button, ListItemText, IconButton, ListItemSecondaryAction } from "@mui/material";
 import { observer } from "mobx-react";
 import { useContext } from "react";
 import { FC } from "react";
 import Store from "../../../Interfaces/Store";
-import CloseIcon from '@material-ui/icons/Close';
+import CloseIcon from '@mui/icons-material/Close';
 import { SelectSet } from "../../../Interfaces/Types/SelectionTypes";
 import { AcronymDictionary } from "../../../Presets/DataDict";
-import { Title, useStyles } from "../../../Presets/StyledComponents";
+import { InheritWidthGrid, CenterAlignedDiv, Title, UtilityContainer } from "../../../Presets/StyledComponents";
+import styled from "@emotion/styled";
 
 const CurrentSelected: FC = () => {
-    const styles = useStyles();
+
     const store = useContext(Store);
     const { currentBrushedPatientGroup, currentSelectSet } = store.state;
 
     return (
-        <Grid item className={styles.gridWidth}>
-            <Container className={styles.containerWidth} style={{ height: "20vh", }}>
+        <InheritWidthGrid item>
+            <UtilityContainer style={{ height: "20vh", }}>
                 <List dense>
                     <ListItem >
                         <Title>Currently Selected</Title>
@@ -47,16 +48,14 @@ const CurrentSelected: FC = () => {
 
 
                 </List>
-                <div style={{ textAlign: "center" }}>
-                    <Button
-
+                <CenterAlignedDiv>
+                    <TinyFontButton
                         disabled={!(currentSelectSet.length > 0 || currentBrushedPatientGroup.length > 0)}
                         variant="outlined"
-
-                        className={styles.tinyFont}
-                        onClick={() => { store.selectionStore.outputToFilter(); }}
-                    >Create Filter</Button>
-                </div>
+                        onClick={() => { store.selectionStore.outputToFilter(); }}>
+                        Create Filter
+                    </TinyFontButton>
+                </CenterAlignedDiv>
                 {/* <Button
                         disabled={!(currentOutputFilterSet.length > 0 || currentSelectPatientGroup.length > 0)}
                         variant="outlined"
@@ -65,8 +64,12 @@ const CurrentSelected: FC = () => {
                         onClick={() => { store.selectionStore.clearAllFilter() }}
                     >Clear Filter</Button> */}
 
-            </Container>
-        </Grid>);
+            </UtilityContainer>
+        </InheritWidthGrid>);
 };
 
 export default observer(CurrentSelected);
+
+const TinyFontButton = styled(Button)({
+    fontSize: "xx-small!important"
+});

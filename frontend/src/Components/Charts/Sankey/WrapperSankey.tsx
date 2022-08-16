@@ -1,33 +1,25 @@
-import { Chip, Typography } from "@material-ui/core";
+import { Typography } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useContext, useEffect, useState } from "react";
 import Chart from 'react-google-charts';
 import { DragDropContext, Draggable, DraggableLocation, Droppable, DropResult } from 'react-beautiful-dnd';
 import { DropdownInputTypes } from "../../../Interfaces/Types/DropdownInputType";
-import { useStyles } from "../../../Presets/StyledComponents";
 import { DataContext } from "../../../App";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import { BloodProductCap } from "../../../Presets/Constants";
 import { range } from "d3-array";
+import { FilterChip } from "../../../Presets/StyledComponents";
 
 
+const WrapperSankey: FC = () => {
 
-type Props = {
-
-};
-
-
-
-const WrapperSankey: FC<Props> = () => {
-
-    const styles = useStyles();
     const hemoData = useContext(DataContext);
 
     const [sankeyData, updateSankeyData] = useState<(string | number)[][]>([]);
 
     /**
- * Moves an item from one list to another list.
- */
+  * Moves an item from one list to another list.
+  */
     const move = (source: DropdownInputTypes[], destination: DropdownInputTypes[], droppableSource: DraggableLocation, droppableDestination: DraggableLocation) => {
         const sourceClone = Array.from(source);
         const destClone = Array.from(destination);
@@ -167,7 +159,7 @@ const WrapperSankey: FC<Props> = () => {
 
     return (
         <div style={{ minHeight: 800, width: "100%", padding: 10 }}>
-            <Typography className={`${styles.centerAlignment}`} variant="h6">
+            <Typography style={{ textAlign: 'center' }} variant="h6">
                 Outcome, Transfusion, and Result Distribution
             </Typography>
             <div style={{ paddingTop: 5 }}>
@@ -179,11 +171,13 @@ const WrapperSankey: FC<Props> = () => {
                             droppableId={`${ind}`}>
                             {(provided, snapshot) => (
                                 <div ref={provided.innerRef}
-                                    className={styles.root}
                                     style={{ display: "flex", minHeight: '40px' }}
                                     {...provided.droppableProps}
                                 >
-                                    <label className="MuiFormLabel-root MuiInputLabel-root MuiInputLabel-shrink MuiFormLabel-filled">{ind === 0 ? "Included" : "Not Included"}</label>
+                                    <label style={{ alignSelf: 'center' }}
+                                        className="MuiFormLabel-root MuiInputLabel-root MuiInputLabel-shrink MuiFormLabel-filled">
+                                        {ind === 0 ? "Included" : "Not Included"}
+                                    </label>
                                     {options.map((item, index) => (
                                         <Draggable
                                             key={`${item.key}-draggable`}
@@ -191,7 +185,7 @@ const WrapperSankey: FC<Props> = () => {
                                             index={index}
                                         >
                                             {(provided, snapshot) => (
-                                                <Chip
+                                                <FilterChip
                                                     label={item.text}
                                                     clickable
                                                     ref={provided.innerRef}
@@ -209,18 +203,20 @@ const WrapperSankey: FC<Props> = () => {
                     ))}
                 </DragDropContext>
             </div>
-            {sankeyData.length > 0 ?
-                <Chart
-                    width={'1000px'}
-                    height={'600px'}
-                    chartType="Sankey"
-                    loader={<div>Loading Chart</div>}
-                    data={sankeyData}
-                    rootProps={{ 'data-testid': '1' }}
-                />
-                : <></>}
+            {
+                sankeyData.length > 0 ?
+                    <Chart
+                        width={'1000px'}
+                        height={'600px'}
+                        chartType="Sankey"
+                        loader={<div>Loading Chart</div>}
+                        data={sankeyData}
+                        rootProps={{ 'data-testid': '1' }}
+                    />
+                    : <></>
+            }
 
-        </div>
+        </div >
     );
 };
 

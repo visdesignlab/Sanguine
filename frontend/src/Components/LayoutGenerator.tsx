@@ -1,4 +1,3 @@
-import { Container } from "@material-ui/core";
 import { observer } from "mobx-react";
 import { useContext } from "react";
 import { FC, useRef, useLayoutEffect } from "react";
@@ -7,7 +6,7 @@ import 'react-grid-layout/css/styles.css';
 import Store from "../Interfaces/Store";
 import { LayoutElement } from "../Interfaces/Types/LayoutTypes";
 import { typeDiction } from "../Presets/DataDict";
-import { useStyles, WelcomeText } from "../Presets/StyledComponents";
+import { UtilityContainer, WelcomeText } from "../Presets/StyledComponents";
 import WrapperCostBar from "./Charts/CostBarChart/WrapperCostBar";
 import WrapperDumbbell from "./Charts/DumbbellChart/WrapperDumbbell";
 import WrapperHeatMap from "./Charts/HeatMap/WrapperHeatMap";
@@ -16,7 +15,7 @@ import WrapperScatter from "./Charts/ScatterPlot/WrapperScatter";
 
 const LayoutGenerator: FC = () => {
     const store = useContext(Store);
-    const styles = useStyles();
+
 
     const createElement = (layout: LayoutElement, index: number) => {
         switch (layout.plotType) {
@@ -124,27 +123,24 @@ const LayoutGenerator: FC = () => {
 
 
     return (
-        <Container className={styles.containerWidth}>
-            <Container ref={tabRef} className={styles.containerWidth} style={{ height: "90vh" }}>
+        <UtilityContainer ref={tabRef} style={{ height: "90vh" }}>
+            <WelcomeText show={store.state.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
+            <Responsive
+                onResizeStop={(e, v) => { store.chartStore.onLayoutChange(e); }}
+                onDragStop={(e, v) => { store.chartStore.onLayoutChange(e); }}
+                draggableHandle={".move-icon"}
+                className="layout"
+                cols={colData}
+                rowHeight={500}
+                width={0.95 * store.mainCompWidth}
+                layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
+            >
+                {store.state.layoutArray.map((layoutE, i) => {
+                    return createElement(layoutE, i);
+                })}
+            </Responsive>
 
-                <WelcomeText show={store.state.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
-                <Responsive
-                    onResizeStop={(e, v) => { store.chartStore.onLayoutChange(e); }}
-                    onDragStop={(e, v) => { store.chartStore.onLayoutChange(e); }}
-                    draggableHandle={".move-icon"}
-                    className="layout"
-                    cols={colData}
-                    rowHeight={500}
-                    width={0.95 * store.mainCompWidth}
-                    layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
-                >
-                    {store.state.layoutArray.map((layoutE, i) => {
-                        return createElement(layoutE, i);
-                    })}
-                </Responsive>
-
-            </Container>
-        </Container>
+        </UtilityContainer>
     );
 };
 
