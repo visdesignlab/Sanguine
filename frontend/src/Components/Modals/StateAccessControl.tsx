@@ -45,6 +45,7 @@ const StateAccessControl: FC<Props> = ({ stateName, openStateAccessControl, setO
 
     useEffect(() => {
         makeStateAccessRequest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [stateName]);
 
     const changeAccess = (uID: string, newAccess: string, indexInArray: number) => {

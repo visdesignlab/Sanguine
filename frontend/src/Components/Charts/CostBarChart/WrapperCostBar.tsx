@@ -51,6 +51,7 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
     const [dimensionWidth, setDimensionWidth] = useState(0);
     const [extraPairTotalWidth, setExtraPairTotalWidth] = useState(0);
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [costMode, setCostMode] = useState(true);
     const [bloodCostToChange, setBloodCostToChange] = useState("");
     const [previousCancelToken, setPreviousCancelToken] = useState<any>(null);
