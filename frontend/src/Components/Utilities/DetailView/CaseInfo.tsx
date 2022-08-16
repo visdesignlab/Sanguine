@@ -74,6 +74,7 @@ const CaseInfo: FC = () => {
         }
         fetchIndividualInformaiton();
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentSelectPatient]);
     return (<UtilityContainer style={{ height: "80vh", padding: "1px", visibility: currentSelectPatient ? "visible" : "hidden" }}>
 

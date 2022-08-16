@@ -42,6 +42,7 @@ const ExtraPairViolin: FC<Props> = ({ kdeMax, dataSet, aggregationScaleDomain, a
             .y((d: any) => kdeScale(d.y) + 0.5 * aggregationScale().bandwidth())
             .x((d: any) => valueScale(d.x));
         return lineFunction;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [aggregationScale, valueScale, kdeMax]);
 
     const svgRef = useRef<SVGSVGElement>(null);

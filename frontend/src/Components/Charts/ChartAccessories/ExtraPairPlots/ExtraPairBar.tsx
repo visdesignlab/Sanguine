@@ -30,6 +30,7 @@ const ExtraPairBar: FC<Props> = ({ secondaryDataSet, dataSet, aggregationScaleDo
         }
         const valueScale = scaleLinear().domain([0, maxVal]).range([0, ExtraPairWidth.BarChart]);
         return valueScale;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dataSet]);
 
     return (
