@@ -3,7 +3,7 @@ import { observer } from 'mobx-react';
 import {
   scaleBand,
 } from 'd3';
-import { basicGray, secondarygray } from '../../../Presets/Constants';
+import { basicGray, secondaryGray } from '../../../Presets/Constants';
 import { AxisText, CustomAxisLine, CustomAxisLineBox } from '../../../Presets/StyledSVGComponents';
 import Store from '../../../Interfaces/Store';
 
@@ -37,7 +37,7 @@ function CustomizedAxisBand({ scaleDomain, scaleRange, scalePadding }: Props) {
         return (
           <g key={ind}>
             <CustomAxisLine x1={x1} x2={x2} />
-            <CustomAxisLineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? secondarygray : basicGray} />
+            <CustomAxisLineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? secondaryGray : basicGray} />
             <AxisText biggerFont={store.configStore.largeFont} x={x1 + 0.5 * (x2 - x1)}>{number}</AxisText>
           </g>
         );
