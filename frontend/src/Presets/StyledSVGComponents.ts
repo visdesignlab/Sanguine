@@ -2,9 +2,7 @@ import styled from "@emotion/styled";
 import { Offset } from "../Interfaces/Types/OffsetType";
 import { Basic_Gray, highlight_orange, largeFontSize, postop_color, preop_color, regularFontSize } from "./Constants";
 
-export interface BiggerFontProps {
-    biggerFont: boolean;
-}
+
 
 export const ChartSVG = styled.svg`
   height: calc(100% - 100px);
@@ -18,7 +16,7 @@ export const SurgeryRect = styled(`rect`)`
   fill:${postop_color};
 `;
 interface ListSVGProps {
-    widthInput: number;
+  widthInput: number;
 }
 export const ListSVG = styled.svg<ListSVGProps>`
   height: 15px;
@@ -26,8 +24,8 @@ export const ListSVG = styled.svg<ListSVGProps>`
   width:${props => props.widthInput}px;
 `;
 interface ChartGProps {
-    currentOffset: Offset;
-    extraPairTotalWidth: number;
+  currentOffset: Offset;
+  extraPairTotalWidth: number;
 }
 
 export const ChartG = styled(`g`) <ChartGProps>`
@@ -41,8 +39,8 @@ export const HeatMapRect = styled(`rect`)`
     stroke-width:2;
 `;
 interface HeatMapDivideProp {
-    currentOffset: Offset;
-    dimensionHeight: number;
+  currentOffset: Offset;
+  dimensionHeight: number;
 }
 
 export const HeatMapDividerLine = styled(`line`) <HeatMapDivideProp>`
@@ -56,15 +54,15 @@ export const HeatMapDividerLine = styled(`line`) <HeatMapDivideProp>`
 
 interface DotProps {
 
-    isSelectSet: boolean;
-    ispreop: boolean;
+  isSelectSet: boolean;
+  ispreop: boolean;
 }
 interface RectProps {
-    isselected: boolean;
+  isselected: boolean;
 }
 
 interface AverageLineProps {
-    ispreop: boolean;
+  ispreop: boolean;
 }
 
 
@@ -85,12 +83,25 @@ export const DumbbellLine = styled(`line`) < AverageLineProps>`
     stroke-width:3px
     `;
 
-export const AxisText = styled.text<BiggerFontProps>`
-    fill:white;
+// export const AxisText = styled.text<BiggerFontProps>`
+//     fill:white;
+//     alignment-baseline: hanging;
+//     text-anchor: middle;
+//     y:0;
+//     font-size:${props => props.biggerFont ? `${largeFontSize}px` : `${regularFontSize}px`};
+// `;
+
+export interface BiggerFontProps {
+  biggerFont: boolean;
+}
+
+export const AxisText = styled.foreignObject<BiggerFontProps>`
     alignment-baseline: hanging;
-    text-anchor: middle;
-    y:0;
+    y:0px;
+    text-align:center;
+      height: 13px;
     font-size:${props => props.biggerFont ? `${largeFontSize}px` : `${regularFontSize}px`};
+    color:white;
 `;
 
 export const CustomAxisLine = styled(`line`)`
