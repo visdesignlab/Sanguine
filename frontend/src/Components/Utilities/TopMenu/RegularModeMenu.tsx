@@ -134,7 +134,7 @@ const RegularModeMenu: FC = () => {
 
       <StateManagementSuite />
 
-      <EmailComponent />
+
 
 
       <IconButton disabled={store.isAtRoot} onClick={() => { store.chartStore.clearAllCharts(); store.configStore.loadedStateName = ""; }}>
