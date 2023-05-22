@@ -4,10 +4,12 @@ import { FC, useContext, useEffect, useState } from "react";
 import { DataContext } from "../../../App";
 import { CURRENT_QUARTER, LAST_QUARTER } from "./EmailComponent";
 import { SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
-import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { format, sum } from "d3";
 import EmailEmbeddedBarChart from "./EmailEmbeddedBarChart";
 import EmailEmbeddedDotPlot from "./EmailEmbeddedDotPlot";
+import styled from "@emotion/styled";
 
 
 type Prop = {
@@ -55,23 +57,29 @@ const EmailText: FC<Prop> = ({ providerType, currentSelectedProviderID }: Prop) 
     console.log(newAllStats);
     // stateUpdateWrapperUseJSON(allStats, newAllStats, setAllStats);
     setAllStats(newAllStats);
-  }, [providerType, currentSelectedProviderID]);
+  }, [providerType, currentSelectedProviderID, allData]);
 
 
   return <div>
     <List>
-      <ListItem>{allStats.curTotalCases} cardiac sugeries</ListItem>
-      <ListItem>Used {allStats.curRBC} units of Red Blood Cells</ListItem>
       <ListItem>
-        The average case complexity (DRG Weight) is {format(',.2f')(allStats.curDRG)}, {allStats.curDRG > allStats.allDRG ? 'higher' : 'lower'} than department average.
+        <StatsSpan>{allStats.curTotalCases}</StatsSpan>
+        {allStats.curTotalCases > allStats.lastTotalCases ? <ArrowUpwardIcon fontSize='small' /> : <></>}
+        {allStats.curTotalCases < allStats.lastTotalCases ? <ArrowDownwardIcon fontSize='small' /> : <></>}
+        cardiac sugeries</ListItem>
+      <ListItem><span>Used <StatsSpan >{allStats.curRBC}</StatsSpan> units of Red Blood Cells</span></ListItem>
+      <ListItem>
+        <span>
+          The average case complexity (DRG Weight) is <StatsSpan>{format(',.2f')(allStats.curDRG)}</StatsSpan>, <StatsSpan>{allStats.curDRG > allStats.allDRG ? 'higher' : 'lower'}</StatsSpan> than department average.
+        </span>
 
         <EmailEmbeddedBarChart curData={allStats.curDRG} compareData={allStats.allDRG} />
-
       </ListItem>
       <ListItem>
-        Among the patients you transfused at least 1 red cell unit, the post-operative hemoglobin value (7.5) was above the recommended threshold {
-          format(',.2%')(allStats.postTransHemo.filter(d => d > 7.5).length / allStats.postTransHemo.length)
-        } of the time.
+        <span>
+          Among the patients you transfused at least 1 red cell unit, the post-operative hemoglobin value (7.5) was above the recommended threshold <StatsSpan>{
+            format(',.0%')(allStats.postTransHemo.filter(d => d > 7.5).length / allStats.postTransHemo.length)}</StatsSpan> of the time.
+        </span>
         <EmailEmbeddedDotPlot dataArray={allStats.postTransHemo} standardLine={7.5} />
       </ListItem>
     </List>
@@ -79,3 +87,8 @@ const EmailText: FC<Prop> = ({ providerType, currentSelectedProviderID }: Prop) 
 };
 
 export default observer(EmailText);
+
+const StatsSpan = styled.span({
+  color: 'blue'
+}
+);
