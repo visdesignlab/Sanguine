@@ -3,7 +3,7 @@ import { Offset } from "../Interfaces/Types/OffsetType";
 import { Basic_Gray, highlight_orange, largeFontSize, postop_color, preop_color, regularFontSize } from "./Constants";
 
 export interface BiggerFontProps {
-    biggerFont: boolean;
+  biggerFont: boolean;
 }
 
 export const ChartSVG = styled.svg`
@@ -18,7 +18,7 @@ export const SurgeryRect = styled(`rect`)`
   fill:${postop_color};
 `;
 interface ListSVGProps {
-    widthInput: number;
+  widthInput: number;
 }
 export const ListSVG = styled.svg<ListSVGProps>`
   height: 15px;
@@ -26,8 +26,8 @@ export const ListSVG = styled.svg<ListSVGProps>`
   width:${props => props.widthInput}px;
 `;
 interface ChartGProps {
-    currentOffset: Offset;
-    extraPairTotalWidth: number;
+  currentOffset: Offset;
+  extraPairTotalWidth: number;
 }
 
 export const ChartG = styled(`g`) <ChartGProps>`
@@ -41,8 +41,8 @@ export const HeatMapRect = styled(`rect`)`
     stroke-width:2;
 `;
 interface HeatMapDivideProp {
-    currentOffset: Offset;
-    dimensionHeight: number;
+  currentOffset: Offset;
+  dimensionHeight: number;
 }
 
 export const HeatMapDividerLine = styled(`line`) <HeatMapDivideProp>`
@@ -56,15 +56,15 @@ export const HeatMapDividerLine = styled(`line`) <HeatMapDivideProp>`
 
 interface DotProps {
 
-    isSelectSet: boolean;
-    ispreop: boolean;
+  isSelectSet: boolean;
+  ispreop: boolean;
 }
 interface RectProps {
-    isselected: boolean;
+  isselected: boolean;
 }
 
 interface AverageLineProps {
-    ispreop: boolean;
+  ispreop: boolean;
 }
 
 
@@ -104,4 +104,10 @@ export const CustomAxisLineBox = styled(`rect`)`
     height: 13px;
     y:0px;
     opacity:0.75;
+`;
+
+export const StandardLine = styled(`line`)`
+  stroke: #e5ab73;
+   stroke-width: 2px;
+  stroke-dasharray: 5,5
 `;

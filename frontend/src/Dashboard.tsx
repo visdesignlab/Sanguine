@@ -13,7 +13,7 @@ import Store from "./Interfaces/Store";
 import { SnackBarCloseTime } from "./Presets/Constants";
 import TabPanel from "./Components/Utilities/TabPanel";
 import WrapperSankey from "./Components/Charts/Sankey/WrapperSankey";
-import EmailComponent from "./Components/Utilities/EmailComponent";
+import EmailComponent from "./Components/Utilities/Email/EmailComponent";
 
 
 const Dashboard: FC = () => {

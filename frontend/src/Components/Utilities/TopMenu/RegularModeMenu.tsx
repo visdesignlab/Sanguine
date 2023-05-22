@@ -20,7 +20,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import styled from "@emotion/styled";
 import { PaddedToolBar, CenterAlignedDiv } from "../../../Presets/StyledComponents";
 import { css } from '@emotion/react';
-import EmailComponent from "../EmailComponent";
+import EmailComponent from "../Email/EmailComponent";
 
 
 const RegularModeMenu: FC = () => {
