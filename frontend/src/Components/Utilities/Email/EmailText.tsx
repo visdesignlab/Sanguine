@@ -43,6 +43,7 @@ const EmailText: FC<Prop> = ({ providerType, currentSelectedProviderID }: Prop) 
     const transfusedCases = allData.filter((a) =>
       a.DATE > CURRENT_QUARTER[0]
       && a.DATE < CURRENT_QUARTER[1]
+      && a[providerType].toString() === currentSelectedProviderID
       && a.PRBC_UNITS);
 
     const newAllStats = {
@@ -61,27 +62,28 @@ const EmailText: FC<Prop> = ({ providerType, currentSelectedProviderID }: Prop) 
 
 
   return <div>
-    <List>
-      <ListItem>
+    <List sx={{ listStyleType: 'disc', pl: 2 }}>
+      <BulletItem>
         <StatsSpan>{allStats.curTotalCases}</StatsSpan>
         {allStats.curTotalCases > allStats.lastTotalCases ? <ArrowUpwardIcon fontSize='small' /> : <></>}
         {allStats.curTotalCases < allStats.lastTotalCases ? <ArrowDownwardIcon fontSize='small' /> : <></>}
-        cardiac sugeries</ListItem>
-      <ListItem><span>Used <StatsSpan >{allStats.curRBC}</StatsSpan> units of Red Blood Cells</span></ListItem>
-      <ListItem>
+        cardiac sugeries
+      </BulletItem>
+      <BulletItem><span>Used <StatsSpan >{allStats.curRBC}</StatsSpan> units of Red Blood Cells</span></BulletItem>
+      <BulletItem>
         <span>
           The average case complexity (DRG Weight) is <StatsSpan>{format(',.2f')(allStats.curDRG)}</StatsSpan>, <StatsSpan>{allStats.curDRG > allStats.allDRG ? 'higher' : 'lower'}</StatsSpan> than department average.
         </span>
 
         <EmailEmbeddedBarChart curData={allStats.curDRG} compareData={allStats.allDRG} />
-      </ListItem>
-      <ListItem>
+      </BulletItem>
+      <BulletItem style={{ visibility: allStats.postTransHemo.length ? undefined : 'hidden' }}>
         <span>
           Among the patients you transfused at least 1 red cell unit, the post-operative hemoglobin value (7.5) was above the recommended threshold <StatsSpan>{
             format(',.0%')(allStats.postTransHemo.filter(d => d > 7.5).length / allStats.postTransHemo.length)}</StatsSpan> of the time.
         </span>
         <EmailEmbeddedDotPlot dataArray={allStats.postTransHemo} standardLine={7.5} />
-      </ListItem>
+      </BulletItem>
     </List>
   </div>;
 };
@@ -92,3 +94,7 @@ const StatsSpan = styled.span({
   color: 'blue'
 }
 );
+
+const BulletItem = styled(ListItem)({
+  display: 'list-item'
+});

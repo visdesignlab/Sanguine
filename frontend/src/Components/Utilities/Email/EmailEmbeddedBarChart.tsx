@@ -15,7 +15,7 @@ const EmailEmbeddedBarChart: FC<Prop> = ({ curData, compareData }) => {
     return scaleLinear().domain([max([curData, compareData]) || 0, 0]).range([EmbeddedSVGMargin.bottom, EmbeddedSVGHeight - EmbeddedSVGMargin.bottom]).nice();
   }, [curData, compareData]);
 
-  const bandScale = scaleBand().domain(['you', 'compare']).range([EmbeddedSVGMargin.left, EmbeddedSVGWidth]).padding(0.3);
+  const bandScale = scaleBand().domain(['you', 'compare']).range([EmbeddedSVGMargin.left, EmbeddedSVGWidth - EmbeddedSVGMargin.right]).padding(0.3);
 
 
   useEffect(() => {
@@ -28,15 +28,15 @@ const EmailEmbeddedBarChart: FC<Prop> = ({ curData, compareData }) => {
         .selectAll('text')
         .remove();
 
-      svgSelection.select('#ver-axis')
-        .call(axisLeft(scale()).ticks(1) as any)
-        .attr('transform', `translate(${EmbeddedSVGMargin.left},0)`)
-        .selectAll('text')
-        .attr('font-size', 'smaller');
+      // svgSelection.select('#ver-axis')
+      //   .call(axisLeft(scale()).ticks(1) as any)
+      //   .attr('transform', `translate(${EmbeddedSVGMargin.left},0)`)
+      //   .selectAll('text')
+      //   .remove();
     }
   }, [bandScale, scale, svgRef]);
 
-  return <svg width={EmbeddedSVGWidth} height={EmbeddedSVGHeight} ref={svgRef}>
+  return <svg width={EmbeddedSVGWidth} height={EmbeddedSVGHeight} ref={svgRef} style={{ verticalAlign: 'middle' }}>
     <g id='band-axis' />
     <g id='ver-axis' />
     <rect x={bandScale('you')} y={scale()(curData)} width={bandScale.bandwidth()} height={scale()(0) - scale()(curData)} fill='blue' />

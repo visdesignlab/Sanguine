@@ -1,8 +1,8 @@
 import { FC, useCallback, useEffect, useRef } from "react";
 import { EmbeddedSVGWidth, EmbeddedSVGHeight, EmbeddedSVGMargin } from "../../../Presets/Constants";
 import { observer } from "mobx-react";
-import { axisBottom, axisLeft, scaleLinear, scalePoint, select } from "d3";
-import { max } from "date-fns";
+import { axisBottom, scaleLinear, scalePoint, select } from "d3";
+import { max } from "d3-array";
 import { StandardLine } from "../../../Presets/StyledSVGComponents";
 
 type Prop = {
@@ -13,10 +13,10 @@ const EmailEmbeddedDotPlot: FC<Prop> = ({ dataArray, standardLine }) => {
   const svgRef = useRef(null);
 
   const scale = useCallback(() => {
-    return scaleLinear().domain([max(dataArray) || 0, 0]).range([EmbeddedSVGMargin.bottom, EmbeddedSVGHeight - EmbeddedSVGMargin.bottom]).nice();
+    return scaleLinear().domain([max(dataArray) || 0, 0]).range([EmbeddedSVGMargin.top, EmbeddedSVGHeight - EmbeddedSVGMargin.bottom]);
   }, [dataArray]);
 
-  const dotScale = scalePoint().domain(dataArray.map((_, d) => d.toString())).range([EmbeddedSVGMargin.left, EmbeddedSVGWidth]);
+  const dotScale = scalePoint().domain(dataArray.map((_, d) => d.toString())).range([EmbeddedSVGMargin.left, EmbeddedSVGWidth - EmbeddedSVGMargin.right]);
 
   useEffect(() => {
     if (svgRef && svgRef.current) {
@@ -30,15 +30,15 @@ const EmailEmbeddedDotPlot: FC<Prop> = ({ dataArray, standardLine }) => {
 
       svgSelection.select('#band-axis').selectAll('.tick').remove();
 
-      svgSelection.select('#ver-axis')
-        .call(axisLeft(scale()).ticks(1) as any)
-        .attr('transform', `translate(${EmbeddedSVGMargin.left},0)`)
-        .selectAll('text')
-        .attr('font-size', 'smaller');
+      // svgSelection.select('#ver-axis')
+      //   .call(axisLeft(scale()).ticks(1) as any)
+      //   .attr('transform', `translate(${EmbeddedSVGMargin.left},0)`)
+      //   .selectAll('text')
+      //   .attr('font-size', 'smaller');
     }
-  }, [dotScale, scale, svgRef]);
+  }, [dotScale, scale, svgRef, dataArray]);
 
-  return <svg width={EmbeddedSVGWidth} height={EmbeddedSVGHeight} ref={svgRef}>
+  return <svg width={EmbeddedSVGWidth} height={EmbeddedSVGHeight} ref={svgRef} style={{ verticalAlign: 'middle' }}>
     <g id='band-axis' />
     <g id='ver-axis' />
 

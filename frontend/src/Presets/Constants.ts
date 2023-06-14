@@ -47,6 +47,6 @@ export const regularFontSize = 11;
 export const largeFontSize = 14;
 
 export const EmbeddedSVGWidth = 100;
-export const EmbeddedSVGHeight = 50;
-export const EmbeddedSVGMargin = { left: 18, bottom: 5 };
+export const EmbeddedSVGHeight = 45;
+export const EmbeddedSVGMargin = { left: 3, bottom: 3, right: 3, top: 3 };
 

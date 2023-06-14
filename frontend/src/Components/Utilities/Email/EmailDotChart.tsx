@@ -3,8 +3,9 @@ import { FC, useContext, useEffect, useRef } from "react";
 import { DataContext } from "../../../App";
 import { Grid } from "@mui/material";
 import { ascending, axisBottom, axisLeft, least, max, mean, scaleBand, scaleLinear, select } from "d3";
-import { Basic_Gray, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, colorProfile } from "../../../Presets/Constants";
+import { Basic_Gray, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, colorProfile, highlight_orange } from "../../../Presets/Constants";
 import { CURRENT_QUARTER, LAST_QUARTER } from "./EmailComponent";
+import { AcronymDictionary } from "../../../Presets/DataDict";
 
 
 
@@ -17,9 +18,9 @@ type Prop = {
 
 const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attributeToVisualize }: Prop) => {
 
-  const MARGIN = { left: 50, top: 5, right: 0, bottom: 20 };
+  const MARGIN = { left: 50, top: 5, right: 10, bottom: 20 };
 
-  const DATA_ORDER = ['recom', 'dept', 'best', 'you'];
+  const DATA_ORDER = ['dept', 'best', 'you'];
   const allData = useContext(DataContext);
 
   const svgRef = useRef(null);
@@ -53,8 +54,8 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
 
     const providerEntry = dataSource[currentSelectedProviderID] ? dataSource[currentSelectedProviderID] : [];;
 
-    return [[determineRecommend()],
-    Object.values(dataSource).flat(),
+    return [
+      Object.values(dataSource).flat(),
       bestPractice,
       providerEntry];
   };
@@ -80,11 +81,27 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
 
       const lengthScale = scaleLinear().domain([0, max(Object.values(currentQuarterData).concat(Object.values(lastQuarterData)).flat()) || 0]).range([MARGIN.left, svgWidth - MARGIN.right]);
 
-      svgSelection.select('#band-axis')
-        .call(axisLeft(bandScale) as any)
-        .attr('transform', `translate(${MARGIN.left},0)`);
+      // add shading for recommend
+      svgSelection.select('.recommend')
+        .selectAll('rect')
+        .data([determineRecommend()])
+        .join('rect')
+        .attr('x', d => lengthScale(d - 1))
+        .attr('y', MARGIN.top)
+        .attr('width', d => lengthScale(d) - lengthScale(d - 1))
+        .attr('height', svgHeight - MARGIN.bottom - MARGIN.top)
+        .attr('fill', highlight_orange)
+        .attr('opacity', 0.3);
 
-      svgSelection.select('#length-axis')
+
+
+      svgSelection.select('.band-axis')
+        .call(axisLeft(bandScale) as any)
+        .attr('transform', `translate(${MARGIN.left},0)`)
+        .select('path')
+        .remove();
+
+      svgSelection.select('.length-axis')
         .call(axisBottom(lengthScale) as any)
         .attr('transform', `translate(0,${svgHeight - MARGIN.bottom})`);
 
@@ -92,7 +109,7 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
 
 
 
-      svgSelection.select('#prev-dots')
+      svgSelection.select('.prev-dots')
         .selectAll('g')
         .data(generateVisualizationData(lastQuarterData))
         .join('g')
@@ -110,7 +127,7 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
         .attr('opacity', 0.2);
 
       // draw current quarter rectangles
-      svgSelection.select('#dots')
+      svgSelection.select('.dots')
         .selectAll('g')
         .data(generateVisualizationData(currentQuarterData))
         .join('g')
@@ -125,19 +142,27 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
         // .attr('width', d => lengthScale(d) - lengthScale(0))
         // .attr('height', bandScale.bandwidth())
         .attr('fill', d => d ? colorProfile[1] : 'none');
+
+
     }
+
+
+
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [svgRef, allData, providerType, currentSelectedProviderID]);
 
 
 
   return <Grid item xs={6} style={{ minHeight: '20vh', maxHeight: '20vh', minWidth: '40vw', maxWidth: '40vw' }}>
-    {attributeToVisualize}
+    {AcronymDictionary[attributeToVisualize] || attributeToVisualize}
     <svg ref={svgRef} width='100%' height='100%'>
-      <g id='band-axis' />
-      <g id='length-axis' />
-      <g id='dots' />
-      <g id='prev-dots' />
+      <g className='band-axis' />
+      <g className='length-axis' />
+      <g className='dots' />
+      <g className='prev-dots' />
+      <g className='recommend' />
+      <g className='legend' />
     </svg>
   </Grid>;
 };
