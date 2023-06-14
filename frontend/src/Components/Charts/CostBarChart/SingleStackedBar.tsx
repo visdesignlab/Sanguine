@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 import { FC, useCallback, useContext } from "react";
 import Store from "../../../Interfaces/Store";
 import { CostBarChartDataPoint } from "../../../Interfaces/Types/DataTypes";
-import { colorProfile } from "../../../Presets/Constants";
+import { ColorProfile } from "../../../Presets/Constants";
 import { BloodComponentOptions } from "../../../Presets/DataDict";
 
 interface OwnProps {
@@ -43,7 +43,7 @@ const SingleStackedBar: FC<Props> = ({ howToTransform, dataPoint, showPotential,
               transform={howToTransform}
               height={bandwidth}
               width={valueScale()(point) - valueScale()(0)}
-              fill={colorProfile[index]}
+              fill={ColorProfile[index]}
             />
           </Tooltip>);
       });
@@ -57,7 +57,7 @@ const SingleStackedBar: FC<Props> = ({ howToTransform, dataPoint, showPotential,
               transform={howToTransform}
               height={bandwidth}
               width={valueScale()(point) - valueScale()(0)}
-              fill={colorProfile[index]}
+              fill={ColorProfile[index]}
             />
           </Tooltip>
         );
@@ -71,7 +71,7 @@ const SingleStackedBar: FC<Props> = ({ howToTransform, dataPoint, showPotential,
             transform={howToTransform}
             height={bandwidth}
             width={showPotential ? (valueScale()(potentialCost) - valueScale()(0)) : (valueScale()(cellSalvageCost) - valueScale()(0))}
-            fill={showPotential ? colorProfile[0] : colorProfile[4]}
+            fill={showPotential ? ColorProfile[0] : ColorProfile[4]}
           /></Tooltip>
       );
       const costSaved = dataPoint.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - dataPoint.dataArray[4];

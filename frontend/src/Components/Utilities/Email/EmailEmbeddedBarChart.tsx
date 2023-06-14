@@ -1,7 +1,7 @@
-import { axisBottom, axisLeft, max, scaleBand, scaleLinear, select } from "d3";
+import { axisBottom, max, scaleBand, scaleLinear, select } from "d3";
 import { observer } from "mobx-react";
 import { FC, useCallback, useEffect, useRef } from "react";
-import { EmbeddedSVGHeight, EmbeddedSVGMargin, EmbeddedSVGWidth } from "../../../Presets/Constants";
+import { ColorProfile, EmbeddedSVGHeight, EmbeddedSVGMargin, EmbeddedSVGWidth } from "../../../Presets/Constants";
 
 type Prop = {
   curData: number;
@@ -39,7 +39,11 @@ const EmailEmbeddedBarChart: FC<Prop> = ({ curData, compareData }) => {
   return <svg width={EmbeddedSVGWidth} height={EmbeddedSVGHeight} ref={svgRef} style={{ verticalAlign: 'middle' }}>
     <g id='band-axis' />
     <g id='ver-axis' />
-    <rect x={bandScale('you')} y={scale()(curData)} width={bandScale.bandwidth()} height={scale()(0) - scale()(curData)} fill='blue' />
+    <rect x={bandScale('you')}
+      y={scale()(curData)}
+      width={bandScale.bandwidth()}
+      height={scale()(0) - scale()(curData)}
+      fill={ColorProfile[3]} />
     <rect x={bandScale('compare')} y={scale()(compareData)} width={bandScale.bandwidth()} height={scale()(0) - scale()(compareData)} fill='grey' />
   </svg>;
 };

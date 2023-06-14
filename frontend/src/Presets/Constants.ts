@@ -13,7 +13,7 @@ export const greyScaleRange = [0.3, 0.85];
 export const HGB_LOW_STANDARD = 7.5;
 export const SnackBarCloseTime = 5000;
 export const HGB_HIGH_STANDARD = 13;
-export const colorProfile = ["#d7191c", "#abd9e9", "#fdae61", "#2c7bb6", "#e1e100"];
+export const ColorProfile = ["#d7191c", "#abd9e9", "#fdae61", "#2c7bb6", "#e1e100"];
 export const OffsetDict = {
   regular: { left: 110, bottom: 40, right: 10, top: 40, margin: 10 } as Offset,
   minimum: { left: 35, bottom: 40, right: 10, top: 40, margin: 10 } as Offset,

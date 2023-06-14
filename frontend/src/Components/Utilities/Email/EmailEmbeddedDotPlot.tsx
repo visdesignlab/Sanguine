@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useRef } from "react";
-import { EmbeddedSVGWidth, EmbeddedSVGHeight, EmbeddedSVGMargin } from "../../../Presets/Constants";
+import { EmbeddedSVGWidth, EmbeddedSVGHeight, EmbeddedSVGMargin, ColorProfile } from "../../../Presets/Constants";
 import { observer } from "mobx-react";
 import { axisBottom, scaleLinear, scalePoint, select } from "d3";
 import { max } from "d3-array";
@@ -48,7 +48,7 @@ const EmailEmbeddedDotPlot: FC<Prop> = ({ dataArray, standardLine }) => {
         cx={dotScale(i.toString())}
         cy={scale()(dp)}
         r={2}
-        fill='blue' />)
+        fill={ColorProfile[3]} />)
     }
   </svg>;
 };

@@ -3,13 +3,13 @@ import { observer } from "mobx-react";
 import { FC, useContext, useEffect, useState } from "react";
 import { DataContext } from "../../../App";
 import { CURRENT_QUARTER, LAST_QUARTER } from "./EmailComponent";
-import { SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { format, sum } from "d3";
 import EmailEmbeddedBarChart from "./EmailEmbeddedBarChart";
 import EmailEmbeddedDotPlot from "./EmailEmbeddedDotPlot";
 import styled from "@emotion/styled";
+import { ColorProfile, highlight_orange } from "../../../Presets/Constants";
 
 
 type Prop = {
@@ -65,8 +65,8 @@ const EmailText: FC<Prop> = ({ providerType, currentSelectedProviderID }: Prop) 
     <List sx={{ listStyleType: 'disc', pl: 2 }}>
       <BulletItem>
         <StatsSpan>{allStats.curTotalCases}</StatsSpan>
-        {allStats.curTotalCases > allStats.lastTotalCases ? <ArrowUpwardIcon fontSize='small' /> : <></>}
-        {allStats.curTotalCases < allStats.lastTotalCases ? <ArrowDownwardIcon fontSize='small' /> : <></>}
+        {allStats.curTotalCases > allStats.lastTotalCases ? <ArrowUpwardIcon fontSize='small' style={{ verticalAlign: 'middle' }} /> : <></>}
+        {allStats.curTotalCases < allStats.lastTotalCases ? <ArrowDownwardIcon fontSize='small' style={{ verticalAlign: 'middle' }} /> : <></>}
         cardiac sugeries
       </BulletItem>
       <BulletItem><span>Used <StatsSpan >{allStats.curRBC}</StatsSpan> units of Red Blood Cells</span></BulletItem>
@@ -79,7 +79,7 @@ const EmailText: FC<Prop> = ({ providerType, currentSelectedProviderID }: Prop) 
       </BulletItem>
       <BulletItem style={{ visibility: allStats.postTransHemo.length ? undefined : 'hidden' }}>
         <span>
-          Among the patients you transfused at least 1 red cell unit, the post-operative hemoglobin value (7.5) was above the recommended threshold <StatsSpan>{
+          Among the patients you transfused at least 1 red cell unit, the post-operative hemoglobin value <span color={highlight_orange}>(7.5)</span> was above the recommended threshold <StatsSpan>{
             format(',.0%')(allStats.postTransHemo.filter(d => d > 7.5).length / allStats.postTransHemo.length)}</StatsSpan> of the time.
         </span>
         <EmailEmbeddedDotPlot dataArray={allStats.postTransHemo} standardLine={7.5} />
@@ -91,7 +91,7 @@ const EmailText: FC<Prop> = ({ providerType, currentSelectedProviderID }: Prop) 
 export default observer(EmailText);
 
 const StatsSpan = styled.span({
-  color: 'blue'
+  color: ColorProfile[3]
 }
 );
 

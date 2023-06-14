@@ -3,7 +3,7 @@ import { FC, useContext, useEffect, useRef } from "react";
 import { DataContext } from "../../../App";
 import { Grid } from "@mui/material";
 import { ascending, axisBottom, axisLeft, least, max, mean, scaleBand, scaleLinear, select } from "d3";
-import { Basic_Gray, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, colorProfile, highlight_orange } from "../../../Presets/Constants";
+import { Basic_Gray, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, ColorProfile, highlight_orange } from "../../../Presets/Constants";
 import { CURRENT_QUARTER, LAST_QUARTER } from "./EmailComponent";
 import { AcronymDictionary } from "../../../Presets/DataDict";
 
@@ -94,7 +94,6 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
         .attr('opacity', 0.3);
 
 
-
       svgSelection.select('.band-axis')
         .call(axisLeft(bandScale) as any)
         .attr('transform', `translate(${MARGIN.left},0)`)
@@ -104,10 +103,6 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
       svgSelection.select('.length-axis')
         .call(axisBottom(lengthScale) as any)
         .attr('transform', `translate(0,${svgHeight - MARGIN.bottom})`);
-
-      // svgSelection.select('#bars');
-
-
 
       svgSelection.select('.prev-dots')
         .selectAll('g')
@@ -120,9 +115,6 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
         .attr('cx', d => lengthScale(d) - lengthScale(0))
         .attr('cy', bandScale.bandwidth() * .5)
         .attr('r', 4)
-        // .attr('cy', (_, i) => bandScale(DATA_ORDER[i]) || 0)
-        // .attr('width', d => lengthScale(d) - lengthScale(0))
-        // .attr('height', bandScale.bandwidth())
         .attr('fill', d => d ? Basic_Gray : 'none')
         .attr('opacity', 0.2);
 
@@ -138,11 +130,32 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
         .attr('cx', d => lengthScale(d) - lengthScale(0))
         .attr('cy', bandScale.bandwidth() * .5)
         .attr('r', 4)
-        // .attr('cy', (_, i) => bandScale(DATA_ORDER[i]) || 0)
-        // .attr('width', d => lengthScale(d) - lengthScale(0))
-        // .attr('height', bandScale.bandwidth())
-        .attr('fill', d => d ? colorProfile[1] : 'none');
+        .attr('opacity', 0.6)
+        .attr('fill', d => d ? ColorProfile[3] : 'none');
 
+      const legendG = svgSelection.select('.legend')
+        .selectAll('g')
+        .data([0, 1])
+        // .data(['Current Quarter', 'Last Quarter'])
+        .join('g');
+
+      legendG.selectAll('circle')
+        .data(d => [d])
+        .join('circle')
+        .attr('cx', svgWidth - 80)
+        .attr('cy', d => d * 10 + 4)
+        .attr('r', 4)
+        .attr('opacity', d => d ? 0.4 : 0.6)
+        .attr('fill', d => d ? Basic_Gray : ColorProfile[3]);
+
+      legendG.selectAll('text')
+        .data(d => [d])
+        .join('text')
+        .attr('x', svgWidth - 75)
+        .attr('y', d => d * 10 + 4)
+        .attr('font-size', 'x-small')
+        .attr('alignment-baseline', 'middle')
+        .text(d => d ? 'Last Quarter' : 'Current Quarter');
 
     }
 
