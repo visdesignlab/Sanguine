@@ -65,21 +65,26 @@ const EmailText: FC<Prop> = ({ providerType, currentSelectedProviderID }: Prop) 
     <List sx={{ listStyleType: 'disc', pl: 2 }}>
       <BulletItem>
         <StatsSpan>{allStats.curTotalCases}</StatsSpan>
-        {allStats.curTotalCases > allStats.lastTotalCases ? <ArrowUpwardIcon fontSize='small' style={{ verticalAlign: 'middle' }} /> : <></>}
-        {allStats.curTotalCases < allStats.lastTotalCases ? <ArrowDownwardIcon fontSize='small' style={{ verticalAlign: 'middle' }} /> : <></>}
-        cardiac sugeries
+        {allStats.curTotalCases > allStats.lastTotalCases ? <ArrowUpwardIcon fontSize='small' style={{ verticalAlign: 'middle', color: ColorProfile[3] }} /> : <></>}
+        {allStats.curTotalCases < allStats.lastTotalCases ? <ArrowDownwardIcon fontSize='small' style={{ verticalAlign: 'middle', color: ColorProfile[3] }} /> : <></>}
+        cardiac sugeries.
       </BulletItem>
-      <BulletItem><span>Used <StatsSpan >{allStats.curRBC}</StatsSpan> units of Red Blood Cells</span></BulletItem>
+
+      <BulletItem><span>Used <StatsSpan >{allStats.curRBC}</StatsSpan> units of Red Blood Cells.</span></BulletItem>
+
       <BulletItem>
         <span>
           The average case complexity (DRG Weight) is <StatsSpan>{format(',.2f')(allStats.curDRG)}</StatsSpan>, <StatsSpan>{allStats.curDRG > allStats.allDRG ? 'higher' : 'lower'}</StatsSpan> than department average.
         </span>
-
         <EmailEmbeddedBarChart curData={allStats.curDRG} compareData={allStats.allDRG} />
       </BulletItem>
+
       <BulletItem style={{ visibility: allStats.postTransHemo.length ? undefined : 'hidden' }}>
         <span>
-          Among the patients you transfused at least 1 red cell unit, the post-operative hemoglobin value <span color={highlight_orange}>(7.5)</span> was above the recommended threshold <StatsSpan>{
+          Among the patients you transfused at least 1 red cell unit, the post-operative hemoglobin value (
+          <span style={{ color: highlight_orange }}>7.5</span>
+          )
+          was above the recommended threshold <StatsSpan>{
             format(',.0%')(allStats.postTransHemo.filter(d => d > 7.5).length / allStats.postTransHemo.length)}</StatsSpan> of the time.
         </span>
         <EmailEmbeddedDotPlot dataArray={allStats.postTransHemo} standardLine={7.5} />

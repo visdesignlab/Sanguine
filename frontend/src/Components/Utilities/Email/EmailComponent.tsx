@@ -57,6 +57,10 @@ const EmailComponent: FC = () => {
 
   // }, [store.configStore.nameDictionary]);
 
+  const capitalizeFirstLetter = (string: string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1).toLocaleLowerCase();
+  };
+
 
 
 
@@ -75,7 +79,9 @@ const EmailComponent: FC = () => {
           <Select value={currentSelectedProviderID} onChange={(e) => setCurrentSelectProvider(e.target.value)}>
             {/* Menu option to select a provider */}
             {Object.keys(store.configStore.nameDictionary[providerType]).map((key: string) =>
-              <MenuItem key={`email-dia-${key}`} value={key}>{store.configStore.nameDictionary[providerType][key]}</MenuItem>)
+              <MenuItem key={`email-dia-${key}`} value={key}>
+                {capitalizeFirstLetter(store.configStore.nameDictionary[providerType][key])}
+              </MenuItem>)
             }
           </Select>
         </FormControl> : <></>}
@@ -86,7 +92,7 @@ const EmailComponent: FC = () => {
     <div>
       <p>
         {
-          currentSelectedProviderID && providerType ? `Dear ${store.configStore.nameDictionary[providerType][currentSelectedProviderID]}`
+          currentSelectedProviderID && providerType ? `Dear ${capitalizeFirstLetter(store.configStore.nameDictionary[providerType][currentSelectedProviderID])},`
             :
             <WelcomeText show={false}>Select provider to start</WelcomeText>
         }
