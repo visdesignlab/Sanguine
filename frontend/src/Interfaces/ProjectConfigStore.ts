@@ -23,7 +23,7 @@ export class ProjectConfigStore {
     this.rootStore = rootstore;
     this._isLoggedIn = !(process.env.REACT_APP_REQUIRE_LOGIN === "true");
     this.largeFont = false;
-    this.privateMode = true;
+    this.privateMode = false;
     this._topMenuBarAddMode = false;
     this.openSnackBar = false;
     this.snackBarMessage = "";

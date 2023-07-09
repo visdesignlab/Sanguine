@@ -18,23 +18,23 @@ const EmailEmbeddedBarChart: FC<Prop> = ({ curData, compareData }) => {
   const bandScale = scaleBand().domain(['you', 'compare']).range([EmbeddedSVGMargin.left, EmbeddedSVGWidth - EmbeddedSVGMargin.right]).padding(0.3);
 
 
-  useEffect(() => {
-    if (svgRef && svgRef.current) {
-      const svgSelection = select(svgRef.current);
+  // useEffect(() => {
+  //   if (svgRef && svgRef.current) {
+  //     const svgSelection = select(svgRef.current);
 
-      svgSelection.select('#band-axis')
-        .call(axisBottom(bandScale) as any)
-        .attr('transform', `translate(0,${EmbeddedSVGHeight - EmbeddedSVGMargin.bottom})`)
-        .selectAll('text')
-        .remove();
+  //     // svgSelection.select('#band-axis')
+  //     //   .call(axisBottom(bandScale) as any)
+  //     //   .attr('transform', `translate(0,${EmbeddedSVGHeight - EmbeddedSVGMargin.bottom})`)
+  //     //   .selectAll('text')
+  //     //   .remove();
 
-      // svgSelection.select('#ver-axis')
-      //   .call(axisLeft(scale()).ticks(1) as any)
-      //   .attr('transform', `translate(${EmbeddedSVGMargin.left},0)`)
-      //   .selectAll('text')
-      //   .remove();
-    }
-  }, [bandScale, scale, svgRef]);
+  //     // svgSelection.select('#ver-axis')
+  //     //   .call(axisLeft(scale()).ticks(1) as any)
+  //     //   .attr('transform', `translate(${EmbeddedSVGMargin.left},0)`)
+  //     //   .selectAll('text')
+  //     //   .remove();
+  //   }
+  // }, [bandScale, scale, svgRef]);
 
   return <svg width={EmbeddedSVGWidth} height={EmbeddedSVGHeight} ref={svgRef} style={{ verticalAlign: 'middle' }}>
     <g id='band-axis' />

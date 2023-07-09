@@ -6,6 +6,7 @@ import { ascending, axisBottom, axisLeft, least, max, mean, scaleBand, scaleLine
 import { Basic_Gray, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, ColorProfile, highlight_orange } from "../../../Presets/Constants";
 import { CURRENT_QUARTER, LAST_QUARTER } from "./EmailComponent";
 import { AcronymDictionary } from "../../../Presets/DataDict";
+import { SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
 
 
 
@@ -18,20 +19,30 @@ type Prop = {
 
 const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attributeToVisualize }: Prop) => {
 
-  const MARGIN = { left: 50, top: 5, right: 10, bottom: 20 };
+  const MARGIN = { left: 50, top: 5, right: 30, bottom: 20 };
 
   const DATA_ORDER = ['dept', 'best', 'you'];
   const allData = useContext(DataContext);
 
   const svgRef = useRef(null);
 
-
-  // const [dataGenerated,setDat]
+  const determineFilter = (a: SingleCasePoint, dateRange: number[]) => {
+    if (attributeToVisualize === 'POSTOP_HGB') {
+      return a.SURGERY_TYPE === 1 && a.DATE > dateRange[0] && a.DATE < dateRange[1] && a.PRBC_UNITS > 0;
+    }
+    return a.SURGERY_TYPE === 1 && a.DATE > dateRange[0] && a.DATE < dateRange[1];
+  };
 
   const generateProviderData = (dateRange: number[]) => {
     // Gather Data need: deparment average, individual average, selected provider average
+
+
+
     // filter down to cases within certain time span
-    const filteredCases = allData.filter((a) => a.DATE > dateRange[0] && a.DATE < dateRange[1]);
+    const filteredCases = allData.filter((a) => determineFilter(a, dateRange));
+
+
+
     const allProviders: { [key: string]: number[]; } = {};
     filteredCases.forEach((currentCase) => {
       const providerID = currentCase[providerType].toString();
@@ -46,9 +57,9 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
   };
 
   // d3.least(flights, (a, b) => d3.ascending(a.price, b.price))
-  const generateVisualizationData = (dataSource: { [key: string]: number[]; }) => {
+  const generateVisualizationData = (dataSource: { [key: string]: number[]; }, hgbMax: number) => {
 
-    const bestPractice = least(Object.values(dataSource), (a, b) => ascending(Math.abs(determineRecommend() - (mean(a) || 0)), Math.abs(determineRecommend() - (mean(b) || 0)))) || [];
+    const bestPractice = least(Object.values(dataSource), (a, b) => ascending(Math.abs(determineRecommend(hgbMax)[0] - (mean(a) || 0)), Math.abs(determineRecommend(hgbMax)[0] - (mean(b) || 0)))) || [];
 
     // console.log(bestPractice, dataSource, currentSelectedProviderID);
 
@@ -60,12 +71,12 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
       providerEntry];
   };
 
-  const determineRecommend = () => {
+  const determineRecommend = (hgbMax: number) => {
     if (attributeToVisualize === 'PREOP_HGB') {
-      return HGB_HIGH_STANDARD;
+      return [13, hgbMax];
     } if (attributeToVisualize === 'POSTOP_HGB') {
-      return HGB_LOW_STANDARD;
-    } return 0;
+      return [7.5, 9];
+    } return [0];
   };
 
   useEffect(() => {
@@ -77,18 +88,23 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
       const currentQuarterData = generateProviderData(CURRENT_QUARTER);
       const lastQuarterData = generateProviderData(LAST_QUARTER);
 
+      const hgbMax = max(Object.values(currentQuarterData).concat(Object.values(lastQuarterData)).flat()) || 0;
+
       const bandScale = scaleBand().domain(DATA_ORDER).range([MARGIN.top, svgHeight - MARGIN.bottom]).padding(0.1);
 
-      const lengthScale = scaleLinear().domain([0, max(Object.values(currentQuarterData).concat(Object.values(lastQuarterData)).flat()) || 0]).range([MARGIN.left, svgWidth - MARGIN.right]);
+      const lengthScale = scaleLinear().domain([0, hgbMax]).range([MARGIN.left, svgWidth - MARGIN.right]);
 
+
+      // preop 13+
+      //postop 7.5-9
       // add shading for recommend
       svgSelection.select('.recommend')
         .selectAll('rect')
-        .data([determineRecommend()])
+        .data([determineRecommend(hgbMax)])
         .join('rect')
-        .attr('x', d => lengthScale(d - 1))
+        .attr('x', d => lengthScale(d[0]))
         .attr('y', MARGIN.top)
-        .attr('width', d => lengthScale(d) - lengthScale(d - 1))
+        .attr('width', d => lengthScale(d[1]) - lengthScale(d[0]))
         .attr('height', svgHeight - MARGIN.bottom - MARGIN.top)
         .attr('fill', highlight_orange)
         .attr('opacity', 0.3);
@@ -106,14 +122,14 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
 
       svgSelection.select('.prev-dots')
         .selectAll('g')
-        .data(generateVisualizationData(lastQuarterData))
+        .data(generateVisualizationData(lastQuarterData, hgbMax))
         .join('g')
         .attr('transform', (_, i) => `translate(0,${bandScale(DATA_ORDER[i]) || 0})`)
         .selectAll('circle')
         .data(d => d)
         .join('circle')
         .attr('cx', d => lengthScale(d) - lengthScale(0))
-        .attr('cy', bandScale.bandwidth() * .5)
+        .attr('cy', bandScale.bandwidth() * .75)
         .attr('r', 4)
         .attr('fill', d => d ? Basic_Gray : 'none')
         .attr('opacity', 0.2);
@@ -121,14 +137,14 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
       // draw current quarter rectangles
       svgSelection.select('.dots')
         .selectAll('g')
-        .data(generateVisualizationData(currentQuarterData))
+        .data(generateVisualizationData(currentQuarterData, hgbMax))
         .join('g')
         .attr('transform', (_, i) => `translate(0,${bandScale(DATA_ORDER[i]) || 0})`)
         .selectAll('circle')
         .data(d => d)
         .join('circle')
         .attr('cx', d => lengthScale(d) - lengthScale(0))
-        .attr('cy', bandScale.bandwidth() * .5)
+        .attr('cy', bandScale.bandwidth() * .25)
         .attr('r', 4)
         .attr('opacity', 0.6)
         .attr('fill', d => d ? ColorProfile[3] : 'none');
@@ -145,7 +161,8 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
         .attr('cx', svgWidth - 80)
         .attr('cy', d => d * 10 + 4)
         .attr('r', 4)
-        .attr('opacity', d => d ? 0.4 : 0.6)
+        .attr('opacity', 0.5)
+        .attr('stroke', 'black')
         .attr('fill', d => d ? Basic_Gray : ColorProfile[3]);
 
       legendG.selectAll('text')
@@ -175,7 +192,7 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
       <g className='dots' />
       <g className='prev-dots' />
       <g className='recommend' />
-      <g className='legend' />
+      <g className='legend' transform={`translate(0,5)`} />
     </svg>
   </Grid>;
 };

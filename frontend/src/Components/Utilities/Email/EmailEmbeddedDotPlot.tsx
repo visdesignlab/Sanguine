@@ -18,29 +18,30 @@ const EmailEmbeddedDotPlot: FC<Prop> = ({ dataArray, standardLine }) => {
 
   const dotScale = scalePoint().domain(dataArray.map((_, d) => d.toString())).range([EmbeddedSVGMargin.left, EmbeddedSVGWidth - EmbeddedSVGMargin.right]);
 
-  useEffect(() => {
-    if (svgRef && svgRef.current) {
-      const svgSelection = select(svgRef.current);
+  // useEffect(() => {
+  //   if (svgRef && svgRef.current) {
+  //     const svgSelection = select(svgRef.current);
 
-      svgSelection.select('#band-axis')
-        .call(axisBottom(dotScale) as any)
-        .attr('transform', `translate(0,${EmbeddedSVGHeight - EmbeddedSVGMargin.bottom})`)
-        .selectAll('text')
-        .remove();
+  //     svgSelection.select('#band-axis')
+  //       .call(axisBottom(dotScale) as any)
+  //       .attr('transform', `translate(0,${EmbeddedSVGHeight - EmbeddedSVGMargin.bottom})`)
+  //       .selectAll('text')
+  //       .remove();
 
-      svgSelection.select('#band-axis').selectAll('.tick').remove();
+  //     svgSelection.select('#band-axis').selectAll('.tick').remove();
 
-      // svgSelection.select('#ver-axis')
-      //   .call(axisLeft(scale()).ticks(1) as any)
-      //   .attr('transform', `translate(${EmbeddedSVGMargin.left},0)`)
-      //   .selectAll('text')
-      //   .attr('font-size', 'smaller');
-    }
-  }, [dotScale, scale, svgRef, dataArray]);
+  //     // svgSelection.select('#ver-axis')
+  //     //   .call(axisLeft(scale()).ticks(1) as any)
+  //     //   .attr('transform', `translate(${EmbeddedSVGMargin.left},0)`)
+  //     //   .selectAll('text')
+  //     //   .attr('font-size', 'smaller');
+  //   }
+  // }, [dotScale, scale, svgRef, dataArray]);
 
   return <svg width={EmbeddedSVGWidth} height={EmbeddedSVGHeight} ref={svgRef} style={{ verticalAlign: 'middle' }}>
-    <g id='band-axis' />
-    <g id='ver-axis' />
+    {/* <g id='band-axis' />
+    <g id='ver-axis' /> */}
+    <line x1={EmbeddedSVGMargin.left} x2={EmbeddedSVGWidth} y1={scale()(0)} y2={scale()(0)} stroke='black' />
 
     <StandardLine x1={EmbeddedSVGMargin.left} x2={EmbeddedSVGWidth} y1={scale()(standardLine)} y2={scale()(standardLine)} />
     {dataArray.map((dp, i) =>

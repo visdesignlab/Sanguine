@@ -7,8 +7,8 @@ import EmailDotChart from "./EmailDotChart";
 import EmailText from "./EmailText";
 import { WelcomeText } from "../../../Presets/StyledComponents";
 
-export const LAST_QUARTER = [convertDateToUnixTimestamp('01-Jan-2015'), convertDateToUnixTimestamp('31-Mar-2015')];
-export const CURRENT_QUARTER = [convertDateToUnixTimestamp('01-Apr-2015'), convertDateToUnixTimestamp('30-Jun-2015')];
+export const LAST_QUARTER = [convertDateToUnixTimestamp('01-Jan-2018'), convertDateToUnixTimestamp('31-Mar-2018')];
+export const CURRENT_QUARTER = [convertDateToUnixTimestamp('01-Apr-2018'), convertDateToUnixTimestamp('30-Jun-2018')];
 
 
 function convertDateToUnixTimestamp(dateString: string): number {
@@ -92,7 +92,7 @@ const EmailComponent: FC = () => {
     <div>
       <p>
         {
-          currentSelectedProviderID && providerType ? `Dear ${capitalizeFirstLetter(store.configStore.nameDictionary[providerType][currentSelectedProviderID])},`
+          currentSelectedProviderID && providerType ? `Dear Dr. ${capitalizeFirstLetter(store.configStore.nameDictionary[providerType][currentSelectedProviderID])},`
             :
             <WelcomeText show={false}>Select provider to start</WelcomeText>
         }
@@ -103,10 +103,10 @@ const EmailComponent: FC = () => {
           <EmailText
             currentSelectedProviderID={currentSelectedProviderID}
             providerType={providerType} />
-          <Grid spacing={2} container>
-            <EmailDotChart attributeToVisualize="POSTOP_HGB" currentSelectedProviderID={currentSelectedProviderID} providerType={providerType} />
-            <EmailDotChart attributeToVisualize="PREOP_HGB" currentSelectedProviderID={currentSelectedProviderID} providerType={providerType} />
-          </Grid>
+          {/* <Grid spacing={2} container> */}
+          <EmailDotChart attributeToVisualize="POSTOP_HGB" currentSelectedProviderID={currentSelectedProviderID} providerType={providerType} />
+          <EmailDotChart attributeToVisualize="PREOP_HGB" currentSelectedProviderID={currentSelectedProviderID} providerType={providerType} />
+          {/* </Grid> */}
         </>
         : <></>}
 
