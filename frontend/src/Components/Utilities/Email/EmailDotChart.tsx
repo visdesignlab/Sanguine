@@ -56,7 +56,7 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
     return allProviders;
   };
 
-  // d3.least(flights, (a, b) => d3.ascending(a.price, b.price))
+
   const generateVisualizationData = (dataSource: { [key: string]: number[]; }, hgbMax: number) => {
 
     const bestPractice = least(Object.values(dataSource), (a, b) => ascending(Math.abs(determineRecommend(hgbMax)[0] - (mean(a) || 0)), Math.abs(determineRecommend(hgbMax)[0] - (mean(b) || 0)))) || [];
@@ -120,6 +120,19 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
         .call(axisBottom(lengthScale) as any)
         .attr('transform', `translate(0,${svgHeight - MARGIN.bottom})`);
 
+      //add mean for prev quarter
+      svgSelection.select('.means').select('.prev')
+        .selectAll('line')
+        .data(generateVisualizationData(lastQuarterData, hgbMax))
+        .join('line')
+        .attr('stroke', Basic_Gray)
+        .attr('stroke-width', 2)
+        .attr('transform', (_, i) => `translate(0, ${bandScale(DATA_ORDER[i]) || 0})`)
+        .attr('x1', d => lengthScale(mean(d) || 0))
+        .attr('x2', d => lengthScale(mean(d) || 0))
+        .attr('y1', bandScale.bandwidth() * 0.55)
+        .attr('y2', bandScale.bandwidth() * .95);
+
       svgSelection.select('.prev-dots')
         .selectAll('g')
         .data(generateVisualizationData(lastQuarterData, hgbMax))
@@ -128,11 +141,28 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
         .selectAll('circle')
         .data(d => d)
         .join('circle')
-        .attr('cx', d => lengthScale(d) - lengthScale(0))
+        .attr('cx', d => lengthScale(d))
         .attr('cy', bandScale.bandwidth() * .75)
         .attr('r', 4)
         .attr('fill', d => d ? Basic_Gray : 'none')
-        .attr('opacity', 0.2);
+        .attr('opacity', 0.2)
+        .append('title')
+        .text(d => d);;
+
+
+      //add mean for current quarter
+
+      svgSelection.select('.means').select('.cur')
+        .selectAll('line')
+        .data(generateVisualizationData(currentQuarterData, hgbMax))
+        .join('line')
+        .attr('transform', (_, i) => `translate(0, ${bandScale(DATA_ORDER[i]) || 0})`)
+        .attr('stroke', ColorProfile[3])
+        .attr('stroke-width', 2)
+        .attr('x1', d => lengthScale(mean(d) || 0))
+        .attr('x2', d => lengthScale(mean(d) || 0))
+        .attr('y1', bandScale.bandwidth() * 0.05)
+        .attr('y2', bandScale.bandwidth() * .45);
 
       // draw current quarter rectangles
       svgSelection.select('.dots')
@@ -143,11 +173,13 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
         .selectAll('circle')
         .data(d => d)
         .join('circle')
-        .attr('cx', d => lengthScale(d) - lengthScale(0))
+        .attr('cx', d => lengthScale(d))
         .attr('cy', bandScale.bandwidth() * .25)
         .attr('r', 4)
         .attr('opacity', 0.6)
-        .attr('fill', d => d ? ColorProfile[3] : 'none');
+        .attr('fill', d => d ? ColorProfile[3] : 'none')
+        .append('title')
+        .text(d => d);;
 
       const legendG = svgSelection.select('.legend')
         .selectAll('g')
@@ -158,17 +190,18 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
       legendG.selectAll('circle')
         .data(d => [d])
         .join('circle')
-        .attr('cx', svgWidth - 80)
+        .attr('cx', lengthScale(0))
         .attr('cy', d => d * 10 + 4)
         .attr('r', 4)
         .attr('opacity', 0.5)
         .attr('stroke', 'black')
         .attr('fill', d => d ? Basic_Gray : ColorProfile[3]);
 
+
       legendG.selectAll('text')
         .data(d => [d])
         .join('text')
-        .attr('x', svgWidth - 75)
+        .attr('x', lengthScale(0) + 8)
         .attr('y', d => d * 10 + 4)
         .attr('font-size', 'x-small')
         .attr('alignment-baseline', 'middle')
@@ -187,11 +220,17 @@ const EmailDotChart: FC<Prop> = ({ providerType, currentSelectedProviderID, attr
   return <Grid item xs={6} style={{ minHeight: '20vh', maxHeight: '20vh', minWidth: '40vw', maxWidth: '40vw' }}>
     {AcronymDictionary[attributeToVisualize] || attributeToVisualize}
     <svg ref={svgRef} width='100%' height='100%'>
+      <g className='means'>
+        <g className='prev' />
+        <g className='cur' />
+      </g>
+      <g className='recommend' />
       <g className='band-axis' />
       <g className='length-axis' />
       <g className='dots' />
       <g className='prev-dots' />
-      <g className='recommend' />
+
+
       <g className='legend' transform={`translate(0,5)`} />
     </svg>
   </Grid>;
