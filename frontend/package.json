@@ -17,7 +17,7 @@
         "@types/react-native": "^0.64.10",
         "@visdesignlab/trrack": "^2.0.0-alpha.10",
         "add": "^2.0.6",
-        "axios": "^0.21.2",
+        "axios": "^1.6.0",
         "d3": "^7.0.0",
         "date-fns": "^2.29.1",
         "jquery": "^3.6.0",
