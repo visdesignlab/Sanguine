@@ -122,7 +122,7 @@ CORS_ALLOW_HEADERS = [
 
 LOGIN_REDIRECT_URL = '/api'
 LOGIN_URL = '/api/accounts/login'
-SESSION_COOKIE_AGE = 2 * 60 * 60  # 2hr * 60 min * 60 sec
+SESSION_COOKIE_AGE = 1 * 60 * 60  # 1hr * 60 min * 60 sec
 SESSION_COOKIE_SECURE = True
 SESSION_SAVE_EVERY_REQUEST = True
 
