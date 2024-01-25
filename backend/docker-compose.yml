@@ -1,0 +1,29 @@
+services:
+  backend:
+    image: ghcr.io/visdesignlab/django-image:3.2-v0.0.12
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_DEBUG=True
+      - DJANGO_SECRET_KEY=this-is-not-secret
+      - REQUIRE_LOGINS=False
+      - MYSQL_DB=sanguine
+      - MYSQL_USER=sanguine
+      - MYSQL_PASSWORD=test
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - ORACLE_HOST=
+      - ORACLE_PORT=
+      - ORACLE_SERVICE_NAME=
+    ports:
+      - "8000:8000"
+
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: sanguine
+      MYSQL_USER: sanguine
+      MYSQL_PASSWORD: test
+    ports:
+      - "3306:3306"
