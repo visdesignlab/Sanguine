@@ -18,12 +18,12 @@ services:
     ports:
       - "8000:8000"
 
-  mysql:
-    image: mysql:8
+  mariadb:
+    image: mariadb:10
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: sanguine
-      MYSQL_USER: sanguine
-      MYSQL_PASSWORD: test
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: sanguine
+      MARIADB_USER: sanguine
+      MARIADB_PASSWORD: test
     ports:
       - "3306:3306"
