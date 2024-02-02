@@ -32,7 +32,7 @@ services:
     image: node:18
     working_dir: /app
     volumes:
-      - ../frontend:/app
+      - ../frontend:/app:Z
     environment:
       - NODE_ENV=production"
     command: sh -c "yarn install && yarn run build"

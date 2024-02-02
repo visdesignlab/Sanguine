@@ -1,5 +1,5 @@
 import csv
-import cx_Oracle
+import oracledb
 import json
 import os
 
@@ -14,14 +14,9 @@ def make_connection():
         usr_name = credential_data["usr_name"]
         password = credential_data["password"]
 
-    # Generate the connection
-    dsn_tns = cx_Oracle.makedsn(
-        os.getenv("ORACLE_HOST"),
-        os.getenv("ORACLE_PORT"),
-        service_name=os.getenv("ORACLE_SERVICE_NAME"),
-    )
+    dsn = f"{os.getenv('ORACLE_HOST')}:{os.getenv('ORACLE_PORT')}/{os.getenv('ORACLE_SERVICE_NAME')}"
 
-    return cx_Oracle.connect(user=usr_name, password=password, dsn=dsn_tns)
+    return oracledb.connect(user=usr_name, password=password, dsn=dsn)
 
 
 # Read in the data dictionary

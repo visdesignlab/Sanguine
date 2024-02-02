@@ -7,11 +7,12 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-cx-oracle = "^8.3.0"
 coverage = "^7.4.0"
 mysqlclient = "^2.2.1"
 django-cas-ng = "==4.1.1"
 django = "~3.2.3"
+oracledb = "^2.0.1"
+
 
 
 [build-system]
