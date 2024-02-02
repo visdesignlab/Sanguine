@@ -10,7 +10,7 @@ services:
       - MYSQL_DB=sanguine
       - MYSQL_USER=sanguine
       - MYSQL_PASSWORD=test
-      - MYSQL_HOST=mysql
+      - MYSQL_HOST=mariadb
       - MYSQL_PORT=3306
       - ORACLE_HOST=
       - ORACLE_PORT=
@@ -27,3 +27,12 @@ services:
       MARIADB_PASSWORD: test
     ports:
       - "3306:3306"
+
+  frontend:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - ../frontend:/app
+    environment:
+      - NODE_ENV=production"
+    command: sh -c "yarn install && yarn run build"
