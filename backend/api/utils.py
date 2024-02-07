@@ -1,22 +1,15 @@
 import csv
 import oracledb
-import json
-import os
+from api.settings import env
 
 from datetime import datetime
 
 
 # Makes and returns the database connection object
 def make_connection():
-    # Load credentials
-    with open("credential.json") as credential:
-        credential_data = json.load(credential)
-        usr_name = credential_data["usr_name"]
-        password = credential_data["password"]
+    dsn = f"{env('ORACLE_HOST')}:{env('ORACLE_PORT')}/{env('ORACLE_SERVICE_NAME')}"
 
-    dsn = f"{os.getenv('ORACLE_HOST')}:{os.getenv('ORACLE_PORT')}/{os.getenv('ORACLE_SERVICE_NAME')}"
-
-    return oracledb.connect(user=usr_name, password=password, dsn=dsn)
+    return oracledb.connect(user=env('ORACLE_USER'), password=env('ORACLE_PASSWORD'), dsn=dsn)
 
 
 # Read in the data dictionary
