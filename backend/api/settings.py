@@ -89,13 +89,19 @@ WSGI_APPLICATION = "api.wsgi.application"
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql', 
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': env("MYSQL_DB"),
         'USER': env("MYSQL_USER"),
         'PASSWORD': env("MYSQL_PASSWORD"),
         'HOST': env("MYSQL_HOST"),
         'PORT': env("MYSQL_PORT"),
-    }
+    },
+    "hospital": {
+        'ENGINE': 'django.db.backends.oracle',
+        "NAME": f"{env('ORACLE_HOST')}:{env('ORACLE_PORT')}/{env('ORACLE_SERVICE_NAME')}",
+        "USER": env("ORACLE_USER"),
+        "PASSWORD": env("ORACLE_PASSWORD")
+    },
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
