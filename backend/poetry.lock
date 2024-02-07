@@ -264,18 +264,18 @@ bcrypt = ["bcrypt"]
 
 [[package]]
 name = "django-cas-ng"
-version = "4.1.1"
-description = "Django CAS 1.0/2.0/3.0 client authentication library, support Django 2.0, 2.1, 2.2, 3.0 and Python 3.5+"
+version = "5.0.1"
+description = "Django CAS 1.0/2.0/3.0 client authentication library, support Django 2.2, 3.0, 3.1, 3.2, 4.0 and Python 3.7+"
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=3.7"
 files = [
-    {file = "django-cas-ng-4.1.1.tar.gz", hash = "sha256:897702228d0ee2940d58ad084a8d8896d21d7b2b063ae529cd5e716b1fa3dddf"},
-    {file = "django_cas_ng-4.1.1-py2.py3-none-any.whl", hash = "sha256:64e5ab89907b75789cb69080aee1b1e8ca68dbe2efd7cb8d927a47cfe1c74b14"},
+    {file = "django-cas-ng-5.0.1.tar.gz", hash = "sha256:e02ba35cc289e3478ca43185383ba24e4f690a41110927e87e92ac6675248541"},
+    {file = "django_cas_ng-5.0.1-py2.py3-none-any.whl", hash = "sha256:76f400c1efc75511fbc8566cb376ece7178a922187c8e01bede257f5b405892a"},
 ]
 
 [package.dependencies]
-Django = ">=2.0"
-python-cas = ">=1.4.0"
+Django = ">=2.2"
+python-cas = ">=1.6.0"
 
 [[package]]
 name = "idna"
@@ -548,4 +548,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "6fc14dfb4398a4a81ce52bee34a7926e5397b1e4531f3c158ffcc724ff5b71bf"
+content-hash = "b9ab16f0f4f72d0699d4d6a2b8e20116248803cfa129d381bd852a798732dd64"
