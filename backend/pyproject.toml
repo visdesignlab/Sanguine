@@ -10,7 +10,7 @@ python = "^3.9"
 coverage = "^7.4.0"
 mysqlclient = "^2.2.1"
 django-cas-ng = "==4.1.1"
-django = "~3.2.3"
+django = "~3.2.24"
 oracledb = "^2.0.1"
 
 
