@@ -1,6 +1,6 @@
 services:
   backend:
-    image: ghcr.io/visdesignlab/django-image:4.2-v0.1.1
+    image: ghcr.io/visdesignlab/django-image:5.0-v0.1.1
     volumes:
       - .:/app:Z
     env_file:
