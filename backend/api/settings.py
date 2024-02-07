@@ -90,11 +90,11 @@ WSGI_APPLICATION = "api.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': env("MYSQL_DB"),
-        'USER': env("MYSQL_USER"),
-        'PASSWORD': env("MYSQL_PASSWORD"),
-        'HOST': env("MYSQL_HOST"),
-        'PORT': env("MYSQL_PORT"),
+        'NAME': env("MARIADB_DB"),
+        'USER': env("MARIADB_USER"),
+        'PASSWORD': env("MARIADB_PASSWORD"),
+        'HOST': env("MARIADB_HOST"),
+        'PORT': env("MARIADB_PORT"),
     },
     "hospital": {
         'ENGINE': 'django.db.backends.oracle',
