@@ -96,12 +96,12 @@ DATABASES = {
         'HOST': env("MARIADB_HOST"),
         'PORT': env("MARIADB_PORT"),
     },
-    # "hospital": {
-    #     'ENGINE': 'django.db.backends.oracle',
-    #     "NAME": f"{env('ORACLE_HOST')}:{env('ORACLE_PORT')}/{env('ORACLE_SERVICE_NAME')}",
-    #     "USER": env("ORACLE_USER"),
-    #     "PASSWORD": env("ORACLE_PASSWORD")
-    # },
+    "hospital": {
+        'ENGINE': 'django.db.backends.oracle',
+        "NAME": f"{env('ORACLE_HOST')}:{env('ORACLE_PORT')}/{env('ORACLE_SERVICE_NAME')}",
+        "USER": env("ORACLE_USER"),
+        "PASSWORD": env("ORACLE_PASSWORD")
+    },
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
