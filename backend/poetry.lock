@@ -278,6 +278,20 @@ Django = ">=2.2"
 python-cas = ">=1.6.0"
 
 [[package]]
+name = "django-extensions"
+version = "3.2.3"
+description = "Extensions for Django"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "django-extensions-3.2.3.tar.gz", hash = "sha256:44d27919d04e23b3f40231c4ab7af4e61ce832ef46d610cc650d53e68328410a"},
+    {file = "django_extensions-3.2.3-py3-none-any.whl", hash = "sha256:9600b7562f79a92cbf1fde6403c04fee314608fefbb595502e34383ae8203401"},
+]
+
+[package.dependencies]
+Django = ">=3.2"
+
+[[package]]
 name = "idna"
 version = "3.6"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -454,6 +468,16 @@ files = [
 ]
 
 [[package]]
+name = "pygraphviz"
+version = "1.12"
+description = "Python interface to Graphviz"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "pygraphviz-1.12.tar.gz", hash = "sha256:8b0b9207954012f3b670e53b8f8f448a28d12bdbbcf69249313bd8dbe680152f"},
+]
+
+[[package]]
 name = "python-cas"
 version = "1.6.0"
 description = "Python CAS client library"
@@ -548,4 +572,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "64c4d7c1b704d370e05ec2f7cc7c1a8cdfb39f04abc992dc8141ea44fe264a45"
+content-hash = "6b16c5d8516c1b50f38b25017f49e02e73ab5c719aec417b8c0c9482f07a6d34"
