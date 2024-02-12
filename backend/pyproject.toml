@@ -6,12 +6,13 @@ authors = ["Jack Wilburn <jackwilburn@tutanota.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
-coverage = "^7.4.0"
+python = "^3.11"
 mysqlclient = "^2.2.1"
-django-cas-ng = "==4.1.1"
-django = "~3.2.3"
+django-cas-ng = "==5.0.1"
+django = "~5.0"
 oracledb = "^2.0.1"
+django-extensions = "^3.2.3"
+pygraphviz = "^1.12"
 
 
 

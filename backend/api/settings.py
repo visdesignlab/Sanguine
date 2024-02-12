@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "api",
     'django_cas_ng',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -89,13 +90,19 @@ WSGI_APPLICATION = "api.wsgi.application"
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql', 
-        'NAME': env("MYSQL_DB"),
-        'USER': env("MYSQL_USER"),
-        'PASSWORD': env("MYSQL_PASSWORD"),
-        'HOST': env("MYSQL_HOST"),
-        'PORT': env("MYSQL_PORT"),
-    }
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': env("MARIADB_DATABASE"),
+        'USER': env("MARIADB_USER"),
+        'PASSWORD': env("MARIADB_PASSWORD"),
+        'HOST': env("MARIADB_HOST"),
+        'PORT': env("MARIADB_PORT"),
+    },
+    "hospital": {
+        'ENGINE': 'django.db.backends.oracle',
+        "NAME": f"{env('ORACLE_HOST')}:{env('ORACLE_PORT')}/{env('ORACLE_SERVICE_NAME')}",
+        "USER": env("ORACLE_USER"),
+        "PASSWORD": env("ORACLE_PASSWORD")
+    },
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
@@ -166,3 +173,4 @@ CAS_IGNORE_REFERER = True
 CAS_FORCE_SSL_SERVICE_URL = True
 CAS_VERSION = '3'
 CAS_USERNAME_ATTRIBUTE = "unid"
+CAS_ROOT_PROXIED_AS = "https://sanguine.med.utah.edu"
