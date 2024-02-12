@@ -177,7 +177,7 @@ class BLPD_SANGUINE_INTRAOP_TRANSFUSION(models.Model):
 
 
 class BLPD_SANGUINE_INTRAOP_MEDS(models.Model):
-    VISIT_NO = models.DecimalField(max_digits=18, decimal_places=0)
+    VISIT_NO = models.ForeignKey(BLPD_SANGUINE_VISIT, on_delete=models.CASCADE)
     CASE_ID = models.ForeignKey(BLPD_SANGUINE_SURGERY_CASE, on_delete=models.CASCADE)
     ORDER_MED_ID = models.DecimalField(max_digits=18, decimal_places=0)
     MED_ADMIN_LINE = models.DecimalField(max_digits=38, decimal_places=0)
