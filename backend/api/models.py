@@ -4,12 +4,12 @@ from enum import Enum
 
 # Helper Enum classes
 class AccessLevel(Enum):
-        READER = 'RE'
-        WRITER = 'WR'
+    READER = 'RE'
+    WRITER = 'WR'
 
-        @classmethod
-        def choices(self):
-            return tuple((i.name, i.value) for i in self)
+    @classmethod
+    def choices(self):
+        return tuple((i.name, i.value) for i in self)
 
 
 # Actual models
@@ -34,47 +34,6 @@ class StateAccess(models.Model):
 
 
 # Hospital models - not currently used in the app
-class BLPD_SANGUINE_BILLING_CODES(models.Model):
-    VISIT_NO = models.ForeignKey(BLPD_SANGUINE_VISIT, on_delete=models.CASCADE)
-    CODE_TYPE_DESC = models.CharField(max_length=2000)
-    CODE = models.CharField(max_length=80)
-    CODE_DESC = models.CharField(max_length=2000)
-    PROC_DTM = models.DateField()
-    PROV_ID = models.CharField(max_length=25)
-    PROV_NAME = models.CharField(max_length=100)
-    PRESENT_ON_ADM_F = models.CharField(max_length=1)
-    CODE_RANK = models.FloatField()
-    LOAD_DTM = models.DateField()
-
-    class Meta:
-        managed = False
-        db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_BILLING_CODES'
-
-
-class BLPD_SANGUINE_SURGERY_CASE(models.Model):
-    VISIT_NO = models.ForeignKey(BLPD_SANGUINE_VISIT, on_delete=models.CASCADE)
-    MRN = models.ForeignKey(BLPD_SANGUINE_PATIENT, on_delete=models.CASCADE)
-    CASE_ID = models.FloatField()
-    CASE_DATE = models.DateField()
-    SURGERY_START_DTM = models.DateField()
-    SURGERY_END_DTM = models.DateField()
-    SURGERY_ELAP = models.FloatField()
-    SURGERY_TYPE_DESC = models.CharField(max_length=2000)
-    SURGEON_PROV_ID = models.CharField(max_length=25)
-    SURGEON_PROV_NAME = models.CharField(max_length=100)
-    ANESTH_PROV_ID = models.CharField(max_length=25)
-    ANESTH_PROV_NAME = models.CharField(max_length=100)
-    PRIM_PROC_DESC = models.CharField(max_length=2000)
-    POSTOP_ICU_LOS = models.FloatField()
-    SCHED_SITE_DESC = models.CharField(max_length=2000)
-    ASA_CODE = models.CharField(max_length=80)
-    LOAD_DTM = models.DateField()
-
-    class Meta:
-        managed = False
-        db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE'
-
-
 class BLPD_SANGUINE_PATIENT(models.Model):
     MRN = models.CharField(max_length=20)
     PAT_FAMILY = models.CharField(max_length=30)
@@ -132,6 +91,47 @@ class BLPD_SANGUINE_VISIT(models.Model):
     class Meta:
         managed = False
         db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT'
+
+
+class BLPD_SANGUINE_BILLING_CODES(models.Model):
+    VISIT_NO = models.ForeignKey(BLPD_SANGUINE_VISIT, on_delete=models.CASCADE)
+    CODE_TYPE_DESC = models.CharField(max_length=2000)
+    CODE = models.CharField(max_length=80)
+    CODE_DESC = models.CharField(max_length=2000)
+    PROC_DTM = models.DateField()
+    PROV_ID = models.CharField(max_length=25)
+    PROV_NAME = models.CharField(max_length=100)
+    PRESENT_ON_ADM_F = models.CharField(max_length=1)
+    CODE_RANK = models.FloatField()
+    LOAD_DTM = models.DateField()
+
+    class Meta:
+        managed = False
+        db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_BILLING_CODES'
+
+
+class BLPD_SANGUINE_SURGERY_CASE(models.Model):
+    VISIT_NO = models.ForeignKey(BLPD_SANGUINE_VISIT, on_delete=models.CASCADE)
+    MRN = models.ForeignKey(BLPD_SANGUINE_PATIENT, on_delete=models.CASCADE)
+    CASE_ID = models.FloatField()
+    CASE_DATE = models.DateField()
+    SURGERY_START_DTM = models.DateField()
+    SURGERY_END_DTM = models.DateField()
+    SURGERY_ELAP = models.FloatField()
+    SURGERY_TYPE_DESC = models.CharField(max_length=2000)
+    SURGEON_PROV_ID = models.CharField(max_length=25)
+    SURGEON_PROV_NAME = models.CharField(max_length=100)
+    ANESTH_PROV_ID = models.CharField(max_length=25)
+    ANESTH_PROV_NAME = models.CharField(max_length=100)
+    PRIM_PROC_DESC = models.CharField(max_length=2000)
+    POSTOP_ICU_LOS = models.FloatField()
+    SCHED_SITE_DESC = models.CharField(max_length=2000)
+    ASA_CODE = models.CharField(max_length=80)
+    LOAD_DTM = models.DateField()
+
+    class Meta:
+        managed = False
+        db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE'
 
 
 class BLPD_SANGUINE_VISIT_LABS(models.Model):
