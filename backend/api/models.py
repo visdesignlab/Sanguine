@@ -49,7 +49,6 @@ class BLPD_SANGUINE_BILLING_CODES(models.Model):
     class Meta:
         managed = False
         db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_BILLING_CODES'
-        using = 'hospital'
 
 
 class BLPD_SANGUINE_SURGERY_CASE(models.Model):
@@ -74,7 +73,6 @@ class BLPD_SANGUINE_SURGERY_CASE(models.Model):
     class Meta:
         managed = False
         db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE'
-        using = 'hospital'
 
 
 class BLPD_SANGUINE_PATIENT(models.Model):
@@ -93,7 +91,6 @@ class BLPD_SANGUINE_PATIENT(models.Model):
     class Meta:
         managed = False
         db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_PATIENT'
-        using = 'hospital'
 
 
 class BLPD_SANGUINE_VISIT(models.Model):
@@ -135,7 +132,6 @@ class BLPD_SANGUINE_VISIT(models.Model):
     class Meta:
         managed = False
         db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT'
-        using = 'hospital'
 
 
 class BLPD_SANGUINE_VISIT_LABS(models.Model):
@@ -157,7 +153,6 @@ class BLPD_SANGUINE_VISIT_LABS(models.Model):
     class Meta:
         managed = False
         db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT_LABS'
-        using = 'hospital'
 
 
 class BLPD_SANGUINE_INTRAOP_TRANSFUSION(models.Model):
@@ -179,7 +174,6 @@ class BLPD_SANGUINE_INTRAOP_TRANSFUSION(models.Model):
     class Meta:
         managed = False
         db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_TRANSFUSION'
-        using = 'hospital'
 
 
 class BLPD_SANGUINE_INTRAOP_MEDS(models.Model):
@@ -202,7 +196,6 @@ class BLPD_SANGUINE_INTRAOP_MEDS(models.Model):
     class Meta:
         managed = False
         db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_MEDS'
-        using = 'hospital'
 
 
 class BLPD_SANGUINE_EXTRAOP_MEDS(models.Model):
@@ -224,4 +217,3 @@ class BLPD_SANGUINE_EXTRAOP_MEDS(models.Model):
     class Meta:
         managed = False
         db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_EXTRAOP_MEDS'
-        using = 'hospital'
