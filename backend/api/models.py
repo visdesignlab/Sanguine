@@ -35,7 +35,7 @@ class StateAccess(models.Model):
 
 # Hospital models - not currently used in the app
 class BLPD_SANGUINE_BILLING_CODES(models.Model):
-    VISIT_NO = models.DecimalField(max_digits=18, decimal_places=0)
+    VISIT_NO = models.ForeignKey(BLPD_SANGUINE_VISIT, on_delete=models.CASCADE)
     CODE_TYPE_DESC = models.CharField(max_length=2000)
     CODE = models.CharField(max_length=80)
     CODE_DESC = models.CharField(max_length=2000)
@@ -52,8 +52,8 @@ class BLPD_SANGUINE_BILLING_CODES(models.Model):
 
 
 class BLPD_SANGUINE_SURGERY_CASE(models.Model):
-    VISIT_NO = models.FloatField()
-    MRN = models.FloatField()
+    VISIT_NO = models.ForeignKey(BLPD_SANGUINE_VISIT, on_delete=models.CASCADE)
+    MRN = models.ForeignKey(BLPD_SANGUINE_PATIENT, on_delete=models.CASCADE)
     CASE_ID = models.FloatField()
     CASE_DATE = models.DateField()
     SURGERY_START_DTM = models.DateField()
@@ -135,7 +135,7 @@ class BLPD_SANGUINE_VISIT(models.Model):
 
 
 class BLPD_SANGUINE_VISIT_LABS(models.Model):
-    VISIT_NO = models.DecimalField(max_digits=18, decimal_places=0)
+    VISIT_NO = models.ForeignKey(BLPD_SANGUINE_VISIT, on_delete=models.CASCADE)
     LAB_ID = models.CharField(max_length=16)
     LAB_DRAW_DTM = models.DateField()
     LAB_PANEL_CODE = models.CharField(max_length=30)
@@ -156,7 +156,7 @@ class BLPD_SANGUINE_VISIT_LABS(models.Model):
 
 
 class BLPD_SANGUINE_INTRAOP_TRANSFUSION(models.Model):
-    VISIT_NO = models.DecimalField(max_digits=18, decimal_places=0)
+    VISIT_NO = models.ForeignKey(BLPD_SANGUINE_VISIT, on_delete=models.CASCADE)
     TRNSFSN_DTM = models.DateField()
     BLOOD_UNIT_NUMBER = models.CharField(max_length=600)
     PRBC_UNITS = models.FloatField()
@@ -178,7 +178,7 @@ class BLPD_SANGUINE_INTRAOP_TRANSFUSION(models.Model):
 
 class BLPD_SANGUINE_INTRAOP_MEDS(models.Model):
     VISIT_NO = models.DecimalField(max_digits=18, decimal_places=0)
-    CASE_ID = models.FloatField()
+    CASE_ID = models.ForeignKey(BLPD_SANGUINE_SURGERY_CASE, on_delete=models.CASCADE)
     ORDER_MED_ID = models.DecimalField(max_digits=18, decimal_places=0)
     MED_ADMIN_LINE = models.DecimalField(max_digits=38, decimal_places=0)
     ORDER_DTM = models.DateField()
@@ -199,7 +199,7 @@ class BLPD_SANGUINE_INTRAOP_MEDS(models.Model):
 
 
 class BLPD_SANGUINE_EXTRAOP_MEDS(models.Model):
-    VISIT_NO = models.DecimalField(max_digits=18, decimal_places=0)
+    VISIT_NO = models.ForeignKey(BLPD_SANGUINE_VISIT, on_delete=models.CASCADE)
     ORDER_MED_ID = models.DecimalField(max_digits=18, decimal_places=0)
     ORDER_DTM = models.DateField()
     MEDICATION_ID = models.DecimalField(max_digits=18, decimal_places=0)
