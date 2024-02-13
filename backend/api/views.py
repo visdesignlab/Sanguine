@@ -187,7 +187,6 @@ def get_procedure_counts(request):
                 {FIELDS_IN_USE.get('case_id')}
             FROM {TABLES_IN_USE.get('billing_codes')} BLNG
             INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
-                ON (BLNG.{FIELDS_IN_USE.get('patient_id')} = SURG.{FIELDS_IN_USE.get('patient_id')})
                 AND (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')})
                 AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
             {filters_safe_sql}
