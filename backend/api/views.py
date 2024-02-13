@@ -119,6 +119,13 @@ def index(request):
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
+def whoami(request):
+    if request.user.is_authenticated:
+        return HttpResponse(request.user.username)
+    else:
+        return HttpResponse('Unauthorized', status=401)
+
+
 @conditional_login_required(
     login_required,
     os.getenv("REQUIRE_LOGINS") == "True"
