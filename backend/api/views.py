@@ -110,7 +110,7 @@ logging.basicConfig(
 
 def execute_sql(command, *args, **kwargs):
     with connections['hospital'].cursor() as cursor:
-        cursor.execute(command, kwargs)
+        cursor.execute(command, args, kwargs)
         return cursor.fetchall()
 
 
