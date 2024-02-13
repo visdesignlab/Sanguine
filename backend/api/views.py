@@ -147,7 +147,7 @@ logging.basicConfig(
 
 def execute_sql(command, *args, **kwargs):
     with connections['hospital'].cursor() as cursor:
-        cursor.execute(command, args, kwargs)
+        cursor.execute(command, kwargs)
         return cursor.fetchall()
 
 
@@ -193,12 +193,10 @@ def get_procedure_counts(request):
             GROUP BY {FIELDS_IN_USE.get('case_id')}
         """
 
-        print(command)
-        print(dict(zip(bind_names, filters)))
         result = list(
             execute_sql(
                 command,
-                dict(zip(bind_names, filters))
+                **dict(zip(bind_names, filters))
             )
         )
 
@@ -625,7 +623,7 @@ def risk_score(request):
 
         result = execute_sql(
             command,
-            dict(zip(pat_bind_names, patient_ids))
+            **dict(zip(pat_bind_names, patient_ids))
         )
 
         result_list = []
@@ -769,7 +767,7 @@ def patient_outcomes(request):
 
         result = execute_sql(
             command,
-            dict(zip(pat_bind_names, patient_ids))
+            **dict(zip(pat_bind_names, patient_ids))
         )
 
         result_list = []
