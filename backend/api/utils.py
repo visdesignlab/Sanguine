@@ -1,15 +1,5 @@
 import csv
-import oracledb
-from api.settings import env
-
 from datetime import datetime
-
-
-# Makes and returns the database connection object
-def make_connection():
-    dsn = f"{env('ORACLE_HOST')}:{env('ORACLE_PORT')}/{env('ORACLE_SERVICE_NAME')}"
-
-    return oracledb.connect(user=env('ORACLE_USER'), password=env('ORACLE_PASSWORD'), dsn=dsn)
 
 
 # Read in the data dictionary
@@ -37,15 +27,6 @@ def cpt():
             cpt.append(tuple(row))
 
     return cpt
-
-
-# Execute a command against the database
-# *args passes through positional args
-# **kwargs passes through keyword arguments
-def execute_sql(command, *args, **kwargs):
-    connection = make_connection()
-    cur = connection.cursor()
-    return cur.execute(command, *args, **kwargs)
 
 
 # Returns all values from raw results for a specified agg var
@@ -136,5 +117,5 @@ def validate_one_date_string(date):
     try:
         datetime.strptime(date, DATE_FORMAT)
         return True
-    except:
+    except ValueError:
         return False
