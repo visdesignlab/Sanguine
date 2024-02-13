@@ -511,7 +511,7 @@ def request_transfused_units(request):
             )
         ) LIMITED_SURG
             ON LIMITED_SURG.{FIELDS_IN_USE.get('visit_no')} = TRNSFSD.{FIELDS_IN_USE.get('visit_no')}
-        WHERE LIMITED_SURG.{FIELDS_IN_USE.get('case_date')} BETWEEN %(min_time)s AND %(max_time)s
+        WHERE LIMITED_SURG.{FIELDS_IN_USE.get('case_date')} BETWEEN TO_DATE(%(min_time)s, 'DD-Mon-YYYY') AND TO_DATE(%(max_time)s, 'DD-Mon-YYYY')
         {pat_filters_safe_sql} {case_filters_safe_sql}
         {group_by}
         {having_sql}
