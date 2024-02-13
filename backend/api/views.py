@@ -512,7 +512,7 @@ def request_transfused_units(request):
             )
         ) LIMITED_SURG
             ON LIMITED_SURG.{FIELDS_IN_USE.get('case_id')} = TRNSFSD.{FIELDS_IN_USE.get('case_id')}
-        WHERE LIMITED_SURG.{FIELDS_IN_USE.get('case_date')} BETWEEN :min_time AND :max_time
+        WHERE LIMITED_SURG.{FIELDS_IN_USE.get('case_date')} BETWEEN %(min_time)s AND %(max_time)s
         {pat_filters_safe_sql} {case_filters_safe_sql}
         {group_by}
         {having_sql}
@@ -521,7 +521,7 @@ def request_transfused_units(request):
         # Execute the query
         result = execute_sql(
             command,
-            dict(
+            **dict(
                 zip(pat_bind_names + case_bind_names,
                     patient_ids + case_ids),
                 min_time=min_time,
