@@ -41,13 +41,13 @@ def get_all_by_agg(result_dict, agg, variable):
 def get_bind_names(filters):
     if not isinstance(filters, list):
         raise TypeError("get_bind_names was not passed a list")
-    return [f"%(filters{str(i)})s" for i in range(len(filters))]
+    return [f"filters{str(i)}" for i in range(len(filters))]
 
 
 def get_all_cpt_code_filters():
     filters = [a[0] for a in cpt()]
     bind_names = get_bind_names(filters)
-    filters_safe_sql = f"WHERE CODE IN ({','.join(bind_names)}) "
+    filters_safe_sql = f"WHERE CODE IN (%({')s,%('.join(bind_names)})s) "
 
     return filters, bind_names, filters_safe_sql
 
