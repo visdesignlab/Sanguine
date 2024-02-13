@@ -73,7 +73,44 @@ DE_IDENT_FIELDS = {
 }
 
 IDENT_FIELDS = {
-
+    "admin_dose": "ADMIN_DOSE",
+    "anest_id": "ANESTH_PROV_ID",
+    "apr_drg_weight": "APR_DRG_WEIGHT",
+    "apr_drg_code": "APR_DRG_CODE",
+    "apr_drg_desc": "APR_DRG_DESC",
+    "apr_drg_rom": "APR_DRG_ROM",
+    "apr_drg_soi": "APR_DRG_SOI",
+    "birth_date": "PAT_BIRTHDATE",
+    "billing_code": "CODE",
+    "case_date": "CASE_DATE",
+    "case_id": "CASE_ID",
+    "code_desc": "CODE_DESC",
+    "death_date": "DEATH_DATE",
+    "dose_unit_desc": "DOSE_UNIT_DESC",
+    "draw_dtm": "LAB_DRAW_DTM",
+    "ethnicity_code": "ETHNICITY_CODE",
+    "ethnicity_desc": "ETHNICITY_DESC",
+    "gender_code": "GENDER_CODE",
+    # "gender_desc": "GENDER_DESC",
+    "medication_id": "MEDICATION_ID",
+    "patient_id": "MRN",
+    "post_op_icu_los": "POSTOP_ICU_LOS",
+    "present_on_adm": "PRESENT_ON_ADM_F",
+    "prim_proc_desc": "PRIM_PROC_DESC",
+    "procedure_dtm": "PROC_DTM",
+    "race_code": "RACE_CODE",
+    "race_desc": "RACE_DESC",
+    "result_code": "RESULT_CODE",
+    "result_desc": "RESULT_DESC",
+    "result_dtm": "RESULT_DTM",
+    "result_value": "RESULT_VALUE",
+    "sched_site_desc": "SCHED_SITE_DESC",
+    "surgeon_id": "SURGEON_PROV_ID",
+    "surgery_elapsed": "SURGERY_ELAP",
+    "surgery_end_time": "SURGERY_END_DTM",
+    "surgery_start_time": "SURGERY_START_DTM",
+    "surgery_type": "SURGERY_TYPE_DESC",
+    "visit_no": "VISIT_NO",
 }
 
 DE_IDENT_TABLES = {
@@ -157,6 +194,8 @@ def get_procedure_counts(request):
             GROUP BY {FIELDS_IN_USE.get('case_id')}
         """
 
+        print(command)
+        print(dict(zip(bind_names, filters)))
         result = list(
             execute_sql(
                 command,
@@ -279,7 +318,7 @@ def fetch_patient(request):
         SELECT
             PATIENT.{FIELDS_IN_USE.get('birth_date')},
             PATIENT.{FIELDS_IN_USE.get('gender_code')},
-            PATIENT.{FIELDS_IN_USE.get('gender_desc')},
+            -- PATIENT.{FIELDS_IN_USE.get('gender_desc')},
             PATIENT.{FIELDS_IN_USE.get('race_code')},
             PATIENT.{FIELDS_IN_USE.get('race_desc')},
             PATIENT.{FIELDS_IN_USE.get('ethnicity_code')},
