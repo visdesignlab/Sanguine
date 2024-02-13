@@ -4,6 +4,7 @@ import logging
 import csv
 
 from collections import Counter, defaultdict
+from django.db import connections
 from django.http import (
     HttpResponse,
     JsonResponse,
@@ -21,7 +22,6 @@ from api.models import State, StateAccess, AccessLevel
 from api.utils import (
     data_dictionary,
     cpt,
-    execute_sql,
     get_all_by_agg,
     get_all_cpt_code_filters,
     get_sum_proc_code_filters,
@@ -106,6 +106,12 @@ logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
+
+
+def execute_sql(command, *args, **kwargs):
+    with connections['hospital'].cursor() as cursor:
+        cursor.execute(command, kwargs)
+        return cursor.fetchall()
 
 
 def index(request):
