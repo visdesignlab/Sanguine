@@ -440,17 +440,17 @@ def request_transfused_units(request):
         )
 
         # Generate the patient filters
-        pat_bind_names = [f":pat_id{str(i)}" for i in range(len(patient_ids))]
+        pat_bind_names = [f"pat_id{str(i)}" for i in range(len(patient_ids))]
         pat_filters_safe_sql = (
-            f"AND TRNSFSD.{FIELDS_IN_USE.get('patient_id')} IN ({','.join(pat_bind_names)}) "
+            f"AND LIMITED_SURG.{FIELDS_IN_USE.get('patient_id')} IN (%({')s,%('.join(pat_bind_names)})s) "
             if patient_ids != []
             else ""
         )
 
         # Generate case id filters
-        case_bind_names = [f":case_id{str(i)}" for i in range(len(case_ids))]
+        case_bind_names = [f"case_id{str(i)}" for i in range(len(case_ids))]
         case_filters_safe_sql = (
-            f"AND TRNSFSD.{FIELDS_IN_USE.get('case_id')} IN ({','.join(case_bind_names)}) "
+            f"AND LIMITED_SURG.{FIELDS_IN_USE.get('case_id')} IN (%({')s,%('.join(case_bind_names)})s) "
             if case_ids != []
             else ""
         )
@@ -488,8 +488,7 @@ def request_transfused_units(request):
                 {joined_sum_code_statements}
             FROM {TABLES_IN_USE.get('billing_codes')} BLNG
             INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
-                ON (BLNG.{FIELDS_IN_USE.get('patient_id')} = SURG.{FIELDS_IN_USE.get('patient_id')})
-                AND (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')})
+                ON (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')})
                 AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
             {with_case_group}
         )
@@ -511,7 +510,7 @@ def request_transfused_units(request):
                     {and_or_combinations_string}
             )
         ) LIMITED_SURG
-            ON LIMITED_SURG.{FIELDS_IN_USE.get('case_id')} = TRNSFSD.{FIELDS_IN_USE.get('case_id')}
+            ON LIMITED_SURG.{FIELDS_IN_USE.get('visit_no')} = TRNSFSD.{FIELDS_IN_USE.get('visit_no')}
         WHERE LIMITED_SURG.{FIELDS_IN_USE.get('case_date')} BETWEEN %(min_time)s AND %(max_time)s
         {pat_filters_safe_sql} {case_filters_safe_sql}
         {group_by}
