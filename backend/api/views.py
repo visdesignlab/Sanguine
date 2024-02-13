@@ -803,7 +803,6 @@ def hemoglobin(request):
         WITH
         LAB_HB AS (
             SELECT
-                V.{FIELDS_IN_USE.get('patient_id')},
                 V.{FIELDS_IN_USE.get('visit_no')},
                 V.{FIELDS_IN_USE.get('draw_dtm')},
                 V.{FIELDS_IN_USE.get('result_dtm')},
