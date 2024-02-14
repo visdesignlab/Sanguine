@@ -492,7 +492,7 @@ def request_transfused_units(request):
                 AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
             WHERE
                     {and_or_combinations_string}
-                AND SURG.{FIELDS_IN_USE.get('case_date')} BETWEEN TO_DATE(%(min_time)s, 'DD-Mon-YYYY') AND TO_DATE
+                AND SURG.{FIELDS_IN_USE.get('case_date')} BETWEEN TO_DATE(%(min_time)s, 'DD-Mon-YYYY') AND TO_DATE(%(max_time)s, 'DD-Mon-YYYY')
             {with_case_group}
         )
 
