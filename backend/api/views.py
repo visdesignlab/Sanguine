@@ -713,7 +713,6 @@ def patient_outcomes(request):
             {TABLES_IN_USE.get('visit')} VST
         LEFT JOIN (
             SELECT
-                {FIELDS_IN_USE.get('patient_id')},
                 {FIELDS_IN_USE.get('visit_no')},
                 CASE WHEN SUM(CASE WHEN CODE IN ('I97.820', '997.02') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS STROKE,
                 CASE WHEN SUM(CASE WHEN CODE IN ('33952', '33954', '33956', '33958', '33962', '33964', '33966', '33973', '33974', '33975', '33976', '33977', '33978', '33979', '33980', '33981', '33982', '33983', '33984', '33986', '33987', '33988', '33989') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS ECMO
@@ -721,7 +720,7 @@ def patient_outcomes(request):
             WHERE {FIELDS_IN_USE.get('present_on_adm')} IS NULL
             GROUP BY {FIELDS_IN_USE.get('patient_id')}, {FIELDS_IN_USE.get('visit_no')}
         ) BLNG_OUTCOMES
-            ON VST.{FIELDS_IN_USE.get('patient_id')} = BLNG_OUTCOMES.{FIELDS_IN_USE.get('patient_id')} AND VST.{FIELDS_IN_USE.get('visit_no')} = BLNG_OUTCOMES.{FIELDS_IN_USE.get('visit_no')}
+            ON VST.{FIELDS_IN_USE.get('visit_no')} = BLNG_OUTCOMES.{FIELDS_IN_USE.get('visit_no')}
         LEFT JOIN (
             SELECT
                 SURG.{FIELDS_IN_USE.get('patient_id')},
@@ -760,9 +759,9 @@ def patient_outcomes(request):
                 )) INNER_MEDS
             LEFT JOIN {TABLES_IN_USE.get('surgery_case')} SURG
                 ON SURG.{FIELDS_IN_USE.get('visit_no')} = INNER_MEDS.{FIELDS_IN_USE.get('visit_no')}
-            GROUP BY {FIELDS_IN_USE.get('patient_id')}, {FIELDS_IN_USE.get('visit_no')}
+            GROUP BY {FIELDS_IN_USE.get('patient_id')}, INNER_MEDS.{FIELDS_IN_USE.get('visit_no')}
         ) MEDS
-            ON VST.{FIELDS_IN_USE.get('patient_id')} = MEDS.{FIELDS_IN_USE.get('patient_id')} AND VST.{FIELDS_IN_USE.get('visit_no')} = MEDS.{FIELDS_IN_USE.get('visit_no')}
+            ON VST.{FIELDS_IN_USE.get('visit_no')} = MEDS.{FIELDS_IN_USE.get('visit_no')}
         WHERE 1=1
             {pat_filters_safe_sql}
         """
