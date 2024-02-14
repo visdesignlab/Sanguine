@@ -676,8 +676,8 @@ def patient_outcomes(request):
         # Define the sql command
         command = f"""
         SELECT
-            VST.{FIELDS_IN_USE.get('patient_id')},
-            VST.{FIELDS_IN_USE.get('visit_no')},
+            MEDS.{FIELDS_IN_USE.get('patient_id')},
+            MEDS.{FIELDS_IN_USE.get('visit_no')},
             CASE WHEN TOTAL_VENT_MINS > 1440 THEN 1 ELSE 0 END AS VENT_1440,
             CASE WHEN PAT_EXPIRED = 'Y' THEN 1 ELSE 0 END AS PAT_DEATH,
             BLNG_OUTCOMES.STROKE,
@@ -724,8 +724,8 @@ def patient_outcomes(request):
             ON VST.{FIELDS_IN_USE.get('patient_id')} = BLNG_OUTCOMES.{FIELDS_IN_USE.get('patient_id')} AND VST.{FIELDS_IN_USE.get('visit_no')} = BLNG_OUTCOMES.{FIELDS_IN_USE.get('visit_no')}
         LEFT JOIN (
             SELECT
-                {FIELDS_IN_USE.get('patient_id')},
-                {FIELDS_IN_USE.get('visit_no')},
+                SURG.{FIELDS_IN_USE.get('patient_id')},
+                INNER_MEDS.{FIELDS_IN_USE.get('visit_no')},
                 CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (31383, 310071, 301530) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS TRANEXAMIC_ACID,
                 CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (300167, 300168, 300725, 310033) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS AMICAR,
                 CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (800001, 59535, 400030, 5553, 23584, 73156, 23579, 23582) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS B12,
@@ -743,7 +743,6 @@ def patient_outcomes(request):
             FROM (
                 (
                     SELECT
-                        {FIELDS_IN_USE.get('patient_id')},
                         {FIELDS_IN_USE.get('visit_no')},
                         {FIELDS_IN_USE.get('medication_id')},
                         {FIELDS_IN_USE.get('admin_dose')},
@@ -753,13 +752,14 @@ def patient_outcomes(request):
                 UNION ALL
                 (
                     SELECT
-                        {FIELDS_IN_USE.get('patient_id')},
                         {FIELDS_IN_USE.get('visit_no')},
                         {FIELDS_IN_USE.get('medication_id')},
                         {FIELDS_IN_USE.get('admin_dose')},
                         {FIELDS_IN_USE.get('dose_unit_desc')}
                     FROM {TABLES_IN_USE.get('extraop_meds')}
-                ))
+                )) INNER_MEDS
+            LEFT JOIN {TABLES_IN_USE.get('surgery_case')} SURG
+                ON SURG.{FIELDS_IN_USE.get('visit_no')} = INNER_MEDS.{FIELDS_IN_USE.get('visit_no')}
             GROUP BY {FIELDS_IN_USE.get('patient_id')}, {FIELDS_IN_USE.get('visit_no')}
         ) MEDS
             ON VST.{FIELDS_IN_USE.get('patient_id')} = MEDS.{FIELDS_IN_USE.get('patient_id')} AND VST.{FIELDS_IN_USE.get('visit_no')} = MEDS.{FIELDS_IN_USE.get('visit_no')}
