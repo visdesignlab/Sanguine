@@ -598,7 +598,7 @@ def risk_score(request):
             # Generate the patient filters
             pat_bind_names = [
                 f":pat_id{str(i)}" for i in range(len(patient_ids))]
-            pat_filters_safe_sql = f"AND DI_PAT_ID IN ({','.join(pat_bind_names)}) " if patient_ids != [
+            pat_filters_safe_sql = f"AND {FIELDS_IN_USE.get('patient_id')} IN ({','.join(pat_bind_names)}) " if patient_ids != [
             ] else ""
         else:
             pat_bind_names = []
@@ -607,15 +607,18 @@ def risk_score(request):
         # Defined the sql command
         command = f"""
         SELECT
-            {FIELDS_IN_USE.get('patient_id')},
-            {FIELDS_IN_USE.get('visit_no')},
-            {FIELDS_IN_USE.get('apr_drg_weight')},
-            {FIELDS_IN_USE.get('apr_drg_code')},
-            {FIELDS_IN_USE.get('apr_drg_desc')},
-            {FIELDS_IN_USE.get('apr_drg_rom')},
-            {FIELDS_IN_USE.get('apr_drg_soi')}
+            SURG.{FIELDS_IN_USE.get('patient_id')},
+            VST.{FIELDS_IN_USE.get('visit_no')},
+            VST.{FIELDS_IN_USE.get('apr_drg_weight')},
+            VST.{FIELDS_IN_USE.get('apr_drg_code')},
+            VST.{FIELDS_IN_USE.get('apr_drg_desc')},
+            VST.{FIELDS_IN_USE.get('apr_drg_rom')},
+            VST.{FIELDS_IN_USE.get('apr_drg_soi')}
         FROM
-            {TABLES_IN_USE.get('visit')}
+            {TABLES_IN_USE.get('visit')} VST
+        INNER JOIN
+            {TABLES_IN_USE.get('surgery_case')} SURG
+            ON SURG.{FIELDS_IN_USE.get('visit_no')} = VST.{FIELDS_IN_USE.get('visit_no')}
         WHERE 1=1
             {pat_filters_safe_sql}
         """
