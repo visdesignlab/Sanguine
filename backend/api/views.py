@@ -769,6 +769,7 @@ def patient_outcomes(request):
         command = f"""
         SELECT
             SURG.{FIELDS_IN_USE.get('patient_id')},
+            VST.{FIELDS_IN_USE.get('visit_no')},
             CASE WHEN TOTAL_VENT_MINS > 1440 THEN 1 ELSE 0 END AS VENT_1440,
             CASE WHEN PAT_EXPIRED = 'Y' THEN 1 ELSE 0 END AS PAT_DEATH,
             BLNG_OUTCOMES.STROKE,
@@ -806,9 +807,9 @@ def patient_outcomes(request):
                 "patient_death": row[3],
                 "patient_stroke": row[4],
                 "patient_ECMO": row[5],
-                "tranexamic_acid": row[6],
-                "AMICAR": row[7],
-                "B12": row[8],
+                # "tranexamic_acid": row[6],
+                # "AMICAR": row[7],
+                # "B12": row[8],
             })
 
         return JsonResponse(result_list, safe=False)
