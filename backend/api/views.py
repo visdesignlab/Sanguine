@@ -772,7 +772,7 @@ def patient_outcomes(request):
             CASE WHEN TOTAL_VENT_MINS > 1440 THEN 1 ELSE 0 END AS VENT_1440,
             CASE WHEN PAT_EXPIRED = 'Y' THEN 1 ELSE 0 END AS PAT_DEATH,
             BLNG_OUTCOMES.STROKE,
-            BLNG_OUTCOMES.ECMO,
+            BLNG_OUTCOMES.ECMO
         FROM
             {TABLES_IN_USE.get('visit')} VST
         INNER JOIN 
