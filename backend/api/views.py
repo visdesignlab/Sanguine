@@ -491,8 +491,7 @@ def request_transfused_units(request):
                 ON (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')})
                 AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
             WHERE
-                    {and_or_combinations_string}
-                AND SURG.{FIELDS_IN_USE.get('case_date')} BETWEEN TO_DATE(%(min_time)s, 'DD-Mon-YYYY') AND TO_DATE(%(max_time)s, 'DD-Mon-YYYY')
+                SURG.{FIELDS_IN_USE.get('case_date')} BETWEEN TO_DATE(%(min_time)s, 'DD-Mon-YYYY') AND TO_DATE(%(max_time)s, 'DD-Mon-YYYY')
             {with_case_group}
         )
 
@@ -509,6 +508,7 @@ def request_transfused_units(request):
             WHERE {FIELDS_IN_USE.get('case_id')} IN (
                 SELECT {FIELDS_IN_USE.get('case_id')}
                 FROM CASE_IDS_WITH_CODE_COUNT
+                where {and_or_combinations_string}
             )
         ) LIMITED_SURG
             ON LIMITED_SURG.{FIELDS_IN_USE.get('visit_no')} = TRNSFSD.{FIELDS_IN_USE.get('visit_no')}
