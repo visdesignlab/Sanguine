@@ -774,7 +774,10 @@ def patient_outcomes(request):
             BLNG_OUTCOMES.STROKE,
             BLNG_OUTCOMES.ECMO,
         FROM
+            {TABLES_IN_USE.get('visit')} VST
+        INNER JOIN 
             {TABLES_IN_USE.get('surgery_case')} SURG
+            ON SURG.{FIELDS_IN_USE.get('visit_no')} = VST.{FIELDS_IN_USE.get('visit_no')}
         LEFT JOIN (
             SELECT
                 {FIELDS_IN_USE.get('visit_no')},
