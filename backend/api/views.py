@@ -207,15 +207,15 @@ def get_procedure_counts(request):
 
         # Count the number of times each procedure co-occurred
         co_occur_counts = defaultdict(Counter)
-        for l in procedures_in_case:
-            for e in l:
-                co_occur_counts[e].update(el for el in l if el is not e)
+        for case_procedures in procedures_in_case:
+            for procedure in case_procedures:
+                co_occur_counts[procedure].update(el for el in case_procedures if el is not procedure)
 
         # Count the raw number of procedures done
         total_counts = Counter([item for sublist in procedures_in_case for item in sublist])
 
         # Get the CPTs that happened alone (didn't have any other co-occurrences)
-        all_single_cpt_cases = [y for y in [set(x) for x in procedures_in_case] if len(y) ==1]
+        all_single_cpt_cases = [y for y in [set(x) for x in procedures_in_case] if len(y) == 1]
         exclusive_counts = Counter([item for sublist in all_single_cpt_cases for item in sublist])
 
         # Combine the raw count with co-occurrences
@@ -558,26 +558,6 @@ def request_transfused_units(request):
         return JsonResponse(cleaned, safe=False)
     else:
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} request_transfused_units User: {request.user}")
-        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
-
-
-@conditional_login_required(
-    login_required,
-    os.getenv("REQUIRE_LOGINS") == "True"
-)
-def test_results(request):
-    if request.method == "GET":
-        case_ids = request.GET.get('case_ids') or ""
-        test_types = request.GET.get('test_types') or ""
-
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: test_results Params: case_ids = {case_ids}, test_types = {test_types} User: {request.user}")
-
-        if not case_ids:
-            HttpResponseBadRequest("You must supply case_ids")
-
-        case_ids = case_ids.split(',')
-    else:
-        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} test_results User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
 
