@@ -674,43 +674,107 @@ def patient_outcomes(request):
             pat_filters_safe_sql = ""
 
         # Define the sql command
+        # command = f"""
+        # SELECT
+        #     MEDS.{FIELDS_IN_USE.get('patient_id')},
+        #     MEDS.{FIELDS_IN_USE.get('visit_no')},
+        #     CASE WHEN TOTAL_VENT_MINS > 1440 THEN 1 ELSE 0 END AS VENT_1440,
+        #     CASE WHEN PAT_EXPIRED = 'Y' THEN 1 ELSE 0 END AS PAT_DEATH,
+        #     BLNG_OUTCOMES.STROKE,
+        #     BLNG_OUTCOMES.ECMO,
+        #     MEDS.TRANEXAMIC_ACID,
+        #     MEDS.AMICAR,
+        #     MEDS.B12,
+        #     MEDS.WARFARIN,
+        #     MEDS.DABIGATRAN,
+        #     MEDS.RIVAROXABAN,
+        #     MEDS.APIXABAN,
+        #     MEDS.HEPARIN,
+        #     MEDS.FONDAPARINUX,
+        #     MEDS.BIVALIRUDIN,
+        #     MEDS.CLOPIDOGREL,
+        #     MEDS.TICAGRELOR,
+        #     MEDS.IRON_ORAL,
+        #     MEDS.IRON_IV,
+        #     CASE
+        #         WHEN MEDS.WARFARIN = 1
+        #         OR MEDS.DABIGATRAN = 1
+        #         OR MEDS.RIVAROXABAN = 1
+        #         OR MEDS.APIXABAN = 1
+        #         OR MEDS.HEPARIN = 1
+        #         OR MEDS.FONDAPARINUX = 1
+        #         OR MEDS.BIVALIRUDIN = 1
+        #     THEN 1 ELSE 0 END AS ANTICOAGULENT,
+        #     CASE
+        #         WHEN MEDS.CLOPIDOGREL = 1
+        #         OR MEDS.TICAGRELOR = 1
+        #     THEN 1 ELSE 0 END AS ANTI_PLATELET
+        # FROM
+        #     {TABLES_IN_USE.get('visit')} VST
+        # LEFT JOIN (
+        #     SELECT
+        #         {FIELDS_IN_USE.get('visit_no')},
+        #         CASE WHEN SUM(CASE WHEN CODE IN ('I97.820', '997.02') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS STROKE,
+        #         CASE WHEN SUM(CASE WHEN CODE IN ('33952', '33954', '33956', '33958', '33962', '33964', '33966', '33973', '33974', '33975', '33976', '33977', '33978', '33979', '33980', '33981', '33982', '33983', '33984', '33986', '33987', '33988', '33989') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS ECMO
+        #     FROM {TABLES_IN_USE.get('billing_codes')}
+        #     WHERE {FIELDS_IN_USE.get('present_on_adm')} IS NULL
+        #     GROUP BY {FIELDS_IN_USE.get('visit_no')}
+        # ) BLNG_OUTCOMES
+        #     ON VST.{FIELDS_IN_USE.get('visit_no')} = BLNG_OUTCOMES.{FIELDS_IN_USE.get('visit_no')}
+        # LEFT JOIN (
+        #     SELECT
+        #         SURG.{FIELDS_IN_USE.get('patient_id')},
+        #         INNER_MEDS.{FIELDS_IN_USE.get('visit_no')},
+        #         CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (31383, 310071, 301530) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS TRANEXAMIC_ACID,
+        #         CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (300167, 300168, 300725, 310033) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS AMICAR,
+        #         CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (800001, 59535, 400030, 5553, 23584, 73156, 23579, 23582) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS B12,
+        #         CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (246886, 23837, 800001, 23834, 23836, 23833, 400114, 246887, 23835, 400113, 400116, 249243, 400115, 31692) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS WARFARIN,
+        #         CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (69663, 69662) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS DABIGATRAN,
+        #         CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (73759, 73760) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS RIVAROXABAN,
+        #         CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (115234, 114370) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS APIXABAN,
+        #         CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (27762, 303033, 303037, 242578, 300268, 27770, 300540, 27763, 244432, 301561, 303038, 301135, 303043, 303036, 388042, 310021, 310088, 303035, 310150, 303042, 310067, 303039, 310090, 303040, 300482, 310089, 303045, 310066, 9375, 300276, 303136, 310070, 252811, 69442, 300580, 302570, 303099, 310076, 301558, 303086) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS HEPARIN,
+        #         CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (70251, 24761, 70252) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS FONDAPARINUX,
+        #         CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (300232, 300233, 300276, 310030, 310113) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS BIVALIRUDIN,
+        #         CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (250238, 59580) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS CLOPIDOGREL,
+        #         CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (72530, 161785) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS TICAGRELOR,
+        #         CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (30070, 18344, 352120, 8333, 8341, 8345, 8349) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS IRON_ORAL,
+        #         CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (300544, 300545, 300599, 12899, 65529) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS IRON_IV
+        #     FROM (
+        #         (
+        #             SELECT
+        #                 {FIELDS_IN_USE.get('visit_no')},
+        #                 {FIELDS_IN_USE.get('medication_id')},
+        #                 {FIELDS_IN_USE.get('admin_dose')},
+        #                 {FIELDS_IN_USE.get('dose_unit_desc')}
+        #             FROM {TABLES_IN_USE.get('intraop_meds')}
+        #         )
+        #         UNION ALL
+        #         (
+        #             SELECT
+        #                 {FIELDS_IN_USE.get('visit_no')},
+        #                 {FIELDS_IN_USE.get('medication_id')},
+        #                 {FIELDS_IN_USE.get('admin_dose')},
+        #                 {FIELDS_IN_USE.get('dose_unit_desc')}
+        #             FROM {TABLES_IN_USE.get('extraop_meds')}
+        #         )) INNER_MEDS
+        #     LEFT JOIN {TABLES_IN_USE.get('surgery_case')} SURG
+        #         ON SURG.{FIELDS_IN_USE.get('visit_no')} = INNER_MEDS.{FIELDS_IN_USE.get('visit_no')}
+        #     GROUP BY {FIELDS_IN_USE.get('patient_id')}, INNER_MEDS.{FIELDS_IN_USE.get('visit_no')}
+        # ) MEDS
+        #     ON VST.{FIELDS_IN_USE.get('visit_no')} = MEDS.{FIELDS_IN_USE.get('visit_no')}
+        # WHERE 1=1
+        #     {pat_filters_safe_sql}
+        # """
+            
         command = f"""
         SELECT
-            MEDS.{FIELDS_IN_USE.get('patient_id')},
-            MEDS.{FIELDS_IN_USE.get('visit_no')},
+            SURG.{FIELDS_IN_USE.get('patient_id')},
             CASE WHEN TOTAL_VENT_MINS > 1440 THEN 1 ELSE 0 END AS VENT_1440,
             CASE WHEN PAT_EXPIRED = 'Y' THEN 1 ELSE 0 END AS PAT_DEATH,
             BLNG_OUTCOMES.STROKE,
             BLNG_OUTCOMES.ECMO,
-            MEDS.TRANEXAMIC_ACID,
-            MEDS.AMICAR,
-            MEDS.B12,
-            MEDS.WARFARIN,
-            MEDS.DABIGATRAN,
-            MEDS.RIVAROXABAN,
-            MEDS.APIXABAN,
-            MEDS.HEPARIN,
-            MEDS.FONDAPARINUX,
-            MEDS.BIVALIRUDIN,
-            MEDS.CLOPIDOGREL,
-            MEDS.TICAGRELOR,
-            MEDS.IRON_ORAL,
-            MEDS.IRON_IV,
-            CASE
-                WHEN MEDS.WARFARIN = 1
-                OR MEDS.DABIGATRAN = 1
-                OR MEDS.RIVAROXABAN = 1
-                OR MEDS.APIXABAN = 1
-                OR MEDS.HEPARIN = 1
-                OR MEDS.FONDAPARINUX = 1
-                OR MEDS.BIVALIRUDIN = 1
-            THEN 1 ELSE 0 END AS ANTICOAGULENT,
-            CASE
-                WHEN MEDS.CLOPIDOGREL = 1
-                OR MEDS.TICAGRELOR = 1
-            THEN 1 ELSE 0 END AS ANTI_PLATELET
         FROM
-            {TABLES_IN_USE.get('visit')} VST
+            {TABLES_IN_USE.get('surgery_case')} SURG
         LEFT JOIN (
             SELECT
                 {FIELDS_IN_USE.get('visit_no')},
@@ -720,48 +784,7 @@ def patient_outcomes(request):
             WHERE {FIELDS_IN_USE.get('present_on_adm')} IS NULL
             GROUP BY {FIELDS_IN_USE.get('visit_no')}
         ) BLNG_OUTCOMES
-            ON VST.{FIELDS_IN_USE.get('visit_no')} = BLNG_OUTCOMES.{FIELDS_IN_USE.get('visit_no')}
-        LEFT JOIN (
-            SELECT
-                SURG.{FIELDS_IN_USE.get('patient_id')},
-                INNER_MEDS.{FIELDS_IN_USE.get('visit_no')},
-                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (31383, 310071, 301530) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS TRANEXAMIC_ACID,
-                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (300167, 300168, 300725, 310033) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS AMICAR,
-                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (800001, 59535, 400030, 5553, 23584, 73156, 23579, 23582) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS B12,
-                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (246886, 23837, 800001, 23834, 23836, 23833, 400114, 246887, 23835, 400113, 400116, 249243, 400115, 31692) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS WARFARIN,
-                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (69663, 69662) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS DABIGATRAN,
-                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (73759, 73760) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS RIVAROXABAN,
-                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (115234, 114370) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS APIXABAN,
-                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (27762, 303033, 303037, 242578, 300268, 27770, 300540, 27763, 244432, 301561, 303038, 301135, 303043, 303036, 388042, 310021, 310088, 303035, 310150, 303042, 310067, 303039, 310090, 303040, 300482, 310089, 303045, 310066, 9375, 300276, 303136, 310070, 252811, 69442, 300580, 302570, 303099, 310076, 301558, 303086) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS HEPARIN,
-                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (70251, 24761, 70252) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS FONDAPARINUX,
-                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (300232, 300233, 300276, 310030, 310113) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS BIVALIRUDIN,
-                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (250238, 59580) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS CLOPIDOGREL,
-                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (72530, 161785) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS TICAGRELOR,
-                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (30070, 18344, 352120, 8333, 8341, 8345, 8349) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS IRON_ORAL,
-                CASE WHEN SUM(CASE WHEN MEDICATION_ID IN (300544, 300545, 300599, 12899, 65529) THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS IRON_IV
-            FROM (
-                (
-                    SELECT
-                        {FIELDS_IN_USE.get('visit_no')},
-                        {FIELDS_IN_USE.get('medication_id')},
-                        {FIELDS_IN_USE.get('admin_dose')},
-                        {FIELDS_IN_USE.get('dose_unit_desc')}
-                    FROM {TABLES_IN_USE.get('intraop_meds')}
-                )
-                UNION ALL
-                (
-                    SELECT
-                        {FIELDS_IN_USE.get('visit_no')},
-                        {FIELDS_IN_USE.get('medication_id')},
-                        {FIELDS_IN_USE.get('admin_dose')},
-                        {FIELDS_IN_USE.get('dose_unit_desc')}
-                    FROM {TABLES_IN_USE.get('extraop_meds')}
-                )) INNER_MEDS
-            LEFT JOIN {TABLES_IN_USE.get('surgery_case')} SURG
-                ON SURG.{FIELDS_IN_USE.get('visit_no')} = INNER_MEDS.{FIELDS_IN_USE.get('visit_no')}
-            GROUP BY {FIELDS_IN_USE.get('patient_id')}, INNER_MEDS.{FIELDS_IN_USE.get('visit_no')}
-        ) MEDS
-            ON VST.{FIELDS_IN_USE.get('visit_no')} = MEDS.{FIELDS_IN_USE.get('visit_no')}
+            ON SURG.{FIELDS_IN_USE.get('visit_no')} = BLNG_OUTCOMES.{FIELDS_IN_USE.get('visit_no')}
         WHERE 1=1
             {pat_filters_safe_sql}
         """
