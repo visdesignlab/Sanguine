@@ -35,7 +35,7 @@ export const defaultState: ApplicationState = {
         CELL_SAVER_ML: [0, ManualInfinity],
     },
     testValueFilter: {
-        PREOP_HGB: [0, ManualInfinity],
-        POSTOP_HGB: [0, ManualInfinity]
+        PREOP_HEMO: [0, ManualInfinity],
+        POSTOP_HEMO: [0, ManualInfinity]
     }
 };

@@ -85,8 +85,8 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
             let tempXMax = 0;
             let existingCaseID = new Set();
             let dataOutput: (DumbbellDataPoint | undefined)[] = hemoData.map((ob: any) => {
-                const preop_hgb = ob.PREOP_HGB;
-                const postop_hgb = ob.POSTOP_HGB;
+                const preop_hgb = ob.PREOP_HEMO;
+                const postop_hgb = ob.POSTOP_HEMO;
                 let yAxisVal;
                 if (transfused_dict[ob.CASE_ID]) {
                     yAxisVal = BloodProductCap[xAggregationOption] ? transfused_dict[ob.CASE_ID].transfused : ob[xAggregationOption];

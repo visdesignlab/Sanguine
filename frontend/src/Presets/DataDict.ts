@@ -7,13 +7,13 @@ export const BloodComponentOptions = [
     { value: "CELL_SAVER_ML", key: "CELL_SAVER_ML", text: "Cell Salvage Volume (ml)" }];
 
 const AggregationOptions = [
-    { value: "SURGEON_ID", key: "SURGEON_ID", text: "Surgeon ID" },
+    { value: "SURGEON_PROV_ID", key: "SURGEON_PROV_ID", text: "Surgeon ID" },
     { value: "YEAR", key: "YEAR", text: "Year" },
     { value: "ANESTHESIOLOGIST_ID", key: "ANESTHESIOLOGIST_ID", text: "Anesthesiologist ID" }];
 
 export const ScatterYOptions = [
-    { value: "PREOP_HGB", key: "PREOP_HGB", text: "Preoperative Hemoglobin Value" },
-    { value: "POSTOP_HGB", key: "POSTOP_HGB", text: "Postoperative Hemoglobin Value" }];
+    { value: "PREOP_HEMO", key: "PREOP_HEMO", text: "Preoperative Hemoglobin Value" },
+    { value: "POSTOP_HEMO", key: "POSTOP_HEMO", text: "Postoperative Hemoglobin Value" }];
 
 export const OutcomeOptions = [
     { value: "DEATH", key: "DEATH", text: "Death" },
@@ -27,8 +27,8 @@ export const OutcomeOptions = [
 export const OutcomeOptionsStringArray = ["DEATH", "VENT", "STROKE", "ECMO", "B12", "TXA", "AMICAR"];
 
 export const ExtraPairOptions = OutcomeOptions.concat([
-    { text: "Preop Hemoglobin", key: "PREOP_HGB", value: "Preop HGB" },
-    { text: "Postop Hemoglobin", key: "POSTOP_HGB", value: "POSTOP_HGB" },
+    { text: "Preop Hemoglobin", key: "PREOP_HEMO", value: "Preop HGB" },
+    { text: "Postop Hemoglobin", key: "POSTOP_HEMO", value: "POSTOP_HEMO" },
     { text: "Total Transfusion", key: "TOTAL_TRANS", value: "TOTAL_TRANS" },
     { text: "Per Case Transfusion", key: "PER_CASE", value: "PER_CASE" },
     { text: "Zero Transfusion Cases", key: "ZERO_TRANS", value: "ZERO_TRANS" },
@@ -79,14 +79,14 @@ export const AcronymDictionary: any = {
     PLT_UNITS: "Intraoperative Platelets Transfused",
     CRYO_UNITS: "Intraoperative Cryo Transfused",
     CELL_SAVER_ML: "Cell Salvage Volume",
-    SURGEON_ID: "Surgeon ID",
+    SURGEON_PROV_ID: "Surgeon ID",
     ANESTHESIOLOGIST_ID: "Anesthesiologist ID",
     YEAR: "Year",
     QUARTER: "Quarter",
     MONTH: "Month",
     HGB_VALUE: "Hemoglobin Value",
-    PREOP_HGB: "Preoperative Hemoglobin Value",
-    POSTOP_HGB: "Postoperative Hemoglobin Value",
+    PREOP_HEMO: "Preoperative Hemoglobin Value",
+    POSTOP_HEMO: "Postoperative Hemoglobin Value",
     DRG_WEIGHT: "Diagnosis-related Group Weight",
     COST: "Blood Component Cost per Case"
 };
@@ -104,8 +104,8 @@ export const HIPAA_Sensitive = new Set([
     "Surgery Start Time",
     "Surgery End Time",
     "CASE_ID",
-    "VISIT_ID",
-    "DATE",
+    "VISIT_NO",
+    "CASE_DATE",
     "MONTH",
     "PATIENT_ID",
     "Hospital Visit Number"

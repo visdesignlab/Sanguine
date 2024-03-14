@@ -76,7 +76,7 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
                 if (hemoData) {
                     let castData: any[] = hemoData.map((ob: SingleCasePoint) => {
 
-                        const yValue = yValueOption === "PREOP_HGB" ? ob.PREOP_HGB : ob.POSTOP_HGB;
+                        const yValue = yValueOption === "PREOP_HEMO" ? ob.PREOP_HEMO : ob.POSTOP_HEMO;
                         let xValue;
                         if (transfused_dict[ob.CASE_ID]) {
                             xValue = transfused_dict[ob.CASE_ID].transfused;

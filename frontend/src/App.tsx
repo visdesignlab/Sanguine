@@ -77,98 +77,20 @@ const App: FC = () => {
         if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
             whoamiAPICall(store);
         }
-        fetch(`${process.env.REACT_APP_QUERY_URL}hemoglobin`)
-            .then((res) => res.json())
-            .then(async (dataHemo) => {
-                const resultHemo = dataHemo.result;
+        try {
+            const surgeryCasesFetch = await fetch(`${process.env.REACT_APP_QUERY_URL}get_sanguine_surgery_cases`);
+            const surgeryCases = await surgeryCasesFetch.json();
 
-                const resTrans = await fetch(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${[timeFormat("%d-%b-%Y")(new Date(defaultState.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(defaultState.rawDateRange[1]))]}`);
-                const dataTrans = await resTrans.json();
-                const resRisk = await fetch(`${process.env.REACT_APP_QUERY_URL}risk_score`);
-                const dataRisk = await resRisk.json();
-                let riskOutcomeDict: any = {};
-                for (let obj of dataRisk) {
-                    riskOutcomeDict[obj.visit_no] = { DRG_WEIGHT: obj.apr_drg_weight };
-                }
-                const resOutcome = await fetch(`${process.env.REACT_APP_QUERY_URL}patient_outcomes`);
-                const dataOutcome = await resOutcome.json();
-
-                const nameDictFetch = await fetch(`${process.env.REACT_APP_QUERY_URL}surgeon_anest_names`);
-                const nameDict = await nameDictFetch.json();
-
-                store.configStore.updateNameDictionary(nameDict);
-
-                for (let obj of dataOutcome) {
-                    riskOutcomeDict[obj.visit_no].VENT = obj.gr_than_1440_vent || 0;
-                    riskOutcomeDict[obj.visit_no].DEATH = obj.patient_death || 0;
-                    riskOutcomeDict[obj.visit_no].STROKE = obj.patient_stroke || 0;
-                    riskOutcomeDict[obj.visit_no].ECMO = obj.patient_ECMO || 0;
-                    riskOutcomeDict[obj.visit_no].AMICAR = obj.AMICAR || 0;
-                    riskOutcomeDict[obj.visit_no].B12 = obj.B12 || 0;
-                    riskOutcomeDict[obj.visit_no].TXA = obj.tranexamic_acid || 0;
-                }
-
-                let transfused_dict = {} as any;
-                let cacheData: SingleCasePoint[] = [];
-
-                dataTrans.forEach((element: any) => {
-                    transfused_dict[element.case_id] = {
-                        PRBC_UNITS: element.transfused_units[0] || 0,
-                        FFP_UNITS: element.transfused_units[1] || 0,
-                        PLT_UNITS: element.transfused_units[2] || 0,
-                        CRYO_UNITS: element.transfused_units[3] || 0,
-                        CELL_SAVER_ML: element.transfused_units[4] || 0
-                    };
-                });
-
-
-
-                resultHemo.forEach((ob: any, index: number) => {
-
-                    if (transfused_dict[ob.CASE_ID]) {
-                        const transfusedResult = transfused_dict[ob.CASE_ID];
-                        const time = ((timeParse("%Y-%m-%dT%H:%M:%S")(ob.DATE))!.getTime());
-                        store.configStore.updateRange(transfusedResult);
-                        store.configStore.updateTestValue("PREOP_HGB", +ob.HEMO[0]);
-                        store.configStore.updateTestValue("POSTOP_HGB", +ob.HEMO[1]);
-                        const outputObj: SingleCasePoint = {
-                            CASE_ID: ob.CASE_ID,
-                            VISIT_ID: ob.VISIT_ID,
-                            PATIENT_ID: ob.PATIENT_ID,
-                            ANESTHESIOLOGIST_ID: ob.ANESTHESIOLOGIST_ID,
-                            SURGEON_ID: ob.SURGEON_ID,
-                            YEAR: ob.YEAR,
-                            PRBC_UNITS: transfusedResult.PRBC_UNITS,
-                            FFP_UNITS: transfusedResult.FFP_UNITS,
-                            PLT_UNITS: transfusedResult.PLT_UNITS,
-                            CRYO_UNITS: transfusedResult.CRYO_UNITS,
-                            CELL_SAVER_ML: transfusedResult.CELL_SAVER_ML,
-                            PREOP_HGB: +ob.HEMO[0],
-                            POSTOP_HGB: +ob.HEMO[1],
-                            QUARTER: ob.QUARTER,
-                            MONTH: ob.MONTH,
-                            DATE: time,
-                            VENT: riskOutcomeDict[ob.VISIT_ID].VENT,
-                            DRG_WEIGHT: riskOutcomeDict[ob.VISIT_ID].DRG_WEIGHT || NaN,
-                            DEATH: riskOutcomeDict[ob.VISIT_ID].DEATH,
-                            ECMO: riskOutcomeDict[ob.VISIT_ID].ECMO,
-                            STROKE: riskOutcomeDict[ob.VISIT_ID].STROKE,
-                            TXA: riskOutcomeDict[ob.VISIT_ID].TXA,
-                            B12: riskOutcomeDict[ob.VISIT_ID].B12,
-                            AMICAR: riskOutcomeDict[ob.VISIT_ID].AMICAR,
-                            SURGERY_TYPE: SurgeryUrgencyArray.indexOf(ob.SURGERY_TYPE)
-                        };
-                        cacheData.push(outputObj);
-                    }
-                });
-
-                cacheData = cacheData.filter((d: any) => d);
-                setHemoData(cacheData);
-                setDataLoading(false);
-            }).catch((error) => {
-                setDataLoadingFailed(true);
-                setDataLoading(false);
-            });
+            const nameDictFetch = await fetch(`${process.env.REACT_APP_QUERY_URL}surgeon_anest_names`);
+            const nameDict = await nameDictFetch.json();
+            store.configStore.updateNameDictionary(nameDict);
+            setHemoData(surgeryCases);
+        }
+        catch (e) {
+            setDataLoadingFailed(true);
+        } finally {
+            setDataLoading(false);
+        }
     }
 
     return <DataContext.Provider value={outputFilteredData}>

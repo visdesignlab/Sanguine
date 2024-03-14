@@ -116,7 +116,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
                                 };
                             }
 
-                            if ((outcomeComparison && singleCase[outcomeComparison] > 0) || (comparisonDate && singleCase.DATE < comparisonDate)) {
+                            if ((outcomeComparison && singleCase[outcomeComparison] > 0) || (comparisonDate && singleCase.CASE_DATE < comparisonDate)) {
                                 secondaryTemporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
                                 secondaryTemporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.PATIENT_ID);
                             }

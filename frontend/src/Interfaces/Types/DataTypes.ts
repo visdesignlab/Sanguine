@@ -36,15 +36,15 @@ export type HeatMapDataPoint = BasicAggregatedDatePoint & {
 };
 
 export type SingleCasePoint = {
-    VISIT_ID: number;
+    VISIT_NO: number;
     CASE_ID: number;
     PATIENT_ID: number;
     YEAR: number;
-    SURGEON_ID: number;
+    SURGEON_PROV_ID: number;
     CRYO_UNITS: number;
     DEATH: number;
     ANESTHESIOLOGIST_ID: number;
-    DATE: number;
+    CASE_DATE: number;
     QUARTER: string;
     CELL_SAVER_ML: number;
     ECMO: number;
@@ -52,9 +52,9 @@ export type SingleCasePoint = {
     MONTH: string;
     FFP_UNITS: number;
     PLT_UNITS: number;
-    POSTOP_HGB: number;
+    POSTOP_HEMO: number;
     PRBC_UNITS: number;
-    PREOP_HGB: number;
+    PREOP_HEMO: number;
     STROKE: number;
     VENT: number;
     B12: number;
