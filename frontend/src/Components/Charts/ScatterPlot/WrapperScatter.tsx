@@ -49,30 +49,16 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
     }, [layoutH, layoutW, store.mainCompWidth, svgRef]);
 
     useDeepCompareEffect(() => {
-        if (previousCancelToken) {
-            previousCancelToken.cancel("cancel the call?");
-        }
-
-        let transfused_dict = {} as any;
-        const cancelToken = axios.CancelToken;
-        const call = cancelToken.source();
-        setPreviousCancelToken(call);
-
-
         let tempYMax = 0;
         let tempYMin = Infinity;
         let tempXMin = Infinity;
         let tempXMax = 0;
         if (hemoData) {
             let castData: any[] = hemoData.map((ob: SingleCasePoint) => {
-
                 const yValue = yValueOption === "PREOP_HEMO" ? ob.PREOP_HEMO : ob.POSTOP_HEMO;
-                let xValue;
-                if (transfused_dict[ob.CASE_ID]) {
-                    xValue = transfused_dict[ob.CASE_ID].transfused;
-                };
+                let xValue = parseInt(`${ob[xAggregationOption]}`, 10);
 
-                if ((yValue && showZero && transfused_dict[ob.CASE_ID]) || (!showZero && yValue && xValue > 0)) {
+                if ((yValue && showZero) || (!showZero && yValue && xValue > 0)) {
                     if ((xValue > 100 && xAggregationOption === "PRBC_UNITS")) {
                         xValue -= 999;
                     }
@@ -90,7 +76,6 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
                         case: ob
                     };
                     return new_ob;
-                    //}
                 } else { return undefined; }
             });
 
