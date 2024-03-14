@@ -128,7 +128,7 @@ const WrapperSankey: FC = () => {
                     } else {
                         to = singleCase[nextKey] ? `${nextKey}-true` : `${nextKey}-false`;
                     }
-                    sankeyObj[from][to] += 1;
+                    // sankeyObj[from][to] += 1;
                 }
             });
         });
