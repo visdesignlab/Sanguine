@@ -81,10 +81,14 @@ const App: FC = () => {
             const surgeryCasesFetch = await fetch(`${process.env.REACT_APP_QUERY_URL}get_sanguine_surgery_cases`);
             const surgeryCases = await surgeryCasesFetch.json();
 
+            if (surgeryCases.result?.length === 0) {
+                throw new Error("There was an issue fetching data. No results were returned.");
+            }
+
             const nameDictFetch = await fetch(`${process.env.REACT_APP_QUERY_URL}surgeon_anest_names`);
             const nameDict = await nameDictFetch.json();
             store.configStore.updateNameDictionary(nameDict);
-            setHemoData(surgeryCases);
+            setHemoData(surgeryCases.result);
         }
         catch (e) {
             setDataLoadingFailed(true);
