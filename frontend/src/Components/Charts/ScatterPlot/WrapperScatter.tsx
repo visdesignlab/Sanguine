@@ -58,7 +58,7 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
                 const yValue = parseFloat((yValueOption === "PREOP_HEMO" ? ob.PREOP_HEMO : ob.POSTOP_HEMO) as unknown as string);
                 let xValue = parseInt(`${ob[xAggregationOption]}`, 10);
 
-                if ((yValue && showZero) || (!showZero && yValue && xValue > 0)) {
+                if ((!Number.isNaN(yValue) && showZero) || (!showZero && !Number.isNaN(yValue) && xValue > 0)) {
                     if ((xValue > 100 && xAggregationOption === "PRBC_UNITS")) {
                         xValue -= 999;
                     }
