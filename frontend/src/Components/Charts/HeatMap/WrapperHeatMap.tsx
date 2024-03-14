@@ -82,66 +82,41 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
     }, [layoutH, layoutW, store.mainCompWidth, svgRef]);
 
     useDeepCompareEffect(() => {
-
-        tokenCheckCancel(previousCancelToken);
-        const cancelToken = axios.CancelToken;
-        const call = cancelToken.source();
-        setPreviousCancelToken(call);
-
-
-        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${store.dateRange}&filter_selection=${ProcedureStringGenerator(proceduresSelection)}&case_ids=${[].toString()}`, {
-            cancelToken: call.token
-        })
-            .then(function (response) {
-                if (response.data) {
-
-                    let caseSetReturnedFromQuery = new Set();
-                    let temporaryDataHolder: any = {};
-                    let secondaryTemporaryDataHolder: any = {};
-                    response.data.forEach((element: any) => {
-                        caseSetReturnedFromQuery.add(element.case_id);
-                    });
-                    hemoData.forEach((singleCase: SingleCasePoint) => {
-                        if (caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
-                            if (!temporaryDataHolder[singleCase[xAggregationOption]]) {
-                                temporaryDataHolder[singleCase[xAggregationOption]] = {
-                                    aggregateAttribute: singleCase[xAggregationOption],
-                                    data: [],
-                                    patientIDList: new Set(),
-                                };
-                                secondaryTemporaryDataHolder[singleCase[xAggregationOption]] = {
-                                    aggregateAttribute: singleCase[xAggregationOption],
-                                    data: [],
-                                    patientIDList: new Set(),
-                                };
-                            }
-
-                            if ((outcomeComparison && singleCase[outcomeComparison] > 0) || (comparisonDate && singleCase.CASE_DATE < comparisonDate)) {
-                                secondaryTemporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
-                                secondaryTemporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.PATIENT_ID);
-                            }
-                            else {
-                                temporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
-                                temporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.PATIENT_ID);
-                            }
-                        }
-                    });
-                    const [caseCount, outputData] = generateRegularData(temporaryDataHolder, store.state.showZero, yValueOption);
-                    const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, store.state.showZero, yValueOption);
-                    stateUpdateWrapperUseJSON(data, outputData, setData);
-                    stateUpdateWrapperUseJSON(secondaryData, secondOutputData, setSecondaryData);
-                    store.chartStore.totalAggregatedCaseCount = (caseCount as number) + (secondCaseCount as number);
-                    setCaseCount(caseCount as number);
-                    setSecondaryCaseCount(secondCaseCount as number);
+        // let caseSetReturnedFromQuery = new Set();
+        let temporaryDataHolder: any = {};
+        let secondaryTemporaryDataHolder: any = {};
+        hemoData.forEach((singleCase: SingleCasePoint) => {
+            // if (caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
+                if (!temporaryDataHolder[singleCase[xAggregationOption]]) {
+                    temporaryDataHolder[singleCase[xAggregationOption]] = {
+                        aggregateAttribute: singleCase[xAggregationOption],
+                        data: [],
+                        patientIDList: new Set(),
+                    };
+                    secondaryTemporaryDataHolder[singleCase[xAggregationOption]] = {
+                        aggregateAttribute: singleCase[xAggregationOption],
+                        data: [],
+                        patientIDList: new Set(),
+                    };
                 }
-            })
-            .catch(function (thrown) {
-                if (axios.isCancel(thrown)) {
-                    console.log('Request canceled', thrown.message);
-                } else {
-                    // handle error
+
+                if ((outcomeComparison && singleCase[outcomeComparison] > 0) || (comparisonDate && singleCase.CASE_DATE < comparisonDate)) {
+                    secondaryTemporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
+                    secondaryTemporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.PATIENT_ID);
                 }
-            });
+                else {
+                    temporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
+                    temporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.PATIENT_ID);
+                }
+            // }
+        });
+        const [caseCount, outputData] = generateRegularData(temporaryDataHolder, store.state.showZero, yValueOption);
+        const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, store.state.showZero, yValueOption);
+        stateUpdateWrapperUseJSON(data, outputData, setData);
+        stateUpdateWrapperUseJSON(secondaryData, secondOutputData, setSecondaryData);
+        store.chartStore.totalAggregatedCaseCount = (caseCount as number) + (secondCaseCount as number);
+        setCaseCount(caseCount as number);
+        setSecondaryCaseCount(secondCaseCount as number);
     }, [proceduresSelection, surgeryUrgencySelection, store.state.outcomeFilter,
         rawDateRange,
         store.state.showZero,
