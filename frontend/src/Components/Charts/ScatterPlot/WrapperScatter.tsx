@@ -55,7 +55,7 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
         let tempXMax = 0;
         if (hemoData) {
             let castData: any[] = hemoData.map((ob: SingleCasePoint) => {
-                const yValue = yValueOption === "PREOP_HEMO" ? ob.PREOP_HEMO : ob.POSTOP_HEMO;
+                const yValue = parseFloat((yValueOption === "PREOP_HEMO" ? ob.PREOP_HEMO : ob.POSTOP_HEMO) as unknown as string);
                 let xValue = parseInt(`${ob[xAggregationOption]}`, 10);
 
                 if ((yValue && showZero) || (!showZero && yValue && xValue > 0)) {
