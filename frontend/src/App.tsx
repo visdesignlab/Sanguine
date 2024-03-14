@@ -62,15 +62,15 @@ const App: FC = () => {
 
     //Data Updates
     useDeepCompareEffect(() => {
-        let patientIDSet: Set<number> | undefined;
-        if (currentSelectPatientGroup.length > 0) {
-            patientIDSet = new Set<number>();
-            currentSelectPatientGroup.forEach((d) => { patientIDSet!.add(d.CASE_ID); });
-        }
-        const newFilteredData = hemoData.filter((eachcase: SingleCasePoint) => checkIfCriteriaMet(eachcase, surgeryUrgencySelection, outcomeFilter, currentOutputFilterSet, bloodComponentFilter, testValueFilter, patientIDSet));
+        // let patientIDSet: Set<number> | undefined;
+        // if (currentSelectPatientGroup.length > 0) {
+        //     patientIDSet = new Set<number>();
+        //     currentSelectPatientGroup.forEach((d) => { patientIDSet!.add(d.CASE_ID); });
+        // }
+        // const newFilteredData = hemoData.filter((eachcase: SingleCasePoint) => checkIfCriteriaMet(eachcase, surgeryUrgencySelection, outcomeFilter, currentOutputFilterSet, bloodComponentFilter, testValueFilter, patientIDSet));
 
 
-        setOutputFilteredDAta(newFilteredData);
+        setOutputFilteredDAta(hemoData);
     }, [surgeryUrgencySelection, outcomeFilter, hemoData, currentOutputFilterSet, bloodComponentFilter, testValueFilter, currentSelectPatientGroup]);
 
     async function cacheHemoData() {
