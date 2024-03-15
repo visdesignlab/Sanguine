@@ -9,7 +9,7 @@ import { defaultState } from "./Interfaces/DefaultState";
 import Store from "./Interfaces/Store";
 import { SingleCasePoint } from "./Interfaces/Types/DataTypes";
 import { logoutHandler, whoamiAPICall } from "./Interfaces/UserManagement";
-import { SurgeryUrgencyArray } from "./Presets/DataDict";
+import { SurgeryUrgencyArray, SurgeryUrgencyType } from "./Presets/DataDict";
 import './App.css';
 import { checkIfCriteriaMet } from "./HelperFunctions/CaseListProducer";
 import useDeepCompareEffect from "use-deep-compare-effect";
