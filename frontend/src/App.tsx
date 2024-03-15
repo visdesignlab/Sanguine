@@ -78,6 +78,9 @@ const App: FC = () => {
             whoamiAPICall(store);
         }
         try {
+            const surgeryCasesFetch = await fetch(`${process.env.REACT_APP_QUERY_URL}get_sanguine_surgery_cases`);
+            const surgeryCasesInput = await surgeryCasesFetch.json();
+
             // Fix data types for the surgery cases
             let minDate = +Infinity;
             let maxDate = -Infinity;
