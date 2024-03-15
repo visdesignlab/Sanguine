@@ -1,6 +1,5 @@
 /** @jsxImportSource @emotion/react */
 import { Button, ButtonGroup, Grid } from "@mui/material";
-import axios from "axios";
 import { observer } from "mobx-react";
 import { FC, useContext, useLayoutEffect, useRef, useState } from "react";
 import { DataContext } from "../../../App";
@@ -56,73 +55,41 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
     }, [layoutH, layoutW, store.mainCompWidth, svgRef]);
 
     useDeepCompareEffect(() => {
-        tokenCheckCancel(previousCancelToken);
-        const cancelToken = axios.CancelToken;
-        const call = cancelToken.source();
-        setPreviousCancelToken(call);
 
-        let requestingAxis = xAggregationOption;
-        if (!BloodProductCap[xAggregationOption]) {
-            requestingAxis = "FFP_UNITS";
-        }
-
-        //replace case_ids
-
-        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=${requestingAxis}&date_range=${store.dateRange}&filter_selection=${ProcedureStringGenerator(proceduresSelection)}&case_ids=${[].toString()}`, {
-            cancelToken: call.token
-        }).then(function (response) {
-            const transfusionDataResponse = response.data;
-            let caseIDSet = new Set();
-            let transfused_dict = {} as any;
-            transfusionDataResponse.forEach((v: any) => {
-                caseIDSet.add(v.case_id);
-                transfused_dict[v.case_id] = {
-                    transfused: v.transfused_units
-                };
-            });
-            let caseCount = 0;
-            let tempXMin = Infinity;
-            let tempXMax = 0;
-            let existingCaseID = new Set();
-            let dataOutput: (DumbbellDataPoint | undefined)[] = hemoData.map((ob: any) => {
-                const preop_hgb = ob.PREOP_HEMO;
-                const postop_hgb = ob.POSTOP_HEMO;
-                let yAxisVal;
-                if (transfused_dict[ob.CASE_ID]) {
-                    yAxisVal = BloodProductCap[xAggregationOption] ? transfused_dict[ob.CASE_ID].transfused : ob[xAggregationOption];
-                };
-                if (yAxisVal !== undefined && preop_hgb > 0 && postop_hgb > 0 && !existingCaseID.has(ob.CASE_ID)) {
-                    if ((showZero) || (!showZero && yAxisVal > 0)) {
-                        yAxisVal = bloodComponentOutlierHandler(yAxisVal, xAggregationOption);
-                        tempXMin = preop_hgb < tempXMin ? preop_hgb : tempXMin;
-                        tempXMin = postop_hgb < tempXMin ? postop_hgb : tempXMin;
-                        tempXMax = preop_hgb > tempXMax ? preop_hgb : tempXMax;
-                        tempXMax = postop_hgb > tempXMax ? postop_hgb : tempXMax;
-                        existingCaseID.add(ob.CASE_ID);
-                        caseCount++;
-                        let new_ob: DumbbellDataPoint = {
-                            case: ob,
-                            startXVal: preop_hgb,
-                            endXVal: postop_hgb,
-                            yVal: yAxisVal,
-                        };
-                        return new_ob;
-                    }
+        let caseCount = 0;
+        let tempXMin = Infinity;
+        let tempXMax = 0;
+        let existingCaseID = new Set();
+        let dataOutput: (DumbbellDataPoint | undefined)[] = hemoData.map((ob: any) => {
+            const preop_hgb = ob.PREOP_HEMO;
+            const postop_hgb = ob.POSTOP_HEMO;
+            let yAxisVal;
+            yAxisVal = ob[xAggregationOption];
+            if (yAxisVal !== undefined && preop_hgb > 0 && postop_hgb > 0 && !existingCaseID.has(ob.CASE_ID)) {
+                if ((showZero) || (!showZero && yAxisVal > 0)) {
+                    yAxisVal = bloodComponentOutlierHandler(yAxisVal, xAggregationOption);
+                    tempXMin = preop_hgb < tempXMin ? preop_hgb : tempXMin;
+                    tempXMin = postop_hgb < tempXMin ? postop_hgb : tempXMin;
+                    tempXMax = preop_hgb > tempXMax ? preop_hgb : tempXMax;
+                    tempXMax = postop_hgb > tempXMax ? postop_hgb : tempXMax;
+                    existingCaseID.add(ob.CASE_ID);
+                    caseCount++;
+                    let new_ob: DumbbellDataPoint = {
+                        case: ob,
+                        startXVal: preop_hgb,
+                        endXVal: postop_hgb,
+                        yVal: yAxisVal,
+                    };
+                    return new_ob;
                 }
-                return undefined;
-            });
-            let filteredDataOutput = (dataOutput.filter((d) => d)) as DumbbellDataPoint[];
-            store.chartStore.totalIndividualCaseCount = caseCount;
-            stateUpdateWrapperUseJSON(data, filteredDataOutput, setData);
-            setXMin(tempXMin);
-            setXMax(tempXMax);
-        }).catch(function (thrown) {
-            if (axios.isCancel(thrown)) {
-                console.log('Request canceled', thrown.message);
-            } else {
-                // handle error
             }
+            return undefined;
         });
+        let filteredDataOutput = (dataOutput.filter((d) => d)) as DumbbellDataPoint[];
+        store.chartStore.totalIndividualCaseCount = caseCount;
+        stateUpdateWrapperUseJSON(data, filteredDataOutput, setData);
+        setXMin(tempXMin);
+        setXMax(tempXMax);
     }, [rawDateRange, proceduresSelection, hemoData, xAggregationOption, showZero]);
 
     return <Grid container direction="row" alignItems="center" style={{ height: "100%" }}>

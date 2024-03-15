@@ -1,5 +1,4 @@
 import { FormControl, IconButton, Menu, MenuItem, Switch, Tooltip } from "@mui/material";
-import axios from "axios";
 import { sum } from "d3";
 import { observer } from "mobx-react";
 import { FC, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -136,109 +135,87 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
         let caseSetReturnedFromQuery = new Set();
         let outputData: CostBarChartDataPoint[] = [];
         let secondaryOutputData: CostBarChartDataPoint[] = [];
-        const cancelToken = axios.CancelToken;
-        const call = cancelToken.source();
-        setPreviousCancelToken(call);
 
 
-
-        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${store.dateRange}&filter_selection=${ProcedureStringGenerator(proceduresSelection)}&case_ids=${[].toString()}`, {
-            cancelToken: call.token
-        }).then(function (response) {
-            const dataResult = response.data;
-            if (dataResult) {
-                dataResult.forEach((element: any) => {
-                    caseSetReturnedFromQuery.add(element.case_id);
-                });
-                hemoData.forEach((singleCase: SingleCasePoint) => {
-                    if (caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
-                        if (!temporaryDataHolder[singleCase[xAggregatedOption]]) {
-                            temporaryDataHolder[singleCase[xAggregatedOption]] = {
-                                aggregateAttribute: singleCase[xAggregatedOption],
-                                PRBC_UNITS: 0,
-                                FFP_UNITS: 0,
-                                CRYO_UNITS: 0,
-                                PLT_UNITS: 0,
-                                CELL_SAVER_ML: 0,
-                                caseNum: 0,
-                                SALVAGE_USAGE: 0,
-                                caseIDList: new Set()
-                            };
-                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]] = {
-                                aggregateAttribute: singleCase[xAggregatedOption],
-                                PRBC_UNITS: 0,
-                                FFP_UNITS: 0,
-                                CRYO_UNITS: 0,
-                                PLT_UNITS: 0,
-                                CELL_SAVER_ML: 0,
-                                caseNum: 0,
-                                SALVAGE_USAGE: 0,
-                                caseIDList: new Set()
-                            };
-                        }
-                        if (comparisonOption && singleCase[comparisonOption] > 0) {
-                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].PRBC_UNITS += singleCase.PRBC_UNITS;
-                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].FFP_UNITS += singleCase.FFP_UNITS;
-                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].CRYO_UNITS += singleCase.CRYO_UNITS;
-                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].PLT_UNITS += singleCase.PLT_UNITS;
-                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
-                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0);
-                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].caseNum += 1;
-                            secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].caseIDList.add(singleCase.CASE_ID);
-                        } else {
-                            temporaryDataHolder[singleCase[xAggregatedOption]].PRBC_UNITS += singleCase.PRBC_UNITS;
-                            temporaryDataHolder[singleCase[xAggregatedOption]].FFP_UNITS += singleCase.FFP_UNITS;
-                            temporaryDataHolder[singleCase[xAggregatedOption]].CRYO_UNITS += singleCase.CRYO_UNITS;
-                            temporaryDataHolder[singleCase[xAggregatedOption]].PLT_UNITS += singleCase.PLT_UNITS;
-                            temporaryDataHolder[singleCase[xAggregatedOption]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
-                            temporaryDataHolder[singleCase[xAggregatedOption]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0);
-                            temporaryDataHolder[singleCase[xAggregatedOption]].caseNum += 1;
-                            temporaryDataHolder[singleCase[xAggregatedOption]].caseIDList.add(singleCase.CASE_ID);
-                        }
-                    }
-                }
-                );
-                let totalCaseCountTemp = 0;
-                let secondaryCaseCountTemp = 0;
-                Object.values(temporaryDataHolder).forEach((dataItem: any) => {
-                    let newDataObj = makeDataObj(dataItem);
-                    totalCaseCountTemp += newDataObj.caseCount;
-                    const sum_cost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0);
-                    tempmaxCost = tempmaxCost > sum_cost ? tempmaxCost : sum_cost;
-                    const costSaved = -(newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]);
-                    if (costMode && !isNaN(costSaved)) {
-                        tempMinCost = tempMinCost < costSaved ? tempMinCost : costSaved;
-                    }
-                    outputData.push(newDataObj);
-                });
-                if (comparisonOption) {
-                    Object.values(secondaryTemporaryDataHolder).forEach((dataItem: any) => {
-                        let newDataObj = makeDataObj(dataItem);
-                        secondaryCaseCountTemp += newDataObj.caseCount;
-                        const sum_cost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0);
-                        tempmaxCost = tempmaxCost > sum_cost ? tempmaxCost : sum_cost;
-                        const costSaved = -(newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]);
-                        if (costMode && !isNaN(costSaved)) {
-                            tempMinCost = tempMinCost < costSaved ? tempMinCost : costSaved;
-                        }
-                        secondaryOutputData.push(newDataObj);
-                    });
-                    stateUpdateWrapperUseJSON(secondaryData, secondaryOutputData, setSecondaryData);
-                }
-                store.chartStore.totalAggregatedCaseCount = totalCaseCountTemp + secondaryCaseCountTemp;
-                setTotalCaseCount(totalCaseCountTemp);
-                setSecondaryCaseCount(secondaryCaseCountTemp);
-                stateUpdateWrapperUseJSON(data, outputData, setData);
-                setMinCost(tempMinCost);
-                setMaximumCost(tempmaxCost);
+        hemoData.forEach((singleCase: SingleCasePoint) => {
+            if (!temporaryDataHolder[singleCase[xAggregatedOption]]) {
+                temporaryDataHolder[singleCase[xAggregatedOption]] = {
+                    aggregateAttribute: singleCase[xAggregatedOption],
+                    PRBC_UNITS: 0,
+                    FFP_UNITS: 0,
+                    CRYO_UNITS: 0,
+                    PLT_UNITS: 0,
+                    CELL_SAVER_ML: 0,
+                    caseNum: 0,
+                    SALVAGE_USAGE: 0,
+                    caseIDList: new Set()
+                };
+                secondaryTemporaryDataHolder[singleCase[xAggregatedOption]] = {
+                    aggregateAttribute: singleCase[xAggregatedOption],
+                    PRBC_UNITS: 0,
+                    FFP_UNITS: 0,
+                    CRYO_UNITS: 0,
+                    PLT_UNITS: 0,
+                    CELL_SAVER_ML: 0,
+                    caseNum: 0,
+                    SALVAGE_USAGE: 0,
+                    caseIDList: new Set()
+                };
             }
-        }).catch(function (thrown) {
-            if (axios.isCancel(thrown)) {
-                console.log('Request canceled', thrown.message);
+            if (comparisonOption && singleCase[comparisonOption] > 0) {
+                secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].PRBC_UNITS += singleCase.PRBC_UNITS;
+                secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].FFP_UNITS += singleCase.FFP_UNITS;
+                secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].CRYO_UNITS += singleCase.CRYO_UNITS;
+                secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].PLT_UNITS += singleCase.PLT_UNITS;
+                secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
+                secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0);
+                secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].caseNum += 1;
+                secondaryTemporaryDataHolder[singleCase[xAggregatedOption]].caseIDList.add(singleCase.CASE_ID);
             } else {
-                // handle error
+                temporaryDataHolder[singleCase[xAggregatedOption]].PRBC_UNITS += singleCase.PRBC_UNITS;
+                temporaryDataHolder[singleCase[xAggregatedOption]].FFP_UNITS += singleCase.FFP_UNITS;
+                temporaryDataHolder[singleCase[xAggregatedOption]].CRYO_UNITS += singleCase.CRYO_UNITS;
+                temporaryDataHolder[singleCase[xAggregatedOption]].PLT_UNITS += singleCase.PLT_UNITS;
+                temporaryDataHolder[singleCase[xAggregatedOption]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
+                temporaryDataHolder[singleCase[xAggregatedOption]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0);
+                temporaryDataHolder[singleCase[xAggregatedOption]].caseNum += 1;
+                temporaryDataHolder[singleCase[xAggregatedOption]].caseIDList.add(singleCase.CASE_ID);
             }
+        }
+        );
+        let totalCaseCountTemp = 0;
+        let secondaryCaseCountTemp = 0;
+        Object.values(temporaryDataHolder).forEach((dataItem: any) => {
+            let newDataObj = makeDataObj(dataItem);
+            totalCaseCountTemp += newDataObj.caseCount;
+            const sum_cost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0);
+            tempmaxCost = tempmaxCost > sum_cost ? tempmaxCost : sum_cost;
+            const costSaved = -(newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]);
+            if (costMode && !isNaN(costSaved)) {
+                tempMinCost = tempMinCost < costSaved ? tempMinCost : costSaved;
+            }
+            outputData.push(newDataObj);
         });
+        if (comparisonOption) {
+            Object.values(secondaryTemporaryDataHolder).forEach((dataItem: any) => {
+                let newDataObj = makeDataObj(dataItem);
+                secondaryCaseCountTemp += newDataObj.caseCount;
+                const sum_cost = sum(newDataObj.dataArray) + (costMode ? (newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]) : 0);
+                tempmaxCost = tempmaxCost > sum_cost ? tempmaxCost : sum_cost;
+                const costSaved = -(newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.dataArray[4]);
+                if (costMode && !isNaN(costSaved)) {
+                    tempMinCost = tempMinCost < costSaved ? tempMinCost : costSaved;
+                }
+                secondaryOutputData.push(newDataObj);
+            });
+            stateUpdateWrapperUseJSON(secondaryData, secondaryOutputData, setSecondaryData);
+        }
+        store.chartStore.totalAggregatedCaseCount = totalCaseCountTemp + secondaryCaseCountTemp;
+        setTotalCaseCount(totalCaseCountTemp);
+        setSecondaryCaseCount(secondaryCaseCountTemp);
+        stateUpdateWrapperUseJSON(data, outputData, setData);
+        setMinCost(tempMinCost);
+        setMaximumCost(tempmaxCost);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [proceduresSelection, rawDateRange, xAggregatedOption, currentOutputFilterSet, costMode, BloodProductCost, hemoData]);
 

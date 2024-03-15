@@ -7,7 +7,6 @@ import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
 import ScatterPlot from "./ScatterPlot";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
-import axios from "axios";
 import useDeepCompareEffect from "use-deep-compare-effect";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import ChartStandardButtons from "../ChartStandardButtons";

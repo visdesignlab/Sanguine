@@ -16,7 +16,7 @@ export const checkIfCriteriaMet = (singleCase: SingleCasePoint, procedureUrgency
             }
         }
     }
-    if (!procedureUrgencyFilter[singleCase.SURGERY_TYPE]) {
+    if (!procedureUrgencyFilter[singleCase.SURGERY_TYPE_DESC as any]) {
         return false;
     }
     let toReturn = true;

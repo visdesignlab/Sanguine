@@ -1,4 +1,3 @@
-import axios from "axios";
 import { observer } from "mobx-react";
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { FC } from "react";
@@ -102,11 +101,11 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
 
                 if ((outcomeComparison && singleCase[outcomeComparison] > 0) || (comparisonDate && singleCase.CASE_DATE < comparisonDate)) {
                     secondaryTemporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
-                    secondaryTemporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.PATIENT_ID);
+                    secondaryTemporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.MRN);
                 }
                 else {
                     temporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
-                    temporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.PATIENT_ID);
+                    temporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.MRN);
                 }
             // }
         });

@@ -9,7 +9,7 @@ export const BloodComponentOptions = [
 const AggregationOptions = [
     { value: "SURGEON_PROV_ID", key: "SURGEON_PROV_ID", text: "Surgeon ID" },
     { value: "YEAR", key: "YEAR", text: "Year" },
-    { value: "ANESTHESIOLOGIST_ID", key: "ANESTHESIOLOGIST_ID", text: "Anesthesiologist ID" }];
+    { value: "ANESTH_PROV_ID", key: "ANESTH_PROV_ID", text: "Anesthesiologist ID" }];
 
 export const ScatterYOptions = [
     { value: "PREOP_HEMO", key: "PREOP_HEMO", text: "Preoperative Hemoglobin Value" },
@@ -35,11 +35,6 @@ export const ExtraPairOptions = OutcomeOptions.concat([
     { text: "DRG Weight (Risk)", key: "RISK", value: "RISK" }
 ]);
 
-export const SurgeryUrgency = [
-    { value: 0, key: 0, text: "Urgent" },
-    { value: 1, key: 1, text: "Elective" },
-    { value: 2, key: 2, text: "Emergent" }];
-
 
 export const dumbbellFacetOptions = BloodComponentOptions.slice(0, 4).concat(AggregationOptions).concat([{ value: "QUARTER", key: "QUARTER", text: "Quarter" }]);
 
@@ -55,7 +50,13 @@ export const addOptions = [
     [BloodComponentOptions, [AggregationOptions[0], AggregationOptions[2]]]
 ];
 
-export const SurgeryUrgencyArray = ["Urgent", "Elective", "Emergent"];
+export const SurgeryUrgency: { value: number; key: number; text: 'Urgent' | 'Elective' | 'Emergent'}[] = [
+    { value: 0, key: 0, text: "Urgent" },
+    { value: 1, key: 1, text: "Elective" },
+    { value: 2, key: 2, text: "Emergent" },
+];
+export const SurgeryUrgencyArray = SurgeryUrgency.map((d) => d.text);
+export type SurgeryUrgencyType = 'Urgent' | 'Elective' | 'Emergent' | 'Unknown';
 
 export const AcronymDictionary: any = {
     CABG: "Coronary Artery Bypass Grafting",
@@ -80,7 +81,7 @@ export const AcronymDictionary: any = {
     CRYO_UNITS: "Intraoperative Cryo Transfused",
     CELL_SAVER_ML: "Cell Salvage Volume",
     SURGEON_PROV_ID: "Surgeon ID",
-    ANESTHESIOLOGIST_ID: "Anesthesiologist ID",
+    ANESTH_PROV_ID: "Anesthesiologist ID",
     YEAR: "Year",
     QUARTER: "Quarter",
     MONTH: "Month",
@@ -107,7 +108,7 @@ export const HIPAA_Sensitive = new Set([
     "VISIT_NO",
     "CASE_DATE",
     "MONTH",
-    "PATIENT_ID",
+    "MRN",
     "Hospital Visit Number"
 ]);
 
