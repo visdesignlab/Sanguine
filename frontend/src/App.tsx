@@ -85,7 +85,7 @@ const App: FC = () => {
             let minDate = +Infinity;
             let maxDate = -Infinity;
             const surgeryCases = { 
-                result: surgeryCasesInput.result.map((d) => {
+                result: surgeryCasesInput.result.map((d: any) => {
                     const preopHemo = parseFloat(`${d.PREOP_HEMO}`);
                     const postopHemo = parseFloat(`${d.POSTOP_HEMO}`);
                     const drgWeight = parseFloat(`${d.DRG_WEIGHT}`);
