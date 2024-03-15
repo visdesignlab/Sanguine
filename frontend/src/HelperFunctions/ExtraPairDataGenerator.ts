@@ -124,7 +124,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
                         caseDictionary[dataPoint.aggregateAttribute] = new Set(dataPoint.caseIDList);
                     });
                     hemoglobinDataSet.forEach((ob: any) => {
-                        const resultValue = parseFloat(ob.POSTOP_HEMO);
+                        const resultValue = ob.POSTOP_HEMO;
                         if (newData[ob[aggregatedBy]] && resultValue > 0 && caseDictionary[ob[aggregatedBy]].has(ob.CASE_ID)) {
                             newData[ob[aggregatedBy]].push(resultValue);
                         }
