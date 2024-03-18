@@ -44,7 +44,7 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
             let transfusionOutput = d[valueToVisualize] as number;
             if (valueToVisualize === "PRBC_UNITS" && transfusionOutput > 100) {
                 transfusionOutput = Math.ceil(d[valueToVisualize] / 1000);
-            } else if (transfusionOutput && valueToVisualize === "PLT_UNITS") {
+            } else if (transfusionOutput > 100 && valueToVisualize === "PLT_UNITS") {
                 transfusionOutput = (d[valueToVisualize] - 245);
             }
 
