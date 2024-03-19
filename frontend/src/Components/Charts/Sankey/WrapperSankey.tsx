@@ -4,16 +4,16 @@ import { FC, useContext, useEffect, useState } from "react";
 import Chart from 'react-google-charts';
 import { DragDropContext, Draggable, DraggableLocation, Droppable, DropResult } from 'react-beautiful-dnd';
 import { DropdownInputTypes } from "../../../Interfaces/Types/DropdownInputType";
-import { DataContext } from "../../../App";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import { BloodProductCap } from "../../../Presets/Constants";
 import { range } from "d3-array";
 import { FilterChip } from "../../../Presets/StyledComponents";
+import Store from "../../../Interfaces/Store";
 
 
 const WrapperSankey: FC = () => {
-
-    const hemoData = useContext(DataContext);
+    const store = useContext(Store);
+    const { filteredCases } = store;
 
     const [sankeyData, updateSankeyData] = useState<(string | number)[][]>([]);
 
@@ -110,7 +110,7 @@ const WrapperSankey: FC = () => {
         });
 
 
-        hemoData.forEach((singleCase) => {
+        filteredCases.forEach((singleCase) => {
             attributeOptions[0].forEach(({ key }, index) => {
                 if (index < attributeOptions[0].length - 1) {
                     let from = '';
@@ -153,7 +153,7 @@ const WrapperSankey: FC = () => {
 
         stateUpdateWrapperUseJSON(sankeyData, newSankeyData, updateSankeyData);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [attributeOptions, hemoData]);
+    }, [attributeOptions, filteredCases]);
 
 
 

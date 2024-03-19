@@ -8,12 +8,16 @@ import { ProjectConfigStore } from './ProjectConfigStore';
 import { SelectionStore } from './SelectionStore';
 import { ActionEvents } from './Types/EventTypes';
 import { ApplicationState } from './Types/StateTypes';
+import { SingleCasePoint } from './Types/DataTypes';
 
 export class RootStore {
     provenance: Provenance<ApplicationState, ActionEvents>;
     configStore: ProjectConfigStore;
     selectionStore: SelectionStore;
     chartStore: ChartStore;
+
+    _allCases: SingleCasePoint[];
+    
     private _mainCompWidth: number;
 
     constructor() {
@@ -26,6 +30,9 @@ export class RootStore {
         this.configStore = new ProjectConfigStore(this);
         this.chartStore = new ChartStore(this);
         this.selectionStore = new SelectionStore(this);
+
+        this._allCases = [];
+
         makeAutoObservable(this);
     }
 
@@ -43,6 +50,21 @@ export class RootStore {
 
     get proceduresSelection () {
         return this.provenanceState.proceduresSelection;
+    }
+
+    get allCases () {
+        return this._allCases;
+    }
+    
+    set allCases(input: SingleCasePoint[]) {
+        this._allCases = input;
+    }
+
+    get filteredCases () {
+        return this._allCases.map((d) => d);
+        // return this.allCases.filter((d) => {
+        //     return this.state.proceduresSelection.filter((p) => p.procedureName === d.PROCEDURE_NAME).length > 0;
+        // });
     }
 
     get dateRange () {

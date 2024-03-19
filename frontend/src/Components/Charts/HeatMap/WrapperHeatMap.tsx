@@ -7,12 +7,10 @@ import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import { ExtraPairPadding, ExtraPairWidth, } from "../../../Presets/Constants";
 import Store from "../../../Interfaces/Store";
 import { ExtraPairPoint, HeatMapDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
-import { tokenCheckCancel } from "../../../Interfaces/UserManagement";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
 import HeatMap from "./HeatMap";
 import ExtraPairButtons from "../ChartAccessories/ExtraPairButtons";
 import useDeepCompareEffect from 'use-deep-compare-effect';
-import { DataContext } from "../../../App";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import ChartStandardButtons from "../ChartStandardButtons";
@@ -32,9 +30,9 @@ type Props = {
     annotationText: string;
 };
 const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH, layoutW, chartId, extraPairArrayString, xAggregationOption, yValueOption, chartTypeIndexinArray, comparisonDate }: Props) => {
-    const hemoData = useContext(DataContext);
     const store = useContext(Store);
 
+    const { filteredCases } = store;
     const { surgeryUrgencySelection, rawDateRange, proceduresSelection } = store.provenanceState;
     const svgRef = useRef<SVGSVGElement>(null);
     const [width, setWidth] = useState(0);
@@ -44,7 +42,6 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
     const [data, setData] = useState<HeatMapDataPoint[]>([]);
     const [secondaryData, setSecondaryData] = useState<HeatMapDataPoint[]>([]);
     const [secondaryExtraPairData, setSecondaryExtraPairData] = useState<ExtraPairPoint[]>([]);
-    const [previousCancelToken, setPreviousCancelToken] = useState<any>(null);
     const [extraPairTotalWidth, setExtraPairTotalWidth] = useState(0);
     const [caseCount, setCaseCount] = useState(0);
     const [secondaryCaseCount, setSecondaryCaseCount] = useState(0);
@@ -59,9 +56,9 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
     }, [extraPairArrayString]);
 
     useDeepCompareEffect(() => {
-        const newExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, data);
+        const newExtraPairData = generateExtrapairPlotData(xAggregationOption, filteredCases, extraPairArray, data);
         if (outcomeComparison || comparisonDate) {
-            const newSecondaryExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, secondaryData);
+            const newSecondaryExtraPairData = generateExtrapairPlotData(xAggregationOption, filteredCases, extraPairArray, secondaryData);
             stateUpdateWrapperUseJSON(secondaryExtraPairData, newSecondaryExtraPairData, setSecondaryExtraPairData);
         }
         let totalWidth = newExtraPairData.length > 0 ? (newExtraPairData.length + 1) * ExtraPairPadding : 0;
@@ -71,7 +68,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
         setExtraPairTotalWidth(totalWidth);
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extraPairArray, data, hemoData, secondaryData, outcomeComparison, comparisonDate]);
+    }, [extraPairArray, data, filteredCases, secondaryData, outcomeComparison, comparisonDate]);
 
     useLayoutEffect(() => {
         if (svgRef.current) {
@@ -84,7 +81,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
         // let caseSetReturnedFromQuery = new Set();
         let temporaryDataHolder: any = {};
         let secondaryTemporaryDataHolder: any = {};
-        hemoData.forEach((singleCase: SingleCasePoint) => {
+        filteredCases.forEach((singleCase: SingleCasePoint) => {
             // if (caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
                 if (!temporaryDataHolder[singleCase[xAggregationOption]]) {
                     temporaryDataHolder[singleCase[xAggregationOption]] = {
@@ -123,7 +120,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
         yValueOption,
         outcomeComparison,
         comparisonDate,
-        hemoData]);
+        filteredCases]);
 
     return (<ChartWrapperContainer>
         <ChartAccessoryDiv>

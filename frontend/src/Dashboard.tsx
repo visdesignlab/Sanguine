@@ -6,7 +6,6 @@ import RegularModeMenu from "./Components/Utilities/TopMenu/RegularModeMenu";
 
 import './App.css';
 import LayoutGenerator from "./Components/LayoutGenerator";
-import { DataContext } from "./App";
 import { Box, Divider, Snackbar, Tab, Tabs, Alert, Grid } from "@mui/material";
 import DetailView from "./Components/Utilities/DetailView/DetailView";
 import Store from "./Interfaces/Store";
@@ -17,7 +16,6 @@ import WrapperSankey from "./Components/Charts/Sankey/WrapperSankey";
 
 const Dashboard: FC = () => {
 
-    const hemoData = useContext(DataContext);
     const store = useContext(Store);
     const [tabValue, setTabValue] = useState(0);
 
@@ -34,7 +32,7 @@ const Dashboard: FC = () => {
 
             <Grid container direction="row" >
                 <Grid item xs={2} id="Side-Bar">
-                    <LeftToolBox totalCaseNum={hemoData.length} />
+                    <LeftToolBox />
                 </Grid>
                 <Divider orientation="vertical" flexItem style={{ marginRight: "-1px" }} />
                 <Grid item xs={8} id="Main-Body">

@@ -1,6 +1,5 @@
 import { observer } from "mobx-react";
 import { FC, useContext, useLayoutEffect, useRef, useState } from "react";
-import { DataContext } from "../../../App";
 import Store from "../../../Interfaces/Store";
 import { ScatterDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
@@ -25,8 +24,8 @@ type Props = {
 };
 const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationOption, chartId, layoutW, layoutH }: Props) => {
 
-    const hemoData = useContext(DataContext);
     const store = useContext(Store);
+    const { filteredCases } = store;
 
     const { proceduresSelection, showZero, rawDateRange } = store.provenanceState;
 
@@ -38,7 +37,6 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
     const [xMax, setXMax] = useState(0);
     const [yMin, setYMin] = useState(0);
     const [yMax, setYMax] = useState(0);
-    const [previousCancelToken, setPreviousCancelToken] = useState<any>(null);
 
     useLayoutEffect(() => {
         if (svgRef.current) {
@@ -52,8 +50,8 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
         let tempYMin = Infinity;
         let tempXMin = Infinity;
         let tempXMax = 0;
-        if (hemoData) {
-            let castData: any[] = hemoData.map((ob: SingleCasePoint) => {
+        if (filteredCases) {
+            let castData: any[] = filteredCases.map((ob: SingleCasePoint) => {
                 const yValue = yValueOption === "PREOP_HEMO" ? ob.PREOP_HEMO : ob.POSTOP_HEMO
                 let xValue = parseInt(`${ob[xAggregationOption]}`, 10);
 
@@ -87,7 +85,7 @@ const WrapperScatter: FC<Props> = ({ annotationText, yValueOption, xAggregationO
             setYMax(tempYMax);
             setYMin(tempYMin);
         }
-    }, [rawDateRange, proceduresSelection, hemoData, showZero, yValueOption, xAggregationOption]);
+    }, [rawDateRange, proceduresSelection, filteredCases, showZero, yValueOption, xAggregationOption]);
 
     return (<ChartWrapperContainer>
         <ChartAccessoryDiv>

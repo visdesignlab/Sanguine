@@ -2,13 +2,11 @@
 import { Button, ButtonGroup, Grid } from "@mui/material";
 import { observer } from "mobx-react";
 import { FC, useContext, useLayoutEffect, useRef, useState } from "react";
-import { DataContext } from "../../../App";
 import { bloodComponentOutlierHandler } from "../../../HelperFunctions/CaseListProducer";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
 import { DumbbellDataPoint } from "../../../Interfaces/Types/DataTypes";
-import { tokenCheckCancel } from "../../../Interfaces/UserManagement";
-import { Basic_Gray, BloodProductCap, postop_color, preop_color } from "../../../Presets/Constants";
+import { Basic_Gray, postop_color, preop_color } from "../../../Presets/Constants";
 import { css } from '@emotion/react';
 import DumbbellChart from "./DumbbellChart";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
@@ -28,8 +26,8 @@ type Props = {
     annotationText: string;
 };
 const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartId, layoutH, layoutW }) => {
-    const hemoData = useContext(DataContext);
     const store = useContext(Store);
+    const { filteredCases } = store;
     const { proceduresSelection, showZero, rawDateRange } = store.provenanceState;
     const svgRef = useRef<SVGSVGElement>(null);
     const [width, setWidth] = useState(0);
@@ -40,7 +38,6 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
     const [showPreop, setShowPreop] = useState(true);
     const [showGap, setShowGap] = useState(true);
     const [showPostop, setShowPostop] = useState(true);
-    const [previousCancelToken, setPreviousCancelToken] = useState<any>(null);
     const [data, setData] = useState<DumbbellDataPoint[]>([]);
 
 
@@ -60,7 +57,7 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
         let tempXMin = Infinity;
         let tempXMax = 0;
         let existingCaseID = new Set();
-        let dataOutput: (DumbbellDataPoint | undefined)[] = hemoData.map((ob: any) => {
+        let dataOutput: (DumbbellDataPoint | undefined)[] = filteredCases.map((ob: any) => {
             const preop_hgb = ob.PREOP_HEMO;
             const postop_hgb = ob.POSTOP_HEMO;
             let yAxisVal;
@@ -90,7 +87,7 @@ const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartI
         stateUpdateWrapperUseJSON(data, filteredDataOutput, setData);
         setXMin(tempXMin);
         setXMax(tempXMax);
-    }, [rawDateRange, proceduresSelection, hemoData, xAggregationOption, showZero]);
+    }, [rawDateRange, proceduresSelection, filteredCases, xAggregationOption, showZero]);
 
     return <Grid container direction="row" alignItems="center" style={{ height: "100%" }}>
         <Grid item xs={1}>

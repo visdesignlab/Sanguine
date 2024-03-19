@@ -9,10 +9,9 @@ import { ListItem, List, ListItemSecondaryAction, ListItemText, Switch, IconButt
 import ErrorIcon from '@mui/icons-material/Error';
 import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
 
-type Props = { totalCaseNum: number; };
-
-const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
+const CurrentView: FC = () => {
     const store = useContext(Store);
+    const { allCases } = store;
 
 
     const generateSurgery = () => {
@@ -70,13 +69,13 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
                     <ListItem key="AggreCaseCount">
                         <ListItemText primary="Aggregated Cases"
-                            secondary={`${store.chartStore.totalAggregatedCaseCount}/${totalCaseNum}`} />
+                            secondary={`${store.chartStore.totalAggregatedCaseCount}/${allCases.length}`} />
 
                     </ListItem>
 
                     <ListItem key="IndiCaseCount">
                         <ListItemText primary="Individual Cases"
-                            secondary={`${store.chartStore.totalIndividualCaseCount}/${totalCaseNum}`} />
+                            secondary={`${store.chartStore.totalIndividualCaseCount}/${allCases.length}`} />
                         <ListItemSecondaryAction>
                             <Tooltip title='Case count can be reduced by both filter and missing data.'>
                                 <IconButton size="small" disableRipple >

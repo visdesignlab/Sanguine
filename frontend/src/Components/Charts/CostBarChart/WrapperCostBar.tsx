@@ -3,7 +3,6 @@ import { sum } from "d3";
 import { observer } from "mobx-react";
 import { FC, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import useDeepCompareEffect from "use-deep-compare-effect";
-import { DataContext } from "../../../App";
 import { generateExtrapairPlotData } from "../../../HelperFunctions/ExtraPairDataGenerator";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import Store from "../../../Interfaces/Store";
@@ -34,7 +33,7 @@ type Props = {
 
 const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggregatedOption, chartId, layoutH, layoutW, comparisonOption }: Props) => {
     const store = useContext(Store);
-    const hemoData = useContext(DataContext);
+    const { filteredCases } = store;
 
     const { proceduresSelection, BloodProductCost, currentOutputFilterSet, rawDateRange } = store.provenanceState;
 
@@ -53,7 +52,6 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [costMode, setCostMode] = useState(true);
     const [bloodCostToChange, setBloodCostToChange] = useState("");
-    const [previousCancelToken, setPreviousCancelToken] = useState<any>(null);
     const [secondaryExtraPairData, setSecondaryExtraPairData] = useState<ExtraPairPoint[]>([]);
     const [showPotential, setShowPotential] = useState(false);
     const [totalCaseCount, setTotalCaseCount] = useState(0);
@@ -82,9 +80,9 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
     }, [extraPairArrayString]);
 
     useDeepCompareEffect(() => {
-        const newExtraPairData = generateExtrapairPlotData(xAggregatedOption, hemoData, extraPairArray, data);
+        const newExtraPairData = generateExtrapairPlotData(xAggregatedOption, filteredCases, extraPairArray, data);
         if (comparisonOption) {
-            const newSecondaryExtraPairData = generateExtrapairPlotData(xAggregatedOption, hemoData, extraPairArray, secondaryData);
+            const newSecondaryExtraPairData = generateExtrapairPlotData(xAggregatedOption, filteredCases, extraPairArray, secondaryData);
             stateUpdateWrapperUseJSON(secondaryExtraPairData, newSecondaryExtraPairData, setSecondaryExtraPairData);
         }
         let totalWidth = newExtraPairData.length > 0 ? (newExtraPairData.length + 1) * ExtraPairPadding : 0;
@@ -94,7 +92,7 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
         setExtraPairTotalWidth(totalWidth);
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extraPairArray, data, hemoData, secondaryData, comparisonOption]);
+    }, [extraPairArray, data, filteredCases, secondaryData, comparisonOption]);
 
 
     useLayoutEffect(() => {
@@ -125,9 +123,6 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
     };
 
     useDeepCompareEffect(() => {
-        if (previousCancelToken) {
-            previousCancelToken.cancel("cancel the call?");
-        }
         let tempmaxCost = 0;
         let tempMinCost = 0;
         let temporaryDataHolder: any = {};
@@ -137,7 +132,7 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
         let secondaryOutputData: CostBarChartDataPoint[] = [];
 
 
-        hemoData.forEach((singleCase: SingleCasePoint) => {
+        filteredCases.forEach((singleCase: SingleCasePoint) => {
             if (!temporaryDataHolder[singleCase[xAggregatedOption]]) {
                 temporaryDataHolder[singleCase[xAggregatedOption]] = {
                     aggregateAttribute: singleCase[xAggregatedOption],
@@ -217,7 +212,7 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
         setMinCost(tempMinCost);
         setMaximumCost(tempmaxCost);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [proceduresSelection, rawDateRange, xAggregatedOption, currentOutputFilterSet, costMode, BloodProductCost, hemoData]);
+    }, [proceduresSelection, rawDateRange, xAggregatedOption, currentOutputFilterSet, costMode, BloodProductCost, filteredCases]);
 
     return (<ChartWrapperContainer>
         <ChartAccessoryDiv>

@@ -11,9 +11,7 @@ import CurrentView from "./CurrentView";
 import SurgeryListViewer from "./SurgeryListViewer";
 import SurgerySearchBar from "./SurgerySearchBar";
 
-type Props = { totalCaseNum: number; };
-
-const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
+const LeftToolBox: FC = () => {
 
   const [surgeryList, setSurgeryList] = useState<ProcedureEntry[]>([]);
   const [maxCaseCount, setMaxCaseCount] = useState(0);
@@ -79,7 +77,7 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
         index={0}
         children={
           <Grid container >
-            <CurrentView totalCaseNum={totalCaseNum} />
+            <CurrentView />
             <Divider orientation="horizontal" style={{ width: '98%', }} />
             <CurrentSelected />
             <Divider orientation="horizontal" style={{ width: '98%' }} />

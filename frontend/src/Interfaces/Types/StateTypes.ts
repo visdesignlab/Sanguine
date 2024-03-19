@@ -21,4 +21,7 @@ export type ApplicationState = {
     currentSelectPatient: SingleCasePoint | null;
     bloodComponentFilter: any;
     testValueFilter: any;
+    allCases: SingleCasePoint[];
+    setAllCases: (input: SingleCasePoint[]) => void;
+    filteredCases: SingleCasePoint[];
 };

@@ -37,5 +37,8 @@ export const defaultState: ApplicationState = {
     testValueFilter: {
         PREOP_HEMO: [0, ManualInfinity],
         POSTOP_HEMO: [0, ManualInfinity]
-    }
+    },
+    allCases: [],
+    setAllCases: (input: any) => { },
+    filteredCases: [],
 };
