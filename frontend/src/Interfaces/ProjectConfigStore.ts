@@ -19,8 +19,8 @@ export class ProjectConfigStore {
     stateToUpdate: string;
     nameDictionary: any;
 
-    constructor(rootstore: RootStore) {
-        this.rootStore = rootstore;
+    constructor(rootStore: RootStore) {
+        this.rootStore = rootStore;
         this._isLoggedIn = !(process.env.REACT_APP_REQUIRE_LOGIN === "true");
         this.largeFont = false;
         this.privateMode = false;

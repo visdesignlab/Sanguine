@@ -8,8 +8,8 @@ export class ChartStore {
     private _totalAggregatedCaseCount: number;
     private _totalIndividualCaseCount: number;
 
-    constructor(rootstore: RootStore) {
-        this.rootStore = rootstore;
+    constructor(rootStore: RootStore) {
+        this.rootStore = rootStore;
 
         this._totalAggregatedCaseCount = 0;
         this._totalIndividualCaseCount = 0;
