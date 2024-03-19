@@ -22,7 +22,7 @@ export type Props = OwnProps;
 const SingleStackedBar: FC<Props> = ({ howToTransform, dataPoint, showPotential, bandwidth, costMode, valueScaleDomain, valueScaleRange }: Props) => {
   const store = useContext(Store);
 
-  const { BloodProductCost } = store.state;
+  const { BloodProductCost } = store.provenanceState;
   const valueScale = useCallback(() => {
     const domain = JSON.parse(valueScaleDomain);
     const range = JSON.parse(valueScaleRange);

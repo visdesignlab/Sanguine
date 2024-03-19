@@ -34,7 +34,7 @@ const DumbbellChart: FC<Props> = ({ data, valueToVisualize, dimensionHeight, dim
     const [indicies, setIndicies] = useState([]);
 
     const store = useContext(Store);
-    const { currentSelectSet } = store.state;
+    const { currentSelectSet } = store.provenanceState;
 
     const currentOffset = OffsetDict.minimum;
     const svgSelection = select(svg.current);

@@ -7,7 +7,7 @@ import Store from "../../../Interfaces/Store";
 
 const SurgeryUrgencyChipGroup: FC = () => {
     const store = useContext(Store);
-    const { surgeryUrgencySelection } = store.state;
+    const { surgeryUrgencySelection } = store.provenanceState;
     return (<Box>
         <FilterChip size="small" label="Urgent" clickable color={surgeryUrgencySelection[0] ? "primary" : undefined}
             onClick={() => { store.configStore.changeSurgeryUrgencySelection([!surgeryUrgencySelection[0], surgeryUrgencySelection[1], surgeryUrgencySelection[2]]); }} />

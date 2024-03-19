@@ -29,7 +29,7 @@ export class RootStore {
         makeAutoObservable(this);
     }
 
-    get state () {
+    get provenanceState () {
         return this.provenance.getState(this.provenance.current);
     }
 
@@ -42,11 +42,11 @@ export class RootStore {
     }
 
     get proceduresSelection () {
-        return this.state.proceduresSelection;
+        return this.provenanceState.proceduresSelection;
     }
 
     get dateRange () {
-        return [timeFormat("%d-%b-%Y")(new Date(this.state.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(this.state.rawDateRange[1]))];
+        return [timeFormat("%d-%b-%Y")(new Date(this.provenanceState.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(this.provenanceState.rawDateRange[1]))];
     }
     get mainCompWidth () { return this._mainCompWidth; }
     set mainCompWidth (input: number) { this._mainCompWidth = input; }

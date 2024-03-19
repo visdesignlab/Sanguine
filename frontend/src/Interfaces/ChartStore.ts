@@ -44,7 +44,7 @@ export class ChartStore {
 
     removeChart (chartID: string) {
         this.provenance.apply(removeChart(chartID));
-        if (this.rootStore.state.layoutArray.length === 0) {
+        if (this.rootStore.provenanceState.layoutArray.length === 0) {
             this.totalAggregatedCaseCount = 0;
             this.totalIndividualCaseCount = 0;
         }

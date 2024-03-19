@@ -43,7 +43,7 @@ const StackedBarChart: FC<Props> = ({ outcomeComparison, caseCount, secondaryCas
     const [xVals, setXVals] = useState([]);
 
     useDeepCompareEffect(() => {
-        const [tempxVals, newCaseMax] = sortHelper(data, xAggregationOption, store.state.showZero, secondaryData);
+        const [tempxVals, newCaseMax] = sortHelper(data, xAggregationOption, store.provenanceState.showZero, secondaryData);
         stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
         setCaseMax(newCaseMax as number);
         // eslint-disable-next-line react-hooks/exhaustive-deps

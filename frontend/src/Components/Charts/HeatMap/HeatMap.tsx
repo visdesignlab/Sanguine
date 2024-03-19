@@ -46,11 +46,11 @@ const HeatMap: FC<Props> = ({ outcomeComparison, interventionDate, secondaryExtr
 
 
     useDeepCompareEffect(() => {
-        const [tempxVals, newCaseMax] = sortHelper(data, xAggregationOption, store.state.showZero, secondaryData);
+        const [tempxVals, newCaseMax] = sortHelper(data, xAggregationOption, store.provenanceState.showZero, secondaryData);
         stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
         setCaseMax(newCaseMax as number);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data, store.state.showZero, xAggregationOption, secondaryData]);
+    }, [data, store.provenanceState.showZero, xAggregationOption, secondaryData]);
 
     const aggregationScale = useCallback(() => {
         return AggregationScaleGenerator(xVals, dimensionHeight, currentOffset);
@@ -84,7 +84,7 @@ const HeatMap: FC<Props> = ({ outcomeComparison, interventionDate, secondaryExtr
             valueScaleRange={JSON.stringify(valueScale().range())}
             xAggregationOption={xAggregationOption} />
         <g className="legend" transform="translate(0,5)">
-            {outputGradientLegend(store.state.showZero, dimensionWidth)}
+            {outputGradientLegend(store.provenanceState.showZero, dimensionWidth)}
         </g>
 
         {secondaryData ? <ComparisonLegend

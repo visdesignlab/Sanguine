@@ -50,7 +50,7 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
             if (!(addingChartType === 4 && (!interventionDate))) {
                 const newChart: LayoutElement = {
                     aggregatedBy: xAggreSelection, valueToVisualize: yValueSelection,
-                    i: store.state.nextAddingIndex.toString(),
+                    i: store.provenanceState.nextAddingIndex.toString(),
                     w: 1,
                     h: 1,
                     x: 0,
@@ -149,8 +149,8 @@ const AddModeTopMenu: FC<Props> = ({ addingChartType }: Props) => {
                         inputFormat="MM/dd/yyyy"
                         renderInput={(params) => <TextField style={{ minWidth: '250px' }} variant="standard" {...params} />}
                         label="Comparison Date (Optional)"
-                        minDate={store.state.rawDateRange[0]}
-                        maxDate={store.state.rawDateRange[1]}
+                        minDate={store.provenanceState.rawDateRange[0]}
+                        maxDate={store.provenanceState.rawDateRange[1]}
                         disabled={outcomeComparisonSelection ? true : false}
                         value={interventionDate}
                         onChange={interventionHandler} />

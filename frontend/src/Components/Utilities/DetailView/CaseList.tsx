@@ -9,7 +9,7 @@ import { CaseListSubheader, UtilityContainer } from "../../../Presets/StyledComp
 const CaseList: FC = () => {
 
     const store = useContext(Store);
-    const { currentBrushedPatientGroup, currentSelectPatient } = store.state;
+    const { currentBrushedPatientGroup, currentSelectPatient } = store.provenanceState;
 
 
     return (<UtilityContainer style={{ height: "15vh", paddingTop: "0.5px" }} >

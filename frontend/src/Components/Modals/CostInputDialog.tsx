@@ -23,7 +23,7 @@ const CostInputDialog: FC<Props> = ({ bloodComponent, visible, setVisibility }: 
         <Dialog open={visible}>
             <DialogTitle>Change Cost for {bloodComponent}</DialogTitle>
             <DialogContent>
-                <DialogContentText>Current Cost for {bloodComponent} is ${store.state.BloodProductCost[bloodComponent]}</DialogContentText>
+                <DialogContentText>Current Cost for {bloodComponent} is ${store.provenanceState.BloodProductCost[bloodComponent]}</DialogContentText>
                 <TextField type="number" fullWidth label="New Cost" onChange={(e) => { setCostInput(parseInt(e.target.value)); }} value={costInput} />
             </DialogContent>
 

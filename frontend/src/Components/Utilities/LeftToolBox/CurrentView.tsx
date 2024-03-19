@@ -17,10 +17,10 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
     const generateSurgery = () => {
         let output: any[] = [];
-        if (store.state.proceduresSelection.length === 0) {
+        if (store.provenanceState.proceduresSelection.length === 0) {
             output.push(<span key={`all`}>All</span>);
         } else {
-            const procedureString = ProcedureStringGenerator(store.state.proceduresSelection).replace(/%20/g, " ");
+            const procedureString = ProcedureStringGenerator(store.provenanceState.proceduresSelection).replace(/%20/g, " ");
             const stringArray = procedureString.split(" ");
 
             stringArray.forEach((word, index) => {
@@ -50,7 +50,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
 
                     <ListItem alignItems="flex-start" style={{ width: "100%" }} key="Date">
                         <ListItemText primary="Date Range"
-                            secondary={`${timeFormat("%b %d, %Y")(new Date(store.state.rawDateRange[0]))} - ${timeFormat("%b %d, %Y")(new Date(store.state.rawDateRange[1]))}`} />
+                            secondary={`${timeFormat("%b %d, %Y")(new Date(store.provenanceState.rawDateRange[0]))} - ${timeFormat("%b %d, %Y")(new Date(store.provenanceState.rawDateRange[1]))}`} />
 
                     </ListItem>
 
@@ -61,7 +61,7 @@ const CurrentView: FC<Props> = ({ totalCaseNum }: Props) => {
                         ></ListItemText>
                         <ListItemSecondaryAction>
                             <Switch
-                                checked={store.state.showZero}
+                                checked={store.provenanceState.showZero}
                                 color="primary"
                                 onChange={(e) => { store.configStore.toggleShowZero(e.target.checked); }}
                             />

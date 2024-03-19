@@ -30,7 +30,7 @@ type Props = {
 const WrapperDumbbell: FC<Props> = ({ annotationText, xAggregationOption, chartId, layoutH, layoutW }) => {
     const hemoData = useContext(DataContext);
     const store = useContext(Store);
-    const { proceduresSelection, showZero, rawDateRange } = store.state;
+    const { proceduresSelection, showZero, rawDateRange } = store.provenanceState;
     const svgRef = useRef<SVGSVGElement>(null);
     const [width, setWidth] = useState(0);
     const [height, setHeight] = useState(0);

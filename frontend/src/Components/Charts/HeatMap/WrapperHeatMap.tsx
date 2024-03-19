@@ -35,7 +35,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
     const hemoData = useContext(DataContext);
     const store = useContext(Store);
 
-    const { surgeryUrgencySelection, rawDateRange, proceduresSelection } = store.state;
+    const { surgeryUrgencySelection, rawDateRange, proceduresSelection } = store.provenanceState;
     const svgRef = useRef<SVGSVGElement>(null);
     const [width, setWidth] = useState(0);
     const [height, setHeight] = useState(0);
@@ -109,16 +109,16 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
                 }
             // }
         });
-        const [caseCount, outputData] = generateRegularData(temporaryDataHolder, store.state.showZero, yValueOption);
-        const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, store.state.showZero, yValueOption);
+        const [caseCount, outputData] = generateRegularData(temporaryDataHolder, store.provenanceState.showZero, yValueOption);
+        const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, store.provenanceState.showZero, yValueOption);
         stateUpdateWrapperUseJSON(data, outputData, setData);
         stateUpdateWrapperUseJSON(secondaryData, secondOutputData, setSecondaryData);
         store.chartStore.totalAggregatedCaseCount = (caseCount as number) + (secondCaseCount as number);
         setCaseCount(caseCount as number);
         setSecondaryCaseCount(secondCaseCount as number);
-    }, [proceduresSelection, surgeryUrgencySelection, store.state.outcomeFilter,
+    }, [proceduresSelection, surgeryUrgencySelection, store.provenanceState.outcomeFilter,
         rawDateRange,
-        store.state.showZero,
+        store.provenanceState.showZero,
         xAggregationOption,
         yValueOption,
         outcomeComparison,

@@ -36,7 +36,7 @@ const WrapperCostBar: FC<Props> = ({ annotationText, extraPairArrayString, xAggr
     const store = useContext(Store);
     const hemoData = useContext(DataContext);
 
-    const { proceduresSelection, BloodProductCost, currentOutputFilterSet, rawDateRange } = store.state;
+    const { proceduresSelection, BloodProductCost, currentOutputFilterSet, rawDateRange } = store.provenanceState;
 
     const svgRef = useRef<SVGSVGElement>(null);
     const [data, setData] = useState<CostBarChartDataPoint[]>([]);

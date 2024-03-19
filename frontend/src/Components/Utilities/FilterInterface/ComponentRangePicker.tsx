@@ -14,7 +14,7 @@ type Props = {
 const ComponentRangePicker: FC<Props> = ({ label, isTestValue }: Props) => {
 
   const store = useContext(Store);
-  const { bloodComponentFilter, testValueFilter } = store.state;
+  const { bloodComponentFilter, testValueFilter } = store.provenanceState;
   const [rangeValue, setRangeValue] = useState<number[]>(
     [0, 0]);
 

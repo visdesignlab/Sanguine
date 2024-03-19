@@ -17,8 +17,8 @@ type Props = {
     bandwidth: number;
 };
 const SingleHeatRow: FC<Props> = ({ dataPoint, valueScaleDomain, valueScaleRange, howToTransform, bandwidth }: Props) => {
-
-    const { showZero } = useContext(Store).state;
+    const store = useContext(Store);
+    const { showZero } = store.provenanceState;
     const valueScale = useCallback(() => {
 
         return (ValueScaleGeneratorFromDomainRange(valueScaleDomain, valueScaleRange, true) as ScaleBand<string>);

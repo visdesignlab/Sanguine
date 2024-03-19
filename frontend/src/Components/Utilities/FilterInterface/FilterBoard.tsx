@@ -20,7 +20,7 @@ const FilterBoard: FC = () => {
 
     const store = useContext(Store);
 
-    const { rawDateRange, outcomeFilter, surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet, bloodComponentFilter, testValueFilter } = store.state;
+    const { rawDateRange, outcomeFilter, surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet, bloodComponentFilter, testValueFilter } = store.provenanceState;
     const [beginDate, setBeginDate] = useState<number | null>(rawDateRange[0]);
     const [endDate, setEndDate] = useState<number | null>(rawDateRange[1]);
 

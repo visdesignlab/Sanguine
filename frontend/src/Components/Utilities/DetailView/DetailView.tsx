@@ -8,7 +8,7 @@ import CaseList from "./CaseList";
 const DetailView: FC = () => {
 
   const store = useContext(Store);
-  const { currentBrushedPatientGroup } = store.state;
+  const { currentBrushedPatientGroup } = store.provenanceState;
 
   return (
     <div

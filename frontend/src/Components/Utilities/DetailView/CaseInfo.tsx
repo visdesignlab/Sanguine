@@ -14,7 +14,7 @@ const CaseInfo: FC = () => {
     const [individualInfo, setIndividualInfo] = useState<any>(null);
     const store = useContext(Store);
 
-    const { currentSelectPatient } = store.state;
+    const { currentSelectPatient } = store.provenanceState;
 
     const swapName = (key: string, value: any) => {
         if (store.configStore.nameDictionary[key] && store.configStore.privateMode) {
