@@ -1252,7 +1252,8 @@ def get_sanguine_surgery_cases(request):
             SELECT
                 VISIT_NO,
                 CASE WHEN SUM(CASE WHEN CODE IN ('I97.820', '997.02') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS STROKE,
-                CASE WHEN SUM(CASE WHEN CODE IN ('33952', '33954', '33956', '33958', '33962', '33964', '33966', '33973', '33974', '33975', '33976', '33977', '33978', '33979', '33980', '33981', '33982', '33983', '33984', '33986', '33987', '33988', '33989') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS ECMO
+                CASE WHEN SUM(CASE WHEN CODE IN ('33952', '33954', '33956', '33958', '33962', '33964', '33966', '33973', '33974', '33975', '33976', '33977', '33978', '33979', '33980', '33981', '33982', '33983', '33984', '33986', '33987', '33988', '33989') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS ECMO,
+                LISTAGG(CODE, ',') AS ALL_CODES
             FROM
                 BLOOD_PRODUCTS_DM.BLPD_SANGUINE_BILLING_CODES
             {filters_safe_sql}
@@ -1447,6 +1448,7 @@ def get_sanguine_surgery_cases(request):
             VST.PAT_EXPIRED AS DEATH,
             BLNG.ECMO,
             BLNG.STROKE,
+            BLNG.ALL_CODES,
             MEDS.TXA,
             MEDS.B12,
             MEDS.AMICAR,
