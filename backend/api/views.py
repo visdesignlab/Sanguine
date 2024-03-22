@@ -1227,6 +1227,8 @@ def get_sanguine_surgery_cases(request):
     if request.method == "GET":
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: get_sanguine_surgery_cases User: {request.user}")
 
+        filters, bind_names, filters_safe_sql = get_all_cpt_code_filters()
+
         # Get the data from the database
         command = f"""
         WITH TRANSFUSED_UNITS AS (
@@ -1253,6 +1255,7 @@ def get_sanguine_surgery_cases(request):
                 CASE WHEN SUM(CASE WHEN CODE IN ('33952', '33954', '33956', '33958', '33962', '33964', '33966', '33973', '33974', '33975', '33976', '33977', '33978', '33979', '33980', '33981', '33982', '33983', '33984', '33986', '33987', '33988', '33989') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS ECMO
             FROM
                 BLOOD_PRODUCTS_DM.BLPD_SANGUINE_BILLING_CODES
+            {filters_safe_sql}
             GROUP BY
                 VISIT_NO
         ),
@@ -1264,22 +1267,22 @@ def get_sanguine_surgery_cases(request):
                 CASE WHEN SUM(B12) > 0 THEN 1 ELSE 0 END AS B12
             FROM (
                 (SELECT 
-                  VISIT_NO,
-                  SUM(CASE WHEN MEDICATION_ID IN (31383, 310071, 301530) THEN 1 ELSE 0 END) AS TXA,
-                  SUM(CASE WHEN MEDICATION_ID IN (300167, 300168, 300725, 310033) THEN 1 ELSE 0 END) AS AMICAR,
-                  SUM(CASE WHEN MEDICATION_ID IN (800001, 59535, 400030, 5553, 23584, 73156, 23579, 23582) THEN 1 ELSE 0 END) AS B12
+                    VISIT_NO,
+                    SUM(CASE WHEN MEDICATION_ID IN (31383, 310071, 301530) THEN 1 ELSE 0 END) AS TXA,
+                    SUM(CASE WHEN MEDICATION_ID IN (300167, 300168, 300725, 310033) THEN 1 ELSE 0 END) AS AMICAR,
+                    SUM(CASE WHEN MEDICATION_ID IN (800001, 59535, 400030, 5553, 23584, 73156, 23579, 23582) THEN 1 ELSE 0 END) AS B12
                 FROM 
-                  BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_MEDS
+                    BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_MEDS
                 group by VISIT_NO
                 )
                 UNION ALL
                 (SELECT 
-                  VISIT_NO,
-                  SUM(CASE WHEN MEDICATION_ID IN (31383, 310071, 301530) THEN 1 ELSE 0 END) AS TXA,
-                  SUM(CASE WHEN MEDICATION_ID IN (300167, 300168, 300725, 310033) THEN 1 ELSE 0 END) AS AMICAR,
-                  SUM(CASE WHEN MEDICATION_ID IN (800001, 59535, 400030, 5553, 23584, 73156, 23579, 23582) THEN 1 ELSE 0 END) AS B12
+                    VISIT_NO,
+                    SUM(CASE WHEN MEDICATION_ID IN (31383, 310071, 301530) THEN 1 ELSE 0 END) AS TXA,
+                    SUM(CASE WHEN MEDICATION_ID IN (300167, 300168, 300725, 310033) THEN 1 ELSE 0 END) AS AMICAR,
+                    SUM(CASE WHEN MEDICATION_ID IN (800001, 59535, 400030, 5553, 23584, 73156, 23579, 23582) THEN 1 ELSE 0 END) AS B12
                 FROM 
-                  BLOOD_PRODUCTS_DM.BLPD_SANGUINE_EXTRAOP_MEDS
+                    BLOOD_PRODUCTS_DM.BLPD_SANGUINE_EXTRAOP_MEDS
                 group by VISIT_NO
                 )
                 ) INNER_MEDS
@@ -1362,63 +1365,63 @@ def get_sanguine_surgery_cases(request):
                 AND Z.DI_POSTOP_DRAW_DTM = LH4.LAB_DRAW_DTM
         ),
         HEMOGLOBIN AS (
-          SELECT
-              SC3.MRN,
-              SC3.CASE_ID,
-              SC3.VISIT_NO,
-              SC3.CASE_DATE,
-              EXTRACT (YEAR from SC3.CASE_DATE) YEAR,
-              EXTRACT (MONTH from SC3.CASE_DATE) AS MONTH,
-              SC3.SURGERY_START_DTM,
-              SC3.SURGERY_END_DTM,
-              SC3.SURGERY_ELAP,
-              SC3.SURGERY_TYPE_DESC,
-              SC3.SURGEON_PROV_ID,
-              SC3.ANESTH_PROV_ID,
-              SC3.PRIM_PROC_DESC,
-              SC3.POSTOP_ICU_LOS,
-              SC3.SCHED_SITE_DESC,
-              MAX(CASE
-                  WHEN PRE.DI_PREOP_DRAW_DTM IS NOT NULL
-                  THEN PRE.DI_PREOP_DRAW_DTM
-              END)
-              AS DI_PREOP_DRAW_DTM,
-              MAX(CASE
-                  WHEN PRE.RESULT_VALUE IS NOT NULL
-                  THEN PRE.RESULT_VALUE
-              END)
-              AS PREOP_HEMO,
-              MAX(CASE
-                  WHEN POST.DI_POSTOP_DRAW_DTM IS NOT NULL
-                  THEN POST.DI_POSTOP_DRAW_DTM
-              END)
-              AS DI_POSTOP_DRAW_DTM,
-              MAX(CASE
-                  WHEN POST.RESULT_VALUE IS NOT NULL
-                  THEN POST.RESULT_VALUE
-              END)
-              AS POSTOP_HEMO
-          FROM
-              BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE SC3
-          LEFT OUTER JOIN PREOP_HB PRE
-              ON SC3.CASE_ID = PRE.CASE_ID
-          LEFT OUTER JOIN POSTOP_HB POST
-              ON SC3.CASE_ID = POST.CASE_ID
-          GROUP BY SC3.MRN,
-              SC3.CASE_ID,
-              SC3.VISIT_NO,
-              SC3.CASE_DATE,
-              EXTRACT (YEAR from SC3.CASE_DATE),
-              EXTRACT (MONTH from SC3.CASE_DATE),
-              SC3.SURGERY_START_DTM,
-              SC3.SURGERY_END_DTM,
-              SC3.SURGERY_ELAP,
-              SC3.SURGERY_TYPE_DESC,
-              SC3.SURGEON_PROV_ID,
-              SC3.ANESTH_PROV_ID,
-              SC3.PRIM_PROC_DESC,
-              SC3.POSTOP_ICU_LOS,
-              SC3.SCHED_SITE_DESC
+            SELECT
+                SC3.MRN,
+                SC3.CASE_ID,
+                SC3.VISIT_NO,
+                SC3.CASE_DATE,
+                EXTRACT (YEAR from SC3.CASE_DATE) YEAR,
+                EXTRACT (MONTH from SC3.CASE_DATE) AS MONTH,
+                SC3.SURGERY_START_DTM,
+                SC3.SURGERY_END_DTM,
+                SC3.SURGERY_ELAP,
+                SC3.SURGERY_TYPE_DESC,
+                SC3.SURGEON_PROV_ID,
+                SC3.ANESTH_PROV_ID,
+                SC3.PRIM_PROC_DESC,
+                SC3.POSTOP_ICU_LOS,
+                SC3.SCHED_SITE_DESC,
+                MAX(CASE
+                    WHEN PRE.DI_PREOP_DRAW_DTM IS NOT NULL
+                    THEN PRE.DI_PREOP_DRAW_DTM
+                END)
+                AS DI_PREOP_DRAW_DTM,
+                MAX(CASE
+                    WHEN PRE.RESULT_VALUE IS NOT NULL
+                    THEN PRE.RESULT_VALUE
+                END)
+                AS PREOP_HEMO,
+                MAX(CASE
+                    WHEN POST.DI_POSTOP_DRAW_DTM IS NOT NULL
+                    THEN POST.DI_POSTOP_DRAW_DTM
+                END)
+                AS DI_POSTOP_DRAW_DTM,
+                MAX(CASE
+                    WHEN POST.RESULT_VALUE IS NOT NULL
+                    THEN POST.RESULT_VALUE
+                END)
+                AS POSTOP_HEMO
+            FROM
+                BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE SC3
+            LEFT OUTER JOIN PREOP_HB PRE
+                ON SC3.CASE_ID = PRE.CASE_ID
+            LEFT OUTER JOIN POSTOP_HB POST
+                ON SC3.CASE_ID = POST.CASE_ID
+            GROUP BY SC3.MRN,
+                SC3.CASE_ID,
+                SC3.VISIT_NO,
+                SC3.CASE_DATE,
+                EXTRACT (YEAR from SC3.CASE_DATE),
+                EXTRACT (MONTH from SC3.CASE_DATE),
+                SC3.SURGERY_START_DTM,
+                SC3.SURGERY_END_DTM,
+                SC3.SURGERY_ELAP,
+                SC3.SURGERY_TYPE_DESC,
+                SC3.SURGEON_PROV_ID,
+                SC3.ANESTH_PROV_ID,
+                SC3.PRIM_PROC_DESC,
+                SC3.POSTOP_ICU_LOS,
+                SC3.SCHED_SITE_DESC
         )
 
 
@@ -1450,19 +1453,22 @@ def get_sanguine_surgery_cases(request):
             SURG.SURGERY_TYPE_DESC
         FROM
             BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE SURG
+        INNER JOIN BILLING_CODES BLNG
+            ON SURG.VISIT_NO = BLNG.VISIT_NO
         LEFT JOIN TRANSFUSED_UNITS T
             ON SURG.CASE_ID = T.CASE_ID
         LEFT JOIN BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT VST
             ON SURG.VISIT_NO = VST.VISIT_NO
-        LEFT JOIN BILLING_CODES BLNG
-            ON SURG.VISIT_NO = BLNG.VISIT_NO
         LEFT JOIN MEDS
             ON SURG.VISIT_NO = MEDS.VISIT_NO
         LEFT JOIN HEMOGLOBIN HGB
             ON SURG.CASE_ID = HGB.CASE_ID
         """
 
-        result = execute_sql_dict(command)
+        result = execute_sql_dict(
+            command,
+            **dict(zip(bind_names, filters))
+        )
 
         return JsonResponse({'result': result})
 
