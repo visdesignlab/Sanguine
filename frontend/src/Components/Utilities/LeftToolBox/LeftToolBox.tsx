@@ -45,7 +45,7 @@ const LeftToolBox: FC = () => {
         return {
           procedureName: procedureInput.procedureName,
           count: procedureInput.count,
-          codes: procedureInput.codes,
+          codes: procedureInput.procedureCodes,
           overlapList: procedureOverlapList,
         };
       });
