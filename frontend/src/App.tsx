@@ -99,8 +99,6 @@ const App: FC = () => {
         throw new Error("There was an issue fetching data. No results were returned.");
       }
 
-      store.provenanceState.rawDateRange = [minDate, maxDate];
-
       const nameDictFetch = await fetch(`${process.env.REACT_APP_QUERY_URL}surgeon_anest_names`);
       const nameDict = await nameDictFetch.json();
       store.configStore.updateNameDictionary(nameDict);

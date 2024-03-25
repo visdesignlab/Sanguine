@@ -9,7 +9,7 @@ export const defaultState: ApplicationState = {
     layoutArray: [],
     surgeryUrgencySelection: [true, true, true],
     outcomeFilter: [],
-    rawDateRange: [new Date(2022, 0, 1).getTime(), today.getTime()],
+    rawDateRange: [new Date(2018, 2, 6).getTime(), today.getTime()],
     proceduresSelection: [],
     totalAggregatedCaseCount: 0,
     totalIndividualCaseCount: 0,

@@ -93,10 +93,10 @@ const FilterBoard: FC = () => {
                                 inputFormat="MM/dd/yyyy"
                                 value={beginDate}
                                 renderInput={(params) => <TextField variant="standard" {...params} />}
-                                onChange={(d) => {
+                                onChange={(d: Date | null) => {
                                     if (d) {
-                                        setBeginDate(d);
-                                        store.configStore.dateRangeChange([d, rawDateRange[1]]);
+                                        setBeginDate(d.getTime());
+                                        store.configStore.dateRangeChange([d.getTime(), rawDateRange[1]]);
                                     } else {
                                         setBeginDate(rawDateRange[0]);
                                     }
@@ -110,10 +110,10 @@ const FilterBoard: FC = () => {
                                 inputFormat="MM/dd/yyyy"
                                 value={endDate}
                                 renderInput={(params) => <TextField variant="standard" {...params} />}
-                                onChange={(d) => {
+                                onChange={(d: Date | null) => {
                                     if (d) {
-                                        setEndDate(d);
-                                        store.configStore.dateRangeChange([rawDateRange[0], d]);
+                                        setEndDate(d.getTime());
+                                        store.configStore.dateRangeChange([rawDateRange[0], d.getTime()]);
                                     } else {
                                         setEndDate(rawDateRange[1]);
                                     }
