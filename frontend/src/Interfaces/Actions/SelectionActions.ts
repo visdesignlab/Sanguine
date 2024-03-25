@@ -19,6 +19,7 @@ export const updateProcedureSelection = createAction<ApplicationState, [Procedur
             state.proceduresSelection = state.proceduresSelection.concat([{
                 procedureName: parentProcedure,
                 count: 1,
+                codes: [],
                 overlapList: [newProcedureSelection]
             }]);
         } else {
@@ -44,7 +45,7 @@ export const updateProcedureSelection = createAction<ApplicationState, [Procedur
             state.proceduresSelection = state.proceduresSelection.filter(d => d.procedureName !== newProcedureSelection.procedureName);
         }
         else {
-            state.proceduresSelection.push({ procedureName: newProcedureSelection.procedureName, count: newProcedureSelection.count, overlapList: [] });
+            state.proceduresSelection.push({ ...newProcedureSelection, overlapList: [] });
         }
     }
 }).setLabel("updateProcedureSelection");

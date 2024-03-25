@@ -21,43 +21,44 @@ const LeftToolBox: FC = () => {
   };
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_QUERY_URL}get_procedure_counts`)
-      .then(response => response.json())
-      .then(function (data) {
-        //Process the result into the data type required.
-        const result = data.result.map((procedureInput: any) => {
-          const procedureOverlapList = Object.keys(procedureInput.overlapList).map(subProcedureName => {
-            return {
-              procedureName: subProcedureName,
-              count: procedureInput.overlapList[subProcedureName],
-            };
-          });
-          procedureOverlapList.sort((a: ProcedureEntry, b: ProcedureEntry) => {
-            if (a.procedureName.includes('Only')) {
-              return -1;
-            } else if (b.procedureName.includes('Only')) {
-              return 1;
-            }
+    async function fetchData() {
+      const procedureFetch = await fetch(`${process.env.REACT_APP_QUERY_URL}get_procedure_counts`);
+      const procedureInput = await procedureFetch.json();
 
-            return b.count - a.count;
-          });
+      // Process the result into the data type required.
+      const result = procedureInput.result.map((procedureInput: any) => {
+        const procedureOverlapList = Object.keys(procedureInput.overlapList).map(subProcedureName => {
           return {
-            procedureName: procedureInput.procedureName,
-            count: procedureInput.count,
-            overlapList: procedureOverlapList
+            procedureName: subProcedureName,
+            count: procedureInput.overlapList[subProcedureName],
           };
         });
-        let tempSurgeryList: ProcedureEntry[] = result;
-        let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
+        procedureOverlapList.sort((a, b) => {
+          if (a.procedureName.includes('Only')) {
+            return -1;
+          } else if (b.procedureName.includes('Only')) {
+            return 1;
+          }
 
-        tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
-        setMaxCaseCount(tempMaxCaseCount);
-        tempSurgeryList.sort((a: ProcedureEntry, b: ProcedureEntry) => b.count - a.count);
-
-        stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList);
-      }).catch(r => {
-        console.log("failed to fetch required data");
+          return b.count - a.count;
+        });
+        return {
+          procedureName: procedureInput.procedureName,
+          count: procedureInput.count,
+          codes: procedureInput.codes,
+          overlapList: procedureOverlapList,
+        };
       });
+      let tempSurgeryList: ProcedureEntry[] = result;
+      let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
+
+      tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
+      setMaxCaseCount(tempMaxCaseCount);
+      tempSurgeryList.sort((a: ProcedureEntry, b: ProcedureEntry) => b.count - a.count);
+
+      stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList);
+    }
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
