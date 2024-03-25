@@ -77,6 +77,16 @@ export class RootStore {
         return !this.provenanceState.currentSelectPatientGroup.some((patient) => patient.CASE_ID === d.CASE_ID);
       }
 
+      // Blood filters (transfusions and tests)
+      const bloodFiltered = Object.entries(this.provenanceState.bloodFilter)
+        .some(([bloodComponent, range]) => {
+          const patientValue = d[bloodComponent] as number;
+          return patientValue < range[0] || patientValue > range[1];
+        });
+      if (bloodFiltered) {
+        return false;
+      }
+
       // Chart selection filters
 
       // Procedure filters
@@ -86,6 +96,24 @@ export class RootStore {
 
       return true;
     });
+  }
+
+  get filterRange() {
+    const filterRange: Record<string, [number, number]> = {
+      PRBC_UNITS: [0, 0],
+      FFP_UNITS: [0, 0],
+      PLT_UNITS: [0, 0],
+      CRYO_UNITS: [0, 0],
+      CELL_SAVER_ML: [0, 0],
+      PREOP_HEMO: [0, 0],
+      POSTOP_HEMO: [0, 0],
+    };
+    this.allCases.forEach((d) => {
+      Object.keys(filterRange).forEach((key) => {
+        filterRange[key][1] = Math.max(d[key] as number, filterRange[key][1]);
+      });
+    });
+    return filterRange;
   }
 
   get dateRange() {

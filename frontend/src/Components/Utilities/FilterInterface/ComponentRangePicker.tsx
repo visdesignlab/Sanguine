@@ -14,40 +14,32 @@ type Props = {
 const ComponentRangePicker: FC<Props> = ({ label, isTestValue }: Props) => {
 
   const store = useContext(Store);
-  const { bloodComponentFilter, testValueFilter } = store.provenanceState;
-  const [rangeValue, setRangeValue] = useState<number[]>(
-    [0, 0]);
+  const { bloodFilter } = store.provenanceState;
+  const [rangeValue, setRangeValue] = useState<number[]>([0, 0]);
+
 
 
   useDeepCompareEffect(() => {
-    if (isTestValue) {
-      if (testValueFilter[label][1] === ManualInfinity) {
-        setRangeValue([testValueFilter[label][0], store.configStore.filterRange[label]]);
-      } else {
-        setRangeValue([testValueFilter[label][0], testValueFilter[label][1]]);
-      }
+    if (bloodFilter[label][1] === ManualInfinity) {
+      setRangeValue([bloodFilter[label][0], store.filterRange[label][1]]);
     } else {
-      if (bloodComponentFilter[label][1] === ManualInfinity) {
-        setRangeValue([bloodComponentFilter[label][0], store.configStore.filterRange[label]]);
-      } else {
-        setRangeValue([bloodComponentFilter[label][0], bloodComponentFilter[label][1]]);
-      }
+      setRangeValue([bloodFilter[label][0], bloodFilter[label][1]]);
     }
-  }, [store.configStore.filterRange, bloodComponentFilter, testValueFilter]);
+  }, [store.filterRange, bloodFilter]);
 
   return (
     <ListItem>
       <ListItemText primary={AcronymDictionary[label] ? AcronymDictionary[label] : label} secondary={<Slider
-        max={store.configStore.filterRange[label]}
-        min={0}
+        max={store.filterRange[label][1]}
+        min={store.filterRange[label][0]}
         marks={[
           {
-            value: 0,
-            label: 0,
+            value: store.filterRange[label][0],
+            label: store.filterRange[label][0],
           },
           {
-            value: store.configStore.filterRange[label],
-            label: store.configStore.filterRange[label],
+            value: store.filterRange[label][1],
+            label: store.filterRange[label][1],
           }
         ]}
         valueLabelDisplay="auto"
@@ -56,9 +48,9 @@ const ComponentRangePicker: FC<Props> = ({ label, isTestValue }: Props) => {
         step={isTestValue ? 0.1 : (label === "CELL_SAVER_ML" ? 1000 : undefined)}
         onChangeCommitted={(e, nV) => {
           if (isTestValue) {
-            store.configStore.changeTestValueFilter(label, (nV as number[]));
+            store.configStore.changeBloodFilter(label, (nV as [number, number]));
           } else {
-            store.configStore.changeBloodFilter(label, (nV as number[]));
+            store.configStore.changeBloodFilter(label, (nV as [number, number]));
           }
         }}
         onChange={(e, nV) => {

@@ -27,16 +27,14 @@ export const defaultState: ApplicationState = {
         CELL_SAVER_ML: 300,
     },
     currentSelectPatient: null,
-    bloodComponentFilter: {
+    bloodFilter: {
         PRBC_UNITS: [0, ManualInfinity],
         FFP_UNITS: [0, ManualInfinity],
         CRYO_UNITS: [0, ManualInfinity],
         PLT_UNITS: [0, ManualInfinity],
         CELL_SAVER_ML: [0, ManualInfinity],
-    },
-    testValueFilter: {
         PREOP_HEMO: [0, ManualInfinity],
-        POSTOP_HEMO: [0, ManualInfinity]
+        POSTOP_HEMO: [0, ManualInfinity],
     },
     allCases: [],
     setAllCases: (input: any) => { },
