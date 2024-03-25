@@ -60,7 +60,7 @@ export type SingleCasePoint = {
     B12: number;
     TXA: number;
     AMICAR: number;
-    SURGERY_TYPE_DESC: 'Urgent' | 'Elective' | 'Emergent' | 'Unknown';
+    SURGERY_TYPE_DESC: 'Urgent' | 'Elective' | 'Emergent';
     [key: string]: number | string;
 };
 export type ScatterDataPoint = {
