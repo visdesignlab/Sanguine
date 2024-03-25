@@ -232,7 +232,7 @@ def get_procedure_counts(request):
         # Combine the raw count with co-occurrences
         combined_counts = [{
             "procedureName": proc_name,
-            "procedureCodes": [key for key,val in cpt_codes_csv.items() if val == proc_name],
+            "procedureCodes": [key for key,val in mapping.items() if val == proc_name],
             "count": total_counts[proc_name],
             "overlapList": {
                 **co_occur_counts[proc_name],
