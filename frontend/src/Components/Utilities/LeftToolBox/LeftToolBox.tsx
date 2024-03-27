@@ -23,7 +23,7 @@ const LeftToolBox: FC = () => {
   useEffect(() => {
     async function fetchData() {
       const procedureFetch = await fetch(`${process.env.REACT_APP_QUERY_URL}get_procedure_counts`);
-      const procedureInput = await procedureFetch.json();
+      const procedureInput = await procedureFetch.json() as { result: { procedureName: string, procedureCodes: string, count: number, overlapList: { [key: string]: number } }[] };
 
       // Process the result into the data type required.
       const result = procedureInput.result.map((procedure: any) => {
