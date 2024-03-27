@@ -87,7 +87,7 @@ export class RootStore {
 
       // Procedure filters
       const patientCodes = d.ALL_CODES.split(',');
-      const procedureFiltered = !this.proceduresSelection.every((procedure) => {
+      const procedureFiltered = !this.provenanceState.proceduresSelection.every((procedure) => {
         if (procedure.overlapList && procedure.overlapList.length > 0) {
           // If we're here, then we have a multiple procedures
           // Check for "only procedure"
