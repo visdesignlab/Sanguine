@@ -19,7 +19,7 @@ export class SelectionStore {
         this.provenance.apply(updateSelectedPatientGroup(caseList));
     }
 
-    updateProcedureSelection(newProcedures: ProcedureEntry, removing: boolean, parentProcedure?: string) {
+    updateProcedureSelection(newProcedures: ProcedureEntry, removing: boolean, parentProcedure?: ProcedureEntry) {
         this.provenance.apply(updateProcedureSelection(newProcedures, removing, parentProcedure));
     }
 

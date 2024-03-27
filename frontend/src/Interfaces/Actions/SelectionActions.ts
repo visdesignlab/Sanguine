@@ -10,35 +10,28 @@ export const updateSelectedPatientGroup = createAction<ApplicationState, [Single
 }).setLabel("updatePatientGroup");
 
 // "removing" only applies to parent procedure
-export const updateProcedureSelection = createAction<ApplicationState, [ProcedureEntry, boolean, string?], ActionEvents>((state, newProcedureSelection, removing, parentProcedure?) => {
+export const updateProcedureSelection = createAction<ApplicationState, [ProcedureEntry, boolean, ProcedureEntry?], ActionEvents>((state, newProcedureSelection, removing, parentProcedureSelection?) => {
     // if there is a parentProcedure, then this parent procedure must be already selected
-    if (parentProcedure) {
+    if (parentProcedureSelection) {
         // find the parent procedure
-        //the parent procedure doesn't exist yet, need to add it with the subprocedure
-        if (state.proceduresSelection.filter(d => d.procedureName === parentProcedure).length === 0) {
-            state.proceduresSelection = state.proceduresSelection.concat([{
-                procedureName: parentProcedure,
-                count: 1,
-                codes: [],
-                overlapList: [newProcedureSelection]
-            }]);
+        let parentProcedure = state.proceduresSelection.find(d => d.procedureName === parentProcedureSelection.procedureName);
+        if (!parentProcedure) {
+            parentProcedure = structuredClone(parentProcedureSelection);
+            parentProcedure!.overlapList = [{
+                procedureName: newProcedureSelection.procedureName,
+                count: newProcedureSelection.count,
+                codes: newProcedureSelection.codes,
+            }];
+            state.proceduresSelection.push(parentProcedure!);
+        } else if (removing) {
+            parentProcedure.overlapList = parentProcedure.overlapList!.filter(d => d.procedureName !== newProcedureSelection.procedureName);
         } else {
-            const overlapList = state.proceduresSelection.filter(d => d.procedureName === parentProcedure)[0].overlapList;
-            if (overlapList) {
-                if (overlapList.filter(d => d.procedureName === newProcedureSelection.procedureName).length > 0) {
-                    // this procedure was selected, we need to remove it
-                    state.proceduresSelection.filter(d => d.procedureName === parentProcedure)[0].overlapList = overlapList.filter(d => d.procedureName !== newProcedureSelection.procedureName);
-                } else {
-                    // this procedure wasn't selected, add it.
-
-                    state.proceduresSelection.filter(d => d.procedureName === parentProcedure)[0].overlapList?.push(newProcedureSelection);
-                }
-            }
+            parentProcedure.overlapList = (parentProcedure.overlapList || []).concat([{
+                procedureName: newProcedureSelection.procedureName,
+                count: newProcedureSelection.count,
+                codes: newProcedureSelection.codes,
+            }]);
         }
-        // const procedureExist = parentProcedureItem.
-    }
-    else if (removing && state.proceduresSelection.filter(d => d.procedureName === newProcedureSelection.procedureName)[0].overlapList!.length > 0) {
-        state.proceduresSelection.filter(d => d.procedureName === newProcedureSelection.procedureName)[0].overlapList = [];
     }
     else {
         if (removing) {

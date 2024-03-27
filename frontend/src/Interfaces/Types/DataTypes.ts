@@ -1,6 +1,7 @@
 export type ProcedureEntry = {
     procedureName: string;
     count: number;
+    codes: string[];
     overlapList?: ProcedureEntry[];
 };
 
@@ -61,7 +62,8 @@ export type SingleCasePoint = {
     TXA: number;
     AMICAR: number;
     SURGERY_TYPE_DESC: 'Urgent' | 'Elective' | 'Emergent';
-    [key: string]: number | string;
+    ALL_CODES: string;
+    [key: string]: string|number;
 };
 export type ScatterDataPoint = {
     xVal: number;

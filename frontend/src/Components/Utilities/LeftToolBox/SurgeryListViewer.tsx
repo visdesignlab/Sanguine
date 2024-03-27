@@ -120,7 +120,7 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
                                     isSelected={findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName)}
                                     isSubSurgery={true}
                                     highlighted={findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName)}
-                                    parentSurgery={listItem.procedureName}
+                                    parentSurgery={listItem}
                                     caseScaleDomain={JSON.stringify(caseScale().domain())}
                                     width={width}
                                     caseScaleRange={JSON.stringify(caseScale().range())} />;
@@ -162,7 +162,7 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
                                     setExpandedList={setExpandedList}
                                     isSubSurgery={true}
                                     highlighted={false}
-                                    parentSurgery={listItem.procedureName}
+                                    parentSurgery={listItem}
                                     caseScaleDomain={JSON.stringify(caseScale().domain())}
                                     width={width}
                                     caseScaleRange={JSON.stringify(caseScale().range())} />;

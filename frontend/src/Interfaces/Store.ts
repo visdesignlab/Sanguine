@@ -90,9 +90,25 @@ export class RootStore {
       // Chart selection filters
 
       // Procedure filters
-      // if (this.proceduresSelection) {
+      const patientCodes = d.ALL_CODES.split(',');
+      const procedureFiltered = !this.proceduresSelection.every((procedure) => {
+        if (procedure.overlapList && procedure.overlapList.length > 0) {
+          // If we're here, then we have a multiple procedures
+          // Check for "only procedure"
+          if (procedure.overlapList.some((subProcedure) => subProcedure.procedureName.includes('Only'))) {
+            return patientCodes.every((code) => procedure.codes.includes(code));
+          }
 
-      // }
+          return procedure.codes.some((code) => patientCodes.includes(code))
+            && procedure.overlapList.every((subProcedure) => subProcedure.codes.some((code) => patientCodes.includes(code)));
+        } else {
+          // If we're here, then we have a single procedure
+          return procedure.codes.some((code) => patientCodes.includes(code));
+        }
+      });
+      if (procedureFiltered) {
+        return false;
+      }
 
       return true;
     });
