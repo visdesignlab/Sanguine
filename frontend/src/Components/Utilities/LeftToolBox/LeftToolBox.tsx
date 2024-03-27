@@ -26,11 +26,12 @@ const LeftToolBox: FC = () => {
       const procedureInput = await procedureFetch.json();
 
       // Process the result into the data type required.
-      const result = procedureInput.result.map((procedureInput: any) => {
-        const procedureOverlapList = Object.keys(procedureInput.overlapList).map(subProcedureName => {
+      const result = procedureInput.result.map((procedure: any) => {
+        const procedureOverlapList = Object.keys(procedure.overlapList).map(subProcedureName => {
           return {
             procedureName: subProcedureName,
-            count: procedureInput.overlapList[subProcedureName],
+            count: procedure.overlapList[subProcedureName],
+            codes: procedureInput.result.find((p) => p.procedureName === subProcedureName)?.procedureCodes || []
           };
         });
         procedureOverlapList.sort((a, b) => {
@@ -43,16 +44,16 @@ const LeftToolBox: FC = () => {
           return b.count - a.count;
         });
         return {
-          procedureName: procedureInput.procedureName,
-          count: procedureInput.count,
-          codes: procedureInput.procedureCodes,
+          procedureName: procedure.procedureName,
+          count: procedure.count,
+          codes: procedure.procedureCodes,
           overlapList: procedureOverlapList,
         };
       });
       let tempSurgeryList: ProcedureEntry[] = result;
       let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
 
-      tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
+      tempMaxCaseCount *= 1.1;
       setMaxCaseCount(tempMaxCaseCount);
       tempSurgeryList.sort((a: ProcedureEntry, b: ProcedureEntry) => b.count - a.count);
 

@@ -49,10 +49,6 @@ export class RootStore {
     return this.provenance.current.children.length === 0;
   }
 
-  get proceduresSelection() {
-    return this.provenanceState.proceduresSelection;
-  }
-
   get allCases() {
     return this._allCases;
   }
