@@ -70,7 +70,7 @@ export class RootStore {
         return false;
       }
       if (this.provenanceState.currentSelectPatientGroup.length > 0) {
-        return !this.provenanceState.currentSelectPatientGroup.some((patient) => patient.CASE_ID === d.CASE_ID);
+        return this.provenanceState.currentSelectPatientGroup.some((patient) => patient.CASE_ID === d.CASE_ID);
       }
 
       // Blood filters (transfusions and tests)
