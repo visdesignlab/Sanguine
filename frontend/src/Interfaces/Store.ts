@@ -69,8 +69,18 @@ export class RootStore {
       if (!this.provenanceState.surgeryUrgencySelection[SurgeryUrgencyArray.indexOf(d.SURGERY_TYPE_DESC)]) {
         return false;
       }
-      if (this.provenanceState.currentSelectPatientGroup.length > 0) {
-        return this.provenanceState.currentSelectPatientGroup.some((patient) => patient.CASE_ID === d.CASE_ID);
+
+      if (
+        this.provenanceState.currentSelectPatientGroup.length > 0
+        && !this.provenanceState.currentSelectPatientGroup.some((patient) => patient.CASE_ID === d.CASE_ID)
+      ) {
+        return false;
+      }
+      if (
+        this.provenanceState.currentOutputFilterSet.length > 0
+        && !this.provenanceState.currentOutputFilterSet.some((output) => output.setValues.includes(`${d[output.setName]}`))
+      ) {
+        return false;
       }
 
       // Blood filters (transfusions and tests)
