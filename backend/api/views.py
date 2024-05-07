@@ -292,8 +292,8 @@ def fetch_surgery(request):
         cpts = cpt()
         data = execute_sql_dict(command=command, id=case_id)
         for row in data:
-            row["cpt"] = list(set([cpt[2] for cpt in cpts if cpt[1] in row["codes"]]))
-            del row["codes"]
+            row["cpt"] = list(set([cpt[2] for cpt in cpts if cpt[1] in row["CODES"]]))
+            del row["CODES"]
 
         return JsonResponse({"result": data})
     else:
