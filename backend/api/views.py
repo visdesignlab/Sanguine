@@ -148,7 +148,7 @@ logging.basicConfig(
 def execute_sql(command, *args, **kwargs):
     with connections['hospital'].cursor() as cursor:
         cursor.execute(command, kwargs)
-        return cursor.fetchall()
+        return cursor.fetchall(), cursor.description
 
 
 def execute_sql_dict(command, *args, **kwargs):
@@ -208,7 +208,7 @@ def get_procedure_counts(request):
             execute_sql(
                 command,
                 **dict(zip(bind_names, filters))
-            )
+            )[0]
         )
 
         # Make co-occurrences list
@@ -289,10 +289,10 @@ def fetch_surgery(request):
         INNER JOIN codes ON surg_cases.comb = codes.comb
         """
 
-        result = execute_sql(command, id=case_id)
+        result, description = execute_sql(command, id=case_id)
         data_dict = data_dictionary()
         data = [
-            dict(zip([data_dict[key[0]] for key in result.description[1:]] + ["cpt"], list(row[1:]) + [[]]))
+            dict(zip([data_dict[key[0]] for key in description[1:]] + ["cpt"], list(row[1:]) + [[]]))
             for row in result
         ]
 
@@ -338,10 +338,10 @@ def fetch_patient(request):
         WHERE PATIENT.{FIELDS_IN_USE.get('patient_id')} = :id
         """
 
-        result = execute_sql(command, id=patient_id)
+        result, description = execute_sql(command, id=patient_id)
         data_dict = data_dictionary()
         data = [
-            dict(zip([data_dict[key[0]] for key in result.description], row))
+            dict(zip([data_dict[key[0]] for key in description], row))
             for row in result
         ]
 
@@ -530,7 +530,7 @@ def request_transfused_units(request):
         """
 
         # Execute the query
-        result = execute_sql(
+        result, description = execute_sql(
             command,
             **dict(
                 zip(pat_bind_names + case_bind_names,
@@ -615,7 +615,7 @@ def risk_score(request):
             {pat_filters_safe_sql}
         """
 
-        result = execute_sql(
+        result, description = execute_sql(
             command,
             **dict(zip(pat_bind_names, patient_ids))
         )
@@ -785,7 +785,7 @@ def patient_outcomes(request):
         #     {pat_filters_safe_sql}
         # """
 
-        result = execute_sql(
+        result, description = execute_sql(
             command,
             **dict(zip(pat_bind_names, patient_ids))
         )
@@ -955,7 +955,7 @@ def hemoglobin(request):
             SC3.{FIELDS_IN_USE.get('sched_site_desc')}
         """
 
-        result = execute_sql(command)
+        result, description = execute_sql(command)
 
         items = [{
             "CASE_ID": row[1],
@@ -1468,7 +1468,7 @@ def get_sanguine_surgery_cases(request):
             ON SURG.CASE_ID = HGB.CASE_ID
         """
 
-        result = execute_sql_dict(
+        result, description = execute_sql_dict(
             command,
             **dict(zip(bind_names, filters))
         )
