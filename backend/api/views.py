@@ -284,24 +284,16 @@ def fetch_surgery(request):
                 FROM {TABLES_IN_USE.get('surgery_case')} SURG
                 WHERE SURG.{FIELDS_IN_USE.get('case_id')} = :id
             )
-        SELECT surg_cases.*, codes.codes
+        SELECT surg_cases.*, codes.codes as codes
         FROM surg_cases
         INNER JOIN codes ON surg_cases.comb = codes.comb
         """
 
-        result, description = execute_sql(command, id=case_id)
-        data_dict = data_dictionary()
-        data = [
-            dict(zip([data_dict[key[0]] for key in description[1:]] + ["cpt"], list(row[1:]) + [[]]))
-            for row in result
-        ]
-
         cpts = cpt()
-        cleaned_cpt = list(set([cpt[2] for cpt in cpts if cpt[1] in data[0]["CODES"]]))
-
-        # cleaned_cpt[0][2] since we want the first cpt that matched the description and the third field from the cpt table
-        data[0]["cpt"] = cleaned_cpt if cleaned_cpt else []
-        del data[0]["CODES"]
+        data = execute_sql_dict(command=command, id=case_id)
+        for row in data:
+            row["cpt"] = list(set([cpt[2] for cpt in cpts if cpt[1] in row["codes"]]))
+            del row["codes"]
 
         return JsonResponse({"result": data})
     else:
@@ -338,12 +330,7 @@ def fetch_patient(request):
         WHERE PATIENT.{FIELDS_IN_USE.get('patient_id')} = :id
         """
 
-        result, description = execute_sql(command, id=patient_id)
-        data_dict = data_dictionary()
-        data = [
-            dict(zip([data_dict[key[0]] for key in description], row))
-            for row in result
-        ]
+        data = execute_sql_dict(command=command, id=patient_id)
 
         return JsonResponse({"result": data})
     else:
