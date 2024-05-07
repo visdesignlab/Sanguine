@@ -1,6 +1,7 @@
 export type ProcedureEntry = {
     procedureName: string;
     count: number;
+    codes: string[];
     overlapList?: ProcedureEntry[];
 };
 
@@ -36,32 +37,33 @@ export type HeatMapDataPoint = BasicAggregatedDatePoint & {
 };
 
 export type SingleCasePoint = {
-    VISIT_ID: number;
+    VISIT_NO: number;
     CASE_ID: number;
-    PATIENT_ID: number;
+    MRN: number;
     YEAR: number;
-    SURGEON_ID: number;
+    SURGEON_PROV_ID: string;
     CRYO_UNITS: number;
     DEATH: number;
-    ANESTHESIOLOGIST_ID: number;
-    DATE: number;
-    QUARTER: string;
+    ANESTH_PROV_ID: string;
+    CASE_DATE: number;
+    QUARTER: number;
     CELL_SAVER_ML: number;
     ECMO: number;
     DRG_WEIGHT: number;
-    MONTH: string;
+    MONTH: number;
     FFP_UNITS: number;
     PLT_UNITS: number;
-    POSTOP_HGB: number;
+    POSTOP_HEMO: number;
     PRBC_UNITS: number;
-    PREOP_HGB: number;
+    PREOP_HEMO: number;
     STROKE: number;
     VENT: number;
     B12: number;
     TXA: number;
     AMICAR: number;
-    SURGERY_TYPE: number;
-    [key: string]: number | string;
+    SURGERY_TYPE_DESC: 'Urgent' | 'Elective' | 'Emergent';
+    ALL_CODES: string;
+    [key: string]: string|number;
 };
 export type ScatterDataPoint = {
     xVal: number;

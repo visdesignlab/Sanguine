@@ -1,4 +1,3 @@
-import axios from "axios";
 import { observer } from "mobx-react";
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { FC } from "react";
@@ -8,12 +7,10 @@ import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import { ExtraPairPadding, ExtraPairWidth, } from "../../../Presets/Constants";
 import Store from "../../../Interfaces/Store";
 import { ExtraPairPoint, HeatMapDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
-import { tokenCheckCancel } from "../../../Interfaces/UserManagement";
 import { ChartSVG } from "../../../Presets/StyledSVGComponents";
 import HeatMap from "./HeatMap";
 import ExtraPairButtons from "../ChartAccessories/ExtraPairButtons";
 import useDeepCompareEffect from 'use-deep-compare-effect';
-import { DataContext } from "../../../App";
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import ChartStandardButtons from "../ChartStandardButtons";
@@ -33,10 +30,10 @@ type Props = {
     annotationText: string;
 };
 const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH, layoutW, chartId, extraPairArrayString, xAggregationOption, yValueOption, chartTypeIndexinArray, comparisonDate }: Props) => {
-    const hemoData = useContext(DataContext);
     const store = useContext(Store);
 
-    const { surgeryUrgencySelection, rawDateRange, proceduresSelection } = store.state;
+    const { filteredCases } = store;
+    const { surgeryUrgencySelection, rawDateRange, proceduresSelection } = store.provenanceState;
     const svgRef = useRef<SVGSVGElement>(null);
     const [width, setWidth] = useState(0);
     const [height, setHeight] = useState(0);
@@ -45,7 +42,6 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
     const [data, setData] = useState<HeatMapDataPoint[]>([]);
     const [secondaryData, setSecondaryData] = useState<HeatMapDataPoint[]>([]);
     const [secondaryExtraPairData, setSecondaryExtraPairData] = useState<ExtraPairPoint[]>([]);
-    const [previousCancelToken, setPreviousCancelToken] = useState<any>(null);
     const [extraPairTotalWidth, setExtraPairTotalWidth] = useState(0);
     const [caseCount, setCaseCount] = useState(0);
     const [secondaryCaseCount, setSecondaryCaseCount] = useState(0);
@@ -60,9 +56,9 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
     }, [extraPairArrayString]);
 
     useDeepCompareEffect(() => {
-        const newExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, data);
+        const newExtraPairData = generateExtrapairPlotData(xAggregationOption, filteredCases, extraPairArray, data);
         if (outcomeComparison || comparisonDate) {
-            const newSecondaryExtraPairData = generateExtrapairPlotData(xAggregationOption, hemoData, extraPairArray, secondaryData);
+            const newSecondaryExtraPairData = generateExtrapairPlotData(xAggregationOption, filteredCases, extraPairArray, secondaryData);
             stateUpdateWrapperUseJSON(secondaryExtraPairData, newSecondaryExtraPairData, setSecondaryExtraPairData);
         }
         let totalWidth = newExtraPairData.length > 0 ? (newExtraPairData.length + 1) * ExtraPairPadding : 0;
@@ -72,7 +68,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
         setExtraPairTotalWidth(totalWidth);
         stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [extraPairArray, data, hemoData, secondaryData, outcomeComparison, comparisonDate]);
+    }, [extraPairArray, data, filteredCases, secondaryData, outcomeComparison, comparisonDate]);
 
     useLayoutEffect(() => {
         if (svgRef.current) {
@@ -82,74 +78,49 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
     }, [layoutH, layoutW, store.mainCompWidth, svgRef]);
 
     useDeepCompareEffect(() => {
-
-        tokenCheckCancel(previousCancelToken);
-        const cancelToken = axios.CancelToken;
-        const call = cancelToken.source();
-        setPreviousCancelToken(call);
-
-
-        axios.get(`${process.env.REACT_APP_QUERY_URL}request_transfused_units?transfusion_type=ALL_UNITS&date_range=${store.dateRange}&filter_selection=${ProcedureStringGenerator(proceduresSelection)}&case_ids=${[].toString()}`, {
-            cancelToken: call.token
-        })
-            .then(function (response) {
-                if (response.data) {
-
-                    let caseSetReturnedFromQuery = new Set();
-                    let temporaryDataHolder: any = {};
-                    let secondaryTemporaryDataHolder: any = {};
-                    response.data.forEach((element: any) => {
-                        caseSetReturnedFromQuery.add(element.case_id);
-                    });
-                    hemoData.forEach((singleCase: SingleCasePoint) => {
-                        if (caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
-                            if (!temporaryDataHolder[singleCase[xAggregationOption]]) {
-                                temporaryDataHolder[singleCase[xAggregationOption]] = {
-                                    aggregateAttribute: singleCase[xAggregationOption],
-                                    data: [],
-                                    patientIDList: new Set(),
-                                };
-                                secondaryTemporaryDataHolder[singleCase[xAggregationOption]] = {
-                                    aggregateAttribute: singleCase[xAggregationOption],
-                                    data: [],
-                                    patientIDList: new Set(),
-                                };
-                            }
-
-                            if ((outcomeComparison && singleCase[outcomeComparison] > 0) || (comparisonDate && singleCase.DATE < comparisonDate)) {
-                                secondaryTemporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
-                                secondaryTemporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.PATIENT_ID);
-                            }
-                            else {
-                                temporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
-                                temporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.PATIENT_ID);
-                            }
-                        }
-                    });
-                    const [caseCount, outputData] = generateRegularData(temporaryDataHolder, store.state.showZero, yValueOption);
-                    const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, store.state.showZero, yValueOption);
-                    stateUpdateWrapperUseJSON(data, outputData, setData);
-                    stateUpdateWrapperUseJSON(secondaryData, secondOutputData, setSecondaryData);
-                    store.chartStore.totalAggregatedCaseCount = (caseCount as number) + (secondCaseCount as number);
-                    setCaseCount(caseCount as number);
-                    setSecondaryCaseCount(secondCaseCount as number);
+        // let caseSetReturnedFromQuery = new Set();
+        let temporaryDataHolder: any = {};
+        let secondaryTemporaryDataHolder: any = {};
+        filteredCases.forEach((singleCase: SingleCasePoint) => {
+            // if (caseSetReturnedFromQuery.has(singleCase.CASE_ID)) {
+                if (!temporaryDataHolder[singleCase[xAggregationOption]]) {
+                    temporaryDataHolder[singleCase[xAggregationOption]] = {
+                        aggregateAttribute: singleCase[xAggregationOption],
+                        data: [],
+                        patientIDList: new Set(),
+                    };
+                    secondaryTemporaryDataHolder[singleCase[xAggregationOption]] = {
+                        aggregateAttribute: singleCase[xAggregationOption],
+                        data: [],
+                        patientIDList: new Set(),
+                    };
                 }
-            })
-            .catch(function (thrown) {
-                if (axios.isCancel(thrown)) {
-                    console.log('Request canceled', thrown.message);
-                } else {
-                    // handle error
+
+                if ((outcomeComparison && singleCase[outcomeComparison] > 0) || (comparisonDate && singleCase.CASE_DATE < comparisonDate)) {
+                    secondaryTemporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
+                    secondaryTemporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.MRN);
                 }
-            });
-    }, [proceduresSelection, surgeryUrgencySelection, store.state.outcomeFilter,
+                else {
+                    temporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
+                    temporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.MRN);
+                }
+            // }
+        });
+        const [caseCount, outputData] = generateRegularData(temporaryDataHolder, store.provenanceState.showZero, yValueOption);
+        const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, store.provenanceState.showZero, yValueOption);
+        stateUpdateWrapperUseJSON(data, outputData, setData);
+        stateUpdateWrapperUseJSON(secondaryData, secondOutputData, setSecondaryData);
+        store.chartStore.totalAggregatedCaseCount = (caseCount as number) + (secondCaseCount as number);
+        setCaseCount(caseCount as number);
+        setSecondaryCaseCount(secondCaseCount as number);
+    }, [proceduresSelection, surgeryUrgencySelection, store.provenanceState.outcomeFilter,
         rawDateRange,
-        store.state.showZero,
+        store.provenanceState.showZero,
         xAggregationOption,
         yValueOption,
         outcomeComparison,
         comparisonDate,
-        hemoData]);
+        filteredCases]);
 
     return (<ChartWrapperContainer>
         <ChartAccessoryDiv>

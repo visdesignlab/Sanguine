@@ -148,7 +148,18 @@ logging.basicConfig(
 def execute_sql(command, *args, **kwargs):
     with connections['hospital'].cursor() as cursor:
         cursor.execute(command, kwargs)
-        return cursor.fetchall()
+        return cursor.fetchall(), cursor.description
+
+
+def execute_sql_dict(command, *args, **kwargs):
+    with connections['hospital'].cursor() as cursor:
+        cursor.execute(command, kwargs)
+
+        rows = cursor.fetchall()
+        cols = [col[0] for col in cursor.description]
+
+        dict_rows = [dict(zip(cols, row)) for row in rows]
+        return dict_rows
 
 
 def index(request):
@@ -197,7 +208,7 @@ def get_procedure_counts(request):
             execute_sql(
                 command,
                 **dict(zip(bind_names, filters))
-            )
+            )[0]
         )
 
         # Make co-occurrences list
@@ -221,6 +232,7 @@ def get_procedure_counts(request):
         # Combine the raw count with co-occurrences
         combined_counts = [{
             "procedureName": proc_name,
+            "procedureCodes": [key for key,val in mapping.items() if val == proc_name],
             "count": total_counts[proc_name],
             "overlapList": {
                 **co_occur_counts[proc_name],
@@ -272,24 +284,16 @@ def fetch_surgery(request):
                 FROM {TABLES_IN_USE.get('surgery_case')} SURG
                 WHERE SURG.{FIELDS_IN_USE.get('case_id')} = :id
             )
-        SELECT surg_cases.*, codes.codes
+        SELECT surg_cases.*, codes.codes as codes
         FROM surg_cases
         INNER JOIN codes ON surg_cases.comb = codes.comb
         """
 
-        result = execute_sql(command, id=case_id)
-        data_dict = data_dictionary()
-        data = [
-            dict(zip([data_dict[key[0]] for key in result.description[1:]] + ["cpt"], list(row[1:]) + [[]]))
-            for row in result
-        ]
-
         cpts = cpt()
-        cleaned_cpt = list(set([cpt[2] for cpt in cpts if cpt[1] in data[0]["CODES"]]))
-
-        # cleaned_cpt[0][2] since we want the first cpt that matched the description and the third field from the cpt table
-        data[0]["cpt"] = cleaned_cpt if cleaned_cpt else []
-        del data[0]["CODES"]
+        data = execute_sql_dict(command=command, id=case_id)
+        for row in data:
+            row["cpt"] = list(set([cpt[2] for cpt in cpts if cpt[1] in row["CODES"]]))
+            del row["CODES"]
 
         return JsonResponse({"result": data})
     else:
@@ -326,12 +330,7 @@ def fetch_patient(request):
         WHERE PATIENT.{FIELDS_IN_USE.get('patient_id')} = :id
         """
 
-        result = execute_sql(command, id=patient_id)
-        data_dict = data_dictionary()
-        data = [
-            dict(zip([data_dict[key[0]] for key in result.description], row))
-            for row in result
-        ]
+        data = execute_sql_dict(command=command, id=patient_id)
 
         return JsonResponse({"result": data})
     else:
@@ -518,7 +517,7 @@ def request_transfused_units(request):
         """
 
         # Execute the query
-        result = execute_sql(
+        result, description = execute_sql(
             command,
             **dict(
                 zip(pat_bind_names + case_bind_names,
@@ -603,7 +602,7 @@ def risk_score(request):
             {pat_filters_safe_sql}
         """
 
-        result = execute_sql(
+        result, description = execute_sql(
             command,
             **dict(zip(pat_bind_names, patient_ids))
         )
@@ -773,7 +772,7 @@ def patient_outcomes(request):
         #     {pat_filters_safe_sql}
         # """
 
-        result = execute_sql(
+        result, description = execute_sql(
             command,
             **dict(zip(pat_bind_names, patient_ids))
         )
@@ -943,7 +942,7 @@ def hemoglobin(request):
             SC3.{FIELDS_IN_USE.get('sched_site_desc')}
         """
 
-        result = execute_sql(command)
+        result, description = execute_sql(command)
 
         items = [{
             "CASE_ID": row[1],
@@ -1205,4 +1204,265 @@ def surgeon_anest_names(request):
         return JsonResponse(response)
     else:
         logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} surgeon_names User: {request.user}")
+        return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
+
+
+@conditional_login_required(
+    login_required,
+    os.getenv("REQUIRE_LOGINS") == "True"
+)
+def get_sanguine_surgery_cases(request):
+    if request.method == "GET":
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} GET: get_sanguine_surgery_cases User: {request.user}")
+
+        filters, bind_names, filters_safe_sql = get_all_cpt_code_filters()
+
+        # Get the data from the database
+        command = f"""
+        WITH TRANSFUSED_UNITS AS (
+            SELECT
+                SUM(PRBC_UNITS) AS PRBC_UNITS,
+                SUM(FFP_UNITS) AS FFP_UNITS,
+                SUM(PLT_UNITS) AS PLT_UNITS,
+                SUM(CRYO_UNITS) AS CRYO_UNITS,
+                SUM(CELL_SAVER_ML) AS CELL_SAVER_ML,
+                SUM(RBC_VOL) AS RBC_VOL,
+                SUM(FFP_VOL) AS FFP_VOL,
+                SUM(PLT_VOL) AS PLT_VOL,
+                SUM(CRYO_VOL) AS CRYO_VOL,
+                CASE_ID
+            FROM
+                BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_TRANSFUSION
+            GROUP BY
+                CASE_ID
+        ),
+        BILLING_CODES AS (
+            SELECT
+                VISIT_NO,
+                CASE WHEN SUM(CASE WHEN CODE IN ('I97.820', '997.02') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS STROKE,
+                CASE WHEN SUM(CASE WHEN CODE IN ('33952', '33954', '33956', '33958', '33962', '33964', '33966', '33973', '33974', '33975', '33976', '33977', '33978', '33979', '33980', '33981', '33982', '33983', '33984', '33986', '33987', '33988', '33989') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS ECMO,
+                LISTAGG(CODE, ',') AS ALL_CODES
+            FROM
+                BLOOD_PRODUCTS_DM.BLPD_SANGUINE_BILLING_CODES
+            {filters_safe_sql}
+            GROUP BY
+                VISIT_NO
+        ),
+        MEDS AS (
+            SELECT
+                VISIT_NO,
+                CASE WHEN SUM(TXA) > 0 THEN 1 ELSE 0 END AS TXA,
+                CASE WHEN SUM(AMICAR) > 0 THEN 1 ELSE 0 END AS AMICAR,
+                CASE WHEN SUM(B12) > 0 THEN 1 ELSE 0 END AS B12
+            FROM (
+                (SELECT 
+                    VISIT_NO,
+                    SUM(CASE WHEN MEDICATION_ID IN (31383, 310071, 301530) THEN 1 ELSE 0 END) AS TXA,
+                    SUM(CASE WHEN MEDICATION_ID IN (300167, 300168, 300725, 310033) THEN 1 ELSE 0 END) AS AMICAR,
+                    SUM(CASE WHEN MEDICATION_ID IN (800001, 59535, 400030, 5553, 23584, 73156, 23579, 23582) THEN 1 ELSE 0 END) AS B12
+                FROM 
+                    BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_MEDS
+                group by VISIT_NO
+                )
+                UNION ALL
+                (SELECT 
+                    VISIT_NO,
+                    SUM(CASE WHEN MEDICATION_ID IN (31383, 310071, 301530) THEN 1 ELSE 0 END) AS TXA,
+                    SUM(CASE WHEN MEDICATION_ID IN (300167, 300168, 300725, 310033) THEN 1 ELSE 0 END) AS AMICAR,
+                    SUM(CASE WHEN MEDICATION_ID IN (800001, 59535, 400030, 5553, 23584, 73156, 23579, 23582) THEN 1 ELSE 0 END) AS B12
+                FROM 
+                    BLOOD_PRODUCTS_DM.BLPD_SANGUINE_EXTRAOP_MEDS
+                group by VISIT_NO
+                )
+                ) INNER_MEDS
+            GROUP BY VISIT_NO
+        ),
+        LAB_HB AS (
+            SELECT
+                V.VISIT_NO,
+                V.LAB_DRAW_DTM,
+                V.RESULT_DTM,
+                V.RESULT_CODE,
+                V.RESULT_VALUE
+            FROM
+                BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT_LABS V
+            WHERE UPPER(V.RESULT_DESC) = 'HEMOGLOBIN'
+        ),
+        PREOP_HB AS (
+            SELECT
+                X.MRN,
+                X.VISIT_NO,
+                X.CASE_ID,
+                X.SURGERY_START_DTM,
+                X.SURGERY_END_DTM,
+                X.DI_PREOP_DRAW_DTM,
+                LH2.RESULT_VALUE
+            FROM (
+                SELECT
+                    SC.MRN,
+                    SC.VISIT_NO,
+                    SC.CASE_ID,
+                    SC.SURGERY_START_DTM,
+                    SC.SURGERY_END_DTM,
+                    MAX(LH.LAB_DRAW_DTM) AS DI_PREOP_DRAW_DTM
+                FROM
+                    BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE SC
+                INNER JOIN LAB_HB LH
+                    ON SC.VISIT_NO = LH.VISIT_NO
+                GROUP BY
+                    SC.MRN,
+                    SC.VISIT_NO,
+                    SC.CASE_ID,
+                    SC.SURGERY_START_DTM,
+                    SC.SURGERY_END_DTM
+            ) X
+            INNER JOIN LAB_HB LH2
+                ON X.VISIT_NO = LH2.VISIT_NO
+                AND X.DI_PREOP_DRAW_DTM = LH2.LAB_DRAW_DTM
+        ),
+        POSTOP_HB AS (
+            SELECT
+                Z.MRN,
+                Z.VISIT_NO,
+                Z.CASE_ID,
+                Z.SURGERY_START_DTM,
+                Z.SURGERY_END_DTM,
+                Z.DI_POSTOP_DRAW_DTM,
+                LH4.RESULT_VALUE
+            FROM (
+                SELECT
+                    SC2.MRN,
+                    SC2.VISIT_NO,
+                    SC2.CASE_ID,
+                    SC2.SURGERY_START_DTM,
+                    SC2.SURGERY_END_DTM,
+                    MIN(LH3.LAB_DRAW_DTM) AS DI_POSTOP_DRAW_DTM
+                FROM
+                    BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE SC2
+                INNER JOIN LAB_HB LH3
+                    ON SC2.VISIT_NO = LH3.VISIT_NO
+                WHERE LH3.LAB_DRAW_DTM > SC2.SURGERY_END_DTM
+                GROUP BY
+                    SC2.MRN,
+                    SC2.VISIT_NO,
+                    SC2.CASE_ID,
+                    SC2.SURGERY_START_DTM,
+                    SC2.SURGERY_END_DTM
+            ) Z
+            INNER JOIN LAB_HB LH4
+                ON Z.VISIT_NO = LH4.VISIT_NO
+                AND Z.DI_POSTOP_DRAW_DTM = LH4.LAB_DRAW_DTM
+        ),
+        HEMOGLOBIN AS (
+            SELECT
+                SC3.MRN,
+                SC3.CASE_ID,
+                SC3.VISIT_NO,
+                SC3.CASE_DATE,
+                EXTRACT (YEAR from SC3.CASE_DATE) YEAR,
+                EXTRACT (MONTH from SC3.CASE_DATE) AS MONTH,
+                SC3.SURGERY_START_DTM,
+                SC3.SURGERY_END_DTM,
+                SC3.SURGERY_ELAP,
+                SC3.SURGERY_TYPE_DESC,
+                SC3.SURGEON_PROV_ID,
+                SC3.ANESTH_PROV_ID,
+                SC3.PRIM_PROC_DESC,
+                SC3.POSTOP_ICU_LOS,
+                SC3.SCHED_SITE_DESC,
+                MAX(CASE
+                    WHEN PRE.DI_PREOP_DRAW_DTM IS NOT NULL
+                    THEN PRE.DI_PREOP_DRAW_DTM
+                END)
+                AS DI_PREOP_DRAW_DTM,
+                MAX(CASE
+                    WHEN PRE.RESULT_VALUE IS NOT NULL
+                    THEN PRE.RESULT_VALUE
+                END)
+                AS PREOP_HEMO,
+                MAX(CASE
+                    WHEN POST.DI_POSTOP_DRAW_DTM IS NOT NULL
+                    THEN POST.DI_POSTOP_DRAW_DTM
+                END)
+                AS DI_POSTOP_DRAW_DTM,
+                MAX(CASE
+                    WHEN POST.RESULT_VALUE IS NOT NULL
+                    THEN POST.RESULT_VALUE
+                END)
+                AS POSTOP_HEMO
+            FROM
+                BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE SC3
+            LEFT OUTER JOIN PREOP_HB PRE
+                ON SC3.CASE_ID = PRE.CASE_ID
+            LEFT OUTER JOIN POSTOP_HB POST
+                ON SC3.CASE_ID = POST.CASE_ID
+            GROUP BY SC3.MRN,
+                SC3.CASE_ID,
+                SC3.VISIT_NO,
+                SC3.CASE_DATE,
+                EXTRACT (YEAR from SC3.CASE_DATE),
+                EXTRACT (MONTH from SC3.CASE_DATE),
+                SC3.SURGERY_START_DTM,
+                SC3.SURGERY_END_DTM,
+                SC3.SURGERY_ELAP,
+                SC3.SURGERY_TYPE_DESC,
+                SC3.SURGEON_PROV_ID,
+                SC3.ANESTH_PROV_ID,
+                SC3.PRIM_PROC_DESC,
+                SC3.POSTOP_ICU_LOS,
+                SC3.SCHED_SITE_DESC
+        )
+
+
+        SELECT
+            SURG.CASE_ID,
+            SURG.VISIT_NO,
+            SURG.MRN,
+            SURG.ANESTH_PROV_ID,
+            SURG.SURGEON_PROV_ID,
+            PRBC_UNITS,
+            FFP_UNITS,
+            PLT_UNITS,
+            CRYO_UNITS,
+            CELL_SAVER_ML,
+            HGB.PREOP_HEMO,
+            HGB.POSTOP_HEMO,
+            EXTRACT(year from SURG.CASE_DATE) AS YEAR,
+            TO_NUMBER(TO_CHAR(SURG.CASE_DATE, 'Q')) AS QUARTER,
+            EXTRACT(month from SURG.CASE_DATE) AS MONTH,
+            SURG.CASE_DATE,
+            CASE WHEN VST.TOTAL_VENT_MINS > 1440 THEN 1 ELSE 0 END AS VENT,
+            VST.APR_DRG_WEIGHT AS DRG_WEIGHT,
+            VST.PAT_EXPIRED AS DEATH,
+            BLNG.ECMO,
+            BLNG.STROKE,
+            BLNG.ALL_CODES,
+            MEDS.TXA,
+            MEDS.B12,
+            MEDS.AMICAR,
+            SURG.SURGERY_TYPE_DESC
+        FROM
+            BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE SURG
+        INNER JOIN BILLING_CODES BLNG
+            ON SURG.VISIT_NO = BLNG.VISIT_NO
+        LEFT JOIN TRANSFUSED_UNITS T
+            ON SURG.CASE_ID = T.CASE_ID
+        LEFT JOIN BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT VST
+            ON SURG.VISIT_NO = VST.VISIT_NO
+        LEFT JOIN MEDS
+            ON SURG.VISIT_NO = MEDS.VISIT_NO
+        LEFT JOIN HEMOGLOBIN HGB
+            ON SURG.CASE_ID = HGB.CASE_ID
+        """
+
+        result, description = execute_sql_dict(
+            command,
+            **dict(zip(bind_names, filters))
+        )
+
+        return JsonResponse({'result': result})
+
+        
+    else:
+        logging.info(f"{request.META.get('HTTP_X_FORWARDED_FOR')} Method Not Allowed: {request.method} get_sanguine_surgery_cases User: {request.user}")
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")

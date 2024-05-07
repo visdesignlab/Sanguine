@@ -14,7 +14,7 @@ const CaseInfo: FC = () => {
     const [individualInfo, setIndividualInfo] = useState<any>(null);
     const store = useContext(Store);
 
-    const { currentSelectPatient } = store.state;
+    const { currentSelectPatient } = store.provenanceState;
 
     const swapName = (key: string, value: any) => {
         if (store.configStore.nameDictionary[key] && store.configStore.privateMode) {
@@ -45,7 +45,7 @@ const CaseInfo: FC = () => {
 
             if (currentSelectPatient) {
                 stateUpdateWrapperUseJSON(individualInfo, null, setIndividualInfo);
-                const fetchResult = await fetch(`${process.env.REACT_APP_QUERY_URL}fetch_patient?patient_id=${currentSelectPatient.PATIENT_ID}`);
+                const fetchResult = await fetch(`${process.env.REACT_APP_QUERY_URL}fetch_patient?patient_id=${currentSelectPatient.MRN}`);
 
                 const fetchResultJson = await fetchResult.json();
                 const individualInfoJSON = fetchResultJson.result[0];
@@ -65,7 +65,7 @@ const CaseInfo: FC = () => {
                     final_result[attribute] = final_result[attribute] === 0 ? "No" : "Yes";
                 });
 
-                final_result.SURGERY_TYPE = SurgeryUrgencyArray[final_result.SURGERY_TYPE];
+                final_result.SURGERY_TYPE_DESC = SurgeryUrgencyArray[final_result.SURGERY_TYPE_DESC];
                 stateUpdateWrapperUseJSON(individualInfo, final_result, setIndividualInfo);
             }
             else {

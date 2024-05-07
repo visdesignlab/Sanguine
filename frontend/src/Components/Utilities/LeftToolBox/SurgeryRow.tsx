@@ -14,7 +14,7 @@ type Props = {
     caseScaleDomain: string;
     caseScaleRange: string;
     width: number;
-    parentSurgery?: string;
+    parentSurgery?: ProcedureEntry;
     expandedList: string[];
     setExpandedList: Dispatch<SetStateAction<string[]>>;
 };
@@ -48,31 +48,30 @@ const SurgeryRow: FC<Props> = ({ listItem, width, isSelected, expandedList, setE
         isSelected={highlighted}
     >
 
-        <SurgeryDiv ref={spanRef}>
+        <SurgeryDiv ref={spanRef} onClick={() => { store.selectionStore.updateProcedureSelection(listItem, isSelected, isSubSurgery ? parentSurgery : undefined); }}>
             {isSubSurgery ?
                 <> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{listItem.procedureName.includes('Only') ? '' : '+'}
                     <span
                         onMouseOver={mouseOverHandler}
                         onMouseLeave={mouseLeaveHandler}
-                        onClick={() => { store.selectionStore.updateProcedureSelection(listItem, false, parentSurgery); }}>
+                        >
                         {listItem.procedureName}</span>
                 </> :
                 <>
-                    <span onClick={() => {
+                    <span onClick={(event) => {
                         if (expandedList.includes(listItem.procedureName)) {
                             setExpandedList(expandedList.filter(d => d !== listItem.procedureName));
                         } else {
                             setExpandedList([...expandedList, listItem.procedureName]);
                         }
+                        event.stopPropagation();
                     }}>
                         {expandedList.includes(listItem.procedureName) ? `▼` : `►`}
                     </span>
                     <span
                         onMouseOver={mouseOverHandler}
                         onMouseLeave={mouseLeaveHandler}
-                        onClick={() => {
-                            store.selectionStore.updateProcedureSelection(listItem, isSelected);
-                        }}>
+                    >
                         {listItem.procedureName}
                     </span>
                 </>}

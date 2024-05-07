@@ -42,9 +42,9 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
         dataArray.forEach((d: SingleCasePoint) => {
 
             let transfusionOutput = d[valueToVisualize] as number;
-            if (valueToVisualize === "PRBC_UNITS" && d[valueToVisualize] > 100) {
-                transfusionOutput = (d[valueToVisualize] - 999);
-            } else if (d[valueToVisualize] > 100 && valueToVisualize === "PLT_UNITS") {
+            if (valueToVisualize === "PRBC_UNITS" && transfusionOutput > 100) {
+                transfusionOutput = Math.ceil(d[valueToVisualize] / 1000);
+            } else if (transfusionOutput > 100 && valueToVisualize === "PLT_UNITS") {
                 transfusionOutput = (d[valueToVisualize] - 245);
             }
 
@@ -60,10 +60,10 @@ export const generateRegularData = (temporaryDataHolder: any[], showZero: boolea
                     countDict[roundedAnswer].push(d);
                 }
             } else {
-                if ((transfusionOutput) > cap) {
+                if (transfusionOutput > cap) {
                     countDict[cap].push(d);
                 } else {
-                    countDict[(transfusionOutput)].push(d);
+                    countDict[transfusionOutput].push(d);
                 }
             }
 

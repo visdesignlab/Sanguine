@@ -11,9 +11,7 @@ import CurrentView from "./CurrentView";
 import SurgeryListViewer from "./SurgeryListViewer";
 import SurgerySearchBar from "./SurgerySearchBar";
 
-type Props = { totalCaseNum: number; };
-
-const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
+const LeftToolBox: FC = () => {
 
   const [surgeryList, setSurgeryList] = useState<ProcedureEntry[]>([]);
   const [maxCaseCount, setMaxCaseCount] = useState(0);
@@ -23,43 +21,45 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
   };
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_QUERY_URL}get_procedure_counts`)
-      .then(response => response.json())
-      .then(function (data) {
-        //Process the result into the data type required.
-        const result = data.result.map((procedureInput: any) => {
-          const procedureOverlapList = Object.keys(procedureInput.overlapList).map(subProcedureName => {
-            return {
-              procedureName: subProcedureName,
-              count: procedureInput.overlapList[subProcedureName],
-            };
-          });
-          procedureOverlapList.sort((a: ProcedureEntry, b: ProcedureEntry) => {
-            if (a.procedureName.includes('Only')) {
-              return -1;
-            } else if (b.procedureName.includes('Only')) {
-              return 1;
-            }
+    async function fetchData() {
+      const procedureFetch = await fetch(`${process.env.REACT_APP_QUERY_URL}get_procedure_counts`);
+      const procedureInput = await procedureFetch.json() as { result: { procedureName: string, procedureCodes: string[], count: number, overlapList: { [key: string]: number } }[] };
 
-            return b.count - a.count;
-          });
+      // Process the result into the data type required.
+      const result = procedureInput.result.map((procedure: any) => {
+        const procedureOverlapList = Object.keys(procedure.overlapList).map(subProcedureName => {
           return {
-            procedureName: procedureInput.procedureName,
-            count: procedureInput.count,
-            overlapList: procedureOverlapList
+            procedureName: subProcedureName,
+            count: procedure.overlapList[subProcedureName],
+            codes: procedureInput.result.find((p) => p.procedureName === subProcedureName)?.procedureCodes || []
           };
         });
-        let tempSurgeryList: ProcedureEntry[] = result;
-        let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
+        procedureOverlapList.sort((a, b) => {
+          if (a.procedureName.includes('Only')) {
+            return -1;
+          } else if (b.procedureName.includes('Only')) {
+            return 1;
+          }
 
-        tempMaxCaseCount = 10 ** (tempMaxCaseCount.toString().length);
-        setMaxCaseCount(tempMaxCaseCount);
-        tempSurgeryList.sort((a: ProcedureEntry, b: ProcedureEntry) => b.count - a.count);
-
-        stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList);
-      }).catch(r => {
-        console.log("failed to fetch required data");
+          return b.count - a.count;
+        });
+        return {
+          procedureName: procedure.procedureName,
+          count: procedure.count,
+          codes: procedure.procedureCodes,
+          overlapList: procedureOverlapList,
+        };
       });
+      let tempSurgeryList: ProcedureEntry[] = result;
+      let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
+
+      tempMaxCaseCount *= 1.1;
+      setMaxCaseCount(tempMaxCaseCount);
+      tempSurgeryList.sort((a: ProcedureEntry, b: ProcedureEntry) => b.count - a.count);
+
+      stateUpdateWrapperUseJSON(surgeryList, tempSurgeryList, setSurgeryList);
+    }
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -79,7 +79,7 @@ const LeftToolBox: FC<Props> = ({ totalCaseNum }: Props) => {
         index={0}
         children={
           <Grid container >
-            <CurrentView totalCaseNum={totalCaseNum} />
+            <CurrentView />
             <Divider orientation="horizontal" style={{ width: '98%', }} />
             <CurrentSelected />
             <Divider orientation="horizontal" style={{ width: '98%' }} />

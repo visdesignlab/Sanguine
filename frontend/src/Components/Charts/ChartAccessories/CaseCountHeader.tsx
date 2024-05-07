@@ -17,7 +17,7 @@ type Props = {
 
 const CaseCountHeader: FC<Props> = ({ showComparisonRect, isFalseComparison, caseCount, yPos, zeroCaseNum, caseMax, height }: Props) => {
     const store = useContext(Store);
-    const { showZero } = store.state;
+    const { showZero } = store.provenanceState;
 
     const caseScale = useCallback(() => {
         return CaseScaleGenerator(caseMax);
@@ -25,7 +25,7 @@ const CaseCountHeader: FC<Props> = ({ showComparisonRect, isFalseComparison, cas
 
     return (<g>
         <rect
-            fill={interpolateGreys(caseScale()(store.state.showZero ? caseCount : (caseCount - zeroCaseNum)))}
+            fill={interpolateGreys(caseScale()(store.provenanceState.showZero ? caseCount : (caseCount - zeroCaseNum)))}
             x={-CaseRectWidth - (showComparisonRect ? 10 : 5)}
             y={yPos}
             width={CaseRectWidth}
@@ -40,7 +40,7 @@ const CaseCountHeader: FC<Props> = ({ showComparisonRect, isFalseComparison, cas
                 width={DifferentialSquareWidth}
                 x={-10} /> : <></>}
         <text
-            fill={caseScale()(store.state.showZero ? caseCount : (caseCount - zeroCaseNum)) > 0.4 ? "white" : "black"}
+            fill={caseScale()(store.provenanceState.showZero ? caseCount : (caseCount - zeroCaseNum)) > 0.4 ? "white" : "black"}
             x={-20 - (showComparisonRect ? 5 : 0)}
             y={yPos + 0.5 * height}
             alignmentBaseline={"central"}

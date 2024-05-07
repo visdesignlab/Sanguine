@@ -20,7 +20,7 @@ const FilterBoard: FC = () => {
 
     const store = useContext(Store);
 
-    const { rawDateRange, outcomeFilter, surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet, bloodComponentFilter, testValueFilter } = store.state;
+    const { rawDateRange, outcomeFilter, surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet, bloodFilter } = store.provenanceState;
     const [beginDate, setBeginDate] = useState<number | null>(rawDateRange[0]);
     const [endDate, setEndDate] = useState<number | null>(rawDateRange[1]);
 
@@ -30,17 +30,10 @@ const FilterBoard: FC = () => {
         store.configStore.dateRangeChange(defaultState.rawDateRange);
     };
 
-    const checkIfCanReset = (filterInput: any) => {
-
-        let canReset = false;
-
-        Object.entries(filterInput).forEach(([filterName, filterValue]) => {
-
-            if ((filterValue as any)[0] > 0 || ((filterValue as any)[1] < store.configStore.filterRange[filterName])) {
-                canReset = true;
-            }
-        });
-        return canReset;
+    function checkIfCanReset(filterInput: any, type?: typeof BloodComponentOptions | typeof ScatterYOptions) {
+        return Object.entries(filterInput)
+            .filter(([filterName, filterValue]) => type ? type.map((d) => d.key).includes(filterName) : true)
+            .some(([filterName, filterValue]) => (filterValue as any)[0] > 0 || ((filterValue as any)[1] < store.filterRange[filterName][1]) );
     };
 
     const enableClearAll = () => {
@@ -56,10 +49,7 @@ const FilterBoard: FC = () => {
         if (currentSelectPatientGroup.length > 0 || currentOutputFilterSet.length > 0) {
             return true;
         }
-        if (checkIfCanReset(testValueFilter)) {
-            return true;
-        }
-        if (checkIfCanReset(bloodComponentFilter)) {
+        if (checkIfCanReset(bloodFilter)) {
             return true;
         }
         return false;
@@ -93,10 +83,10 @@ const FilterBoard: FC = () => {
                                 inputFormat="MM/dd/yyyy"
                                 value={beginDate}
                                 renderInput={(params) => <TextField variant="standard" {...params} />}
-                                onChange={(d) => {
+                                onChange={(d: Date | null) => {
                                     if (d) {
-                                        setBeginDate(d);
-                                        store.configStore.dateRangeChange([d, rawDateRange[1]]);
+                                        setBeginDate(d.getTime());
+                                        store.configStore.dateRangeChange([d.getTime(), rawDateRange[1]]);
                                     } else {
                                         setBeginDate(rawDateRange[0]);
                                     }
@@ -110,10 +100,10 @@ const FilterBoard: FC = () => {
                                 inputFormat="MM/dd/yyyy"
                                 value={endDate}
                                 renderInput={(params) => <TextField variant="standard" {...params} />}
-                                onChange={(d) => {
+                                onChange={(d: Date | null) => {
                                     if (d) {
-                                        setEndDate(d);
-                                        store.configStore.dateRangeChange([rawDateRange[0], d]);
+                                        setEndDate(d.getTime());
+                                        store.configStore.dateRangeChange([rawDateRange[0], d.getTime()]);
                                     } else {
                                         setEndDate(rawDateRange[1]);
                                     }
@@ -205,8 +195,8 @@ const FilterBoard: FC = () => {
                     <ListItemText primary={<Title>Blood Component Filter</Title>} />
                     <ListItemSecondaryAction>
 
-                        <IconButton onClick={() => { store.configStore.resetBloodFilter(); }}
-                            disabled={!checkIfCanReset(bloodComponentFilter)}>
+                        <IconButton onClick={() => { store.configStore.resetBloodFilter(BloodComponentOptions); }}
+                            disabled={!checkIfCanReset(bloodFilter, BloodComponentOptions)}>
                             <Tooltip title="Reset">
                                 <ReplayIcon />
                             </Tooltip>
@@ -224,8 +214,8 @@ const FilterBoard: FC = () => {
                     <ListItemText primary={<Title>Test Value Filter</Title>} />
                     <ListItemSecondaryAction>
 
-                        <IconButton onClick={() => { store.configStore.resetTestValueFilter(); }}
-                            disabled={!checkIfCanReset(testValueFilter)}>
+                        <IconButton onClick={() => { store.configStore.resetBloodFilter(ScatterYOptions); }}
+                            disabled={!checkIfCanReset(bloodFilter, ScatterYOptions)}>
                             <Tooltip title="Reset">
                                 <ReplayIcon />
                             </Tooltip>

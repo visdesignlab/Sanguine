@@ -3,6 +3,7 @@ import { defaultState } from "../DefaultState";
 import { ActionEvents } from "../Types/EventTypes";
 import { LayoutElement } from "../Types/LayoutTypes";
 import { ApplicationState } from "../Types/StateTypes";
+import { BloodComponentOptions, ScatterYOptions } from "../../Presets/DataDict";
 
 
 //Load in a preset of layout elements
@@ -32,28 +33,27 @@ export const changeSurgeryUrgencySelection = createAction<ApplicationState, [[bo
     state.surgeryUrgencySelection = surgeryUrgencyInput;
 }).setLabel("changeUrgency");
 
-export const changeBloodFilter = createAction<ApplicationState, [string, number[]], ActionEvents>((state, bloodComponentName, newRange) => {
-    state.bloodComponentFilter[bloodComponentName] = newRange;
+export const changeBloodFilter = createAction<ApplicationState, [string, [number, number]], ActionEvents>((state, bloodComponentName, newRange) => {
+    state.bloodFilter[bloodComponentName] = newRange;
 }).setLabel("changeBloodFilter");
 
-export const resetBloodFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
-    state.bloodComponentFilter = defaultState.bloodComponentFilter;
+export const resetBloodFilter = createAction<ApplicationState, [typeof BloodComponentOptions | typeof ScatterYOptions], ActionEvents>((state, type) => {
+    const toUpdate: Record<string, [number, number]> = {};
+    const typeKeys = type.map((d) => d.key);
+    Object.keys(state.bloodFilter).forEach((key) => {
+        if (typeKeys.includes(key)) {
+            toUpdate[key] = defaultState.bloodFilter[key];
+        }
+    });
+
+    state.bloodFilter = { ...state.bloodFilter, ...toUpdate };
 }).setLabel("resetBloodFilter");
-
-export const changeTestValueFilter = createAction<ApplicationState, [string, number[]], ActionEvents>((state, testName, newRange) => {
-    state.testValueFilter[testName] = newRange;
-}).setLabel("changeTestValueFilter");
-
-export const resetTestValueFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
-    state.testValueFilter = defaultState.testValueFilter;
-}).setLabel("resetTestValueFilter");
 
 export const clearAllFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
     state.currentSelectPatientGroup = [];
     state.currentOutputFilterSet = [];
     state.rawDateRange = defaultState.rawDateRange;
     state.outcomeFilter = [];
-    state.testValueFilter = defaultState.testValueFilter;
-    state.bloodComponentFilter = defaultState.bloodComponentFilter;
+    state.bloodFilter = defaultState.bloodFilter;
     state.surgeryUrgencySelection = defaultState.surgeryUrgencySelection;
 }).setLabel("clearAllFilter");

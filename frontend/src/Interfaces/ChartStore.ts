@@ -8,8 +8,8 @@ export class ChartStore {
     private _totalAggregatedCaseCount: number;
     private _totalIndividualCaseCount: number;
 
-    constructor(rootstore: RootStore) {
-        this.rootStore = rootstore;
+    constructor(rootStore: RootStore) {
+        this.rootStore = rootStore;
 
         this._totalAggregatedCaseCount = 0;
         this._totalIndividualCaseCount = 0;
@@ -44,7 +44,7 @@ export class ChartStore {
 
     removeChart (chartID: string) {
         this.provenance.apply(removeChart(chartID));
-        if (this.rootStore.state.layoutArray.length === 0) {
+        if (this.rootStore.provenanceState.layoutArray.length === 0) {
             this.totalAggregatedCaseCount = 0;
             this.totalIndividualCaseCount = 0;
         }

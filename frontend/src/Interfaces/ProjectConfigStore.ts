@@ -1,6 +1,6 @@
 import { makeAutoObservable } from "mobx";
-import { BloodComponentOptions } from "../Presets/DataDict";
-import { changeBloodFilter, changeCostConfig, changeOutcomeFilter, changeSurgeryUrgencySelection, changeTestValueFilter, clearAllFilter, dateRangeChange, loadPreset, resetBloodFilter, resetTestValueFilter, toggleShowZero } from "./Actions/ProjectConfigActions";
+import { BloodComponentOptions, ScatterYOptions } from "../Presets/DataDict";
+import { changeBloodFilter, changeCostConfig, changeOutcomeFilter, changeSurgeryUrgencySelection, clearAllFilter, dateRangeChange, loadPreset, resetBloodFilter, toggleShowZero } from "./Actions/ProjectConfigActions";
 import { RootStore } from "./Store";
 import { LayoutElement } from "./Types/LayoutTypes";
 
@@ -13,14 +13,13 @@ export class ProjectConfigStore {
     snackBarMessage: string;
     largeFont: boolean;
     savedState: string[];
-    filterRange: any;
     snackBarIsError: boolean;
     privateMode: boolean;
     stateToUpdate: string;
     nameDictionary: any;
 
-    constructor(rootstore: RootStore) {
-        this.rootStore = rootstore;
+    constructor(rootStore: RootStore) {
+        this.rootStore = rootStore;
         this._isLoggedIn = !(process.env.REACT_APP_REQUIRE_LOGIN === "true");
         this.largeFont = false;
         this.privateMode = false;
@@ -29,7 +28,6 @@ export class ProjectConfigStore {
         this.snackBarMessage = "";
         this.snackBarIsError = false;
         this.loadedStateName = "";
-        this.filterRange = { PRBC_UNITS: 0, FFP_UNITS: 0, PLT_UNITS: 0, CRYO_UNITS: 0, CELL_SAVER_ML: 0, PREOP_HGB: 0, POSTOP_HGB: 0 };
         this.stateToUpdate = "";
 
         this.nameDictionary = {};
@@ -47,17 +45,6 @@ export class ProjectConfigStore {
 
     addNewState = (stateName: string) => {
         this.savedState.push(stateName);
-    };
-
-    updateRange = (transfusedResult: any) => {
-        BloodComponentOptions.forEach((d) => {
-            this.filterRange[d.key] = transfusedResult[d.key] > this.filterRange[d.key] ? transfusedResult[d.key] : this.filterRange[d.key];
-        });
-    };
-
-
-    updateTestValue = (label: string, value: number) => {
-        this.filterRange[label] = value > this.filterRange[label] ? value : this.filterRange[label];
     };
 
     get provenance() {
@@ -102,20 +89,12 @@ export class ProjectConfigStore {
     loadPreset(layoutInput: LayoutElement[]) {
         this.provenance.apply(loadPreset(layoutInput));
     }
-    changeBloodFilter(componentName: string, newRange: number[]) {
+    changeBloodFilter(componentName: string, newRange: [number, number]) {
         this.provenance.apply(changeBloodFilter(componentName, newRange));
     }
-    resetBloodFilter() {
-        this.provenance.apply(resetBloodFilter());
+    resetBloodFilter(type: typeof BloodComponentOptions | typeof ScatterYOptions) {
+        this.provenance.apply(resetBloodFilter(type));
     }
-
-    changeTestValueFilter(testValueName: string, newRange: number[]) {
-        this.provenance.apply(changeTestValueFilter(testValueName, newRange));
-    }
-    resetTestValueFilter() {
-        this.provenance.apply(resetTestValueFilter());
-    }
-
     clearAllFilter() {
         this.provenance.apply(clearAllFilter());
     }

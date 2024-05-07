@@ -12,7 +12,7 @@ import styled from "@emotion/styled";
 const CurrentSelected: FC = () => {
 
     const store = useContext(Store);
-    const { currentBrushedPatientGroup, currentSelectSet } = store.state;
+    const { currentBrushedPatientGroup, currentSelectSet } = store.provenanceState;
 
     return (
         <InheritWidthGrid item>

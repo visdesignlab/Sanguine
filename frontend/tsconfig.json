@@ -1,12 +1,11 @@
 {
     "compilerOptions": {
         "experimentalDecorators": true,
-        "target": "es5",
+        "target": "es2022",
         "lib": [
-            "es6",
+            "es2022",
             "dom",
-            "dom.iterable",
-            "esnext"
+            "dom.iterable"
         ],
         "noImplicitAny": true,
         "noImplicitThis": true,

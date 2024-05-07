@@ -100,7 +100,7 @@ const LayoutGenerator: FC = () => {
         xxs: 2
     };
     const generateGrid = () => {
-        let output = store.state.layoutArray.map(d => ({ w: d.w, h: d.h, x: d.x, y: d.y, i: d.i }));
+        let output = store.provenanceState.layoutArray.map(d => ({ w: d.w, h: d.h, x: d.x, y: d.y, i: d.i }));
         const newStuff = output.map(d => ({ ...d }));
         return newStuff;
     };
@@ -124,7 +124,7 @@ const LayoutGenerator: FC = () => {
 
     return (
         <UtilityContainer ref={tabRef} style={{ height: "90vh" }}>
-            <WelcomeText show={store.state.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
+            <WelcomeText show={store.provenanceState.layoutArray.length > 0}>Click "Add" above to start.</WelcomeText>
             <Responsive
                 onResizeStop={(e, v) => { store.chartStore.onLayoutChange(e); }}
                 onDragStop={(e, v) => { store.chartStore.onLayoutChange(e); }}
@@ -135,7 +135,7 @@ const LayoutGenerator: FC = () => {
                 width={0.95 * store.mainCompWidth}
                 layouts={{ md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid() }}
             >
-                {store.state.layoutArray.map((layoutE, i) => {
+                {store.provenanceState.layoutArray.map((layoutE, i) => {
                     return createElement(layoutE, i);
                 })}
             </Responsive>

@@ -15,7 +15,7 @@ const SurgerySearchBar: FC<Props> = ({ surgeryList }: Props) => {
 
     const searchHandler = (input: ProcedureEntry) => {
         if (input) {
-            if (store.state.proceduresSelection.filter(d => d.procedureName === input.procedureName).length === 0) {
+            if (store.provenanceState.proceduresSelection.filter(d => d.procedureName === input.procedureName).length === 0) {
                 store.selectionStore.updateProcedureSelection(input, false);
                 setInput("");
             }

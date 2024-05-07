@@ -49,7 +49,7 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
         let newItemSelected: ProcedureEntry[] = [];
         let newItemUnselected: ProcedureEntry[] = [];
         surgeryList.forEach((item: ProcedureEntry) => {
-            if (store.state.proceduresSelection.filter(d => d.procedureName === item.procedureName).length > 0) {
+            if (store.provenanceState.proceduresSelection.filter(d => d.procedureName === item.procedureName).length > 0) {
                 newItemSelected.push(item);
             }
             else {
@@ -59,11 +59,11 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
         stateUpdateWrapperUseJSON(itemSelected, newItemSelected, setItemSelected);
         stateUpdateWrapperUseJSON(itemUnselected, newItemUnselected, setItemUnselected);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [store.state.proceduresSelection, surgeryList]);
+    }, [store.provenanceState.proceduresSelection, surgeryList]);
 
     const findIfSubProcedureSelected = (subProcedureName: string, parentProcedureName: string) => {
-        if (store.state.proceduresSelection.filter(d => d.procedureName === parentProcedureName).length > 0) {
-            const overlapList = store.state.proceduresSelection.filter(d => d.procedureName === parentProcedureName)[0].overlapList;
+        if (store.provenanceState.proceduresSelection.filter(d => d.procedureName === parentProcedureName).length > 0) {
+            const overlapList = store.provenanceState.proceduresSelection.filter(d => d.procedureName === parentProcedureName)[0].overlapList;
             if (overlapList) {
                 return overlapList.filter(d => d.procedureName === subProcedureName).length > 0;
             }
@@ -72,8 +72,8 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
     };
 
     const findIfSelectedSubProcedureExist = (parentProcedureName: string) => {
-        if (store.state.proceduresSelection.filter(d => d.procedureName === parentProcedureName).length > 0) {
-            const overlapList = store.state.proceduresSelection.filter(d => d.procedureName === parentProcedureName)[0].overlapList;
+        if (store.provenanceState.proceduresSelection.filter(d => d.procedureName === parentProcedureName).length > 0) {
+            const overlapList = store.provenanceState.proceduresSelection.filter(d => d.procedureName === parentProcedureName)[0].overlapList;
             if (overlapList) {
                 return overlapList.length > 0;
             }
@@ -120,7 +120,7 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
                                     isSelected={findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName)}
                                     isSubSurgery={true}
                                     highlighted={findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName)}
-                                    parentSurgery={listItem.procedureName}
+                                    parentSurgery={listItem}
                                     caseScaleDomain={JSON.stringify(caseScale().domain())}
                                     width={width}
                                     caseScaleRange={JSON.stringify(caseScale().range())} />;
@@ -162,7 +162,7 @@ const SurgeryListViewer: FC<Props> = ({ surgeryList, maxCaseCount }: Props) => {
                                     setExpandedList={setExpandedList}
                                     isSubSurgery={true}
                                     highlighted={false}
-                                    parentSurgery={listItem.procedureName}
+                                    parentSurgery={listItem}
                                     caseScaleDomain={JSON.stringify(caseScale().domain())}
                                     width={width}
                                     caseScaleRange={JSON.stringify(caseScale().range())} />;

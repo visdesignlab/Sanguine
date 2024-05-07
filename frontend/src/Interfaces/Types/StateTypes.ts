@@ -19,6 +19,8 @@ export type ApplicationState = {
     nextAddingIndex: number;
     layoutArray: LayoutElement[];
     currentSelectPatient: SingleCasePoint | null;
-    bloodComponentFilter: any;
-    testValueFilter: any;
+    bloodFilter: Record<string, [number, number]>;
+    allCases: SingleCasePoint[];
+    setAllCases: (input: SingleCasePoint[]) => void;
+    filteredCases: SingleCasePoint[];
 };

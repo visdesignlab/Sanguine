@@ -8,7 +8,7 @@ import { FilterChip } from "../../../Presets/StyledComponents";
 
 const OutcomeChipGroup: FC = () => {
     const store = useContext(Store);
-    const { outcomeFilter } = store.state;
+    const { outcomeFilter } = store.provenanceState;
 
     const clickHandler = (input: string) => {
         if (outcomeFilter.includes(input)) {

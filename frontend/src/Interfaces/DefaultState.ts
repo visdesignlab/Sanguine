@@ -9,7 +9,7 @@ export const defaultState: ApplicationState = {
     layoutArray: [],
     surgeryUrgencySelection: [true, true, true],
     outcomeFilter: [],
-    rawDateRange: [new Date(2022, 0, 1).getTime(), today.getTime()],
+    rawDateRange: [new Date(2018, 2, 6).getTime(), today.getTime()],
     proceduresSelection: [],
     totalAggregatedCaseCount: 0,
     totalIndividualCaseCount: 0,
@@ -27,15 +27,16 @@ export const defaultState: ApplicationState = {
         CELL_SAVER_ML: 300,
     },
     currentSelectPatient: null,
-    bloodComponentFilter: {
+    bloodFilter: {
         PRBC_UNITS: [0, ManualInfinity],
         FFP_UNITS: [0, ManualInfinity],
         CRYO_UNITS: [0, ManualInfinity],
         PLT_UNITS: [0, ManualInfinity],
         CELL_SAVER_ML: [0, ManualInfinity],
+        PREOP_HEMO: [0, ManualInfinity],
+        POSTOP_HEMO: [0, ManualInfinity],
     },
-    testValueFilter: {
-        PREOP_HGB: [0, ManualInfinity],
-        POSTOP_HGB: [0, ManualInfinity]
-    }
+    allCases: [],
+    setAllCases: (input: any) => { },
+    filteredCases: [],
 };
