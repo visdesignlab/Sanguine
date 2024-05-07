@@ -259,17 +259,7 @@ const DumbbellChart: FC<Props> = ({ data, valueToVisualize, dimensionHeight, dim
 
 
     const decideIfSelectSet = (d: DumbbellDataPoint) => {
-        if (currentSelectSet.length > 0) {
-            for (let selected of currentSelectSet) {
-                if (selected.setValues.includes((d.case[selected.setName]).toString())) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        else {
-            return false;
-        }
+        return currentSelectSet.length > 0 && !!currentSelectSet.find((selected) => selected.setValues.includes(`${d.case[selected.setName]}`));
     };
 
     const generateDumbbells = () => {

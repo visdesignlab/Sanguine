@@ -28,7 +28,7 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
     const scalePadding = 0.2;
     const currentOffset = OffsetDict.minimum;
     const store = useContext(Store);
-    const { currentBrushedPatientGroup } = store.provenanceState;
+    const { currentBrushedPatientGroup, currentSelectSet } = store.provenanceState;
     const svgSelection = select(svg.current);
     const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null);
     const [isFirstRender, updateIsFirstRender] = useState(true);
@@ -185,16 +185,7 @@ const ScatterPlot: FC<Props> = ({ xAggregationOption, xMax, xMin, yMax, yMin, yV
 
 
     const decideIfSelectSet = (d: ScatterDataPoint) => {
-        // if (currentSelectSet.length > 0) {
-        //     for (let selected of currentSelectSet) {
-        //         if (selected.setValues.includes((d.case[selected.setName]) as any)) { return true; }
-        //     }
-        //     return false;
-        // }
-        // else {
-        //     return false;
-        // }
-        return false;
+        return currentSelectSet.length > 0 && !!currentSelectSet.find((selected) => selected.setValues.includes(`${d.case[selected.setName]}`));
     };
 
 
