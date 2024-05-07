@@ -1455,7 +1455,7 @@ def get_sanguine_surgery_cases(request):
             ON SURG.CASE_ID = HGB.CASE_ID
         """
 
-        result, description = execute_sql_dict(
+        result = execute_sql_dict(
             command,
             **dict(zip(bind_names, filters))
         )
