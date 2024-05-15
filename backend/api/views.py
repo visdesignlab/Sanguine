@@ -375,14 +375,14 @@ def request_transfused_units(request):
         max_time = date_range[1]
 
         # Check that the values supplied are valid possibilities
-        blood_products = [
-            "PRBC_UNITS",
-            "FFP_UNITS",
-            "PLT_UNITS",
-            "CRYO_UNITS",
-            "CELL_SAVER_ML",
-            "ALL_UNITS",
-        ]
+        blood_products = {
+            "PRBC_UNITS": "SUM(PRBC_UNITS) + (SUM(RBC_VOL)/250) AS PRBC_UNITS",
+            "FFP_UNITS": "SUM(FFP_UNITS) + (SUM(FFP_VOL)/220) AS FFP_UNITS",
+            "PLT_UNITS": "SUM(PLT_UNITS) + (SUM(PLT_VOL)/300) AS PLT_UNITS",
+            "CRYO_UNITS": "SUM(CRYO_UNITS) + (SUM(CRYO_VOL)/75) AS CRYO_UNITS",
+            "CELL_SAVER_ML": "SUM(CELL_SAVER_ML) AS CELL_SAVER_ML",
+        }
+        blood_products["ALL_UNITS"] = ", ".join(blood_products.values())
         aggregates = {
             "YEAR": f"EXTRACT (YEAR FROM LIMITED_SURG.{FIELDS_IN_USE.get('case_date')})",
             "SURGEON_ID": f"LIMITED_SURG.{FIELDS_IN_USE.get('surgeon_id')}",
@@ -407,8 +407,8 @@ def request_transfused_units(request):
         }
 
         # Check that the params are valid
-        if transfusion_type not in blood_products:
-            return HttpResponseBadRequest(f"transfusion_type must be one of the following: {blood_products}")
+        if transfusion_type not in blood_products.keys():
+            return HttpResponseBadRequest(f"transfusion_type must be one of the following: {blood_products.keys()}")
 
         if aggregated_by and (aggregated_by not in aggregates.keys()):
             return HttpResponseBadRequest(f"If you use aggregated_by, it must be one of the following: {list(aggregates.keys())}")
@@ -431,6 +431,8 @@ def request_transfused_units(request):
                 if aggregated_by
                 else "SUM(PRBC_UNITS),SUM(FFP_UNITS),SUM(PLT_UNITS),SUM(CRYO_UNITS),SUM(CELL_SAVER_ML)"
             )
+
+        transfusion_type = f"{transfusion_type}, {aggregates[aggregated_by]}" if aggregated_by else transfusion_type
 
         group_by = (
             f"GROUP BY LIMITED_SURG.{FIELDS_IN_USE.get('surgeon_id')}, LIMITED_SURG.{FIELDS_IN_USE.get('anest_id')}, LIMITED_SURG.{FIELDS_IN_USE.get('patient_id')}, LIMITED_SURG.{FIELDS_IN_USE.get('case_id')}, {aggregates[aggregated_by]}"
@@ -517,7 +519,7 @@ def request_transfused_units(request):
         """
 
         # Execute the query
-        result, description = execute_sql(
+        result, _ = execute_sql(
             command,
             **dict(
                 zip(pat_bind_names + case_bind_names,
