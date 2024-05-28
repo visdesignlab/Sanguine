@@ -82,7 +82,7 @@ export type DumbbellDataPoint = {
 export type ExtraPairPoint = {
     name: string;
     data: any[];
-    type: string;
+    type: 'Violin' | 'BarChart' | 'Basic';
     label: string;
     medianSet?: any;
     kdeMax?: number;

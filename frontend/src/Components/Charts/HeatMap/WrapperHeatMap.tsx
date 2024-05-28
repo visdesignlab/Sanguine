@@ -4,18 +4,17 @@ import { FC } from "react";
 import { generateRegularData } from "../../../HelperFunctions/ChartDataGenerator";
 import { generateExtrapairPlotData } from "../../../HelperFunctions/ExtraPairDataGenerator";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
-import { ExtraPairPadding, ExtraPairWidth, } from "../../../Presets/Constants";
+import { ExtraPairPadding, ExtraPairWidth } from "../../../Presets/Constants";
 import Store from "../../../Interfaces/Store";
 import { ExtraPairPoint, HeatMapDataPoint, SingleCasePoint } from "../../../Interfaces/Types/DataTypes";
-import { ChartSVG } from "../../../Presets/StyledSVGComponents";
 import HeatMap from "./HeatMap";
 import ExtraPairButtons from "../ChartAccessories/ExtraPairButtons";
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import ChartConfigMenu from "../ChartAccessories/ChartConfigMenu";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import ChartStandardButtons from "../ChartStandardButtons";
-import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
-import { ChartAccessoryDiv, ChartWrapperContainer } from "../../../Presets/StyledComponents";
+import { ChartAccessoryDiv } from "../../../Presets/StyledComponents";
+import { Box, Container } from "@mui/material";
 
 type Props = {
     layoutW: number;
@@ -72,10 +71,11 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
 
     useLayoutEffect(() => {
         if (svgRef.current) {
+            console.log(data);
             setWidth(svgRef.current.clientWidth);
             setHeight(svgRef.current.clientHeight);
         }
-    }, [layoutH, layoutW, store.mainCompWidth, svgRef]);
+    }, [data, layoutH, layoutW, store.mainCompWidth, svgRef]);
 
     useDeepCompareEffect(() => {
         // let caseSetReturnedFromQuery = new Set();
@@ -96,7 +96,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
                     };
                 }
 
-                if ((outcomeComparison && singleCase[outcomeComparison] > 0) || (comparisonDate && singleCase.CASE_DATE < comparisonDate)) {
+                if ((outcomeComparison && singleCase[outcomeComparison] as number > 0) || (comparisonDate && singleCase.CASE_DATE < comparisonDate)) {
                     secondaryTemporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
                     secondaryTemporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.MRN);
                 }
@@ -122,7 +122,7 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
         comparisonDate,
         filteredCases]);
 
-    return (<ChartWrapperContainer>
+    return (<Container style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <ChartAccessoryDiv>
             {`Heatmap${(outcomeComparison || comparisonDate) ? " with Comparison" : ""}`}
             <ExtraPairButtons disbleButton={width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
@@ -137,27 +137,29 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
             <ChartStandardButtons chartID={chartId} />
 
         </ChartAccessoryDiv>
-        <ChartSVG ref={svgRef}>
-            <HeatMap
-                dimensionHeight={height}
-                dimensionWidth={width}
-                data={data}
-                svg={svgRef}
-                extraPairTotalWidth={extraPairTotalWidth}
-                xAggregationOption={xAggregationOption}
-                yValueOption={yValueOption}
-                chartId={chartId}
-                extraPairDataSet={extraPairData}
-                secondaryExtraPairDataSet={(outcomeComparison || comparisonDate) ? secondaryExtraPairData : undefined}
-                secondaryData={(outcomeComparison || comparisonDate) ? secondaryData : undefined}
-                firstTotal={caseCount}
-                secondTotal={secondaryCaseCount}
-                interventionDate={comparisonDate}
-                outcomeComparison={outcomeComparison || ""}
-            />
-        </ChartSVG>
+        <Box style={{ flexGrow: 1 }}>
+            <svg style={{ width: '100%', height: '100%' }} ref={svgRef}>
+                <HeatMap
+                    dimensionHeight={height}
+                    dimensionWidth={width}
+                    data={data}
+                    svg={svgRef}
+                    extraPairTotalWidth={extraPairTotalWidth}
+                    xAggregationOption={xAggregationOption}
+                    yValueOption={yValueOption}
+                    chartId={chartId}
+                    extraPairDataSet={extraPairData}
+                    secondaryExtraPairDataSet={(outcomeComparison || comparisonDate) ? secondaryExtraPairData : undefined}
+                    secondaryData={(outcomeComparison || comparisonDate) ? secondaryData : undefined}
+                    firstTotal={caseCount}
+                    secondTotal={secondaryCaseCount}
+                    interventionDate={comparisonDate}
+                    outcomeComparison={outcomeComparison || ""}
+                />
+            </svg>
+        </Box>
         <AnnotationForm chartI={chartId} annotationText={annotationText} />
-    </ChartWrapperContainer>
+    </Container>
 
 
     );

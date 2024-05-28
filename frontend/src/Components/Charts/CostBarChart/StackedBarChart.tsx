@@ -5,7 +5,7 @@ import { Basic_Gray, OffsetDict } from "../../../Presets/Constants";
 import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import useDeepCompareEffect from "use-deep-compare-effect";
 import { observer } from "mobx-react";
-import HeatMapAxis from "../ChartAccessories/HeatMapAxis";
+import HeatMapAxis from "../ChartAccessories/HeatMapAxisY";
 import { ChartG } from "../../../Presets/StyledSVGComponents";
 import SingleStackedBar from "./SingleStackedBar";
 import CaseCountHeader from "../ChartAccessories/CaseCountHeader";
