@@ -376,11 +376,11 @@ def request_transfused_units(request):
 
         # Check that the values supplied are valid possibilities
         blood_products = {
-            "PRBC_UNITS": "SUM(PRBC_UNITS) + (SUM(RBC_VOL)/250) AS PRBC_UNITS",
-            "FFP_UNITS": "SUM(FFP_UNITS) + (SUM(FFP_VOL)/220) AS FFP_UNITS",
-            "PLT_UNITS": "SUM(PLT_UNITS) + (SUM(PLT_VOL)/300) AS PLT_UNITS",
-            "CRYO_UNITS": "SUM(CRYO_UNITS) + (SUM(CRYO_VOL)/75) AS CRYO_UNITS",
-            "CELL_SAVER_ML": "SUM(CELL_SAVER_ML) AS CELL_SAVER_ML",
+            "PRBC_UNITS": "SUM(NVL(PRBC_UNITS, 0)) + (SUM(RBC_VOL)/250, 0)) AS PRBC_UNITS",
+            "FFP_UNITS": "SUM(NVL(FFP_UNITS, 0)) + (NVL(SUM(FFP_VOL)/220, 0)) AS FFP_UNITS",
+            "PLT_UNITS": "SUM(NVL(PLT_UNITS, 0)) + (NVL(SUM(PLT_VOL)/300, 0)) AS PLT_UNITS",
+            "CRYO_UNITS": "SUM(NVL(CRYO_UNITS, 0)) + (NVL(SUM(CRYO_VOL)/75, 0)) AS CRYO_UNITS",
+            "CELL_SAVER_ML": "SUM(NVL(CELL_SAVER_ML, 0)) AS CELL_SAVER_ML",
         }
         blood_products["ALL_UNITS"] = ", ".join(blood_products.values())
         aggregates = {
