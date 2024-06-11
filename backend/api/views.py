@@ -1223,15 +1223,11 @@ def get_sanguine_surgery_cases(request):
         command = f"""
         WITH TRANSFUSED_UNITS AS (
             SELECT
-                SUM(NVL(PRBC_UNITS, 0)) + CEIL(SUM(RBC_VOL)/250, 0)) AS PRBC_UNITS,
+                SUM(NVL(PRBC_UNITS, 0)) + CEIL(NVL(SUM(RBC_VOL)/250, 0)) AS PRBC_UNITS,
                 SUM(NVL(FFP_UNITS, 0)) + CEIL(NVL(SUM(FFP_VOL)/220, 0)) AS FFP_UNITS,
                 SUM(NVL(PLT_UNITS, 0)) + CEIL(NVL(SUM(PLT_VOL)/300, 0)) AS PLT_UNITS,
                 SUM(NVL(CRYO_UNITS, 0)) + CEIL(NVL(SUM(CRYO_VOL)/75, 0)) AS CRYO_UNITS,
                 SUM(CELL_SAVER_ML) AS CELL_SAVER_ML,
-                SUM(RBC_VOL) AS RBC_VOL,
-                SUM(FFP_VOL) AS FFP_VOL,
-                SUM(PLT_VOL) AS PLT_VOL,
-                SUM(CRYO_VOL) AS CRYO_VOL,
                 CASE_ID
             FROM
                 BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_TRANSFUSION
