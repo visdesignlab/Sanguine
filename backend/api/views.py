@@ -1284,7 +1284,7 @@ def get_sanguine_surgery_cases(request):
                 V.RESULT_VALUE
             FROM
                 BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT_LABS V
-            WHERE UPPER(V.RESULT_DESC) = 'HEMOGLOBIN'
+            WHERE UPPER(V.RESULT_DESC) = 'HEMOGLOBIN' OR UPPER(V.RESULT_DESC) LIKE '%HGB%'
         ),
         PREOP_HB AS (
             SELECT
