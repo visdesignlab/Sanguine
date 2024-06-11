@@ -1225,7 +1225,7 @@ def get_sanguine_surgery_cases(request):
             SELECT
                 SUM(NVL(PRBC_UNITS, 0)) + CEIL(SUM(RBC_VOL)/250, 0)) AS PRBC_UNITS,
                 SUM(NVL(FFP_UNITS, 0)) + CEIL(NVL(SUM(FFP_VOL)/220, 0)) AS FFP_UNITS,
-                SUM(NVL(PLT_UNITS, 0)) + CEIL(NVL(SUM(PLT_VOL)/300, 0)) AS PLT_UNITS
+                SUM(NVL(PLT_UNITS, 0)) + CEIL(NVL(SUM(PLT_VOL)/300, 0)) AS PLT_UNITS,
                 SUM(NVL(CRYO_UNITS, 0)) + CEIL(NVL(SUM(CRYO_VOL)/75, 0)) AS CRYO_UNITS,
                 SUM(CELL_SAVER_ML) AS CELL_SAVER_ML,
                 SUM(RBC_VOL) AS RBC_VOL,
