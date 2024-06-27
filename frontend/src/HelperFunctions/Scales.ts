@@ -9,9 +9,10 @@ export const AggregationScaleGenerator = (
     xVals: any[],
     dimensionHeight: number,
     currentOffset: Offset) => {
+
     return scaleBand()
         .domain(xVals)
-        .range([dimensionHeight - currentOffset.bottom, currentOffset.top])
+        .range([dimensionHeight - currentOffset.bottom, 0])
         .paddingInner(0.1);
 };
 

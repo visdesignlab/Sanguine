@@ -175,5 +175,5 @@ const outcomeDataGenerate = (aggregatedBy: string, name: string, label: string, 
         newData[key].actualVal = sum(value as any);
 
     }
-    return ({ name: name, label: label, data: newData, type: "Basic" });
+    return ({ name: name, label: label, data: newData, type: "Basic" }) as ExtraPairPoint;
 };
