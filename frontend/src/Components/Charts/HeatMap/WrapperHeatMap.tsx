@@ -71,7 +71,6 @@ const WrapperHeatMap: FC<Props> = ({ annotationText, outcomeComparison, layoutH,
 
     useLayoutEffect(() => {
         if (svgRef.current) {
-            console.log(data);
             setWidth(svgRef.current.clientWidth);
             setHeight(svgRef.current.clientHeight);
         }
