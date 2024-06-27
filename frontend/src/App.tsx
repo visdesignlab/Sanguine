@@ -99,9 +99,15 @@ const App: FC = () => {
         throw new Error("There was an issue fetching data. No results were returned.");
       }
 
-      // const nameDictFetch = await fetch(`${process.env.REACT_APP_QUERY_URL}surgeon_anest_names`);
-      // const nameDict = await nameDictFetch.json();
-      // store.configStore.updateNameDictionary(nameDict);
+      const nameDictFetch = await fetch(`${process.env.REACT_APP_QUERY_URL}surgeon_anest_names`);
+      const nameDict = await nameDictFetch.json();
+      store.configStore.updateNameDictionary(nameDict);
+
+      let patientIDSet: Set<number> | undefined;
+      if (currentSelectPatientGroup.length > 0) {
+        patientIDSet = new Set<number>();
+        currentSelectPatientGroup.forEach((d) => { patientIDSet!.add(d.CASE_ID); });
+      }
 
       store.allCases = surgeryCases.result;
     }
