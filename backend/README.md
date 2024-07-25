@@ -86,15 +86,6 @@ There are several routes set up for accessing the patient and surgery data. Here
     curl '127.0.0.1:8000/api/get_procedure_counts'
     ```
 
-- Name: `/api/hemoglobin`
-  - Allowed Methods: `GET`
-  - Parameters: `None`
-  - Description: Returns pre and post operative hemoglobin values for all patients.
-  - Example:
-    ```
-    curl '127.0.0.1:8000/api/hemoglobin'
-    ```
-
 - Name: `/api/fetch_surgery`
   - Allowed Methods: `GET`
   - Parameters:  

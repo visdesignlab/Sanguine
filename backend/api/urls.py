@@ -13,7 +13,6 @@ urlpatterns = [
     path("api/", views.index, name="index"),
     path("api/whoami", views.whoami, name="whoami"),
     path("api/get_procedure_counts", views.get_procedure_counts, name="get_procedure_counts"),
-    path("api/hemoglobin", views.hemoglobin, name="hemoglobin"),
     path("api/fetch_surgery", views.fetch_surgery, name="fetch_surgery"),
     path("api/fetch_patient", views.fetch_patient, name="fetch_patient"),
     path("api/state", views.state, name="state"),
