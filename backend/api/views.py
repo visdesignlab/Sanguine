@@ -22,7 +22,6 @@ from api.models import State, StateAccess, AccessLevel
 from api.utils import (
     cpt,
     get_all_cpt_code_filters,
-    output_quarter,
 )
 
 
@@ -353,6 +352,7 @@ def fetch_patient(request):
         )
         return HttpResponseNotAllowed(["GET"], "Method Not Allowed")
 
+
 @conditional_login_required(login_required, os.getenv("REQUIRE_LOGINS") == "True")
 def state(request):
     if request.method == "GET":
@@ -665,22 +665,22 @@ def get_sanguine_surgery_cases(request):
                 CASE WHEN SUM(AMICAR) > 0 THEN 1 ELSE 0 END AS AMICAR,
                 CASE WHEN SUM(B12) > 0 THEN 1 ELSE 0 END AS B12
             FROM (
-                (SELECT 
+                (SELECT
                     VISIT_NO,
                     SUM(CASE WHEN MEDICATION_ID IN (31383, 310071, 301530) THEN 1 ELSE 0 END) AS TXA,
                     SUM(CASE WHEN MEDICATION_ID IN (300167, 300168, 300725, 310033) THEN 1 ELSE 0 END) AS AMICAR,
                     SUM(CASE WHEN MEDICATION_ID IN (800001, 59535, 400030, 5553, 23584, 73156, 23579, 23582) THEN 1 ELSE 0 END) AS B12
-                FROM 
+                FROM
                     BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_MEDS
                 group by VISIT_NO
                 )
                 UNION ALL
-                (SELECT 
+                (SELECT
                     VISIT_NO,
                     SUM(CASE WHEN MEDICATION_ID IN (31383, 310071, 301530) THEN 1 ELSE 0 END) AS TXA,
                     SUM(CASE WHEN MEDICATION_ID IN (300167, 300168, 300725, 310033) THEN 1 ELSE 0 END) AS AMICAR,
                     SUM(CASE WHEN MEDICATION_ID IN (800001, 59535, 400030, 5553, 23584, 73156, 23579, 23582) THEN 1 ELSE 0 END) AS B12
-                FROM 
+                FROM
                     BLOOD_PRODUCTS_DM.BLPD_SANGUINE_EXTRAOP_MEDS
                 group by VISIT_NO
                 )
