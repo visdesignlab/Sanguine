@@ -95,33 +95,6 @@ There are several routes set up for accessing the patient and surgery data. Here
     curl '127.0.0.1:8000/api/hemoglobin'
     ```
 
-- Name: `/api/request_transfused_units`
-  - Allowed Methods: `GET`
-  - Parameters:
-    - Required:  
-        `transfusion_type`: A blood product to look up. Must be one of: PRBC_UNITS, FFP_UNITS, PLT_UNITS, CRYO_UNITS, CELL_SAVER_ML, or ALL_UNITS.  
-        `date_range`: A comma separated list of 2 dates in oracle db date format.
-    - Optional:  
-        `aggregated_by`: One of YEAR, SURGEON_ID, ANESTHESIOLOGIST_ID.  
-        `patient_ids`: A comma separated list of patient ids.  
-        `case_ids`: A comma separated list of case ids.  
-        `filter_selection`: A query of the format "(proc1) OR (proc2 AND proc3) OR ...". any and clause is optional and allows for querying overlapping cases (e.g. surgery cases with ECMO AND CABG).
-  - Description: Returns the number of transfused units in several different ways. 1) the transfused units for each case or 2), if it's aggregated, returns the different values for the aggregation along with the transfused units grouped by it and the case ids for that aggregated value.
-  - Example:
-    ```
-    # Minimal example
-    curl '127.0.0.1:8000/api/request_transfused_units?transfusion_type=PRBC_UNITS&date_range=01-JAN-2016,31-DEC-2017'
-    
-    # Full example
-    curl '127.0.0.1:8000/api/request_transfused_units?
-      transfusion_type=PRBC_UNITS&
-      date_range=01-JAN-2016,31-DEC-2017&
-      aggregated_by=YEAR&
-      patient_ids=68175619,14711172,35383429,632559101&
-      case_ids=85103152,123&
-      filter_selection=(CABG AND ECMO) OR (TAVR AND Musculoskeletal Thoracic Procedure)'
-    ```
-
 - Name: `/api/fetch_surgery`
   - Allowed Methods: `GET`
   - Parameters:  
@@ -140,26 +113,6 @@ There are several routes set up for accessing the patient and surgery data. Here
   - Example:
     ```
     curl '127.0.0.1:8000/api/fetch_patient?patient_id=68175619'
-    ```
-
-- Name: `/api/risk_score`
-  - Allowed Methods: `GET`
-  - Parameters:  
-    `patient_ids`: A comma separated list of patient ids.  
-  - Description: Takes patient ids and returns a list of APR_DRG values such as overall risk of mortality.
-  - Example:
-    ```
-    curl '127.0.0.1:8000/api/risk_score?patient_ids=68175619,14711172,35383429,632559101'
-    ```
-
-- Name: `/api/patient_outcomes`
-  - Allowed Methods: `GET`
-  - Parameters:  
-    `patient_ids`: A comma separated list of patient ids.  
-  - Description: WIP. Takes patient ids as input. Currently returns 2 values, whether a patient has died or not and if they spent 1440 minutes on a ventilator (24 hours).
-  - Example:
-    ```
-    curl '127.0.0.1:8000/api/patient_outcomes?patient_ids=68175619,14711172,35383429,632559101'
     ```
 
 - Name: `/api/state`
