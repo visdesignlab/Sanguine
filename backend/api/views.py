@@ -632,7 +632,7 @@ def get_sanguine_surgery_cases(request):
         filters, bind_names, filters_safe_sql = get_all_cpt_code_filters()
 
         # Get the data from the database
-        command = f"""
+        command = rf"""
         WITH TRANSFUSED_UNITS AS (
             SELECT
                 SUM(NVL(PRBC_UNITS, 0)) + CEIL(NVL(SUM(RBC_VOL)/250, 0)) AS PRBC_UNITS,
@@ -696,7 +696,8 @@ def get_sanguine_surgery_cases(request):
                 V.RESULT_VALUE
             FROM
                 BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT_LABS V
-            WHERE UPPER(V.RESULT_DESC) = 'HEMOGLOBIN' OR INSTR(UPPER(V.RESULT_DESC), 'HGB') > 0
+            WHERE INSTR(UPPER(RESULT_DESC), 'HEMOGLOBIN') > 0 OR INSTR(UPPER(V.RESULT_DESC), 'HGB') > 0
+            AND REGEXP_LIKE(RESULT_VALUE, '^[+-]?\d+(\.\d+)?$')
         ),
         PREOP_HB AS (
             SELECT
