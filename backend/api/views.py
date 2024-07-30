@@ -696,7 +696,7 @@ def get_sanguine_surgery_cases(request):
                 V.RESULT_VALUE
             FROM
                 BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT_LABS V
-            WHERE INSTR(UPPER(RESULT_DESC), 'HEMOGLOBIN') > 0 OR INSTR(UPPER(V.RESULT_DESC), 'HGB') > 0
+            WHERE (INSTR(UPPER(RESULT_DESC), 'HEMOGLOBIN') > 0 OR INSTR(UPPER(V.RESULT_DESC), 'HGB') > 0)
             AND REGEXP_LIKE(RESULT_VALUE, '^[+-]?\d+(\.\d+)?$')
         ),
         PREOP_HB AS (
