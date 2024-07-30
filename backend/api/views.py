@@ -635,10 +635,22 @@ def get_sanguine_surgery_cases(request):
         command = rf"""
         WITH TRANSFUSED_UNITS AS (
             SELECT
-                SUM(NVL(PRBC_UNITS, 0)) + CEIL(NVL(SUM(RBC_VOL)/250, 0)) AS PRBC_UNITS,
-                SUM(NVL(FFP_UNITS, 0)) + CEIL(NVL(SUM(FFP_VOL)/220, 0)) AS FFP_UNITS,
-                SUM(NVL(PLT_UNITS, 0)) + CEIL(NVL(SUM(PLT_VOL)/300, 0)) AS PLT_UNITS,
-                SUM(NVL(CRYO_UNITS, 0)) + CEIL(NVL(SUM(CRYO_VOL)/75, 0)) AS CRYO_UNITS,
+                SUM(NVL(
+                    CASE WHEN PRBC_UNITS > 150 THEN CEIL(PRBC_UNITS / 250) ELSE PRBC_UNITS END,
+                    0
+                )) + CEIL(NVL(SUM(RBC_VOL)/250, 0)) AS PRBC_UNITS,
+                SUM(NVL(
+                    CASE WHEN FFP_UNITS > 150 THEN CEIL(FFP_UNITS / 220) ELSE FFP_UNITS END,
+                    0
+                )) + CEIL(NVL(SUM(FFP_VOL)/220, 0)) AS FFP_UNITS,
+                SUM(NVL(
+                    CASE WHEN PLT_UNITS > 150 THEN CEIL(PLT_UNITS / 300) ELSE PLT_UNITS END,
+                    0
+                )) + CEIL(NVL(SUM(PLT_VOL)/300, 0)) AS PLT_UNITS,
+                SUM(NVL(
+                    CASE WHEN CRYO_UNITS > 35 THEN CEIL(CRYO_UNITS / 75) ELSE CRYO_UNITS END,
+                    0
+                )) + CEIL(NVL(SUM(CRYO_VOL)/75, 0)) AS CRYO_UNITS,
                 SUM(CELL_SAVER_ML) AS CELL_SAVER_ML,
                 CASE_ID
             FROM
