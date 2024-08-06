@@ -1,5 +1,6 @@
 import csv
 import logging
+from django.db import connections
 
 logger = logging.getLogger("api.views")
 
@@ -48,3 +49,20 @@ def log_request(request, paramsToExclude=[]):
     logger.info(
         f"From: {request.META.get('HTTP_X_FORWARDED_FOR')}. Path: {request.path}. Method: {request.method}. User: {request.user}. Params: {params}"
     )
+
+
+def execute_sql(command, *args, **kwargs):
+    with connections["hospital"].cursor() as cursor:
+        cursor.execute(command, kwargs)
+        return cursor.fetchall(), cursor.description
+
+
+def execute_sql_dict(command, *args, **kwargs):
+    with connections["hospital"].cursor() as cursor:
+        cursor.execute(command, kwargs)
+
+        rows = cursor.fetchall()
+        cols = [col[0] for col in cursor.description]
+
+        dict_rows = [dict(zip(cols, row)) for row in rows]
+        return dict_rows
