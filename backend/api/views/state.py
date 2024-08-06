@@ -12,7 +12,7 @@ from django.views.decorators.http import require_http_methods
 from django_cas_ng.decorators import login_required
 
 from api.models import State, StateAccess, AccessLevel
-from backend.api.views.utils.utils import log_request
+from .utils.utils import log_request
 
 
 @require_http_methods(["GET", "POST", "PUT", "DELETE"])
