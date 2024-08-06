@@ -104,7 +104,7 @@ LOGGING = {
     },
     "handlers": {
         "file": {
-            "class": "logging.RotatingFileHandler",
+            "class": "logging.handlers.RotatingFileHandler",
             "filename": "sanguine.log",
             "maxBytes": 1000000000,  # 1GB
             "backupCount": 10,
