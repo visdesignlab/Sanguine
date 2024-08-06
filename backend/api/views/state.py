@@ -72,7 +72,7 @@ def state(request):
             )
             new_state.save()
 
-            return HttpResponse("state object created", 200)
+            return HttpResponse("state object created", 201)
         else:
             return HttpResponseBadRequest("missing params: [name, definition, owner]")
 
@@ -113,7 +113,7 @@ def state(request):
         result.public = new_public
         result.save()
 
-        return HttpResponse("state object updated", 200)
+        return HttpResponse("state object updated")
 
     elif request.method == "DELETE":
         # Get the required information from the request body
@@ -133,7 +133,7 @@ def state(request):
 
         result.delete()
 
-        return HttpResponse("state object deleted", 200)
+        return HttpResponse("state object deleted")
 
 
 @require_http_methods(["POST"])
@@ -178,7 +178,7 @@ def share_state(request):
             state_access_object = state_access_object.first()
             state_access_object.role = role
             state_access_object.save()
-            return HttpResponse("Updated user role", 200)
+            return HttpResponse("Updated user role")
         else:
             return HttpResponse(
                 "This user already has multiple access roles", status=500
