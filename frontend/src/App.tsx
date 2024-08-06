@@ -80,8 +80,8 @@ const App: FC = () => {
             PLT_UNITS: d.PLT_UNITS ? d.PLT_UNITS : 0,
             CRYO_UNITS: d.CRYO_UNITS ? d.CRYO_UNITS : 0,
             CELL_SAVER_ML: d.CELL_SAVER_ML ? d.CELL_SAVER_ML : 0,
-            PREOP_HEMO: !Number.isNaN(preopHemo) ? preopHemo : 0,
-            POSTOP_HEMO: !Number.isNaN(postopHemo) ? postopHemo : 0,
+            PREOP_HEMO: !Number.isNaN(preopHemo) ? preopHemo : null,
+            POSTOP_HEMO: !Number.isNaN(postopHemo) ? postopHemo : null,
             VENT: d.VENT ? d.VENT : 0,
             DRG_WEIGHT: !Number.isNaN(drgWeight) ? drgWeight : 0,
             DEATH: d.DEATH === "Y" ? 1 : 0,
@@ -99,9 +99,6 @@ const App: FC = () => {
         throw new Error("There was an issue fetching data. No results were returned.");
       }
 
-      const nameDictFetch = await fetch(`${process.env.REACT_APP_QUERY_URL}surgeon_anest_names`);
-      const nameDict = await nameDictFetch.json();
-      store.configStore.updateNameDictionary(nameDict);
 
       let patientIDSet: Set<number> | undefined;
       if (currentSelectPatientGroup.length > 0) {

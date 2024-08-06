@@ -1,6 +1,4 @@
 import ast
-import logging
-import csv
 
 from collections import Counter, defaultdict
 from django.db import connections
@@ -17,7 +15,7 @@ from django.views.decorators.http import require_http_methods
 from django_cas_ng.decorators import login_required
 
 from api.models import State, StateAccess, AccessLevel
-from api.utils import cpt, get_all_cpt_code_filters
+from api.utils import cpt, get_all_cpt_code_filters, log_request
 
 DE_IDENT_FIELDS = {
     "admin_dose": "ADMIN_DOSE",
@@ -126,8 +124,6 @@ IDENT_TABLES = {
 FIELDS_IN_USE = IDENT_FIELDS
 TABLES_IN_USE = IDENT_TABLES
 
-logger = logging.getLogger(__name__)
-
 
 def execute_sql(command, *args, **kwargs):
     with connections["hospital"].cursor() as cursor:
@@ -144,24 +140,6 @@ def execute_sql_dict(command, *args, **kwargs):
 
         dict_rows = [dict(zip(cols, row)) for row in rows]
         return dict_rows
-
-
-def log_request(request, paramsToExclude=[]):
-    params = {}
-
-    if request.method == "GET":
-        params = request.GET
-    if request.method == "POST":
-        params = request.POST
-    if request.method == "PUT" or request.method == "DELTE":
-        params = ast.literal_eval(request.body.decode())
-
-    # Remove excluded params
-    params = {k: v for k, v in params.items() if k not in paramsToExclude}
-
-    logger.info(
-        f"From: {request.META.get('HTTP_X_FORWARDED_FOR')}. Path: {request.path}. Method: {request.method}. User: {request.user}. Params: {params}"
-    )
 
 
 @require_http_methods(["GET"])
@@ -526,31 +504,6 @@ def state_unids(request):
         "users_and_roles": users_and_roles,
     }
 
-    return JsonResponse(response)
-
-
-@require_http_methods(["GET"])
-@login_required
-def surgeon_anest_names(request):
-    log_request(request)
-
-    # Import the mappings between surgeon ID and name
-    surgeon_mapping = {}
-
-    with open("SURGEON_LOOKUP_040422.csv", "r") as file:
-        read_csv = csv.reader(file, delimiter=",")
-        for row in read_csv:
-            surgeon_mapping[row[0]] = row[1]
-
-    # Import the mappings between anesthesiologist ID and name
-    anest_mapping = {}
-
-    with open("ANESTH_LOOKUP_040422.csv", "r") as file:
-        read_csv = csv.reader(file, delimiter=",")
-        for row in read_csv:
-            anest_mapping[row[0]] = row[1]
-
-    response = {"SURGEON_ID": surgeon_mapping, "ANESTHESIOLOGIST_ID": anest_mapping}
     return JsonResponse(response)
 
 

@@ -16,7 +16,6 @@ export class ProjectConfigStore {
     snackBarIsError: boolean;
     privateMode: boolean;
     stateToUpdate: string;
-    nameDictionary: any;
 
     constructor(rootStore: RootStore) {
         this.rootStore = rootStore;
@@ -29,18 +28,13 @@ export class ProjectConfigStore {
         this.snackBarIsError = false;
         this.loadedStateName = "";
         this.stateToUpdate = "";
-
-        this.nameDictionary = {};
         this.savedState = [];
+
         makeAutoObservable(this);
     }
 
     checkIfInSavedState = (stateName: string) => {
         return this.savedState.includes(stateName);
-    };
-
-    updateNameDictionary = (newNameDictionary: any) => {
-        this.nameDictionary = newNameDictionary;
     };
 
     addNewState = (stateName: string) => {
@@ -76,6 +70,7 @@ export class ProjectConfigStore {
     changeCostConfig(componentName: string, newCost: number) {
         this.provenance.apply(changeCostConfig(componentName, newCost));
     }
+
     changeOutcomeFilter(newOutcomeFilter: string[]) {
         this.provenance.apply(changeOutcomeFilter(newOutcomeFilter));
     }
@@ -83,18 +78,23 @@ export class ProjectConfigStore {
     toggleShowZero(showZero: boolean) {
         this.provenance.apply(toggleShowZero(showZero));
     }
+
     dateRangeChange(dateRange: number[]) {
         this.provenance.apply(dateRangeChange(dateRange));
     }
+
     loadPreset(layoutInput: LayoutElement[]) {
         this.provenance.apply(loadPreset(layoutInput));
     }
+
     changeBloodFilter(componentName: string, newRange: [number, number]) {
         this.provenance.apply(changeBloodFilter(componentName, newRange));
     }
+
     resetBloodFilter(type: typeof BloodComponentOptions | typeof ScatterYOptions) {
         this.provenance.apply(resetBloodFilter(type));
     }
+
     clearAllFilter() {
         this.provenance.apply(clearAllFilter());
     }

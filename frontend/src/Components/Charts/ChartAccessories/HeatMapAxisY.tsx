@@ -41,13 +41,7 @@ const HeatMapAxis: FC<Props> = ({ svg, currentOffset, extraPairTotalWidth, xVals
         .selectAll("text")
         .attr("font-size", store.configStore.largeFont ? largeFontSize : regularFontSize)
         .attr("transform", `translate(-${CaseRectWidth + 2},0)`)
-        .text((d: any) => {
-            if (store.configStore.nameDictionary[xAggregationOption] && store.configStore.privateMode) {
-                const name = store.configStore.nameDictionary[xAggregationOption][d];
-                return name ? `${name.slice(0, 1)}${name.slice(1).toLowerCase()}` : d;
-            }
-            return d;
-        })
+        .text((d: any) => d)
         .attr("cursor", "pointer")
         .on("click", (e, d: any) => {
             store.selectionStore.selectSet(xAggregationOption, d.toString(), !e.shiftKey);

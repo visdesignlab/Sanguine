@@ -1,4 +1,7 @@
 import csv
+import logging
+
+logger = logging.getLogger("api.views")
 
 
 def cpt():
@@ -27,3 +30,21 @@ def get_all_cpt_code_filters():
     filters_safe_sql = f"WHERE CODE IN (%({')s,%('.join(bind_names)})s) "
 
     return filters, bind_names, filters_safe_sql
+
+
+def log_request(request, paramsToExclude=[]):
+    params = {}
+
+    if request.method == "GET":
+        params = request.GET
+    if request.method == "POST":
+        params = request.POST
+    if request.method == "PUT" or request.method == "DELTE":
+        params = ast.literal_eval(request.body.decode())
+
+    # Remove excluded params
+    params = {k: v for k, v in params.items() if k not in paramsToExclude}
+
+    logger.info(
+        f"From: {request.META.get('HTTP_X_FORWARDED_FOR')}. Path: {request.path}. Method: {request.method}. User: {request.user}. Params: {params}"
+    )

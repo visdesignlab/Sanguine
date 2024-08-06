@@ -9,7 +9,6 @@ import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
 import useDeepCompareEffect from "use-deep-compare-effect";
 import AnnotationForm from "../ChartAccessories/AnnotationForm";
 import ChartStandardButtons from "../ChartStandardButtons";
-import { ProcedureStringGenerator } from "../../../HelperFunctions/ProcedureStringGenerator";
 import { ChartWrapperContainer } from "../../../Presets/StyledComponents";
 import styled from "@emotion/styled";
 import { Basic_Gray } from "../../../Presets/Constants";
