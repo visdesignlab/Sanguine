@@ -28,8 +28,6 @@ def get_procedure_counts(request):
 
     filters, bind_names, _ = get_all_cpt_code_filters()
 
-    # Make the connection and execute the command
-    # ,CASE WHEN PRIM_PROC_DESC LIKE "%REDO%" THEN 1 ELSE 0 END AS REDO
     command = procedure_count_query
 
     result = list(execute_sql(command, **dict(zip(bind_names, filters)))[0])
