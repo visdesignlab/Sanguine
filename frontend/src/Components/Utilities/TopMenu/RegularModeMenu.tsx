@@ -56,7 +56,7 @@ const RegularModeMenu: FC = () => {
 
     const updateState = () => {
         const csrftoken = simulateAPIClick();
-        fetch(`${import.meta.env.REACT_APP_QUERY_URL}state`, {
+        fetch(`${import.meta.env.VITE_APP_QUERY_URL}state`, {
             method: `PUT`,
             credentials: "include",
             headers: {

@@ -19,7 +19,7 @@ const App: FC = () => {
   const [dataLoadingFailed, setDataLoadingFailed] = useState(false);
 
   useEffect(() => {
-    if (import.meta.env.REACT_APP_REQUIRE_LOGIN !== "true" || (store.configStore.isLoggedIn && allCases.length === 0)) {
+    if (import.meta.env.VITE_APP_REQUIRE_LOGIN !== "true" || (store.configStore.isLoggedIn && allCases.length === 0)) {
       fetchAllCases();
     } else {
       whoamiAPICall(store);
@@ -29,14 +29,14 @@ const App: FC = () => {
 
   const handleOnIdle = () => {
     // On idle log the user out
-    if (import.meta.env.REACT_APP_REQUIRE_LOGIN === "true") {
+    if (import.meta.env.VITE_APP_REQUIRE_LOGIN === "true") {
       logoutHandler();
     }
 
   };
 
   const handleOnAction = () => {
-    if (import.meta.env.REACT_APP_REQUIRE_LOGIN === "true") {
+    if (import.meta.env.VITE_APP_REQUIRE_LOGIN === "true") {
       whoamiAPICall(store);
     }
   };
@@ -51,11 +51,11 @@ const App: FC = () => {
   });
 
   async function fetchAllCases() {
-    if (import.meta.env.REACT_APP_REQUIRE_LOGIN === "true") {
+    if (import.meta.env.VITE_APP_REQUIRE_LOGIN === "true") {
       whoamiAPICall(store);
     }
     try {
-      const surgeryCasesFetch = await fetch(`${import.meta.env.REACT_APP_QUERY_URL}get_sanguine_surgery_cases`);
+      const surgeryCasesFetch = await fetch(`${import.meta.env.VITE_APP_QUERY_URL}get_sanguine_surgery_cases`);
       const surgeryCasesInput = await surgeryCasesFetch.json();
 
       // Fix data types for the surgery cases
@@ -117,7 +117,7 @@ const App: FC = () => {
 
   return <>
     <Dashboard />
-    {(import.meta.env.REACT_APP_REQUIRE_LOGIN === "true") ?
+    {(import.meta.env.VITE_APP_REQUIRE_LOGIN === "true") ?
       <>
         <BrowserWarning />
         <DataRetrieval dataLoading={dataLoading} dataLoadingFailed={dataLoadingFailed} />

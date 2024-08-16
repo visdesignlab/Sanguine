@@ -25,7 +25,7 @@ const StateAccessControl: FC<Props> = ({ stateName, openStateAccessControl, setO
 
     const makeStateAccessRequest = () => {
         if (stateName) {
-            fetch(`${import.meta.env.REACT_APP_QUERY_URL}state_unids?state_name=${stateName}`)
+            fetch(`${import.meta.env.VITE_APP_QUERY_URL}state_unids?state_name=${stateName}`)
                 .then(response => response.json())
                 .then(function (data) {
                     //   const result = data.result;
@@ -50,7 +50,7 @@ const StateAccessControl: FC<Props> = ({ stateName, openStateAccessControl, setO
 
     const changeAccess = (uID: string, newAccess: string, indexInArray: number) => {
         const csrftoken = simulateAPIClick();
-        fetch(`${import.meta.env.REACT_APP_QUERY_URL}share_state`, {
+        fetch(`${import.meta.env.VITE_APP_QUERY_URL}share_state`, {
             method: `POST`,
             credentials: "include",
             headers: {

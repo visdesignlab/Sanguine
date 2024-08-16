@@ -16,7 +16,7 @@ const UIDInputModal: FC<Props> = ({ stateName, visible, setVisibility }: Props) 
 
     const shareState = () => {
         const csrftoken = simulateAPIClick();
-        fetch(`${import.meta.env.REACT_APP_QUERY_URL}share_state`, {
+        fetch(`${import.meta.env.VITE_APP_QUERY_URL}share_state`, {
             method: `POST`,
             credentials: "include",
             headers: {

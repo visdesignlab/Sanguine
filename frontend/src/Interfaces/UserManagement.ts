@@ -46,7 +46,7 @@ export function getCookie (name: string) {
 
 export const whoamiAPICall = (store: RootStore) => {
 
-    fetch(`${import.meta.env.REACT_APP_QUERY_URL}whoami`, {
+    fetch(`${import.meta.env.VITE_APP_QUERY_URL}whoami`, {
         method: 'GET',
         credentials: "include",
         headers: {
@@ -58,13 +58,13 @@ export const whoamiAPICall = (store: RootStore) => {
             store.configStore.isLoggedIn = true;
         } else {
             store.configStore.isLoggedIn = false;
-            window.location.replace(`${import.meta.env.REACT_APP_QUERY_URL}accounts/login/`);
+            window.location.replace(`${import.meta.env.VITE_APP_QUERY_URL}accounts/login/`);
         }
     });
 };
 
 export const simulateAPIClick = () => {
-    fetch(`${import.meta.env.REACT_APP_QUERY_URL}accounts/login/`, {
+    fetch(`${import.meta.env.VITE_APP_QUERY_URL}accounts/login/`, {
         method: 'GET',
         credentials: 'include',
     });
@@ -73,6 +73,6 @@ export const simulateAPIClick = () => {
 };
 
 export const logoutHandler = () => {
-    window.location.replace(`${import.meta.env.REACT_APP_QUERY_URL}accounts/logout`);
+    window.location.replace(`${import.meta.env.VITE_APP_QUERY_URL}accounts/logout`);
 
 };

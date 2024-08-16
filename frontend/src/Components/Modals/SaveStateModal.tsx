@@ -26,7 +26,7 @@ const SaveStateModal: FC<Props> = ({ visible, setVisibility }: Props) => {
     const saveNewState = () => {
         const csrftoken = simulateAPIClick();
         if (store.configStore.stateToUpdate) {
-            fetch(`${import.meta.env.REACT_APP_QUERY_URL}state`, {
+            fetch(`${import.meta.env.VITE_APP_QUERY_URL}state`, {
                 method: `PUT`,
                 credentials: "include",
                 headers: {
@@ -58,7 +58,7 @@ const SaveStateModal: FC<Props> = ({ visible, setVisibility }: Props) => {
             store.configStore.openSnackBar = true;
         }
         else {
-            fetch(`${import.meta.env.REACT_APP_QUERY_URL}state`, {
+            fetch(`${import.meta.env.VITE_APP_QUERY_URL}state`, {
                 method: 'POST',
                 credentials: "include",
                 headers: {
