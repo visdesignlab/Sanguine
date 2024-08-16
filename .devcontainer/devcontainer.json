@@ -1,0 +1,12 @@
+{
+  "name": "Frontend Container",
+  "dockerComposeFile": ["../docker-compose.devcontainer.yml"],
+  "service": "frontend",
+  "shutdownAction": "stopCompose",
+  "workspaceFolder": "/app",
+  "customizations": {
+    "vscode": {
+      "extensions": ["oracle.sql-developer"]
+    }
+  }
+}

@@ -1,0 +1,31 @@
+services:
+  backend:
+    extends:
+      file: docker-compose.yml
+      service: backend
+
+  mariadb:
+    extends:
+      file: docker-compose.yml
+      service: mariadb
+
+  oracle:
+    image: oracle/database:19.3.0-ee
+    environment:
+      ORACLE_PWD: ${ORACLE_PASSWORD}
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracledb_data:/opt/oracle/oradata:Z
+
+  frontend:
+    extends:
+      file: docker-compose.yml
+      service: frontend
+    environment:
+        - NODE_ENV=development
+    command: sh -c "while true; do sleep 1000; done"
+
+volumes:
+  mariadb_data:
+  oracledb_data:

@@ -2,11 +2,13 @@ services:
   backend:
     image: ghcr.io/visdesignlab/django-image:5.0-v0.1.1
     volumes:
-      - .:/app:Z
+      - ./backend:/app:Z
     env_file:
       - .env
     ports:
       - "8000:8000"
+    depends_on:
+      - mariadb
 
   mariadb:
     image: mariadb:10
@@ -17,12 +19,14 @@ services:
       MARIADB_DATABASE: ${MARIADB_DATABASE}
     ports:
       - "3306:3306"
+    volumes:
+      - ./mariadb_data:/var/lib/mysql
 
   frontend:
     image: node:18
-    working_dir: /app
+    working_dir: /app/frontend
     volumes:
-      - ../frontend:/app:Z
+      - .:/app:Z
     environment:
-      - NODE_ENV=production"
-    command: sh -c "yarn install && yarn run build"
+      - NODE_ENV=production
+    command: sh -c "yarn install && yarn build"
