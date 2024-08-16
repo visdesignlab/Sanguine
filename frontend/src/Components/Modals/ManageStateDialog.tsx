@@ -25,7 +25,7 @@ const ManageStateDialog: FC<Props> = ({ setOpenSaveState, setVisbility, visible 
 
     const removeState = (stateName: string) => {
         const csrftoken = simulateAPIClick();
-        fetch(`${process.env.REACT_APP_QUERY_URL}state`, {
+        fetch(`${import.meta.env.REACT_APP_QUERY_URL}state`, {
             method: 'DELETE',
             credentials: "include",
             headers: {

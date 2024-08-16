@@ -28,7 +28,7 @@ const StateManagementSuite: FC = () => {
     // // const [listOfSavedState, setListOfSavedState] = useState<string[]>([])
 
     async function fetchSavedStates() {
-        fetch(`${process.env.REACT_APP_QUERY_URL}state`)
+        fetch(`${import.meta.env.REACT_APP_QUERY_URL}state`)
             .then(result => result.json())
             .then(result => {
                 if (result) {
@@ -41,7 +41,7 @@ const StateManagementSuite: FC = () => {
     }
 
     useEffect(() => {
-        fetch(`${process.env.REACT_APP_QUERY_URL}state`)
+        fetch(`${import.meta.env.REACT_APP_QUERY_URL}state`)
             .then(result => result.json())
             .then(result => {
                 if (result) {
@@ -56,7 +56,7 @@ const StateManagementSuite: FC = () => {
     }, []);
 
     const loadSavedState = async (name: string) => {
-        const res = await (fetch(`${process.env.REACT_APP_QUERY_URL}state?name=${name}`));
+        const res = await (fetch(`${import.meta.env.REACT_APP_QUERY_URL}state?name=${name}`));
         const result = await res.json();
         store.provenance.importState(result.definition);
     };
