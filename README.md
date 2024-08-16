@@ -12,12 +12,15 @@ Sanguine is a web-based visualization tool built by the VDL and ARUP that visual
     - [Architecture](#architecture)
     - [Security](#security)
     - [Quick start guide](#quick-start-guide)
-1. [Deployment docs](#deployment-docs)
 
 
 ## Current and Future Deployments
 
+We currently support 2 deployments of Sanguine, both at the University of Utah. The first deployment was a prototype that was used to gather feedback from clinicians and researchers using de-identified data. The second deployment is a production deployment that is used by clinicians and researchers to analyze blood usage data on the identified patient database.
 
+We're currently working with another hospital outside of Utah to deploy Sanguine in their environment. This deployment will be similar to the production deployment at the University of Utah, but will be customized to meet the needs of the hospital.
+
+If you're interested in deploying Sanguine at your hospital, please contact us at ryan(dot)metcalf(at)path.utah.edu.
 
 ## Developer Documentation
 
@@ -38,6 +41,7 @@ Security is a top priority for the Sanguine application. We use a variety of tec
 - Authentication: Once users are connected to the VPN, they must authenticate using their SSO credentials to access the application. The list of authorized users is maintained by hospital IT, and only users on this list can access the application.
 - Service accounts: The backend uses a service account to connect to the database. This account has limited permissions and is only used to retrieve the data that the frontend needs to display as defined by the Sanguine schema.
 - VM security: VMs are provided and mainted by hospital IT. They are kept up to date with the latest security patches and are monitored for any suspicious activity. Upgrades are performed at the hospital's discretion, in accordance with their security policies.
+- Logging: We log all requests to the application and monitor for any unusual activity at backend/sanguine.log.
 
 ### Quick start guide
 
