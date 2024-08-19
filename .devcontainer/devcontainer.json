@@ -6,7 +6,7 @@
   "workspaceFolder": "/app",
   "customizations": {
     "vscode": {
-      "extensions": ["oracle.sql-developer"]
+      "extensions": ["oracle.sql-developer", "dbaeumer.vscode-eslint"]
     }
   }
 }
