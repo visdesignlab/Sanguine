@@ -6,7 +6,13 @@
   "workspaceFolder": "/app",
   "customizations": {
     "vscode": {
-      "extensions": ["oracle.sql-developer", "dbaeumer.vscode-eslint"]
+      "extensions": [
+        "oracle.sql-developer",
+        "dbaeumer.vscode-eslint",
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.flake8"
+      ]
     }
   }
 }
