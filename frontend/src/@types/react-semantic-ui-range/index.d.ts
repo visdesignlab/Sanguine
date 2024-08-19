@@ -1,1 +1,1 @@
-declare module "pdfast"
+declare module 'pdfast'

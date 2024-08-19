@@ -1,236 +1,255 @@
-import { Button, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, TextField, Tooltip } from "@mui/material";
+import {
+  Button, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, TextField, Tooltip,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { observer } from "mobx-react";
-import { FC, useContext, useState } from "react";
-import { AcronymDictionary } from "../../../Presets/DataDict";
-import Store from "../../../Interfaces/Store";
-import ComponentRangePicker from "./ComponentRangePicker";
-import { Title, UtilityContainer } from "../../../Presets/StyledComponents";
-import { BloodComponentOptions, ScatterYOptions } from "../../../Presets/DataDict";
+import { observer } from 'mobx-react';
+import { useContext, useState } from 'react';
 import ReplayIcon from '@mui/icons-material/Replay';
-import { defaultState } from "../../../Interfaces/DefaultState";
-import OutcomeChipGroup from "./OutcomeChipGroup";
-import SurgeryUrgencyChipGroup from "./SurgeryUrgencyChipGroup";
-import { SelectSet } from "../../../Interfaces/Types/SelectionTypes";
-import { DesktopDatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { AcronymDictionary, BloodComponentOptions, ScatterYOptions } from '../../../Presets/DataDict';
+import Store from '../../../Interfaces/Store';
+import ComponentRangePicker from './ComponentRangePicker';
+import { Title, UtilityContainer } from '../../../Presets/StyledComponents';
+import { defaultState } from '../../../Interfaces/DefaultState';
+import OutcomeChipGroup from './OutcomeChipGroup';
+import SurgeryUrgencyChipGroup from './SurgeryUrgencyChipGroup';
+import { SelectSet } from '../../../Interfaces/Types/SelectionTypes';
 
+function FilterBoard() {
+  const store = useContext(Store);
 
-const FilterBoard: FC = () => {
+  const {
+    rawDateRange, outcomeFilter, surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet, bloodFilter,
+  } = store.provenanceState;
+  const [beginDate, setBeginDate] = useState<number | null>(rawDateRange[0]);
+  const [endDate, setEndDate] = useState<number | null>(rawDateRange[1]);
 
-    const store = useContext(Store);
+  const resetDateFilter = () => {
+    setBeginDate(defaultState.rawDateRange[0]);
+    setEndDate(defaultState.rawDateRange[1]);
+    store.configStore.dateRangeChange(defaultState.rawDateRange);
+  };
 
-    const { rawDateRange, outcomeFilter, surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet, bloodFilter } = store.provenanceState;
-    const [beginDate, setBeginDate] = useState<number | null>(rawDateRange[0]);
-    const [endDate, setEndDate] = useState<number | null>(rawDateRange[1]);
+  function checkIfCanReset(filterInput: Record<string, [number, number]>, type?: typeof BloodComponentOptions | typeof ScatterYOptions) {
+    return Object.entries(filterInput)
+      .filter(([filterName]) => (type ? type.map((d) => d.key).includes(filterName) : true))
+      .some(([filterName, filterValue]) => (filterValue)[0] > 0 || ((filterValue)[1] < store.filterRange[filterName][1]));
+  }
 
-    const resetDateFilter = () => {
-        setBeginDate(defaultState.rawDateRange[0]);
-        setEndDate(defaultState.rawDateRange[1]);
-        store.configStore.dateRangeChange(defaultState.rawDateRange);
-    };
+  const enableClearAll = () => {
+    if (rawDateRange[0] !== defaultState.rawDateRange[0] || rawDateRange[1] !== defaultState.rawDateRange[1]) {
+      return true;
+    }
+    if (outcomeFilter.length > 0) {
+      return true;
+    }
+    if (!(surgeryUrgencySelection[0] && surgeryUrgencySelection[1] && surgeryUrgencySelection[2])) {
+      return true;
+    }
+    if (currentSelectPatientGroup.length > 0 || currentOutputFilterSet.length > 0) {
+      return true;
+    }
+    if (checkIfCanReset(bloodFilter)) {
+      return true;
+    }
+    return false;
+  };
 
-    function checkIfCanReset(filterInput: any, type?: typeof BloodComponentOptions | typeof ScatterYOptions) {
-        return Object.entries(filterInput)
-            .filter(([filterName, filterValue]) => type ? type.map((d) => d.key).includes(filterName) : true)
-            .some(([filterName, filterValue]) => (filterValue as any)[0] > 0 || ((filterValue as any)[1] < store.filterRange[filterName][1]) );
-    };
+  return (
+    <UtilityContainer>
+      <List dense>
+        <ListItem>
+          <Button variant="outlined" size="small" disabled={!enableClearAll()} onClick={() => { store.configStore.clearAllFilter(); }}>Clear All Filter Settings</Button>
+        </ListItem>
+        <ListItem>
+          <ListItemText
+            primary={(
+              <Title>
+                Pick Date Range
+              </Title>
+            )}
+          />
+          <ListItemSecondaryAction>
 
-    const enableClearAll = () => {
-        if (rawDateRange[0] !== defaultState.rawDateRange[0] || rawDateRange[1] !== defaultState.rawDateRange[1]) {
-            return true;
-        }
-        if (outcomeFilter.length > 0) {
-            return true;
-        }
-        if (!(surgeryUrgencySelection[0] && surgeryUrgencySelection[1] && surgeryUrgencySelection[2])) {
-            return true;
-        }
-        if (currentSelectPatientGroup.length > 0 || currentOutputFilterSet.length > 0) {
-            return true;
-        }
-        if (checkIfCanReset(bloodFilter)) {
-            return true;
-        }
-        return false;
-    };
+            <IconButton
+              onClick={resetDateFilter}
+              disabled={(rawDateRange[0] === defaultState.rawDateRange[0]) && (rawDateRange[1] === defaultState.rawDateRange[1])}
+            >
+              <Tooltip title="Reset">
+                <ReplayIcon />
+              </Tooltip>
+            </IconButton>
 
-    return (
-        <UtilityContainer>
-            < List dense >
-                <ListItem>
-                    <Button variant="outlined" size="small" disabled={!enableClearAll()} onClick={() => { store.configStore.clearAllFilter(); }}>Clear All Filter Settings</Button>
-                </ListItem>
-                <ListItem>
-                    <ListItemText primary={<Title>
-                        Pick Date Range
-                    </Title>} />
-                    <ListItemSecondaryAction>
+          </ListItemSecondaryAction>
+        </ListItem>
+        <ListItem>
+          <ListItemText
+            primary="Date From"
+            secondary={(
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DesktopDatePicker
+                  inputFormat="MM/dd/yyyy"
+                  value={beginDate}
+                  renderInput={(params) => <TextField variant="standard" {...params} />}
+                  onChange={(d: Date | null) => {
+                    if (d) {
+                      setBeginDate(d.getTime());
+                      store.configStore.dateRangeChange([d.getTime(), rawDateRange[1]]);
+                    } else {
+                      setBeginDate(rawDateRange[0]);
+                    }
+                  }}
+                />
+              </LocalizationProvider>
+            )}
+          />
+        </ListItem>
+        <ListItem>
+          <ListItemText
+            primary="To"
+            secondary={(
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DesktopDatePicker
+                  inputFormat="MM/dd/yyyy"
+                  value={endDate}
+                  renderInput={(params) => <TextField variant="standard" {...params} />}
+                  onChange={(d: Date | null) => {
+                    if (d) {
+                      setEndDate(d.getTime());
+                      store.configStore.dateRangeChange([rawDateRange[0], d.getTime()]);
+                    } else {
+                      setEndDate(rawDateRange[1]);
+                    }
+                  }}
+                />
+              </LocalizationProvider>
+            )}
+          />
+        </ListItem>
 
-                        <IconButton onClick={resetDateFilter}
-                            disabled={(rawDateRange[0] === defaultState.rawDateRange[0]) && (rawDateRange[1] === defaultState.rawDateRange[1])}>
-                            <Tooltip title="Reset">
-                                <ReplayIcon />
-                            </Tooltip>
-                        </IconButton>
+        <ListItem>
+          <ListItemText
+            primary={(
+              <Title>
+                Outcome / Intervention Filter
+              </Title>
+            )}
+          />
+          <ListItemSecondaryAction>
 
-                    </ListItemSecondaryAction>
-                </ListItem>
-                <ListItem>
-                    <ListItemText primary="Date From" secondary={
-                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                            <DesktopDatePicker
-                                inputFormat="MM/dd/yyyy"
-                                value={beginDate}
-                                renderInput={(params) => <TextField variant="standard" {...params} />}
-                                onChange={(d: Date | null) => {
-                                    if (d) {
-                                        setBeginDate(d.getTime());
-                                        store.configStore.dateRangeChange([d.getTime(), rawDateRange[1]]);
-                                    } else {
-                                        setBeginDate(rawDateRange[0]);
-                                    }
-                                }} />
-                        </LocalizationProvider>} />
-                </ListItem>
-                <ListItem>
-                    <ListItemText primary="To" secondary={
-                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                            <DesktopDatePicker
-                                inputFormat="MM/dd/yyyy"
-                                value={endDate}
-                                renderInput={(params) => <TextField variant="standard" {...params} />}
-                                onChange={(d: Date | null) => {
-                                    if (d) {
-                                        setEndDate(d.getTime());
-                                        store.configStore.dateRangeChange([rawDateRange[0], d.getTime()]);
-                                    } else {
-                                        setEndDate(rawDateRange[1]);
-                                    }
-                                }} />
-                        </LocalizationProvider>} />
-                </ListItem>
+            <IconButton
+              onClick={() => { store.configStore.changeOutcomeFilter([]); }}
+              disabled={outcomeFilter.length === 0}
+            >
+              <Tooltip title="Clear">
+                <ReplayIcon />
+              </Tooltip>
+            </IconButton>
 
-                <ListItem>
-                    <ListItemText primary={<Title>
-                        Outcome / Intervention Filter
-                    </Title>} />
-                    <ListItemSecondaryAction>
+          </ListItemSecondaryAction>
+        </ListItem>
+        <OutcomeChipGroup />
 
-                        <IconButton
-                            onClick={() => { store.configStore.changeOutcomeFilter([]); }}
-                            disabled={outcomeFilter.length === 0}
-                        >
-                            <Tooltip title="Clear">
-                                <ReplayIcon />
-                            </Tooltip>
-                        </IconButton>
+        <ListItem>
+          <ListItemText primary={<Title>Surgery Urgency Filter</Title>} />
+          <ListItemSecondaryAction>
 
-                    </ListItemSecondaryAction>
-                </ListItem>
-                <OutcomeChipGroup />
+            <IconButton
+              onClick={() => { store.configStore.changeSurgeryUrgencySelection([true, true, true]); }}
+              disabled={surgeryUrgencySelection[0] && surgeryUrgencySelection[1] && surgeryUrgencySelection[2]}
+            >
+              <Tooltip title="Clear">
+                <ReplayIcon />
+              </Tooltip>
+            </IconButton>
 
-                <ListItem>
-                    <ListItemText primary={<Title>Surgery Urgency Filter</Title>} />
-                    <ListItemSecondaryAction>
+          </ListItemSecondaryAction>
+        </ListItem>
+        <SurgeryUrgencyChipGroup />
 
-                        <IconButton
-                            onClick={() => { store.configStore.changeSurgeryUrgencySelection([true, true, true]); }}
-                            disabled={surgeryUrgencySelection[0] && surgeryUrgencySelection[1] && surgeryUrgencySelection[2]}
-                        >
-                            <Tooltip title="Clear">
-                                <ReplayIcon />
-                            </Tooltip>
-                        </IconButton>
+        <ListItem>
+          <ListItemText primary={<Title>Selection Filter</Title>} />
+          <ListItemSecondaryAction>
 
-                    </ListItemSecondaryAction>
-                </ListItem>
-                <SurgeryUrgencyChipGroup />
+            <IconButton
+              onClick={() => { store.selectionStore.clearSelectionFilter(); }}
+              disabled={currentSelectPatientGroup.length === 0 && currentOutputFilterSet.length === 0}
+            >
+              <Tooltip title="Clear All">
+                <ReplayIcon />
+              </Tooltip>
+            </IconButton>
 
-                <ListItem>
-                    <ListItemText primary={<Title>Selection Filter</Title>} />
-                    <ListItemSecondaryAction>
+          </ListItemSecondaryAction>
+        </ListItem>
+        {currentSelectPatientGroup.length > 0 ? (
+          <ListItem key="PatientgroupSelected">
+            <ListItemText primary="Cases Filtered" secondary={currentSelectPatientGroup.length} />
+            <ListItemSecondaryAction>
 
-                        <IconButton onClick={() => { store.selectionStore.clearSelectionFilter(); }}
-                            disabled={currentSelectPatientGroup.length === 0 && currentOutputFilterSet.length === 0}>
-                            <Tooltip title="Clear All">
-                                <ReplayIcon />
-                            </Tooltip>
-                        </IconButton>
+              <IconButton onClick={() => { store.selectionStore.updateSelectedPatientGroup([]); }}>
+                <Tooltip title="Remove">
+                  <CloseIcon />
+                </Tooltip>
+              </IconButton>
 
-                    </ListItemSecondaryAction>
-                </ListItem>
-                {
-                    currentSelectPatientGroup.length > 0 ? (
-                        <ListItem key="PatientgroupSelected">
-                            <ListItemText primary="Cases Filtered" secondary={currentSelectPatientGroup.length} />
-                            <ListItemSecondaryAction>
+            </ListItemSecondaryAction>
+          </ListItem>
+        ) : null}
+        {currentOutputFilterSet.map((selectSet: SelectSet) => (
+          <ListItem key={`${selectSet.setName}selected`}>
+            <ListItemText
+              key={`${selectSet.setName}selected`}
+              primary={AcronymDictionary[selectSet.setName as never] ? AcronymDictionary[selectSet.setName as never] : selectSet.setName}
+              secondary={selectSet.setValues.sort().join(', ')}
+            />
+            <ListItemSecondaryAction key={`${selectSet.setName}selected`}>
+              <IconButton key={`${selectSet.setName}selected`} onClick={() => { store.selectionStore.removeFilter(selectSet.setName); }}>
+                <Tooltip title="Remove">
+                  <CloseIcon key={`${selectSet.setName}selected`} />
+                </Tooltip>
+              </IconButton>
+            </ListItemSecondaryAction>
+          </ListItem>
+        ))}
 
-                                <IconButton onClick={() => { store.selectionStore.updateSelectedPatientGroup([]); }}>
-                                    <Tooltip title="Remove">
-                                        <CloseIcon />
-                                    </Tooltip>
-                                </IconButton>
+        <ListItem>
+          <ListItemText primary={<Title>Blood Component Filter</Title>} />
+          <ListItemSecondaryAction>
 
-                            </ListItemSecondaryAction>
-                        </ListItem>) : <></>
-                }
-                {
-                    currentOutputFilterSet.map((selectSet: SelectSet) => {
-                        return (<ListItem key={`${selectSet.setName}selected`}>
-                            <ListItemText key={`${selectSet.setName}selected`} primary={AcronymDictionary[selectSet.setName] ? AcronymDictionary[selectSet.setName] : selectSet.setName}
-                                secondary={selectSet.setValues.sort().join(', ')} />
-                            <ListItemSecondaryAction key={`${selectSet.setName}selected`}>
-                                <IconButton key={`${selectSet.setName}selected`} onClick={() => { store.selectionStore.removeFilter(selectSet.setName); }}>
-                                    <Tooltip title="Remove">
-                                        <CloseIcon key={`${selectSet.setName}selected`} />
-                                    </Tooltip>
-                                </IconButton>
-                            </ListItemSecondaryAction>
-                        </ListItem>);
-                    })
-                }
+            <IconButton
+              onClick={() => { store.configStore.resetBloodFilter(BloodComponentOptions); }}
+              disabled={!checkIfCanReset(bloodFilter, BloodComponentOptions)}
+            >
+              <Tooltip title="Reset">
+                <ReplayIcon />
+              </Tooltip>
+            </IconButton>
 
-                <ListItem>
-                    <ListItemText primary={<Title>Blood Component Filter</Title>} />
-                    <ListItemSecondaryAction>
+          </ListItemSecondaryAction>
+        </ListItem>
+        {BloodComponentOptions.map((d) => (<ComponentRangePicker label={d.key as keyof typeof AcronymDictionary} key={d.key} />))}
 
-                        <IconButton onClick={() => { store.configStore.resetBloodFilter(BloodComponentOptions); }}
-                            disabled={!checkIfCanReset(bloodFilter, BloodComponentOptions)}>
-                            <Tooltip title="Reset">
-                                <ReplayIcon />
-                            </Tooltip>
-                        </IconButton>
+        <ListItem>
+          <ListItemText primary={<Title>Test Value Filter</Title>} />
+          <ListItemSecondaryAction>
 
-                    </ListItemSecondaryAction>
-                </ListItem>
-                {
-                    BloodComponentOptions.map((d) => {
-                        return (<ComponentRangePicker label={d.key} key={d.key} />);
-                    })
-                }
+            <IconButton
+              onClick={() => { store.configStore.resetBloodFilter(ScatterYOptions); }}
+              disabled={!checkIfCanReset(bloodFilter, ScatterYOptions)}
+            >
+              <Tooltip title="Reset">
+                <ReplayIcon />
+              </Tooltip>
+            </IconButton>
 
-                <ListItem>
-                    <ListItemText primary={<Title>Test Value Filter</Title>} />
-                    <ListItemSecondaryAction>
-
-                        <IconButton onClick={() => { store.configStore.resetBloodFilter(ScatterYOptions); }}
-                            disabled={!checkIfCanReset(bloodFilter, ScatterYOptions)}>
-                            <Tooltip title="Reset">
-                                <ReplayIcon />
-                            </Tooltip>
-                        </IconButton>
-
-                    </ListItemSecondaryAction>
-                </ListItem>
-                {
-                    ScatterYOptions.map((d) => {
-                        return (<ComponentRangePicker label={d.key} key={d.key} isTestValue={true} />);
-                    })
-                }
-            </List >
-        </UtilityContainer>
-    );
-};
+          </ListItemSecondaryAction>
+        </ListItem>
+        {ScatterYOptions.map((d) => (<ComponentRangePicker label={d.key} key={d.key} isTestValue />))}
+      </List>
+    </UtilityContainer>
+  );
+}
 
 export default observer(FilterBoard);

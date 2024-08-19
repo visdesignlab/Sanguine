@@ -1,73 +1,81 @@
-import { makeAutoObservable } from "mobx";
-import { addExtraPair, addNewChart, changeChart, changeNotation, clearAllCharts, onLayoutChange, removeChart, removeExtraPair } from "./Actions/ChartActions";
-import { RootStore } from "./Store";
-import { LayoutElement } from "./Types/LayoutTypes";
+import { makeAutoObservable } from 'mobx';
+import {
+  addExtraPair, addNewChart, changeChart, changeNotation, clearAllCharts, onLayoutChange, removeChart, removeExtraPair,
+} from './Actions/ChartActions';
+// eslint-disable-next-line import/no-cycle
+import { RootStore } from './Store';
+import { LayoutElement } from './Types/LayoutTypes';
+import { BloodProductCap } from '../Presets/Constants';
+import { AcronymDictionary } from '../Presets/DataDict';
 
 export class ChartStore {
-    rootStore: RootStore;
-    private _totalAggregatedCaseCount: number;
-    private _totalIndividualCaseCount: number;
+  rootStore: RootStore;
 
-    constructor(rootStore: RootStore) {
-        this.rootStore = rootStore;
+  private _totalAggregatedCaseCount: number;
 
-        this._totalAggregatedCaseCount = 0;
-        this._totalIndividualCaseCount = 0;
-        makeAutoObservable(this);
-    }
-    get provenance () {
-        return this.rootStore.provenance;
-    }
-    get totalIndividualCaseCount () {
-        return this._totalIndividualCaseCount;
-    }
+  private _totalIndividualCaseCount: number;
 
-    get totalAggregatedCaseCount () {
-        return this._totalAggregatedCaseCount;
-    }
+  constructor(rootStore: RootStore) {
+    this.rootStore = rootStore;
 
-    set totalIndividualCaseCount (input: number) {
-        this._totalIndividualCaseCount = input;
-    }
+    this._totalAggregatedCaseCount = 0;
+    this._totalIndividualCaseCount = 0;
+    makeAutoObservable(this);
+  }
 
-    set totalAggregatedCaseCount (input: number) {
-        this._totalAggregatedCaseCount = input;
-    }
+  get provenance() {
+    return this.rootStore.provenance;
+  }
 
-    addExtraPair (chartID: string, newExtraPair: string) {
-        this.provenance.apply(addExtraPair(chartID, newExtraPair));
-    }
+  get totalIndividualCaseCount() {
+    return this._totalIndividualCaseCount;
+  }
 
-    removeExtraPair (chartID: string, removingPairName: string) {
-        this.provenance.apply(removeExtraPair(chartID, removingPairName));
-    }
+  set totalIndividualCaseCount(input: number) {
+    this._totalIndividualCaseCount = input;
+  }
 
-    removeChart (chartID: string) {
-        this.provenance.apply(removeChart(chartID));
-        if (this.rootStore.provenanceState.layoutArray.length === 0) {
-            this.totalAggregatedCaseCount = 0;
-            this.totalIndividualCaseCount = 0;
-        }
-    }
+  get totalAggregatedCaseCount() {
+    return this._totalAggregatedCaseCount;
+  }
 
-    changeNotation (chartID: string, newNotation: string) {
-        this.provenance.apply(changeNotation(chartID, newNotation));
-    }
+  set totalAggregatedCaseCount(input: number) {
+    this._totalAggregatedCaseCount = input;
+  }
 
-    addNewChart (newLayoutElement: LayoutElement) {
-        this.provenance.apply(addNewChart(newLayoutElement));
-    }
+  addExtraPair(chartID: string, newExtraPair: string) {
+    this.provenance.apply(addExtraPair(chartID, newExtraPair));
+  }
 
-    changeChart (xAggregationSelection: string, yValueSelection: string, chartIndex: string, chartType: string, outcomeComparison?: string) {
-        this.provenance.apply(changeChart(xAggregationSelection, yValueSelection, chartIndex, chartType, outcomeComparison));
-    }
+  removeExtraPair(chartID: string, removingPairName: string) {
+    this.provenance.apply(removeExtraPair(chartID, removingPairName));
+  }
 
-
-    onLayoutChange (gridLayout: ReactGridLayout.Layout[]) {
-        this.provenance.apply(onLayoutChange(gridLayout));
+  removeChart(chartID: string) {
+    this.provenance.apply(removeChart(chartID));
+    if (this.rootStore.provenanceState.layoutArray.length === 0) {
+      this.totalAggregatedCaseCount = 0;
+      this.totalIndividualCaseCount = 0;
     }
+  }
 
-    clearAllCharts () {
-        this.provenance.apply(clearAllCharts());
-    }
+  changeNotation(chartID: string, newNotation: string) {
+    this.provenance.apply(changeNotation(chartID, newNotation));
+  }
+
+  addNewChart(newLayoutElement: LayoutElement) {
+    this.provenance.apply(addNewChart(newLayoutElement));
+  }
+
+  changeChart(xAggregationSelection: keyof typeof AcronymDictionary, yValueSelection: keyof typeof BloodProductCap | '' | 'POSTOP_HEMO' | 'PREOP_HEMO', chartIndex: string, chartType: string, outcomeComparison: keyof typeof AcronymDictionary | 'NONE') {
+    this.provenance.apply(changeChart(xAggregationSelection, yValueSelection, chartIndex, chartType, outcomeComparison));
+  }
+
+  onLayoutChange(gridLayout: ReactGridLayout.Layout[]) {
+    this.provenance.apply(onLayoutChange(gridLayout));
+  }
+
+  clearAllCharts() {
+    this.provenance.apply(clearAllCharts());
+  }
 }

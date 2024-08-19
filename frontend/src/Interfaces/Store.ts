@@ -1,3 +1,4 @@
+/* eslint-disable import/no-cycle */
 import { initProvenance, Provenance } from '@visdesignlab/trrack';
 import { timeFormat } from 'd3';
 import { makeAutoObservable } from 'mobx';
@@ -13,8 +14,11 @@ import { SurgeryUrgencyArray } from '../Presets/DataDict';
 
 export class RootStore {
   provenance: Provenance<ApplicationState, ActionEvents>;
+
   configStore: ProjectConfigStore;
+
   selectionStore: SelectionStore;
+
   chartStore: ChartStore;
 
   _allCases: SingleCasePoint[];
@@ -25,7 +29,7 @@ export class RootStore {
     this._mainCompWidth = 0;
 
     this.provenance = initProvenance<ApplicationState, ActionEvents>(
-      defaultState
+      defaultState,
     );
     this.provenance.done();
     this.configStore = new ProjectConfigStore(this);
@@ -64,7 +68,7 @@ export class RootStore {
         return false;
       }
       if (this.provenanceState.outcomeFilter.length > 0) {
-        return !this.provenanceState.outcomeFilter.some((outcome) => !d[outcome])
+        return !this.provenanceState.outcomeFilter.some((outcome) => !d[outcome]);
       }
       if (!this.provenanceState.surgeryUrgencySelection[SurgeryUrgencyArray.indexOf(d.SURGERY_TYPE_DESC)]) {
         return false;
@@ -107,10 +111,9 @@ export class RootStore {
 
           return procedure.codes.some((code) => patientCodes.includes(code))
             && procedure.overlapList.every((subProcedure) => subProcedure.codes.some((code) => patientCodes.includes(code)));
-        } else {
-          // If we're here, then we have a single procedure
-          return procedure.codes.some((code) => patientCodes.includes(code));
         }
+        // If we're here, then we have a single procedure
+        return procedure.codes.some((code) => patientCodes.includes(code));
       });
       if (procedureFiltered) {
         return false;
@@ -139,11 +142,12 @@ export class RootStore {
   }
 
   get dateRange() {
-    return [timeFormat("%d-%b-%Y")(new Date(this.provenanceState.rawDateRange[0])), timeFormat("%d-%b-%Y")(new Date(this.provenanceState.rawDateRange[1]))];
+    return [timeFormat('%d-%b-%Y')(new Date(this.provenanceState.rawDateRange[0])), timeFormat('%d-%b-%Y')(new Date(this.provenanceState.rawDateRange[1]))];
   }
-  get mainCompWidth() { return this._mainCompWidth; }
-  set mainCompWidth(input: number) { this._mainCompWidth = input; }
 
+  get mainCompWidth() { return this._mainCompWidth; }
+
+  set mainCompWidth(input: number) { this._mainCompWidth = input; }
 }
 const Store = createContext(new RootStore());
 export default Store;

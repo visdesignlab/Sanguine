@@ -79,6 +79,7 @@
         "contextType": "static public field",
         "displayName": "static public field"
       }
-    ]
+    ],
+    "no-nested-ternary": "off"
   }
 }

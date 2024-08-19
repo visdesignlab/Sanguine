@@ -1,22 +1,23 @@
-import { Grid, Tabs, Divider, Tab } from "@mui/material";
-import { max } from "d3";
-import { observer } from "mobx-react";
-import { FC, useEffect, useState } from "react";
-import { stateUpdateWrapperUseJSON } from "../../../Interfaces/StateChecker";
-import { ProcedureEntry } from "../../../Interfaces/Types/DataTypes";
-import FilterBoard from "../FilterInterface/FilterBoard";
-import TabPanel from "../TabPanel";
-import CurrentSelected from "./CurrentSelected";
-import CurrentView from "./CurrentView";
-import SurgeryListViewer from "./SurgeryListViewer";
-import SurgerySearchBar from "./SurgerySearchBar";
+import {
+  Grid, Tabs, Divider, Tab,
+} from '@mui/material';
+import { max } from 'd3';
+import { observer } from 'mobx-react';
+import { useEffect, useState } from 'react';
+import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
+import { ProcedureEntry } from '../../../Interfaces/Types/DataTypes';
+import FilterBoard from '../FilterInterface/FilterBoard';
+import TabPanel from '../TabPanel';
+import CurrentSelected from './CurrentSelected';
+import CurrentView from './CurrentView';
+import SurgeryListViewer from './SurgeryListViewer';
+import SurgerySearchBar from './SurgerySearchBar';
 
-const LeftToolBox: FC = () => {
-
+function LeftToolBox() {
   const [surgeryList, setSurgeryList] = useState<ProcedureEntry[]>([]);
   const [maxCaseCount, setMaxCaseCount] = useState(0);
   const [tabValue, setTabValue] = useState(0);
-  const handleChange = (event: any, newValue: any) => {
+  const handleChange = (_: unknown, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -26,18 +27,16 @@ const LeftToolBox: FC = () => {
       const procedureInput = await procedureFetch.json() as { result: { procedureName: string, procedureCodes: string[], count: number, overlapList: { [key: string]: number } }[] };
 
       // Process the result into the data type required.
-      const result = procedureInput.result.map((procedure: any) => {
-        const procedureOverlapList = Object.keys(procedure.overlapList).map(subProcedureName => {
-          return {
-            procedureName: subProcedureName,
-            count: procedure.overlapList[subProcedureName],
-            codes: procedureInput.result.find((p) => p.procedureName === subProcedureName)?.procedureCodes || []
-          };
-        });
+      const result = procedureInput.result.map((procedure) => {
+        const procedureOverlapList = Object.keys(procedure.overlapList).map((subProcedureName) => ({
+          procedureName: subProcedureName,
+          count: procedure.overlapList[subProcedureName],
+          codes: procedureInput.result.find((p) => p.procedureName === subProcedureName)?.procedureCodes || [],
+        }));
         procedureOverlapList.sort((a, b) => {
           if (a.procedureName.includes('Only')) {
             return -1;
-          } else if (b.procedureName.includes('Only')) {
+          } if (b.procedureName.includes('Only')) {
             return 1;
           }
 
@@ -50,8 +49,8 @@ const LeftToolBox: FC = () => {
           overlapList: procedureOverlapList,
         };
       });
-      let tempSurgeryList: ProcedureEntry[] = result;
-      let tempMaxCaseCount = (max(result as any, (d: any) => d.count) as any);
+      const tempSurgeryList: ProcedureEntry[] = result;
+      let tempMaxCaseCount = (max(result, (d) => d.count)) || 0;
 
       tempMaxCaseCount *= 1.1;
       setMaxCaseCount(tempMaxCaseCount);
@@ -65,43 +64,41 @@ const LeftToolBox: FC = () => {
 
   return (
 
-    <Grid >
-      <Tabs value={tabValue}
+    <Grid>
+      <Tabs
+        value={tabValue}
         onChange={handleChange}
         indicatorColor="primary"
         textColor="primary"
-        centered>
+        centered
+      >
         <Tab label="Current View" />
         <Tab label="Filter" />
       </Tabs>
       <TabPanel
         value={tabValue}
         index={0}
-        children={
-          <Grid container >
-            <CurrentView />
-            <Divider orientation="horizontal" style={{ width: '98%', }} />
-            <CurrentSelected />
-            <Divider orientation="horizontal" style={{ width: '98%' }} />
-            <SurgerySearchBar surgeryList={surgeryList} />
-            <Divider orientation="horizontal" style={{ width: '98%' }} />
-            <SurgeryListViewer surgeryList={surgeryList} maxCaseCount={maxCaseCount} />
-          </Grid>
-        }
         styling={undefined}
-      />
+      >
+        <Grid container>
+          <CurrentView />
+          <Divider orientation="horizontal" style={{ width: '98%' }} />
+          <CurrentSelected />
+          <Divider orientation="horizontal" style={{ width: '98%' }} />
+          <SurgerySearchBar surgeryList={surgeryList} />
+          <Divider orientation="horizontal" style={{ width: '98%' }} />
+          <SurgeryListViewer surgeryList={surgeryList} maxCaseCount={maxCaseCount} />
+        </Grid>
+      </TabPanel>
       <TabPanel
         value={tabValue}
         index={1}
-        children={
-          <FilterBoard />
-        }
-        styling={{ height: "85vh" }}
-      />
-    </Grid>);
-
-};
+        styling={{ height: '85vh' }}
+      >
+        <FilterBoard />
+      </TabPanel>
+    </Grid>
+  );
+}
 
 export default observer(LeftToolBox);
-
-

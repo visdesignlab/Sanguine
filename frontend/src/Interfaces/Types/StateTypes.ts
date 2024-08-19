@@ -1,6 +1,6 @@
-import { ProcedureEntry, SingleCasePoint } from "./DataTypes";
-import { LayoutElement } from "./LayoutTypes";
-import { SelectSet } from "./SelectionTypes";
+import { ProcedureEntry, SingleCasePoint } from './DataTypes';
+import { LayoutElement } from './LayoutTypes';
+import { SelectSet } from './SelectionTypes';
 
 export type ApplicationState = {
     outcomeFilter: string[];
@@ -12,9 +12,10 @@ export type ApplicationState = {
     currentSelectSet: SelectSet[];
     currentOutputFilterSet: SelectSet[];
     showZero: boolean;
-    //This two are both case ids
+    // This two are both case ids
     currentSelectPatientGroup: SingleCasePoint[];
     currentBrushedPatientGroup: SingleCasePoint[];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
     BloodProductCost: any;
     nextAddingIndex: number;
     layoutArray: LayoutElement[];

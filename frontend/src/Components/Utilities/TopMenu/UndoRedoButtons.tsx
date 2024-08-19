@@ -1,31 +1,30 @@
-import { observer } from "mobx-react";
-import { FC, useContext } from "react";
+import { observer } from 'mobx-react';
+import { useContext } from 'react';
 import RedoIcon from '@mui/icons-material/Redo';
 import UndoIcon from '@mui/icons-material/Undo';
-import Store from "../../../Interfaces/Store";
-import { ButtonGroup, IconButton, Tooltip } from "@mui/material";
+import { ButtonGroup, IconButton, Tooltip } from '@mui/material';
+import Store from '../../../Interfaces/Store';
 
+function UndoRedoButtons() {
+  const store = useContext(Store);
 
-const UndoRedoButtons: FC = () => {
-    const store = useContext(Store);
+  return (
+    <ButtonGroup size="small">
 
+      <IconButton disabled={store.isAtRoot} onClick={() => { store.provenance.undo(); }}>
+        <Tooltip title="Undo">
+          <UndoIcon />
+        </Tooltip>
+      </IconButton>
 
-    return <ButtonGroup size="small">
+      <IconButton disabled={store.isAtLatest} onClick={() => { store.provenance.redo(); }}>
+        <Tooltip title="Redo">
+          <RedoIcon />
+        </Tooltip>
+      </IconButton>
 
-        <IconButton disabled={store.isAtRoot} onClick={() => { store.provenance.undo(); }}>
-            <Tooltip title='Undo'>
-                <UndoIcon />
-            </Tooltip>
-        </IconButton>
+    </ButtonGroup>
+  );
+}
 
-
-        <IconButton disabled={store.isAtLatest} onClick={() => { store.provenance.redo(); }}>
-            <Tooltip title='Redo'>
-                <RedoIcon />
-            </Tooltip>
-        </IconButton>
-
-    </ButtonGroup>;
-
-};
 export default observer(UndoRedoButtons);
