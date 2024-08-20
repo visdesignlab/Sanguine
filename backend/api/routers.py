@@ -1,3 +1,6 @@
+from django.conf import settings
+
+
 class SanguineRouter:
     """
     A router to control all database operations on models in the
@@ -24,7 +27,7 @@ class SanguineRouter:
         Allow relations if a model in the sanguine app is involved.
         """
         if getattr(obj1, 'use_hospital_db', False) or getattr(obj2, 'use_hospital_db', False):
-            return False
+            return settings.IS_TESTING
         return None
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):

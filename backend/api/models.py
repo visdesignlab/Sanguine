@@ -49,7 +49,7 @@ class PATIENT(models.Model):
     RACE_DESC = models.CharField(max_length=2000)
     ETHNICITY_CODE = models.CharField(max_length=80)
     ETHNICITY_DESC = models.CharField(max_length=2000)
-    DEATH_DATE = models.DateField()
+    DEATH_DATE = models.DateField(null=True)
     LOAD_DTM = models.DateField()
 
     objects = SanguineManager()
@@ -77,24 +77,24 @@ class VISIT(models.Model):
     APR_DRG_SOI = models.CharField(max_length=80)
     APR_DRG_DESC = models.CharField(max_length=2000)
     APR_DRG_WEIGHT = models.FloatField()
-    CCI_MI = models.FloatField()
-    CCI_CHF = models.FloatField()
-    CCI_PVD = models.FloatField()
-    CCI_CVD = models.FloatField()
-    CCI_DEMENTIA = models.FloatField()
-    CCI_COPD = models.FloatField()
-    CCI_RHEUM_DZ = models.FloatField()
-    CCI_PUD = models.FloatField()
-    CCI_LIVER_DZ_MILD = models.FloatField()
-    CCI_DM_WO_COMPL = models.FloatField()
-    CCI_DM_W_COMPL = models.FloatField()
-    CCI_PARAPLEGIA = models.FloatField()
-    CCI_RENAL_DZ = models.FloatField()
-    CCI_MALIGN_WO_METS = models.FloatField()
-    CCI_LIVER_DZ_SEVERE = models.FloatField()
-    CCI_MALIGN_W_METS = models.FloatField()
-    CCI_HIV_AIDS = models.FloatField()
-    CCI_SCORE = models.FloatField()
+    CCI_MI = models.FloatField(null=True)
+    CCI_CHF = models.FloatField(null=True)
+    CCI_PVD = models.FloatField(null=True)
+    CCI_CVD = models.FloatField(null=True)
+    CCI_DEMENTIA = models.FloatField(null=True)
+    CCI_COPD = models.FloatField(null=True)
+    CCI_RHEUM_DZ = models.FloatField(null=True)
+    CCI_PUD = models.FloatField(null=True)
+    CCI_LIVER_DZ_MILD = models.FloatField(null=True)
+    CCI_DM_WO_COMPL = models.FloatField(null=True)
+    CCI_DM_W_COMPL = models.FloatField(null=True)
+    CCI_PARAPLEGIA = models.FloatField(null=True)
+    CCI_RENAL_DZ = models.FloatField(null=True)
+    CCI_MALIGN_WO_METS = models.FloatField(null=True)
+    CCI_LIVER_DZ_SEVERE = models.FloatField(null=True)
+    CCI_MALIGN_W_METS = models.FloatField(null=True)
+    CCI_HIV_AIDS = models.FloatField(null=True)
+    CCI_SCORE = models.FloatField(null=True)
     LOAD_DTM = models.DateField()
 
     objects = SanguineManager()
@@ -104,27 +104,6 @@ class VISIT(models.Model):
         managed = False
         # These table names are only used for the testing database
         db_table = 'SANG_VISIT'
-
-
-class BILLING_CODES(models.Model):
-    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE)
-    CODE_TYPE_DESC = models.CharField(max_length=2000)
-    CODE = models.CharField(max_length=80)
-    CODE_DESC = models.CharField(max_length=2000)
-    PROC_DTM = models.DateField()
-    PROV_ID = models.CharField(max_length=25)
-    PROV_NAME = models.CharField(max_length=100)
-    PRESENT_ON_ADM_F = models.CharField(max_length=1)
-    CODE_RANK = models.FloatField()
-    LOAD_DTM = models.DateField()
-
-    objects = SanguineManager()
-    use_hospital_db = True
-
-    class Meta:
-        managed = False
-        # These table names are only used for the testing database
-        db_table = 'SANG_BILLING_CODES'
 
 
 class SURGERY_CASE(models.Model):
@@ -153,6 +132,27 @@ class SURGERY_CASE(models.Model):
         managed = False
         # These table names are only used for the testing database
         db_table = 'SANG_SURGERY_CASE'
+
+
+class BILLING_CODES(models.Model):
+    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE)
+    CODE_TYPE_DESC = models.CharField(max_length=2000)
+    CODE = models.CharField(max_length=80)
+    CODE_DESC = models.CharField(max_length=2000)
+    PROC_DTM = models.DateField()
+    PROV_ID = models.CharField(max_length=25)
+    PROV_NAME = models.CharField(max_length=100)
+    PRESENT_ON_ADM_F = models.CharField(max_length=1)
+    CODE_RANK = models.FloatField()
+    LOAD_DTM = models.DateField()
+
+    objects = SanguineManager()
+    use_hospital_db = True
+
+    class Meta:
+        managed = False
+        # These table names are only used for the testing database
+        db_table = 'SANG_BILLING_CODES'
 
 
 class VISIT_LABS(models.Model):

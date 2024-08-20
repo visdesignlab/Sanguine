@@ -13,10 +13,10 @@ services:
     image: oracle/database:19.3.0-ee
     environment:
       ORACLE_PWD: ${ORACLE_PASSWORD}
-    ports:
-      - "1521:1521"
+    expose:
+      - "1521"
     volumes:
-      - oracledb_data:/opt/oracle/oradata:Z
+      - oracledb_data:/opt/oracle/oradata
 
   frontend:
     extends:
