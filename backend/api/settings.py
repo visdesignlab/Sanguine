@@ -1,8 +1,10 @@
 import environ
 import os
+import oracledb
 
 env = environ.Env(
-    DJANGO_DEBUG=(bool, False)  # Cast to bool, default to False
+    DJANGO_DEBUG=(bool, False),  # Cast to bool, default to False
+    DJANGO_TESTING=(bool, False)  # Cast to bool, default to False
 )
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -10,6 +12,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env("DJANGO_DEBUG")
+IS_TESTING = env("DJANGO_TESTING")
 
 # We're allowing localhost for local development and for production deployment with containers
 ALLOWED_HOSTS = [
@@ -75,10 +78,12 @@ DATABASES = {
         'ENGINE': 'django.db.backends.oracle',
         "NAME": f"{env('ORACLE_HOST')}:{env('ORACLE_PORT')}/{env('ORACLE_SERVICE_NAME')}",
         "USER": env("ORACLE_USER"),
-        "PASSWORD": env("ORACLE_PASSWORD")
+        "PASSWORD": env("ORACLE_PASSWORD"),
+        "OPTIONS": {
+            "mode": oracledb.AUTH_MODE_SYSDBA if env('ORACLE_HOST') == 'oracle' else oracledb.AUTH_MODE_DEFAULT,
+        }
     },
 }
-
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 DATABASE_ROUTERS = ['api.routers.SanguineRouter']
 
