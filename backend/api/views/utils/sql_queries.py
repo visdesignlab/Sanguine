@@ -212,9 +212,9 @@ surgery_case_query = rf"""
         FROM (
             (SELECT
                 VISIT_NO,
-                SUM(CASE WHEN lower(medication_name) like '%%tranexamic%%' THEN 1 ELSE 0 END) AS TXA,
-                SUM(CASE WHEN lower(medication_name) like '%%amicar%%' or lower(medication_name) like '%%aminocaproic%%' THEN 1 ELSE 0 END) AS AMICAR,
-                SUM(CASE WHEN lower(medication_name) like '%%b12%%' or lower(medication_name) like '%%cobalamin%%'  THEN 1 ELSE 0 END) AS B12
+                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%tranexamic%%' THEN 1 ELSE 0 END) AS TXA,
+                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%amicar%%' or lower(MEDICATION_NAME) like '%%aminocaproic%%' THEN 1 ELSE 0 END) AS AMICAR,
+                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%b12%%' or lower(MEDICATION_NAME) like '%%cobalamin%%'  THEN 1 ELSE 0 END) AS B12
             FROM
                 BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_MEDS
             group by VISIT_NO
@@ -222,9 +222,9 @@ surgery_case_query = rf"""
             UNION ALL
             (SELECT
                 VISIT_NO,
-                SUM(CASE WHEN lower(medication_name) like '%%tranexamic%%' THEN 1 ELSE 0 END) AS TXA,
-                SUM(CASE WHEN lower(medication_name) like '%%amicar%%' or lower(medication_name) like '%%aminocaproic%%' THEN 1 ELSE 0 END) AS AMICAR,
-                SUM(CASE WHEN lower(medication_name) like '%%b12%%' or lower(medication_name) like '%%cobalamin%%'  THEN 1 ELSE 0 END) AS B12
+                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%tranexamic%%' THEN 1 ELSE 0 END) AS TXA,
+                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%amicar%%' or lower(MEDICATION_NAME) like '%%aminocaproic%%' THEN 1 ELSE 0 END) AS AMICAR,
+                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%b12%%' or lower(MEDICATION_NAME) like '%%cobalamin%%'  THEN 1 ELSE 0 END) AS B12
             FROM
                 BLOOD_PRODUCTS_DM.BLPD_SANGUINE_EXTRAOP_MEDS
             group by VISIT_NO
