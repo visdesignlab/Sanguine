@@ -57,7 +57,8 @@ export const selectSet = createAction<ApplicationState, [keyof typeof BloodProdu
       if (d.setName === selectSetName) {
         if (replace) {
           return { setName: selectSetName, setValues: [selectSetInput] };
-        } if (!d.setValues.includes(selectSetInput)) {
+        }
+        if (!d.setValues.includes(selectSetInput)) {
           return { setName: selectSetName, setValues: d.setValues.concat([selectSetInput]) };
         }
         return d;
