@@ -1,71 +1,63 @@
-import { observer } from "mobx-react";
-import { useContext, useState } from "react";
-import { useEffect } from "react";
-import { FC } from "react";
-import { useIdleTimer } from "react-idle-timer";
-import Dashboard from "./Dashboard";
-import Store from "./Interfaces/Store";
-import { logoutHandler, whoamiAPICall } from "./Interfaces/UserManagement";
-import { SurgeryUrgencyArray, SurgeryUrgencyType } from "./Presets/DataDict";
+import { observer } from 'mobx-react';
+import {
+  useContext, useState, useEffect,
+} from 'react';
+import { useIdleTimer } from 'react-idle-timer';
+import Dashboard from './Dashboard';
+import Store from './Interfaces/Store';
+import { logoutHandler, whoamiAPICall } from './Interfaces/UserManagement';
+import { SurgeryUrgencyArray, SurgeryUrgencyType } from './Presets/DataDict';
 import './App.css';
-import BrowserWarning from "./Components/Modals/BrowserWarning";
-import DataRetrieval from "./Components/Modals/DataRetrieval";
+import BrowserWarning from './Components/Modals/BrowserWarning';
+import DataRetrieval from './Components/Modals/DataRetrieval';
 
-const App: FC = () => {
+function App() {
   const store = useContext(Store);
   const { currentSelectPatientGroup, allCases } = store.provenanceState;
 
   const [dataLoading, setDataLoading] = useState(true);
   const [dataLoadingFailed, setDataLoadingFailed] = useState(false);
 
-  useEffect(() => {
-    if (process.env.REACT_APP_REQUIRE_LOGIN !== "true" || (store.configStore.isLoggedIn && allCases.length === 0)) {
-      fetchAllCases();
-    } else {
-      whoamiAPICall(store);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.configStore.isLoggedIn]);
-
   const handleOnIdle = () => {
     // On idle log the user out
-    if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
+    if (import.meta.env.VITE_APP_REQUIRE_LOGIN === 'true') {
       logoutHandler();
     }
-
   };
 
   const handleOnAction = () => {
-    if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
+    if (import.meta.env.VITE_APP_REQUIRE_LOGIN === 'true') {
       whoamiAPICall(store);
     }
   };
 
   useIdleTimer({
-    //the idle timer setting
+    // the idle timer setting
     timeout: 1000 * 60 * 120,
     onIdle: handleOnIdle,
     onAction: handleOnAction,
-    events: ["mousedown", "keydown"],
-    throttle: 1000 * 60
+    events: ['mousedown', 'keydown'],
+    throttle: 1000 * 60,
   });
 
   async function fetchAllCases() {
-    if (process.env.REACT_APP_REQUIRE_LOGIN === "true") {
+    if (import.meta.env.VITE_APP_REQUIRE_LOGIN === 'true') {
       whoamiAPICall(store);
     }
     try {
-      const surgeryCasesFetch = await fetch(`${process.env.REACT_APP_QUERY_URL}get_sanguine_surgery_cases`);
+      const surgeryCasesFetch = await fetch(`${import.meta.env.VITE_APP_QUERY_URL}get_sanguine_surgery_cases`);
       const surgeryCasesInput = await surgeryCasesFetch.json();
 
       // Fix data types for the surgery cases
       let minDate = +Infinity;
       let maxDate = -Infinity;
       const surgeryCases = {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         result: surgeryCasesInput.result.map((d: any) => {
           const preopHemo = parseFloat(`${d.PREOP_HEMO}`);
           const postopHemo = parseFloat(`${d.POSTOP_HEMO}`);
           const drgWeight = parseFloat(`${d.DRG_WEIGHT}`);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const surgeryTypeIndex = SurgeryUrgencyArray.indexOf(d.SURGERY_TYPE_DESC as any);
           const caseDate = new Date(d.CASE_DATE).getTime();
 
@@ -84,21 +76,20 @@ const App: FC = () => {
             POSTOP_HEMO: !Number.isNaN(postopHemo) ? postopHemo : null,
             VENT: d.VENT ? d.VENT : 0,
             DRG_WEIGHT: !Number.isNaN(drgWeight) ? drgWeight : 0,
-            DEATH: d.DEATH === "Y" ? 1 : 0,
+            DEATH: d.DEATH === 'Y' ? 1 : 0,
             ECMO: d.ECMO ? d.ECMO : 0,
             STROKE: d.STROKE ? d.STROKE : 0,
             TXA: d.TXA ? d.TXA : 0,
             B12: d.B12 ? d.B12 : 0,
             AMICAR: d.AMICAR ? d.AMICAR : 0,
-            SURGERY_TYPE_DESC: (surgeryTypeIndex > -1 ? SurgeryUrgencyArray[surgeryTypeIndex] : "Unknown") as SurgeryUrgencyType,
+            SURGERY_TYPE_DESC: (surgeryTypeIndex > -1 ? SurgeryUrgencyArray[surgeryTypeIndex] : 'Unknown') as SurgeryUrgencyType,
           };
-        })
+        }),
       };
 
       if (surgeryCases.result?.length === 0) {
-        throw new Error("There was an issue fetching data. No results were returned.");
+        throw new Error('There was an issue fetching data. No results were returned.');
       }
-
 
       let patientIDSet: Set<number> | undefined;
       if (currentSelectPatientGroup.length > 0) {
@@ -107,22 +98,34 @@ const App: FC = () => {
       }
 
       store.allCases = surgeryCases.result;
-    }
-    catch (e) {
+    } catch (e) {
       setDataLoadingFailed(true);
     } finally {
       setDataLoading(false);
     }
   }
 
-  return <>
-    <Dashboard />
-    {(process.env.REACT_APP_REQUIRE_LOGIN === "true") ?
-      <>
-        <BrowserWarning />
-        <DataRetrieval dataLoading={dataLoading} dataLoadingFailed={dataLoadingFailed} />
-      </> : <></>}
-  </>;
-};
+  useEffect(() => {
+    if (import.meta.env.VITE_APP_REQUIRE_LOGIN !== 'true' || (store.configStore.isLoggedIn && allCases.length === 0)) {
+      fetchAllCases();
+    } else {
+      whoamiAPICall(store);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.configStore.isLoggedIn]);
+
+  return (
+    <>
+      <Dashboard />
+      {(import.meta.env.VITE_APP_REQUIRE_LOGIN === 'true')
+        ? (
+          <>
+            <BrowserWarning />
+            <DataRetrieval dataLoading={dataLoading} dataLoadingFailed={dataLoadingFailed} />
+          </>
+        ) : null}
+    </>
+  );
+}
 
 export default observer(App);

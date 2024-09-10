@@ -1,6 +1,8 @@
-import styled from "@emotion/styled";
-import { Offset } from "../Interfaces/Types/OffsetType";
-import { Basic_Gray, highlight_orange, largeFontSize, postop_color, preop_color, regularFontSize } from "./Constants";
+import styled from '@emotion/styled';
+import { Offset } from '../Interfaces/Types/OffsetType';
+import {
+  basicGray, highlightOrange, largeFontSize, postopColor, preopColor, regularFontSize,
+} from './Constants';
 
 export interface BiggerFontProps {
     biggerFont: boolean;
@@ -11,11 +13,11 @@ export const ChartSVG = styled.svg`
   width: 100%;
 `;
 
-export const SurgeryRect = styled(`rect`)`
+export const SurgeryRect = styled('rect')`
   y:1;
   height:15px;
   fill-opacity:0.4;
-  fill:${postop_color};
+  fill:${postopColor};
 `;
 interface ListSVGProps {
     widthInput: number;
@@ -23,19 +25,18 @@ interface ListSVGProps {
 export const ListSVG = styled.svg<ListSVGProps>`
   height: 15px;
   padding-left:5px;
-  width:${props => props.widthInput}px;
+  width:${(props) => props.widthInput}px;
 `;
 interface ChartGProps {
     currentOffset: Offset;
     extraPairTotalWidth: number;
 }
 
-export const ChartG = styled(`g`) <ChartGProps>`
-    transform: translate(${props => (props.currentOffset.left + props.extraPairTotalWidth)}px,0px)
+export const ChartG = styled('g') <ChartGProps>`
+    transform: translate(${(props) => (props.currentOffset.left + props.extraPairTotalWidth)}px,0px)
 `;
 
-
-export const HeatMapRect = styled(`rect`)`
+export const HeatMapRect = styled('rect')`
     y:0;
     opacity:0.6;
     stroke-width:2;
@@ -45,11 +46,11 @@ interface HeatMapDivideProp {
     dimensionHeight: number;
 }
 
-export const HeatMapDividerLine = styled(`line`) <HeatMapDivideProp>`
+export const HeatMapDividerLine = styled('line') <HeatMapDivideProp>`
     x1:1;
     x2:1;
-    y1=${props => (props.currentOffset.top)}
-    y2=${props => (props.dimensionHeight - props.currentOffset.bottom)};
+    y1=${(props) => (props.currentOffset.top)}
+    y2=${(props) => (props.dimensionHeight - props.currentOffset.bottom)};
     stroke: #e5e5e5;
     stroke-width:1;
 `;
@@ -67,21 +68,20 @@ interface AverageLineProps {
     ispreop: boolean;
 }
 
-
-export const DumbbellCircle = styled(`circle`) <DotProps>`
+export const DumbbellCircle = styled('circle') <DotProps>`
   r:4px;
-  fill: ${props => (props.isSelectSet ? highlight_orange : props.ispreop ? preop_color : postop_color)};
-  opacity:${props => props.isSelectSet ? 1 : 0.8};
+  fill: ${(props) => (props.isSelectSet ? highlightOrange : props.ispreop ? preopColor : postopColor)};
+  opacity:${(props) => (props.isSelectSet ? 1 : 0.8)};
 `;
 
-export const DumbbellRect = styled(`rect`) <RectProps>`
+export const DumbbellRect = styled('rect') <RectProps>`
  width:1.5px;
- opacity:${props => props.isselected ? 1 : 0.5};
- fill: ${props => (props.isselected ? highlight_orange : Basic_Gray)};
+ opacity:${(props) => (props.isselected ? 1 : 0.5)};
+ fill: ${(props) => (props.isselected ? highlightOrange : basicGray)};
 `;
 
-export const DumbbellLine = styled(`line`) < AverageLineProps>`
-    stroke: ${props => (props.ispreop ? preop_color : postop_color)};
+export const DumbbellLine = styled('line') < AverageLineProps>`
+    stroke: ${(props) => (props.ispreop ? preopColor : postopColor)};
     stroke-width:3px
     `;
 
@@ -90,17 +90,17 @@ export const AxisText = styled.text<BiggerFontProps>`
     alignment-baseline: hanging;
     text-anchor: middle;
     y:0;
-    font-size:${props => props.biggerFont ? `${largeFontSize}px` : `${regularFontSize}px`};
+    font-size:${(props) => (props.biggerFont ? `${largeFontSize}px` : `${regularFontSize}px`)};
 `;
 
-export const CustomAxisLine = styled(`line`)`
+export const CustomAxisLine = styled('line')`
     stroke: #404040;
     stroke-width:2px;
     y1: 0;
     y2:0;
 `;
 
-export const CustomAxisLineBox = styled(`rect`)`
+export const CustomAxisLineBox = styled('rect')`
     height: 13px;
     y:0px;
     opacity:0.75;

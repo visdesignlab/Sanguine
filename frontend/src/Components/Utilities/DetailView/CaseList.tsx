@@ -1,49 +1,53 @@
-import { IconButton, List, ListItem, ListItemButton, ListItemSecondaryAction, ListItemText } from "@mui/material";
-import { FC, useContext } from "react";
-import Store from "../../../Interfaces/Store";
+import {
+  IconButton, List, ListItem, ListItemButton, ListItemSecondaryAction, ListItemText,
+} from '@mui/material';
+import { useContext } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
-import { observer } from "mobx-react";
-import { CaseListSubheader, UtilityContainer } from "../../../Presets/StyledComponents";
+import { observer } from 'mobx-react';
+import Store from '../../../Interfaces/Store';
+import { CaseListSubheader, UtilityContainer } from '../../../Presets/StyledComponents';
 
+function CaseList() {
+  const store = useContext(Store);
+  const { currentBrushedPatientGroup, currentSelectPatient } = store.provenanceState;
 
-const CaseList: FC = () => {
+  return (
+    <UtilityContainer style={{ height: '15vh', paddingTop: '0.5px' }}>
 
-    const store = useContext(Store);
-    const { currentBrushedPatientGroup, currentSelectPatient } = store.provenanceState;
+      <List dense component="nav">
 
+        <CaseListSubheader>
 
-    return (<UtilityContainer style={{ height: "15vh", paddingTop: "0.5px" }} >
+          <ListItemText primary="Selected Cases" />
+          <ListItemSecondaryAction>
+            <IconButton
+              edge="end"
+              onClick={() => {
+                store.selectionStore.updateBrush([]);
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </ListItemSecondaryAction>
+        </CaseListSubheader>
 
-        <List dense component="nav">
+        {currentBrushedPatientGroup.map((d) => (
+          <ListItem
+            key={d.CASE_ID}
+            selected={(currentSelectPatient && currentSelectPatient.CASE_ID === d.CASE_ID) || false}
+          >
+            <ListItemButton onClick={() => store.selectionStore.setCurrentSelectPatient(d)}>
+              <ListItemText primary={
+                                store.configStore.privateMode ? d.CASE_ID : '----------'
+                            }
+              />
+            </ListItemButton>
+          </ListItem>
+        ))}
 
-            <CaseListSubheader>
+      </List>
+    </UtilityContainer>
+  );
+}
 
-                <ListItemText primary={`Selected Cases`} />
-                <ListItemSecondaryAction>
-                    <IconButton edge="end"
-                        onClick={() => {
-                            store.selectionStore.updateBrush([]);
-                        }}>
-                        <CloseIcon />
-                    </IconButton>
-                </ListItemSecondaryAction>
-            </CaseListSubheader>
-
-            {currentBrushedPatientGroup.map(d => {
-                return (
-                    <ListItem
-                        key={d.CASE_ID}
-                        selected={(currentSelectPatient && currentSelectPatient.CASE_ID === d.CASE_ID) || false}>
-                        <ListItemButton onClick={() => store.selectionStore.setCurrentSelectPatient(d)}>
-                            <ListItemText primary={
-                                store.configStore.privateMode ? d.CASE_ID : "----------"
-                            } />
-                        </ListItemButton>
-                    </ListItem>
-                );
-            })}
-
-        </List>
-    </UtilityContainer>);
-};
 export default observer(CaseList);

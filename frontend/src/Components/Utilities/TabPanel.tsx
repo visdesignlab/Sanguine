@@ -1,4 +1,4 @@
-import { CSSProperties, FC, ReactNode } from "react";
+import { CSSProperties, ReactNode } from 'react';
 
 type Props = {
     index: number,
@@ -7,10 +7,14 @@ type Props = {
     styling: CSSProperties | undefined;
 };
 
-const TabPanel: FC<Props> = ({ index, value, children, styling }: Props) => {
-    return <div hidden={value !== index} style={styling}>
-        {children}
-    </div>;
-};
+function TabPanel({
+  index, value, children, styling,
+}: Props) {
+  return (
+    <div hidden={value !== index} style={styling}>
+      {children}
+    </div>
+  );
+}
 
 export default TabPanel;

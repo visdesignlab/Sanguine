@@ -12,6 +12,11 @@ class AccessLevel(Enum):
         return tuple((i.name, i.value) for i in self)
 
 
+class SanguineManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().using('hospital')
+
+
 # Actual models
 class State(models.Model):
     name = models.CharField(max_length=128, unique=True, default="New State")
@@ -34,7 +39,7 @@ class StateAccess(models.Model):
 
 
 # Hospital models - not currently used in the app
-class BLPD_SANGUINE_PATIENT(models.Model):
+class PATIENT(models.Model):
     MRN = models.CharField(max_length=20)
     PAT_FAMILY = models.CharField(max_length=30)
     PAT_GIVEN = models.CharField(max_length=30)
@@ -44,15 +49,19 @@ class BLPD_SANGUINE_PATIENT(models.Model):
     RACE_DESC = models.CharField(max_length=2000)
     ETHNICITY_CODE = models.CharField(max_length=80)
     ETHNICITY_DESC = models.CharField(max_length=2000)
-    DEATH_DATE = models.DateField()
+    DEATH_DATE = models.DateField(null=True)
     LOAD_DTM = models.DateField()
+
+    objects = SanguineManager()
+    use_hospital_db = True
 
     class Meta:
         managed = False
-        db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_PATIENT'
+        # These table names are only used for the testing database
+        db_table = 'SANG_PATIENT'
 
 
-class BLPD_SANGUINE_VISIT(models.Model):
+class VISIT(models.Model):
     VISIT_NO = models.DecimalField(max_digits=18, decimal_places=0)
     ADM_DTM = models.DateField()
     DSCH_DTM = models.DateField()
@@ -68,51 +77,38 @@ class BLPD_SANGUINE_VISIT(models.Model):
     APR_DRG_SOI = models.CharField(max_length=80)
     APR_DRG_DESC = models.CharField(max_length=2000)
     APR_DRG_WEIGHT = models.FloatField()
-    CCI_MI = models.FloatField()
-    CCI_CHF = models.FloatField()
-    CCI_PVD = models.FloatField()
-    CCI_CVD = models.FloatField()
-    CCI_DEMENTIA = models.FloatField()
-    CCI_COPD = models.FloatField()
-    CCI_RHEUM_DZ = models.FloatField()
-    CCI_PUD = models.FloatField()
-    CCI_LIVER_DZ_MILD = models.FloatField()
-    CCI_DM_WO_COMPL = models.FloatField()
-    CCI_DM_W_COMPL = models.FloatField()
-    CCI_PARAPLEGIA = models.FloatField()
-    CCI_RENAL_DZ = models.FloatField()
-    CCI_MALIGN_WO_METS = models.FloatField()
-    CCI_LIVER_DZ_SEVERE = models.FloatField()
-    CCI_MALIGN_W_METS = models.FloatField()
-    CCI_HIV_AIDS = models.FloatField()
-    CCI_SCORE = models.FloatField()
+    CCI_MI = models.FloatField(null=True)
+    CCI_CHF = models.FloatField(null=True)
+    CCI_PVD = models.FloatField(null=True)
+    CCI_CVD = models.FloatField(null=True)
+    CCI_DEMENTIA = models.FloatField(null=True)
+    CCI_COPD = models.FloatField(null=True)
+    CCI_RHEUM_DZ = models.FloatField(null=True)
+    CCI_PUD = models.FloatField(null=True)
+    CCI_LIVER_DZ_MILD = models.FloatField(null=True)
+    CCI_DM_WO_COMPL = models.FloatField(null=True)
+    CCI_DM_W_COMPL = models.FloatField(null=True)
+    CCI_PARAPLEGIA = models.FloatField(null=True)
+    CCI_RENAL_DZ = models.FloatField(null=True)
+    CCI_MALIGN_WO_METS = models.FloatField(null=True)
+    CCI_LIVER_DZ_SEVERE = models.FloatField(null=True)
+    CCI_MALIGN_W_METS = models.FloatField(null=True)
+    CCI_HIV_AIDS = models.FloatField(null=True)
+    CCI_SCORE = models.FloatField(null=True)
     LOAD_DTM = models.DateField()
+
+    objects = SanguineManager()
+    use_hospital_db = True
 
     class Meta:
         managed = False
-        db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT'
+        # These table names are only used for the testing database
+        db_table = 'SANG_VISIT'
 
 
-class BLPD_SANGUINE_BILLING_CODES(models.Model):
-    VISIT_NO = models.ForeignKey(BLPD_SANGUINE_VISIT, on_delete=models.CASCADE)
-    CODE_TYPE_DESC = models.CharField(max_length=2000)
-    CODE = models.CharField(max_length=80)
-    CODE_DESC = models.CharField(max_length=2000)
-    PROC_DTM = models.DateField()
-    PROV_ID = models.CharField(max_length=25)
-    PROV_NAME = models.CharField(max_length=100)
-    PRESENT_ON_ADM_F = models.CharField(max_length=1)
-    CODE_RANK = models.FloatField()
-    LOAD_DTM = models.DateField()
-
-    class Meta:
-        managed = False
-        db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_BILLING_CODES'
-
-
-class BLPD_SANGUINE_SURGERY_CASE(models.Model):
-    VISIT_NO = models.ForeignKey(BLPD_SANGUINE_VISIT, on_delete=models.CASCADE)
-    MRN = models.ForeignKey(BLPD_SANGUINE_PATIENT, on_delete=models.CASCADE)
+class SURGERY_CASE(models.Model):
+    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE)
+    MRN = models.ForeignKey(PATIENT, on_delete=models.CASCADE)
     CASE_ID = models.FloatField()
     CASE_DATE = models.DateField()
     SURGERY_START_DTM = models.DateField()
@@ -129,13 +125,38 @@ class BLPD_SANGUINE_SURGERY_CASE(models.Model):
     ASA_CODE = models.CharField(max_length=80)
     LOAD_DTM = models.DateField()
 
+    objects = SanguineManager()
+    use_hospital_db = True
+
     class Meta:
         managed = False
-        db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE'
+        # These table names are only used for the testing database
+        db_table = 'SANG_SURGERY_CASE'
 
 
-class BLPD_SANGUINE_VISIT_LABS(models.Model):
-    VISIT_NO = models.ForeignKey(BLPD_SANGUINE_VISIT, on_delete=models.CASCADE)
+class BILLING_CODES(models.Model):
+    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE)
+    CODE_TYPE_DESC = models.CharField(max_length=2000)
+    CODE = models.CharField(max_length=80)
+    CODE_DESC = models.CharField(max_length=2000)
+    PROC_DTM = models.DateField()
+    PROV_ID = models.CharField(max_length=25)
+    PROV_NAME = models.CharField(max_length=100)
+    PRESENT_ON_ADM_F = models.CharField(max_length=1)
+    CODE_RANK = models.FloatField()
+    LOAD_DTM = models.DateField()
+
+    objects = SanguineManager()
+    use_hospital_db = True
+
+    class Meta:
+        managed = False
+        # These table names are only used for the testing database
+        db_table = 'SANG_BILLING_CODES'
+
+
+class VISIT_LABS(models.Model):
+    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE)
     LAB_ID = models.CharField(max_length=16)
     LAB_DRAW_DTM = models.DateField()
     LAB_PANEL_CODE = models.CharField(max_length=30)
@@ -150,13 +171,17 @@ class BLPD_SANGUINE_VISIT_LABS(models.Model):
     UPPER_LIMIT = models.FloatField()
     LOAD_DTM = models.DateField()
 
+    objects = SanguineManager()
+    use_hospital_db = True
+
     class Meta:
         managed = False
-        db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT_LABS'
+        # These table names are only used for the testing database
+        db_table = 'SANG_VISIT_LABS'
 
 
-class BLPD_SANGUINE_INTRAOP_TRANSFUSION(models.Model):
-    VISIT_NO = models.ForeignKey(BLPD_SANGUINE_VISIT, on_delete=models.CASCADE)
+class INTRAOP_TRANSFUSION(models.Model):
+    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE)
     TRNSFSN_DTM = models.DateField()
     BLOOD_UNIT_NUMBER = models.CharField(max_length=600)
     PRBC_UNITS = models.FloatField()
@@ -171,14 +196,18 @@ class BLPD_SANGUINE_INTRAOP_TRANSFUSION(models.Model):
     TRANSFUSION_RANK = models.FloatField()
     LOAD_DTM = models.DateField()
 
+    objects = SanguineManager()
+    use_hospital_db = True
+
     class Meta:
         managed = False
-        db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_TRANSFUSION'
+        # These table names are only used for the testing database
+        db_table = 'SANG_INTRAOP_TRANSFUSION'
 
 
-class BLPD_SANGUINE_INTRAOP_MEDS(models.Model):
-    VISIT_NO = models.ForeignKey(BLPD_SANGUINE_VISIT, on_delete=models.CASCADE)
-    CASE_ID = models.ForeignKey(BLPD_SANGUINE_SURGERY_CASE, on_delete=models.CASCADE)
+class INTRAOP_MEDS(models.Model):
+    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE)
+    CASE_ID = models.ForeignKey(SURGERY_CASE, on_delete=models.CASCADE)
     ORDER_MED_ID = models.DecimalField(max_digits=18, decimal_places=0)
     MED_ADMIN_LINE = models.DecimalField(max_digits=38, decimal_places=0)
     ORDER_DTM = models.DateField()
@@ -193,13 +222,17 @@ class BLPD_SANGUINE_INTRAOP_MEDS(models.Model):
     MED_END_DTM = models.DateField()
     LOAD_DTM = models.DateField()
 
+    objects = SanguineManager()
+    use_hospital_db = True
+
     class Meta:
         managed = False
-        db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_MEDS'
+        # These table names are only used for the testing database
+        db_table = 'SANG_INTRAOP_MEDS'
 
 
-class BLPD_SANGUINE_EXTRAOP_MEDS(models.Model):
-    VISIT_NO = models.ForeignKey(BLPD_SANGUINE_VISIT, on_delete=models.CASCADE)
+class EXTRAOP_MEDS(models.Model):
+    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE)
     ORDER_MED_ID = models.DecimalField(max_digits=18, decimal_places=0)
     ORDER_DTM = models.DateField()
     MEDICATION_ID = models.DecimalField(max_digits=18, decimal_places=0)
@@ -214,6 +247,10 @@ class BLPD_SANGUINE_EXTRAOP_MEDS(models.Model):
     MED_END_DTM = models.DateField()
     LOAD_DTM = models.DateField()
 
+    objects = SanguineManager()
+    use_hospital_db = True
+
     class Meta:
         managed = False
-        db_table = 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_EXTRAOP_MEDS'
+        # These table names are only used for the testing database
+        db_table = 'SANG_EXTRAOP_MEDS'

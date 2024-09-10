@@ -77,6 +77,42 @@ Now, to run the devcontainer using vscode, follow these steps:
 
 1. The database should now be populated with mock data and you should be able to see it in the frontend by adding a chart to the dashboard.
 
+#### Setting up the vscode extensions to connect to the databases
+
+The devcontainer specification contains the necessary extensions to connect to the databases, one for Oracle SQL and one for MariaDB/MySQL. 
+
+To connect to the Oracle SQL database, open the SQL developer menu, click create connection and use the following settings:
+
+- Connection name: Development Oracle SQL
+- Role: SYSDBA
+- Username: SYS
+- Password: Password1
+- Host: oracle
+- Port: 1521
+- SID: ORCLCDB
+
+To query the database and test it's working, right click the database connection, click open sql worksheet, and run the following query:
+
+```sql
+SELECT * FROM dual;
+```
+
+To connect to the MariaDB/MySQL database, open the database menu, click create connection connection and use the following settings:
+
+- Connection name: Development MariaDB
+- Server type: MariaDB
+- Hostname: mariadb
+- Port: 3306
+- Username: sanguine
+- Password: test
+- Database: sanguine
+
+To query the database and test it's working, open the database and then sanguine. Then next to query, click the book icon and run the following query:
+
+```sql
+SELECT * FROM django_migrations;
+```
+
 #### Setting up the oracle sql container
 
 NOTE: If you're using an apple silicon machine, you can follow the instructions in this [video](https://www.youtube.com/watch?v=uxvoMhkKUPE) to build the oracle sql container for apple silicon.

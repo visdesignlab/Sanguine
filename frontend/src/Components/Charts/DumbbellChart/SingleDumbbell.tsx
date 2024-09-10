@@ -1,10 +1,8 @@
-import { Tooltip } from "@mui/material";
-import { observer } from "mobx-react";
-import { FC } from "react";
-import { DumbbellDataPoint } from "../../../Interfaces/Types/DataTypes";
-import { BiggerTooltip } from "../../../Presets/StyledComponents";
-import { DumbbellCircle, DumbbellRect } from "../../../Presets/StyledSVGComponents";
-
+import { Tooltip } from '@mui/material';
+import { observer } from 'mobx-react';
+import { DumbbellDataPoint } from '../../../Interfaces/Types/DataTypes';
+import { BiggerTooltip } from '../../../Presets/StyledComponents';
+import { DumbbellCircle, DumbbellRect } from '../../../Presets/StyledSVGComponents';
 
 type Props = {
     xVal: number;
@@ -17,49 +15,44 @@ type Props = {
     circleYValEnd: number;
 };
 
-const SingleDumbbell: FC<Props> = ({ xVal, dataPoint, isSelectSet, showGap, showPostop, showPreop, circleYValStart, circleYValEnd }: Props) => {
-    const clickDumbbellHandler = (d: DumbbellDataPoint) => {
-        console.log(d);
-    };
-    const yValCalculation = circleYValStart > circleYValEnd ? circleYValEnd : circleYValStart;
-    const rectHeight = Math.abs(circleYValStart - circleYValEnd);
-    return (
-        <Tooltip
-            title={<BiggerTooltip children={`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`} />}
-            arrow
-            placement="top">
-            <g >
-                <DumbbellRect
-                    x={xVal - 1}
-                    y={yValCalculation}
-                    height={rectHeight}
-                    isselected={isSelectSet}
-                    display={showGap ? undefined : "none"}
-                />
-                <DumbbellCircle
-                    cx={xVal}
-                    cy={circleYValStart}
-                    onClick={() => {
-                        clickDumbbellHandler(dataPoint);
-                    }}
-                    isSelectSet={isSelectSet}
-                    ispreop={true}
-                    display={showPreop ? undefined : "none"}
-                />
-                <DumbbellCircle
-                    cx={
+function SingleDumbbell({
+  xVal, dataPoint, isSelectSet, showGap, showPostop, showPreop, circleYValStart, circleYValEnd,
+}: Props) {
+  const yValCalculation = circleYValStart > circleYValEnd ? circleYValEnd : circleYValStart;
+  const rectHeight = Math.abs(circleYValStart - circleYValEnd);
+  return (
+    <Tooltip
+      title={<BiggerTooltip>{`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}</BiggerTooltip>}
+      arrow
+      placement="top"
+    >
+      <g>
+        <DumbbellRect
+          x={xVal - 1}
+          y={yValCalculation}
+          height={rectHeight}
+          isselected={isSelectSet}
+          display={showGap ? undefined : 'none'}
+        />
+        <DumbbellCircle
+          cx={xVal}
+          cy={circleYValStart}
+          isSelectSet={isSelectSet}
+          ispreop
+          display={showPreop ? undefined : 'none'}
+        />
+        <DumbbellCircle
+          cx={
                         xVal
                     }
-                    cy={circleYValEnd}
-                    onClick={() => {
-                        clickDumbbellHandler(dataPoint);
-                    }}
-                    isSelectSet={isSelectSet}
-                    ispreop={false}
-                    display={showPostop ? undefined : "none"}
-                />
-            </g>
-        </Tooltip>);
-};
+          cy={circleYValEnd}
+          isSelectSet={isSelectSet}
+          ispreop={false}
+          display={showPostop ? undefined : 'none'}
+        />
+      </g>
+    </Tooltip>
+  );
+}
 
 export default observer(SingleDumbbell);

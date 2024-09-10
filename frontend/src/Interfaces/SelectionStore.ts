@@ -1,52 +1,57 @@
-import { makeAutoObservable } from "mobx";
-import { clearSelectionFilter, clearSet, outputToFilter, removeFilter, selectSet, setCurrentSelectPatient, updateBrushPatient, updateProcedureSelection, updateSelectedPatientGroup } from "./Actions/SelectionActions";
-import { RootStore } from "./Store";
-import { ProcedureEntry, SingleCasePoint } from "./Types/DataTypes";
+import { makeAutoObservable } from 'mobx';
+import {
+  clearSelectionFilter, clearSet, outputToFilter, removeFilter, selectSet, setCurrentSelectPatient, updateBrushPatient, updateProcedureSelection, updateSelectedPatientGroup,
+} from './Actions/SelectionActions';
+// eslint-disable-next-line import/no-cycle
+import { RootStore } from './Store';
+import { ProcedureEntry, SingleCasePoint } from './Types/DataTypes';
+import { BloodProductCap } from '../Presets/Constants';
 
 export class SelectionStore {
-    rootStore: RootStore;
+  rootStore: RootStore;
 
-    constructor(rootStore: RootStore) {
-        this.rootStore = rootStore;
-        makeAutoObservable(this);
-    }
+  constructor(rootStore: RootStore) {
+    this.rootStore = rootStore;
+    makeAutoObservable(this);
+  }
 
-    get provenance() {
-        return this.rootStore.provenance;
-    }
+  get provenance() {
+    return this.rootStore.provenance;
+  }
 
-    updateSelectedPatientGroup(caseList: SingleCasePoint[]) {
-        this.provenance.apply(updateSelectedPatientGroup(caseList));
-    }
+  updateSelectedPatientGroup(caseList: SingleCasePoint[]) {
+    this.provenance.apply(updateSelectedPatientGroup(caseList));
+  }
 
-    updateProcedureSelection(newProcedures: ProcedureEntry, removing: boolean, parentProcedure?: ProcedureEntry) {
-        this.provenance.apply(updateProcedureSelection(newProcedures, removing, parentProcedure));
-    }
+  updateProcedureSelection(newProcedures: ProcedureEntry, removing: boolean, parentProcedure?: ProcedureEntry) {
+    this.provenance.apply(updateProcedureSelection(newProcedures, removing, parentProcedure));
+  }
 
-    updateBrush(caseList: SingleCasePoint[]) {
-        this.provenance.apply(updateBrushPatient(caseList));
-    }
+  updateBrush(caseList: SingleCasePoint[]) {
+    this.provenance.apply(updateBrushPatient(caseList));
+  }
 
-    setCurrentSelectPatient(newCase: SingleCasePoint | null) {
-        this.provenance.apply(setCurrentSelectPatient(newCase));
-    }
+  setCurrentSelectPatient(newCase: SingleCasePoint | null) {
+    this.provenance.apply(setCurrentSelectPatient(newCase));
+  }
 
-    clearSelectionFilter() {
-        this.provenance.apply(clearSelectionFilter());
-    }
+  clearSelectionFilter() {
+    this.provenance.apply(clearSelectionFilter());
+  }
 
-    outputToFilter() {
-        this.provenance.apply(outputToFilter());
-    }
+  outputToFilter() {
+    this.provenance.apply(outputToFilter());
+  }
 
-    removeFilter(filterNameToRemove: string) {
-        this.provenance.apply(removeFilter(filterNameToRemove));
-    }
+  removeFilter(filterNameToRemove: string) {
+    this.provenance.apply(removeFilter(filterNameToRemove));
+  }
 
-    selectSet(selectSetName: string, selectSetInput: string, replace: boolean) {
-        this.provenance.apply(selectSet(selectSetName, selectSetInput, replace));
-    }
-    clearSet(selectSetName: string) {
-        this.provenance.apply(clearSet(selectSetName));
-    }
+  selectSet(selectSetName: keyof typeof BloodProductCap, selectSetInput: string, replace: boolean) {
+    this.provenance.apply(selectSet(selectSetName, selectSetInput, replace));
+  }
+
+  clearSet(selectSetName: string) {
+    this.provenance.apply(clearSet(selectSetName));
+  }
 }

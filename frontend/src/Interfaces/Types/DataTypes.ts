@@ -1,3 +1,6 @@
+import { AcronymDictionary } from '../../Presets/DataDict';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export type ProcedureEntry = {
     procedureName: string;
     count: number;
@@ -25,7 +28,6 @@ export type CostCompareChartDataPoint = CostBarChartDataPoint & {
     withInterCellSalvageUsage: number;
     withInterCellSalvageVolume: number;
 };
-
 
 export type BarChartDataPoint = BasicAggregatedDatePoint & {
     actualDataPoints: any[];
@@ -80,7 +82,7 @@ export type DumbbellDataPoint = {
 };
 
 export type ExtraPairPoint = {
-    name: string;
+    name: keyof typeof AcronymDictionary;
     data: any[];
     type: 'Violin' | 'BarChart' | 'Basic';
     label: string;

@@ -13,8 +13,7 @@ django = "~5.0"
 oracledb = "^2.0.1"
 django-extensions = "^3.2.3"
 pygraphviz = "^1.12"
-
-
+faker = "^27.0.0"
 
 [build-system]
 requires = ["poetry-core"]
