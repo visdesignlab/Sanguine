@@ -20,7 +20,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ./mariadb_data:/var/lib/mysql
+      - mariadb_data:/var/lib/mysql
 
   frontend:
     image: node:18
@@ -30,3 +30,6 @@ services:
     environment:
       - NODE_ENV=production
     command: sh -c "yarn install && yarn build"
+
+volumes:
+  mariadb_data:
