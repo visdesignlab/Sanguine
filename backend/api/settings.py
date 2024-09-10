@@ -80,7 +80,7 @@ DATABASES = {
         "USER": env("ORACLE_USER"),
         "PASSWORD": env("ORACLE_PASSWORD"),
         "OPTIONS": {
-            "mode": oracledb.AUTH_MODE_SYSDBA if env('ORACLE_HOST') == 'oracle' else oracledb.AUTH_MODE_DEFAULT,
+            "mode": oracledb.AUTH_MODE_SYSDBA if IS_TESTING else oracledb.AUTH_MODE_DEFAULT,
         }
     },
 }
