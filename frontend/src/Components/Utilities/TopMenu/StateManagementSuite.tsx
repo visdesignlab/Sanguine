@@ -17,7 +17,7 @@ function StateManagementSuite() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   async function fetchSavedStates() {
-    fetch(`${import.meta.env.VITE_APP_QUERY_URL}state`)
+    fetch(`${import.meta.env.VITE_QUERY_URL}state`)
       .then((result) => result.json())
       .then((result) => {
         if (result) {
@@ -37,7 +37,7 @@ function StateManagementSuite() {
   };
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_APP_QUERY_URL}state`)
+    fetch(`${import.meta.env.VITE_QUERY_URL}state`)
       .then((result) => result.json())
       .then((result) => {
         if (result) {
@@ -50,7 +50,7 @@ function StateManagementSuite() {
   }, []);
 
   const loadSavedState = async (name: string) => {
-    const res = await (fetch(`${import.meta.env.VITE_APP_QUERY_URL}state?name=${name}`));
+    const res = await (fetch(`${import.meta.env.VITE_QUERY_URL}state?name=${name}`));
     const result = await res.json();
     store.provenance.importState(result.definition);
   };

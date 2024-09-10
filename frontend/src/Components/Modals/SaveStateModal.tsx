@@ -43,7 +43,7 @@ function SaveStateModal({ visible, setVisibility }: Props) {
   const saveNewState = () => {
     const csrftoken = simulateAPIClick();
     if (store.configStore.stateToUpdate) {
-      fetch(`${import.meta.env.VITE_APP_QUERY_URL}state`, {
+      fetch(`${import.meta.env.VITE_QUERY_URL}state`, {
         method: 'PUT',
         credentials: 'include',
         headers: {
@@ -74,7 +74,7 @@ function SaveStateModal({ visible, setVisibility }: Props) {
       store.configStore.snackBarMessage = 'State name duplicate. Please rename.';
       store.configStore.openSnackBar = true;
     } else {
-      fetch(`${import.meta.env.VITE_APP_QUERY_URL}state`, {
+      fetch(`${import.meta.env.VITE_QUERY_URL}state`, {
         method: 'POST',
         credentials: 'include',
         headers: {

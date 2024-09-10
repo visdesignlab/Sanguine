@@ -20,13 +20,13 @@ function App() {
 
   const handleOnIdle = () => {
     // On idle log the user out
-    if (import.meta.env.VITE_APP_REQUIRE_LOGIN === 'true') {
+    if (import.meta.env.VITE_REQUIRE_LOGIN === 'true') {
       logoutHandler();
     }
   };
 
   const handleOnAction = () => {
-    if (import.meta.env.VITE_APP_REQUIRE_LOGIN === 'true') {
+    if (import.meta.env.VITE_REQUIRE_LOGIN === 'true') {
       whoamiAPICall(store);
     }
   };
@@ -41,11 +41,11 @@ function App() {
   });
 
   async function fetchAllCases() {
-    if (import.meta.env.VITE_APP_REQUIRE_LOGIN === 'true') {
+    if (import.meta.env.VITE_REQUIRE_LOGIN === 'true') {
       whoamiAPICall(store);
     }
     try {
-      const surgeryCasesFetch = await fetch(`${import.meta.env.VITE_APP_QUERY_URL}get_sanguine_surgery_cases`);
+      const surgeryCasesFetch = await fetch(`${import.meta.env.VITE_QUERY_URL}get_sanguine_surgery_cases`);
       const surgeryCasesInput = await surgeryCasesFetch.json();
 
       // Fix data types for the surgery cases
@@ -106,7 +106,7 @@ function App() {
   }
 
   useEffect(() => {
-    if (import.meta.env.VITE_APP_REQUIRE_LOGIN !== 'true' || (store.configStore.isLoggedIn && allCases.length === 0)) {
+    if (import.meta.env.VITE_REQUIRE_LOGIN !== 'true' || (store.configStore.isLoggedIn && allCases.length === 0)) {
       fetchAllCases();
     } else {
       whoamiAPICall(store);
@@ -117,7 +117,7 @@ function App() {
   return (
     <>
       <Dashboard />
-      {(import.meta.env.VITE_APP_REQUIRE_LOGIN === 'true')
+      {(import.meta.env.VITE_REQUIRE_LOGIN === 'true')
         ? (
           <>
             <BrowserWarning />

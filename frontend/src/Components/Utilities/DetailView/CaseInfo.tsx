@@ -38,12 +38,12 @@ function CaseInfo() {
     async function fetchIndividualInformaiton() {
       if (currentSelectPatient) {
         stateUpdateWrapperUseJSON(individualInfo, null, setIndividualInfo);
-        const fetchResult = await fetch(`${import.meta.env.VITE_APP_QUERY_URL}fetch_patient?patient_id=${currentSelectPatient.MRN}`);
+        const fetchResult = await fetch(`${import.meta.env.VITE_QUERY_URL}fetch_patient?patient_id=${currentSelectPatient.MRN}`);
 
         const fetchResultJson = await fetchResult.json();
         const individualInfoJSON = fetchResultJson.result[0];
 
-        const fetchSurgery = await fetch(`${import.meta.env.VITE_APP_QUERY_URL}fetch_surgery?case_id=${currentSelectPatient.CASE_ID}`);
+        const fetchSurgery = await fetch(`${import.meta.env.VITE_QUERY_URL}fetch_surgery?case_id=${currentSelectPatient.CASE_ID}`);
         const fetchSurgeryJson = await fetchSurgery.json();
         const surgeryInfo = fetchSurgeryJson.result[0];
         surgeryInfo['CPT Codes'] = surgeryInfo.cpt.join(', ');

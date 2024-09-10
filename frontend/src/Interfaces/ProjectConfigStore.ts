@@ -32,7 +32,7 @@ export class ProjectConfigStore {
 
   constructor(rootStore: RootStore) {
     this.rootStore = rootStore;
-    this._isLoggedIn = !(import.meta.env.VITE_APP_REQUIRE_LOGIN === 'true');
+    this._isLoggedIn = !(import.meta.env.VITE_REQUIRE_LOGIN === 'true');
     this.largeFont = false;
     this.privateMode = false;
     this._topMenuBarAddMode = false;

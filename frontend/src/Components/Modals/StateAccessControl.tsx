@@ -27,7 +27,7 @@ function StateAccessControl({ stateName, openStateAccessControl, setOpenStateAcc
 
   const makeStateAccessRequest = () => {
     if (stateName) {
-      fetch(`${import.meta.env.VITE_APP_QUERY_URL}state_unids?state_name=${stateName}`)
+      fetch(`${import.meta.env.VITE_QUERY_URL}state_unids?state_name=${stateName}`)
         .then((response) => response.json())
         .then((data) => {
           //   const result = data.result;
@@ -53,7 +53,7 @@ function StateAccessControl({ stateName, openStateAccessControl, setOpenStateAcc
 
   const changeAccess = (uID: string, newAccess: string) => {
     const csrftoken = simulateAPIClick();
-    fetch(`${import.meta.env.VITE_APP_QUERY_URL}share_state`, {
+    fetch(`${import.meta.env.VITE_QUERY_URL}share_state`, {
       method: 'POST',
       credentials: 'include',
       headers: {

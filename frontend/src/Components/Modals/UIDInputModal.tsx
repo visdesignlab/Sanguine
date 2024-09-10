@@ -18,7 +18,7 @@ function UIDInputModal({ stateName, visible, setVisibility }: Props) {
 
   const shareState = () => {
     const csrftoken = simulateAPIClick();
-    fetch(`${import.meta.env.VITE_APP_QUERY_URL}share_state`, {
+    fetch(`${import.meta.env.VITE_QUERY_URL}share_state`, {
       method: 'POST',
       credentials: 'include',
       headers: {

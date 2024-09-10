@@ -27,7 +27,7 @@ function ManageStateDialog({ setOpenSaveState, setVisbility, visible }: Props) {
 
   const removeState = (stateName: string) => {
     const csrftoken = simulateAPIClick();
-    fetch(`${import.meta.env.VITE_APP_QUERY_URL}state`, {
+    fetch(`${import.meta.env.VITE_QUERY_URL}state`, {
       method: 'DELETE',
       credentials: 'include',
       headers: {
