@@ -209,4 +209,3 @@ class Command(BaseCommand):
         # Generate mock data for INTRAOP_TRANSFUSION
         for surg in surgeries:
             pass
-
