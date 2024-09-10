@@ -27,4 +27,5 @@ services:
     command: sh -c "while true; do sleep 1000; done"
 
 volumes:
+  mariadb_data:
   oracledb_data:
