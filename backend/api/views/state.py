@@ -12,11 +12,12 @@ from django.views.decorators.http import require_http_methods
 from django_cas_ng.decorators import login_required
 
 from api.models import State, StateAccess, AccessLevel
+from .decorators.conditional_login_required import conditional_login_required
 from .utils.utils import log_request
 
 
 @require_http_methods(["GET", "POST", "PUT", "DELETE"])
-@login_required
+@conditional_login_required(login_required)
 def state(request):
     log_request(request, ["definition", "new_definition", ])
 
@@ -137,7 +138,7 @@ def state(request):
 
 
 @require_http_methods(["POST"])
-@login_required
+@conditional_login_required(login_required)
 def share_state(request):
     log_request(request)
 
@@ -194,7 +195,7 @@ def share_state(request):
 
 
 @require_http_methods(["GET"])
-@login_required
+@conditional_login_required(login_required)
 def state_unids(request):
     log_request(request)
 
