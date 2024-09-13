@@ -4,8 +4,6 @@ import {
   basicGray, highlightOrange, largeFontSize, postopColor, preopColor, regularFontSize,
 } from './Constants';
 
-
-
 export const ChartSVG = styled.svg`
   height: calc(100% - 100px);
   width: 100%;
@@ -31,13 +29,13 @@ interface ChartGProps {
 }
 
 export const ChartG = styled('g') <ChartGProps>`
-    transform: translate(${(props) => (props.currentOffset.left + props.extraPairTotalWidth)}px,0px)
+  transform: translate(${(props) => (props.currentOffset.left + props.extraPairTotalWidth)}px,0px)
 `;
 
 export const HeatMapRect = styled('rect')`
-    y:0;
-    opacity:0.6;
-    stroke-width:2;
+  y:0;
+  opacity:0.6;
+  stroke-width:2;
 `;
 interface HeatMapDivideProp {
   currentOffset: Offset;
@@ -45,16 +43,15 @@ interface HeatMapDivideProp {
 }
 
 export const HeatMapDividerLine = styled('line') <HeatMapDivideProp>`
-    x1:1;
-    x2:1;
-    y1=${(props) => (props.currentOffset.top)}
-    y2=${(props) => (props.dimensionHeight - props.currentOffset.bottom)};
-    stroke: #e5e5e5;
+  x1:1;
+  x2:1;
+  y1=${(props) => (props.currentOffset.top)}
+  y2=${(props) => (props.dimensionHeight - props.currentOffset.bottom)};
+  stroke: #e5e5e5;
     stroke-width:1;
 `;
 
 interface DotProps {
-
   isSelectSet: boolean;
   ispreop: boolean;
 }
@@ -83,14 +80,6 @@ export const DumbbellLine = styled('line') < AverageLineProps>`
     stroke-width:3px
     `;
 
-// export const AxisText = styled.text<BiggerFontProps>`
-//     fill:white;
-//     alignment-baseline: hanging;
-//     text-anchor: middle;
-//     y:0;
-//     font-size:${props => props.biggerFont ? `${largeFontSize}px` : `${regularFontSize}px`};
-// `;
-
 export interface BiggerFontProps {
   biggerFont: boolean;
 }
@@ -100,7 +89,7 @@ export const AxisText = styled.foreignObject<BiggerFontProps>`
     y:0px;
     text-align:center;
       height: 13px;
-    font-size:${props => props.biggerFont ? `${largeFontSize}px` : `${regularFontSize}px`};
+    font-size:${(props) => (props.biggerFont ? `${largeFontSize}px` : `${regularFontSize}px`)};
     color:white;
 `;
 
