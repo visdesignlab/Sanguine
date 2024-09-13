@@ -1,47 +1,16 @@
+from api.models import (
+    PATIENT,
+    VISIT,
+    SURGERY_CASE,
+    BILLING_CODES,
+    VISIT_LABS,
+    EXTRAOP_MEDS,
+    INTRAOP_MEDS,
+    INTRAOP_TRANSFUSION,
+)
 from .utils import get_all_cpt_code_filters
 
-DE_IDENT_FIELDS = {
-    "admin_dose": "ADMIN_DOSE",
-    "anest_id": "ANESTH_PROV_DWID",
-    "apr_drg_weight": "APR_DRG_WEIGHT",
-    "apr_drg_code": "APR_DRG_CODE",
-    "apr_drg_desc": "APR_DRG_DESC",
-    "apr_drg_rom": "APR_DRG_ROM",
-    "apr_drg_soi": "APR_DRG_SOI",
-    "birth_date": "DI_BIRTHDATE",
-    "billing_code": "CODE",
-    "case_date": "DI_CASE_DATE",
-    "case_id": "DI_CASE_ID",
-    "code_desc": "CODE_DESC",
-    "death_date": "DI_DEATH_DATE",
-    "dose_unit_desc": "DOSE_UNIT_DESC",
-    "draw_dtm": "DI_DRAW_DTM",
-    "ethnicity_code": "ETHNICITY_CODE",
-    "ethnicity_desc": "ETHNICITY_DESC",
-    "gender_code": "GENDER_CODE",
-    "gender_desc": "GENDER_DESC",
-    "medication_id": "MEDICATION_ID",
-    "patient_id": "DI_PAT_ID",
-    "post_op_icu_los": "POSTOP_ICU_LOS",
-    "present_on_adm": "PRESENT_ON_ADM_F",
-    "prim_proc_desc": "PRIM_PROC_DESC",
-    "procedure_dtm": "DI_PROC_DTM",
-    "race_code": "RACE_CODE",
-    "race_desc": "RACE_DESC",
-    "result_code": "RESULT_CODE",
-    "result_desc": "RESULT_DESC",
-    "result_dtm": "DI_RESULT_DTM",
-    "result_value": "RESULT_VALUE",
-    "sched_site_desc": "SCHED_SITE_DESC",
-    "surgeon_id": "SURGEON_PROV_DWID",
-    "surgery_elapsed": "SURGERY_ELAP",
-    "surgery_end_time": "DI_SURGERY_END_DTM",
-    "surgery_start_time": "DI_SURGERY_START_DTM",
-    "surgery_type": "SURGERY_TYPE_DESC",
-    "visit_no": "DI_VISIT_NO",
-}
-
-IDENT_FIELDS = {
+FIELDS = {
     "admin_dose": "ADMIN_DOSE",
     "anest_id": "ANESTH_PROV_ID",
     "apr_drg_weight": "APR_DRG_WEIGHT",
@@ -82,83 +51,69 @@ IDENT_FIELDS = {
     "visit_no": "VISIT_NO",
 }
 
-DE_IDENT_TABLES = {
-    "billing_codes": "CLIN_DM.BPU_CTS_DI_BILL_CODES_092920",
-    "intra_op_trnsfsd": "CLIN_DM.BPU_CTS_DI_INTRP_TRNSF_092920",
-    "patient": "CLIN_DM.BPU_CTS_DI_PATIENT_092920",
-    "surgery_case": "CLIN_DM.BPU_CTS_DI_SURGERY_CASE_092920",
-    "visit": "CLIN_DM.BPU_CTS_DI_VISIT_092920",
-    "visit_labs": "CLIN_DM.BPU_CTS_DI_VST_LABS_092920",
-    "extraop_meds": "CLIN_DM.BPU_CTS_DI_EXTRAOP_MEDS_092920",
-    "intraop_meds": "CLIN_DM.BPU_CTS_DI_INTRAOP_MEDS_092920",
+TABLES = {
+    "billing_codes": BILLING_CODES._meta.db_table,
+    "intra_op_trnsfsd": INTRAOP_TRANSFUSION._meta.db_table,
+    "patient": PATIENT._meta.db_table,
+    "surgery_case": SURGERY_CASE._meta.db_table,
+    "visit": VISIT._meta.db_table,
+    "visit_labs": VISIT_LABS._meta.db_table,
+    "extraop_meds": EXTRAOP_MEDS._meta.db_table,
+    "intraop_meds": INTRAOP_MEDS._meta.db_table,
 }
-
-IDENT_TABLES = {
-    "billing_codes": "BLOOD_PRODUCTS_DM.BLPD_SANGUINE_BILLING_CODES",
-    "intra_op_trnsfsd": "BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_TRANSFUSION",
-    "patient": "BLOOD_PRODUCTS_DM.BLPD_SANGUINE_PATIENT",
-    "surgery_case": "BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE",
-    "visit": "BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT",
-    "visit_labs": "BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT_LABS",
-    "extraop_meds": "BLOOD_PRODUCTS_DM.BLPD_SANGUINE_EXTRAOP_MEDS",
-    "intraop_meds": "BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_MEDS",
-}
-
-FIELDS_IN_USE = IDENT_FIELDS
-TABLES_IN_USE = IDENT_TABLES
 
 _, _, filters_safe_sql = get_all_cpt_code_filters()
 
 procedure_count_query = f"""
         SELECT
-            LISTAGG({FIELDS_IN_USE.get('billing_code')}, ',') as codes,
-            {FIELDS_IN_USE.get('case_id')}
-        FROM {TABLES_IN_USE.get('billing_codes')} BLNG
-        INNER JOIN {TABLES_IN_USE.get('surgery_case')} SURG
-            ON (BLNG.{FIELDS_IN_USE.get('visit_no')} = SURG.{FIELDS_IN_USE.get('visit_no')})
-            AND (BLNG.{FIELDS_IN_USE.get('procedure_dtm')} = SURG.{FIELDS_IN_USE.get('case_date')})
+            LISTAGG({FIELDS.get('billing_code')}, ',') as codes,
+            SURG.{FIELDS.get('case_id')}
+        FROM {TABLES.get('billing_codes')} BLNG
+        INNER JOIN {TABLES.get('surgery_case')} SURG
+            ON (BLNG.{FIELDS.get('visit_no')} = SURG.{FIELDS.get('visit_no')})
+            AND (BLNG.{FIELDS.get('procedure_dtm')} = SURG.{FIELDS.get('case_date')})
         {filters_safe_sql}
-        GROUP BY {FIELDS_IN_USE.get('case_id')}
+        GROUP BY {FIELDS.get('case_id')}
     """
 
 patient_query = f"""
     SELECT
-        PATIENT.{FIELDS_IN_USE.get('birth_date')},
-        PATIENT.{FIELDS_IN_USE.get('gender_code')},
-        -- PATIENT.{FIELDS_IN_USE.get('gender_desc')},
-        PATIENT.{FIELDS_IN_USE.get('race_code')},
-        PATIENT.{FIELDS_IN_USE.get('race_desc')},
-        PATIENT.{FIELDS_IN_USE.get('ethnicity_code')},
-        PATIENT.{FIELDS_IN_USE.get('ethnicity_desc')},
-        PATIENT.{FIELDS_IN_USE.get('death_date')}
+        PATIENT.{FIELDS.get('birth_date')},
+        PATIENT.{FIELDS.get('gender_code')},
+        -- PATIENT.{FIELDS.get('gender_desc')},
+        PATIENT.{FIELDS.get('race_code')},
+        PATIENT.{FIELDS.get('race_desc')},
+        PATIENT.{FIELDS.get('ethnicity_code')},
+        PATIENT.{FIELDS.get('ethnicity_desc')},
+        PATIENT.{FIELDS.get('death_date')}
     FROM
-        {TABLES_IN_USE.get('patient')} PATIENT
-    WHERE PATIENT.{FIELDS_IN_USE.get('patient_id')} = :id
+        {TABLES.get('patient')} PATIENT
+    WHERE PATIENT.{FIELDS.get('patient_id')} = :id
     """
 
 surgery_query = f"""
     with
         codes as (
             SELECT
-                BLNG.{FIELDS_IN_USE.get('visit_no')} || ', ' || BLNG.{FIELDS_IN_USE.get('procedure_dtm')} as comb,
-                LISTAGG(BLNG.{FIELDS_IN_USE.get('code_desc')}, ', ') as codes
-            FROM {TABLES_IN_USE.get('billing_codes')} BLNG
-            group by {FIELDS_IN_USE.get('visit_no')} || ', ' || {FIELDS_IN_USE.get('procedure_dtm')}
+                BLNG.{FIELDS.get('visit_no')} || ', ' || BLNG.{FIELDS.get('procedure_dtm')} as comb,
+                LISTAGG(BLNG.{FIELDS.get('code_desc')}, ', ') as codes
+            FROM {TABLES.get('billing_codes')} BLNG
+            group by {FIELDS.get('visit_no')} || ', ' || {FIELDS.get('procedure_dtm')}
         ),
         surg_cases as (
             SELECT
-                TO_CHAR(SURG.{FIELDS_IN_USE.get('visit_no')}) || ', ' || TO_CHAR(SURG.{FIELDS_IN_USE.get('case_date')}) as comb,
-                SURG.{FIELDS_IN_USE.get('case_id')},
-                SURG.{FIELDS_IN_USE.get('visit_no')},
-                SURG.{FIELDS_IN_USE.get('case_date')},
-                SURG.{FIELDS_IN_USE.get('surgery_start_time')},
-                SURG.{FIELDS_IN_USE.get('surgery_end_time')},
-                SURG.{FIELDS_IN_USE.get('surgery_elapsed')},
-                SURG.{FIELDS_IN_USE.get('surgery_type')},
-                SURG.{FIELDS_IN_USE.get('prim_proc_desc')},
-                SURG.{FIELDS_IN_USE.get('post_op_icu_los')}
-            FROM {TABLES_IN_USE.get('surgery_case')} SURG
-            WHERE SURG.{FIELDS_IN_USE.get('case_id')} = :id
+                TO_CHAR(SURG.{FIELDS.get('visit_no')}) || ', ' || TO_CHAR(SURG.{FIELDS.get('case_date')}) as comb,
+                SURG.{FIELDS.get('case_id')},
+                SURG.{FIELDS.get('visit_no')},
+                SURG.{FIELDS.get('case_date')},
+                SURG.{FIELDS.get('surgery_start_time')},
+                SURG.{FIELDS.get('surgery_end_time')},
+                SURG.{FIELDS.get('surgery_elapsed')},
+                SURG.{FIELDS.get('surgery_type')},
+                SURG.{FIELDS.get('prim_proc_desc')},
+                SURG.{FIELDS.get('post_op_icu_los')}
+            FROM {TABLES.get('surgery_case')} SURG
+            WHERE SURG.{FIELDS.get('case_id')} = :id
         )
     SELECT surg_cases.*, codes.codes as codes
     FROM surg_cases
@@ -187,7 +142,7 @@ surgery_case_query = rf"""
             SUM(CELL_SAVER_ML) AS CELL_SAVER_ML,
             CASE_ID
         FROM
-            BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_TRANSFUSION
+            {TABLES.get('intra_op_trnsfsd')}
         GROUP BY
             CASE_ID
     ),
@@ -198,7 +153,7 @@ surgery_case_query = rf"""
             CASE WHEN SUM(CASE WHEN CODE IN ('33952', '33954', '33956', '33958', '33962', '33964', '33966', '33973', '33974', '33975', '33976', '33977', '33978', '33979', '33980', '33981', '33982', '33983', '33984', '33986', '33987', '33988', '33989') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS ECMO,
             LISTAGG(CODE, ',') AS ALL_CODES
         FROM
-            BLOOD_PRODUCTS_DM.BLPD_SANGUINE_BILLING_CODES
+            {TABLES.get('billing_codes')}
         {filters_safe_sql}
         GROUP BY
             VISIT_NO
@@ -216,7 +171,7 @@ surgery_case_query = rf"""
                 SUM(CASE WHEN lower(MEDICATION_NAME) like '%%amicar%%' or lower(MEDICATION_NAME) like '%%aminocaproic%%' or lower(MEDICATION_NAME) like '%%eaca%%' THEN 1 ELSE 0 END) AS AMICAR,
                 SUM(CASE WHEN lower(MEDICATION_NAME) like '%%b12%%' or lower(MEDICATION_NAME) like '%%cobalamin%%'  THEN 1 ELSE 0 END) AS B12
             FROM
-                BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_MEDS
+                {TABLES.get('intraop_meds')}
             group by VISIT_NO
             )
             UNION ALL
@@ -226,7 +181,7 @@ surgery_case_query = rf"""
                 SUM(CASE WHEN lower(MEDICATION_NAME) like '%%amicar%%' or lower(MEDICATION_NAME) like '%%aminocaproic%%' or lower(MEDICATION_NAME) like '%%eaca%%' THEN 1 ELSE 0 END) AS AMICAR,
                 SUM(CASE WHEN lower(MEDICATION_NAME) like '%%b12%%' or lower(MEDICATION_NAME) like '%%cobalamin%%'  THEN 1 ELSE 0 END) AS B12
             FROM
-                BLOOD_PRODUCTS_DM.BLPD_SANGUINE_EXTRAOP_MEDS
+                {TABLES.get('extraop_meds')}
             group by VISIT_NO
             )
             ) INNER_MEDS
@@ -234,14 +189,14 @@ surgery_case_query = rf"""
     ),
     LAB_HB AS (
         SELECT
-            V.VISIT_NO,
-            V.LAB_DRAW_DTM,
-            V.RESULT_DTM,
-            V.RESULT_CODE,
-            V.RESULT_VALUE
+            VISIT_NO,
+            LAB_DRAW_DTM,
+            RESULT_DTM,
+            RESULT_CODE,
+            RESULT_VALUE
         FROM
-            BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT_LABS V
-        WHERE (INSTR(UPPER(RESULT_DESC), 'HEMOGLOBIN') > 0 OR INSTR(UPPER(V.RESULT_DESC), 'HGB') > 0)
+            {TABLES.get('visit_labs')}
+        WHERE (INSTR(UPPER(RESULT_DESC), 'HEMOGLOBIN') > 0 OR INSTR(UPPER(RESULT_DESC), 'HGB') > 0)
         AND REGEXP_LIKE(RESULT_VALUE, '^[+-]?\d+(\.\d+)?$')
     ),
     PREOP_HB AS (
@@ -262,7 +217,7 @@ surgery_case_query = rf"""
                 SC.SURGERY_END_DTM,
                 MAX(LH.LAB_DRAW_DTM) AS DI_PREOP_DRAW_DTM
             FROM
-                BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE SC
+                {TABLES.get('surgery_case')} SC
             INNER JOIN LAB_HB LH
                 ON SC.VISIT_NO = LH.VISIT_NO
             GROUP BY
@@ -294,7 +249,7 @@ surgery_case_query = rf"""
                 SC2.SURGERY_END_DTM,
                 MIN(LH3.LAB_DRAW_DTM) AS DI_POSTOP_DRAW_DTM
             FROM
-                BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE SC2
+                {TABLES.get('surgery_case')} SC2
             INNER JOIN LAB_HB LH3
                 ON SC2.VISIT_NO = LH3.VISIT_NO
             WHERE LH3.LAB_DRAW_DTM > SC2.SURGERY_END_DTM
@@ -347,7 +302,7 @@ surgery_case_query = rf"""
             END)
             AS POSTOP_HEMO
         FROM
-            BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE SC3
+            {TABLES.get('surgery_case')} SC3
         LEFT OUTER JOIN PREOP_HB PRE
             ON SC3.CASE_ID = PRE.CASE_ID
         LEFT OUTER JOIN POSTOP_HB POST
@@ -398,12 +353,12 @@ surgery_case_query = rf"""
         MEDS.AMICAR,
         SURG.SURGERY_TYPE_DESC
     FROM
-        BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE SURG
+        {TABLES.get('surgery_case')} SURG
     INNER JOIN BILLING_CODES BLNG
         ON SURG.VISIT_NO = BLNG.VISIT_NO
     LEFT JOIN TRANSFUSED_UNITS T
         ON SURG.CASE_ID = T.CASE_ID
-    LEFT JOIN BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT VST
+    LEFT JOIN {TABLES.get('visit')} VST
         ON SURG.VISIT_NO = VST.VISIT_NO
     LEFT JOIN MEDS
         ON SURG.VISIT_NO = MEDS.VISIT_NO
