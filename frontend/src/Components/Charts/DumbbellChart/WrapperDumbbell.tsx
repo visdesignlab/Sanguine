@@ -205,7 +205,7 @@ function WrapperDumbbell({
             <ChartStandardButtons chartID={chartId} />
           </ChartAccessoryDiv>
           <ChartSVG ref={svgRef}>
-            <DumbbellChart data={data} svg={svgRef} showGap={showGap} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} valueToVisualize={xAggregationOption} dimensionWidth={width} dimensionHeight={height} xMin={xMin} xMax={xMax} />
+            <DumbbellChart data={data} svg={svgRef} showGap={showGap} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} xAggregationOption={xAggregationOption} dimensionWidth={width} dimensionHeight={height} xMin={xMin} xMax={xMax} />
 
           </ChartSVG>
           <AnnotationForm chartI={chartId} annotationText={annotationText} />

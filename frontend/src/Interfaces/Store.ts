@@ -61,6 +61,13 @@ export class RootStore {
     this._allCases = input;
   }
 
+  get providerMappping() {
+    const surgeons = this._allCases.map((d) => [d.SURGEON_PROV_ID, d.SURGEON_PROV_NAME]);
+    const anesths = this._allCases.map((d) => [d.ANESTH_PROV_ID, d.ANESTH_PROV_NAME]);
+    const merged = surgeons.concat(anesths);
+    return Object.fromEntries(merged);
+  }
+
   get filteredCases() {
     return this._allCases.filter((d) => {
       // Filter panel items

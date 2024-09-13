@@ -4,10 +4,6 @@ import {
   basicGray, highlightOrange, largeFontSize, postopColor, preopColor, regularFontSize,
 } from './Constants';
 
-export interface BiggerFontProps {
-    biggerFont: boolean;
-}
-
 export const ChartSVG = styled.svg`
   height: calc(100% - 100px);
   width: 100%;
@@ -20,7 +16,7 @@ export const SurgeryRect = styled('rect')`
   fill:${postopColor};
 `;
 interface ListSVGProps {
-    widthInput: number;
+  widthInput: number;
 }
 export const ListSVG = styled.svg<ListSVGProps>`
   height: 15px;
@@ -28,44 +24,43 @@ export const ListSVG = styled.svg<ListSVGProps>`
   width:${(props) => props.widthInput}px;
 `;
 interface ChartGProps {
-    currentOffset: Offset;
-    extraPairTotalWidth: number;
+  currentOffset: Offset;
+  extraPairTotalWidth: number;
 }
 
 export const ChartG = styled('g') <ChartGProps>`
-    transform: translate(${(props) => (props.currentOffset.left + props.extraPairTotalWidth)}px,0px)
+  transform: translate(${(props) => (props.currentOffset.left + props.extraPairTotalWidth)}px,0px)
 `;
 
 export const HeatMapRect = styled('rect')`
-    y:0;
-    opacity:0.6;
-    stroke-width:2;
+  y:0;
+  opacity:0.6;
+  stroke-width:2;
 `;
 interface HeatMapDivideProp {
-    currentOffset: Offset;
-    dimensionHeight: number;
+  currentOffset: Offset;
+  dimensionHeight: number;
 }
 
 export const HeatMapDividerLine = styled('line') <HeatMapDivideProp>`
-    x1:1;
-    x2:1;
-    y1=${(props) => (props.currentOffset.top)}
-    y2=${(props) => (props.dimensionHeight - props.currentOffset.bottom)};
-    stroke: #e5e5e5;
+  x1:1;
+  x2:1;
+  y1=${(props) => (props.currentOffset.top)}
+  y2=${(props) => (props.dimensionHeight - props.currentOffset.bottom)};
+  stroke: #e5e5e5;
     stroke-width:1;
 `;
 
 interface DotProps {
-
-    isSelectSet: boolean;
-    ispreop: boolean;
+  isSelectSet: boolean;
+  ispreop: boolean;
 }
 interface RectProps {
-    isselected: boolean;
+  isselected: boolean;
 }
 
 interface AverageLineProps {
-    ispreop: boolean;
+  ispreop: boolean;
 }
 
 export const DumbbellCircle = styled('circle') <DotProps>`
@@ -85,12 +80,17 @@ export const DumbbellLine = styled('line') < AverageLineProps>`
     stroke-width:3px
     `;
 
-export const AxisText = styled.text<BiggerFontProps>`
-    fill:white;
+export interface BiggerFontProps {
+  biggerFont: boolean;
+}
+
+export const AxisText = styled.foreignObject<BiggerFontProps>`
     alignment-baseline: hanging;
-    text-anchor: middle;
-    y:0;
+    y:0px;
+    text-align:center;
+      height: 13px;
     font-size:${(props) => (props.biggerFont ? `${largeFontSize}px` : `${regularFontSize}px`)};
+    color:white;
 `;
 
 export const CustomAxisLine = styled('line')`
