@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from enum import Enum
 
@@ -38,9 +39,8 @@ class StateAccess(models.Model):
         unique_together = ['state', 'user']
 
 
-# Hospital models - not currently used in the app
 class PATIENT(models.Model):
-    MRN = models.CharField(max_length=20)
+    MRN = models.IntegerField(primary_key=True)
     PAT_FAMILY = models.CharField(max_length=30)
     PAT_GIVEN = models.CharField(max_length=30)
     PAT_BIRTHDATE = models.DateField()
@@ -57,12 +57,11 @@ class PATIENT(models.Model):
 
     class Meta:
         managed = False
-        # These table names are only used for the testing database
-        db_table = 'SANG_PATIENT'
+        db_table = 'SANG_PATIENT' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_PATIENT'
 
 
 class VISIT(models.Model):
-    VISIT_NO = models.DecimalField(max_digits=18, decimal_places=0)
+    VISIT_NO = models.IntegerField(primary_key=True)
     ADM_DTM = models.DateField()
     DSCH_DTM = models.DateField()
     AGE_AT_ADM = models.FloatField()
@@ -102,14 +101,13 @@ class VISIT(models.Model):
 
     class Meta:
         managed = False
-        # These table names are only used for the testing database
-        db_table = 'SANG_VISIT'
+        db_table = 'SANG_VISIT' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT'
 
 
 class SURGERY_CASE(models.Model):
-    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE)
-    MRN = models.ForeignKey(PATIENT, on_delete=models.CASCADE)
-    CASE_ID = models.FloatField()
+    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE, db_column='VISIT_NO')
+    MRN = models.ForeignKey(PATIENT, on_delete=models.CASCADE, db_column='MRN')
+    CASE_ID = models.IntegerField(primary_key=True)
     CASE_DATE = models.DateField()
     SURGERY_START_DTM = models.DateField()
     SURGERY_END_DTM = models.DateField()
@@ -130,12 +128,11 @@ class SURGERY_CASE(models.Model):
 
     class Meta:
         managed = False
-        # These table names are only used for the testing database
-        db_table = 'SANG_SURGERY_CASE'
+        db_table = 'SANG_SURGERY_CASE' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE'
 
 
 class BILLING_CODES(models.Model):
-    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE)
+    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE, db_column='VISIT_NO')
     CODE_TYPE_DESC = models.CharField(max_length=2000)
     CODE = models.CharField(max_length=80)
     CODE_DESC = models.CharField(max_length=2000)
@@ -151,12 +148,11 @@ class BILLING_CODES(models.Model):
 
     class Meta:
         managed = False
-        # These table names are only used for the testing database
-        db_table = 'SANG_BILLING_CODES'
+        db_table = 'SANG_BILLING_CODES' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_BILLING_CODES'
 
 
 class VISIT_LABS(models.Model):
-    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE)
+    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE, db_column='VISIT_NO')
     LAB_ID = models.CharField(max_length=16)
     LAB_DRAW_DTM = models.DateField()
     LAB_PANEL_CODE = models.CharField(max_length=30)
@@ -176,23 +172,23 @@ class VISIT_LABS(models.Model):
 
     class Meta:
         managed = False
-        # These table names are only used for the testing database
-        db_table = 'SANG_VISIT_LABS'
+        db_table = 'SANG_VISIT_LABS' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT_LABS'
 
 
 class INTRAOP_TRANSFUSION(models.Model):
-    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE)
+    CASE_ID = models.ForeignKey(SURGERY_CASE, on_delete=models.CASCADE, db_column='CASE_ID')
+    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE, db_column='VISIT_NO')
     TRNSFSN_DTM = models.DateField()
     BLOOD_UNIT_NUMBER = models.CharField(max_length=600)
-    PRBC_UNITS = models.FloatField()
-    FFP_UNITS = models.FloatField()
-    PLT_UNITS = models.FloatField()
-    CRYO_UNITS = models.FloatField()
-    CELL_SAVER_ML = models.FloatField()
-    RBC_VOL = models.FloatField()
-    FFP_VOL = models.FloatField()
-    PLT_VOL = models.FloatField()
-    CRYO_VOL = models.FloatField()
+    PRBC_UNITS = models.FloatField(null=True)
+    FFP_UNITS = models.FloatField(null=True)
+    PLT_UNITS = models.FloatField(null=True)
+    CRYO_UNITS = models.FloatField(null=True)
+    CELL_SAVER_ML = models.FloatField(null=True)
+    RBC_VOL = models.FloatField(null=True)
+    FFP_VOL = models.FloatField(null=True)
+    PLT_VOL = models.FloatField(null=True)
+    CRYO_VOL = models.FloatField(null=True)
     TRANSFUSION_RANK = models.FloatField()
     LOAD_DTM = models.DateField()
 
@@ -201,13 +197,12 @@ class INTRAOP_TRANSFUSION(models.Model):
 
     class Meta:
         managed = False
-        # These table names are only used for the testing database
-        db_table = 'SANG_INTRAOP_TRANSFUSION'
+        db_table = 'SANG_INTRAOP_TRANSFUSION' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_TRANSFUSION'
 
 
 class INTRAOP_MEDS(models.Model):
-    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE)
-    CASE_ID = models.ForeignKey(SURGERY_CASE, on_delete=models.CASCADE)
+    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE, db_column='VISIT_NO')
+    CASE_ID = models.ForeignKey(SURGERY_CASE, on_delete=models.CASCADE, db_column='CASE_ID')
     ORDER_MED_ID = models.DecimalField(max_digits=18, decimal_places=0)
     MED_ADMIN_LINE = models.DecimalField(max_digits=38, decimal_places=0)
     ORDER_DTM = models.DateField()
@@ -227,12 +222,11 @@ class INTRAOP_MEDS(models.Model):
 
     class Meta:
         managed = False
-        # These table names are only used for the testing database
-        db_table = 'SANG_INTRAOP_MEDS'
+        db_table = 'SANG_INTRAOP_MEDS' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_MEDS'
 
 
 class EXTRAOP_MEDS(models.Model):
-    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE)
+    VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE, db_column='VISIT_NO')
     ORDER_MED_ID = models.DecimalField(max_digits=18, decimal_places=0)
     ORDER_DTM = models.DateField()
     MEDICATION_ID = models.DecimalField(max_digits=18, decimal_places=0)
@@ -252,5 +246,4 @@ class EXTRAOP_MEDS(models.Model):
 
     class Meta:
         managed = False
-        # These table names are only used for the testing database
-        db_table = 'SANG_EXTRAOP_MEDS'
+        db_table = 'SANG_EXTRAOP_MEDS' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_EXTRAOP_MEDS'
