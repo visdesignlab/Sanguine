@@ -80,7 +80,7 @@ function ExtraPairPlotGenerator({
         break;
     }
   });
-  return <g>returningComponents</g>;
+  return <g>{returningComponents}</g>;
 }
 
 export default observer(ExtraPairPlotGenerator);
