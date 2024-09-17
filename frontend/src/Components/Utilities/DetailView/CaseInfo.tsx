@@ -18,18 +18,18 @@ function CaseInfo() {
   const { currentSelectPatient } = store.provenanceState;
 
   const generateListItems = () => {
-    const result = [];
+    const result: JSX.Element[] = [];
     if (individualInfo) {
-      for (const [key, val] of Object.entries(individualInfo)) {
+      Object.entries(individualInfo).forEach(([key, val], idx) => {
         if (!HIPAASensitive.includes(key as never) || store.configStore.privateMode) {
           const typeNarrowedKey = key as keyof typeof AcronymDictionary;
           result.push(
-            <ListItem>
+            <ListItem key={`case-info-${idx}`}>
               <ListItemText primary={AcronymDictionary[typeNarrowedKey] ? AcronymDictionary[typeNarrowedKey] : key} secondary={val} />
             </ListItem>,
           );
         }
-      }
+      });
     }
     return result;
   };
