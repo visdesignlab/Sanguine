@@ -14,7 +14,7 @@ function DetailView() {
       style={{ visibility: currentBrushedPatientGroup.length > 0 ? 'visible' : 'hidden' }}
     >
       <CaseList />
-      <Divider orientation="horizontal" style={{ width: '100%' }} />
+      <Divider />
       <CaseInfo />
     </div>
   );
