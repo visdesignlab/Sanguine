@@ -79,7 +79,7 @@ function SurgeryListViewer({ surgeryList, maxCaseCount }: Props) {
   return (
     <InheritWidthGrid item>
       <Box ref={surgeryViewRef} style={{ height: '28vh', overflow: 'auto' }}>
-        <table style={{ width: '100%', tableLayout: 'fixed' }}>
+        <table style={{ width: '95%', tableLayout: 'fixed', marginLeft: 8 }}>
           <colgroup>
             <col span={1} style={{ width: '60%' }} />
             <col span={1} style={{ width: '40%' }} />
