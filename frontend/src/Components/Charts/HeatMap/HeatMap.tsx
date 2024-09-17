@@ -164,7 +164,7 @@ function HeatMap({
         }}
         transform={`translate(0,${currentOffset.top})`}
       >
-        <svg style={{ height: `${chartHeight - currentOffset.bottom - currentOffset.top}px`, width: '100%' }} ref={innerSvg}>
+        <svg style={{ height: `${chartHeight - currentOffset.top}px`, width: '100%' }} ref={innerSvg}>
           <HeatMapAxisY
             svg={innerSvg}
             currentOffset={currentOffset}
