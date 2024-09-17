@@ -42,7 +42,7 @@ function StateManagementSuite() {
       .then((result) => {
         if (result) {
           const resultList = result.map((d: unknown) => d);
-          store.configStore.savedState = resultList;
+          store.configStore.setSavedState(resultList);
         }
       });
 

@@ -52,6 +52,10 @@ export class ProjectConfigStore {
     this.savedState.push(stateName);
   };
 
+  setSavedState = (stateList: string[]) => {
+    this.savedState = stateList;
+  };
+
   get provenance() {
     return this.rootStore.provenance;
   }
