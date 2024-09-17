@@ -90,7 +90,7 @@ function SurgeryRow({
           )}
 
       </SurgeryDiv>
-      <td style={{ display: showSVG ? undefined : 'none' }}>
+      <td style={{ display: showSVG ? undefined : 'none', }}>
         <ListSVG widthInput={0.3 * width}>
           <SurgeryRect
             x={caseScale().range()[0]}

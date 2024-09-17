@@ -1,13 +1,10 @@
 import { observer } from 'mobx-react';
-import {
-  useContext, useState, useEffect,
-} from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { useIdleTimer } from 'react-idle-timer';
 import Dashboard from './Dashboard';
 import Store from './Interfaces/Store';
 import { logoutHandler, whoamiAPICall } from './Interfaces/UserManagement';
 import { SurgeryUrgencyArray, SurgeryUrgencyType } from './Presets/DataDict';
-import './App.css';
 import BrowserWarning from './Components/Modals/BrowserWarning';
 import DataRetrieval from './Components/Modals/DataRetrieval';
 
@@ -18,24 +15,23 @@ function App() {
   const [dataLoading, setDataLoading] = useState(true);
   const [dataLoadingFailed, setDataLoadingFailed] = useState(false);
 
-  const handleOnIdle = () => {
+  const onIdle = () => {
     // On idle log the user out
     if (import.meta.env.VITE_REQUIRE_LOGIN === 'true') {
       logoutHandler();
     }
   };
 
-  const handleOnAction = () => {
+  const onAction = () => {
     if (import.meta.env.VITE_REQUIRE_LOGIN === 'true') {
       whoamiAPICall(store);
     }
   };
 
   useIdleTimer({
-    // the idle timer setting
     timeout: 1000 * 60 * 120,
-    onIdle: handleOnIdle,
-    onAction: handleOnAction,
+    onIdle,
+    onAction,
     events: ['mousedown', 'keydown'],
     throttle: 1000 * 60,
   });
@@ -98,6 +94,7 @@ function App() {
       }
 
       store.allCases = surgeryCases.result;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       setDataLoadingFailed(true);
     } finally {
@@ -117,13 +114,10 @@ function App() {
   return (
     <>
       <Dashboard />
-      {(import.meta.env.VITE_REQUIRE_LOGIN === 'true')
-        ? (
-          <>
-            <BrowserWarning />
-            <DataRetrieval dataLoading={dataLoading} dataLoadingFailed={dataLoadingFailed} />
-          </>
-        ) : null}
+      <>
+        <BrowserWarning />
+        <DataRetrieval dataLoading={dataLoading} dataLoadingFailed={dataLoadingFailed} />
+      </>
     </>
   );
 }

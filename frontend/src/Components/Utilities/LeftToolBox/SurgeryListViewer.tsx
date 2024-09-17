@@ -3,10 +3,11 @@ import { observer } from 'mobx-react';
 import {
   useCallback, useContext, useEffect, useLayoutEffect, useRef, useState,
 } from 'react';
+import { Box } from '@mui/material';
 import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import Store from '../../../Interfaces/Store';
 import { ProcedureEntry } from '../../../Interfaces/Types/DataTypes';
-import { InheritWidthGrid, UtilityContainer } from '../../../Presets/StyledComponents';
+import { InheritWidthGrid } from '../../../Presets/StyledComponents';
 import SurgeryRow from './SurgeryRow';
 
 type Props = {
@@ -77,15 +78,15 @@ function SurgeryListViewer({ surgeryList, maxCaseCount }: Props) {
 
   return (
     <InheritWidthGrid item>
-      <UtilityContainer ref={surgeryViewRef} style={{ height: '30vh' }}>
-        <table style={{ width: '100%', tableLayout: 'fixed' }}>
+      <Box ref={surgeryViewRef} style={{ height: '28vh', overflow: 'auto' }}>
+        <table style={{ width: '95%', tableLayout: 'fixed', marginLeft: 8 }}>
           <colgroup>
             <col span={1} style={{ width: '60%' }} />
             <col span={1} style={{ width: '40%' }} />
           </colgroup>
           <thead>
             <tr>
-              <th>{`Procedures(${surgeryList.length})`}</th>
+              <th>{`Procedures (${surgeryList.length})`}</th>
               <th>
                 <svg height={18} style={{ paddingLeft: '5px' }} width="100%">
                   <g id="surgeryCaseScale" transform="translate(0 ,17)" />
@@ -187,7 +188,7 @@ function SurgeryListViewer({ surgeryList, maxCaseCount }: Props) {
           </tbody>
         </table>
 
-      </UtilityContainer>
+      </Box>
     </InheritWidthGrid>
   );
 }

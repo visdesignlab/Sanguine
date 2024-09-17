@@ -1,5 +1,5 @@
 import {
-  Button, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, TextField, Tooltip,
+  Box, Button, IconButton, List, ListItem, ListItemButton, ListItemSecondaryAction, ListItemText, TextField, Tooltip,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { observer } from 'mobx-react';
@@ -10,7 +10,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { AcronymDictionary, BloodComponentOptions, ScatterYOptions } from '../../../Presets/DataDict';
 import Store from '../../../Interfaces/Store';
 import ComponentRangePicker from './ComponentRangePicker';
-import { Title, UtilityContainer } from '../../../Presets/StyledComponents';
+import { Title } from '../../../Presets/StyledComponents';
 import { defaultState } from '../../../Interfaces/DefaultState';
 import OutcomeChipGroup from './OutcomeChipGroup';
 import SurgeryUrgencyChipGroup from './SurgeryUrgencyChipGroup';
@@ -57,10 +57,18 @@ function FilterBoard() {
   };
 
   return (
-    <UtilityContainer>
+    <Box p={1}>
       <List dense>
         <ListItem>
-          <Button variant="outlined" size="small" disabled={!enableClearAll()} onClick={() => { store.configStore.clearAllFilter(); }}>Clear All Filter Settings</Button>
+          <Button
+            variant="outlined"
+            size="small"
+            disabled={!enableClearAll()}
+            onClick={() => { store.configStore.clearAllFilter(); }}
+            sx={{ mx: 'auto' }}
+          >
+            Clear All Filters
+          </Button>
         </ListItem>
         <ListItem>
           <ListItemText
@@ -85,47 +93,47 @@ function FilterBoard() {
         </ListItem>
         <ListItem>
           <ListItemText
-            primary="Date From"
-            secondary={(
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DesktopDatePicker
-                  inputFormat="MM/dd/yyyy"
-                  value={beginDate}
-                  renderInput={(params) => <TextField variant="standard" {...params} />}
-                  onChange={(d: Date | null) => {
-                    if (d) {
-                      setBeginDate(d.getTime());
-                      store.configStore.dateRangeChange([d.getTime(), rawDateRange[1]]);
-                    } else {
-                      setBeginDate(rawDateRange[0]);
-                    }
-                  }}
-                />
-              </LocalizationProvider>
-            )}
+            primary="From:"
           />
+          <ListItemButton sx={{ maxWidth: 160 }}>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DesktopDatePicker
+                inputFormat="MM/dd/yyyy"
+                value={beginDate}
+                renderInput={(params) => <TextField variant="standard" {...params} />}
+                onChange={(d: Date | null) => {
+                  if (d) {
+                    setBeginDate(d.getTime());
+                    store.configStore.dateRangeChange([d.getTime(), rawDateRange[1]]);
+                  } else {
+                    setBeginDate(rawDateRange[0]);
+                  }
+                }}
+              />
+            </LocalizationProvider>
+          </ListItemButton>
         </ListItem>
         <ListItem>
           <ListItemText
-            primary="To"
-            secondary={(
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DesktopDatePicker
-                  inputFormat="MM/dd/yyyy"
-                  value={endDate}
-                  renderInput={(params) => <TextField variant="standard" {...params} />}
-                  onChange={(d: Date | null) => {
-                    if (d) {
-                      setEndDate(d.getTime());
-                      store.configStore.dateRangeChange([rawDateRange[0], d.getTime()]);
-                    } else {
-                      setEndDate(rawDateRange[1]);
-                    }
-                  }}
-                />
-              </LocalizationProvider>
-            )}
+            primary="To: "
           />
+          <ListItemButton sx={{ maxWidth: 160 }}>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DesktopDatePicker
+                inputFormat="MM/dd/yyyy"
+                value={endDate}
+                renderInput={(params) => <TextField variant="standard" {...params} />}
+                onChange={(d: Date | null) => {
+                  if (d) {
+                    setEndDate(d.getTime());
+                    store.configStore.dateRangeChange([rawDateRange[0], d.getTime()]);
+                  } else {
+                    setEndDate(rawDateRange[1]);
+                  }
+                }}
+              />
+            </LocalizationProvider>
+          </ListItemButton>
         </ListItem>
 
         <ListItem>
@@ -248,7 +256,7 @@ function FilterBoard() {
         </ListItem>
         {ScatterYOptions.map((d) => (<ComponentRangePicker label={d.key} key={d.key} isTestValue />))}
       </List>
-    </UtilityContainer>
+    </Box>
   );
 }
 

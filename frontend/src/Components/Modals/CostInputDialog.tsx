@@ -29,7 +29,8 @@ function CostInputDialog({ bloodComponent, visible, setVisibility }: Props) {
       </DialogTitle>
       <DialogContent>
         <DialogContentText>
-          Current Cost for
+          Current cost for
+          {' '}
           {bloodComponent}
           {' '}
           is $

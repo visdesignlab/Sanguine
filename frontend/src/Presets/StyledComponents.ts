@@ -1,17 +1,12 @@
 import {
-  Chip, Container, Grid, ListSubheader, Toolbar,
+  Chip, Container, Grid,
 } from '@mui/material';
 import styled from '@emotion/styled';
-import { basicGray, thirdGray } from './Constants';
+import { basicGray } from './Constants';
 
 export const LayoutDiv = styled.div`
   width: 100vw;
 `;
-
-export const CaseListSubheader = styled(ListSubheader)({
-  padding: '5px!important',
-  backgroundColor: 'white!important',
-});
 
 export const Title = styled.b`
     font-size:large;
@@ -65,39 +60,8 @@ export const SurgeryListComp = styled('tr') <SurgeryListProps>`
   }
 `;
 
-interface WelcomeTextProps {
-    show: boolean;
-}
-
-export const WelcomeText = styled('text') < WelcomeTextProps>`
-    display:${(props) => (props.show ? 'none' : 'block')};
-    font-size:xxx-large;
-    fill:${thirdGray};
-    opacity:0.25;
-    margin:20px;
-`;
-
-export const UtilityContainer = styled(Container)({
-  width: '100%',
-  paddingLeft: '5px!important',
-  paddingRight: '5px!important',
-  maxWidth: 'none',
-  overflow: 'hidden',
-  height: '100%',
-  '&:hover': {
-    overflow: 'overlay',
-  },
-});
-
 export const InheritWidthGrid = styled(Grid)({
   width: 'inherit!important',
-});
-
-export const PaddedToolBar = styled(Toolbar)({
-  '& > *': {
-    paddingLeft: '6px',
-    paddingRight: '6px',
-  },
 });
 
 export const BiggerTooltip = styled.div({

@@ -2,12 +2,12 @@ import { timeFormat } from 'd3';
 import { observer } from 'mobx-react';
 import { useContext } from 'react';
 import {
-  ListItem, List, ListItemSecondaryAction, ListItemText, Switch, IconButton, Tooltip,
+  ListItem, List, ListItemSecondaryAction, ListItemText, Switch, IconButton, Tooltip, Box,
 } from '@mui/material';
 import ErrorIcon from '@mui/icons-material/Error';
 import Store from '../../../Interfaces/Store';
 import { AcronymDictionary } from '../../../Presets/DataDict';
-import { InheritWidthGrid, Title, UtilityContainer } from '../../../Presets/StyledComponents';
+import { InheritWidthGrid } from '../../../Presets/StyledComponents';
 import { ProcedureStringGenerator } from '../../../HelperFunctions/ProcedureStringGenerator';
 
 function CurrentView() {
@@ -22,17 +22,17 @@ function CurrentView() {
       const procedureString = ProcedureStringGenerator(store.provenanceState.proceduresSelection).replace(/%20/g, ' ');
       const stringArray = procedureString.split(' ');
 
-      stringArray.forEach((word, index) => {
+      stringArray.forEach((word, idx) => {
         const wordWithoutSymbol = word.replace(/[^a-zA-Z ]/g, '');
         if (AcronymDictionary[wordWithoutSymbol as never]) {
           output.push((
-            <Tooltip key={`${index}-${word}`} title={<div key={`${index}-${word}`}>{AcronymDictionary[wordWithoutSymbol as never]}</div>}>
-              <div className="tooltip" key={`${index}-${word}`} style={{ cursor: 'help' }}>
+            <Tooltip key={`${idx}-${word}`} title={<div key={`${idx}-${word}`}>{AcronymDictionary[wordWithoutSymbol as never]}</div>}>
+              <div className="tooltip" key={`${idx}-${word}`} style={{ cursor: 'help' }}>
                 {word}
               </div>
             </Tooltip>));
         } else {
-          output.push((<span style={{ color: `${word === 'AND' || word === 'OR' ? 'lightcoral' : undefined}` }} key={`${index}-${word}`}>{`${index !== 0 ? ' ' : ''}${word}${index !== stringArray.length - 1 ? ' ' : ''}`}</span>));
+          output.push((<span style={{ color: `${word === 'AND' || word === 'OR' ? 'lightcoral' : undefined}` }} key={`${idx}-${word}`}>{`${idx !== 0 ? ' ' : ''}${word}${idx !== stringArray.length - 1 ? ' ' : ''}`}</span>));
         }
       });
     }
@@ -41,12 +41,8 @@ function CurrentView() {
 
   return (
     <InheritWidthGrid item>
-      <UtilityContainer style={{ height: '30vh' }}>
+      <Box style={{ height: '30vh', overflow: 'auto' }}>
         <List dense>
-          <ListItem style={{ textAlign: 'left' }}>
-            <Title>Current View</Title>
-          </ListItem>
-
           <ListItem alignItems="flex-start" style={{ width: '100%' }} key="Date">
             <ListItemText
               primary="Date Range"
@@ -95,7 +91,7 @@ function CurrentView() {
           </ListItem>
 
         </List>
-      </UtilityContainer>
+      </Box>
     </InheritWidthGrid>
   );
 }

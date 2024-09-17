@@ -37,33 +37,33 @@ function SingleStackedBar({
   const generateStackedBars = () => {
     let outputElements = [];
     if (!costMode) {
-      outputElements = dataPoint.dataArray.map((point, index) => (
-        <Tooltip title={`${BloodComponentOptions[index].key}: ${costMode ? format('$.2f')(point) : format('.4r')(point)}`} key={index}>
+      outputElements = dataPoint.dataArray.map((point, idx) => (
+        <Tooltip title={`${BloodComponentOptions[idx].key}: ${costMode ? format('$.2f')(point) : format('.4r')(point)}`} key={idx}>
           <rect
-            x={valueScale()(sum(dataPoint.dataArray.slice(0, index)))}
+            x={valueScale()(sum(dataPoint.dataArray.slice(0, idx)))}
             transform={howToTransform}
             height={bandwidth}
             width={valueScale()(point) - valueScale()(0)}
-            fill={colorProfile[index]}
+            fill={colorProfile[idx]}
           />
         </Tooltip>
       ));
     } else {
-      outputElements = dataPoint.dataArray.slice(0, 4).map((point, index) => (
-        <Tooltip title={`${BloodComponentOptions[index].key}: ${costMode ? format('$.2f')(point) : format('.4r')(point)}`} key={index}>
+      outputElements = dataPoint.dataArray.slice(0, 4).map((point, idx) => (
+        <Tooltip title={`${BloodComponentOptions[idx].key}: ${costMode ? format('$.2f')(point) : format('.4r')(point)}`} key={idx}>
           <rect
-            x={valueScale()(sum(dataPoint.dataArray.slice(0, index)))}
+            x={valueScale()(sum(dataPoint.dataArray.slice(0, idx)))}
             transform={howToTransform}
             height={bandwidth}
             width={valueScale()(point) - valueScale()(0)}
-            fill={colorProfile[index]}
+            fill={colorProfile[idx]}
           />
         </Tooltip>
       ));
       const potentialCost = dataPoint.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS;
       const cellSalvageCost = dataPoint.dataArray[4];
       outputElements.push(
-        <Tooltip title={showPotential ? `Potential RBC Cost ${format('$.2f')(potentialCost)}` : `Cell Salvage Cost${format('$.2f')(cellSalvageCost)}`}>
+        <Tooltip title={showPotential ? `Potential RBC Cost ${format('$.2f')(potentialCost)}` : `Cell Salvage Cost${format('$.2f')(cellSalvageCost)}`} key={4}>
           <rect
             x={valueScale()(sum(dataPoint.dataArray.slice(0, 4)))}
             transform={howToTransform}
@@ -75,7 +75,7 @@ function SingleStackedBar({
       );
       const costSaved = dataPoint.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - dataPoint.dataArray[4];
       outputElements.push(
-        <Tooltip title={`Potential Saving per case ${format('$.2f')(costSaved)}`}>
+        <Tooltip title={`Potential Saving per case ${format('$.2f')(costSaved)}`} key={5}>
           <rect
             x={valueScale()(-costSaved)}
             transform={howToTransform}

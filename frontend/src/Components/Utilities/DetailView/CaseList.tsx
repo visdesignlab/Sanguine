@@ -1,23 +1,32 @@
 import {
-  IconButton, List, ListItem, ListItemButton, ListItemSecondaryAction, ListItemText,
+  Box, IconButton, List, ListItem, ListItemButton, ListItemSecondaryAction, ListItemText,
+  ListSubheader,
 } from '@mui/material';
 import { useContext } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import { observer } from 'mobx-react';
 import Store from '../../../Interfaces/Store';
-import { CaseListSubheader, UtilityContainer } from '../../../Presets/StyledComponents';
 
 function CaseList() {
   const store = useContext(Store);
   const { currentBrushedPatientGroup, currentSelectPatient } = store.provenanceState;
 
   return (
-    <UtilityContainer style={{ height: '15vh', paddingTop: '0.5px' }}>
-
-      <List dense component="nav">
-
-        <CaseListSubheader>
-
+    <Box style={{ height: '20vh' }} p={0.1}>
+      <List
+        dense
+        sx={{
+          bgcolor: 'background.paper',
+          position: 'relative',
+          overflow: 'auto',
+          '& ul': { padding: 0 },
+          height: '90%',
+          width: '100%',
+          mt: 0.3,
+        }}
+        subheader={<li />}
+      >
+        <ListSubheader sx={{ p: 1 }}>
           <ListItemText primary="Selected Cases" />
           <ListItemSecondaryAction>
             <IconButton
@@ -29,7 +38,7 @@ function CaseList() {
               <CloseIcon />
             </IconButton>
           </ListItemSecondaryAction>
-        </CaseListSubheader>
+        </ListSubheader>
 
         {currentBrushedPatientGroup.map((d) => (
           <ListItem
@@ -46,7 +55,7 @@ function CaseList() {
         ))}
 
       </List>
-    </UtilityContainer>
+    </Box>
   );
 }
 

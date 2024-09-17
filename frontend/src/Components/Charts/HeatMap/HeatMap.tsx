@@ -82,7 +82,7 @@ function HeatMap({
     labelInput: string,
     type: 'Basic' | 'Violin' | 'BarChart',
     extraPairDataPoint: ExtraPairPoint,
-    index: number,
+    idx: number,
     allExtraPairs: ExtraPairPoint[],
   ) => {
     let explanation = '';
@@ -111,7 +111,7 @@ function HeatMap({
       </BiggerTooltip>
     );
 
-    const xPadding: number = allExtraPairs.slice(0, index + 1).map((extraPair) => ExtraPairWidth[extraPair.type] + ExtraPairPadding).reduce((partialSum, a) => partialSum + a, 0);
+    const xPadding: number = allExtraPairs.slice(0, idx + 1).map((extraPair) => ExtraPairWidth[extraPair.type] + ExtraPairPadding).reduce((partialSum, a) => partialSum + a, 0);
 
     return (
       <Tooltip title={tooltipText}>
@@ -174,8 +174,8 @@ function HeatMap({
             xAggregationOption={xAggregationOption}
           />
           <g>
-            {data.map((dataPoint, ind) => (
-              <g key={ind}>
+            {data.map((dataPoint, idx) => (
+              <g key={idx}>
                 <SingleHeatRow
                   bandwidth={secondaryData ? aggregationScale().bandwidth() * 0.5 : aggregationScale().bandwidth()}
                   valueScaleDomain={JSON.stringify(valueScale().domain())}
@@ -196,8 +196,8 @@ function HeatMap({
                 </ChartG>
               </g>
             ))}
-            {secondaryData ? secondaryData.map((dataPoint, ind) => (
-              <g key={ind}>
+            {secondaryData ? secondaryData.map((dataPoint, idx) => (
+              <g key={idx}>
                 <SingleHeatRow
                   bandwidth={aggregationScale().bandwidth() * 0.5}
                   valueScaleDomain={JSON.stringify(valueScale().domain())}
@@ -232,7 +232,7 @@ function HeatMap({
       </foreignObject>
 
       {/* Render after chart to render on top */}
-      {extraPairDataSet.map((extraPair, index) => extraPairTextGenerator(extraPair.name, extraPair.label, extraPair.type, extraPair, index, extraPairDataSet))}
+      {extraPairDataSet.map((extraPair, idx) => extraPairTextGenerator(extraPair.name, extraPair.label, extraPair.type, extraPair, idx, extraPairDataSet))}
       <HeatMapAxisX
         svg={svg}
         currentOffset={currentOffset}

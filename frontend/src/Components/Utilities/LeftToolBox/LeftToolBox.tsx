@@ -1,6 +1,4 @@
-import {
-  Grid, Tabs, Divider, Tab,
-} from '@mui/material';
+import { Tabs, Divider, Tab } from '@mui/material';
 import { max } from 'd3';
 import { observer } from 'mobx-react';
 import { useEffect, useState } from 'react';
@@ -63,8 +61,7 @@ function LeftToolBox() {
   }, []);
 
   return (
-
-    <Grid>
+    <>
       <Tabs
         value={tabValue}
         onChange={handleChange}
@@ -78,26 +75,22 @@ function LeftToolBox() {
       <TabPanel
         value={tabValue}
         index={0}
-        styling={undefined}
       >
-        <Grid container>
-          <CurrentView />
-          <Divider orientation="horizontal" style={{ width: '98%' }} />
-          <CurrentSelected />
-          <Divider orientation="horizontal" style={{ width: '98%' }} />
-          <SurgerySearchBar surgeryList={surgeryList} />
-          <Divider orientation="horizontal" style={{ width: '98%' }} />
-          <SurgeryListViewer surgeryList={surgeryList} maxCaseCount={maxCaseCount} />
-        </Grid>
+        <CurrentView />
+        <Divider orientation="horizontal" />
+        <CurrentSelected />
+        <Divider orientation="horizontal" />
+        <SurgerySearchBar surgeryList={surgeryList} />
+        <Divider orientation="horizontal" />
+        <SurgeryListViewer surgeryList={surgeryList} maxCaseCount={maxCaseCount} />
       </TabPanel>
       <TabPanel
         value={tabValue}
         index={1}
-        styling={{ height: '85vh' }}
       >
         <FilterBoard />
       </TabPanel>
-    </Grid>
+    </>
   );
 }
 

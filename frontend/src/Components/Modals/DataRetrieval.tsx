@@ -3,12 +3,7 @@ import {
 } from '@mui/material';
 import { observer } from 'mobx-react';
 
-type Props = {
-    dataLoading: boolean;
-    dataLoadingFailed: boolean;
-};
-
-function DataRetrievalModal({ dataLoading, dataLoadingFailed }: Props) {
+function DataRetrievalModal({ dataLoading, dataLoadingFailed }: { dataLoading: boolean; dataLoadingFailed: boolean; }) {
   return (
     <Dialog open={dataLoading || dataLoadingFailed}>
       {dataLoadingFailed
@@ -32,7 +27,6 @@ function DataRetrievalModal({ dataLoading, dataLoadingFailed }: Props) {
                 </Grid>
                 <Grid item style={{ alignSelf: 'center' }}>
                   <DialogContentText>
-
                     We are fetching required data.
                   </DialogContentText>
                 </Grid>

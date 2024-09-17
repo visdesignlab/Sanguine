@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react';
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, Fragment } from 'react';
 import {
-  Button, ButtonGroup, FormControl, InputLabel, Select, TextField,
+  Button, ButtonGroup, FormControl, InputLabel, Select, TextField, Toolbar,
 } from '@mui/material';
 import styled from '@emotion/styled';
 import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
@@ -13,16 +13,14 @@ import Store from '../../../Interfaces/Store';
 import { LayoutElement } from '../../../Interfaces/Types/LayoutTypes';
 import { DropdownGenerator } from '../../../HelperFunctions/DropdownGenerator';
 import { BloodProductCap, ManualInfinity } from '../../../Presets/Constants';
-import { PaddedToolBar, CenterAlignedDiv } from '../../../Presets/StyledComponents';
+import { CenterAlignedDiv } from '../../../Presets/StyledComponents';
 
 const StyledFormControl = styled(FormControl)({
   // margin: '1rem',
   minWidth: '200px!important',
 });
 
-type Props = { addingChartType: number; };
-
-function AddModeTopMenu({ addingChartType }: Props) {
+function AddModeTopMenu({ addingChartType, sx }: { addingChartType: number; sx: React.CSSProperties }) {
   const store = useContext(Store);
 
   const [xAggreSelection, setXAggreSelection] = useState<keyof typeof AcronymDictionary | ''>('');
@@ -78,8 +76,7 @@ function AddModeTopMenu({ addingChartType }: Props) {
   };
 
   const outputRegularOptions = (titleOne: string, titleTwo: string, titleOneRequied: boolean) => (
-    <>
-
+    <Fragment key={1}>
       <CenterAlignedDiv>
         <StyledFormControl variant="standard" required={titleOneRequied}>
           <InputLabel>
@@ -110,7 +107,7 @@ function AddModeTopMenu({ addingChartType }: Props) {
 
       </CenterAlignedDiv>
 
-    </>
+    </Fragment>
   );
 
   const addBarChartMenuRewrite = [
@@ -129,8 +126,7 @@ function AddModeTopMenu({ addingChartType }: Props) {
     // for #3 Heat Map
 
     [outputRegularOptions('Select Value to Show', 'Aggregated by', true),
-      <>
-
+      <Fragment key={2}>
         <CenterAlignedDiv>
           <StyledFormControl variant="standard" disabled={!!interventionDate}>
             <InputLabel>Outcome (Optional)</InputLabel>
@@ -159,32 +155,29 @@ function AddModeTopMenu({ addingChartType }: Props) {
           </LocalizationProvider>
 
         </CenterAlignedDiv>
-      </>,
+      </Fragment>,
     ],
   ];
 
   return (
-    <PaddedToolBar style={{ justifyContent: 'space-evenly' }}>
+    <Toolbar style={{ justifyContent: 'space-evenly' }} sx={sx}>
       {addBarChartMenuRewrite[addingChartType]}
       {/* <Divider orientation="vertical" flexItem /> */}
 
-      <CenterAlignedDiv>
-        <ButtonGroup disableElevation variant="contained" color="primary">
-          <Button
-            disabled={!checkValidInput()}
-            onClick={confirmChartAddHandler}
-          >
-            Confirm
-          </Button>
-          <Button
-            onClick={cancelChartAddHandler}
-          >
-            Cancel
-          </Button>
-        </ButtonGroup>
-      </CenterAlignedDiv>
-
-    </PaddedToolBar>
+      <ButtonGroup disableElevation variant="contained" color="primary">
+        <Button
+          disabled={!checkValidInput()}
+          onClick={confirmChartAddHandler}
+        >
+          Confirm
+        </Button>
+        <Button
+          onClick={cancelChartAddHandler}
+        >
+          Cancel
+        </Button>
+      </ButtonGroup>
+    </Toolbar>
   );
 }
 
