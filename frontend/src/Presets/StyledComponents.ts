@@ -81,13 +81,6 @@ export const InheritWidthGrid = styled(Grid)({
   width: 'inherit!important',
 });
 
-export const PaddedToolBar = styled(Toolbar)({
-  '& > *': {
-    paddingLeft: '6px',
-    paddingRight: '6px',
-  },
-});
-
 export const BiggerTooltip = styled.div({
   fontSize: 'small!important',
   textAlign: 'center',
