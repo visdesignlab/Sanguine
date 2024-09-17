@@ -70,7 +70,7 @@ function ScatterPlot({
         .range([currentOffset.left, width - currentOffset.right - currentOffset.margin]).nice();
     } else {
       innerXAxisScale = scaleBand()
-        .domain(range(0, xMax + 1).map((d) => d.toString()))
+        .domain(range(0, xMax + 1) as never)
         .range([currentOffset.left, width - currentOffset.right - currentOffset.margin])
         .padding(scalePadding);
     }
