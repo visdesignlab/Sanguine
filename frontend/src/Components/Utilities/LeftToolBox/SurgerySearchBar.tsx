@@ -8,13 +8,13 @@ import { InheritWidthGrid } from '../../../Presets/StyledComponents';
 function SurgerySearchBar({ surgeryList }: { surgeryList: ProcedureEntry[] }) {
   const store = useContext(Store);
 
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState<ProcedureEntry | null>(null);
 
   const searchHandler = (value: ProcedureEntry | null) => {
     if (value) {
       if (store.provenanceState.proceduresSelection.filter((d) => d.procedureName === value.procedureName).length === 0) {
         store.selectionStore.updateProcedureSelection(value, false);
-        setInput('');
+        setInput(null);
       }
     }
   };
