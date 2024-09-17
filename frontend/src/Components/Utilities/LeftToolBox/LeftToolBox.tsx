@@ -78,7 +78,6 @@ function LeftToolBox() {
       <TabPanel
         value={tabValue}
         index={0}
-        styling={undefined}
       >
         <Grid container>
           <CurrentView />
@@ -93,7 +92,6 @@ function LeftToolBox() {
       <TabPanel
         value={tabValue}
         index={1}
-        styling={{ height: '85vh' }}
       >
         <FilterBoard />
       </TabPanel>

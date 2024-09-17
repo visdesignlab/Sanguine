@@ -1,17 +1,8 @@
-import { CSSProperties, ReactNode } from 'react';
+import { ReactNode } from 'react';
 
-type Props = {
-    index: number,
-    value: number,
-    children: ReactNode,
-    styling: CSSProperties | undefined;
-};
-
-function TabPanel({
-  index, value, children, styling,
-}: Props) {
+function TabPanel({ index, value, children }: { index: number; value: number; children: ReactNode; }) {
   return (
-    <div hidden={value !== index} style={styling}>
+    <div hidden={value !== index} style={{ height: 'calc(100% - 48px)' }}>
       {children}
     </div>
   );
