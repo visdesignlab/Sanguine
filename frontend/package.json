@@ -40,7 +40,7 @@
         "react-idle-timer": "^4.6.4",
         "typescript": "^4.3.4",
         "use-deep-compare-effect": "^1.6.1",
-        "vite": "^5.4.1"
+        "vite": "^5.4.6"
     },
     "scripts": {
         "serve": "vite --host=0.0.0.0 --port=8080",
