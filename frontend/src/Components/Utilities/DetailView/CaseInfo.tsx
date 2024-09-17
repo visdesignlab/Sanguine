@@ -1,5 +1,5 @@
 import {
-  CircularProgress, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText,
+  Box, CircularProgress, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, ListSubheader,
 } from '@mui/material';
 import { observer } from 'mobx-react';
 import {
@@ -9,7 +9,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import Store from '../../../Interfaces/Store';
 import { AcronymDictionary, HIPAASensitive, SurgeryUrgencyArray } from '../../../Presets/DataDict';
-import { UtilityContainer, CaseListSubheader, CenterAlignedDiv } from '../../../Presets/StyledComponents';
+import { CenterAlignedDiv } from '../../../Presets/StyledComponents';
 
 function CaseInfo() {
   const [individualInfo, setIndividualInfo] = useState(null);
@@ -69,10 +69,27 @@ function CaseInfo() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSelectPatient]);
   return (
-    <UtilityContainer style={{ height: '80vh', padding: '1px', visibility: currentSelectPatient ? 'visible' : 'hidden' }}>
-
-      <List dense>
-        <CaseListSubheader>
+    <Box
+      p={0.1}
+      style={{
+        height: 'calc(100vh - 64px - 20vh - 1px',
+        overflow: 'auto',
+        visibility: currentSelectPatient ? 'visible' : 'hidden',
+      }}
+    >
+      <List
+        dense
+        sx={{
+          bgcolor: 'background.paper',
+          position: 'relative',
+          overflow: 'auto',
+          '& ul': { padding: 0 },
+          height: '98%',
+          width: '100%',
+        }}
+        subheader={<li />}
+      >
+        <ListSubheader sx={{ p: 1 }}>
           <ListItemText primary="Case Info" />
           <ListItemSecondaryAction>
 
@@ -85,11 +102,11 @@ function CaseInfo() {
               <CloseIcon />
             </IconButton>
           </ListItemSecondaryAction>
+        </ListSubheader>
 
-        </CaseListSubheader>
         {individualInfo ? generateListItems() : <CenterAlignedDiv><CircularProgress /></CenterAlignedDiv>}
       </List>
-    </UtilityContainer>
+    </Box>
   );
 }
 

@@ -1,5 +1,5 @@
 import {
-  List, ListItem, Button, ListItemText, IconButton, ListItemSecondaryAction,
+  List, ListItem, Button, ListItemText, IconButton, ListItemSecondaryAction, Box,
 } from '@mui/material';
 import { observer } from 'mobx-react';
 import { useContext } from 'react';
@@ -9,7 +9,7 @@ import Store from '../../../Interfaces/Store';
 import { SelectSet } from '../../../Interfaces/Types/SelectionTypes';
 import { AcronymDictionary } from '../../../Presets/DataDict';
 import {
-  InheritWidthGrid, CenterAlignedDiv, Title, UtilityContainer,
+  InheritWidthGrid, CenterAlignedDiv, Title,
 } from '../../../Presets/StyledComponents';
 
 const TinyFontButton = styled(Button)({
@@ -22,7 +22,7 @@ function CurrentSelected() {
 
   return (
     <InheritWidthGrid item>
-      <UtilityContainer style={{ height: '20vh' }}>
+      <Box style={{ height: '20vh', overflow: 'auto' }}>
         <List dense>
           <ListItem>
             <Title>Currently Selected</Title>
@@ -76,7 +76,7 @@ function CurrentSelected() {
                         onClick={() => { store.selectionStore.clearAllFilter() }}
                     >Clear Filter</Button> */}
 
-      </UtilityContainer>
+      </Box>
     </InheritWidthGrid>
   );
 }
