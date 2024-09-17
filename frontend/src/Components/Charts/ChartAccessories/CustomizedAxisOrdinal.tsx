@@ -32,7 +32,6 @@ function CustomizedAxisOrdinal({
   const axisTextOutput = useCallback((input: number) => {
     if (store.configStore.privateMode && xAggregationOption.includes('PROV_ID')) {
       const name = store.providerMappping[input] as string;
-      console.log(name);
       return name ? `${name.slice(0, 1)}${name.slice(1).toLowerCase()}` : input;
     }
     return input;
@@ -41,20 +40,20 @@ function CustomizedAxisOrdinal({
   return (
     <>
 
-      {numberList.map((numberOb, ind) => {
-        const x1 = ind === 0
+      {numberList.map((numberOb, idx) => {
+        const x1 = idx === 0
           ? (scale() as ScaleOrdinal<any, number>)(0)
-          : (1 + (scale() as ScaleOrdinal<any, number>)((numberList[ind - 1].indexEnding + 1)) - 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberList[ind - 1].indexEnding)));
+          : (1 + (scale() as ScaleOrdinal<any, number>)((numberList[idx - 1].indexEnding + 1)) - 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberList[idx - 1].indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberList[idx - 1].indexEnding)));
 
-        const x2 = ind === numberList.length - 1
+        const x2 = idx === numberList.length - 1
           ? (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding)
           : (-1 + (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding) + 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding)));
 
         if (x1 && x2) {
           return (
-            <g key={ind}>
+            <g key={idx}>
               <CustomAxisLine x1={x1} x2={x2} />
-              <CustomAxisLineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? secondaryGray : basicGray} />
+              <CustomAxisLineBox x={x1} width={x2 - x1} fill={idx % 2 === 1 ? secondaryGray : basicGray} />
               <Tooltip title={axisTextOutput(numberOb.num)}>
                 <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{axisTextOutput(numberOb.num)}</AxisText>
               </Tooltip>

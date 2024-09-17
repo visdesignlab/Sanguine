@@ -196,7 +196,7 @@ function ScatterPlot({
     const unselectedPatients: JSX.Element[] = [];
     const brushedSet = new Set(brushedCaseList);
     const medianSet: Record<string, number[]> = {};
-    data.forEach((dataPoint) => {
+    data.forEach((dataPoint, idx) => {
       const cx = xAggregationOption === 'CELL_SAVER_ML' ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth());
 
       if (medianSet[dataPoint.xVal]) {
@@ -211,6 +211,7 @@ function ScatterPlot({
       if (isBrushed || isSelectSet) {
         selectedPatients.push(
           <ScatterDot
+            key={`dot-${idx}`}
             cx={cx}
             cy={cy}
             isselected={isSelectSet}
@@ -220,6 +221,7 @@ function ScatterPlot({
       } else {
         unselectedPatients.push(
           <ScatterDot
+            key={`dot-${idx}`}
             cx={cx}
             cy={cy}
             isselected={isSelectSet}

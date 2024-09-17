@@ -250,8 +250,8 @@ function DumbbellChart({
     const selectedPatients: JSX.Element[] = [];
     const unselectedPatients: JSX.Element[] = [];
 
-    sortedData.forEach((dataPoint, index) => {
-      const xVal = (valueScale() as unknown as ScaleOrdinal<number, number>)(index);
+    sortedData.forEach((dataPoint, idx) => {
+      const xVal = (valueScale() as unknown as ScaleOrdinal<number, number>)(idx);
       const isSelectSet = decideIfSelectSet(dataPoint);
 
       if (xVal) {
@@ -266,6 +266,7 @@ function DumbbellChart({
               showPreop={showPreop}
               circleYValStart={testValueScale()(dataPoint.startXVal)}
               circleYValEnd={testValueScale()(dataPoint.endXVal)}
+              key={`dumbbell-${idx}`}
             />,
           );
         } else {
@@ -279,6 +280,7 @@ function DumbbellChart({
               showPreop={showPreop}
               circleYValStart={testValueScale()(dataPoint.startXVal)}
               circleYValEnd={testValueScale()(dataPoint.endXVal)}
+              key={`dumbbell-${idx}`}
             />,
           );
         }
@@ -304,23 +306,23 @@ function DumbbellChart({
         <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(HGB_LOW_STANDARD)} y2={testValueScale()(HGB_LOW_STANDARD)} style={{ stroke: '#e5ab73', strokeWidth: '2', strokeDasharray: '5,5' }} />
 
         {generateDumbbells()}
-        {numberList.map((numberOb, ind) => {
+        {numberList.map((numberOb, idx) => {
           if (Object.keys(averageForEachTransfused).length > 0) {
-            const x1 = ind === 0 ? (valueScale() as unknown as ScaleOrdinal<number, number>)(0) : (valueScale() as unknown as ScaleOrdinal<number, number>)(numberList[ind - 1].indexEnding + 1);
+            const x1 = idx === 0 ? (valueScale() as unknown as ScaleOrdinal<number, number>)(0) : (valueScale() as unknown as ScaleOrdinal<number, number>)(numberList[idx - 1].indexEnding + 1);
             const x2 = (valueScale() as unknown as ScaleOrdinal<number, number>)(numberOb.indexEnding);
             const beginY = testValueScale()(averageForEachTransfused[(numberOb.num).toString()].averageStart);
             const endY = testValueScale()(averageForEachTransfused[numberOb.num].averageEnd);
-            const interval = ind === 0 ? 0 : (valueScale() as unknown as ScaleOrdinal<number, number>)(numberList[ind - 1].indexEnding);
+            const interval = idx === 0 ? 0 : (valueScale() as unknown as ScaleOrdinal<number, number>)(numberList[idx - 1].indexEnding);
             let interventionLine;
-            if (ind >= 1 && numberOb.num <= numberList[ind - 1].num) {
+            if (idx >= 1 && numberOb.num <= numberList[idx - 1].num) {
               interventionLine = <line x1={x1 - 0.5 * (x1 - interval)} x2={x1 - 0.5 * (x1 - interval)} y1={currentOffset.top} y2={dimensionHeight - currentOffset.bottom} style={{ stroke: '#e5ab73', strokeWidth: '2', strokeDasharray: '5,5' }} />;
             }
             if (x1 && x2) {
               return ([
                 // eslint-disable-next-line react/jsx-key
-                <DumbbellLine x1={x1} x2={x2} y1={beginY} y2={beginY} ispreop />,
+                <DumbbellLine x1={x1} x2={x2} y1={beginY} y2={beginY} ispreop key={`db-line-${idx}`} />,
                 // eslint-disable-next-line react/jsx-key
-                <DumbbellLine x1={x1} x2={x2} y1={endY} y2={endY} ispreop={false} />, interventionLine,
+                <DumbbellLine x1={x1} x2={x2} y1={endY} y2={endY} ispreop={false} key={`db-line-${idx}-2`} />, interventionLine,
               ]);
             } return null;
           } return null;

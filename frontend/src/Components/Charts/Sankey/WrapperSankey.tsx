@@ -103,27 +103,27 @@ function WrapperSankey() {
       return [key, range(0, BloodProductCap[key as never] + 1).map((d, i) => (i === BloodProductCap[key as never] ? `${d}+` : `${d}`))];
     });
 
-    allOptions.forEach((attributePair, index) => {
-      if (index < allOptions.length - 1) {
+    allOptions.forEach((attributePair, idx) => {
+      if (idx < allOptions.length - 1) {
         const attributeOneOptions = attributePair[1] as string[];
-        const nextAttributeOptions = allOptions[index + 1][1] as string[];
+        const nextAttributeOptions = allOptions[idx + 1][1] as string[];
         attributeOneOptions.forEach((optionOne) => {
           sankeyObj[`${attributePair[0]}-${optionOne}`] = {};
           nextAttributeOptions.forEach((optionTwo) => {
-            sankeyObj[`${attributePair[0]}-${optionOne}`][`${allOptions[index + 1][0]}-${optionTwo}`] = 0;
-            // newSankeyData.push([`${attributePair[0]}-${optionOne}`, `${allOptions[index + 1][0]}-${optionTwo}`, 0]);
+            sankeyObj[`${attributePair[0]}-${optionOne}`][`${allOptions[idx + 1][0]}-${optionTwo}`] = 0;
+            // newSankeyData.push([`${attributePair[0]}-${optionOne}`, `${allOptions[idx + 1][0]}-${optionTwo}`, 0]);
           });
         });
       }
     });
 
     // filteredCases.forEach((singleCase) => {
-    //   attributeOptions[0].forEach(({ key }, index) => {
-    //     if (index < attributeOptions[0].length - 1) {
+    //   attributeOptions[0].forEach(({ key }, idx) => {
+    //     if (idx < attributeOptions[0].length - 1) {
     //       let from = '';
     //       let to = '';
 
-    //       const nextKey = attributeOptions[0][index + 1].key;
+    //       const nextKey = attributeOptions[0][idx + 1].key;
 
     //       if (BloodProductCap[key]) {
     //         from = singleCase[key] < BloodProductCap[key] ? `${key}-${singleCase[key]}` : `${key}-${BloodProductCap[key]}+`;
@@ -140,9 +140,9 @@ function WrapperSankey() {
     //   });
     // });
 
-    allOptions.forEach(([attributeName, options], index) => {
-      if (index < allOptions.length - 1) {
-        const [nextKey, nextOptions] = allOptions[index + 1];
+    allOptions.forEach(([attributeName, options], idx) => {
+      if (idx < allOptions.length - 1) {
+        const [nextKey, nextOptions] = allOptions[idx + 1];
 
         (options as string[]).forEach((option) => {
           (nextOptions as string[]).forEach((nextOption) => {
@@ -168,11 +168,11 @@ function WrapperSankey() {
       </Typography>
       <div style={{ paddingTop: 5 }}>
         <DragDropContext onDragEnd={onDragEnd}>
-          {attributeOptions.map((options, ind) => (
+          {attributeOptions.map((options, idx) => (
             <Droppable
               direction="horizontal"
-              key={`${ind}-droppable`}
-              droppableId={`${ind}`}
+              key={`${idx}-droppable`}
+              droppableId={`${idx}`}
             >
               {(provided) => (
                 <div
@@ -184,13 +184,13 @@ function WrapperSankey() {
                     style={{ alignSelf: 'center' }}
                     className="MuiFormLabel-root MuiInputLabel-root MuiInputLabel-shrink MuiFormLabel-filled"
                   >
-                    {ind === 0 ? 'Included' : 'Not Included'}
+                    {idx === 0 ? 'Included' : 'Not Included'}
                   </label>
-                  {options.map((item, index) => (
+                  {options.map((item, idx2) => (
                     <Draggable
                       key={`${item.key}-draggable`}
                       draggableId={item.key}
-                      index={index}
+                      index={idx2}
                     >
                       {(providedDrag) => (
                         <FilterChip

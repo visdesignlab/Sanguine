@@ -31,13 +31,13 @@ function CustomizedAxisBand({ scaleDomain, scaleRange, scalePadding }: Props) {
 
   return (
     <>
-      {scale().domain().map((number, ind) => {
+      {scale().domain().map((number, idx) => {
         const x1 = scale()(number) || 0;
         const x2 = x1 + scale().bandwidth();
         return (
-          <g key={ind}>
+          <g key={idx}>
             <CustomAxisLine x1={x1} x2={x2} />
-            <CustomAxisLineBox x={x1} width={x2 - x1} fill={ind % 2 === 1 ? secondaryGray : basicGray} />
+            <CustomAxisLineBox x={x1} width={x2 - x1} fill={idx % 2 === 1 ? secondaryGray : basicGray} />
             <AxisText biggerFont={store.configStore.largeFont} x={x1 + 0.5 * (x2 - x1)}>{number}</AxisText>
           </g>
         );

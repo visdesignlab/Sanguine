@@ -21,7 +21,7 @@ function ExtraPairPlotGenerator({
   let transferedDistance = 0;
   const returningComponents: JSX.Element[] = [];
 
-  extraPairDataSet.forEach((pairData, index) => {
+  extraPairDataSet.forEach((pairData, idx) => {
     let temporarySecondary = secondaryExtraPairDataSet;
     if (secondaryExtraPairDataSet) {
       temporarySecondary = secondaryExtraPairDataSet.length > 0 ? temporarySecondary : undefined;
@@ -30,7 +30,7 @@ function ExtraPairPlotGenerator({
       case 'Violin':
         transferedDistance += (ExtraPairWidth.Violin + ExtraPairPadding);
         // eslint-disable-next-line no-case-declarations
-        const calculatedKdeMax = temporarySecondary ? Math.max(pairData.kdeMax || 0, temporarySecondary[index].kdeMax || 0) : (pairData.kdeMax || 0);
+        const calculatedKdeMax = temporarySecondary ? Math.max(pairData.kdeMax || 0, temporarySecondary[idx].kdeMax || 0) : (pairData.kdeMax || 0);
         returningComponents.push(
           <g transform={`translate(${transferedDistance - (ExtraPairWidth.Violin)},0)`}>
             <ExtraPairViolin
@@ -40,8 +40,8 @@ function ExtraPairPlotGenerator({
               kdeMax={calculatedKdeMax}
               dataSet={pairData.data}
               name={pairData.name}
-              secondaryDataSet={temporarySecondary ? temporarySecondary[index].data : undefined}
-              secondaryMedianSet={temporarySecondary ? temporarySecondary[index].medianSet : undefined}
+              secondaryDataSet={temporarySecondary ? temporarySecondary[idx].data : undefined}
+              secondaryMedianSet={temporarySecondary ? temporarySecondary[idx].medianSet : undefined}
             />
           </g>,
         );
@@ -55,7 +55,7 @@ function ExtraPairPlotGenerator({
               aggregationScaleDomain={aggregationScaleDomain}
               aggregationScaleRange={aggregationScaleRange}
               dataSet={pairData.data}
-              secondaryDataSet={temporarySecondary ? temporarySecondary[index].data : undefined}
+              secondaryDataSet={temporarySecondary ? temporarySecondary[idx].data : undefined}
             />
           </g>,
         );
@@ -69,7 +69,7 @@ function ExtraPairPlotGenerator({
             <ExtraPairBasic
               aggregationScaleDomain={aggregationScaleDomain}
               aggregationScaleRange={aggregationScaleRange}
-              secondaryDataSet={temporarySecondary ? temporarySecondary[index].data : undefined}
+              secondaryDataSet={temporarySecondary ? temporarySecondary[idx].data : undefined}
               dataSet={pairData.data}
             />
           </g>,
