@@ -4,10 +4,10 @@ import {
 } from 'react';
 import { Responsive } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
+import { Container, Typography } from '@mui/material';
 import Store from '../Interfaces/Store';
 import { LayoutElement } from '../Interfaces/Types/LayoutTypes';
 import { AcronymDictionary, typeDiction } from '../Presets/DataDict';
-import { UtilityContainer, WelcomeText } from '../Presets/StyledComponents';
 import WrapperCostBar from './Charts/CostBarChart/WrapperCostBar';
 import WrapperDumbbell from './Charts/DumbbellChart/WrapperDumbbell';
 import WrapperHeatMap from './Charts/HeatMap/WrapperHeatMap';
@@ -126,8 +126,8 @@ function LayoutGenerator() {
   });
 
   return (
-    <UtilityContainer ref={tabRef} style={{ height: '90vh' }}>
-      <WelcomeText show={store.provenanceState.layoutArray.length > 0}>Click &quot;Add&quot; above to start.</WelcomeText>
+    <Container ref={tabRef}>
+      {store.provenanceState.layoutArray.length === 0 && <Typography variant="h4" mt={2} sx={{ opacity: 0.4 }}>Click &quot;Add Chart&quot; above to visualize transfusion data.</Typography>}
       <Responsive
         onResizeStop={(e) => { store.chartStore.onLayoutChange(e); }}
         onDragStop={(e) => { store.chartStore.onLayoutChange(e); }}
@@ -143,7 +143,7 @@ function LayoutGenerator() {
         {store.provenanceState.layoutArray.map((layoutE) => createElement(layoutE))}
       </Responsive>
 
-    </UtilityContainer>
+    </Container>
   );
 }
 

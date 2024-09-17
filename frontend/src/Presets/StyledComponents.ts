@@ -2,7 +2,7 @@ import {
   Chip, Container, Grid, ListSubheader, Toolbar,
 } from '@mui/material';
 import styled from '@emotion/styled';
-import { basicGray, thirdGray } from './Constants';
+import { basicGray } from './Constants';
 
 export const LayoutDiv = styled.div`
   width: 100vw;
@@ -63,18 +63,6 @@ export const SurgeryListComp = styled('tr') <SurgeryListProps>`
   &:hover{
     background:#faeee1;
   }
-`;
-
-interface WelcomeTextProps {
-    show: boolean;
-}
-
-export const WelcomeText = styled('text') < WelcomeTextProps>`
-    display:${(props) => (props.show ? 'none' : 'block')};
-    font-size:xxx-large;
-    fill:${thirdGray};
-    opacity:0.25;
-    margin:20px;
 `;
 
 export const UtilityContainer = styled(Container)({
