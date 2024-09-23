@@ -26,12 +26,12 @@ function Dashboard() {
     <>
       <RegularModeMenu />
 
-      <Grid container direction="row" sx={{ height: 'calc(100vh - 64px)', overflow: 'auto' }}>
-        <Grid item xs={2}>
+      <Grid container direction="row">
+        <Grid item xs={2} sx={{ height: 'calc(100vh - 64px)', overflow: 'auto' }}>
           <LeftToolBox />
         </Grid>
         <Divider orientation="vertical" flexItem style={{ marginRight: '-1px' }} />
-        <Grid item xs={8}>
+        <Grid item xs={8} sx={{ height: 'calc(100vh - 64px)', overflow: 'auto' }}>
           <Tabs
             value={tabValue}
             onChange={handleChange}
@@ -56,7 +56,7 @@ function Dashboard() {
           </TabPanel>
         </Grid>
         <Divider orientation="vertical" flexItem style={{ marginRight: '-1px' }} />
-        <Grid item xs={2}>
+        <Grid item xs={2} sx={{ height: 'calc(100vh - 64px)', overflow: 'auto' }}>
           <DetailView />
         </Grid>
       </Grid>
