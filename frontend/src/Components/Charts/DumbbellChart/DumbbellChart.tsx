@@ -318,11 +318,16 @@ function DumbbellChart({
               interventionLine = <line x1={x1 - 0.5 * (x1 - interval)} x2={x1 - 0.5 * (x1 - interval)} y1={currentOffset.top} y2={dimensionHeight - currentOffset.bottom} style={{ stroke: '#e5ab73', strokeWidth: '2', strokeDasharray: '5,5' }} />;
             }
             if (x1 && x2) {
+              const toReturn = [];
+              if (showPreop) {
+                toReturn.push(<DumbbellLine x1={x1} x2={x2} y1={beginY} y2={beginY} ispreop key={`db-line-${idx}`} />);
+              }
+              if (showPostop) {
+                toReturn.push(<DumbbellLine x1={x1} x2={x2} y1={endY} y2={endY} ispreop={false} key={`db-line-${idx}-2`} />);
+              }
               return ([
-                // eslint-disable-next-line react/jsx-key
-                <DumbbellLine x1={x1} x2={x2} y1={beginY} y2={beginY} ispreop key={`db-line-${idx}`} />,
-                // eslint-disable-next-line react/jsx-key
-                <DumbbellLine x1={x1} x2={x2} y1={endY} y2={endY} ispreop={false} key={`db-line-${idx}-2`} />, interventionLine,
+                ...toReturn,
+                interventionLine,
               ]);
             } return null;
           } return null;
