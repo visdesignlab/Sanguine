@@ -17,7 +17,11 @@ export type BasicAggregatedDatePoint = {
     caseIDList: number[];
 };
 export type CostBarChartDataPoint = BasicAggregatedDatePoint & {
-    dataArray: number[];
+    PRBC_UNITS: number;
+    FFP_UNITS: number;
+    CRYO_UNITS: number;
+    PLT_UNITS: number;
+    CELL_SAVER_ML: number;
     cellSalvageUsage: number;
     cellSalvageVolume: number;
 };

@@ -2,7 +2,6 @@ import { createAction } from '@visdesignlab/trrack';
 import { ProcedureEntry, SingleCasePoint } from '../Types/DataTypes';
 import { ActionEvents } from '../Types/EventTypes';
 import { ApplicationState } from '../Types/StateTypes';
-import { BloodProductCap } from '../../Presets/Constants';
 
 // This is a filter
 export const updateSelectedPatientGroup = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
@@ -50,7 +49,7 @@ export const setCurrentSelectPatient = createAction<ApplicationState, [SingleCas
   state.currentSelectPatient = newCase;
 }).setLabel('updateCaseSelect');
 
-export const selectSet = createAction<ApplicationState, [keyof typeof BloodProductCap, string, boolean], ActionEvents>((state, selectSetName, selectSetInput, replace) => {
+export const selectSet = createAction<ApplicationState, [string, string, boolean], ActionEvents>((state, selectSetName, selectSetInput, replace) => {
   // this current set name already exist
   if (state.currentSelectSet.filter((d) => d.setName === selectSetName).length > 0) {
     state.currentSelectSet = state.currentSelectSet.map((d) => {

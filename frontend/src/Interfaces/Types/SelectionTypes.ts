@@ -1,6 +1,4 @@
-import { AcronymDictionary } from '../../Presets/DataDict';
-
 export type SelectSet = {
-    setName: keyof typeof AcronymDictionary;
+    setName: string;
     setValues: string[];
 }

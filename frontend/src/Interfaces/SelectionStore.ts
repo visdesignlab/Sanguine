@@ -5,7 +5,6 @@ import {
 // eslint-disable-next-line import/no-cycle
 import { RootStore } from './Store';
 import { ProcedureEntry, SingleCasePoint } from './Types/DataTypes';
-import { BloodProductCap } from '../Presets/Constants';
 
 export class SelectionStore {
   rootStore: RootStore;
@@ -47,7 +46,7 @@ export class SelectionStore {
     this.provenance.apply(removeFilter(filterNameToRemove));
   }
 
-  selectSet(selectSetName: keyof typeof BloodProductCap, selectSetInput: string, replace: boolean) {
+  selectSet(selectSetName: string, selectSetInput: string, replace: boolean) {
     this.provenance.apply(selectSet(selectSetName, selectSetInput, replace));
   }
 

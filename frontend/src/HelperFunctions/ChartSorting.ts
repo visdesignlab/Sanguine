@@ -40,5 +40,5 @@ export const sortHelper = (data: BasicAggregatedDatePoint[], xAggregationOption:
       return dp.aggregateAttribute;
     });
   }
-  return [dataXVals, newCaseMax];
+  return [dataXVals, newCaseMax] as [string[], number];
 };
