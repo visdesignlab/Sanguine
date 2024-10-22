@@ -2,18 +2,17 @@ import { observer } from 'mobx-react';
 import {
   useContext, useMemo, useRef, useState, useCallback,
 } from 'react';
-import { format, max, range } from 'd3';
+import { range } from 'd3';
 import useDeepCompareEffect from 'use-deep-compare-effect';
-import { Tooltip, styled } from '@mui/material';
 import { sortHelper } from '../../../HelperFunctions/ChartSorting';
 import Store from '../../../Interfaces/Store';
 import { ExtraPairPoint, HeatMapDataPoint } from '../../../Interfaces/Types/DataTypes';
 import {
-  basicGray, BloodProductCap, ExtraPairPadding, ExtraPairWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, MIN_HEATMAP_BANDWIDTH, OffsetDict, largeFontSize, regularFontSize,
+  BloodProductCap, MIN_HEATMAP_BANDWIDTH, OffsetDict,
 } from '../../../Presets/Constants';
 import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import { AggregationScaleGenerator, ValueScaleGenerator } from '../../../HelperFunctions/Scales';
-import { BiggerFontProps, ChartG, HeatMapDividerLine } from '../../../Presets/StyledSVGComponents';
+import { ChartG, HeatMapDividerLine } from '../../../Presets/StyledSVGComponents';
 import DualColorLegend from '../ChartAccessories/DualColorLegend';
 import SingleColorLegend from '../ChartAccessories/SingleColorLegend';
 import SingleHeatRow from './SingleHeatRow';
@@ -22,18 +21,7 @@ import GeneratorExtraPair from '../ChartAccessories/ExtraPairPlots/GeneratorExtr
 import ComparisonLegend from '../ChartAccessories/ComparisonLegend';
 import HeatMapAxisX from '../ChartAccessories/HeatMapAxisX';
 import HeatMapAxisY from '../ChartAccessories/HeatMapAxisY';
-import { BiggerTooltip } from '../../../Presets/StyledComponents';
 import { AcronymDictionary } from '../../../Presets/DataDict';
-
-const ExtraPairText = styled('text') <BiggerFontProps>`
-  font-size: ${(props) => (props.biggerFont ? `${largeFontSize}px` : `${regularFontSize}px`)};
-  text-anchor: middle;
-  alignment-baseline:hanging;
-  cursor:pointer;
-    &:hover tspan {
-        opacity:1;
-  }
-`;
 
 export const outputGradientLegend = (showZero: boolean, dimensionWidth: number) => {
   if (!showZero) {
@@ -41,15 +29,6 @@ export const outputGradientLegend = (showZero: boolean, dimensionWidth: number) 
   }
   return <SingleColorLegend dimensionWidth={dimensionWidth} />;
 };
-
-const RemoveTSpan = styled('tspan')`
-    font-size:10px;
-    fill:${basicGray};
-    opacity:0;
-     &:hover{
-        opacity:1;
-     }
-`;
 
 type Props = {
     dimensionWidth: number;
@@ -76,59 +55,6 @@ function HeatMap({
   const currentOffset = OffsetDict.regular;
   const [xVals, setXVals] = useState<[]>([]);
   const [caseMax, setCaseMax] = useState(0);
-
-  const extraPairTextGenerator = (
-    nameInput: keyof typeof AcronymDictionary,
-    labelInput: string,
-    type: 'Basic' | 'Violin' | 'BarChart',
-    extraPairDataPoint: ExtraPairPoint,
-    idx: number,
-    allExtraPairs: ExtraPairPoint[],
-  ) => {
-    let explanation = '';
-    switch (type) {
-      case 'Basic':
-        explanation = 'Percentage of Patients';
-        break;
-      case 'Violin':
-        explanation = nameInput === 'RISK' ? 'Scaled 0-30' : (`Scaled 0-18, line at ${nameInput as string === 'Preop HGB' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD}`);
-        break;
-      case 'BarChart':
-        explanation = `Scaled 0-${format('.4r')(max(Object.values(extraPairDataPoint.data)))}`;
-        break;
-      default:
-        break;
-    }
-
-    const tooltipText = (
-      <BiggerTooltip>
-        {AcronymDictionary[nameInput] ? `${AcronymDictionary[nameInput]}` : undefined}
-        {AcronymDictionary[nameInput] ? <br /> : null}
-        {explanation}
-        {' '}
-        <br />
-        (Click to remove)
-      </BiggerTooltip>
-    );
-
-    const xPadding: number = allExtraPairs.slice(0, idx + 1).map((extraPair) => ExtraPairWidth[extraPair.type] + ExtraPairPadding).reduce((partialSum, a) => partialSum + a, 0);
-
-    return (
-      <Tooltip title={tooltipText}>
-        <ExtraPairText
-          x={xPadding - ExtraPairWidth[type] / 2}
-          y={dimensionHeight - currentOffset.bottom + 25}
-          biggerFont={store.configStore.largeFont}
-          onClick={() => {
-            store.chartStore.removeExtraPair(chartId, nameInput);
-          }}
-        >
-          {labelInput}
-          <RemoveTSpan x={xPadding - ExtraPairWidth[type] / 2} dy="-0.5em">x</RemoveTSpan>
-        </ExtraPairText>
-      </Tooltip>
-    );
-  };
 
   useDeepCompareEffect(() => {
     const [tempxVals, newCaseMax] = sortHelper(data, xAggregationOption, store.provenanceState.showZero, secondaryData);
@@ -225,6 +151,9 @@ function HeatMap({
               secondaryExtraPairDataSet={secondaryExtraPairDataSet || undefined}
               aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
               aggregationScaleRange={JSON.stringify(aggregationScale().range())}
+              height={chartHeight}
+              text
+              chartId={chartId}
             />
 
           </g>
@@ -232,7 +161,6 @@ function HeatMap({
       </foreignObject>
 
       {/* Render after chart to render on top */}
-      {extraPairDataSet.map((extraPair, idx) => extraPairTextGenerator(extraPair.name, extraPair.label, extraPair.type, extraPair, idx, extraPairDataSet))}
       <HeatMapAxisX
         svg={svg}
         currentOffset={currentOffset}

@@ -42,7 +42,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
       switch (variable) {
         case 'TOTAL_TRANS':
           // let newDataBar = {} as any;
-          data.forEach((dataPoint: BasicAggregatedDatePoint) => {
+          data.forEach((dataPoint) => {
             newData[dataPoint.aggregateAttribute] = dataPoint.totalVal;
           });
           newExtraPairData.push({
