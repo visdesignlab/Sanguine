@@ -459,7 +459,7 @@ function WrapperCostBar({
             extraPairDataSet={extraPairData}
             secondaryExtraPairDataSet={comparisonOption ? secondaryExtraPairData : undefined}
             aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
-            aggregationScaleRange={`[${vegaHeight - 38}, 6]`}
+            aggregationScaleRange={`[${comparisonOption ? vegaHeight - 45 : vegaHeight - 40}, ${comparisonOption ? 15 : 6}]`}
             text
             height={vegaHeight}
             chartId={chartId}
