@@ -8,7 +8,7 @@ import { Container, Typography } from '@mui/material';
 import Store from '../Interfaces/Store';
 import { LayoutElement } from '../Interfaces/Types/LayoutTypes';
 import { AcronymDictionary, typeDiction } from '../Presets/DataDict';
-import WrapperCostBar from './Charts/CostBarChart/WrapperCostBar';
+import WrapperCostBar from './Charts/CostBarChart';
 import WrapperDumbbell from './Charts/DumbbellChart/WrapperDumbbell';
 import WrapperHeatMap from './Charts/HeatMap/WrapperHeatMap';
 import WrapperScatter from './Charts/ScatterPlot/WrapperScatter';
@@ -39,12 +39,11 @@ function LayoutGenerator() {
             key={layout.i}
             className={`parent-node${layout.i}`}
           >
-
             <WrapperCostBar
               extraPairArrayString={layout.extraPair || ''}
               layoutW={layout.w}
               layoutH={layout.h}
-              xAggregatedOption={layout.aggregatedBy as keyof typeof BloodProductCap}
+              xAggregationOption={layout.aggregatedBy as keyof typeof BloodProductCap}
               chartId={layout.i}
               comparisonOption={layout.valueToVisualize as keyof typeof BloodProductCap}
               annotationText={layout.notation}
@@ -127,22 +126,27 @@ function LayoutGenerator() {
 
   return (
     <Container ref={tabRef}>
-      {store.provenanceState.layoutArray.length === 0 && <Typography variant="h4" mt={2} sx={{ opacity: 0.4 }}>Click &quot;Add Chart&quot; above to visualize transfusion data.</Typography>}
+      {store.provenanceState.layoutArray.length === 0 && (
+        <Typography variant="h4" mt={2} sx={{ opacity: 0.4 }}>Click &quot;Add Chart&quot; above to visualize transfusion data.</Typography>
+      )}
       <Responsive
         onResizeStop={(e) => { store.chartStore.onLayoutChange(e); }}
         onDragStop={(e) => { store.chartStore.onLayoutChange(e); }}
         draggableHandle=".move-icon"
-        className="layout"
         cols={colData}
-        rowHeight={500}
+        rowHeight={400}
         width={0.95 * store.mainCompWidth}
         layouts={{
-          md: generateGrid(), lg: generateGrid(), sm: generateGrid(), xs: generateGrid(), xxs: generateGrid(),
+          xxs: generateGrid(),
+          xs: generateGrid(),
+          sm: generateGrid(),
+          md: generateGrid(),
+          lg: generateGrid(),
         }}
+        isBounded
       >
         {store.provenanceState.layoutArray.map((layoutE) => createElement(layoutE))}
       </Responsive>
-
     </Container>
   );
 }
