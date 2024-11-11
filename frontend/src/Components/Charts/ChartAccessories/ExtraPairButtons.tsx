@@ -43,7 +43,7 @@ function ExtraPairButtons({ extraPairLength, chartId, disbleButton }: Props) {
         onClose={handleClose}
       >
         {ExtraPairOptions.map((option) => (
-          <MenuItem key={option.key} onClick={() => { extraPairHandling(option.key); }}>{option.text}</MenuItem>
+          <MenuItem key={option.key} onClick={() => { extraPairHandling(option.key); }}>{option.value}</MenuItem>
         ))}
       </Menu>
 

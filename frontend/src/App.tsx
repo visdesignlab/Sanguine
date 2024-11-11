@@ -78,6 +78,7 @@ function App() {
             TXA: d.TXA ? d.TXA : 0,
             B12: d.B12 ? d.B12 : 0,
             AMICAR: d.AMICAR ? d.AMICAR : 0,
+            IRON: d.IRON ? d.IRON : 0,
             SURGERY_TYPE_DESC: (surgeryTypeIndex > -1 ? SurgeryUrgencyArray[surgeryTypeIndex] : 'Unknown') as SurgeryUrgencyType,
           };
         }),

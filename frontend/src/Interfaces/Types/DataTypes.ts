@@ -1,4 +1,4 @@
-import { AcronymDictionary } from '../../Presets/DataDict';
+import { AcronymDictionary, EXTRA_PAIR_OPTIONS } from '../../Presets/DataDict';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type ProcedureEntry = {
@@ -67,6 +67,7 @@ export type SingleCasePoint = {
     B12: number;
     TXA: number;
     AMICAR: number;
+    IRON: number;
     SURGERY_TYPE_DESC: 'Urgent' | 'Elective' | 'Emergent';
     ALL_CODES: string;
     [key: string]: string|number;
@@ -86,13 +87,14 @@ export type DumbbellDataPoint = {
 };
 
 export type ExtraPairPoint = {
-    name: keyof typeof AcronymDictionary;
+    name: typeof EXTRA_PAIR_OPTIONS[number];
     data: any[];
     type: 'Violin' | 'BarChart' | 'Basic';
     label: string;
     medianSet?: any;
     kdeMax?: number;
 };
+export type ExtendedExtraPairPoint = Omit<ExtraPairPoint, 'name'> & { name: keyof typeof AcronymDictionary | 'TOTAL_TRANS' | 'PER_CASE' | 'ZERO_TRANS' };
 
 export type ExtraPairInterventionPoint = {
     name: string;

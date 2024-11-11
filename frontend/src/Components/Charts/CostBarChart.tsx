@@ -98,8 +98,8 @@ function WrapperCostBar({
   }, [xAggregationOption, layoutH, layoutW, store.mainCompWidth, chartDiv]);
 
   // Bar click listener
-  const barClick = (eventType: string, clickedElement: CostBarDataPoint) => {
-    store.selectionStore.selectSet(xAggregationOption, clickedElement.rowLabel[0].toString(), true);
+  const barClick = (eventType: string, clickedElement: unknown) => {
+    store.selectionStore.selectSet(xAggregationOption, (clickedElement as CostBarDataPoint).rowLabel[0].toString(), true);
   };
 
   const [showPotential, setShowPotential] = useState(false);
@@ -120,7 +120,7 @@ function WrapperCostBar({
       values: data
         .flatMap((d) => ([
           showPotential ? {
-            rowLabel: d.aggregateAttribute, value: d.cellSalvageVolume * -0.004 * BloodProductCost.PRBC_UNITS, bloodProduct: 'savings', order: 0,
+            rowLabel: d.aggregateAttribute, value: d.cellSalvageVolume * -0.004 * BloodProductCost.PRBC_UNITS, bloodProduct: 'savings', type: 'false',
           } : null,
           {
             rowLabel: d.aggregateAttribute, value: d.PRBC_UNITS, bloodProduct: 'PRBC', type: 'false',
@@ -144,6 +144,9 @@ function WrapperCostBar({
       plotDataTemp.values = plotDataTemp.values.concat(
         secondaryData
           .flatMap((d) => ([
+            showPotential ? {
+              rowLabel: d.aggregateAttribute, value: d.cellSalvageVolume * -0.004 * BloodProductCost.PRBC_UNITS, bloodProduct: 'savings', type: 'true',
+            } : null,
             {
               rowLabel: d.aggregateAttribute, value: d.PRBC_UNITS, bloodProduct: 'PRBC', type: 'true',
             },
@@ -159,7 +162,8 @@ function WrapperCostBar({
             {
               rowLabel: d.aggregateAttribute, value: d.CELL_SAVER_ML, bloodProduct: 'CELL_SAVER', type: 'true',
             },
-          ])),
+          ]))
+          .filter((d) => d !== null),
       );
     }
     return plotDataTemp;
@@ -417,11 +421,11 @@ function WrapperCostBar({
               key={bOption.key}
               onClick={() => {
                 setOpenCostInputDialog(true);
-                setBloodCostToChange(bOption.value);
+                setBloodCostToChange(bOption.key);
                 handleClose();
               }}
             >
-              {bOption.text}
+              {bOption.value}
             </MenuItem>
           ))}
         </Menu>

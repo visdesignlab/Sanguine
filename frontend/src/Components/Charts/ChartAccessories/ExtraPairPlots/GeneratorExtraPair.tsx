@@ -2,9 +2,9 @@
 import { observer } from 'mobx-react';
 import styled from '@emotion/styled';
 import { Tooltip } from '@mui/material';
-import { format, max } from 'date-fns';
 import { useContext } from 'react';
-import { ExtraPairPoint } from '../../../../Interfaces/Types/DataTypes';
+import { format, max } from 'd3';
+import { ExtendedExtraPairPoint, ExtraPairPoint } from '../../../../Interfaces/Types/DataTypes';
 import {
   basicGray,
   ExtraPairPadding, ExtraPairWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, largeFontSize, OffsetDict, regularFontSize,
@@ -12,7 +12,7 @@ import {
 import ExtraPairViolin from './ExtraPairViolin';
 import ExtraPairBar from './ExtraPairBar';
 import ExtraPairBasic from './ExtraPairBasic';
-import { AcronymDictionary } from '../../../../Presets/DataDict';
+import { AcronymDictionary, EXTRA_PAIR_OPTIONS } from '../../../../Presets/DataDict';
 import { BiggerTooltip } from '../../../../Presets/StyledComponents';
 import { BiggerFontProps } from '../../../../Presets/StyledSVGComponents';
 import Store from '../../../../Interfaces/Store';
@@ -37,8 +37,8 @@ const RemoveTSpan = styled('tspan')`
 `;
 
 interface OwnProps {
-    extraPairDataSet: ExtraPairPoint[];
-    secondaryExtraPairDataSet?: ExtraPairPoint[];
+    extraPairDataSet: ExtendedExtraPairPoint[];
+    secondaryExtraPairDataSet?: ExtendedExtraPairPoint[];
     aggregationScaleDomain: string;
     aggregationScaleRange: string;
     text?: boolean;
@@ -116,7 +116,7 @@ function GeneratorExtraPair({
     }
   });
   const extraPairTextGenerator = (
-    nameInput: keyof typeof AcronymDictionary,
+    nameInput: typeof EXTRA_PAIR_OPTIONS[number],
     labelInput: string,
     type: 'Basic' | 'Violin' | 'BarChart',
     extraPairDataPoint: ExtraPairPoint,

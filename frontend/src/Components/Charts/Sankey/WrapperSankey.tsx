@@ -14,7 +14,7 @@ import { BloodProductCap } from '../../../Presets/Constants';
 import { FilterChip } from '../../../Presets/StyledComponents';
 import Store from '../../../Interfaces/Store';
 
-const reorder = (list: { value: string, key: string, text: string; }[], startIndex: number, endIndex: number) => {
+const reorder = (list: { value: string, key: string }[], startIndex: number, endIndex: number) => {
   const result = Array.from(list);
   const [removed] = result.splice(startIndex, 1);
   result.splice(endIndex, 0, removed);
@@ -47,21 +47,22 @@ function WrapperSankey() {
   };
 
   const PRESET = [
-    { value: 'B12', key: 'B12', text: 'B12' },
-    { value: 'TXA', key: 'TXA', text: 'Tranexamic Acid' },
-    { value: 'PRBC_UNITS', key: 'PRBC_UNITS', text: 'Intraoperative RBCs Transfused' },
-    { value: 'FFP_UNITS', key: 'FFP_UNITS', text: 'Intraoperative FFP Transfused' },
-    { value: 'VENT', key: 'VENT', text: 'Ventilator Over 24hr' },
-    { value: 'DEATH', key: 'DEATH', text: 'Death' },
+    { key: 'B12', value: 'B12' },
+    { key: 'IRON', value: 'IRON' },
+    { key: 'TXA', value: 'Tranexamic Acid' },
+    { key: 'PRBC_UNITS', value: 'Intraoperative RBCs Transfused' },
+    { key: 'FFP_UNITS', value: 'Intraoperative FFP Transfused' },
+    { key: 'VENT', value: 'Ventilator Over 24hr' },
+    { key: 'DEATH', value: 'Death' },
   ];
 
   const PRESET_NONSELECTED = [
-    { value: 'STROKE', key: 'STROKE', text: 'Stroke' },
-    { value: 'ECMO', key: 'ECMO', text: 'ECMO' },
-    { value: 'AMICAR', key: 'AMICAR', text: 'Amicar' },
-    { value: 'PLT_UNITS', key: 'PLT_UNITS', text: 'Intraoperative Platelets Transfused' },
-    { value: 'CRYO_UNITS', key: 'CRYO_UNITS', text: 'Intraoperative Cryo Transfused' },
-    // { value: "CELL_SAVER_ML", key: "CELL_SAVER_ML", text: "Cell Salvage Volume (ml)" }
+    { key: 'STROKE', value: 'Stroke' },
+    { key: 'ECMO', value: 'ECMO' },
+    { key: 'AMICAR', value: 'Amicar' },
+    { key: 'PLT_UNITS', value: 'Intraoperative Platelets Transfused' },
+    { key: 'CRYO_UNITS', value: 'Intraoperative Cryo Transfused' },
+    // { value: "CELL_SAVER_ML", key: "CELL_SAVER_ML", value: "Cell Salvage Volume (ml)" }
   ];
 
   // with the first element being the attribute selected, and second element not selected
@@ -194,7 +195,7 @@ function WrapperSankey() {
                     >
                       {(providedDrag) => (
                         <FilterChip
-                          label={item.text}
+                          label={item.value}
                           clickable
                           ref={providedDrag.innerRef}
                           {...providedDrag.draggableProps}

@@ -22,7 +22,7 @@ function OutcomeChipGroup() {
       {OutcomeOptions.map((d) => (
         <FilterChip
           style={{ margin: '3px' }}
-          label={d.text}
+          label={d.value}
           key={d.key}
           clickable
           color={outcomeFilter.includes(d.key) ? 'primary' : undefined}

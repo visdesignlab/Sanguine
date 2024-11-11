@@ -240,26 +240,27 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Successfully generated visit labs data'))
 
         # Generate mock data for EXTRAOP_MEDS
-        med_types = ['TXA', 'B12', 'AMICAR', 'tranexamic acid', 'vitamin B12', 'aminocaproic acid']
+        med_types = ['TXA', 'B12', 'AMICAR', 'tranexamic acid', 'vitamin B12', 'aminocaproic acid', 'iron', 'ferrous sulfate', 'ferric carboxymaltose']
         for surg in surgeries:
             order_dtm = fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM)
             admin_dtm = order_dtm + timedelta(minutes=fake.random_int(min=1, max=120))
-            EXTRAOP_MEDS.objects.create(
-                VISIT_NO=surg.VISIT_NO,
-                ORDER_MED_ID=fake.unique.random_number(digits=10),
-                ORDER_DTM=fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM),
-                MEDICATION_ID=fake.unique.random_number(digits=10),
-                MEDICATION_NAME=fake.random_element(elements=med_types),
-                MED_ADMIN_LINE=fake.random_int(min=1, max=4),
-                ADMIN_DTM=admin_dtm,
-                ADMIN_DOSE=fake.pydecimal(left_digits=2, right_digits=1, positive=True, min_value=0.1, max_value=10),
-                MED_FORM=fake.random_element(elements=('tablet', 'capsule', 'injection', 'syrup')),
-                ADMIN_ROUTE_DESC=fake.random_element(elements=('oral', 'intravenous', 'intramuscular', 'subcutaneous')),
-                DOSE_UNIT_DESC=fake.random_element(elements=('mg', 'g', 'mL', 'unit')),
-                MED_START_DTM=admin_dtm,
-                MED_END_DTM=admin_dtm + timedelta(hours=fake.random_int(min=1, max=12)),
-                LOAD_DTM=fake.date_this_century(),
-            )
+            for i in range(random.randint(1, 5)):
+                EXTRAOP_MEDS.objects.create(
+                    VISIT_NO=surg.VISIT_NO,
+                    ORDER_MED_ID=fake.unique.random_number(digits=10),
+                    ORDER_DTM=fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM),
+                    MEDICATION_ID=fake.unique.random_number(digits=10),
+                    MEDICATION_NAME=fake.random_element(elements=med_types),
+                    MED_ADMIN_LINE=fake.random_int(min=1, max=4),
+                    ADMIN_DTM=admin_dtm,
+                    ADMIN_DOSE=fake.pydecimal(left_digits=2, right_digits=1, positive=True, min_value=0.1, max_value=10),
+                    MED_FORM=fake.random_element(elements=('tablet', 'capsule', 'injection', 'syrup')),
+                    ADMIN_ROUTE_DESC=fake.random_element(elements=('oral', 'intravenous', 'intramuscular', 'subcutaneous')),
+                    DOSE_UNIT_DESC=fake.random_element(elements=('mg', 'g', 'mL', 'unit')),
+                    MED_START_DTM=admin_dtm,
+                    MED_END_DTM=admin_dtm + timedelta(hours=fake.random_int(min=1, max=12)),
+                    LOAD_DTM=fake.date_this_century(),
+                )
         self.stdout.write(self.style.SUCCESS('Successfully generated extraop meds data'))
 
         # Generate mock data for INTRAOP_MEDS

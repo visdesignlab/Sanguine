@@ -1,41 +1,46 @@
 export const BloodComponentOptions = [
-  { value: 'PRBC_UNITS', key: 'PRBC_UNITS', text: 'Intraoperative RBCs Transfused' },
-  { value: 'FFP_UNITS', key: 'FFP_UNITS', text: 'Intraoperative FFP Transfused' },
-  { value: 'PLT_UNITS', key: 'PLT_UNITS', text: 'Intraoperative Platelets Transfused' },
-  { value: 'CRYO_UNITS', key: 'CRYO_UNITS', text: 'Intraoperative Cryo Transfused' },
-  { value: 'CELL_SAVER_ML', key: 'CELL_SAVER_ML', text: 'Cell Salvage Volume (ml)' }];
+  { key: 'PRBC_UNITS', value: 'Intraoperative RBCs Transfused' },
+  { key: 'FFP_UNITS', value: 'Intraoperative FFP Transfused' },
+  { key: 'PLT_UNITS', value: 'Intraoperative Platelets Transfused' },
+  { key: 'CRYO_UNITS', value: 'Intraoperative Cryo Transfused' },
+  { key: 'CELL_SAVER_ML', value: 'Cell Salvage Volume (ml)' }];
 
 const AggregationOptions = [
-  { value: 'SURGEON_PROV_ID', key: 'SURGEON_PROV_ID', text: 'Surgeon ID' },
-  { value: 'YEAR', key: 'YEAR', text: 'Year' },
-  { value: 'ANESTH_PROV_ID', key: 'ANESTH_PROV_ID', text: 'Anesthesiologist ID' }];
+  { key: 'SURGEON_PROV_ID', value: 'Surgeon ID' },
+  { key: 'YEAR', value: 'Year' },
+  { key: 'ANESTH_PROV_ID', value: 'Anesthesiologist ID' }];
 
-export const ScatterYOptions: { value: string; key: 'PREOP_HEMO' | 'POSTOP_HEMO'; text: string }[] = [
-  { value: 'PREOP_HEMO', key: 'PREOP_HEMO', text: 'Preoperative Hemoglobin Value' },
-  { value: 'POSTOP_HEMO', key: 'POSTOP_HEMO', text: 'Postoperative Hemoglobin Value' },
+export const ScatterYOptions: { value: string; key: 'PREOP_HEMO' | 'POSTOP_HEMO'; }[] = [
+  { key: 'PREOP_HEMO', value: 'Preoperative Hemoglobin Value' },
+  { key: 'POSTOP_HEMO', value: 'Postoperative Hemoglobin Value' },
 ];
 
-export const OutcomeOptions = [
-  { value: 'DEATH', key: 'DEATH', text: 'Death' },
-  { value: 'VENT', key: 'VENT', text: 'Ventilator Over 24hr' },
-  { value: 'STROKE', key: 'STROKE', text: 'Stroke' },
-  { value: 'ECMO', key: 'ECMO', text: 'ECMO' },
-  { value: 'B12', key: 'B12', text: 'B12' },
-  { value: 'TXA', key: 'TXA', text: 'Tranexamic Acid' },
-  { value: 'AMICAR', key: 'AMICAR', text: 'Amicar' }];
+const OUTCOMES = ['DEATH', 'VENT', 'STROKE', 'ECMO', 'B12', 'IRON', 'TXA', 'AMICAR'] as const;
+export const OutcomeOptions: { key: typeof OUTCOMES[number]; value: string }[] = [
+  { key: 'DEATH', value: 'Death' },
+  { key: 'VENT', value: 'Ventilator Over 24hr' },
+  { key: 'STROKE', value: 'Stroke' },
+  { key: 'ECMO', value: 'ECMO' },
+  { key: 'B12', value: 'B12' },
+  { key: 'IRON', value: 'Iron' },
+  { key: 'TXA', value: 'Tranexamic Acid' },
+  { key: 'AMICAR', value: 'Amicar' },
+];
 
-export const ExtraPairOptions = OutcomeOptions.concat([
-  { text: 'Preop Hemoglobin', key: 'PREOP_HEMO', value: 'Preop HGB' },
-  { text: 'Postop Hemoglobin', key: 'POSTOP_HEMO', value: 'POSTOP_HEMO' },
-  { text: 'Total Transfusion', key: 'TOTAL_TRANS', value: 'TOTAL_TRANS' },
-  { text: 'Per Case Transfusion', key: 'PER_CASE', value: 'PER_CASE' },
-  { text: 'Zero Transfusion Cases', key: 'ZERO_TRANS', value: 'ZERO_TRANS' },
-  { text: 'DRG Weight (Risk)', key: 'RISK', value: 'RISK' },
+export const EXTRA_PAIR_OPTIONS = [...OUTCOMES, 'PREOP_HEMO', 'POSTOP_HEMO', 'TOTAL_TRANS', 'PER_CASE', 'ZERO_TRANS', 'RISK'] as const;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const ExtraPairOptions: { key: typeof EXTRA_PAIR_OPTIONS[number]; value: string }[] = (OutcomeOptions as any).concat([
+  { key: 'PREOP_HEMO', value: 'Preop HGB' },
+  { key: 'POSTOP_HEMO', value: 'POSTOP_HEMO' },
+  { key: 'TOTAL_TRANS', value: 'TOTAL_TRANS' },
+  { key: 'PER_CASE', value: 'PER_CASE' },
+  { key: 'ZERO_TRANS', value: 'ZERO_TRANS' },
+  { key: 'RISK', value: 'RISK' },
 ]);
 
-export const dumbbellFacetOptions = BloodComponentOptions.slice(0, 4).concat(AggregationOptions).concat([{ value: 'QUARTER', key: 'QUARTER', text: 'Quarter' }]);
+export const dumbbellFacetOptions = BloodComponentOptions.slice(0, 4).concat(AggregationOptions).concat([{ key: 'QUARTER', value: 'Quarter' }]);
 
-const dumbbellValueOptions = [{ value: 'HGB_VALUE', key: 'HGB_VALUE', text: 'Hemoglobin Value' }];
+const dumbbellValueOptions = [{ key: 'HGB_VALUE', value: 'Hemoglobin Value' }];
 
 export const typeDiction = ['COST', 'DUMBBELL', 'SCATTER', 'HEATMAP', 'INTERVENTION'];
 
@@ -47,12 +52,12 @@ export const addOptions = [
   [BloodComponentOptions, [AggregationOptions[0], AggregationOptions[2]]],
 ];
 
-export const SurgeryUrgency: { value: number; key: number; text: 'Urgent' | 'Elective' | 'Emergent'}[] = [
-  { value: 0, key: 0, text: 'Urgent' },
-  { value: 1, key: 1, text: 'Elective' },
-  { value: 2, key: 2, text: 'Emergent' },
+export const SurgeryUrgency: { key: number; value: 'Urgent' | 'Elective' | 'Emergent'}[] = [
+  { key: 0, value: 'Urgent' },
+  { key: 1, value: 'Elective' },
+  { key: 2, value: 'Emergent' },
 ];
-export const SurgeryUrgencyArray = SurgeryUrgency.map((d) => d.text);
+export const SurgeryUrgencyArray = SurgeryUrgency.map((d) => d.value);
 export type SurgeryUrgencyType = 'Urgent' | 'Elective' | 'Emergent' | 'Unknown';
 
 export const AcronymDictionary = {

@@ -50,7 +50,7 @@ function ChartConfigMenu({
     handleClose();
   };
 
-  const OutcomeDropdownOptions = OutcomeOptions.concat({ value: 'NONE', key: 'NONE', text: 'None' });
+  const OutcomeDropdownOptions = OutcomeOptions.concat({ key: 'NONE', value: 'None' });
 
   return (
     <>
@@ -69,7 +69,7 @@ function ChartConfigMenu({
           parentMenuOpen={open}
         >
           {addOptions[chartTypeIndexinArray][1].map((option) => (
-            <MenuItem key={option.key} onClick={() => { changeXAxis(option.key as keyof typeof AcronymDictionary); }}>{option.text}</MenuItem>
+            <MenuItem key={option.key} onClick={() => { changeXAxis(option.key as keyof typeof AcronymDictionary); }}>{option.value}</MenuItem>
           ))}
         </NestedMenuItem>
         {requireSecondary ? (
@@ -78,7 +78,7 @@ function ChartConfigMenu({
             parentMenuOpen={open}
           >
             {addOptions[chartTypeIndexinArray][0].map((option) => (
-              <MenuItem key={option.key} onClick={() => { changeYAxis(option.key as keyof typeof BloodProductCap); }}>{option.text}</MenuItem>
+              <MenuItem key={option.key} onClick={() => { changeYAxis(option.key as keyof typeof BloodProductCap); }}>{option.value}</MenuItem>
             ))}
             {chartTypeIndexinArray === 0 ? <MenuItem key="NONE" onClick={() => { changeYAxis(''); }}>None</MenuItem> : null}
           </NestedMenuItem>
@@ -89,7 +89,7 @@ function ChartConfigMenu({
             parentMenuOpen={open}
           >
             {OutcomeDropdownOptions.map((option) => (
-              <MenuItem key={option.key} onClick={() => { changeOutcome(option.key as keyof typeof AcronymDictionary | 'NONE'); }}>{option.text}</MenuItem>
+              <MenuItem key={option.key} onClick={() => { changeOutcome(option.key as keyof typeof AcronymDictionary | 'NONE'); }}>{option.value}</MenuItem>
             ))}
           </NestedMenuItem>
         ) : []}

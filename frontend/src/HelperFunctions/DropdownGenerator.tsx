@@ -3,9 +3,9 @@ import { DropdownInputTypes } from '../Interfaces/Types/DropdownInputType';
 
 export const DropdownGenerator = (input: DropdownInputTypes[], withNone?: boolean) => {
   let output = input.map((d) => (
-    <MenuItem value={d.value} key={d.key}>
+    <MenuItem value={d.key} key={d.key}>
       {' '}
-      {d.text}
+      {d.value}
       {' '}
     </MenuItem>
   ));

@@ -53,7 +53,7 @@ function CaseInfo() {
 
         finalResult = Object.assign(finalResult, currentSelectPatient);
 
-        const outcomeAttributes = ['DEATH', 'ECMO', 'STROKE', 'VENT', 'AMICAR', 'TXA', 'B12'];
+        const outcomeAttributes = ['DEATH', 'ECMO', 'STROKE', 'VENT', 'AMICAR', 'TXA', 'B12', 'IRON'];
         outcomeAttributes.forEach((attribute) => {
           finalResult[attribute] = finalResult[attribute] === 0 ? 'No' : 'Yes';
         });

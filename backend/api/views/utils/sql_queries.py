@@ -163,13 +163,15 @@ surgery_case_query = rf"""
             VISIT_NO,
             CASE WHEN SUM(TXA) > 0 THEN 1 ELSE 0 END AS TXA,
             CASE WHEN SUM(AMICAR) > 0 THEN 1 ELSE 0 END AS AMICAR,
-            CASE WHEN SUM(B12) > 0 THEN 1 ELSE 0 END AS B12
+            CASE WHEN SUM(B12) > 0 THEN 1 ELSE 0 END AS B12,
+            CASE WHEN SUM(IRON) > 0 THEN 1 ELSE 0 END AS IRON
         FROM (
             (SELECT
                 VISIT_NO,
                 SUM(CASE WHEN lower(MEDICATION_NAME) like '%%tranexamic%%' or lower(MEDICATION_NAME) like '%%txa%%' THEN 1 ELSE 0 END) AS TXA,
                 SUM(CASE WHEN lower(MEDICATION_NAME) like '%%amicar%%' or lower(MEDICATION_NAME) like '%%aminocaproic%%' or lower(MEDICATION_NAME) like '%%eaca%%' THEN 1 ELSE 0 END) AS AMICAR,
-                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%b12%%' or lower(MEDICATION_NAME) like '%%cobalamin%%'  THEN 1 ELSE 0 END) AS B12
+                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%b12%%' or lower(MEDICATION_NAME) like '%%cobalamin%%' THEN 1 ELSE 0 END) AS B12,
+                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%iron%%' or lower(MEDICATION_NAME) like '%%ferric%%' or lower(MEDICATION_NAME) like '%%ferrous%%' THEN 1 ELSE 0 END) AS IRON
             FROM
                 {TABLES.get('intraop_meds')}
             group by VISIT_NO
@@ -179,7 +181,8 @@ surgery_case_query = rf"""
                 VISIT_NO,
                 SUM(CASE WHEN lower(MEDICATION_NAME) like '%%tranexamic%%' or lower(MEDICATION_NAME) like '%%txa%%' THEN 1 ELSE 0 END) AS TXA,
                 SUM(CASE WHEN lower(MEDICATION_NAME) like '%%amicar%%' or lower(MEDICATION_NAME) like '%%aminocaproic%%' or lower(MEDICATION_NAME) like '%%eaca%%' THEN 1 ELSE 0 END) AS AMICAR,
-                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%b12%%' or lower(MEDICATION_NAME) like '%%cobalamin%%'  THEN 1 ELSE 0 END) AS B12
+                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%b12%%' or lower(MEDICATION_NAME) like '%%cobalamin%%' THEN 1 ELSE 0 END) AS B12,
+                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%iron%%' or lower(MEDICATION_NAME) like '%%ferric%%' or lower(MEDICATION_NAME) like '%%ferrous%%' THEN 1 ELSE 0 END) AS IRON
             FROM
                 {TABLES.get('extraop_meds')}
             group by VISIT_NO
@@ -353,6 +356,7 @@ surgery_case_query = rf"""
         MEDS.TXA,
         MEDS.B12,
         MEDS.AMICAR,
+        MEDS.IRON,
         SURG.SURGERY_TYPE_DESC
     FROM
         {TABLES.get('surgery_case')} SURG

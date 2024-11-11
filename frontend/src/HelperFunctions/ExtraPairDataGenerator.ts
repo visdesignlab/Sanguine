@@ -3,8 +3,9 @@ import {
   median, max, mean, sum,
 } from 'd3';
 import { create as createpd } from 'pdfast';
-import { SingleCasePoint, BasicAggregatedDatePoint, ExtraPairPoint } from '../Interfaces/Types/DataTypes';
-import { AcronymDictionary } from '../Presets/DataDict';
+import {
+  SingleCasePoint, BasicAggregatedDatePoint, ExtraPairPoint, ExtendedExtraPairPoint,
+} from '../Interfaces/Types/DataTypes';
 
 const outcomeDataGenerate = (aggregatedBy: string, name: string, label: string, data: BasicAggregatedDatePoint[], hemoglobinDataSet: SingleCasePoint[]) => {
   const temporaryDataHolder: any = {};
@@ -29,7 +30,6 @@ const outcomeDataGenerate = (aggregatedBy: string, name: string, label: string, 
   }) as ExtraPairPoint;
 };
 
-type ExtendedExtraPairPoint = Omit<ExtraPairPoint, 'name'> & { name: keyof typeof AcronymDictionary | 'TOTAL_TRANS' | 'PER_CASE' | 'ZERO_TRANS' };
 export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: BasicAggregatedDatePoint[]) => {
   const newExtraPairData: ExtendedExtraPairPoint[] = [];
   if (extraPairArray.length > 0) {
@@ -88,6 +88,9 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
           break;
         case 'TXA':
           newExtraPairData.push(outcomeDataGenerate(aggregatedBy, 'TXA', 'TXA', data, hemoglobinDataSet));
+          break;
+        case 'IRON':
+          newExtraPairData.push(outcomeDataGenerate(aggregatedBy, 'IRON', 'Iron', data, hemoglobinDataSet));
           break;
 
         case 'RISK':
