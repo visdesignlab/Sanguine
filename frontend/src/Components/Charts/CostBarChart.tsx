@@ -11,9 +11,9 @@ import {
 import { scaleBand } from 'd3';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import {
-  BloodProductCap, ExtraPairPadding, ExtraPairWidth, MIN_HEATMAP_BANDWIDTH, OffsetDict, postopColor, preopColor,
+  ExtraPairPadding, ExtraPairWidth, MIN_HEATMAP_BANDWIDTH, OffsetDict, postopColor, preopColor,
 } from '../../Presets/Constants';
-import { AcronymDictionary, BloodComponentOptions } from '../../Presets/DataDict';
+import { Aggregation, BloodComponentOptions, Outcome } from '../../Presets/DataDict';
 import { ChartWrapperContainer, ChartAccessoryDiv } from '../../Presets/StyledComponents';
 import AnnotationForm from './ChartAccessories/AnnotationForm';
 import CostInputDialog from '../Modals/CostInputDialog';
@@ -47,17 +47,17 @@ type CostBarDataPoint = {
 };
 
 type Props = {
-  xAggregationOption: keyof typeof BloodProductCap;
+  yAxisVar: Aggregation;
   chartId: string;
   annotationText: string;
   layoutW: number;
   layoutH: number;
-  comparisonOption?: keyof typeof AcronymDictionary;
+  comparisonOption?: Outcome;
   extraPairArrayString: string;
 };
 
 function WrapperCostBar({
-  annotationText, extraPairArrayString, xAggregationOption, chartId, layoutH, layoutW, comparisonOption,
+  annotationText, extraPairArrayString, yAxisVar, chartId, layoutH, layoutW, comparisonOption,
 }: Props) {
   const store = useContext(Store);
   const { filteredCases } = store;
@@ -95,11 +95,11 @@ function WrapperCostBar({
         resizeObserver.unobserve(target);
       }
     };
-  }, [xAggregationOption, layoutH, layoutW, store.mainCompWidth, chartDiv]);
+  }, [yAxisVar, layoutH, layoutW, store.mainCompWidth, chartDiv]);
 
   // Bar click listener
   const barClick = (eventType: string, clickedElement: unknown) => {
-    store.selectionStore.selectSet(xAggregationOption, (clickedElement as CostBarDataPoint).rowLabel[0].toString(), true);
+    store.selectionStore.selectSet(yAxisVar, (clickedElement as CostBarDataPoint).rowLabel[0].toString(), true);
   };
 
   const [showPotential, setShowPotential] = useState(false);
@@ -176,8 +176,8 @@ function WrapperCostBar({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [extraPairArrayString]);
-  const extraPairData = useMemo(() => generateExtrapairPlotData(xAggregationOption, filteredCases, extraPairArray, data), [xAggregationOption, filteredCases, extraPairArray, data]);
-  const secondaryExtraPairData = generateExtrapairPlotData(xAggregationOption, filteredCases, extraPairArray, secondaryData);
+  const extraPairData = useMemo(() => generateExtrapairPlotData(yAxisVar, filteredCases, extraPairArray, data), [yAxisVar, filteredCases, extraPairArray, data]);
+  const secondaryExtraPairData = generateExtrapairPlotData(yAxisVar, filteredCases, extraPairArray, secondaryData);
   const extraPairTotalWidth = useMemo(() => extraPairData.map((pair) => ExtraPairWidth[pair.type] + ExtraPairPadding).reduce((a, b) => a + b, 0), [extraPairData]);
 
   const makeDataObj = (dataItem: TempDataItem) => {
@@ -201,9 +201,9 @@ function WrapperCostBar({
   const currentOffset = OffsetDict.regular;
   const [xVals, setXVals] = useState<string[]>([]);
   useDeepCompareEffect(() => {
-    const [tempxVals, _] = sortHelper(data, xAggregationOption, store.provenanceState.showZero, secondaryData);
+    const [tempxVals, _] = sortHelper(data, yAxisVar, store.provenanceState.showZero, secondaryData);
     setXVals(tempxVals);
-  }, [data, xAggregationOption, secondaryData]);
+  }, [data, yAxisVar, secondaryData]);
 
   const aggregationScale = useCallback(() => {
     const aggScale = scaleBand()
@@ -222,9 +222,9 @@ function WrapperCostBar({
     const secondaryOutputData: CostBarChartDataPoint[] = [];
 
     filteredCases.forEach((singleCase: SingleCasePoint) => {
-      if (!temporaryDataHolder[singleCase[xAggregationOption]]) {
-        temporaryDataHolder[singleCase[xAggregationOption]] = {
-          aggregateAttribute: singleCase[xAggregationOption],
+      if (!temporaryDataHolder[singleCase[yAxisVar]]) {
+        temporaryDataHolder[singleCase[yAxisVar]] = {
+          aggregateAttribute: singleCase[yAxisVar],
           PRBC_UNITS: 0,
           FFP_UNITS: 0,
           CRYO_UNITS: 0,
@@ -234,8 +234,8 @@ function WrapperCostBar({
           SALVAGE_USAGE: 0,
           caseIDList: new Set(),
         };
-        secondaryTemporaryDataHolder[singleCase[xAggregationOption]] = {
-          aggregateAttribute: singleCase[xAggregationOption],
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]] = {
+          aggregateAttribute: singleCase[yAxisVar],
           PRBC_UNITS: 0,
           FFP_UNITS: 0,
           CRYO_UNITS: 0,
@@ -247,23 +247,23 @@ function WrapperCostBar({
         };
       }
       if (comparisonOption && singleCase[comparisonOption] as number > 0) {
-        secondaryTemporaryDataHolder[singleCase[xAggregationOption]].PRBC_UNITS += singleCase.PRBC_UNITS;
-        secondaryTemporaryDataHolder[singleCase[xAggregationOption]].FFP_UNITS += singleCase.FFP_UNITS;
-        secondaryTemporaryDataHolder[singleCase[xAggregationOption]].CRYO_UNITS += singleCase.CRYO_UNITS;
-        secondaryTemporaryDataHolder[singleCase[xAggregationOption]].PLT_UNITS += singleCase.PLT_UNITS;
-        secondaryTemporaryDataHolder[singleCase[xAggregationOption]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
-        secondaryTemporaryDataHolder[singleCase[xAggregationOption]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0);
-        secondaryTemporaryDataHolder[singleCase[xAggregationOption]].caseNum += 1;
-        secondaryTemporaryDataHolder[singleCase[xAggregationOption]].caseIDList.add(singleCase.CASE_ID);
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].PRBC_UNITS += singleCase.PRBC_UNITS;
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].FFP_UNITS += singleCase.FFP_UNITS;
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].CRYO_UNITS += singleCase.CRYO_UNITS;
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].PLT_UNITS += singleCase.PLT_UNITS;
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0);
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].caseNum += 1;
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].caseIDList.add(singleCase.CASE_ID);
       } else {
-        temporaryDataHolder[singleCase[xAggregationOption]].PRBC_UNITS += singleCase.PRBC_UNITS;
-        temporaryDataHolder[singleCase[xAggregationOption]].FFP_UNITS += singleCase.FFP_UNITS;
-        temporaryDataHolder[singleCase[xAggregationOption]].CRYO_UNITS += singleCase.CRYO_UNITS;
-        temporaryDataHolder[singleCase[xAggregationOption]].PLT_UNITS += singleCase.PLT_UNITS;
-        temporaryDataHolder[singleCase[xAggregationOption]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
-        temporaryDataHolder[singleCase[xAggregationOption]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0);
-        temporaryDataHolder[singleCase[xAggregationOption]].caseNum += 1;
-        temporaryDataHolder[singleCase[xAggregationOption]].caseIDList.add(singleCase.CASE_ID);
+        temporaryDataHolder[singleCase[yAxisVar]].PRBC_UNITS += singleCase.PRBC_UNITS;
+        temporaryDataHolder[singleCase[yAxisVar]].FFP_UNITS += singleCase.FFP_UNITS;
+        temporaryDataHolder[singleCase[yAxisVar]].CRYO_UNITS += singleCase.CRYO_UNITS;
+        temporaryDataHolder[singleCase[yAxisVar]].PLT_UNITS += singleCase.PLT_UNITS;
+        temporaryDataHolder[singleCase[yAxisVar]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
+        temporaryDataHolder[singleCase[yAxisVar]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0);
+        temporaryDataHolder[singleCase[yAxisVar]].caseNum += 1;
+        temporaryDataHolder[singleCase[yAxisVar]].caseIDList.add(singleCase.CASE_ID);
       }
     });
     let totalCaseCountTemp = 0;
@@ -298,7 +298,7 @@ function WrapperCostBar({
     }
     store.chartStore.totalAggregatedCaseCount = totalCaseCountTemp + secondaryCaseCountTemp;
     stateUpdateWrapperUseJSON(data, outputData, setData);
-  }, [proceduresSelection, rawDateRange, xAggregationOption, currentOutputFilterSet, BloodProductCost, filteredCases, comparisonOption]);
+  }, [proceduresSelection, rawDateRange, yAxisVar, currentOutputFilterSet, BloodProductCost, filteredCases, comparisonOption]);
 
   const spec = useMemo(() => ({
     $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
@@ -399,12 +399,12 @@ function WrapperCostBar({
         </FormControl>
         <ExtraPairButtons disbleButton={dimensionWidth * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
         <ChartConfigMenu
-          xAggregationOption={xAggregationOption}
-          yValueOption=""
-          chartTypeIndexinArray={0}
+          yAxisVar={yAxisVar}
+          xAxisVar="COST"
+          chartTypeIndexinArray={3}
           chartId={chartId}
-          requireOutcome={false}
-          requireSecondary
+          yChangeable
+          outcomeChangeable
         />
         <Tooltip title="Change blood component cost">
           <IconButton size="small" onClick={handleClick}>

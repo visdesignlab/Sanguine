@@ -3,7 +3,9 @@ import { defaultState } from '../DefaultState';
 import { ActionEvents } from '../Types/EventTypes';
 import { LayoutElement } from '../Types/LayoutTypes';
 import { ApplicationState } from '../Types/StateTypes';
-import { BloodComponentOptions, ScatterYOptions } from '../../Presets/DataDict';
+import {
+  BLOOD_COMPONENTS, BloodComponent, BloodComponentOptions, HEMO_OPTIONS, HemoOption, ScatterYOptions,
+} from '../../Presets/DataDict';
 
 // Load in a preset of layout elements
 export const loadPreset = createAction<ApplicationState, [LayoutElement[]], ActionEvents>((state, input) => {
@@ -32,14 +34,14 @@ export const changeSurgeryUrgencySelection = createAction<ApplicationState, [[bo
   state.surgeryUrgencySelection = surgeryUrgencyInput;
 }).setLabel('changeUrgency');
 
-export const changeBloodFilter = createAction<ApplicationState, [string, [number, number]], ActionEvents>((state, bloodComponentName, newRange) => {
+export const changeBloodFilter = createAction<ApplicationState, [BloodComponent | HemoOption, [number, number]], ActionEvents>((state, bloodComponentName, newRange) => {
   state.bloodFilter[bloodComponentName] = newRange;
 }).setLabel('changeBloodFilter');
 
 export const resetBloodFilter = createAction<ApplicationState, [typeof BloodComponentOptions | typeof ScatterYOptions], ActionEvents>((state, type) => {
   const toUpdate: Record<string, [number, number]> = {};
   const typeKeys = type.map((d) => d.key);
-  Object.keys(state.bloodFilter).forEach((key) => {
+  [...BLOOD_COMPONENTS, ...HEMO_OPTIONS].forEach((key) => {
     if (typeKeys.includes(key)) {
       toUpdate[key] = defaultState.bloodFilter[key];
     }

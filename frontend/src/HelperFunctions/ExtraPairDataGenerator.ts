@@ -4,7 +4,7 @@ import {
 } from 'd3';
 import { create as createpd } from 'pdfast';
 import {
-  SingleCasePoint, BasicAggregatedDatePoint, ExtraPairPoint, ExtendedExtraPairPoint,
+  SingleCasePoint, BasicAggregatedDatePoint, ExtraPairPoint,
 } from '../Interfaces/Types/DataTypes';
 
 const outcomeDataGenerate = (aggregatedBy: string, name: string, label: string, data: BasicAggregatedDatePoint[], hemoglobinDataSet: SingleCasePoint[]) => {
@@ -31,7 +31,7 @@ const outcomeDataGenerate = (aggregatedBy: string, name: string, label: string, 
 };
 
 export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: BasicAggregatedDatePoint[]) => {
-  const newExtraPairData: ExtendedExtraPairPoint[] = [];
+  const newExtraPairData: ExtraPairPoint[] = [];
   if (extraPairArray.length > 0) {
     extraPairArray.forEach((variable: string) => {
       const newData = {} as any;

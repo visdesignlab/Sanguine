@@ -18,14 +18,14 @@ type Props = {
     dimensionHeight: number;
     dimensionWidth: number;
     extraPairTotalWidth: number;
-    yValueOption: keyof typeof AcronymDictionary | keyof typeof BloodProductCap;
+    yAxisVar: keyof typeof AcronymDictionary | keyof typeof BloodProductCap;
     valueScaleDomain: string;
     valueScaleRange: string;
-    xAggregationOption: keyof typeof BloodProductCap;
+    xAxisVar: keyof typeof BloodProductCap;
     isValueScaleBand: boolean;
 };
 function HeatMapAxis({
-  svg, currentOffset, extraPairTotalWidth, xVals, dimensionHeight, yValueOption, valueScaleRange, valueScaleDomain, xAggregationOption, dimensionWidth, isValueScaleBand,
+  svg, currentOffset, extraPairTotalWidth, xVals, dimensionHeight, yAxisVar, valueScaleRange, valueScaleDomain, xAxisVar, dimensionWidth, isValueScaleBand,
 }: Props) {
   const store = useContext(Store);
   const aggregationScale = useCallback(() => AggregationScaleGenerator(xVals, dimensionHeight, currentOffset), [dimensionHeight, xVals, currentOffset]);
@@ -37,7 +37,7 @@ function HeatMapAxis({
   let valueLabel;
   if (isValueScaleBand) {
     // eslint-disable-next-line no-nested-ternary, @typescript-eslint/no-explicit-any
-    valueLabel = axisBottom(valueScale() as ScaleBand<string>).tickFormat((d, i) => (yValueOption === 'CELL_SAVER_ML' ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[yValueOption as any as keyof typeof BloodProductCap] as any ? `${d}+` : d)));
+    valueLabel = axisBottom(valueScale() as ScaleBand<string>).tickFormat((d, i) => (yAxisVar === 'CELL_SAVER_ML' ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[yAxisVar as any as keyof typeof BloodProductCap] as any ? `${d}+` : d)));
   } else {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     valueLabel = axisBottom(valueScale() as any);
@@ -59,7 +59,7 @@ function HeatMapAxis({
     .attr('cursor', 'pointer')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .on('click', (e, d: any) => {
-      store.selectionStore.selectSet(xAggregationOption, d.toString(), !e.shiftKey);
+      store.selectionStore.selectSet(xAxisVar, d.toString(), !e.shiftKey);
     });
 
   svgSelection
@@ -83,7 +83,7 @@ function HeatMapAxis({
     .attr('font-size', store.configStore.largeFont ? largeFontSize : regularFontSize)
     .attr('text-anchor', 'middle')
     .attr('transform', `translate(${extraPairTotalWidth},0)`)
-    .text(() => (AcronymDictionary[yValueOption] ? AcronymDictionary[yValueOption] : yValueOption));
+    .text(() => (AcronymDictionary[yAxisVar] ? AcronymDictionary[yAxisVar] : yAxisVar));
 
   svgSelection
     .select('.y-label')
@@ -94,7 +94,7 @@ function HeatMapAxis({
     .attr('alignment-baseline', 'hanging')
     .attr('transform', `translate(${extraPairTotalWidth},0)`)
     .text(
-      AcronymDictionary[xAggregationOption] ? AcronymDictionary[xAggregationOption] : xAggregationOption,
+      AcronymDictionary[xAxisVar] ? AcronymDictionary[xAxisVar] : xAxisVar,
     );
 
   return (

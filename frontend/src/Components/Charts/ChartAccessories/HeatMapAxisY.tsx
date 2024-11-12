@@ -2,11 +2,12 @@ import { axisLeft, select } from 'd3';
 import { RefObject, useCallback, useContext } from 'react';
 import { observer } from 'mobx-react';
 import {
-  BloodProductCap, CaseRectWidth, largeFontSize, regularFontSize,
+  CaseRectWidth, largeFontSize, regularFontSize,
 } from '../../../Presets/Constants';
 import { AggregationScaleGenerator } from '../../../HelperFunctions/Scales';
 import { Offset } from '../../../Interfaces/Types/OffsetType';
 import Store from '../../../Interfaces/Store';
+import { Aggregation } from '../../../Presets/DataDict';
 
 type Props = {
     svg: RefObject<SVGSVGElement>;
@@ -14,10 +15,10 @@ type Props = {
     xVals: string[];
     dimensionHeight: number;
     extraPairTotalWidth: number;
-    xAggregationOption: keyof typeof BloodProductCap;
+    yAxisVar: Aggregation;
 };
 function HeatMapAxis({
-  svg, currentOffset, extraPairTotalWidth, xVals, dimensionHeight, xAggregationOption,
+  svg, currentOffset, extraPairTotalWidth, xVals, dimensionHeight, yAxisVar,
 }: Props) {
   const store = useContext(Store);
   const aggregationScale = useCallback(() => AggregationScaleGenerator(xVals, dimensionHeight, currentOffset), [dimensionHeight, xVals, currentOffset]);
@@ -42,7 +43,7 @@ function HeatMapAxis({
     .attr('cursor', 'pointer')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .on('click', (e, d: any) => {
-      store.selectionStore.selectSet(xAggregationOption, d.toString(), !e.shiftKey);
+      store.selectionStore.selectSet(yAxisVar, d.toString(), !e.shiftKey);
     });
 
   return (

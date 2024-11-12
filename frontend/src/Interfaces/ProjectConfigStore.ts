@@ -1,5 +1,7 @@
 import { makeAutoObservable } from 'mobx';
-import { BloodComponentOptions, ScatterYOptions } from '../Presets/DataDict';
+import {
+  BloodComponent, BloodComponentOptions, HemoOption, ScatterYOptions,
+} from '../Presets/DataDict';
 import {
   changeBloodFilter, changeCostConfig, changeOutcomeFilter, changeSurgeryUrgencySelection, clearAllFilter, dateRangeChange, loadPreset, resetBloodFilter, toggleShowZero,
 } from './Actions/ProjectConfigActions';
@@ -100,7 +102,7 @@ export class ProjectConfigStore {
     this.provenance.apply(loadPreset(layoutInput));
   }
 
-  changeBloodFilter(componentName: string, newRange: [number, number]) {
+  changeBloodFilter(componentName: BloodComponent | HemoOption, newRange: [number, number]) {
     this.provenance.apply(changeBloodFilter(componentName, newRange));
   }
 

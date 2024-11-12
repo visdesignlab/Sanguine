@@ -16,22 +16,21 @@ import ChartConfigMenu from '../ChartAccessories/ChartConfigMenu';
 import AnnotationForm from '../ChartAccessories/AnnotationForm';
 import ChartStandardButtons from '../ChartStandardButtons';
 import { ChartAccessoryDiv } from '../../../Presets/StyledComponents';
-import { AcronymDictionary } from '../../../Presets/DataDict';
+import { Aggregation, Outcome } from '../../../Presets/DataDict';
 
 type Props = {
     layoutW: number;
     layoutH: number;
     chartId: string;
     extraPairArrayString: string;
-    xAggregationOption: keyof typeof BloodProductCap;
-    yValueOption: keyof typeof BloodProductCap;
-    chartTypeIndexinArray: number;
-    outcomeComparison?: keyof typeof AcronymDictionary;
+    xAxisVar: keyof typeof BloodProductCap;
+    yAxisVar: Aggregation;
+    outcomeComparison?: Outcome;
     comparisonDate?: number;
     annotationText: string;
 };
 function WrapperHeatMap({
-  annotationText, outcomeComparison, layoutH, layoutW, chartId, extraPairArrayString, xAggregationOption, yValueOption, chartTypeIndexinArray, comparisonDate,
+  annotationText, outcomeComparison, layoutH, layoutW, chartId, extraPairArrayString, yAxisVar, xAxisVar, comparisonDate,
 }: Props) {
   const store = useContext(Store);
 
@@ -57,9 +56,9 @@ function WrapperHeatMap({
   }, [extraPairArrayString]);
 
   useDeepCompareEffect(() => {
-    const newExtraPairData = generateExtrapairPlotData(xAggregationOption, filteredCases, extraPairArray, data);
+    const newExtraPairData = generateExtrapairPlotData(yAxisVar, filteredCases, extraPairArray, data);
     if (outcomeComparison || comparisonDate) {
-      const newSecondaryExtraPairData = generateExtrapairPlotData(xAggregationOption, filteredCases, extraPairArray, secondaryData);
+      const newSecondaryExtraPairData = generateExtrapairPlotData(yAxisVar, filteredCases, extraPairArray, secondaryData);
       stateUpdateWrapperUseJSON(secondaryExtraPairData, newSecondaryExtraPairData, setSecondaryExtraPairData);
     }
     let totalWidth = newExtraPairData.length > 0 ? (newExtraPairData.length + 1) * ExtraPairPadding : 0;
@@ -82,30 +81,30 @@ function WrapperHeatMap({
     const temporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }> = {};
     const secondaryTemporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }> = {};
     filteredCases.forEach((singleCase: SingleCasePoint) => {
-      if (!temporaryDataHolder[singleCase[xAggregationOption]]) {
-        temporaryDataHolder[singleCase[xAggregationOption]] = {
-          aggregateAttribute: singleCase[xAggregationOption],
+      if (!temporaryDataHolder[singleCase[yAxisVar]]) {
+        temporaryDataHolder[singleCase[yAxisVar]] = {
+          aggregateAttribute: singleCase[yAxisVar],
           data: [],
           patientIDList: new Set(),
         };
-        secondaryTemporaryDataHolder[singleCase[xAggregationOption]] = {
-          aggregateAttribute: singleCase[xAggregationOption],
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]] = {
+          aggregateAttribute: singleCase[yAxisVar],
           data: [],
           patientIDList: new Set(),
         };
       }
 
       if ((outcomeComparison && singleCase[outcomeComparison] as number > 0) || (comparisonDate && singleCase.CASE_DATE < comparisonDate)) {
-        secondaryTemporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
-        secondaryTemporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.MRN);
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].data.push(singleCase);
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].patientIDList.add(singleCase.MRN);
       } else {
-        temporaryDataHolder[singleCase[xAggregationOption]].data.push(singleCase);
-        temporaryDataHolder[singleCase[xAggregationOption]].patientIDList.add(singleCase.MRN);
+        temporaryDataHolder[singleCase[yAxisVar]].data.push(singleCase);
+        temporaryDataHolder[singleCase[yAxisVar]].patientIDList.add(singleCase.MRN);
       }
       // }
     });
-    const [tempCaseCount, outputData] = generateRegularData(temporaryDataHolder, store.provenanceState.showZero, yValueOption);
-    const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, store.provenanceState.showZero, yValueOption);
+    const [tempCaseCount, outputData] = generateRegularData(temporaryDataHolder, store.provenanceState.showZero, xAxisVar);
+    const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, store.provenanceState.showZero, xAxisVar);
     stateUpdateWrapperUseJSON(data, outputData, setData);
     stateUpdateWrapperUseJSON(secondaryData, secondOutputData, setSecondaryData);
     store.chartStore.totalAggregatedCaseCount = (tempCaseCount as number) + (secondCaseCount as number);
@@ -114,8 +113,8 @@ function WrapperHeatMap({
   }, [proceduresSelection, surgeryUrgencySelection, store.provenanceState.outcomeFilter,
     rawDateRange,
     store.provenanceState.showZero,
-    xAggregationOption,
-    yValueOption,
+    yAxisVar,
+    xAxisVar,
     outcomeComparison,
     comparisonDate,
     filteredCases]);
@@ -126,12 +125,13 @@ function WrapperHeatMap({
         {`Heatmap${(outcomeComparison || comparisonDate) ? ' with Comparison' : ''}`}
         <ExtraPairButtons disbleButton={width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
         <ChartConfigMenu
-          xAggregationOption={xAggregationOption}
-          yValueOption={yValueOption}
-          chartTypeIndexinArray={chartTypeIndexinArray}
+          yAxisVar={yAxisVar}
+          xAxisVar={xAxisVar}
+          chartTypeIndexinArray={2}
           chartId={chartId}
-          requireOutcome
-          requireSecondary
+          xChangeable
+          yChangeable
+          outcomeChangeable
         />
         <ChartStandardButtons chartID={chartId} />
 
@@ -144,8 +144,8 @@ function WrapperHeatMap({
             data={data}
             svg={svgRef}
             extraPairTotalWidth={extraPairTotalWidth}
-            xAggregationOption={xAggregationOption}
-            yValueOption={yValueOption}
+            yAxisVar={yAxisVar}
+            xAxisVar={xAxisVar}
             chartId={chartId}
             extraPairDataSet={extraPairData}
             secondaryExtraPairDataSet={(outcomeComparison || comparisonDate) ? secondaryExtraPairData : undefined}

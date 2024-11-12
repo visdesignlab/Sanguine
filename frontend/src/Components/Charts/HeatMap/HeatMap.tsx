@@ -21,7 +21,7 @@ import GeneratorExtraPair from '../ChartAccessories/ExtraPairPlots/GeneratorExtr
 import ComparisonLegend from '../ChartAccessories/ComparisonLegend';
 import HeatMapAxisX from '../ChartAccessories/HeatMapAxisX';
 import HeatMapAxisY from '../ChartAccessories/HeatMapAxisY';
-import { AcronymDictionary } from '../../../Presets/DataDict';
+import { Aggregation, Outcome } from '../../../Presets/DataDict';
 
 export const outputGradientLegend = (showZero: boolean, dimensionWidth: number) => {
   if (!showZero) {
@@ -33,8 +33,8 @@ export const outputGradientLegend = (showZero: boolean, dimensionWidth: number) 
 type Props = {
     dimensionWidth: number;
     dimensionHeight: number;
-    xAggregationOption: keyof typeof BloodProductCap;
-    yValueOption: keyof typeof BloodProductCap;
+    xAxisVar: keyof typeof BloodProductCap;
+    yAxisVar: Aggregation;
     chartId: string;
     data: HeatMapDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
@@ -45,11 +45,11 @@ type Props = {
     secondaryExtraPairDataSet?: ExtraPairPoint[];
     firstTotal: number;
     secondTotal: number;
-    outcomeComparison?: keyof typeof AcronymDictionary;
+    outcomeComparison?: Outcome;
 };
 
 function HeatMap({
-  outcomeComparison, interventionDate, secondaryExtraPairDataSet, dimensionHeight, secondaryData, dimensionWidth, xAggregationOption, yValueOption, chartId, data, svg, extraPairDataSet, extraPairTotalWidth, firstTotal, secondTotal,
+  outcomeComparison, interventionDate, secondaryExtraPairDataSet, dimensionHeight, secondaryData, dimensionWidth, yAxisVar, xAxisVar, chartId, data, svg, extraPairDataSet, extraPairTotalWidth, firstTotal, secondTotal,
 }: Props) {
   const store = useContext(Store);
   const currentOffset = OffsetDict.regular;
@@ -57,11 +57,11 @@ function HeatMap({
   const [caseMax, setCaseMax] = useState(0);
 
   useDeepCompareEffect(() => {
-    const [tempxVals, newCaseMax] = sortHelper(data, xAggregationOption, store.provenanceState.showZero, secondaryData);
+    const [tempxVals, newCaseMax] = sortHelper(data, yAxisVar, store.provenanceState.showZero, secondaryData);
     stateUpdateWrapperUseJSON(xVals, tempxVals, setXVals);
     setCaseMax(newCaseMax as number);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, store.provenanceState.showZero, xAggregationOption, secondaryData]);
+  }, [data, store.provenanceState.showZero, yAxisVar, secondaryData]);
 
   const chartHeight = useMemo(() => Math.max(
     dimensionHeight,
@@ -72,13 +72,13 @@ function HeatMap({
 
   const valueScale = useCallback(() => {
     let outputRange;
-    if (yValueOption === 'CELL_SAVER_ML') {
-      outputRange = [-1].concat(range(0, BloodProductCap[yValueOption] + 100, 100));
+    if (xAxisVar === 'CELL_SAVER_ML') {
+      outputRange = [-1].concat(range(0, BloodProductCap[xAxisVar] + 100, 100));
     } else {
-      outputRange = range(0, BloodProductCap[yValueOption] + 1);
+      outputRange = range(0, BloodProductCap[xAxisVar] + 1);
     }
     return ValueScaleGenerator(outputRange, currentOffset, dimensionWidth, extraPairTotalWidth);
-  }, [dimensionWidth, extraPairTotalWidth, yValueOption, currentOffset]);
+  }, [dimensionWidth, extraPairTotalWidth, xAxisVar, currentOffset]);
 
   const innerSvg = useRef<SVGSVGElement | null>(null);
 
@@ -97,7 +97,7 @@ function HeatMap({
             xVals={xVals}
             dimensionHeight={chartHeight}
             extraPairTotalWidth={extraPairTotalWidth}
-            xAggregationOption={xAggregationOption}
+            yAxisVar={yAxisVar}
           />
           <g>
             {data.map((dataPoint, idx) => (
@@ -168,10 +168,10 @@ function HeatMap({
         dimensionHeight={dimensionHeight}
         dimensionWidth={dimensionWidth}
         extraPairTotalWidth={extraPairTotalWidth}
-        yValueOption={yValueOption}
+        xAxisVar={xAxisVar}
         valueScaleDomain={JSON.stringify(valueScale().domain())}
         valueScaleRange={JSON.stringify(valueScale().range())}
-        xAggregationOption={xAggregationOption}
+        yAxisVar={yAxisVar}
       />
 
       {/* Make the top elements render on top */}

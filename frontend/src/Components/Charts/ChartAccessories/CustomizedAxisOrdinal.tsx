@@ -11,12 +11,12 @@ import { AxisText, CustomAxisLine, CustomAxisLineBox } from '../../../Presets/St
 import Store from '../../../Interfaces/Store';
 
 function CustomizedAxisOrdinal({
-  numberList, scaleDomain, scaleRange, xAggregationOption,
+  numberList, scaleDomain, scaleRange, xAxisVar,
 }: {
   scaleDomain: string;
   scaleRange: string;
   numberList: { num: number, indexEnding: number; }[];
-  xAggregationOption: string;
+  xAxisVar: string;
 }) {
   const store = useContext(Store);
   const scale = useCallback(() => {
@@ -30,12 +30,12 @@ function CustomizedAxisOrdinal({
   }, [scaleDomain, scaleRange]);
 
   const axisTextOutput = useCallback((input: number) => {
-    if (store.configStore.privateMode && xAggregationOption.includes('PROV_ID')) {
+    if (store.configStore.privateMode && xAxisVar.includes('PROV_ID')) {
       const name = store.providerMappping[input] as string;
       return name ? `${name.slice(0, 1)}${name.slice(1).toLowerCase()}` : input;
     }
     return input;
-  }, [store.configStore.privateMode, store.providerMappping, xAggregationOption]);
+  }, [store.configStore.privateMode, store.providerMappping, xAxisVar]);
 
   return (
     <>

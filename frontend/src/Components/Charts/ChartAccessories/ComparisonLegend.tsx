@@ -6,7 +6,7 @@ import Store from '../../../Interfaces/Store';
 import {
   DifferentialSquareWidth, preopColor, postopColor, OffsetDict, largeFontSize, regularFontSize,
 } from '../../../Presets/Constants';
-import { AcronymDictionary } from '../../../Presets/DataDict';
+import { AcronymDictionary, Outcome } from '../../../Presets/DataDict';
 import { BiggerFontProps } from '../../../Presets/StyledSVGComponents';
 
 const ComparisonDiv = styled.div<BiggerFontProps>`
@@ -19,7 +19,7 @@ type Props = {
     interventionDate?: number;
     firstTotal: number;
     secondTotal: number;
-    outcomeComparison?: keyof typeof AcronymDictionary;
+    outcomeComparison?: Outcome;
 };
 
 function ComparisonLegend({

@@ -7,21 +7,23 @@ import {
 import { observer } from 'mobx-react';
 import Store from '../../../Interfaces/Store';
 import {
-  AcronymDictionary, addOptions, OutcomeOptions, typeDiction,
+  addOptions, Outcome, OutcomeOptions, typeDiction,
 } from '../../../Presets/DataDict';
-import { BloodProductCap } from '../../../Presets/Constants';
+import { xAxisOption, yAxisOption } from '../../../Interfaces/Types/LayoutTypes';
+import { DropdownInputTypes } from '../../../Interfaces/Types/DropdownInputType';
 
 type Props = {
-    xAggregationOption: keyof typeof AcronymDictionary;
-    yValueOption: keyof typeof BloodProductCap | '' | 'POSTOP_HEMO' | 'PREOP_HEMO';
-    chartTypeIndexinArray: number;
-    chartId: string;
-    requireOutcome: boolean;
-    requireSecondary: boolean;
+  xAxisVar: xAxisOption;
+  yAxisVar: yAxisOption;
+  chartTypeIndexinArray: number;
+  chartId: string;
+  xChangeable?: boolean;
+  yChangeable?: boolean;
+  outcomeChangeable?: boolean;
 };
 
 function ChartConfigMenu({
-  xAggregationOption, yValueOption, chartTypeIndexinArray, requireOutcome, chartId, requireSecondary,
+  xAxisVar, yAxisVar, chartTypeIndexinArray, chartId, xChangeable = false, yChangeable = false, outcomeChangeable = false,
 }: Props) {
   const store = useContext(Store);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -35,22 +37,26 @@ function ChartConfigMenu({
     setAnchorEl(null);
   };
 
-  const changeXAxis = (value: keyof typeof AcronymDictionary) => {
-    store.chartStore.changeChart(value, yValueOption, chartId, typeDiction[chartTypeIndexinArray], 'NONE');
+  const changeXAxis = (userInput: DropdownInputTypes) => {
+    const { key } = userInput;
+    store.chartStore.changeChart(key as xAxisOption, yAxisVar, chartId, typeDiction[chartTypeIndexinArray], 'NONE');
     handleClose();
   };
 
-  const changeYAxis = (value: keyof typeof BloodProductCap | '') => {
-    store.chartStore.changeChart(xAggregationOption, value, chartId, typeDiction[chartTypeIndexinArray], 'NONE');
+  const changeYAxis = (userInput: DropdownInputTypes) => {
+    const { key } = userInput;
+    store.chartStore.changeChart(xAxisVar, key as yAxisOption, chartId, typeDiction[chartTypeIndexinArray], 'NONE');
     handleClose();
   };
 
-  const changeOutcome = (value: keyof typeof AcronymDictionary | 'NONE') => {
-    store.chartStore.changeChart(xAggregationOption, yValueOption, chartId, 'HEATMAP', value);
+  const changeOutcome = (userInput: DropdownInputTypes) => {
+    const { key } = userInput;
+    store.chartStore.changeChart(xAxisVar, yAxisVar, chartId, typeDiction[chartTypeIndexinArray], key as Outcome);
     handleClose();
   };
 
-  const OutcomeDropdownOptions = OutcomeOptions.concat({ key: 'NONE', value: 'None' });
+  const noneOption = { key: 'NONE', value: 'None' };
+  const OutcomeDropdownOptions = [...OutcomeOptions, noneOption];
 
   return (
     <>
@@ -64,32 +70,34 @@ function ChartConfigMenu({
         open={open}
         onClose={handleClose}
       >
-        <NestedMenuItem
-          label="Change Aggregation"
-          parentMenuOpen={open}
-        >
-          {addOptions[chartTypeIndexinArray][1].map((option) => (
-            <MenuItem key={option.key} onClick={() => { changeXAxis(option.key as keyof typeof AcronymDictionary); }}>{option.value}</MenuItem>
-          ))}
-        </NestedMenuItem>
-        {requireSecondary ? (
+        {xChangeable ? (
           <NestedMenuItem
-            label="Change Value to Show"
+            label="Change X Axis"
             parentMenuOpen={open}
           >
             {addOptions[chartTypeIndexinArray][0].map((option) => (
-              <MenuItem key={option.key} onClick={() => { changeYAxis(option.key as keyof typeof BloodProductCap); }}>{option.value}</MenuItem>
+              <MenuItem key={option.key} onClick={() => { changeXAxis(option); }}>{option.value}</MenuItem>
             ))}
-            {chartTypeIndexinArray === 0 ? <MenuItem key="NONE" onClick={() => { changeYAxis(''); }}>None</MenuItem> : null}
           </NestedMenuItem>
         ) : []}
-        {requireOutcome ? (
+        {yChangeable ? (
+          <NestedMenuItem
+            label="Change Y Axis"
+            parentMenuOpen={open}
+          >
+            {addOptions[chartTypeIndexinArray][1].map((option) => (
+              <MenuItem key={option.key} onClick={() => { changeYAxis(option); }}>{option.value}</MenuItem>
+            ))}
+            {chartTypeIndexinArray === 0 ? <MenuItem key="NONE" onClick={() => { changeYAxis(noneOption); }}>None</MenuItem> : null}
+          </NestedMenuItem>
+        ) : []}
+        {outcomeChangeable ? (
           <NestedMenuItem
             label="Change Outcome Comparison"
             parentMenuOpen={open}
           >
             {OutcomeDropdownOptions.map((option) => (
-              <MenuItem key={option.key} onClick={() => { changeOutcome(option.key as keyof typeof AcronymDictionary | 'NONE'); }}>{option.value}</MenuItem>
+              <MenuItem key={option.key} onClick={() => { changeOutcome(option); }}>{option.value}</MenuItem>
             ))}
           </NestedMenuItem>
         ) : []}

@@ -7,12 +7,11 @@ import 'react-grid-layout/css/styles.css';
 import { Container, Typography } from '@mui/material';
 import Store from '../Interfaces/Store';
 import { LayoutElement } from '../Interfaces/Types/LayoutTypes';
-import { AcronymDictionary, typeDiction } from '../Presets/DataDict';
 import WrapperCostBar from './Charts/CostBarChart';
 import WrapperDumbbell from './Charts/DumbbellChart/WrapperDumbbell';
 import WrapperHeatMap from './Charts/HeatMap/WrapperHeatMap';
 import WrapperScatter from './Charts/ScatterPlot/WrapperScatter';
-import { BloodProductCap } from '../Presets/Constants';
+import { isAggregation, isBloodComponent, isHemoOption } from '../Presets/DataDict';
 
 function LayoutGenerator() {
   const store = useContext(Store);
@@ -20,74 +19,84 @@ function LayoutGenerator() {
   const createElement = (layout: LayoutElement) => {
     switch (layout.plotType) {
       case 'DUMBBELL':
-        return (
-          <div key={layout.i} className={`parent-node${layout.i}`}>
-
-            <WrapperDumbbell
-              layoutW={layout.w}
-              chartId={layout.i}
-              layoutH={layout.h}
-              xAggregationOption={layout.aggregatedBy as keyof typeof AcronymDictionary}
-              annotationText={layout.notation}
-            />
-          </div>
-        );
-
-      case 'COST':
-        return (
-          <div
-            key={layout.i}
-            className={`parent-node${layout.i}`}
-          >
-            <WrapperCostBar
-              extraPairArrayString={layout.extraPair || ''}
-              layoutW={layout.w}
-              layoutH={layout.h}
-              xAggregationOption={layout.aggregatedBy as keyof typeof BloodProductCap}
-              chartId={layout.i}
-              comparisonOption={layout.valueToVisualize as keyof typeof BloodProductCap}
-              annotationText={layout.notation}
-            />
-          </div>
-        );
+        if (isAggregation(layout.xAxisVar) || isBloodComponent(layout.xAxisVar)) {
+          return (
+            <div key={layout.i} className={`parent-node${layout.i}`}>
+              <WrapperDumbbell
+                layoutW={layout.w}
+                chartId={layout.i}
+                layoutH={layout.h}
+                xAxisVar={layout.xAxisVar}
+                annotationText={layout.notation}
+              />
+            </div>
+          );
+        }
+        throw new Error('Invalid dumbbell chart variable');
 
       case 'SCATTER':
-        return (
-          <div
-            key={layout.i}
-            className={`parent-node${layout.i}`}
-          >
-            <WrapperScatter
-              xAggregationOption={layout.aggregatedBy as keyof typeof AcronymDictionary}
-              layoutW={layout.w}
-              yValueOption={layout.valueToVisualize as 'PREOP_HEMO' | 'POSTOP_HEMO'}
-              layoutH={layout.h}
-              chartId={layout.i}
-              annotationText={layout.notation}
-            />
-          </div>
-        );
+        if (isBloodComponent(layout.xAxisVar) && isHemoOption(layout.yAxisVar)) {
+          return (
+            <div
+              key={layout.i}
+              className={`parent-node${layout.i}`}
+            >
+              <WrapperScatter
+                xAxisVar={layout.xAxisVar}
+                layoutW={layout.w}
+                yAxisVar={layout.yAxisVar}
+                layoutH={layout.h}
+                chartId={layout.i}
+                annotationText={layout.notation}
+              />
+            </div>
+          );
+        }
+        throw new Error('Invalid scatter chart variable');
 
       case 'HEATMAP':
-        return (
-          <div
-            key={layout.i}
-            className={`parent-node${layout.i}`}
-          >
-            <WrapperHeatMap
-              annotationText={layout.notation}
-              chartId={layout.i}
-              layoutW={layout.w}
-              layoutH={layout.h}
-              extraPairArrayString={layout.extraPair || ''}
-              xAggregationOption={layout.aggregatedBy as keyof typeof BloodProductCap}
-              yValueOption={layout.valueToVisualize as keyof typeof BloodProductCap}
-              chartTypeIndexinArray={typeDiction.indexOf(layout.plotType)}
-              comparisonDate={layout.outcomeComparison ? undefined : layout.interventionDate}
-              outcomeComparison={layout.outcomeComparison === '' ? undefined : layout.outcomeComparison}
-            />
-          </div>
-        );
+        if (isBloodComponent(layout.xAxisVar) && isAggregation(layout.yAxisVar)) {
+          return (
+            <div
+              key={layout.i}
+              className={`parent-node${layout.i}`}
+            >
+              <WrapperHeatMap
+                annotationText={layout.notation}
+                chartId={layout.i}
+                layoutW={layout.w}
+                layoutH={layout.h}
+                extraPairArrayString={layout.extraPair || ''}
+                xAxisVar={layout.xAxisVar}
+                yAxisVar={layout.yAxisVar}
+                comparisonDate={layout.outcomeComparison ? undefined : layout.interventionDate}
+                outcomeComparison={layout.outcomeComparison}
+              />
+            </div>
+          );
+        }
+        throw new Error('Invalid heatmap chart variable');
+
+      case 'COST':
+        if (isAggregation(layout.yAxisVar)) {
+          return (
+            <div
+              key={layout.i}
+              className={`parent-node${layout.i}`}
+            >
+              <WrapperCostBar
+                extraPairArrayString={layout.extraPair || ''}
+                layoutW={layout.w}
+                layoutH={layout.h}
+                yAxisVar={layout.yAxisVar}
+                chartId={layout.i}
+                comparisonOption={layout.outcomeComparison}
+                annotationText={layout.notation}
+              />
+            </div>
+          );
+        }
+        throw new Error('Invalid cost chart variable');
 
       default:
         return null;

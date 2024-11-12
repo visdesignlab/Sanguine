@@ -1,9 +1,8 @@
 import { createAction } from '@visdesignlab/trrack';
 import { ActionEvents } from '../Types/EventTypes';
-import { LayoutElement } from '../Types/LayoutTypes';
+import { LayoutElement, xAxisOption, yAxisOption } from '../Types/LayoutTypes';
 import { ApplicationState } from '../Types/StateTypes';
-import { BloodProductCap } from '../../Presets/Constants';
-import { AcronymDictionary } from '../../Presets/DataDict';
+import { Outcome } from '../../Presets/DataDict';
 
 export const addExtraPair = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, newExtraPair) => {
   state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
@@ -60,14 +59,14 @@ export const onLayoutChange = createAction<ApplicationState, [ReactGridLayout.La
   state.layoutArray = JSON.parse(JSON.stringify(state.layoutArray));
 }).setLabel('LayoutChange');
 
-export const changeChart = createAction<ApplicationState, [keyof typeof AcronymDictionary, keyof typeof BloodProductCap | '' | 'POSTOP_HEMO' | 'PREOP_HEMO', string, string, keyof typeof AcronymDictionary | 'NONE'], ActionEvents>((state, xAggregationSelection, yValueSelection, chartIndex, chartType, outcomeComparison?) => {
+export const changeChart = createAction<ApplicationState, [xAxisOption, yAxisOption, string, string, Outcome | 'NONE'], ActionEvents>((state, xAxisSelection, yAxisSelection, chartIndex, chartType, outcomeComparison?) => {
   state.layoutArray = state.layoutArray.map((d) => {
     if (d.i === chartIndex) {
-      d.aggregatedBy = xAggregationSelection;
-      d.valueToVisualize = yValueSelection;
+      d.xAxisVar = xAxisSelection;
+      d.yAxisVar = yAxisSelection;
       d.plotType = chartType;
       if (outcomeComparison) {
-        d.outcomeComparison = outcomeComparison === 'NONE' ? '' : outcomeComparison;
+        d.outcomeComparison = outcomeComparison === 'NONE' ? undefined : outcomeComparison;
       }
     }
     return d;

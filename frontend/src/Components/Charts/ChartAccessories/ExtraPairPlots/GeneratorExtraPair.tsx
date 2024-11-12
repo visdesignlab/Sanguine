@@ -37,7 +37,7 @@ const RemoveTSpan = styled('tspan')`
 `;
 
 interface OwnProps {
-    extraPairDataSet: ExtendedExtraPairPoint[];
+    extraPairDataSet: ExtraPairPoint[];
     secondaryExtraPairDataSet?: ExtendedExtraPairPoint[];
     aggregationScaleDomain: string;
     aggregationScaleRange: string;
@@ -141,8 +141,8 @@ function GeneratorExtraPair({
 
     const tooltipText = (
       <BiggerTooltip>
-        {AcronymDictionary[nameInput] ? `${AcronymDictionary[nameInput]}` : undefined}
-        {AcronymDictionary[nameInput] ? <br /> : null}
+        {AcronymDictionary[nameInput as keyof typeof AcronymDictionary] ? `${AcronymDictionary[nameInput as keyof typeof AcronymDictionary]}` : undefined}
+        {AcronymDictionary[nameInput as keyof typeof AcronymDictionary] ? <br /> : null}
         {explanation}
         {' '}
         <br />

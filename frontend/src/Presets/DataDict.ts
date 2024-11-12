@@ -1,21 +1,40 @@
-export const BloodComponentOptions = [
+export const BLOOD_COMPONENTS = ['PRBC_UNITS', 'FFP_UNITS', 'PLT_UNITS', 'CRYO_UNITS', 'CELL_SAVER_ML'] as const;
+export type BloodComponent = typeof BLOOD_COMPONENTS[number];
+export const BloodComponentOptions: { key: typeof BLOOD_COMPONENTS[number]; value: string }[] = [
   { key: 'PRBC_UNITS', value: 'Intraoperative RBCs Transfused' },
   { key: 'FFP_UNITS', value: 'Intraoperative FFP Transfused' },
   { key: 'PLT_UNITS', value: 'Intraoperative Platelets Transfused' },
   { key: 'CRYO_UNITS', value: 'Intraoperative Cryo Transfused' },
-  { key: 'CELL_SAVER_ML', value: 'Cell Salvage Volume (ml)' }];
+  { key: 'CELL_SAVER_ML', value: 'Cell Salvage Volume (ml)' },
+];
+export function isBloodComponent(str: string): str is BloodComponent {
+  return BLOOD_COMPONENTS.includes(str as BloodComponent);
+}
 
-const AggregationOptions = [
+const _AGGREGATIONS = ['SURGEON_PROV_ID', 'ANESTH_PROV_ID', 'YEAR', 'QUARTER'] as const;
+export type Aggregation = typeof _AGGREGATIONS[number];
+export const AggregationOptions: { key: typeof _AGGREGATIONS[number]; value: string }[] = [
   { key: 'SURGEON_PROV_ID', value: 'Surgeon ID' },
+  { key: 'ANESTH_PROV_ID', value: 'Anesthesiologist ID' },
   { key: 'YEAR', value: 'Year' },
-  { key: 'ANESTH_PROV_ID', value: 'Anesthesiologist ID' }];
+  { key: 'QUARTER', value: 'Quarter' },
+];
+export function isAggregation(str: string): str is Aggregation {
+  return _AGGREGATIONS.includes(str as Aggregation);
+}
 
-export const ScatterYOptions: { value: string; key: 'PREOP_HEMO' | 'POSTOP_HEMO'; }[] = [
+export const HEMO_OPTIONS = ['PREOP_HEMO', 'POSTOP_HEMO'] as const;
+export type HemoOption = typeof HEMO_OPTIONS[number];
+export const ScatterYOptions: { key: HemoOption; value: string; }[] = [
   { key: 'PREOP_HEMO', value: 'Preoperative Hemoglobin Value' },
   { key: 'POSTOP_HEMO', value: 'Postoperative Hemoglobin Value' },
 ];
+export function isHemoOption(str: string): str is HemoOption {
+  return HEMO_OPTIONS.includes(str as HemoOption);
+}
 
 const OUTCOMES = ['DEATH', 'VENT', 'STROKE', 'ECMO', 'B12', 'IRON', 'TXA', 'AMICAR'] as const;
+export type Outcome = typeof OUTCOMES[number];
 export const OutcomeOptions: { key: typeof OUTCOMES[number]; value: string }[] = [
   { key: 'DEATH', value: 'Death' },
   { key: 'VENT', value: 'Ventilator Over 24hr' },
@@ -38,18 +57,16 @@ export const ExtraPairOptions: { key: typeof EXTRA_PAIR_OPTIONS[number]; value: 
   { key: 'RISK', value: 'RISK' },
 ]);
 
-export const dumbbellFacetOptions = BloodComponentOptions.slice(0, 4).concat(AggregationOptions).concat([{ key: 'QUARTER', value: 'Quarter' }]);
-
 const dumbbellValueOptions = [{ key: 'HGB_VALUE', value: 'Hemoglobin Value' }];
 
-export const typeDiction = ['COST', 'DUMBBELL', 'SCATTER', 'HEATMAP', 'INTERVENTION'];
+export const typeDiction = ['DUMBBELL', 'SCATTER', 'HEATMAP', 'COST'];
 
 export const addOptions = [
-  [OutcomeOptions.slice(4, 7), AggregationOptions],
-  [dumbbellValueOptions, dumbbellFacetOptions],
-  [ScatterYOptions, BloodComponentOptions],
-  [BloodComponentOptions, AggregationOptions],
-  [BloodComponentOptions, [AggregationOptions[0], AggregationOptions[2]]],
+  [[...BloodComponentOptions, ...AggregationOptions], dumbbellValueOptions], // Dumbbell chart
+  [BloodComponentOptions, ScatterYOptions], // Scatter plot
+  [BloodComponentOptions, AggregationOptions], // Heatmap
+  [[...BloodComponentOptions, { key: 'COST', value: 'Cost' }], AggregationOptions], // Cost
+  [BloodComponentOptions, [AggregationOptions[0], AggregationOptions[1]]],
 ];
 
 export const SurgeryUrgency: { key: number; value: 'Urgent' | 'Elective' | 'Emergent'}[] = [
@@ -77,6 +94,9 @@ export const AcronymDictionary = {
   DEATH: 'Death in hospital',
   STROKE: 'Stroke',
   TXA: 'Tranexamic Acid',
+  IRON: 'Iron',
+  B12: 'B12',
+  AMICAR: 'Amicar',
   PRBC_UNITS: 'Intraoperative RBCs Transfused',
   FFP_UNITS: 'Intraoperative FFP Transfused',
   PLT_UNITS: 'Intraoperative Platelets Transfused',

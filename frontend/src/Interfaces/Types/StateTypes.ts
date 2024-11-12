@@ -1,3 +1,4 @@
+import { BloodComponent, HemoOption } from '../../Presets/DataDict';
 import { ProcedureEntry, SingleCasePoint } from './DataTypes';
 import { LayoutElement } from './LayoutTypes';
 import { SelectSet } from './SelectionTypes';
@@ -20,7 +21,7 @@ export type ApplicationState = {
     nextAddingIndex: number;
     layoutArray: LayoutElement[];
     currentSelectPatient: SingleCasePoint | null;
-    bloodFilter: Record<string, [number, number]>;
+    bloodFilter: Record<BloodComponent | HemoOption, [number, number]>;
     allCases: SingleCasePoint[];
     setAllCases: (input: SingleCasePoint[]) => void;
     filteredCases: SingleCasePoint[];

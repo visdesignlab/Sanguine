@@ -19,7 +19,7 @@ import SingleDumbbell from './SingleDumbbell';
 
 type Props = {
     data: DumbbellDataPoint[];
-    xAggregationOption: keyof typeof AcronymDictionary;
+    xAxisVar: keyof typeof AcronymDictionary;
     dimensionWidth: number,
     dimensionHeight: number;
     svg: React.RefObject<SVGSVGElement>;
@@ -31,7 +31,7 @@ type Props = {
     showGap: boolean;
 };
 function DumbbellChart({
-  data, xAggregationOption, dimensionHeight, dimensionWidth, svg, xMax, xMin, showGap, showPostop, showPreop, sortMode,
+  data, xAxisVar, dimensionHeight, dimensionWidth, svg, xMax, xMin, showGap, showPostop, showPreop, sortMode,
 }: Props) {
   const [averageForEachTransfused, setAverage] = useState<Record<number | string, { averageStart: number, averageEnd: number }>>({});
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([]);
@@ -109,7 +109,7 @@ function DumbbellChart({
       let currentPreopSum: number[] = [];
       let currentPostopSum: number[] = [];
       const averageDict: Record<number | string, { averageStart?: number, averageEnd?: number }> = {};
-      if (xAggregationOption === 'CELL_SAVER_ML') {
+      if (xAxisVar === 'CELL_SAVER_ML') {
         tempSortedData.forEach((d, i) => {
           currentPreopSum.push(d.startXVal);
           currentPostopSum.push(d.endXVal);
@@ -224,7 +224,7 @@ function DumbbellChart({
     .attr('text-anchor', 'middle')
     .attr('alignment-baseline', 'hanging')
     .text(
-      AcronymDictionary[xAggregationOption] ? AcronymDictionary[xAggregationOption] : xAggregationOption,
+      AcronymDictionary[xAxisVar] ? AcronymDictionary[xAxisVar] : xAxisVar,
     );
   svgSelection.select('.axes')
     .select('.x-axis')
@@ -295,7 +295,7 @@ function DumbbellChart({
       <g className="axes">
         <g className="x-axis" />
         <g className="y-axis" transform={`translate(0,${dimensionHeight - currentOffset.bottom})`}>
-          <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} xAggregationOption={xAggregationOption} />
+          <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} xAxisVar={xAxisVar} />
         </g>
         <text className="x-label" />
         <text className="y-label" />

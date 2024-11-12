@@ -18,7 +18,7 @@ import ChartConfigMenu from '../ChartAccessories/ChartConfigMenu';
 import AnnotationForm from '../ChartAccessories/AnnotationForm';
 import ChartStandardButtons from '../ChartStandardButtons';
 import { ChartAccessoryDiv, ChartWrapperContainer } from '../../../Presets/StyledComponents';
-import { AcronymDictionary } from '../../../Presets/DataDict';
+import { BloodComponent, Aggregation } from '../../../Presets/DataDict';
 
 const ButtonStyles = {
   preopButtonActive: css({
@@ -69,7 +69,7 @@ const DumbbellUtilTitle = styled.div({
 });
 
 type Props = {
-    xAggregationOption: keyof typeof AcronymDictionary;
+    xAxisVar: BloodComponent | Aggregation;
     chartId: string;
     layoutH: number;
     layoutW: number;
@@ -77,7 +77,7 @@ type Props = {
 };
 
 function WrapperDumbbell({
-  annotationText, xAggregationOption, chartId, layoutH, layoutW,
+  annotationText, xAxisVar, chartId, layoutH, layoutW,
 }: Props) {
   const store = useContext(Store);
   const { filteredCases } = store;
@@ -110,10 +110,10 @@ function WrapperDumbbell({
       const preopHgb = ob.PREOP_HEMO;
       const postopHgb = ob.POSTOP_HEMO;
       let yAxisVal;
-      yAxisVal = ob[xAggregationOption] as number;
+      yAxisVal = ob[xAxisVar] as number;
       if (yAxisVal !== undefined && preopHgb > 0 && postopHgb > 0 && !existingCaseID.has(ob.CASE_ID)) {
         if ((showZero) || (!showZero && yAxisVal > 0)) {
-          yAxisVal = bloodComponentOutlierHandler(yAxisVal, xAggregationOption);
+          yAxisVal = bloodComponentOutlierHandler(yAxisVal, xAxisVar);
           tempXMin = preopHgb < tempXMin ? preopHgb : tempXMin;
           tempXMin = postopHgb < tempXMin ? postopHgb : tempXMin;
           tempXMax = preopHgb > tempXMax ? preopHgb : tempXMax;
@@ -136,7 +136,7 @@ function WrapperDumbbell({
     stateUpdateWrapperUseJSON(data, filteredDataOutput, setData);
     setXMin(tempXMin);
     setXMax(tempXMax);
-  }, [rawDateRange, proceduresSelection, filteredCases, xAggregationOption, showZero]);
+  }, [rawDateRange, proceduresSelection, filteredCases, xAxisVar, showZero]);
 
   return (
     <Grid container direction="row" alignItems="center" style={{ height: '100%' }}>
@@ -195,17 +195,16 @@ function WrapperDumbbell({
           <ChartAccessoryDiv>
             Dumbbell Chart
             <ChartConfigMenu
-              xAggregationOption={xAggregationOption}
-              yValueOption={'HGB_VALUE' as never}
-              chartTypeIndexinArray={1}
+              xAxisVar={xAxisVar}
+              yAxisVar={'HGB_VALUE' as never}
+              chartTypeIndexinArray={0}
               chartId={chartId}
-              requireOutcome={false}
-              requireSecondary={false}
+              xChangeable
             />
             <ChartStandardButtons chartID={chartId} />
           </ChartAccessoryDiv>
           <ChartSVG ref={svgRef}>
-            <DumbbellChart data={data} svg={svgRef} showGap={showGap} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} xAggregationOption={xAggregationOption} dimensionWidth={width} dimensionHeight={height} xMin={xMin} xMax={xMax} />
+            <DumbbellChart data={data} svg={svgRef} showGap={showGap} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} xAxisVar={xAxisVar} dimensionWidth={width} dimensionHeight={height} xMin={xMin} xMax={xMax} />
 
           </ChartSVG>
           <AnnotationForm chartI={chartId} annotationText={annotationText} />
