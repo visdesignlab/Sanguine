@@ -26,18 +26,6 @@ export type CostBarChartDataPoint = BasicAggregatedDatePoint & {
     cellSalvageVolume: number;
 };
 
-export type CostCompareChartDataPoint = CostBarChartDataPoint & {
-    withInterDataArray: number[];
-    withInterCaseNum: number;
-    withInterCellSalvageUsage: number;
-    withInterCellSalvageVolume: number;
-};
-
-export type BarChartDataPoint = BasicAggregatedDatePoint & {
-    actualDataPoints: any[];
-    median: number;
-};
-
 export type HeatMapDataPoint = BasicAggregatedDatePoint & {
     countDict: any;
 };
@@ -95,17 +83,3 @@ export type ExtraPairPoint = {
     kdeMax?: number;
 };
 export type ExtendedExtraPairPoint = Omit<ExtraPairPoint, 'name'> & { name: keyof typeof AcronymDictionary | 'TOTAL_TRANS' | 'PER_CASE' | 'ZERO_TRANS' };
-
-export type ExtraPairInterventionPoint = {
-    name: string;
-    totalIntData: any[];
-    preIntData: any[];
-    postIntData: any[];
-    type: string;
-    totalMedianSet?: any;
-    preMedianSet?: any;
-    postMedianSet?: any;
-    label: string;
-    totalKdeMax?: number,
-    halfKdeMax?: number;
-};

@@ -1,34 +1,6 @@
 import { RootStore } from './Store';
 
-export const getUser = () => {
-  const userStr = sessionStorage.getItem('user');
-  if (userStr) return JSON.parse(userStr);
-  return null;
-};
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const tokenCheckCancel = (previousCancelToken: any) => {
-  if (previousCancelToken) {
-    previousCancelToken.cancel('cancel the call');
-  }
-};
-
-export const getToken = () => sessionStorage.getItem('token') || null;
-
-// remove the token and user from the session storage
-export const removeUserSession = () => {
-  sessionStorage.removeItem('token');
-  sessionStorage.removeItem('user');
-};
-
-// set the token and user from the session storage
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const setUserSession = (token: string, user: any) => {
-  sessionStorage.setItem('token', token);
-  sessionStorage.setItem('user', JSON.stringify(user));
-};
-
-export function getCookie(name: string) {
+function getCookie(name: string) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
     const cookies = document.cookie.split(';');

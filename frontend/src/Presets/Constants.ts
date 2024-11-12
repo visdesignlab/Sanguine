@@ -10,7 +10,6 @@ export const greyScaleRange = [0.3, 0.85];
 export const HGB_LOW_STANDARD = 7.5;
 export const SnackBarCloseTime = 5000;
 export const HGB_HIGH_STANDARD = 13;
-export const colorProfile = ['#d7191c', '#abd9e9', '#fdae61', '#2c7bb6', '#e1e100'];
 export const OffsetDict = {
   regular: {
     left: 110, bottom: 40, right: 10, top: 40, margin: 10,
@@ -32,7 +31,6 @@ export const ExtraPairPadding = 10;
 export const CaseRectWidth = 30;
 export const DumbbellMinimumWidth = 18;
 export const DifferentialSquareWidth = 10;
-export const CostExplain = 'Stacked bar chart on the right of the dashed line shows per case cost for each unit types. The bars on the left of the dashed line shows the potential cost on RBC if not using cell salvage. ';
 
 export const BloodProductCap = {
   PRBC_UNITS: 5,
@@ -43,8 +41,6 @@ export const BloodProductCap = {
 };
 
 export const ExtraPairLimit = 5;
-
-export const drawerWidth = 300;
 
 export const ManualInfinity = 5000000000;
 

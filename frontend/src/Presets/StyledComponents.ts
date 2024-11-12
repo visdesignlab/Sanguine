@@ -4,10 +4,6 @@ import {
 import styled from '@emotion/styled';
 import { basicGray } from './Constants';
 
-export const LayoutDiv = styled.div`
-  width: 100vw;
-`;
-
 export const Title = styled.b`
     font-size:large;
 `;

@@ -23,7 +23,7 @@ import HeatMapAxisX from '../ChartAccessories/HeatMapAxisX';
 import HeatMapAxisY from '../ChartAccessories/HeatMapAxisY';
 import { Aggregation, Outcome } from '../../../Presets/DataDict';
 
-export const outputGradientLegend = (showZero: boolean, dimensionWidth: number) => {
+const outputGradientLegend = (showZero: boolean, dimensionWidth: number) => {
   if (!showZero) {
     return <DualColorLegend dimensionWidth={dimensionWidth} />;
   }

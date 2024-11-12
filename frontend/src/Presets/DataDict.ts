@@ -13,7 +13,7 @@ export function isBloodComponent(str: string): str is BloodComponent {
 
 const _AGGREGATIONS = ['SURGEON_PROV_ID', 'ANESTH_PROV_ID', 'YEAR', 'QUARTER'] as const;
 export type Aggregation = typeof _AGGREGATIONS[number];
-export const AggregationOptions: { key: typeof _AGGREGATIONS[number]; value: string }[] = [
+const AggregationOptions: { key: typeof _AGGREGATIONS[number]; value: string }[] = [
   { key: 'SURGEON_PROV_ID', value: 'Surgeon ID' },
   { key: 'ANESTH_PROV_ID', value: 'Anesthesiologist ID' },
   { key: 'YEAR', value: 'Year' },
@@ -69,7 +69,7 @@ export const addOptions = [
   [BloodComponentOptions, [AggregationOptions[0], AggregationOptions[1]]],
 ];
 
-export const SurgeryUrgency: { key: number; value: 'Urgent' | 'Elective' | 'Emergent'}[] = [
+const SurgeryUrgency: { key: number; value: 'Urgent' | 'Elective' | 'Emergent'}[] = [
   { key: 0, value: 'Urgent' },
   { key: 1, value: 'Elective' },
   { key: 2, value: 'Emergent' },

@@ -46,7 +46,7 @@ interface OwnProps {
     chartId: string;
 }
 
-export type Props = OwnProps;
+type Props = OwnProps;
 
 function GeneratorExtraPair({
   extraPairDataSet, secondaryExtraPairDataSet, aggregationScaleDomain, aggregationScaleRange, text = false, height, chartId,

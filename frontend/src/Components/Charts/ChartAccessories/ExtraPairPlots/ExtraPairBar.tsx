@@ -6,7 +6,7 @@ import { observer } from 'mobx-react';
 import { Tooltip } from '@mui/material';
 import { ExtraPairWidth } from '../../../../Presets/Constants';
 
-export type Props = {
+type Props = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dataSet: any[];
   aggregationScaleDomain: string;
