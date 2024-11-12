@@ -83,7 +83,7 @@ function WrapperScatter({
         } return undefined;
       });
 
-      castData = castData.filter((d) => d);
+      castData = castData.filter((d) => d && d.yVal);
 
       store.chartStore.totalIndividualCaseCount = castData.length;
       stateUpdateWrapperUseJSON(data, castData, setData);
