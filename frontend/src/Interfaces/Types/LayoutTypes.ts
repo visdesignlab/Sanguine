@@ -8,7 +8,7 @@ type BaseLayoutElement = {
     y: number;
     w: number;
     h: number;
-    notation: string;
+    annotationText: string;
 };
 
 export type DumbbellLayoutElement = BaseLayoutElement & {

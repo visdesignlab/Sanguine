@@ -20,7 +20,7 @@ import { HeatMapLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
 
 function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
   const {
-    xAxisVar, yAxisVar, i: chartId, h: layoutH, w: layoutW, notation: annotationText, extraPair, interventionDate, outcomeComparison,
+    xAxisVar, yAxisVar, i: chartId, h: layoutH, w: layoutW, annotationText, extraPair, interventionDate, outcomeComparison,
   } = layout;
   const store = useContext(Store);
 

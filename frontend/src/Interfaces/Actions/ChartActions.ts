@@ -37,7 +37,7 @@ export const removeChart = createAction<ApplicationState, [string], ActionEvents
 export const changeNotation = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, newNotation) => {
   state.layoutArray = state.layoutArray.map((d) => {
     if (d.i === chartID) {
-      d.notation = newNotation;
+      d.annotationText = newNotation;
     }
     return d;
   });

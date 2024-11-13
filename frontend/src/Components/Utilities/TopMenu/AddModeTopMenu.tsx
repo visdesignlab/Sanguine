@@ -68,7 +68,7 @@ function AddModeTopMenu({ addingChartType, sx }: { addingChartType: number; sx: 
           y: ManualInfinity,
           w: 1,
           h: 1,
-          notation: '',
+          annotationText: '',
           plotType,
           extraPair: plotType === 'HEATMAP' || plotType === 'COST' ? JSON.stringify([]) : undefined,
         };

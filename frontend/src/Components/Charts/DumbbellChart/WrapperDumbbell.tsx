@@ -70,7 +70,7 @@ const DumbbellUtilTitle = styled.div({
 
 function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
   const {
-    xAxisVar, i: chartId, h: layoutH, w: layoutW, notation: annotationText,
+    xAxisVar, i: chartId, h: layoutH, w: layoutW, annotationText,
   } = layout;
 
   const store = useContext(Store);

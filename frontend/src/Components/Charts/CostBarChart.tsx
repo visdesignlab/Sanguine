@@ -49,7 +49,7 @@ type CostBarDataPoint = {
 
 function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   const {
-    yAxisVar, i: chartId, h: layoutH, w: layoutW, notation: annotationText, extraPair, outcomeComparison,
+    yAxisVar, i: chartId, h: layoutH, w: layoutW, annotationText, extraPair, outcomeComparison,
   } = layout;
 
   const store = useContext(Store);

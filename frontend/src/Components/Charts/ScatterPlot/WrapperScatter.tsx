@@ -23,7 +23,7 @@ const ChartAccessoryDiv = styled.div({
 
 function WrapperScatter({ layout }: { layout: ScatterLayoutElement }) {
   const {
-    xAxisVar, yAxisVar, i: chartId, h: layoutH, w: layoutW, notation: annotationText,
+    xAxisVar, yAxisVar, i: chartId, h: layoutH, w: layoutW, annotationText,
   } = layout;
   const store = useContext(Store);
   const { filteredCases } = store;
