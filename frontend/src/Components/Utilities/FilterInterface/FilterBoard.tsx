@@ -7,7 +7,9 @@ import { useContext, useState } from 'react';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { AcronymDictionary, BloodComponentOptions, ScatterYOptions } from '../../../Presets/DataDict';
+import {
+  AcronymDictionary, BloodComponent, BloodComponentOptions, HemoOption, ScatterYOptions,
+} from '../../../Presets/DataDict';
 import Store from '../../../Interfaces/Store';
 import ComponentRangePicker from './ComponentRangePicker';
 import { Title } from '../../../Presets/StyledComponents';
@@ -33,7 +35,7 @@ function FilterBoard() {
 
   function checkIfCanReset(filterInput: Record<string, [number, number]>, type?: typeof BloodComponentOptions | typeof ScatterYOptions) {
     return Object.entries(filterInput)
-      .filter(([filterName]) => (type ? type.map((d) => d.key).includes(filterName) : true))
+      .filter(([filterName]) => (type ? type.map((d) => d.key).includes(filterName as BloodComponent | HemoOption) : true))
       .some(([filterName, filterValue]) => (filterValue)[0] > 0 || ((filterValue)[1] < store.filterRange[filterName][1]));
   }
 
@@ -237,7 +239,7 @@ function FilterBoard() {
 
           </ListItemSecondaryAction>
         </ListItem>
-        {BloodComponentOptions.map((d) => (<ComponentRangePicker label={d.key as keyof typeof AcronymDictionary} key={d.key} />))}
+        {BloodComponentOptions.map((d) => (<ComponentRangePicker label={d.key} key={d.key} />))}
 
         <ListItem>
           <ListItemText primary={<Title>Test Value Filter</Title>} />

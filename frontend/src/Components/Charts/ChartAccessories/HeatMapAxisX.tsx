@@ -4,10 +4,11 @@ import { observer } from 'mobx-react';
 import {
   BloodProductCap, CELL_SAVER_TICKS, largeFontSize, regularFontSize,
 } from '../../../Presets/Constants';
-import { AcronymDictionary } from '../../../Presets/DataDict';
+import { AcronymDictionary, BloodComponent } from '../../../Presets/DataDict';
 import { ValueScaleGeneratorFromDomainRange } from '../../../HelperFunctions/Scales';
 import { Offset } from '../../../Interfaces/Types/OffsetType';
 import Store from '../../../Interfaces/Store';
+import { xAxisOption, yAxisOption } from '../../../Interfaces/Types/LayoutTypes';
 
 type Props = {
   svg: RefObject<SVGSVGElement>;
@@ -15,14 +16,14 @@ type Props = {
   dimensionHeight: number;
   dimensionWidth: number;
   extraPairTotalWidth: number;
-  yValueOption: keyof typeof AcronymDictionary | keyof typeof BloodProductCap;
+  yAxisVar: yAxisOption;
   valueScaleDomain: string;
   valueScaleRange: string;
-  xAggregationOption: keyof typeof AcronymDictionary;
+  xAxisVar: xAxisOption;
   isValueScaleBand: boolean;
 };
 function HeatMapAxis({
-  svg, currentOffset, extraPairTotalWidth, dimensionHeight, yValueOption, valueScaleRange, valueScaleDomain, xAggregationOption, dimensionWidth, isValueScaleBand,
+  svg, currentOffset, extraPairTotalWidth, dimensionHeight, yAxisVar, valueScaleRange, valueScaleDomain, xAxisVar, dimensionWidth, isValueScaleBand,
 }: Props) {
   const store = useContext(Store);
 
@@ -31,8 +32,9 @@ function HeatMapAxis({
   const svgSelection = select(svg.current);
   let valueLabel;
   if (isValueScaleBand) {
+    valueLabel = axisBottom(valueScale() as ScaleBand<string>)
     // eslint-disable-next-line no-nested-ternary, @typescript-eslint/no-explicit-any
-    valueLabel = axisBottom(valueScale() as ScaleBand<string>).tickFormat((d, i) => (yValueOption === 'CELL_SAVER_ML' ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[yValueOption as any as keyof typeof BloodProductCap] as any ? `${d}+` : d)));
+      .tickFormat((d, i) => (xAxisVar === 'CELL_SAVER_ML' ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[xAxisVar as BloodComponent] as any ? `${d}+` : d)));
   } else {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     valueLabel = axisBottom(valueScale() as any);
@@ -59,7 +61,7 @@ function HeatMapAxis({
     .attr('font-size', store.configStore.largeFont ? largeFontSize : regularFontSize)
     .attr('text-anchor', 'middle')
     .attr('transform', `translate(${extraPairTotalWidth},0)`)
-    .text(() => (AcronymDictionary[yValueOption] ? AcronymDictionary[yValueOption] : yValueOption));
+    .text(() => (AcronymDictionary[xAxisVar] ? AcronymDictionary[xAxisVar] : xAxisVar));
 
   svgSelection
     .select('.y-label')
@@ -70,7 +72,7 @@ function HeatMapAxis({
     .attr('alignment-baseline', 'hanging')
     .attr('transform', `translate(${extraPairTotalWidth},0)`)
     .text(
-      AcronymDictionary[xAggregationOption] ? AcronymDictionary[xAggregationOption] : xAggregationOption,
+      AcronymDictionary[yAxisVar] ? AcronymDictionary[yAxisVar] : yAxisVar,
     );
 
   return (

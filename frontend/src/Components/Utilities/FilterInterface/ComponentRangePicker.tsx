@@ -5,10 +5,10 @@ import { useState, useContext } from 'react';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import Store from '../../../Interfaces/Store';
 import { ManualInfinity } from '../../../Presets/Constants';
-import { AcronymDictionary } from '../../../Presets/DataDict';
+import { AcronymDictionary, BloodComponent, HemoOption } from '../../../Presets/DataDict';
 
 type Props = {
-  label: keyof typeof AcronymDictionary;
+  label: BloodComponent | HemoOption;
   isTestValue?: boolean;
 };
 

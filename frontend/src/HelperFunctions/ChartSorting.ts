@@ -1,6 +1,6 @@
 import { BasicAggregatedDatePoint } from '../Interfaces/Types/DataTypes';
 
-export const sortHelper = (data: BasicAggregatedDatePoint[], xAggregationOption: string, showZero: boolean, secondaryData?: BasicAggregatedDatePoint[]) => {
+export const sortHelper = (data: BasicAggregatedDatePoint[], xAxisVar: string, showZero: boolean, secondaryData?: BasicAggregatedDatePoint[]) => {
   let newCaseMax = 0;
   let dataXVals: string[] = [];
   if (secondaryData) {
@@ -23,14 +23,14 @@ export const sortHelper = (data: BasicAggregatedDatePoint[], xAggregationOption:
       newCaseMax = newCaseMax > calcualtedCaseCount ? newCaseMax : calcualtedCaseCount;
     });
     dataXVals.sort((a, b) => {
-      if (xAggregationOption === 'YEAR') {
+      if (xAxisVar === 'YEAR') {
         return parseInt(a, 10) - parseInt(b, 10);
       }
       return dataToObj[a] - dataToObj[b];
     });
   } else {
     dataXVals = data.sort((a, b) => {
-      if (xAggregationOption === 'YEAR') {
+      if (xAxisVar === 'YEAR') {
         return a.aggregateAttribute - b.aggregateAttribute;
       }
       if (showZero) { return a.caseCount - b.caseCount; }

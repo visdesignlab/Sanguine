@@ -7,11 +7,10 @@ import { basicGray, secondaryGray } from '../../../Presets/Constants';
 import { AxisText, CustomAxisLine, CustomAxisLineBox } from '../../../Presets/StyledSVGComponents';
 import Store from '../../../Interfaces/Store';
 
-export type Props = {
+type Props = {
   scaleDomain: string;
   scaleRange: string;
   scalePadding: number;
-
 };
 
 function CustomizedAxisBand({ scaleDomain, scaleRange, scalePadding }: Props) {

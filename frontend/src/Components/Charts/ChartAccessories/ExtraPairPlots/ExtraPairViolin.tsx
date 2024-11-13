@@ -17,7 +17,7 @@ const ViolinLine = styled('path')`
     stroke: ${basicGray};
   `;
 
-export type Props = {
+type Props = {
   dataSet: SingleCasePoint[];
   aggregationScaleDomain: string;
   aggregationScaleRange: string;

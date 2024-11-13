@@ -1,5 +1,7 @@
 import { observer } from 'mobx-react';
-import React, { useState, useContext, Fragment } from 'react';
+import React, {
+  useState, useContext, Fragment, useEffect,
+} from 'react';
 import {
   Button, ButtonGroup, FormControl, InputLabel, Select, TextField, Toolbar,
 } from '@mui/material';
@@ -7,162 +9,150 @@ import styled from '@emotion/styled';
 import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import {
-  AcronymDictionary, addOptions, OutcomeOptions, typeDiction,
+  addOptions, Outcome, OutcomeOptions, typeDiction,
 } from '../../../Presets/DataDict';
 import Store from '../../../Interfaces/Store';
-import { LayoutElement } from '../../../Interfaces/Types/LayoutTypes';
+import { LayoutElement, xAxisOption, yAxisOption } from '../../../Interfaces/Types/LayoutTypes';
 import { DropdownGenerator } from '../../../HelperFunctions/DropdownGenerator';
-import { BloodProductCap, ManualInfinity } from '../../../Presets/Constants';
+import { ManualInfinity } from '../../../Presets/Constants';
 import { CenterAlignedDiv } from '../../../Presets/StyledComponents';
 
 const StyledFormControl = styled(FormControl)({
-  // margin: '1rem',
   minWidth: '200px!important',
 });
 
 function AddModeTopMenu({ addingChartType, sx }: { addingChartType: number; sx: React.CSSProperties }) {
   const store = useContext(Store);
 
-  const [xAggreSelection, setXAggreSelection] = useState<keyof typeof AcronymDictionary | ''>('');
-  const [yValueSelection, setYValueSelection] = useState<keyof typeof BloodProductCap | ''>('');
-  const [outcomeComparisonSelection, setOutcomeComparisonSelection] = useState<keyof typeof AcronymDictionary | ''>('');
+  const [xAxisSelection, setxAxisSelection] = useState<xAxisOption | '' >('');
+  const [yAxisSelection, setYAxisSelection] = useState<yAxisOption | ''>('');
+  const [outcomeComparisonSelection, setOutcomeComparisonSelection] = useState<Outcome | ''>('');
   const [interventionDate, setInterventionDate] = useState<number | null>(null);
+
+  const [xDisabled, setXDisabled] = useState(false);
+  const [yDisabled, setYDisabled] = useState(false);
+
+  // Automatically set the axis values if the chart type has a fixed option
+  useEffect(() => {
+    setXDisabled(addingChartType === 3);
+    setYDisabled(addingChartType === 0);
+
+    if (addingChartType === 0) {
+      setYAxisSelection('HGB_VALUE');
+    } else if (addingChartType === 3) {
+      setxAxisSelection('COST');
+    }
+  }, [addingChartType, store.configStore.topMenuBarAddMode]);
+
+  const resetFields = () => {
+    setxAxisSelection('');
+    setYAxisSelection('');
+    setOutcomeComparisonSelection('');
+    setInterventionDate(null);
+  };
 
   const cancelChartAddHandler = () => {
     store.configStore.topMenuBarAddMode = false;
-    setXAggreSelection('');
-    setYValueSelection('');
+    resetFields();
   };
 
-  const interventionHandler = (date: number | null) => {
-    if (date) {
-      setInterventionDate(date);
-    } else {
-      setInterventionDate(null);
-    }
-  };
-
-  const checkValidInput = () => (xAggreSelection.length > 0 && yValueSelection.length > 0 && addingChartType > 0) || (xAggreSelection.length > 0 && addingChartType === 0);
+  const checkValidInput = () => (xAxisSelection.length > 0 && yAxisSelection.length > 0 && addingChartType > -1);
 
   const confirmChartAddHandler = () => {
     if (checkValidInput()) {
-      if (!(addingChartType === 4 && (!interventionDate))) {
-        const newChart: LayoutElement = {
-          aggregatedBy: xAggreSelection,
-          valueToVisualize: yValueSelection as keyof typeof BloodProductCap,
+      if (!(addingChartType === 4 && !interventionDate)) {
+        const plotType = typeDiction[addingChartType];
+        const newChart: Partial<LayoutElement> = {
           i: store.provenanceState.nextAddingIndex.toString(),
-          w: 1,
-          h: 1,
           x: 0,
           y: ManualInfinity,
-          plotType: typeDiction[addingChartType],
-          notation: '',
-          outcomeComparison: outcomeComparisonSelection as keyof typeof AcronymDictionary || undefined,
-          interventionDate: interventionDate || undefined,
+          w: 1,
+          h: 1,
+          annotationText: '',
+          plotType,
+          extraPair: plotType === 'HEATMAP' || plotType === 'COST' ? JSON.stringify([]) : undefined,
         };
-        if (
-          typeDiction[addingChartType] === 'HEATMAP' || typeDiction[addingChartType] === 'COST') {
+        newChart.xAxisVar = xAxisSelection as xAxisOption;
+        newChart.yAxisVar = yAxisSelection as yAxisOption;
+
+        if (newChart.plotType === 'HEATMAP' || newChart.plotType === 'COST') {
           newChart.extraPair = JSON.stringify([]);
+          newChart.outcomeComparison = outcomeComparisonSelection || undefined;
+          newChart.interventionDate = interventionDate || undefined;
         }
 
-        store.chartStore.addNewChart(newChart);
+        store.chartStore.addNewChart(newChart as LayoutElement);
         store.configStore.topMenuBarAddMode = false;
-        setInterventionDate(null);
-        setXAggreSelection('');
-        setYValueSelection('');
-        setOutcomeComparisonSelection('');
+        resetFields();
       }
     }
   };
 
-  const outputRegularOptions = (titleOne: string, titleTwo: string, titleOneRequied: boolean) => (
-    <Fragment key={1}>
-      <CenterAlignedDiv>
-        <StyledFormControl variant="standard" required={titleOneRequied}>
-          <InputLabel>
-            {titleOne}
-            {titleOneRequied ? '' : ' (Optional)'}
-          </InputLabel>
-          <Select
-            value={yValueSelection}
-            label={`${titleOne}${titleOneRequied ? '' : ' (Optional)'}`}
-            onChange={(e) => { setYValueSelection(e.target.value as keyof typeof BloodProductCap); }}
-          >
-            {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][0] : [], !titleOneRequied)}
-          </Select>
-        </StyledFormControl>
-      </CenterAlignedDiv>
-
-      <CenterAlignedDiv>
-        <StyledFormControl required variant="standard">
-          <InputLabel>{titleTwo}</InputLabel>
-          <Select
-            label={titleTwo}
-            value={xAggreSelection}
-            onChange={(e) => { setXAggreSelection(e.target.value as keyof typeof AcronymDictionary); }}
-          >
-            {DropdownGenerator(addingChartType > -1 ? addOptions[addingChartType][1] : [])}
-          </Select>
-        </StyledFormControl>
-
-      </CenterAlignedDiv>
-
-    </Fragment>
-  );
-
-  const addBarChartMenuRewrite = [
-    // For #0 Cost and Saving Chart
-
-    outputRegularOptions('Select Comparison', 'Aggregated by', false),
-
-    // For #1 Dumbbell Chart
-
-    outputRegularOptions('Select Value to Show', 'Arranged by', true),
-
-    // for #2 Scatter Plot
-
-    outputRegularOptions('Select Value to Show', 'Arranged by', true),
-
-    // for #3 Heat Map
-
-    [outputRegularOptions('Select Value to Show', 'Aggregated by', true),
-      <Fragment key={2}>
+  return addingChartType > -1 ? (
+    <Toolbar style={{ justifyContent: 'space-evenly' }} sx={sx}>
+      <Fragment key={1}>
         <CenterAlignedDiv>
-          <StyledFormControl variant="standard" disabled={!!interventionDate}>
-            <InputLabel>Outcome (Optional)</InputLabel>
+          <StyledFormControl required variant="standard" disabled={xDisabled}>
+            <InputLabel>
+              X Axis Values
+            </InputLabel>
             <Select
-              value={outcomeComparisonSelection}
-              label="Outcome (Optional)"
-              onChange={(e) => { setOutcomeComparisonSelection(e.target.value as keyof typeof AcronymDictionary); }}
+              value={xAxisSelection}
+              label="X Axis Values"
+              onChange={(e) => { setxAxisSelection(e.target.value as xAxisOption); }}
             >
-              {DropdownGenerator(OutcomeOptions, true)}
+              {DropdownGenerator(addOptions[addingChartType][0], addingChartType === 3)}
             </Select>
           </StyledFormControl>
         </CenterAlignedDiv>
 
         <CenterAlignedDiv>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DesktopDatePicker
-              inputFormat="MM/dd/yyyy"
-              renderInput={(params) => <TextField style={{ minWidth: '250px' }} variant="standard" {...params} />}
-              label="Comparison Date (Optional)"
-              minDate={store.provenanceState.rawDateRange[0]}
-              maxDate={store.provenanceState.rawDateRange[1]}
-              disabled={!!outcomeComparisonSelection}
-              value={interventionDate}
-              onChange={interventionHandler}
-            />
-          </LocalizationProvider>
+          <StyledFormControl required variant="standard" disabled={yDisabled}>
+            <InputLabel>Y Axis Values</InputLabel>
+            <Select
+              label="Y Axis Values"
+              value={yAxisSelection}
+              onChange={(e) => { setYAxisSelection(e.target.value as yAxisOption); }}
+            >
+              {DropdownGenerator(addOptions[addingChartType][1])}
+            </Select>
+          </StyledFormControl>
 
         </CenterAlignedDiv>
-      </Fragment>,
-    ],
-  ];
+      </Fragment>
 
-  return (
-    <Toolbar style={{ justifyContent: 'space-evenly' }} sx={sx}>
-      {addBarChartMenuRewrite[addingChartType]}
-      {/* <Divider orientation="vertical" flexItem /> */}
+      {addingChartType >= 2 && (
+        <Fragment key={2}>
+          <CenterAlignedDiv>
+            <StyledFormControl variant="standard" disabled={!!interventionDate}>
+              <InputLabel>Outcome (Optional)</InputLabel>
+              <Select
+                value={outcomeComparisonSelection}
+                label="Outcome Comparison (Optional)"
+                onChange={(e) => { setOutcomeComparisonSelection(e.target.value as Outcome); }}
+              >
+                {DropdownGenerator(OutcomeOptions, true)}
+              </Select>
+            </StyledFormControl>
+          </CenterAlignedDiv>
+
+          <CenterAlignedDiv>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DesktopDatePicker
+                inputFormat="MM/dd/yyyy"
+                renderInput={(params) => <TextField style={{ minWidth: '250px' }} variant="standard" {...params} />}
+                label="Comparison Date (Optional)"
+                minDate={store.provenanceState.rawDateRange[0]}
+                maxDate={store.provenanceState.rawDateRange[1]}
+                disabled={!!outcomeComparisonSelection}
+                value={interventionDate}
+                onChange={(value: unknown) => { setInterventionDate((value as Date).getTime()); }}
+              />
+            </LocalizationProvider>
+
+          </CenterAlignedDiv>
+        </Fragment>
+      )}
 
       <ButtonGroup disableElevation variant="contained" color="primary">
         <Button
@@ -178,7 +168,8 @@ function AddModeTopMenu({ addingChartType, sx }: { addingChartType: number; sx: 
         </Button>
       </ButtonGroup>
     </Toolbar>
-  );
+  // eslint-disable-next-line react/jsx-no-useless-fragment
+  ) : <></>;
 }
 
 export default observer(AddModeTopMenu);

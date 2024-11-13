@@ -12,7 +12,7 @@ import { ScatterDataPoint, SingleCasePoint } from '../../../Interfaces/Types/Dat
 import {
   basicGray, highlightOrange, largeFontSize, OffsetDict, regularFontSize, thirdGray,
 } from '../../../Presets/Constants';
-import { AcronymDictionary } from '../../../Presets/DataDict';
+import { AcronymDictionary, BloodComponent, HemoOption } from '../../../Presets/DataDict';
 import CustomizedAxisBand from '../ChartAccessories/CustomizedAxisBand';
 
 interface DotProps {
@@ -32,8 +32,8 @@ const StatisticalLine = styled('line')`
 `;
 
 type Props = {
-    xAggregationOption: keyof typeof AcronymDictionary;
-    yValueOption: keyof typeof AcronymDictionary;
+    xAxisVar: BloodComponent;
+    yAxisVar: HemoOption;
     width: number;
     height: number;
     data: ScatterDataPoint[];
@@ -45,7 +45,7 @@ type Props = {
 };
 
 function ScatterPlot({
-  xAggregationOption, xMax, xMin, yMax, yMin, yValueOption, data, width, height, svg,
+  xAxisVar, xMax, xMin, yMax, yMin, yAxisVar, data, width, height, svg,
 }: Props) {
   const scalePadding = 0.2;
   const currentOffset = OffsetDict.minimum;
@@ -64,7 +64,7 @@ function ScatterPlot({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const xAxisScale = useCallback<any>(() => {
     let innerXAxisScale;
-    if (xAggregationOption === 'CELL_SAVER_ML') {
+    if (xAxisVar === 'CELL_SAVER_ML') {
       innerXAxisScale = scaleLinear()
         .domain([0.9 * xMin, 1.1 * xMax])
         .range([currentOffset.left, width - currentOffset.right - currentOffset.margin]).nice();
@@ -75,7 +75,7 @@ function ScatterPlot({
         .padding(scalePadding);
     }
     return innerXAxisScale;
-  }, [xMax, xMin, width, currentOffset, xAggregationOption]);
+  }, [xMax, xMin, width, currentOffset, xAxisVar]);
 
   const yAxisScale = useCallback(() => scaleLinear()
     .domain([0.9 * yMin, 1.1 * yMax])
@@ -93,7 +93,7 @@ function ScatterPlot({
     } else if (brushLoc) {
       const caseList: SingleCasePoint[] = [];
       data.forEach((dataPoint) => {
-        const cx = xAggregationOption === 'CELL_SAVER_ML' ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth());
+        const cx = xAxisVar === 'CELL_SAVER_ML' ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth());
         const cy = yAxisScale()(dataPoint.yVal);
         if (cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
           caseList.push(dataPoint.case);
@@ -159,10 +159,10 @@ function ScatterPlot({
     .attr('text-anchor', 'middle')
     .attr('alignment-baseline', 'hanging')
     .text(
-      AcronymDictionary[yValueOption] ? AcronymDictionary[yValueOption] : yValueOption,
+      AcronymDictionary[yAxisVar] ? AcronymDictionary[yAxisVar] : yAxisVar,
     );
 
-  if (xAggregationOption === 'CELL_SAVER_ML') {
+  if (xAxisVar === 'CELL_SAVER_ML') {
     svgSelection.select('.axes')
       .select('.x-axis')
       .call(xAxisLabel as never)
@@ -187,7 +187,7 @@ function ScatterPlot({
     .attr('alignment-baseline', 'hanging')
     .attr('font-size', store.configStore.largeFont ? largeFontSize : regularFontSize)
     .attr('text-anchor', 'middle')
-    .text(AcronymDictionary[xAggregationOption] ? AcronymDictionary[xAggregationOption] : xAggregationOption);
+    .text(AcronymDictionary[xAxisVar] ? AcronymDictionary[xAxisVar] : xAxisVar);
 
   const decideIfSelectSet = (d: ScatterDataPoint) => currentSelectSet.length > 0 && !!currentSelectSet.find((selected) => selected.setValues.includes(`${d.case[selected.setName]}`));
 
@@ -197,7 +197,7 @@ function ScatterPlot({
     const brushedSet = new Set(brushedCaseList);
     const medianSet: Record<string, number[]> = {};
     data.forEach((dataPoint, idx) => {
-      const cx = xAggregationOption === 'CELL_SAVER_ML' ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth());
+      const cx = xAxisVar === 'CELL_SAVER_ML' ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth());
 
       if (medianSet[dataPoint.xVal]) {
         medianSet[dataPoint.xVal].push(dataPoint.yVal);
@@ -232,7 +232,7 @@ function ScatterPlot({
       }
     });
     let lineSet: JSX.Element[] = [];
-    if (xAggregationOption !== 'CELL_SAVER_ML') {
+    if (xAxisVar !== 'CELL_SAVER_ML') {
       for (const [key, value] of Object.entries(medianSet)) {
         const meanVal = mean(value) || 0;
         const std = deviation(value) || 0;
@@ -279,7 +279,7 @@ function ScatterPlot({
       <g className="axes">
         <g className="y-axis" />
         <g className="x-axis" transform={`translate(0 ,${height - currentOffset.bottom} )`}>
-          {xAggregationOption !== 'CELL_SAVER_ML' ? <CustomizedAxisBand scalePadding={scalePadding} scaleDomain={JSON.stringify(xAxisScale().domain())} scaleRange={JSON.stringify(xAxisScale().range())} /> : null}
+          {xAxisVar !== 'CELL_SAVER_ML' ? <CustomizedAxisBand scalePadding={scalePadding} scaleDomain={JSON.stringify(xAxisScale().domain())} scaleRange={JSON.stringify(xAxisScale().range())} /> : null}
         </g>
         <text className="x-label" />
         <text className="y-label" />

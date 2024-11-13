@@ -128,10 +128,10 @@ function RegularModeMenu() {
         <Stack direction="row" spacing={1}>
           <Button startIcon={<InsertChartIcon />} color="primary" variant="contained" disableElevation onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true">Add Chart</Button>
           <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
-            <MenuItem onClick={() => handleClose(1)}>Dumbbell Chart</MenuItem>
-            <MenuItem onClick={() => handleClose(2)}>Scatter Plot</MenuItem>
-            <MenuItem onClick={() => handleClose(3)}>Heat Map</MenuItem>
-            <MenuItem onClick={() => handleClose(0)}>Cost and Saving Chart</MenuItem>
+            <MenuItem onClick={() => handleClose(0)}>Dumbbell Chart</MenuItem>
+            <MenuItem onClick={() => handleClose(1)}>Scatter Plot</MenuItem>
+            <MenuItem onClick={() => handleClose(2)}>Heat Map</MenuItem>
+            <MenuItem onClick={() => handleClose(3)}>Cost and Saving Chart</MenuItem>
           </Menu>
 
           <StateManagementSuite />

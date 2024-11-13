@@ -18,7 +18,7 @@ interface OwnProps {
   secondaryDataSet?: any[];
 }
 
-export type Props = OwnProps;
+type Props = OwnProps;
 
 function ExtraPairBasic({
   secondaryDataSet, dataSet, aggregationScaleRange, aggregationScaleDomain,

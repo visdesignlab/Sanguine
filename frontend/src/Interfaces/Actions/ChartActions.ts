@@ -1,13 +1,12 @@
 import { createAction } from '@visdesignlab/trrack';
 import { ActionEvents } from '../Types/EventTypes';
-import { LayoutElement } from '../Types/LayoutTypes';
+import { LayoutElement, xAxisOption, yAxisOption } from '../Types/LayoutTypes';
 import { ApplicationState } from '../Types/StateTypes';
-import { BloodProductCap } from '../../Presets/Constants';
-import { AcronymDictionary } from '../../Presets/DataDict';
+import { Outcome, typeDiction } from '../../Presets/DataDict';
 
 export const addExtraPair = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, newExtraPair) => {
   state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
-    if (d.i === chartID && d.extraPair) {
+    if (d.i === chartID && (d.plotType === 'HEATMAP' || d.plotType === 'COST') && d.extraPair) {
       if (!d.extraPair.includes(newExtraPair)) {
         const originalArray = JSON.parse(d.extraPair);
         originalArray.push(newExtraPair);
@@ -20,7 +19,7 @@ export const addExtraPair = createAction<ApplicationState, [string, string], Act
 
 export const removeExtraPair = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, removingPairName) => {
   state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
-    if (d.i === chartID && d.extraPair) {
+    if (d.i === chartID && (d.plotType === 'HEATMAP' || d.plotType === 'COST') && d.extraPair) {
       const originalArray = JSON.parse(d.extraPair);
 
       const newArray = (originalArray.filter((l: string) => (l !== removingPairName)));
@@ -38,7 +37,7 @@ export const removeChart = createAction<ApplicationState, [string], ActionEvents
 export const changeNotation = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, newNotation) => {
   state.layoutArray = state.layoutArray.map((d) => {
     if (d.i === chartID) {
-      d.notation = newNotation;
+      d.annotationText = newNotation;
     }
     return d;
   });
@@ -60,14 +59,14 @@ export const onLayoutChange = createAction<ApplicationState, [ReactGridLayout.La
   state.layoutArray = JSON.parse(JSON.stringify(state.layoutArray));
 }).setLabel('LayoutChange');
 
-export const changeChart = createAction<ApplicationState, [keyof typeof AcronymDictionary, keyof typeof BloodProductCap | '' | 'POSTOP_HEMO' | 'PREOP_HEMO', string, string, keyof typeof AcronymDictionary | 'NONE'], ActionEvents>((state, xAggregationSelection, yValueSelection, chartIndex, chartType, outcomeComparison?) => {
+export const changeChart = createAction<ApplicationState, [xAxisOption, yAxisOption, string, typeof typeDiction[number], Outcome | 'NONE'], ActionEvents>((state, xAxisSelection, yAxisSelection, chartIndex, chartType, outcomeComparison?) => {
   state.layoutArray = state.layoutArray.map((d) => {
     if (d.i === chartIndex) {
-      d.aggregatedBy = xAggregationSelection;
-      d.valueToVisualize = yValueSelection;
+      d.xAxisVar = xAxisSelection;
+      d.yAxisVar = yAxisSelection;
       d.plotType = chartType;
-      if (outcomeComparison) {
-        d.outcomeComparison = outcomeComparison === 'NONE' ? '' : outcomeComparison;
+      if (outcomeComparison && (d.plotType === 'HEATMAP' || d.plotType === 'COST')) {
+        d.outcomeComparison = outcomeComparison === 'NONE' ? undefined : outcomeComparison;
       }
     }
     return d;

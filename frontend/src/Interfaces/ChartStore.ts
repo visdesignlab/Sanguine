@@ -4,9 +4,8 @@ import {
 } from './Actions/ChartActions';
 // eslint-disable-next-line import/no-cycle
 import { RootStore } from './Store';
-import { LayoutElement } from './Types/LayoutTypes';
-import { BloodProductCap } from '../Presets/Constants';
-import { AcronymDictionary } from '../Presets/DataDict';
+import { LayoutElement, xAxisOption, yAxisOption } from './Types/LayoutTypes';
+import { Outcome, typeDiction } from '../Presets/DataDict';
 
 export class ChartStore {
   rootStore: RootStore;
@@ -67,8 +66,8 @@ export class ChartStore {
     this.provenance.apply(addNewChart(newLayoutElement));
   }
 
-  changeChart(xAggregationSelection: keyof typeof AcronymDictionary, yValueSelection: keyof typeof BloodProductCap | '' | 'POSTOP_HEMO' | 'PREOP_HEMO', chartIndex: string, chartType: string, outcomeComparison: keyof typeof AcronymDictionary | 'NONE') {
-    this.provenance.apply(changeChart(xAggregationSelection, yValueSelection, chartIndex, chartType, outcomeComparison));
+  changeChart(xAxisSelection: xAxisOption, yAxisSelection: yAxisOption, chartIndex: string, chartType: typeof typeDiction[number], outcomeComparison: Outcome | 'NONE') {
+    this.provenance.apply(changeChart(xAxisSelection, yAxisSelection, chartIndex, chartType, outcomeComparison));
   }
 
   onLayoutChange(gridLayout: ReactGridLayout.Layout[]) {

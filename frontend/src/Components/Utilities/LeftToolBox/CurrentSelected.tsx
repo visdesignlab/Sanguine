@@ -47,7 +47,7 @@ function CurrentSelected() {
           {currentSelectSet.map((selectSet: SelectSet) => (
             <ListItem key={`${selectSet.setName}selected`}>
               <ListItemText
-                primary={AcronymDictionary[selectSet.setName] ? AcronymDictionary[selectSet.setName] : selectSet.setName}
+                primary={AcronymDictionary[selectSet.setName as keyof typeof AcronymDictionary] ? AcronymDictionary[selectSet.setName as keyof typeof AcronymDictionary] : selectSet.setName}
                 secondary={selectSet.setValues.sort().join(', ')}
               />
               <ListItemSecondaryAction>
