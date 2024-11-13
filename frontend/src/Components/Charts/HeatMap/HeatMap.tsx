@@ -21,7 +21,7 @@ import GeneratorExtraPair from '../ChartAccessories/ExtraPairPlots/GeneratorExtr
 import ComparisonLegend from '../ChartAccessories/ComparisonLegend';
 import HeatMapAxisX from '../ChartAccessories/HeatMapAxisX';
 import HeatMapAxisY from '../ChartAccessories/HeatMapAxisY';
-import { Aggregation, Outcome } from '../../../Presets/DataDict';
+import { Aggregation, BloodComponent, Outcome } from '../../../Presets/DataDict';
 
 const outputGradientLegend = (showZero: boolean, dimensionWidth: number) => {
   if (!showZero) {
@@ -33,7 +33,7 @@ const outputGradientLegend = (showZero: boolean, dimensionWidth: number) => {
 type Props = {
     dimensionWidth: number;
     dimensionHeight: number;
-    xAxisVar: keyof typeof BloodProductCap;
+    xAxisVar: BloodComponent;
     yAxisVar: Aggregation;
     chartId: string;
     data: HeatMapDataPoint[];

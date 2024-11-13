@@ -11,96 +11,34 @@ import WrapperCostBar from './Charts/CostBarChart';
 import WrapperDumbbell from './Charts/DumbbellChart/WrapperDumbbell';
 import WrapperHeatMap from './Charts/HeatMap/WrapperHeatMap';
 import WrapperScatter from './Charts/ScatterPlot/WrapperScatter';
-import { isAggregation, isBloodComponent, isHemoOption } from '../Presets/DataDict';
 
 function LayoutGenerator() {
   const store = useContext(Store);
 
   const createElement = (layout: LayoutElement) => {
+    let chartElement: JSX.Element | null = null;
     switch (layout.plotType) {
       case 'DUMBBELL':
-        if (isAggregation(layout.xAxisVar) || isBloodComponent(layout.xAxisVar)) {
-          return (
-            <div key={layout.i} className={`parent-node${layout.i}`}>
-              <WrapperDumbbell
-                layoutW={layout.w}
-                chartId={layout.i}
-                layoutH={layout.h}
-                xAxisVar={layout.xAxisVar}
-                annotationText={layout.notation}
-              />
-            </div>
-          );
-        }
-        throw new Error('Invalid dumbbell chart variable');
+        chartElement = <WrapperDumbbell layout={layout} />;
+        break;
 
       case 'SCATTER':
-        if (isBloodComponent(layout.xAxisVar) && isHemoOption(layout.yAxisVar)) {
-          return (
-            <div
-              key={layout.i}
-              className={`parent-node${layout.i}`}
-            >
-              <WrapperScatter
-                xAxisVar={layout.xAxisVar}
-                layoutW={layout.w}
-                yAxisVar={layout.yAxisVar}
-                layoutH={layout.h}
-                chartId={layout.i}
-                annotationText={layout.notation}
-              />
-            </div>
-          );
-        }
-        throw new Error('Invalid scatter chart variable');
+        chartElement = <WrapperScatter layout={layout} />;
+        break;
 
       case 'HEATMAP':
-        if (isBloodComponent(layout.xAxisVar) && isAggregation(layout.yAxisVar)) {
-          return (
-            <div
-              key={layout.i}
-              className={`parent-node${layout.i}`}
-            >
-              <WrapperHeatMap
-                annotationText={layout.notation}
-                chartId={layout.i}
-                layoutW={layout.w}
-                layoutH={layout.h}
-                extraPairArrayString={layout.extraPair || ''}
-                xAxisVar={layout.xAxisVar}
-                yAxisVar={layout.yAxisVar}
-                comparisonDate={layout.outcomeComparison ? undefined : layout.interventionDate}
-                outcomeComparison={layout.outcomeComparison}
-              />
-            </div>
-          );
-        }
-        throw new Error('Invalid heatmap chart variable');
+        chartElement = <WrapperHeatMap layout={layout} />;
+        break;
 
       case 'COST':
-        if (isAggregation(layout.yAxisVar)) {
-          return (
-            <div
-              key={layout.i}
-              className={`parent-node${layout.i}`}
-            >
-              <WrapperCostBar
-                extraPairArrayString={layout.extraPair || ''}
-                layoutW={layout.w}
-                layoutH={layout.h}
-                yAxisVar={layout.yAxisVar}
-                chartId={layout.i}
-                comparisonOption={layout.outcomeComparison}
-                annotationText={layout.notation}
-              />
-            </div>
-          );
-        }
-        throw new Error('Invalid cost chart variable');
+        chartElement = <WrapperCostBar layout={layout} />;
+        break;
 
       default:
-        return null;
+        break;
     }
+
+    return <div key={layout.i}>{chartElement}</div>;
   };
 
   const colData = {

@@ -5,7 +5,7 @@ import {
 // eslint-disable-next-line import/no-cycle
 import { RootStore } from './Store';
 import { LayoutElement, xAxisOption, yAxisOption } from './Types/LayoutTypes';
-import { Outcome } from '../Presets/DataDict';
+import { Outcome, typeDiction } from '../Presets/DataDict';
 
 export class ChartStore {
   rootStore: RootStore;
@@ -66,7 +66,7 @@ export class ChartStore {
     this.provenance.apply(addNewChart(newLayoutElement));
   }
 
-  changeChart(xAxisSelection: xAxisOption, yAxisSelection: yAxisOption, chartIndex: string, chartType: string, outcomeComparison: Outcome | 'NONE') {
+  changeChart(xAxisSelection: xAxisOption, yAxisSelection: yAxisOption, chartIndex: string, chartType: typeof typeDiction[number], outcomeComparison: Outcome | 'NONE') {
     this.provenance.apply(changeChart(xAxisSelection, yAxisSelection, chartIndex, chartType, outcomeComparison));
   }
 

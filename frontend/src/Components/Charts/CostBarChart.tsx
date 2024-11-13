@@ -13,7 +13,7 @@ import useDeepCompareEffect from 'use-deep-compare-effect';
 import {
   ExtraPairPadding, ExtraPairWidth, MIN_HEATMAP_BANDWIDTH, OffsetDict, postopColor, preopColor,
 } from '../../Presets/Constants';
-import { Aggregation, BloodComponentOptions, Outcome } from '../../Presets/DataDict';
+import { BloodComponentOptions } from '../../Presets/DataDict';
 import { ChartWrapperContainer, ChartAccessoryDiv } from '../../Presets/StyledComponents';
 import AnnotationForm from './ChartAccessories/AnnotationForm';
 import CostInputDialog from '../Modals/CostInputDialog';
@@ -27,6 +27,7 @@ import { stateUpdateWrapperUseJSON } from '../../Interfaces/StateChecker';
 import { CostBarChartDataPoint, SingleCasePoint } from '../../Interfaces/Types/DataTypes';
 import { sortHelper } from '../../HelperFunctions/ChartSorting';
 import ComparisonLegend from './ChartAccessories/ComparisonLegend';
+import { CostLayoutElement } from '../../Interfaces/Types/LayoutTypes';
 
 type TempDataItem = {
   aggregateAttribute: string | number;
@@ -46,19 +47,11 @@ type CostBarDataPoint = {
   bloodProduct: string;
 };
 
-type Props = {
-  yAxisVar: Aggregation;
-  chartId: string;
-  annotationText: string;
-  layoutW: number;
-  layoutH: number;
-  comparisonOption?: Outcome;
-  extraPairArrayString: string;
-};
+function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
+  const {
+    yAxisVar, i: chartId, h: layoutH, w: layoutW, notation: annotationText, extraPair, outcomeComparison,
+  } = layout;
 
-function WrapperCostBar({
-  annotationText, extraPairArrayString, yAxisVar, chartId, layoutH, layoutW, comparisonOption,
-}: Props) {
   const store = useContext(Store);
   const { filteredCases } = store;
   const {
@@ -171,11 +164,11 @@ function WrapperCostBar({
 
   const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
   useEffect(() => {
-    if (extraPairArrayString) {
-      stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPairArrayString), setExtraPairArray);
+    if (extraPair) {
+      stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [extraPairArrayString]);
+  }, [extraPair]);
   const extraPairData = useMemo(() => generateExtrapairPlotData(yAxisVar, filteredCases, extraPairArray, data), [yAxisVar, filteredCases, extraPairArray, data]);
   const secondaryExtraPairData = generateExtrapairPlotData(yAxisVar, filteredCases, extraPairArray, secondaryData);
   const extraPairTotalWidth = useMemo(() => extraPairData.map((pair) => ExtraPairWidth[pair.type] + ExtraPairPadding).reduce((a, b) => a + b, 0), [extraPairData]);
@@ -246,7 +239,7 @@ function WrapperCostBar({
           caseIDList: new Set(),
         };
       }
-      if (comparisonOption && singleCase[comparisonOption] as number > 0) {
+      if (outcomeComparison && singleCase[outcomeComparison] as number > 0) {
         secondaryTemporaryDataHolder[singleCase[yAxisVar]].PRBC_UNITS += singleCase.PRBC_UNITS;
         secondaryTemporaryDataHolder[singleCase[yAxisVar]].FFP_UNITS += singleCase.FFP_UNITS;
         secondaryTemporaryDataHolder[singleCase[yAxisVar]].CRYO_UNITS += singleCase.CRYO_UNITS;
@@ -279,7 +272,7 @@ function WrapperCostBar({
       }
       outputData.push(newDataObj);
     });
-    if (comparisonOption) {
+    if (outcomeComparison) {
       Object.values(secondaryTemporaryDataHolder).forEach((dataItem) => {
         const newDataObj = makeDataObj(dataItem);
         secondaryCaseCountTemp += newDataObj.caseCount;
@@ -298,7 +291,7 @@ function WrapperCostBar({
     }
     store.chartStore.totalAggregatedCaseCount = totalCaseCountTemp + secondaryCaseCountTemp;
     stateUpdateWrapperUseJSON(data, outputData, setData);
-  }, [proceduresSelection, rawDateRange, yAxisVar, currentOutputFilterSet, BloodProductCost, filteredCases, comparisonOption]);
+  }, [proceduresSelection, rawDateRange, yAxisVar, currentOutputFilterSet, BloodProductCost, filteredCases, outcomeComparison]);
 
   const spec = useMemo(() => ({
     $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
@@ -317,7 +310,7 @@ function WrapperCostBar({
         axis: { grid: false, title: 'Cost' },
       },
       y: { field: 'rowLabel', type: 'ordinal', sort: xVals.toReversed() },
-      yOffset: comparisonOption ? { field: 'type', type: 'ordinal', scale: { paddingOuter: -8, domain: ['true', 'false'] } } : undefined,
+      yOffset: outcomeComparison ? { field: 'type', type: 'ordinal', scale: { paddingOuter: -8, domain: ['true', 'false'] } } : undefined,
       color: { field: 'bloodProduct', type: 'nominal', legend: null },
       fillOpacity: {
         condition: { param: 'select', value: 1 },
@@ -338,7 +331,7 @@ function WrapperCostBar({
           barClick: { type: 'point', fields: ['rowLabel', 'bloodProduct'] },
         },
       },
-      ...(comparisonOption ? [
+      ...(outcomeComparison ? [
         {
           mark: 'rect',
           encoding: {
@@ -361,13 +354,13 @@ function WrapperCostBar({
     config: {
       axisY: {
         title: null,
-        labelPadding: comparisonOption ? 20 : 0,
+        labelPadding: outcomeComparison ? 20 : 0,
       },
       view: {
         stroke: 'transparent',
       },
     },
-  }), [xVals, comparisonOption, secondaryData, dimensionHeight]);
+  }), [xVals, outcomeComparison, secondaryData, dimensionHeight]);
 
   const axisSpec = useMemo(() => ({
     ...spec,
@@ -437,14 +430,14 @@ function WrapperCostBar({
         <CostInputDialog bloodComponent={bloodCostToChange} visible={openCostInputDialog} setVisibility={setOpenCostInputDialog} />
         <ChartStandardButtons chartID={chartId} />
       </ChartAccessoryDiv>
-      {comparisonOption && (
+      {outcomeComparison && (
         <svg height={30}>
           <ComparisonLegend
             dimensionWidth={dimensionWidth}
             interventionDate={undefined}
             firstTotal={data.reduce((a, b) => a + b.caseCount, 0)}
             secondTotal={secondaryData.reduce((a, b) => a + b.caseCount, 0)}
-            outcomeComparison={comparisonOption}
+            outcomeComparison={outcomeComparison}
           />
 
         </svg>
@@ -452,7 +445,7 @@ function WrapperCostBar({
       <div
         ref={chartDiv}
         style={{
-          height: `calc(100% - 38px - 40px - 10px${comparisonOption ? ' - 30px' : ''})`,
+          height: `calc(100% - 38px - 40px - 10px${outcomeComparison ? ' - 30px' : ''})`,
           width: '100%',
           overflow: 'auto',
           display: 'flex',
@@ -461,9 +454,9 @@ function WrapperCostBar({
         <svg width={extraPairTotalWidth} height={vegaHeight}>
           <GeneratorExtraPair
             extraPairDataSet={extraPairData}
-            secondaryExtraPairDataSet={comparisonOption ? secondaryExtraPairData : undefined}
+            secondaryExtraPairDataSet={outcomeComparison ? secondaryExtraPairData : undefined}
             aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
-            aggregationScaleRange={`[${comparisonOption ? vegaHeight - 45 : vegaHeight - 40}, ${comparisonOption ? 15 : 6}]`}
+            aggregationScaleRange={`[${outcomeComparison ? vegaHeight - 45 : vegaHeight - 40}, ${outcomeComparison ? 15 : 6}]`}
             text
             height={vegaHeight}
             chartId={chartId}

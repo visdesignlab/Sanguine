@@ -18,7 +18,7 @@ import ChartConfigMenu from '../ChartAccessories/ChartConfigMenu';
 import AnnotationForm from '../ChartAccessories/AnnotationForm';
 import ChartStandardButtons from '../ChartStandardButtons';
 import { ChartAccessoryDiv, ChartWrapperContainer } from '../../../Presets/StyledComponents';
-import { BloodComponent, Aggregation } from '../../../Presets/DataDict';
+import { DumbbellLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
 
 const ButtonStyles = {
   preopButtonActive: css({
@@ -68,17 +68,11 @@ const DumbbellUtilTitle = styled.div({
   fontSize: '0.8rem',
 });
 
-type Props = {
-    xAxisVar: BloodComponent | Aggregation;
-    chartId: string;
-    layoutH: number;
-    layoutW: number;
-    annotationText: string;
-};
+function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
+  const {
+    xAxisVar, i: chartId, h: layoutH, w: layoutW, notation: annotationText,
+  } = layout;
 
-function WrapperDumbbell({
-  annotationText, xAxisVar, chartId, layoutH, layoutW,
-}: Props) {
   const store = useContext(Store);
   const { filteredCases } = store;
   const { proceduresSelection, showZero, rawDateRange } = store.provenanceState;

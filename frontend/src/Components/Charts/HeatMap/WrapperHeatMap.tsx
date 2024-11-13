@@ -7,7 +7,7 @@ import { Box, Container } from '@mui/material';
 import { generateRegularData } from '../../../HelperFunctions/ChartDataGenerator';
 import { generateExtrapairPlotData } from '../../../HelperFunctions/ExtraPairDataGenerator';
 import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
-import { BloodProductCap, ExtraPairPadding, ExtraPairWidth } from '../../../Presets/Constants';
+import { ExtraPairPadding, ExtraPairWidth } from '../../../Presets/Constants';
 import Store from '../../../Interfaces/Store';
 import { ExtraPairPoint, HeatMapDataPoint, SingleCasePoint } from '../../../Interfaces/Types/DataTypes';
 import HeatMap from './HeatMap';
@@ -16,22 +16,12 @@ import ChartConfigMenu from '../ChartAccessories/ChartConfigMenu';
 import AnnotationForm from '../ChartAccessories/AnnotationForm';
 import ChartStandardButtons from '../ChartStandardButtons';
 import { ChartAccessoryDiv } from '../../../Presets/StyledComponents';
-import { Aggregation, Outcome } from '../../../Presets/DataDict';
+import { HeatMapLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
 
-type Props = {
-    layoutW: number;
-    layoutH: number;
-    chartId: string;
-    extraPairArrayString: string;
-    xAxisVar: keyof typeof BloodProductCap;
-    yAxisVar: Aggregation;
-    outcomeComparison?: Outcome;
-    comparisonDate?: number;
-    annotationText: string;
-};
-function WrapperHeatMap({
-  annotationText, outcomeComparison, layoutH, layoutW, chartId, extraPairArrayString, yAxisVar, xAxisVar, comparisonDate,
-}: Props) {
+function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
+  const {
+    xAxisVar, yAxisVar, i: chartId, h: layoutH, w: layoutW, notation: annotationText, extraPair, interventionDate, outcomeComparison,
+  } = layout;
   const store = useContext(Store);
 
   const { filteredCases } = store;
@@ -49,15 +39,15 @@ function WrapperHeatMap({
   const [secondaryCaseCount, setSecondaryCaseCount] = useState(0);
 
   useEffect(() => {
-    if (extraPairArrayString) {
-      stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPairArrayString), setExtraPairArray);
+    if (extraPair) {
+      stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [extraPairArrayString]);
+  }, [extraPair]);
 
   useDeepCompareEffect(() => {
     const newExtraPairData = generateExtrapairPlotData(yAxisVar, filteredCases, extraPairArray, data);
-    if (outcomeComparison || comparisonDate) {
+    if (outcomeComparison || interventionDate) {
       const newSecondaryExtraPairData = generateExtrapairPlotData(yAxisVar, filteredCases, extraPairArray, secondaryData);
       stateUpdateWrapperUseJSON(secondaryExtraPairData, newSecondaryExtraPairData, setSecondaryExtraPairData);
     }
@@ -68,7 +58,7 @@ function WrapperHeatMap({
     setExtraPairTotalWidth(totalWidth);
     stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [extraPairArray, data, filteredCases, secondaryData, outcomeComparison, comparisonDate]);
+  }, [extraPairArray, data, filteredCases, secondaryData, outcomeComparison, interventionDate]);
 
   useLayoutEffect(() => {
     if (svgRef.current) {
@@ -94,7 +84,7 @@ function WrapperHeatMap({
         };
       }
 
-      if ((outcomeComparison && singleCase[outcomeComparison] as number > 0) || (comparisonDate && singleCase.CASE_DATE < comparisonDate)) {
+      if ((outcomeComparison && singleCase[outcomeComparison] as number > 0) || (interventionDate && singleCase.CASE_DATE < interventionDate)) {
         secondaryTemporaryDataHolder[singleCase[yAxisVar]].data.push(singleCase);
         secondaryTemporaryDataHolder[singleCase[yAxisVar]].patientIDList.add(singleCase.MRN);
       } else {
@@ -116,13 +106,13 @@ function WrapperHeatMap({
     yAxisVar,
     xAxisVar,
     outcomeComparison,
-    comparisonDate,
+    interventionDate,
     filteredCases]);
 
   return (
     <Container style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <ChartAccessoryDiv>
-        {`Heatmap${(outcomeComparison || comparisonDate) ? ' with Comparison' : ''}`}
+        {`Heatmap${(outcomeComparison || interventionDate) ? ' with Comparison' : ''}`}
         <ExtraPairButtons disbleButton={width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
         <ChartConfigMenu
           yAxisVar={yAxisVar}
@@ -148,11 +138,11 @@ function WrapperHeatMap({
             xAxisVar={xAxisVar}
             chartId={chartId}
             extraPairDataSet={extraPairData}
-            secondaryExtraPairDataSet={(outcomeComparison || comparisonDate) ? secondaryExtraPairData : undefined}
-            secondaryData={(outcomeComparison || comparisonDate) ? secondaryData : undefined}
+            secondaryExtraPairDataSet={(outcomeComparison || interventionDate) ? secondaryExtraPairData : undefined}
+            secondaryData={(outcomeComparison || interventionDate) ? secondaryData : undefined}
             firstTotal={caseCount}
             secondTotal={secondaryCaseCount}
-            interventionDate={comparisonDate}
+            interventionDate={interventionDate}
             outcomeComparison={outcomeComparison}
           />
         </svg>

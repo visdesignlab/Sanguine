@@ -59,7 +59,7 @@ export const ExtraPairOptions: { key: typeof EXTRA_PAIR_OPTIONS[number]; value: 
 
 const dumbbellValueOptions = [{ key: 'HGB_VALUE', value: 'Hemoglobin Value' }];
 
-export const typeDiction = ['DUMBBELL', 'SCATTER', 'HEATMAP', 'COST'];
+export const typeDiction = ['DUMBBELL', 'SCATTER', 'HEATMAP', 'COST'] as const;
 
 export const addOptions = [
   [[...BloodComponentOptions, ...AggregationOptions], dumbbellValueOptions], // Dumbbell chart

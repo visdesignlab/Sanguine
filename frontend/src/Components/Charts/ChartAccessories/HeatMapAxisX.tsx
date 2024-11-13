@@ -4,7 +4,7 @@ import { observer } from 'mobx-react';
 import {
   BloodProductCap, CELL_SAVER_TICKS, largeFontSize, regularFontSize,
 } from '../../../Presets/Constants';
-import { AcronymDictionary } from '../../../Presets/DataDict';
+import { AcronymDictionary, BloodComponent } from '../../../Presets/DataDict';
 import { ValueScaleGeneratorFromDomainRange } from '../../../HelperFunctions/Scales';
 import { Offset } from '../../../Interfaces/Types/OffsetType';
 import Store from '../../../Interfaces/Store';
@@ -34,7 +34,7 @@ function HeatMapAxis({
   if (isValueScaleBand) {
     valueLabel = axisBottom(valueScale() as ScaleBand<string>)
     // eslint-disable-next-line no-nested-ternary, @typescript-eslint/no-explicit-any
-      .tickFormat((d, i) => (xAxisVar === 'CELL_SAVER_ML' ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[xAxisVar as keyof typeof BloodProductCap] as any ? `${d}+` : d)));
+      .tickFormat((d, i) => (xAxisVar === 'CELL_SAVER_ML' ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[xAxisVar as BloodComponent] as any ? `${d}+` : d)));
   } else {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     valueLabel = axisBottom(valueScale() as any);

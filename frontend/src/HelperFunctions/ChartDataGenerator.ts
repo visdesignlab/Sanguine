@@ -1,9 +1,10 @@
 import { sum } from 'd3';
 import { HeatMapDataPoint, SingleCasePoint } from '../Interfaces/Types/DataTypes';
 import { BloodProductCap } from '../Presets/Constants';
+import { BloodComponent } from '../Presets/DataDict';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const generateRegularData = (temporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }>, showZero: boolean, valueToVisualize: keyof typeof BloodProductCap) => {
+export const generateRegularData = (temporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }>, showZero: boolean, valueToVisualize: BloodComponent) => {
   let totalCaseCount = 0;
   const outputData: HeatMapDataPoint[] = [];
   Object.values(temporaryDataHolder).forEach((computedData) => {

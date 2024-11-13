@@ -61,25 +61,27 @@ function AddModeTopMenu({ addingChartType, sx }: { addingChartType: number; sx: 
   const confirmChartAddHandler = () => {
     if (checkValidInput()) {
       if (!(addingChartType === 4 && !interventionDate)) {
-        const newChart: LayoutElement = {
-          xAxisVar: xAxisSelection as xAxisOption,
-          yAxisVar: yAxisSelection as yAxisOption,
+        const plotType = typeDiction[addingChartType];
+        const newChart: Partial<LayoutElement> = {
           i: store.provenanceState.nextAddingIndex.toString(),
-          w: 1,
-          h: 1,
           x: 0,
           y: ManualInfinity,
-          plotType: typeDiction[addingChartType],
+          w: 1,
+          h: 1,
           notation: '',
-          outcomeComparison: outcomeComparisonSelection || undefined,
-          interventionDate: interventionDate || undefined,
+          plotType,
+          extraPair: plotType === 'HEATMAP' || plotType === 'COST' ? JSON.stringify([]) : undefined,
         };
-        if (
-          typeDiction[addingChartType] === 'HEATMAP' || typeDiction[addingChartType] === 'COST') {
+        newChart.xAxisVar = xAxisSelection as xAxisOption;
+        newChart.yAxisVar = yAxisSelection as yAxisOption;
+
+        if (newChart.plotType === 'HEATMAP' || newChart.plotType === 'COST') {
           newChart.extraPair = JSON.stringify([]);
+          newChart.outcomeComparison = outcomeComparisonSelection || undefined;
+          newChart.interventionDate = interventionDate || undefined;
         }
 
-        store.chartStore.addNewChart(newChart);
+        store.chartStore.addNewChart(newChart as LayoutElement);
         store.configStore.topMenuBarAddMode = false;
         resetFields();
       }

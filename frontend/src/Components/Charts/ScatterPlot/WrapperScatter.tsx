@@ -14,24 +14,17 @@ import AnnotationForm from '../ChartAccessories/AnnotationForm';
 import ChartStandardButtons from '../ChartStandardButtons';
 import { ChartWrapperContainer } from '../../../Presets/StyledComponents';
 import { basicGray } from '../../../Presets/Constants';
-import { BloodComponent, HemoOption } from '../../../Presets/DataDict';
+import { ScatterLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
 
 const ChartAccessoryDiv = styled.div({
   textAlign: 'right',
   color: basicGray,
 });
 
-type Props = {
-    yAxisVar: HemoOption;
-    xAxisVar: BloodComponent;
-    chartId: string;
-    layoutW: number;
-    layoutH: number;
-    annotationText: string;
-};
-function WrapperScatter({
-  annotationText, yAxisVar, xAxisVar, chartId, layoutW, layoutH,
-}: Props) {
+function WrapperScatter({ layout }: { layout: ScatterLayoutElement }) {
+  const {
+    xAxisVar, yAxisVar, i: chartId, h: layoutH, w: layoutW, notation: annotationText,
+  } = layout;
   const store = useContext(Store);
   const { filteredCases } = store;
 
