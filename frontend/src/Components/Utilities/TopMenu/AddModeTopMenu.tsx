@@ -9,7 +9,7 @@ import styled from '@emotion/styled';
 import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import {
-  addOptions, Outcome, OutcomeOptions, typeDiction,
+  addOptions, ChartType, Outcome, OutcomeOptions,
 } from '../../../Presets/DataDict';
 import Store from '../../../Interfaces/Store';
 import { LayoutElement, xAxisOption, yAxisOption } from '../../../Interfaces/Types/LayoutTypes';
@@ -21,7 +21,7 @@ const StyledFormControl = styled(FormControl)({
   minWidth: '200px!important',
 });
 
-function AddModeTopMenu({ addingChartType, sx }: { addingChartType: number; sx: React.CSSProperties }) {
+function AddModeTopMenu({ chartType, sx }: { chartType: ChartType; sx: React.CSSProperties }) {
   const store = useContext(Store);
 
   const [xAxisSelection, setxAxisSelection] = useState<xAxisOption | '' >('');
@@ -34,15 +34,15 @@ function AddModeTopMenu({ addingChartType, sx }: { addingChartType: number; sx: 
 
   // Automatically set the axis values if the chart type has a fixed option
   useEffect(() => {
-    setXDisabled(addingChartType === 3);
-    setYDisabled(addingChartType === 0);
+    setXDisabled(chartType === 'COST');
+    setYDisabled(chartType === 'HEATMAP');
 
-    if (addingChartType === 0) {
+    if (chartType === 'DUMBBELL') {
       setYAxisSelection('HGB_VALUE');
-    } else if (addingChartType === 3) {
+    } else if (chartType === 'COST') {
       setxAxisSelection('COST');
     }
-  }, [addingChartType, store.configStore.topMenuBarAddMode]);
+  }, [chartType, store.configStore.topMenuBarAddMode]);
 
   const resetFields = () => {
     setxAxisSelection('');
@@ -56,39 +56,36 @@ function AddModeTopMenu({ addingChartType, sx }: { addingChartType: number; sx: 
     resetFields();
   };
 
-  const checkValidInput = () => (xAxisSelection.length > 0 && yAxisSelection.length > 0 && addingChartType > -1);
+  const checkValidInput = () => (xAxisSelection.length > 0 && yAxisSelection.length > 0);
 
   const confirmChartAddHandler = () => {
     if (checkValidInput()) {
-      if (!(addingChartType === 4 && !interventionDate)) {
-        const plotType = typeDiction[addingChartType];
-        const newChart: Partial<LayoutElement> = {
-          i: store.provenanceState.nextAddingIndex.toString(),
-          x: 0,
-          y: ManualInfinity,
-          w: 1,
-          h: 1,
-          annotationText: '',
-          plotType,
-          extraPair: plotType === 'HEATMAP' || plotType === 'COST' ? JSON.stringify([]) : undefined,
-        };
-        newChart.xAxisVar = xAxisSelection as xAxisOption;
-        newChart.yAxisVar = yAxisSelection as yAxisOption;
+      const newChart: Partial<LayoutElement> = {
+        i: store.provenanceState.nextAddingIndex.toString(),
+        x: 0,
+        y: ManualInfinity,
+        w: 1,
+        h: 1,
+        annotationText: '',
+        chartType,
+        extraPair: chartType === 'HEATMAP' || chartType === 'COST' ? JSON.stringify([]) : undefined,
+      };
+      newChart.xAxisVar = xAxisSelection as xAxisOption;
+      newChart.yAxisVar = yAxisSelection as yAxisOption;
 
-        if (newChart.plotType === 'HEATMAP' || newChart.plotType === 'COST') {
-          newChart.extraPair = JSON.stringify([]);
-          newChart.outcomeComparison = outcomeComparisonSelection || undefined;
-          newChart.interventionDate = interventionDate || undefined;
-        }
-
-        store.chartStore.addNewChart(newChart as LayoutElement);
-        store.configStore.topMenuBarAddMode = false;
-        resetFields();
+      if (newChart.chartType === 'HEATMAP' || newChart.chartType === 'COST') {
+        newChart.extraPair = JSON.stringify([]);
+        newChart.outcomeComparison = outcomeComparisonSelection || undefined;
+        newChart.interventionDate = interventionDate || undefined;
       }
+
+      store.chartStore.addNewChart(newChart as LayoutElement);
+      store.configStore.topMenuBarAddMode = false;
+      resetFields();
     }
   };
 
-  return addingChartType > -1 ? (
+  return (
     <Toolbar style={{ justifyContent: 'space-evenly' }} sx={sx}>
       <Fragment key={1}>
         <CenterAlignedDiv>
@@ -101,7 +98,7 @@ function AddModeTopMenu({ addingChartType, sx }: { addingChartType: number; sx: 
               label="X Axis Values"
               onChange={(e) => { setxAxisSelection(e.target.value as xAxisOption); }}
             >
-              {DropdownGenerator(addOptions[addingChartType][0], addingChartType === 3)}
+              {DropdownGenerator(addOptions[chartType].x, chartType === 'COST')}
             </Select>
           </StyledFormControl>
         </CenterAlignedDiv>
@@ -114,14 +111,14 @@ function AddModeTopMenu({ addingChartType, sx }: { addingChartType: number; sx: 
               value={yAxisSelection}
               onChange={(e) => { setYAxisSelection(e.target.value as yAxisOption); }}
             >
-              {DropdownGenerator(addOptions[addingChartType][1])}
+              {DropdownGenerator(addOptions[chartType].y)}
             </Select>
           </StyledFormControl>
 
         </CenterAlignedDiv>
       </Fragment>
 
-      {addingChartType >= 2 && (
+      {(chartType === 'HEATMAP' || chartType === 'COST') && (
         <Fragment key={2}>
           <CenterAlignedDiv>
             <StyledFormControl variant="standard" disabled={!!interventionDate}>
@@ -169,7 +166,7 @@ function AddModeTopMenu({ addingChartType, sx }: { addingChartType: number; sx: 
       </ButtonGroup>
     </Toolbar>
   // eslint-disable-next-line react/jsx-no-useless-fragment
-  ) : <></>;
+  );
 }
 
 export default observer(AddModeTopMenu);

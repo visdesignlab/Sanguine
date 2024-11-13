@@ -50,24 +50,24 @@ export const EXTRA_PAIR_OPTIONS = [...OUTCOMES, 'PREOP_HEMO', 'POSTOP_HEMO', 'TO
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ExtraPairOptions: { key: typeof EXTRA_PAIR_OPTIONS[number]; value: string }[] = (OutcomeOptions as any).concat([
   { key: 'PREOP_HEMO', value: 'Preop HGB' },
-  { key: 'POSTOP_HEMO', value: 'POSTOP_HEMO' },
-  { key: 'TOTAL_TRANS', value: 'TOTAL_TRANS' },
-  { key: 'PER_CASE', value: 'PER_CASE' },
-  { key: 'ZERO_TRANS', value: 'ZERO_TRANS' },
-  { key: 'RISK', value: 'RISK' },
+  { key: 'POSTOP_HEMO', value: 'Posop HGB' },
+  { key: 'TOTAL_TRANS', value: 'Total Transfused' },
+  { key: 'PER_CASE', value: 'Per Case' },
+  { key: 'ZERO_TRANS', value: 'Zero Transfused' },
+  { key: 'RISK', value: 'APR-DRG Weight' },
 ]);
 
 const dumbbellValueOptions = [{ key: 'HGB_VALUE', value: 'Hemoglobin Value' }];
 
-export const typeDiction = ['DUMBBELL', 'SCATTER', 'HEATMAP', 'COST'] as const;
+const _CHART_TYPES = ['DUMBBELL', 'SCATTER', 'HEATMAP', 'COST'] as const;
+export type ChartType = typeof _CHART_TYPES[number];
 
-export const addOptions = [
-  [[...BloodComponentOptions, ...AggregationOptions], dumbbellValueOptions], // Dumbbell chart
-  [BloodComponentOptions, ScatterYOptions], // Scatter plot
-  [BloodComponentOptions, AggregationOptions], // Heatmap
-  [[...BloodComponentOptions, { key: 'COST', value: 'Cost' }], AggregationOptions], // Cost
-  [BloodComponentOptions, [AggregationOptions[0], AggregationOptions[1]]],
-];
+export const addOptions = {
+  DUMBBELL: { x: [...BloodComponentOptions, ...AggregationOptions], y: dumbbellValueOptions },
+  SCATTER: { x: BloodComponentOptions, y: ScatterYOptions },
+  HEATMAP: { x: BloodComponentOptions, y: AggregationOptions },
+  COST: { x: [{ key: 'COST', value: 'Cost' }], y: AggregationOptions },
+};
 
 const SurgeryUrgency: { key: number; value: 'Urgent' | 'Elective' | 'Emergent'}[] = [
   { key: 0, value: 'Urgent' },

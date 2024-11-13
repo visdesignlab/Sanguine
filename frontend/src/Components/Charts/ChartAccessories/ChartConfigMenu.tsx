@@ -6,25 +6,14 @@ import {
 } from '@mui/material';
 import { observer } from 'mobx-react';
 import Store from '../../../Interfaces/Store';
-import {
-  addOptions, Outcome, OutcomeOptions, typeDiction,
-} from '../../../Presets/DataDict';
-import { xAxisOption, yAxisOption } from '../../../Interfaces/Types/LayoutTypes';
+import { addOptions, Outcome, OutcomeOptions } from '../../../Presets/DataDict';
+import { LayoutElement, xAxisOption, yAxisOption } from '../../../Interfaces/Types/LayoutTypes';
 import { DropdownInputTypes } from '../../../Interfaces/Types/DropdownInputType';
 
-type Props = {
-  xAxisVar: xAxisOption;
-  yAxisVar: yAxisOption;
-  chartTypeIndexinArray: number;
-  chartId: string;
-  xChangeable?: boolean;
-  yChangeable?: boolean;
-  outcomeChangeable?: boolean;
-};
-
-function ChartConfigMenu({
-  xAxisVar, yAxisVar, chartTypeIndexinArray, chartId, xChangeable = false, yChangeable = false, outcomeChangeable = false,
-}: Props) {
+function ChartConfigMenu({ layout }: { layout: LayoutElement }) {
+  const {
+    xAxisVar, yAxisVar, i: chartId, chartType,
+  } = layout;
   const store = useContext(Store);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -39,19 +28,19 @@ function ChartConfigMenu({
 
   const changeXAxis = (userInput: DropdownInputTypes) => {
     const { key } = userInput;
-    store.chartStore.changeChart(key as xAxisOption, yAxisVar, chartId, typeDiction[chartTypeIndexinArray], 'NONE');
+    store.chartStore.changeChart(key as xAxisOption, yAxisVar, chartId, chartType, 'NONE');
     handleClose();
   };
 
   const changeYAxis = (userInput: DropdownInputTypes) => {
     const { key } = userInput;
-    store.chartStore.changeChart(xAxisVar, key as yAxisOption, chartId, typeDiction[chartTypeIndexinArray], 'NONE');
+    store.chartStore.changeChart(xAxisVar, key as yAxisOption, chartId, chartType, 'NONE');
     handleClose();
   };
 
   const changeOutcome = (userInput: DropdownInputTypes) => {
     const { key } = userInput;
-    store.chartStore.changeChart(xAxisVar, yAxisVar, chartId, typeDiction[chartTypeIndexinArray], key as Outcome);
+    store.chartStore.changeChart(xAxisVar, yAxisVar, chartId, chartType, key as Outcome);
     handleClose();
   };
 
@@ -70,28 +59,27 @@ function ChartConfigMenu({
         open={open}
         onClose={handleClose}
       >
-        {xChangeable ? (
+        {['DUMBBELL', 'SCATTER', 'HEATMAP'].includes(chartType) ? (
           <NestedMenuItem
             label="Change X Axis"
             parentMenuOpen={open}
           >
-            {addOptions[chartTypeIndexinArray][0].map((option) => (
+            {addOptions[chartType].x.map((option) => (
               <MenuItem key={option.key} onClick={() => { changeXAxis(option); }}>{option.value}</MenuItem>
             ))}
           </NestedMenuItem>
         ) : []}
-        {yChangeable ? (
+        {['SCATTER', 'HEATMAP', 'COST'].includes(chartType) ? (
           <NestedMenuItem
             label="Change Y Axis"
             parentMenuOpen={open}
           >
-            {addOptions[chartTypeIndexinArray][1].map((option) => (
+            {addOptions[chartType].y.map((option) => (
               <MenuItem key={option.key} onClick={() => { changeYAxis(option); }}>{option.value}</MenuItem>
             ))}
-            {chartTypeIndexinArray === 0 ? <MenuItem key="NONE" onClick={() => { changeYAxis(noneOption); }}>None</MenuItem> : null}
           </NestedMenuItem>
         ) : []}
-        {outcomeChangeable ? (
+        {['HEATMAP', 'COST'].includes(chartType) ? (
           <NestedMenuItem
             label="Change Outcome Comparison"
             parentMenuOpen={open}

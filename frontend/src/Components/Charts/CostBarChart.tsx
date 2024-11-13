@@ -391,14 +391,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
           </Tooltip>
         </FormControl>
         <ExtraPairButtons disbleButton={dimensionWidth * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
-        <ChartConfigMenu
-          yAxisVar={yAxisVar}
-          xAxisVar="COST"
-          chartTypeIndexinArray={3}
-          chartId={chartId}
-          yChangeable
-          outcomeChangeable
-        />
+        <ChartConfigMenu layout={layout} />
         <Tooltip title="Change blood component cost">
           <IconButton size="small" onClick={handleClick}>
             <MonetizationOnIcon />

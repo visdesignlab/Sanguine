@@ -188,13 +188,7 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
         <ChartWrapperContainer>
           <ChartAccessoryDiv>
             Dumbbell Chart
-            <ChartConfigMenu
-              xAxisVar={xAxisVar}
-              yAxisVar={'HGB_VALUE' as never}
-              chartTypeIndexinArray={0}
-              chartId={chartId}
-              xChangeable
-            />
+            <ChartConfigMenu layout={layout} />
             <ChartStandardButtons chartID={chartId} />
           </ChartAccessoryDiv>
           <ChartSVG ref={svgRef}>

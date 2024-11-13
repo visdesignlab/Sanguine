@@ -21,6 +21,7 @@ import UndoRedoButtons from './UndoRedoButtons';
 import AddModeTopMenu from './AddModeTopMenu';
 import { logoutHandler, simulateAPIClick } from '../../../Interfaces/UserManagement';
 import Store from '../../../Interfaces/Store';
+import { ChartType } from '../../../Presets/DataDict';
 
 const StyledImage = styled.img({
   margin: 'auto!important',
@@ -39,7 +40,7 @@ const ManualDisableCSS = css({
 
 function RegularModeMenu() {
   const store = useContext(Store);
-  const [addingChartType, setAddingChartType] = useState(-1);
+  const [chartType, setChartType] = useState<ChartType | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [anchorMore, setAnchorMore] = useState<null | HTMLElement>(null);
 
@@ -48,8 +49,8 @@ function RegularModeMenu() {
   const passSetOpenAbout = (input: boolean) => {
     setOpenAbout(input);
   };
-  const addModeButtonHandler = (chartType: number) => {
-    setAddingChartType(chartType);
+  const addModeButtonHandler = (type: ChartType) => {
+    setChartType(type);
     store.configStore.topMenuBarAddMode = true;
   };
 
@@ -61,7 +62,7 @@ function RegularModeMenu() {
   };
   const handleMoreClose = () => { setAnchorMore(null); };
 
-  const handleClose = (input?: number) => {
+  const handleClose = (input?: ChartType) => {
     setAnchorEl(null);
     if (input !== undefined) {
       addModeButtonHandler(input);
@@ -128,10 +129,10 @@ function RegularModeMenu() {
         <Stack direction="row" spacing={1}>
           <Button startIcon={<InsertChartIcon />} color="primary" variant="contained" disableElevation onClick={handleClick} aria-controls="simple-menu" aria-haspopup="true">Add Chart</Button>
           <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={() => handleClose()}>
-            <MenuItem onClick={() => handleClose(0)}>Dumbbell Chart</MenuItem>
-            <MenuItem onClick={() => handleClose(1)}>Scatter Plot</MenuItem>
-            <MenuItem onClick={() => handleClose(2)}>Heat Map</MenuItem>
-            <MenuItem onClick={() => handleClose(3)}>Cost and Saving Chart</MenuItem>
+            <MenuItem onClick={() => handleClose('DUMBBELL')}>Dumbbell Chart</MenuItem>
+            <MenuItem onClick={() => handleClose('SCATTER')}>Scatter Plot</MenuItem>
+            <MenuItem onClick={() => handleClose('HEATMAP')}>Heat Map</MenuItem>
+            <MenuItem onClick={() => handleClose('COST')}>Cost and Saving Chart</MenuItem>
           </Menu>
 
           <StateManagementSuite />
@@ -193,7 +194,7 @@ function RegularModeMenu() {
         </Menu>
         <InfoDialog setOpenAbout={passSetOpenAbout} openAbout={openAbout} />
       </Toolbar>
-      <AddModeTopMenu addingChartType={addingChartType} sx={{ display: store.configStore.topMenuBarAddMode ? '' : 'none' }} />
+      {chartType && <AddModeTopMenu chartType={chartType} sx={{ display: store.configStore.topMenuBarAddMode ? '' : 'none' }} />}
     </AppBar>
   );
 }

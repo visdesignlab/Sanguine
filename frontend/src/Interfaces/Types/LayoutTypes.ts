@@ -12,19 +12,19 @@ type BaseLayoutElement = {
 };
 
 export type DumbbellLayoutElement = BaseLayoutElement & {
-    plotType: 'DUMBBELL';
+    chartType: 'DUMBBELL';
     xAxisVar: BloodComponent | Aggregation;
     yAxisVar: 'HGB_VALUE';
 };
 
 export type ScatterLayoutElement = BaseLayoutElement & {
-    plotType: 'SCATTER';
+    chartType: 'SCATTER';
     xAxisVar: BloodComponent;
     yAxisVar: HemoOption;
 };
 
 export type HeatMapLayoutElement = BaseLayoutElement & {
-    plotType: 'HEATMAP';
+    chartType: 'HEATMAP';
     xAxisVar: BloodComponent;
     yAxisVar: Aggregation;
     extraPair?: string;
@@ -33,7 +33,7 @@ export type HeatMapLayoutElement = BaseLayoutElement & {
 };
 
 export type CostLayoutElement = BaseLayoutElement & {
-    plotType: 'COST';
+    chartType: 'COST';
     xAxisVar: 'COST';
     yAxisVar: Aggregation;
     extraPair?: string;

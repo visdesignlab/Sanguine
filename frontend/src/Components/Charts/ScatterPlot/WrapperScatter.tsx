@@ -91,14 +91,7 @@ function WrapperScatter({ layout }: { layout: ScatterLayoutElement }) {
     <ChartWrapperContainer>
       <ChartAccessoryDiv>
         Scatterplot
-        <ChartConfigMenu
-          xAxisVar={xAxisVar}
-          yAxisVar={yAxisVar}
-          chartTypeIndexinArray={1}
-          chartId={chartId}
-          xChangeable
-          yChangeable
-        />
+        <ChartConfigMenu layout={layout} />
         <ChartStandardButtons chartID={chartId} />
       </ChartAccessoryDiv>
       <ChartSVG ref={svgRef}>

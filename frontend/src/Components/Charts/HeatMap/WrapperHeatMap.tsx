@@ -114,15 +114,7 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
       <ChartAccessoryDiv>
         {`Heatmap${(outcomeComparison || interventionDate) ? ' with Comparison' : ''}`}
         <ExtraPairButtons disbleButton={width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
-        <ChartConfigMenu
-          yAxisVar={yAxisVar}
-          xAxisVar={xAxisVar}
-          chartTypeIndexinArray={2}
-          chartId={chartId}
-          xChangeable
-          yChangeable
-          outcomeChangeable
-        />
+        <ChartConfigMenu layout={layout} />
         <ChartStandardButtons chartID={chartId} />
       </ChartAccessoryDiv>
 

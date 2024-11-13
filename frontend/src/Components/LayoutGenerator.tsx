@@ -17,7 +17,7 @@ function LayoutGenerator() {
 
   const createElement = (layout: LayoutElement) => {
     let chartElement: JSX.Element | null = null;
-    switch (layout.plotType) {
+    switch (layout.chartType) {
       case 'DUMBBELL':
         chartElement = <WrapperDumbbell layout={layout} />;
         break;

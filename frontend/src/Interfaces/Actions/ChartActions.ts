@@ -2,11 +2,11 @@ import { createAction } from '@visdesignlab/trrack';
 import { ActionEvents } from '../Types/EventTypes';
 import { LayoutElement, xAxisOption, yAxisOption } from '../Types/LayoutTypes';
 import { ApplicationState } from '../Types/StateTypes';
-import { Outcome, typeDiction } from '../../Presets/DataDict';
+import { ChartType, Outcome } from '../../Presets/DataDict';
 
 export const addExtraPair = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, newExtraPair) => {
   state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
-    if (d.i === chartID && (d.plotType === 'HEATMAP' || d.plotType === 'COST') && d.extraPair) {
+    if (d.i === chartID && (d.chartType === 'HEATMAP' || d.chartType === 'COST') && d.extraPair) {
       if (!d.extraPair.includes(newExtraPair)) {
         const originalArray = JSON.parse(d.extraPair);
         originalArray.push(newExtraPair);
@@ -19,7 +19,7 @@ export const addExtraPair = createAction<ApplicationState, [string, string], Act
 
 export const removeExtraPair = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, removingPairName) => {
   state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
-    if (d.i === chartID && (d.plotType === 'HEATMAP' || d.plotType === 'COST') && d.extraPair) {
+    if (d.i === chartID && (d.chartType === 'HEATMAP' || d.chartType === 'COST') && d.extraPair) {
       const originalArray = JSON.parse(d.extraPair);
 
       const newArray = (originalArray.filter((l: string) => (l !== removingPairName)));
@@ -59,13 +59,13 @@ export const onLayoutChange = createAction<ApplicationState, [ReactGridLayout.La
   state.layoutArray = JSON.parse(JSON.stringify(state.layoutArray));
 }).setLabel('LayoutChange');
 
-export const changeChart = createAction<ApplicationState, [xAxisOption, yAxisOption, string, typeof typeDiction[number], Outcome | 'NONE'], ActionEvents>((state, xAxisSelection, yAxisSelection, chartIndex, chartType, outcomeComparison?) => {
+export const changeChart = createAction<ApplicationState, [xAxisOption, yAxisOption, string, ChartType, Outcome | 'NONE'], ActionEvents>((state, xAxisSelection, yAxisSelection, chartIndex, chartType, outcomeComparison?) => {
   state.layoutArray = state.layoutArray.map((d) => {
     if (d.i === chartIndex) {
       d.xAxisVar = xAxisSelection;
       d.yAxisVar = yAxisSelection;
-      d.plotType = chartType;
-      if (outcomeComparison && (d.plotType === 'HEATMAP' || d.plotType === 'COST')) {
+      d.chartType = chartType;
+      if (outcomeComparison && (d.chartType === 'HEATMAP' || d.chartType === 'COST')) {
         d.outcomeComparison = outcomeComparison === 'NONE' ? undefined : outcomeComparison;
       }
     }
