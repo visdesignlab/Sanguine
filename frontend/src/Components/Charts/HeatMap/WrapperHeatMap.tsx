@@ -124,8 +124,8 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
           outcomeChangeable
         />
         <ChartStandardButtons chartID={chartId} />
-
       </ChartAccessoryDiv>
+
       <Box style={{ flexGrow: 1 }}>
         <svg style={{ width: '100%', height: '100%' }} ref={svgRef}>
           <HeatMap

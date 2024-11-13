@@ -146,7 +146,7 @@ function AddModeTopMenu({ addingChartType, sx }: { addingChartType: number; sx: 
                 maxDate={store.provenanceState.rawDateRange[1]}
                 disabled={!!outcomeComparisonSelection}
                 value={interventionDate}
-                onChange={setInterventionDate}
+                onChange={(value: unknown) => { setInterventionDate((value as Date).getTime()); }}
               />
             </LocalizationProvider>
 

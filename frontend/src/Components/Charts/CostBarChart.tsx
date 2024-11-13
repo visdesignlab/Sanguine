@@ -49,7 +49,7 @@ type CostBarDataPoint = {
 
 function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   const {
-    yAxisVar, i: chartId, h: layoutH, w: layoutW, annotationText, extraPair, outcomeComparison,
+    yAxisVar, i: chartId, h: layoutH, w: layoutW, annotationText, extraPair, interventionDate, outcomeComparison,
   } = layout;
 
   const store = useContext(Store);
@@ -239,7 +239,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
           caseIDList: new Set(),
         };
       }
-      if (outcomeComparison && singleCase[outcomeComparison] as number > 0) {
+      if ((outcomeComparison && singleCase[outcomeComparison] as number > 0) || (interventionDate && singleCase.CASE_DATE < interventionDate)) {
         secondaryTemporaryDataHolder[singleCase[yAxisVar]].PRBC_UNITS += singleCase.PRBC_UNITS;
         secondaryTemporaryDataHolder[singleCase[yAxisVar]].FFP_UNITS += singleCase.FFP_UNITS;
         secondaryTemporaryDataHolder[singleCase[yAxisVar]].CRYO_UNITS += singleCase.CRYO_UNITS;
@@ -272,7 +272,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
       }
       outputData.push(newDataObj);
     });
-    if (outcomeComparison) {
+    if (outcomeComparison || interventionDate) {
       Object.values(secondaryTemporaryDataHolder).forEach((dataItem) => {
         const newDataObj = makeDataObj(dataItem);
         secondaryCaseCountTemp += newDataObj.caseCount;
@@ -291,7 +291,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     }
     store.chartStore.totalAggregatedCaseCount = totalCaseCountTemp + secondaryCaseCountTemp;
     stateUpdateWrapperUseJSON(data, outputData, setData);
-  }, [proceduresSelection, rawDateRange, yAxisVar, currentOutputFilterSet, BloodProductCost, filteredCases, outcomeComparison]);
+  }, [proceduresSelection, rawDateRange, yAxisVar, currentOutputFilterSet, BloodProductCost, filteredCases, outcomeComparison, interventionDate]);
 
   const spec = useMemo(() => ({
     $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
@@ -310,7 +310,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
         axis: { grid: false, title: 'Cost' },
       },
       y: { field: 'rowLabel', type: 'ordinal', sort: xVals.toReversed() },
-      yOffset: outcomeComparison ? { field: 'type', type: 'ordinal', scale: { paddingOuter: -8, domain: ['true', 'false'] } } : undefined,
+      yOffset: outcomeComparison || interventionDate ? { field: 'type', type: 'ordinal', scale: { paddingOuter: -8, domain: ['true', 'false'] } } : undefined,
       color: { field: 'bloodProduct', type: 'nominal', legend: null },
       fillOpacity: {
         condition: { param: 'select', value: 1 },
@@ -331,7 +331,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
           barClick: { type: 'point', fields: ['rowLabel', 'bloodProduct'] },
         },
       },
-      ...(outcomeComparison ? [
+      ...(outcomeComparison || interventionDate ? [
         {
           mark: 'rect',
           encoding: {
@@ -354,13 +354,13 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     config: {
       axisY: {
         title: null,
-        labelPadding: outcomeComparison ? 20 : 0,
+        labelPadding: outcomeComparison || interventionDate ? 20 : 0,
       },
       view: {
         stroke: 'transparent',
       },
     },
-  }), [xVals, outcomeComparison, secondaryData, dimensionHeight]);
+  }), [xVals, outcomeComparison, interventionDate, secondaryData, dimensionHeight]);
 
   const axisSpec = useMemo(() => ({
     ...spec,
@@ -430,11 +430,11 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
         <CostInputDialog bloodComponent={bloodCostToChange} visible={openCostInputDialog} setVisibility={setOpenCostInputDialog} />
         <ChartStandardButtons chartID={chartId} />
       </ChartAccessoryDiv>
-      {outcomeComparison && (
+      {(outcomeComparison || interventionDate) && (
         <svg height={30}>
           <ComparisonLegend
             dimensionWidth={dimensionWidth}
-            interventionDate={undefined}
+            interventionDate={interventionDate}
             firstTotal={data.reduce((a, b) => a + b.caseCount, 0)}
             secondTotal={secondaryData.reduce((a, b) => a + b.caseCount, 0)}
             outcomeComparison={outcomeComparison}
@@ -445,7 +445,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
       <div
         ref={chartDiv}
         style={{
-          height: `calc(100% - 38px - 40px - 10px${outcomeComparison ? ' - 30px' : ''})`,
+          height: `calc(100% - 38px - 40px - 10px${outcomeComparison || interventionDate ? ' - 30px' : ''})`,
           width: '100%',
           overflow: 'auto',
           display: 'flex',
@@ -454,9 +454,9 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
         <svg width={extraPairTotalWidth} height={vegaHeight}>
           <GeneratorExtraPair
             extraPairDataSet={extraPairData}
-            secondaryExtraPairDataSet={outcomeComparison ? secondaryExtraPairData : undefined}
+            secondaryExtraPairDataSet={outcomeComparison || interventionDate ? secondaryExtraPairData : undefined}
             aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
-            aggregationScaleRange={`[${outcomeComparison ? vegaHeight - 45 : vegaHeight - 40}, ${outcomeComparison ? 15 : 6}]`}
+            aggregationScaleRange={`[${outcomeComparison || interventionDate ? vegaHeight - 45 : vegaHeight - 40}, ${outcomeComparison || interventionDate ? 15 : 6}]`}
             text
             height={vegaHeight}
             chartId={chartId}
