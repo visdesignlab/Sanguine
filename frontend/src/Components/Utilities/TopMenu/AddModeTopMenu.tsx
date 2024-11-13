@@ -34,8 +34,11 @@ function AddModeTopMenu({ chartType, sx }: { chartType: ChartType; sx: React.CSS
 
   // Automatically set the axis values if the chart type has a fixed option
   useEffect(() => {
+    if (!store.configStore.topMenuBarAddMode) {
+      return;
+    }
     setXDisabled(chartType === 'COST');
-    setYDisabled(chartType === 'HEATMAP');
+    setYDisabled(chartType === 'DUMBBELL');
 
     if (chartType === 'DUMBBELL') {
       setYAxisSelection('HGB_VALUE');
@@ -80,8 +83,8 @@ function AddModeTopMenu({ chartType, sx }: { chartType: ChartType; sx: React.CSS
       }
 
       store.chartStore.addNewChart(newChart as LayoutElement);
-      store.configStore.topMenuBarAddMode = false;
       resetFields();
+      store.configStore.topMenuBarAddMode = false;
     }
   };
 
@@ -98,7 +101,7 @@ function AddModeTopMenu({ chartType, sx }: { chartType: ChartType; sx: React.CSS
               label="X Axis Values"
               onChange={(e) => { setxAxisSelection(e.target.value as xAxisOption); }}
             >
-              {DropdownGenerator(addOptions[chartType].x, chartType === 'COST')}
+              {DropdownGenerator(addOptions[chartType].x)}
             </Select>
           </StyledFormControl>
         </CenterAlignedDiv>
