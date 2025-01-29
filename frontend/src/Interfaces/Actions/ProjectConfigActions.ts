@@ -34,6 +34,10 @@ export const changeSurgeryUrgencySelection = createAction<ApplicationState, [[bo
   state.surgeryUrgencySelection = surgeryUrgencyInput;
 }).setLabel('changeUrgency');
 
+export const changeSurgeonCasesPerformed = createAction<ApplicationState, [[number, number]], ActionEvents>((state, surgeonCasesPerformed) => {
+  state.surgeonCasesPerformed = surgeonCasesPerformed;
+}).setLabel('changeSurgeonCasesPerformed');
+
 export const changeBloodFilter = createAction<ApplicationState, [BloodComponent | HemoOption, [number, number]], ActionEvents>((state, bloodComponentName, newRange) => {
   state.bloodFilter[bloodComponentName] = newRange;
 }).setLabel('changeBloodFilter');

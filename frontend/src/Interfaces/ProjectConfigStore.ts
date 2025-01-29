@@ -3,7 +3,7 @@ import {
   BloodComponent, BloodComponentOptions, HemoOption, ScatterYOptions,
 } from '../Presets/DataDict';
 import {
-  changeBloodFilter, changeCostConfig, changeOutcomeFilter, changeSurgeryUrgencySelection, clearAllFilter, dateRangeChange, loadPreset, resetBloodFilter, toggleShowZero,
+  changeBloodFilter, changeCostConfig, changeOutcomeFilter, changeSurgeryUrgencySelection, clearAllFilter, dateRangeChange, loadPreset, resetBloodFilter, toggleShowZero, changeSurgeonCasesPerformed,
 } from './Actions/ProjectConfigActions';
 // eslint-disable-next-line import/no-cycle
 import { RootStore } from './Store';
@@ -80,6 +80,10 @@ export class ProjectConfigStore {
 
   changeSurgeryUrgencySelection(input: [boolean, boolean, boolean]) {
     this.provenance.apply(changeSurgeryUrgencySelection(input));
+  }
+
+  changeSurgeonCasesPerformed(input: [number, number]) {
+    this.provenance.apply(changeSurgeonCasesPerformed(input));
   }
 
   changeCostConfig(componentName: string, newCost: number) {

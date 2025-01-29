@@ -8,6 +8,7 @@ export type ApplicationState = {
     rawDateRange: number[];
     proceduresSelection: ProcedureEntry[];
     surgeryUrgencySelection: [boolean, boolean, boolean];
+    surgeonCasesPerformed: [number, number];
     totalAggregatedCaseCount: number;
     totalIndividualCaseCount: number;
     currentSelectSet: SelectSet[];

@@ -1,9 +1,9 @@
 import {
-  Box, Button, IconButton, List, ListItem, ListItemButton, ListItemSecondaryAction, ListItemText, TextField, Tooltip,
+  Box, Button, IconButton, List, ListItem, ListItemButton, ListItemSecondaryAction, ListItemText, Slider, TextField, Tooltip,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { observer } from 'mobx-react';
-import { useContext, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -22,7 +22,7 @@ function FilterBoard() {
   const store = useContext(Store);
 
   const {
-    rawDateRange, outcomeFilter, surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet, bloodFilter,
+    rawDateRange, outcomeFilter, surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet, bloodFilter, surgeonCasesPerformed,
   } = store.provenanceState;
   const [beginDate, setBeginDate] = useState<number | null>(rawDateRange[0]);
   const [endDate, setEndDate] = useState<number | null>(rawDateRange[1]);
@@ -57,6 +57,12 @@ function FilterBoard() {
     }
     return false;
   };
+
+  const fullSurgeonCasesPerformedRange = useMemo(() => {
+    const min = 0;
+    const max = Math.max(...Object.values(store.surgeonCasesPerformedRange));
+    return [min, max] as [number, number];
+  }, [store.surgeonCasesPerformedRange]);
 
   return (
     <Box p={1}>
@@ -177,6 +183,38 @@ function FilterBoard() {
           </ListItemSecondaryAction>
         </ListItem>
         <SurgeryUrgencyChipGroup />
+
+        <ListItem>
+          <ListItemText primary={<Title>Surgeon Cases Performed</Title>} />
+          <ListItemSecondaryAction>
+
+            <IconButton
+              onClick={() => { store.configStore.changeSurgeonCasesPerformed(fullSurgeonCasesPerformedRange); }}
+              disabled={surgeonCasesPerformed[0] === fullSurgeonCasesPerformedRange[0] && surgeonCasesPerformed[1] === fullSurgeonCasesPerformedRange[1]}
+            >
+              <Tooltip title="Clear">
+                <ReplayIcon />
+              </Tooltip>
+            </IconButton>
+
+          </ListItemSecondaryAction>
+        </ListItem>
+        <ListItem>
+          <ListItemText
+            secondary={(
+              <Slider
+                value={surgeonCasesPerformed}
+                onChange={(event, value) => { store.configStore.changeSurgeonCasesPerformed(value as [number, number]); }}
+                marks={[
+                  0,
+                  Math.max(...Object.values(store.surgeonCasesPerformedRange)),
+                ].map((d) => ({ value: d, label: d.toString() }))}
+                max={Math.max(...Object.values(store.surgeonCasesPerformedRange))}
+                step={1}
+              />
+            )}
+          />
+        </ListItem>
 
         <ListItem>
           <ListItemText primary={<Title>Selection Filter</Title>} />

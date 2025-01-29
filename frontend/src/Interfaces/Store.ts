@@ -80,6 +80,10 @@ export class RootStore {
       if (!this.provenanceState.surgeryUrgencySelection[SurgeryUrgencyArray.indexOf(d.SURGERY_TYPE_DESC)]) {
         return false;
       }
+      // surgeon cases performed
+      if (this.surgeonCasesPerformedRange[d.SURGEON_PROV_ID] < this.provenanceState.surgeonCasesPerformed[0] || this.surgeonCasesPerformedRange[d.SURGEON_PROV_ID] > this.provenanceState.surgeonCasesPerformed[1]) {
+        return false;
+      }
 
       if (
         this.provenanceState.currentSelectPatientGroup.length > 0
@@ -146,6 +150,17 @@ export class RootStore {
       });
     });
     return filterRange;
+  }
+
+  get surgeonCasesPerformedRange() {
+    const surgeonCases = this._allCases.reduce((acc, d) => {
+      if (!acc[d.SURGEON_PROV_ID]) {
+        acc[d.SURGEON_PROV_ID] = 0;
+      }
+      acc[d.SURGEON_PROV_ID] += 1;
+      return acc;
+    }, {} as Record<string, number>);
+    return surgeonCases;
   }
 
   get dateRange() {
