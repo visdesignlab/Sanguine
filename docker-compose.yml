@@ -1,6 +1,6 @@
 services:
   backend:
-    image: ghcr.io/visdesignlab/django-image:5.0-v0.1.1
+    image: ghcr.io/visdesignlab/django-image:5.0-v0.1.4
     volumes:
       - ./backend:/app:Z
     env_file:
@@ -9,6 +9,7 @@ services:
       - "8000:8000"
     depends_on:
       - mariadb
+    entrypoint: ["/bin/sh", "-c", "GUNICORN_TIMEOUT=120 /entrypoint.sh"]
 
   mariadb:
     image: mariadb:10
