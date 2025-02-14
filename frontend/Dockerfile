@@ -8,12 +8,13 @@ COPY . /app
 ARG VITE_QUERY_URL
 ARG VITE_REQUIRE_LOGIN
 # Install the dependencies
-RUN yarn install
-# Build the application
-RUN yarn build
+RUN set -ex; \
+      yarn install --frozen-lockfile --production; \
+      yarn cache clean; \
+      yarn run build
 
 # Use nginx:stable as the base image
-FROM nginx:stable-alpine-slim
+FROM nginx:stable-alpine
 # Copy the build files from the build stage to the nginx html directory
 COPY --from=build /app/dist /usr/share/nginx/html
 # Copy the custom nginx configuration file
