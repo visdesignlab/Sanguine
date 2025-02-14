@@ -51,7 +51,7 @@ function ComponentRangePicker({ label, isTestValue }: Props) {
         primary={AcronymDictionary[label] ? AcronymDictionary[label] : label}
         secondary={(
           <Stack direction="row" spacing={2}>
-            <Input value={rangeValue[0]} onChange={handleInputMinChange} sx={{ width: '75px' }} />
+            <Input value={rangeValue[0]} onChange={handleInputMinChange} sx={{ width: '75px' }} inputProps={{ type: 'number' }} />
             <Slider
               max={store.filterRange[label][1]}
               min={store.filterRange[label][0]}
