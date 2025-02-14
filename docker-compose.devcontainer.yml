@@ -19,11 +19,15 @@ services:
       - oracledb_data:/opt/oracle/oradata
 
   frontend:
-    extends:
-      file: docker-compose.yml
-      service: frontend
-    environment:
-        - NODE_ENV=development
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: build  # Grab the build stage from the Dockerfile
+    working_dir: /app/frontend
+    volumes:
+      - .:/app:Z
+    env_file:
+      - .env
     command: sh -c "while true; do sleep 1000; done"
 
 volumes:
