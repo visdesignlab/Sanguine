@@ -12,7 +12,7 @@ services:
     entrypoint: ["/bin/sh", "-c", "GUNICORN_TIMEOUT=120 /entrypoint.sh"]
 
   mariadb:
-    image: mariadb:11
+    image: docker.io/mariadb:11
     environment:
       MARIADB_USER: ${MARIADB_USER}
       MARIADB_PASSWORD: ${MARIADB_PASSWORD}

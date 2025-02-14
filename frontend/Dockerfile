@@ -1,5 +1,5 @@
 # Use node:lts as the base image
-FROM node:lts AS build
+FROM docker.io/node:lts AS build
 # Set the working directory
 WORKDIR /app
 # Copy the frontend directory to the working directory
@@ -14,7 +14,7 @@ RUN set -ex; \
       yarn run build
 
 # Use nginx:stable as the base image
-FROM nginx:stable-alpine
+FROM docker.io/nginx:stable-alpine
 # Copy the build files from the build stage to the nginx html directory
 COPY --from=build /app/dist /usr/share/nginx/html
 # Copy the custom nginx configuration file
