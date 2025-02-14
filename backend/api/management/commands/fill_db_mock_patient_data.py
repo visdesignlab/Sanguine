@@ -24,6 +24,7 @@ def create_model_table(unmanaged_models, drop_tables):
         if drop_tables:
             for model in unmanaged_models:
                 try:
+                    model.objects.all().delete()
                     schema_editor.delete_model(model)
                 except Exception as e:
                     print(f"Error dropping table for {model._meta.db_table}: {e}")
@@ -55,14 +56,14 @@ class Command(BaseCommand):
 
         # Create the tables for the unmanaged models
         create_model_table([
-            PATIENT,
-            VISIT,
-            SURGERY_CASE,
             BILLING_CODES,
             VISIT_LABS,
             EXTRAOP_MEDS,
             INTRAOP_MEDS,
             INTRAOP_TRANSFUSION
+            SURGERY_CASE,
+            VISIT,
+            PATIENT,
         ], drop_tables)
 
         # Initialize the Faker object
