@@ -60,7 +60,7 @@ class Command(BaseCommand):
             VISIT_LABS,
             EXTRAOP_MEDS,
             INTRAOP_MEDS,
-            INTRAOP_TRANSFUSION
+            INTRAOP_TRANSFUSION,
             SURGERY_CASE,
             VISIT,
             PATIENT,
