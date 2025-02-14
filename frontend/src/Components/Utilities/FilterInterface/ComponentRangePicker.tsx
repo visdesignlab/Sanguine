@@ -1,5 +1,7 @@
 /* eslint-disable no-nested-ternary */
-import { ListItem, ListItemText, Slider } from '@mui/material';
+import {
+  ListItem, ListItemText, Slider, Stack, Input,
+} from '@mui/material';
 import { observer } from 'mobx-react';
 import { useState, useContext } from 'react';
 import useDeepCompareEffect from 'use-deep-compare-effect';
@@ -25,39 +27,61 @@ function ComponentRangePicker({ label, isTestValue }: Props) {
     }
   }, [store.filterRange, bloodFilter]);
 
+  const handleInputMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    const newMin = inputValue === '' ? 0 : parseInt(inputValue, 10);
+    if (!Number.isNaN(newMin)) {
+      setRangeValue([newMin, rangeValue[1]]);
+      store.configStore.changeBloodFilter(label, [newMin, rangeValue[1]]);
+    }
+  };
+
+  const handleInputMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    const newMax = inputValue === '' ? 0 : parseInt(inputValue, 10);
+    if (!Number.isNaN(newMax)) {
+      setRangeValue([rangeValue[0], newMax]);
+      store.configStore.changeBloodFilter(label, [rangeValue[0], newMax]);
+    }
+  };
+
   return (
     <ListItem>
       <ListItemText
         primary={AcronymDictionary[label] ? AcronymDictionary[label] : label}
         secondary={(
-          <Slider
-            max={store.filterRange[label][1]}
-            min={store.filterRange[label][0]}
-            marks={[
-              {
-                value: store.filterRange[label][0],
-                label: store.filterRange[label][0],
-              },
-              {
-                value: store.filterRange[label][1],
-                label: store.filterRange[label][1],
-              },
-            ]}
-            valueLabelDisplay="auto"
-            aria-labelledby="range-slider"
-            value={rangeValue}
-            step={isTestValue ? 0.1 : (label === 'CELL_SAVER_ML' ? 1000 : undefined)}
-            onChangeCommitted={(e, nV) => {
-              if (isTestValue) {
-                store.configStore.changeBloodFilter(label, (nV as [number, number]));
-              } else {
-                store.configStore.changeBloodFilter(label, (nV as [number, number]));
-              }
-            }}
-            onChange={(e, nV) => {
-              setRangeValue((nV as number[]));
-            }}
-          />
+          <Stack direction="row" spacing={2}>
+            <Input value={rangeValue[0]} onChange={handleInputMinChange} sx={{ width: '75px' }} />
+            <Slider
+              max={store.filterRange[label][1]}
+              min={store.filterRange[label][0]}
+              marks={[
+                {
+                  value: store.filterRange[label][0],
+                  label: store.filterRange[label][0],
+                },
+                {
+                  value: store.filterRange[label][1],
+                  label: store.filterRange[label][1],
+                },
+              ]}
+              valueLabelDisplay="auto"
+              aria-labelledby="range-slider"
+              value={rangeValue}
+              step={isTestValue ? 0.1 : (label === 'CELL_SAVER_ML' ? 1000 : undefined)}
+              onChangeCommitted={(e, nV) => {
+                if (isTestValue) {
+                  store.configStore.changeBloodFilter(label, (nV as [number, number]));
+                } else {
+                  store.configStore.changeBloodFilter(label, (nV as [number, number]));
+                }
+              }}
+              onChange={(e, nV) => {
+                setRangeValue((nV as number[]));
+              }}
+            />
+            <Input value={rangeValue[1]} onChange={handleInputMaxChange} sx={{ width: '75px' }} />
+          </Stack>
         )}
       />
     </ListItem>
