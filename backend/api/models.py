@@ -40,7 +40,7 @@ class StateAccess(models.Model):
 
 
 class PATIENT(models.Model):
-    MRN = models.IntegerField(primary_key=True)
+    MRN = models.BigIntegerField(primary_key=True)
     PAT_FAMILY = models.CharField(max_length=30)
     PAT_GIVEN = models.CharField(max_length=30)
     PAT_BIRTHDATE = models.DateField()
@@ -61,7 +61,7 @@ class PATIENT(models.Model):
 
 
 class VISIT(models.Model):
-    VISIT_NO = models.IntegerField(primary_key=True)
+    VISIT_NO = models.BigIntegerField(primary_key=True)
     ADM_DTM = models.DateField()
     DSCH_DTM = models.DateField()
     AGE_AT_ADM = models.FloatField()
@@ -107,7 +107,7 @@ class VISIT(models.Model):
 class SURGERY_CASE(models.Model):
     VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE, db_column='VISIT_NO')
     MRN = models.ForeignKey(PATIENT, on_delete=models.CASCADE, db_column='MRN')
-    CASE_ID = models.IntegerField(primary_key=True)
+    CASE_ID = models.BigIntegerField(primary_key=True)
     CASE_DATE = models.DateField()
     SURGERY_START_DTM = models.DateField()
     SURGERY_END_DTM = models.DateField()
