@@ -8,7 +8,7 @@ from api.models import (
     INTRAOP_MEDS,
     INTRAOP_TRANSFUSION,
 )
-from .utils import get_all_cpt_code_filters
+from ..utils.utils import get_all_cpt_code_filters
 
 FIELDS = {
     "admin_dose": "ADMIN_DOSE",
@@ -66,7 +66,7 @@ _, _, filters_safe_sql = get_all_cpt_code_filters()
 
 procedure_count_query = f"""
         SELECT
-            LISTAGG({FIELDS.get('billing_code')}, ',') as codes,
+            GROUP_CONCAT({FIELDS.get('billing_code')}) as codes,
             SURG.{FIELDS.get('case_id')}
         FROM {TABLES.get('billing_codes')} BLNG
         INNER JOIN {TABLES.get('surgery_case')} SURG

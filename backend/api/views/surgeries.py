@@ -4,7 +4,7 @@ from django.views.decorators.http import require_http_methods
 from django_cas_ng.decorators import login_required
 
 from .decorators.conditional_login_required import conditional_login_required
-from .utils.sql_queries import procedure_count_query, patient_query, surgery_query, surgery_case_query
+from .sql_queries import procedure_count_query, patient_query, surgery_query, surgery_case_query
 from .utils.utils import cpt, get_all_cpt_code_filters, log_request, execute_sql, execute_sql_dict
 
 
