@@ -80,7 +80,7 @@ function ComponentRangePicker({ label, isTestValue }: Props) {
                 setRangeValue((nV as number[]));
               }}
             />
-            <Input value={rangeValue[1]} onChange={handleInputMaxChange} sx={{ width: '75px' }} />
+            <Input value={rangeValue[1]} onChange={handleInputMaxChange} sx={{ width: '75px' }} inputProps={{ type: 'number' }} />
           </Stack>
         )}
       />
