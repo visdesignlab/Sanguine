@@ -24,7 +24,6 @@ def create_model_table(unmanaged_models, drop_tables):
         if drop_tables:
             for model in unmanaged_models:
                 try:
-                    model.objects.all().delete()
                     schema_editor.delete_model(model)
                 except Exception as e:
                     print(f"Error dropping table for {model._meta.db_table}: {e}")
