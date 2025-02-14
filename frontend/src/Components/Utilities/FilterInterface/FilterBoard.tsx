@@ -1,5 +1,5 @@
 import {
-  Box, Button, IconButton, List, ListItem, ListItemButton, ListItemSecondaryAction, ListItemText, Slider, TextField, Tooltip,
+  Box, Button, IconButton, Input, List, ListItem, ListItemButton, ListItemSecondaryAction, ListItemText, Slider, Stack, TextField, Tooltip,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { observer } from 'mobx-react';
@@ -17,6 +17,7 @@ import { defaultState } from '../../../Interfaces/DefaultState';
 import OutcomeChipGroup from './OutcomeChipGroup';
 import SurgeryUrgencyChipGroup from './SurgeryUrgencyChipGroup';
 import { SelectSet } from '../../../Interfaces/Types/SelectionTypes';
+import { ManualInfinity } from '../../../Presets/Constants';
 
 function FilterBoard() {
   const store = useContext(Store);
@@ -63,6 +64,12 @@ function FilterBoard() {
     const max = Math.max(...Object.values(store.surgeonCasesPerformedRange));
     return [min, max] as [number, number];
   }, [store.surgeonCasesPerformedRange]);
+
+  const [minSurgeonCasesPerformed, maxSurgeonCasesPerformed] = useMemo(() => {
+    const min = surgeonCasesPerformed[0];
+    const max = surgeonCasesPerformed[1] === ManualInfinity ? fullSurgeonCasesPerformedRange[1] : surgeonCasesPerformed[1];
+    return [min, max] as [number, number];
+  }, [fullSurgeonCasesPerformedRange, surgeonCasesPerformed]);
 
   return (
     <Box p={1}>
@@ -202,16 +209,21 @@ function FilterBoard() {
         <ListItem>
           <ListItemText
             secondary={(
-              <Slider
-                value={surgeonCasesPerformed}
-                onChange={(event, value) => { store.configStore.changeSurgeonCasesPerformed(value as [number, number]); }}
-                marks={[
-                  0,
-                  Math.max(...Object.values(store.surgeonCasesPerformedRange)),
-                ].map((d) => ({ value: d, label: d.toString() }))}
-                max={Math.max(...Object.values(store.surgeonCasesPerformedRange))}
-                step={1}
-              />
+              <Stack direction="row" spacing={2}>
+                <Input value={minSurgeonCasesPerformed} onChange={(e) => { store.configStore.changeSurgeonCasesPerformed([parseInt(e.target.value, 10), surgeonCasesPerformed[1]]); }} sx={{ width: '75px' }} inputProps={{ type: 'number' }} />
+                <Slider
+                  value={surgeonCasesPerformed}
+                  onChange={(event, value) => { store.configStore.changeSurgeonCasesPerformed(value as [number, number]); }}
+                  marks={[
+                    0,
+                    Math.max(...Object.values(store.surgeonCasesPerformedRange)),
+                  ].map((d) => ({ value: d, label: d.toString() }))}
+                  max={Math.max(...Object.values(store.surgeonCasesPerformedRange))}
+                  step={1}
+                  valueLabelDisplay="auto"
+                />
+                <Input value={maxSurgeonCasesPerformed} onChange={(e) => { store.configStore.changeSurgeonCasesPerformed([surgeonCasesPerformed[0], parseInt(e.target.value, 10)]); }} sx={{ width: '75px' }} inputProps={{ type: 'number' }} />
+              </Stack>
             )}
           />
         </ListItem>
