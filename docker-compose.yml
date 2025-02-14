@@ -28,8 +28,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:  # Pass the environment variables to the build stage
-        - VITE_QUERY_URL
-        - VITE_REQUIRE_LOGIN
+        VITE_QUERY_URL: ${VITE_QUERY_URL}
+        VITE_REQUIRE_LOGIN: ${VITE_REQUIRE_LOGIN}
     ports:
       - "8080:8080"
 
