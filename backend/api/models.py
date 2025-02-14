@@ -68,7 +68,7 @@ class VISIT(models.Model):
     PAT_CLASS_DESC = models.CharField(max_length=2000)
     PAT_TYPE_DESC = models.CharField(max_length=2000)
     PAT_EXPIRED = models.CharField(max_length=1)
-    INVASIVE_VENT_F = models.CharField(max_length=1)
+    INVASIVE_VENT_F = models.CharField(max_length=1, null=True)
     TOTAL_VENT_MINS = models.FloatField()
     TOTAL_VENT_DAYS = models.FloatField()
     APR_DRG_CODE = models.CharField(max_length=254)
@@ -139,7 +139,7 @@ class BILLING_CODES(models.Model):
     PROC_DTM = models.DateField()
     PROV_ID = models.CharField(max_length=25)
     PROV_NAME = models.CharField(max_length=100)
-    PRESENT_ON_ADM_F = models.CharField(max_length=1)
+    PRESENT_ON_ADM_F = models.CharField(max_length=1, null=True)
     CODE_RANK = models.FloatField()
     LOAD_DTM = models.DateField()
 
