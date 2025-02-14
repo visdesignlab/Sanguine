@@ -1,5 +1,5 @@
 # Use node:lts as the base image
-FROM docker.io/node:lts AS build
+FROM docker.io/node:lts-alpine AS build
 # Set the working directory
 WORKDIR /app
 # Copy the frontend directory to the working directory
