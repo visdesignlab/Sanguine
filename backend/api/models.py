@@ -67,7 +67,7 @@ class VISIT(models.Model):
     AGE_AT_ADM = models.FloatField()
     PAT_CLASS_DESC = models.CharField(max_length=2000)
     PAT_TYPE_DESC = models.CharField(max_length=2000)
-    PAT_EXPIRED = models.CharField(max_length=1)
+    PAT_EXPIRED = models.CharField(max_length=1, null=True)
     INVASIVE_VENT_F = models.CharField(max_length=1, null=True)
     TOTAL_VENT_MINS = models.FloatField()
     TOTAL_VENT_DAYS = models.FloatField()
