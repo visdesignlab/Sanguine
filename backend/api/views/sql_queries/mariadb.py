@@ -92,17 +92,17 @@ patient_query = f"""
     """
 
 surgery_query = f"""
-    with
-        codes as (
+    WITH
+        codes AS (
             SELECT
-                BLNG.{FIELDS.get('visit_no')} || ', ' || BLNG.{FIELDS.get('procedure_dtm')} as comb,
-                LISTAGG(BLNG.{FIELDS.get('code_desc')}, ', ') as codes
+                CONCAT(BLNG.{FIELDS.get('visit_no')}, ', ', BLNG.{FIELDS.get('procedure_dtm')}) AS comb,
+                GROUP_CONCAT(BLNG.{FIELDS.get('code_desc')} SEPARATOR ', ') AS codes
             FROM {TABLES.get('billing_codes')} BLNG
-            group by {FIELDS.get('visit_no')} || ', ' || {FIELDS.get('procedure_dtm')}
+            GROUP BY CONCAT(BLNG.{FIELDS.get('visit_no')}, ', ', BLNG.{FIELDS.get('procedure_dtm')})
         ),
-        surg_cases as (
+        surg_cases AS (
             SELECT
-                TO_CHAR(SURG.{FIELDS.get('visit_no')}) || ', ' || TO_CHAR(SURG.{FIELDS.get('case_date')}) as comb,
+                CONCAT(SURG.{FIELDS.get('visit_no')}, ', ', SURG.{FIELDS.get('case_date')}) AS comb,
                 SURG.{FIELDS.get('case_id')},
                 SURG.{FIELDS.get('visit_no')},
                 SURG.{FIELDS.get('case_date')},
@@ -115,7 +115,7 @@ surgery_query = f"""
             FROM {TABLES.get('surgery_case')} SURG
             WHERE SURG.{FIELDS.get('case_id')} = :id
         )
-    SELECT surg_cases.*, codes.codes as codes
+    SELECT surg_cases.*, codes.codes AS codes
     FROM surg_cases
     INNER JOIN codes ON surg_cases.comb = codes.comb
     """
@@ -123,22 +123,18 @@ surgery_query = f"""
 surgery_case_query = rf"""
     WITH TRANSFUSED_UNITS AS (
         SELECT
-            SUM(NVL(
-                CASE WHEN PRBC_UNITS > 150 THEN CEIL(PRBC_UNITS / 250) ELSE PRBC_UNITS END,
-                0
-            )) + CEIL(NVL(SUM(RBC_VOL)/250, 0)) AS PRBC_UNITS,
-            SUM(NVL(
-                CASE WHEN FFP_UNITS > 150 THEN CEIL(FFP_UNITS / 220) ELSE FFP_UNITS END,
-                0
-            )) + CEIL(NVL(SUM(FFP_VOL)/220, 0)) AS FFP_UNITS,
-            SUM(NVL(
-                CASE WHEN PLT_UNITS > 150 THEN CEIL(PLT_UNITS / 300) ELSE PLT_UNITS END,
-                0
-            )) + CEIL(NVL(SUM(PLT_VOL)/300, 0)) AS PLT_UNITS,
-            SUM(NVL(
-                CASE WHEN CRYO_UNITS > 35 THEN CEIL(CRYO_UNITS / 75) ELSE CRYO_UNITS END,
-                0
-            )) + CEIL(NVL(SUM(CRYO_VOL)/75, 0)) AS CRYO_UNITS,
+            SUM(IF(
+                PRBC_UNITS > 150, CEIL(PRBC_UNITS / 250), PRBC_UNITS
+            )) + CEIL(IFNULL(SUM(RBC_VOL)/250, 0)) AS PRBC_UNITS,
+            SUM(IF(
+                FFP_UNITS > 150, CEIL(FFP_UNITS / 220), FFP_UNITS
+            )) + CEIL(IFNULL(SUM(FFP_VOL)/220, 0)) AS FFP_UNITS,
+            SUM(IF(
+                PLT_UNITS > 150, CEIL(PLT_UNITS / 300), PLT_UNITS
+            )) + CEIL(IFNULL(SUM(PLT_VOL)/300, 0)) AS PLT_UNITS,
+            SUM(IF(
+                CRYO_UNITS > 35, CEIL(CRYO_UNITS / 75), CRYO_UNITS
+            )) + CEIL(IFNULL(SUM(CRYO_VOL)/75, 0)) AS CRYO_UNITS,
             SUM(CELL_SAVER_ML) AS CELL_SAVER_ML,
             CASE_ID
         FROM
@@ -149,9 +145,9 @@ surgery_case_query = rf"""
     BILLING_CODES AS (
         SELECT
             VISIT_NO,
-            CASE WHEN SUM(CASE WHEN CODE IN ('I97.820', '997.02') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS STROKE,
-            CASE WHEN SUM(CASE WHEN CODE IN ('33952', '33954', '33956', '33958', '33962', '33964', '33966', '33973', '33974', '33975', '33976', '33977', '33978', '33979', '33980', '33981', '33982', '33983', '33984', '33986', '33987', '33988', '33989') THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END AS ECMO,
-            LISTAGG(CODE, ',') AS ALL_CODES
+            IF(SUM(IF(CODE IN ('I97.820', '997.02'), 1, 0)) > 0, 1, 0) AS STROKE,
+            IF(SUM(IF(CODE IN ('33952', '33954', '33956', '33958', '33962', '33964', '33966', '33973', '33974', '33975', '33976', '33977', '33978', '33979', '33980', '33981', '33982', '33983', '33984', '33986', '33987', '33988', '33989'), 1, 0)) > 0, 1, 0) AS ECMO,
+            GROUP_CONCAT(CODE) AS ALL_CODES
         FROM
             {TABLES.get('billing_codes')}
         {filters_safe_sql}
@@ -161,33 +157,33 @@ surgery_case_query = rf"""
     MEDS AS (
         SELECT
             VISIT_NO,
-            CASE WHEN SUM(TXA) > 0 THEN 1 ELSE 0 END AS TXA,
-            CASE WHEN SUM(AMICAR) > 0 THEN 1 ELSE 0 END AS AMICAR,
-            CASE WHEN SUM(B12) > 0 THEN 1 ELSE 0 END AS B12,
-            CASE WHEN SUM(IRON) > 0 THEN 1 ELSE 0 END AS IRON
+            IF(SUM(TXA) > 0, 1, 0) AS TXA,
+            IF(SUM(AMICAR) > 0, 1, 0) AS AMICAR,
+            IF(SUM(B12) > 0, 1, 0) AS B12,
+            IF(SUM(IRON) > 0, 1, 0) AS IRON
         FROM (
             (SELECT
                 VISIT_NO,
-                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%tranexamic%%' or lower(MEDICATION_NAME) like '%%txa%%' THEN 1 ELSE 0 END) AS TXA,
-                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%amicar%%' or lower(MEDICATION_NAME) like '%%aminocaproic%%' or lower(MEDICATION_NAME) like '%%eaca%%' THEN 1 ELSE 0 END) AS AMICAR,
-                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%b12%%' or lower(MEDICATION_NAME) like '%%cobalamin%%' THEN 1 ELSE 0 END) AS B12,
-                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%iron%%' or lower(MEDICATION_NAME) like '%%ferric%%' or lower(MEDICATION_NAME) like '%%ferrous%%' THEN 1 ELSE 0 END) AS IRON
+                SUM(IF(LOWER(MEDICATION_NAME) LIKE '%%tranexamic%%' OR LOWER(MEDICATION_NAME) LIKE '%%txa%%', 1, 0)) AS TXA,
+                SUM(IF(LOWER(MEDICATION_NAME) LIKE '%%amicar%%' OR LOWER(MEDICATION_NAME) LIKE '%%aminocaproic%%' OR LOWER(MEDICATION_NAME) LIKE '%%eaca%%', 1, 0)) AS AMICAR,
+                SUM(IF(LOWER(MEDICATION_NAME) LIKE '%%b12%%' OR LOWER(MEDICATION_NAME) LIKE '%%cobalamin%%', 1, 0)) AS B12,
+                SUM(IF(LOWER(MEDICATION_NAME) LIKE '%%iron%%' OR LOWER(MEDICATION_NAME) LIKE '%%ferric%%' OR LOWER(MEDICATION_NAME) LIKE '%%ferrous%%', 1, 0)) AS IRON
             FROM
                 {TABLES.get('intraop_meds')}
-            group by VISIT_NO
+            GROUP BY VISIT_NO
             )
             UNION ALL
             (SELECT
                 VISIT_NO,
-                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%tranexamic%%' or lower(MEDICATION_NAME) like '%%txa%%' THEN 1 ELSE 0 END) AS TXA,
-                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%amicar%%' or lower(MEDICATION_NAME) like '%%aminocaproic%%' or lower(MEDICATION_NAME) like '%%eaca%%' THEN 1 ELSE 0 END) AS AMICAR,
-                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%b12%%' or lower(MEDICATION_NAME) like '%%cobalamin%%' THEN 1 ELSE 0 END) AS B12,
-                SUM(CASE WHEN lower(MEDICATION_NAME) like '%%iron%%' or lower(MEDICATION_NAME) like '%%ferric%%' or lower(MEDICATION_NAME) like '%%ferrous%%' THEN 1 ELSE 0 END) AS IRON
+                SUM(IF(LOWER(MEDICATION_NAME) LIKE '%%tranexamic%%' OR LOWER(MEDICATION_NAME) LIKE '%%txa%%', 1, 0)) AS TXA,
+                SUM(IF(LOWER(MEDICATION_NAME) LIKE '%%amicar%%' OR LOWER(MEDICATION_NAME) LIKE '%%aminocaproic%%' OR LOWER(MEDICATION_NAME) LIKE '%%eaca%%', 1, 0)) AS AMICAR,
+                SUM(IF(LOWER(MEDICATION_NAME) LIKE '%%b12%%' OR LOWER(MEDICATION_NAME) LIKE '%%cobalamin%%', 1, 0)) AS B12,
+                SUM(IF(LOWER(MEDICATION_NAME) LIKE '%%iron%%' OR LOWER(MEDICATION_NAME) LIKE '%%ferric%%' OR LOWER(MEDICATION_NAME) LIKE '%%ferrous%%', 1, 0)) AS IRON
             FROM
                 {TABLES.get('extraop_meds')}
-            group by VISIT_NO
+            GROUP BY VISIT_NO
             )
-            ) INNER_MEDS
+        ) INNER_MEDS
         GROUP BY VISIT_NO
     ),
     LAB_HB AS (
@@ -200,7 +196,7 @@ surgery_case_query = rf"""
         FROM
             {TABLES.get('visit_labs')}
         WHERE (INSTR(UPPER(RESULT_DESC), 'HEMOGLOBIN') > 0 OR INSTR(UPPER(RESULT_DESC), 'HGB') > 0)
-        AND REGEXP_LIKE(RESULT_VALUE, '^[+-]?\d+(\.\d+)?$')
+        AND RESULT_VALUE REGEXP '^[+-]?\\d+(\\.\\d+)?$'
     ),
     PREOP_HB AS (
         SELECT
@@ -273,8 +269,8 @@ surgery_case_query = rf"""
             SC3.CASE_ID,
             SC3.VISIT_NO,
             SC3.CASE_DATE,
-            EXTRACT (YEAR from SC3.CASE_DATE) YEAR,
-            EXTRACT (MONTH from SC3.CASE_DATE) AS MONTH,
+            YEAR(SC3.CASE_DATE) AS YEAR,
+            MONTH(SC3.CASE_DATE) AS MONTH,
             SC3.SURGERY_START_DTM,
             SC3.SURGERY_END_DTM,
             SC3.SURGERY_ELAP,
@@ -284,38 +280,38 @@ surgery_case_query = rf"""
             SC3.PRIM_PROC_DESC,
             SC3.POSTOP_ICU_LOS,
             SC3.SCHED_SITE_DESC,
-            MAX(CASE
-                WHEN PRE.DI_PREOP_DRAW_DTM IS NOT NULL
-                THEN PRE.DI_PREOP_DRAW_DTM
-            END)
-            AS DI_PREOP_DRAW_DTM,
-            MAX(CASE
-                WHEN PRE.RESULT_VALUE IS NOT NULL
-                THEN PRE.RESULT_VALUE
-            END)
-            AS PREOP_HEMO,
-            MAX(CASE
-                WHEN POST.DI_POSTOP_DRAW_DTM IS NOT NULL
-                THEN POST.DI_POSTOP_DRAW_DTM
-            END)
-            AS DI_POSTOP_DRAW_DTM,
-            MAX(CASE
-                WHEN POST.RESULT_VALUE IS NOT NULL
-                THEN POST.RESULT_VALUE
-            END)
-            AS POSTOP_HEMO
+            MAX(IF(
+                PRE.DI_PREOP_DRAW_DTM IS NOT NULL,
+                PRE.DI_PREOP_DRAW_DTM,
+                NULL
+            )) AS DI_PREOP_DRAW_DTM,
+            MAX(IF(
+                PRE.RESULT_VALUE IS NOT NULL,
+                PRE.RESULT_VALUE,
+                NULL
+            )) AS PREOP_HEMO,
+            MAX(IF(
+                POST.DI_POSTOP_DRAW_DTM IS NOT NULL,
+                POST.DI_POSTOP_DRAW_DTM,
+                NULL
+            )) AS DI_POSTOP_DRAW_DTM,
+            MAX(IF(
+                POST.RESULT_VALUE IS NOT NULL,
+                POST.RESULT_VALUE,
+                NULL
+            )) AS POSTOP_HEMO
         FROM
             {TABLES.get('surgery_case')} SC3
-        LEFT OUTER JOIN PREOP_HB PRE
+        LEFT JOIN PREOP_HB PRE
             ON SC3.CASE_ID = PRE.CASE_ID
-        LEFT OUTER JOIN POSTOP_HB POST
+        LEFT JOIN POSTOP_HB POST
             ON SC3.CASE_ID = POST.CASE_ID
         GROUP BY SC3.MRN,
             SC3.CASE_ID,
             SC3.VISIT_NO,
             SC3.CASE_DATE,
-            EXTRACT (YEAR from SC3.CASE_DATE),
-            EXTRACT (MONTH from SC3.CASE_DATE),
+            YEAR(SC3.CASE_DATE),
+            MONTH(SC3.CASE_DATE),
             SC3.SURGERY_START_DTM,
             SC3.SURGERY_END_DTM,
             SC3.SURGERY_ELAP,
@@ -326,7 +322,6 @@ surgery_case_query = rf"""
             SC3.POSTOP_ICU_LOS,
             SC3.SCHED_SITE_DESC
     )
-
 
     SELECT
         SURG.CASE_ID,
@@ -343,11 +338,11 @@ surgery_case_query = rf"""
         CELL_SAVER_ML,
         HGB.PREOP_HEMO,
         HGB.POSTOP_HEMO,
-        EXTRACT(year from SURG.CASE_DATE) AS YEAR,
-        TO_NUMBER(TO_CHAR(SURG.CASE_DATE, 'Q')) AS QUARTER,
-        EXTRACT(month from SURG.CASE_DATE) AS MONTH,
+        YEAR(SURG.CASE_DATE) AS YEAR,
+        QUARTER(SURG.CASE_DATE) AS QUARTER,
+        MONTH(SURG.CASE_DATE) AS MONTH,
         SURG.CASE_DATE,
-        CASE WHEN VST.TOTAL_VENT_MINS > 1440 THEN 1 ELSE 0 END AS VENT,
+        IF(VST.TOTAL_VENT_MINS > 1440, 1, 0) AS VENT,
         VST.APR_DRG_WEIGHT AS DRG_WEIGHT,
         VST.PAT_EXPIRED AS DEATH,
         BLNG.ECMO,
