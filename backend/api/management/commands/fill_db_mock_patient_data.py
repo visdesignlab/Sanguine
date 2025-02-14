@@ -34,11 +34,10 @@ def create_model_table(unmanaged_models, drop_tables):
             except Exception as e:
                 print(f"Error creating table for {model._meta.db_table}: {e}")
 
+            table_names_in_db = [x.lower() for x in connection.introspection.table_names()]
             if (
                 model._meta.db_table.lower()
-                not in connection.introspection.table_names()
-                or model._meta.db_table
-                not in connection.introspection.table_names()
+                not in table_names_in_db
             ):
                 raise ValueError(
                     f"Table {model._meta.db_table} is missing in test database. If you meant to drop the table, run the with --drop option."
