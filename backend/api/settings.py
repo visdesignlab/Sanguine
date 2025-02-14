@@ -82,7 +82,14 @@ DATABASES = {
         "OPTIONS": {
             "mode": oracledb.AUTH_MODE_SYSDBA if IS_TESTING else oracledb.AUTH_MODE_DEFAULT,
         }
-    },
+    } if os.environ.get("ORACLE_HOST", None) is not None else {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': env("MARIADB_DATABASE"),
+        'USER': env("MARIADB_USER"),
+        'PASSWORD': env("MARIADB_PASSWORD"),
+        'HOST': env("MARIADB_HOST"),
+        'PORT': env("MARIADB_PORT"),
+    }
 }
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 DATABASE_ROUTERS = ['api.routers.SanguineRouter']
