@@ -18,6 +18,7 @@ IS_TESTING = env("DJANGO_TESTING")
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
+    "backend",
 ]
 
 INSTALLED_APPS = [
