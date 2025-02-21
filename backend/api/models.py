@@ -109,8 +109,8 @@ class SURGERY_CASE(models.Model):
     MRN = models.ForeignKey(PATIENT, on_delete=models.CASCADE, db_column='MRN')
     CASE_ID = models.BigIntegerField(primary_key=True)
     CASE_DATE = models.DateField()
-    SURGERY_START_DTM = models.DateField()
-    SURGERY_END_DTM = models.DateField()
+    SURGERY_START_DTM = models.DateTimeField()
+    SURGERY_END_DTM = models.DateTimeField()
     SURGERY_ELAP = models.FloatField()
     SURGERY_TYPE_DESC = models.CharField(max_length=2000)
     SURGEON_PROV_ID = models.CharField(max_length=25)
@@ -121,7 +121,7 @@ class SURGERY_CASE(models.Model):
     POSTOP_ICU_LOS = models.FloatField()
     SCHED_SITE_DESC = models.CharField(max_length=2000)
     ASA_CODE = models.CharField(max_length=80)
-    LOAD_DTM = models.DateField()
+    LOAD_DTM = models.DateTimeField()
 
     objects = SanguineManager()
     use_hospital_db = True
@@ -139,12 +139,12 @@ class BILLING_CODES(models.Model):
     CODE_TYPE_DESC = models.CharField(max_length=2000)
     CODE = models.CharField(max_length=80)
     CODE_DESC = models.CharField(max_length=2000)
-    PROC_DTM = models.DateField()
+    PROC_DTM = models.DateTimeField()
     PROV_ID = models.CharField(max_length=25)
     PROV_NAME = models.CharField(max_length=100)
     PRESENT_ON_ADM_F = models.CharField(max_length=1, null=True)
     CODE_RANK = models.FloatField()
-    LOAD_DTM = models.DateField()
+    LOAD_DTM = models.DateTimeField()
 
     objects = SanguineManager()
     use_hospital_db = True
@@ -161,10 +161,10 @@ class BILLING_CODES(models.Model):
 class VISIT_LABS(models.Model):
     VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE, db_column='VISIT_NO')
     LAB_ID = models.CharField(max_length=16)
-    LAB_DRAW_DTM = models.DateField()
+    LAB_DRAW_DTM = models.DateTimeField()
     LAB_PANEL_CODE = models.CharField(max_length=30)
     LAB_PANEL_DESC = models.CharField(max_length=256)
-    RESULT_DTM = models.DateField()
+    RESULT_DTM = models.DateTimeField()
     RESULT_CODE = models.CharField(max_length=30)
     RESULT_LOINC = models.CharField(max_length=30)
     RESULT_DESC = models.CharField(max_length=256)
@@ -172,7 +172,7 @@ class VISIT_LABS(models.Model):
     UOM_CODE = models.CharField(max_length=30)
     LOWER_LIMIT = models.FloatField()
     UPPER_LIMIT = models.FloatField()
-    LOAD_DTM = models.DateField()
+    LOAD_DTM = models.DateTimeField()
 
     objects = SanguineManager()
     use_hospital_db = True
@@ -189,7 +189,7 @@ class VISIT_LABS(models.Model):
 class INTRAOP_TRANSFUSION(models.Model):
     CASE_ID = models.ForeignKey(SURGERY_CASE, on_delete=models.CASCADE, db_column='CASE_ID')
     VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE, db_column='VISIT_NO')
-    TRNSFSN_DTM = models.DateField()
+    TRNSFSN_DTM = models.DateTimeField()
     BLOOD_UNIT_NUMBER = models.CharField(max_length=600)
     PRBC_UNITS = models.FloatField(null=True)
     FFP_UNITS = models.FloatField(null=True)
@@ -201,7 +201,7 @@ class INTRAOP_TRANSFUSION(models.Model):
     PLT_VOL = models.FloatField(null=True)
     CRYO_VOL = models.FloatField(null=True)
     TRANSFUSION_RANK = models.FloatField()
-    LOAD_DTM = models.DateField()
+    LOAD_DTM = models.DateTimeField()
 
     objects = SanguineManager()
     use_hospital_db = True
@@ -219,17 +219,17 @@ class INTRAOP_MEDS(models.Model):
     CASE_ID = models.ForeignKey(SURGERY_CASE, on_delete=models.CASCADE, db_column='CASE_ID')
     ORDER_MED_ID = models.DecimalField(max_digits=18, decimal_places=0)
     MED_ADMIN_LINE = models.DecimalField(max_digits=38, decimal_places=0)
-    ORDER_DTM = models.DateField()
+    ORDER_DTM = models.DateTimeField()
     MEDICATION_ID = models.DecimalField(max_digits=18, decimal_places=0)
     MEDICATION_NAME = models.CharField(max_length=510)
-    ADMIN_DTM = models.DateField()
+    ADMIN_DTM = models.DateTimeField()
     ADMIN_DOSE = models.CharField(max_length=184)
     MED_FORM = models.CharField(max_length=50)
     ADMIN_ROUTE_DESC = models.CharField(max_length=254)
     DOSE_UNIT_DESC = models.CharField(max_length=254)
-    MED_START_DTM = models.DateField()
-    MED_END_DTM = models.DateField()
-    LOAD_DTM = models.DateField()
+    MED_START_DTM = models.DateTimeField()
+    MED_END_DTM = models.DateTimeField()
+    LOAD_DTM = models.DateTimeField()
 
     objects = SanguineManager()
     use_hospital_db = True
@@ -245,18 +245,18 @@ class INTRAOP_MEDS(models.Model):
 class EXTRAOP_MEDS(models.Model):
     VISIT_NO = models.ForeignKey(VISIT, on_delete=models.CASCADE, db_column='VISIT_NO')
     ORDER_MED_ID = models.DecimalField(max_digits=18, decimal_places=0)
-    ORDER_DTM = models.DateField()
+    ORDER_DTM = models.DateTimeField()
     MEDICATION_ID = models.DecimalField(max_digits=18, decimal_places=0)
     MEDICATION_NAME = models.CharField(max_length=510)
     MED_ADMIN_LINE = models.DecimalField(max_digits=38, decimal_places=0)
-    ADMIN_DTM = models.DateField()
+    ADMIN_DTM = models.DateTimeField()
     ADMIN_DOSE = models.CharField(max_length=184)
     MED_FORM = models.CharField(max_length=50)
     ADMIN_ROUTE_DESC = models.CharField(max_length=254)
     DOSE_UNIT_DESC = models.CharField(max_length=254)
-    MED_START_DTM = models.DateField()
-    MED_END_DTM = models.DateField()
-    LOAD_DTM = models.DateField()
+    MED_START_DTM = models.DateTimeField()
+    MED_END_DTM = models.DateTimeField()
+    LOAD_DTM = models.DateTimeField()
 
     objects = SanguineManager()
     use_hospital_db = True
