@@ -117,7 +117,6 @@ class Command(BaseCommand):
                 ETHNICITY_CODE=eth_codes[eth_idx],
                 ETHNICITY_DESC=eth_descs[eth_idx],
                 DEATH_DATE=death_date,
-                LOAD_DTM=make_aware(fake.date_this_century()),
             )
             pats.append(patient)
         self.stdout.write(self.style.SUCCESS('Successfully generated patient data'))
@@ -164,7 +163,6 @@ class Command(BaseCommand):
                     CCI_MALIGN_W_METS=fake.random_element(elements=(0, 6, None)),
                     CCI_HIV_AIDS=fake.random_element(elements=(0, 6, None)),
                     CCI_SCORE=fake.random_int(min=0, max=25),
-                    LOAD_DTM=make_aware(fake.date_this_century()),
                 )
                 visits.append((pat, visit))
         self.stdout.write(self.style.SUCCESS('Successfully generated visit data'))
@@ -195,7 +193,6 @@ class Command(BaseCommand):
                     POSTOP_ICU_LOS=fake.random_int(min=0, max=10),
                     SCHED_SITE_DESC=fake.sentence(),
                     ASA_CODE=fake.random_element(elements=('1', '2', '3', '4', '5', '6')),
-                    LOAD_DTM=make_aware(fake.date_this_century()),
                 )
                 surgeries.append(surgery)
         self.stdout.write(self.style.SUCCESS('Successfully generated surgery case data'))
@@ -214,7 +211,6 @@ class Command(BaseCommand):
                     PROV_NAME=surg.SURGEON_PROV_NAME,
                     PRESENT_ON_ADM_F=fake.random_element(elements=('Y', None)),
                     CODE_RANK=rank,
-                    LOAD_DTM=make_aware(fake.date_this_century()),
                 )
         self.stdout.write(self.style.SUCCESS('Successfully generated billing codes data'))
 
@@ -237,7 +233,6 @@ class Command(BaseCommand):
                     UOM_CODE=fake.random_element(elements=('g/dL', 'g/L')),
                     LOWER_LIMIT=12,
                     UPPER_LIMIT=18,
-                    LOAD_DTM=make_aware(fake.date_this_century()),
                 )
         self.stdout.write(self.style.SUCCESS('Successfully generated visit labs data'))
 
@@ -261,7 +256,6 @@ class Command(BaseCommand):
                     DOSE_UNIT_DESC=fake.random_element(elements=('mg', 'g', 'mL', 'unit')),
                     MED_START_DTM=admin_dtm,
                     MED_END_DTM=admin_dtm + timedelta(hours=fake.random_int(min=1, max=12)),
-                    LOAD_DTM=make_aware(fake.date_this_century()),
                 )
         self.stdout.write(self.style.SUCCESS('Successfully generated extraop meds data'))
 
@@ -284,7 +278,6 @@ class Command(BaseCommand):
                 DOSE_UNIT_DESC=fake.random_element(elements=('mg', 'g', 'mL', 'unit')),
                 MED_START_DTM=admin_dtm,
                 MED_END_DTM=admin_dtm + timedelta(hours=fake.random_int(min=1, max=12)),
-                LOAD_DTM=make_aware(fake.date_this_century()),
             )
         self.stdout.write(self.style.SUCCESS('Successfully generated intraop meds data'))
 
@@ -312,6 +305,5 @@ class Command(BaseCommand):
                     PLT_VOL=plt * 300 if type == 'vol' else None,
                     CRYO_VOL=cryo * 75 if type == 'vol' else None,
                     TRANSFUSION_RANK=rank,
-                    LOAD_DTM=make_aware(fake.date_this_century()),
                 )
         self.stdout.write(self.style.SUCCESS('Successfully generated intraop transfusion data'))

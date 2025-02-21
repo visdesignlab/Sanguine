@@ -50,7 +50,6 @@ class PATIENT(models.Model):
     ETHNICITY_CODE = models.CharField(max_length=80)
     ETHNICITY_DESC = models.CharField(max_length=2000)
     DEATH_DATE = models.DateField(null=True)
-    LOAD_DTM = models.DateTimeField()
 
     objects = SanguineManager()
     use_hospital_db = True
@@ -94,7 +93,6 @@ class VISIT(models.Model):
     CCI_MALIGN_W_METS = models.FloatField(null=True)
     CCI_HIV_AIDS = models.FloatField(null=True)
     CCI_SCORE = models.FloatField(null=True)
-    LOAD_DTM = models.DateTimeField()
 
     objects = SanguineManager()
     use_hospital_db = True
@@ -121,7 +119,6 @@ class SURGERY_CASE(models.Model):
     POSTOP_ICU_LOS = models.FloatField()
     SCHED_SITE_DESC = models.CharField(max_length=2000)
     ASA_CODE = models.CharField(max_length=80)
-    LOAD_DTM = models.DateTimeField()
 
     objects = SanguineManager()
     use_hospital_db = True
@@ -144,7 +141,6 @@ class BILLING_CODES(models.Model):
     PROV_NAME = models.CharField(max_length=100)
     PRESENT_ON_ADM_F = models.CharField(max_length=1, null=True)
     CODE_RANK = models.FloatField()
-    LOAD_DTM = models.DateTimeField()
 
     objects = SanguineManager()
     use_hospital_db = True
@@ -172,7 +168,6 @@ class VISIT_LABS(models.Model):
     UOM_CODE = models.CharField(max_length=30)
     LOWER_LIMIT = models.FloatField()
     UPPER_LIMIT = models.FloatField()
-    LOAD_DTM = models.DateTimeField()
 
     objects = SanguineManager()
     use_hospital_db = True
@@ -201,7 +196,6 @@ class INTRAOP_TRANSFUSION(models.Model):
     PLT_VOL = models.FloatField(null=True)
     CRYO_VOL = models.FloatField(null=True)
     TRANSFUSION_RANK = models.FloatField()
-    LOAD_DTM = models.DateTimeField()
 
     objects = SanguineManager()
     use_hospital_db = True
@@ -229,7 +223,6 @@ class INTRAOP_MEDS(models.Model):
     DOSE_UNIT_DESC = models.CharField(max_length=254)
     MED_START_DTM = models.DateTimeField()
     MED_END_DTM = models.DateTimeField()
-    LOAD_DTM = models.DateTimeField()
 
     objects = SanguineManager()
     use_hospital_db = True
@@ -256,7 +249,6 @@ class EXTRAOP_MEDS(models.Model):
     DOSE_UNIT_DESC = models.CharField(max_length=254)
     MED_START_DTM = models.DateTimeField()
     MED_END_DTM = models.DateTimeField()
-    LOAD_DTM = models.DateTimeField()
 
     objects = SanguineManager()
     use_hospital_db = True
