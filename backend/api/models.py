@@ -129,6 +129,9 @@ class SURGERY_CASE(models.Model):
     class Meta:
         managed = False
         db_table = 'SANG_SURGERY_CASE' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE'
+        indexes = [
+            models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX'),
+        ]
 
 
 class BILLING_CODES(models.Model):
@@ -149,6 +152,10 @@ class BILLING_CODES(models.Model):
     class Meta:
         managed = False
         db_table = 'SANG_BILLING_CODES' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_BILLING_CODES'
+        indexes = [
+            models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX'),
+            models.Index(fields=['CODE'], name='CODE_IDX'),
+        ]
 
 
 class VISIT_LABS(models.Model):
@@ -173,6 +180,10 @@ class VISIT_LABS(models.Model):
     class Meta:
         managed = False
         db_table = 'SANG_VISIT_LABS' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT_LABS'
+        indexes = [
+            models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX'),
+            models.Index(fields=['RESULT_DESC'], name='RESULT_DESC_IDX'),
+        ]
 
 
 class INTRAOP_TRANSFUSION(models.Model):
@@ -198,6 +209,9 @@ class INTRAOP_TRANSFUSION(models.Model):
     class Meta:
         managed = False
         db_table = 'SANG_INTRAOP_TRANSFUSION' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_TRANSFUSION'
+        indexes = [
+            models.Index(fields=['CASE_ID'], name='CASE_ID_IDX'),
+        ]
 
 
 class INTRAOP_MEDS(models.Model):
@@ -223,6 +237,9 @@ class INTRAOP_MEDS(models.Model):
     class Meta:
         managed = False
         db_table = 'SANG_INTRAOP_MEDS' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_MEDS'
+        indexes = [
+            models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX'),
+        ]
 
 
 class EXTRAOP_MEDS(models.Model):
@@ -247,3 +264,6 @@ class EXTRAOP_MEDS(models.Model):
     class Meta:
         managed = False
         db_table = 'SANG_EXTRAOP_MEDS' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_EXTRAOP_MEDS'
+        indexes = [
+            models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX'),
+        ]
