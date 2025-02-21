@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from django.utils.timezone import make_aware
 from django.core.management.base import BaseCommand
 from django.db import connections
 from faker import Faker
@@ -126,8 +127,8 @@ class Command(BaseCommand):
             for _ in range(5):
                 visit_no = fake.unique.random_number(digits=10)
                 end_date = pat.DEATH_DATE if pat.DEATH_DATE else datetime.now().date()
-                admit_date = fake.date_time_between(start_date=pat.PAT_BIRTHDATE, end_date=min(end_date, datetime(2025, 1, 1).date()))
-                discharge_date = fake.date_time_between(start_date=admit_date, end_date=min(end_date, (admit_date + timedelta(days=10)).date()))
+                admit_date = make_aware(fake.date_time_between(start_date=pat.PAT_BIRTHDATE, end_date=min(end_date, datetime(2025, 1, 1).date())))
+                discharge_date = make_aware(fake.date_time_between(start_date=admit_date, end_date=min(end_date, (admit_date + timedelta(days=10)).date())))
                 age_at_adm = (admit_date.date() - pat.PAT_BIRTHDATE).days // 365
                 visit = VISIT.objects.create(
                     VISIT_NO=visit_no,
@@ -171,8 +172,8 @@ class Command(BaseCommand):
         # Generate mock data for SURGERY_CASE
         for pat, visit in visits:
             for _ in range(random.randint(1, 5)):
-                surg_start = fake.date_time_between(start_date=visit.ADM_DTM, end_date=visit.ADM_DTM + timedelta(days=1))
-                surg_end = fake.date_time_between(start_date=surg_start, end_date=surg_start + timedelta(hours=16))
+                surg_start = make_aware(fake.date_time_between(start_date=visit.ADM_DTM, end_date=visit.ADM_DTM + timedelta(days=1)))
+                surg_end = make_aware(fake.date_time_between(start_date=surg_start, end_date=surg_start + timedelta(hours=16)))
 
                 surgeon = fake.random_element(elements=surgeons)
                 anesth = fake.random_element(elements=anests)
@@ -221,7 +222,7 @@ class Command(BaseCommand):
         result_desc_options = ['HGB', 'Hemoglobin']
         for pat, visit in visits:
             for _ in range(random.randint(1, 5)):
-                draw_dtm = fake.date_time_between(start_date=visit.ADM_DTM, end_date=visit.DSCH_DTM)
+                draw_dtm = make_aware(fake.date_time_between(start_date=visit.ADM_DTM, end_date=visit.DSCH_DTM))
                 VISIT_LABS.objects.create(
                     VISIT_NO=visit,
                     LAB_ID=fake.unique.random_number(digits=10),
@@ -243,13 +244,13 @@ class Command(BaseCommand):
         # Generate mock data for EXTRAOP_MEDS
         med_types = ['TXA', 'B12', 'AMICAR', 'tranexamic acid', 'vitamin B12', 'aminocaproic acid', 'iron', 'ferrous sulfate', 'ferric carboxymaltose']
         for surg in surgeries:
-            order_dtm = fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM)
+            order_dtm = make_aware(fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM))
             admin_dtm = order_dtm + timedelta(minutes=fake.random_int(min=1, max=120))
             for i in range(random.randint(1, 5)):
                 EXTRAOP_MEDS.objects.create(
                     VISIT_NO=surg.VISIT_NO,
                     ORDER_MED_ID=fake.unique.random_number(digits=10),
-                    ORDER_DTM=fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM),
+                    ORDER_DTM=make_aware(fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM)),
                     MEDICATION_ID=fake.unique.random_number(digits=10),
                     MEDICATION_NAME=fake.random_element(elements=med_types),
                     MED_ADMIN_LINE=fake.random_int(min=1, max=4),
@@ -266,13 +267,13 @@ class Command(BaseCommand):
 
         # Generate mock data for INTRAOP_MEDS
         for surg in surgeries:
-            order_dtm = fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM)
+            order_dtm = make_aware(fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM))
             admin_dtm = order_dtm + timedelta(minutes=fake.random_int(min=1, max=120))
             INTRAOP_MEDS.objects.create(
                 VISIT_NO=surg.VISIT_NO,
                 CASE_ID=surg,
                 ORDER_MED_ID=fake.unique.random_number(digits=10),
-                ORDER_DTM=fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM),
+                ORDER_DTM=make_aware(fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM)),
                 MEDICATION_ID=fake.unique.random_number(digits=10),
                 MEDICATION_NAME=fake.random_element(elements=med_types),
                 MED_ADMIN_LINE=fake.random_int(min=1, max=4),
@@ -299,7 +300,7 @@ class Command(BaseCommand):
                 INTRAOP_TRANSFUSION.objects.create(
                     CASE_ID=surg,
                     VISIT_NO=surg.VISIT_NO,
-                    TRNSFSN_DTM=fake.date_time_between(start_date=surg.SURGERY_START_DTM, end_date=surg.SURGERY_END_DTM),
+                    TRNSFSN_DTM=make_aware(fake.date_time_between(start_date=surg.SURGERY_START_DTM, end_date=surg.SURGERY_END_DTM)),
                     BLOOD_UNIT_NUMBER=fake.unique.random_number(digits=10),
                     PRBC_UNITS=rbcs if type == 'unit' else None,
                     FFP_UNITS=ffp if type == 'unit' else None,
