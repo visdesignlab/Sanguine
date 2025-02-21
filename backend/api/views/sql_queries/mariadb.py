@@ -69,7 +69,7 @@ procedure_count_query = f"""
             GROUP_CONCAT({FIELDS.get('billing_code')}) as codes,
             SURG.{FIELDS.get('case_id')}
         FROM {TABLES.get('billing_codes')} BLNG
-        INNER JOIN {TABLES.get('surgery_case')} SURG
+        INNER JOIN SANG_SURGERY_CASE SURG
             ON (BLNG.{FIELDS.get('visit_no')} = SURG.{FIELDS.get('visit_no')})
             AND (BLNG.{FIELDS.get('procedure_dtm')} = SURG.{FIELDS.get('case_date')})
         {filters_safe_sql}
@@ -112,7 +112,7 @@ surgery_query = f"""
                 SURG.{FIELDS.get('surgery_type')},
                 SURG.{FIELDS.get('prim_proc_desc')},
                 SURG.{FIELDS.get('post_op_icu_los')}
-            FROM {TABLES.get('surgery_case')} SURG
+            FROM SANG_SURGERY_CASE SURG
             WHERE SURG.{FIELDS.get('case_id')} = :id
         )
     SELECT surg_cases.*, codes.codes AS codes
@@ -187,30 +187,24 @@ surgery_case_query = rf"""
             RESULT_DTM,
             RESULT_CODE,
             RESULT_VALUE
-        FROM {TABLES.get('visit_labs')}
+        FROM SANG_VISIT_LABS
         WHERE (UPPER(RESULT_DESC) REGEXP 'HEMOGLOBIN|HGB')
           AND RESULT_VALUE REGEXP '^[+-]?\\d+(\\.\\d+)?$'
     ),
     PREOP_HB AS (
         SELECT
-            X.MRN,
             X.VISIT_NO,
             X.CASE_ID,
-            X.SURGERY_START_DTM,
-            X.SURGERY_END_DTM,
             X.DI_PREOP_DRAW_DTM,
-            LH2.RESULT_VALUE
+            LH2.RESULT_VALUE AS PREOP_HEMO
         FROM (
             SELECT
-                SC.MRN,
                 SC.VISIT_NO,
                 SC.CASE_ID,
-                SC.SURGERY_START_DTM,
-                SC.SURGERY_END_DTM,
                 MAX(LH.LAB_DRAW_DTM) AS DI_PREOP_DRAW_DTM
-            FROM {TABLES.get('surgery_case')} SC
-            INNER JOIN LAB_HB LH ON SC.VISIT_NO = LH.VISIT_NO
-            GROUP BY SC.MRN, SC.VISIT_NO, SC.CASE_ID, SC.SURGERY_START_DTM, SC.SURGERY_END_DTM
+            FROM SANG_SURGERY_CASE SC
+            INNER JOIN LAB_HB LH ON SC.VISIT_NO = LH.VISIT_NO and LH.LAB_DRAW_DTM < SC.SURGERY_START_DTM
+            GROUP BY SC.VISIT_NO, SC.CASE_ID
         ) X
         INNER JOIN LAB_HB LH2
             ON X.VISIT_NO = LH2.VISIT_NO
@@ -218,59 +212,22 @@ surgery_case_query = rf"""
     ),
     POSTOP_HB AS (
         SELECT
-            Z.MRN,
-            Z.VISIT_NO,
-            Z.CASE_ID,
-            Z.SURGERY_START_DTM,
-            Z.SURGERY_END_DTM,
-            Z.DI_POSTOP_DRAW_DTM,
-            LH4.RESULT_VALUE
+            X.VISIT_NO,
+            X.CASE_ID,
+            X.DI_POSTOP_DRAW_DTM,
+            LH2.RESULT_VALUE AS POSTOP_HEMO
         FROM (
             SELECT
-                SC2.MRN,
-                SC2.VISIT_NO,
-                SC2.CASE_ID,
-                SC2.SURGERY_START_DTM,
-                SC2.SURGERY_END_DTM,
-                MIN(LH3.LAB_DRAW_DTM) AS DI_POSTOP_DRAW_DTM
-            FROM {TABLES.get('surgery_case')} SC2
-            INNER JOIN LAB_HB LH3 ON SC2.VISIT_NO = LH3.VISIT_NO
-            WHERE LH3.LAB_DRAW_DTM > SC2.SURGERY_END_DTM
-            GROUP BY SC2.MRN, SC2.VISIT_NO, SC2.CASE_ID, SC2.SURGERY_START_DTM, SC2.SURGERY_END_DTM
-        ) Z
-        INNER JOIN LAB_HB LH4
-            ON Z.VISIT_NO = LH4.VISIT_NO
-           AND Z.DI_POSTOP_DRAW_DTM = LH4.LAB_DRAW_DTM
-    ),
-    HEMOGLOBIN AS (
-        SELECT
-            SC3.MRN,
-            SC3.CASE_ID,
-            SC3.VISIT_NO,
-            SC3.CASE_DATE,
-            YEAR(SC3.CASE_DATE) AS YEAR,
-            MONTH(SC3.CASE_DATE) AS MONTH,
-            SC3.SURGERY_START_DTM,
-            SC3.SURGERY_END_DTM,
-            SC3.SURGERY_ELAP,
-            SC3.SURGERY_TYPE_DESC,
-            SC3.SURGEON_PROV_ID,
-            SC3.ANESTH_PROV_ID,
-            SC3.PRIM_PROC_DESC,
-            SC3.POSTOP_ICU_LOS,
-            SC3.SCHED_SITE_DESC,
-            MAX(PRE.DI_PREOP_DRAW_DTM) AS DI_PREOP_DRAW_DTM,
-            MAX(PRE.RESULT_VALUE) AS PREOP_HEMO,
-            MAX(POST.DI_POSTOP_DRAW_DTM) AS DI_POSTOP_DRAW_DTM,
-            MAX(POST.RESULT_VALUE) AS POSTOP_HEMO
-        FROM {TABLES.get('surgery_case')} SC3
-        LEFT JOIN PREOP_HB PRE ON SC3.CASE_ID = PRE.CASE_ID
-        LEFT JOIN POSTOP_HB POST ON SC3.CASE_ID = POST.CASE_ID
-        GROUP BY SC3.MRN, SC3.CASE_ID, SC3.VISIT_NO, SC3.CASE_DATE,
-                 YEAR(SC3.CASE_DATE), MONTH(SC3.CASE_DATE),
-                 SC3.SURGERY_START_DTM, SC3.SURGERY_END_DTM, SC3.SURGERY_ELAP,
-                 SC3.SURGERY_TYPE_DESC, SC3.SURGEON_PROV_ID, SC3.ANESTH_PROV_ID,
-                 SC3.PRIM_PROC_DESC, SC3.POSTOP_ICU_LOS, SC3.SCHED_SITE_DESC
+                SC.VISIT_NO,
+                SC.CASE_ID,
+                MIN(LH.LAB_DRAW_DTM) AS DI_POSTOP_DRAW_DTM
+            FROM SANG_SURGERY_CASE SC
+            INNER JOIN LAB_HB LH ON SC.VISIT_NO = LH.VISIT_NO and LH.LAB_DRAW_DTM > SC.SURGERY_END_DTM
+            GROUP BY SC.VISIT_NO, SC.CASE_ID
+        ) X
+        INNER JOIN LAB_HB LH2
+            ON X.VISIT_NO = LH2.VISIT_NO
+            AND X.DI_POSTOP_DRAW_DTM = LH2.LAB_DRAW_DTM
     )
     SELECT
         SURG.CASE_ID,
@@ -285,8 +242,8 @@ surgery_case_query = rf"""
         T.PLT_UNITS,
         T.CRYO_UNITS,
         T.CELL_SAVER_ML,
-        HGB.PREOP_HEMO,
-        HGB.POSTOP_HEMO,
+        PRE.PREOP_HEMO,
+        POST.POSTOP_HEMO,
         YEAR(SURG.CASE_DATE) AS YEAR,
         QUARTER(SURG.CASE_DATE) AS QUARTER,
         MONTH(SURG.CASE_DATE) AS MONTH,
@@ -302,10 +259,11 @@ surgery_case_query = rf"""
         MEDS.AMICAR,
         MEDS.IRON,
         SURG.SURGERY_TYPE_DESC
-    FROM {TABLES.get('surgery_case')} SURG
+    FROM SANG_SURGERY_CASE SURG
     INNER JOIN BILLING_CODES BLNG ON SURG.VISIT_NO = BLNG.VISIT_NO
     LEFT JOIN TRANSFUSED_UNITS T ON SURG.CASE_ID = T.CASE_ID
-    LEFT JOIN {TABLES.get('visit')} VST ON SURG.VISIT_NO = VST.VISIT_NO
+    LEFT JOIN SANG_VISIT VST ON SURG.VISIT_NO = VST.VISIT_NO
     LEFT JOIN MEDS ON SURG.VISIT_NO = MEDS.VISIT_NO
-    LEFT JOIN HEMOGLOBIN HGB ON SURG.CASE_ID = HGB.CASE_ID
+    LEFT JOIN PREOP_HB PRE ON SURG.CASE_ID = PRE.CASE_ID
+    LEFT JOIN POSTOP_HB POST ON SURG.CASE_ID = POST.CASE_ID
 """
