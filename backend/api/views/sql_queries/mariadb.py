@@ -88,7 +88,7 @@ patient_query = f"""
         PATIENT.{FIELDS.get('death_date')}
     FROM
         {TABLES.get('patient')} PATIENT
-    WHERE PATIENT.{FIELDS.get('patient_id')} = %s
+    WHERE PATIENT.{FIELDS.get('patient_id')} = %(id)s
     """
 
 surgery_query = f"""
@@ -113,7 +113,7 @@ surgery_query = f"""
                 SURG.{FIELDS.get('prim_proc_desc')},
                 SURG.{FIELDS.get('post_op_icu_los')}
             FROM SANG_SURGERY_CASE SURG
-            WHERE SURG.{FIELDS.get('case_id')} = %s
+            WHERE SURG.{FIELDS.get('case_id')} = %(id)s
         )
     SELECT surg_cases.*, codes.codes AS codes
     FROM surg_cases
