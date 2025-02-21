@@ -169,9 +169,10 @@ class Command(BaseCommand):
 
         # Generate mock data for SURGERY_CASE
         for pat, visit in visits:
-            for _ in range(random.randint(1, 5)):
-                surg_start = make_aware(fake.date_time_between(start_date=visit.ADM_DTM, end_date=visit.ADM_DTM + timedelta(days=1)))
-                surg_end = make_aware(fake.date_time_between(start_date=surg_start, end_date=surg_start + timedelta(hours=16)))
+            surg1_start = make_aware(visit.ADM_DTM + timedelta(hours=2))
+            surg2_start = make_aware(visit.ADM_DTM + timedelta(days=1))
+            for start_time in [surg1_start, surg2_start]:
+                surg_end = make_aware(fake.date_time_between(start_date=start_time, end_date=start_time + timedelta(hours=5)))
 
                 surgeon = fake.random_element(elements=surgeons)
                 anesth = fake.random_element(elements=anests)
@@ -180,10 +181,10 @@ class Command(BaseCommand):
                     VISIT_NO=visit,
                     MRN=pat,
                     CASE_ID=fake.unique.random_number(digits=10),
-                    CASE_DATE=surg_start.date(),
-                    SURGERY_START_DTM=surg_start,
+                    CASE_DATE=start_time.date(),
+                    SURGERY_START_DTM=start_time,
                     SURGERY_END_DTM=surg_end,
-                    SURGERY_ELAP=(surg_end - surg_start).total_seconds() / 60,
+                    SURGERY_ELAP=(surg_end - start_time).total_seconds() / 60,
                     SURGERY_TYPE_DESC=fake.random_element(elements=('Elective', 'Emergent', 'Trauma Emergent', 'Trauma Urgent', 'Urgent')),
                     SURGEON_PROV_ID=surgeon[0],
                     SURGEON_PROV_NAME=surgeon[1],
@@ -226,6 +227,27 @@ class Command(BaseCommand):
                     LAB_PANEL_CODE=fake.unique.random_number(digits=10),
                     LAB_PANEL_DESC=fake.sentence(),
                     RESULT_DTM=draw_dtm + timedelta(hours=random.randint(1, 12)),
+                    RESULT_CODE=fake.unique.random_number(digits=10),
+                    RESULT_LOINC=fake.unique.random_number(digits=10),
+                    RESULT_DESC=fake.random_element(elements=result_desc_options),
+                    RESULT_VALUE=fake.pydecimal(left_digits=2, right_digits=1, positive=True, min_value=5, max_value=20),
+                    UOM_CODE=fake.random_element(elements=('g/dL', 'g/L')),
+                    LOWER_LIMIT=12,
+                    UPPER_LIMIT=18,
+                )
+        for surg in surgeries:
+            ten_min_before_surg = surg.SURGERY_START_DTM - timedelta(minutes=10)
+            five_min_before_surg = surg.SURGERY_START_DTM - timedelta(minutes=5)
+            five_min_after_surg = surg.SURGERY_END_DTM + timedelta(minutes=5)
+            ten_min_before_surg = surg.SURGERY_END_DTM + timedelta(minutes=10)
+            for time in [ten_min_before_surg, five_min_before_surg, five_min_after_surg, ten_min_before_surg]:
+                VISIT_LABS.objects.create(
+                    VISIT_NO=surg.VISIT_NO,
+                    LAB_ID=fake.unique.random_number(digits=10),
+                    LAB_DRAW_DTM=time,
+                    LAB_PANEL_CODE=fake.unique.random_number(digits=10),
+                    LAB_PANEL_DESC=fake.sentence(),
+                    RESULT_DTM=time + timedelta(minutes=random.randint(1, 15)),
                     RESULT_CODE=fake.unique.random_number(digits=10),
                     RESULT_LOINC=fake.unique.random_number(digits=10),
                     RESULT_DESC=fake.random_element(elements=result_desc_options),
