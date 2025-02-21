@@ -50,7 +50,7 @@ class PATIENT(models.Model):
     ETHNICITY_CODE = models.CharField(max_length=80)
     ETHNICITY_DESC = models.CharField(max_length=2000)
     DEATH_DATE = models.DateField(null=True)
-    LOAD_DTM = models.DateField()
+    LOAD_DTM = models.DateTimeField()
 
     objects = SanguineManager()
     use_hospital_db = True
@@ -94,7 +94,7 @@ class VISIT(models.Model):
     CCI_MALIGN_W_METS = models.FloatField(null=True)
     CCI_HIV_AIDS = models.FloatField(null=True)
     CCI_SCORE = models.FloatField(null=True)
-    LOAD_DTM = models.DateField()
+    LOAD_DTM = models.DateTimeField()
 
     objects = SanguineManager()
     use_hospital_db = True
