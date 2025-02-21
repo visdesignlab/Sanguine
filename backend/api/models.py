@@ -130,7 +130,7 @@ class SURGERY_CASE(models.Model):
         managed = False
         db_table = 'SANG_SURGERY_CASE' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE'
         indexes = [
-            models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX'),
+            models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX_SURGERY_CASE'),
         ]
 
 
@@ -153,7 +153,7 @@ class BILLING_CODES(models.Model):
         managed = False
         db_table = 'SANG_BILLING_CODES' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_BILLING_CODES'
         indexes = [
-            models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX'),
+            models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX_BILLING_CODES'),
             models.Index(fields=['CODE'], name='CODE_IDX'),
         ]
 
@@ -181,7 +181,7 @@ class VISIT_LABS(models.Model):
         managed = False
         db_table = 'SANG_VISIT_LABS' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT_LABS'
         indexes = [
-            models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX'),
+            models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX_VISIT_LABS'),
             models.Index(fields=['RESULT_DESC'], name='RESULT_DESC_IDX'),
         ]
 
@@ -238,7 +238,7 @@ class INTRAOP_MEDS(models.Model):
         managed = False
         db_table = 'SANG_INTRAOP_MEDS' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_MEDS'
         indexes = [
-            models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX'),
+            models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX_INTRAOP_MEDS'),
         ]
 
 
@@ -265,5 +265,5 @@ class EXTRAOP_MEDS(models.Model):
         managed = False
         db_table = 'SANG_EXTRAOP_MEDS' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_EXTRAOP_MEDS'
         indexes = [
-            models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX'),
+            models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX_EXTRAOP_MEDS'),
         ]
