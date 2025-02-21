@@ -37,7 +37,7 @@ function CustomizedAxisBand({ scaleDomain, scaleRange, scalePadding }: Props) {
           <g key={idx}>
             <CustomAxisLine x1={x1} x2={x2} />
             <CustomAxisLineBox x={x1} width={x2 - x1} fill={idx % 2 === 1 ? secondaryGray : basicGray} />
-            <AxisText biggerFont={store.configStore.largeFont} x={x1 + 0.5 * (x2 - x1)}>{number}</AxisText>
+            <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{number}</AxisText>
           </g>
         );
       })}
