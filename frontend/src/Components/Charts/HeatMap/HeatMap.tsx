@@ -81,7 +81,8 @@ function HeatMap({
   }, [dimensionWidth, extraPairTotalWidth, xAxisVar, currentOffset]);
 
   const innerSvg = useRef<SVGSVGElement | null>(null);
-
+  const svgHeight = chartHeight - currentOffset.top + 50;
+  
   return (
     <g>
       <foreignObject
@@ -90,7 +91,7 @@ function HeatMap({
         }}
         transform={`translate(0,${currentOffset.top})`}
       >
-        <svg style={{ height: `${chartHeight - currentOffset.top}px`, width: '100%' }} ref={innerSvg}>
+        <svg style={{ height: `${svgHeight}px`, width: '100%' }} ref={innerSvg}>
           <HeatMapAxisY
             svg={innerSvg}
             currentOffset={currentOffset}
@@ -151,7 +152,7 @@ function HeatMap({
               secondaryExtraPairDataSet={secondaryExtraPairDataSet || undefined}
               aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
               aggregationScaleRange={JSON.stringify(aggregationScale().range())}
-              height={chartHeight}
+              height={svgHeight}
               text
               chartId={chartId}
             />
