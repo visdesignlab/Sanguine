@@ -95,14 +95,14 @@ surgery_query = f"""
     WITH
         codes AS (
             SELECT
-                CONCAT(BLNG.{FIELDS.get('visit_no')}, ', ', BLNG.{FIELDS.get('procedure_dtm')}) AS comb,
+                CONCAT(BLNG.{FIELDS.get('visit_no')}, ', ', CAST(BLNG.{FIELDS.get('procedure_dtm')} AS DATE)) AS comb,
                 GROUP_CONCAT(BLNG.{FIELDS.get('code_desc')} SEPARATOR ', ') AS codes
             FROM {TABLES.get('billing_codes')} BLNG
-            GROUP BY CONCAT(BLNG.{FIELDS.get('visit_no')}, ', ', BLNG.{FIELDS.get('procedure_dtm')})
+            GROUP BY CONCAT(BLNG.{FIELDS.get('visit_no')}, ', ', CAST(BLNG.{FIELDS.get('procedure_dtm')} AS DATE))
         ),
         surg_cases AS (
             SELECT
-                CONCAT(SURG.{FIELDS.get('visit_no')}, ', ', SURG.{FIELDS.get('case_date')}) AS comb,
+                CONCAT(SURG.{FIELDS.get('visit_no')}, ', ', CAST(SURG.{FIELDS.get('case_date')} AS DATE)) AS comb,
                 SURG.{FIELDS.get('case_id')},
                 SURG.{FIELDS.get('visit_no')},
                 SURG.{FIELDS.get('case_date')},
