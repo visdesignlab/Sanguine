@@ -4,7 +4,8 @@ import oracledb
 
 env = environ.Env(
     DJANGO_DEBUG=(bool, False),  # Cast to bool, default to False
-    DJANGO_TESTING=(bool, False)  # Cast to bool, default to False
+    DJANGO_TESTING=(bool, False),  # Cast to bool, default to False
+    DJANGO_HOSTNAME=(str, "localhost"),
 )
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -16,9 +17,8 @@ IS_TESTING = env("DJANGO_TESTING")
 
 # We're allowing localhost for local development and for production deployment with containers
 ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
     "backend",
+    env("DJANGO_HOSTNAME"),
 ]
 
 INSTALLED_APPS = [
