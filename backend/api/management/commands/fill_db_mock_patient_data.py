@@ -169,8 +169,8 @@ class Command(BaseCommand):
 
         # Generate mock data for SURGERY_CASE
         for pat, visit in visits:
-            surg1_start = make_aware(visit.ADM_DTM + timedelta(hours=2))
-            surg2_start = make_aware(visit.ADM_DTM + timedelta(days=1))
+            surg1_start = visit.ADM_DTM + timedelta(hours=2)
+            surg2_start = visit.ADM_DTM + timedelta(days=1)
             for start_time in [surg1_start, surg2_start]:
                 surg_end = make_aware(fake.date_time_between(start_date=start_time, end_date=start_time + timedelta(hours=5)))
 
