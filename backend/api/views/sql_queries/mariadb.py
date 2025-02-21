@@ -96,7 +96,7 @@ surgery_query = f"""
         codes AS (
             SELECT
                 CONCAT(BLNG.{FIELDS.get('visit_no')}, ', ', CAST(BLNG.{FIELDS.get('procedure_dtm')} AS DATE)) AS comb,
-                GROUP_CONCAT(BLNG.{FIELDS.get('code_desc')} SEPARATOR ', ') AS codes
+                GROUP_CONCAT(BLNG.{FIELDS.get('code_desc')} SEPARATOR ', ') AS CODES
             FROM {TABLES.get('billing_codes')} BLNG
             GROUP BY CONCAT(BLNG.{FIELDS.get('visit_no')}, ', ', CAST(BLNG.{FIELDS.get('procedure_dtm')} AS DATE))
         ),
@@ -115,7 +115,7 @@ surgery_query = f"""
             FROM SANG_SURGERY_CASE SURG
             WHERE SURG.{FIELDS.get('case_id')} = %(id)s
         )
-    SELECT surg_cases.*, codes.codes AS codes
+    SELECT surg_cases.*, codes.CODES AS CODES
     FROM surg_cases
     INNER JOIN codes ON surg_cases.comb = codes.comb
     """
