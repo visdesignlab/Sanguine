@@ -145,7 +145,12 @@ function HeatMap({
               </g>
             )) : null}
           </g>
-          <g className="extraPairChart">
+          <svg
+            className="extraPairChart"
+            width={extraPairTotalWidth}
+            height={chartHeight}
+            style={{ overflow: 'hidden' }}
+          >
             <GeneratorExtraPair
               extraPairDataSet={extraPairDataSet}
               secondaryExtraPairDataSet={secondaryExtraPairDataSet || undefined}
@@ -156,7 +161,7 @@ function HeatMap({
               chartId={chartId}
             />
 
-          </g>
+          </svg>
         </svg>
       </foreignObject>
 
