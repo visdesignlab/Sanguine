@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  median, max, mean, sum,
+  median, min, max, mean, sum,
 } from 'd3';
 import { create as createpd } from 'pdfast';
 import {
@@ -29,6 +29,21 @@ const outcomeDataGenerate = (aggregatedBy: string, name: string, label: string, 
     name, label, data: newData, type: 'Basic',
   }) as ExtraPairPoint;
 };
+
+/**
+ * Compute an attribute-wide min and max.
+ * @param input - The object to compute the min and max over.
+ * @returns The min and max of the object.
+ */
+function getAttributeMinMax(input: Record<string, number[]>): { attributeMin: number, attributeMax: number } {
+  let attributeData: number[] = [];
+  for (const key in input) {
+    if (Object.hasOwn(input, key)) {
+      attributeData = attributeData.concat(input[key]);
+    }
+  }
+  return { attributeMin: min(attributeData)!, attributeMax: max(attributeData)! };
+}
 
 export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: BasicAggregatedDatePoint[]) => {
   const newExtraPairData: ExtraPairPoint[] = [];
@@ -93,7 +108,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
           newExtraPairData.push(outcomeDataGenerate(aggregatedBy, 'IRON', 'Iron', data, hemoglobinDataSet));
           break;
 
-        case 'RISK':
+        case 'RISK': {
           // let temporaryDataHolder: any = {}
           data.forEach((dataPoint: BasicAggregatedDatePoint) => {
             temporaryDataHolder[dataPoint.aggregateAttribute] = [];
@@ -104,10 +119,16 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
               temporaryDataHolder[ob[aggregatedBy]].push(ob.DRG_WEIGHT);
             }
           });
+
+          // Compute the attribute-wide min and max for 'DRG_WEIGHT' AKA 'RISK'
+          const { attributeMin, attributeMax } = getAttributeMinMax(temporaryDataHolder);
+
           for (const [key, value] of Object.entries(temporaryDataHolder)) {
             medianData[key] = median(value as any);
-            let pd = createpd(value, { min: 0, max: 30 });
-            pd = [{ x: 0, y: 0 }].concat(pd);
+
+            // Create the KDE for the attribute using the computed min and max
+            let pd = createpd(value, { min: attributeMin, max: attributeMax });
+            // pd = [{ x: 0, y: 0 }].concat(pd);
 
             if ((value as any).length > 5) {
               kdeMaxTemp = (max(pd, (val: any) => val.y) as any) > kdeMaxTemp ? max(pd, (val: any) => val.y) : kdeMaxTemp;
@@ -121,8 +142,8 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
             name: 'RISK', label: 'DRG Weight', data: newData, type: 'Violin', medianSet: medianData, kdeMax: kdeMaxTemp,
           });
           break;
-
-        case 'PREOP_HEMO':
+        }
+        case 'PREOP_HEMO': {
           data.forEach((dataPoint: BasicAggregatedDatePoint) => {
             newData[dataPoint.aggregateAttribute] = [];
             caseDictionary[dataPoint.aggregateAttribute] = new Set(dataPoint.caseIDList);
@@ -134,11 +155,17 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
               newData[ob[aggregatedBy]].push(resultValue);
             }
           });
+
+          // Compute the attribute-wide min and max for 'PREOP_HEMO'
+          const { attributeMin, attributeMax } = getAttributeMinMax(newData);
+
           for (const prop in newData) {
             if (Object.hasOwn(newData, prop)) {
               medianData[prop] = median(newData[prop]);
-              let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
-              pd = [{ x: 0, y: 0 }].concat(pd);
+
+              // Create the KDE for the attribute using the computed min and max
+              let pd = createpd(newData[prop], { width: 2, min: attributeMin, max: attributeMax });
+              // pd = [{ x: 0, y: 0 }].concat(pd);
 
               if ((newData[prop] as any).length > 5) {
                 kdeMaxTemp = (max(pd, (val: any) => val.y) as any) > kdeMaxTemp ? max(pd, (val: any) => val.y) : kdeMaxTemp;
@@ -153,7 +180,8 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
             name: 'PREOP_HEMO', label: 'Preop HGB', data: newData, type: 'Violin', medianSet: medianData, kdeMax: kdeMaxTemp,
           });
           break;
-        case 'POSTOP_HEMO':
+        }
+        case 'POSTOP_HEMO': {
           // let newData = {} as any;
           data.forEach((dataPoint: BasicAggregatedDatePoint) => {
             newData[dataPoint.aggregateAttribute] = [];
@@ -165,11 +193,17 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
               newData[ob[aggregatedBy]].push(resultValue);
             }
           });
+
+          // Compute the attribute-wide min and max for 'POSTOP_HEMO'
+          const { attributeMin, attributeMax } = getAttributeMinMax(newData);
+
           for (const prop in newData) {
             if (Object.hasOwn(newData, prop)) {
               medianData[prop] = median(newData[prop]);
-              let pd = createpd(newData[prop], { width: 2, min: 0, max: 18 });
-              pd = [{ x: 0, y: 0 }].concat(pd);
+
+              // Create the KDE for the attribute using the computed min and max
+              let pd = createpd(newData[prop], { width: 2, min: attributeMin, max: attributeMax });
+              // pd = [{ x: 0, y: 0 }].concat(pd);
 
               if ((newData[prop] as any).length > 5) {
                 kdeMaxTemp = (max(pd, (val: any) => val.y) as any) > kdeMaxTemp ? max(pd, (val: any) => val.y) : kdeMaxTemp;
@@ -184,6 +218,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
             name: 'POSTOP_HEMO', label: 'Postop HGB', data: newData, type: 'Violin', medianSet: medianData, kdeMax: kdeMaxTemp,
           });
           break;
+        }
         default:
           break;
       }
