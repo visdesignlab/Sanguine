@@ -36,12 +36,7 @@ const outcomeDataGenerate = (aggregatedBy: string, name: string, label: string, 
  * @returns The min and max of the object.
  */
 function getAttributeMinMax(input: Record<string, number[]>): { attributeMin: number, attributeMax: number } {
-  let attributeData: number[] = [];
-  for (const key in input) {
-    if (Object.hasOwn(input, key)) {
-      attributeData = attributeData.concat(input[key]);
-    }
-  }
+  const attributeData = Object.values(input).flat();
   return { attributeMin: min(attributeData)!, attributeMax: max(attributeData)! };
 }
 
