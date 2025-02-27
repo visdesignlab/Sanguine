@@ -128,7 +128,7 @@ function ExtraPairViolin({
         style={{ stroke: '#e5ab73', strokeWidth: '2', strokeDasharray: '5,5' }}
         x1={valueScale(name === 'Preop HGB' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
         x2={valueScale(name === 'Preop HGB' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
-        opacity={name === 'RISK' ? 0 : 1}
+        opacity={name === 'DRG_WEIGHT' ? 0 : 1}
         y1={aggregationScale().range()[0]}
         y2={aggregationScale().range()[1] - 0.25 * aggregationScale().bandwidth()}
       />
