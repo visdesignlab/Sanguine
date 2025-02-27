@@ -103,7 +103,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
           newExtraPairData.push(outcomeDataGenerate(aggregatedBy, 'IRON', 'Iron', data, hemoglobinDataSet));
           break;
 
-        case 'RISK': {
+        case 'DRG_WEIGHT': {
           // let temporaryDataHolder: any = {}
           data.forEach((dataPoint: BasicAggregatedDatePoint) => {
             temporaryDataHolder[dataPoint.aggregateAttribute] = [];
@@ -134,7 +134,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
             newData[key] = { kdeArray: pd, dataPoints: value };
           }
           newExtraPairData.push({
-            name: 'RISK', label: 'DRG Weight', data: newData, type: 'Violin', medianSet: medianData, kdeMax: kdeMaxTemp,
+            name: variable, label: 'DRG Weight', data: newData, type: 'Violin', medianSet: medianData, kdeMax: kdeMaxTemp,
           });
           break;
         }
