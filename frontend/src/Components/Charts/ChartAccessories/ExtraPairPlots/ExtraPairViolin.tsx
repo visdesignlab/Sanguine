@@ -34,7 +34,6 @@ type Props = {
  * @returns The x domain of the KDE from the data set.
  */
 function getAttributeXDomain(dataSet: ExtraPairPoint['data']) {
-  
   const allKdeX = Object.values(dataSet).flatMap((result) => result.kdeArray.map((point: { x: number }) => point.x));
   return [min(allKdeX) ?? 0, max(allKdeX) ?? 20];
 }
@@ -126,8 +125,8 @@ function ExtraPairViolin({
       </g>
       <line
         style={{ stroke: '#e5ab73', strokeWidth: '2', strokeDasharray: '5,5' }}
-        x1={valueScale(name === 'Preop HGB' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
-        x2={valueScale(name === 'Preop HGB' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
+        x1={valueScale(name === 'PREOP_HEMO' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
+        x2={valueScale(name === 'PREOP_HEMO' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
         opacity={name === 'DRG_WEIGHT' ? 0 : 1}
         y1={aggregationScale().range()[0]}
         y2={aggregationScale().range()[1] - 0.25 * aggregationScale().bandwidth()}
