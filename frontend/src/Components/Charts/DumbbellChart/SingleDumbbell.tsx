@@ -22,7 +22,7 @@ function SingleDumbbell({
   const rectHeight = Math.abs(circleYValStart - circleYValEnd);
   return (
     <Tooltip
-      title={<BiggerTooltip>{`${dataPoint.startXVal} -> ${dataPoint.endXVal}, ${dataPoint.yVal}`}</BiggerTooltip>}
+      title={<BiggerTooltip>{`${dataPoint.startYVal} -> ${dataPoint.endYVal}, ${dataPoint.xVal}`}</BiggerTooltip>}
       arrow
       placement="top"
     >

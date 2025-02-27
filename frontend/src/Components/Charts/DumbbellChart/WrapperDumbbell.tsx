@@ -116,9 +116,9 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           caseCount += 1;
           const newOb: DumbbellDataPoint = {
             case: ob,
-            startXVal: preopHgb,
-            endXVal: postopHgb,
-            yVal: yAxisVal,
+            startYVal: preopHgb,
+            endYVal: postopHgb,
+            xVal: yAxisVal,
           };
           return newOb;
         }

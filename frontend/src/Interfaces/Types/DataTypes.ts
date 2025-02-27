@@ -68,9 +68,9 @@ export type ScatterDataPoint = {
 };
 
 export type DumbbellDataPoint = {
-    startXVal: number;
-    endXVal: number;
-    yVal: number;
+    startYVal: number;
+    endYVal: number;
+    xVal: number;
     case: SingleCasePoint;
 };
 

@@ -11,11 +11,11 @@ import { AxisText, CustomAxisLine, CustomAxisLineBox } from '../../../Presets/St
 import Store from '../../../Interfaces/Store';
 
 function CustomizedAxisOrdinal({
-  numberList, scaleDomain, scaleRange, xAxisVar,
+  bins, scaleDomain, scaleRange, xAxisVar,
 }: {
   scaleDomain: string;
   scaleRange: string;
-  numberList: { num: number, indexEnding: number; }[];
+  bins: { num: number, indexEnding: number; }[];
   xAxisVar: string;
 }) {
   const store = useContext(Store);
@@ -40,12 +40,12 @@ function CustomizedAxisOrdinal({
   return (
     <>
 
-      {numberList.map((numberOb, idx) => {
+      {bins.map((numberOb, idx) => {
         const x1 = idx === 0
           ? (scale() as ScaleOrdinal<any, number>)(0)
-          : (1 + (scale() as ScaleOrdinal<any, number>)((numberList[idx - 1].indexEnding + 1)) - 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberList[idx - 1].indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberList[idx - 1].indexEnding)));
+          : (1 + (scale() as ScaleOrdinal<any, number>)((bins[idx - 1].indexEnding + 1)) - 0.5 * ((scale() as ScaleOrdinal<any, number>)(bins[idx - 1].indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(bins[idx - 1].indexEnding)));
 
-        const x2 = idx === numberList.length - 1
+        const x2 = idx === bins.length - 1
           ? (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding)
           : (-1 + (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding) + 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding)));
 
