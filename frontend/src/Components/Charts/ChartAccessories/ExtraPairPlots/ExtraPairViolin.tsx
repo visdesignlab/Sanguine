@@ -34,10 +34,10 @@ type Props = {
  * @returns The x domain of the KDE from the data set.
  */
 function getAttributeXDomain(dataSet: ExtraPairPoint['data']) {
-  const allKdeX: number[] = [];
-  Object.values(dataSet).forEach((result) => {
+  
+  const allKdeX = Object.values(dataSet).flatMap((result) => {
     const originalKde = result.kdeArray;
-    allKdeX.push(...originalKde.map((point: { x: number }) => point.x));
+    return originalKde.map((point: { x: number }) => point.x);
   });
   return [min(allKdeX) ?? 0, max(allKdeX) ?? 20];
 }
