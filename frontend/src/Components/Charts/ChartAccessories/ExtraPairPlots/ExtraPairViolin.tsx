@@ -35,10 +35,7 @@ type Props = {
  */
 function getAttributeXDomain(dataSet: ExtraPairPoint['data']) {
   
-  const allKdeX = Object.values(dataSet).flatMap((result) => {
-    const originalKde = result.kdeArray;
-    return originalKde.map((point: { x: number }) => point.x);
-  });
+  const allKdeX = Object.values(dataSet).flatMap((result) => result.kdeArray.map((point: { x: number }) => point.x));
   return [min(allKdeX) ?? 0, max(allKdeX) ?? 20];
 }
 
