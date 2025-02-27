@@ -46,7 +46,7 @@ export const OutcomeOptions: { key: typeof OUTCOMES[number]; value: string }[] =
   { key: 'AMICAR', value: 'Amicar' },
 ];
 
-export const EXTRA_PAIR_OPTIONS = [...OUTCOMES, 'PREOP_HEMO', 'POSTOP_HEMO', 'TOTAL_TRANS', 'PER_CASE', 'ZERO_TRANS', 'RISK'] as const;
+export const EXTRA_PAIR_OPTIONS = [...OUTCOMES, 'PREOP_HEMO', 'POSTOP_HEMO', 'TOTAL_TRANS', 'PER_CASE', 'ZERO_TRANS', 'DRG_WEIGHT'] as const;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ExtraPairOptions: { key: typeof EXTRA_PAIR_OPTIONS[number]; value: string }[] = (OutcomeOptions as any).concat([
   { key: 'PREOP_HEMO', value: 'Preop HGB' },
@@ -54,7 +54,7 @@ export const ExtraPairOptions: { key: typeof EXTRA_PAIR_OPTIONS[number]; value: 
   { key: 'TOTAL_TRANS', value: 'Total Transfused' },
   { key: 'PER_CASE', value: 'Per Case' },
   { key: 'ZERO_TRANS', value: 'Zero Transfused' },
-  { key: 'RISK', value: 'APR-DRG Weight' },
+  { key: 'DRG_WEIGHT', value: 'APR-DRG Weight' },
 ]);
 
 const dumbbellValueOptions = [{ key: 'HGB_VALUE', value: 'Hemoglobin Value' }];
@@ -89,7 +89,6 @@ export const AcronymDictionary = {
   TVR: 'Tricuspid Valve Repair',
   PVR: 'Proliferative Vitreoretinopathy',
   VENT: 'Over 24 Hours Ventilator Usage',
-  RISK: 'Diagnosis-related Group Weight (Risk Score)',
   'Zero %': 'Zero Transfusion',
   DEATH: 'Death in hospital',
   STROKE: 'Stroke',
