@@ -12,7 +12,6 @@ import DetailView from './Components/Utilities/DetailView/DetailView';
 import Store from './Interfaces/Store';
 import { SnackBarCloseTime } from './Presets/Constants';
 import TabPanel from './Components/Utilities/TabPanel';
-import WrapperSankey from './Components/Charts/Sankey/WrapperSankey';
 
 function Dashboard() {
   const store = useContext(Store);
@@ -40,19 +39,12 @@ function Dashboard() {
             centered
           >
             <Tab label="Main Dashboard" />
-            <Tab label="Sankey" />
           </Tabs>
           <TabPanel
             value={tabValue}
             index={0}
           >
             <LayoutGenerator />
-          </TabPanel>
-          <TabPanel
-            value={tabValue}
-            index={1}
-          >
-            <WrapperSankey />
           </TabPanel>
         </Grid>
         <Divider orientation="vertical" flexItem style={{ marginRight: '-1px' }} />
