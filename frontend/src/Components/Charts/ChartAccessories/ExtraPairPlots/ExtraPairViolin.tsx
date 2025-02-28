@@ -3,7 +3,7 @@ import {
 } from 'react';
 import { observer } from 'mobx-react';
 import {
-  scaleLinear, line, curveCatmullRom, format, scaleBand, select, axisBottom,
+  scaleLinear, line, min, max, curveCatmullRom, format, scaleBand, select, extent, axisBottom,
 } from 'd3';
 import { Tooltip } from '@mui/material';
 import styled from '@emotion/styled';
@@ -28,6 +28,16 @@ type Props = {
   secondaryMedianSet?: ExtraPairPoint['medianSet'];
 };
 
+/**
+ * Get the x domain of the KDE for the attribute.
+ * @param dataSet - The data set to get the domain from.
+ * @returns The x domain of the KDE from the data set.
+ */
+function getAttributeXDomain(dataSet: ExtraPairPoint['data']) {
+  const allKdeX = Object.values(dataSet).flatMap((result) => result.kdeArray.map((point: { x: number }) => point.x));
+  return [min(allKdeX) ?? 0, max(allKdeX) ?? 20];
+}
+
 function ExtraPairViolin({
   kdeMax, dataSet, aggregationScaleDomain, aggregationScaleRange, medianSet, name, secondaryDataSet, secondaryMedianSet,
 }: Props) {
@@ -38,10 +48,12 @@ function ExtraPairViolin({
     return aggScale;
   }, [aggregationScaleDomain, aggregationScaleRange]);
 
-  const valueScale = scaleLinear().domain([0, 18]).range([0, ExtraPairWidth.Violin]);
-  if (name === 'RISK') {
-    valueScale.domain([0, 30]);
-  }
+  // Get the x domain dynamically for the attribute
+  const attributeXDomain = getAttributeXDomain(dataSet);
+  // Set x scale for the entire attribute (Violin plots, etc.)
+  const valueScale = scaleLinear()
+    .domain(attributeXDomain)
+    .range([0, ExtraPairWidth.Violin]);
 
   const lineFunction = useCallback(() => {
     const calculatedKdeRange = secondaryDataSet ? [-0.25 * aggregationScale().bandwidth(), 0.25 * aggregationScale().bandwidth()] : [-0.5 * aggregationScale().bandwidth(), 0.5 * aggregationScale().bandwidth()];
@@ -113,9 +125,9 @@ function ExtraPairViolin({
       </g>
       <line
         style={{ stroke: '#e5ab73', strokeWidth: '2', strokeDasharray: '5,5' }}
-        x1={valueScale(name === 'Preop HGB' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
-        x2={valueScale(name === 'Preop HGB' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
-        opacity={name === 'RISK' ? 0 : 1}
+        x1={valueScale(name === 'PREOP_HEMO' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
+        x2={valueScale(name === 'PREOP_HEMO' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
+        opacity={name === 'DRG_WEIGHT' ? 0 : 1}
         y1={aggregationScale().range()[0]}
         y2={aggregationScale().range()[1] - 0.25 * aggregationScale().bandwidth()}
       />
