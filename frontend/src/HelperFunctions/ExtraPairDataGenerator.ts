@@ -127,7 +127,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
 
               // Create the KDE for the attribute using the computed min and max
               let pd = createpd(newData[prop], { width: 2, min: attributeMin, max: attributeMax });
-              // pd = [{ x: 0, y: 0 }].concat(pd);
+              pd = [{ x: 0, y: 0 }].concat(pd);
 
               if ((newData[prop] as any).length > 5) {
                 kdeMaxTemp = (max(pd, (val: any) => val.y) as any) > kdeMaxTemp ? max(pd, (val: any) => val.y) : kdeMaxTemp;
