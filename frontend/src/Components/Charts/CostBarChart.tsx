@@ -95,7 +95,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     store.selectionStore.selectSet(yAxisVar, (clickedElement as CostBarDataPoint).rowLabel[0].toString(), true);
   };
 
-  const [showPotential, setShowPotential] = useState(false);
+  const [showPotential, setShowPotential] = useState(true);
   const [bloodCostToChange, setBloodCostToChange] = useState('');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [openCostInputDialog, setOpenCostInputDialog] = useState(false);
