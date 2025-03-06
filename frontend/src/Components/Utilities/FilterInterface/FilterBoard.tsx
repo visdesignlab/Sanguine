@@ -215,7 +215,7 @@ function FilterBoard() {
                   value={surgeonCasesPerformed}
                   onChange={(event, value) => { store.configStore.changeSurgeonCasesPerformed(value as [number, number]); }}
                   marks={[
-                    0,
+                    defaultState.surgeonCasesPerformed[0],
                     Math.max(...Object.values(store.surgeonCasesPerformedRange)),
                   ].map((d) => ({ value: d, label: d.toString() }))}
                   max={Math.max(...Object.values(store.surgeonCasesPerformedRange))}
