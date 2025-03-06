@@ -10,7 +10,8 @@ import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import Store from '../../../Interfaces/Store';
 import { DumbbellDataPoint } from '../../../Interfaces/Types/DataTypes';
 import {
-  OffsetDict, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, DumbbellMinimumWidth, largeFontSize, regularFontSize,
+  OffsetDict, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, DumbbellGroupMinimumWidth, largeFontSize, regularFontSize,
+  DumbbellMinimumWidth,
 } from '../../../Presets/Constants';
 import { AcronymDictionary } from '../../../Presets/DataDict';
 import { DumbbellLine } from '../../../Presets/StyledSVGComponents';
@@ -161,33 +162,11 @@ function DumbbellChart({
   }, [sortMode]);
 
   useDeepCompareEffect(() => {
-    const widthAllowed = dimensionWidth - currentOffset.left - currentOffset.right;
-
     const spacing: Record<number, number> = {};
 
-    if (DumbbellMinimumWidth * datapointsDict.length >= (widthAllowed)) {
-      datapointsDict.forEach((d, i) => {
-        spacing[i] = widthAllowed / datapointsDict.length;
-      });
-    } else {
-      let numberOfTitlesUsingMinimumScale = 0;
-      let totalDataPointsNotUsingMinimumScale = 0;
-      datapointsDict.forEach((d, i) => {
-        if ((d.length / sortedData.length) * widthAllowed < DumbbellMinimumWidth) {
-          spacing[i] = DumbbellMinimumWidth;
-          numberOfTitlesUsingMinimumScale += 1;
-        } else {
-          totalDataPointsNotUsingMinimumScale += d.length;
-        }
-      });
-      const spaceLeft = widthAllowed - numberOfTitlesUsingMinimumScale * DumbbellMinimumWidth;
-
-      datapointsDict.forEach((d, i) => {
-        if (!spacing[i]) {
-          spacing[i] = spaceLeft * (d.length / totalDataPointsNotUsingMinimumScale);
-        }
-      });
-    }
+    datapointsDict.forEach((d, i) => {
+      spacing[i] = Math.max(DumbbellGroupMinimumWidth, DumbbellMinimumWidth * d.length);
+    });
 
     let newResultRange: number[] = [];
     let currentLoc = currentOffset.left;

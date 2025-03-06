@@ -29,7 +29,8 @@ export const MIN_HEATMAP_BANDWIDTH = (secondaryData: unknown) => (secondaryData 
 export const ExtraPairWidth = { Violin: 100, BarChart: 50, Basic: 40 };
 export const ExtraPairPadding = 10;
 export const CaseRectWidth = 30;
-export const DumbbellMinimumWidth = 18;
+export const DumbbellGroupMinimumWidth = 100;
+export const DumbbellMinimumWidth = 8;
 export const DifferentialSquareWidth = 10;
 
 export const BloodProductCap = {
