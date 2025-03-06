@@ -142,6 +142,12 @@ function DumbbellChart({
             currentPostopSum = [];
             currentPreopSum = [];
           }
+
+          if (i === tempSortedData.length - 1) {
+            tempNumberList.push({ num: d.yVal + 1, indexEnding: i + 1 });
+            averageDict[(d.yVal + 1).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
+            tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length });
+          }
         });
       }
 
@@ -164,9 +170,14 @@ function DumbbellChart({
   useDeepCompareEffect(() => {
     const spacing: Record<number, number> = {};
 
+    let totalWidth = 0;
+
     datapointsDict.forEach((d, i) => {
       spacing[i] = Math.max(DumbbellGroupMinimumWidth, DumbbellMinimumWidth * d.length);
+      totalWidth += spacing[i];
     });
+
+    svg.current?.setAttribute('width', `${totalWidth + currentOffset.left + currentOffset.right - DumbbellGroupMinimumWidth}`);
 
     let newResultRange: number[] = [];
     let currentLoc = currentOffset.left;
@@ -195,7 +206,7 @@ function DumbbellChart({
 
   svgSelection
     .select('.axes')
-    .select('.y-label')
+    .select('.x-label')
     .attr('display', null)
     .attr('y', dimensionHeight - currentOffset.bottom + 20)
     .attr('x', 0.5 * (dimensionWidth))
@@ -206,7 +217,7 @@ function DumbbellChart({
       AcronymDictionary[xAxisVar] ? AcronymDictionary[xAxisVar] : xAxisVar,
     );
   svgSelection.select('.axes')
-    .select('.x-axis')
+    .select('.y-axis')
     .attr('transform', `translate(${currentOffset.left}, 0)`)
     .call(testLabel as never)
     .selectAll('text')
@@ -214,7 +225,7 @@ function DumbbellChart({
 
   svgSelection
     .select('.axes')
-    .select('.x-label')
+    .select('.y-label')
     .attr('x', -0.5 * dimensionHeight)
     .attr('y', 0)
     .attr('transform', 'rotate(-90)')
@@ -272,12 +283,12 @@ function DumbbellChart({
   return (
     <>
       <g className="axes">
-        <g className="x-axis" />
-        <g className="y-axis" transform={`translate(0,${dimensionHeight - currentOffset.bottom})`}>
+        <g className="y-axis" />
+        <g className="x-axis" transform={`translate(0,${dimensionHeight - currentOffset.bottom})`}>
           <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} xAxisVar={xAxisVar} />
         </g>
-        <text className="x-label" />
         <text className="y-label" />
+        <text className="x-label" />
       </g>
       <g className="chart-comp">
 

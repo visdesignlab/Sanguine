@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useContext } from 'react';
 import { observer } from 'mobx-react';
-import {
-  ScaleOrdinal,
-  scaleOrdinal,
-} from 'd3';
+import { scaleOrdinal } from 'd3';
 import Tooltip from '@mui/material/Tooltip';
 import { basicGray, secondaryGray } from '../../../Presets/Constants';
 import { AxisText, CustomAxisLine, CustomAxisLineBox } from '../../../Presets/StyledSVGComponents';
@@ -22,7 +19,7 @@ function CustomizedAxisOrdinal({
   const scale = useCallback(() => {
     const domain = JSON.parse(scaleDomain);
     const range = JSON.parse(scaleRange);
-    const sc = scaleOrdinal()
+    const sc = scaleOrdinal<any, number>()
       .domain(domain)
       .range(range);
 
@@ -41,13 +38,16 @@ function CustomizedAxisOrdinal({
     <>
 
       {numberList.map((numberOb, idx) => {
+        if (idx === numberList.length - 1) {
+          return null;
+        }
         const x1 = idx === 0
-          ? (scale() as ScaleOrdinal<any, number>)(0)
-          : (1 + (scale() as ScaleOrdinal<any, number>)((numberList[idx - 1].indexEnding + 1)) - 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberList[idx - 1].indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberList[idx - 1].indexEnding)));
+          ? (scale())(0)
+          : (1 + (scale())((numberList[idx - 1].indexEnding + 1)) - 0.5 * ((scale())(numberList[idx - 1].indexEnding + 1) - (scale())(numberList[idx - 1].indexEnding)));
 
         const x2 = idx === numberList.length - 1
-          ? (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding)
-          : (-1 + (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding) + 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding)));
+          ? scale().range()[1]
+          : (-1 + (scale())(numberOb.indexEnding) + 0.5 * ((scale())(numberOb.indexEnding + 1) - (scale())(numberOb.indexEnding)));
 
         if (x1 && x2) {
           return (
