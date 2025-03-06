@@ -7,7 +7,7 @@ today.setDate(today.getDate() + 1);
 export const defaultState: ApplicationState = {
   layoutArray: [],
   surgeryUrgencySelection: [true, true, true],
-  surgeonCasesPerformed: [0, ManualInfinity],
+  surgeonCasesPerformed: [5, ManualInfinity],
   outcomeFilter: [],
   rawDateRange: [new Date(2018, 2, 6).getTime(), today.getTime()],
   proceduresSelection: [],
