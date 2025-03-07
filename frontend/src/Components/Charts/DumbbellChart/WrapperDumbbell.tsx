@@ -175,12 +175,6 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           >
             Postop
           </Button>
-          <Button
-            css={showGap ? ButtonStyles.gapButtonActive : ButtonStyles.gapButtonOutline}
-            onClick={() => { setShowGap(!showGap); }}
-          >
-            Gap
-          </Button>
         </ButtonGroup>
 
       </Grid>
