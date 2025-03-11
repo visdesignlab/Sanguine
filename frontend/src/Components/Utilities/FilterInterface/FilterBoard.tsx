@@ -218,7 +218,7 @@ function FilterBoard() {
                     defaultState.surgeonCasesPerformed[0],
                     Math.max(...Object.values(store.surgeonCasesPerformedRange)),
                   ].map((d) => ({ value: d, label: d.toString() }))}
-                  min={defaultState.surgeonCasesPerformed[0]}
+                  min={0}
                   max={Math.max(...Object.values(store.surgeonCasesPerformedRange))}
                   step={1}
                   valueLabelDisplay="auto"
