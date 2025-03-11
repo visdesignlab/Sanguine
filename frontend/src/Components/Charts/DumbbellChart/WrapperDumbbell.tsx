@@ -83,7 +83,6 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
   const [xMax, setXMax] = useState(0);
   const [sortMode, setSortMode] = useState('Postop');
   const [showPreop, setShowPreop] = useState(true);
-  const [showGap, setShowGap] = useState(true);
   const [showPostop, setShowPostop] = useState(true);
   const [data, setData] = useState<DumbbellDataPoint[]>([]);
 
@@ -186,7 +185,7 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
             <ChartStandardButtons chartID={chartId} />
           </ChartAccessoryDiv>
           <ChartSVG ref={svgRef}>
-            <DumbbellChart data={data} svg={svgRef} showGap={showGap} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} xAxisVar={xAxisVar} dimensionWidth={width} dimensionHeight={height} xMin={xMin} xMax={xMax} />
+            <DumbbellChart data={data} svg={svgRef} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} xAxisVar={xAxisVar} dimensionWidth={width} dimensionHeight={height} xMin={xMin} xMax={xMax} />
 
           </ChartSVG>
           <AnnotationForm chartI={chartId} annotationText={annotationText} />

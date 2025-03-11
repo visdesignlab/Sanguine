@@ -28,10 +28,9 @@ type Props = {
     sortMode: string;
     showPreop: boolean;
     showPostop: boolean;
-    showGap: boolean;
 };
 function DumbbellChart({
-  data, xAxisVar, dimensionHeight, dimensionWidth, svg, xMax, xMin, showGap, showPostop, showPreop, sortMode,
+  data, xAxisVar, dimensionHeight, dimensionWidth, svg, xMax, xMin, showPostop, showPreop, sortMode,
 }: Props) {
   const [averageForEachTransfused, setAverage] = useState<Record<number | string, { averageStart: number, averageEnd: number }>>({});
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([]);
@@ -45,6 +44,7 @@ function DumbbellChart({
 
   const currentOffset = OffsetDict.minimum;
   const svgSelection = select(svg.current);
+  const showGap = showPostop && showPreop;
 
   const sortDataHelper = (originalData: DumbbellDataPoint[], sortModeInput: string) => {
     const copyOfData: DumbbellDataPoint[] = JSON.parse(JSON.stringify(originalData));
