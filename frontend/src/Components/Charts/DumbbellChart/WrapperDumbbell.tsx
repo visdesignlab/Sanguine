@@ -140,25 +140,32 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           size="small"
           aria-label="small outlined button group"
           orientation="vertical"
+          sx={{ minHeight: '75px' }}
         >
-          <Button
-            css={sortMode === 'Preop' ? ButtonStyles.preopButtonActive : ButtonStyles.preopButtonOutline}
-            onClick={() => { setSortMode('Preop'); }}
-          >
-            Preop
-          </Button>
-          <Button
-            css={sortMode === 'Postop' ? ButtonStyles.postopButtonActive : ButtonStyles.postopButtonOutline}
-            onClick={() => { setSortMode('Postop'); }}
-          >
-            Postop
-          </Button>
-          <Button
-            css={sortMode === 'Gap' ? ButtonStyles.gapButtonActive : ButtonStyles.gapButtonOutline}
-            onClick={() => { setSortMode('Gap'); }}
-          >
-            Gap
-          </Button>
+          {showPreop && (
+            <Button
+              css={sortMode === 'Preop' ? ButtonStyles.preopButtonActive : ButtonStyles.preopButtonOutline}
+              onClick={() => { setSortMode('Preop'); }}
+            >
+              Preop
+            </Button>
+          )}
+          {showPostop && (
+            <Button
+              css={sortMode === 'Postop' ? ButtonStyles.postopButtonActive : ButtonStyles.postopButtonOutline}
+              onClick={() => { setSortMode('Postop'); }}
+            >
+              Postop
+            </Button>
+          )}
+          {showPreop && showPostop && (
+            <Button
+              css={sortMode === 'Gap' ? ButtonStyles.gapButtonActive : ButtonStyles.gapButtonOutline}
+              onClick={() => { setSortMode('Gap'); }}
+            >
+              Gap
+            </Button>
+          )}
         </ButtonGroup>
         <DumbbellUtilTitle>Show</DumbbellUtilTitle>
         <ButtonGroup size="small" orientation="vertical">
