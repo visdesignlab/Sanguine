@@ -178,9 +178,8 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [extraPair]);
 
-  // useDeepCompareEffect COPIED FROM WrapperHeatMap.tsx, which correctly generates the extra attribute data for the extra pair plot ------------------------------------------------------------
-
-  // TODO: Make this a prop?
+  // Creating the Extra Attribute Data (NOT the cost-savings data), to be used for the extra pair plot (GeneratorExtraPair) -----------------------------------------------------------------------------------
+  // Default xAxisVar is PRBC_UNITS (because cost savings chart doesn't have different x-Axes). (So additional attributes like Total Transfused, Per Case, etc. are currently in terms of 'PRBC_UNITS').
   const xAxisVar = 'PRBC_UNITS';
   useDeepCompareEffect(() => {
     const [tempCaseCount, secondaryTempCaseCount, outputData, secondaryOutputData] = generateExtraAttributeData(filteredCases, yAxisVar, outcomeComparison, interventionDate, store.provenanceState.showZero, xAxisVar);
