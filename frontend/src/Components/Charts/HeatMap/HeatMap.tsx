@@ -81,7 +81,7 @@ function HeatMap({
   }, [dimensionWidth, extraPairTotalWidth, xAxisVar, currentOffset]);
 
   const innerSvg = useRef<SVGSVGElement | null>(null);
-  const svgHeight = chartHeight - currentOffset.top + 50;
+  const svgHeight = chartHeight - currentOffset.top;
 
   return (
     <g>
