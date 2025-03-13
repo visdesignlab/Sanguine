@@ -17,10 +17,46 @@ import { AcronymDictionary } from '../../../Presets/DataDict';
 import { DumbbellLine } from '../../../Presets/StyledSVGComponents';
 import CustomizedAxisOrdinal from '../ChartAccessories/CustomizedAxisOrdinal';
 import SingleDumbbell from './SingleDumbbell';
+import { DumbbellLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
+
+const sortDataHelper = (originalData: DumbbellDataPoint[], sortModeInput: 'preop' | 'postop' | 'gap', xAxisVar: DumbbellLayoutElement['xAxisVar']) => {
+  const copyOfData: DumbbellDataPoint[] = JSON.parse(JSON.stringify(originalData));
+  const countOfYVals = copyOfData
+    .map((surgeryCase) => surgeryCase.yVal)
+    .reduce((acc, label) => {
+      acc[label] = (acc[label] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+  if (originalData.length > 0) {
+    copyOfData.sort((a, b) => {
+      if (a.yVal === b.yVal) {
+        switch (sortModeInput) {
+          case 'postop':
+            return a.endXVal - b.endXVal;
+          case 'preop':
+            return a.startXVal - b.startXVal;
+          case 'gap':
+            return Math.abs(a.endXVal - a.startXVal) - Math.abs(b.endXVal - b.startXVal);
+          default:
+            return 0;
+        }
+      } else {
+        if (['SURGEON_PROV_ID', 'ANESTH_PROV_ID'].includes(xAxisVar)) {
+          return countOfYVals[b.yVal] - countOfYVals[a.yVal];
+        }
+        return a.yVal - b.yVal;
+      }
+    });
+
+    return copyOfData;
+  }
+  return [];
+};
 
 type Props = {
     data: DumbbellDataPoint[];
-    xAxisVar: keyof typeof AcronymDictionary;
+    xAxisVar: DumbbellLayoutElement['xAxisVar'];
     dimensionWidth: number,
     dimensionHeight: number;
     svg: React.RefObject<SVGSVGElement>;
@@ -47,66 +83,11 @@ function DumbbellChart({
   const svgSelection = select(svg.current);
   const showGap = showPostop && showPreop;
 
-  const sortDataHelper = (originalData: DumbbellDataPoint[], sortModeInput: 'preop' | 'postop' | 'gap') => {
-    const copyOfData: DumbbellDataPoint[] = JSON.parse(JSON.stringify(originalData));
-    if (originalData.length > 0) {
-      let tempSortedData: DumbbellDataPoint[] = [];
-      switch (sortModeInput) {
-        case 'postop':
-          tempSortedData = copyOfData.sort(
-            (a, b) => {
-              if (a.yVal === b.yVal) {
-                if (a.endXVal > b.endXVal) return 1;
-                if (a.endXVal < b.endXVal) return -1;
-              } else {
-                if (a.yVal > b.yVal) return 1;
-                if (a.yVal < b.yVal) return -1;
-              }
-              return 0;
-            },
-          );
-          break;
-        case 'preop':
-          tempSortedData = copyOfData.sort(
-            (a, b) => {
-              if (a.yVal === b.yVal) {
-                if (a.startXVal > b.startXVal) return 1;
-                if (a.startXVal < b.startXVal) return -1;
-              } else {
-                if (a.yVal > b.yVal) return 1;
-                if (a.yVal < b.yVal) return -1;
-              }
-              return 0;
-            },
-          );
-          break;
-        case 'gap':
-          tempSortedData = copyOfData.sort(
-            (a, b) => {
-              if (a.yVal === b.yVal) {
-                if (Math.abs(a.endXVal - a.startXVal) > Math.abs(b.endXVal - b.startXVal)) return 1;
-                if (Math.abs(a.endXVal - a.startXVal) < Math.abs(b.endXVal - b.startXVal)) return -1;
-              } else {
-                if (a.yVal > b.yVal) return 1;
-                if (a.yVal < b.yVal) return -1;
-              }
-              return 0;
-            },
-          );
-          break;
-        default:
-          break;
-      }
-      return tempSortedData;
-    }
-    return [];
-  };
-
   useEffect(() => {
     const tempNumberList: { num: number, indexEnding: number; }[] = [];
     const tempDatapointsDict: { title: number, length: number; }[] = [];
     if (data.length > 0) {
-      const tempSortedData = sortDataHelper(data, sortMode);
+      const tempSortedData = sortDataHelper(data, sortMode, xAxisVar);
       let currentPreopSum: number[] = [];
       let currentPostopSum: number[] = [];
       const averageDict: Record<number | string, { averageStart?: number, averageEnd?: number }> = {};
@@ -162,7 +143,7 @@ function DumbbellChart({
   }, [data]);
 
   useEffect(() => {
-    const tempSortedData = sortDataHelper(data, sortMode);
+    const tempSortedData = sortDataHelper(data, sortMode, xAxisVar);
     stateUpdateWrapperUseJSON(sortedData, tempSortedData, setSortedData);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortMode]);
