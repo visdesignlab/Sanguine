@@ -58,15 +58,6 @@ function ExtraPairViolin({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aggregationScale, valueScale, kdeMax]);
 
-  const svgRef = useRef<SVGSVGElement>(null);
-
-  useEffect(() => {
-    const svgSelection = select(svgRef.current);
-    const scaleLabel = axisBottom(valueScale).ticks(3);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    svgSelection.select('.axis').call(scaleLabel as any);
-  }, [svgRef, valueScale]);
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const generateViolin = (dataPoints: (number)[], pdArray: any, aggregationAttribute: string) => {
     const validDP = dataPoints.filter((d) => d);
@@ -108,9 +99,6 @@ function ExtraPairViolin({
 
   return (
     <>
-      <g ref={svgRef} transform={`translate(0,${aggregationScale().range()[0]})`}>
-        <g className="axis" />
-      </g>
       <line
         style={{ stroke: '#e5ab73', strokeWidth: '2', strokeDasharray: '5,5' }}
         x1={valueScale(name === 'Preop HGB' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
@@ -152,3 +140,26 @@ function ExtraPairViolin({
 }
 
 export default observer(ExtraPairViolin);
+
+export function ExtraPairViolinAxis({
+  yPos, // Vertical positioning
+  xPos, // Horizontal positioning
+}: {
+  yPos: number;
+  xPos: number;
+}) {
+  const valueScale = scaleLinear().domain([0, 18]).range([0, ExtraPairWidth.Violin]);
+
+  const axisRef = useRef<SVGSVGElement>(null);
+  useEffect(() => {
+    const svgSelection = select(axisRef.current);
+    const scaleLabel = axisBottom(valueScale).ticks(3);
+    svgSelection.select('.axis').call(scaleLabel as any);
+  }, [axisRef, valueScale]);
+
+  return (
+    <g ref={axisRef} transform={`translate(${xPos},${yPos})`}>
+      <g className="axis" />
+    </g>
+  );
+}
