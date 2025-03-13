@@ -43,12 +43,12 @@ const sortDataHelper = (originalData: DumbbellDataPoint[], sortModeInput: 'preop
         }
       } else {
         if (['SURGEON_PROV_ID', 'ANESTH_PROV_ID'].includes(xAxisVar)) {
-          return countOfYVals[b.yVal] - countOfYVals[a.yVal];
+          // Sort by count of y values, or if equal counts sort by provider name
+          return countOfYVals[b.yVal] - countOfYVals[a.yVal] || a.yVal.toString().localeCompare(b.yVal.toString());
         }
         return a.yVal - b.yVal;
       }
     });
-
     return copyOfData;
   }
   return [];
