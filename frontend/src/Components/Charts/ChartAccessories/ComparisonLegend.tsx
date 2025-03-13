@@ -54,7 +54,7 @@ function ComparisonLegend({
           fontSize={store.configStore.largeFont ? largeFontSize : regularFontSize}
           fill="black"
         >
-          {` ${interventionDate ? 'Pre Intervene' : 'True'} ${firstTotal}/${firstTotal + secondTotal}`}
+          {`${interventionDate ? 'Pre Intervene' : 'True'} ${firstTotal}/${firstTotal + secondTotal}`}
         </text>
         <text
           x={0.2 * (dimensionWidth) + DifferentialSquareWidth + 1}
