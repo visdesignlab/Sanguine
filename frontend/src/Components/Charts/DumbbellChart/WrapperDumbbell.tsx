@@ -82,9 +82,8 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
   const [height, setHeight] = useState(0);
   const [xMin, setXMin] = useState(Infinity);
   const [xMax, setXMax] = useState(0);
-  const [sortMode, setSortMode] = useState('Postop');
+  const [sortMode, setSortMode] = useState<'preop' | 'postop' | 'gap'>('postop');
   const [showPreop, setShowPreop] = useState(true);
-  const [showGap, setShowGap] = useState(true);
   const [showPostop, setShowPostop] = useState(true);
   const [data, setData] = useState<DumbbellDataPoint[]>([]);
 
@@ -142,25 +141,32 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           size="small"
           aria-label="small outlined button group"
           orientation="vertical"
+          sx={{ minHeight: '75px' }}
         >
-          <Button
-            css={sortMode === 'Preop' ? ButtonStyles.preopButtonActive : ButtonStyles.preopButtonOutline}
-            onClick={() => { setSortMode('Preop'); }}
-          >
-            Preop
-          </Button>
-          <Button
-            css={sortMode === 'Postop' ? ButtonStyles.postopButtonActive : ButtonStyles.postopButtonOutline}
-            onClick={() => { setSortMode('Postop'); }}
-          >
-            Postop
-          </Button>
-          <Button
-            css={sortMode === 'Gap' ? ButtonStyles.gapButtonActive : ButtonStyles.gapButtonOutline}
-            onClick={() => { setSortMode('Gap'); }}
-          >
-            Gap
-          </Button>
+          {showPreop && (
+            <Button
+              css={sortMode === 'preop' ? ButtonStyles.preopButtonActive : ButtonStyles.preopButtonOutline}
+              onClick={() => { setSortMode('preop'); }}
+            >
+              Preop
+            </Button>
+          )}
+          {showPostop && (
+            <Button
+              css={sortMode === 'postop' ? ButtonStyles.postopButtonActive : ButtonStyles.postopButtonOutline}
+              onClick={() => { setSortMode('postop'); }}
+            >
+              Postop
+            </Button>
+          )}
+          {showPreop && showPostop && (
+            <Button
+              css={sortMode === 'gap' ? ButtonStyles.gapButtonActive : ButtonStyles.gapButtonOutline}
+              onClick={() => { setSortMode('gap'); }}
+            >
+              Gap
+            </Button>
+          )}
         </ButtonGroup>
         <DumbbellUtilTitle>Show</DumbbellUtilTitle>
         <ButtonGroup size="small" orientation="vertical">
@@ -176,12 +182,6 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           >
             Postop
           </Button>
-          <Button
-            css={showGap ? ButtonStyles.gapButtonActive : ButtonStyles.gapButtonOutline}
-            onClick={() => { setShowGap(!showGap); }}
-          >
-            Gap
-          </Button>
         </ButtonGroup>
 
       </Grid>
@@ -194,7 +194,7 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           </ChartAccessoryDiv>
           <Box style={{ height: 'calc(100% - 100px)', overflow: 'auto' }}>
             <svg ref={svgRef} style={{ height: 'calc(100% - 10px)' }}>
-              <DumbbellChart data={data} svg={svgRef} showGap={showGap} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} xAxisVar={xAxisVar} dimensionWidth={width} dimensionHeight={height} xMin={xMin} xMax={xMax} />
+              <DumbbellChart data={data} svg={svgRef} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} xAxisVar={xAxisVar} dimensionWidth={width} dimensionHeight={height} xMin={xMin} xMax={xMax} />
             </svg>
           </Box>
           <AnnotationForm chartI={chartId} annotationText={annotationText} />
