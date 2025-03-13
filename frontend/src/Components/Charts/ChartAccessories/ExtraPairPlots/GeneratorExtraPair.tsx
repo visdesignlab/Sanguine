@@ -66,7 +66,7 @@ const extraPairTextGenerator = (
       explanation = 'Percentage of Patients';
       break;
     case 'Violin':
-      explanation = nameInput === 'RISK' ? 'Scaled 0-30' : (`Scaled 0-18, line at ${nameInput as string === 'Preop HGB' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD}`);
+      explanation = nameInput === 'DRG_WEIGHT' ? 'Scaled 0-30' : (`Scaled 0-18, line at ${nameInput as string === 'Preop HGB' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD}`);
       break;
     case 'BarChart':
       explanation = `Scaled 0-${format('.4r')(max(Object.values(extraPairDataPoint.data)))}`;
