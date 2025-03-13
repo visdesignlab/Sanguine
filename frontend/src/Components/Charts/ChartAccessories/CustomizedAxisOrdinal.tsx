@@ -41,13 +41,14 @@ function CustomizedAxisOrdinal({
         if (idx === numberList.length - 1) {
           return null;
         }
+        const s = scale();
         const x1 = idx === 0
-          ? (scale())(0)
-          : (1 + (scale())((numberList[idx - 1].indexEnding + 1)) - 0.5 * ((scale())(numberList[idx - 1].indexEnding + 1) - (scale())(numberList[idx - 1].indexEnding)));
+          ? 2 * s(0) - s(1)
+          : 1 + s(numberList[idx - 1].indexEnding + 1) - 0.5 * (s(numberList[idx - 1].indexEnding + 1) - s(numberList[idx - 1].indexEnding));
 
         const x2 = idx === numberList.length - 1
-          ? scale().range()[1]
-          : (-1 + (scale())(numberOb.indexEnding) + 0.5 * ((scale())(numberOb.indexEnding + 1) - (scale())(numberOb.indexEnding)));
+          ? s.range()[1]
+          : -1 + s(numberOb.indexEnding) + 0.5 * (s(numberOb.indexEnding + 1) - s(numberOb.indexEnding));
 
         if (x1 && x2) {
           return (

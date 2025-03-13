@@ -238,17 +238,18 @@ function DumbbellChart({
     return null;
   });
 
+  const paddingFromLeft = 5;
   return (
     <>
       <g className="axes">
         <g className="y-axis" />
-        <g className="x-axis" transform={`translate(0,${dimensionHeight - currentOffset.bottom})`}>
+        <g className="x-axis" transform={`translate(${paddingFromLeft},${dimensionHeight - currentOffset.bottom})`}>
           <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} xAxisVar={xAxisVar} />
         </g>
         <text className="y-label" />
         <text className="x-label" />
       </g>
-      <g className="chart-comp">
+      <g className="chart-comp" transform={`translate(${paddingFromLeft},0)`}>
 
         <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(HGB_HIGH_STANDARD)} y2={testValueScale()(HGB_HIGH_STANDARD)} style={{ stroke: '#e5ab73', strokeWidth: '2', strokeDasharray: '5,5' }} />
         <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(HGB_LOW_STANDARD)} y2={testValueScale()(HGB_LOW_STANDARD)} style={{ stroke: '#e5ab73', strokeWidth: '2', strokeDasharray: '5,5' }} />
