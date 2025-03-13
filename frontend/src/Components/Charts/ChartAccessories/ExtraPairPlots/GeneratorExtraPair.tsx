@@ -9,7 +9,7 @@ import {
   basicGray,
   ExtraPairPadding, ExtraPairWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, largeFontSize, regularFontSize,
 } from '../../../../Presets/Constants';
-import ExtraPairViolin from './ExtraPairViolin';
+import ExtraPairViolin, { ExtraPairViolinAxis } from './ExtraPairViolin';
 import ExtraPairBar from './ExtraPairBar';
 import ExtraPairBasic from './ExtraPairBasic';
 import { AcronymDictionary, EXTRA_PAIR_OPTIONS } from '../../../../Presets/DataDict';
@@ -46,7 +46,7 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-// Generates the Attribute Lables & Tooltips
+// Generates the Attribute Labels, Tooltips, and Violin Axis
 const extraPairTextGenerator = (
   store: RootStore,
   nameInput: typeof EXTRA_PAIR_OPTIONS[number],
@@ -91,19 +91,32 @@ const extraPairTextGenerator = (
   const labelX: number = allExtraPairs.slice(0, idx + 1).map((extraPair) => ExtraPairWidth[extraPair.type] + ExtraPairPadding).reduce((partialSum, a) => partialSum + a, 0);
 
   return (
-    <Tooltip title={tooltipText}>
-      <ExtraPairText
-        x={labelX - ExtraPairWidth[type] / 2}
-        y={dimensionHeight - currentOffset.bottom + 25}
-        biggerFont={store.configStore.largeFont}
-        onClick={() => {
-          store.chartStore.removeExtraPair(chartId, nameInput);
-        }}
-      >
-        {labelInput}
-        <RemoveTSpan x={labelX - ExtraPairWidth[type] / 2} dy="-0.5em">x</RemoveTSpan>
-      </ExtraPairText>
-    </Tooltip>
+    <>
+      {/* Generates the Violin Axis */}
+      {extraPairDataPoint.type === 'Violin' && (
+        <ExtraPairViolinAxis
+          key={`violin-axis-${idx}`}
+          yPos={dimensionHeight - currentOffset.bottom}
+          xPos={labelX - ExtraPairWidth.Violin}
+        />
+      )}
+      {/* Generates the Attribute Label */}
+      <Tooltip title={tooltipText}>
+        <ExtraPairText
+          x={labelX - ExtraPairWidth[type] / 2}
+          y={dimensionHeight - currentOffset.bottom + 25}
+          biggerFont={store.configStore.largeFont}
+          onClick={() => {
+            store.chartStore.removeExtraPair(chartId, nameInput);
+          }}
+        >
+          {labelInput}
+          <RemoveTSpan x={labelX - ExtraPairWidth[type] / 2} dy="-0.5em">
+            x
+          </RemoveTSpan>
+        </ExtraPairText>
+      </Tooltip>
+    </>
   );
 };
 
