@@ -81,7 +81,7 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
   const [height, setHeight] = useState(0);
   const [xMin, setXMin] = useState(Infinity);
   const [xMax, setXMax] = useState(0);
-  const [sortMode, setSortMode] = useState('Postop');
+  const [sortMode, setSortMode] = useState<'preop' | 'postop' | 'gap'>('postop');
   const [showPreop, setShowPreop] = useState(true);
   const [showPostop, setShowPostop] = useState(true);
   const [data, setData] = useState<DumbbellDataPoint[]>([]);
@@ -144,24 +144,24 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
         >
           {showPreop && (
             <Button
-              css={sortMode === 'Preop' ? ButtonStyles.preopButtonActive : ButtonStyles.preopButtonOutline}
-              onClick={() => { setSortMode('Preop'); }}
+              css={sortMode === 'preop' ? ButtonStyles.preopButtonActive : ButtonStyles.preopButtonOutline}
+              onClick={() => { setSortMode('preop'); }}
             >
               Preop
             </Button>
           )}
           {showPostop && (
             <Button
-              css={sortMode === 'Postop' ? ButtonStyles.postopButtonActive : ButtonStyles.postopButtonOutline}
-              onClick={() => { setSortMode('Postop'); }}
+              css={sortMode === 'postop' ? ButtonStyles.postopButtonActive : ButtonStyles.postopButtonOutline}
+              onClick={() => { setSortMode('postop'); }}
             >
               Postop
             </Button>
           )}
           {showPreop && showPostop && (
             <Button
-              css={sortMode === 'Gap' ? ButtonStyles.gapButtonActive : ButtonStyles.gapButtonOutline}
-              onClick={() => { setSortMode('Gap'); }}
+              css={sortMode === 'gap' ? ButtonStyles.gapButtonActive : ButtonStyles.gapButtonOutline}
+              onClick={() => { setSortMode('gap'); }}
             >
               Gap
             </Button>

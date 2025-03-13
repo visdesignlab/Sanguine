@@ -25,7 +25,7 @@ type Props = {
     svg: React.RefObject<SVGSVGElement>;
     xMin: number;
     xMax: number;
-    sortMode: string;
+    sortMode: 'preop' | 'postop' | 'gap';
     showPreop: boolean;
     showPostop: boolean;
 };
@@ -46,12 +46,12 @@ function DumbbellChart({
   const svgSelection = select(svg.current);
   const showGap = showPostop && showPreop;
 
-  const sortDataHelper = (originalData: DumbbellDataPoint[], sortModeInput: string) => {
+  const sortDataHelper = (originalData: DumbbellDataPoint[], sortModeInput: 'preop' | 'postop' | 'gap') => {
     const copyOfData: DumbbellDataPoint[] = JSON.parse(JSON.stringify(originalData));
     if (originalData.length > 0) {
       let tempSortedData: DumbbellDataPoint[] = [];
       switch (sortModeInput) {
-        case 'Postop':
+        case 'postop':
           tempSortedData = copyOfData.sort(
             (a, b) => {
               if (a.yVal === b.yVal) {
@@ -65,7 +65,7 @@ function DumbbellChart({
             },
           );
           break;
-        case 'Preop':
+        case 'preop':
           tempSortedData = copyOfData.sort(
             (a, b) => {
               if (a.yVal === b.yVal) {
@@ -79,7 +79,7 @@ function DumbbellChart({
             },
           );
           break;
-        case 'Gap':
+        case 'gap':
           tempSortedData = copyOfData.sort(
             (a, b) => {
               if (a.yVal === b.yVal) {
