@@ -17,7 +17,7 @@ import DualColorLegend from '../ChartAccessories/DualColorLegend';
 import SingleColorLegend from '../ChartAccessories/SingleColorLegend';
 import SingleHeatRow from './SingleHeatRow';
 import CaseCountHeader from '../ChartAccessories/CaseCountHeader';
-import GeneratorExtraPair from '../ChartAccessories/ExtraPairPlots/GeneratorExtraPair';
+import GeneratorExtraPair, { ExtraPairLabels } from '../ChartAccessories/ExtraPairPlots/GeneratorExtraPair';
 import ComparisonLegend from '../ChartAccessories/ComparisonLegend';
 import HeatMapAxisX from '../ChartAccessories/HeatMapAxisX';
 import HeatMapAxisY from '../ChartAccessories/HeatMapAxisY';
@@ -82,7 +82,7 @@ function HeatMap({
 
   const innerSvg = useRef<SVGSVGElement | null>(null);
   const svgHeight = chartHeight - currentOffset.top + 50;
-  
+
   return (
     <g>
       <foreignObject
@@ -152,14 +152,14 @@ function HeatMap({
               secondaryExtraPairDataSet={secondaryExtraPairDataSet || undefined}
               aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
               aggregationScaleRange={JSON.stringify(aggregationScale().range())}
-              height={svgHeight}
-              text
-              chartId={chartId}
             />
 
           </g>
         </svg>
       </foreignObject>
+      <g>
+        <ExtraPairLabels extraPairDataSet={extraPairDataSet} dimensionHeight={dimensionHeight} currentOffset={currentOffset} chartId={chartId} />
+      </g>
 
       {/* Render after chart to render on top */}
       <HeatMapAxisX
