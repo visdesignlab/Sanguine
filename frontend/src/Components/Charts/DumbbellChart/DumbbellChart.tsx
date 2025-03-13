@@ -72,9 +72,9 @@ function DumbbellChart({
   const [averageForEachTransfused, setAverage] = useState<Record<number | string, { averageStart: number, averageEnd: number }>>({});
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([]);
   const [numberList, setNumberList] = useState<{ num: number, indexEnding: number; }[]>([]);
-  const [datapointsDict, setDataPointDict] = useState<{ title: number, length: number; }[]>([]);
+  const [dataPointDict, setDataPointDict] = useState<{ title: number, length: number; }[]>([]);
   const [resultRange, setResultRange] = useState<number[]>([]);
-  const [indicies, setIndicies] = useState([]);
+  const [indices, setIndices] = useState([]);
 
   const store = useContext(Store);
   const { currentSelectSet } = store.provenanceState;
@@ -85,7 +85,7 @@ function DumbbellChart({
 
   useEffect(() => {
     const tempNumberList: { num: number, indexEnding: number; }[] = [];
-    const tempDatapointsDict: { title: number, length: number; }[] = [];
+    const tempDataPointDict: { title: number, length: number; }[] = [];
     if (data.length > 0) {
       const tempSortedData = sortDataHelper(data, sortMode, xAxisVar);
       let currentPreopSum: number[] = [];
@@ -99,11 +99,11 @@ function DumbbellChart({
           if (i === tempSortedData.length - 1) {
             tempNumberList.push({ num: roundedAnswer, indexEnding: i });
             averageDict[roundedAnswer] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
-            tempDatapointsDict.push({ title: roundedAnswer, length: currentPreopSum.length });
+            tempDataPointDict.push({ title: roundedAnswer, length: currentPreopSum.length });
           } else if (roundedAnswer !== (Math.floor(tempSortedData[i + 1].yVal / 100) * 100)) {
             tempNumberList.push({ num: roundedAnswer, indexEnding: i });
             averageDict[(roundedAnswer).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
-            tempDatapointsDict.push({ title: roundedAnswer, length: currentPreopSum.length });
+            tempDataPointDict.push({ title: roundedAnswer, length: currentPreopSum.length });
             currentPostopSum = [];
             currentPreopSum = [];
           }
@@ -115,11 +115,11 @@ function DumbbellChart({
           if (i === tempSortedData.length - 1) {
             tempNumberList.push({ num: d.yVal, indexEnding: i });
             averageDict[d.yVal] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
-            tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length });
+            tempDataPointDict.push({ title: d.yVal, length: currentPreopSum.length });
           } else if (d.yVal !== tempSortedData[i + 1].yVal) {
             tempNumberList.push({ num: d.yVal, indexEnding: i });
             averageDict[(d.yVal).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
-            tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length });
+            tempDataPointDict.push({ title: d.yVal, length: currentPreopSum.length });
             currentPostopSum = [];
             currentPreopSum = [];
           }
@@ -127,16 +127,16 @@ function DumbbellChart({
           if (i === tempSortedData.length - 1) {
             tempNumberList.push({ num: d.yVal + 1, indexEnding: i + 1 });
             averageDict[(d.yVal + 1).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
-            tempDatapointsDict.push({ title: d.yVal, length: currentPreopSum.length });
+            tempDataPointDict.push({ title: d.yVal, length: currentPreopSum.length });
           }
         });
       }
 
-      const newindices = range(0, data.length);
-      stateUpdateWrapperUseJSON(indicies, newindices, setIndicies);
+      const newIndices = range(0, data.length);
+      stateUpdateWrapperUseJSON(indices, newIndices, setIndices);
       stateUpdateWrapperUseJSON(averageForEachTransfused, averageDict, setAverage);
       stateUpdateWrapperUseJSON(sortedData, tempSortedData, setSortedData);
-      stateUpdateWrapperUseJSON(datapointsDict, tempDatapointsDict, setDataPointDict);
+      stateUpdateWrapperUseJSON(dataPointDict, tempDataPointDict, setDataPointDict);
       stateUpdateWrapperUseJSON(numberList, tempNumberList, setNumberList);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -153,7 +153,7 @@ function DumbbellChart({
 
     let totalWidth = 0;
 
-    datapointsDict.forEach((d, i) => {
+    dataPointDict.forEach((d, i) => {
       spacing[i] = Math.max(DumbbellGroupMinimumWidth, DumbbellMinimumWidth * d.length);
       totalWidth += spacing[i];
     });
@@ -162,7 +162,7 @@ function DumbbellChart({
 
     let newResultRange: number[] = [];
     let currentLoc = currentOffset.left;
-    datapointsDict.forEach((d, i) => {
+    dataPointDict.forEach((d, i) => {
       const calculatedRange = range(currentLoc, currentLoc + spacing[i], spacing[i] / (d.length + 1));
       calculatedRange.splice(0, 1);
       if (calculatedRange.length !== d.length) {
@@ -173,15 +173,15 @@ function DumbbellChart({
     });
     stateUpdateWrapperUseJSON(resultRange, newResultRange, setResultRange);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [datapointsDict, dimensionWidth, currentOffset, sortedData]);
+  }, [dataPointDict, dimensionWidth, currentOffset, sortedData]);
 
   const testValueScale = useCallback(() => scaleLinear()
     .domain([0.9 * xMin, 1.1 * xMax])
     .range([dimensionHeight - currentOffset.bottom, currentOffset.top]), [xMin, xMax, dimensionHeight, currentOffset]);
 
   const valueScale = useCallback(() => scaleOrdinal()
-    .domain(indicies)
-    .range(resultRange), [indicies, resultRange]);
+    .domain(indices)
+    .range(resultRange), [indices, resultRange]);
 
   const testLabel = axisLeft(testValueScale());
 
@@ -217,49 +217,26 @@ function DumbbellChart({
 
   const decideIfSelectSet = (d: DumbbellDataPoint) => currentSelectSet.length > 0 && !!currentSelectSet.find((selected) => selected.setValues.includes(`${d.case[selected.setName]}`));
 
-  const generateDumbbells = () => {
-    const selectedPatients: JSX.Element[] = [];
-    const unselectedPatients: JSX.Element[] = [];
+  const generateDumbbells = () => sortedData.map((dataPoint, idx) => {
+    const xVal = (valueScale() as unknown as ScaleOrdinal<number, number>)(idx);
 
-    sortedData.forEach((dataPoint, idx) => {
-      const xVal = (valueScale() as unknown as ScaleOrdinal<number, number>)(idx);
-      const isSelectSet = decideIfSelectSet(dataPoint);
-
-      if (xVal) {
-        if (isSelectSet) {
-          selectedPatients.push(
-            <SingleDumbbell
-              xVal={xVal}
-              isSelectSet={isSelectSet}
-              dataPoint={dataPoint}
-              showGap={showGap}
-              showPostop={showPostop}
-              showPreop={showPreop}
-              circleYValStart={testValueScale()(dataPoint.startXVal)}
-              circleYValEnd={testValueScale()(dataPoint.endXVal)}
-              key={`dumbbell-${idx}`}
-            />,
-          );
-        } else {
-          unselectedPatients.push(
-            <SingleDumbbell
-              xVal={xVal}
-              isSelectSet={isSelectSet}
-              dataPoint={dataPoint}
-              showGap={showGap}
-              showPostop={showPostop}
-              showPreop={showPreop}
-              circleYValStart={testValueScale()(dataPoint.startXVal)}
-              circleYValEnd={testValueScale()(dataPoint.endXVal)}
-              key={`dumbbell-${idx}`}
-            />,
-          );
-        }
-      }
-    });
-
-    return unselectedPatients.concat(selectedPatients);
-  };
+    if (xVal) {
+      return (
+        <SingleDumbbell
+          xVal={xVal}
+          isSelectSet={decideIfSelectSet(dataPoint)}
+          dataPoint={dataPoint}
+          showGap={showGap}
+          showPostop={showPostop}
+          showPreop={showPreop}
+          circleYValStart={testValueScale()(dataPoint.startXVal)}
+          circleYValEnd={testValueScale()(dataPoint.endXVal)}
+          key={`dumbbell-${idx}`}
+        />
+      );
+    }
+    return null;
+  });
 
   return (
     <>
