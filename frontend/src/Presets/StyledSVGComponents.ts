@@ -100,6 +100,16 @@ export const CustomAxisLine = styled('line')`
     y2:0;
 `;
 
+interface CustomAxisColumnBackgroundProps {
+  chartHeight: number;
+}
+
+export const CustomAxisColumnBackground = styled('rect')<CustomAxisColumnBackgroundProps>`
+    height: ${({ chartHeight }) => chartHeight}px;
+    y: -${({ chartHeight }) => chartHeight}px;
+    opacity: 0.05;
+`;
+
 export const CustomAxisLineBox = styled('rect')`
     height: 13px;
     y:0px;
