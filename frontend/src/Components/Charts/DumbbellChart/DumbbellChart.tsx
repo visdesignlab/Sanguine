@@ -295,7 +295,7 @@ function DumbbellChart({
       <g className="axes">
         <g className="x-axis" />
         <g className="y-axis" transform={`translate(0,${dimensionHeight - currentOffset.bottom})`}>
-          <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} xAxisVar={xAxisVar} />
+          <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} xAxisVar={xAxisVar} chartHeight={dimensionHeight - currentOffset.bottom - currentOffset.top} />
         </g>
         <text className="x-label" />
         <text className="y-label" />
