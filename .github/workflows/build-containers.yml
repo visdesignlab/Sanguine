@@ -67,4 +67,3 @@ jobs:
           subject-name: index.docker.io/intelvia/intelvia-frontend
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
-```
