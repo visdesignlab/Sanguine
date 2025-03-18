@@ -1,6 +1,5 @@
 import environ
 import os
-import oracledb
 
 env = environ.Env(
     DJANGO_DEBUG=(bool, False),  # Cast to bool, default to False
@@ -76,14 +75,6 @@ DATABASES = {
         'PORT': env("MARIADB_PORT"),
     },
     "hospital": {
-        'ENGINE': 'django.db.backends.oracle',
-        "NAME": f"{env('ORACLE_HOST')}:{env('ORACLE_PORT')}/{env('ORACLE_SERVICE_NAME')}",
-        "USER": env("ORACLE_USER"),
-        "PASSWORD": env("ORACLE_PASSWORD"),
-        "OPTIONS": {
-            "mode": oracledb.AUTH_MODE_SYSDBA if IS_TESTING else oracledb.AUTH_MODE_DEFAULT,
-        }
-    } if os.environ.get("ORACLE_HOST", None) is not None else {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': env("MARIADB_DATABASE"),
         'USER': env("MARIADB_USER"),
