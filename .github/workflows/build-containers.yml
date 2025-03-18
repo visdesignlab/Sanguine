@@ -30,7 +30,7 @@ jobs:
 
       - name: Extract metadata (tags, labels) for frontend Docker
         id: meta-frontend
-        uses: docker/metadata-action@9v5
+        uses: docker/metadata-action@v5
         with:
           images: intelvia/intelvia-frontend
 
