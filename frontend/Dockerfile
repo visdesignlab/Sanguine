@@ -6,7 +6,8 @@ COPY . /app
 WORKDIR /app
 
 # Install development dependencies
-RUN apk add --no-cache git
+RUN apk update
+RUN apk add --no-cache git openssh
 
 # Set the environment variables for vite
 ARG VITE_QUERY_URL

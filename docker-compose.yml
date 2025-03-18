@@ -1,15 +1,13 @@
 services:
   backend:
-    image: ghcr.io/visdesignlab/django-image:5.0-v0.1.4
-    volumes:
-      - ./backend:/app:Z
+    image: docker.io/intelvia/intelvia-backend:latest
     env_file:
       - .env
     ports:
       - "8000:8000"
     depends_on:
-      - mariadb
-    entrypoint: ["/bin/sh", "-c", "GUNICORN_TIMEOUT=120 /entrypoint.sh"]
+      mariadb:
+        condition: service_healthy
 
   mariadb:
     image: docker.io/mariadb:11
@@ -22,16 +20,25 @@ services:
       - "3306"
     volumes:
       - mariadb_data:/var/lib/mysql
+      - ./sftp/upload:/var/lib/mysql-files
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 3s
+      interval: 10s
+      timeout: 5s
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:  # Pass the environment variables to the build stage
-        VITE_QUERY_URL: ${VITE_QUERY_URL}
-        VITE_REQUIRE_LOGIN: ${VITE_REQUIRE_LOGIN}
+    image: docker.io/intelvia/intelvia-frontend:latest
     ports:
       - "8080:8080"
+
+  sftp:
+    image: atmoz/sftp
+    volumes:
+      - ./sftp/upload:/home/intelvia
+    ports:
+      - "2222:22"
+    command: intelvia:password:1001
 
 volumes:
   mariadb_data:
