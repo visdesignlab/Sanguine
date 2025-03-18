@@ -1,6 +1,6 @@
 services:
   backend:
-    image: docker.io/intelvia/intelvia-backend:latest
+    image: docker.io/intelvia/intelvia-backend:alternative-infra
     env_file:
       - .env
     ports:
@@ -28,12 +28,14 @@ services:
       timeout: 5s
 
   frontend:
-    image: docker.io/intelvia/intelvia-frontend:latest
+    image: docker.io/intelvia/intelvia-frontend:alternative-infra
     ports:
       - "8080:8080"
+    depends_on:
+      - backend
 
   sftp:
-    image: atmoz/sftp
+    image: docker.io/atmoz/sftp
     volumes:
       - ./sftp/upload:/home/intelvia
     ports:

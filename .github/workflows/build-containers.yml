@@ -21,6 +21,9 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
 
+      - name: Copy .env.default to .env
+        run: cp .env.default .env
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -44,7 +47,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./backend
-          dockerfile: Dockerfile
           push: true
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
@@ -54,7 +56,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
-          dockerfile: Dockerfile
           push: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
