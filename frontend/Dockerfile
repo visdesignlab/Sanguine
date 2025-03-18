@@ -1,12 +1,17 @@
 # Use node:lts as the base image
 FROM docker.io/node:lts-alpine AS build
-# Set the working directory
-WORKDIR /app
-# Copy the frontend directory to the working directory
+
+# Copy the frontend code into the container
 COPY . /app
+WORKDIR /app
+
+# Install development dependencies
+RUN apk add --no-cache git
+
 # Set the environment variables for vite
 ARG VITE_QUERY_URL
 ARG VITE_REQUIRE_LOGIN
+
 # Install the dependencies
 RUN set -ex; \
       yarn install --frozen-lockfile --production; \

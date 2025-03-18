@@ -2,6 +2,11 @@ on:
   push:
     branches:
       - alternative-infra
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - 'main'
 
 jobs:
   push_to_registry:
