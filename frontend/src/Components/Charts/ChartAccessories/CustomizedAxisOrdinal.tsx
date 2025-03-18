@@ -7,16 +7,17 @@ import {
 } from 'd3';
 import Tooltip from '@mui/material/Tooltip';
 import { basicGray, secondaryGray } from '../../../Presets/Constants';
-import { AxisText, CustomAxisLine, CustomAxisLineBox } from '../../../Presets/StyledSVGComponents';
+import { AxisText, CustomAxisColumnBackground, CustomAxisLine, CustomAxisLineBox } from '../../../Presets/StyledSVGComponents';
 import Store from '../../../Interfaces/Store';
 
 function CustomizedAxisOrdinal({
-  numberList, scaleDomain, scaleRange, xAxisVar,
+  numberList, scaleDomain, scaleRange, xAxisVar, chartHeight,
 }: {
   scaleDomain: string;
   scaleRange: string;
   numberList: { num: number, indexEnding: number; }[];
   xAxisVar: string;
+  chartHeight: number;
 }) {
   const store = useContext(Store);
   const scale = useCallback(() => {
@@ -54,6 +55,7 @@ function CustomizedAxisOrdinal({
             <g key={idx}>
               <CustomAxisLine x1={x1} x2={x2} />
               <CustomAxisLineBox x={x1} width={x2 - x1} fill={idx % 2 === 1 ? secondaryGray : basicGray} />
+              <CustomAxisColumnBackground x={x1} width={x2 - x1} chartHeight={chartHeight} fill={idx % 2 === 1 ? 'white' : 'black'} />
               <Tooltip title={axisTextOutput(numberOb.num)}>
                 <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{axisTextOutput(numberOb.num)}</AxisText>
               </Tooltip>

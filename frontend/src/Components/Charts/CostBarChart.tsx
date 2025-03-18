@@ -21,7 +21,7 @@ import ChartConfigMenu from './ChartAccessories/ChartConfigMenu';
 import ExtraPairButtons from './ChartAccessories/ExtraPairButtons';
 import ChartStandardButtons from './ChartStandardButtons';
 import Store from '../../Interfaces/Store';
-import GeneratorExtraPair from './ChartAccessories/ExtraPairPlots/GeneratorExtraPair';
+import GeneratorExtraPair, { ExtraPairLabels } from './ChartAccessories/ExtraPairPlots/GeneratorExtraPair';
 import { generateExtrapairPlotData } from '../../HelperFunctions/ExtraPairDataGenerator';
 import { stateUpdateWrapperUseJSON } from '../../Interfaces/StateChecker';
 import { CostBarChartDataPoint, SingleCasePoint } from '../../Interfaces/Types/DataTypes';
@@ -65,6 +65,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   const [vegaHeight, setVegaHeight] = useState(0);
   const [dimensionHeight, setDimensionHeight] = useState(0);
   const [dimensionWidth, setDimensionWidth] = useState(0);
+  const xAxisOverlayHeight = 50;
   useLayoutEffect(() => {
     if (chartDiv.current) {
       setDimensionHeight(chartDiv.current.clientHeight);
@@ -450,9 +451,6 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
             secondaryExtraPairDataSet={outcomeComparison || interventionDate ? secondaryExtraPairData : undefined}
             aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
             aggregationScaleRange={`[${outcomeComparison || interventionDate ? vegaHeight - 45 : vegaHeight - 40}, ${outcomeComparison || interventionDate ? 15 : 6}]`}
-            text
-            height={vegaHeight}
-            chartId={chartId}
           />
         </svg>
         <Stack>
@@ -468,11 +466,13 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
           {/* Permanent x axis overlay with white background */}
           <div
             style={{
-              height: 50,
-              width: dimensionWidth - extraPairTotalWidth - 20,
+              height: xAxisOverlayHeight,
+              width: dimensionWidth,
               backgroundColor: 'white',
               position: 'fixed',
               bottom: 45,
+              left: 20,
+              right: 0,
             }}
           />
           <VegaLite
@@ -488,6 +488,22 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
             }}
           />
         </Stack>
+        {/* Bottom additional attribute labels */}
+        <svg
+          width={extraPairTotalWidth}
+          height={vegaHeight}
+          style={{
+            position: 'fixed',
+            bottom: 0,
+          }}
+        >
+          <ExtraPairLabels
+            extraPairDataSet={extraPairData}
+            dimensionHeight={vegaHeight - xAxisOverlayHeight}
+            currentOffset={currentOffset}
+            chartId={chartId}
+          />
+        </svg>
       </div>
       <AnnotationForm chartI={chartId} annotationText={annotationText} />
     </ChartWrapperContainer>
