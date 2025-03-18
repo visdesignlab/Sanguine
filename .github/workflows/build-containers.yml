@@ -35,7 +35,7 @@ jobs:
           images: intelvia/intelvia-frontend
 
       - name: Build and push backend Docker image
-        id: push
+        id: push-backend
         uses: docker/build-push-action@v6
         with:
           context: ./backend
@@ -45,7 +45,7 @@ jobs:
           labels: ${{ steps.meta-backend.outputs.labels }}
 
       - name: Build and push frontend Docker image
-        id: push
+        id: push-frontend
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
@@ -58,12 +58,12 @@ jobs:
         uses: actions/attest-build-provenance@v2
         with:
           subject-name: index.docker.io/intelvia/intelvia-backend
-          subject-digest: ${{ steps.push.outputs.digest }}
+          subject-digest: ${{ steps.push-backend.outputs.digest }}
           push-to-registry: true
 
       - name: Generate artifact attestation frontend
         uses: actions/attest-build-provenance@v2
         with:
           subject-name: index.docker.io/intelvia/intelvia-frontend
-          subject-digest: ${{ steps.push.outputs.digest }}
+          subject-digest: ${{ steps.push-frontend.outputs.digest }}
           push-to-registry: true
