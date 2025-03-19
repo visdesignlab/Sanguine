@@ -11,7 +11,6 @@ RUN apk add --no-cache git openssh
 
 # Set the environment variables for vite
 ARG VITE_QUERY_URL="/api/"
-ARG VITE_REQUIRE_LOGIN="false"
 
 # Install the dependencies
 RUN set -ex; \

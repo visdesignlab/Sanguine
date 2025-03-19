@@ -1,5 +1,6 @@
 from collections import Counter, defaultdict
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
+from django.conf import settings
 from django.views.decorators.http import require_http_methods
 from django_cas_ng.decorators import login_required
 
@@ -18,6 +19,8 @@ def index(request):
 def whoami(request):
     if request.user.is_authenticated:
         return HttpResponse(request.user.username)
+    elif settings.DEBUG:
+        return HttpResponse("DEBUG")
     else:
         return HttpResponse("Unauthorized", status=401)
 

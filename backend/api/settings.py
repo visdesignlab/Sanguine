@@ -1,5 +1,7 @@
 import environ
 import os
+from corsheaders.defaults import default_headers
+
 
 env = environ.Env(
     DJANGO_DEBUG=(bool, False),  # Cast to bool, default to False
@@ -134,26 +136,19 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
-CORS_ORIGIN_ALLOW_ALL = False
-CORS_ORIGIN_WHITELIST = ["http://localhost:8080"] if IS_TESTING else []
-CORS_ALLOW_CREDENTIALS = False
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'access-control-allow-credentials',
-    'access-control-allow-origin',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-]
+if DEBUG:
+    CORS_ORIGIN_ALLOW_ALL = True
+    CORS_ALLOW_CREDENTIALS = True
+
+    CORS_ALLOW_HEADERS = (
+        *default_headers,
+        'access-control-allow-credentials',
+        'access-control-allow-origin',
+    )
 
 LOGIN_REDIRECT_URL = '/api'
 LOGIN_URL = '/api/accounts/login'
-SESSION_COOKIE_AGE = 2 * 60 * 60  # 2hr * 60 min * 60 sec
+SESSION_COOKIE_AGE = 60 * 30  # 60 seconds * 30 minutes
 SESSION_COOKIE_SECURE = True
 SESSION_SAVE_EVERY_REQUEST = True
 CSRF_COOKIE_SECURE = True
