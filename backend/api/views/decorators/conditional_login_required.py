@@ -1,11 +1,13 @@
 from django.conf import settings
+from django_cas_ng.decorators import login_required
 
 
-# If settings.IS_TESTING is True, then the conditional_login_required decorator will be used to bypass CAS authentication
-# This decorator will be passed the login_required decorator, which will be used to bypass the CAS authentication
-def conditional_login_required(decorator):
+def conditional_login_required():
+    """
+    Decorator that requires the user to be logged in if DEBUG is False (i.e. in production).
+    """
     def result_decorator(f):
-        if settings.IS_TESTING:
+        if settings.DEBUG:
             return f
-        return decorator(f)
+        return login_required(f)
     return result_decorator

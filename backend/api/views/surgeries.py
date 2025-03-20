@@ -2,7 +2,6 @@ from collections import Counter, defaultdict
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.conf import settings
 from django.views.decorators.http import require_http_methods
-from django_cas_ng.decorators import login_required
 
 from .decorators.conditional_login_required import conditional_login_required
 from .sql_queries import procedure_count_query, patient_query, surgery_query, surgery_case_query
@@ -26,7 +25,7 @@ def whoami(request):
 
 
 @require_http_methods(["GET"])
-@conditional_login_required(login_required)
+@conditional_login_required
 def get_procedure_counts(request):
     log_request(request)
 
@@ -84,7 +83,7 @@ def get_procedure_counts(request):
 
 
 @require_http_methods(["GET"])
-@conditional_login_required(login_required)
+@conditional_login_required
 def fetch_surgery(request):
     log_request(request)
 
@@ -107,7 +106,7 @@ def fetch_surgery(request):
 
 
 @require_http_methods(["GET"])
-@conditional_login_required(login_required)
+@conditional_login_required
 def fetch_patient(request):
     log_request(request)
 
@@ -125,7 +124,7 @@ def fetch_patient(request):
 
 
 @require_http_methods(["GET"])
-@conditional_login_required(login_required)
+@conditional_login_required
 def get_sanguine_surgery_cases(request):
     log_request(request)
 
