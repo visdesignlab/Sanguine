@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                 ('LOAD_DTM', models.DateField()),
             ],
             options={
-                'db_table': 'SANG_BILLING_CODES',
+                'db_table': 'BILLING_CODES',
                 'managed': False,
             },
         ),
@@ -51,7 +51,7 @@ class Migration(migrations.Migration):
                 ('LOAD_DTM', models.DateField()),
             ],
             options={
-                'db_table': 'SANG_EXTRAOP_MEDS',
+                'db_table': 'EXTRAOP_MEDS',
                 'managed': False,
             },
         ),
@@ -74,7 +74,7 @@ class Migration(migrations.Migration):
                 ('LOAD_DTM', models.DateField()),
             ],
             options={
-                'db_table': 'SANG_INTRAOP_MEDS',
+                'db_table': 'INTRAOP_MEDS',
                 'managed': False,
             },
         ),
@@ -97,7 +97,7 @@ class Migration(migrations.Migration):
                 ('LOAD_DTM', models.DateField()),
             ],
             options={
-                'db_table': 'SANG_INTRAOP_TRANSFUSION',
+                'db_table': 'INTRAOP_TRANSFUSION',
                 'managed': False,
             },
         ),
@@ -118,7 +118,7 @@ class Migration(migrations.Migration):
                 ('LOAD_DTM', models.DateField()),
             ],
             options={
-                'db_table': 'SANG_PATIENT',
+                'db_table': 'PATIENT',
                 'managed': False,
             },
         ),
@@ -143,7 +143,7 @@ class Migration(migrations.Migration):
                 ('LOAD_DTM', models.DateField()),
             ],
             options={
-                'db_table': 'SANG_SURGERY_CASE',
+                'db_table': 'SURGERY_CASE',
                 'managed': False,
             },
         ),
@@ -187,7 +187,7 @@ class Migration(migrations.Migration):
                 ('LOAD_DTM', models.DateField()),
             ],
             options={
-                'db_table': 'SANG_VISIT',
+                'db_table': 'VISIT',
                 'managed': False,
             },
         ),
@@ -210,7 +210,7 @@ class Migration(migrations.Migration):
                 ('LOAD_DTM', models.DateField()),
             ],
             options={
-                'db_table': 'SANG_VISIT_LABS',
+                'db_table': 'VISIT_LABS',
                 'managed': False,
             },
         ),

@@ -5,7 +5,6 @@ from corsheaders.defaults import default_headers
 
 env = environ.Env(
     DJANGO_DEBUG=(bool, False),  # Cast to bool, default to False
-    DJANGO_TESTING=(bool, False),  # Cast to bool, default to False
     DJANGO_HOSTNAME=(str, "localhost"),
 )
 
@@ -14,7 +13,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env("DJANGO_DEBUG")
-IS_TESTING = env("DJANGO_TESTING")
 
 # We're allowing localhost for local development and for production deployment with containers
 ALLOWED_HOSTS = [
@@ -75,18 +73,9 @@ DATABASES = {
         'PASSWORD': env("MARIADB_PASSWORD"),
         'HOST': env("MARIADB_HOST"),
         'PORT': env("MARIADB_PORT"),
-    },
-    "hospital": {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': env("MARIADB_DATABASE"),
-        'USER': env("MARIADB_USER"),
-        'PASSWORD': env("MARIADB_PASSWORD"),
-        'HOST': env("MARIADB_HOST"),
-        'PORT': env("MARIADB_PORT"),
     }
 }
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
-DATABASE_ROUTERS = ['api.routers.SanguineRouter']
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',

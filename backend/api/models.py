@@ -13,11 +13,6 @@ class AccessLevel(Enum):
         return tuple((i.name, i.value) for i in self)
 
 
-class SanguineManager(models.Manager):
-    def get_queryset(self):
-        return super().get_queryset().using('hospital')
-
-
 # Actual models
 class State(models.Model):
     name = models.CharField(max_length=128, unique=True, default="New State")
@@ -51,12 +46,9 @@ class PATIENT(models.Model):
     ETHNICITY_DESC = models.CharField(max_length=2000)
     DEATH_DATE = models.DateField(null=True)
 
-    objects = SanguineManager()
-    use_hospital_db = True
-
     class Meta:
         managed = False
-        db_table = 'SANG_PATIENT' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_PATIENT'
+        db_table = 'PATIENT'
 
 
 class VISIT(models.Model):
@@ -94,12 +86,9 @@ class VISIT(models.Model):
     CCI_HIV_AIDS = models.FloatField(null=True)
     CCI_SCORE = models.FloatField(null=True)
 
-    objects = SanguineManager()
-    use_hospital_db = True
-
     class Meta:
         managed = False
-        db_table = 'SANG_VISIT' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT'
+        db_table = 'VISIT'
 
 
 class SURGERY_CASE(models.Model):
@@ -120,12 +109,9 @@ class SURGERY_CASE(models.Model):
     SCHED_SITE_DESC = models.CharField(max_length=2000)
     ASA_CODE = models.CharField(max_length=80)
 
-    objects = SanguineManager()
-    use_hospital_db = True
-
     class Meta:
         managed = False
-        db_table = 'SANG_SURGERY_CASE' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE'
+        db_table = 'SURGERY_CASE'
         indexes = [
             models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX_SURGERY_CASE'),
         ]
@@ -142,12 +128,9 @@ class BILLING_CODES(models.Model):
     PRESENT_ON_ADM_F = models.CharField(max_length=1, null=True)
     CODE_RANK = models.FloatField()
 
-    objects = SanguineManager()
-    use_hospital_db = True
-
     class Meta:
         managed = False
-        db_table = 'SANG_BILLING_CODES' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_BILLING_CODES'
+        db_table = 'BILLING_CODES'
         indexes = [
             models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX_BILLING_CODES'),
             models.Index(fields=['CODE'], name='CODE_IDX'),
@@ -169,12 +152,9 @@ class VISIT_LABS(models.Model):
     LOWER_LIMIT = models.FloatField()
     UPPER_LIMIT = models.FloatField()
 
-    objects = SanguineManager()
-    use_hospital_db = True
-
     class Meta:
         managed = False
-        db_table = 'SANG_VISIT_LABS' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT_LABS'
+        db_table = 'VISIT_LABS'
         indexes = [
             models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX_VISIT_LABS'),
             models.Index(fields=['RESULT_DESC'], name='RESULT_DESC_IDX'),
@@ -197,12 +177,9 @@ class INTRAOP_TRANSFUSION(models.Model):
     CRYO_VOL = models.FloatField(null=True)
     TRANSFUSION_RANK = models.FloatField()
 
-    objects = SanguineManager()
-    use_hospital_db = True
-
     class Meta:
         managed = False
-        db_table = 'SANG_INTRAOP_TRANSFUSION' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_TRANSFUSION'
+        db_table = 'INTRAOP_TRANSFUSION'
         indexes = [
             models.Index(fields=['CASE_ID'], name='CASE_ID_IDX'),
         ]
@@ -224,12 +201,9 @@ class INTRAOP_MEDS(models.Model):
     MED_START_DTM = models.DateTimeField()
     MED_END_DTM = models.DateTimeField()
 
-    objects = SanguineManager()
-    use_hospital_db = True
-
     class Meta:
         managed = False
-        db_table = 'SANG_INTRAOP_MEDS' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_MEDS'
+        db_table = 'INTRAOP_MEDS'
         indexes = [
             models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX_INTRAOP_MEDS'),
         ]
@@ -250,12 +224,9 @@ class EXTRAOP_MEDS(models.Model):
     MED_START_DTM = models.DateTimeField()
     MED_END_DTM = models.DateTimeField()
 
-    objects = SanguineManager()
-    use_hospital_db = True
-
     class Meta:
         managed = False
-        db_table = 'SANG_EXTRAOP_MEDS' if settings.IS_TESTING else 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_EXTRAOP_MEDS'
+        db_table = 'EXTRAOP_MEDS'
         indexes = [
             models.Index(fields=['VISIT_NO'], name='VISIT_NO_IDX_EXTRAOP_MEDS'),
         ]

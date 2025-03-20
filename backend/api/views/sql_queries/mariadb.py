@@ -69,7 +69,7 @@ procedure_count_query = f"""
             GROUP_CONCAT({FIELDS.get('billing_code')}) as codes,
             SURG.{FIELDS.get('case_id')}
         FROM {TABLES.get('billing_codes')} BLNG
-        INNER JOIN SANG_SURGERY_CASE SURG
+        INNER JOIN SURGERY_CASE SURG
             ON (BLNG.{FIELDS.get('visit_no')} = SURG.{FIELDS.get('visit_no')})
             AND (BLNG.{FIELDS.get('procedure_dtm')} = SURG.{FIELDS.get('case_date')})
         {filters_safe_sql}
@@ -112,7 +112,7 @@ surgery_query = f"""
                 SURG.{FIELDS.get('surgery_type')},
                 SURG.{FIELDS.get('prim_proc_desc')},
                 SURG.{FIELDS.get('post_op_icu_los')}
-            FROM SANG_SURGERY_CASE SURG
+            FROM SURGERY_CASE SURG
             WHERE SURG.{FIELDS.get('case_id')} = %(id)s
         )
     SELECT surg_cases.*, codes.CODES AS CODES
@@ -187,7 +187,7 @@ surgery_case_query = rf"""
             RESULT_DTM,
             RESULT_CODE,
             RESULT_VALUE
-        FROM SANG_VISIT_LABS
+        FROM VISIT_LABS
         WHERE (UPPER(RESULT_DESC) REGEXP 'HEMOGLOBIN|HGB')
           AND RESULT_VALUE REGEXP '^[+-]?\\d+(\\.\\d+)?$'
     ),
@@ -202,7 +202,7 @@ surgery_case_query = rf"""
                 SC.VISIT_NO,
                 SC.CASE_ID,
                 MAX(LH.LAB_DRAW_DTM) AS DI_PREOP_DRAW_DTM
-            FROM SANG_SURGERY_CASE SC
+            FROM SURGERY_CASE SC
             INNER JOIN LAB_HB LH ON SC.VISIT_NO = LH.VISIT_NO and LH.LAB_DRAW_DTM < SC.SURGERY_START_DTM
             GROUP BY SC.VISIT_NO, SC.CASE_ID
         ) X
@@ -221,7 +221,7 @@ surgery_case_query = rf"""
                 SC.VISIT_NO,
                 SC.CASE_ID,
                 MIN(LH.LAB_DRAW_DTM) AS DI_POSTOP_DRAW_DTM
-            FROM SANG_SURGERY_CASE SC
+            FROM SURGERY_CASE SC
             INNER JOIN LAB_HB LH ON SC.VISIT_NO = LH.VISIT_NO and LH.LAB_DRAW_DTM > SC.SURGERY_END_DTM
             GROUP BY SC.VISIT_NO, SC.CASE_ID
         ) X
@@ -259,10 +259,10 @@ surgery_case_query = rf"""
         MEDS.AMICAR,
         MEDS.IRON,
         SURG.SURGERY_TYPE_DESC
-    FROM SANG_SURGERY_CASE SURG
+    FROM SURGERY_CASE SURG
     INNER JOIN BILLING_CODES BLNG ON SURG.VISIT_NO = BLNG.VISIT_NO
     LEFT JOIN TRANSFUSED_UNITS T ON SURG.CASE_ID = T.CASE_ID
-    LEFT JOIN SANG_VISIT VST ON SURG.VISIT_NO = VST.VISIT_NO
+    LEFT JOIN VISIT VST ON SURG.VISIT_NO = VST.VISIT_NO
     LEFT JOIN MEDS ON SURG.VISIT_NO = MEDS.VISIT_NO
     LEFT JOIN PREOP_HB PRE ON SURG.CASE_ID = PRE.CASE_ID
     LEFT JOIN POSTOP_HB POST ON SURG.CASE_ID = POST.CASE_ID
