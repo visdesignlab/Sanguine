@@ -68,7 +68,7 @@ function CustomizedAxisOrdinal({
                 x={x1}
                 width={x2 - x1}
                 chartHeight={chartHeight}
-                fill={hoveredColumn === idx ? hoverStore.hoverColor : (idx % 2 === 1 ? 'white' : 'black')}
+                fill={hoveredColumn === idx ? hoverStore.backgroundHoverColor : (idx % 2 === 1 ? 'white' : 'black')}
                 opacity={hoveredColumn === idx ? 0.5 : 0.05}
               />
               <Tooltip title={axisTextOutput(numberOb.num)}>

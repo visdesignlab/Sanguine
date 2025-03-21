@@ -19,21 +19,18 @@ interface DotProps {
   isselected: boolean;
   isbrushed: boolean;
   isHovered: boolean;
+  hoverColor: string;
 }
 
 const ScatterDot = styled('circle')<DotProps>`
   r: 4px;
   opacity: ${(props) => (props.isHovered || props.isselected ? 1 : 0.5)};
   stroke-width: 2px;
-  fill: ${(props) => {
-    const store = useContext(Store);
-    const { hoverStore } = store;
-    return props.isHovered
-      ? hoverStore.hoverColor
-      : props.isbrushed || props.isselected
-        ? highlightOrange
-        : basicGray;
-  }};
+  fill: ${(props) => (props.isHovered
+    ? props.hoverColor
+    : props.isbrushed || props.isselected
+      ? highlightOrange
+      : basicGray)};
 `;
 
 const StatisticalLine = styled('line')`
@@ -229,6 +226,7 @@ function ScatterPlot({
             isselected={isSelectSet}
             isbrushed={isBrushed || false}
             isHovered={isHovered}
+            hoverColor={hoverStore.smallHoverColor}
             onMouseEnter={() => { hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
             onMouseLeave={() => { hoverStore.hoveredCaseIds = []; }}
           />,
@@ -242,6 +240,7 @@ function ScatterPlot({
             isselected={isSelectSet}
             isbrushed={isBrushed || false}
             isHovered={isHovered}
+            hoverColor={hoverStore.smallHoverColor}
             onMouseEnter={() => { hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
             onMouseLeave={() => { hoverStore.hoveredCaseIds = []; }}
           />,

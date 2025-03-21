@@ -277,7 +277,7 @@ function DumbbellChart({
               onMouseLeave={() => {
                 store.hoverStore.hoveredCaseIds = [];
               }}
-              hoverColor={store.hoverStore.hoverColor}
+              hoverColor={store.hoverStore.smallHoverColor}
               key={`dumbbell-${idx}`}
             />,
           );
@@ -299,7 +299,7 @@ function DumbbellChart({
               onMouseLeave={() => {
                 store.hoverStore.hoveredCaseIds = [];
               }}
-              hoverColor={store.hoverStore.hoverColor}
+              hoverColor={store.hoverStore.smallHoverColor}
               key={`dumbbell-${idx}`}
             />,
           );

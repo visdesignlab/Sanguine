@@ -14,8 +14,11 @@ export class HoverStore {
   // Currently hovered case IDs
   private _hoveredCaseIds: number[];
 
-  // Color of the hover
-  public readonly hoverColor: string;
+  // Color of the smaller mark hover
+  public readonly smallHoverColor: string;
+
+  // Color of a larger background hover
+  public readonly backgroundHoverColor: string;
 
   // Extends the root store
   constructor(rootStore: RootStore) {
@@ -25,7 +28,10 @@ export class HoverStore {
     this._hoveredCaseIds = [];
 
     // Color of the hover
-    this.hoverColor = '#FFE8BE';
+    this.smallHoverColor = '#FFCF76';
+
+    // Color of the hover
+    this.backgroundHoverColor = '#FFE8BE';
 
     // Make the store observable
     makeAutoObservable(this);
