@@ -33,7 +33,6 @@ function DumbbellChart({
   data, xAxisVar, dimensionHeight, dimensionWidth, svg, xMax, xMin, showPostop, showPreop, sortMode,
 }: Props) {
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
-  const [hoveredDataPoint, setHoveredDataPoint] = useState<DumbbellDataPoint | null>(null);
   const [averageForEachTransfused, setAverage] = useState<Record<number | string, { averageStart: number, averageEnd: number }>>({});
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([]);
   const [numberList, setNumberList] = useState<{ num: number, indexEnding: number; }[]>([]);
@@ -47,26 +46,6 @@ function DumbbellChart({
   const currentOffset = OffsetDict.minimum;
   const svgSelection = select(svg.current);
   const showGap = showPostop && showPreop;
-
-  // Update the hoverStore when data is hovered
-  useEffect(() => {
-    if (sortedData.length === 0) {
-      return;
-    }
-    // If a data point is hovered, set the hoveredCaseIds to the case ID of the data point. Otherwise, clear the hoveredCaseIds
-    if (hoveredDataPoint !== null) {
-      store.hoverStore.hoveredCaseIds = [hoveredDataPoint.case.CASE_ID];
-    }
-    // If a column is hovered, set the hoveredCaseIds to the case IDs in the hovered column
-    if (hoveredColumn !== null) {
-      // Get the data points in the column. TODO: Change "yVal" to the correct column name
-      const pointsInColumn = sortedData.filter(
-        (dp: DumbbellDataPoint) => dp.yVal === hoveredColumn,
-      );
-      // Set the store's hoveredCaseIds to the case IDs in the hovered column
-      store.hoverStore.hoveredCaseIds = pointsInColumn.map((dp: DumbbellDataPoint) => dp.case.CASE_ID);
-    }
-  }, [sortedData, hoveredDataPoint, hoveredColumn, store.hoverStore]);
 
   const sortDataHelper = (originalData: DumbbellDataPoint[], sortModeInput: 'preop' | 'postop' | 'gap') => {
     const copyOfData: DumbbellDataPoint[] = JSON.parse(JSON.stringify(originalData));
@@ -277,8 +256,7 @@ function DumbbellChart({
       const isSelectSet = decideIfSelectSet(dataPoint);
 
       // Compute whether this dataPoint is currently hovered.
-      const isHovered = hoveredDataPoint?.case.CASE_ID === dataPoint.case.CASE_ID;
-      const { hoverColor } = store.hoverStore;
+      const isHovered = store.hoverStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
 
       if (xVal) {
         if (isSelectSet) {
@@ -293,9 +271,13 @@ function DumbbellChart({
               circleYValStart={testValueScale()(dataPoint.startXVal)}
               circleYValEnd={testValueScale()(dataPoint.endXVal)}
               isHovered={isHovered}
-              onMouseEnter={() => setHoveredDataPoint(dataPoint)}
-              onMouseLeave={() => setHoveredDataPoint(null)}
-              hoverColor={hoverColor}
+              onMouseEnter={() => {
+                store.hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
+              }}
+              onMouseLeave={() => {
+                store.hoverStore.hoveredCaseIds = [];
+              }}
+              hoverColor={store.hoverStore.hoverColor}
               key={`dumbbell-${idx}`}
             />,
           );
@@ -311,9 +293,13 @@ function DumbbellChart({
               circleYValStart={testValueScale()(dataPoint.startXVal)}
               circleYValEnd={testValueScale()(dataPoint.endXVal)}
               isHovered={isHovered}
-              onMouseEnter={() => setHoveredDataPoint(dataPoint)}
-              onMouseLeave={() => setHoveredDataPoint(null)}
-              hoverColor={hoverColor}
+              onMouseEnter={() => {
+                store.hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
+              }}
+              onMouseLeave={() => {
+                store.hoverStore.hoveredCaseIds = [];
+              }}
+              hoverColor={store.hoverStore.hoverColor}
               key={`dumbbell-${idx}`}
             />,
           );
@@ -324,12 +310,30 @@ function DumbbellChart({
     return unselectedPatients.concat(selectedPatients);
   };
 
+  // Add a new handler that updates both the local hoveredColumn state and the store.
+  const handleColumnHover = (columnIndex: number | null) => {
+    setHoveredColumn(columnIndex);
+    if (columnIndex !== null) {
+      // Filter the sorted data for cases within the hovered column.
+      const pointsInColumn = sortedData.filter(
+        (dp: DumbbellDataPoint) => dp.yVal === columnIndex,
+      );
+      // Update the hover store with all case IDs in that column
+      store.hoverStore.hoveredCaseIds = pointsInColumn.map(
+        (dp: DumbbellDataPoint) => dp.case.CASE_ID,
+      );
+    } else {
+      // Clear hovered cases when no column is hovered.
+      store.hoverStore.hoveredCaseIds = [];
+    }
+  };
+
   return (
     <>
       <g className="axes">
         <g className="x-axis" />
         <g className="y-axis" transform={`translate(0,${dimensionHeight - currentOffset.bottom})`}>
-          <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} xAxisVar={xAxisVar} chartHeight={dimensionHeight - currentOffset.bottom - currentOffset.top} hoveredColumn={hoveredColumn} onColumnHover={setHoveredColumn} />
+          <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} xAxisVar={xAxisVar} chartHeight={dimensionHeight - currentOffset.bottom - currentOffset.top} hoveredColumn={hoveredColumn} onColumnHover={handleColumnHover} />
         </g>
         <text className="x-label" />
         <text className="y-label" />

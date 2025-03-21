@@ -229,6 +229,8 @@ function ScatterPlot({
             isselected={isSelectSet}
             isbrushed={isBrushed || false}
             isHovered={isHovered}
+            onMouseEnter={() => { hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
+            onMouseLeave={() => { hoverStore.hoveredCaseIds = []; }}
           />,
         );
       } else {
@@ -240,6 +242,8 @@ function ScatterPlot({
             isselected={isSelectSet}
             isbrushed={isBrushed || false}
             isHovered={isHovered}
+            onMouseEnter={() => { hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
+            onMouseLeave={() => { hoverStore.hoveredCaseIds = []; }}
           />,
 
         );
@@ -286,9 +290,8 @@ function ScatterPlot({
           y={0}
           className="highlight-label"
         />
-
-        {generateScatterDots()}
         <g className="brush-layer" />
+        {generateScatterDots()}
       </g>
       <g className="axes">
         <g className="y-axis" />
