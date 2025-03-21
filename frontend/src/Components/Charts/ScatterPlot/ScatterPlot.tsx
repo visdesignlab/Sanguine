@@ -18,12 +18,22 @@ import CustomizedAxisBand from '../ChartAccessories/CustomizedAxisBand';
 interface DotProps {
   isselected: boolean;
   isbrushed: boolean;
+  isHovered: boolean;
 }
-const ScatterDot = styled('circle') <DotProps>`
-r:4px;
-opacity:${(props) => (props.isselected ? 1 : 0.5)};
-stroke-width:2px;
-fill:${(props) => (props.isbrushed || props.isselected ? highlightOrange : basicGray)};
+
+const ScatterDot = styled('circle')<DotProps>`
+  r: 4px;
+  opacity: ${(props) => (props.isHovered || props.isselected ? 1 : 0.5)};
+  stroke-width: 2px;
+  fill: ${(props) => {
+    const store = useContext(Store);
+    const { hoverStore } = store;
+    return props.isHovered
+      ? hoverStore.hoverColor
+      : props.isbrushed || props.isselected
+        ? highlightOrange
+        : basicGray;
+  }};
 `;
 
 const StatisticalLine = styled('line')`
@@ -50,6 +60,7 @@ function ScatterPlot({
   const scalePadding = 0.2;
   const currentOffset = OffsetDict.minimum;
   const store = useContext(Store);
+  const { hoverStore } = store;
   const { currentBrushedPatientGroup, currentSelectSet } = store.provenanceState;
   const svgSelection = select(svg.current);
   const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null);
@@ -198,7 +209,8 @@ function ScatterPlot({
     const medianSet: Record<string, number[]> = {};
     data.forEach((dataPoint, idx) => {
       const cx = xAxisVar === 'CELL_SAVER_ML' ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth());
-
+      // Check if the data point is hovered
+      const isHovered = hoverStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
       if (medianSet[dataPoint.xVal]) {
         medianSet[dataPoint.xVal].push(dataPoint.yVal);
       } else {
@@ -216,6 +228,7 @@ function ScatterPlot({
             cy={cy}
             isselected={isSelectSet}
             isbrushed={isBrushed || false}
+            isHovered={isHovered}
           />,
         );
       } else {
@@ -226,6 +239,7 @@ function ScatterPlot({
             cy={cy}
             isselected={isSelectSet}
             isbrushed={isBrushed || false}
+            isHovered={isHovered}
           />,
 
         );
