@@ -32,6 +32,8 @@ type Props = {
 function DumbbellChart({
   data, xAxisVar, dimensionHeight, dimensionWidth, svg, xMax, xMin, showPostop, showPreop, sortMode,
 }: Props) {
+  const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
+  const [hoveredDataPoint, setHoveredDataPoint] = useState<DumbbellDataPoint | null>(null);
   const [averageForEachTransfused, setAverage] = useState<Record<number | string, { averageStart: number, averageEnd: number }>>({});
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([]);
   const [numberList, setNumberList] = useState<{ num: number, indexEnding: number; }[]>([]);
@@ -45,6 +47,26 @@ function DumbbellChart({
   const currentOffset = OffsetDict.minimum;
   const svgSelection = select(svg.current);
   const showGap = showPostop && showPreop;
+
+  // Update the hoverStore when data is hovered
+  useEffect(() => {
+    if (sortedData.length === 0) {
+      return;
+    }
+    // If a data point is hovered, set the hoveredCaseIds to the case ID of the data point. Otherwise, clear the hoveredCaseIds
+    if (hoveredDataPoint !== null) {
+      store.hoverStore.hoveredCaseIds = [hoveredDataPoint.case.CASE_ID];
+    }
+    // If a column is hovered, set the hoveredCaseIds to the case IDs in the hovered column
+    if (hoveredColumn !== null) {
+      // Get the data points in the column. TODO: Change "yVal" to the correct column name
+      const pointsInColumn = sortedData.filter(
+        (dp: DumbbellDataPoint) => dp.yVal === hoveredColumn,
+      );
+      // Set the store's hoveredCaseIds to the case IDs in the hovered column
+      store.hoverStore.hoveredCaseIds = pointsInColumn.map((dp: DumbbellDataPoint) => dp.case.CASE_ID);
+    }
+  }, [sortedData, hoveredDataPoint, hoveredColumn, store.hoverStore]);
 
   const sortDataHelper = (originalData: DumbbellDataPoint[], sortModeInput: 'preop' | 'postop' | 'gap') => {
     const copyOfData: DumbbellDataPoint[] = JSON.parse(JSON.stringify(originalData));
@@ -254,6 +276,10 @@ function DumbbellChart({
       const xVal = (valueScale() as unknown as ScaleOrdinal<number, number>)(idx);
       const isSelectSet = decideIfSelectSet(dataPoint);
 
+      // Compute whether this dataPoint is currently hovered.
+      const isHovered = hoveredDataPoint?.case.CASE_ID === dataPoint.case.CASE_ID;
+      const { hoverColor } = store.hoverStore;
+
       if (xVal) {
         if (isSelectSet) {
           selectedPatients.push(
@@ -266,6 +292,10 @@ function DumbbellChart({
               showPreop={showPreop}
               circleYValStart={testValueScale()(dataPoint.startXVal)}
               circleYValEnd={testValueScale()(dataPoint.endXVal)}
+              isHovered={isHovered}
+              onMouseEnter={() => setHoveredDataPoint(dataPoint)}
+              onMouseLeave={() => setHoveredDataPoint(null)}
+              hoverColor={hoverColor}
               key={`dumbbell-${idx}`}
             />,
           );
@@ -280,6 +310,10 @@ function DumbbellChart({
               showPreop={showPreop}
               circleYValStart={testValueScale()(dataPoint.startXVal)}
               circleYValEnd={testValueScale()(dataPoint.endXVal)}
+              isHovered={isHovered}
+              onMouseEnter={() => setHoveredDataPoint(dataPoint)}
+              onMouseLeave={() => setHoveredDataPoint(null)}
+              hoverColor={hoverColor}
               key={`dumbbell-${idx}`}
             />,
           );
@@ -295,7 +329,7 @@ function DumbbellChart({
       <g className="axes">
         <g className="x-axis" />
         <g className="y-axis" transform={`translate(0,${dimensionHeight - currentOffset.bottom})`}>
-          <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} xAxisVar={xAxisVar} chartHeight={dimensionHeight - currentOffset.bottom - currentOffset.top} />
+          <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} xAxisVar={xAxisVar} chartHeight={dimensionHeight - currentOffset.bottom - currentOffset.top} hoveredColumn={hoveredColumn} onColumnHover={setHoveredColumn} />
         </g>
         <text className="x-label" />
         <text className="y-label" />

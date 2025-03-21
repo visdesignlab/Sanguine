@@ -54,26 +54,40 @@ export const HeatMapDividerLine = styled('line') <HeatMapDivideProp>`
 interface DotProps {
   isSelectSet: boolean;
   ispreop: boolean;
+  isHovered: boolean;
+  hoverColor: string;
 }
 interface RectProps {
   isselected: boolean;
+  isHovered: boolean;
+  hoverColor: string;
 }
 
 interface AverageLineProps {
   ispreop: boolean;
 }
 
-export const DumbbellCircle = styled('circle') <DotProps>`
-  r:4px;
-  fill: ${(props) => (props.isSelectSet ? highlightOrange : props.ispreop ? preopColor : postopColor)};
-  opacity:${(props) => (props.isSelectSet ? 1 : 0.8)};
-`;
+export const DumbbellCircle = styled('circle')<DotProps>`
+     r:4px;
+     fill: ${(props) => (props.isHovered
+    ? props.hoverColor
+    : props.isSelectSet
+      ? highlightOrange
+      : props.ispreop
+        ? preopColor
+        : postopColor)};
+     opacity: ${(props) => (props.isSelectSet || props.isHovered ? 1 : 0.8)};
+   `;
 
-export const DumbbellRect = styled('rect') <RectProps>`
- width:1.5px;
- opacity:${(props) => (props.isselected ? 1 : 0.5)};
- fill: ${(props) => (props.isselected ? highlightOrange : basicGray)};
-`;
+export const DumbbellRect = styled('rect')<RectProps>`
+   width:1.5px;
+   opacity: ${(props) => (props.isselected || props.isHovered ? 1 : 0.5)};
+   fill: ${(props) => (props.isHovered
+    ? props.hoverColor
+    : props.isselected
+      ? highlightOrange
+      : basicGray)};
+ `;
 
 export const DumbbellLine = styled('line') < AverageLineProps>`
     stroke: ${(props) => (props.ispreop ? preopColor : postopColor)};
@@ -107,7 +121,6 @@ interface CustomAxisColumnBackgroundProps {
 export const CustomAxisColumnBackground = styled('rect')<CustomAxisColumnBackgroundProps>`
     height: ${({ chartHeight }) => chartHeight}px;
     y: -${({ chartHeight }) => chartHeight}px;
-    opacity: 0.05;
 `;
 
 export const CustomAxisLineBox = styled('rect')`
