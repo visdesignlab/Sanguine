@@ -20,7 +20,7 @@ from api.views.utils.utils import get_all_cpt_code_filters
 
 
 def create_model_table(unmanaged_models, drop_tables):
-    connection = connections["hospital"]
+    connection = connections["default"]
     with connection.schema_editor() as schema_editor:
         if drop_tables:
             for model in unmanaged_models:
