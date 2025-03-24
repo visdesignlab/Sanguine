@@ -47,6 +47,14 @@ function CustomizedAxisBand({
             onMouseLeave={() => onColumnHover(null)}
           >
             <CustomAxisLine x1={x1} x2={x2} />
+            <CustomAxisColumnBackground
+              x={x1}
+              width={x2 - x1}
+              chartHeight={chartHeight}
+              fill={idx % 2 === 1 ? 'black' : 'white'}
+              opacity={0.05}
+              style={{ pointerEvents: 'none' }}
+            />
             <CustomAxisLineBox x={x1} width={x2 - x1} fill={idx % 2 === 1 ? secondaryGray : basicGray} />
             <CustomAxisColumnBackground
               x={x1}
