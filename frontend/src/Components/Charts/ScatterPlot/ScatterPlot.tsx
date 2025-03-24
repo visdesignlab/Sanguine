@@ -63,6 +63,7 @@ function ScatterPlot({
   const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null);
   const [isFirstRender, updateIsFirstRender] = useState(true);
   const [brushedCaseList, updatebrushedCaseList] = useState<number[]>([]);
+  const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateBrush = (e: any) => {
@@ -277,6 +278,22 @@ function ScatterPlot({
     return unselectedPatients.concat(selectedPatients).concat(lineSet);
   };
 
+  // Add a new handler that updates both the local hoveredColumn state and the store.
+  const handleColumnHover = (columnIndex: number | null) => {
+    setHoveredColumn(columnIndex);
+    if (columnIndex !== null) {
+      // Filter the data using dp.xVal because the column represents the x-axis category.
+      const pointsInColumn = data.filter((dp: ScatterDataPoint) => dp.xVal === columnIndex);
+      // Update the hover store with all case IDs in that column
+      store.hoverStore.hoveredCaseIds = pointsInColumn.map(
+        (dp: ScatterDataPoint) => dp.case.CASE_ID,
+      );
+    } else {
+      // Clear hovered cases when no column is hovered.
+      store.hoverStore.hoveredCaseIds = [];
+    }
+  };
+
   return (
     <>
       <g className="chart-comp">
@@ -289,18 +306,17 @@ function ScatterPlot({
           y={0}
           className="highlight-label"
         />
-        <g className="brush-layer" />
-        {generateScatterDots()}
       </g>
       <g className="axes">
         <g className="y-axis" />
         <g className="x-axis" transform={`translate(0 ,${height - currentOffset.bottom} )`}>
-          {xAxisVar !== 'CELL_SAVER_ML' ? <CustomizedAxisBand scalePadding={scalePadding} scaleDomain={JSON.stringify(xAxisScale().domain())} scaleRange={JSON.stringify(xAxisScale().range())} /> : null}
+          {xAxisVar !== 'CELL_SAVER_ML' ? <CustomizedAxisBand scalePadding={scalePadding} scaleDomain={JSON.stringify(xAxisScale().domain())} scaleRange={JSON.stringify(xAxisScale().range())} chartHeight={height - currentOffset.bottom - currentOffset.top} hoveredColumn={hoveredColumn} onColumnHover={handleColumnHover} /> : null}
         </g>
         <text className="x-label" />
         <text className="y-label" />
       </g>
-
+      <g className="brush-layer" />
+      {generateScatterDots()}
     </>
   );
 }
