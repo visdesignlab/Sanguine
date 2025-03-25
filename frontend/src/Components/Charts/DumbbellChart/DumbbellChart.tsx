@@ -32,7 +32,6 @@ type Props = {
 function DumbbellChart({
   data, xAxisVar, dimensionHeight, dimensionWidth, svg, xMax, xMin, showPostop, showPreop, sortMode,
 }: Props) {
-  const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
   const [averageForEachTransfused, setAverage] = useState<Record<number | string, { averageStart: number, averageEnd: number }>>({});
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([]);
   const [numberList, setNumberList] = useState<{ num: number, indexEnding: number; }[]>([]);
@@ -310,30 +309,12 @@ function DumbbellChart({
     return unselectedPatients.concat(selectedPatients);
   };
 
-  // Add a new handler that updates both the local hoveredColumn state and the store.
-  const handleColumnHover = (columnIndex: number | null) => {
-    setHoveredColumn(columnIndex);
-    if (columnIndex !== null) {
-      // Filter the sorted data for cases within the hovered column.
-      const pointsInColumn = sortedData.filter(
-        (dp: DumbbellDataPoint) => dp.yVal === columnIndex,
-      );
-      // Update the hover store with all case IDs in that column
-      store.hoverStore.hoveredCaseIds = pointsInColumn.map(
-        (dp: DumbbellDataPoint) => dp.case.CASE_ID,
-      );
-    } else {
-      // Clear hovered cases when no column is hovered.
-      store.hoverStore.hoveredCaseIds = [];
-    }
-  };
-
   return (
     <>
       <g className="axes">
         <g className="x-axis" />
         <g className="y-axis" transform={`translate(0,${dimensionHeight - currentOffset.bottom})`}>
-          <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} xAxisVar={xAxisVar} chartHeight={dimensionHeight - currentOffset.bottom - currentOffset.top} hoveredColumn={hoveredColumn} onColumnHover={handleColumnHover} />
+          <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} xAxisVar={xAxisVar} chartHeight={dimensionHeight - currentOffset.bottom - currentOffset.top} data={sortedData} />
         </g>
         <text className="x-label" />
         <text className="y-label" />

@@ -1,4 +1,4 @@
-import { useCallback, useContext } from 'react';
+import { useCallback, useContext, useState } from 'react';
 import { observer } from 'mobx-react';
 import {
   scaleBand,
@@ -8,21 +8,24 @@ import {
   AxisText, CustomAxisColumnBackground, CustomAxisLine, CustomAxisLineBox,
 } from '../../../Presets/StyledSVGComponents';
 import Store from '../../../Interfaces/Store';
+import { ScatterDataPoint } from '../../../Interfaces/Types/DataTypes';
 
 type Props = {
   scaleDomain: string;
   scaleRange: string;
   scalePadding: number;
   chartHeight: number;
-  hoveredColumn: number | null;
-  onColumnHover: (column: number | null) => void;
+  data: ScatterDataPoint[];
 };
 
 function CustomizedAxisBand({
-  scaleDomain, scaleRange, scalePadding, chartHeight, hoveredColumn, onColumnHover,
+  scaleDomain, scaleRange, scalePadding, chartHeight, data,
 }: Props) {
   const store = useContext(Store);
   const { hoverStore } = store;
+
+  const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
+
   const scale = useCallback(() => {
     const domain = JSON.parse(scaleDomain);
     const range = JSON.parse(scaleRange);
@@ -35,6 +38,22 @@ function CustomizedAxisBand({
     return sc;
   }, [scaleDomain, scaleRange, scalePadding]);
 
+  // Add a new handler that updates both the local hoveredColumn state and the store.
+  const handleColumnHover = (columnIndex: number | null) => {
+    setHoveredColumn(columnIndex);
+    if (columnIndex !== null) {
+      // Filter the data using dp.xVal because the column represents the x-axis category.
+      const pointsInColumn = data.filter((dp: ScatterDataPoint) => dp.xVal === columnIndex);
+      // Update the hover store with all case IDs in that column
+      store.hoverStore.hoveredCaseIds = pointsInColumn.map(
+        (dp: ScatterDataPoint) => dp.case.CASE_ID,
+      );
+    } else {
+      // Clear hovered cases when no column is hovered.
+      store.hoverStore.hoveredCaseIds = [];
+    }
+  };
+
   return (
     <>
       {scale().domain().map((number, idx) => {
@@ -43,18 +62,10 @@ function CustomizedAxisBand({
         return (
           <g
             key={idx}
-            onMouseEnter={() => onColumnHover(idx)}
-            onMouseLeave={() => onColumnHover(null)}
+            onMouseEnter={() => handleColumnHover(idx)}
+            onMouseLeave={() => handleColumnHover(null)}
           >
             <CustomAxisLine x1={x1} x2={x2} />
-            <CustomAxisColumnBackground
-              x={x1}
-              width={x2 - x1}
-              chartHeight={chartHeight}
-              fill={idx % 2 === 1 ? 'black' : 'white'}
-              opacity={0.05}
-              style={{ pointerEvents: 'none' }}
-            />
             <CustomAxisLineBox x={x1} width={x2 - x1} fill={idx % 2 === 1 ? secondaryGray : basicGray} />
             <CustomAxisColumnBackground
               x={x1}

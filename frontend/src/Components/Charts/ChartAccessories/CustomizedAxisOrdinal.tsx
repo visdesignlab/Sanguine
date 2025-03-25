@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useCallback, useContext } from 'react';
+import { useCallback, useContext, useState } from 'react';
 import { observer } from 'mobx-react';
 import {
   ScaleOrdinal,
@@ -11,20 +11,22 @@ import {
   AxisText, CustomAxisColumnBackground, CustomAxisLine, CustomAxisLineBox,
 } from '../../../Presets/StyledSVGComponents';
 import Store from '../../../Interfaces/Store';
+import { DumbbellDataPoint } from '../../../Interfaces/Types/DataTypes';
 
 function CustomizedAxisOrdinal({
-  numberList, scaleDomain, scaleRange, xAxisVar, chartHeight, hoveredColumn, onColumnHover,
+  numberList, scaleDomain, scaleRange, xAxisVar, chartHeight, data,
 }: {
   scaleDomain: string;
   scaleRange: string;
   numberList: { num: number, indexEnding: number; }[];
   xAxisVar: string;
   chartHeight: number;
-  hoveredColumn: number | null;
-  onColumnHover: (column: number | null) => void;
+  data: DumbbellDataPoint[];
 }) {
   const store = useContext(Store);
   const { hoverStore } = store;
+  const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
+
   const scale = useCallback(() => {
     const domain = JSON.parse(scaleDomain);
     const range = JSON.parse(scaleRange);
@@ -43,6 +45,24 @@ function CustomizedAxisOrdinal({
     return input;
   }, [store.configStore.privateMode, store.providerMappping, xAxisVar]);
 
+  // Add a new handler that updates both the local hoveredColumn state and the store.
+  const handleColumnHover = (columnIndex: number | null) => {
+    setHoveredColumn(columnIndex);
+    if (columnIndex !== null) {
+      // Filter the sorted data for cases within the hovered column.
+      const pointsInColumn = data.filter(
+        (dp: DumbbellDataPoint) => dp.yVal === columnIndex,
+      );
+      // Update the hover store with all case IDs in that column
+      store.hoverStore.hoveredCaseIds = pointsInColumn.map(
+        (dp: DumbbellDataPoint) => dp.case.CASE_ID,
+      );
+    } else {
+      // Clear hovered cases when no column is hovered.
+      store.hoverStore.hoveredCaseIds = [];
+    }
+  };
+
   return (
     <>
 
@@ -59,8 +79,8 @@ function CustomizedAxisOrdinal({
           return (
             <g
               key={idx}
-              onMouseEnter={() => onColumnHover(idx)}
-              onMouseLeave={() => onColumnHover(null)}
+              onMouseEnter={() => handleColumnHover(idx)}
+              onMouseLeave={() => handleColumnHover(null)}
             >
               <CustomAxisLine x1={x1} x2={x2} />
               <CustomAxisLineBox x={x1} width={x2 - x1} fill={idx % 2 === 1 ? secondaryGray : basicGray} />
