@@ -50,6 +50,6 @@ export class HoverStore {
    * @param {number[]} ids - The list of hovered case IDs
    */
   set hoveredCaseIds(ids: number[]) {
-    this._hoveredCaseIds = ids;
+    this._hoveredCaseIds = structuredClone(ids);
   }
 }
