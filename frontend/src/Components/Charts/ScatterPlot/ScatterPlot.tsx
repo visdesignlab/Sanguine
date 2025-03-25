@@ -95,13 +95,21 @@ function ScatterPlot({
     .on('end', updateBrush);
   svgSelection.select('.brush-layer').call(brushDef as never);
 
+  // helper function to determine the correct x position for a given data point
+  const getCX = (dPoint: ScatterDataPoint) => {
+    if (xAxisVar === 'CELL_SAVER_ML') {
+      return (xAxisScale()(dPoint.xVal)) || 0;
+    }
+    return ((xAxisScale()(dPoint.xVal) || 0) + dPoint.randomFactor * xAxisScale().bandwidth());
+  };
+
   useEffect(() => {
     if (isFirstRender) {
       updateIsFirstRender(false);
     } else if (brushLoc) {
       const caseList: SingleCasePoint[] = [];
       data.forEach((dataPoint) => {
-        const cx = xAxisVar === 'CELL_SAVER_ML' ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth());
+        const cx = getCX(dataPoint);
         const cy = yAxisScale()(dataPoint.yVal);
         if (cx > brushLoc[0][0] && cx < brushLoc[1][0] && cy > brushLoc[0][1] && cy < brushLoc[1][1]) {
           caseList.push(dataPoint.case);
@@ -199,55 +207,8 @@ function ScatterPlot({
 
   const decideIfSelectSet = (d: ScatterDataPoint) => currentSelectSet.length > 0 && !!currentSelectSet.find((selected) => selected.setValues.includes(`${d.case[selected.setName]}`));
 
-  const generateScatterDots = () => {
-    const selectedPatients: JSX.Element[] = [];
-    const unselectedPatients: JSX.Element[] = [];
-    const brushedSet = new Set(brushedCaseList);
-    const medianSet: Record<string, number[]> = {};
-    data.forEach((dataPoint, idx) => {
-      const cx = xAxisVar === 'CELL_SAVER_ML' ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth());
-      // Check if the data point is hovered
-      const hovered = hoverStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
-      if (medianSet[dataPoint.xVal]) {
-        medianSet[dataPoint.xVal].push(dataPoint.yVal);
-      } else {
-        medianSet[dataPoint.xVal] = [dataPoint.yVal];
-      }
-      const cy = yAxisScale()(dataPoint.yVal);
-      const isSelectSet = decideIfSelectSet(dataPoint);
-      const brushed = brushedSet.has(dataPoint.case.CASE_ID);
-
-      if (brushed || isSelectSet) {
-        selectedPatients.push(
-          <ScatterDot
-            key={`dot-${idx}`}
-            cx={cx}
-            cy={cy}
-            selected={isSelectSet}
-            brushed={brushed || false}
-            hovered={hovered}
-            hoverColor={hoverStore.smallHoverColor}
-            onMouseEnter={() => { hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
-            onMouseLeave={() => { hoverStore.hoveredCaseIds = []; }}
-          />,
-        );
-      } else {
-        unselectedPatients.push(
-          <ScatterDot
-            key={`dot-${idx}`}
-            cx={cx}
-            cy={cy}
-            selected={isSelectSet}
-            brushed={brushed || false}
-            hovered={hovered}
-            hoverColor={hoverStore.smallHoverColor}
-            onMouseEnter={() => { hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
-            onMouseLeave={() => { hoverStore.hoveredCaseIds = []; }}
-          />,
-
-        );
-      }
-    });
+  // Generate the statistical lines for all median sets
+  const generateStatisticalLines = (medianSet: Record<string, number[]>) => {
     let lineSet: JSX.Element[] = [];
     if (xAxisVar !== 'CELL_SAVER_ML') {
       for (const [key, value] of Object.entries(medianSet)) {
@@ -274,7 +235,51 @@ function ScatterPlot({
         );
       }
     }
-    return unselectedPatients.concat(selectedPatients).concat(lineSet);
+    return lineSet;
+  };
+
+  // Generates all data to be rendered within the plot
+  // This includes all datapoints and each set's relevant statistics lines
+  const generateScatterplot = () => {
+    const scatterDots: JSX.Element[] = [];
+    const brushedSet = new Set(brushedCaseList);
+    const medianSet: Record<string, number[]> = {};
+
+    data.forEach((dataPoint, idx) => {
+      // Get the exact value for CELL_SAVER_ML or a jittered xVal
+      const cx = getCX(dataPoint);
+      // Check if the data point is hovered
+      const hovered = hoverStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
+      if (medianSet[dataPoint.xVal]) {
+        medianSet[dataPoint.xVal].push(dataPoint.yVal);
+      } else {
+        medianSet[dataPoint.xVal] = [dataPoint.yVal];
+      }
+      const cy = yAxisScale()(dataPoint.yVal);
+      const isSelectSet = decideIfSelectSet(dataPoint);
+      const brushed = brushedSet.has(dataPoint.case.CASE_ID);
+
+      // Append the scatterdot JSX element
+      scatterDots.push(
+        <ScatterDot
+          key={`dot-${idx}`}
+          cx={cx}
+          cy={cy}
+          selected={isSelectSet}
+          brushed={brushed || false}
+          hovered={hovered}
+          hoverColor={hoverStore.smallHoverColor}
+          onMouseEnter={() => { hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
+          onMouseLeave={() => { hoverStore.hoveredCaseIds = []; }}
+        />,
+      );
+    });
+
+    // Generate statistical lines
+    const lineSet = generateStatisticalLines(medianSet);
+
+    // Statistical lines will be rendered on top of the scatter dots
+    return scatterDots.concat(lineSet);
   };
 
   return (
@@ -299,7 +304,7 @@ function ScatterPlot({
         <text className="y-label" />
       </g>
       <g className="brush-layer" />
-      {generateScatterDots()}
+      {generateScatterplot()}
     </>
   );
 }
