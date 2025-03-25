@@ -2,12 +2,6 @@ import { makeAutoObservable } from 'mobx';
 // eslint-disable-next-line import/no-cycle
 import { RootStore } from './Store';
 
-/**
- * @typedef {Object} HoverStore
- * @property {number[]} hoveredCaseIds - The list of hovered case IDs
- * @property {string} hoverColor - The color of the hover
- * @property {RootStore} rootStore - The root store
- */
 export class HoverStore {
   rootStore: RootStore;
 
