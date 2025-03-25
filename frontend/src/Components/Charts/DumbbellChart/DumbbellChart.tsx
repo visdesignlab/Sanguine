@@ -358,10 +358,10 @@ function DumbbellChart({
             if (x1 && x2) {
               const toReturn = [];
               if (showPreop) {
-                toReturn.push(<DumbbellLine x1={x1} x2={x2} y1={beginY} y2={beginY} ispreop key={`db-line-${idx}`} />);
+                toReturn.push(<DumbbellLine x1={x1} x2={x2} y1={beginY} y2={beginY} isPreop key={`db-line-${idx}`} />);
               }
               if (showPostop) {
-                toReturn.push(<DumbbellLine x1={x1} x2={x2} y1={endY} y2={endY} ispreop={false} key={`db-line-${idx}-2`} />);
+                toReturn.push(<DumbbellLine x1={x1} x2={x2} y1={endY} y2={endY} isPreop={false} key={`db-line-${idx}-2`} />);
               }
               return ([
                 ...toReturn,

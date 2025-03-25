@@ -16,7 +16,7 @@ import { AcronymDictionary, BloodComponent, HemoOption } from '../../../Presets/
 import CustomizedAxisBand from '../ChartAccessories/CustomizedAxisBand';
 
 interface DotProps {
-  isselected: boolean;
+  isSelected: boolean;
   isbrushed: boolean;
   isHovered: boolean;
   hoverColor: string;
@@ -24,11 +24,11 @@ interface DotProps {
 
 const ScatterDot = styled('circle')<DotProps>`
   r: 4px;
-  opacity: ${(props) => (props.isHovered || props.isselected ? 1 : 0.5)};
+  opacity: ${(props) => (props.isHovered || props.isSelected ? 1 : 0.5)};
   stroke-width: 2px;
   fill: ${(props) => (props.isHovered
     ? props.hoverColor
-    : props.isbrushed || props.isselected
+    : props.isbrushed || props.isSelected
       ? highlightOrange
       : basicGray)};
 `;
@@ -224,7 +224,7 @@ function ScatterPlot({
             key={`dot-${idx}`}
             cx={cx}
             cy={cy}
-            isselected={isSelectSet}
+            isSelected={isSelectSet}
             isbrushed={isBrushed || false}
             isHovered={isHovered}
             hoverColor={hoverStore.smallHoverColor}
@@ -238,7 +238,7 @@ function ScatterPlot({
             key={`dot-${idx}`}
             cx={cx}
             cy={cy}
-            isselected={isSelectSet}
+            isSelected={isSelectSet}
             isbrushed={isBrushed || false}
             isHovered={isHovered}
             hoverColor={hoverStore.smallHoverColor}

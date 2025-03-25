@@ -46,7 +46,7 @@ function SingleDumbbell({
           x={xVal - 1}
           y={yValCalculation}
           height={rectHeight}
-          isselected={isSelectSet}
+          isSelected={isSelectSet}
           display={showGap ? undefined : 'none'}
           isHovered={isHovered}
           hoverColor={hoverColor}
@@ -55,7 +55,7 @@ function SingleDumbbell({
           cx={xVal}
           cy={circleYValStart}
           isSelectSet={isSelectSet}
-          ispreop
+          isPreop
           display={showPreop ? undefined : 'none'}
           isHovered={isHovered}
           hoverColor={hoverColor}
@@ -64,7 +64,7 @@ function SingleDumbbell({
           cx={xVal}
           cy={circleYValEnd}
           isSelectSet={isSelectSet}
-          ispreop={false}
+          isPreop={false}
           display={showPostop ? undefined : 'none'}
           isHovered={isHovered}
           hoverColor={hoverColor}

@@ -53,44 +53,50 @@ export const HeatMapDividerLine = styled('line') <HeatMapDivideProp>`
 
 interface DotProps {
   isSelectSet: boolean;
-  ispreop: boolean;
+  isPreop: boolean;
   isHovered: boolean;
   hoverColor: string;
 }
 interface RectProps {
-  isselected: boolean;
+  isSelected: boolean;
   isHovered: boolean;
   hoverColor: string;
 }
 
 interface AverageLineProps {
-  ispreop: boolean;
+  isPreop: boolean;
 }
 
 export const DumbbellCircle = styled('circle')<DotProps>`
-     r:4px;
-     fill: ${(props) => (props.isHovered
-    ? props.hoverColor
-    : props.isSelectSet
-      ? highlightOrange
-      : props.ispreop
-        ? preopColor
-        : postopColor)};
-     opacity: ${(props) => (props.isSelectSet || props.isHovered ? 1 : 0.8)};
-   `;
+  r: 4px;
+  fill: ${(props) => {
+    if (props.isHovered) {
+      return props.hoverColor;
+    }
+    if (props.isSelectSet) {
+      return highlightOrange;
+    }
+    return props.isPreop ? preopColor : postopColor;
+  }};
+  opacity: ${(props) => (props.isSelectSet || props.isHovered ? 1 : 0.8)};
+`;
 
 export const DumbbellRect = styled('rect')<RectProps>`
-   width:1.5px;
-   opacity: ${(props) => (props.isselected || props.isHovered ? 1 : 0.5)};
-   fill: ${(props) => (props.isHovered
-    ? props.hoverColor
-    : props.isselected
-      ? highlightOrange
-      : basicGray)};
+  width:1.5px;
+  opacity: ${(props) => (props.isSelected || props.isHovered ? 1 : 0.5)};
+  fill: ${(props) => {
+    if (props.isHovered) {
+      return props.hoverColor;
+    }
+    if (props.isSelected) {
+      return highlightOrange;
+    }
+    return basicGray;
+  }};
  `;
 
 export const DumbbellLine = styled('line') < AverageLineProps>`
-    stroke: ${(props) => (props.ispreop ? preopColor : postopColor)};
+    stroke: ${(props) => (props.isPreop ? preopColor : postopColor)};
     stroke-width:3px
     `;
 
