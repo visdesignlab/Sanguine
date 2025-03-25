@@ -256,7 +256,7 @@ function DumbbellChart({
       const isSelectSet = decideIfSelectSet(dataPoint);
 
       // Compute whether this dataPoint is currently hovered.
-      const isHovered = store.hoverStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
+      const hovered = store.hoverStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
 
       if (xVal) {
         if (isSelectSet) {
@@ -270,7 +270,7 @@ function DumbbellChart({
               showPreop={showPreop}
               circleYValStart={testValueScale()(dataPoint.startXVal)}
               circleYValEnd={testValueScale()(dataPoint.endXVal)}
-              isHovered={isHovered}
+              hovered={hovered}
               onMouseEnter={() => {
                 store.hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
               }}
@@ -292,7 +292,7 @@ function DumbbellChart({
               showPreop={showPreop}
               circleYValStart={testValueScale()(dataPoint.startXVal)}
               circleYValEnd={testValueScale()(dataPoint.endXVal)}
-              isHovered={isHovered}
+              hovered={hovered}
               onMouseEnter={() => {
                 store.hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
               }}

@@ -14,7 +14,7 @@ function isOverflown(element: Element) {
 
 type Props = {
     listItem: ProcedureEntry;
-    isSelected: boolean;
+    selected: boolean;
     isSubSurgery: boolean;
     highlighted: boolean;
     caseScaleDomain: string;
@@ -25,7 +25,7 @@ type Props = {
     setExpandedList: Dispatch<SetStateAction<string[]>>;
 };
 function SurgeryRow({
-  listItem, width, isSelected, expandedList, setExpandedList, isSubSurgery, highlighted, caseScaleDomain, caseScaleRange, parentSurgery,
+  listItem, width, selected, expandedList, setExpandedList, isSubSurgery, highlighted, caseScaleDomain, caseScaleRange, parentSurgery,
 }: Props) {
   const [showSVG, setShowSVG] = useState(true);
   const spanRef = useRef(null);
@@ -49,10 +49,10 @@ function SurgeryRow({
   return (
     <SurgeryListComp
       key={`${isSubSurgery && parentSurgery ? `${parentSurgery}-` : ''}${listItem.procedureName}`}
-      isSelected={highlighted}
+      selected={highlighted}
     >
 
-      <SurgeryDiv ref={spanRef} onClick={() => { store.selectionStore.updateProcedureSelection(listItem, isSelected, isSubSurgery ? parentSurgery : undefined); }}>
+      <SurgeryDiv ref={spanRef} onClick={() => { store.selectionStore.updateProcedureSelection(listItem, selected, isSubSurgery ? parentSurgery : undefined); }}>
         {isSubSurgery
           ? (
             <>

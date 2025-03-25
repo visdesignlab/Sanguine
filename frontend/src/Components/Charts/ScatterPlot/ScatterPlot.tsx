@@ -16,19 +16,19 @@ import { AcronymDictionary, BloodComponent, HemoOption } from '../../../Presets/
 import CustomizedAxisBand from '../ChartAccessories/CustomizedAxisBand';
 
 interface DotProps {
-  isSelected: boolean;
-  isbrushed: boolean;
-  isHovered: boolean;
+  selected: boolean;
+  brushed: boolean;
+  hovered: boolean;
   hoverColor: string;
 }
 
 const ScatterDot = styled('circle')<DotProps>`
   r: 4px;
-  opacity: ${(props) => (props.isHovered || props.isSelected ? 1 : 0.5)};
+  opacity: ${(props) => (props.hovered || props.selected ? 1 : 0.5)};
   stroke-width: 2px;
-  fill: ${(props) => (props.isHovered
+  fill: ${(props) => (props.hovered
     ? props.hoverColor
-    : props.isbrushed || props.isSelected
+    : props.brushed || props.selected
       ? highlightOrange
       : basicGray)};
 `;
@@ -39,16 +39,16 @@ const StatisticalLine = styled('line')`
 `;
 
 type Props = {
-    xAxisVar: BloodComponent;
-    yAxisVar: HemoOption;
-    width: number;
-    height: number;
-    data: ScatterDataPoint[];
-    svg: React.RefObject<SVGSVGElement>;
-    yMin: number;
-    yMax: number;
-    xMin: number;
-    xMax: number;
+  xAxisVar: BloodComponent;
+  yAxisVar: HemoOption;
+  width: number;
+  height: number;
+  data: ScatterDataPoint[];
+  svg: React.RefObject<SVGSVGElement>;
+  yMin: number;
+  yMax: number;
+  xMin: number;
+  xMax: number;
 };
 
 function ScatterPlot({
@@ -208,7 +208,7 @@ function ScatterPlot({
     data.forEach((dataPoint, idx) => {
       const cx = xAxisVar === 'CELL_SAVER_ML' ? ((xAxisScale()(dataPoint.xVal)) || 0) : ((xAxisScale()(dataPoint.xVal) || 0) + dataPoint.randomFactor * xAxisScale().bandwidth());
       // Check if the data point is hovered
-      const isHovered = hoverStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
+      const hovered = hoverStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
       if (medianSet[dataPoint.xVal]) {
         medianSet[dataPoint.xVal].push(dataPoint.yVal);
       } else {
@@ -216,17 +216,17 @@ function ScatterPlot({
       }
       const cy = yAxisScale()(dataPoint.yVal);
       const isSelectSet = decideIfSelectSet(dataPoint);
-      const isBrushed = brushedSet.has(dataPoint.case.CASE_ID);
+      const brushed = brushedSet.has(dataPoint.case.CASE_ID);
 
-      if (isBrushed || isSelectSet) {
+      if (brushed || isSelectSet) {
         selectedPatients.push(
           <ScatterDot
             key={`dot-${idx}`}
             cx={cx}
             cy={cy}
-            isSelected={isSelectSet}
-            isbrushed={isBrushed || false}
-            isHovered={isHovered}
+            selected={isSelectSet}
+            brushed={brushed || false}
+            hovered={hovered}
             hoverColor={hoverStore.smallHoverColor}
             onMouseEnter={() => { hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
             onMouseLeave={() => { hoverStore.hoveredCaseIds = []; }}
@@ -238,9 +238,9 @@ function ScatterPlot({
             key={`dot-${idx}`}
             cx={cx}
             cy={cy}
-            isSelected={isSelectSet}
-            isbrushed={isBrushed || false}
-            isHovered={isHovered}
+            selected={isSelectSet}
+            brushed={brushed || false}
+            hovered={hovered}
             hoverColor={hoverStore.smallHoverColor}
             onMouseEnter={() => { hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
             onMouseLeave={() => { hoverStore.hoveredCaseIds = []; }}
