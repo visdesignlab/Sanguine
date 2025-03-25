@@ -31,18 +31,10 @@ export class HoverStore {
     makeAutoObservable(this);
   }
 
-  /**
-   * Getter for the hoveredCaseIds
-   * @returns {number[]} The list of hovered case IDs
-   */
   get hoveredCaseIds() {
     return this._hoveredCaseIds;
   }
 
-  /**
-   * Setter for the hoveredCaseIds
-   * @param {number[]} ids - The list of hovered case IDs
-   */
   set hoveredCaseIds(ids: number[]) {
     this._hoveredCaseIds = structuredClone(ids);
   }
