@@ -69,6 +69,7 @@ interface AverageLineProps {
 
 export const DumbbellCircle = styled('circle')<DotProps>`
   r: 4px;
+  opacity: ${(props) => (props.isSelectSet || props.isHovered ? 1 : 0.8)};
   fill: ${(props) => {
     if (props.isHovered) {
       return props.hoverColor;
@@ -78,11 +79,10 @@ export const DumbbellCircle = styled('circle')<DotProps>`
     }
     return props.isPreop ? preopColor : postopColor;
   }};
-  opacity: ${(props) => (props.isSelectSet || props.isHovered ? 1 : 0.8)};
 `;
 
 export const DumbbellRect = styled('rect')<RectProps>`
-  width:1.5px;
+  width: 1.5px;
   opacity: ${(props) => (props.isSelected || props.isHovered ? 1 : 0.5)};
   fill: ${(props) => {
     if (props.isHovered) {
