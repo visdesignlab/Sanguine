@@ -104,6 +104,7 @@ function HeatMap({
               // Compute whether this dataPoint is currently hovered.
               const isHovered = store.hoverStore.hoveredProviderIds.includes(Number(dataPoint.aggregateAttribute));
               return (
+                /** On hover of a row, hover store is updated. */
                 <g key={idx} transform={`translate(0, ${rowY})`} onMouseEnter={() => { hoverStore.hoveredProviderIds = dataPoint.aggregateAttribute; }} onMouseLeave={() => { hoverStore.hoveredProviderIds = []; }}>
                   {/** Background Hover Row Rectangle */}
                   <rect
@@ -157,6 +158,7 @@ function HeatMap({
                 </ChartG>
               </g>
             )) : null}
+            {/** Row labels rendered on top */}
             <HeatMapAxisY
               svg={innerSvg}
               currentOffset={currentOffset}
