@@ -11,6 +11,7 @@ import { ActionEvents } from './Types/EventTypes';
 import { ApplicationState } from './Types/StateTypes';
 import { SingleCasePoint } from './Types/DataTypes';
 import { SurgeryUrgencyArray } from '../Presets/DataDict';
+import { HoverStore } from './HoverStore';
 
 export class RootStore {
   provenance: Provenance<ApplicationState, ActionEvents>;
@@ -18,6 +19,8 @@ export class RootStore {
   configStore: ProjectConfigStore;
 
   selectionStore: SelectionStore;
+
+  hoverStore: HoverStore;
 
   chartStore: ChartStore;
 
@@ -35,6 +38,7 @@ export class RootStore {
     this.configStore = new ProjectConfigStore(this);
     this.chartStore = new ChartStore(this);
     this.selectionStore = new SelectionStore(this);
+    this.hoverStore = new HoverStore(this);
 
     this._allCases = [];
 

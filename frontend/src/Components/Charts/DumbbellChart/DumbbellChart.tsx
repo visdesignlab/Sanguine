@@ -254,6 +254,9 @@ function DumbbellChart({
       const xVal = (valueScale() as unknown as ScaleOrdinal<number, number>)(idx);
       const isSelectSet = decideIfSelectSet(dataPoint);
 
+      // Compute whether this dataPoint is currently hovered.
+      const hovered = store.hoverStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
+
       if (xVal) {
         if (isSelectSet) {
           selectedPatients.push(
@@ -266,6 +269,14 @@ function DumbbellChart({
               showPreop={showPreop}
               circleYValStart={testValueScale()(dataPoint.startXVal)}
               circleYValEnd={testValueScale()(dataPoint.endXVal)}
+              hovered={hovered}
+              onMouseEnter={() => {
+                store.hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
+              }}
+              onMouseLeave={() => {
+                store.hoverStore.hoveredCaseIds = [];
+              }}
+              hoverColor={store.hoverStore.smallHoverColor}
               key={`dumbbell-${idx}`}
             />,
           );
@@ -280,6 +291,14 @@ function DumbbellChart({
               showPreop={showPreop}
               circleYValStart={testValueScale()(dataPoint.startXVal)}
               circleYValEnd={testValueScale()(dataPoint.endXVal)}
+              hovered={hovered}
+              onMouseEnter={() => {
+                store.hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
+              }}
+              onMouseLeave={() => {
+                store.hoverStore.hoveredCaseIds = [];
+              }}
+              hoverColor={store.hoverStore.smallHoverColor}
               key={`dumbbell-${idx}`}
             />,
           );
@@ -295,7 +314,7 @@ function DumbbellChart({
       <g className="axes">
         <g className="x-axis" />
         <g className="y-axis" transform={`translate(0,${dimensionHeight - currentOffset.bottom})`}>
-          <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} xAxisVar={xAxisVar} chartHeight={dimensionHeight - currentOffset.bottom - currentOffset.top} />
+          <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} xAxisVar={xAxisVar} chartHeight={dimensionHeight - currentOffset.bottom - currentOffset.top} data={sortedData} />
         </g>
         <text className="x-label" />
         <text className="y-label" />
@@ -320,10 +339,10 @@ function DumbbellChart({
             if (x1 && x2) {
               const toReturn = [];
               if (showPreop) {
-                toReturn.push(<DumbbellLine x1={x1} x2={x2} y1={beginY} y2={beginY} ispreop key={`db-line-${idx}`} />);
+                toReturn.push(<DumbbellLine x1={x1} x2={x2} y1={beginY} y2={beginY} isPreop key={`db-line-${idx}`} />);
               }
               if (showPostop) {
-                toReturn.push(<DumbbellLine x1={x1} x2={x2} y1={endY} y2={endY} ispreop={false} key={`db-line-${idx}-2`} />);
+                toReturn.push(<DumbbellLine x1={x1} x2={x2} y1={endY} y2={endY} isPreop={false} key={`db-line-${idx}-2`} />);
               }
               return ([
                 ...toReturn,
