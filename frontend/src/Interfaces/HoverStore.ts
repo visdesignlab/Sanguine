@@ -14,12 +14,18 @@ export class HoverStore {
   // Color of a larger background hover
   public readonly backgroundHoverColor: string;
 
+  // Currently hovered provider IDs
+  private _hoveredProviderIds: number[];
+
   // Extends the root store
   constructor(rootStore: RootStore) {
     this.rootStore = rootStore;
 
     // Currently hovered case IDs
     this._hoveredCaseIds = [];
+
+    // Currently hovered provider IDs
+    this._hoveredProviderIds = [];
 
     // Color of the hover
     this.smallHoverColor = '#FFCF76';
@@ -37,5 +43,19 @@ export class HoverStore {
 
   set hoveredCaseIds(ids: number[]) {
     this._hoveredCaseIds = structuredClone(ids);
+  }
+
+  get hoveredProviderIds() {
+    return this._hoveredProviderIds;
+  }
+
+  set hoveredProviderIds(ids: number[]) {
+    this._hoveredProviderIds = ids;
+
+    // Update the hovered case IDs based on the hovered provider IDs
+    this._hoveredCaseIds = this.rootStore.allCases
+      .filter((caseRecord) => ids.includes(Number(caseRecord.SURGEON_PROV_ID))
+      || ids.includes(Number(caseRecord.ANESTH_PROV_ID)))
+      .map((caseRecord) => caseRecord.CASE_ID);
   }
 }
