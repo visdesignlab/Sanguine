@@ -15,7 +15,7 @@ function CustomizedAxisOrdinal({
 }: {
   scaleDomain: string;
   scaleRange: string;
-  numberList: { num: number, indexEnding: number; }[];
+  numberList: { bin: number, indexEnding: number; }[];
   xAxisVar: string;
   chartHeight: number;
   data: DumbbellDataPoint[];
@@ -92,8 +92,8 @@ function CustomizedAxisOrdinal({
                 fill={hoveredColumn === idx ? hoverStore.backgroundHoverColor : (idx % 2 === 1 ? 'white' : 'black')}
                 opacity={hoveredColumn === idx ? 0.5 : 0.05}
               />
-              <Tooltip title={axisTextOutput(numberOb.num)}>
-                <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{axisTextOutput(numberOb.num)}</AxisText>
+              <Tooltip title={axisTextOutput(numberOb.bin)}>
+                <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{axisTextOutput(numberOb.bin)}</AxisText>
               </Tooltip>
 
             </g>
