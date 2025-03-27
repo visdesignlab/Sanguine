@@ -52,6 +52,7 @@ function HeatMap({
   outcomeComparison, interventionDate, secondaryExtraPairDataSet, dimensionHeight, secondaryData, dimensionWidth, yAxisVar, xAxisVar, chartId, data, svg, extraPairDataSet, extraPairTotalWidth, firstTotal, secondTotal,
 }: Props) {
   const store = useContext(Store);
+  const { hoverStore } = store;
   const currentOffset = OffsetDict.regular;
   const [xVals, setXVals] = useState<[]>([]);
   const [caseMax, setCaseMax] = useState(0);
@@ -92,37 +93,49 @@ function HeatMap({
         transform={`translate(0,${currentOffset.top})`}
       >
         <svg style={{ height: `${svgHeight}px`, width: '100%' }} ref={innerSvg}>
-          <HeatMapAxisY
-            svg={innerSvg}
-            currentOffset={currentOffset}
-            xVals={xVals}
-            dimensionHeight={chartHeight}
-            extraPairTotalWidth={extraPairTotalWidth}
-            yAxisVar={yAxisVar}
-          />
           <g>
-            {data.map((dataPoint, idx) => (
-              <g key={idx}>
-                <SingleHeatRow
-                  bandwidth={secondaryData ? aggregationScale().bandwidth() * 0.5 : aggregationScale().bandwidth()}
-                  valueScaleDomain={JSON.stringify(valueScale().domain())}
-                  valueScaleRange={JSON.stringify(valueScale().range())}
-                  dataPoint={dataPoint}
-                  howToTransform={`translate(0,${(aggregationScale()(dataPoint.aggregateAttribute) || 0) + (secondaryData ? (aggregationScale().bandwidth() * 0.5) : 0)})`}
-                />
-                <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
-                  <CaseCountHeader
-                    caseCount={dataPoint.caseCount}
-                    yPos={(aggregationScale()(dataPoint.aggregateAttribute) || 0) + (secondaryData ? (aggregationScale().bandwidth() * 0.5) : 0)}
-                    height={(secondaryData ? 0.5 : 1) * aggregationScale().bandwidth()}
-                    zeroCaseNum={dataPoint.zeroCaseNum}
-                    showComparisonRect={!!secondaryData}
-                    isFalseComparison
-                    caseMax={caseMax}
+            {data.map((dataPoint, idx) => {
+            // Calculate vertical placement and height for each primary row
+              const rowY = (aggregationScale()(dataPoint.aggregateAttribute) || 0)
+              + (secondaryData ? aggregationScale().bandwidth() * 0.5 : 0);
+              const rowHeight = secondaryData
+                ? aggregationScale().bandwidth() * 0.5
+                : aggregationScale().bandwidth();
+              // Compute whether this dataPoint is currently hovered.
+              const isHovered = hoverStore.hoveredAttribute?.[0] === yAxisVar && hoverStore.hoveredAttribute?.[1] === dataPoint.aggregateAttribute;
+              return (
+                /** On hover of a row, hover store is updated. */
+                <g key={idx} transform={`translate(0, ${rowY})`} onMouseEnter={() => { hoverStore.hoveredAttribute = [yAxisVar, dataPoint.aggregateAttribute]; }} onMouseLeave={() => { hoverStore.hoveredAttribute = undefined; }}>
+                  {/** Background Hover Row Rectangle */}
+                  <rect
+                    x={0}
+                    y={0}
+                    width={dimensionWidth}
+                    height={rowHeight}
+                    fill={isHovered ? hoverStore.backgroundHoverColor : 'transparent'}
                   />
-                </ChartG>
-              </g>
-            ))}
+                  <SingleHeatRow
+                    bandwidth={rowHeight}
+                    valueScaleDomain={JSON.stringify(valueScale().domain())}
+                    valueScaleRange={JSON.stringify(valueScale().range())}
+                    dataPoint={dataPoint}
+                  // Now rendered at y=0 within this transformed group
+                    howToTransform="translate(0,0)"
+                  />
+                  <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
+                    <CaseCountHeader
+                      caseCount={dataPoint.caseCount}
+                      yPos={0}
+                      height={rowHeight}
+                      zeroCaseNum={dataPoint.zeroCaseNum}
+                      showComparisonRect={!!secondaryData}
+                      isFalseComparison
+                      caseMax={caseMax}
+                    />
+                  </ChartG>
+                </g>
+              );
+            })}
             {secondaryData ? secondaryData.map((dataPoint, idx) => (
               <g key={idx}>
                 <SingleHeatRow
@@ -145,6 +158,15 @@ function HeatMap({
                 </ChartG>
               </g>
             )) : null}
+            {/** Row labels rendered on top */}
+            <HeatMapAxisY
+              svg={innerSvg}
+              currentOffset={currentOffset}
+              xVals={xVals}
+              dimensionHeight={chartHeight}
+              extraPairTotalWidth={extraPairTotalWidth}
+              yAxisVar={yAxisVar}
+            />
           </g>
           <g className="extraPairChart">
             <GeneratorExtraPair
@@ -153,7 +175,6 @@ function HeatMap({
               aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
               aggregationScaleRange={JSON.stringify(aggregationScale().range())}
             />
-
           </g>
         </svg>
       </foreignObject>

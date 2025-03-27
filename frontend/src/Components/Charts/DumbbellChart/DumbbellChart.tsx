@@ -20,7 +20,13 @@ import SingleDumbbell from './SingleDumbbell';
 import { DumbbellLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
 
 const sortDataHelper = (originalData: DumbbellDataPoint[], sortModeInput: 'preop' | 'postop' | 'gap', xAxisVar: DumbbellLayoutElement['xAxisVar']) => {
-  const copyOfData: DumbbellDataPoint[] = JSON.parse(JSON.stringify(originalData));
+  let copyOfData: DumbbellDataPoint[] = JSON.parse(JSON.stringify(originalData));
+  if (xAxisVar === 'CELL_SAVER_ML') {
+    copyOfData = copyOfData.map((d) => ({
+      ...d,
+      yVal: Math.floor(d.yVal / 100) * 100,
+    }));
+  }
   const countOfYVals = copyOfData
     .map((surgeryCase) => surgeryCase.yVal)
     .reduce((acc, label) => {
@@ -84,53 +90,37 @@ function DumbbellChart({
   const showGap = showPostop && showPreop;
 
   useEffect(() => {
+    // "Num" is the bucket column number, index is bucket index
     const tempNumberList: { bin: number, indexEnding: number; }[] = [];
+
+    // Determines spacing of the dumbbells per group
     const tempDataPointDict: { title: number, length: number; }[] = [];
+
+    // Sorts the data based on the sort mode
     if (data.length > 0) {
+      // Sorts the data based on the sort mode
       const tempSortedData = sortDataHelper(data, sortMode, xAxisVar);
       let currentPreopSum: number[] = [];
       let currentPostopSum: number[] = [];
+      // Median values for each group (for median lines)
       const averageDict: Record<number | string, { averageStart?: number, averageEnd?: number }> = {};
-      if (xAxisVar === 'CELL_SAVER_ML') {
-        tempSortedData.forEach((d, i) => {
-          currentPreopSum.push(d.startXVal);
-          currentPostopSum.push(d.endXVal);
-          const roundedAnswer = Math.floor(d.yVal / 100) * 100;
-          if (i === tempSortedData.length - 1) {
-            tempNumberList.push({ bin: roundedAnswer, indexEnding: i });
-            averageDict[roundedAnswer] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
-            tempDataPointDict.push({ title: roundedAnswer, length: currentPreopSum.length });
-          } else if (roundedAnswer !== (Math.floor(tempSortedData[i + 1].yVal / 100) * 100)) {
-            tempNumberList.push({ bin: roundedAnswer, indexEnding: i });
-            averageDict[(roundedAnswer).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
-            tempDataPointDict.push({ title: roundedAnswer, length: currentPreopSum.length });
-            currentPostopSum = [];
-            currentPreopSum = [];
-          }
-        });
-      } else {
-        tempSortedData.forEach((d, i) => {
-          currentPreopSum.push(d.startXVal);
-          currentPostopSum.push(d.endXVal);
-          if (i === tempSortedData.length - 1) {
-            tempNumberList.push({ bin: d.yVal, indexEnding: i });
-            averageDict[d.yVal] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
-            tempDataPointDict.push({ title: d.yVal, length: currentPreopSum.length });
-          } else if (d.yVal !== tempSortedData[i + 1].yVal) {
-            tempNumberList.push({ bin: d.yVal, indexEnding: i });
-            averageDict[(d.yVal).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
-            tempDataPointDict.push({ title: d.yVal, length: currentPreopSum.length });
-            currentPostopSum = [];
-            currentPreopSum = [];
-          }
 
-          if (i === tempSortedData.length - 1) {
-            tempNumberList.push({ bin: d.yVal + 1, indexEnding: i + 1 });
-            averageDict[(d.yVal + 1).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
-            tempDataPointDict.push({ title: d.yVal, length: currentPreopSum.length });
-          }
-        });
-      }
+      // Sets the average values, bucket column numbers, and the number of data points in each bucket
+      tempSortedData.forEach((d, i) => {
+        currentPreopSum.push(d.startXVal);
+        currentPostopSum.push(d.endXVal);
+        if (i === tempSortedData.length - 1) {
+          tempNumberList.push({ bin: d.yVal, indexEnding: i });
+          averageDict[d.yVal] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
+          tempDataPointDict.push({ title: d.yVal, length: currentPreopSum.length });
+        } else if (d.yVal !== tempSortedData[i + 1].yVal) {
+          tempNumberList.push({ bin: d.yVal, indexEnding: i });
+          averageDict[(d.yVal).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
+          tempDataPointDict.push({ title: d.yVal, length: currentPreopSum.length });
+          currentPostopSum = [];
+          currentPreopSum = [];
+        }
+      });
 
       const newIndices = range(0, data.length);
       stateUpdateWrapperUseJSON(indices, newIndices, setIndices);
@@ -231,6 +221,14 @@ function DumbbellChart({
           showPreop={showPreop}
           circleYValStart={testValueScale()(dataPoint.startXVal)}
           circleYValEnd={testValueScale()(dataPoint.endXVal)}
+          hovered={store.hoverStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID)}
+          onMouseEnter={() => {
+            store.hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
+          }}
+          onMouseLeave={() => {
+            store.hoverStore.hoveredCaseIds = [];
+          }}
+          hoverColor={store.hoverStore.smallHoverColor}
           key={`dumbbell-${idx}`}
         />
       );
@@ -244,7 +242,7 @@ function DumbbellChart({
       <g className="axes">
         <g className="y-axis" />
         <g className="x-axis" transform={`translate(${paddingFromLeft},${dimensionHeight - currentOffset.bottom})`}>
-          <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} xAxisVar={xAxisVar} />
+          <CustomizedAxisOrdinal scaleDomain={JSON.stringify(valueScale().domain())} scaleRange={JSON.stringify(valueScale().range())} numberList={numberList} xAxisVar={xAxisVar} chartHeight={dimensionHeight - currentOffset.bottom - currentOffset.top} data={sortedData} />
         </g>
         <text className="y-label" />
         <text className="x-label" />
@@ -265,10 +263,10 @@ function DumbbellChart({
             if (x1 && x2) {
               const toReturn = [];
               if (showPreop) {
-                toReturn.push(<DumbbellLine x1={x1} x2={x2} y1={beginY} y2={beginY} ispreop key={`db-line-${idx}`} />);
+                toReturn.push(<DumbbellLine x1={x1} x2={x2} y1={beginY} y2={beginY} isPreop key={`db-line-${idx}`} />);
               }
               if (showPostop) {
-                toReturn.push(<DumbbellLine x1={x1} x2={x2} y1={endY} y2={endY} ispreop={false} key={`db-line-${idx}-2`} />);
+                toReturn.push(<DumbbellLine x1={x1} x2={x2} y1={endY} y2={endY} isPreop={false} key={`db-line-${idx}-2`} />);
               }
               return toReturn;
             } return null;
