@@ -71,7 +71,7 @@ function DumbbellChart({
 }: Props) {
   const [averageForEachTransfused, setAverage] = useState<Record<number | string, { averageStart: number, averageEnd: number }>>({});
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([]);
-  const [numberList, setNumberList] = useState<{ num: number, indexEnding: number; }[]>([]);
+  const [numberList, setNumberList] = useState<{ bin: number, indexEnding: number; }[]>([]);
   const [dataPointDict, setDataPointDict] = useState<{ title: number, length: number; }[]>([]);
   const [resultRange, setResultRange] = useState<number[]>([]);
   const [indices, setIndices] = useState([]);
@@ -84,7 +84,7 @@ function DumbbellChart({
   const showGap = showPostop && showPreop;
 
   useEffect(() => {
-    const tempNumberList: { num: number, indexEnding: number; }[] = [];
+    const tempNumberList: { bin: number, indexEnding: number; }[] = [];
     const tempDataPointDict: { title: number, length: number; }[] = [];
     if (data.length > 0) {
       const tempSortedData = sortDataHelper(data, sortMode, xAxisVar);
@@ -97,11 +97,11 @@ function DumbbellChart({
           currentPostopSum.push(d.endXVal);
           const roundedAnswer = Math.floor(d.yVal / 100) * 100;
           if (i === tempSortedData.length - 1) {
-            tempNumberList.push({ num: roundedAnswer, indexEnding: i });
+            tempNumberList.push({ bin: roundedAnswer, indexEnding: i });
             averageDict[roundedAnswer] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
             tempDataPointDict.push({ title: roundedAnswer, length: currentPreopSum.length });
           } else if (roundedAnswer !== (Math.floor(tempSortedData[i + 1].yVal / 100) * 100)) {
-            tempNumberList.push({ num: roundedAnswer, indexEnding: i });
+            tempNumberList.push({ bin: roundedAnswer, indexEnding: i });
             averageDict[(roundedAnswer).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
             tempDataPointDict.push({ title: roundedAnswer, length: currentPreopSum.length });
             currentPostopSum = [];
@@ -113,11 +113,11 @@ function DumbbellChart({
           currentPreopSum.push(d.startXVal);
           currentPostopSum.push(d.endXVal);
           if (i === tempSortedData.length - 1) {
-            tempNumberList.push({ num: d.yVal, indexEnding: i });
+            tempNumberList.push({ bin: d.yVal, indexEnding: i });
             averageDict[d.yVal] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
             tempDataPointDict.push({ title: d.yVal, length: currentPreopSum.length });
           } else if (d.yVal !== tempSortedData[i + 1].yVal) {
-            tempNumberList.push({ num: d.yVal, indexEnding: i });
+            tempNumberList.push({ bin: d.yVal, indexEnding: i });
             averageDict[(d.yVal).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
             tempDataPointDict.push({ title: d.yVal, length: currentPreopSum.length });
             currentPostopSum = [];
@@ -125,7 +125,7 @@ function DumbbellChart({
           }
 
           if (i === tempSortedData.length - 1) {
-            tempNumberList.push({ num: d.yVal + 1, indexEnding: i + 1 });
+            tempNumberList.push({ bin: d.yVal + 1, indexEnding: i + 1 });
             averageDict[(d.yVal + 1).toString()] = { averageStart: median(currentPreopSum), averageEnd: median(currentPostopSum) };
             tempDataPointDict.push({ title: d.yVal, length: currentPreopSum.length });
           }
@@ -259,13 +259,9 @@ function DumbbellChart({
           if (Object.keys(averageForEachTransfused).length > 0) {
             const x1 = idx === 0 ? (valueScale() as unknown as ScaleOrdinal<number, number>)(0) : (valueScale() as unknown as ScaleOrdinal<number, number>)(numberList[idx - 1].indexEnding + 1);
             const x2 = (valueScale() as unknown as ScaleOrdinal<number, number>)(numberOb.indexEnding);
-            const beginY = testValueScale()(averageForEachTransfused[(numberOb.num).toString()].averageStart);
-            const endY = testValueScale()(averageForEachTransfused[numberOb.num].averageEnd);
-            const interval = idx === 0 ? 0 : (valueScale() as unknown as ScaleOrdinal<number, number>)(numberList[idx - 1].indexEnding);
-            let interventionLine;
-            if (idx >= 1 && numberOb.num <= numberList[idx - 1].num) {
-              interventionLine = <line x1={x1 - 0.5 * (x1 - interval)} x2={x1 - 0.5 * (x1 - interval)} y1={currentOffset.top} y2={dimensionHeight - currentOffset.bottom} style={{ stroke: '#e5ab73', strokeWidth: '2', strokeDasharray: '5,5' }} />;
-            }
+            const beginY = testValueScale()(averageForEachTransfused[(numberOb.bin).toString()].averageStart);
+            const endY = testValueScale()(averageForEachTransfused[numberOb.bin].averageEnd);
+
             if (x1 && x2) {
               const toReturn = [];
               if (showPreop) {
@@ -274,10 +270,7 @@ function DumbbellChart({
               if (showPostop) {
                 toReturn.push(<DumbbellLine x1={x1} x2={x2} y1={endY} y2={endY} ispreop={false} key={`db-line-${idx}-2`} />);
               }
-              return ([
-                ...toReturn,
-                interventionLine,
-              ]);
+              return toReturn;
             } return null;
           } return null;
         })}
