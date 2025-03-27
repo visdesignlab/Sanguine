@@ -2,6 +2,8 @@ import { makeAutoObservable } from 'mobx';
 // eslint-disable-next-line import/no-cycle
 import { RootStore } from './Store';
 
+type AttributeFilter = [name: string, value: string | number | boolean];
+
 export class HoverStore {
   rootStore: RootStore;
 
@@ -15,7 +17,7 @@ export class HoverStore {
   public readonly backgroundHoverColor: string;
 
   // Currently hovered provider IDs
-  private _hoveredProviderIds: number[];
+  private _hoveredAttribute?: AttributeFilter;
 
   // Extends the root store
   constructor(rootStore: RootStore) {
@@ -25,7 +27,7 @@ export class HoverStore {
     this._hoveredCaseIds = [];
 
     // Currently hovered provider IDs
-    this._hoveredProviderIds = [];
+    this._hoveredAttribute = undefined;
 
     // Color of the hover
     this.smallHoverColor = '#FFCF76';
@@ -38,6 +40,13 @@ export class HoverStore {
   }
 
   get hoveredCaseIds() {
+    // Update the hovered case IDs based on the hovered provider IDs
+    if (this._hoveredAttribute !== undefined) {
+      return this.rootStore.filteredCases
+        .filter((caseRecord) => caseRecord[this._hoveredAttribute![0]] === this._hoveredAttribute![1])
+        .map((caseRecord) => caseRecord.CASE_ID);
+    }
+
     return this._hoveredCaseIds;
   }
 
@@ -45,17 +54,11 @@ export class HoverStore {
     this._hoveredCaseIds = structuredClone(ids);
   }
 
-  get hoveredProviderIds() {
-    return this._hoveredProviderIds;
+  get hoveredAttribute() {
+    return this._hoveredAttribute;
   }
 
-  set hoveredProviderIds(ids: number[]) {
-    this._hoveredProviderIds = ids;
-
-    // Update the hovered case IDs based on the hovered provider IDs
-    this._hoveredCaseIds = this.rootStore.allCases
-      .filter((caseRecord) => ids.includes(Number(caseRecord.SURGEON_PROV_ID))
-      || ids.includes(Number(caseRecord.ANESTH_PROV_ID)))
-      .map((caseRecord) => caseRecord.CASE_ID);
+  set hoveredAttribute(filter: AttributeFilter | undefined) {
+    this._hoveredAttribute = filter;
   }
 }
