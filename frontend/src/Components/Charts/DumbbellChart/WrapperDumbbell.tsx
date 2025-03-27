@@ -1,5 +1,7 @@
 /** @jsxImportSource @emotion/react */
-import { Button, ButtonGroup, Grid } from '@mui/material';
+import {
+  Box, Button, ButtonGroup, Grid,
+} from '@mui/material';
 import { observer } from 'mobx-react';
 import {
   useContext, useLayoutEffect, useRef, useState,
@@ -13,7 +15,6 @@ import Store from '../../../Interfaces/Store';
 import { DumbbellDataPoint } from '../../../Interfaces/Types/DataTypes';
 import { basicGray, postopColor, preopColor } from '../../../Presets/Constants';
 import DumbbellChart from './DumbbellChart';
-import { ChartSVG } from '../../../Presets/StyledSVGComponents';
 import ChartConfigMenu from '../ChartAccessories/ChartConfigMenu';
 import AnnotationForm from '../ChartAccessories/AnnotationForm';
 import ChartStandardButtons from '../ChartStandardButtons';
@@ -191,10 +192,11 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
             <ChartConfigMenu layout={layout} />
             <ChartStandardButtons chartID={chartId} />
           </ChartAccessoryDiv>
-          <ChartSVG ref={svgRef}>
-            <DumbbellChart data={data} svg={svgRef} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} xAxisVar={xAxisVar} dimensionWidth={width} dimensionHeight={height} xMin={xMin} xMax={xMax} />
-
-          </ChartSVG>
+          <Box style={{ height: 'calc(100% - 100px)', overflow: 'auto' }}>
+            <svg ref={svgRef} style={{ height: 'calc(100% - 10px)' }}>
+              <DumbbellChart data={data} svg={svgRef} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} xAxisVar={xAxisVar} dimensionWidth={width} dimensionHeight={height} xMin={xMin} xMax={xMax} />
+            </svg>
+          </Box>
           <AnnotationForm chartI={chartId} annotationText={annotationText} />
         </ChartWrapperContainer>
       </Grid>
