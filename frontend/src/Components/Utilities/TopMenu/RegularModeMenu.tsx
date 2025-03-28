@@ -12,6 +12,7 @@ import FormatSizeIcon from '@mui/icons-material/FormatSize';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ScreenshotMonitorIcon from '@mui/icons-material/ScreenshotMonitor';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import styled from '@emotion/styled';
 import { css } from '@emotion/react';
@@ -155,6 +156,12 @@ function RegularModeMenu() {
         <IconButton onClick={() => { store.configStore.largeFont = !store.configStore.largeFont; }}>
           <Tooltip title="Change Font Size">
             <FormatSizeIcon css={store.configStore.largeFont ? '' : ManualDisableCSS} />
+          </Tooltip>
+        </IconButton>
+
+        <IconButton>
+          <Tooltip title="Screenshot full webpage">
+            <ScreenshotMonitorIcon />
           </Tooltip>
         </IconButton>
 
