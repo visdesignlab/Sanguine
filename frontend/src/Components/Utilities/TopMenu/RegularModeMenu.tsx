@@ -1,4 +1,6 @@
 /** @jsxImportSource @emotion/react */
+import * as htmlToImage from 'html-to-image';
+import download from 'downloadjs';
 import {
   Menu, MenuItem, Button, AppBar, Typography, IconButton, Tooltip, ListItemIcon, Toolbar, Stack,
 } from '@mui/material';
@@ -102,6 +104,60 @@ function RegularModeMenu() {
     });
   };
 
+  async function handleScreenshot(fullPage: boolean): Promise<void> {
+    const htmlEl = document.documentElement;
+    const filter = (node: HTMLElement): boolean => !node.classList?.contains('no-capture') && node.tagName !== 'NOSCRIPT';
+    let options: any = {
+      backgroundColor: '#ffffff',
+      pixelRatio: 2,
+      style: { overflow: 'visible' },
+      filter,
+    };
+
+    let tempStyleEl: HTMLStyleElement | null = null;
+    if (fullPage) {
+    // Inject a temporary CSS rule to force grid items overflow to visible.
+      tempStyleEl = document.createElement('style');
+      tempStyleEl.innerHTML = '#full-dashboard .MuiGrid-item { overflow: visible !important; }';
+      document.head.appendChild(tempStyleEl);
+
+      const pageWidth = htmlEl.scrollWidth;
+      const pageHeight = htmlEl.scrollHeight;
+      options = {
+        ...options,
+        width: pageWidth,
+        height: pageHeight,
+        canvasWidth: pageWidth,
+        canvasHeight: pageHeight,
+      };
+    }
+
+    const dateString = new Date().toISOString().replace(/[:.]/g, '-');
+    try {
+      const dataUrl = await htmlToImage.toPng(htmlEl, options);
+      download(dataUrl, `IntelVia_${dateString}.png`);
+    } catch (error) {
+      console.error('Screenshot failed:', error);
+    } finally {
+      if (tempStyleEl) {
+        document.head.removeChild(tempStyleEl);
+      }
+    }
+  }
+
+  // ...existing state...
+  const [screenshotAnchorEl, setScreenshotAnchorEl] = useState<null | HTMLElement>(null);
+
+  // ...existing functions...
+
+  const handleScreenshotMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setScreenshotAnchorEl(event.currentTarget);
+  };
+
+  const handleScreenshotMenuClose = () => {
+    setScreenshotAnchorEl(null);
+  };
+
   return (
     <AppBar position="static" color="transparent" elevation={2}>
       <Toolbar sx={{ display: store.configStore.topMenuBarAddMode ? 'none' : '' }}>
@@ -159,11 +215,32 @@ function RegularModeMenu() {
           </Tooltip>
         </IconButton>
 
-        <IconButton>
-          <Tooltip title="Screenshot full webpage">
+        <IconButton onClick={handleScreenshotMenuOpen}>
+          <Tooltip title="Screenshot">
             <ScreenshotMonitorIcon />
           </Tooltip>
         </IconButton>
+        <Menu
+          className="no-capture"
+          anchorEl={screenshotAnchorEl}
+          open={Boolean(screenshotAnchorEl)}
+          onClose={handleScreenshotMenuClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+        >
+          <MenuItem onClick={() => { handleScreenshot(false); handleScreenshotMenuClose(); }}>
+            Screenshot Current View
+          </MenuItem>
+          <MenuItem onClick={() => { handleScreenshot(true); handleScreenshotMenuClose(); }}>
+            Screenshot Full Page
+          </MenuItem>
+        </Menu>
 
         <IconButton onClick={handleMoreClick}>
           <Tooltip title="More">
