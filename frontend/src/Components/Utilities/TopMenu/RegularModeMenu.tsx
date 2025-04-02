@@ -108,7 +108,7 @@ function RegularModeMenu() {
     // Get root element
     const htmlEl = document.documentElement;
     // Filter out the elements that should not be captured
-    const filter = (node: HTMLElement): boolean => !node.classList?.contains('no-capture') && node.tagName !== 'NOSCRIPT';
+    const filter = (node: HTMLElement): boolean => node.tagName !== 'NOSCRIPT';
     // Temporarily set the dashboard grid items to overflow visible (for full-page screenshot)
     const tempStyleEl: HTMLStyleElement = document.createElement('style');
     tempStyleEl.innerHTML = '#full-dashboard .MuiGrid-item { overflow: visible !important; }';
