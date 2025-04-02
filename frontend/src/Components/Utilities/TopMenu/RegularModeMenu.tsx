@@ -46,7 +46,6 @@ function RegularModeMenu() {
   const [chartType, setChartType] = useState<ChartType | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [anchorMore, setAnchorMore] = useState<null | HTMLElement>(null);
-
   const [openAbout, setOpenAbout] = useState(false);
 
   const passSetOpenAbout = (input: boolean) => {
@@ -104,58 +103,42 @@ function RegularModeMenu() {
     });
   };
 
-  async function handleScreenshot(fullPage: boolean): Promise<void> {
+  // Screenshot function
+  const handleScreenshot = async () => {
+    // Get root element
     const htmlEl = document.documentElement;
+    // Filter out the elements that should not be captured
     const filter = (node: HTMLElement): boolean => !node.classList?.contains('no-capture') && node.tagName !== 'NOSCRIPT';
-    let options: any = {
+    // Temporarily set the dashboard grid items to overflow visible (for full-page screenshot)
+    const tempStyleEl: HTMLStyleElement = document.createElement('style');
+    tempStyleEl.innerHTML = '#full-dashboard .MuiGrid-item { overflow: visible !important; }';
+    document.head.appendChild(tempStyleEl);
+
+    // Screenshot options
+    const options = {
       backgroundColor: '#ffffff',
       pixelRatio: 2,
-      style: { overflow: 'visible' },
       filter,
+      // Full-page width and height
+      width: htmlEl.scrollWidth,
+      height: htmlEl.scrollHeight,
     };
+    // Generate date string in the format YYYY-MM-DD_HH-MM-SS
+    const dateString = new Date()
+      .toISOString()
+      .replace(/T/, '_')
+      .split('.')[0]
+      .replace(/:/g, '-');
 
-    let tempStyleEl: HTMLStyleElement | null = null;
-    if (fullPage) {
-    // Inject a temporary CSS rule to force grid items overflow to visible.
-      tempStyleEl = document.createElement('style');
-      tempStyleEl.innerHTML = '#full-dashboard .MuiGrid-item { overflow: visible !important; }';
-      document.head.appendChild(tempStyleEl);
-
-      const pageWidth = htmlEl.scrollWidth;
-      const pageHeight = htmlEl.scrollHeight;
-      options = {
-        ...options,
-        width: pageWidth,
-        height: pageHeight,
-        canvasWidth: pageWidth,
-        canvasHeight: pageHeight,
-      };
-    }
-
-    const dateString = new Date().toISOString().replace(/[:.]/g, '-');
     try {
       const dataUrl = await htmlToImage.toPng(htmlEl, options);
       download(dataUrl, `IntelVia_${dateString}.png`);
     } catch (error) {
       console.error('Screenshot failed:', error);
     } finally {
-      if (tempStyleEl) {
-        document.head.removeChild(tempStyleEl);
-      }
+      // Change dashboard grid items back to overflow auto
+      document.head.removeChild(tempStyleEl);
     }
-  }
-
-  // ...existing state...
-  const [screenshotAnchorEl, setScreenshotAnchorEl] = useState<null | HTMLElement>(null);
-
-  // ...existing functions...
-
-  const handleScreenshotMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setScreenshotAnchorEl(event.currentTarget);
-  };
-
-  const handleScreenshotMenuClose = () => {
-    setScreenshotAnchorEl(null);
   };
 
   return (
@@ -215,32 +198,11 @@ function RegularModeMenu() {
           </Tooltip>
         </IconButton>
 
-        <IconButton onClick={handleScreenshotMenuOpen}>
-          <Tooltip title="Screenshot">
+        <IconButton onClick={handleScreenshot}>
+          <Tooltip title="Screenshot Full Page">
             <ScreenshotMonitorIcon />
           </Tooltip>
         </IconButton>
-        <Menu
-          className="no-capture"
-          anchorEl={screenshotAnchorEl}
-          open={Boolean(screenshotAnchorEl)}
-          onClose={handleScreenshotMenuClose}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'right',
-          }}
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'right',
-          }}
-        >
-          <MenuItem onClick={() => { handleScreenshot(false); handleScreenshotMenuClose(); }}>
-            Screenshot Current View
-          </MenuItem>
-          <MenuItem onClick={() => { handleScreenshot(true); handleScreenshotMenuClose(); }}>
-            Screenshot Full Page
-          </MenuItem>
-        </Menu>
 
         <IconButton onClick={handleMoreClick}>
           <Tooltip title="More">
@@ -248,7 +210,6 @@ function RegularModeMenu() {
           </Tooltip>
         </IconButton>
         <Menu anchorEl={anchorMore} open={Boolean(anchorMore)} onClose={handleMoreClose}>
-
           <a href="https://github.com/visdesignlab/Sanguine/issues" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: ' black' }}>
             <MenuItem onClick={handleMoreClose}>
               <ListItemIcon>
