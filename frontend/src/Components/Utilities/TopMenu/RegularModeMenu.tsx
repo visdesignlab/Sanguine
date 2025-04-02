@@ -1,4 +1,6 @@
 /** @jsxImportSource @emotion/react */
+import * as htmlToImage from 'html-to-image';
+import download from 'downloadjs';
 import {
   Menu, MenuItem, Button, AppBar, Typography, IconButton, Tooltip, ListItemIcon, Toolbar, Stack,
 } from '@mui/material';
@@ -12,6 +14,7 @@ import FormatSizeIcon from '@mui/icons-material/FormatSize';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ScreenshotMonitorIcon from '@mui/icons-material/ScreenshotMonitor';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import styled from '@emotion/styled';
 import { css } from '@emotion/react';
@@ -43,7 +46,6 @@ function RegularModeMenu() {
   const [chartType, setChartType] = useState<ChartType | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [anchorMore, setAnchorMore] = useState<null | HTMLElement>(null);
-
   const [openAbout, setOpenAbout] = useState(false);
 
   const passSetOpenAbout = (input: boolean) => {
@@ -99,6 +101,44 @@ function RegularModeMenu() {
       store.configStore.snackBarMessage = `An error occurred: ${error}`;
       store.configStore.openSnackBar = true;
     });
+  };
+
+  // Screenshot function
+  const handleScreenshot = async () => {
+    // Get root element
+    const htmlEl = document.documentElement;
+    // Filter out the elements that should not be captured
+    const filter = (node: HTMLElement): boolean => node.tagName !== 'NOSCRIPT';
+    // Temporarily set the dashboard grid items to overflow visible (for full-page screenshot)
+    const tempStyleEl: HTMLStyleElement = document.createElement('style');
+    tempStyleEl.innerHTML = '#full-dashboard .MuiGrid-item { overflow: visible !important; }';
+    document.head.appendChild(tempStyleEl);
+
+    // Screenshot options
+    const options = {
+      backgroundColor: '#ffffff',
+      pixelRatio: 2,
+      filter,
+      // Full-page width and height
+      width: htmlEl.scrollWidth,
+      height: htmlEl.scrollHeight,
+    };
+    // Generate date string in the format YYYY-MM-DD_HH-MM-SS
+    const dateString = new Date()
+      .toISOString()
+      .replace(/T/, '_')
+      .split('.')[0]
+      .replace(/:/g, '-');
+
+    try {
+      const dataUrl = await htmlToImage.toPng(htmlEl, options);
+      download(dataUrl, `IntelVia_${dateString}.png`);
+    } catch (error) {
+      console.error('Screenshot failed:', error);
+    } finally {
+      // Change dashboard grid items back to overflow auto
+      document.head.removeChild(tempStyleEl);
+    }
   };
 
   return (
@@ -158,13 +198,18 @@ function RegularModeMenu() {
           </Tooltip>
         </IconButton>
 
+        <IconButton onClick={handleScreenshot}>
+          <Tooltip title="Screenshot Full Page">
+            <ScreenshotMonitorIcon />
+          </Tooltip>
+        </IconButton>
+
         <IconButton onClick={handleMoreClick}>
           <Tooltip title="More">
             <MoreVertIcon />
           </Tooltip>
         </IconButton>
         <Menu anchorEl={anchorMore} open={Boolean(anchorMore)} onClose={handleMoreClose}>
-
           <a href="https://github.com/visdesignlab/Sanguine/issues" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: ' black' }}>
             <MenuItem onClick={handleMoreClose}>
               <ListItemIcon>
