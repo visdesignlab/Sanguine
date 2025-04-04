@@ -148,7 +148,7 @@ function DumbbellChart({
       totalWidth += spacing[i];
     });
 
-    svg.current?.setAttribute('width', `${totalWidth + currentOffset.left + currentOffset.right - DumbbellGroupMinimumWidth}`);
+    svg.current?.setAttribute('width', `${totalWidth + currentOffset.left + currentOffset.right}`);
 
     let newResultRange: number[] = [];
     let currentLoc = currentOffset.left;
