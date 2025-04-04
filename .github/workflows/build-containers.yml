@@ -1,9 +1,7 @@
 on:
   push:
-    branches:
-      - intelvia
-    # tags:
-    #   - 'v*'
+    tags:
+      - 'v*'
 
 jobs:
   push_to_registry:
