@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useContext, useState } from 'react';
 import { observer } from 'mobx-react';
-import {
-  ScaleOrdinal,
-  scaleOrdinal,
-} from 'd3';
+import { scaleOrdinal } from 'd3';
 import Tooltip from '@mui/material/Tooltip';
 import { basicGray, secondaryGray } from '../../../Presets/Constants';
 import {
@@ -18,7 +15,7 @@ function CustomizedAxisOrdinal({
 }: {
   scaleDomain: string;
   scaleRange: string;
-  numberList: { num: number, indexEnding: number; }[];
+  numberList: { bin: number, indexEnding: number; }[];
   xAxisVar: string;
   chartHeight: number;
   data: DumbbellDataPoint[];
@@ -30,7 +27,7 @@ function CustomizedAxisOrdinal({
   const scale = useCallback(() => {
     const domain = JSON.parse(scaleDomain);
     const range = JSON.parse(scaleRange);
-    const sc = scaleOrdinal()
+    const sc = scaleOrdinal<any, number>()
       .domain(domain)
       .range(range);
 
@@ -67,13 +64,14 @@ function CustomizedAxisOrdinal({
     <>
 
       {numberList.map((numberOb, idx) => {
+        const s = scale();
         const x1 = idx === 0
-          ? (scale() as ScaleOrdinal<any, number>)(0)
-          : (1 + (scale() as ScaleOrdinal<any, number>)((numberList[idx - 1].indexEnding + 1)) - 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberList[idx - 1].indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberList[idx - 1].indexEnding)));
+          ? 2 * s(0) - s(1)
+          : 1 + s(numberList[idx - 1].indexEnding + 1) - 0.5 * (s(numberList[idx - 1].indexEnding + 1) - s(numberList[idx - 1].indexEnding));
 
         const x2 = idx === numberList.length - 1
-          ? (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding)
-          : (-1 + (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding) + 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding)));
+          ? s.range().at(-1) as number + 30
+          : -1 + s(numberOb.indexEnding) + 0.5 * (s(numberOb.indexEnding + 1) - s(numberOb.indexEnding));
 
         if (x1 && x2) {
           return (
@@ -91,8 +89,8 @@ function CustomizedAxisOrdinal({
                 fill={hoveredColumn === idx ? hoverStore.backgroundHoverColor : (idx % 2 === 1 ? 'white' : 'black')}
                 opacity={hoveredColumn === idx ? 0.5 : 0.05}
               />
-              <Tooltip title={axisTextOutput(numberOb.num)}>
-                <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{axisTextOutput(numberOb.num)}</AxisText>
+              <Tooltip title={axisTextOutput(numberOb.bin)}>
+                <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{axisTextOutput(numberOb.bin)}</AxisText>
               </Tooltip>
 
             </g>
