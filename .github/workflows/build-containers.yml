@@ -1,12 +1,9 @@
 on:
   push:
     branches:
-      - alternative-infra
-    tags:
-      - 'v*'
-  pull_request:
-    branches:
-      - 'main'
+      - intelvia
+    # tags:
+    #   - 'v*'
 
 jobs:
   push_to_registry:
