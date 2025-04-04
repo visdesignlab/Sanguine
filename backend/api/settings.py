@@ -1,10 +1,11 @@
 import environ
 import os
-import oracledb
+from corsheaders.defaults import default_headers
+
 
 env = environ.Env(
     DJANGO_DEBUG=(bool, False),  # Cast to bool, default to False
-    DJANGO_TESTING=(bool, False)  # Cast to bool, default to False
+    DJANGO_HOSTNAME=(str, "localhost"),
 )
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -12,12 +13,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env("DJANGO_DEBUG")
-IS_TESTING = env("DJANGO_TESTING")
 
 # We're allowing localhost for local development and for production deployment with containers
 ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
+    "backend",
+    env("DJANGO_HOSTNAME"),
 ]
 
 INSTALLED_APPS = [
@@ -73,19 +73,9 @@ DATABASES = {
         'PASSWORD': env("MARIADB_PASSWORD"),
         'HOST': env("MARIADB_HOST"),
         'PORT': env("MARIADB_PORT"),
-    },
-    "hospital": {
-        'ENGINE': 'django.db.backends.oracle',
-        "NAME": f"{env('ORACLE_HOST')}:{env('ORACLE_PORT')}/{env('ORACLE_SERVICE_NAME')}",
-        "USER": env("ORACLE_USER"),
-        "PASSWORD": env("ORACLE_PASSWORD"),
-        "OPTIONS": {
-            "mode": oracledb.AUTH_MODE_SYSDBA if IS_TESTING else oracledb.AUTH_MODE_DEFAULT,
-        }
-    },
+    }
 }
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
-DATABASE_ROUTERS = ['api.routers.SanguineRouter']
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
@@ -135,26 +125,19 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
-CORS_ORIGIN_ALLOW_ALL = False
-CORS_ORIGIN_WHITELIST = ["http://localhost:8080"] if IS_TESTING else []
-CORS_ALLOW_CREDENTIALS = False
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'access-control-allow-credentials',
-    'access-control-allow-origin',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-]
+if DEBUG:
+    CORS_ORIGIN_ALLOW_ALL = True
+    CORS_ALLOW_CREDENTIALS = True
+
+    CORS_ALLOW_HEADERS = (
+        *default_headers,
+        'access-control-allow-credentials',
+        'access-control-allow-origin',
+    )
 
 LOGIN_REDIRECT_URL = '/api'
 LOGIN_URL = '/api/accounts/login'
-SESSION_COOKIE_AGE = 2 * 60 * 60  # 2hr * 60 min * 60 sec
+SESSION_COOKIE_AGE = 60 * 30  # 60 seconds * 30 minutes
 SESSION_COOKIE_SECURE = True
 SESSION_SAVE_EVERY_REQUEST = True
 CSRF_COOKIE_SECURE = True

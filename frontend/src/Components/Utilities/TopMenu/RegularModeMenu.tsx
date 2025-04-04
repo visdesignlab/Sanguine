@@ -78,7 +78,6 @@ function RegularModeMenu() {
         Accept: 'application/x-www-form-urlencoded',
         'Content-Type': 'application/x-www-form-urlencoded',
         'X-CSRFToken': csrftoken || '',
-        'Access-Control-Allow-Origin': 'https://bloodvis.chpc.utah.edu',
         'Access-Control-Allow-Credentials': 'true',
       },
       body: JSON.stringify({ old_name: store.configStore.loadedStateName, new_name: store.configStore.loadedStateName, new_definition: store.provenance.exportState(false) }),

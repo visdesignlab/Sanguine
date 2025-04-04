@@ -103,11 +103,11 @@ To connect to the MariaDB/MySQL database, open the database menu, click create c
 - Server type: MariaDB
 - Hostname: mariadb
 - Port: 3306
-- Username: sanguine
+- Username: intelvia
 - Password: test
-- Database: sanguine
+- Database: intelvia
 
-To query the database and test it's working, open the database and then sanguine. Then next to query, click the book icon and run the following query:
+To query the database and test it's working, open the database and then intelvia. Then next to query, click the book icon and run the following query:
 
 ```sql
 SELECT * FROM django_migrations;

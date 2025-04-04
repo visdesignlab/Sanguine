@@ -50,7 +50,6 @@ function SaveStateModal({ visible, setVisibility }: Props) {
           Accept: 'application/x-www-form-urlencoded',
           'Content-Type': 'application/x-www-form-urlencoded',
           'X-CSRFToken': csrftoken || '',
-          'Access-Control-Allow-Origin': 'https://bloodvis.chpc.utah.edu',
           'Access-Control-Allow-Credentials': 'true',
         },
         body: JSON.stringify({
@@ -81,7 +80,6 @@ function SaveStateModal({ visible, setVisibility }: Props) {
           Accept: 'application/x-www-form-urlencoded',
           'Content-Type': 'application/x-www-form-urlencoded',
           'X-CSRFToken': csrftoken || '',
-          'Access-Control-Allow-Origin': 'https://bloodvis.chpc.utah.edu',
           'Access-Control-Allow-Credentials': 'true',
         },
         body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&definition=${store.provenance.exportState(false)}&public=${publicAccess.toString()}`,

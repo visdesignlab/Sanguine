@@ -1,0 +1,70 @@
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  push_to_registry:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Copy .env.default to .env
+        run: cp .env.default .env
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for backend Docker
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: intelvia/intelvia-backend
+
+      - name: Extract metadata (tags, labels) for frontend Docker
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: intelvia/intelvia-frontend
+
+      - name: Build and push backend Docker image
+        id: push-backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+
+      - name: Build and push frontend Docker image
+        id: push-frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+
+      - name: Generate artifact attestation backend
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: index.docker.io/intelvia/intelvia-backend
+          subject-digest: ${{ steps.push-backend.outputs.digest }}
+          push-to-registry: true
+
+      - name: Generate artifact attestation frontend
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: index.docker.io/intelvia/intelvia-frontend
+          subject-digest: ${{ steps.push-frontend.outputs.digest }}
+          push-to-registry: true

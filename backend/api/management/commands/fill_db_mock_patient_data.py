@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from django.utils.timezone import make_aware
 from django.core.management.base import BaseCommand
 from django.db import connections
 from faker import Faker
@@ -19,7 +20,7 @@ from api.views.utils.utils import get_all_cpt_code_filters
 
 
 def create_model_table(unmanaged_models, drop_tables):
-    connection = connections["hospital"]
+    connection = connections["default"]
     with connection.schema_editor() as schema_editor:
         if drop_tables:
             for model in unmanaged_models:
@@ -34,9 +35,10 @@ def create_model_table(unmanaged_models, drop_tables):
             except Exception as e:
                 print(f"Error creating table for {model._meta.db_table}: {e}")
 
+            table_names_in_db = [x.lower() for x in connection.introspection.table_names()]
             if (
                 model._meta.db_table.lower()
-                not in connection.introspection.table_names()
+                not in table_names_in_db
             ):
                 raise ValueError(
                     f"Table {model._meta.db_table} is missing in test database. If you meant to drop the table, run the with --drop option."
@@ -54,14 +56,14 @@ class Command(BaseCommand):
 
         # Create the tables for the unmanaged models
         create_model_table([
-            PATIENT,
-            VISIT,
-            SURGERY_CASE,
             BILLING_CODES,
             VISIT_LABS,
             EXTRAOP_MEDS,
             INTRAOP_MEDS,
-            INTRAOP_TRANSFUSION
+            INTRAOP_TRANSFUSION,
+            SURGERY_CASE,
+            VISIT,
+            PATIENT,
         ], drop_tables)
 
         # Initialize the Faker object
@@ -115,7 +117,6 @@ class Command(BaseCommand):
                 ETHNICITY_CODE=eth_codes[eth_idx],
                 ETHNICITY_DESC=eth_descs[eth_idx],
                 DEATH_DATE=death_date,
-                LOAD_DTM=fake.date_this_century(),
             )
             pats.append(patient)
         self.stdout.write(self.style.SUCCESS('Successfully generated patient data'))
@@ -125,8 +126,8 @@ class Command(BaseCommand):
             for _ in range(5):
                 visit_no = fake.unique.random_number(digits=10)
                 end_date = pat.DEATH_DATE if pat.DEATH_DATE else datetime.now().date()
-                admit_date = fake.date_time_between(start_date=pat.PAT_BIRTHDATE, end_date=min(end_date, datetime(2025, 1, 1).date()))
-                discharge_date = fake.date_time_between(start_date=admit_date, end_date=min(end_date, (admit_date + timedelta(days=10)).date()))
+                admit_date = make_aware(fake.date_time_between(start_date=pat.PAT_BIRTHDATE, end_date=min(end_date, datetime(2025, 1, 1).date())))
+                discharge_date = make_aware(fake.date_time_between(start_date=admit_date, end_date=min(end_date, (admit_date + timedelta(days=10)).date())))
                 age_at_adm = (admit_date.date() - pat.PAT_BIRTHDATE).days // 365
                 visit = VISIT.objects.create(
                     VISIT_NO=visit_no,
@@ -162,16 +163,16 @@ class Command(BaseCommand):
                     CCI_MALIGN_W_METS=fake.random_element(elements=(0, 6, None)),
                     CCI_HIV_AIDS=fake.random_element(elements=(0, 6, None)),
                     CCI_SCORE=fake.random_int(min=0, max=25),
-                    LOAD_DTM=fake.date_this_century(),
                 )
                 visits.append((pat, visit))
         self.stdout.write(self.style.SUCCESS('Successfully generated visit data'))
 
         # Generate mock data for SURGERY_CASE
         for pat, visit in visits:
-            for _ in range(random.randint(1, 5)):
-                surg_start = fake.date_time_between(start_date=visit.ADM_DTM, end_date=visit.ADM_DTM + timedelta(days=1))
-                surg_end = fake.date_time_between(start_date=surg_start, end_date=surg_start + timedelta(hours=16))
+            surg1_start = visit.ADM_DTM + timedelta(hours=2)
+            surg2_start = visit.ADM_DTM + timedelta(days=1)
+            for start_time in [surg1_start, surg2_start]:
+                surg_end = make_aware(fake.date_time_between(start_date=start_time, end_date=start_time + timedelta(hours=5)))
 
                 surgeon = fake.random_element(elements=surgeons)
                 anesth = fake.random_element(elements=anests)
@@ -180,10 +181,10 @@ class Command(BaseCommand):
                     VISIT_NO=visit,
                     MRN=pat,
                     CASE_ID=fake.unique.random_number(digits=10),
-                    CASE_DATE=surg_start.date(),
-                    SURGERY_START_DTM=surg_start,
+                    CASE_DATE=start_time.date(),
+                    SURGERY_START_DTM=start_time,
                     SURGERY_END_DTM=surg_end,
-                    SURGERY_ELAP=(surg_end - surg_start).total_seconds() / 60,
+                    SURGERY_ELAP=(surg_end - start_time).total_seconds() / 60,
                     SURGERY_TYPE_DESC=fake.random_element(elements=('Elective', 'Emergent', 'Trauma Emergent', 'Trauma Urgent', 'Urgent')),
                     SURGEON_PROV_ID=surgeon[0],
                     SURGEON_PROV_NAME=surgeon[1],
@@ -193,7 +194,6 @@ class Command(BaseCommand):
                     POSTOP_ICU_LOS=fake.random_int(min=0, max=10),
                     SCHED_SITE_DESC=fake.sentence(),
                     ASA_CODE=fake.random_element(elements=('1', '2', '3', '4', '5', '6')),
-                    LOAD_DTM=fake.date_this_century(),
                 )
                 surgeries.append(surgery)
         self.stdout.write(self.style.SUCCESS('Successfully generated surgery case data'))
@@ -212,7 +212,6 @@ class Command(BaseCommand):
                     PROV_NAME=surg.SURGEON_PROV_NAME,
                     PRESENT_ON_ADM_F=fake.random_element(elements=('Y', None)),
                     CODE_RANK=rank,
-                    LOAD_DTM=fake.date_this_century(),
                 )
         self.stdout.write(self.style.SUCCESS('Successfully generated billing codes data'))
 
@@ -220,7 +219,7 @@ class Command(BaseCommand):
         result_desc_options = ['HGB', 'Hemoglobin']
         for pat, visit in visits:
             for _ in range(random.randint(1, 5)):
-                draw_dtm = fake.date_time_between(start_date=visit.ADM_DTM, end_date=visit.DSCH_DTM)
+                draw_dtm = make_aware(fake.date_time_between(start_date=visit.ADM_DTM, end_date=visit.DSCH_DTM))
                 VISIT_LABS.objects.create(
                     VISIT_NO=visit,
                     LAB_ID=fake.unique.random_number(digits=10),
@@ -235,20 +234,40 @@ class Command(BaseCommand):
                     UOM_CODE=fake.random_element(elements=('g/dL', 'g/L')),
                     LOWER_LIMIT=12,
                     UPPER_LIMIT=18,
-                    LOAD_DTM=fake.date_this_century(),
+                )
+        for surg in surgeries:
+            ten_min_before_surg = surg.SURGERY_START_DTM - timedelta(minutes=10)
+            five_min_before_surg = surg.SURGERY_START_DTM - timedelta(minutes=5)
+            five_min_after_surg = surg.SURGERY_END_DTM + timedelta(minutes=5)
+            ten_min_before_surg = surg.SURGERY_END_DTM + timedelta(minutes=10)
+            for time in [ten_min_before_surg, five_min_before_surg, five_min_after_surg, ten_min_before_surg]:
+                VISIT_LABS.objects.create(
+                    VISIT_NO=surg.VISIT_NO,
+                    LAB_ID=fake.unique.random_number(digits=10),
+                    LAB_DRAW_DTM=time,
+                    LAB_PANEL_CODE=fake.unique.random_number(digits=10),
+                    LAB_PANEL_DESC=fake.sentence(),
+                    RESULT_DTM=time + timedelta(minutes=random.randint(1, 15)),
+                    RESULT_CODE=fake.unique.random_number(digits=10),
+                    RESULT_LOINC=fake.unique.random_number(digits=10),
+                    RESULT_DESC=fake.random_element(elements=result_desc_options),
+                    RESULT_VALUE=fake.pydecimal(left_digits=2, right_digits=1, positive=True, min_value=5, max_value=20),
+                    UOM_CODE=fake.random_element(elements=('g/dL', 'g/L')),
+                    LOWER_LIMIT=12,
+                    UPPER_LIMIT=18,
                 )
         self.stdout.write(self.style.SUCCESS('Successfully generated visit labs data'))
 
         # Generate mock data for EXTRAOP_MEDS
         med_types = ['TXA', 'B12', 'AMICAR', 'tranexamic acid', 'vitamin B12', 'aminocaproic acid', 'iron', 'ferrous sulfate', 'ferric carboxymaltose']
         for surg in surgeries:
-            order_dtm = fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM)
+            order_dtm = make_aware(fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM))
             admin_dtm = order_dtm + timedelta(minutes=fake.random_int(min=1, max=120))
             for i in range(random.randint(1, 5)):
                 EXTRAOP_MEDS.objects.create(
                     VISIT_NO=surg.VISIT_NO,
                     ORDER_MED_ID=fake.unique.random_number(digits=10),
-                    ORDER_DTM=fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM),
+                    ORDER_DTM=make_aware(fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM)),
                     MEDICATION_ID=fake.unique.random_number(digits=10),
                     MEDICATION_NAME=fake.random_element(elements=med_types),
                     MED_ADMIN_LINE=fake.random_int(min=1, max=4),
@@ -259,19 +278,18 @@ class Command(BaseCommand):
                     DOSE_UNIT_DESC=fake.random_element(elements=('mg', 'g', 'mL', 'unit')),
                     MED_START_DTM=admin_dtm,
                     MED_END_DTM=admin_dtm + timedelta(hours=fake.random_int(min=1, max=12)),
-                    LOAD_DTM=fake.date_this_century(),
                 )
         self.stdout.write(self.style.SUCCESS('Successfully generated extraop meds data'))
 
         # Generate mock data for INTRAOP_MEDS
         for surg in surgeries:
-            order_dtm = fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM)
+            order_dtm = make_aware(fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM))
             admin_dtm = order_dtm + timedelta(minutes=fake.random_int(min=1, max=120))
             INTRAOP_MEDS.objects.create(
                 VISIT_NO=surg.VISIT_NO,
                 CASE_ID=surg,
                 ORDER_MED_ID=fake.unique.random_number(digits=10),
-                ORDER_DTM=fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM),
+                ORDER_DTM=make_aware(fake.date_time_between(start_date=surg.VISIT_NO.ADM_DTM, end_date=surg.VISIT_NO.DSCH_DTM)),
                 MEDICATION_ID=fake.unique.random_number(digits=10),
                 MEDICATION_NAME=fake.random_element(elements=med_types),
                 MED_ADMIN_LINE=fake.random_int(min=1, max=4),
@@ -282,7 +300,6 @@ class Command(BaseCommand):
                 DOSE_UNIT_DESC=fake.random_element(elements=('mg', 'g', 'mL', 'unit')),
                 MED_START_DTM=admin_dtm,
                 MED_END_DTM=admin_dtm + timedelta(hours=fake.random_int(min=1, max=12)),
-                LOAD_DTM=fake.date_this_century(),
             )
         self.stdout.write(self.style.SUCCESS('Successfully generated intraop meds data'))
 
@@ -298,7 +315,7 @@ class Command(BaseCommand):
                 INTRAOP_TRANSFUSION.objects.create(
                     CASE_ID=surg,
                     VISIT_NO=surg.VISIT_NO,
-                    TRNSFSN_DTM=fake.date_time_between(start_date=surg.SURGERY_START_DTM, end_date=surg.SURGERY_END_DTM),
+                    TRNSFSN_DTM=make_aware(fake.date_time_between(start_date=surg.SURGERY_START_DTM, end_date=surg.SURGERY_END_DTM)),
                     BLOOD_UNIT_NUMBER=fake.unique.random_number(digits=10),
                     PRBC_UNITS=rbcs if type == 'unit' else None,
                     FFP_UNITS=ffp if type == 'unit' else None,
@@ -310,6 +327,5 @@ class Command(BaseCommand):
                     PLT_VOL=plt * 300 if type == 'vol' else None,
                     CRYO_VOL=cryo * 75 if type == 'vol' else None,
                     TRANSFUSION_RANK=rank,
-                    LOAD_DTM=fake.date_this_century(),
                 )
         self.stdout.write(self.style.SUCCESS('Successfully generated intraop transfusion data'))

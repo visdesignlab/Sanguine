@@ -1,5 +1,3 @@
-import { RootStore } from './Store';
-
 function getCookie(name: string) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
@@ -15,23 +13,18 @@ function getCookie(name: string) {
   return cookieValue;
 }
 
-export const whoamiAPICall = (store: RootStore) => {
-  fetch(`${import.meta.env.VITE_QUERY_URL}whoami`, {
+export async function whoamiAPICall() {
+  const result = await fetch(`${import.meta.env.VITE_QUERY_URL}whoami`, {
     method: 'GET',
     credentials: 'include',
     headers: {
-      'Access-Control-Allow-Origin': 'https://bloodvis.chpc.utah.edu',
       'Access-Control-Allow-Credentials': 'true',
     },
-  }).then((response) => {
-    if (response.status === 200) {
-      store.configStore.isLoggedIn = true;
-    } else {
-      store.configStore.isLoggedIn = false;
-      window.location.replace(`${import.meta.env.VITE_QUERY_URL}accounts/login/`);
-    }
   });
-};
+  if (result.status !== 200) {
+    window.location.replace(`${import.meta.env.VITE_QUERY_URL}accounts/login/`);
+  }
+}
 
 export const simulateAPIClick = () => {
   fetch(`${import.meta.env.VITE_QUERY_URL}accounts/login/`, {
