@@ -102,7 +102,7 @@ function SurgeryListViewer({ surgeryList, maxCaseCount }: Props) {
                   expandedList={expandedList}
                   setExpandedList={setExpandedList}
                   listItem={listItem}
-                  isSelected
+                  selected
                   isSubSurgery={false}
                   highlighted={!findIfSelectedSubProcedureExist(listItem.procedureName)}
                   caseScaleDomain={JSON.stringify(caseScale().domain())}
@@ -116,7 +116,7 @@ function SurgeryListViewer({ surgeryList, maxCaseCount }: Props) {
                     expandedList={expandedList}
                     setExpandedList={setExpandedList}
                     listItem={subItem}
-                    isSelected={findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName)}
+                    selected={findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName)}
                     isSubSurgery
                     highlighted={findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName)}
                     parentSurgery={listItem}
@@ -132,7 +132,7 @@ function SurgeryListViewer({ surgeryList, maxCaseCount }: Props) {
                   expandedList={expandedList}
                   setExpandedList={setExpandedList}
                   listItem={listItem}
-                  isSelected
+                  selected
                   isSubSurgery={false}
                   highlighted
                   caseScaleDomain={JSON.stringify(caseScale().domain())}
@@ -148,7 +148,7 @@ function SurgeryListViewer({ surgeryList, maxCaseCount }: Props) {
                   listItem={listItem}
                   expandedList={expandedList}
                   setExpandedList={setExpandedList}
-                  isSelected={false}
+                  selected={false}
                   isSubSurgery={false}
                   highlighted={false}
                   caseScaleDomain={JSON.stringify(caseScale().domain())}
@@ -159,7 +159,7 @@ function SurgeryListViewer({ surgeryList, maxCaseCount }: Props) {
                   <SurgeryRow
                     key={subItem.procedureName}
                     listItem={subItem}
-                    isSelected={false}
+                    selected={false}
                     expandedList={expandedList}
                     setExpandedList={setExpandedList}
                     isSubSurgery
@@ -176,7 +176,7 @@ function SurgeryListViewer({ surgeryList, maxCaseCount }: Props) {
                 listItem={listItem}
                 expandedList={expandedList}
                 setExpandedList={setExpandedList}
-                isSelected={false}
+                selected={false}
                 isSubSurgery={false}
                 highlighted={false}
                 caseScaleDomain={JSON.stringify(caseScale().domain())}

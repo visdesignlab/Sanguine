@@ -45,11 +45,11 @@ export const ChartAccessoryDiv = styled.div({
 });
 
 interface SurgeryListProps {
-    isSelected: boolean;
+    selected: boolean;
 }
 
 export const SurgeryListComp = styled('tr') <SurgeryListProps>`
-  background:${(props) => (props.isSelected ? '#ecbe8d' : 'none')};
+  background:${(props) => (props.selected ? '#ecbe8d' : 'none')};
   cursor: pointer;
   &:hover{
     background:#faeee1;
