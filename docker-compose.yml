@@ -1,6 +1,6 @@
 services:
   backend:
-    image: docker.io/intelvia/intelvia-backend:alternative-infra
+    image: docker.io/intelvia/intelvia-backend:intelvia
     env_file:
       - .env
     ports:
@@ -29,7 +29,7 @@ services:
       timeout: 5s
 
   frontend:
-    image: docker.io/intelvia/intelvia-frontend:alternative-infra
+    image: docker.io/intelvia/intelvia-frontend:intelvia
     ports:
       - "8080:8080"
     depends_on:
