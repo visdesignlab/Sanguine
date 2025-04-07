@@ -111,6 +111,7 @@ export const AxisText = styled.foreignObject<BiggerFontProps>`
       height: 13px;
     font-size:${(props) => (props.biggerFont ? `${largeFontSize}px` : `${regularFontSize}px`)};
     color:white;
+    -webkit-text-fill-color: white;
 `;
 
 export const CustomAxisLine = styled('line')`

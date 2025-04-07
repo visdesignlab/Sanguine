@@ -16,7 +16,7 @@ function Dashboard() {
   const store = useContext(Store);
 
   return (
-    <>
+    <div id="full-dashboard">
       <RegularModeMenu />
       <Grid container direction="row">
         <Grid item xs={2} sx={{ height: 'calc(100vh - 64px)', overflow: 'auto' }}>
@@ -36,7 +36,7 @@ function Dashboard() {
           {store.configStore.snackBarMessage}
         </Alert>
       </Snackbar>
-    </>
+    </div>
   );
 }
 export default observer(Dashboard);
