@@ -1,6 +1,5 @@
 /** @jsxImportSource @emotion/react */
 import * as htmlToImage from 'html-to-image';
-import download from 'downloadjs';
 import {
   Menu, MenuItem, Button, AppBar, Typography, IconButton, Tooltip, ListItemIcon, Toolbar, Stack,
 } from '@mui/material';
@@ -132,7 +131,13 @@ function RegularModeMenu() {
 
     try {
       const dataUrl = await htmlToImage.toPng(htmlEl, options);
-      download(dataUrl, `IntelVia_${dateString}.png`);
+      // Create a temporary anchor element and trigger download
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `Intelvia_Screenshot_${dateString}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
       console.error('Screenshot failed:', error);
     } finally {
