@@ -15,6 +15,8 @@ class Patient(models.Model):
 class Visit(models.Model):
     visit_no = models.BigIntegerField(primary_key=True)
     mrn = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    epic_pat_id = models.CharField(max_length=80)
+    hsp_account_id = models.CharField(max_length=80)
     adm_dtm = models.DateField()
     dsch_dtm = models.DateField()
     clinical_los = models.DecimalField(max_digits=10, decimal_places=2, null=True)
@@ -146,6 +148,7 @@ class RoomTrace(models.Model):
     department_name = models.CharField(max_length=100)
     room_id = models.CharField(max_length=30)
     bed_id = models.CharField(max_length=30)
+    service_in_c = models.CharField(max_length=10)
     service_in_desc = models.CharField(max_length=100)
     in_dtm = models.DateTimeField()
     out_dtm = models.DateTimeField()
