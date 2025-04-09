@@ -55,6 +55,7 @@ function SingleHeatRow({
                   transform={howToTransform}
                   width={valueScale().bandwidth()}
                   height={bandwidth}
+                  opacity={colorFill === 'white' ? 0 : 1}
                   key={`${dataPoint.aggregateAttribute}-${point}`}
                 />
               </Tooltip>

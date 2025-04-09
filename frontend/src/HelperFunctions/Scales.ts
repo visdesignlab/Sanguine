@@ -2,7 +2,7 @@ import { scaleBand, scaleLinear } from 'd3';
 import { Offset } from '../Interfaces/Types/OffsetType';
 import { greyScaleRange } from '../Presets/Constants';
 
-export const HeatmapColorScale = scaleLinear().domain([0, 1]).range([0.1, 1]);
+export const HeatmapColorScale = scaleLinear().domain([0, 1]).range([0, 1]);
 export const HeatmapGreyScale = scaleLinear().domain([0, 1]).range(greyScaleRange);
 
 export const AggregationScaleGenerator = (

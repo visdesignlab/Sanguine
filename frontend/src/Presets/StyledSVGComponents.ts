@@ -34,7 +34,6 @@ export const ChartG = styled('g') <ChartGProps>`
 
 export const HeatMapRect = styled('rect')`
   y:0;
-  opacity:0.6;
   stroke-width:2;
 `;
 interface HeatMapDivideProp {
