@@ -109,9 +109,9 @@ function HeatMap({
                   {/** Background Hover Row Rectangle */}
                   <rect
                     x={0}
-                    y={0}
+                    y={-1}
                     width={dimensionWidth}
-                    height={rowHeight}
+                    height={rowHeight + 2}
                     fill={isHovered ? hoverStore.backgroundHoverColor : 'transparent'}
                   />
                   <SingleHeatRow
