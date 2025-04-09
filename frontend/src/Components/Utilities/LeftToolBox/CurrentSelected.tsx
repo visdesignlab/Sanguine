@@ -36,7 +36,7 @@ function CurrentSelected() {
                   secondary={currentBrushedPatientGroup.length}
                 />
                 <ListItemSecondaryAction>
-                  <IconButton onClick={() => { store.selectionStore.updateBrush([]); }}>
+                  <IconButton onClick={() => { store.InteractionStore.updateBrush([]); }}>
                     <CloseIcon />
                   </IconButton>
                 </ListItemSecondaryAction>
@@ -51,7 +51,7 @@ function CurrentSelected() {
                 secondary={selectSet.setValues.sort().join(', ')}
               />
               <ListItemSecondaryAction>
-                <IconButton onClick={() => { store.selectionStore.clearSet(selectSet.setName); }}>
+                <IconButton onClick={() => { store.InteractionStore.clearSet(selectSet.setName); }}>
                   <CloseIcon />
                 </IconButton>
               </ListItemSecondaryAction>
@@ -63,7 +63,7 @@ function CurrentSelected() {
           <TinyFontButton
             disabled={!(currentSelectSet.length > 0 || currentBrushedPatientGroup.length > 0)}
             variant="outlined"
-            onClick={() => { store.selectionStore.outputToFilter(); }}
+            onClick={() => { store.InteractionStore.outputToFilter(); }}
           >
             Create Filter
           </TinyFontButton>
@@ -73,7 +73,7 @@ function CurrentSelected() {
                         variant="outlined"
                         size="small"
                         className={styles.tinyFont}
-                        onClick={() => { store.selectionStore.clearAllFilter() }}
+                        onClick={() => { store.InteractionStore.clearAllFilter() }}
                     >Clear Filter</Button> */}
 
       </Box>

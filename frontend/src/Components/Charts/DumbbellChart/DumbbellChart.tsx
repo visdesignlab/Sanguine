@@ -221,14 +221,14 @@ function DumbbellChart({
           showPreop={showPreop}
           circleYValStart={testValueScale()(dataPoint.startXVal)}
           circleYValEnd={testValueScale()(dataPoint.endXVal)}
-          hovered={store.hoverStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID)}
+          hovered={store.InteractionStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID)}
           onMouseEnter={() => {
-            store.hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
+            store.InteractionStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
           }}
           onMouseLeave={() => {
-            store.hoverStore.hoveredCaseIds = [];
+            store.InteractionStore.hoveredCaseIds = [];
           }}
-          hoverColor={store.hoverStore.smallHoverColor}
+          hoverColor={store.InteractionStore.smallHoverColor}
           key={`dumbbell-${idx}`}
         />
       );

@@ -13,7 +13,7 @@ function SurgerySearchBar({ surgeryList }: { surgeryList: ProcedureEntry[] }) {
   const searchHandler = (value: ProcedureEntry | null) => {
     if (value) {
       if (store.provenanceState.proceduresSelection.filter((d) => d.procedureName === value.procedureName).length === 0) {
-        store.selectionStore.updateProcedureSelection(value, false);
+        store.InteractionStore.updateProcedureSelection(value, false);
         setInput(null);
       }
     }

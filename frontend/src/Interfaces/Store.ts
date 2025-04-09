@@ -6,21 +6,18 @@ import { createContext } from 'react';
 import { ChartStore } from './ChartStore';
 import { defaultState } from './DefaultState';
 import { ProjectConfigStore } from './ProjectConfigStore';
-import { SelectionStore } from './SelectionStore';
+import { InteractionStore } from './InteractionStore';
 import { ActionEvents } from './Types/EventTypes';
 import { ApplicationState } from './Types/StateTypes';
 import { SingleCasePoint } from './Types/DataTypes';
 import { SurgeryUrgencyArray } from '../Presets/DataDict';
-import { HoverStore } from './HoverStore';
 
 export class RootStore {
   provenance: Provenance<ApplicationState, ActionEvents>;
 
   configStore: ProjectConfigStore;
 
-  selectionStore: SelectionStore;
-
-  hoverStore: HoverStore;
+  InteractionStore: InteractionStore;
 
   chartStore: ChartStore;
 
@@ -37,8 +34,8 @@ export class RootStore {
     this.provenance.done();
     this.configStore = new ProjectConfigStore(this);
     this.chartStore = new ChartStore(this);
-    this.selectionStore = new SelectionStore(this);
-    this.hoverStore = new HoverStore(this);
+    this.InteractionStore = new InteractionStore(this);
+    this.InteractionStore = new InteractionStore(this);
 
     this._allCases = [];
 

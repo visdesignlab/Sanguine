@@ -57,7 +57,7 @@ function ScatterPlot({
   const scalePadding = 0.2;
   const currentOffset = OffsetDict.minimum;
   const store = useContext(Store);
-  const { hoverStore } = store;
+  const { InteractionStore } = store;
   const { currentBrushedPatientGroup, currentSelectSet } = store.provenanceState;
   const svgSelection = select(svg.current);
   const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null);
@@ -122,13 +122,13 @@ function ScatterPlot({
         updateBrushLoc(null);
         brushDef.move(svgSelection.select('.brush-layer'), null);
         if (store.provenanceState.currentBrushedPatientGroup.length > 0) {
-          store.selectionStore.updateBrush([]);
+          store.InteractionStore.updateBrush([]);
         }
       } else {
-        store.selectionStore.updateBrush(caseList);
+        store.InteractionStore.updateBrush(caseList);
       }
     } else if (store.provenanceState.currentBrushedPatientGroup.length > 0) {
-      store.selectionStore.updateBrush([]);
+      store.InteractionStore.updateBrush([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brushLoc]);
@@ -249,7 +249,7 @@ function ScatterPlot({
       // Get the exact value for CELL_SAVER_ML or a jittered xVal
       const cx = getCX(dataPoint);
       // Check if the data point is hovered
-      const hovered = hoverStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
+      const hovered = InteractionStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
       if (medianSet[dataPoint.xVal]) {
         medianSet[dataPoint.xVal].push(dataPoint.yVal);
       } else {
@@ -268,9 +268,9 @@ function ScatterPlot({
           selected={isSelectSet}
           brushed={brushed || false}
           hovered={hovered}
-          hoverColor={hoverStore.smallHoverColor}
-          onMouseEnter={() => { hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
-          onMouseLeave={() => { hoverStore.hoveredCaseIds = []; }}
+          hoverColor={InteractionStore.smallHoverColor}
+          onMouseEnter={() => { InteractionStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
+          onMouseLeave={() => { InteractionStore.hoveredCaseIds = []; }}
         />,
       );
     });

@@ -22,7 +22,7 @@ function CustomizedAxisBand({
   scaleDomain, scaleRange, scalePadding, chartHeight, data,
 }: Props) {
   const store = useContext(Store);
-  const { hoverStore } = store;
+  const { InteractionStore } = store;
 
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
 
@@ -45,12 +45,12 @@ function CustomizedAxisBand({
       // Filter the data using dp.xVal because the column represents the x-axis category.
       const pointsInColumn = data.filter((dp: ScatterDataPoint) => dp.xVal === columnIndex);
       // Update the hover store with all case IDs in that column
-      store.hoverStore.hoveredCaseIds = pointsInColumn.map(
+      store.InteractionStore.hoveredCaseIds = pointsInColumn.map(
         (dp: ScatterDataPoint) => dp.case.CASE_ID,
       );
     } else {
       // Clear hovered cases when no column is hovered.
-      store.hoverStore.hoveredCaseIds = [];
+      store.InteractionStore.hoveredCaseIds = [];
     }
   };
 
@@ -71,7 +71,7 @@ function CustomizedAxisBand({
               x={x1}
               width={x2 - x1}
               chartHeight={chartHeight}
-              fill={hoveredColumn === idx ? hoverStore.backgroundHoverColor : (idx % 2 === 1 ? 'white' : 'black')}
+              fill={hoveredColumn === idx ? InteractionStore.backgroundHoverColor : (idx % 2 === 1 ? 'white' : 'black')}
               opacity={hoveredColumn === idx ? 0.5 : 0.05}
             />
             <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{number}</AxisText>

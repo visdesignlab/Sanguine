@@ -52,7 +52,7 @@ function HeatMap({
   outcomeComparison, interventionDate, secondaryExtraPairDataSet, dimensionHeight, secondaryData, dimensionWidth, yAxisVar, xAxisVar, chartId, data, svg, extraPairDataSet, extraPairTotalWidth, firstTotal, secondTotal,
 }: Props) {
   const store = useContext(Store);
-  const { hoverStore } = store;
+  const { InteractionStore } = store;
   const currentOffset = OffsetDict.regular;
   const [xVals, setXVals] = useState<[]>([]);
   const [caseMax, setCaseMax] = useState(0);
@@ -102,17 +102,17 @@ function HeatMap({
                 ? aggregationScale().bandwidth() * 0.5
                 : aggregationScale().bandwidth();
               // Compute whether this dataPoint is currently hovered.
-              const isHovered = hoverStore.hoveredAttribute?.[0] === yAxisVar && hoverStore.hoveredAttribute?.[1] === dataPoint.aggregateAttribute;
+              const isHovered = InteractionStore.hoveredAttribute?.[0] === yAxisVar && InteractionStore.hoveredAttribute?.[1] === dataPoint.aggregateAttribute;
               return (
                 /** On hover of a row, hover store is updated. */
-                <g key={idx} transform={`translate(0, ${rowY})`} onMouseEnter={() => { hoverStore.hoveredAttribute = [yAxisVar, dataPoint.aggregateAttribute]; }} onMouseLeave={() => { hoverStore.hoveredAttribute = undefined; }}>
+                <g key={idx} transform={`translate(0, ${rowY})`} onMouseEnter={() => { InteractionStore.hoveredAttribute = [yAxisVar, dataPoint.aggregateAttribute]; }} onMouseLeave={() => { InteractionStore.hoveredAttribute = undefined; }}>
                   {/** Background Hover Row Rectangle */}
                   <rect
                     x={0}
-                    y={0}
+                    y={-1}
                     width={dimensionWidth}
-                    height={rowHeight}
-                    fill={isHovered ? hoverStore.backgroundHoverColor : 'transparent'}
+                    height={rowHeight + 2}
+                    fill={isHovered ? InteractionStore.backgroundHoverColor : 'transparent'}
                   />
                   <SingleHeatRow
                     bandwidth={rowHeight}

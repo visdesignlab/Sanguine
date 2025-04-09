@@ -21,7 +21,7 @@ function CustomizedAxisOrdinal({
   data: DumbbellDataPoint[];
 }) {
   const store = useContext(Store);
-  const { hoverStore } = store;
+  const { InteractionStore } = store;
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
 
   const scale = useCallback(() => {
@@ -51,12 +51,12 @@ function CustomizedAxisOrdinal({
         (dp: DumbbellDataPoint) => dp.yVal === columnIndex,
       );
       // Update the hover store with all case IDs in that column
-      store.hoverStore.hoveredCaseIds = pointsInColumn.map(
+      store.InteractionStore.hoveredCaseIds = pointsInColumn.map(
         (dp: DumbbellDataPoint) => dp.case.CASE_ID,
       );
     } else {
       // Clear hovered cases when no column is hovered.
-      store.hoverStore.hoveredCaseIds = [];
+      store.InteractionStore.hoveredCaseIds = [];
     }
   };
 
@@ -86,7 +86,7 @@ function CustomizedAxisOrdinal({
                 x={x1}
                 width={x2 - x1}
                 chartHeight={chartHeight}
-                fill={hoveredColumn === idx ? hoverStore.backgroundHoverColor : (idx % 2 === 1 ? 'white' : 'black')}
+                fill={hoveredColumn === idx ? InteractionStore.backgroundHoverColor : (idx % 2 === 1 ? 'white' : 'black')}
                 opacity={hoveredColumn === idx ? 0.5 : 0.05}
               />
               <Tooltip title={axisTextOutput(numberOb.bin)}>
