@@ -11,6 +11,9 @@ class Patient(models.Model):
     ethnicity_desc = models.CharField(max_length=2000)
     death_date = models.DateField(null=True)
 
+    class Meta:
+        db_table = "Patient"
+
 
 class Visit(models.Model):
     visit_no = models.BigIntegerField(primary_key=True)
@@ -52,6 +55,9 @@ class Visit(models.Model):
     cci_hiv_aids = models.FloatField(null=True)
     cci_score = models.FloatField(null=True)
 
+    class Meta:
+        db_table = "Visit"
+
 
 class SurgeryCase(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE)
@@ -71,6 +77,9 @@ class SurgeryCase(models.Model):
     sched_site_desc = models.CharField(max_length=2000)
     asa_code = models.CharField(max_length=80)
 
+    class Meta:
+        db_table = "SurgeryCase"
+
 
 class BillingCode(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE)
@@ -80,6 +89,9 @@ class BillingCode(models.Model):
     prov_id = models.CharField(max_length=25)
     prov_name = models.CharField(max_length=100)
     code_rank = models.FloatField()
+
+    class Meta:
+        db_table = "BillingCode"
 
 
 class Medication(models.Model):
@@ -96,6 +108,9 @@ class Medication(models.Model):
     dose_unit_desc = models.CharField(max_length=254)
     med_start_dtm = models.DateTimeField()
     med_end_dtm = models.DateTimeField()
+    
+    class Meta:
+        db_table = "Medication"
 
 
 class Lab(models.Model):
@@ -113,6 +128,9 @@ class Lab(models.Model):
     uom_code = models.CharField(max_length=30)
     lower_limit = models.FloatField()
     upper_limit = models.FloatField()
+
+    class Meta:
+        db_table = "Lab"
 
 
 class Transfusion(models.Model):
@@ -132,6 +150,9 @@ class Transfusion(models.Model):
     whole_vol = models.FloatField(null=True)
     cell_saver_ml = models.FloatField(null=True)
 
+    class Meta:
+        db_table = "Transfusion"
+
 
 class AttendingProvider(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE)
@@ -140,6 +161,9 @@ class AttendingProvider(models.Model):
     attend_start_dtm = models.DateTimeField()
     attend_end_dtm = models.DateTimeField()
     attend_prov_line = models.DecimalField(max_digits=38, decimal_places=0)
+
+    class Meta:
+        db_table = "AttendingProvider"
 
 
 class RoomTrace(models.Model):
@@ -154,3 +178,6 @@ class RoomTrace(models.Model):
     out_dtm = models.DateTimeField()
     duration_days = models.FloatField()
     bed_room_dept_line = models.FloatField()
+
+    class Meta:
+        db_table = "RoomTrace"
