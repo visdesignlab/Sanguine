@@ -29,7 +29,7 @@ def get_bind_names(filters):
 def get_all_cpt_code_filters():
     filters = [a[0] for a in cpt()]
     bind_names = get_bind_names(filters)
-    filters_safe_sql = f"WHERE CODE IN (%({')s,%('.join(bind_names)})s) "
+    filters_safe_sql = f"WHERE cpt_code IN (%({')s,%('.join(bind_names)})s) "
 
     return filters, bind_names, filters_safe_sql
 

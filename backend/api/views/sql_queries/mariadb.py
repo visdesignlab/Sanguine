@@ -1,12 +1,11 @@
 from api.models import (
-    PATIENT,
-    VISIT,
-    SURGERY_CASE,
-    BILLING_CODES,
-    VISIT_LABS,
-    EXTRAOP_MEDS,
-    INTRAOP_MEDS,
-    INTRAOP_TRANSFUSION,
+    Patient,
+    Visit,
+    SurgeryCase,
+    BillingCode,
+    Lab,
+    Medication,
+    Transfusion,
 )
 from ..utils.utils import get_all_cpt_code_filters
 
@@ -19,9 +18,9 @@ FIELDS = {
     "apr_drg_rom": "APR_DRG_ROM",
     "apr_drg_soi": "APR_DRG_SOI",
     "birth_date": "PAT_BIRTHDATE",
-    "billing_code": "CODE",
+    "cpt_code": "cpt_code",
     "case_date": "CASE_DATE",
-    "case_id": "CASE_ID",
+    "case_id": "case_id",
     "code_desc": "CODE_DESC",
     "death_date": "DEATH_DATE",
     "dose_unit_desc": "DOSE_UNIT_DESC",
@@ -48,47 +47,46 @@ FIELDS = {
     "surgery_end_time": "SURGERY_END_DTM",
     "surgery_start_time": "SURGERY_START_DTM",
     "surgery_type": "SURGERY_TYPE_DESC",
-    "visit_no": "VISIT_NO",
+    "visit_no": "visit_no",
 }
 
 TABLES = {
-    "billing_codes": BILLING_CODES._meta.db_table,
-    "intra_op_trnsfsd": INTRAOP_TRANSFUSION._meta.db_table,
-    "patient": PATIENT._meta.db_table,
-    "surgery_case": SURGERY_CASE._meta.db_table,
-    "visit": VISIT._meta.db_table,
-    "visit_labs": VISIT_LABS._meta.db_table,
-    "extraop_meds": EXTRAOP_MEDS._meta.db_table,
-    "intraop_meds": INTRAOP_MEDS._meta.db_table,
+    "billing_codes": BillingCode._meta.db_table,
+    "intra_op_trnsfsd": Transfusion._meta.db_table,
+    "patient": Patient._meta.db_table,
+    "surgery_case": SurgeryCase._meta.db_table,
+    "visit": Visit._meta.db_table,
+    "visit_labs": Lab._meta.db_table,
+    "medication": Medication._meta.db_table,
 }
 
 _, _, filters_safe_sql = get_all_cpt_code_filters()
 
 procedure_count_query = f"""
         SELECT
-            GROUP_CONCAT({FIELDS.get('billing_code')}) as codes,
+            GROUP_CONCAT({FIELDS.get('cpt_code')}) as codes,
             SURG.{FIELDS.get('case_id')}
         FROM {TABLES.get('billing_codes')} BLNG
         INNER JOIN {TABLES.get('surgery_case')} SURG
-            ON BLNG.{FIELDS.get('visit_no')} = SURG.{FIELDS.get('visit_no')}
-            AND CAST(BLNG.{FIELDS.get('procedure_dtm')} AS DATE) = SURG.{FIELDS.get('case_date')}
+            ON (BLNG.{FIELDS.get('visit_no')} = SURG.{FIELDS.get('visit_no')})
+            AND (BLNG.{FIELDS.get('procedure_dtm')} = SURG.{FIELDS.get('case_date')})
         {filters_safe_sql}
         GROUP BY SURG.{FIELDS.get('case_id')}
     """
 
 patient_query = f"""
     SELECT
-        PATIENT.{FIELDS.get('birth_date')},
-        PATIENT.{FIELDS.get('gender_code')},
-        -- PATIENT.{FIELDS.get('gender_desc')},
-        PATIENT.{FIELDS.get('race_code')},
-        PATIENT.{FIELDS.get('race_desc')},
-        PATIENT.{FIELDS.get('ethnicity_code')},
-        PATIENT.{FIELDS.get('ethnicity_desc')},
-        PATIENT.{FIELDS.get('death_date')}
+        Patient.{FIELDS.get('birth_date')},
+        Patient.{FIELDS.get('gender_code')},
+        -- Patient.{FIELDS.get('gender_desc')},
+        Patient.{FIELDS.get('race_code')},
+        Patient.{FIELDS.get('race_desc')},
+        Patient.{FIELDS.get('ethnicity_code')},
+        Patient.{FIELDS.get('ethnicity_desc')},
+        Patient.{FIELDS.get('death_date')}
     FROM
-        {TABLES.get('patient')} PATIENT
-    WHERE PATIENT.{FIELDS.get('patient_id')} = %(id)s
+        {TABLES.get('patient')} Patient
+    WHERE Patient.{FIELDS.get('patient_id')} = %(id)s
     """
 
 surgery_query = f"""
@@ -112,7 +110,7 @@ surgery_query = f"""
                 SURG.{FIELDS.get('surgery_type')},
                 SURG.{FIELDS.get('prim_proc_desc')},
                 SURG.{FIELDS.get('post_op_icu_los')}
-            FROM SURGERY_CASE SURG
+            FROM SurgeryCase SURG
             WHERE SURG.{FIELDS.get('case_id')} = %(id)s
         )
     SELECT surg_cases.*, codes.CODES AS CODES
@@ -123,8 +121,8 @@ surgery_query = f"""
 surgery_case_query = rf"""
     WITH TRANSFUSED_UNITS AS (
         SELECT
-            SUM(CASE WHEN PRBC_UNITS > 150 THEN CEIL(PRBC_UNITS / 250) ELSE PRBC_UNITS END)
-                + CEIL(COALESCE(SUM(RBC_VOL) / 250, 0)) AS PRBC_UNITS,
+            SUM(CASE WHEN RBC_UNITS > 150 THEN CEIL(RBC_UNITS / 250) ELSE RBC_UNITS END)
+                + CEIL(COALESCE(SUM(RBC_VOL) / 250, 0)) AS RBC_UNITS,
             SUM(CASE WHEN FFP_UNITS > 150 THEN CEIL(FFP_UNITS / 220) ELSE FFP_UNITS END)
                 + CEIL(COALESCE(SUM(FFP_VOL) / 220, 0)) AS FFP_UNITS,
             SUM(CASE WHEN PLT_UNITS > 150 THEN CEIL(PLT_UNITS / 300) ELSE PLT_UNITS END)
@@ -132,112 +130,112 @@ surgery_case_query = rf"""
             SUM(CASE WHEN CRYO_UNITS > 35 THEN CEIL(CRYO_UNITS / 75) ELSE CRYO_UNITS END)
                 + CEIL(COALESCE(SUM(CRYO_VOL) / 75, 0)) AS CRYO_UNITS,
             SUM(CELL_SAVER_ML) AS CELL_SAVER_ML,
-            CASE_ID
+            visit_no
         FROM {TABLES.get('intra_op_trnsfsd')}
-        GROUP BY CASE_ID
+        GROUP BY visit_no
     ),
-    BILLING_CODES AS (
+    BillingCode AS (
         SELECT
-            VISIT_NO,
+            visit_no,
             /* Use MAX on the computed binary flag to avoid nesting SUM(IF(...)) */
-            MAX(CODE IN ('I97.820', '997.02')) AS STROKE,
-            MAX(CODE IN (
+            MAX(cpt_code IN ('I97.820', '997.02')) AS STROKE,
+            MAX(cpt_code IN (
                     '33952', '33954', '33956', '33958', '33962', '33964',
                     '33966', '33973', '33974', '33975', '33976', '33977',
                     '33978', '33979', '33980', '33981', '33982', '33983',
                     '33984', '33986', '33987', '33988', '33989'
                 )) AS ECMO,
-            GROUP_CONCAT(CODE) AS ALL_CODES
+            GROUP_CONCAT(cpt_code) AS ALL_CODES
         FROM {TABLES.get('billing_codes')}
         {filters_safe_sql}
-        GROUP BY VISIT_NO
+        GROUP BY visit_no
     ),
     MEDS AS (
         SELECT
-            VISIT_NO,
+            visit_no,
             MAX(TXA) AS TXA,
             MAX(AMICAR) AS AMICAR,
             MAX(B12) AS B12,
             MAX(IRON) AS IRON
         FROM (
             SELECT
-                VISIT_NO,
+                visit_no,
                 SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'tranexamic|txa' THEN 1 ELSE 0 END) AS TXA,
                 SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'amicar|aminocaproic|eaca' THEN 1 ELSE 0 END) AS AMICAR,
                 SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'b12|cobalamin' THEN 1 ELSE 0 END) AS B12,
                 SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'iron|ferric|ferrous' THEN 1 ELSE 0 END) AS IRON
-            FROM {TABLES.get('intraop_meds')}
-            GROUP BY VISIT_NO
+            FROM {TABLES.get('medication')}
+            GROUP BY visit_no
             UNION ALL
             SELECT
-                VISIT_NO,
+                visit_no,
                 SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'tranexamic|txa' THEN 1 ELSE 0 END) AS TXA,
                 SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'amicar|aminocaproic|eaca' THEN 1 ELSE 0 END) AS AMICAR,
                 SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'b12|cobalamin' THEN 1 ELSE 0 END) AS B12,
                 SUM(CASE WHEN LOWER(MEDICATION_NAME) REGEXP 'iron|ferric|ferrous' THEN 1 ELSE 0 END) AS IRON
-            FROM {TABLES.get('extraop_meds')}
-            GROUP BY VISIT_NO
+            FROM {TABLES.get('medication')}
+            GROUP BY visit_no
         ) meds_union
-        GROUP BY VISIT_NO
+        GROUP BY visit_no
     ),
     LAB_HB AS (
         SELECT
-            VISIT_NO,
+            visit_no,
             LAB_DRAW_DTM,
             RESULT_DTM,
             RESULT_CODE,
             RESULT_VALUE
-        FROM VISIT_LABS
+        FROM Lab
         WHERE (UPPER(RESULT_DESC) REGEXP 'HEMOGLOBIN|HGB')
           AND RESULT_VALUE REGEXP '^[+-]?\\d+(\\.\\d+)?$'
     ),
     PREOP_HB AS (
         SELECT
-            X.VISIT_NO,
-            X.CASE_ID,
+            X.visit_no,
+            X.case_id,
             X.DI_PREOP_DRAW_DTM,
             LH2.RESULT_VALUE AS PREOP_HEMO
         FROM (
             SELECT
-                SC.VISIT_NO,
-                SC.CASE_ID,
+                SC.visit_no,
+                SC.case_id,
                 MAX(LH.LAB_DRAW_DTM) AS DI_PREOP_DRAW_DTM
-            FROM SURGERY_CASE SC
-            INNER JOIN LAB_HB LH ON SC.VISIT_NO = LH.VISIT_NO and LH.LAB_DRAW_DTM < SC.SURGERY_START_DTM
-            GROUP BY SC.VISIT_NO, SC.CASE_ID
+            FROM SurgeryCase SC
+            INNER JOIN LAB_HB LH ON SC.visit_no = LH.visit_no and LH.LAB_DRAW_DTM < SC.SURGERY_START_DTM
+            GROUP BY SC.visit_no, SC.case_id
         ) X
         INNER JOIN LAB_HB LH2
-            ON X.VISIT_NO = LH2.VISIT_NO
+            ON X.visit_no = LH2.visit_no
            AND X.DI_PREOP_DRAW_DTM = LH2.LAB_DRAW_DTM
     ),
     POSTOP_HB AS (
         SELECT
-            X.VISIT_NO,
-            X.CASE_ID,
+            X.visit_no,
+            X.case_id,
             X.DI_POSTOP_DRAW_DTM,
             LH2.RESULT_VALUE AS POSTOP_HEMO
         FROM (
             SELECT
-                SC.VISIT_NO,
-                SC.CASE_ID,
+                SC.visit_no,
+                SC.case_id,
                 MIN(LH.LAB_DRAW_DTM) AS DI_POSTOP_DRAW_DTM
-            FROM SURGERY_CASE SC
-            INNER JOIN LAB_HB LH ON SC.VISIT_NO = LH.VISIT_NO and LH.LAB_DRAW_DTM > SC.SURGERY_END_DTM
-            GROUP BY SC.VISIT_NO, SC.CASE_ID
+            FROM SurgeryCase SC
+            INNER JOIN LAB_HB LH ON SC.visit_no = LH.visit_no and LH.LAB_DRAW_DTM > SC.SURGERY_END_DTM
+            GROUP BY SC.visit_no, SC.case_id
         ) X
         INNER JOIN LAB_HB LH2
-            ON X.VISIT_NO = LH2.VISIT_NO
+            ON X.visit_no = LH2.visit_no
             AND X.DI_POSTOP_DRAW_DTM = LH2.LAB_DRAW_DTM
     )
     SELECT
-        SURG.CASE_ID,
-        SURG.VISIT_NO,
+        SURG.case_id,
+        SURG.visit_no,
         SURG.MRN,
         SURG.SURGEON_PROV_ID,
         SURG.SURGEON_PROV_NAME,
         SURG.ANESTH_PROV_ID,
         SURG.ANESTH_PROV_NAME,
-        T.PRBC_UNITS,
+        T.RBC_UNITS,
         T.FFP_UNITS,
         T.PLT_UNITS,
         T.CRYO_UNITS,
@@ -250,7 +248,6 @@ surgery_case_query = rf"""
         SURG.CASE_DATE,
         VST.total_vent_mins > 1440 AS VENT,
         VST.APR_DRG_WEIGHT AS DRG_WEIGHT,
-        VST.PAT_EXPIRED AS DEATH,
         BLNG.ECMO,
         BLNG.STROKE,
         BLNG.ALL_CODES,
@@ -259,11 +256,11 @@ surgery_case_query = rf"""
         MEDS.AMICAR,
         MEDS.IRON,
         SURG.SURGERY_TYPE_DESC
-    FROM SURGERY_CASE SURG
-    INNER JOIN BILLING_CODES BLNG ON SURG.VISIT_NO = BLNG.VISIT_NO
-    LEFT JOIN TRANSFUSED_UNITS T ON SURG.CASE_ID = T.CASE_ID
-    LEFT JOIN VISIT VST ON SURG.VISIT_NO = VST.VISIT_NO
-    LEFT JOIN MEDS ON SURG.VISIT_NO = MEDS.VISIT_NO
-    LEFT JOIN PREOP_HB PRE ON SURG.CASE_ID = PRE.CASE_ID
-    LEFT JOIN POSTOP_HB POST ON SURG.CASE_ID = POST.CASE_ID
+    FROM SurgeryCase SURG
+    INNER JOIN BillingCode BLNG ON SURG.visit_no = BLNG.visit_no
+    LEFT JOIN TRANSFUSED_UNITS T ON SURG.visit_no = T.visit_no
+    LEFT JOIN Visit VST ON SURG.visit_no = VST.visit_no
+    LEFT JOIN MEDS ON SURG.visit_no = MEDS.visit_no
+    LEFT JOIN PREOP_HB PRE ON SURG.case_id = PRE.case_id
+    LEFT JOIN POSTOP_HB POST ON SURG.case_id = POST.case_id
 """

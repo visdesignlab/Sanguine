@@ -17,7 +17,7 @@ class Patient(models.Model):
 
 class Visit(models.Model):
     visit_no = models.BigIntegerField(primary_key=True)
-    mrn = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    mrn = models.ForeignKey(Patient, on_delete=models.CASCADE, db_column="mrn")
     epic_pat_id = models.CharField(max_length=80)
     hsp_account_id = models.CharField(max_length=80)
     adm_dtm = models.DateField()
@@ -60,8 +60,8 @@ class Visit(models.Model):
 
 
 class SurgeryCase(models.Model):
-    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE)
-    mrn = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
+    mrn = models.ForeignKey(Patient, on_delete=models.CASCADE, db_column="mrn")
     case_id = models.BigIntegerField(primary_key=True)
     case_date = models.DateField()
     surgery_start_dtm = models.DateTimeField()
@@ -82,7 +82,7 @@ class SurgeryCase(models.Model):
 
 
 class BillingCode(models.Model):
-    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE)
+    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
     cpt_code = models.CharField(max_length=80)
     cpt_code_desc = models.CharField(max_length=2000)
     proc_dtm = models.DateTimeField()
@@ -95,7 +95,7 @@ class BillingCode(models.Model):
 
 
 class Medication(models.Model):
-    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE)
+    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
     order_med_id = models.DecimalField(max_digits=18, decimal_places=0)
     order_dtm = models.DateTimeField()
     medication_id = models.DecimalField(max_digits=18, decimal_places=0)
@@ -114,8 +114,8 @@ class Medication(models.Model):
 
 
 class Lab(models.Model):
-    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE)
-    mrn = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
+    mrn = models.ForeignKey(Patient, on_delete=models.CASCADE, db_column="mrn")
     lab_id = models.CharField(max_length=16)
     lab_draw_dtm = models.DateTimeField()
     lab_panel_code = models.CharField(max_length=30)
@@ -134,7 +134,7 @@ class Lab(models.Model):
 
 
 class Transfusion(models.Model):
-    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE)
+    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
     trnsfsn_dtm = models.DateTimeField()
     transfusion_rank = models.FloatField()
     blood_unit_number = models.CharField(max_length=600)
@@ -155,7 +155,7 @@ class Transfusion(models.Model):
 
 
 class AttendingProvider(models.Model):
-    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE)
+    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
     prov_id = models.CharField(max_length=25)
     prov_name = models.CharField(max_length=100)
     attend_start_dtm = models.DateTimeField()
@@ -167,7 +167,7 @@ class AttendingProvider(models.Model):
 
 
 class RoomTrace(models.Model):
-    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE)
+    visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
     department_id = models.CharField(max_length=30)
     department_name = models.CharField(max_length=100)
     room_id = models.CharField(max_length=30)
