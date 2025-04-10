@@ -23,6 +23,7 @@ function CustomizedAxisOrdinal({
   const store = useContext(Store);
   const { InteractionStore } = store;
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
+  const [selectedColumn, setSelectedColumn] = useState<number | null>(null);
 
   const scale = useCallback(() => {
     const domain = JSON.parse(scaleDomain);
@@ -45,6 +46,23 @@ function CustomizedAxisOrdinal({
   // Add a new handler that updates both the local hoveredColumn state and the store.
   const handleColumnHover = (columnIndex: number | null) => {
     setHoveredColumn(columnIndex);
+    if (columnIndex !== null) {
+      // Filter the sorted data for cases within the hovered column.
+      const pointsInColumn = data.filter(
+        (dp: DumbbellDataPoint) => dp.yVal === columnIndex,
+      );
+      // Update the hover store with all case IDs in that column
+      store.InteractionStore.selectedCaseIds = pointsInColumn.map(
+        (dp: DumbbellDataPoint) => dp.case.CASE_ID,
+      );
+    } else {
+      // Clear hovered cases when no column is hovered.
+      store.InteractionStore.selectedCaseIds = [];
+    }
+  };
+
+  const handleColumnClick = (columnIndex: number) => {
+    setSelectedColumn(columnIndex);
     if (columnIndex !== null) {
       // Filter the sorted data for cases within the hovered column.
       const pointsInColumn = data.filter(
@@ -79,6 +97,7 @@ function CustomizedAxisOrdinal({
               key={idx}
               onMouseEnter={() => handleColumnHover(idx)}
               onMouseLeave={() => handleColumnHover(null)}
+              onClick={() => handleColumnClick(idx)}
             >
               <CustomAxisLine x1={x1} x2={x2} />
               <CustomAxisLineBox x={x1} width={x2 - x1} fill={idx % 2 === 1 ? secondaryGray : basicGray} />
@@ -86,13 +105,20 @@ function CustomizedAxisOrdinal({
                 x={x1}
                 width={x2 - x1}
                 chartHeight={chartHeight}
-                fill={hoveredColumn === idx ? InteractionStore.backgroundHoverColor : (idx % 2 === 1 ? 'white' : 'black')}
-                opacity={hoveredColumn === idx ? 0.5 : 0.05}
+                fill={
+                selectedColumn === idx
+                  ? InteractionStore.backgroundSelectedColor
+                  : hoveredColumn === idx
+                    ? InteractionStore.backgroundHoverColor
+                    : idx % 2 === 1
+                      ? 'white'
+                      : 'black'
+              }
+                opacity={selectedColumn === idx || hoveredColumn === idx ? 0.5 : 0.05}
               />
               <Tooltip title={axisTextOutput(numberOb.bin)}>
                 <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{axisTextOutput(numberOb.bin)}</AxisText>
               </Tooltip>
-
             </g>
           );
         } return null;
