@@ -25,9 +25,9 @@ export class InteractionStore {
 
     // Colors
     this.smallHoverColor = '#FFCF76';
-    this.smallSelectedColor = '#FFCF76';
+    this.smallSelectColor = '#E29609';
     this.backgroundHoverColor = '#FFE8BE';
-    this.backgroundSelectedColor = '#FFE8BE';
+    this.backgroundSelectedColor = '#FFCF76';
 
     // Make the store observable
     makeAutoObservable(this);
@@ -41,7 +41,7 @@ export class InteractionStore {
   // Color of the smaller mark hover
   public readonly smallHoverColor: string;
 
-  public readonly smallSelectedColor: string;
+  public readonly smallSelectColor: string;
 
   // Color of a larger background hover
   public readonly backgroundHoverColor: string;

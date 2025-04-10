@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import { Offset } from '../Interfaces/Types/OffsetType';
 import {
-  basicGray, highlightOrange, largeFontSize, postopColor, preopColor, regularFontSize,
+  basicGray, largeFontSize, postopColor, preopColor, regularFontSize,
 } from './Constants';
 
 export const ChartSVG = styled.svg`
@@ -56,11 +56,13 @@ interface DotProps {
   isPreop: boolean;
   hovered: boolean;
   hoverColor: string;
+  selectColor: string;
 }
 interface RectProps {
   selected: boolean;
   hovered: boolean;
   hoverColor: string;
+  selectColor: string;
 }
 
 interface AverageLineProps {
@@ -75,7 +77,7 @@ export const DumbbellCircle = styled('circle')<DotProps>`
       return props.hoverColor;
     }
     if (props.selected) {
-      return highlightOrange;
+      return props.selectColor;
     }
     return props.isPreop ? preopColor : postopColor;
   }};
@@ -89,7 +91,7 @@ export const DumbbellRect = styled('rect')<RectProps>`
       return props.hoverColor;
     }
     if (props.selected) {
-      return highlightOrange;
+      return props.selectColor;
     }
     return basicGray;
   }};

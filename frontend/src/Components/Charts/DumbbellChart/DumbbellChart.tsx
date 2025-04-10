@@ -234,6 +234,7 @@ function DumbbellChart({
             store.InteractionStore.hoveredCaseIds = [];
           }}
           hoverColor={store.InteractionStore.smallHoverColor}
+          selectColor={store.InteractionStore.smallSelectColor}
           key={`dumbbell-${idx}`}
         />
       );
