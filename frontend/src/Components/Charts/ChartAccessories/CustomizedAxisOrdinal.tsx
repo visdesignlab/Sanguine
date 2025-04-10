@@ -1,8 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useCallback, useContext, useState } from 'react';
+import {
+  useCallback, useContext, useEffect, useState,
+} from 'react';
 import { observer } from 'mobx-react';
 import { scaleOrdinal } from 'd3';
 import Tooltip from '@mui/material/Tooltip';
+import { Watch } from '@mui/icons-material';
+import { reaction } from 'mobx';
 import { basicGray, secondaryGray } from '../../../Presets/Constants';
 import {
   AxisText, CustomAxisColumnBackground, CustomAxisLine, CustomAxisLineBox,
@@ -24,6 +28,7 @@ function CustomizedAxisOrdinal({
   const { InteractionStore } = store;
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<number | null>(null);
+  const [columnRecentlyClicked, setColumnRecentlyClicked] = useState<boolean | null>(null);
 
   const scale = useCallback(() => {
     const domain = JSON.parse(scaleDomain);
@@ -63,6 +68,7 @@ function CustomizedAxisOrdinal({
 
   const handleColumnClick = (columnIndex: number) => {
     setSelectedColumn(columnIndex);
+    setColumnRecentlyClicked(true);
     if (columnIndex !== null) {
       // Filter the sorted data for cases within the hovered column.
       const pointsInColumn = data.filter(
@@ -77,6 +83,13 @@ function CustomizedAxisOrdinal({
       store.InteractionStore.selectedCaseIds = [];
     }
   };
+
+  useEffect(() => {
+    if (!columnRecentlyClicked) {
+      setSelectedColumn(null);
+    }
+    setColumnRecentlyClicked(false);
+  }, [store.InteractionStore.selectedCaseIds]);
 
   return (
     <>
