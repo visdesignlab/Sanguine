@@ -84,6 +84,7 @@ function CustomizedAxisOrdinal({
     }
   };
 
+  // Reset selectedColumn when the something else is selected
   useEffect(() => {
     if (!columnRecentlyClicked) {
       setSelectedColumn(null);

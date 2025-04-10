@@ -270,6 +270,7 @@ function ScatterPlot({
           brushed={brushed || false}
           hovered={hovered}
           hoverColor={InteractionStore.smallHoverColor}
+          onClick={() => { InteractionStore.selectedCaseIds = [dataPoint.case.CASE_ID]; }}
           onMouseEnter={() => { InteractionStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
           onMouseLeave={() => { InteractionStore.hoveredCaseIds = []; }}
         />,
