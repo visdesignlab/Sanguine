@@ -250,13 +250,14 @@ function ScatterPlot({
       const cx = getCX(dataPoint);
       // Check if the data point is hovered
       const hovered = InteractionStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
+      const selected = InteractionStore.selectedCaseIds.includes(dataPoint.case.CASE_ID);
       if (medianSet[dataPoint.xVal]) {
         medianSet[dataPoint.xVal].push(dataPoint.yVal);
       } else {
         medianSet[dataPoint.xVal] = [dataPoint.yVal];
       }
       const cy = yAxisScale()(dataPoint.yVal);
-      const isSelectSet = decideIfSelectSet(dataPoint);
+      // const isSelectSet = decideIfSelectSet(dataPoint);
       const brushed = brushedSet.has(dataPoint.case.CASE_ID);
 
       // Append the scatterdot JSX element
@@ -265,7 +266,7 @@ function ScatterPlot({
           key={`dot-${idx}`}
           cx={cx}
           cy={cy}
-          selected={isSelectSet}
+          selected={selected}
           brushed={brushed || false}
           hovered={hovered}
           hoverColor={InteractionStore.smallHoverColor}
