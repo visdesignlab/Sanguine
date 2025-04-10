@@ -11,38 +11,47 @@ type HoveredAttribute = [AttributeName: string, value: string | number | boolean
 export class InteractionStore {
   rootStore: RootStore;
 
-  // Extends the root store
+  // Extends the root store --------------------------------------------
   constructor(rootStore: RootStore) {
     this.rootStore = rootStore;
 
-    // Currently hovered case IDs
+    // Currently interacted case IDs
     this._hoveredCaseIds = [];
+    this._selectedCaseIds = [];
 
-    // Currently hovered provider IDs
+    // Currently interacted provider IDs
     this._hoveredAttribute = undefined;
+    this._selectedAttribute = undefined;
 
-    // Color of the hover
+    // Colors
     this.smallHoverColor = '#FFCF76';
-
-    // Color of the hover
+    this.smallSelectedColor = '#FFCF76';
     this.backgroundHoverColor = '#FFE8BE';
+    this.backgroundSelectedColor = '#FFE8BE';
 
     // Make the store observable
     makeAutoObservable(this);
   }
 
   // Hovering ---------------------------------------------------------
-  // Currently hovered case IDs
   private _hoveredCaseIds: number[];
+
+  private _selectedCaseIds: number[];
 
   // Color of the smaller mark hover
   public readonly smallHoverColor: string;
 
+  public readonly smallSelectedColor: string;
+
   // Color of a larger background hover
   public readonly backgroundHoverColor: string;
 
-  // Currently hovered provider IDs
+  public readonly backgroundSelectedColor: string;
+
+  // Interacted Attributes
   private _hoveredAttribute?: HoveredAttribute;
+
+  private _selectedAttribute?: HoveredAttribute;
 
   get hoveredCaseIds() {
     // Update the hovered case IDs based on the hovered provider IDs
@@ -59,12 +68,35 @@ export class InteractionStore {
     this._hoveredCaseIds = structuredClone(ids);
   }
 
+  get selectedCaseIds() {
+    // Update the hovered case IDs based on the hovered provider IDs
+    if (this._selectedAttribute !== undefined) {
+      return this.rootStore.filteredCases
+        .filter((caseRecord) => caseRecord[this._selectedAttribute![0]] === this._selectedAttribute![1])
+        .map((caseRecord) => caseRecord.CASE_ID);
+    }
+
+    return this._hoveredCaseIds;
+  }
+
+  set selectedCaseIds(ids: number[]) {
+    this._selectedCaseIds = structuredClone(ids);
+  }
+
   get hoveredAttribute() {
     return this._hoveredAttribute;
   }
 
   set hoveredAttribute(hoveredAttribute: HoveredAttribute | undefined) {
     this._hoveredAttribute = hoveredAttribute;
+  }
+
+  get selectedAttribute() {
+    return this._selectedAttribute;
+  }
+
+  set selectedAttribute(selectedAttribute: HoveredAttribute | undefined) {
+    this._selectedAttribute = selectedAttribute;
   }
 
   // Selections --------------------------------------------------------
