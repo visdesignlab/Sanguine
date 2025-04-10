@@ -52,12 +52,12 @@ function CustomizedAxisOrdinal({
         (dp: DumbbellDataPoint) => dp.yVal === columnIndex,
       );
       // Update the hover store with all case IDs in that column
-      store.InteractionStore.selectedCaseIds = pointsInColumn.map(
+      store.InteractionStore.hoveredCaseIds = pointsInColumn.map(
         (dp: DumbbellDataPoint) => dp.case.CASE_ID,
       );
     } else {
       // Clear hovered cases when no column is hovered.
-      store.InteractionStore.selectedCaseIds = [];
+      store.InteractionStore.hoveredCaseIds = [];
     }
   };
 
@@ -69,12 +69,12 @@ function CustomizedAxisOrdinal({
         (dp: DumbbellDataPoint) => dp.yVal === columnIndex,
       );
       // Update the hover store with all case IDs in that column
-      store.InteractionStore.hoveredCaseIds = pointsInColumn.map(
+      store.InteractionStore.selectedCaseIds = pointsInColumn.map(
         (dp: DumbbellDataPoint) => dp.case.CASE_ID,
       );
     } else {
       // Clear hovered cases when no column is hovered.
-      store.InteractionStore.hoveredCaseIds = [];
+      store.InteractionStore.selectedCaseIds = [];
     }
   };
 

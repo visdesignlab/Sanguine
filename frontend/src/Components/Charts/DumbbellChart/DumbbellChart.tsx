@@ -222,6 +222,11 @@ function DumbbellChart({
           circleYValStart={testValueScale()(dataPoint.startXVal)}
           circleYValEnd={testValueScale()(dataPoint.endXVal)}
           hovered={store.InteractionStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID)}
+          selected={store.InteractionStore.selectedCaseIds.includes(dataPoint.case.CASE_ID)}
+          onClick={() => {
+            console.log("Single Dumbbell Clicked");
+            store.InteractionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
+          }}
           onMouseEnter={() => {
             store.InteractionStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
           }}

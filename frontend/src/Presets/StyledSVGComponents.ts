@@ -52,7 +52,7 @@ export const HeatMapDividerLine = styled('line') <HeatMapDivideProp>`
 `;
 
 interface DotProps {
-  isSelectSet: boolean;
+  selected: boolean;
   isPreop: boolean;
   hovered: boolean;
   hoverColor: string;
@@ -69,12 +69,12 @@ interface AverageLineProps {
 
 export const DumbbellCircle = styled('circle')<DotProps>`
   r: 4px;
-  opacity: ${(props) => (props.isSelectSet || props.hovered ? 1 : 0.8)};
+  opacity: ${(props) => (props.selected || props.hovered ? 1 : 0.8)};
   fill: ${(props) => {
     if (props.hovered) {
       return props.hoverColor;
     }
-    if (props.isSelectSet) {
+    if (props.selected) {
       return highlightOrange;
     }
     return props.isPreop ? preopColor : postopColor;

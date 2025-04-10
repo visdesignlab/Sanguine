@@ -69,18 +69,19 @@ export class InteractionStore {
   }
 
   get selectedCaseIds() {
-    // Update the hovered case IDs based on the hovered provider IDs
     if (this._selectedAttribute !== undefined) {
       return this.rootStore.filteredCases
-        .filter((caseRecord) => caseRecord[this._selectedAttribute![0]] === this._selectedAttribute![1])
+        .filter((caseRecord) => this._selectedAttribute && caseRecord[this._selectedAttribute[0]] === this._selectedAttribute[1])
         .map((caseRecord) => caseRecord.CASE_ID);
     }
-
-    return this._hoveredCaseIds;
+    console.log("Returning selectedCaseIds:", this._selectedCaseIds);
+    return this._selectedCaseIds; // Fixed: return _selectedCaseIds instead of _hoveredCaseIds
   }
 
   set selectedCaseIds(ids: number[]) {
     this._selectedCaseIds = structuredClone(ids);
+
+    console.log("selectedCaseIds", this._selectedCaseIds);
   }
 
   get hoveredAttribute() {
