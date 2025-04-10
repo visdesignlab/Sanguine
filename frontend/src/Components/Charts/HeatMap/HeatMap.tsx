@@ -103,16 +103,17 @@ function HeatMap({
                 : aggregationScale().bandwidth();
               // Compute whether this dataPoint is currently hovered.
               const isHovered = InteractionStore.hoveredAttribute?.[0] === yAxisVar && InteractionStore.hoveredAttribute?.[1] === dataPoint.aggregateAttribute;
+              const isSelected = InteractionStore.selectedAttribute?.[0] === yAxisVar && InteractionStore.selectedAttribute?.[1] === dataPoint.aggregateAttribute;
               return (
                 /** On hover of a row, hover store is updated. */
-                <g key={idx} transform={`translate(0, ${rowY})`} onMouseEnter={() => { InteractionStore.hoveredAttribute = [yAxisVar, dataPoint.aggregateAttribute]; }} onMouseLeave={() => { InteractionStore.hoveredAttribute = undefined; }}>
+                <g key={idx} transform={`translate(0, ${rowY})`} onMouseEnter={() => { InteractionStore.hoveredAttribute = [yAxisVar, dataPoint.aggregateAttribute]; }} onMouseLeave={() => { InteractionStore.hoveredAttribute = undefined; }} onClick={() => { InteractionStore.selectedAttribute = [yAxisVar, dataPoint.aggregateAttribute]; }}>
                   {/** Background Hover Row Rectangle */}
                   <rect
                     x={0}
                     y={-1}
                     width={dimensionWidth}
                     height={rowHeight + 2}
-                    fill={isHovered ? InteractionStore.backgroundHoverColor : 'transparent'}
+                    fill={isSelected ? InteractionStore.backgroundSelectedColor : isHovered ? InteractionStore.backgroundHoverColor : 'transparent'}
                   />
                   <SingleHeatRow
                     bandwidth={rowHeight}
