@@ -14,12 +14,14 @@ import {
 } from '../../../Presets/Constants';
 import { AcronymDictionary, BloodComponent, HemoOption } from '../../../Presets/DataDict';
 import CustomizedAxisBand from '../ChartAccessories/CustomizedAxisBand';
+import { InteractionStore } from '../../../Interfaces/InteractionStore';
 
 interface DotProps {
   selected: boolean;
   brushed: boolean;
   hovered: boolean;
   hoverColor: string;
+  selectedColor: string;
 }
 
 const ScatterDot = styled('circle')<DotProps>`
@@ -29,7 +31,7 @@ const ScatterDot = styled('circle')<DotProps>`
   fill: ${(props) => (props.hovered
     ? props.hoverColor
     : props.brushed || props.selected
-      ? highlightOrange
+      ? props.selectedColor
       : basicGray)};
 `;
 
@@ -270,6 +272,7 @@ function ScatterPlot({
           brushed={brushed || false}
           hovered={hovered}
           hoverColor={InteractionStore.smallHoverColor}
+          selectedColor={InteractionStore.smallSelectColor}
           onClick={() => { InteractionStore.selectedCaseIds = [dataPoint.case.CASE_ID]; }}
           onMouseEnter={() => { InteractionStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
           onMouseLeave={() => { InteractionStore.hoveredCaseIds = []; }}
