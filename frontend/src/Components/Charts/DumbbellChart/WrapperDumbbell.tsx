@@ -4,7 +4,7 @@ import {
 } from '@mui/material';
 import { observer } from 'mobx-react';
 import {
-  useContext, useLayoutEffect, useRef, useState,
+  useContext, useEffect, useRef, useState,
 } from 'react';
 import { css } from '@emotion/react';
 import useDeepCompareEffect from 'use-deep-compare-effect';
@@ -71,7 +71,7 @@ const DumbbellUtilTitle = styled.div({
 
 function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
   const {
-    xAxisVar, i: chartId, h: layoutH, w: layoutW, annotationText,
+    xAxisVar, i: chartId, annotationText,
   } = layout;
 
   const store = useContext(Store);
@@ -87,13 +87,23 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
   const [showPostop, setShowPostop] = useState(true);
   const [data, setData] = useState<DumbbellDataPoint[]>([]);
 
-  useLayoutEffect(() => {
-    if (svgRef.current) {
-      setWidth(svgRef.current.clientWidth);
-      // setWidth(w === 1 ? 542.28 : 1146.97)
-      setHeight(svgRef.current.clientHeight);
+  // Use ResizeObserver to detect container size changes
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver((entries) => {
+      if (entries[0]) {
+        const { width: newWidth, height: newHeight } = entries[0].contentRect;
+        setWidth(newWidth);
+        setHeight(newHeight);
+      }
+    });
+    const refCurrent = svgRef.current;
+    if (refCurrent) {
+      resizeObserver.observe(refCurrent);
     }
-  }, [layoutH, layoutW, store.mainCompWidth, svgRef]);
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [svgRef]);
 
   useDeepCompareEffect(() => {
     let caseCount = 0;

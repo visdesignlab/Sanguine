@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react';
 import {
-  useContext, useLayoutEffect, useRef, useState,
+  useContext, useEffect, useRef, useState,
 } from 'react';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import styled from '@emotion/styled';
@@ -23,7 +23,7 @@ const ChartAccessoryDiv = styled.div({
 
 function WrapperScatter({ layout }: { layout: ScatterLayoutElement }) {
   const {
-    xAxisVar, yAxisVar, i: chartId, h: layoutH, w: layoutW, annotationText,
+    xAxisVar, yAxisVar, i: chartId, w: layoutW, annotationText,
   } = layout;
   const store = useContext(Store);
   const { filteredCases } = store;
@@ -39,12 +39,23 @@ function WrapperScatter({ layout }: { layout: ScatterLayoutElement }) {
   const [yMin, setYMin] = useState(0);
   const [yMax, setYMax] = useState(0);
 
-  useLayoutEffect(() => {
-    if (svgRef.current) {
-      setWidth(svgRef.current.clientWidth);
-      setHeight(svgRef.current.clientHeight);
+  // Use ResizeObserver to detect container size changes
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver((entries) => {
+      if (entries[0]) {
+        const { width: newWidth, height: newHeight } = entries[0].contentRect;
+        setWidth(newWidth);
+        setHeight(newHeight);
+      }
+    });
+    const refCurrent = svgRef.current;
+    if (refCurrent) {
+      resizeObserver.observe(refCurrent);
     }
-  }, [layoutH, layoutW, store.mainCompWidth, svgRef]);
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [svgRef]);
 
   useDeepCompareEffect(() => {
     let tempYMax = 0;
