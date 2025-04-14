@@ -4,7 +4,7 @@ import {
 } from '@mui/material';
 import { observer } from 'mobx-react';
 import {
-  useContext, useEffect, useRef, useState,
+  useContext, useRef, useState,
 } from 'react';
 import { css } from '@emotion/react';
 import useDeepCompareEffect from 'use-deep-compare-effect';
@@ -20,6 +20,7 @@ import AnnotationForm from '../ChartAccessories/AnnotationForm';
 import ChartStandardButtons from '../ChartStandardButtons';
 import { ChartAccessoryDiv, ChartWrapperContainer } from '../../../Presets/StyledComponents';
 import { DumbbellLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
+import useComponentSize from '../../Hooks/UseComponentSize';
 
 const ButtonStyles = {
   preopButtonActive: css({
@@ -78,8 +79,6 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
   const { filteredCases } = store;
   const { proceduresSelection, showZero, rawDateRange } = store.provenanceState;
   const svgRef = useRef<SVGSVGElement>(null);
-  const [width, setWidth] = useState(0);
-  const [height, setHeight] = useState(0);
   const [xMin, setXMin] = useState(Infinity);
   const [xMax, setXMax] = useState(0);
   const [sortMode, setSortMode] = useState<'preop' | 'postop' | 'gap'>('postop');
@@ -87,23 +86,7 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
   const [showPostop, setShowPostop] = useState(true);
   const [data, setData] = useState<DumbbellDataPoint[]>([]);
 
-  // Use ResizeObserver to detect container size changes
-  useEffect(() => {
-    const resizeObserver = new ResizeObserver((entries) => {
-      if (entries[0]) {
-        const { width: newWidth, height: newHeight } = entries[0].contentRect;
-        setWidth(newWidth);
-        setHeight(newHeight);
-      }
-    });
-    const refCurrent = svgRef.current;
-    if (refCurrent) {
-      resizeObserver.observe(refCurrent);
-    }
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [svgRef]);
+  const size = useComponentSize(svgRef);
 
   useDeepCompareEffect(() => {
     let caseCount = 0;
@@ -204,7 +187,7 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           </ChartAccessoryDiv>
           <Box style={{ height: 'calc(100% - 100px)', overflow: 'auto' }}>
             <svg ref={svgRef} style={{ height: 'calc(100% - 10px)' }}>
-              <DumbbellChart data={data} svg={svgRef} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} xAxisVar={xAxisVar} dimensionWidth={width} dimensionHeight={height} xMin={xMin} xMax={xMax} />
+              <DumbbellChart data={data} svg={svgRef} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} xAxisVar={xAxisVar} dimensionWidth={size.width} dimensionHeight={size.height} xMin={xMin} xMax={xMax} />
             </svg>
           </Box>
           <AnnotationForm chartI={chartId} annotationText={annotationText} />
