@@ -98,7 +98,7 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
       const postopHgb = ob.POSTOP_HEMO;
       let yAxisVal;
       yAxisVal = ob[xAxisVar] as number;
-      if (yAxisVal !== undefined && preopHgb > 0 && postopHgb > 0 && !existingCaseID.has(ob.CASE_ID)) {
+      if (yAxisVal !== undefined && preopHgb > 0 && postopHgb > 0 && !existingCaseID.has(ob.case_id)) {
         if ((showZero) || (!showZero && yAxisVal > 0)) {
           yAxisVal = bloodComponentOutlierHandler(yAxisVal, xAxisVar);
           tempXMin = preopHgb < tempXMin ? preopHgb : tempXMin;
