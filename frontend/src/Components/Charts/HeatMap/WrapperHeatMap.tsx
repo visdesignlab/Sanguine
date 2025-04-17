@@ -16,6 +16,7 @@ import AnnotationForm from '../ChartAccessories/AnnotationForm';
 import ChartStandardButtons from '../ChartStandardButtons';
 import { ChartAccessoryDiv } from '../../../Presets/StyledComponents';
 import { HeatMapLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
+import { ExtraPairOptions } from '../../../Presets/DataDict';
 
 function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
   const {
@@ -87,7 +88,7 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
     <Container style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <ChartAccessoryDiv>
         {`Heatmap${(outcomeComparison || interventionDate) ? ' with Comparison' : ''}`}
-        <ExtraPairButtons disbleButton={width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
+        <ExtraPairButtons disbleButton={width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} buttonOptions={ExtraPairOptions} />
         <ChartConfigMenu layout={layout} />
         <ChartStandardButtons chartID={chartId} />
       </ChartAccessoryDiv>
