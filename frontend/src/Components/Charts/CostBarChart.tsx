@@ -207,6 +207,15 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     return aggScale;
   }, [dimensionHeight, xVals, currentOffset]);
 
+  const privateModeNaming = useCallback((input: string | number) => {
+    // Use provider name if private mode is OFF and xAxisVar includes 'PROV_ID'
+    if (!store.configStore.privateMode && yAxisVar.includes('PROV_ID')) {
+      const name = store.providerMappping[Number(input)] as string;
+      return name ? `${name.slice(0, 1)}${name.slice(1).toLowerCase()}` : input;
+    }
+    return input;
+  }, [store.configStore.privateMode, store.providerMappping, yAxisVar]);
+
   useDeepCompareEffect(() => {
     let tempmaxCost = 0;
     let tempMinCost = 0;
@@ -218,7 +227,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     filteredCases.forEach((singleCase: SingleCasePoint) => {
       if (!temporaryDataHolder[singleCase[yAxisVar]]) {
         temporaryDataHolder[singleCase[yAxisVar]] = {
-          aggregateAttribute: singleCase[yAxisVar],
+          aggregateAttribute: privateModeNaming(singleCase[yAxisVar]),
           PRBC_UNITS: 0,
           FFP_UNITS: 0,
           CRYO_UNITS: 0,
@@ -229,7 +238,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
           caseIDList: new Set(),
         };
         secondaryTemporaryDataHolder[singleCase[yAxisVar]] = {
-          aggregateAttribute: singleCase[yAxisVar],
+          aggregateAttribute: privateModeNaming(singleCase[yAxisVar]),
           PRBC_UNITS: 0,
           FFP_UNITS: 0,
           CRYO_UNITS: 0,
@@ -292,7 +301,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     }
     store.chartStore.totalAggregatedCaseCount = totalCaseCountTemp + secondaryCaseCountTemp;
     stateUpdateWrapperUseJSON(data, outputData, setData);
-  }, [proceduresSelection, rawDateRange, yAxisVar, currentOutputFilterSet, BloodProductCost, filteredCases, outcomeComparison, interventionDate]);
+  }, [proceduresSelection, rawDateRange, yAxisVar, currentOutputFilterSet, BloodProductCost, filteredCases, outcomeComparison, interventionDate, store.configStore.privateMode]);
 
   const spec = useMemo(() => ({
     $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
