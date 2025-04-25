@@ -50,7 +50,7 @@ export const EXTRA_PAIR_OPTIONS = [...OUTCOMES, 'PREOP_HEMO', 'POSTOP_HEMO', 'TO
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ExtraPairOptions: { key: typeof EXTRA_PAIR_OPTIONS[number]; value: string }[] = (OutcomeOptions as any).concat([
   { key: 'PREOP_HEMO', value: 'Preop HGB' },
-  { key: 'POSTOP_HEMO', value: 'Posop HGB' },
+  { key: 'POSTOP_HEMO', value: 'Postop HGB' },
   { key: 'TOTAL_TRANS', value: 'Total Transfused' },
   { key: 'PER_CASE', value: 'Per Case' },
   { key: 'ZERO_TRANS', value: 'Zero Transfused' },
