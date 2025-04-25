@@ -69,11 +69,11 @@ procedure_count_query = f"""
             GROUP_CONCAT({FIELDS.get('billing_code')}) as codes,
             SURG.{FIELDS.get('case_id')}
         FROM {TABLES.get('billing_codes')} BLNG
-        INNER JOIN SURGERY_CASE SURG
-            ON (BLNG.{FIELDS.get('visit_no')} = SURG.{FIELDS.get('visit_no')})
-            AND (BLNG.{FIELDS.get('procedure_dtm')} = SURG.{FIELDS.get('case_date')})
+        INNER JOIN {TABLES.get('surgery_case')} SURG
+            ON BLNG.{FIELDS.get('visit_no')} = SURG.{FIELDS.get('visit_no')}
+            AND CAST(BLNG.{FIELDS.get('procedure_dtm')} AS DATE) = SURG.{FIELDS.get('case_date')}
         {filters_safe_sql}
-        GROUP BY {FIELDS.get('case_id')}
+        GROUP BY SURG.{FIELDS.get('case_id')}
     """
 
 patient_query = f"""
