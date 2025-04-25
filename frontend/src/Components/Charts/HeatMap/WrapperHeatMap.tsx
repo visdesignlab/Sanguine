@@ -85,15 +85,16 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
         temporaryDataHolder[singleCase[yAxisVar]].data.push(singleCase);
         temporaryDataHolder[singleCase[yAxisVar]].patientIDList.add(singleCase.MRN);
       }
-      // }
     });
     const [tempCaseCount, outputData] = generateRegularData(temporaryDataHolder, store.provenanceState.showZero, xAxisVar);
     const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, store.provenanceState.showZero, xAxisVar);
     stateUpdateWrapperUseJSON(data, outputData, setData);
     stateUpdateWrapperUseJSON(secondaryData, secondOutputData, setSecondaryData);
     store.chartStore.totalAggregatedCaseCount = (tempCaseCount as number) + (secondCaseCount as number);
-    setCaseCount(tempCaseCount as number);
-    setSecondaryCaseCount(secondCaseCount as number);
+
+    // Marks the 'true' and 'false' if attribute === 0.
+    setCaseCount(secondCaseCount as number);
+    setSecondaryCaseCount(tempCaseCount as number);
   }, [proceduresSelection, surgeryUrgencySelection, store.provenanceState.outcomeFilter,
     rawDateRange,
     store.provenanceState.showZero,
