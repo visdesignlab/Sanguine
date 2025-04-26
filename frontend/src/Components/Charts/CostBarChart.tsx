@@ -28,6 +28,7 @@ import { CostBarChartDataPoint, SingleCasePoint } from '../../Interfaces/Types/D
 import { sortHelper } from '../../HelperFunctions/ChartSorting';
 import ComparisonLegend from './ChartAccessories/ComparisonLegend';
 import { CostLayoutElement } from '../../Interfaces/Types/LayoutTypes';
+import { usePrivateProvName } from '../Hooks/PrivateModeLabeling';
 
 type TempDataItem = {
   aggregateAttribute: string | number;
@@ -207,14 +208,10 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     return aggScale;
   }, [dimensionHeight, xVals, currentOffset]);
 
-  const privateModeNaming = useCallback((input: string | number) => {
-    // Use provider name if private mode is OFF and xAxisVar includes 'PROV_ID'
-    if (!store.configStore.privateMode && yAxisVar.includes('PROV_ID')) {
-      const name = store.providerMappping[Number(input)] as string;
-      return name ? `${name.slice(0, 1)}${name.slice(1).toLowerCase()}` : input;
-    }
-    return input;
-  }, [store.configStore.privateMode, store.providerMappping, yAxisVar]);
+  // Gets the provider name depending on the private mode setting
+  const getProviderName = usePrivateProvName;
+  // If the xAxisVar is a provider ID, we need to get the provider name for display.
+  const getLabel = (label: string | number) => (yAxisVar.includes('PROV_ID') ? getProviderName(label) : label);
 
   useDeepCompareEffect(() => {
     let tempmaxCost = 0;
@@ -227,7 +224,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     filteredCases.forEach((singleCase: SingleCasePoint) => {
       if (!temporaryDataHolder[singleCase[yAxisVar]]) {
         temporaryDataHolder[singleCase[yAxisVar]] = {
-          aggregateAttribute: privateModeNaming(singleCase[yAxisVar]),
+          aggregateAttribute: getLabel(singleCase[yAxisVar]),
           PRBC_UNITS: 0,
           FFP_UNITS: 0,
           CRYO_UNITS: 0,
@@ -238,7 +235,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
           caseIDList: new Set(),
         };
         secondaryTemporaryDataHolder[singleCase[yAxisVar]] = {
-          aggregateAttribute: privateModeNaming(singleCase[yAxisVar]),
+          aggregateAttribute: getLabel(singleCase[yAxisVar]),
           PRBC_UNITS: 0,
           FFP_UNITS: 0,
           CRYO_UNITS: 0,

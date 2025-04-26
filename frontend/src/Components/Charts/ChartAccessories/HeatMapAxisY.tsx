@@ -8,6 +8,7 @@ import { AggregationScaleGenerator } from '../../../HelperFunctions/Scales';
 import { Offset } from '../../../Interfaces/Types/OffsetType';
 import Store from '../../../Interfaces/Store';
 import { Aggregation } from '../../../Presets/DataDict';
+import { usePrivateProvName } from '../../Hooks/PrivateModeLabeling';
 
 type Props = {
     svg: RefObject<SVGSVGElement>;
@@ -26,14 +27,8 @@ function HeatMapAxis({
   const svgSelection = select(svg.current);
   const aggregationLabel = axisLeft(aggregationScale());
 
-  const privateModeNaming = useCallback((input: string) => {
-    // Use provider name if private mode is OFF and xAxisVar includes 'PROV_ID'
-    if (!store.configStore.privateMode && yAxisVar.includes('PROV_ID')) {
-      const name = store.providerMappping[Number(input)] as string;
-      return name ? `${name.slice(0, 1)}${name.slice(1).toLowerCase()}` : input;
-    }
-    return input;
-  }, [store.configStore.privateMode, store.providerMappping, yAxisVar]);
+  // Gets the provider name depending on the private mode setting
+  const getProviderName = usePrivateProvName;
 
   svgSelection
     .select('.axes-y')
@@ -48,7 +43,7 @@ function HeatMapAxis({
     .attr('font-size', store.configStore.largeFont ? largeFontSize : regularFontSize)
     .attr('transform', `translate(-${CaseRectWidth + 2},0)`)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .text((d: any) => privateModeNaming(d))
+    .text((d: any) => (yAxisVar.includes('PROV_ID') ? getProviderName(d) : d))
     .attr('cursor', 'pointer')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .on('click', (e, d: any) => {
