@@ -60,6 +60,7 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
   }, [extraPairArray, data, filteredCases, secondaryData, outcomeComparison, interventionDate]);
 
   const size = useComponentSize(svgRef);
+  const yAxisMargin = 40;
 
   useDeepCompareEffect(() => {
     const temporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }> = {};
@@ -119,7 +120,7 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
             dimensionWidth={size.width}
             data={data}
             svg={svgRef}
-            extraPairTotalWidth={extraPairTotalWidth}
+            extraPairTotalWidth={extraPairTotalWidth + yAxisMargin}
             yAxisVar={yAxisVar}
             xAxisVar={xAxisVar}
             chartId={chartId}
