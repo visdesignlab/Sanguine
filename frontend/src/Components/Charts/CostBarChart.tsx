@@ -195,6 +195,12 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
 
   const currentOffset = OffsetDict.regular;
   const [xVals, setXVals] = useState<string[]>([]);
+
+  // Gets the provider name depending on the private mode setting
+  const getProviderName = usePrivateProvName();
+  // If the xAxisVar is a provider ID, we need to get the provider name for display.
+  const getLabel = (label: string | number) => (yAxisVar.includes('PROV_ID') ? getProviderName(label) : label);
+
   useDeepCompareEffect(() => {
     const [tempxVals, _] = sortHelper(data, yAxisVar, store.provenanceState.showZero, secondaryData);
     setXVals(tempxVals);
@@ -207,11 +213,6 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
       .paddingInner(0.1);
     return aggScale;
   }, [dimensionHeight, xVals, currentOffset]);
-
-  // Gets the provider name depending on the private mode setting
-  const getProviderName = usePrivateProvName;
-  // If the xAxisVar is a provider ID, we need to get the provider name for display.
-  const getLabel = (label: string | number) => (yAxisVar.includes('PROV_ID') ? getProviderName(label) : label);
 
   useDeepCompareEffect(() => {
     let tempmaxCost = 0;

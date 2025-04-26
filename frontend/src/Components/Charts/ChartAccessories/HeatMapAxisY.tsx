@@ -28,7 +28,7 @@ function HeatMapAxis({
   const aggregationLabel = axisLeft(aggregationScale());
 
   // Gets the provider name depending on the private mode setting
-  const getProviderName = usePrivateProvName;
+  const getProviderName = usePrivateProvName();
 
   svgSelection
     .select('.axes-y')

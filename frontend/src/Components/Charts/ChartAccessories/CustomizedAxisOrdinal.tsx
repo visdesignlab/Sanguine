@@ -36,7 +36,7 @@ function CustomizedAxisOrdinal({
   }, [scaleDomain, scaleRange]);
 
   // Gets the provider name depending on the private mode setting
-  const getProviderName = usePrivateProvName;
+  const getProviderName = usePrivateProvName();
   // If the xAxisVar is a provider ID, we need to get the provider name for display.
   const getLabel = (label: number) => (xAxisVar.includes('PROV_ID') ? getProviderName(label) : label);
 
