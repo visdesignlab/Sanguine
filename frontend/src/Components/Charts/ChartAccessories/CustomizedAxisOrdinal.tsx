@@ -35,7 +35,7 @@ function CustomizedAxisOrdinal({
   }, [scaleDomain, scaleRange]);
 
   const axisTextOutput = useCallback((input: number) => {
-    if (store.configStore.privateMode && xAxisVar.includes('PROV_ID')) {
+    if (!store.configStore.privateMode && xAxisVar.includes('PROV_ID')) {
       const name = store.providerMappping[input] as string;
       return name ? `${name.slice(0, 1)}${name.slice(1).toLowerCase()}` : input;
     }
