@@ -55,9 +55,10 @@ function SurgeryRow({
       <SurgeryDiv ref={spanRef} onClick={() => { store.selectionStore.updateProcedureSelection(listItem, selected, isSubSurgery ? parentSurgery : undefined); }}>
         {isSubSurgery
           ? (
+            // Sub-procedure row
             <>
               {' '}
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               {listItem.procedureName.includes('Only') ? '' : '+'}
               <span
                 onMouseOver={mouseOverHandler}
@@ -68,7 +69,9 @@ function SurgeryRow({
             </>
           )
           : (
+            // Main-procedure row
             <>
+              {/** If the main procedure is expanded or collapsed */}
               <span onClick={(event) => {
                 if (expandedList.includes(listItem.procedureName)) {
                   setExpandedList(expandedList.filter((d) => d !== listItem.procedureName));
@@ -80,6 +83,7 @@ function SurgeryRow({
               >
                 {expandedList.includes(listItem.procedureName) ? '▼' : '►'}
               </span>
+              {/** Main Procedure name */}
               <span
                 onMouseOver={mouseOverHandler}
                 onMouseLeave={mouseLeaveHandler}
