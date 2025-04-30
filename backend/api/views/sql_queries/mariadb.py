@@ -248,7 +248,7 @@ surgery_case_query = rf"""
         QUARTER(SURG.CASE_DATE) AS QUARTER,
         MONTH(SURG.CASE_DATE) AS MONTH,
         SURG.CASE_DATE,
-        VST.TOTAL_VENT_MINS > 1440, 1, 0 AS VENT,
+        VST.total_vent_mins > 1440 AS VENT,
         VST.APR_DRG_WEIGHT AS DRG_WEIGHT,
         VST.PAT_EXPIRED AS DEATH,
         BLNG.ECMO,
