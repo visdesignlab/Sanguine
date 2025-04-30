@@ -9,7 +9,7 @@ import {
 } from '../../../Presets/StyledSVGComponents';
 import Store from '../../../Interfaces/Store';
 import { DumbbellDataPoint } from '../../../Interfaces/Types/DataTypes';
-import { usePrivateProvName } from '../../Hooks/PrivateModeLabeling';
+import { usePrivateProvLabel } from '../../Hooks/PrivateModeLabeling';
 
 function CustomizedAxisOrdinal({
   numberList, scaleDomain, scaleRange, xAxisVar, chartHeight, data,
@@ -36,9 +36,7 @@ function CustomizedAxisOrdinal({
   }, [scaleDomain, scaleRange]);
 
   // Gets the provider name depending on the private mode setting
-  const getProviderName = usePrivateProvName();
-  // If the xAxisVar is a provider ID, we need to get the provider name for display.
-  const getLabel = (label: number) => (xAxisVar.includes('PROV_ID') ? getProviderName(label) : label);
+  const getLabel = usePrivateProvLabel();
 
   // Add a new handler that updates both the local hoveredColumn state and the store.
   const handleColumnHover = (columnIndex: number | null) => {
@@ -87,8 +85,8 @@ function CustomizedAxisOrdinal({
                 fill={hoveredColumn === idx ? hoverStore.backgroundHoverColor : (idx % 2 === 1 ? 'white' : 'black')}
                 opacity={hoveredColumn === idx ? 0.5 : 0.05}
               />
-              <Tooltip title={getLabel(numberOb.bin)} arrow>
-                <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{getLabel(numberOb.bin)}</AxisText>
+              <Tooltip title={getLabel(numberOb.bin, xAxisVar)} arrow>
+                <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{getLabel(numberOb.bin, xAxisVar)}</AxisText>
               </Tooltip>
 
             </g>

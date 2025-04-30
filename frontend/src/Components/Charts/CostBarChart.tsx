@@ -28,7 +28,7 @@ import { CostBarChartDataPoint, SingleCasePoint } from '../../Interfaces/Types/D
 import { sortHelper } from '../../HelperFunctions/ChartSorting';
 import ComparisonLegend from './ChartAccessories/ComparisonLegend';
 import { CostLayoutElement } from '../../Interfaces/Types/LayoutTypes';
-import { usePrivateProvName } from '../Hooks/PrivateModeLabeling';
+import { usePrivateProvLabel } from '../Hooks/PrivateModeLabeling';
 
 type TempDataItem = {
   aggregateAttribute: string | number;
@@ -197,9 +197,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   const [xVals, setXVals] = useState<string[]>([]);
 
   // Gets the provider name depending on the private mode setting
-  const getProviderName = usePrivateProvName();
-  // If the xAxisVar is a provider ID, we need to get the provider name for display.
-  const getLabel = (label: string | number) => (yAxisVar.includes('PROV_ID') ? getProviderName(label) : label);
+  const getLabel = usePrivateProvLabel();
 
   useDeepCompareEffect(() => {
     const [tempxVals, _] = sortHelper(data, yAxisVar, store.provenanceState.showZero, secondaryData);
@@ -225,7 +223,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     filteredCases.forEach((singleCase: SingleCasePoint) => {
       if (!temporaryDataHolder[singleCase[yAxisVar]]) {
         temporaryDataHolder[singleCase[yAxisVar]] = {
-          aggregateAttribute: getLabel(singleCase[yAxisVar]),
+          aggregateAttribute: getLabel(singleCase[yAxisVar], yAxisVar),
           PRBC_UNITS: 0,
           FFP_UNITS: 0,
           CRYO_UNITS: 0,
@@ -236,7 +234,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
           caseIDList: new Set(),
         };
         secondaryTemporaryDataHolder[singleCase[yAxisVar]] = {
-          aggregateAttribute: getLabel(singleCase[yAxisVar]),
+          aggregateAttribute: getLabel(singleCase[yAxisVar], yAxisVar),
           PRBC_UNITS: 0,
           FFP_UNITS: 0,
           CRYO_UNITS: 0,
