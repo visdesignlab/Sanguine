@@ -63,7 +63,7 @@ export const generateExtraAttributeData = (filteredCases: SingleCasePoint[], yAx
     }
   });
 
-  // Get the case count and data for the temporary and secondary (outcome comparison).
+  // Get the case count and processed data for the temporary and secondary (outcome comparison).
   const [caseCount, extraAttributeChartData] = processExtraAttributeData(extraAttributeData, showZero, xAxisVar as 'PRBC_UNITS' | 'FFP_UNITS' | 'PLT_UNITS' | 'CRYO_UNITS' | 'CELL_SAVER_ML');
   const [secondCaseCount, outcomeAttributeChartData] = processExtraAttributeData(outcomeExtraAttributeData, showZero, xAxisVar as 'PRBC_UNITS' | 'FFP_UNITS' | 'PLT_UNITS' | 'CRYO_UNITS' | 'CELL_SAVER_ML');
   return [caseCount, secondCaseCount, extraAttributeChartData, outcomeAttributeChartData];
