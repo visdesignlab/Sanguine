@@ -12,7 +12,9 @@ type Props = {
     disbleButton: boolean;
     buttonOptions: { key: string; value: string }[];
 };
-function ExtraPairButtons({ extraPairLength, chartId, disbleButton, buttonOptions}: Props) {
+function ExtraPairButtons({
+  extraPairLength, chartId, disbleButton, buttonOptions,
+}: Props) {
   const store = useContext(Store);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);

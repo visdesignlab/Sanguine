@@ -6,7 +6,7 @@ import { create as createpd } from 'pdfast';
 import {
   SingleCasePoint, BasicAggregatedDatePoint, ExtraPairPoint,
 } from '../Interfaces/Types/DataTypes';
-import { generateRegularData } from './ChartDataGenerator';
+import { processExtraAttributeData } from './ChartDataGenerator';
 
 const outcomeDataGenerate = (aggregatedBy: string, name: string, label: string, data: BasicAggregatedDatePoint[], hemoglobinDataSet: SingleCasePoint[]) => {
   const temporaryDataHolder: any = {};
@@ -33,33 +33,40 @@ const outcomeDataGenerate = (aggregatedBy: string, name: string, label: string, 
 
 // Generate the data for the extra attribute plot(s) specifically. (Taken from WrapperHeatMap.tsx, to be re-used in CostBarChart.tsx)
 export const generateExtraAttributeData = (filteredCases: SingleCasePoint[], yAxisVar: string, outcomeComparison: string | undefined, interventionDate: number | undefined, showZero: boolean, xAxisVar: string) => {
-  const temporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }> = {};
-  const secondaryTemporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }> = {};
+  // Initializing sets for extra attribute data (and second set for outcome comparison)
+  const extraAttributeData: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }> = {};
+  const outcomeExtraAttributeData: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }> = {};
+
+  // For every case, add it to the correct dataset.
   filteredCases.forEach((singleCase: SingleCasePoint) => {
-    if (!temporaryDataHolder[singleCase[yAxisVar]]) {
-      temporaryDataHolder[singleCase[yAxisVar]] = {
+    // If the case has not been added, initialize it.
+    if (!extraAttributeData[singleCase[yAxisVar]]) {
+      extraAttributeData[singleCase[yAxisVar]] = {
         aggregateAttribute: singleCase[yAxisVar],
         data: [],
         patientIDList: new Set(),
       };
-      secondaryTemporaryDataHolder[singleCase[yAxisVar]] = {
+      outcomeExtraAttributeData[singleCase[yAxisVar]] = {
         aggregateAttribute: singleCase[yAxisVar],
         data: [],
         patientIDList: new Set(),
       };
     }
 
+    // Determine which dataset the case should belong to and add it.
     if ((outcomeComparison && singleCase[outcomeComparison] as number > 0) || (interventionDate && new Date(singleCase.CASE_DATE) < new Date(interventionDate))) {
-      secondaryTemporaryDataHolder[singleCase[yAxisVar]].data.push(singleCase);
-      secondaryTemporaryDataHolder[singleCase[yAxisVar]].patientIDList.add(singleCase.MRN);
+      outcomeExtraAttributeData[singleCase[yAxisVar]].data.push(singleCase);
+      outcomeExtraAttributeData[singleCase[yAxisVar]].patientIDList.add(singleCase.MRN);
     } else {
-      temporaryDataHolder[singleCase[yAxisVar]].data.push(singleCase);
-      temporaryDataHolder[singleCase[yAxisVar]].patientIDList.add(singleCase.MRN);
+      extraAttributeData[singleCase[yAxisVar]].data.push(singleCase);
+      extraAttributeData[singleCase[yAxisVar]].patientIDList.add(singleCase.MRN);
     }
   });
-  const [tempCaseCount, outputData] = generateRegularData(temporaryDataHolder, showZero, xAxisVar as 'PRBC_UNITS' | 'FFP_UNITS' | 'PLT_UNITS' | 'CRYO_UNITS' | 'CELL_SAVER_ML');
-  const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, showZero, xAxisVar as 'PRBC_UNITS' | 'FFP_UNITS' | 'PLT_UNITS' | 'CRYO_UNITS' | 'CELL_SAVER_ML');
-  return [tempCaseCount, secondCaseCount, outputData, secondOutputData];
+
+  // Get the case count and data for the temporary and secondary (outcome comparison).
+  const [caseCount, extraAttributeChartData] = processExtraAttributeData(extraAttributeData, showZero, xAxisVar as 'PRBC_UNITS' | 'FFP_UNITS' | 'PLT_UNITS' | 'CRYO_UNITS' | 'CELL_SAVER_ML');
+  const [secondCaseCount, outcomeAttributeChartData] = processExtraAttributeData(outcomeExtraAttributeData, showZero, xAxisVar as 'PRBC_UNITS' | 'FFP_UNITS' | 'PLT_UNITS' | 'CRYO_UNITS' | 'CELL_SAVER_ML');
+  return [caseCount, secondCaseCount, extraAttributeChartData, outcomeAttributeChartData];
 };
 
 /**
@@ -78,7 +85,6 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
     extraPairArray.forEach((variable: string) => {
       const newData = {} as any;
       const caseDictionary = {} as any;
-      const temporaryDataHolder: any = {};
       const medianData = {} as any;
       let kdeMaxTemp: any = 0;
       switch (variable) {

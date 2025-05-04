@@ -3,10 +3,13 @@ import { HeatMapDataPoint, SingleCasePoint } from '../Interfaces/Types/DataTypes
 import { BloodProductCap } from '../Presets/Constants';
 import { BloodComponent } from '../Presets/DataDict';
 
+// Returns the total case count and the output data for .
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const generateRegularData = (temporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }>, showZero: boolean, valueToVisualize: BloodComponent) => {
+export const processExtraAttributeData = (temporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }>, showZero: boolean, valueToVisualize: BloodComponent) => {
   let totalCaseCount = 0;
   const outputData: HeatMapDataPoint[] = [];
+
+
   Object.values(temporaryDataHolder).forEach((computedData) => {
     const caseIDArray: number[] = [];
     const dataArray: SingleCasePoint[] = computedData.data;
