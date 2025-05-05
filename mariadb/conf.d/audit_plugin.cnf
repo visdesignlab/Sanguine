@@ -1,0 +1,3 @@
+[mariadb]
+plugin_load_add = server_audit
+server_audit=FORCE_PLUS_PERMANENT

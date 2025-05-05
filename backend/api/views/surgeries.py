@@ -1,10 +1,10 @@
 from collections import Counter, defaultdict
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
+from django.conf import settings
 from django.views.decorators.http import require_http_methods
-from django_cas_ng.decorators import login_required
 
 from .decorators.conditional_login_required import conditional_login_required
-from .utils.sql_queries import procedure_count_query, patient_query, surgery_query, surgery_case_query
+from .sql_queries import procedure_count_query, patient_query, surgery_query, surgery_case_query
 from .utils.utils import cpt, get_all_cpt_code_filters, log_request, execute_sql, execute_sql_dict
 
 
@@ -18,12 +18,14 @@ def index(request):
 def whoami(request):
     if request.user.is_authenticated:
         return HttpResponse(request.user.username)
+    elif settings.DEBUG:
+        return HttpResponse("DEBUG")
     else:
         return HttpResponse("Unauthorized", status=401)
 
 
 @require_http_methods(["GET"])
-@conditional_login_required(login_required)
+@conditional_login_required
 def get_procedure_counts(request):
     log_request(request)
 
@@ -81,7 +83,7 @@ def get_procedure_counts(request):
 
 
 @require_http_methods(["GET"])
-@conditional_login_required(login_required)
+@conditional_login_required
 def fetch_surgery(request):
     log_request(request)
 
@@ -96,6 +98,7 @@ def fetch_surgery(request):
     cpts = cpt()
     data = execute_sql_dict(command=command, id=case_id)
     for row in data:
+        print(row)
         row["cpt"] = list(set([cpt[2] for cpt in cpts if cpt[1] in row["CODES"]]))
         del row["CODES"]
 
@@ -103,7 +106,7 @@ def fetch_surgery(request):
 
 
 @require_http_methods(["GET"])
-@conditional_login_required(login_required)
+@conditional_login_required
 def fetch_patient(request):
     log_request(request)
 
@@ -121,7 +124,7 @@ def fetch_patient(request):
 
 
 @require_http_methods(["GET"])
-@conditional_login_required(login_required)
+@conditional_login_required
 def get_sanguine_surgery_cases(request):
     log_request(request)
 

@@ -95,28 +95,30 @@ function SurgeryListViewer({ surgeryList, maxCaseCount }: Props) {
             </tr>
           </thead>
           <tbody>
+            {/** Render Selected Procedures */}
             {itemSelected.flatMap((listItem: ProcedureEntry) => {
+              // If the procedure is expanded (inside expandedList), render the sub-procedures as well
               if (expandedList.includes(listItem.procedureName) && listItem.overlapList) {
                 return [<SurgeryRow
-                  key={listItem.procedureName}
+                  key={`main-${listItem.procedureName}`}
                   expandedList={expandedList}
                   setExpandedList={setExpandedList}
                   listItem={listItem}
-                  isSelected
+                  selected
                   isSubSurgery={false}
                   highlighted={!findIfSelectedSubProcedureExist(listItem.procedureName)}
                   caseScaleDomain={JSON.stringify(caseScale().domain())}
                   width={width}
                   caseScaleRange={JSON.stringify(caseScale().range())}
                 />,
-
-                ].concat(listItem.overlapList.map((subItem: ProcedureEntry) => (
+                // Render sub-procedures contained in the 'overlapList'
+                ].concat(listItem.overlapList.map((subItem: ProcedureEntry, subIndex: number) => (
                   <SurgeryRow
-                    key={subItem.procedureName}
+                    key={`sub-${listItem.procedureName}-${subItem.procedureName}-${subIndex}`}
                     expandedList={expandedList}
                     setExpandedList={setExpandedList}
                     listItem={subItem}
-                    isSelected={findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName)}
+                    selected={findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName)}
                     isSubSurgery
                     highlighted={findIfSubProcedureSelected(subItem.procedureName, listItem.procedureName)}
                     parentSurgery={listItem}
@@ -126,13 +128,14 @@ function SurgeryListViewer({ surgeryList, maxCaseCount }: Props) {
                   />
                 )));
               }
+              // If the procedure is not expanded, render the procedure only
               return [
                 <SurgeryRow
-                  key={listItem.procedureName}
+                  key={`main-${listItem.procedureName}`}
                   expandedList={expandedList}
                   setExpandedList={setExpandedList}
                   listItem={listItem}
-                  isSelected
+                  selected
                   isSubSurgery={false}
                   highlighted
                   caseScaleDomain={JSON.stringify(caseScale().domain())}
@@ -141,25 +144,28 @@ function SurgeryListViewer({ surgeryList, maxCaseCount }: Props) {
                 />,
               ];
             })}
+            {/** Render Unselected Procedures */}
             {itemUnselected.flatMap((listItem: ProcedureEntry) => {
+              // If the procedure is expanded, render the sub-procedures as well
               if (expandedList.includes(listItem.procedureName) && listItem.overlapList) {
                 return [<SurgeryRow
-                  key={listItem.procedureName}
+                  key={`main-${listItem.procedureName}`}
                   listItem={listItem}
                   expandedList={expandedList}
                   setExpandedList={setExpandedList}
-                  isSelected={false}
+                  selected={false}
                   isSubSurgery={false}
                   highlighted={false}
                   caseScaleDomain={JSON.stringify(caseScale().domain())}
                   width={width}
                   caseScaleRange={JSON.stringify(caseScale().range())}
                 />,
-                ].concat(listItem.overlapList.map((subItem: ProcedureEntry) => (
+                // Render sub-procedures contained in the 'overlapList'
+                ].concat(listItem.overlapList.map((subItem: ProcedureEntry, subIndex: number) => (
                   <SurgeryRow
-                    key={subItem.procedureName}
+                    key={`sub-${listItem.procedureName}-${subItem.procedureName}-${subIndex}`}
                     listItem={subItem}
-                    isSelected={false}
+                    selected={false}
                     expandedList={expandedList}
                     setExpandedList={setExpandedList}
                     isSubSurgery
@@ -171,12 +177,13 @@ function SurgeryListViewer({ surgeryList, maxCaseCount }: Props) {
                   />
                 )));
               }
+              // If the procedure is not expanded, render the procedure only
               return [<SurgeryRow
-                key={listItem.procedureName}
+                key={`main-${listItem.procedureName}`}
                 listItem={listItem}
                 expandedList={expandedList}
                 setExpandedList={setExpandedList}
-                isSelected={false}
+                selected={false}
                 isSubSurgery={false}
                 highlighted={false}
                 caseScaleDomain={JSON.stringify(caseScale().domain())}

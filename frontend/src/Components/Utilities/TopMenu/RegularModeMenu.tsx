@@ -1,4 +1,5 @@
 /** @jsxImportSource @emotion/react */
+import * as htmlToImage from 'html-to-image';
 import {
   Menu, MenuItem, Button, AppBar, Typography, IconButton, Tooltip, ListItemIcon, Toolbar, Stack,
 } from '@mui/material';
@@ -12,6 +13,7 @@ import FormatSizeIcon from '@mui/icons-material/FormatSize';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ScreenshotMonitorIcon from '@mui/icons-material/ScreenshotMonitor';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import styled from '@emotion/styled';
 import { css } from '@emotion/react';
@@ -43,7 +45,6 @@ function RegularModeMenu() {
   const [chartType, setChartType] = useState<ChartType | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [anchorMore, setAnchorMore] = useState<null | HTMLElement>(null);
-
   const [openAbout, setOpenAbout] = useState(false);
 
   const passSetOpenAbout = (input: boolean) => {
@@ -78,7 +79,6 @@ function RegularModeMenu() {
         Accept: 'application/x-www-form-urlencoded',
         'Content-Type': 'application/x-www-form-urlencoded',
         'X-CSRFToken': csrftoken || '',
-        'Access-Control-Allow-Origin': 'https://bloodvis.chpc.utah.edu',
         'Access-Control-Allow-Credentials': 'true',
       },
       body: JSON.stringify({ old_name: store.configStore.loadedStateName, new_name: store.configStore.loadedStateName, new_definition: store.provenance.exportState(false) }),
@@ -99,6 +99,50 @@ function RegularModeMenu() {
       store.configStore.snackBarMessage = `An error occurred: ${error}`;
       store.configStore.openSnackBar = true;
     });
+  };
+
+  // Screenshot function
+  const handleScreenshot = async () => {
+    // Get root element
+    const htmlEl = document.documentElement;
+    // Filter out the elements that should not be captured
+    const filter = (node: HTMLElement): boolean => node.tagName !== 'NOSCRIPT';
+    // Temporarily set the dashboard grid items to overflow visible (for full-page screenshot)
+    const tempStyleEl: HTMLStyleElement = document.createElement('style');
+    tempStyleEl.innerHTML = '#full-dashboard .MuiGrid-item { overflow: visible !important; }';
+    document.head.appendChild(tempStyleEl);
+
+    // Screenshot options
+    const options = {
+      backgroundColor: '#ffffff',
+      pixelRatio: 2,
+      filter,
+      // Full-page width and height
+      width: htmlEl.scrollWidth,
+      height: htmlEl.scrollHeight,
+    };
+    // Generate date string in the format YYYY-MM-DD_HH-MM-SS
+    const dateString = new Date()
+      .toISOString()
+      .replace(/T/, '_')
+      .split('.')[0]
+      .replace(/:/g, '-');
+
+    try {
+      const dataUrl = await htmlToImage.toPng(htmlEl, options);
+      // Create a temporary anchor element and trigger download
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `Intelvia_Screenshot_${dateString}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Screenshot failed:', error);
+    } finally {
+      // Change dashboard grid items back to overflow auto
+      document.head.removeChild(tempStyleEl);
+    }
   };
 
   return (
@@ -158,13 +202,18 @@ function RegularModeMenu() {
           </Tooltip>
         </IconButton>
 
+        <IconButton onClick={handleScreenshot}>
+          <Tooltip title="Screenshot Full Page">
+            <ScreenshotMonitorIcon />
+          </Tooltip>
+        </IconButton>
+
         <IconButton onClick={handleMoreClick}>
           <Tooltip title="More">
             <MoreVertIcon />
           </Tooltip>
         </IconButton>
         <Menu anchorEl={anchorMore} open={Boolean(anchorMore)} onClose={handleMoreClose}>
-
           <a href="https://github.com/visdesignlab/Sanguine/issues" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: ' black' }}>
             <MenuItem onClick={handleMoreClose}>
               <ListItemIcon>

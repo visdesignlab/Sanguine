@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react';
 import {
-  useContext, useEffect, useLayoutEffect, useRef, useState,
+  useContext, useEffect, useRef, useState,
 } from 'react';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import { Box, Container } from '@mui/material';
@@ -17,18 +17,17 @@ import ChartStandardButtons from '../ChartStandardButtons';
 import { ChartAccessoryDiv } from '../../../Presets/StyledComponents';
 import { HeatMapLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
 import { ExtraPairOptions } from '../../../Presets/DataDict';
+import useComponentSize from '../../Hooks/UseComponentSize';
 
 function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
   const {
-    xAxisVar, yAxisVar, i: chartId, h: layoutH, w: layoutW, annotationText, extraPair, interventionDate, outcomeComparison,
+    xAxisVar, yAxisVar, i: chartId, annotationText, extraPair, interventionDate, outcomeComparison,
   } = layout;
   const store = useContext(Store);
 
   const { filteredCases } = store;
   const { surgeryUrgencySelection, rawDateRange, proceduresSelection } = store.provenanceState;
   const svgRef = useRef<SVGSVGElement>(null);
-  const [width, setWidth] = useState(0);
-  const [height, setHeight] = useState(0);
   const [extraPairData, setExtraPairData] = useState<ExtraPairPoint[]>([]);
   const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
   const [data, setData] = useState<HeatMapDataPoint[]>([]);
@@ -60,12 +59,7 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [extraPairArray, data, filteredCases, secondaryData, outcomeComparison, interventionDate]);
 
-  useLayoutEffect(() => {
-    if (svgRef.current) {
-      setWidth(svgRef.current.clientWidth);
-      setHeight(svgRef.current.clientHeight);
-    }
-  }, [data, layoutH, layoutW, store.mainCompWidth, svgRef]);
+  const size = useComponentSize(svgRef);
 
   // Generating the extra attribute data for the extra pair plot ------------------------------------------------------------
   useDeepCompareEffect(() => {
@@ -73,8 +67,9 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
     stateUpdateWrapperUseJSON(data, outputData, setData);
     stateUpdateWrapperUseJSON(secondaryData, secondaryOutputData, setSecondaryData);
     store.chartStore.totalAggregatedCaseCount = (tempCaseCount as number) + (secondaryTempCaseCount as number);
-    setCaseCount(tempCaseCount as number);
-    setSecondaryCaseCount(secondaryTempCaseCount as number);
+    // Marks the 'true' and 'false' if attribute === 0. 
+    setCaseCount(secondaryTempCaseCount as number);
+    setSecondaryCaseCount(tempCaseCount as number);
   }, [proceduresSelection, surgeryUrgencySelection, store.provenanceState.outcomeFilter,
     rawDateRange,
     store.provenanceState.showZero,
@@ -88,7 +83,7 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
     <Container style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <ChartAccessoryDiv>
         {`Heatmap${(outcomeComparison || interventionDate) ? ' with Comparison' : ''}`}
-        <ExtraPairButtons disbleButton={width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} buttonOptions={ExtraPairOptions} />
+        <ExtraPairButtons disbleButton={size.width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} buttonOptions={ExtraPairOptions} />
         <ChartConfigMenu layout={layout} />
         <ChartStandardButtons chartID={chartId} />
       </ChartAccessoryDiv>
@@ -96,8 +91,8 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
       <Box style={{ flexGrow: 1 }}>
         <svg style={{ width: '100%', height: '100%' }} ref={svgRef}>
           <HeatMap
-            dimensionHeight={height}
-            dimensionWidth={width}
+            dimensionHeight={size.height}
+            dimensionWidth={size.width}
             data={data}
             svg={svgRef}
             extraPairTotalWidth={extraPairTotalWidth}

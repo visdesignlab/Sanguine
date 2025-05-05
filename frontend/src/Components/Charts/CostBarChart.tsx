@@ -28,6 +28,7 @@ import { CostBarChartDataPoint, SingleCasePoint } from '../../Interfaces/Types/D
 import { sortHelper } from '../../HelperFunctions/ChartSorting';
 import ComparisonLegend from './ChartAccessories/ComparisonLegend';
 import { CostLayoutElement } from '../../Interfaces/Types/LayoutTypes';
+import { usePrivateProvLabel } from '../Hooks/PrivateModeLabeling';
 
 type TempDataItem = {
   aggregateAttribute: string | number;
@@ -65,6 +66,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   const [vegaHeight, setVegaHeight] = useState(0);
   const [dimensionHeight, setDimensionHeight] = useState(0);
   const [dimensionWidth, setDimensionWidth] = useState(0);
+  const xAxisOverlayHeight = 50;
   useLayoutEffect(() => {
     if (chartDiv.current) {
       setDimensionHeight(chartDiv.current.clientHeight);
@@ -219,6 +221,10 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
 
   const currentOffset = OffsetDict.regular;
   const [xVals, setXVals] = useState<string[]>([]);
+
+  // Gets the provider name depending on the private mode setting
+  const getLabel = usePrivateProvLabel();
+
   useDeepCompareEffect(() => {
     const [tempxVals, _] = sortHelper(costSavingsData, yAxisVar, store.provenanceState.showZero, secondaryCostSavingsData);
     setXVals(tempxVals);
@@ -243,7 +249,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     filteredCases.forEach((singleCase: SingleCasePoint) => {
       if (!temporaryDataHolder[singleCase[yAxisVar]]) {
         temporaryDataHolder[singleCase[yAxisVar]] = {
-          aggregateAttribute: singleCase[yAxisVar],
+          aggregateAttribute: getLabel(singleCase[yAxisVar], yAxisVar),
           PRBC_UNITS: 0,
           FFP_UNITS: 0,
           CRYO_UNITS: 0,
@@ -254,7 +260,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
           caseIDList: new Set(),
         };
         secondaryTemporaryDataHolder[singleCase[yAxisVar]] = {
-          aggregateAttribute: singleCase[yAxisVar],
+          aggregateAttribute: getLabel(singleCase[yAxisVar], yAxisVar),
           PRBC_UNITS: 0,
           FFP_UNITS: 0,
           CRYO_UNITS: 0,
@@ -317,7 +323,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     }
     store.chartStore.totalAggregatedCaseCount = totalCaseCountTemp + secondaryCaseCountTemp;
     stateUpdateWrapperUseJSON(costSavingsData, outputData, setCostSavingsData);
-  }, [proceduresSelection, rawDateRange, yAxisVar, currentOutputFilterSet, BloodProductCost, filteredCases, outcomeComparison, interventionDate]);
+  }, [proceduresSelection, rawDateRange, yAxisVar, currentOutputFilterSet, BloodProductCost, filteredCases, outcomeComparison, interventionDate, store.configStore.privateMode]);
 
   const spec = useMemo(() => ({
     $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
@@ -476,9 +482,6 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
             secondaryExtraPairDataSet={outcomeComparison || interventionDate ? secondaryExtraPairData : undefined}
             aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
             aggregationScaleRange={`[${outcomeComparison || interventionDate ? vegaHeight - 45 : vegaHeight - 40}, ${outcomeComparison || interventionDate ? 15 : 6}]`}
-            text
-            height={vegaHeight}
-            chartId={chartId}
           />
         </svg>
         <Stack>
@@ -494,11 +497,13 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
           {/* Permanent x axis overlay with white background */}
           <div
             style={{
-              height: 50,
-              width: dimensionWidth - extraPairTotalWidth - 20,
+              height: xAxisOverlayHeight,
+              width: dimensionWidth,
               backgroundColor: 'white',
               position: 'fixed',
               bottom: 45,
+              left: 20,
+              right: 0,
             }}
           />
           <VegaLite
@@ -514,6 +519,22 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
             }}
           />
         </Stack>
+        {/* Bottom additional attribute labels */}
+        <svg
+          width={extraPairTotalWidth}
+          height={vegaHeight}
+          style={{
+            position: 'fixed',
+            bottom: 0,
+          }}
+        >
+          <ExtraPairLabels
+            extraPairDataSet={extraPairData}
+            dimensionHeight={vegaHeight - xAxisOverlayHeight}
+            currentOffset={currentOffset}
+            chartId={chartId}
+          />
+        </svg>
       </div>
       <AnnotationForm chartI={chartId} annotationText={annotationText} />
     </ChartWrapperContainer>

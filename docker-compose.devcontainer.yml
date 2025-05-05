@@ -3,29 +3,31 @@ services:
     extends:
       file: docker-compose.yml
       service: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    working_dir: /app/backend
+    volumes:
+      - .:/app:Z
+    command: poetry run python manage.py runserver 0.0.0.0:8000
+    tty: true
 
   mariadb:
     extends:
       file: docker-compose.yml
       service: mariadb
 
-  oracle:
-    image: oracle/database:19.3.0-ee
-    environment:
-      ORACLE_PWD: ${ORACLE_PASSWORD}
-    expose:
-      - "1521"
-    volumes:
-      - oracledb_data:/opt/oracle/oradata
-
   frontend:
-    extends:
-      file: docker-compose.yml
-      service: frontend
-    environment:
-        - NODE_ENV=development
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: build  # Grab the build stage from the Dockerfile
+    working_dir: /app/frontend
+    volumes:
+      - .:/app:Z
+    env_file:
+      - .env
     command: sh -c "while true; do sleep 1000; done"
 
 volumes:
   mariadb_data:
-  oracledb_data:

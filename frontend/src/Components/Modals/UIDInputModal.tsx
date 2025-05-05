@@ -25,7 +25,6 @@ function UIDInputModal({ stateName, visible, setVisibility }: Props) {
         Accept: 'application/x-www-form-urlencoded',
         'Content-Type': 'application/x-www-form-urlencoded',
         'X-CSRFToken': csrftoken || '',
-        'Access-Control-Allow-Origin': 'https://bloodvis.chpc.utah.edu',
         'Access-Control-Allow-Credentials': 'true',
       },
       body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&user=${`u${uIDInput}`}&role=${writeAccess ? 'WR' : 'RE'}`,
