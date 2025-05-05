@@ -21,7 +21,7 @@ import ChartConfigMenu from './ChartAccessories/ChartConfigMenu';
 import ExtraPairButtons from './ChartAccessories/ExtraPairButtons';
 import ChartStandardButtons from './ChartStandardButtons';
 import Store from '../../Interfaces/Store';
-import GeneratorExtraPair from './ChartAccessories/ExtraPairPlots/GeneratorExtraPair';
+import GeneratorExtraPair, { ExtraPairLabels } from './ChartAccessories/ExtraPairPlots/GeneratorExtraPair';
 import { generateExtrapairPlotData, generateExtraAttributeData } from '../../HelperFunctions/ExtraPairDataGenerator';
 import { stateUpdateWrapperUseJSON } from '../../Interfaces/StateChecker';
 import { CostBarChartDataPoint, SingleCasePoint } from '../../Interfaces/Types/DataTypes';

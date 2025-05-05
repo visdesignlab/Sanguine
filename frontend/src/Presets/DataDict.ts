@@ -64,7 +64,7 @@ export const CostSavingsExtraOptions: { key: typeof EXTRA_PAIR_OPTIONS[number]; 
   { key: 'PREOP_HEMO', value: 'Preop HGB' },
   { key: 'POSTOP_HEMO', value: 'Posop HGB' },
   { key: 'TOTAL_TRANS', value: 'Total RBC Transfused' },
-  { key: 'PER_CASE', value: 'Per RBC Case' },
+  { key: 'PER_CASE', value: 'Per Case RBC' },
   { key: 'ZERO_TRANS', value: 'Zero RBC Transfused' },
   { key: 'DRG_WEIGHT', value: 'APR-DRG Weight' },
 ];
