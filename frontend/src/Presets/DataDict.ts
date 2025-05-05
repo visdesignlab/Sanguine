@@ -57,6 +57,18 @@ export const ExtraPairOptions: { key: typeof EXTRA_PAIR_OPTIONS[number]; value: 
   { key: 'DRG_WEIGHT', value: 'APR-DRG Weight' },
 ]);
 
+// Temporarily different set of labels (only RBC) for cost savings chart.
+// TODO: Different blood products other than just RBC.
+export const CostSavingsExtraOptions: { key: typeof EXTRA_PAIR_OPTIONS[number]; value: string }[] = [
+  ...OutcomeOptions,
+  { key: 'PREOP_HEMO', value: 'Preop HGB' },
+  { key: 'POSTOP_HEMO', value: 'Posop HGB' },
+  { key: 'TOTAL_TRANS', value: 'Total RBC Transfused' },
+  { key: 'PER_CASE', value: 'Per RBC Case' },
+  { key: 'ZERO_TRANS', value: 'Zero RBC Transfused' },
+  { key: 'DRG_WEIGHT', value: 'APR-DRG Weight' },
+];
+
 const dumbbellValueOptions = [{ key: 'HGB_VALUE', value: 'Hemoglobin Value' }];
 
 const _CHART_TYPES = ['DUMBBELL', 'SCATTER', 'HEATMAP', 'COST'] as const;
