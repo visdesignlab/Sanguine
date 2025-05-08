@@ -57,6 +57,16 @@ export const ExtraPairOptions: { key: typeof EXTRA_PAIR_OPTIONS[number]; value: 
   { key: 'DRG_WEIGHT', value: 'APR-DRG Weight' },
 ]);
 
+// Temporary options for cost/savings charts in terms of RBC only. (Because these charts dont have a variable x-axis)
+export const CostSavingsExtraPairOptions: { key: typeof EXTRA_PAIR_OPTIONS[number]; value: string }[] = (OutcomeOptions as any).concat([
+  { key: 'PREOP_HEMO', value: 'Preop HGB' },
+  { key: 'POSTOP_HEMO', value: 'Postop HGB' },
+  { key: 'TOTAL_TRANS', value: 'Total RBC Transfused' }, // Updated label
+  { key: 'PER_CASE', value: 'Per Case RBC' }, // Updated label
+  { key: 'ZERO_TRANS', value: 'Zero RBC Transfused' }, // Updated label
+  { key: 'DRG_WEIGHT', value: 'APR-DRG Weight' },
+]);
+
 const dumbbellValueOptions = [{ key: 'HGB_VALUE', value: 'Hemoglobin Value' }];
 
 const _CHART_TYPES = ['DUMBBELL', 'SCATTER', 'HEATMAP', 'COST'] as const;

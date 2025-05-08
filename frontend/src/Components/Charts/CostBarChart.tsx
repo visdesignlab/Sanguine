@@ -13,7 +13,7 @@ import useDeepCompareEffect from 'use-deep-compare-effect';
 import {
   ExtraPairPadding, ExtraPairWidth, MIN_HEATMAP_BANDWIDTH, OffsetDict, postopColor, preopColor,
 } from '../../Presets/Constants';
-import { BloodComponentOptions, ExtraPairOptions } from '../../Presets/DataDict';
+import { BloodComponentOptions, CostSavingsExtraPairOptions } from '../../Presets/DataDict';
 import { ChartWrapperContainer, ChartAccessoryDiv } from '../../Presets/StyledComponents';
 import AnnotationForm from './ChartAccessories/AnnotationForm';
 import CostInputDialog from '../Modals/CostInputDialog';
@@ -429,7 +429,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
             <Switch checked={showPotential} onChange={(e) => { setShowPotential(e.target.checked); }} />
           </Tooltip>
         </FormControl>
-        <ExtraPairButtons disbleButton={dimensionWidth * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} buttonOptions={ExtraPairOptions} />
+        <ExtraPairButtons disbleButton={dimensionWidth * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} buttonOptions={CostSavingsExtraPairOptions} />
         <ChartConfigMenu layout={layout} />
         <Tooltip title="Change blood component cost">
           <IconButton size="small" onClick={handleClick}>
