@@ -27,8 +27,8 @@ function CustomizedAxisOrdinal({
 }) {
   const store = useContext(Store);
   const { InteractionStore } = store;
-  const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
-  const [selectedColumn, setSelectedColumn] = useState<number | null>(null);
+  const [hoveredColumn, setHoveredColumn] = useState<string | null>(null);
+  const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
   const [columnRecentlyClicked, setColumnRecentlyClicked] = useState<boolean | null>(null);
 
   const scale = useCallback(() => {
@@ -45,12 +45,12 @@ function CustomizedAxisOrdinal({
   const getLabel = usePrivateProvLabel();
 
   // Add a new handler that updates both the local hoveredColumn state and the store.
-  const handleColumnHover = (columnIndex: number | null) => {
+  const handleColumnHover = (columnIndex: string | null) => {
     setHoveredColumn(columnIndex);
     if (columnIndex !== null) {
       // Filter the sorted data for cases within the hovered column.
       const pointsInColumn = data.filter(
-        (dp: DumbbellDataPoint) => dp.yVal === columnIndex,
+        (dp: DumbbellDataPoint) => dp.yVal.toString() === columnIndex,
       );
       // Update the hover store with all case IDs in that column
       store.InteractionStore.hoveredCaseIds = pointsInColumn.map(
@@ -62,13 +62,13 @@ function CustomizedAxisOrdinal({
     }
   };
 
-  const handleColumnClick = (columnIndex: number) => {
+  const handleColumnClick = (columnIndex: string) => {
     setSelectedColumn(columnIndex);
     setColumnRecentlyClicked(true);
     if (columnIndex !== null) {
       // Filter the sorted data for cases within the hovered column.
       const pointsInColumn = data.filter(
-        (dp: DumbbellDataPoint) => dp.yVal === columnIndex,
+        (dp: DumbbellDataPoint) => dp.yVal.toString() === columnIndex,
       );
       // Update the hover store with all case IDs in that column
       store.InteractionStore.selectedCaseIds = pointsInColumn.map(
@@ -102,12 +102,14 @@ function CustomizedAxisOrdinal({
           : -1 + s(numberOb.indexEnding) + 0.5 * (s(numberOb.indexEnding + 1) - s(numberOb.indexEnding));
 
         if (x1 && x2) {
+          const binLabel = getLabel(numberOb.bin, xAxisVar);
+          const binKey = idx.toString();
           return (
             <g
               key={idx}
-              onMouseEnter={() => handleColumnHover(idx)}
+              onMouseEnter={() => handleColumnHover(binLabel)}
               onMouseLeave={() => handleColumnHover(null)}
-              onClick={() => handleColumnClick(idx)}
+              onClick={() => handleColumnClick(binLabel)}
             >
               <CustomAxisLine x1={x1} x2={x2} />
               <CustomAxisLineBox x={x1} width={x2 - x1} fill={idx % 2 === 1 ? secondaryGray : basicGray} />
@@ -116,18 +118,18 @@ function CustomizedAxisOrdinal({
                 width={x2 - x1}
                 chartHeight={chartHeight}
                 fill={
-                selectedColumn === idx
+                selectedColumn === binKey
                   ? InteractionStore.backgroundSelectedColor
-                  : hoveredColumn === idx
+                  : hoveredColumn === binKey
                     ? InteractionStore.backgroundHoverColor
                     : idx % 2 === 1
                       ? 'white'
                       : 'black'
               }
-                opacity={selectedColumn === idx || hoveredColumn === idx ? 0.5 : 0.05}
+                opacity={selectedColumn === binKey || hoveredColumn === binKey ? 0.5 : 0.05}
               />
               <Tooltip title={getLabel(numberOb.bin, xAxisVar)} arrow>
-                <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{getLabel(numberOb.bin, xAxisVar)}</AxisText>
+                <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{binLabel}</AxisText>
               </Tooltip>
             </g>
           );
