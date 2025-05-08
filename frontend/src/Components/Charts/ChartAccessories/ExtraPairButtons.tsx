@@ -4,15 +4,15 @@ import {
 import { useContext, useState, MouseEvent } from 'react';
 import InsertChartIcon from '@mui/icons-material/InsertChart';
 import Store from '../../../Interfaces/Store';
-import { ExtraPairOptions } from '../../../Presets/DataDict';
 import { ExtraPairLimit } from '../../../Presets/Constants';
 
 type Props = {
     extraPairLength: number;
     chartId: string;
     disbleButton: boolean;
+    buttonOptions: { key: string; value: string }[];
 };
-function ExtraPairButtons({ extraPairLength, chartId, disbleButton }: Props) {
+function ExtraPairButtons({ extraPairLength, chartId, disbleButton, buttonOptions}: Props) {
   const store = useContext(Store);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -42,7 +42,7 @@ function ExtraPairButtons({ extraPairLength, chartId, disbleButton }: Props) {
         open={open}
         onClose={handleClose}
       >
-        {ExtraPairOptions.map((option) => (
+        {buttonOptions.map((option) => (
           <MenuItem key={option.key} onClick={() => { extraPairHandling(option.key); }}>{option.value}</MenuItem>
         ))}
       </Menu>

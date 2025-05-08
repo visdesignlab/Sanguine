@@ -11,6 +11,7 @@ import Store from '../../../Interfaces/Store';
 import { ExtraPairPoint, HeatMapDataPoint } from '../../../Interfaces/Types/DataTypes';
 import HeatMap from './HeatMap';
 import ExtraPairButtons from '../ChartAccessories/ExtraPairButtons';
+import { ExtraPairOptions } from '../../../Presets/DataDict';
 import ChartConfigMenu from '../ChartAccessories/ChartConfigMenu';
 import AnnotationForm from '../ChartAccessories/AnnotationForm';
 import ChartStandardButtons from '../ChartStandardButtons';
@@ -82,7 +83,7 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
     <Container style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <ChartAccessoryDiv>
         {`Heatmap${(outcomeComparison || interventionDate) ? ' with Comparison' : ''}`}
-        <ExtraPairButtons disbleButton={size.width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
+        <ExtraPairButtons disbleButton={size.width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} buttonOptions={ExtraPairOptions} />
         <ChartConfigMenu layout={layout} />
         <ChartStandardButtons chartID={chartId} />
       </ChartAccessoryDiv>
