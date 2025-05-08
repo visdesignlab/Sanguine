@@ -102,7 +102,7 @@ function HeatMap({
                 ? aggregationScale().bandwidth() * 0.5
                 : aggregationScale().bandwidth();
               // Compute whether this dataPoint is currently hovered.
-              const isHovered = hoverStore.hoveredAttribute?.[0] === yAxisVar && hoverStore.hoveredAttribute?.[1] === dataPoint.aggregateAttribute;
+              const isHovered = hoverStore.hoveredAttribute?.[0] === yAxisVar && hoverStore.hoveredAttribute?.[1] === dataPoint.aggregateAttribute.toString();
               return (
                 /** On hover of a row, hover store is updated. */
                 <g key={idx} transform={`translate(0, ${rowY})`} onMouseEnter={() => { hoverStore.hoveredAttribute = [yAxisVar, dataPoint.aggregateAttribute]; }} onMouseLeave={() => { hoverStore.hoveredAttribute = undefined; }}>
