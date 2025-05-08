@@ -50,7 +50,7 @@ function CustomizedAxisOrdinal({
     if (columnIndex !== null) {
       // Filter the sorted data for cases within the hovered column.
       const pointsInColumn = data.filter(
-        (dp: DumbbellDataPoint) => dp.yVal.toString() === columnIndex,
+        (dp: DumbbellDataPoint) => getLabel(dp.yVal, xAxisVar) === columnIndex,
       );
       // Update the hover store with all case IDs in that column
       store.InteractionStore.hoveredCaseIds = pointsInColumn.map(
@@ -68,7 +68,7 @@ function CustomizedAxisOrdinal({
     if (columnIndex !== null) {
       // Filter the sorted data for cases within the hovered column.
       const pointsInColumn = data.filter(
-        (dp: DumbbellDataPoint) => dp.yVal.toString() === columnIndex,
+        (dp: DumbbellDataPoint) => getLabel(dp.yVal, xAxisVar) === columnIndex,
       );
       // Update the hover store with all case IDs in that column
       store.InteractionStore.selectedCaseIds = pointsInColumn.map(
