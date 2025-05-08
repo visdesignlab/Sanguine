@@ -178,7 +178,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
       );
     }
     return plotDataTemp;
-  }, [BloodProductCost.PRBC_UNITS, costSavingsData, secondaryCostSavingsData, showPotential, store.configStore.privateMode, yAxisVar]);
+  }, [BloodProductCost.PRBC_UNITS, costSavingsData, secondaryCostSavingsData, showPotential, yAxisVar, getLabel]);
 
   const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
   useEffect(() => {
