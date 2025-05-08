@@ -13,7 +13,7 @@ export const SnackBarCloseTime = 5000;
 export const HGB_HIGH_STANDARD = 13;
 export const OffsetDict = {
   regular: {
-    left: 110, bottom: 40, right: 10, top: 40, margin: 10,
+    left: 140, bottom: 40, right: 10, top: 40, margin: 10,
   } as Offset,
   minimum: {
     left: 35, bottom: 40, right: 10, top: 40, margin: 10,

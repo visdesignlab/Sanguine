@@ -138,7 +138,21 @@ function DumbbellChart({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortMode]);
 
+  function clearState() {
+    stateUpdateWrapperUseJSON(sortedData, [], setSortedData);
+    stateUpdateWrapperUseJSON(numberList, [], setNumberList);
+    stateUpdateWrapperUseJSON(dataPointDict, [], setDataPointDict);
+    stateUpdateWrapperUseJSON(resultRange, [], setResultRange);
+    stateUpdateWrapperUseJSON(averageForEachTransfused, {}, setAverage);
+  }
+
   useDeepCompareEffect(() => {
+    // Clear out states when there is no data
+    if (data.length === 0) {
+      clearState();
+      return;
+    }
+
     const spacing: Record<number, number> = {};
 
     let totalWidth = 0;
@@ -163,7 +177,7 @@ function DumbbellChart({
     });
     stateUpdateWrapperUseJSON(resultRange, newResultRange, setResultRange);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataPointDict, dimensionWidth, currentOffset, sortedData]);
+  }, [dataPointDict, dimensionWidth, currentOffset, sortedData, data]);
 
   const testValueScale = useCallback(() => scaleLinear()
     .domain([0.9 * xMin, 1.1 * xMax])
