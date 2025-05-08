@@ -1,0 +1,20 @@
+name: Feature request
+description: Suggest a new feature or improvement
+labels: [feature request, needs triage]
+assignees:
+  - your-github-username
+body:
+  - type: textarea
+    id: describe-request
+    attributes:
+      label: Describe your request
+      description: Please describe the new feature you'd like to see or the improvement you suggest.
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Optionally, attach screenshots to explain your request.
+    validations:
+      required: false
