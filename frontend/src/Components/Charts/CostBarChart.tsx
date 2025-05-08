@@ -22,7 +22,7 @@ import ExtraPairButtons from './ChartAccessories/ExtraPairButtons';
 import ChartStandardButtons from './ChartStandardButtons';
 import Store from '../../Interfaces/Store';
 import GeneratorExtraPair, { ExtraPairLabels } from './ChartAccessories/ExtraPairPlots/GeneratorExtraPair';
-import { generateExtrapairPlotData } from '../../HelperFunctions/ExtraPairDataGenerator';
+import { generateExtrapairPlotData, generateExtraAttributeData } from '../../HelperFunctions/ExtraPairDataGenerator';
 import { stateUpdateWrapperUseJSON } from '../../Interfaces/StateChecker';
 import { CostBarChartDataPoint, SingleCasePoint } from '../../Interfaces/Types/DataTypes';
 import { sortHelper } from '../../HelperFunctions/ChartSorting';
@@ -111,11 +111,19 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   // Gets the provider name depending on the private mode setting
   const getLabel = usePrivateProvLabel();
 
-  const [data, setData] = useState<CostBarChartDataPoint[]>([]);
-  const [secondaryData, setSecondaryData] = useState<CostBarChartDataPoint[]>([]);
+  // Separate data for the cost savings chart, and the extra attribute plot(s) ------------------------------------------------------------
+
+  // Cost Savings Chart Data
+  const [costSavingsData, setCostSavingsData] = useState<CostBarChartDataPoint[]>([]);
+  const [secondaryCostSavingsData, setSecondaryCostSavingsData] = useState<CostBarChartDataPoint[]>([]);
+
+  // Extra Attribute Data, to be used for the extra pair plot
+  const [extraAttributeData, setExtraAttributeData] = useState<CostBarChartDataPoint[]>([]);
+  const [secondaryExtraAttributeData, setSecondaryExtraAttributeData] = useState<CostBarChartDataPoint[]>([]);
+
   const plotData = useMemo(() => {
     const plotDataTemp = {
-      values: data
+      values: costSavingsData
         .flatMap((d) => {
           const label = getLabel(d.aggregateAttribute, yAxisVar);
           return [
@@ -140,9 +148,9 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
           ];
         }).filter((d) => d !== null),
     };
-    if (secondaryData.length > 0) {
+    if (secondaryCostSavingsData.length > 0) {
       plotDataTemp.values = plotDataTemp.values.concat(
-        secondaryData
+        secondaryCostSavingsData
           .flatMap((d) => {
             const label = getLabel(d.aggregateAttribute, yAxisVar);
             return [
@@ -170,7 +178,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
       );
     }
     return plotDataTemp;
-  }, [BloodProductCost.PRBC_UNITS, data, secondaryData, showPotential, store.configStore.privateMode, yAxisVar]);
+  }, [BloodProductCost.PRBC_UNITS, costSavingsData, secondaryCostSavingsData, showPotential, store.configStore.privateMode, yAxisVar]);
 
   const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
   useEffect(() => {
@@ -179,8 +187,28 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [extraPair]);
-  const extraPairData = useMemo(() => generateExtrapairPlotData(yAxisVar, filteredCases, extraPairArray, data), [yAxisVar, filteredCases, extraPairArray, data]);
-  const secondaryExtraPairData = generateExtrapairPlotData(yAxisVar, filteredCases, extraPairArray, secondaryData);
+
+  // useDeepCompareEffect COPIED FROM WrapperHeatMap.tsx, which correctly generates the extra attribute data for the extra pair plot ------------------------------------------------------------
+
+  // Creating the Extra Attribute Data (NOT the cost-savings data), to be used for the extra pair plot (GeneratorExtraPair) -----------------------------------------------------------------------------------
+  // Default xAxisVar is PRBC_UNITS (because cost savings chart doesn't have different x-Axes). (So additional attributes like Total Transfused, Per Case, etc. are currently in terms of 'PRBC_UNITS').
+  const xAxisVar = 'PRBC_UNITS';
+  useDeepCompareEffect(() => {
+    const [tempCaseCount, secondaryTempCaseCount, outputData, secondaryOutputData] = generateExtraAttributeData(filteredCases, yAxisVar, outcomeComparison, interventionDate, store.provenanceState.showZero, xAxisVar);
+    stateUpdateWrapperUseJSON(extraAttributeData, outputData, setExtraAttributeData);
+    stateUpdateWrapperUseJSON(secondaryExtraAttributeData, secondaryOutputData, setSecondaryExtraAttributeData);
+    store.chartStore.totalAggregatedCaseCount = (tempCaseCount as number) + (secondaryTempCaseCount as number);
+  }, [proceduresSelection, store.provenanceState.outcomeFilter,
+    rawDateRange,
+    store.provenanceState.showZero,
+    yAxisVar,
+    xAxisVar,
+    outcomeComparison,
+    interventionDate,
+    filteredCases]);
+
+  const extraPairData = useMemo(() => generateExtrapairPlotData(yAxisVar, filteredCases, extraPairArray, extraAttributeData), [yAxisVar, filteredCases, extraPairArray, extraAttributeData]);
+  const secondaryExtraPairData = generateExtrapairPlotData(yAxisVar, filteredCases, extraPairArray, secondaryExtraAttributeData);
   const extraPairTotalWidth = useMemo(() => extraPairData.map((pair) => ExtraPairWidth[pair.type] + ExtraPairPadding).reduce((a, b) => a + b, 0), [extraPairData]);
 
   const makeDataObj = (dataItem: TempDataItem) => {
@@ -205,9 +233,9 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   const [xVals, setXVals] = useState<string[]>([]);
 
   useDeepCompareEffect(() => {
-    const [tempxVals, _] = sortHelper(data, yAxisVar, store.provenanceState.showZero, secondaryData);
+    const [tempxVals, _] = sortHelper(costSavingsData, yAxisVar, store.provenanceState.showZero, secondaryCostSavingsData);
     setXVals(tempxVals);
-  }, [data, yAxisVar, secondaryData]);
+  }, [costSavingsData, yAxisVar, secondaryCostSavingsData]);
 
   const aggregationScale = useCallback(() => {
     const aggScale = scaleBand()
@@ -295,13 +323,13 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
         }
         secondaryOutputData.push(newDataObj);
       });
-      stateUpdateWrapperUseJSON(secondaryData, secondaryOutputData, setSecondaryData);
+      stateUpdateWrapperUseJSON(secondaryCostSavingsData, secondaryOutputData, setSecondaryCostSavingsData);
     } else {
       // Clear out the secondary data if it is not needed
-      stateUpdateWrapperUseJSON(secondaryData, [], setSecondaryData);
+      stateUpdateWrapperUseJSON(secondaryCostSavingsData, [], setSecondaryCostSavingsData);
     }
     store.chartStore.totalAggregatedCaseCount = totalCaseCountTemp + secondaryCaseCountTemp;
-    stateUpdateWrapperUseJSON(data, outputData, setData);
+    stateUpdateWrapperUseJSON(costSavingsData, outputData, setCostSavingsData);
   }, [proceduresSelection, rawDateRange, yAxisVar, currentOutputFilterSet, BloodProductCost, filteredCases, outcomeComparison, interventionDate, store.configStore.privateMode]);
 
   const spec = useMemo(() => ({
@@ -361,7 +389,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
       type: 'fit',
       contains: 'padding',
     },
-    height: { step: Math.max(MIN_HEATMAP_BANDWIDTH(secondaryData), (dimensionHeight - 50) / xVals.length) },
+    height: { step: Math.max(MIN_HEATMAP_BANDWIDTH(secondaryCostSavingsData), (dimensionHeight - 50) / xVals.length) },
     config: {
       axisY: {
         title: null,
@@ -371,7 +399,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
         stroke: 'transparent',
       },
     },
-  }), [xVals, outcomeComparison, interventionDate, secondaryData, dimensionHeight]);
+  }), [xVals, outcomeComparison, interventionDate, secondaryCostSavingsData, dimensionHeight]);
 
   const axisSpec = useMemo(() => ({
     ...spec,
@@ -439,8 +467,8 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
           <ComparisonLegend
             dimensionWidth={dimensionWidth}
             interventionDate={interventionDate}
-            firstTotal={data.reduce((a, b) => a + b.caseCount, 0)}
-            secondTotal={secondaryData.reduce((a, b) => a + b.caseCount, 0)}
+            firstTotal={costSavingsData.reduce((a, b) => a + b.caseCount, 0)}
+            secondTotal={secondaryCostSavingsData.reduce((a, b) => a + b.caseCount, 0)}
             outcomeComparison={outcomeComparison}
           />
 
