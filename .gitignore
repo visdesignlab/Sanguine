@@ -50,3 +50,5 @@ mariadb_data/
 *.zip
 
 __pycache__/
+
+clarity-queries
