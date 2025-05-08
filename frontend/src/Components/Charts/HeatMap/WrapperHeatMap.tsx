@@ -60,6 +60,7 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
 
   const size = useComponentSize(svgRef);
 
+  // Generating the extra attribute data for the extra pair plot ------------------------------------------------------------
   useDeepCompareEffect(() => {
     const [tempCaseCount, secondaryTempCaseCount, outputData, secondaryOutputData] = generateExtraAttributeData(filteredCases, yAxisVar, outcomeComparison, interventionDate, store.provenanceState.showZero, xAxisVar);
     stateUpdateWrapperUseJSON(data, outputData, setData);
