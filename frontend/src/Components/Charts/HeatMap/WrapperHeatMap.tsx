@@ -4,12 +4,11 @@ import {
 } from 'react';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import { Box, Container } from '@mui/material';
-import { generateRegularData } from '../../../HelperFunctions/ChartDataGenerator';
-import { generateExtrapairPlotData } from '../../../HelperFunctions/ExtraPairDataGenerator';
+import { generateExtrapairPlotData, generateExtraAttributeData } from '../../../HelperFunctions/ExtraPairDataGenerator';
 import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import { ExtraPairPadding, ExtraPairWidth } from '../../../Presets/Constants';
 import Store from '../../../Interfaces/Store';
-import { ExtraPairPoint, HeatMapDataPoint, SingleCasePoint } from '../../../Interfaces/Types/DataTypes';
+import { ExtraPairPoint, HeatMapDataPoint } from '../../../Interfaces/Types/DataTypes';
 import HeatMap from './HeatMap';
 import ExtraPairButtons from '../ChartAccessories/ExtraPairButtons';
 import ChartConfigMenu from '../ChartAccessories/ChartConfigMenu';
@@ -62,39 +61,13 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
   const size = useComponentSize(svgRef);
 
   useDeepCompareEffect(() => {
-    const temporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }> = {};
-    const secondaryTemporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }> = {};
-    filteredCases.forEach((singleCase: SingleCasePoint) => {
-      if (!temporaryDataHolder[singleCase[yAxisVar]]) {
-        temporaryDataHolder[singleCase[yAxisVar]] = {
-          aggregateAttribute: singleCase[yAxisVar],
-          data: [],
-          patientIDList: new Set(),
-        };
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]] = {
-          aggregateAttribute: singleCase[yAxisVar],
-          data: [],
-          patientIDList: new Set(),
-        };
-      }
-
-      if ((outcomeComparison && singleCase[outcomeComparison] as number > 0) || (interventionDate && singleCase.CASE_DATE < interventionDate)) {
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].data.push(singleCase);
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].patientIDList.add(singleCase.MRN);
-      } else {
-        temporaryDataHolder[singleCase[yAxisVar]].data.push(singleCase);
-        temporaryDataHolder[singleCase[yAxisVar]].patientIDList.add(singleCase.MRN);
-      }
-    });
-    const [tempCaseCount, outputData] = generateRegularData(temporaryDataHolder, store.provenanceState.showZero, xAxisVar);
-    const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, store.provenanceState.showZero, xAxisVar);
+    const [tempCaseCount, secondaryTempCaseCount, outputData, secondaryOutputData] = generateExtraAttributeData(filteredCases, yAxisVar, outcomeComparison, interventionDate, store.provenanceState.showZero, xAxisVar);
     stateUpdateWrapperUseJSON(data, outputData, setData);
-    stateUpdateWrapperUseJSON(secondaryData, secondOutputData, setSecondaryData);
-    store.chartStore.totalAggregatedCaseCount = (tempCaseCount as number) + (secondCaseCount as number);
-
+    stateUpdateWrapperUseJSON(secondaryData, secondaryOutputData, setSecondaryData);
+    store.chartStore.totalAggregatedCaseCount = (tempCaseCount as number) + (secondaryTempCaseCount as number);
     // Marks the 'true' and 'false' if attribute === 0.
-    setCaseCount(secondCaseCount as number);
-    setSecondaryCaseCount(tempCaseCount as number);
+    setCaseCount(tempCaseCount as number);
+    setSecondaryCaseCount(secondaryTempCaseCount as number);
   }, [proceduresSelection, surgeryUrgencySelection, store.provenanceState.outcomeFilter,
     rawDateRange,
     store.provenanceState.showZero,

@@ -6,6 +6,7 @@ import { create as createpd } from 'pdfast';
 import {
   SingleCasePoint, BasicAggregatedDatePoint, ExtraPairPoint,
 } from '../Interfaces/Types/DataTypes';
+import { generateRegularData } from './ChartDataGenerator';
 
 const outcomeDataGenerate = (aggregatedBy: string, name: string, label: string, data: BasicAggregatedDatePoint[], hemoglobinDataSet: SingleCasePoint[]) => {
   const temporaryDataHolder: any = {};
@@ -29,7 +30,36 @@ const outcomeDataGenerate = (aggregatedBy: string, name: string, label: string, 
     name, label, data: newData, type: 'Basic',
   }) as ExtraPairPoint;
 };
+// Generate the data for the extra attribute plot(s) specifically. (Taken from WrapperHeatMap.tsx, to be re-used in CostBarChart.tsx)
+export const generateExtraAttributeData = (filteredCases: SingleCasePoint[], yAxisVar: string, outcomeComparison: string | undefined, interventionDate: number | undefined, showZero: boolean, xAxisVar: string) => {
+  const temporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }> = {};
+  const secondaryTemporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }> = {};
+  filteredCases.forEach((singleCase: SingleCasePoint) => {
+    if (!temporaryDataHolder[singleCase[yAxisVar]]) {
+      temporaryDataHolder[singleCase[yAxisVar]] = {
+        aggregateAttribute: singleCase[yAxisVar],
+        data: [],
+        patientIDList: new Set(),
+      };
+      secondaryTemporaryDataHolder[singleCase[yAxisVar]] = {
+        aggregateAttribute: singleCase[yAxisVar],
+        data: [],
+        patientIDList: new Set(),
+      };
+    }
 
+    if ((outcomeComparison && singleCase[outcomeComparison] as number > 0) || (interventionDate && new Date(singleCase.CASE_DATE) < new Date(interventionDate))) {
+      secondaryTemporaryDataHolder[singleCase[yAxisVar]].data.push(singleCase);
+      secondaryTemporaryDataHolder[singleCase[yAxisVar]].patientIDList.add(singleCase.MRN);
+    } else {
+      temporaryDataHolder[singleCase[yAxisVar]].data.push(singleCase);
+      temporaryDataHolder[singleCase[yAxisVar]].patientIDList.add(singleCase.MRN);
+    }
+  });
+  const [tempCaseCount, outputData] = generateRegularData(temporaryDataHolder, showZero, xAxisVar as 'PRBC_UNITS' | 'FFP_UNITS' | 'PLT_UNITS' | 'CRYO_UNITS' | 'CELL_SAVER_ML');
+  const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, showZero, xAxisVar as 'PRBC_UNITS' | 'FFP_UNITS' | 'PLT_UNITS' | 'CRYO_UNITS' | 'CELL_SAVER_ML');
+  return [tempCaseCount, secondCaseCount, outputData, secondOutputData];
+};
 /**
  * Compute an attribute-wide min and max.
  * @param input - The object to compute the min and max over.
