@@ -108,61 +108,69 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     setAnchorEl(null);
   };
 
+  // Gets the provider name depending on the private mode setting
+  const getLabel = usePrivateProvLabel();
+
   const [data, setData] = useState<CostBarChartDataPoint[]>([]);
   const [secondaryData, setSecondaryData] = useState<CostBarChartDataPoint[]>([]);
   const plotData = useMemo(() => {
     const plotDataTemp = {
       values: data
-        .flatMap((d) => ([
-          showPotential ? {
-            rowLabel: d.aggregateAttribute, value: d.cellSalvageVolume * -0.004 * BloodProductCost.PRBC_UNITS, bloodProduct: 'savings', type: 'false',
-          } : null,
-          {
-            rowLabel: d.aggregateAttribute, value: d.PRBC_UNITS, bloodProduct: 'PRBC', type: 'false',
-          },
-          {
-            rowLabel: d.aggregateAttribute, value: d.FFP_UNITS, bloodProduct: 'FFP', type: 'false',
-          },
-          {
-            rowLabel: d.aggregateAttribute, value: d.CRYO_UNITS, bloodProduct: 'CRYO', type: 'false',
-          },
-          {
-            rowLabel: d.aggregateAttribute, value: d.PLT_UNITS, bloodProduct: 'PLT', type: 'false',
-          },
-          {
-            rowLabel: d.aggregateAttribute, value: d.CELL_SAVER_ML, bloodProduct: 'CELL_SAVER', type: 'false',
-          },
-        ]))
-        .filter((d) => d !== null),
+        .flatMap((d) => {
+          const label = getLabel(d.aggregateAttribute, yAxisVar);
+          return [
+            showPotential ? {
+              rowLabel: label, value: d.cellSalvageVolume * -0.004 * BloodProductCost.PRBC_UNITS, bloodProduct: 'savings', type: 'false',
+            } : null,
+            {
+              rowLabel: label, value: d.PRBC_UNITS, bloodProduct: 'PRBC', type: 'false',
+            },
+            {
+              rowLabel: label, value: d.FFP_UNITS, bloodProduct: 'FFP', type: 'false',
+            },
+            {
+              rowLabel: label, value: d.CRYO_UNITS, bloodProduct: 'CRYO', type: 'false',
+            },
+            {
+              rowLabel: label, value: d.PLT_UNITS, bloodProduct: 'PLT', type: 'false',
+            },
+            {
+              rowLabel: label, value: d.CELL_SAVER_ML, bloodProduct: 'CELL_SAVER', type: 'false',
+            },
+          ];
+        }).filter((d) => d !== null),
     };
     if (secondaryData.length > 0) {
       plotDataTemp.values = plotDataTemp.values.concat(
         secondaryData
-          .flatMap((d) => ([
-            showPotential ? {
-              rowLabel: d.aggregateAttribute, value: d.cellSalvageVolume * -0.004 * BloodProductCost.PRBC_UNITS, bloodProduct: 'savings', type: 'true',
-            } : null,
-            {
-              rowLabel: d.aggregateAttribute, value: d.PRBC_UNITS, bloodProduct: 'PRBC', type: 'true',
-            },
-            {
-              rowLabel: d.aggregateAttribute, value: d.FFP_UNITS, bloodProduct: 'FFP', type: 'true',
-            },
-            {
-              rowLabel: d.aggregateAttribute, value: d.CRYO_UNITS, bloodProduct: 'CRYO', type: 'true',
-            },
-            {
-              rowLabel: d.aggregateAttribute, value: d.PLT_UNITS, bloodProduct: 'PLT', type: 'true',
-            },
-            {
-              rowLabel: d.aggregateAttribute, value: d.CELL_SAVER_ML, bloodProduct: 'CELL_SAVER', type: 'true',
-            },
-          ]))
+          .flatMap((d) => {
+            const label = getLabel(d.aggregateAttribute, yAxisVar);
+            return [
+              showPotential ? {
+                rowLabel: label, value: d.cellSalvageVolume * -0.004 * BloodProductCost.PRBC_UNITS, bloodProduct: 'savings', type: 'true',
+              } : null,
+              {
+                rowLabel: label, value: d.PRBC_UNITS, bloodProduct: 'PRBC', type: 'true',
+              },
+              {
+                rowLabel: label, value: d.FFP_UNITS, bloodProduct: 'FFP', type: 'true',
+              },
+              {
+                rowLabel: label, value: d.CRYO_UNITS, bloodProduct: 'CRYO', type: 'true',
+              },
+              {
+                rowLabel: label, value: d.PLT_UNITS, bloodProduct: 'PLT', type: 'true',
+              },
+              {
+                rowLabel: label, value: d.CELL_SAVER_ML, bloodProduct: 'CELL_SAVER', type: 'true',
+              },
+            ];
+          })
           .filter((d) => d !== null),
       );
     }
     return plotDataTemp;
-  }, [BloodProductCost.PRBC_UNITS, data, secondaryData, showPotential]);
+  }, [BloodProductCost.PRBC_UNITS, data, secondaryData, showPotential, store.configStore.privateMode, yAxisVar]);
 
   const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
   useEffect(() => {
@@ -196,9 +204,6 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   const currentOffset = OffsetDict.regular;
   const [xVals, setXVals] = useState<string[]>([]);
 
-  // Gets the provider name depending on the private mode setting
-  const getLabel = usePrivateProvLabel();
-
   useDeepCompareEffect(() => {
     const [tempxVals, _] = sortHelper(data, yAxisVar, store.provenanceState.showZero, secondaryData);
     setXVals(tempxVals);
@@ -223,7 +228,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     filteredCases.forEach((singleCase: SingleCasePoint) => {
       if (!temporaryDataHolder[singleCase[yAxisVar]]) {
         temporaryDataHolder[singleCase[yAxisVar]] = {
-          aggregateAttribute: getLabel(singleCase[yAxisVar], yAxisVar),
+          aggregateAttribute: singleCase[yAxisVar],
           PRBC_UNITS: 0,
           FFP_UNITS: 0,
           CRYO_UNITS: 0,
@@ -234,7 +239,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
           caseIDList: new Set(),
         };
         secondaryTemporaryDataHolder[singleCase[yAxisVar]] = {
-          aggregateAttribute: getLabel(singleCase[yAxisVar], yAxisVar),
+          aggregateAttribute: singleCase[yAxisVar],
           PRBC_UNITS: 0,
           FFP_UNITS: 0,
           CRYO_UNITS: 0,
