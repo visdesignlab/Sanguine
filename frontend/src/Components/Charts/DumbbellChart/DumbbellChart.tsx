@@ -235,14 +235,20 @@ function DumbbellChart({
           showPreop={showPreop}
           circleYValStart={testValueScale()(dataPoint.startXVal)}
           circleYValEnd={testValueScale()(dataPoint.endXVal)}
-          hovered={store.hoverStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID)}
+          hovered={store.InteractionStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID)}
+          selected={store.InteractionStore.selectedCaseIds.includes(dataPoint.case.CASE_ID)}
+          onClick={() => {
+            store.InteractionStore.clearSelectedAttribute();
+            store.InteractionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
+          }}
           onMouseEnter={() => {
-            store.hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
+            store.InteractionStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
           }}
           onMouseLeave={() => {
-            store.hoverStore.hoveredCaseIds = [];
+            store.InteractionStore.hoveredCaseIds = [];
           }}
-          hoverColor={store.hoverStore.smallHoverColor}
+          hoverColor={store.InteractionStore.smallHoverColor}
+          selectColor={store.InteractionStore.smallSelectColor}
           key={`dumbbell-${idx}`}
         />
       );

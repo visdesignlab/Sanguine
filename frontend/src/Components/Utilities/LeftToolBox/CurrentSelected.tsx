@@ -11,6 +11,7 @@ import { AcronymDictionary } from '../../../Presets/DataDict';
 import {
   InheritWidthGrid, CenterAlignedDiv, Title,
 } from '../../../Presets/StyledComponents';
+import { InteractionStore } from '../../../Interfaces/InteractionStore';
 
 const TinyFontButton = styled(Button)({
   fontSize: 'xx-small!important',
@@ -36,7 +37,7 @@ function CurrentSelected() {
                   secondary={currentBrushedPatientGroup.length}
                 />
                 <ListItemSecondaryAction>
-                  <IconButton onClick={() => { store.selectionStore.updateBrush([]); }}>
+                  <IconButton onClick={() => { store.InteractionStore.updateBrush([]); }}>
                     <CloseIcon />
                   </IconButton>
                 </ListItemSecondaryAction>
@@ -51,19 +52,35 @@ function CurrentSelected() {
                 secondary={selectSet.setValues.sort().join(', ')}
               />
               <ListItemSecondaryAction>
-                <IconButton onClick={() => { store.selectionStore.clearSet(selectSet.setName); }}>
+                <IconButton onClick={() => { store.InteractionStore.clearSet(selectSet.setName); }}>
                   <CloseIcon />
                 </IconButton>
               </ListItemSecondaryAction>
             </ListItem>
           ))}
+          {store.InteractionStore.selectedCaseIds.length > 0 && (
+          <ListItem alignItems="flex-start" style={{ width: '100%' }}>
+            <ListItemText
+              primary="Currently Selected Patients"
+              secondary={store.InteractionStore.selectedCaseIds.length}
+            />
+            <ListItemSecondaryAction>
+              <IconButton onClick={() => { store.InteractionStore.selectedCaseIds = []; store.InteractionStore.selectedAttribute = undefined; }}>
+                <CloseIcon />
+              </IconButton>
+            </ListItemSecondaryAction>
+          </ListItem>
+          )}
 
         </List>
         <CenterAlignedDiv>
           <TinyFontButton
-            disabled={!(currentSelectSet.length > 0 || currentBrushedPatientGroup.length > 0)}
+            disabled={!(currentSelectSet.length > 0 || currentBrushedPatientGroup.length > 0 || store.InteractionStore.selectedCaseIds.length > 0)}
             variant="outlined"
-            onClick={() => { store.selectionStore.outputToFilter(); }}
+            onClick={() => {
+              const selectedCases = store.filteredCases.filter((caseRecord: any) => store.InteractionStore.selectedCaseIds.includes(caseRecord.CASE_ID));
+              store.InteractionStore.updateSelectedPatientGroup(selectedCases);
+            }}
           >
             Create Filter
           </TinyFontButton>
@@ -73,7 +90,7 @@ function CurrentSelected() {
                         variant="outlined"
                         size="small"
                         className={styles.tinyFont}
-                        onClick={() => { store.selectionStore.clearAllFilter() }}
+                        onClick={() => { store.InteractionStore.clearAllFilter() }}
                     >Clear Filter</Button> */}
 
       </Box>

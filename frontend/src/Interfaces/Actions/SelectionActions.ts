@@ -88,3 +88,4 @@ export const outputToFilter = createAction<ApplicationState, [], ActionEvents>((
 export const removeFilter = createAction<ApplicationState, [string], ActionEvents>((state, filterToRemove) => {
   state.currentOutputFilterSet = state.currentOutputFilterSet.filter((d) => d.setName !== filterToRemove);
 }).setLabel('clearFilter');
+

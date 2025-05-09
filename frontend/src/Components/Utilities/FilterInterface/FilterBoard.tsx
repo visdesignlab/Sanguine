@@ -234,7 +234,7 @@ function FilterBoard() {
           <ListItemSecondaryAction>
 
             <IconButton
-              onClick={() => { store.selectionStore.clearSelectionFilter(); }}
+              onClick={() => { store.InteractionStore.clearSelectionFilter(); }}
               disabled={currentSelectPatientGroup.length === 0 && currentOutputFilterSet.length === 0}
             >
               <Tooltip title="Clear All">
@@ -249,7 +249,7 @@ function FilterBoard() {
             <ListItemText primary="Cases Filtered" secondary={currentSelectPatientGroup.length} />
             <ListItemSecondaryAction>
 
-              <IconButton onClick={() => { store.selectionStore.updateSelectedPatientGroup([]); }}>
+              <IconButton onClick={() => { store.InteractionStore.updateSelectedPatientGroup([]); }}>
                 <Tooltip title="Remove">
                   <CloseIcon />
                 </Tooltip>
@@ -266,7 +266,7 @@ function FilterBoard() {
               secondary={selectSet.setValues.sort().join(', ')}
             />
             <ListItemSecondaryAction key={`${selectSet.setName}selected`}>
-              <IconButton key={`${selectSet.setName}selected`} onClick={() => { store.selectionStore.removeFilter(selectSet.setName); }}>
+              <IconButton key={`${selectSet.setName}selected`} onClick={() => { store.InteractionStore.removeFilter(selectSet.setName); }}>
                 <Tooltip title="Remove">
                   <CloseIcon key={`${selectSet.setName}selected`} />
                 </Tooltip>

@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import { Offset } from '../Interfaces/Types/OffsetType';
 import {
-  basicGray, highlightOrange, largeFontSize, postopColor, preopColor, regularFontSize,
+  largeFontSize, lightGray, postopColor, preopColor, regularFontSize,
 } from './Constants';
 
 export const ChartSVG = styled.svg`
@@ -52,15 +52,17 @@ export const HeatMapDividerLine = styled('line') <HeatMapDivideProp>`
 `;
 
 interface DotProps {
-  isSelectSet: boolean;
+  selected: boolean;
   isPreop: boolean;
   hovered: boolean;
   hoverColor: string;
+  selectColor: string;
 }
 interface RectProps {
   selected: boolean;
   hovered: boolean;
   hoverColor: string;
+  selectColor: string;
 }
 
 interface AverageLineProps {
@@ -69,13 +71,13 @@ interface AverageLineProps {
 
 export const DumbbellCircle = styled('circle')<DotProps>`
   r: 4px;
-  opacity: ${(props) => (props.isSelectSet || props.hovered ? 1 : 0.8)};
+  opacity: 1;
   fill: ${(props) => {
     if (props.hovered) {
       return props.hoverColor;
     }
-    if (props.isSelectSet) {
-      return highlightOrange;
+    if (props.selected) {
+      return props.selectColor;
     }
     return props.isPreop ? preopColor : postopColor;
   }};
@@ -83,15 +85,15 @@ export const DumbbellCircle = styled('circle')<DotProps>`
 
 export const DumbbellRect = styled('rect')<RectProps>`
   width: 1.5px;
-  opacity: ${(props) => (props.selected || props.hovered ? 1 : 0.5)};
+  opacity: 1;
   fill: ${(props) => {
     if (props.hovered) {
       return props.hoverColor;
     }
     if (props.selected) {
-      return highlightOrange;
+      return props.selectColor;
     }
-    return basicGray;
+    return lightGray;
   }};
  `;
 

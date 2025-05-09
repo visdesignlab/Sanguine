@@ -13,10 +13,13 @@ type Props = {
     showGap: boolean;
     circleYValStart: number;
     circleYValEnd: number;
+    selected: boolean;
     hovered: boolean;
+    onClick: () => void;
     onMouseEnter: () => void;
     onMouseLeave: () => void;
     hoverColor: string;
+    selectColor: string;
 };
 
 function SingleDumbbell({
@@ -28,10 +31,13 @@ function SingleDumbbell({
   showPreop,
   circleYValStart,
   circleYValEnd,
+  selected,
   hovered,
+  onClick,
   onMouseEnter,
   onMouseLeave,
   hoverColor,
+  selectColor,
 }: Props) {
   const yValCalculation = circleYValStart > circleYValEnd ? circleYValEnd : circleYValStart;
   const rectHeight = Math.abs(circleYValStart - circleYValEnd);
@@ -41,33 +47,36 @@ function SingleDumbbell({
       arrow
       placement="top"
     >
-      <g onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+      <g onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} onClick={onClick}>
         <DumbbellRect
           x={xVal - 1}
           y={yValCalculation}
           height={rectHeight}
-          selected={isSelectSet}
+          selected={selected}
           display={showGap ? undefined : 'none'}
           hovered={hovered}
           hoverColor={hoverColor}
+          selectColor={selectColor}
         />
         <DumbbellCircle
           cx={xVal}
           cy={circleYValStart}
-          isSelectSet={isSelectSet}
+          selected={selected}
           isPreop
           display={showPreop ? undefined : 'none'}
           hovered={hovered}
           hoverColor={hoverColor}
+          selectColor={selectColor}
         />
         <DumbbellCircle
           cx={xVal}
           cy={circleYValEnd}
-          isSelectSet={isSelectSet}
+          selected={selected}
           isPreop={false}
           display={showPostop ? undefined : 'none'}
           hovered={hovered}
           hoverColor={hoverColor}
+          selectColor={selectColor}
         />
       </g>
     </Tooltip>

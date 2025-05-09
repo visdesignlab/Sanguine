@@ -1,4 +1,4 @@
-import { useCallback, useContext, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { observer } from 'mobx-react';
 import {
   scaleBand,
@@ -22,9 +22,11 @@ function CustomizedAxisBand({
   scaleDomain, scaleRange, scalePadding, chartHeight, data,
 }: Props) {
   const store = useContext(Store);
-  const { hoverStore } = store;
+  const { InteractionStore } = store;
 
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
+  const [selectedColumn, setSelectedColumn] = useState<number | null>(null);
+  const [columnRecentlyClicked, setColumnRecentlyClicked] = useState<boolean | null>(null);
 
   const scale = useCallback(() => {
     const domain = JSON.parse(scaleDomain);
@@ -45,14 +47,40 @@ function CustomizedAxisBand({
       // Filter the data using dp.xVal because the column represents the x-axis category.
       const pointsInColumn = data.filter((dp: ScatterDataPoint) => dp.xVal === columnIndex);
       // Update the hover store with all case IDs in that column
-      store.hoverStore.hoveredCaseIds = pointsInColumn.map(
+      store.InteractionStore.hoveredCaseIds = pointsInColumn.map(
         (dp: ScatterDataPoint) => dp.case.CASE_ID,
       );
     } else {
       // Clear hovered cases when no column is hovered.
-      store.hoverStore.hoveredCaseIds = [];
+      store.InteractionStore.hoveredCaseIds = [];
     }
   };
+
+  const handleColumnClick = (columnIndex: number) => {
+    setSelectedColumn(columnIndex);
+    setColumnRecentlyClicked(true);
+    if (columnIndex !== null) {
+      // Filter the sorted data for cases within the hovered column.
+      const pointsInColumn = data.filter(
+        (dp: ScatterDataPoint) => dp.xVal === columnIndex,
+      );
+        // Update the hover store with all case IDs in that column
+      store.InteractionStore.selectedCaseIds = pointsInColumn.map(
+        (dp: ScatterDataPoint) => dp.case.CASE_ID,
+      );
+    } else {
+      // Clear hovered cases when no column is hovered.
+      store.InteractionStore.selectedCaseIds = [];
+    }
+  };
+
+  // Reset selectedColumn when the something else is selected
+  useEffect(() => {
+    if (!columnRecentlyClicked) {
+      setSelectedColumn(null);
+    }
+    setColumnRecentlyClicked(false);
+  }, [store.InteractionStore.selectedCaseIds]);
 
   return (
     <>
@@ -64,6 +92,7 @@ function CustomizedAxisBand({
             key={idx}
             onMouseEnter={() => handleColumnHover(idx)}
             onMouseLeave={() => handleColumnHover(null)}
+            onClick={() => handleColumnClick(idx)}
           >
             <CustomAxisLine x1={x1} x2={x2} />
             <CustomAxisLineBox x={x1} width={x2 - x1} fill={idx % 2 === 1 ? secondaryGray : basicGray} />
@@ -71,8 +100,16 @@ function CustomizedAxisBand({
               x={x1}
               width={x2 - x1}
               chartHeight={chartHeight}
-              fill={hoveredColumn === idx ? hoverStore.backgroundHoverColor : (idx % 2 === 1 ? 'white' : 'black')}
-              opacity={hoveredColumn === idx ? 0.5 : 0.05}
+              fill={
+              selectedColumn === idx
+                ? InteractionStore.backgroundSelectedColor
+                : hoveredColumn === idx
+                  ? InteractionStore.backgroundHoverColor
+                  : idx % 2 === 1
+                    ? 'white'
+                    : 'black'
+              }
+              opacity={selectedColumn === idx || hoveredColumn === idx ? 0.5 : 0.05}
             />
             <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{number}</AxisText>
           </g>
