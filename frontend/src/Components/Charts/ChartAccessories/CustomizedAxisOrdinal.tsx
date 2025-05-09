@@ -27,8 +27,8 @@ function CustomizedAxisOrdinal({
 }) {
   const store = useContext(Store);
   const { InteractionStore } = store;
-  const [hoveredColumn, setHoveredColumn] = useState<string | null>(null);
-  const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
+  const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
+  const [selectedColumn, setSelectedColumn] = useState<number | null>(null);
   const [columnRecentlyClicked, setColumnRecentlyClicked] = useState<boolean | null>(null);
 
   const scale = useCallback(() => {
@@ -45,35 +45,38 @@ function CustomizedAxisOrdinal({
   const getLabel = usePrivateProvLabel();
 
   // Add a new handler that updates both the local hoveredColumn state and the store.
-  const handleColumnHover = (columnIndex: string | null) => {
-    setHoveredColumn(columnIndex);
-    if (columnIndex !== null) {
+  const handleColumnHover = (columnValue: number | null) => {
+    setHoveredColumn(columnValue);
+    if (columnValue !== null) {
       // Filter the sorted data for cases within the hovered column.
       const pointsInColumn = data.filter(
-        (dp: DumbbellDataPoint) => getLabel(dp.yVal, xAxisVar) === columnIndex,
+        (dp: DumbbellDataPoint) => dp.yVal === columnValue,
       );
       // Update the hover store with all case IDs in that column
       store.InteractionStore.hoveredCaseIds = pointsInColumn.map(
         (dp: DumbbellDataPoint) => dp.case.CASE_ID,
       );
+      store.InteractionStore.hoveredAttribute = [xAxisVar, columnValue];
     } else {
       // Clear hovered cases when no column is hovered.
       store.InteractionStore.hoveredCaseIds = [];
     }
   };
 
-  const handleColumnClick = (columnIndex: string) => {
-    setSelectedColumn(columnIndex);
+  const handleColumnClick = (columnValue: number) => {
+    setSelectedColumn(columnValue);
     setColumnRecentlyClicked(true);
-    if (columnIndex !== null) {
+
+    if (columnValue !== null) {
       // Filter the sorted data for cases within the hovered column.
       const pointsInColumn = data.filter(
-        (dp: DumbbellDataPoint) => getLabel(dp.yVal, xAxisVar) === columnIndex,
+        (dp: DumbbellDataPoint) => dp.yVal === columnValue,
       );
       // Update the hover store with all case IDs in that column
       store.InteractionStore.selectedCaseIds = pointsInColumn.map(
         (dp: DumbbellDataPoint) => dp.case.CASE_ID,
       );
+      store.InteractionStore.selectedAttribute = [xAxisVar, columnValue];
     } else {
       // Clear hovered cases when no column is hovered.
       store.InteractionStore.selectedCaseIds = [];
@@ -103,13 +106,12 @@ function CustomizedAxisOrdinal({
 
         if (x1 && x2) {
           const binLabel = getLabel(numberOb.bin, xAxisVar);
-          const binKey = idx.toString();
           return (
             <g
               key={idx}
-              onMouseEnter={() => handleColumnHover(binLabel)}
+              onMouseEnter={() => handleColumnHover(numberOb.bin)}
               onMouseLeave={() => handleColumnHover(null)}
-              onClick={() => handleColumnClick(binLabel)}
+              onClick={() => handleColumnClick(numberOb.bin)}
             >
               <CustomAxisLine x1={x1} x2={x2} />
               <CustomAxisLineBox x={x1} width={x2 - x1} fill={idx % 2 === 1 ? secondaryGray : basicGray} />
@@ -118,15 +120,15 @@ function CustomizedAxisOrdinal({
                 width={x2 - x1}
                 chartHeight={chartHeight}
                 fill={
-                selectedColumn === binKey
+                selectedColumn === numberOb.bin
                   ? InteractionStore.backgroundSelectedColor
-                  : hoveredColumn === binKey
+                  : hoveredColumn === numberOb.bin
                     ? InteractionStore.backgroundHoverColor
                     : idx % 2 === 1
                       ? 'white'
                       : 'black'
               }
-                opacity={selectedColumn === binKey || hoveredColumn === binKey ? 0.5 : 0.05}
+                opacity={selectedColumn === numberOb.bin || hoveredColumn === numberOb.bin ? 0.5 : 0.05}
               />
               <Tooltip title={getLabel(numberOb.bin, xAxisVar)} arrow>
                 <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{binLabel}</AxisText>
