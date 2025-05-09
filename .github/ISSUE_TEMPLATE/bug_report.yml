@@ -1,6 +1,5 @@
 name: Bug report
 description: Report a bug you've encountered
-issue type: [bug]
 body:
   - type: textarea
     id: what-happened
