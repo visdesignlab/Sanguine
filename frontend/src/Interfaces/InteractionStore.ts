@@ -66,6 +66,7 @@ export class InteractionStore {
 
   set hoveredCaseIds(ids: number[]) {
     this._hoveredCaseIds = structuredClone(ids);
+    console.log("hovered cases:", this._hoveredCaseIds);
   }
 
   get selectedCaseIds() {
@@ -87,6 +88,14 @@ export class InteractionStore {
 
   set hoveredAttribute(hoveredAttribute: HoveredAttribute | undefined) {
     this._hoveredAttribute = hoveredAttribute;
+  }
+
+  clearHoveredAttribute() {
+    this._hoveredAttribute = undefined;
+  }
+
+  clearSelectedAttribute() {
+    this._selectedAttribute = undefined;
   }
 
   get selectedAttribute() {
