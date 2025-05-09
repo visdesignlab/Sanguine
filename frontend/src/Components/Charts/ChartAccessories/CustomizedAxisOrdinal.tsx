@@ -5,8 +5,6 @@ import {
 import { observer } from 'mobx-react';
 import { scaleOrdinal } from 'd3';
 import Tooltip from '@mui/material/Tooltip';
-import { Watch } from '@mui/icons-material';
-import { reaction } from 'mobx';
 import { basicGray, secondaryGray } from '../../../Presets/Constants';
 import {
   AxisText, CustomAxisColumnBackground, CustomAxisLine, CustomAxisLineBox,
@@ -59,7 +57,8 @@ function CustomizedAxisOrdinal({
       store.InteractionStore.hoveredAttribute = [xAxisVar, columnValue];
     } else {
       // Clear hovered cases when no column is hovered.
-      store.InteractionStore.hoveredCaseIds = [];
+      // store.InteractionStore.hoveredCaseIds = [];
+      // store.InteractionStore.hoveredAttribute = null;
     }
   };
 
@@ -79,7 +78,8 @@ function CustomizedAxisOrdinal({
       store.InteractionStore.selectedAttribute = [xAxisVar, columnValue];
     } else {
       // Clear hovered cases when no column is hovered.
-      store.InteractionStore.selectedCaseIds = [];
+      // store.InteractionStore.selectedCaseIds = [];
+      // store.InteractionStore.selectedAttribute = null;
     }
   };
 
@@ -110,7 +110,7 @@ function CustomizedAxisOrdinal({
             <g
               key={idx}
               onMouseEnter={() => handleColumnHover(numberOb.bin)}
-              onMouseLeave={() => handleColumnHover(null)}
+              onMouseLeave={() => store.InteractionStore.clearHoveredAttribute()}
               onClick={() => handleColumnClick(numberOb.bin)}
             >
               <CustomAxisLine x1={x1} x2={x2} />

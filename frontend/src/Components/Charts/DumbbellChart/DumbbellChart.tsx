@@ -238,6 +238,7 @@ function DumbbellChart({
           hovered={store.InteractionStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID)}
           selected={store.InteractionStore.selectedCaseIds.includes(dataPoint.case.CASE_ID)}
           onClick={() => {
+            store.InteractionStore.clearSelectedAttribute();
             store.InteractionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
           }}
           onMouseEnter={() => {
