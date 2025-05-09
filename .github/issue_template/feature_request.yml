@@ -1,8 +1,6 @@
 name: Feature request
 description: Suggest a new feature or improvement
-labels: [feature request, needs triage]
-assignees:
-  - your-github-username
+labels: [feature request]
 body:
   - type: textarea
     id: describe-request
