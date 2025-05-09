@@ -74,14 +74,11 @@ export class InteractionStore {
         .filter((caseRecord) => this._selectedAttribute && caseRecord[this._selectedAttribute[0]] === this._selectedAttribute[1])
         .map((caseRecord) => caseRecord.CASE_ID);
     }
-    console.log("Returning selectedCaseIds:", this._selectedCaseIds);
     return this._selectedCaseIds; // Fixed: return _selectedCaseIds instead of _hoveredCaseIds
   }
 
   set selectedCaseIds(ids: number[]) {
     this._selectedCaseIds = structuredClone(ids);
-
-    console.log("selectedCaseIds", this._selectedCaseIds);
   }
 
   get hoveredAttribute() {
