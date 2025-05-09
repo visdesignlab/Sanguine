@@ -6,13 +6,13 @@ body:
     id: describe-request
     attributes:
       label: Describe your request
-      description: Please describe the new feature you'd like to see or the improvement you suggest.
+      description: Describe the new feature or improvement you'd suggest
     validations:
       required: true
   - type: textarea
     id: screenshots
     attributes:
       label: Screenshots
-      description: Optionally, attach screenshots to explain your request.
+      description: Optionally, attach screenshots to explain your request
     validations:
       required: false

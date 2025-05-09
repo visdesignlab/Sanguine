@@ -20,6 +20,6 @@ body:
     id: screenshots
     attributes:
       label: Screenshots
-      description: If you can, provide screen-shots or screen recordings of this bug.
+      description: If you can, provide screenshots and/or recordings of this bug
     validations:
       required: false
