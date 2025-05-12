@@ -1,5 +1,6 @@
 import environ
 import os
+import sys
 from corsheaders.defaults import default_headers
 
 
@@ -99,19 +100,16 @@ LOGGING = {
         },
     },
     "handlers": {
-        "file": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": "sanguine.log",
-            "maxBytes": 1000000000,  # 1GB
-            "backupCount": 10,
-            "encoding": "utf-8",
+        "console": {
+            "class": "logging.StreamHandler",
+            "stream": sys.stdout,
             "formatter": "verbose",
         },
     },
     "loggers": {
         "": {
             "level": "DEBUG",
-            "handlers": ["file"],
+            "handlers": ["console"],
         },
     },
 }
