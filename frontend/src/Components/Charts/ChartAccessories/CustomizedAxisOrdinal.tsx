@@ -44,8 +44,8 @@ function CustomizedAxisOrdinal({
 
   // Add a new handler that updates both the local hoveredColumn state and the store.
   const handleColumnHover = (columnValue: number | null) => {
-    setHoveredColumn(columnValue);
     if (columnValue !== null) {
+      setHoveredColumn(columnValue);
       // Filter the sorted data for cases within the hovered column.
       const pointsInColumn = data.filter(
         (dp: DumbbellDataPoint) => dp.yVal === columnValue,
@@ -110,7 +110,7 @@ function CustomizedAxisOrdinal({
             <g
               key={idx}
               onMouseEnter={() => handleColumnHover(numberOb.bin)}
-              onMouseLeave={() => store.InteractionStore.clearHoveredAttribute()}
+              onMouseLeave={() => { setHoveredColumn(null); store.InteractionStore.clearHoveredAttribute(); }}
               onClick={() => handleColumnClick(numberOb.bin)}
             >
               <CustomAxisLine x1={x1} x2={x2} />
