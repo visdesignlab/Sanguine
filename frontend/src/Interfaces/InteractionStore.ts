@@ -97,6 +97,7 @@ export class InteractionStore {
 
   clearSelectedAttribute() {
     this._selectedAttribute = undefined;
+    this.selectedCaseIds = [];
   }
 
   get selectedAttribute() {
