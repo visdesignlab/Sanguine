@@ -116,9 +116,9 @@ function HeatMap({
                   {/** Background Hover Row Rectangle */}
                   <rect
                     x={0}
-                    y={-1}
+                    y={secondaryData ? -aggregationScale().bandwidth() * 0.5 : 0}
                     width={dimensionWidth}
-                    height={rowHeight + 2}
+                    height={aggregationScale().bandwidth() + 2}
                     fill={isSelected ? InteractionStore.backgroundSelectedColor : isHovered ? InteractionStore.backgroundHoverColor : 'transparent'}
                   />
                   <SingleHeatRow
