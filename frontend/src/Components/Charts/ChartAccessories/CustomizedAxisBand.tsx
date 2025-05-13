@@ -1,4 +1,6 @@
-import { useCallback, useContext, useEffect, useState } from 'react';
+import {
+  useCallback, useContext, useEffect, useState,
+} from 'react';
 import { observer } from 'mobx-react';
 import {
   scaleBand,
@@ -16,10 +18,11 @@ type Props = {
   scalePadding: number;
   chartHeight: number;
   data: ScatterDataPoint[];
+  xAxisVar: string;
 };
 
 function CustomizedAxisBand({
-  scaleDomain, scaleRange, scalePadding, chartHeight, data,
+  scaleDomain, scaleRange, scalePadding, chartHeight, data, xAxisVar,
 }: Props) {
   const store = useContext(Store);
   const { InteractionStore } = store;
@@ -56,22 +59,28 @@ function CustomizedAxisBand({
     }
   };
 
-  const handleColumnClick = (columnIndex: number) => {
-    setSelectedColumn(columnIndex);
+  const handleColumnClick = (columnValue: number) => {
     setColumnRecentlyClicked(true);
-    if (columnIndex !== null) {
-      // Filter the sorted data for cases within the hovered column.
-      const pointsInColumn = data.filter(
-        (dp: ScatterDataPoint) => dp.xVal === columnIndex,
+    const pointsInColumn = data.filter(
+      (dp: ScatterDataPoint) => dp.xVal === columnValue,
+    );
+    const caseIds = pointsInColumn.map(
+      (dp: ScatterDataPoint) => Number(dp.case.CASE_ID),
+    );
+
+    if (selectedColumn === columnValue) {
+      // If the column is already selected, clear it.
+      setSelectedColumn(null);
+      store.InteractionStore.clearSelectedAttribute();
+      store.InteractionStore.selectedCaseIds = store.InteractionStore.selectedCaseIds.filter(
+        (id: number) => !caseIds.includes(id),
       );
-        // Update the hover store with all case IDs in that column
-      store.InteractionStore.selectedCaseIds = pointsInColumn.map(
-        (dp: ScatterDataPoint) => dp.case.CASE_ID,
-      );
-    } else {
-      // Clear hovered cases when no column is hovered.
-      store.InteractionStore.selectedCaseIds = [];
+      return;
     }
+
+    setSelectedColumn(columnValue);
+    store.InteractionStore.selectedCaseIds = caseIds;
+    store.InteractionStore.selectedAttribute = [xAxisVar, columnValue];
   };
 
   // Reset selectedColumn when the something else is selected

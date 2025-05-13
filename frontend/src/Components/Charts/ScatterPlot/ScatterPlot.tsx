@@ -207,8 +207,6 @@ function ScatterPlot({
     .attr('text-anchor', 'middle')
     .text(AcronymDictionary[xAxisVar] ? AcronymDictionary[xAxisVar] : xAxisVar);
 
-  const decideIfSelectSet = (d: ScatterDataPoint) => currentSelectSet.length > 0 && !!currentSelectSet.find((selected) => selected.setValues.includes(`${d.case[selected.setName]}`));
-
   // Generate the statistical lines for all median sets
   const generateStatisticalLines = (medianSet: Record<string, number[]>) => {
     let lineSet: JSX.Element[] = [];
@@ -261,6 +259,7 @@ function ScatterPlot({
       const cy = yAxisScale()(dataPoint.yVal);
       // const isSelectSet = decideIfSelectSet(dataPoint);
       const brushed = brushedSet.has(dataPoint.case.CASE_ID);
+      const isOnlySelection = store.InteractionStore.selectedCaseIds.length === 1 && store.InteractionStore.selectedCaseIds[0] === dataPoint.case.CASE_ID;
 
       // Append the scatterdot JSX element
       scatterDots.push(
@@ -273,7 +272,13 @@ function ScatterPlot({
           hovered={hovered}
           hoverColor={InteractionStore.smallHoverColor}
           selectedColor={InteractionStore.smallSelectColor}
-          onClick={() => { InteractionStore.selectedCaseIds = [dataPoint.case.CASE_ID]; }}
+          onClick={() => {
+            store.InteractionStore.clearSelectedAttribute();
+            store.InteractionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
+            if (isOnlySelection) {
+              store.InteractionStore.selectedCaseIds = [];
+            }
+          }}
           onMouseEnter={() => { InteractionStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
           onMouseLeave={() => { InteractionStore.hoveredCaseIds = []; }}
         />,
@@ -303,7 +308,7 @@ function ScatterPlot({
       <g className="axes">
         <g className="y-axis" />
         <g className="x-axis" transform={`translate(0 ,${height - currentOffset.bottom} )`}>
-          {xAxisVar !== 'CELL_SAVER_ML' ? <CustomizedAxisBand scalePadding={scalePadding} scaleDomain={JSON.stringify(xAxisScale().domain())} scaleRange={JSON.stringify(xAxisScale().range())} chartHeight={height - currentOffset.bottom - currentOffset.top} data={data} /> : null}
+          {xAxisVar !== 'CELL_SAVER_ML' ? <CustomizedAxisBand scalePadding={scalePadding} scaleDomain={JSON.stringify(xAxisScale().domain())} scaleRange={JSON.stringify(xAxisScale().range())} chartHeight={height - currentOffset.bottom - currentOffset.top} data={data} xAxisVar={xAxisVar} /> : null}
         </g>
         <text className="x-label" />
         <text className="y-label" />

@@ -55,10 +55,6 @@ function CustomizedAxisOrdinal({
         (dp: DumbbellDataPoint) => dp.case.CASE_ID,
       );
       store.InteractionStore.hoveredAttribute = [xAxisVar, columnValue];
-    } else {
-      // Clear hovered cases when no column is hovered.
-      // store.InteractionStore.hoveredCaseIds = [];
-      // store.InteractionStore.hoveredAttribute = null;
     }
   };
 
