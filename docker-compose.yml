@@ -21,7 +21,7 @@ services:
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./mariadb/conf.d:/etc/mysql/conf.d:z
-      - ./sftp/upload:/var/lib/mysql-files
+      # - ./sftp/upload:/var/lib/mysql-files
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       start_period: 3s
