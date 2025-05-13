@@ -10,11 +10,10 @@ import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import Store from '../../../Interfaces/Store';
 import { ScatterDataPoint, SingleCasePoint } from '../../../Interfaces/Types/DataTypes';
 import {
-  basicGray, highlightOrange, largeFontSize, OffsetDict, regularFontSize, thirdGray,
+  basicGray, largeFontSize, OffsetDict, regularFontSize, thirdGray,
 } from '../../../Presets/Constants';
 import { AcronymDictionary, BloodComponent, HemoOption } from '../../../Presets/DataDict';
 import CustomizedAxisBand from '../ChartAccessories/CustomizedAxisBand';
-import { InteractionStore } from '../../../Interfaces/InteractionStore';
 
 interface DotProps {
   selected: boolean;
@@ -60,7 +59,7 @@ function ScatterPlot({
   const currentOffset = OffsetDict.minimum;
   const store = useContext(Store);
   const { InteractionStore } = store;
-  const { currentBrushedPatientGroup, currentSelectSet } = store.provenanceState;
+  const { currentBrushedPatientGroup } = store.provenanceState;
   const svgSelection = select(svg.current);
   const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null);
   const [isFirstRender, updateIsFirstRender] = useState(true);
