@@ -110,15 +110,25 @@ function HeatMap({
                   InteractionStore.clearSelectedAttribute();
                 }
               };
+              const hoverRectY = secondaryData ? -aggregationScale().bandwidth() * 0.5 : 0;
+              const hoverRectHeight = aggregationScale().bandwidth();
               return (
                 /** On hover of a row, hover store is updated. */
                 <g key={idx} transform={`translate(0, ${rowY})`} onMouseEnter={() => { InteractionStore.hoveredAttribute = [yAxisVar, dataPoint.aggregateAttribute]; }} onMouseLeave={() => { InteractionStore.hoveredAttribute = undefined; }} onClick={() => { handleRowClick(); }}>
-                  {/** Background Hover Row Rectangle */}
+                  {/** Invisible row hover rectangle with padding for event capture */}
                   <rect
                     x={0}
-                    y={secondaryData ? -aggregationScale().bandwidth() * 0.5 : 0}
+                    y={hoverRectY}
                     width={dimensionWidth}
-                    height={aggregationScale().bandwidth() + 2}
+                    height={hoverRectHeight + 2}
+                    fill="transparent"
+                  />
+                  {/** Background row hover highlight rectangle for display */}
+                  <rect
+                    x={0}
+                    y={hoverRectY}
+                    width={dimensionWidth}
+                    height={hoverRectHeight}
                     fill={isSelected ? InteractionStore.backgroundSelectedColor : isHovered ? InteractionStore.backgroundHoverColor : 'transparent'}
                   />
                   <SingleHeatRow
