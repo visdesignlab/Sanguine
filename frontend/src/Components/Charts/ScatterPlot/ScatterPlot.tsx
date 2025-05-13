@@ -26,7 +26,7 @@ interface DotProps {
 
 const ScatterDot = styled('circle')<DotProps>`
   r: 4px;
-  opacity: ${(props) => (props.hovered || props.selected ? 1 : 0.5)};
+  opacity: ${(props) => (props.hovered || props.selected || props.brushed ? 1 : 0.5)};
   stroke-width: 2px;
   fill: ${(props) => (props.hovered
     ? props.hoverColor
