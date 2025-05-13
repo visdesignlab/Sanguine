@@ -55,9 +55,10 @@ export class InteractionStore {
   private _selectedAttribute?: HoveredAttribute;
 
   get hoveredCaseIds() {
-    // Update the hovered case IDs based on the hovered provider IDs
+    // If there's a hovered attribute, filter the cases based on that
     if (this._hoveredAttribute !== undefined) {
       return this.rootStore.filteredCases
+        // Normalize attribute returns the value of that case's attribute. Compare it to the store's hovered attribute value
         .filter((caseRecord) => (normalizeAttribute(caseRecord[this._hoveredAttribute![0]], this._hoveredAttribute![0]) === this._hoveredAttribute![1]))
         .map((caseRecord) => caseRecord.CASE_ID);
     }
@@ -70,12 +71,13 @@ export class InteractionStore {
   }
 
   get selectedCaseIds() {
+    // If there's a selected attribute, filter the cases based on that
     if (this._selectedAttribute !== undefined) {
       return this.rootStore.filteredCases
         .filter((caseRecord) => (normalizeAttribute(caseRecord[this._selectedAttribute![0]], this._selectedAttribute![0]) === this._selectedAttribute![1]))
         .map((caseRecord) => caseRecord.CASE_ID);
     }
-    return this._selectedCaseIds; // Fixed: return _selectedCaseIds instead of _hoveredCaseIds
+    return this._selectedCaseIds;
   }
 
   set selectedCaseIds(ids: number[]) {
@@ -88,6 +90,7 @@ export class InteractionStore {
 
   set hoveredAttribute(hoveredAttribute: HoveredAttribute | undefined) {
     this._hoveredAttribute = hoveredAttribute;
+    // updateSelectedPatientGroup(this.hoveredCaseIds);
   }
 
   clearHoveredAttribute() {

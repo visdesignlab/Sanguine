@@ -4,6 +4,7 @@ import {
 } from 'react';
 import { range } from 'd3';
 import useDeepCompareEffect from 'use-deep-compare-effect';
+import { is } from 'date-fns/locale';
 import { sortHelper } from '../../../HelperFunctions/ChartSorting';
 import Store from '../../../Interfaces/Store';
 import { ExtraPairPoint, HeatMapDataPoint } from '../../../Interfaces/Types/DataTypes';
@@ -84,6 +85,31 @@ function HeatMap({
   const innerSvg = useRef<SVGSVGElement | null>(null);
   const svgHeight = chartHeight - currentOffset.top;
 
+  // Compute whether this dataPoint is currently hovered.
+
+  function rowHovered(attribute: string, value: string) {
+    return InteractionStore.hoveredAttribute?.[0] === attribute && InteractionStore.hoveredAttribute?.[1] === value;
+  }
+  function rowSelected(attribute: string, value: string) {
+    return InteractionStore.selectedAttribute?.[0] === attribute && InteractionStore.selectedAttribute?.[1] === value;
+  }
+  function handleRowClick(attribute: string, value: string) {
+    if (rowSelected(attribute, value)) {
+      InteractionStore.clearSelectedAttribute();
+    } else {
+      InteractionStore.selectedAttribute = [attribute, value];
+    }
+  }
+  function handleHover(attribute: string, value: string) {
+    InteractionStore.hoveredAttribute = [attribute, value];
+  }
+
+  function handleHoverLeave() {
+    InteractionStore.hoveredAttribute = undefined;
+  }
+
+  const rowHeight = useMemo(() => (secondaryData ? aggregationScale().bandwidth() * 0.5 : aggregationScale().bandwidth()), [secondaryData, aggregationScale]);
+
   return (
     <g>
       <foreignObject
@@ -98,37 +124,26 @@ function HeatMap({
             // Calculate vertical placement and height for each primary row
               const rowY = (aggregationScale()(dataPoint.aggregateAttribute) || 0)
               + (secondaryData ? aggregationScale().bandwidth() * 0.5 : 0);
-              const rowHeight = secondaryData
-                ? aggregationScale().bandwidth() * 0.5
-                : aggregationScale().bandwidth();
-              // Compute whether this dataPoint is currently hovered.
-              const isHovered = InteractionStore.hoveredAttribute?.[0] === yAxisVar && InteractionStore.hoveredAttribute?.[1] === dataPoint.aggregateAttribute;
-              const isSelected = InteractionStore.selectedAttribute?.[0] === yAxisVar && InteractionStore.selectedAttribute?.[1] === dataPoint.aggregateAttribute;
-              const handleRowClick = () => {
-                InteractionStore.selectedAttribute = [yAxisVar, dataPoint.aggregateAttribute];
-                if (isSelected) {
-                  InteractionStore.clearSelectedAttribute();
-                }
-              };
-              const hoverRectY = secondaryData ? -aggregationScale().bandwidth() * 0.5 : 0;
-              const hoverRectHeight = aggregationScale().bandwidth();
+
+              const isSelected = rowSelected(yAxisVar, dataPoint.aggregateAttribute);
+              const isHovered = rowHovered(yAxisVar, dataPoint.aggregateAttribute);
               return (
                 /** On hover of a row, hover store is updated. */
-                <g key={idx} transform={`translate(0, ${rowY})`} onMouseEnter={() => { InteractionStore.hoveredAttribute = [yAxisVar, dataPoint.aggregateAttribute]; }} onMouseLeave={() => { InteractionStore.hoveredAttribute = undefined; }} onClick={() => { handleRowClick(); }}>
+                <g key={idx} transform={`translate(0, ${rowY})`} onMouseEnter={() => { handleHover(yAxisVar, dataPoint.aggregateAttribute); }} onMouseLeave={() => { handleHoverLeave(); }} onClick={() => { handleRowClick(yAxisVar, dataPoint.aggregateAttribute); }}>
                   {/** Invisible row hover rectangle with padding for event capture */}
                   <rect
                     x={0}
-                    y={hoverRectY}
+                    y={0}
                     width={dimensionWidth}
-                    height={hoverRectHeight + 2}
+                    height={rowHeight + 2}
                     fill="transparent"
                   />
                   {/** Background row hover highlight rectangle for display */}
                   <rect
                     x={0}
-                    y={hoverRectY}
+                    y={0}
                     width={dimensionWidth}
-                    height={hoverRectHeight}
+                    height={rowHeight}
                     fill={isSelected ? InteractionStore.backgroundSelectedColor : isHovered ? InteractionStore.backgroundHoverColor : 'transparent'}
                   />
                   <SingleHeatRow
@@ -153,28 +168,45 @@ function HeatMap({
                 </g>
               );
             })}
-            {secondaryData ? secondaryData.map((dataPoint, idx) => (
-              <g key={idx}>
-                <SingleHeatRow
-                  bandwidth={aggregationScale().bandwidth() * 0.5}
-                  valueScaleDomain={JSON.stringify(valueScale().domain())}
-                  valueScaleRange={JSON.stringify(valueScale().range())}
-                  dataPoint={dataPoint}
-                  howToTransform={`translate(0,${(aggregationScale()(dataPoint.aggregateAttribute) || 0)})`}
-                />
-                <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
-                  <CaseCountHeader
-                    showComparisonRect
-                    isFalseComparison={false}
-                    caseCount={dataPoint.caseCount}
-                    yPos={aggregationScale()(dataPoint.aggregateAttribute) || 0}
-                    height={0.5 * aggregationScale().bandwidth()}
-                    zeroCaseNum={dataPoint.zeroCaseNum}
-                    caseMax={caseMax}
+            {secondaryData ? secondaryData.map((dataPoint, idx) => {
+              // Calculate vertical placement and height for each primary row
+              const rowY = (aggregationScale()(dataPoint.aggregateAttribute) || 0)
+              + (aggregationScale().bandwidth() * 0.5);
+
+              const isSelected = rowSelected(yAxisVar, dataPoint.aggregateAttribute);
+              const isHovered = rowHovered(yAxisVar, dataPoint.aggregateAttribute);
+              return (
+                <g key={idx} onMouseEnter={() => { handleHover(yAxisVar, dataPoint.aggregateAttribute); }} onMouseLeave={() => { handleHoverLeave(); }} onClick={() => { handleRowClick(yAxisVar, dataPoint.aggregateAttribute); }}>
+
+                  {/** Background row hover highlight rectangle for display */}
+                  <rect
+                    x={0}
+                    y={rowY - rowHeight}
+                    width={dimensionWidth}
+                    height={rowHeight}
+                    fill={isSelected ? InteractionStore.backgroundSelectedColor : isHovered ? InteractionStore.backgroundHoverColor : 'transparent'}
                   />
-                </ChartG>
-              </g>
-            )) : null}
+                  <SingleHeatRow
+                    bandwidth={aggregationScale().bandwidth() * 0.5}
+                    valueScaleDomain={JSON.stringify(valueScale().domain())}
+                    valueScaleRange={JSON.stringify(valueScale().range())}
+                    dataPoint={dataPoint}
+                    howToTransform={`translate(0,${(aggregationScale()(dataPoint.aggregateAttribute) || 0)})`}
+                  />
+                  <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
+                    <CaseCountHeader
+                      showComparisonRect
+                      isFalseComparison={false}
+                      caseCount={dataPoint.caseCount}
+                      yPos={aggregationScale()(dataPoint.aggregateAttribute) || 0}
+                      height={0.5 * aggregationScale().bandwidth()}
+                      zeroCaseNum={dataPoint.zeroCaseNum}
+                      caseMax={caseMax}
+                    />
+                  </ChartG>
+                </g>
+              );
+            }) : null}
             {/** Row labels rendered on top */}
             <HeatMapAxisY
               svg={innerSvg}
