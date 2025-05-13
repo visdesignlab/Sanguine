@@ -18,15 +18,17 @@ import { DumbbellLine } from '../../../Presets/StyledSVGComponents';
 import CustomizedAxisOrdinal from '../ChartAccessories/CustomizedAxisOrdinal';
 import SingleDumbbell from './SingleDumbbell';
 import { DumbbellLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
+import { normalizeAttribute } from '../../../HelperFunctions/NormalizeAttributes';
 
 const sortDataHelper = (originalData: DumbbellDataPoint[], sortModeInput: 'preop' | 'postop' | 'gap', xAxisVar: DumbbellLayoutElement['xAxisVar']) => {
   let copyOfData: DumbbellDataPoint[] = JSON.parse(JSON.stringify(originalData));
-  if (xAxisVar === 'CELL_SAVER_ML') {
-    copyOfData = copyOfData.map((d) => ({
-      ...d,
-      yVal: Math.floor(d.yVal / 100) * 100,
-    }));
-  }
+
+  // Normalize the data (cell_saver_ml is rounded to nearest hundred)
+  copyOfData = copyOfData.map((d) => ({
+    ...d,
+    yVal: normalizeAttribute(d.yVal, xAxisVar) as number,
+  }));
+
   const countOfYVals = copyOfData
     .map((surgeryCase) => surgeryCase.yVal)
     .reduce((acc, label) => {

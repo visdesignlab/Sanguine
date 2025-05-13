@@ -5,6 +5,7 @@ import {
 // eslint-disable-next-line import/no-cycle
 import { RootStore } from './Store';
 import { ProcedureEntry, SingleCasePoint } from './Types/DataTypes';
+import { normalizeAttribute } from '../HelperFunctions/NormalizeAttributes';
 
 type HoveredAttribute = [AttributeName: string, value: string | number | boolean];
 
@@ -57,7 +58,7 @@ export class InteractionStore {
     // Update the hovered case IDs based on the hovered provider IDs
     if (this._hoveredAttribute !== undefined) {
       return this.rootStore.filteredCases
-        .filter((caseRecord) => caseRecord[this._hoveredAttribute![0]] === this._hoveredAttribute![1])
+        .filter((caseRecord) => (normalizeAttribute(caseRecord[this._hoveredAttribute![0]], this._hoveredAttribute![0]) === this._hoveredAttribute![1]))
         .map((caseRecord) => caseRecord.CASE_ID);
     }
 
@@ -71,7 +72,7 @@ export class InteractionStore {
   get selectedCaseIds() {
     if (this._selectedAttribute !== undefined) {
       return this.rootStore.filteredCases
-        .filter((caseRecord) => this._selectedAttribute && caseRecord[this._selectedAttribute[0]] === this._selectedAttribute[1])
+        .filter((caseRecord) => (normalizeAttribute(caseRecord[this._selectedAttribute![0]], this._selectedAttribute![0]) === this._selectedAttribute![1]))
         .map((caseRecord) => caseRecord.CASE_ID);
     }
     return this._selectedCaseIds; // Fixed: return _selectedCaseIds instead of _hoveredCaseIds
