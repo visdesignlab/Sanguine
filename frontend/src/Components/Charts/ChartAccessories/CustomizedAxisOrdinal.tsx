@@ -27,7 +27,6 @@ function CustomizedAxisOrdinal({
   const { InteractionStore } = store;
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<number | null>(null);
-  const [columnRecentlyClicked, setColumnRecentlyClicked] = useState<boolean | null>(null);
 
   const scale = useCallback(() => {
     const domain = JSON.parse(scaleDomain);
@@ -59,7 +58,6 @@ function CustomizedAxisOrdinal({
   };
 
   const handleColumnClick = (columnValue: number) => {
-    setColumnRecentlyClicked(true);
     const pointsInColumn = data.filter(
       (dp: DumbbellDataPoint) => dp.yVal === columnValue,
     );

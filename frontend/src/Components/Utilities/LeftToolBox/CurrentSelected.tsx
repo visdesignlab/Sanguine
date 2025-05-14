@@ -11,7 +11,6 @@ import { AcronymDictionary } from '../../../Presets/DataDict';
 import {
   InheritWidthGrid, CenterAlignedDiv, Title,
 } from '../../../Presets/StyledComponents';
-import { InteractionStore } from '../../../Interfaces/InteractionStore';
 
 const TinyFontButton = styled(Button)({
   fontSize: 'xx-small!important',

@@ -29,7 +29,6 @@ function CustomizedAxisBand({
 
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<number | null>(null);
-  const [columnRecentlyClicked, setColumnRecentlyClicked] = useState<boolean | null>(null);
 
   const scale = useCallback(() => {
     const domain = JSON.parse(scaleDomain);
@@ -60,7 +59,6 @@ function CustomizedAxisBand({
   };
 
   const handleColumnClick = (columnValue: number) => {
-    setColumnRecentlyClicked(true);
     const pointsInColumn = data.filter(
       (dp: ScatterDataPoint) => dp.xVal === columnValue,
     );
