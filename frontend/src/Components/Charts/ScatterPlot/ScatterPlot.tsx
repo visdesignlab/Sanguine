@@ -123,13 +123,13 @@ function ScatterPlot({
         updateBrushLoc(null);
         brushDef.move(svgSelection.select('.brush-layer'), null);
         if (store.provenanceState.currentSelectedPatientGroup.length > 0) {
-          store.InteractionStore.updateSelectedPatients([]);
+          store.InteractionStore.clearSelectedCases();
         }
       } else {
-        store.InteractionStore.updateSelectedPatients(caseList);
+        store.InteractionStore.selectedCaseIds = caseList.map((d) => d.CASE_ID);
       }
     } else if (store.provenanceState.currentSelectedPatientGroup.length > 0) {
-      store.InteractionStore.updateSelectedPatients([]);
+      store.InteractionStore.clearSelectedCases();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brushLoc]);
