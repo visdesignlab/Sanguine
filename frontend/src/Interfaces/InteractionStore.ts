@@ -1,4 +1,4 @@
-import { makeAutoObservable, reaction} from 'mobx';
+import { makeAutoObservable } from 'mobx';
 import {
   clearSelectionFilter, clearSet, outputToFilter, removeFilter, selectSet, setCurrentSelectPatient, updateSelectedPatients, updateProcedureSelection, updateFilteredPatientGroup,
 } from './Actions/SelectionActions';
@@ -105,38 +105,31 @@ export class InteractionStore {
     this.hoveredCaseIds = [];
   }
 
-  clearSelectedAttribute() {
+  clearSelectedCases() {
     this._selectedAttribute = undefined;
     this.selectedCaseIds = [];
   }
-
-  clearSelectedCases() {
-    this.clearSelectedAttribute();
-    this._selectedCaseIds = [];
-    this.selectedCaseIds = [];
-  }
-
-  // Watch for changes to the state.currentSelectedPatientGroup and update the selected case IDs accordingly
-
 
   get selectedAttribute() {
     return this._selectedAttribute;
   }
 
   set selectedAttribute(selectedAttribute: HoveredAttribute | undefined) {
-    this.clearSelectedAttribute();
+    this.clearSelectedCases();
     this._selectedAttribute = selectedAttribute;
 
     let selectedCaseIds: number[] = [];
-    // Update the selected case IDs based on the selected attribute
+    // Get all case IDs which match the selected attribute
     if (this._selectedAttribute !== undefined) {
       selectedCaseIds = this.rootStore.filteredCases
         .filter((caseRecord) => (normalizeAttribute(caseRecord[this._selectedAttribute![0]], this._selectedAttribute![0]) === this._selectedAttribute![1]))
         .map((caseRecord) => caseRecord.CASE_ID);
     }
-    // Get the SingleCasePoints which match the ID's
+    // Get the SingleCasePoints from the selected case IDs
     const selectedCases = this.rootStore.filteredCases
       .filter((caseRecord) => selectedCaseIds.includes(caseRecord.CASE_ID));
+
+    // Update the selected cases in provenance.
     this.updateSelectedPatients(selectedCases);
   }
 

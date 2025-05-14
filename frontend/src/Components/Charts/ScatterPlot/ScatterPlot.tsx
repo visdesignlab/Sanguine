@@ -256,8 +256,11 @@ function ScatterPlot({
         medianSet[dataPoint.xVal] = [dataPoint.yVal];
       }
       const cy = yAxisScale()(dataPoint.yVal);
-      // const isSelectSet = decideIfSelectSet(dataPoint);
+
+      // Check if the data point is brushed
       const brushed = brushedSet.has(dataPoint.case.CASE_ID);
+
+      // Checks if scatterdot the only currently selected case
       const isOnlySelection = store.InteractionStore.selectedCaseIds.length === 1 && store.InteractionStore.selectedCaseIds[0] === dataPoint.case.CASE_ID;
 
       // Append the scatterdot JSX element
@@ -272,10 +275,12 @@ function ScatterPlot({
           hoverColor={InteractionStore.smallHoverColor}
           selectedColor={InteractionStore.smallSelectColor}
           onClick={() => {
-            store.InteractionStore.clearSelectedAttribute();
+            store.InteractionStore.clearSelectedCases();
+            // Updates the selected cases to be this scatterdot.
             store.InteractionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
+            // If the scatterdot is already selected, deselect it.
             if (isOnlySelection) {
-              store.InteractionStore.selectedCaseIds = [];
+              store.InteractionStore.clearSelectedCases();
             }
           }}
           onMouseEnter={() => { InteractionStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}

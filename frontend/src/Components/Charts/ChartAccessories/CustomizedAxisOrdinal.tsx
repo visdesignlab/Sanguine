@@ -25,6 +25,8 @@ function CustomizedAxisOrdinal({
 }) {
   const store = useContext(Store);
   const { InteractionStore } = store;
+
+  // Used for keeping track of currently hovered and selected columns for background highlighting.
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<number | null>(null);
 
@@ -64,22 +66,22 @@ function CustomizedAxisOrdinal({
     const caseIds = pointsInColumn.map(
       (dp: DumbbellDataPoint) => Number(dp.case.CASE_ID),
     );
+    // If the column is already selected, deselect it.
     if (selectedColumn === columnValue) {
-      // If the column is already selected, clear it.
       setSelectedColumn(null);
-      store.InteractionStore.clearSelectedAttribute();
+      store.InteractionStore.clearSelectedCases();
       store.InteractionStore.selectedCaseIds = store.InteractionStore.selectedCaseIds.filter(
         (id: number) => !caseIds.includes(id),
       );
       return;
     }
-
+    // Set the local and store selected column and case ids.
     setSelectedColumn(columnValue);
     store.InteractionStore.selectedCaseIds = caseIds;
     store.InteractionStore.selectedAttribute = [xAxisVar, columnValue];
   };
 
-  // Reset selectedColumn when the something else is selected
+  // Reset selectedColumn when another plot selects other points.
   useEffect(() => {
     if (selectedColumn !== null) {
       // Get the case IDs for the currently selected column.

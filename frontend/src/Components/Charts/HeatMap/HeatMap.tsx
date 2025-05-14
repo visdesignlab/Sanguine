@@ -85,29 +85,36 @@ function HeatMap({
   const innerSvg = useRef<SVGSVGElement | null>(null);
   const svgHeight = chartHeight - currentOffset.top;
 
-  // Compute whether this dataPoint is currently hovered.
-
+  // Checks if current row is hovered based on the attribute value.
   function rowHovered(attribute: string, value: string) {
     return InteractionStore.hoveredAttribute?.[0] === attribute && InteractionStore.hoveredAttribute?.[1] === value;
   }
+  // Checks if current row is selected based on the attribute value.
   function rowSelected(attribute: string, value: string) {
     return InteractionStore.selectedAttribute?.[0] === attribute && InteractionStore.selectedAttribute?.[1] === value;
   }
+
+  // Sets the selected attribute in the store.
   function handleRowClick(attribute: string, value: string) {
+    // If the row is already selected, deselect the row.
     if (rowSelected(attribute, value)) {
-      InteractionStore.clearSelectedAttribute();
+      InteractionStore.clearSelectedCases();
     } else {
       InteractionStore.selectedAttribute = [attribute, value];
     }
   }
+
+  // Sets the hovered attribute in the store.
   function handleHover(attribute: string, value: string) {
     InteractionStore.hoveredAttribute = [attribute, value];
   }
 
+  // Removes the hovered attribute from the store.
   function handleHoverLeave() {
     InteractionStore.hoveredAttribute = undefined;
   }
 
+  // Calculates the height of each row based on whether secondary data is present.
   const rowHeight = useMemo(() => (secondaryData ? aggregationScale().bandwidth() * 0.5 : aggregationScale().bandwidth()), [secondaryData, aggregationScale]);
 
   return (
@@ -125,6 +132,7 @@ function HeatMap({
               const rowY = (aggregationScale()(dataPoint.aggregateAttribute) || 0)
               + (secondaryData ? aggregationScale().bandwidth() * 0.5 : 0);
 
+              // For this row, is the row selected or hovered?
               const isSelected = rowSelected(yAxisVar, dataPoint.aggregateAttribute);
               const isHovered = rowHovered(yAxisVar, dataPoint.aggregateAttribute);
               return (
@@ -173,6 +181,7 @@ function HeatMap({
               const rowY = (aggregationScale()(dataPoint.aggregateAttribute) || 0)
               + (aggregationScale().bandwidth() * 0.5);
 
+              // For this secondary row, is the row selected or hovered?
               const isSelected = rowSelected(yAxisVar, dataPoint.aggregateAttribute);
               const isHovered = rowHovered(yAxisVar, dataPoint.aggregateAttribute);
               return (
