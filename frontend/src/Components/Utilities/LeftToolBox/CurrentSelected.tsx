@@ -71,14 +71,6 @@ function CurrentSelected() {
             Create Filter
           </TinyFontButton>
         </CenterAlignedDiv>
-        {/* <Button
-                        disabled={!(currentOutputFilterSet.length > 0 || currentSelectPatientGroup.length > 0)}
-                        variant="outlined"
-                        size="small"
-                        className={styles.tinyFont}
-                        onClick={() => { store.InteractionStore.clearAllFilter() }}
-                    >Clear Filter</Button> */}
-
       </Box>
     </InheritWidthGrid>
   );

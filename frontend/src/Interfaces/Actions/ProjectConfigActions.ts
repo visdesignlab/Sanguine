@@ -55,7 +55,7 @@ export const resetBloodFilter = createAction<ApplicationState, [typeof BloodComp
 }).setLabel('resetBloodFilter');
 
 export const clearAllFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
-  state.currentSelectPatientGroup = [];
+  state.currentFilteredPatientGroup = [];
   state.currentOutputFilterSet = [];
   state.rawDateRange = defaultState.rawDateRange;
   state.outcomeFilter = [];

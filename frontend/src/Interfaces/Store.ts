@@ -87,8 +87,8 @@ export class RootStore {
       }
 
       if (
-        this.provenanceState.currentSelectPatientGroup.length > 0
-        && !this.provenanceState.currentSelectPatientGroup.some((patient) => patient.CASE_ID === d.CASE_ID)
+        this.provenanceState.currentFilteredPatientGroup.length > 0
+        && !this.provenanceState.currentFilteredPatientGroup.some((patient) => patient.CASE_ID === d.CASE_ID)
       ) {
         return false;
       }

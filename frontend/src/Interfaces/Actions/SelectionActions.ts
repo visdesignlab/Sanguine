@@ -5,7 +5,7 @@ import { ApplicationState } from '../Types/StateTypes';
 
 // This is a filter
 export const updateSelectedPatientGroup = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
-  state.currentSelectPatientGroup = caseList;
+  state.currentFilteredPatientGroup = caseList;
 }).setLabel('updatePatientGroup');
 
 // "removing" only applies to parent procedure
@@ -74,14 +74,14 @@ export const clearSet = createAction<ApplicationState, [string], ActionEvents>((
 }).setLabel('selectSetToRemove');
 
 export const clearSelectionFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
-  state.currentSelectPatientGroup = [];
+  state.currentFilteredPatientGroup = [];
   state.currentOutputFilterSet = [];
 }).setLabel('clearSelectionFilter');
 
 export const outputToFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
   state.currentOutputFilterSet = state.currentSelectSet;
   state.currentSelectSet = [];
-  state.currentSelectPatientGroup = state.currentBrushedPatientGroup;
+  state.currentFilteredPatientGroup = state.currentBrushedPatientGroup;
   state.currentBrushedPatientGroup = [];
 }).setLabel('createFilter');
 
