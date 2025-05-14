@@ -9,7 +9,7 @@ import Store from '../../../Interfaces/Store';
 
 function CaseList() {
   const store = useContext(Store);
-  const { currentBrushedPatientGroup, currentSelectPatient } = store.provenanceState;
+  const { currentSelectedPatientGroup, currentSelectPatient } = store.provenanceState;
 
   return (
     <Box style={{ height: '20vh' }} p={0.1}>
@@ -40,7 +40,7 @@ function CaseList() {
           </ListItemSecondaryAction>
         </ListSubheader>
 
-        {currentBrushedPatientGroup.map((d) => (
+        {currentSelectedPatientGroup.map((d) => (
           <ListItem
             key={d.CASE_ID}
             selected={(currentSelectPatient && currentSelectPatient.CASE_ID === d.CASE_ID) || false}

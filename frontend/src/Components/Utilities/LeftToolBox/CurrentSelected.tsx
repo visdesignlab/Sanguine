@@ -18,7 +18,7 @@ const TinyFontButton = styled(Button)({
 
 function CurrentSelected() {
   const store = useContext(Store);
-  const { currentBrushedPatientGroup, currentSelectSet } = store.provenanceState;
+  const { currentSelectedPatientGroup, currentSelectSet } = store.provenanceState;
 
   return (
     <InheritWidthGrid item>
@@ -28,12 +28,12 @@ function CurrentSelected() {
             <Title>Currently Selected</Title>
           </ListItem>
 
-          {currentBrushedPatientGroup.length > 0
+          {currentSelectedPatientGroup.length > 0
             ? (
               <ListItem alignItems="flex-start" style={{ width: '100%' }}>
                 <ListItemText
                   primary="Currently Selected Patients"
-                  secondary={currentBrushedPatientGroup.length}
+                  secondary={currentSelectedPatientGroup.length}
                 />
                 <ListItemSecondaryAction>
                   <IconButton onClick={() => { store.InteractionStore.updateBrush([]); }}>
@@ -61,7 +61,7 @@ function CurrentSelected() {
         </List>
         <CenterAlignedDiv>
           <TinyFontButton
-            disabled={!(currentSelectSet.length > 0 || currentBrushedPatientGroup.length > 0 || store.InteractionStore.selectedCaseIds.length > 0)}
+            disabled={!(currentSelectSet.length > 0 || currentSelectedPatientGroup.length > 0 || store.InteractionStore.selectedCaseIds.length > 0)}
             variant="outlined"
             onClick={() => {
               const selectedCases = store.filteredCases.filter((caseRecord: any) => store.InteractionStore.selectedCaseIds.includes(caseRecord.CASE_ID));

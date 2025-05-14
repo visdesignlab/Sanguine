@@ -39,7 +39,7 @@ export const updateProcedureSelection = createAction<ApplicationState, [Procedur
 }).setLabel('updateProcedureSelection');
 
 export const updateBrushPatient = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
-  state.currentBrushedPatientGroup = caseList;
+  state.currentSelectedPatientGroup = caseList;
   if (caseList.length === 0) {
     state.currentSelectPatient = null;
   }
@@ -81,8 +81,8 @@ export const clearSelectionFilter = createAction<ApplicationState, [], ActionEve
 export const outputToFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
   state.currentOutputFilterSet = state.currentSelectSet;
   state.currentSelectSet = [];
-  state.currentFilteredPatientGroup = state.currentBrushedPatientGroup;
-  state.currentBrushedPatientGroup = [];
+  state.currentFilteredPatientGroup = state.currentSelectedPatientGroup;
+  state.currentSelectedPatientGroup = [];
 }).setLabel('createFilter');
 
 export const removeFilter = createAction<ApplicationState, [string], ActionEvents>((state, filterToRemove) => {

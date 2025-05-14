@@ -16,7 +16,7 @@ export type ApplicationState = {
     showZero: boolean;
     // This two are both case ids
     currentFilteredPatientGroup: SingleCasePoint[];
-    currentBrushedPatientGroup: SingleCasePoint[];
+    currentSelectedPatientGroup: SingleCasePoint[];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
     BloodProductCost: any;
     nextAddingIndex: number;

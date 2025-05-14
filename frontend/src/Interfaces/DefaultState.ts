@@ -18,7 +18,7 @@ export const defaultState: ApplicationState = {
   nextAddingIndex: 0,
   showZero: true,
   currentFilteredPatientGroup: [],
-  currentBrushedPatientGroup: [],
+  currentSelectedPatientGroup: [],
   BloodProductCost: {
     PRBC_UNITS: 200,
     FFP_UNITS: 55,

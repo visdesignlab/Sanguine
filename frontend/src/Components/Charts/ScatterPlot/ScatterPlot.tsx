@@ -59,7 +59,7 @@ function ScatterPlot({
   const currentOffset = OffsetDict.minimum;
   const store = useContext(Store);
   const { InteractionStore } = store;
-  const { currentBrushedPatientGroup } = store.provenanceState;
+  const { currentSelectedPatientGroup } = store.provenanceState;
   const svgSelection = select(svg.current);
   const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null);
   const [isFirstRender, updateIsFirstRender] = useState(true);
@@ -122,13 +122,13 @@ function ScatterPlot({
       if (caseList.length === 0) {
         updateBrushLoc(null);
         brushDef.move(svgSelection.select('.brush-layer'), null);
-        if (store.provenanceState.currentBrushedPatientGroup.length > 0) {
+        if (store.provenanceState.currentSelectedPatientGroup.length > 0) {
           store.InteractionStore.updateBrush([]);
         }
       } else {
         store.InteractionStore.updateBrush(caseList);
       }
-    } else if (store.provenanceState.currentBrushedPatientGroup.length > 0) {
+    } else if (store.provenanceState.currentSelectedPatientGroup.length > 0) {
       store.InteractionStore.updateBrush([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -145,13 +145,13 @@ function ScatterPlot({
   }, [data]);
 
   useEffect(() => {
-    const newbrushedCaseList = currentBrushedPatientGroup.map((d) => d.CASE_ID);
+    const newbrushedCaseList = currentSelectedPatientGroup.map((d) => d.CASE_ID);
     stateUpdateWrapperUseJSON(brushedCaseList, newbrushedCaseList, updatebrushedCaseList);
-    if (currentBrushedPatientGroup.length === 0) {
+    if (currentSelectedPatientGroup.length === 0) {
       clearBrush();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentBrushedPatientGroup]);
+  }, [currentSelectedPatientGroup]);
 
   const yAxisLabel = axisLeft(yAxisScale());
   const xAxisLabel = axisBottom(xAxisScale() as never);
