@@ -32,14 +32,13 @@ function CaseList() {
             <IconButton
               edge="end"
               onClick={() => {
-                store.InteractionStore.updateBrush([]);
+                store.InteractionStore.clearSelectedCases();
               }}
             >
               <CloseIcon />
             </IconButton>
           </ListItemSecondaryAction>
         </ListSubheader>
-
         {currentSelectedPatientGroup.map((d) => (
           <ListItem
             key={d.CASE_ID}

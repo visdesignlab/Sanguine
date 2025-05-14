@@ -123,13 +123,13 @@ function ScatterPlot({
         updateBrushLoc(null);
         brushDef.move(svgSelection.select('.brush-layer'), null);
         if (store.provenanceState.currentSelectedPatientGroup.length > 0) {
-          store.InteractionStore.updateBrush([]);
+          store.InteractionStore.updateSelectedPatients([]);
         }
       } else {
-        store.InteractionStore.updateBrush(caseList);
+        store.InteractionStore.updateSelectedPatients(caseList);
       }
     } else if (store.provenanceState.currentSelectedPatientGroup.length > 0) {
-      store.InteractionStore.updateBrush([]);
+      store.InteractionStore.updateSelectedPatients([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brushLoc]);

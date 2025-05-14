@@ -1,6 +1,6 @@
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable, reaction} from 'mobx';
 import {
-  clearSelectionFilter, clearSet, outputToFilter, removeFilter, selectSet, setCurrentSelectPatient, updateBrushPatient, updateProcedureSelection, updateFilteredPatientGroup,
+  clearSelectionFilter, clearSet, outputToFilter, removeFilter, selectSet, setCurrentSelectPatient, updateSelectedPatients, updateProcedureSelection, updateFilteredPatientGroup,
 } from './Actions/SelectionActions';
 // eslint-disable-next-line import/no-cycle
 import { RootStore } from './Store';
@@ -89,7 +89,7 @@ export class InteractionStore {
       .filter((caseRecord) => ids.includes(caseRecord.CASE_ID));
 
     // Update the selected patient group with the selected cases
-    this.updateBrush(selectedCases);
+    this.updateSelectedPatients(selectedCases);
   }
 
   get hoveredAttribute() {
@@ -110,6 +110,15 @@ export class InteractionStore {
     this.selectedCaseIds = [];
   }
 
+  clearSelectedCases() {
+    this.clearSelectedAttribute();
+    this._selectedCaseIds = [];
+    this.selectedCaseIds = [];
+  }
+
+  // Watch for changes to the state.currentSelectedPatientGroup and update the selected case IDs accordingly
+
+
   get selectedAttribute() {
     return this._selectedAttribute;
   }
@@ -128,7 +137,7 @@ export class InteractionStore {
     // Get the SingleCasePoints which match the ID's
     const selectedCases = this.rootStore.filteredCases
       .filter((caseRecord) => selectedCaseIds.includes(caseRecord.CASE_ID));
-    this.updateBrush(selectedCases);
+    this.updateSelectedPatients(selectedCases);
   }
 
   // Selections --------------------------------------------------------
@@ -144,8 +153,8 @@ export class InteractionStore {
     this.provenance.apply(updateProcedureSelection(newProcedures, removing, parentProcedure));
   }
 
-  updateBrush(caseList: SingleCasePoint[]) {
-    this.provenance.apply(updateBrushPatient(caseList));
+  updateSelectedPatients(caseList: SingleCasePoint[]) {
+    this.provenance.apply(updateSelectedPatients(caseList));
   }
 
   setCurrentSelectPatient(newCase: SingleCasePoint | null) {

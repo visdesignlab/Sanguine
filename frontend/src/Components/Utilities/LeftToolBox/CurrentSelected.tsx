@@ -32,11 +32,11 @@ function CurrentSelected() {
             ? (
               <ListItem alignItems="flex-start" style={{ width: '100%' }}>
                 <ListItemText
-                  primary="Currently Selected Patients"
+                  primary="Currently Selected Cases"
                   secondary={currentSelectedPatientGroup.length}
                 />
                 <ListItemSecondaryAction>
-                  <IconButton onClick={() => { store.InteractionStore.updateBrush([]); }}>
+                  <IconButton onClick={() => { store.InteractionStore.clearSelectedCases(); }}>
                     <CloseIcon />
                   </IconButton>
                 </ListItemSecondaryAction>
