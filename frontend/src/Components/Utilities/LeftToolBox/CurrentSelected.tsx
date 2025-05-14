@@ -33,7 +33,7 @@ function CurrentSelected() {
             ? (
               <ListItem alignItems="flex-start" style={{ width: '100%' }}>
                 <ListItemText
-                  primary="Current Brushed Patients"
+                  primary="Currently Selected Patients"
                   secondary={currentBrushedPatientGroup.length}
                 />
                 <ListItemSecondaryAction>
@@ -58,19 +58,6 @@ function CurrentSelected() {
               </ListItemSecondaryAction>
             </ListItem>
           ))}
-          {store.InteractionStore.selectedCaseIds.length > 0 && (
-          <ListItem alignItems="flex-start" style={{ width: '100%' }}>
-            <ListItemText
-              primary="Currently Selected Patients"
-              secondary={store.InteractionStore.selectedCaseIds.length}
-            />
-            <ListItemSecondaryAction>
-              <IconButton onClick={() => { store.InteractionStore.selectedCaseIds = []; store.InteractionStore.selectedAttribute = undefined; }}>
-                <CloseIcon />
-              </IconButton>
-            </ListItemSecondaryAction>
-          </ListItem>
-          )}
 
         </List>
         <CenterAlignedDiv>

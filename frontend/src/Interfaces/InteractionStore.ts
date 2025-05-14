@@ -81,7 +81,15 @@ export class InteractionStore {
   }
 
   set selectedCaseIds(ids: number[]) {
+    // Sets the selected case IDs to the passed in IDs
     this._selectedCaseIds = structuredClone(ids);
+
+    // Get the SingleCasePoints which match the ID's
+    const selectedCases = this.rootStore.filteredCases
+      .filter((caseRecord) => ids.includes(caseRecord.CASE_ID));
+
+    // Update the selected patient group with the selected cases
+    this.updateBrush(selectedCases);
   }
 
   get hoveredAttribute() {
@@ -90,7 +98,6 @@ export class InteractionStore {
 
   set hoveredAttribute(hoveredAttribute: HoveredAttribute | undefined) {
     this._hoveredAttribute = hoveredAttribute;
-    // updateSelectedPatientGroup(this.hoveredCaseIds);
   }
 
   clearHoveredAttribute() {
@@ -108,7 +115,20 @@ export class InteractionStore {
   }
 
   set selectedAttribute(selectedAttribute: HoveredAttribute | undefined) {
+    this.clearSelectedAttribute();
     this._selectedAttribute = selectedAttribute;
+
+    let selectedCaseIds: number[] = [];
+    // Update the selected case IDs based on the selected attribute
+    if (this._selectedAttribute !== undefined) {
+      selectedCaseIds = this.rootStore.filteredCases
+        .filter((caseRecord) => (normalizeAttribute(caseRecord[this._selectedAttribute![0]], this._selectedAttribute![0]) === this._selectedAttribute![1]))
+        .map((caseRecord) => caseRecord.CASE_ID);
+    }
+    // Get the SingleCasePoints which match the ID's
+    const selectedCases = this.rootStore.filteredCases
+      .filter((caseRecord) => selectedCaseIds.includes(caseRecord.CASE_ID));
+    this.updateBrush(selectedCases);
   }
 
   // Selections --------------------------------------------------------

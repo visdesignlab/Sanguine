@@ -66,7 +66,6 @@ function CustomizedAxisOrdinal({
     const caseIds = pointsInColumn.map(
       (dp: DumbbellDataPoint) => Number(dp.case.CASE_ID),
     );
-
     if (selectedColumn === columnValue) {
       // If the column is already selected, clear it.
       setSelectedColumn(null);
@@ -84,11 +83,23 @@ function CustomizedAxisOrdinal({
 
   // Reset selectedColumn when the something else is selected
   useEffect(() => {
-    if (!columnRecentlyClicked) {
-      setSelectedColumn(null);
+    if (selectedColumn !== null) {
+      // Get the case IDs for the currently selected column.
+      const pointsInColumn = data.filter(
+        (dp: DumbbellDataPoint) => dp.yVal === selectedColumn,
+      );
+      const columnCaseIds = pointsInColumn.map(
+        (dp: DumbbellDataPoint) => Number(dp.case.CASE_ID),
+      );
+      // If there exists at least one different selected case ID in the store, clear the selected column.
+      const storeCaseIds = store.InteractionStore.selectedCaseIds;
+      const isSame = columnCaseIds.length === storeCaseIds.length
+        && columnCaseIds.every((id) => storeCaseIds.includes(id));
+      if (!isSame) {
+        setSelectedColumn(null);
+      }
     }
-    setColumnRecentlyClicked(false);
-  }, [store.InteractionStore.selectedCaseIds]);
+  }, [store.InteractionStore.selectedCaseIds, data, selectedColumn]);
 
   return (
     <>
