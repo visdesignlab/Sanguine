@@ -69,7 +69,7 @@ function CustomizedAxisBand({
     if (selectedColumn === columnValue) {
       // If the column is already selected, clear it.
       setSelectedColumn(null);
-      store.InteractionStore.clearSelectedAttribute();
+      store.InteractionStore.clearSelectedCases();
       store.InteractionStore.selectedCaseIds = store.InteractionStore.selectedCaseIds.filter(
         (id: number) => !caseIds.includes(id),
       );
