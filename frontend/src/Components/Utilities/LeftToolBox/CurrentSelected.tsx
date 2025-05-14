@@ -65,7 +65,7 @@ function CurrentSelected() {
             variant="outlined"
             onClick={() => {
               const selectedCases = store.filteredCases.filter((caseRecord: any) => store.InteractionStore.selectedCaseIds.includes(caseRecord.CASE_ID));
-              store.InteractionStore.updateSelectedPatientGroup(selectedCases);
+              store.InteractionStore.updateFilteredPatientGroup(selectedCases);
             }}
           >
             Create Filter

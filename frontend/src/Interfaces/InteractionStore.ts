@@ -1,6 +1,6 @@
 import { makeAutoObservable } from 'mobx';
 import {
-  clearSelectionFilter, clearSet, outputToFilter, removeFilter, selectSet, setCurrentSelectPatient, updateBrushPatient, updateProcedureSelection, updateSelectedPatientGroup,
+  clearSelectionFilter, clearSet, outputToFilter, removeFilter, selectSet, setCurrentSelectPatient, updateBrushPatient, updateProcedureSelection, updateFilteredPatientGroup,
 } from './Actions/SelectionActions';
 // eslint-disable-next-line import/no-cycle
 import { RootStore } from './Store';
@@ -136,8 +136,8 @@ export class InteractionStore {
     return this.rootStore.provenance;
   }
 
-  updateSelectedPatientGroup(caseList: SingleCasePoint[]) {
-    this.provenance.apply(updateSelectedPatientGroup(caseList));
+  updateFilteredPatientGroup(caseList: SingleCasePoint[]) {
+    this.provenance.apply(updateFilteredPatientGroup(caseList));
   }
 
   updateProcedureSelection(newProcedures: ProcedureEntry, removing: boolean, parentProcedure?: ProcedureEntry) {

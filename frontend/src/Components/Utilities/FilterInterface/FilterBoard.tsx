@@ -249,7 +249,7 @@ function FilterBoard() {
             <ListItemText primary="Cases Filtered" secondary={currentFilteredPatientGroup.length} />
             <ListItemSecondaryAction>
 
-              <IconButton onClick={() => { store.InteractionStore.updateSelectedPatientGroup([]); }}>
+              <IconButton onClick={() => { store.InteractionStore.updateFilteredPatientGroup([]); }}>
                 <Tooltip title="Remove">
                   <CloseIcon />
                 </Tooltip>

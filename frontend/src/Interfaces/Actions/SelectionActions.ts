@@ -4,7 +4,7 @@ import { ActionEvents } from '../Types/EventTypes';
 import { ApplicationState } from '../Types/StateTypes';
 
 // This is a filter
-export const updateSelectedPatientGroup = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
+export const updateFilteredPatientGroup = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
   state.currentFilteredPatientGroup = caseList;
 }).setLabel('updatePatientGroup');
 
