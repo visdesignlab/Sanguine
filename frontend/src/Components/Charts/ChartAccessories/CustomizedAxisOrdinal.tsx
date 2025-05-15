@@ -46,7 +46,9 @@ function CustomizedAxisOrdinal({
   // Add a new handler that updates both the local hoveredColumn state and the store.
   const handleColumnHover = (columnValue: number | null) => {
     if (columnValue !== null) {
-      setHoveredColumn(columnValue);
+      if (selectedColumn !== columnValue) {
+        setHoveredColumn(columnValue);
+      }
       // Filter the sorted data for cases within the hovered column.
       const pointsInColumn = data.filter(
         (dp: DumbbellDataPoint) => dp.yVal === columnValue,

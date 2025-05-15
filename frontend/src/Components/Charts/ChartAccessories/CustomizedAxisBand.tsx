@@ -43,11 +43,13 @@ function CustomizedAxisBand({
   }, [scaleDomain, scaleRange, scalePadding]);
 
   // Add a new handler that updates both the local hoveredColumn state and the store.
-  const handleColumnHover = (columnIndex: number | null) => {
-    setHoveredColumn(columnIndex);
-    if (columnIndex !== null) {
+  const handleColumnHover = (columnValue: number | null) => {
+    if (selectedColumn !== columnValue) {
+      setHoveredColumn(columnValue);
+    }
+    if (columnValue !== null) {
       // Filter the data using dp.xVal because the column represents the x-axis category.
-      const pointsInColumn = data.filter((dp: ScatterDataPoint) => dp.xVal === columnIndex);
+      const pointsInColumn = data.filter((dp: ScatterDataPoint) => dp.xVal === columnValue);
       // Update the hover store with all case IDs in that column
       store.InteractionStore.hoveredCaseIds = pointsInColumn.map(
         (dp: ScatterDataPoint) => dp.case.CASE_ID,

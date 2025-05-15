@@ -271,7 +271,7 @@ function ScatterPlot({
           cy={cy}
           selected={selected}
           brushed={brushed || false}
-          hovered={hovered}
+          hovered={hovered && !selected}
           hoverColor={InteractionStore.smallHoverColor}
           selectedColor={InteractionStore.smallSelectColor}
           onClick={() => {
