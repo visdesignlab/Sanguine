@@ -4,9 +4,9 @@ import { ActionEvents } from '../Types/EventTypes';
 import { ApplicationState } from '../Types/StateTypes';
 
 // This is a filter
-export const updateSelectedPatientGroup = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
-  state.currentSelectPatientGroup = caseList;
-}).setLabel('updatePatientGroup');
+export const updateFilteredPatientGroup = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
+  state.currentFilteredPatientGroup = caseList;
+}).setLabel('updateFilteredPatientGroup');
 
 // "removing" only applies to parent procedure
 export const updateProcedureSelection = createAction<ApplicationState, [ProcedureEntry, boolean, ProcedureEntry?], ActionEvents>((state, newProcedureSelection, removing, parentProcedureSelection?) => {
@@ -38,12 +38,12 @@ export const updateProcedureSelection = createAction<ApplicationState, [Procedur
   }
 }).setLabel('updateProcedureSelection');
 
-export const updateBrushPatient = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
-  state.currentBrushedPatientGroup = caseList;
+export const updateSelectedPatients = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
+  state.currentSelectedPatientGroup = caseList;
   if (caseList.length === 0) {
     state.currentSelectPatient = null;
   }
-}).setLabel('updateBrush');
+}).setLabel('updateSelectedPatients');
 
 export const setCurrentSelectPatient = createAction<ApplicationState, [SingleCasePoint | null], ActionEvents>((state, newCase) => {
   state.currentSelectPatient = newCase;
@@ -74,17 +74,18 @@ export const clearSet = createAction<ApplicationState, [string], ActionEvents>((
 }).setLabel('selectSetToRemove');
 
 export const clearSelectionFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
-  state.currentSelectPatientGroup = [];
+  state.currentFilteredPatientGroup = [];
   state.currentOutputFilterSet = [];
 }).setLabel('clearSelectionFilter');
 
 export const outputToFilter = createAction<ApplicationState, [], ActionEvents>((state) => {
   state.currentOutputFilterSet = state.currentSelectSet;
   state.currentSelectSet = [];
-  state.currentSelectPatientGroup = state.currentBrushedPatientGroup;
-  state.currentBrushedPatientGroup = [];
+  state.currentFilteredPatientGroup = state.currentSelectedPatientGroup;
+  state.currentSelectedPatientGroup = [];
 }).setLabel('createFilter');
 
 export const removeFilter = createAction<ApplicationState, [string], ActionEvents>((state, filterToRemove) => {
   state.currentOutputFilterSet = state.currentOutputFilterSet.filter((d) => d.setName !== filterToRemove);
 }).setLabel('clearFilter');
+

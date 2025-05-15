@@ -31,10 +31,10 @@ function SingleHeatRow({
           const output = dataPoint.countDict[point].length;
           const caseCount = showZero ? dataPoint.caseCount : dataPoint.caseCount - dataPoint.zeroCaseNum;
           // let disables = false;
-          let colorFill = output === 0 ? 'white' : interpolateReds(HeatmapColorScale(output / caseCount));
+          let colorFill = output === 0 ? 'transparent' : interpolateReds(HeatmapColorScale(output / caseCount));
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           if (!showZero && point as any === 0) {
-            colorFill = output === 0 ? 'white' : interpolateGreys(HeatmapGreyScale(output / (dataPoint.caseCount)));
+            colorFill = output === 0 ? 'transparent' : interpolateGreys(HeatmapGreyScale(output / (dataPoint.caseCount)));
             // disables = true;
           }
 

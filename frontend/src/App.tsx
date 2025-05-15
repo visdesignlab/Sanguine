@@ -10,7 +10,7 @@ import DataRetrieval from './Components/Modals/DataRetrieval';
 
 function App() {
   const store = useContext(Store);
-  const { currentSelectPatientGroup } = store.provenanceState;
+  const { currentFilteredPatientGroup } = store.provenanceState;
 
   const [dataLoading, setDataLoading] = useState(true);
   const [dataLoadingFailed, setDataLoadingFailed] = useState(false);
@@ -75,9 +75,9 @@ function App() {
         }
 
         let patientIDSet: Set<number> | undefined;
-        if (currentSelectPatientGroup.length > 0) {
+        if (currentFilteredPatientGroup.length > 0) {
           patientIDSet = new Set<number>();
-          currentSelectPatientGroup.forEach((d) => { patientIDSet!.add(d.CASE_ID); });
+          currentFilteredPatientGroup.forEach((d) => { patientIDSet!.add(d.CASE_ID); });
         }
 
         store.allCases = surgeryCases.result;
@@ -90,7 +90,7 @@ function App() {
     }
 
     fetchAllCases();
-  }, [currentSelectPatientGroup, store]);
+  }, [currentFilteredPatientGroup, store]);
 
   return (
     <>

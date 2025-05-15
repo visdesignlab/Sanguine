@@ -96,7 +96,7 @@ function CaseInfo() {
             <IconButton
               edge="end"
               onClick={() => {
-                store.selectionStore.setCurrentSelectPatient(null);
+                store.InteractionStore.setCurrentSelectPatient(null);
               }}
             >
               <CloseIcon />

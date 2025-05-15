@@ -18,15 +18,17 @@ import { DumbbellLine } from '../../../Presets/StyledSVGComponents';
 import CustomizedAxisOrdinal from '../ChartAccessories/CustomizedAxisOrdinal';
 import SingleDumbbell from './SingleDumbbell';
 import { DumbbellLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
+import { normalizeAttribute } from '../../../HelperFunctions/NormalizeAttributes';
 
 const sortDataHelper = (originalData: DumbbellDataPoint[], sortModeInput: 'preop' | 'postop' | 'gap', xAxisVar: DumbbellLayoutElement['xAxisVar']) => {
   let copyOfData: DumbbellDataPoint[] = JSON.parse(JSON.stringify(originalData));
-  if (xAxisVar === 'CELL_SAVER_ML') {
-    copyOfData = copyOfData.map((d) => ({
-      ...d,
-      yVal: Math.floor(d.yVal / 100) * 100,
-    }));
-  }
+
+  // Normalize the data (cell_saver_ml is rounded to nearest hundred)
+  copyOfData = copyOfData.map((d) => ({
+    ...d,
+    yVal: normalizeAttribute(d.yVal, xAxisVar) as number,
+  }));
+
   const countOfYVals = copyOfData
     .map((surgeryCase) => surgeryCase.yVal)
     .reduce((acc, label) => {
@@ -225,6 +227,8 @@ function DumbbellChart({
     const xVal = (valueScale() as unknown as ScaleOrdinal<number, number>)(idx);
 
     if (xVal) {
+      // Checks if dumbbell the only currently selected case
+      const isOnlySelection = store.InteractionStore.selectedCaseIds.length === 1 && store.InteractionStore.selectedCaseIds[0] === dataPoint.case.CASE_ID;
       return (
         <SingleDumbbell
           xVal={xVal}
@@ -235,14 +239,25 @@ function DumbbellChart({
           showPreop={showPreop}
           circleYValStart={testValueScale()(dataPoint.startXVal)}
           circleYValEnd={testValueScale()(dataPoint.endXVal)}
-          hovered={store.hoverStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID)}
+          hovered={store.InteractionStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID)}
+          selected={store.InteractionStore.selectedCaseIds.includes(dataPoint.case.CASE_ID)}
+          onClick={() => {
+            store.InteractionStore.clearSelectedCases();
+            // Updates the selected cases to be this dumbbell.
+            store.InteractionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
+            // If this is the only selected case, 'deselect' this dumbbell on click.
+            if (isOnlySelection) {
+              store.InteractionStore.clearSelectedCases();
+            }
+          }}
           onMouseEnter={() => {
-            store.hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
+            store.InteractionStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
           }}
           onMouseLeave={() => {
-            store.hoverStore.hoveredCaseIds = [];
+            store.InteractionStore.hoveredCaseIds = [];
           }}
-          hoverColor={store.hoverStore.smallHoverColor}
+          hoverColor={store.InteractionStore.smallHoverColor}
+          selectColor={store.InteractionStore.smallSelectColor}
           key={`dumbbell-${idx}`}
         />
       );

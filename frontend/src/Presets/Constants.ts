@@ -4,6 +4,7 @@ export const preopColor = '#209b58';
 export const postopColor = '#20639b';
 export const highlightOrange = '#d98532';
 export const basicGray = '#404040';
+export const lightGray = '#b3b3b3';
 export const secondaryGray = '#666666';
 export const thirdGray = '#a2a2a2';
 export const greyScaleRange = [0.3, 0.85];
