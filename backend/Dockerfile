@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN pip install poetry
 RUN poetry config virtualenvs.create false
+RUN poetry lock
 RUN poetry install
 
 # Expose the port the app runs on

@@ -16,3 +16,5 @@ faker = "^37.0.0"
 gunicorn = "^23.0.0"
 django-environ = "^0.12.0"
 django-cors-headers = "^4.7.0"
+oracledb = "^2.0.1"
+
