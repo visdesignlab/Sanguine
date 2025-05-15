@@ -42,34 +42,31 @@ function CustomizedAxisBand({
     return sc;
   }, [scaleDomain, scaleRange, scalePadding]);
 
-  // Add a new handler that updates both the local hoveredColumn state and the store.
+  // Helper to get all case IDs for a column (using dp.xVal)
+  const getCaseIds = (columnValue: number): number[] => data.filter((dp: ScatterDataPoint) => dp.xVal === columnValue)
+    .map((dp: ScatterDataPoint) => Number(dp.case.CASE_ID));
+
+  // Hover handler using the helper function.
   const handleColumnHover = (columnValue: number | null) => {
+    // Sets locally hovered column if it's not selected.
     if (selectedColumn !== columnValue) {
       setHoveredColumn(columnValue);
     }
+    // Sets the hovered case IDs in the store.
     if (columnValue !== null) {
-      // Filter the data using dp.xVal because the column represents the x-axis category.
-      const pointsInColumn = data.filter((dp: ScatterDataPoint) => dp.xVal === columnValue);
-      // Update the hover store with all case IDs in that column
-      store.InteractionStore.hoveredCaseIds = pointsInColumn.map(
-        (dp: ScatterDataPoint) => dp.case.CASE_ID,
-      );
+      const caseIds = getCaseIds(columnValue);
+      store.InteractionStore.hoveredCaseIds = caseIds;
     } else {
-      // Clear hovered cases when no column is hovered.
       store.InteractionStore.hoveredCaseIds = [];
     }
   };
 
+  // Click handler using the helper function.
   const handleColumnClick = (columnValue: number) => {
-    const pointsInColumn = data.filter(
-      (dp: ScatterDataPoint) => dp.xVal === columnValue,
-    );
-    const caseIds = pointsInColumn.map(
-      (dp: ScatterDataPoint) => Number(dp.case.CASE_ID),
-    );
+    const caseIds = getCaseIds(columnValue);
 
+    // If the column is already selected, deselect it.
     if (selectedColumn === columnValue) {
-      // If the column is already selected, clear it.
       setSelectedColumn(null);
       store.InteractionStore.clearSelectedCases();
       store.InteractionStore.selectedCaseIds = store.InteractionStore.selectedCaseIds.filter(
@@ -77,26 +74,23 @@ function CustomizedAxisBand({
       );
       return;
     }
-
+    // Sets the selected column locally (for background highlighting).
     setSelectedColumn(columnValue);
+
+    // Sets selected case IDs & attribute from this column in the store.
     store.InteractionStore.selectedCaseIds = caseIds;
     store.InteractionStore.selectedAttribute = [xAxisVar, columnValue];
   };
 
-  // Reset selectedColumn when the something else is selected
+  // Reset locally selected column when another component updates the store's selectedCaseIds.
   useEffect(() => {
     if (selectedColumn !== null) {
-      // Get the case IDs for the currently selected column.
-      const pointsInColumn = data.filter(
-        (dp: ScatterDataPoint) => dp.xVal === selectedColumn,
-      );
-      const columnCaseIds = pointsInColumn.map(
-        (dp: ScatterDataPoint) => Number(dp.case.CASE_ID),
-      );
-        // If there exists at least one different selected case ID in the store, clear the selected column.
+      const columnCaseIds = getCaseIds(selectedColumn);
       const storeCaseIds = store.InteractionStore.selectedCaseIds;
+
+      // If the store's selected case IDs don't match the column's case IDs, reset the selected column.
       const isSame = columnCaseIds.length === storeCaseIds.length
-          && columnCaseIds.every((id) => storeCaseIds.includes(id));
+        && columnCaseIds.every((id) => storeCaseIds.includes(id));
       if (!isSame) {
         setSelectedColumn(null);
       }
@@ -122,13 +116,13 @@ function CustomizedAxisBand({
               width={x2 - x1}
               chartHeight={chartHeight}
               fill={
-              selectedColumn === idx
-                ? InteractionStore.backgroundSelectedColor
-                : hoveredColumn === idx
-                  ? InteractionStore.backgroundHoverColor
-                  : idx % 2 === 1
-                    ? 'white'
-                    : 'black'
+                selectedColumn === idx
+                  ? InteractionStore.backgroundSelectedColor
+                  : hoveredColumn === idx
+                    ? InteractionStore.backgroundHoverColor
+                    : idx % 2 === 1
+                      ? 'white'
+                      : 'black'
               }
               opacity={selectedColumn === idx || hoveredColumn === idx ? 0.5 : 0.05}
             />

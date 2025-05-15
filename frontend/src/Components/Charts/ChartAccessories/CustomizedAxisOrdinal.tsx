@@ -43,31 +43,26 @@ function CustomizedAxisOrdinal({
   // Gets the provider name depending on the private mode setting
   const getLabel = usePrivateProvLabel();
 
-  // Add a new handler that updates both the local hoveredColumn state and the store.
+  // Helper to get all case IDs for a column
+  const getCaseIds = (columnValue: number): number[] => data.filter((dp: DumbbellDataPoint) => dp.yVal === columnValue)
+    .map((dp: DumbbellDataPoint) => Number(dp.case.CASE_ID));
+
+  // Hover handler using the helper function.
   const handleColumnHover = (columnValue: number | null) => {
     if (columnValue !== null) {
       if (selectedColumn !== columnValue) {
         setHoveredColumn(columnValue);
       }
-      // Filter the sorted data for cases within the hovered column.
-      const pointsInColumn = data.filter(
-        (dp: DumbbellDataPoint) => dp.yVal === columnValue,
-      );
-      // Update the hover store with all case IDs in that column
-      store.InteractionStore.hoveredCaseIds = pointsInColumn.map(
-        (dp: DumbbellDataPoint) => dp.case.CASE_ID,
-      );
+      const caseIds = getCaseIds(columnValue);
+      store.InteractionStore.hoveredCaseIds = caseIds;
       store.InteractionStore.hoveredAttribute = [xAxisVar, columnValue];
     }
   };
 
+  // Click handler using the helper function.
   const handleColumnClick = (columnValue: number) => {
-    const pointsInColumn = data.filter(
-      (dp: DumbbellDataPoint) => dp.yVal === columnValue,
-    );
-    const caseIds = pointsInColumn.map(
-      (dp: DumbbellDataPoint) => Number(dp.case.CASE_ID),
-    );
+    const caseIds = getCaseIds(columnValue);
+
     // If the column is already selected, deselect it.
     if (selectedColumn === columnValue) {
       setSelectedColumn(null);
@@ -79,22 +74,19 @@ function CustomizedAxisOrdinal({
     }
     // Set the local and store selected column and case ids.
     setSelectedColumn(columnValue);
+
+    // Sets selected case IDs & attribute from this column in the store.
     store.InteractionStore.selectedCaseIds = caseIds;
     store.InteractionStore.selectedAttribute = [xAxisVar, columnValue];
   };
 
-  // Reset selectedColumn when another plot selects other points.
+  // Reset locally selected column when another component updates the store's selectedCaseIds.
   useEffect(() => {
     if (selectedColumn !== null) {
-      // Get the case IDs for the currently selected column.
-      const pointsInColumn = data.filter(
-        (dp: DumbbellDataPoint) => dp.yVal === selectedColumn,
-      );
-      const columnCaseIds = pointsInColumn.map(
-        (dp: DumbbellDataPoint) => Number(dp.case.CASE_ID),
-      );
-      // If there exists at least one different selected case ID in the store, clear the selected column.
+      const columnCaseIds = getCaseIds(selectedColumn);
       const storeCaseIds = store.InteractionStore.selectedCaseIds;
+
+      // If the store's selected case IDs don't match the column's case IDs, reset the selected column.
       const isSame = columnCaseIds.length === storeCaseIds.length
         && columnCaseIds.every((id) => storeCaseIds.includes(id));
       if (!isSame) {
@@ -105,7 +97,6 @@ function CustomizedAxisOrdinal({
 
   return (
     <>
-
       {numberList.map((numberOb, idx) => {
         const s = scale();
         const x1 = idx === 0
@@ -113,7 +104,7 @@ function CustomizedAxisOrdinal({
           : 1 + s(numberList[idx - 1].indexEnding + 1) - 0.5 * (s(numberList[idx - 1].indexEnding + 1) - s(numberList[idx - 1].indexEnding));
 
         const x2 = idx === numberList.length - 1
-          ? s.range().at(-1) as number + 30
+          ? (s.range().at(-1) as number) + 30
           : -1 + s(numberOb.indexEnding) + 0.5 * (s(numberOb.indexEnding + 1) - s(numberOb.indexEnding));
 
         if (x1 && x2) {
@@ -122,7 +113,10 @@ function CustomizedAxisOrdinal({
             <g
               key={idx}
               onMouseEnter={() => handleColumnHover(numberOb.bin)}
-              onMouseLeave={() => { setHoveredColumn(null); store.InteractionStore.clearHoveredAttribute(); }}
+              onMouseLeave={() => {
+                setHoveredColumn(null);
+                store.InteractionStore.clearHoveredAttribute();
+              }}
               onClick={() => handleColumnClick(numberOb.bin)}
             >
               <CustomAxisLine x1={x1} x2={x2} />
@@ -132,22 +126,25 @@ function CustomizedAxisOrdinal({
                 width={x2 - x1}
                 chartHeight={chartHeight}
                 fill={
-                selectedColumn === numberOb.bin
-                  ? InteractionStore.backgroundSelectedColor
-                  : hoveredColumn === numberOb.bin
-                    ? InteractionStore.backgroundHoverColor
-                    : idx % 2 === 1
-                      ? 'white'
-                      : 'black'
-              }
+                  selectedColumn === numberOb.bin
+                    ? InteractionStore.backgroundSelectedColor
+                    : hoveredColumn === numberOb.bin
+                      ? InteractionStore.backgroundHoverColor
+                      : idx % 2 === 1
+                        ? 'white'
+                        : 'black'
+                }
                 opacity={selectedColumn === numberOb.bin || hoveredColumn === numberOb.bin ? 0.5 : 0.05}
               />
-              <Tooltip title={getLabel(numberOb.bin, xAxisVar)} arrow>
-                <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{binLabel}</AxisText>
+              <Tooltip title={binLabel} arrow>
+                <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>
+                  {binLabel}
+                </AxisText>
               </Tooltip>
             </g>
           );
-        } return null;
+        }
+        return null;
       })}
     </>
   );
