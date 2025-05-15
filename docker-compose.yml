@@ -1,6 +1,6 @@
 services:
   backend:
-    image: docker.io/intelvia/intelvia-backend:v0.0.4
+    image: intelvia/intelvia-backend:v0.0.5
     env_file:
       - .env
     ports:
@@ -35,13 +35,13 @@ services:
     depends_on:
       - backend
 
-  sftp:
-    image: docker.io/atmoz/sftp
-    volumes:
-      - ./sftp/upload:/home/intelvia
-    ports:
-      - "2222:22"
-    command: intelvia:password:1001
+        #  sftp:
+        #image: docker.io/atmoz/sftp
+        #volumes:
+        #  - ./sftp/upload:/home/intelvia
+        #ports:
+        #  - "2222:22"
+        #command: intelvia:password:1001
 
 volumes:
   mariadb_data:

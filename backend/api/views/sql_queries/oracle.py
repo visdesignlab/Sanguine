@@ -52,16 +52,15 @@ FIELDS = {
 }
 
 TABLES = {
-    "billing_codes": BILLING_CODES._meta.db_table,
-    "intra_op_trnsfsd": INTRAOP_TRANSFUSION._meta.db_table,
-    "patient": PATIENT._meta.db_table,
-    "surgery_case": SURGERY_CASE._meta.db_table,
-    "visit": VISIT._meta.db_table,
-    "visit_labs": VISIT_LABS._meta.db_table,
-    "extraop_meds": EXTRAOP_MEDS._meta.db_table,
-    "intraop_meds": INTRAOP_MEDS._meta.db_table,
+    "billing_codes": 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_BILLING_CODES',
+    "intra_op_trnsfsd": 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_TRANSFUSION',
+    "patient": 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_PATIENT',
+    "surgery_case": 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_SURGERY_CASE',
+    "visit": 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT',
+    "visit_labs": 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_VISIT_LABS',
+    "extraop_meds": 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_EXTRAOP_MEDS',
+    "intraop_meds": 'BLOOD_PRODUCTS_DM.BLPD_SANGUINE_INTRAOP_MEDS',
 }
-
 _, _, filters_safe_sql = get_all_cpt_code_filters()
 
 procedure_count_query = f"""

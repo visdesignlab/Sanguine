@@ -3,7 +3,7 @@ import os
 import sys
 from corsheaders.defaults import default_headers
 
-
+DATABASE_ROUTERS = ['api.routers.SanguineRouter']
 env = environ.Env(
     DJANGO_DEBUG=(bool, False),  # Cast to bool, default to False
     DJANGO_HOSTNAME=(str, "localhost"),
@@ -151,3 +151,16 @@ CAS_FORCE_SSL_SERVICE_URL = True
 CAS_VERSION = '3'
 CAS_USERNAME_ATTRIBUTE = "unid"
 CAS_ROOT_PROXIED_AS = "https://sanguine.med.utah.edu"
+
+#added to make oracle work
+import oracledb
+DATABASE_ROUTERS = ['api.routers.SanguineRouter']
+DATABASES["hospital"] = {
+        'ENGINE': 'django.db.backends.oracle',
+        "NAME": f"{env('ORACLE_HOST')}:{env('ORACLE_PORT')}/{env('ORACLE_SERVICE_NAME')}",
+        "USER": env("ORACLE_USER"),
+        "PASSWORD": env("ORACLE_PASSWORD"),
+        "OPTIONS": {
+            "mode": oracledb.AUTH_MODE_DEFAULT,
+        }
+    }

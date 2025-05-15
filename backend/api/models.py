@@ -2,6 +2,10 @@ from django.conf import settings
 from django.db import models
 from enum import Enum
 
+#added for oracle
+class SanguineManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().using('hospital')
 
 # Helper Enum classes
 class AccessLevel(Enum):
@@ -45,7 +49,9 @@ class PATIENT(models.Model):
     ETHNICITY_CODE = models.CharField(max_length=80)
     ETHNICITY_DESC = models.CharField(max_length=2000)
     DEATH_DATE = models.DateField(null=True)
-
+    
+    objects = SanguineManager()
+    use_hospital_db = True
     class Meta:
         managed = False
         db_table = 'PATIENT'
@@ -85,7 +91,9 @@ class VISIT(models.Model):
     CCI_MALIGN_W_METS = models.FloatField(null=True)
     CCI_HIV_AIDS = models.FloatField(null=True)
     CCI_SCORE = models.FloatField(null=True)
-
+    
+    objects = SanguineManager()
+    use_hospital_db = True
     class Meta:
         managed = False
         db_table = 'VISIT'
@@ -109,6 +117,8 @@ class SURGERY_CASE(models.Model):
     SCHED_SITE_DESC = models.CharField(max_length=2000)
     ASA_CODE = models.CharField(max_length=80)
 
+    objects = SanguineManager()
+    use_hospital_db = True
     class Meta:
         managed = False
         db_table = 'SURGERY_CASE'
@@ -128,6 +138,8 @@ class BILLING_CODES(models.Model):
     PRESENT_ON_ADM_F = models.CharField(max_length=1, null=True)
     CODE_RANK = models.FloatField()
 
+    objects = SanguineManager()
+    use_hospital_db = True
     class Meta:
         managed = False
         db_table = 'BILLING_CODES'
@@ -152,6 +164,8 @@ class VISIT_LABS(models.Model):
     LOWER_LIMIT = models.FloatField()
     UPPER_LIMIT = models.FloatField()
 
+    objects = SanguineManager()
+    use_hospital_db = True
     class Meta:
         managed = False
         db_table = 'VISIT_LABS'
@@ -177,6 +191,8 @@ class INTRAOP_TRANSFUSION(models.Model):
     CRYO_VOL = models.FloatField(null=True)
     TRANSFUSION_RANK = models.FloatField()
 
+    objects = SanguineManager()
+    use_hospital_db = True
     class Meta:
         managed = False
         db_table = 'INTRAOP_TRANSFUSION'
@@ -201,6 +217,8 @@ class INTRAOP_MEDS(models.Model):
     MED_START_DTM = models.DateTimeField()
     MED_END_DTM = models.DateTimeField()
 
+    objects = SanguineManager()
+    use_hospital_db = True
     class Meta:
         managed = False
         db_table = 'INTRAOP_MEDS'
@@ -224,6 +242,8 @@ class EXTRAOP_MEDS(models.Model):
     MED_START_DTM = models.DateTimeField()
     MED_END_DTM = models.DateTimeField()
 
+    objects = SanguineManager()
+    use_hospital_db = True
     class Meta:
         managed = False
         db_table = 'EXTRAOP_MEDS'
