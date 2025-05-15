@@ -139,6 +139,10 @@ SESSION_COOKIE_AGE = 60 * 30  # 60 seconds * 30 minutes
 SESSION_COOKIE_SECURE = True
 SESSION_SAVE_EVERY_REQUEST = True
 CSRF_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = [
+    f"https://{env('DJANGO_HOSTNAME')}",
+    f"http://{env('DJANGO_HOSTNAME')}:8080",
+]
 
 CAS_SERVER_URL = "https://go.utah.edu/cas/"
 CAS_ADMIN_PREFIX = "api/"
