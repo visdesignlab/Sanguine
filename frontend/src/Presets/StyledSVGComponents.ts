@@ -69,33 +69,29 @@ interface AverageLineProps {
   isPreop: boolean;
 }
 
+// If selected: selectColor; If only hovered: hoverColor; If none, preop/postop color
 export const DumbbellCircle = styled('circle')<DotProps>`
   r: 4px;
   opacity: 1;
-  fill: ${(props) => {
-    if (props.hovered) {
-      return props.hoverColor;
-    }
-    if (props.selected) {
-      return props.selectColor;
-    }
-    return props.isPreop ? preopColor : postopColor;
-  }};
+  fill: ${(props) => (props.selected
+    ? props.selectColor
+    : props.hovered
+      ? props.hoverColor
+      : props.isPreop
+        ? preopColor
+        : postopColor)};
 `;
 
+// If selected: selectColor; If only hovered: hoverColor; If none, lightGray
 export const DumbbellRect = styled('rect')<RectProps>`
   width: 1.5px;
   opacity: 1;
-  fill: ${(props) => {
-    if (props.hovered) {
-      return props.hoverColor;
-    }
-    if (props.selected) {
-      return props.selectColor;
-    }
-    return lightGray;
-  }};
- `;
+  fill: ${(props) => (props.selected
+    ? props.selectColor
+    : props.hovered
+      ? props.hoverColor
+      : lightGray)};
+`;
 
 export const DumbbellLine = styled('line') < AverageLineProps>`
     stroke: ${(props) => (props.isPreop ? preopColor : postopColor)};
