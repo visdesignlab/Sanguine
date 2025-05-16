@@ -47,7 +47,7 @@ function HeatMapAxis({
     .attr('cursor', 'pointer')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .on('click', (e, d: any) => {
-      store.InteractionStore.selectSet(yAxisVar, d.toString(), !e.shiftKey);
+      store.interactionStore.selectSet(yAxisVar, d.toString(), !e.shiftKey);
     });
 
   return (

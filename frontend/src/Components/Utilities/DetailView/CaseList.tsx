@@ -32,7 +32,7 @@ function CaseList() {
             <IconButton
               edge="end"
               onClick={() => {
-                store.InteractionStore.clearSelectedCases();
+                store.interactionStore.clearSelectedCases();
               }}
             >
               <CloseIcon />
@@ -44,7 +44,7 @@ function CaseList() {
             key={d.CASE_ID}
             selected={(currentSelectPatient && currentSelectPatient.CASE_ID === d.CASE_ID) || false}
           >
-            <ListItemButton onClick={() => store.InteractionStore.setCurrentSelectPatient(d)}>
+            <ListItemButton onClick={() => store.interactionStore.setCurrentSelectPatient(d)}>
               <ListItemText primary={
                                 store.configStore.privateMode ? d.CASE_ID : '----------'
                             }

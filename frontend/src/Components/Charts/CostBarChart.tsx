@@ -94,7 +94,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
 
   // Bar click listener
   const barClick = (eventType: string, clickedElement: unknown) => {
-    store.InteractionStore.selectSet(yAxisVar, (clickedElement as CostBarDataPoint).rowLabel[0].toString(), true);
+    store.interactionStore.selectSet(yAxisVar, (clickedElement as CostBarDataPoint).rowLabel[0].toString(), true);
   };
 
   const [showPotential, setShowPotential] = useState(true);

@@ -36,7 +36,7 @@ function CurrentSelected() {
                   secondary={currentSelectedPatientGroup.length}
                 />
                 <ListItemSecondaryAction>
-                  <IconButton onClick={() => { store.InteractionStore.clearSelectedCases(); }}>
+                  <IconButton onClick={() => { store.interactionStore.clearSelectedCases(); }}>
                     <CloseIcon />
                   </IconButton>
                 </ListItemSecondaryAction>
@@ -51,7 +51,7 @@ function CurrentSelected() {
                 secondary={selectSet.setValues.sort().join(', ')}
               />
               <ListItemSecondaryAction>
-                <IconButton onClick={() => { store.InteractionStore.clearSet(selectSet.setName); }}>
+                <IconButton onClick={() => { store.interactionStore.clearSet(selectSet.setName); }}>
                   <CloseIcon />
                 </IconButton>
               </ListItemSecondaryAction>
@@ -61,11 +61,11 @@ function CurrentSelected() {
         </List>
         <CenterAlignedDiv>
           <TinyFontButton
-            disabled={!(currentSelectSet.length > 0 || currentSelectedPatientGroup.length > 0 || store.InteractionStore.selectedCaseIds.length > 0)}
+            disabled={!(currentSelectSet.length > 0 || currentSelectedPatientGroup.length > 0 || store.interactionStore.selectedCaseIds.length > 0)}
             variant="outlined"
             onClick={() => {
-              const selectedCases = store.filteredCases.filter((caseRecord: any) => store.InteractionStore.selectedCaseIds.includes(caseRecord.CASE_ID));
-              store.InteractionStore.updateFilteredPatientGroup(selectedCases);
+              const selectedCases = store.filteredCases.filter((caseRecord: any) => store.interactionStore.selectedCaseIds.includes(caseRecord.CASE_ID));
+              store.interactionStore.updateFilteredPatientGroup(selectedCases);
             }}
           >
             Create Filter

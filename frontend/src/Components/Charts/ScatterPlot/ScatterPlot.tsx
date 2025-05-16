@@ -58,7 +58,7 @@ function ScatterPlot({
   const scalePadding = 0.2;
   const currentOffset = OffsetDict.minimum;
   const store = useContext(Store);
-  const { InteractionStore } = store;
+  const { interactionStore } = store;
   const { currentSelectedPatientGroup } = store.provenanceState;
   const svgSelection = select(svg.current);
   const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null);
@@ -123,13 +123,13 @@ function ScatterPlot({
         updateBrushLoc(null);
         brushDef.move(svgSelection.select('.brush-layer'), null);
         if (store.provenanceState.currentSelectedPatientGroup.length > 0) {
-          store.InteractionStore.clearSelectedCases();
+          store.interactionStore.clearSelectedCases();
         }
       } else {
-        store.InteractionStore.selectedCaseIds = caseList.map((d) => d.CASE_ID);
+        store.interactionStore.selectedCaseIds = caseList.map((d) => d.CASE_ID);
       }
     } else if (store.provenanceState.currentSelectedPatientGroup.length > 0) {
-      store.InteractionStore.clearSelectedCases();
+      store.interactionStore.clearSelectedCases();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brushLoc]);
@@ -248,8 +248,8 @@ function ScatterPlot({
       // Get the exact value for CELL_SAVER_ML or a jittered xVal
       const cx = getCX(dataPoint);
       // Check if the data point is hovered
-      const hovered = InteractionStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
-      const selected = InteractionStore.selectedCaseIds.includes(dataPoint.case.CASE_ID);
+      const hovered = interactionStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
+      const selected = interactionStore.selectedCaseIds.includes(dataPoint.case.CASE_ID);
       if (medianSet[dataPoint.xVal]) {
         medianSet[dataPoint.xVal].push(dataPoint.yVal);
       } else {
@@ -261,7 +261,7 @@ function ScatterPlot({
       const brushed = brushedSet.has(dataPoint.case.CASE_ID);
 
       // Checks if scatterdot the only currently selected case
-      const isOnlySelection = store.InteractionStore.selectedCaseIds.length === 1 && store.InteractionStore.selectedCaseIds[0] === dataPoint.case.CASE_ID;
+      const isOnlySelection = store.interactionStore.selectedCaseIds.length === 1 && store.interactionStore.selectedCaseIds[0] === dataPoint.case.CASE_ID;
 
       // Append the scatterdot JSX element
       scatterDots.push(
@@ -272,19 +272,19 @@ function ScatterPlot({
           selected={selected}
           brushed={brushed || false}
           hovered={hovered && !selected}
-          hoverColor={InteractionStore.smallHoverColor}
-          selectedColor={InteractionStore.smallSelectColor}
+          hoverColor={interactionStore.smallHoverColor}
+          selectedColor={interactionStore.smallSelectColor}
           onClick={() => {
-            store.InteractionStore.clearSelectedCases();
+            store.interactionStore.clearSelectedCases();
             // Updates the selected cases to be this scatterdot.
-            store.InteractionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
+            store.interactionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
             // If the scatterdot is already selected, deselect it.
             if (isOnlySelection) {
-              store.InteractionStore.clearSelectedCases();
+              store.interactionStore.clearSelectedCases();
             }
           }}
-          onMouseEnter={() => { InteractionStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
-          onMouseLeave={() => { InteractionStore.hoveredCaseIds = []; }}
+          onMouseEnter={() => { interactionStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
+          onMouseLeave={() => { interactionStore.hoveredCaseIds = []; }}
         />,
       );
     });

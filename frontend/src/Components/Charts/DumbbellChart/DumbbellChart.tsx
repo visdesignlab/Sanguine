@@ -228,9 +228,9 @@ function DumbbellChart({
 
     if (xVal) {
       // Checks if dumbbell the only currently selected case
-      const isOnlySelection = store.InteractionStore.selectedCaseIds.length === 1 && store.InteractionStore.selectedCaseIds[0] === dataPoint.case.CASE_ID;
-      const isHovered = store.InteractionStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
-      const isSelected = store.InteractionStore.selectedCaseIds.includes(dataPoint.case.CASE_ID);
+      const isOnlySelection = store.interactionStore.selectedCaseIds.length === 1 && store.interactionStore.selectedCaseIds[0] === dataPoint.case.CASE_ID;
+      const isHovered = store.interactionStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
+      const isSelected = store.interactionStore.selectedCaseIds.includes(dataPoint.case.CASE_ID);
       return (
         <SingleDumbbell
           xVal={xVal}
@@ -244,22 +244,22 @@ function DumbbellChart({
           hovered={isHovered && !isSelected}
           selected={isSelected}
           onClick={() => {
-            store.InteractionStore.clearSelectedCases();
+            store.interactionStore.clearSelectedCases();
             // Updates the selected cases to be this dumbbell.
-            store.InteractionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
+            store.interactionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
             // If this is the only selected case, 'deselect' this dumbbell on click.
             if (isOnlySelection) {
-              store.InteractionStore.clearSelectedCases();
+              store.interactionStore.clearSelectedCases();
             }
           }}
           onMouseEnter={() => {
-            store.InteractionStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
+            store.interactionStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
           }}
           onMouseLeave={() => {
-            store.InteractionStore.hoveredCaseIds = [];
+            store.interactionStore.hoveredCaseIds = [];
           }}
-          hoverColor={store.InteractionStore.smallHoverColor}
-          selectColor={store.InteractionStore.smallSelectColor}
+          hoverColor={store.interactionStore.smallHoverColor}
+          selectColor={store.interactionStore.smallSelectColor}
           key={`dumbbell-${idx}`}
         />
       );

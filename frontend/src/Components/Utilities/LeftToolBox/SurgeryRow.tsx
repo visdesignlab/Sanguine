@@ -54,7 +54,7 @@ function SurgeryRow({
       selected={highlighted}
     >
 
-      <SurgeryDiv ref={spanRef} onClick={() => { store.InteractionStore.updateProcedureSelection(listItem, selected, isSubSurgery ? parentSurgery : undefined); }}>
+      <SurgeryDiv ref={spanRef} onClick={() => { store.interactionStore.updateProcedureSelection(listItem, selected, isSubSurgery ? parentSurgery : undefined); }}>
         {isSubSurgery
           ? (
             // Sub-procedure row

@@ -25,7 +25,7 @@ function CustomizedAxisBand({
   scaleDomain, scaleRange, scalePadding, chartHeight, data, xAxisVar,
 }: Props) {
   const store = useContext(Store);
-  const { InteractionStore } = store;
+  const { interactionStore } = store;
 
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<number | null>(null);
@@ -55,9 +55,9 @@ function CustomizedAxisBand({
     // Sets the hovered case IDs in the store.
     if (columnValue !== null) {
       const caseIds = getCaseIds(columnValue);
-      store.InteractionStore.hoveredCaseIds = caseIds;
+      store.interactionStore.hoveredCaseIds = caseIds;
     } else {
-      store.InteractionStore.hoveredCaseIds = [];
+      store.interactionStore.hoveredCaseIds = [];
     }
   };
 
@@ -68,8 +68,8 @@ function CustomizedAxisBand({
     // If the column is already selected, deselect it.
     if (selectedColumn === columnValue) {
       setSelectedColumn(null);
-      store.InteractionStore.clearSelectedCases();
-      store.InteractionStore.selectedCaseIds = store.InteractionStore.selectedCaseIds.filter(
+      store.interactionStore.clearSelectedCases();
+      store.interactionStore.selectedCaseIds = store.interactionStore.selectedCaseIds.filter(
         (id: number) => !caseIds.includes(id),
       );
       return;
@@ -78,15 +78,15 @@ function CustomizedAxisBand({
     setSelectedColumn(columnValue);
 
     // Sets selected case IDs & attribute from this column in the store.
-    store.InteractionStore.selectedCaseIds = caseIds;
-    store.InteractionStore.selectedAttribute = [xAxisVar, columnValue];
+    store.interactionStore.selectedCaseIds = caseIds;
+    store.interactionStore.selectedAttribute = [xAxisVar, columnValue];
   };
 
   // Reset locally selected column when another component updates the store's selectedCaseIds.
   useEffect(() => {
     if (selectedColumn !== null) {
       const columnCaseIds = getCaseIds(selectedColumn);
-      const storeCaseIds = store.InteractionStore.selectedCaseIds;
+      const storeCaseIds = store.interactionStore.selectedCaseIds;
 
       // If the store's selected case IDs don't match the column's case IDs, reset the selected column.
       const isSame = columnCaseIds.length === storeCaseIds.length
@@ -95,7 +95,7 @@ function CustomizedAxisBand({
         setSelectedColumn(null);
       }
     }
-  }, [store.InteractionStore.selectedCaseIds, data, selectedColumn]);
+  }, [store.interactionStore.selectedCaseIds, data, selectedColumn]);
 
   return (
     <>
@@ -117,9 +117,9 @@ function CustomizedAxisBand({
               chartHeight={chartHeight}
               fill={
                 selectedColumn === idx
-                  ? InteractionStore.backgroundSelectedColor
+                  ? interactionStore.backgroundSelectedColor
                   : hoveredColumn === idx
-                    ? InteractionStore.backgroundHoverColor
+                    ? interactionStore.backgroundHoverColor
                     : idx % 2 === 1
                       ? 'white'
                       : 'black'

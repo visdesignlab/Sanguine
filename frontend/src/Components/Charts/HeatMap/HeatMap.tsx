@@ -52,7 +52,7 @@ function HeatMap({
   outcomeComparison, interventionDate, secondaryExtraPairDataSet, dimensionHeight, secondaryData, dimensionWidth, yAxisVar, xAxisVar, chartId, data, svg, extraPairDataSet, extraPairTotalWidth, firstTotal, secondTotal,
 }: Props) {
   const store = useContext(Store);
-  const { InteractionStore } = store;
+  const { interactionStore } = store;
   const currentOffset = OffsetDict.regular;
   const [xVals, setXVals] = useState<[]>([]);
   const [caseMax, setCaseMax] = useState(0);
@@ -86,31 +86,31 @@ function HeatMap({
 
   // Checks if current row is hovered based on the attribute value.
   function rowHovered(attribute: string, value: string) {
-    return InteractionStore.hoveredAttribute?.[0] === attribute && InteractionStore.hoveredAttribute?.[1] === value;
+    return interactionStore.hoveredAttribute?.[0] === attribute && interactionStore.hoveredAttribute?.[1] === value;
   }
   // Checks if current row is selected based on the attribute value.
   function rowSelected(attribute: string, value: string) {
-    return InteractionStore.selectedAttribute?.[0] === attribute && InteractionStore.selectedAttribute?.[1] === value;
+    return interactionStore.selectedAttribute?.[0] === attribute && interactionStore.selectedAttribute?.[1] === value;
   }
 
   // Sets the selected attribute in the store.
   function handleRowClick(attribute: string, value: string) {
     // If the row is already selected, deselect the row.
     if (rowSelected(attribute, value)) {
-      InteractionStore.clearSelectedCases();
+      interactionStore.clearSelectedCases();
     } else {
-      InteractionStore.selectedAttribute = [attribute, value];
+      interactionStore.selectedAttribute = [attribute, value];
     }
   }
 
   // Sets the hovered attribute in the store.
   function handleHover(attribute: string, value: string) {
-    InteractionStore.hoveredAttribute = [attribute, value];
+    interactionStore.hoveredAttribute = [attribute, value];
   }
 
   // Removes the hovered attribute from the store.
   function handleHoverLeave() {
-    InteractionStore.hoveredAttribute = undefined;
+    interactionStore.hoveredAttribute = undefined;
   }
 
   // Calculates the height of each row based on whether secondary data is present.
@@ -151,7 +151,7 @@ function HeatMap({
                     y={0}
                     width={dimensionWidth}
                     height={rowHeight}
-                    fill={isSelected ? InteractionStore.backgroundSelectedColor : isHovered ? InteractionStore.backgroundHoverColor : 'transparent'}
+                    fill={isSelected ? interactionStore.backgroundSelectedColor : isHovered ? interactionStore.backgroundHoverColor : 'transparent'}
                   />
                   <SingleHeatRow
                     bandwidth={rowHeight}
@@ -192,7 +192,7 @@ function HeatMap({
                     y={rowY - rowHeight}
                     width={dimensionWidth}
                     height={rowHeight}
-                    fill={isSelected ? InteractionStore.backgroundSelectedColor : isHovered ? InteractionStore.backgroundHoverColor : 'transparent'}
+                    fill={isSelected ? interactionStore.backgroundSelectedColor : isHovered ? interactionStore.backgroundHoverColor : 'transparent'}
                   />
                   <SingleHeatRow
                     bandwidth={aggregationScale().bandwidth() * 0.5}

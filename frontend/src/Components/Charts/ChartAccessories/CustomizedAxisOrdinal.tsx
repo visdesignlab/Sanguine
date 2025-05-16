@@ -24,7 +24,7 @@ function CustomizedAxisOrdinal({
   data: DumbbellDataPoint[];
 }) {
   const store = useContext(Store);
-  const { InteractionStore } = store;
+  const { interactionStore } = store;
 
   // Used for keeping track of currently hovered and selected columns for background highlighting.
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
@@ -54,8 +54,8 @@ function CustomizedAxisOrdinal({
         setHoveredColumn(columnValue);
       }
       const caseIds = getCaseIds(columnValue);
-      store.InteractionStore.hoveredCaseIds = caseIds;
-      store.InteractionStore.hoveredAttribute = [xAxisVar, columnValue];
+      store.interactionStore.hoveredCaseIds = caseIds;
+      store.interactionStore.hoveredAttribute = [xAxisVar, columnValue];
     }
   };
 
@@ -66,8 +66,8 @@ function CustomizedAxisOrdinal({
     // If the column is already selected, deselect it.
     if (selectedColumn === columnValue) {
       setSelectedColumn(null);
-      store.InteractionStore.clearSelectedCases();
-      store.InteractionStore.selectedCaseIds = store.InteractionStore.selectedCaseIds.filter(
+      store.interactionStore.clearSelectedCases();
+      store.interactionStore.selectedCaseIds = store.interactionStore.selectedCaseIds.filter(
         (id: number) => !caseIds.includes(id),
       );
       return;
@@ -76,15 +76,15 @@ function CustomizedAxisOrdinal({
     setSelectedColumn(columnValue);
 
     // Sets selected case IDs & attribute from this column in the store.
-    store.InteractionStore.selectedCaseIds = caseIds;
-    store.InteractionStore.selectedAttribute = [xAxisVar, columnValue];
+    store.interactionStore.selectedCaseIds = caseIds;
+    store.interactionStore.selectedAttribute = [xAxisVar, columnValue];
   };
 
   // Reset locally selected column when another component updates the store's selectedCaseIds.
   useEffect(() => {
     if (selectedColumn !== null) {
       const columnCaseIds = getCaseIds(selectedColumn);
-      const storeCaseIds = store.InteractionStore.selectedCaseIds;
+      const storeCaseIds = store.interactionStore.selectedCaseIds;
 
       // If the store's selected case IDs don't match the column's case IDs, reset the selected column.
       const isSame = columnCaseIds.length === storeCaseIds.length
@@ -93,7 +93,7 @@ function CustomizedAxisOrdinal({
         setSelectedColumn(null);
       }
     }
-  }, [store.InteractionStore.selectedCaseIds, data, selectedColumn]);
+  }, [store.interactionStore.selectedCaseIds, data, selectedColumn]);
 
   return (
     <>
@@ -115,7 +115,7 @@ function CustomizedAxisOrdinal({
               onMouseEnter={() => handleColumnHover(numberOb.bin)}
               onMouseLeave={() => {
                 setHoveredColumn(null);
-                store.InteractionStore.clearHoveredAttribute();
+                store.interactionStore.clearHoveredAttribute();
               }}
               onClick={() => handleColumnClick(numberOb.bin)}
             >
@@ -127,9 +127,9 @@ function CustomizedAxisOrdinal({
                 chartHeight={chartHeight}
                 fill={
                   selectedColumn === numberOb.bin
-                    ? InteractionStore.backgroundSelectedColor
+                    ? interactionStore.backgroundSelectedColor
                     : hoveredColumn === numberOb.bin
-                      ? InteractionStore.backgroundHoverColor
+                      ? interactionStore.backgroundHoverColor
                       : idx % 2 === 1
                         ? 'white'
                         : 'black'

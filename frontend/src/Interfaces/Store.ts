@@ -17,7 +17,7 @@ export class RootStore {
 
   configStore: ProjectConfigStore;
 
-  InteractionStore: InteractionStore;
+  interactionStore: InteractionStore;
 
   chartStore: ChartStore;
 
@@ -34,8 +34,7 @@ export class RootStore {
     this.provenance.done();
     this.configStore = new ProjectConfigStore(this);
     this.chartStore = new ChartStore(this);
-    this.InteractionStore = new InteractionStore(this);
-    this.InteractionStore = new InteractionStore(this);
+    this.interactionStore = new InteractionStore(this);
 
     this._allCases = [];
 
