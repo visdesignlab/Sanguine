@@ -23,16 +23,17 @@ interface DotProps {
   selectedColor: string;
 }
 
+// If selected: selectedColor; If only hovered: hoverColor; If none, lightGray
 const ScatterDot = styled('circle')<DotProps>`
   r: 4px;
   opacity: ${(props) => (props.hovered || props.selected || props.brushed ? 1 : 0.5)};
   stroke-width: 2px;
-  fill: ${(props) => (props.hovered
-    ? props.hoverColor
-    : props.brushed || props.selected
-      ? props.selectedColor
+  fill: ${(props) => (props.selected
+    ? props.selectedColor
+    : props.hovered
+      ? props.hoverColor
       : basicGray)};
-`;
+  `;
 
 const StatisticalLine = styled('line')`
   stroke-width: 3px;
