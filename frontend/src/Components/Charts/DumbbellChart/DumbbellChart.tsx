@@ -228,7 +228,6 @@ function DumbbellChart({
 
     if (xVal) {
       // Checks if dumbbell the only currently selected case
-      const isOnlySelection = store.interactionStore.selectedCaseIds.length === 1 && store.interactionStore.selectedCaseIds[0] === dataPoint.case.CASE_ID;
       const isHovered = store.interactionStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
       const isSelected = store.interactionStore.selectedCaseIds.includes(dataPoint.case.CASE_ID);
       return (
@@ -244,12 +243,12 @@ function DumbbellChart({
           hovered={isHovered && !isSelected}
           selected={isSelected}
           onClick={() => {
-            store.interactionStore.clearSelectedCases();
-            // Updates the selected cases to be this dumbbell.
-            store.interactionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
-            // If this is the only selected case, 'deselect' this dumbbell on click.
-            if (isOnlySelection) {
-              store.interactionStore.clearSelectedCases();
+            // If selected, deselect this case.
+            if (isSelected) {
+              store.interactionStore.deselectCaseIds([dataPoint.case.CASE_ID]);
+            } else {
+              // If not selected, select this case.
+              store.interactionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
             }
           }}
           onMouseEnter={() => {

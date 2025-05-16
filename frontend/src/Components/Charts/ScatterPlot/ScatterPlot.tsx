@@ -260,10 +260,6 @@ function ScatterPlot({
 
       // Check if the data point is brushed
       const brushed = brushedSet.has(dataPoint.case.CASE_ID);
-
-      // Checks if scatterdot the only currently selected case
-      const isOnlySelection = store.interactionStore.selectedCaseIds.length === 1 && store.interactionStore.selectedCaseIds[0] === dataPoint.case.CASE_ID;
-
       // Append the scatterdot JSX element
       scatterDots.push(
         <ScatterDot
@@ -280,8 +276,8 @@ function ScatterPlot({
             // Updates the selected cases to be this scatterdot.
             store.interactionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
             // If the scatterdot is already selected, deselect it.
-            if (isOnlySelection) {
-              store.interactionStore.clearSelectedCases();
+            if (selected) {
+              store.interactionStore.deselectCaseIds([dataPoint.case.CASE_ID]);
             }
           }}
           onMouseEnter={() => { interactionStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}

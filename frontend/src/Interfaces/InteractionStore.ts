@@ -133,6 +133,11 @@ export class InteractionStore {
     this.updateSelectedPatients(selectedCases);
   }
 
+  deselectCaseIds(caseIds: number[]) {
+    // Remove the passed in case IDs from the selected case IDs
+    this._selectedCaseIds = this.selectedCaseIds.filter((caseId) => !caseIds.includes(caseId));
+  }
+
   // Selections --------------------------------------------------------
   get provenance() {
     return this.rootStore.provenance;

@@ -69,9 +69,7 @@ function CustomizedAxisBand({
     if (selectedColumn === columnValue) {
       setSelectedColumn(null);
       store.interactionStore.clearSelectedCases();
-      store.interactionStore.selectedCaseIds = store.interactionStore.selectedCaseIds.filter(
-        (id: number) => !caseIds.includes(id),
-      );
+      store.interactionStore.deselectCaseIds(caseIds);
       return;
     }
     // Sets the selected column locally (for background highlighting).
