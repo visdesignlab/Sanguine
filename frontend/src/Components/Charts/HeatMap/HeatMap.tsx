@@ -4,7 +4,6 @@ import {
 } from 'react';
 import { range } from 'd3';
 import useDeepCompareEffect from 'use-deep-compare-effect';
-import { is } from 'date-fns/locale';
 import { sortHelper } from '../../../HelperFunctions/ChartSorting';
 import Store from '../../../Interfaces/Store';
 import { ExtraPairPoint, HeatMapDataPoint } from '../../../Interfaces/Types/DataTypes';
