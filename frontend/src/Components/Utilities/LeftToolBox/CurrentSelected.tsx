@@ -64,7 +64,7 @@ function CurrentSelected() {
             disabled={!(currentSelectSet.length > 0 || currentSelectedPatientGroup.length > 0 || store.interactionStore.selectedCaseIds.length > 0)}
             variant="outlined"
             onClick={() => {
-              const selectedCases = store.filteredCases.filter((caseRecord: any) => store.interactionStore.selectedCaseIds.includes(caseRecord.CASE_ID));
+              const selectedCases = store.filteredCases.filter((caseRecord) => store.interactionStore.selectedCaseIds.includes(caseRecord.CASE_ID));
               store.interactionStore.updateFilteredPatientGroup(selectedCases);
             }}
           >
