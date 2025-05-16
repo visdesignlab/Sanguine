@@ -5,7 +5,9 @@ import { observer } from 'mobx-react';
 import {
   scaleBand,
 } from 'd3';
-import { basicGray, secondaryGray } from '../../../Presets/Constants';
+import {
+  basicGray, secondaryGray, backgroundHoverColor, backgroundSelectedColor,
+} from '../../../Presets/Constants';
 import {
   AxisText, CustomAxisColumnBackground, CustomAxisLine, CustomAxisLineBox,
 } from '../../../Presets/StyledSVGComponents';
@@ -25,7 +27,6 @@ function CustomizedAxisBand({
   scaleDomain, scaleRange, scalePadding, chartHeight, data, xAxisVar,
 }: Props) {
   const store = useContext(Store);
-  const { interactionStore } = store;
 
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<number | null>(null);
@@ -115,9 +116,9 @@ function CustomizedAxisBand({
               chartHeight={chartHeight}
               fill={
                 selectedColumn === idx
-                  ? interactionStore.backgroundSelectedColor
+                  ? backgroundSelectedColor
                   : hoveredColumn === idx
-                    ? interactionStore.backgroundHoverColor
+                    ? backgroundHoverColor
                     : idx % 2 === 1
                       ? 'white'
                       : 'black'

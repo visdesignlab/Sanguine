@@ -8,7 +8,7 @@ import { sortHelper } from '../../../HelperFunctions/ChartSorting';
 import Store from '../../../Interfaces/Store';
 import { ExtraPairPoint, HeatMapDataPoint } from '../../../Interfaces/Types/DataTypes';
 import {
-  BloodProductCap, MIN_HEATMAP_BANDWIDTH, OffsetDict,
+  BloodProductCap, MIN_HEATMAP_BANDWIDTH, OffsetDict, backgroundSelectedColor, backgroundHoverColor,
 } from '../../../Presets/Constants';
 import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import { AggregationScaleGenerator, ValueScaleGenerator } from '../../../HelperFunctions/Scales';
@@ -151,7 +151,7 @@ function HeatMap({
                     y={0}
                     width={dimensionWidth}
                     height={rowHeight}
-                    fill={isSelected ? interactionStore.backgroundSelectedColor : isHovered ? interactionStore.backgroundHoverColor : 'transparent'}
+                    fill={isSelected ? backgroundSelectedColor : isHovered ? backgroundHoverColor : 'transparent'}
                   />
                   <SingleHeatRow
                     bandwidth={rowHeight}
@@ -192,7 +192,7 @@ function HeatMap({
                     y={rowY - rowHeight}
                     width={dimensionWidth}
                     height={rowHeight}
-                    fill={isSelected ? interactionStore.backgroundSelectedColor : isHovered ? interactionStore.backgroundHoverColor : 'transparent'}
+                    fill={isSelected ? backgroundSelectedColor : isHovered ? backgroundHoverColor : 'transparent'}
                   />
                   <SingleHeatRow
                     bandwidth={aggregationScale().bandwidth() * 0.5}

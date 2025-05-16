@@ -10,7 +10,7 @@ import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import Store from '../../../Interfaces/Store';
 import { ScatterDataPoint, SingleCasePoint } from '../../../Interfaces/Types/DataTypes';
 import {
-  basicGray, largeFontSize, OffsetDict, regularFontSize, thirdGray,
+  basicGray, largeFontSize, OffsetDict, regularFontSize, thirdGray, smallHoverColor, smallSelectColor,
 } from '../../../Presets/Constants';
 import { AcronymDictionary, BloodComponent, HemoOption } from '../../../Presets/DataDict';
 import CustomizedAxisBand from '../ChartAccessories/CustomizedAxisBand';
@@ -269,8 +269,8 @@ function ScatterPlot({
           selected={selected}
           brushed={brushed || false}
           hovered={hovered && !selected}
-          hoverColor={interactionStore.smallHoverColor}
-          selectedColor={interactionStore.smallSelectColor}
+          hoverColor={smallHoverColor}
+          selectedColor={smallSelectColor}
           onClick={() => {
             store.interactionStore.clearSelectedCases();
             // Updates the selected cases to be this scatterdot.

@@ -5,7 +5,9 @@ import {
 import { observer } from 'mobx-react';
 import { scaleOrdinal } from 'd3';
 import Tooltip from '@mui/material/Tooltip';
-import { basicGray, secondaryGray } from '../../../Presets/Constants';
+import {
+  basicGray, secondaryGray, backgroundSelectedColor, backgroundHoverColor,
+} from '../../../Presets/Constants';
 import {
   AxisText, CustomAxisColumnBackground, CustomAxisLine, CustomAxisLineBox,
 } from '../../../Presets/StyledSVGComponents';
@@ -24,7 +26,6 @@ function CustomizedAxisOrdinal({
   data: DumbbellDataPoint[];
 }) {
   const store = useContext(Store);
-  const { interactionStore } = store;
 
   // Used for keeping track of currently hovered and selected columns for background highlighting.
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
@@ -125,9 +126,9 @@ function CustomizedAxisOrdinal({
                 chartHeight={chartHeight}
                 fill={
                   selectedColumn === numberOb.bin
-                    ? interactionStore.backgroundSelectedColor
+                    ? backgroundSelectedColor
                     : hoveredColumn === numberOb.bin
-                      ? interactionStore.backgroundHoverColor
+                      ? backgroundHoverColor
                       : idx % 2 === 1
                         ? 'white'
                         : 'black'

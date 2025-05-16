@@ -11,7 +11,7 @@ import Store from '../../../Interfaces/Store';
 import { DumbbellDataPoint } from '../../../Interfaces/Types/DataTypes';
 import {
   OffsetDict, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, DumbbellGroupMinimumWidth, largeFontSize, regularFontSize,
-  DumbbellMinimumWidth,
+  DumbbellMinimumWidth, smallHoverColor, smallSelectColor,
 } from '../../../Presets/Constants';
 import { AcronymDictionary } from '../../../Presets/DataDict';
 import { DumbbellLine } from '../../../Presets/StyledSVGComponents';
@@ -257,8 +257,8 @@ function DumbbellChart({
           onMouseLeave={() => {
             store.interactionStore.hoveredCaseIds = [];
           }}
-          hoverColor={store.interactionStore.smallHoverColor}
-          selectColor={store.interactionStore.smallSelectColor}
+          hoverColor={smallHoverColor}
+          selectColor={smallSelectColor}
           key={`dumbbell-${idx}`}
         />
       );
