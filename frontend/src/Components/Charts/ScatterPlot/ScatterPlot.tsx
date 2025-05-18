@@ -272,12 +272,12 @@ function ScatterPlot({
           hoverColor={smallHoverColor}
           selectedColor={smallSelectColor}
           onClick={() => {
-            store.interactionStore.clearSelectedCases();
-            // Updates the selected cases to be this scatterdot.
-            store.interactionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
-            // If the scatterdot is already selected, deselect it.
+            // If selected, deselect this case.
             if (selected) {
               store.interactionStore.deselectCaseIds([dataPoint.case.CASE_ID]);
+            } else {
+              // If not selected, select this case.
+              store.interactionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
             }
           }}
           onMouseEnter={() => { interactionStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
