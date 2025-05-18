@@ -18,7 +18,7 @@ const TinyFontButton = styled(Button)({
 
 function CurrentSelected() {
   const store = useContext(Store);
-  const { currentBrushedPatientGroup, currentSelectSet } = store.provenanceState;
+  const { currentSelectedPatientGroup, currentSelectSet } = store.provenanceState;
 
   return (
     <InheritWidthGrid item>
@@ -28,15 +28,15 @@ function CurrentSelected() {
             <Title>Currently Selected</Title>
           </ListItem>
 
-          {currentBrushedPatientGroup.length > 0
+          {currentSelectedPatientGroup.length > 0
             ? (
               <ListItem alignItems="flex-start" style={{ width: '100%' }}>
                 <ListItemText
-                  primary="Current Brushed Patients"
-                  secondary={currentBrushedPatientGroup.length}
+                  primary="Currently Selected Cases"
+                  secondary={currentSelectedPatientGroup.length}
                 />
                 <ListItemSecondaryAction>
-                  <IconButton onClick={() => { store.selectionStore.updateBrush([]); }}>
+                  <IconButton onClick={() => { store.interactionStore.clearSelectedCases(); }}>
                     <CloseIcon />
                   </IconButton>
                 </ListItemSecondaryAction>
@@ -51,7 +51,7 @@ function CurrentSelected() {
                 secondary={selectSet.setValues.sort().join(', ')}
               />
               <ListItemSecondaryAction>
-                <IconButton onClick={() => { store.selectionStore.clearSet(selectSet.setName); }}>
+                <IconButton onClick={() => { store.interactionStore.clearSet(selectSet.setName); }}>
                   <CloseIcon />
                 </IconButton>
               </ListItemSecondaryAction>
@@ -61,21 +61,16 @@ function CurrentSelected() {
         </List>
         <CenterAlignedDiv>
           <TinyFontButton
-            disabled={!(currentSelectSet.length > 0 || currentBrushedPatientGroup.length > 0)}
+            disabled={!(currentSelectSet.length > 0 || currentSelectedPatientGroup.length > 0 || store.interactionStore.selectedCaseIds.length > 0)}
             variant="outlined"
-            onClick={() => { store.selectionStore.outputToFilter(); }}
+            onClick={() => {
+              const selectedCases = store.filteredCases.filter((caseRecord) => store.interactionStore.selectedCaseIds.includes(caseRecord.CASE_ID));
+              store.interactionStore.updateFilteredPatientGroup(selectedCases);
+            }}
           >
             Create Filter
           </TinyFontButton>
         </CenterAlignedDiv>
-        {/* <Button
-                        disabled={!(currentOutputFilterSet.length > 0 || currentSelectPatientGroup.length > 0)}
-                        variant="outlined"
-                        size="small"
-                        className={styles.tinyFont}
-                        onClick={() => { store.selectionStore.clearAllFilter() }}
-                    >Clear Filter</Button> */}
-
       </Box>
     </InheritWidthGrid>
   );

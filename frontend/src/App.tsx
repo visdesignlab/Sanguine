@@ -11,6 +11,8 @@ import { SingleCasePoint } from './Interfaces/Types/DataTypes';
 
 function App() {
   const store = useContext(Store);
+  const { currentFilteredPatientGroup } = store.provenanceState;
+
 
   const [dataLoading, setDataLoading] = useState(true);
   const [dataLoadingFailed, setDataLoadingFailed] = useState(false);
@@ -72,7 +74,14 @@ function App() {
           throw new Error('There was an issue fetching data. No results were returned.');
         }
 
+        let patientIDSet: Set<number> | undefined;
+        if (currentFilteredPatientGroup.length > 0) {
+          patientIDSet = new Set<number>();
+          currentFilteredPatientGroup.forEach((d) => { patientIDSet!.add(d.CASE_ID); });
+        }
+
         store.allCases = surgeryCases;
+
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         setDataLoadingFailed(true);
@@ -82,7 +91,9 @@ function App() {
     }
 
     fetchAllCases();
-  }, []);
+
+  }, [currentFilteredPatientGroup, store]);
+
 
   return (
     <>

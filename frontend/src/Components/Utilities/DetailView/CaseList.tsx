@@ -9,7 +9,7 @@ import Store from '../../../Interfaces/Store';
 
 function CaseList() {
   const store = useContext(Store);
-  const { currentBrushedPatientGroup, currentSelectPatient } = store.provenanceState;
+  const { currentSelectedPatientGroup, currentSelectPatient } = store.provenanceState;
 
   return (
     <Box style={{ height: '20vh' }} p={0.1}>
@@ -32,20 +32,19 @@ function CaseList() {
             <IconButton
               edge="end"
               onClick={() => {
-                store.selectionStore.updateBrush([]);
+                store.interactionStore.clearSelectedCases();
               }}
             >
               <CloseIcon />
             </IconButton>
           </ListItemSecondaryAction>
         </ListSubheader>
-
-        {currentBrushedPatientGroup.map((d) => (
+        {currentSelectedPatientGroup.map((d) => (
           <ListItem
             key={d.CASE_ID}
             selected={(currentSelectPatient && currentSelectPatient.CASE_ID === d.CASE_ID) || false}
           >
-            <ListItemButton onClick={() => store.selectionStore.setCurrentSelectPatient(d)}>
+            <ListItemButton onClick={() => store.interactionStore.setCurrentSelectPatient(d)}>
               <ListItemText primary={
                                 store.configStore.privateMode ? d.CASE_ID : '----------'
                             }

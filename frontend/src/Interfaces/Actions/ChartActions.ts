@@ -75,7 +75,7 @@ export const changeChart = createAction<ApplicationState, [xAxisOption, yAxisOpt
 
 export const clearAllCharts = createAction<ApplicationState, [], ActionEvents>((state) => {
   state.layoutArray = [];
-  state.currentBrushedPatientGroup = [];
+  state.currentSelectedPatientGroup = [];
   state.currentSelectSet = [];
   state.currentSelectPatient = null;
 }).setLabel('clearAllCharts');

@@ -23,7 +23,7 @@ function FilterBoard() {
   const store = useContext(Store);
 
   const {
-    rawDateRange, outcomeFilter, surgeryUrgencySelection, currentSelectPatientGroup, currentOutputFilterSet, bloodFilter, surgeonCasesPerformed,
+    rawDateRange, outcomeFilter, surgeryUrgencySelection, currentFilteredPatientGroup, currentOutputFilterSet, bloodFilter, surgeonCasesPerformed,
   } = store.provenanceState;
   const [beginDate, setBeginDate] = useState<number | null>(rawDateRange[0]);
   const [endDate, setEndDate] = useState<number | null>(rawDateRange[1]);
@@ -50,7 +50,7 @@ function FilterBoard() {
     if (!(surgeryUrgencySelection[0] && surgeryUrgencySelection[1] && surgeryUrgencySelection[2])) {
       return true;
     }
-    if (currentSelectPatientGroup.length > 0 || currentOutputFilterSet.length > 0) {
+    if (currentFilteredPatientGroup.length > 0 || currentOutputFilterSet.length > 0) {
       return true;
     }
     if (checkIfCanReset(bloodFilter)) {
@@ -234,8 +234,8 @@ function FilterBoard() {
           <ListItemSecondaryAction>
 
             <IconButton
-              onClick={() => { store.selectionStore.clearSelectionFilter(); }}
-              disabled={currentSelectPatientGroup.length === 0 && currentOutputFilterSet.length === 0}
+              onClick={() => { store.interactionStore.clearSelectionFilter(); }}
+              disabled={currentFilteredPatientGroup.length === 0 && currentOutputFilterSet.length === 0}
             >
               <Tooltip title="Clear All">
                 <ReplayIcon />
@@ -244,12 +244,12 @@ function FilterBoard() {
 
           </ListItemSecondaryAction>
         </ListItem>
-        {currentSelectPatientGroup.length > 0 ? (
+        {currentFilteredPatientGroup.length > 0 ? (
           <ListItem key="PatientgroupSelected">
-            <ListItemText primary="Cases Filtered" secondary={currentSelectPatientGroup.length} />
+            <ListItemText primary="Cases Filtered" secondary={currentFilteredPatientGroup.length} />
             <ListItemSecondaryAction>
 
-              <IconButton onClick={() => { store.selectionStore.updateSelectedPatientGroup([]); }}>
+              <IconButton onClick={() => { store.interactionStore.updateFilteredPatientGroup([]); }}>
                 <Tooltip title="Remove">
                   <CloseIcon />
                 </Tooltip>
@@ -266,7 +266,7 @@ function FilterBoard() {
               secondary={selectSet.setValues.sort().join(', ')}
             />
             <ListItemSecondaryAction key={`${selectSet.setName}selected`}>
-              <IconButton key={`${selectSet.setName}selected`} onClick={() => { store.selectionStore.removeFilter(selectSet.setName); }}>
+              <IconButton key={`${selectSet.setName}selected`} onClick={() => { store.interactionStore.removeFilter(selectSet.setName); }}>
                 <Tooltip title="Remove">
                   <CloseIcon key={`${selectSet.setName}selected`} />
                 </Tooltip>

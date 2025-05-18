@@ -7,11 +7,11 @@ import CaseList from './CaseList';
 
 function DetailView() {
   const store = useContext(Store);
-  const { currentBrushedPatientGroup } = store.provenanceState;
+  const { currentSelectedPatientGroup } = store.provenanceState;
 
   return (
     <div
-      style={{ visibility: currentBrushedPatientGroup.length > 0 ? 'visible' : 'hidden' }}
+      style={{ visibility: currentSelectedPatientGroup.length > 0 ? 'visible' : 'hidden' }}
     >
       <CaseList />
       <Divider />
