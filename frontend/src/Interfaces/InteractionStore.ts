@@ -55,12 +55,6 @@ export class InteractionStore {
   }
 
   get selectedCaseIds() {
-    // If there's a selected attribute, filter the cases based on that
-    if (this._selectedAttribute !== undefined) {
-      return this.rootStore.filteredCases
-        .filter((caseRecord) => (normalizeAttribute(caseRecord[this._selectedAttribute![0]], this._selectedAttribute![0]) === this._selectedAttribute![1]))
-        .map((caseRecord) => caseRecord.CASE_ID);
-    }
     return this._selectedCaseIds;
   }
 
@@ -113,13 +107,25 @@ export class InteractionStore {
     const selectedCases = this.rootStore.filteredCases
       .filter((caseRecord) => selectedCaseIds.includes(caseRecord.CASE_ID));
 
+    // Set the selected case IDs in this store.
+    this._selectedCaseIds = selectedCaseIds;
     // Update the selected cases in provenance.
     this.updateSelectedPatients(selectedCases);
   }
 
   deselectCaseIds(caseIds: number[]) {
     // Remove the passed in case IDs from the selected case IDs
-    this._selectedCaseIds = this.selectedCaseIds.filter((caseId) => !caseIds.includes(caseId));
+    const filteredCaseIds = this._selectedCaseIds.filter((caseId) => !caseIds.includes(caseId));
+
+    // Get the SingleCasePoints from the selected case IDs
+    const selectedCases = this.rootStore.filteredCases
+      .filter((caseRecord) => filteredCaseIds.includes(caseRecord.CASE_ID));
+
+    // Set the selected case IDs in this store.
+    this._selectedCaseIds = filteredCaseIds;
+
+    // Set the selected case IDs in this provenance.
+    this.updateSelectedPatients(selectedCases);
   }
 
   // Selections --------------------------------------------------------
