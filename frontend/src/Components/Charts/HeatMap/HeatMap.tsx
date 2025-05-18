@@ -120,7 +120,7 @@ function HeatMap({
     <g>
       <foreignObject
         style={{
-          width: '100%', height: `${dimensionHeight - currentOffset.bottom - currentOffset.top}px`, overflow: 'scroll', overflowY: 'scroll',
+          width: dimensionWidth, height: `${dimensionHeight - currentOffset.bottom - currentOffset.top}px`, overflow: 'scroll', overflowY: 'scroll',
         }}
         transform={`translate(0,${currentOffset.top})`}
       >

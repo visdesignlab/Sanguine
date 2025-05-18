@@ -1,5 +1,6 @@
 import environ
 import os
+import sys
 from corsheaders.defaults import default_headers
 
 
@@ -99,19 +100,16 @@ LOGGING = {
         },
     },
     "handlers": {
-        "file": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": "sanguine.log",
-            "maxBytes": 1000000000,  # 1GB
-            "backupCount": 10,
-            "encoding": "utf-8",
+        "console": {
+            "class": "logging.StreamHandler",
+            "stream": sys.stdout,
             "formatter": "verbose",
         },
     },
     "loggers": {
         "": {
             "level": "DEBUG",
-            "handlers": ["file"],
+            "handlers": ["console"],
         },
     },
 }
@@ -141,6 +139,10 @@ SESSION_COOKIE_AGE = 60 * 30  # 60 seconds * 30 minutes
 SESSION_COOKIE_SECURE = True
 SESSION_SAVE_EVERY_REQUEST = True
 CSRF_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = [
+    f"https://{env('DJANGO_HOSTNAME')}",
+    f"http://{env('DJANGO_HOSTNAME')}:8080",
+]
 
 CAS_SERVER_URL = "https://go.utah.edu/cas/"
 CAS_ADMIN_PREFIX = "api/"

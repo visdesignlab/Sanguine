@@ -1,6 +1,6 @@
 services:
   backend:
-    image: docker.io/intelvia/intelvia-backend:v0.0.1
+    image: docker.io/intelvia/intelvia-backend:v0.0.3
     env_file:
       - .env
     ports:
@@ -20,8 +20,8 @@ services:
       - "3306"
     volumes:
       - mariadb_data:/var/lib/mysql
-      - ./mariadb/conf.d:/etc/mysql/conf.d
-      - ./sftp/upload:/var/lib/mysql-files
+      - ./mariadb/conf.d:/etc/mysql/conf.d:z
+      # - ./sftp/upload:/var/lib/mysql-files
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       start_period: 3s
@@ -29,7 +29,7 @@ services:
       timeout: 5s
 
   frontend:
-    image: docker.io/intelvia/intelvia-frontend:v0.0.1
+    image: docker.io/intelvia/intelvia-frontend:v0.0.3
     ports:
       - "8080:8080"
     depends_on:
