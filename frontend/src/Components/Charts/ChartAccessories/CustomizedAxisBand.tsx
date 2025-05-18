@@ -49,16 +49,13 @@ function CustomizedAxisBand({
 
   // Hover handler using the helper function.
   const handleColumnHover = (columnValue: number | null) => {
-    // Sets locally hovered column if it's not selected.
-    if (selectedColumn !== columnValue) {
-      setHoveredColumn(columnValue);
-    }
-    // Sets the hovered case IDs in the store.
     if (columnValue !== null) {
+      if (selectedColumn !== columnValue) {
+        setHoveredColumn(columnValue);
+      }
       const caseIds = getCaseIds(columnValue);
       store.interactionStore.hoveredCaseIds = caseIds;
-    } else {
-      store.interactionStore.hoveredCaseIds = [];
+      store.interactionStore.hoveredAttribute = [xAxisVar, columnValue];
     }
   };
 
@@ -105,7 +102,10 @@ function CustomizedAxisBand({
           <g
             key={idx}
             onMouseEnter={() => handleColumnHover(idx)}
-            onMouseLeave={() => handleColumnHover(null)}
+            onMouseLeave={() => {
+              setHoveredColumn(null);
+              store.interactionStore.clearHoveredAttribute();
+            }}
             onClick={() => handleColumnClick(idx)}
           >
             <CustomAxisLine x1={x1} x2={x2} />
