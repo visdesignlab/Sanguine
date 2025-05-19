@@ -16,7 +16,7 @@ export type ActionEvents =
 // onLayoutchange,
 // // selectPatient,
 // selectSet,
-// updateSelectedPatientGroup,
+// updateFilteredPatientGroup,
 // updateBrushPatientGroup,
 // changeExtraPair,
 // removeExtraPair,

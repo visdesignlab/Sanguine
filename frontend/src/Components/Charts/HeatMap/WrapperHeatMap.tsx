@@ -1,34 +1,33 @@
 import { observer } from 'mobx-react';
 import {
-  useContext, useEffect, useLayoutEffect, useRef, useState,
+  useContext, useEffect, useRef, useState,
 } from 'react';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import { Box, Container } from '@mui/material';
-import { generateRegularData } from '../../../HelperFunctions/ChartDataGenerator';
-import { generateExtrapairPlotData } from '../../../HelperFunctions/ExtraPairDataGenerator';
+import { generateExtrapairPlotData, generateExtraAttributeData } from '../../../HelperFunctions/ExtraPairDataGenerator';
 import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import { ExtraPairPadding, ExtraPairWidth } from '../../../Presets/Constants';
 import Store from '../../../Interfaces/Store';
-import { ExtraPairPoint, HeatMapDataPoint, SingleCasePoint } from '../../../Interfaces/Types/DataTypes';
+import { ExtraPairPoint, HeatMapDataPoint } from '../../../Interfaces/Types/DataTypes';
 import HeatMap from './HeatMap';
 import ExtraPairButtons from '../ChartAccessories/ExtraPairButtons';
+import { ExtraPairOptions } from '../../../Presets/DataDict';
 import ChartConfigMenu from '../ChartAccessories/ChartConfigMenu';
 import AnnotationForm from '../ChartAccessories/AnnotationForm';
 import ChartStandardButtons from '../ChartStandardButtons';
 import { ChartAccessoryDiv } from '../../../Presets/StyledComponents';
 import { HeatMapLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
+import useComponentSize from '../../Hooks/UseComponentSize';
 
 function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
   const {
-    xAxisVar, yAxisVar, i: chartId, h: layoutH, w: layoutW, annotationText, extraPair, interventionDate, outcomeComparison,
+    xAxisVar, yAxisVar, i: chartId, annotationText, extraPair, interventionDate, outcomeComparison,
   } = layout;
   const store = useContext(Store);
 
   const { filteredCases } = store;
   const { surgeryUrgencySelection, rawDateRange, proceduresSelection } = store.provenanceState;
   const svgRef = useRef<SVGSVGElement>(null);
-  const [width, setWidth] = useState(0);
-  const [height, setHeight] = useState(0);
   const [extraPairData, setExtraPairData] = useState<ExtraPairPoint[]>([]);
   const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
   const [data, setData] = useState<HeatMapDataPoint[]>([]);
@@ -60,46 +59,17 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [extraPairArray, data, filteredCases, secondaryData, outcomeComparison, interventionDate]);
 
-  useLayoutEffect(() => {
-    if (svgRef.current) {
-      setWidth(svgRef.current.clientWidth);
-      setHeight(svgRef.current.clientHeight);
-    }
-  }, [data, layoutH, layoutW, store.mainCompWidth, svgRef]);
+  const size = useComponentSize(svgRef);
 
+  // Generating the extra attribute data for the extra pair plot ------------------------------------------------------------
   useDeepCompareEffect(() => {
-    const temporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }> = {};
-    const secondaryTemporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }> = {};
-    filteredCases.forEach((singleCase: SingleCasePoint) => {
-      if (!temporaryDataHolder[singleCase[yAxisVar]]) {
-        temporaryDataHolder[singleCase[yAxisVar]] = {
-          aggregateAttribute: singleCase[yAxisVar],
-          data: [],
-          patientIDList: new Set(),
-        };
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]] = {
-          aggregateAttribute: singleCase[yAxisVar],
-          data: [],
-          patientIDList: new Set(),
-        };
-      }
-
-      if ((outcomeComparison && singleCase[outcomeComparison] as number > 0) || (interventionDate && singleCase.CASE_DATE < interventionDate)) {
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].data.push(singleCase);
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].patientIDList.add(singleCase.MRN);
-      } else {
-        temporaryDataHolder[singleCase[yAxisVar]].data.push(singleCase);
-        temporaryDataHolder[singleCase[yAxisVar]].patientIDList.add(singleCase.MRN);
-      }
-      // }
-    });
-    const [tempCaseCount, outputData] = generateRegularData(temporaryDataHolder, store.provenanceState.showZero, xAxisVar);
-    const [secondCaseCount, secondOutputData] = generateRegularData(secondaryTemporaryDataHolder, store.provenanceState.showZero, xAxisVar);
+    const [tempCaseCount, secondaryTempCaseCount, outputData, secondaryOutputData] = generateExtraAttributeData(filteredCases, yAxisVar, outcomeComparison, interventionDate, store.provenanceState.showZero, xAxisVar);
     stateUpdateWrapperUseJSON(data, outputData, setData);
-    stateUpdateWrapperUseJSON(secondaryData, secondOutputData, setSecondaryData);
-    store.chartStore.totalAggregatedCaseCount = (tempCaseCount as number) + (secondCaseCount as number);
+    stateUpdateWrapperUseJSON(secondaryData, secondaryOutputData, setSecondaryData);
+    store.chartStore.totalAggregatedCaseCount = (tempCaseCount as number) + (secondaryTempCaseCount as number);
+    // Marks the 'true' and 'false' if attribute === 0.
     setCaseCount(tempCaseCount as number);
-    setSecondaryCaseCount(secondCaseCount as number);
+    setSecondaryCaseCount(secondaryTempCaseCount as number);
   }, [proceduresSelection, surgeryUrgencySelection, store.provenanceState.outcomeFilter,
     rawDateRange,
     store.provenanceState.showZero,
@@ -113,7 +83,7 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
     <Container style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <ChartAccessoryDiv>
         {`Heatmap${(outcomeComparison || interventionDate) ? ' with Comparison' : ''}`}
-        <ExtraPairButtons disbleButton={width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} />
+        <ExtraPairButtons disbleButton={size.width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} buttonOptions={ExtraPairOptions} />
         <ChartConfigMenu layout={layout} />
         <ChartStandardButtons chartID={chartId} />
       </ChartAccessoryDiv>
@@ -121,8 +91,8 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
       <Box style={{ flexGrow: 1 }}>
         <svg style={{ width: '100%', height: '100%' }} ref={svgRef}>
           <HeatMap
-            dimensionHeight={height}
-            dimensionWidth={width}
+            dimensionHeight={size.height}
+            dimensionWidth={size.width}
             data={data}
             svg={svgRef}
             extraPairTotalWidth={extraPairTotalWidth}

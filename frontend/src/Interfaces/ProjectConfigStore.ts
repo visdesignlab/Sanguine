@@ -12,8 +12,6 @@ import { LayoutElement } from './Types/LayoutTypes';
 export class ProjectConfigStore {
   rootStore: RootStore;
 
-  private _isLoggedIn: boolean;
-
   private _topMenuBarAddMode: boolean;
 
   loadedStateName: string;
@@ -34,7 +32,6 @@ export class ProjectConfigStore {
 
   constructor(rootStore: RootStore) {
     this.rootStore = rootStore;
-    this._isLoggedIn = !(import.meta.env.VITE_REQUIRE_LOGIN === 'true');
     this.largeFont = false;
     this.privateMode = false;
     this._topMenuBarAddMode = false;
@@ -60,14 +57,6 @@ export class ProjectConfigStore {
 
   get provenance() {
     return this.rootStore.provenance;
-  }
-
-  set isLoggedIn(input: boolean) {
-    this._isLoggedIn = input;
-  }
-
-  get isLoggedIn() {
-    return this._isLoggedIn;
   }
 
   set topMenuBarAddMode(input: boolean) {

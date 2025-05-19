@@ -7,7 +7,6 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "oracle.sql-developer",
         "dbaeumer.vscode-eslint",
         "ms-python.python",
         "ms-python.black-formatter",

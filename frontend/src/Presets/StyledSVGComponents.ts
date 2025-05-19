@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import { Offset } from '../Interfaces/Types/OffsetType';
 import {
-  basicGray, highlightOrange, largeFontSize, postopColor, preopColor, regularFontSize,
+  largeFontSize, lightGray, postopColor, preopColor, regularFontSize,
 } from './Constants';
 
 export const ChartSVG = styled.svg`
@@ -52,48 +52,46 @@ export const HeatMapDividerLine = styled('line') <HeatMapDivideProp>`
 `;
 
 interface DotProps {
-  isSelectSet: boolean;
+  selected: boolean;
   isPreop: boolean;
   hovered: boolean;
   hoverColor: string;
+  selectColor: string;
 }
 interface RectProps {
   selected: boolean;
   hovered: boolean;
   hoverColor: string;
+  selectColor: string;
 }
 
 interface AverageLineProps {
   isPreop: boolean;
 }
 
+// If selected: selectColor; If only hovered: hoverColor; If none, preop/postop color
 export const DumbbellCircle = styled('circle')<DotProps>`
   r: 4px;
-  opacity: ${(props) => (props.isSelectSet || props.hovered ? 1 : 0.8)};
-  fill: ${(props) => {
-    if (props.hovered) {
-      return props.hoverColor;
-    }
-    if (props.isSelectSet) {
-      return highlightOrange;
-    }
-    return props.isPreop ? preopColor : postopColor;
-  }};
+  opacity: 1;
+  fill: ${(props) => (props.selected
+    ? props.selectColor
+    : props.hovered
+      ? props.hoverColor
+      : props.isPreop
+        ? preopColor
+        : postopColor)};
 `;
 
+// If selected: selectColor; If only hovered: hoverColor; If none, lightGray
 export const DumbbellRect = styled('rect')<RectProps>`
   width: 1.5px;
-  opacity: ${(props) => (props.selected || props.hovered ? 1 : 0.5)};
-  fill: ${(props) => {
-    if (props.hovered) {
-      return props.hoverColor;
-    }
-    if (props.selected) {
-      return highlightOrange;
-    }
-    return basicGray;
-  }};
- `;
+  opacity: 1;
+  fill: ${(props) => (props.selected
+    ? props.selectColor
+    : props.hovered
+      ? props.hoverColor
+      : lightGray)};
+`;
 
 export const DumbbellLine = styled('line') < AverageLineProps>`
     stroke: ${(props) => (props.isPreop ? preopColor : postopColor)};
@@ -111,6 +109,7 @@ export const AxisText = styled.foreignObject<BiggerFontProps>`
       height: 13px;
     font-size:${(props) => (props.biggerFont ? `${largeFontSize}px` : `${regularFontSize}px`)};
     color:white;
+    -webkit-text-fill-color: white;
 `;
 
 export const CustomAxisLine = styled('line')`

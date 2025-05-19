@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react';
 import {
-  useContext, useLayoutEffect, useRef, useState,
+  useContext, useRef, useState,
 } from 'react';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import styled from '@emotion/styled';
@@ -15,6 +15,7 @@ import ChartStandardButtons from '../ChartStandardButtons';
 import { ChartWrapperContainer } from '../../../Presets/StyledComponents';
 import { basicGray } from '../../../Presets/Constants';
 import { ScatterLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
+import useComponentSize from '../../Hooks/UseComponentSize';
 
 const ChartAccessoryDiv = styled.div({
   textAlign: 'right',
@@ -23,7 +24,7 @@ const ChartAccessoryDiv = styled.div({
 
 function WrapperScatter({ layout }: { layout: ScatterLayoutElement }) {
   const {
-    xAxisVar, yAxisVar, i: chartId, h: layoutH, w: layoutW, annotationText,
+    xAxisVar, yAxisVar, i: chartId, annotationText,
   } = layout;
   const store = useContext(Store);
   const { filteredCases } = store;
@@ -31,20 +32,13 @@ function WrapperScatter({ layout }: { layout: ScatterLayoutElement }) {
   const { proceduresSelection, showZero, rawDateRange } = store.provenanceState;
 
   const svgRef = useRef<SVGSVGElement>(null);
-  const [width, setWidth] = useState(layoutW === 1 ? 542.28 : 1146.97);
-  const [height, setHeight] = useState(0);
   const [data, setData] = useState<ScatterDataPoint[]>([]);
   const [xMin, setXMin] = useState(0);
   const [xMax, setXMax] = useState(0);
   const [yMin, setYMin] = useState(0);
   const [yMax, setYMax] = useState(0);
 
-  useLayoutEffect(() => {
-    if (svgRef.current) {
-      setWidth(svgRef.current.clientWidth);
-      setHeight(svgRef.current.clientHeight);
-    }
-  }, [layoutH, layoutW, store.mainCompWidth, svgRef]);
+  const size = useComponentSize(svgRef);
 
   useDeepCompareEffect(() => {
     let tempYMax = 0;
@@ -103,8 +97,8 @@ function WrapperScatter({ layout }: { layout: ScatterLayoutElement }) {
           yMin={yMin}
           yAxisVar={yAxisVar}
           data={data}
-          width={width}
-          height={height}
+          width={size.width}
+          height={size.height}
           svg={svgRef}
         />
       </ChartSVG>

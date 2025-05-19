@@ -20,12 +20,14 @@
         "@vitejs/plugin-react-swc": "^3.7.0",
         "d3": "^7.0.0",
         "date-fns": "^2.29.1",
+        "downloadjs": "^1.4.7",
         "eslint": "^8.0.0",
         "eslint-config-airbnb": "^19.0.4",
         "eslint-plugin-import": "^2.30.0",
         "eslint-plugin-jsx-a11y": "^6.10.0",
         "eslint-plugin-react": "^7.36.1",
         "eslint-plugin-react-hooks": "^4.6.2",
+        "html-to-image": "^1.11.13",
         "mobx": "^6.3.2",
         "mobx-react": "^7.2.0",
         "mui-nested-menu": "^3.4.0",
@@ -39,7 +41,7 @@
         "use-deep-compare-effect": "^1.6.1",
         "vega": "^5.30.0",
         "vega-lite": "^5.21.0",
-        "vite": "^6.2.3"
+        "vite": "^6.2.7"
     },
     "scripts": {
         "serve": "vite --host=0.0.0.0 --port=8080",

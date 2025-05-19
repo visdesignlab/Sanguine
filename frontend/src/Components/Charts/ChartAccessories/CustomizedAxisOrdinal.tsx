@@ -1,86 +1,122 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useCallback, useContext, useState } from 'react';
-import { observer } from 'mobx-react';
 import {
-  ScaleOrdinal,
-  scaleOrdinal,
-} from 'd3';
+  useCallback, useContext, useEffect, useState,
+} from 'react';
+import { observer } from 'mobx-react';
+import { scaleOrdinal } from 'd3';
 import Tooltip from '@mui/material/Tooltip';
-import { basicGray, secondaryGray } from '../../../Presets/Constants';
+import {
+  basicGray, secondaryGray, backgroundSelectedColor, backgroundHoverColor,
+} from '../../../Presets/Constants';
 import {
   AxisText, CustomAxisColumnBackground, CustomAxisLine, CustomAxisLineBox,
 } from '../../../Presets/StyledSVGComponents';
 import Store from '../../../Interfaces/Store';
 import { DumbbellDataPoint } from '../../../Interfaces/Types/DataTypes';
+import { usePrivateProvLabel } from '../../Hooks/PrivateModeLabeling';
 
 function CustomizedAxisOrdinal({
   numberList, scaleDomain, scaleRange, xAxisVar, chartHeight, data,
 }: {
   scaleDomain: string;
   scaleRange: string;
-  numberList: { num: number, indexEnding: number; }[];
+  numberList: { bin: number, indexEnding: number; }[];
   xAxisVar: string;
   chartHeight: number;
   data: DumbbellDataPoint[];
 }) {
   const store = useContext(Store);
-  const { hoverStore } = store;
+
+  // Used for keeping track of currently hovered and selected columns for background highlighting.
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
+  const [selectedColumn, setSelectedColumn] = useState<number | null>(null);
 
   const scale = useCallback(() => {
     const domain = JSON.parse(scaleDomain);
     const range = JSON.parse(scaleRange);
-    const sc = scaleOrdinal()
+    const sc = scaleOrdinal<any, number>()
       .domain(domain)
       .range(range);
 
     return sc;
   }, [scaleDomain, scaleRange]);
 
-  const axisTextOutput = useCallback((input: number) => {
-    if (store.configStore.privateMode && xAxisVar.includes('PROV_ID')) {
-      const name = store.providerMappping[input] as string;
-      return name ? `${name.slice(0, 1)}${name.slice(1).toLowerCase()}` : input;
-    }
-    return input;
-  }, [store.configStore.privateMode, store.providerMappping, xAxisVar]);
+  // Gets the provider name depending on the private mode setting
+  const getLabel = usePrivateProvLabel();
 
-  // Add a new handler that updates both the local hoveredColumn state and the store.
-  const handleColumnHover = (columnIndex: number | null) => {
-    setHoveredColumn(columnIndex);
-    if (columnIndex !== null) {
-      // Filter the sorted data for cases within the hovered column.
-      const pointsInColumn = data.filter(
-        (dp: DumbbellDataPoint) => dp.yVal === columnIndex,
-      );
-      // Update the hover store with all case IDs in that column
-      store.hoverStore.hoveredCaseIds = pointsInColumn.map(
-        (dp: DumbbellDataPoint) => dp.case.CASE_ID,
-      );
-    } else {
-      // Clear hovered cases when no column is hovered.
-      store.hoverStore.hoveredCaseIds = [];
+  // Helper to get all case IDs for a column
+  const getCaseIds = (columnValue: number): number[] => data.filter((dp: DumbbellDataPoint) => dp.yVal === columnValue)
+    .map((dp: DumbbellDataPoint) => Number(dp.case.CASE_ID));
+
+  // Hover handler using the helper function.
+  const handleColumnHover = (columnValue: number | null) => {
+    if (columnValue !== null) {
+      if (selectedColumn !== columnValue) {
+        setHoveredColumn(columnValue);
+      }
+      const caseIds = getCaseIds(columnValue);
+      store.interactionStore.hoveredCaseIds = caseIds;
+      store.interactionStore.hoveredAttribute = [xAxisVar, columnValue];
     }
   };
 
+  // Click handler using the helper function.
+  const handleColumnClick = (columnValue: number) => {
+    const caseIds = getCaseIds(columnValue);
+
+    // If the column is already selected, deselect it.
+    if (selectedColumn === columnValue) {
+      setSelectedColumn(null);
+      store.interactionStore.clearSelectedCases();
+      store.interactionStore.deselectCaseIds(caseIds);
+      return;
+    }
+    // Set the local and store selected column and case ids.
+    setSelectedColumn(columnValue);
+
+    // Sets selected case IDs & attribute from this column in the store.
+    store.interactionStore.selectedCaseIds = caseIds;
+    store.interactionStore.selectedAttribute = [xAxisVar, columnValue];
+  };
+
+  // Reset locally selected column when another component updates the store's selectedCaseIds.
+  useEffect(() => {
+    if (selectedColumn !== null) {
+      const columnCaseIds = getCaseIds(selectedColumn);
+      const storeCaseIds = store.interactionStore.selectedCaseIds;
+
+      // If the store's selected case IDs don't match the column's case IDs, reset the selected column.
+      const isSame = columnCaseIds.length === storeCaseIds.length
+        && columnCaseIds.every((id) => storeCaseIds.includes(id));
+      if (!isSame) {
+        setSelectedColumn(null);
+      }
+    }
+  }, [store.interactionStore.selectedCaseIds, data, selectedColumn]);
+
   return (
     <>
-
       {numberList.map((numberOb, idx) => {
+        const s = scale();
         const x1 = idx === 0
-          ? (scale() as ScaleOrdinal<any, number>)(0)
-          : (1 + (scale() as ScaleOrdinal<any, number>)((numberList[idx - 1].indexEnding + 1)) - 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberList[idx - 1].indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberList[idx - 1].indexEnding)));
+          ? 2 * s(0) - s(1)
+          : 1 + s(numberList[idx - 1].indexEnding + 1) - 0.5 * (s(numberList[idx - 1].indexEnding + 1) - s(numberList[idx - 1].indexEnding));
 
         const x2 = idx === numberList.length - 1
-          ? (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding)
-          : (-1 + (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding) + 0.5 * ((scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding + 1) - (scale() as ScaleOrdinal<any, number>)(numberOb.indexEnding)));
+          ? (s.range().at(-1) as number) + 30
+          : -1 + s(numberOb.indexEnding) + 0.5 * (s(numberOb.indexEnding + 1) - s(numberOb.indexEnding));
 
         if (x1 && x2) {
+          const binLabel = getLabel(numberOb.bin, xAxisVar);
           return (
             <g
               key={idx}
-              onMouseEnter={() => handleColumnHover(idx)}
-              onMouseLeave={() => handleColumnHover(null)}
+              onMouseEnter={() => handleColumnHover(numberOb.bin)}
+              onMouseLeave={() => {
+                setHoveredColumn(null);
+                store.interactionStore.clearHoveredAttribute();
+              }}
+              onClick={() => handleColumnClick(numberOb.bin)}
             >
               <CustomAxisLine x1={x1} x2={x2} />
               <CustomAxisLineBox x={x1} width={x2 - x1} fill={idx % 2 === 1 ? secondaryGray : basicGray} />
@@ -88,16 +124,26 @@ function CustomizedAxisOrdinal({
                 x={x1}
                 width={x2 - x1}
                 chartHeight={chartHeight}
-                fill={hoveredColumn === idx ? hoverStore.backgroundHoverColor : (idx % 2 === 1 ? 'white' : 'black')}
-                opacity={hoveredColumn === idx ? 0.5 : 0.05}
+                fill={
+                  selectedColumn === numberOb.bin
+                    ? backgroundSelectedColor
+                    : hoveredColumn === numberOb.bin
+                      ? backgroundHoverColor
+                      : idx % 2 === 1
+                        ? 'white'
+                        : 'black'
+                }
+                opacity={selectedColumn === numberOb.bin || hoveredColumn === numberOb.bin ? 0.5 : 0.05}
               />
-              <Tooltip title={axisTextOutput(numberOb.num)}>
-                <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{axisTextOutput(numberOb.num)}</AxisText>
+              <Tooltip title={binLabel} arrow>
+                <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>
+                  {binLabel}
+                </AxisText>
               </Tooltip>
-
             </g>
           );
-        } return null;
+        }
+        return null;
       })}
     </>
   );

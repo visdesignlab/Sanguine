@@ -1,18 +1,16 @@
 services:
   backend:
-    image: ghcr.io/visdesignlab/django-image:5.0-v0.1.4
-    volumes:
-      - ./backend:/app:Z
+    image: docker.io/intelvia/intelvia-backend:v0.0.3
     env_file:
       - .env
     ports:
       - "8000:8000"
     depends_on:
-      - mariadb
-    entrypoint: ["/bin/sh", "-c", "GUNICORN_TIMEOUT=120 /entrypoint.sh"]
+      mariadb:
+        condition: service_healthy
 
   mariadb:
-    image: mariadb:10
+    image: docker.io/mariadb:11
     environment:
       MARIADB_USER: ${MARIADB_USER}
       MARIADB_PASSWORD: ${MARIADB_PASSWORD}
@@ -22,17 +20,28 @@ services:
       - "3306"
     volumes:
       - mariadb_data:/var/lib/mysql
+      - ./mariadb/conf.d:/etc/mysql/conf.d:z
+      # - ./sftp/upload:/var/lib/mysql-files
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 3s
+      interval: 10s
+      timeout: 5s
 
   frontend:
-    image: node:18
-    working_dir: /app/frontend
+    image: docker.io/intelvia/intelvia-frontend:v0.0.3
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+
+  sftp:
+    image: docker.io/atmoz/sftp
     volumes:
-      - .:/app:Z
-    environment:
-      - NODE_ENV=production
-    env_file:
-      - .env
-    command: sh -c "yarn install && yarn build"
+      - ./sftp/upload:/home/intelvia
+    ports:
+      - "2222:22"
+    command: intelvia:password:1001
 
 volumes:
   mariadb_data:

@@ -8,7 +8,7 @@ import { sortHelper } from '../../../HelperFunctions/ChartSorting';
 import Store from '../../../Interfaces/Store';
 import { ExtraPairPoint, HeatMapDataPoint } from '../../../Interfaces/Types/DataTypes';
 import {
-  BloodProductCap, MIN_HEATMAP_BANDWIDTH, OffsetDict,
+  BloodProductCap, MIN_HEATMAP_BANDWIDTH, OffsetDict, backgroundSelectedColor, backgroundHoverColor,
 } from '../../../Presets/Constants';
 import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import { AggregationScaleGenerator, ValueScaleGenerator } from '../../../HelperFunctions/Scales';
@@ -52,7 +52,7 @@ function HeatMap({
   outcomeComparison, interventionDate, secondaryExtraPairDataSet, dimensionHeight, secondaryData, dimensionWidth, yAxisVar, xAxisVar, chartId, data, svg, extraPairDataSet, extraPairTotalWidth, firstTotal, secondTotal,
 }: Props) {
   const store = useContext(Store);
-  const { hoverStore } = store;
+  const { interactionStore } = store;
   const currentOffset = OffsetDict.regular;
   const [xVals, setXVals] = useState<[]>([]);
   const [caseMax, setCaseMax] = useState(0);
@@ -84,11 +84,43 @@ function HeatMap({
   const innerSvg = useRef<SVGSVGElement | null>(null);
   const svgHeight = chartHeight - currentOffset.top;
 
+  // Checks if current row is hovered based on the attribute value.
+  function rowHovered(attribute: string, value: string) {
+    return interactionStore.hoveredAttribute?.[0] === attribute && interactionStore.hoveredAttribute?.[1] === value;
+  }
+  // Checks if current row is selected based on the attribute value.
+  function rowSelected(attribute: string, value: string) {
+    return interactionStore.selectedAttribute?.[0] === attribute && interactionStore.selectedAttribute?.[1] === value;
+  }
+
+  // Sets the selected attribute in the store.
+  function handleRowClick(attribute: string, value: string) {
+    // If the row is already selected, deselect the row.
+    if (rowSelected(attribute, value)) {
+      interactionStore.clearSelectedCases();
+    } else {
+      interactionStore.selectedAttribute = [attribute, value];
+    }
+  }
+
+  // Sets the hovered attribute in the store.
+  function handleHover(attribute: string, value: string) {
+    interactionStore.hoveredAttribute = [attribute, value];
+  }
+
+  // Removes the hovered attribute from the store.
+  function handleHoverLeave() {
+    interactionStore.hoveredAttribute = undefined;
+  }
+
+  // Calculates the height of each row based on whether secondary data is present.
+  const rowHeight = useMemo(() => (secondaryData ? aggregationScale().bandwidth() * 0.5 : aggregationScale().bandwidth()), [secondaryData, aggregationScale]);
+
   return (
     <g>
       <foreignObject
         style={{
-          width: '100%', height: `${dimensionHeight - currentOffset.bottom - currentOffset.top}px`, overflow: 'scroll', overflowY: 'scroll',
+          width: dimensionWidth, height: `${dimensionHeight - currentOffset.bottom - currentOffset.top}px`, overflow: 'scroll', overflowY: 'scroll',
         }}
         transform={`translate(0,${currentOffset.top})`}
       >
@@ -98,21 +130,28 @@ function HeatMap({
             // Calculate vertical placement and height for each primary row
               const rowY = (aggregationScale()(dataPoint.aggregateAttribute) || 0)
               + (secondaryData ? aggregationScale().bandwidth() * 0.5 : 0);
-              const rowHeight = secondaryData
-                ? aggregationScale().bandwidth() * 0.5
-                : aggregationScale().bandwidth();
-              // Compute whether this dataPoint is currently hovered.
-              const isHovered = hoverStore.hoveredAttribute?.[0] === yAxisVar && hoverStore.hoveredAttribute?.[1] === dataPoint.aggregateAttribute.toString();
+
+              // For this row, is the row selected or hovered?
+              const isSelected = rowSelected(yAxisVar, dataPoint.aggregateAttribute);
+              const isHovered = rowHovered(yAxisVar, dataPoint.aggregateAttribute);
               return (
                 /** On hover of a row, hover store is updated. */
-                <g key={idx} transform={`translate(0, ${rowY})`} onMouseEnter={() => { hoverStore.hoveredAttribute = [yAxisVar, dataPoint.aggregateAttribute]; }} onMouseLeave={() => { hoverStore.hoveredAttribute = undefined; }}>
-                  {/** Background Hover Row Rectangle */}
+                <g key={idx} transform={`translate(0, ${rowY})`} onMouseEnter={() => { handleHover(yAxisVar, dataPoint.aggregateAttribute); }} onMouseLeave={() => { handleHoverLeave(); }} onClick={() => { handleRowClick(yAxisVar, dataPoint.aggregateAttribute); }}>
+                  {/** Invisible row hover rectangle with padding for event capture */}
+                  <rect
+                    x={0}
+                    y={0}
+                    width={dimensionWidth}
+                    height={rowHeight + 2}
+                    fill="transparent"
+                  />
+                  {/** Background row hover highlight rectangle for display */}
                   <rect
                     x={0}
                     y={0}
                     width={dimensionWidth}
                     height={rowHeight}
-                    fill={isHovered ? hoverStore.backgroundHoverColor : 'transparent'}
+                    fill={isSelected ? backgroundSelectedColor : isHovered ? backgroundHoverColor : 'transparent'}
                   />
                   <SingleHeatRow
                     bandwidth={rowHeight}
@@ -136,28 +175,46 @@ function HeatMap({
                 </g>
               );
             })}
-            {secondaryData ? secondaryData.map((dataPoint, idx) => (
-              <g key={idx}>
-                <SingleHeatRow
-                  bandwidth={aggregationScale().bandwidth() * 0.5}
-                  valueScaleDomain={JSON.stringify(valueScale().domain())}
-                  valueScaleRange={JSON.stringify(valueScale().range())}
-                  dataPoint={dataPoint}
-                  howToTransform={`translate(0,${(aggregationScale()(dataPoint.aggregateAttribute) || 0)})`}
-                />
-                <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
-                  <CaseCountHeader
-                    showComparisonRect
-                    isFalseComparison={false}
-                    caseCount={dataPoint.caseCount}
-                    yPos={aggregationScale()(dataPoint.aggregateAttribute) || 0}
-                    height={0.5 * aggregationScale().bandwidth()}
-                    zeroCaseNum={dataPoint.zeroCaseNum}
-                    caseMax={caseMax}
+            {secondaryData ? secondaryData.map((dataPoint, idx) => {
+              // Calculate vertical placement and height for each primary row
+              const rowY = (aggregationScale()(dataPoint.aggregateAttribute) || 0)
+              + (aggregationScale().bandwidth() * 0.5);
+
+              // For this secondary row, is the row selected or hovered?
+              const isSelected = rowSelected(yAxisVar, dataPoint.aggregateAttribute);
+              const isHovered = rowHovered(yAxisVar, dataPoint.aggregateAttribute);
+              return (
+                <g key={idx} onMouseEnter={() => { handleHover(yAxisVar, dataPoint.aggregateAttribute); }} onMouseLeave={() => { handleHoverLeave(); }} onClick={() => { handleRowClick(yAxisVar, dataPoint.aggregateAttribute); }}>
+
+                  {/** Background row hover highlight rectangle for display */}
+                  <rect
+                    x={0}
+                    y={rowY - rowHeight}
+                    width={dimensionWidth}
+                    height={rowHeight}
+                    fill={isSelected ? backgroundSelectedColor : isHovered ? backgroundHoverColor : 'transparent'}
                   />
-                </ChartG>
-              </g>
-            )) : null}
+                  <SingleHeatRow
+                    bandwidth={aggregationScale().bandwidth() * 0.5}
+                    valueScaleDomain={JSON.stringify(valueScale().domain())}
+                    valueScaleRange={JSON.stringify(valueScale().range())}
+                    dataPoint={dataPoint}
+                    howToTransform={`translate(0,${(aggregationScale()(dataPoint.aggregateAttribute) || 0)})`}
+                  />
+                  <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
+                    <CaseCountHeader
+                      showComparisonRect
+                      isFalseComparison={false}
+                      caseCount={dataPoint.caseCount}
+                      yPos={aggregationScale()(dataPoint.aggregateAttribute) || 0}
+                      height={0.5 * aggregationScale().bandwidth()}
+                      zeroCaseNum={dataPoint.zeroCaseNum}
+                      caseMax={caseMax}
+                    />
+                  </ChartG>
+                </g>
+              );
+            }) : null}
             {/** Row labels rendered on top */}
             <HeatMapAxisY
               svg={innerSvg}

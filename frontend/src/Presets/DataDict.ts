@@ -50,10 +50,20 @@ export const EXTRA_PAIR_OPTIONS = [...OUTCOMES, 'PREOP_HEMO', 'POSTOP_HEMO', 'TO
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ExtraPairOptions: { key: typeof EXTRA_PAIR_OPTIONS[number]; value: string }[] = (OutcomeOptions as any).concat([
   { key: 'PREOP_HEMO', value: 'Preop HGB' },
-  { key: 'POSTOP_HEMO', value: 'Posop HGB' },
+  { key: 'POSTOP_HEMO', value: 'Postop HGB' },
   { key: 'TOTAL_TRANS', value: 'Total Transfused' },
   { key: 'PER_CASE', value: 'Per Case' },
   { key: 'ZERO_TRANS', value: 'Zero Transfused' },
+  { key: 'DRG_WEIGHT', value: 'APR-DRG Weight' },
+]);
+
+// Temporary options for cost/savings charts in terms of RBC only. (Because these charts dont have a variable x-axis)
+export const CostSavingsExtraPairOptions: { key: typeof EXTRA_PAIR_OPTIONS[number]; value: string }[] = (OutcomeOptions as any).concat([
+  { key: 'PREOP_HEMO', value: 'Preop HGB' },
+  { key: 'POSTOP_HEMO', value: 'Postop HGB' },
+  { key: 'TOTAL_TRANS', value: 'Total RBC Transfused' }, // Updated label
+  { key: 'PER_CASE', value: 'Per Case RBC' }, // Updated label
+  { key: 'ZERO_TRANS', value: 'Zero RBC Transfused' }, // Updated label
   { key: 'DRG_WEIGHT', value: 'APR-DRG Weight' },
 ]);
 

@@ -7,49 +7,36 @@ import { logoutHandler, whoamiAPICall } from './Interfaces/UserManagement';
 import { SurgeryUrgencyArray, SurgeryUrgencyType } from './Presets/DataDict';
 import BrowserWarning from './Components/Modals/BrowserWarning';
 import DataRetrieval from './Components/Modals/DataRetrieval';
+import { SingleCasePoint } from './Interfaces/Types/DataTypes';
 
 function App() {
   const store = useContext(Store);
-  const { currentSelectPatientGroup, allCases } = store.provenanceState;
+  const { currentFilteredPatientGroup } = store.provenanceState;
+
 
   const [dataLoading, setDataLoading] = useState(true);
   const [dataLoadingFailed, setDataLoadingFailed] = useState(false);
 
-  const onIdle = () => {
-    // On idle log the user out
-    if (import.meta.env.VITE_REQUIRE_LOGIN === 'true') {
-      logoutHandler();
-    }
-  };
-
-  const onAction = () => {
-    if (import.meta.env.VITE_REQUIRE_LOGIN === 'true') {
-      whoamiAPICall(store);
-    }
-  };
-
   useIdleTimer({
-    timeout: 1000 * 60 * 120,
-    onIdle,
-    onAction,
+    timeout: 1000 * 60 * 30, // 1000 ms * 60 s * 30 min
+    onIdle: () => logoutHandler(),
+    onAction: () => whoamiAPICall(),
     events: ['mousedown', 'keydown'],
     throttle: 1000 * 60,
   });
 
-  async function fetchAllCases() {
-    if (import.meta.env.VITE_REQUIRE_LOGIN === 'true') {
-      whoamiAPICall(store);
-    }
-    try {
-      const surgeryCasesFetch = await fetch(`${import.meta.env.VITE_QUERY_URL}get_sanguine_surgery_cases`);
-      const surgeryCasesInput = await surgeryCasesFetch.json();
+  useEffect(() => {
+    async function fetchAllCases() {
+      await whoamiAPICall();
+      try {
+        const surgeryCasesFetch = await fetch(`${import.meta.env.VITE_QUERY_URL}get_sanguine_surgery_cases`);
+        const surgeryCasesInput: { result: unknown[] } = await surgeryCasesFetch.json();
 
-      // Fix data types for the surgery cases
-      let minDate = +Infinity;
-      let maxDate = -Infinity;
-      const surgeryCases = {
+        // Fix data types for the surgery cases
+        let minDate = +Infinity;
+        let maxDate = -Infinity;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        result: surgeryCasesInput.result.map((d: any) => {
+        const surgeryCases = surgeryCasesInput.result.map((d: any) => {
           const preopHemo = parseFloat(`${d.PREOP_HEMO}`);
           const postopHemo = parseFloat(`${d.POSTOP_HEMO}`);
           const drgWeight = parseFloat(`${d.DRG_WEIGHT}`);
@@ -80,37 +67,33 @@ function App() {
             AMICAR: d.AMICAR ? d.AMICAR : 0,
             IRON: d.IRON ? d.IRON : 0,
             SURGERY_TYPE_DESC: (surgeryTypeIndex > -1 ? SurgeryUrgencyArray[surgeryTypeIndex] : 'Unknown') as SurgeryUrgencyType,
-          };
-        }),
-      };
+          } as SingleCasePoint;
+        });
 
-      if (surgeryCases.result?.length === 0) {
-        throw new Error('There was an issue fetching data. No results were returned.');
+        if (surgeryCases?.length === 0) {
+          throw new Error('There was an issue fetching data. No results were returned.');
+        }
+
+        let patientIDSet: Set<number> | undefined;
+        if (currentFilteredPatientGroup.length > 0) {
+          patientIDSet = new Set<number>();
+          currentFilteredPatientGroup.forEach((d) => { patientIDSet!.add(d.CASE_ID); });
+        }
+
+        store.allCases = surgeryCases;
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (e) {
+        setDataLoadingFailed(true);
+      } finally {
+        setDataLoading(false);
       }
-
-      let patientIDSet: Set<number> | undefined;
-      if (currentSelectPatientGroup.length > 0) {
-        patientIDSet = new Set<number>();
-        currentSelectPatientGroup.forEach((d) => { patientIDSet!.add(d.CASE_ID); });
-      }
-
-      store.allCases = surgeryCases.result;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      setDataLoadingFailed(true);
-    } finally {
-      setDataLoading(false);
     }
-  }
 
-  useEffect(() => {
-    if (import.meta.env.VITE_REQUIRE_LOGIN !== 'true' || (store.configStore.isLoggedIn && allCases.length === 0)) {
-      fetchAllCases();
-    } else {
-      whoamiAPICall(store);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.configStore.isLoggedIn]);
+    fetchAllCases();
+
+  }, [currentFilteredPatientGroup, store]);
+
 
   return (
     <>

@@ -8,6 +8,7 @@ import { AggregationScaleGenerator } from '../../../HelperFunctions/Scales';
 import { Offset } from '../../../Interfaces/Types/OffsetType';
 import Store from '../../../Interfaces/Store';
 import { Aggregation } from '../../../Presets/DataDict';
+import { usePrivateProvLabel } from '../../Hooks/PrivateModeLabeling';
 
 type Props = {
     svg: RefObject<SVGSVGElement>;
@@ -26,6 +27,9 @@ function HeatMapAxis({
   const svgSelection = select(svg.current);
   const aggregationLabel = axisLeft(aggregationScale());
 
+  // Gets the provider name depending on the private mode setting
+  const getLabel = usePrivateProvLabel();
+
   svgSelection
     .select('.axes-y')
     .select('.y-axis')
@@ -39,11 +43,11 @@ function HeatMapAxis({
     .attr('font-size', store.configStore.largeFont ? largeFontSize : regularFontSize)
     .attr('transform', `translate(-${CaseRectWidth + 2},0)`)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .text((d: any) => d)
+    .text((d: any) => getLabel(d, yAxisVar))
     .attr('cursor', 'pointer')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .on('click', (e, d: any) => {
-      store.selectionStore.selectSet(yAxisVar, d.toString(), !e.shiftKey);
+      store.interactionStore.selectSet(yAxisVar, d.toString(), !e.shiftKey);
     });
 
   return (

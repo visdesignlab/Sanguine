@@ -53,13 +53,13 @@ def log_request(request, paramsToExclude=[]):
 
 
 def execute_sql(command, *args, **kwargs):
-    with connections["hospital"].cursor() as cursor:
+    with connections["default"].cursor() as cursor:
         cursor.execute(command, kwargs)
         return cursor.fetchall(), cursor.description
 
 
 def execute_sql_dict(command, *args, **kwargs):
-    with connections["hospital"].cursor() as cursor:
+    with connections["default"].cursor() as cursor:
         cursor.execute(command, kwargs)
 
         rows = cursor.fetchall()
