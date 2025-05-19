@@ -11,7 +11,7 @@ import {
 import { scaleBand } from 'd3';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import {
-  ExtraPairPadding, ExtraPairWidth, MIN_HEATMAP_BANDWIDTH, OffsetDict, postopColor, preopColor,
+  ExtraPairPadding, ExtraPairWidth, MIN_HEATMAP_BANDWIDTH, OffsetDict, postopColor, preopColor, backgroundHoverColor,
 } from '../../Presets/Constants';
 import { BloodComponentOptions, CostSavingsExtraPairOptions } from '../../Presets/DataDict';
 import { ChartWrapperContainer, ChartAccessoryDiv } from '../../Presets/StyledComponents';
@@ -54,7 +54,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   } = layout;
 
   const store = useContext(Store);
-  const { hoverStore } = store;
+  const { interactionStore } = store;
   const { filteredCases } = store;
   const {
     proceduresSelection,
@@ -102,7 +102,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   const hover = (eventType: string, hoveredElement: unknown) => {
     const hoveredData = hoveredElement as CostBarDataPoint;
     const hoveredAttribute = hoveredData.rowLabel ? hoveredData.rowLabel.toString() : undefined;
-    hoverStore.hoveredAttribute = hoveredAttribute ? [yAxisVar, hoveredAttribute] : undefined;
+    interactionStore.hoveredAttribute = hoveredAttribute ? [yAxisVar, hoveredAttribute] : undefined;
   };
 
   const [showPotential, setShowPotential] = useState(true);
@@ -510,14 +510,15 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
           <svg width={dimensionWidth} height={widthOffset + Math.abs(aggregationScale.range()[0] - aggregationScale.range()[1])}>
             {/* For every row (attribute), render a highlighted rectangle if hovered. */}
             {aggregationScale.domain().map((attribute, idx) => {
-              const isHovered = hoverStore.hoveredAttribute?.[0] === yAxisVar && hoverStore.hoveredAttribute?.[1] === attribute.toString();
+              const isHovered = interactionStore.hoveredAttribute?.[0] === yAxisVar && interactionStore.hoveredAttribute?.[1] === getLabel(attribute, yAxisVar);
+              const fillColor = isHovered ? backgroundHoverColor : 'transparent';
               return (
                 <rect
                   key={idx}
                   y={aggregationScale(attribute)}
                   width={dimensionWidth}
                   height={aggregationScale.bandwidth()}
-                  fill={isHovered ? hoverStore.backgroundHoverColor : 'transparent'}
+                  fill={fillColor}
                   opacity={isHovered ? 1 : 0}
                 />
               );
