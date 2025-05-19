@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react';
 import {
-  useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState,
+  useContext, useEffect, useLayoutEffect, useMemo, useRef, useState,
 } from 'react';
 import { VegaLite } from 'react-vega';
 import HelpIcon from '@mui/icons-material/Help';
@@ -11,7 +11,7 @@ import {
 import { scaleBand } from 'd3';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import {
-  ExtraPairPadding, ExtraPairWidth, MIN_HEATMAP_BANDWIDTH, OffsetDict, postopColor, preopColor,
+  ExtraPairPadding, ExtraPairWidth, MIN_HEATMAP_BANDWIDTH, OffsetDict, postopColor, preopColor, backgroundHoverColor,
 } from '../../Presets/Constants';
 import { BloodComponentOptions, CostSavingsExtraPairOptions } from '../../Presets/DataDict';
 import { ChartWrapperContainer, ChartAccessoryDiv } from '../../Presets/StyledComponents';
@@ -54,6 +54,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   } = layout;
 
   const store = useContext(Store);
+  const { interactionStore } = store;
   const { filteredCases } = store;
   const {
     proceduresSelection,
@@ -67,10 +68,11 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   const [dimensionHeight, setDimensionHeight] = useState(0);
   const [dimensionWidth, setDimensionWidth] = useState(0);
   const xAxisOverlayHeight = 50;
+  const widthOffset = 10;
   useLayoutEffect(() => {
     if (chartDiv.current) {
       setDimensionHeight(chartDiv.current.clientHeight);
-      setDimensionWidth(chartDiv.current.clientWidth - 10);
+      setDimensionWidth(chartDiv.current.clientWidth - widthOffset);
     }
   }, [layoutH, layoutW, store.mainCompWidth, chartDiv]);
 
@@ -95,6 +97,12 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   // Bar click listener
   const barClick = (eventType: string, clickedElement: unknown) => {
     store.interactionStore.selectSet(yAxisVar, (clickedElement as CostBarDataPoint).rowLabel[0].toString(), true);
+  };
+  // Hover listener
+  const hover = (eventType: string, hoveredElement: unknown) => {
+    const hoveredData = hoveredElement as CostBarDataPoint;
+    const hoveredAttribute = hoveredData.rowLabel ? hoveredData.rowLabel.toString() : undefined;
+    interactionStore.hoveredAttribute = hoveredAttribute ? [yAxisVar, hoveredAttribute] : undefined;
   };
 
   const [showPotential, setShowPotential] = useState(true);
@@ -235,15 +243,23 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   useDeepCompareEffect(() => {
     const [tempxVals, _] = sortHelper(costSavingsData, yAxisVar, store.provenanceState.showZero, secondaryCostSavingsData);
     setXVals(tempxVals);
+    // For every x val in temp x vals, get the getLabel(value, yAxisVar) of the value.
+    console.log("XVals", tempxVals.map((val) => val));
   }, [costSavingsData, yAxisVar, secondaryCostSavingsData]);
 
-  const aggregationScale = useCallback(() => {
-    const aggScale = scaleBand()
+  // Moved the aggregationScale calculation here in one definition
+  const aggregationScaleRange = useMemo((): [number, number] => (outcomeComparison || interventionDate
+    ? [15, vegaHeight - 45]
+    : [6, vegaHeight - 40]), [vegaHeight, outcomeComparison, interventionDate]);
+
+  // Scale used for additional attribute rows, hovering, etc.
+  const aggregationScale = useMemo(
+    () => scaleBand()
       .domain(xVals)
-      .range([dimensionHeight - currentOffset.bottom, currentOffset.top])
-      .paddingInner(0.1);
-    return aggScale;
-  }, [dimensionHeight, xVals, currentOffset]);
+      .range(aggregationScaleRange)
+      .paddingInner(0.1),
+    [xVals, aggregationScaleRange],
+  );
 
   useDeepCompareEffect(() => {
     let tempmaxCost = 0;
@@ -334,6 +350,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
 
   const spec = useMemo(() => ({
     $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+    background: 'transparent',
     data: { name: 'values' },
     transform: [
       {
@@ -348,7 +365,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
         aggregate: 'sum',
         axis: { grid: false, title: 'Cost' },
       },
-      y: { field: 'rowLabel', type: 'ordinal', sort: xVals.toReversed() },
+      y: { field: 'rowLabel', type: 'ordinal', sort: xVals },
       yOffset: outcomeComparison || interventionDate ? { field: 'type', type: 'ordinal', scale: { paddingOuter: -8, domain: ['true', 'false'] } } : undefined,
       color: { field: 'bloodProduct', type: 'nominal', legend: null },
       fillOpacity: {
@@ -366,8 +383,15 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
       {
         mark: 'bar',
         selection: {
-          select: { type: 'point', fields: ['rowLabel'] },
-          barClick: { type: 'point', fields: ['rowLabel', 'bloodProduct'] },
+          select: {
+            type: 'point', fields: ['rowLabel'], on: 'click', clear: 'dblclick',
+          },
+          hover: {
+            type: 'point',
+            on: 'pointerover',
+            fields: ['rowLabel'],
+            clear: 'pointerout',
+          }, // New hover selection
         },
       },
       ...(outcomeComparison || interventionDate ? [
@@ -477,18 +501,42 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
       <div
         ref={chartDiv}
         style={{
+          position: 'relative',
           height: `calc(100% - 38px - 40px - 10px${outcomeComparison || interventionDate ? ' - 30px' : ''})`,
           width: '100%',
           overflow: 'auto',
           display: 'flex',
         }}
       >
+        {/* Hover highlight rows, rendered behind everything */}
+        <div style={{ position: 'absolute', zIndex: -1 }}>
+          <svg width={dimensionWidth} height={widthOffset + Math.abs(aggregationScale.range()[0] - aggregationScale.range()[1])}>
+            {/* For every row (attribute), render a highlighted rectangle if hovered. */}
+            {aggregationScale.domain().map((attribute, idx) => {
+              const isHovered = interactionStore.hoveredAttribute?.[0] === yAxisVar && interactionStore.hoveredAttribute?.[1] === getLabel(attribute, yAxisVar);
+              const fillColor = isHovered ? backgroundHoverColor : 'transparent';
+              if (isHovered) {
+                console.log("Hovered", attribute);
+              }
+              return (
+                <rect
+                  key={idx}
+                  y={aggregationScale(attribute)}
+                  width={dimensionWidth}
+                  height={aggregationScale.bandwidth()}
+                  fill={fillColor}
+                  opacity={isHovered ? 1 : 0}
+                />
+              );
+            })}
+          </svg>
+        </div>
         <svg width={extraPairTotalWidth} height={vegaHeight}>
           <GeneratorExtraPair
             extraPairDataSet={extraPairData}
             secondaryExtraPairDataSet={outcomeComparison || interventionDate ? secondaryExtraPairData : undefined}
-            aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
-            aggregationScaleRange={`[${outcomeComparison || interventionDate ? vegaHeight - 45 : vegaHeight - 40}, ${outcomeComparison || interventionDate ? 15 : 6}]`}
+            aggregationScaleDomain={JSON.stringify(aggregationScale.domain())}
+            aggregationScaleRange={JSON.stringify(aggregationScaleRange)}
           />
         </svg>
         <Stack>
@@ -496,9 +544,13 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
             spec={spec as never}
             data={plotData}
             actions={false}
-            signalListeners={{ barClick }}
+            signalListeners={{
+              barClick,
+              hover,
+            }}
             width={dimensionWidth - extraPairTotalWidth - 20}
             className="vega-vis"
+            style={{ transform: 'translateY(-1px)' }}
           />
 
           {/* Permanent x axis overlay with white background */}
