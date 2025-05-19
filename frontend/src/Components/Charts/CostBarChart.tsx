@@ -243,12 +243,14 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   useDeepCompareEffect(() => {
     const [tempxVals, _] = sortHelper(costSavingsData, yAxisVar, store.provenanceState.showZero, secondaryCostSavingsData);
     setXVals(tempxVals);
+    // For every x val in temp x vals, get the getLabel(value, yAxisVar) of the value.
+    console.log("XVals", tempxVals.map((val) => val));
   }, [costSavingsData, yAxisVar, secondaryCostSavingsData]);
 
   // Moved the aggregationScale calculation here in one definition
   const aggregationScaleRange = useMemo((): [number, number] => (outcomeComparison || interventionDate
-    ? [vegaHeight - 45, 15]
-    : [vegaHeight - 40, 6]), [vegaHeight, outcomeComparison, interventionDate]);
+    ? [15, vegaHeight - 45]
+    : [6, vegaHeight - 40]), [vegaHeight, outcomeComparison, interventionDate]);
 
   // Scale used for additional attribute rows, hovering, etc.
   const aggregationScale = useMemo(
@@ -363,7 +365,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
         aggregate: 'sum',
         axis: { grid: false, title: 'Cost' },
       },
-      y: { field: 'rowLabel', type: 'ordinal', sort: xVals.toReversed() },
+      y: { field: 'rowLabel', type: 'ordinal', sort: xVals },
       yOffset: outcomeComparison || interventionDate ? { field: 'type', type: 'ordinal', scale: { paddingOuter: -8, domain: ['true', 'false'] } } : undefined,
       color: { field: 'bloodProduct', type: 'nominal', legend: null },
       fillOpacity: {
@@ -512,6 +514,9 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
             {aggregationScale.domain().map((attribute, idx) => {
               const isHovered = interactionStore.hoveredAttribute?.[0] === yAxisVar && interactionStore.hoveredAttribute?.[1] === getLabel(attribute, yAxisVar);
               const fillColor = isHovered ? backgroundHoverColor : 'transparent';
+              if (isHovered) {
+                console.log("Hovered", attribute);
+              }
               return (
                 <rect
                   key={idx}
