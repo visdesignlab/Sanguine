@@ -383,8 +383,9 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
       {
         mark: 'bar',
         selection: {
-          select: { type: 'point', fields: ['rowLabel'] },
-          barClick: { type: 'point', fields: ['rowLabel', 'bloodProduct'] },
+          select: {
+            type: 'point', fields: ['rowLabel'], on: 'click', clear: 'dblclick',
+          },
           hover: {
             type: 'point',
             on: 'pointerover',
