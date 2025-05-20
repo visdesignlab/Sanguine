@@ -11,6 +11,7 @@ import { AcronymDictionary } from '../../../Presets/DataDict';
 import {
   InheritWidthGrid, CenterAlignedDiv, Title,
 } from '../../../Presets/StyledComponents';
+import { usePrivateProvLabel } from '../../Hooks/PrivateModeLabeling';
 
 const TinyFontButton = styled(Button)({
   fontSize: 'xx-small!important',
@@ -19,6 +20,7 @@ const TinyFontButton = styled(Button)({
 function CurrentSelected() {
   const store = useContext(Store);
   const { currentSelectedPatientGroup, currentSelectSet } = store.provenanceState;
+  const getLabel = usePrivateProvLabel();
 
   return (
     <InheritWidthGrid item>
@@ -28,6 +30,7 @@ function CurrentSelected() {
             <Title>Currently Selected</Title>
           </ListItem>
 
+          {/** Currently Selected Cases */}
           {currentSelectedPatientGroup.length > 0
             ? (
               <ListItem alignItems="flex-start" style={{ width: '100%' }}>
@@ -43,12 +46,13 @@ function CurrentSelected() {
               </ListItem>
             )
             : null}
-
+          {/** Currently Selected Attributes */}
           {currentSelectSet.map((selectSet: SelectSet) => (
             <ListItem key={`${selectSet.setName}selected`}>
+              {/** primary = Attribute Name.  secondary = attribute values, different values for private mode. */}
               <ListItemText
                 primary={AcronymDictionary[selectSet.setName as keyof typeof AcronymDictionary] ? AcronymDictionary[selectSet.setName as keyof typeof AcronymDictionary] : selectSet.setName}
-                secondary={selectSet.setValues.sort().join(', ')}
+                secondary={store.configStore.privateMode ? selectSet.setValues.sort().join(', ') : selectSet.setValues.map((value) => getLabel(value, selectSet.setName)).sort().join(', ')}
               />
               <ListItemSecondaryAction>
                 <IconButton onClick={() => { store.interactionStore.clearSet(selectSet.setName); }}>
