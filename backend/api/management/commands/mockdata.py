@@ -62,13 +62,17 @@ class Command(BaseCommand):
             mrn = fake.unique.random_number(digits=10)
             race_idx = random.randint(0, 7)
             eth_idx = random.randint(0, 3)
-            birthdate = fake.date_of_birth()
+            birthdate = fake.date_time_between(
+                start_date=datetime(1950, 1, 1),
+                end_date=datetime(1960, 1, 1),
+            )
             death_date = birthdate + timedelta(
                 days=fake.random_int(min=7500, max=35000)
             )
             death_date = (
                 death_date if fake.random_element(elements=(True, False)) else None
             )
+            bad_pat = fake.random_element(elements=(True, False)) if death_date is not None else False
 
             patient = Patient.objects.create(
                 mrn=mrn,
@@ -80,14 +84,15 @@ class Command(BaseCommand):
                 ethnicity_desc=eth_descs[eth_idx],
                 death_date=death_date,
             )
-            pats.append(patient)
+            pats.append((patient, bad_pat))
         self.stdout.write(self.style.SUCCESS("Successfully generated patient data"))
 
         # Generate mock data for VISIT
-        for pat in pats:
-            for _ in range(5):
+        for pat, bad_pat in pats:
+            num_visits = 5 if not bad_pat else 2
+            for i in range(num_visits):
                 visit_no = fake.unique.random_number(digits=10)
-                end_date = pat.death_date if pat.death_date else datetime.now().date()
+                end_date = pat.death_date if bad_pat and i == num_visits - 1 else None
                 admit_date = make_aware(
                     fake.date_time_between(
                         start_date=pat.birth_date,
@@ -98,7 +103,7 @@ class Command(BaseCommand):
                     fake.date_time_between(
                         start_date=admit_date,
                         end_date=min(
-                            end_date, (admit_date + timedelta(days=10)).date()
+                            end_date, (admit_date + timedelta(days=10)).date(),
                         ),
                     )
                 )
