@@ -13,7 +13,6 @@ function App() {
   const store = useContext(Store);
   const { currentFilteredPatientGroup } = store.provenanceState;
 
-
   const [dataLoading, setDataLoading] = useState(true);
   const [dataLoadingFailed, setDataLoadingFailed] = useState(false);
 
@@ -91,9 +90,7 @@ function App() {
     }
 
     fetchAllCases();
-
-  }, [currentFilteredPatientGroup, store]);
-
+  }, []);
 
   return (
     <>
