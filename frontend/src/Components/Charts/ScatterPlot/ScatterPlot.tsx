@@ -127,7 +127,7 @@ function ScatterPlot({
           store.interactionStore.clearSelectedCases();
         }
       } else {
-        store.interactionStore.selectedCaseIds = caseList.map((d) => d.CASE_ID);
+        store.interactionStore.addSelectedCaseIds(caseList.map((d) => d.CASE_ID));
       }
     } else if (store.provenanceState.currentSelectedPatientGroup.length > 0) {
       store.interactionStore.clearSelectedCases();
@@ -277,7 +277,7 @@ function ScatterPlot({
               store.interactionStore.deselectCaseIds([dataPoint.case.CASE_ID]);
             } else {
               // If not selected, select this case.
-              store.interactionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
+              store.interactionStore.addSelectedCaseIds([dataPoint.case.CASE_ID]);
             }
           }}
           onMouseEnter={() => { interactionStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
