@@ -70,27 +70,30 @@ export class RootStore {
 
   get filteredCases() {
     return this._allCases.filter((d) => {
-      // Filter panel items
+      // Date range filter
       if (!(d.CASE_DATE >= this.provenanceState.rawDateRange[0] && d.CASE_DATE <= this.provenanceState.rawDateRange[1])) {
         return false;
       }
+      // Outcome filter
       if (this.provenanceState.outcomeFilter.length > 0) {
         return !this.provenanceState.outcomeFilter.some((outcome) => !d[outcome]);
       }
+      // Surgery urgency filter
       if (!this.provenanceState.surgeryUrgencySelection[SurgeryUrgencyArray.indexOf(d.SURGERY_TYPE_DESC)]) {
         return false;
       }
-      // surgeon cases performed
+      // Surgeon cases performed filter
       if (this.surgeonCasesPerformedRange[d.SURGEON_PROV_ID] < this.provenanceState.surgeonCasesPerformed[0] || this.surgeonCasesPerformedRange[d.SURGEON_PROV_ID] > this.provenanceState.surgeonCasesPerformed[1]) {
         return false;
       }
-
+      // Patients filter
       if (
         this.provenanceState.currentFilteredPatientGroup.length > 0
         && !this.provenanceState.currentFilteredPatientGroup.some((patient) => patient.CASE_ID === d.CASE_ID)
       ) {
         return false;
       }
+      // Output filter set
       if (
         this.provenanceState.currentOutputFilterSet.length > 0
         && !this.provenanceState.currentOutputFilterSet.some((output) => output.setValues.includes(`${d[output.setName]}`))
@@ -98,7 +101,7 @@ export class RootStore {
         return false;
       }
 
-      // Blood filters (transfusions and tests)
+      // Blood filters (transfusions and tests) ------------------
       const bloodFiltered = Object.entries(this.provenanceState.bloodFilter)
         .some(([bloodComponent, range]) => {
           const patientValue = d[bloodComponent] as number;
@@ -108,22 +111,20 @@ export class RootStore {
         return false;
       }
 
-      // Chart selection filters
+      // Procedure filters -------------------------------
+      const hasAnyProcedure = this.provenanceState.proceduresSelection.length > 0;
 
-      // Procedure filters
-      const patientCodes = d.ALL_CODES.split(',');
-      const procedureFiltered = !this.provenanceState.proceduresSelection.every((procedure) => {
+      // If there are selected procedures, filter cases based on the selected procedures
+      const procedureFiltered = hasAnyProcedure && !this.provenanceState.proceduresSelection.some((procedure) => {
+        const patientCodes = d.ALL_CODES.split(/\s*,\s*/);
+
+        // Sub-procedures selected (overlapList)
         if (procedure.overlapList && procedure.overlapList.length > 0) {
-          // If we're here, then we have a multiple procedures
-          // Check for "only procedure"
-          if (procedure.overlapList.some((subProcedure) => subProcedure.procedureName.includes('Only'))) {
-            return patientCodes.every((code) => procedure.codes.includes(code));
-          }
-
           return procedure.codes.some((code) => patientCodes.includes(code))
-            && procedure.overlapList.every((subProcedure) => subProcedure.codes.some((code) => patientCodes.includes(code)));
+            && procedure.overlapList.some((subProcedure) => subProcedure.codes.some((code) => patientCodes.includes(code)));
         }
-        // If we're here, then we have a single procedure
+
+        // Main procedure selected
         return procedure.codes.some((code) => patientCodes.includes(code));
       });
       if (procedureFiltered) {
