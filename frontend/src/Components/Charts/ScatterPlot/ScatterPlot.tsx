@@ -309,7 +309,7 @@ function ScatterPlot({
       <g className="axes">
         <g className="y-axis" />
         <g className="x-axis" transform={`translate(0 ,${height - currentOffset.bottom} )`}>
-          {xAxisVar !== 'CELL_SAVER_ML' ? <CustomizedAxisBand scalePadding={scalePadding} scaleDomain={JSON.stringify(xAxisScale().domain())} scaleRange={JSON.stringify(xAxisScale().range())} chartHeight={height - currentOffset.bottom - currentOffset.top} data={data} xAxisVar={xAxisVar} /> : null}
+          {xAxisVar !== 'CELL_SAVER_ML' ? <CustomizedAxisBand scalePadding={scalePadding} scaleDomain={JSON.stringify(xAxisScale().domain())} scaleRange={JSON.stringify(xAxisScale().range())} chartHeight={height - currentOffset.bottom - currentOffset.top} xAxisVar={xAxisVar} /> : null}
         </g>
         <text className="x-label" />
         <text className="y-label" />
