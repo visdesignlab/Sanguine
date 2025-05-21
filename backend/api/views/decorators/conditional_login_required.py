@@ -9,7 +9,7 @@ def conditional_login_required(view_func):
     """
     @wraps(view_func)
     def result_decorator(request, *args, **kwargs):
-        if settings.DEBUG:
+        if settings.DISABLE_LOGINS:
             return view_func(request, *args, **kwargs)
         return login_required(view_func)(request, *args, **kwargs)
     return result_decorator
