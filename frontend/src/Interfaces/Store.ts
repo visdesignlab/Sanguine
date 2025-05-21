@@ -116,7 +116,7 @@ export class RootStore {
 
       // If there are selected procedures, filter cases based on the selected procedures
       const procedureFiltered = hasAnyProcedure && !this.provenanceState.proceduresSelection.some((procedure) => {
-        const patientCodes = d.ALL_CODES.split(/\s*,\s*/);
+        const patientCodes = d.ALL_CODES.split(',');
 
         // Sub-procedures selected (overlapList)
         if (procedure.overlapList && procedure.overlapList.length > 0) {
