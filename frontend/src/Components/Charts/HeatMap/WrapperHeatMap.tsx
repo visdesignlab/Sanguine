@@ -63,13 +63,13 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
 
   // Generating the extra attribute data for the extra pair plot ------------------------------------------------------------
   useDeepCompareEffect(() => {
-    const [tempCaseCount, secondaryTempCaseCount, outputData, secondaryOutputData] = generateExtraAttributeData(filteredCases, yAxisVar, outcomeComparison, interventionDate, store.provenanceState.showZero, xAxisVar);
+    const [secondCaseCount, tempCaseCount, outputData, secondaryOutputData] = generateExtraAttributeData(filteredCases, yAxisVar, outcomeComparison, interventionDate, store.provenanceState.showZero, xAxisVar);
     stateUpdateWrapperUseJSON(data, outputData, setData);
     stateUpdateWrapperUseJSON(secondaryData, secondaryOutputData, setSecondaryData);
-    store.chartStore.totalAggregatedCaseCount = (tempCaseCount as number) + (secondaryTempCaseCount as number);
+    store.chartStore.totalAggregatedCaseCount = (tempCaseCount as number) + (secondCaseCount as number);
     // Marks the 'true' and 'false' if attribute === 0.
     setCaseCount(tempCaseCount as number);
-    setSecondaryCaseCount(secondaryTempCaseCount as number);
+    setSecondaryCaseCount(secondCaseCount as number);
   }, [proceduresSelection, surgeryUrgencySelection, store.provenanceState.outcomeFilter,
     rawDateRange,
     store.provenanceState.showZero,
