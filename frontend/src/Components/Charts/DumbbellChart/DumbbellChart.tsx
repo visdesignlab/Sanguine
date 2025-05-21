@@ -11,22 +11,24 @@ import Store from '../../../Interfaces/Store';
 import { DumbbellDataPoint } from '../../../Interfaces/Types/DataTypes';
 import {
   OffsetDict, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, DumbbellGroupMinimumWidth, largeFontSize, regularFontSize,
-  DumbbellMinimumWidth,
+  DumbbellMinimumWidth, smallHoverColor, smallSelectColor,
 } from '../../../Presets/Constants';
 import { AcronymDictionary } from '../../../Presets/DataDict';
 import { DumbbellLine } from '../../../Presets/StyledSVGComponents';
 import CustomizedAxisOrdinal from '../ChartAccessories/CustomizedAxisOrdinal';
 import SingleDumbbell from './SingleDumbbell';
 import { DumbbellLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
+import { normalizeAttribute } from '../../../HelperFunctions/NormalizeAttributes';
 
 const sortDataHelper = (originalData: DumbbellDataPoint[], sortModeInput: 'preop' | 'postop' | 'gap', xAxisVar: DumbbellLayoutElement['xAxisVar']) => {
   let copyOfData: DumbbellDataPoint[] = JSON.parse(JSON.stringify(originalData));
-  if (xAxisVar === 'CELL_SAVER_ML') {
-    copyOfData = copyOfData.map((d) => ({
-      ...d,
-      yVal: Math.floor(d.yVal / 100) * 100,
-    }));
-  }
+
+  // Normalize the data (cell_saver_ml is rounded to nearest hundred)
+  copyOfData = copyOfData.map((d) => ({
+    ...d,
+    yVal: normalizeAttribute(d.yVal, xAxisVar) as number,
+  }));
+
   const countOfYVals = copyOfData
     .map((surgeryCase) => surgeryCase.yVal)
     .reduce((acc, label) => {
@@ -225,6 +227,9 @@ function DumbbellChart({
     const xVal = (valueScale() as unknown as ScaleOrdinal<number, number>)(idx);
 
     if (xVal) {
+      // Checks if dumbbell the only currently selected case
+      const isHovered = store.interactionStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
+      const isSelected = store.interactionStore.selectedCaseIds.includes(dataPoint.case.CASE_ID);
       return (
         <SingleDumbbell
           xVal={xVal}
@@ -235,14 +240,25 @@ function DumbbellChart({
           showPreop={showPreop}
           circleYValStart={testValueScale()(dataPoint.startXVal)}
           circleYValEnd={testValueScale()(dataPoint.endXVal)}
-          hovered={store.hoverStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID)}
+          hovered={isHovered && !isSelected}
+          selected={isSelected}
+          onClick={() => {
+            // If selected, deselect this case.
+            if (isSelected) {
+              store.interactionStore.deselectCaseIds([dataPoint.case.CASE_ID]);
+            } else {
+              // If not selected, select this case.
+              store.interactionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
+            }
+          }}
           onMouseEnter={() => {
-            store.hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
+            store.interactionStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
           }}
           onMouseLeave={() => {
-            store.hoverStore.hoveredCaseIds = [];
+            store.interactionStore.hoveredCaseIds = [];
           }}
-          hoverColor={store.hoverStore.smallHoverColor}
+          hoverColor={smallHoverColor}
+          selectColor={smallSelectColor}
           key={`dumbbell-${idx}`}
         />
       );

@@ -11,13 +11,13 @@ import Store from '../../Interfaces/Store';
 export function usePrivateProvLabel(): (label: string | number, attribute: string) => string {
   const store = useContext(Store);
 
-  // If private mode is enabled, return the label as a string.
+  // Convert the label to a provider name or id depending on private mode setting.
   return useCallback((label: string | number, attribute: string): string => {
     // If getting provider label, get the provider name if private mode is disabled.
     if (!store.configStore.privateMode && attribute.includes('PROV_ID')) {
-      const name = store.providerMappping[Number(label)] as string;
+      const name = store.providerMapping[label] as string;
       return name ? `${name.charAt(0)}${name.slice(1).toLowerCase()}` : String(label);
     }
     return String(label);
-  }, [store.configStore.privateMode, store.providerMappping]);
+  }, [store.configStore.privateMode, store.providerMapping]);
 }

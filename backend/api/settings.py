@@ -7,6 +7,8 @@ from corsheaders.defaults import default_headers
 env = environ.Env(
     DJANGO_DEBUG=(bool, False),  # Cast to bool, default to False
     DJANGO_HOSTNAME=(str, "localhost"),
+    DJANGO_DISABLE_LOGINS=(bool, False),
+    DJANGO_LOGOUT_REDIRECT=(str, "")
 )
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -14,6 +16,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env("DJANGO_DEBUG")
+DISABLE_LOGINS = env("DJANGO_DISABLE_LOGINS")
 
 # We're allowing localhost for local development and for production deployment with containers
 ALLOWED_HOSTS = [
@@ -139,6 +142,10 @@ SESSION_COOKIE_AGE = 60 * 30  # 60 seconds * 30 minutes
 SESSION_COOKIE_SECURE = True
 SESSION_SAVE_EVERY_REQUEST = True
 CSRF_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = [
+    f"https://{env('DJANGO_HOSTNAME')}",
+    f"http://{env('DJANGO_HOSTNAME')}:8080",
+]
 
 CAS_SERVER_URL = "https://go.utah.edu/cas/"
 CAS_ADMIN_PREFIX = "api/"
@@ -147,3 +154,4 @@ CAS_FORCE_SSL_SERVICE_URL = True
 CAS_VERSION = '3'
 CAS_USERNAME_ATTRIBUTE = "unid"
 CAS_ROOT_PROXIED_AS = "https://sanguine.med.utah.edu"
+CAS_REDIRECT_URL = env("DJANGO_LOGOUT_REDIRECT")

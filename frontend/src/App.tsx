@@ -7,10 +7,10 @@ import { logoutHandler, whoamiAPICall } from './Interfaces/UserManagement';
 import { SurgeryUrgencyArray, SurgeryUrgencyType } from './Presets/DataDict';
 import BrowserWarning from './Components/Modals/BrowserWarning';
 import DataRetrieval from './Components/Modals/DataRetrieval';
+import { SingleCasePoint } from './Interfaces/Types/DataTypes';
 
 function App() {
   const store = useContext(Store);
-  const { currentSelectPatientGroup } = store.provenanceState;
 
   const [dataLoading, setDataLoading] = useState(true);
   const [dataLoadingFailed, setDataLoadingFailed] = useState(false);
@@ -28,59 +28,51 @@ function App() {
       await whoamiAPICall();
       try {
         const surgeryCasesFetch = await fetch(`${import.meta.env.VITE_QUERY_URL}get_sanguine_surgery_cases`);
-        const surgeryCasesInput = await surgeryCasesFetch.json();
+        const surgeryCasesInput: { result: unknown[] } = await surgeryCasesFetch.json();
 
         // Fix data types for the surgery cases
         let minDate = +Infinity;
         let maxDate = -Infinity;
-        const surgeryCases = {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const surgeryCases = surgeryCasesInput.result.map((d: any) => {
+          const preopHemo = parseFloat(`${d.PREOP_HEMO}`);
+          const postopHemo = parseFloat(`${d.POSTOP_HEMO}`);
+          const drgWeight = parseFloat(`${d.DRG_WEIGHT}`);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          result: surgeryCasesInput.result.map((d: any) => {
-            const preopHemo = parseFloat(`${d.PREOP_HEMO}`);
-            const postopHemo = parseFloat(`${d.POSTOP_HEMO}`);
-            const drgWeight = parseFloat(`${d.DRG_WEIGHT}`);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const surgeryTypeIndex = SurgeryUrgencyArray.indexOf(d.SURGERY_TYPE_DESC as any);
-            const caseDate = new Date(d.CASE_DATE).getTime();
+          const surgeryTypeIndex = SurgeryUrgencyArray.indexOf(d.SURGERY_TYPE_DESC as any);
+          const caseDate = new Date(d.CASE_DATE).getTime();
 
-            minDate = Math.min(minDate, caseDate);
-            maxDate = Math.max(maxDate, caseDate);
+          minDate = Math.min(minDate, caseDate);
+          maxDate = Math.max(maxDate, caseDate);
 
-            return {
-              ...d,
-              CASE_DATE: new Date(d.CASE_DATE).getTime(),
-              PRBC_UNITS: d.PRBC_UNITS ? d.PRBC_UNITS : 0,
-              FFP_UNITS: d.FFP_UNITS ? d.FFP_UNITS : 0,
-              PLT_UNITS: d.PLT_UNITS ? d.PLT_UNITS : 0,
-              CRYO_UNITS: d.CRYO_UNITS ? d.CRYO_UNITS : 0,
-              CELL_SAVER_ML: d.CELL_SAVER_ML ? d.CELL_SAVER_ML : 0,
-              PREOP_HEMO: !Number.isNaN(preopHemo) ? preopHemo : null,
-              POSTOP_HEMO: !Number.isNaN(postopHemo) ? postopHemo : null,
-              VENT: d.VENT ? d.VENT : 0,
-              DRG_WEIGHT: !Number.isNaN(drgWeight) ? drgWeight : 0,
-              DEATH: d.DEATH === 'Y' ? 1 : 0,
-              ECMO: d.ECMO ? d.ECMO : 0,
-              STROKE: d.STROKE ? d.STROKE : 0,
-              TXA: d.TXA ? d.TXA : 0,
-              B12: d.B12 ? d.B12 : 0,
-              AMICAR: d.AMICAR ? d.AMICAR : 0,
-              IRON: d.IRON ? d.IRON : 0,
-              SURGERY_TYPE_DESC: (surgeryTypeIndex > -1 ? SurgeryUrgencyArray[surgeryTypeIndex] : 'Unknown') as SurgeryUrgencyType,
-            };
-          }),
-        };
+          return {
+            ...d,
+            CASE_DATE: new Date(d.CASE_DATE).getTime(),
+            PRBC_UNITS: d.PRBC_UNITS ? d.PRBC_UNITS : 0,
+            FFP_UNITS: d.FFP_UNITS ? d.FFP_UNITS : 0,
+            PLT_UNITS: d.PLT_UNITS ? d.PLT_UNITS : 0,
+            CRYO_UNITS: d.CRYO_UNITS ? d.CRYO_UNITS : 0,
+            CELL_SAVER_ML: d.CELL_SAVER_ML ? d.CELL_SAVER_ML : 0,
+            PREOP_HEMO: !Number.isNaN(preopHemo) ? preopHemo : null,
+            POSTOP_HEMO: !Number.isNaN(postopHemo) ? postopHemo : null,
+            VENT: d.VENT ? d.VENT : 0,
+            DRG_WEIGHT: !Number.isNaN(drgWeight) ? drgWeight : 0,
+            DEATH: d.DEATH === 'Y' ? 1 : 0,
+            ECMO: d.ECMO ? d.ECMO : 0,
+            STROKE: d.STROKE ? d.STROKE : 0,
+            TXA: d.TXA ? d.TXA : 0,
+            B12: d.B12 ? d.B12 : 0,
+            AMICAR: d.AMICAR ? d.AMICAR : 0,
+            IRON: d.IRON ? d.IRON : 0,
+            SURGERY_TYPE_DESC: (surgeryTypeIndex > -1 ? SurgeryUrgencyArray[surgeryTypeIndex] : 'Unknown') as SurgeryUrgencyType,
+          } as SingleCasePoint;
+        });
 
-        if (surgeryCases.result?.length === 0) {
+        if (surgeryCases?.length === 0) {
           throw new Error('There was an issue fetching data. No results were returned.');
         }
 
-        let patientIDSet: Set<number> | undefined;
-        if (currentSelectPatientGroup.length > 0) {
-          patientIDSet = new Set<number>();
-          currentSelectPatientGroup.forEach((d) => { patientIDSet!.add(d.CASE_ID); });
-        }
-
-        store.allCases = surgeryCases.result;
+        store.allCases = surgeryCases;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         setDataLoadingFailed(true);
@@ -90,7 +82,7 @@ function App() {
     }
 
     fetchAllCases();
-  }, [currentSelectPatientGroup, store]);
+  }, []);
 
   return (
     <>

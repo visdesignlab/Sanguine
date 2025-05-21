@@ -10,7 +10,7 @@ import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import Store from '../../../Interfaces/Store';
 import { ScatterDataPoint, SingleCasePoint } from '../../../Interfaces/Types/DataTypes';
 import {
-  basicGray, highlightOrange, largeFontSize, OffsetDict, regularFontSize, thirdGray,
+  basicGray, largeFontSize, OffsetDict, regularFontSize, thirdGray, smallHoverColor, smallSelectColor,
 } from '../../../Presets/Constants';
 import { AcronymDictionary, BloodComponent, HemoOption } from '../../../Presets/DataDict';
 import CustomizedAxisBand from '../ChartAccessories/CustomizedAxisBand';
@@ -20,18 +20,20 @@ interface DotProps {
   brushed: boolean;
   hovered: boolean;
   hoverColor: string;
+  selectedColor: string;
 }
 
+// If selected: selectedColor; If only hovered: hoverColor; If none, lightGray
 const ScatterDot = styled('circle')<DotProps>`
   r: 4px;
-  opacity: ${(props) => (props.hovered || props.selected ? 1 : 0.5)};
+  opacity: ${(props) => (props.hovered || props.selected || props.brushed ? 1 : 0.5)};
   stroke-width: 2px;
-  fill: ${(props) => (props.hovered
-    ? props.hoverColor
-    : props.brushed || props.selected
-      ? highlightOrange
+  fill: ${(props) => (props.selected
+    ? props.selectedColor
+    : props.hovered
+      ? props.hoverColor
       : basicGray)};
-`;
+  `;
 
 const StatisticalLine = styled('line')`
   stroke-width: 3px;
@@ -57,8 +59,8 @@ function ScatterPlot({
   const scalePadding = 0.2;
   const currentOffset = OffsetDict.minimum;
   const store = useContext(Store);
-  const { hoverStore } = store;
-  const { currentBrushedPatientGroup, currentSelectSet } = store.provenanceState;
+  const { interactionStore } = store;
+  const { currentSelectedPatientGroup } = store.provenanceState;
   const svgSelection = select(svg.current);
   const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null);
   const [isFirstRender, updateIsFirstRender] = useState(true);
@@ -121,14 +123,14 @@ function ScatterPlot({
       if (caseList.length === 0) {
         updateBrushLoc(null);
         brushDef.move(svgSelection.select('.brush-layer'), null);
-        if (store.provenanceState.currentBrushedPatientGroup.length > 0) {
-          store.selectionStore.updateBrush([]);
+        if (store.provenanceState.currentSelectedPatientGroup.length > 0) {
+          store.interactionStore.clearSelectedCases();
         }
       } else {
-        store.selectionStore.updateBrush(caseList);
+        store.interactionStore.selectedCaseIds = caseList.map((d) => d.CASE_ID);
       }
-    } else if (store.provenanceState.currentBrushedPatientGroup.length > 0) {
-      store.selectionStore.updateBrush([]);
+    } else if (store.provenanceState.currentSelectedPatientGroup.length > 0) {
+      store.interactionStore.clearSelectedCases();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brushLoc]);
@@ -144,13 +146,13 @@ function ScatterPlot({
   }, [data]);
 
   useEffect(() => {
-    const newbrushedCaseList = currentBrushedPatientGroup.map((d) => d.CASE_ID);
+    const newbrushedCaseList = currentSelectedPatientGroup.map((d) => d.CASE_ID);
     stateUpdateWrapperUseJSON(brushedCaseList, newbrushedCaseList, updatebrushedCaseList);
-    if (currentBrushedPatientGroup.length === 0) {
+    if (currentSelectedPatientGroup.length === 0) {
       clearBrush();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentBrushedPatientGroup]);
+  }, [currentSelectedPatientGroup]);
 
   const yAxisLabel = axisLeft(yAxisScale());
   const xAxisLabel = axisBottom(xAxisScale() as never);
@@ -205,8 +207,6 @@ function ScatterPlot({
     .attr('text-anchor', 'middle')
     .text(AcronymDictionary[xAxisVar] ? AcronymDictionary[xAxisVar] : xAxisVar);
 
-  const decideIfSelectSet = (d: ScatterDataPoint) => currentSelectSet.length > 0 && !!currentSelectSet.find((selected) => selected.setValues.includes(`${d.case[selected.setName]}`));
-
   // Generate the statistical lines for all median sets
   const generateStatisticalLines = (medianSet: Record<string, number[]>) => {
     let lineSet: JSX.Element[] = [];
@@ -249,28 +249,39 @@ function ScatterPlot({
       // Get the exact value for CELL_SAVER_ML or a jittered xVal
       const cx = getCX(dataPoint);
       // Check if the data point is hovered
-      const hovered = hoverStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
+      const hovered = interactionStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
+      const selected = interactionStore.selectedCaseIds.includes(dataPoint.case.CASE_ID);
       if (medianSet[dataPoint.xVal]) {
         medianSet[dataPoint.xVal].push(dataPoint.yVal);
       } else {
         medianSet[dataPoint.xVal] = [dataPoint.yVal];
       }
       const cy = yAxisScale()(dataPoint.yVal);
-      const isSelectSet = decideIfSelectSet(dataPoint);
-      const brushed = brushedSet.has(dataPoint.case.CASE_ID);
 
+      // Check if the data point is brushed
+      const brushed = brushedSet.has(dataPoint.case.CASE_ID);
       // Append the scatterdot JSX element
       scatterDots.push(
         <ScatterDot
           key={`dot-${idx}`}
           cx={cx}
           cy={cy}
-          selected={isSelectSet}
+          selected={selected}
           brushed={brushed || false}
-          hovered={hovered}
-          hoverColor={hoverStore.smallHoverColor}
-          onMouseEnter={() => { hoverStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
-          onMouseLeave={() => { hoverStore.hoveredCaseIds = []; }}
+          hovered={hovered && !selected}
+          hoverColor={smallHoverColor}
+          selectedColor={smallSelectColor}
+          onClick={() => {
+            // If selected, deselect this case.
+            if (selected) {
+              store.interactionStore.deselectCaseIds([dataPoint.case.CASE_ID]);
+            } else {
+              // If not selected, select this case.
+              store.interactionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
+            }
+          }}
+          onMouseEnter={() => { interactionStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
+          onMouseLeave={() => { interactionStore.hoveredCaseIds = []; }}
         />,
       );
     });
@@ -298,7 +309,7 @@ function ScatterPlot({
       <g className="axes">
         <g className="y-axis" />
         <g className="x-axis" transform={`translate(0 ,${height - currentOffset.bottom} )`}>
-          {xAxisVar !== 'CELL_SAVER_ML' ? <CustomizedAxisBand scalePadding={scalePadding} scaleDomain={JSON.stringify(xAxisScale().domain())} scaleRange={JSON.stringify(xAxisScale().range())} chartHeight={height - currentOffset.bottom - currentOffset.top} data={data} /> : null}
+          {xAxisVar !== 'CELL_SAVER_ML' ? <CustomizedAxisBand scalePadding={scalePadding} scaleDomain={JSON.stringify(xAxisScale().domain())} scaleRange={JSON.stringify(xAxisScale().range())} chartHeight={height - currentOffset.bottom - currentOffset.top} data={data} xAxisVar={xAxisVar} /> : null}
         </g>
         <text className="x-label" />
         <text className="y-label" />

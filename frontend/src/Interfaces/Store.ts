@@ -6,21 +6,18 @@ import { createContext } from 'react';
 import { ChartStore } from './ChartStore';
 import { defaultState } from './DefaultState';
 import { ProjectConfigStore } from './ProjectConfigStore';
-import { SelectionStore } from './SelectionStore';
+import { InteractionStore } from './InteractionStore';
 import { ActionEvents } from './Types/EventTypes';
 import { ApplicationState } from './Types/StateTypes';
 import { SingleCasePoint } from './Types/DataTypes';
 import { SurgeryUrgencyArray } from '../Presets/DataDict';
-import { HoverStore } from './HoverStore';
 
 export class RootStore {
   provenance: Provenance<ApplicationState, ActionEvents>;
 
   configStore: ProjectConfigStore;
 
-  selectionStore: SelectionStore;
-
-  hoverStore: HoverStore;
+  interactionStore: InteractionStore;
 
   chartStore: ChartStore;
 
@@ -37,8 +34,7 @@ export class RootStore {
     this.provenance.done();
     this.configStore = new ProjectConfigStore(this);
     this.chartStore = new ChartStore(this);
-    this.selectionStore = new SelectionStore(this);
-    this.hoverStore = new HoverStore(this);
+    this.interactionStore = new InteractionStore(this);
 
     this._allCases = [];
 
@@ -65,7 +61,7 @@ export class RootStore {
     this._allCases = input;
   }
 
-  get providerMappping() {
+  get providerMapping() {
     const surgeons = this._allCases.map((d) => [d.SURGEON_PROV_ID, d.SURGEON_PROV_NAME]);
     const anesths = this._allCases.map((d) => [d.ANESTH_PROV_ID, d.ANESTH_PROV_NAME]);
     const merged = surgeons.concat(anesths);
@@ -90,8 +86,8 @@ export class RootStore {
       }
 
       if (
-        this.provenanceState.currentSelectPatientGroup.length > 0
-        && !this.provenanceState.currentSelectPatientGroup.some((patient) => patient.CASE_ID === d.CASE_ID)
+        this.provenanceState.currentFilteredPatientGroup.length > 0
+        && !this.provenanceState.currentFilteredPatientGroup.some((patient) => patient.CASE_ID === d.CASE_ID)
       ) {
         return false;
       }
