@@ -42,13 +42,9 @@ function HeatMapAxis({
     .selectAll('text')
     .attr('font-size', store.configStore.largeFont ? largeFontSize : regularFontSize)
     .attr('transform', `translate(-${CaseRectWidth + 2},0)`)
+    .style('user-select', 'none')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .text((d: any) => getLabel(d, yAxisVar))
-    .attr('cursor', 'pointer')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .on('click', (e, d: any) => {
-      store.interactionStore.selectSet(yAxisVar, d.toString(), !e.shiftKey);
-    });
+    .text((d: any) => getLabel(d, yAxisVar));
 
   return (
     <g className="axes-y">
