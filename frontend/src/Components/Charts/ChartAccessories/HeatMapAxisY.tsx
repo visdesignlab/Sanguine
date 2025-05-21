@@ -42,6 +42,7 @@ function HeatMapAxis({
     .selectAll('text')
     .attr('font-size', store.configStore.largeFont ? largeFontSize : regularFontSize)
     .attr('transform', `translate(-${CaseRectWidth + 2},0)`)
+    .attr('pointer-events', 'none')
     .style('user-select', 'none')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .text((d: any) => getLabel(d, yAxisVar));
