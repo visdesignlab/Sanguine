@@ -248,7 +248,7 @@ function DumbbellChart({
               store.interactionStore.deselectCaseIds([dataPoint.case.CASE_ID]);
             } else {
               // If not selected, select this case.
-              store.interactionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
+              store.interactionStore.addSelectedCaseIds([dataPoint.case.CASE_ID]);
             }
           }}
           onMouseEnter={() => {
