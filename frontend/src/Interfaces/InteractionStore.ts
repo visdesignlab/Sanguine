@@ -39,14 +39,6 @@ export class InteractionStore {
   private _selectedAttributes?: Attribute[];
 
   get hoveredCaseIds() {
-    // If there's a hovered attribute, filter the cases based on that
-    if (this._hoveredAttribute !== undefined) {
-      return this.rootStore.filteredCases
-        // Normalize attribute returns the value of that case's attribute. Compare it to the store's hovered attribute value
-        .filter((caseRecord) => (normalizeAttribute(caseRecord[this._hoveredAttribute![0]], this._hoveredAttribute![0]) === this._hoveredAttribute![1]))
-        .map((caseRecord) => caseRecord.CASE_ID);
-    }
-
     return this._hoveredCaseIds;
   }
 
@@ -75,6 +67,15 @@ export class InteractionStore {
   }
 
   set hoveredAttribute(hoveredAttribute: Attribute | undefined) {
+    if (!hoveredAttribute) {
+      this.clearHoveredAttribute();
+      return;
+    }
+    const attributeCases = this.rootStore.filteredCases
+    // Normalize attribute returns the value of that case's attribute. Compare it to the store's hovered attribute value
+      .filter((caseRecord) => (normalizeAttribute(caseRecord[hoveredAttribute![0]], hoveredAttribute![0]) === hoveredAttribute![1]))
+      .map((caseRecord) => caseRecord.CASE_ID);
+    this._hoveredCaseIds = attributeCases;
     this._hoveredAttribute = hoveredAttribute;
   }
 
@@ -89,7 +90,6 @@ export class InteractionStore {
   }
 
   get selectedAttributes() {
-    console.log('Get Selected attributes:', this._selectedAttributes);
     return this._selectedAttributes;
   }
 
@@ -139,20 +139,27 @@ export class InteractionStore {
    */
   addSelectedAttribute(selectedAttribute: Attribute) {
     const [attrName, value] = selectedAttribute;
+    // Get the ids of all cases matching this attribute
     const newIds = this.rootStore.filteredCases
       .filter((caseRecord) => normalizeAttribute(caseRecord[attrName], attrName) === value)
       .map((caseRecord) => caseRecord.CASE_ID);
 
-    // Add the selectedAttribute to the selected attributes internal array.
+    // Add the new IDs to the current selection
+    this.addSelectedCaseIds(newIds);
+
+    // If no selected attributes, create a new array
     if (!this._selectedAttributes) {
       this._selectedAttributes = [selectedAttribute];
     } else if (
-      // If the selected attribute is not already in the selected attributes
+      // Otherwise, check if the attribute is already in the list
       !this._selectedAttributes.some(([a, v]) => a === attrName && v === value)
     ) {
-      this._selectedAttributes.push(selectedAttribute);
+      // Add the new attribute to the selected attributes list.
+      this._selectedAttributes = [
+        ...this._selectedAttributes,
+        selectedAttribute,
+      ];
     }
-    this.addSelectedCaseIds(newIds);
   }
 
   // Add selected case IDs to the current selected case IDs
