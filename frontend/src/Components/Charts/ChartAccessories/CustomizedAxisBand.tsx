@@ -29,7 +29,7 @@ function CustomizedAxisBand({
   const store = useContext(Store);
 
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
-  const [selectedColumn, setSelectedColumn] = useState<number | null>(null);
+  const [selectedColumns, setSelectedColumns] = useState<number[] | null>([]);
 
   const scale = useCallback(() => {
     const domain = JSON.parse(scaleDomain);
@@ -43,14 +43,26 @@ function CustomizedAxisBand({
     return sc;
   }, [scaleDomain, scaleRange, scalePadding]);
 
-  // Helper to get all case IDs for a column (using dp.xVal)
-  const getCaseIds = (columnValue: number): number[] => data.filter((dp: ScatterDataPoint) => dp.xVal === columnValue)
-    .map((dp: ScatterDataPoint) => Number(dp.case.CASE_ID));
+  /**
+ * Helper to get all case IDs for one or more column values (using dp.xVal).
+ *
+ * @param columnValues
+ *   A single xVal or an array of xVals to match against.
+ * @returns
+ *   An array of CASE_IDs for all data points whose xVal is in columnValues.
+ */
+  const getCaseIds = (columnValues: number | number[]): number[] => {
+  // normalize to array
+    const values = Array.isArray(columnValues) ? columnValues : [columnValues];
+    return data
+      .filter((dp: ScatterDataPoint) => values.includes(dp.xVal))
+      .map((dp: ScatterDataPoint) => Number(dp.case.CASE_ID));
+  };
 
   // Hover handler using the helper function.
   const handleColumnHover = (columnValue: number | null) => {
     if (columnValue !== null) {
-      if (selectedColumn !== columnValue) {
+      if (selectedColumns && !selectedColumns.includes(columnValue)) {
         setHoveredColumn(columnValue);
       }
       const caseIds = getCaseIds(columnValue);
@@ -64,34 +76,34 @@ function CustomizedAxisBand({
     const caseIds = getCaseIds(columnValue);
 
     // If the column is already selected, deselect it.
-    if (selectedColumn === columnValue) {
-      setSelectedColumn(null);
+    if (selectedColumns && selectedColumns.includes(columnValue)) {
+      setSelectedColumns(null);
       store.interactionStore.clearSelectedCases();
       store.interactionStore.deselectCaseIds(caseIds);
       return;
     }
     // Sets the selected column locally (for background highlighting).
-    setSelectedColumn(columnValue);
+    setSelectedColumns((prevSelectedColumns) => [...(prevSelectedColumns || []), columnValue]);
 
     // Sets selected case IDs & attribute from this column in the store.
     store.interactionStore.selectedCaseIds = caseIds;
-    store.interactionStore.selectedAttribute = [xAxisVar, columnValue];
+    store.interactionStore.addSelectedAttribute([xAxisVar, columnValue]);
   };
 
   // Reset locally selected column when another component updates the store's selectedCaseIds.
   useEffect(() => {
-    if (selectedColumn !== null) {
-      const columnCaseIds = getCaseIds(selectedColumn);
+    if (selectedColumns !== null) {
+      const columnCaseIds = getCaseIds(selectedColumns);
       const storeCaseIds = store.interactionStore.selectedCaseIds;
 
       // If the store's selected case IDs don't match the column's case IDs, reset the selected column.
       const isSame = columnCaseIds.length === storeCaseIds.length
         && columnCaseIds.every((id) => storeCaseIds.includes(id));
       if (!isSame) {
-        setSelectedColumn(null);
+        setSelectedColumns(null);
       }
     }
-  }, [store.interactionStore.selectedCaseIds, data, selectedColumn]);
+  }, [store.interactionStore.selectedCaseIds, data, selectedColumns]);
 
   return (
     <>
@@ -115,7 +127,7 @@ function CustomizedAxisBand({
               width={x2 - x1}
               chartHeight={chartHeight}
               fill={
-                selectedColumn === idx
+                selectedColumns?.includes(idx)
                   ? backgroundSelectedColor
                   : hoveredColumn === idx
                     ? backgroundHoverColor
@@ -123,7 +135,7 @@ function CustomizedAxisBand({
                       ? 'white'
                       : 'black'
               }
-              opacity={selectedColumn === idx || hoveredColumn === idx ? 0.5 : 0.05}
+              opacity={selectedColumns?.includes(idx) || hoveredColumn === idx ? 0.5 : 0.05}
             />
             <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{number}</AxisText>
           </g>

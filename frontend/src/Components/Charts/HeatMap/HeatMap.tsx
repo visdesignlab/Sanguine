@@ -88,18 +88,20 @@ function HeatMap({
   function rowHovered(attribute: string, value: string) {
     return interactionStore.hoveredAttribute?.[0] === attribute && interactionStore.hoveredAttribute?.[1] === value;
   }
-  // Checks if current row is selected based on the attribute value.
+  // Checks if current row is selected based on any of the selected attributes.
   function rowSelected(attribute: string, value: string) {
-    return interactionStore.selectedAttribute?.[0] === attribute && interactionStore.selectedAttribute?.[1] === value;
+    return interactionStore.selectedAttributes
+      ?.some(([attrName, attrValue]) => attrName === attribute && attrValue === value)
+    ?? false;
   }
 
   // Sets the selected attribute in the store.
   function handleRowClick(attribute: string, value: string) {
     // If the row is already selected, deselect the row.
     if (rowSelected(attribute, value)) {
-      interactionStore.clearSelectedCases();
+      interactionStore.deselectAttribute([attribute, value]);
     } else {
-      interactionStore.selectedAttribute = [attribute, value];
+      interactionStore.addSelectedAttribute([attribute, value]);
     }
   }
 

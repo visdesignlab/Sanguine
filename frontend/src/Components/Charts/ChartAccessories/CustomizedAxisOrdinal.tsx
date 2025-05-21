@@ -54,29 +54,26 @@ function CustomizedAxisOrdinal({
       if (selectedColumn !== columnValue) {
         setHoveredColumn(columnValue);
       }
-      const caseIds = getCaseIds(columnValue);
-      store.interactionStore.hoveredCaseIds = caseIds;
       store.interactionStore.hoveredAttribute = [xAxisVar, columnValue];
     }
   };
 
   // Click handler using the helper function.
   const handleColumnClick = (columnValue: number) => {
-    const caseIds = getCaseIds(columnValue);
-
     // If the column is already selected, deselect it.
+    console.log("column clicked", columnValue, "selected column", selectedColumn);
     if (selectedColumn === columnValue) {
       setSelectedColumn(null);
-      store.interactionStore.clearSelectedCases();
-      store.interactionStore.deselectCaseIds(caseIds);
+      console.log("Desselecting column: ", columnValue);
+      store.interactionStore.deselectAttribute([xAxisVar, columnValue]);
+      console.log("attributes:", store.interactionStore.selectedAttributes);
       return;
     }
     // Set the local and store selected column and case ids.
     setSelectedColumn(columnValue);
 
     // Sets selected case IDs & attribute from this column in the store.
-    store.interactionStore.selectedCaseIds = caseIds;
-    store.interactionStore.selectedAttribute = [xAxisVar, columnValue];
+    store.interactionStore.addSelectedAttribute([xAxisVar, columnValue]);
   };
 
   // Reset locally selected column when another component updates the store's selectedCaseIds.

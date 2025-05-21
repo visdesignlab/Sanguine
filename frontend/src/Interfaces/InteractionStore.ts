@@ -7,7 +7,7 @@ import { RootStore } from './Store';
 import { ProcedureEntry, SingleCasePoint } from './Types/DataTypes';
 import { normalizeAttribute } from '../HelperFunctions/NormalizeAttributes';
 
-type HoveredAttribute = [AttributeName: string, value: string | number | boolean];
+type Attribute = [AttributeName: string, value: string | number | boolean];
 
 export class InteractionStore {
   rootStore: RootStore;
@@ -22,7 +22,7 @@ export class InteractionStore {
 
     // Currently interacted provider IDs
     this._hoveredAttribute = undefined;
-    this._selectedAttribute = undefined;
+    this._selectedAttributes = undefined;
 
     // Make the store observable
     makeAutoObservable(this);
@@ -34,9 +34,9 @@ export class InteractionStore {
   private _selectedCaseIds: number[];
 
   // Interacted Attributes
-  private _hoveredAttribute?: HoveredAttribute;
+  private _hoveredAttribute?: Attribute;
 
-  private _selectedAttribute?: HoveredAttribute;
+  private _selectedAttributes?: Attribute[];
 
   get hoveredCaseIds() {
     // If there's a hovered attribute, filter the cases based on that
@@ -74,7 +74,7 @@ export class InteractionStore {
     return this._hoveredAttribute;
   }
 
-  set hoveredAttribute(hoveredAttribute: HoveredAttribute | undefined) {
+  set hoveredAttribute(hoveredAttribute: Attribute | undefined) {
     this._hoveredAttribute = hoveredAttribute;
   }
 
@@ -84,24 +84,31 @@ export class InteractionStore {
   }
 
   clearSelectedCases() {
-    this._selectedAttribute = undefined;
+    this._selectedAttributes = undefined;
     this.selectedCaseIds = [];
   }
 
-  get selectedAttribute() {
-    return this._selectedAttribute;
+  get selectedAttributes() {
+    console.log('Get Selected attributes:', this._selectedAttributes);
+    return this._selectedAttributes;
   }
 
-  set selectedAttribute(selectedAttribute: HoveredAttribute | undefined) {
+  set selectedAttributes(selectedAttributes: Attribute[] | undefined) {
     this.clearSelectedCases();
-    this._selectedAttribute = selectedAttribute;
+    this._selectedAttributes = selectedAttributes;
 
     let selectedCaseIds: number[] = [];
-    // Get all case IDs which match the selected attribute
-    if (this._selectedAttribute !== undefined) {
-      selectedCaseIds = this.rootStore.filteredCases
-        .filter((caseRecord) => (normalizeAttribute(caseRecord[this._selectedAttribute![0]], this._selectedAttribute![0]) === this._selectedAttribute![1]))
-        .map((caseRecord) => caseRecord.CASE_ID);
+    // Get all case IDs which match any of the selected attributes
+    if (this._selectedAttributes) {
+      const idSet = new Set<number>();
+      this.rootStore.filteredCases.forEach((caseRecord) => {
+        this._selectedAttributes!.forEach(([attrName, value]) => {
+          if (normalizeAttribute(caseRecord[attrName], attrName) === value) {
+            idSet.add(caseRecord.CASE_ID);
+          }
+        });
+      });
+      selectedCaseIds = Array.from(idSet);
     }
     // Get the SingleCasePoints from the selected case IDs
     const selectedCases = this.rootStore.filteredCases
@@ -111,6 +118,50 @@ export class InteractionStore {
     this._selectedCaseIds = selectedCaseIds;
     // Update the selected cases in provenance.
     this.updateSelectedPatients(selectedCases);
+  }
+
+  /**
+   * Adds all case-IDs matching any of the provided attributes to the current selection.
+   *
+   * @param selectedAttributes
+   *   An array of tuples [attributeName, value] describing which cases to include.
+   */
+  addSelectedAttributes(selectedAttributes: Attribute[] | undefined) {
+    if (!selectedAttributes?.length) return;
+    selectedAttributes.forEach((attr) => this.addSelectedAttribute(attr));
+  }
+
+  /**
+   * Adds all case-IDs matching a single attribute tuple to the current selection.
+   *
+   * @param selectedAttribute
+   *   A tuple [attributeName, value] describing which cases to include.
+   */
+  addSelectedAttribute(selectedAttribute: Attribute) {
+    const [attrName, value] = selectedAttribute;
+    const newIds = this.rootStore.filteredCases
+      .filter((caseRecord) => normalizeAttribute(caseRecord[attrName], attrName) === value)
+      .map((caseRecord) => caseRecord.CASE_ID);
+
+    // Add the selectedAttribute to the selected attributes internal array.
+    if (!this._selectedAttributes) {
+      this._selectedAttributes = [selectedAttribute];
+    } else if (
+      // If the selected attribute is not already in the selected attributes
+      !this._selectedAttributes.some(([a, v]) => a === attrName && v === value)
+    ) {
+      this._selectedAttributes.push(selectedAttribute);
+    }
+    this.addSelectedCaseIds(newIds);
+  }
+
+  // Add selected case IDs to the current selected case IDs
+  addSelectedCaseIds(caseIds: number[]) {
+    // Filter out IDs already in the current selection
+    const uniqueNewIds = caseIds.filter((id) => !this._selectedCaseIds.includes(id));
+    if (uniqueNewIds.length === 0) return;
+    const merged = [...this._selectedCaseIds, ...uniqueNewIds];
+    this.selectedCaseIds = merged;
   }
 
   deselectCaseIds(caseIds: number[]) {
@@ -126,6 +177,38 @@ export class InteractionStore {
 
     // Set the selected case IDs in this provenance.
     this.updateSelectedPatients(selectedCases);
+  }
+
+  /**
+   * Removes all case-IDs matching any of the provided attributes from the current selection.
+   *
+   * @param selectedAttributes
+   *   An array of tuples [attributeName, value] describing which cases to deselect.
+   */
+  deselectAttributes(selectedAttributes: Attribute[]): void {
+    if (!selectedAttributes?.length) return;
+    selectedAttributes.forEach((attr) => this.deselectAttribute(attr));
+  }
+
+  /**
+   * Removes all case-IDs matching a single attribute tuple from the current selection.
+   *
+   * @param selectedAttribute
+   *   A tuple [attributeName, value] describing which cases to deselect.
+   */
+  deselectAttribute(selectedAttribute: Attribute): void {
+    const [attrName, value] = selectedAttribute;
+    // Remove the attribute from our internal list
+    if (this._selectedAttributes) {
+      this._selectedAttributes = this._selectedAttributes
+        .filter(([a, v]) => !(a === attrName && v === value));
+    }
+    // Find all case IDs that match this attribute and remove them
+    const idsToRemove = this.rootStore.filteredCases
+      .filter((caseRecord) => normalizeAttribute(caseRecord[attrName], attrName) === value)
+      .map((caseRecord) => caseRecord.CASE_ID);
+
+    this.deselectCaseIds(idsToRemove);
   }
 
   // Selections --------------------------------------------------------
