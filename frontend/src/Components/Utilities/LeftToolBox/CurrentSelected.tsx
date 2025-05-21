@@ -52,7 +52,13 @@ function CurrentSelected() {
               {/** primary = Attribute Name.  secondary = attribute values, different values for private mode. */}
               <ListItemText
                 primary={AcronymDictionary[selectSet.setName as keyof typeof AcronymDictionary] ? AcronymDictionary[selectSet.setName as keyof typeof AcronymDictionary] : selectSet.setName}
-                secondary={store.configStore.privateMode ? selectSet.setValues.sort().join(', ') : selectSet.setValues.map((value) => getLabel(value, selectSet.setName)).sort().join(', ')}
+                secondary={
+                  selectSet
+                    .setValues
+                    .map((value) => getLabel(value, selectSet.setName))
+                    .sort()
+                    .join(', ')
+                }
               />
               <ListItemSecondaryAction>
                 <IconButton onClick={() => { store.interactionStore.clearSet(selectSet.setName); }}>
