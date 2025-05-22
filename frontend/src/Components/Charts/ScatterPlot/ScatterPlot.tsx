@@ -6,7 +6,6 @@ import { observer } from 'mobx-react';
 import {
   useContext, useCallback, useEffect, useState,
 } from 'react';
-import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import Store from '../../../Interfaces/Store';
 import { ScatterDataPoint, SingleCasePoint } from '../../../Interfaces/Types/DataTypes';
 import {
@@ -60,11 +59,9 @@ function ScatterPlot({
   const currentOffset = OffsetDict.minimum;
   const store = useContext(Store);
   const { interactionStore } = store;
-  const { currentSelectedPatientGroup } = store.provenanceState;
   const svgSelection = select(svg.current);
   const [brushLoc, updateBrushLoc] = useState<[[number, number], [number, number]] | null>(null);
   const [isFirstRender, updateIsFirstRender] = useState(true);
-  const [brushedCaseList, updatebrushedCaseList] = useState<number[]>([]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateBrush = (e: any) => {
@@ -105,6 +102,7 @@ function ScatterPlot({
     return ((xAxisScale()(dPoint.xVal) || 0) + dPoint.randomFactor * xAxisScale().bandwidth());
   };
 
+  // Update the brush and the selected cases in the store.
   useEffect(() => {
     if (isFirstRender) {
       updateIsFirstRender(false);
@@ -117,42 +115,20 @@ function ScatterPlot({
           caseList.push(dataPoint.case);
         }
       });
-
-      //     !!!!!!!this is the code of checking brushed patient
-
       if (caseList.length === 0) {
         updateBrushLoc(null);
-        brushDef.move(svgSelection.select('.brush-layer'), null);
+        // brushDef.move(svgSelection.select('.brush-layer'), null);
         if (store.provenanceState.currentSelectedPatientGroup.length > 0) {
-          store.interactionStore.clearSelectedCases();
+          store.interactionStore.clearBrushSelectedCases();
         }
       } else {
-        store.interactionStore.addSelectedCaseIds(caseList.map((d) => d.CASE_ID));
+        store.interactionStore.brushSelectedCaseIds = caseList.map((d) => d.CASE_ID);
       }
-    } else if (store.provenanceState.currentSelectedPatientGroup.length > 0) {
-      store.interactionStore.clearSelectedCases();
+    } else if (store.interactionStore.selectedCaseIds.length > 0) {
+      store.interactionStore.clearBrushSelectedCases();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brushLoc]);
-
-  const clearBrush = () => {
-    brushDef.move(svgSelection.select('.brush-layer'), null);
-  };
-
-  // Clear the brush
-  useEffect(() => {
-    clearBrush();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
-
-  useEffect(() => {
-    const newbrushedCaseList = currentSelectedPatientGroup.map((d) => d.CASE_ID);
-    stateUpdateWrapperUseJSON(brushedCaseList, newbrushedCaseList, updatebrushedCaseList);
-    if (currentSelectedPatientGroup.length === 0) {
-      clearBrush();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSelectedPatientGroup]);
 
   const yAxisLabel = axisLeft(yAxisScale());
   const xAxisLabel = axisBottom(xAxisScale() as never);
@@ -242,7 +218,6 @@ function ScatterPlot({
   // This includes all datapoints and each set's relevant statistics lines
   const generateScatterplot = () => {
     const scatterDots: JSX.Element[] = [];
-    const brushedSet = new Set(brushedCaseList);
     const medianSet: Record<string, number[]> = {};
 
     data.forEach((dataPoint, idx) => {
@@ -257,9 +232,6 @@ function ScatterPlot({
         medianSet[dataPoint.xVal] = [dataPoint.yVal];
       }
       const cy = yAxisScale()(dataPoint.yVal);
-
-      // Check if the data point is brushed
-      const brushed = brushedSet.has(dataPoint.case.CASE_ID);
       // Append the scatterdot JSX element
       scatterDots.push(
         <ScatterDot
@@ -267,7 +239,7 @@ function ScatterPlot({
           cx={cx}
           cy={cy}
           selected={selected}
-          brushed={brushed || false}
+          brushed={false}
           hovered={hovered && !selected}
           hoverColor={smallHoverColor}
           selectedColor={smallSelectColor}
