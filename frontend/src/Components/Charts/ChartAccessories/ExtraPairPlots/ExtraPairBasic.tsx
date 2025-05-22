@@ -71,6 +71,7 @@ function ExtraPairBasic({
               />
 
               <text
+                pointerEvents="none"
                 x={ExtraPairWidth.Basic * 0.5}
                 y={aggregationScale()(val)! + (secondaryDataSet ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth()}
                 opacity={hasData ? 1 : 0}
@@ -119,6 +120,7 @@ function ExtraPairBasic({
               />
 
               <text
+                pointerEvents="none"
                 x={ExtraPairWidth.Basic * 0.5}
                 y={aggregationScale()(val)! + 0.25 * aggregationScale().bandwidth()}
                 opacity={hasData ? 1 : 0}
