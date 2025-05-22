@@ -3,14 +3,14 @@ import {
 } from 'react';
 import { observer } from 'mobx-react';
 import {
-  scaleLinear, line, min, max, curveCatmullRom, format, scaleBand, select, extent, axisBottom,
+  scaleLinear, line, min, max, curveCatmullRom, format, scaleBand, select, axisBottom,
 } from 'd3';
-import { Tooltip } from '@mui/material';
 import styled from '@emotion/styled';
 import {
   basicGray, ExtraPairWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, thirdGray,
 } from '../../../../Presets/Constants';
 import { SingleCasePoint, ExtraPairPoint } from '../../../../Interfaces/Types/DataTypes';
+import { ExtraPairTooltip } from './ExtraPairTooltip';
 
 const ViolinLine = styled('path')`
     fill: ${basicGray};
@@ -124,9 +124,9 @@ function ExtraPairViolin({
           const tooltipMessage = medianSet[val] ? `Median ${format('.2f')(medianSet[val])}` : 'No data avalaible.';
           return (
             <g key={idx}>
-              <Tooltip title={tooltipMessage}>
+              <ExtraPairTooltip title={tooltipMessage}>
                 {generateViolin(result.dataPoints as never, result.kdeArray, val)}
-              </Tooltip>
+              </ExtraPairTooltip>
 
             </g>
           );
@@ -137,11 +137,11 @@ function ExtraPairViolin({
           const secondaryTooltipMessage = secondaryMedianSet[val] ? `Median ${format('.2f')(secondaryMedianSet[val])}` : 'No data avalaible.';
           return (
             <g key={idx}>
-              <Tooltip title={secondaryTooltipMessage}>
+              <ExtraPairTooltip title={secondaryTooltipMessage}>
                 <g>
                   {generateViolin(result.dataPoints as never, result.kdeArray, val)}
                 </g>
-              </Tooltip>
+              </ExtraPairTooltip>
 
             </g>
           );

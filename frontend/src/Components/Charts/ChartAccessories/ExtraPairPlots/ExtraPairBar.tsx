@@ -3,8 +3,8 @@ import {
   scaleLinear, max, format, scaleBand,
 } from 'd3';
 import { observer } from 'mobx-react';
-import { Tooltip } from '@mui/material';
 import { ExtraPairWidth } from '../../../../Presets/Constants';
+import { ExtraPairTooltip } from './ExtraPairTooltip';
 
 type Props = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,7 +39,7 @@ function ExtraPairBar({
     <>
       <g transform={`translate(0,${secondaryDataSet ? aggregationScale().bandwidth() * 0.5 : 0})`}>
         {Object.entries(dataSet).map(([val, dataVal], idx) => (
-          <Tooltip title={format('.4r')(dataVal)} key={idx}>
+          <ExtraPairTooltip title={format('.4r')(dataVal)} key={idx}>
             <rect
               x={0}
               y={aggregationScale()(val)}
@@ -48,12 +48,12 @@ function ExtraPairBar({
               width={valueScale()(dataVal)}
               height={(secondaryDataSet ? 0.5 : 1) * aggregationScale().bandwidth()}
             />
-          </Tooltip>
+          </ExtraPairTooltip>
         ))}
       </g>
       <g>
         {secondaryDataSet ? Object.entries(secondaryDataSet).map(([val, dataVal], idx) => (
-          <Tooltip title={format('.4r')(dataVal)} key={idx}>
+          <ExtraPairTooltip title={format('.4r')(dataVal)} key={idx}>
             <rect
               x={0}
               y={aggregationScale()(val)}
@@ -62,7 +62,7 @@ function ExtraPairBar({
               width={valueScale()(dataVal)}
               height={aggregationScale().bandwidth() * 0.5}
             />
-          </Tooltip>
+          </ExtraPairTooltip>
         )) : null}
       </g>
     </>
