@@ -3,11 +3,11 @@ import {
   scaleLinear, format, interpolateGreys, scaleBand,
 } from 'd3';
 import { observer } from 'mobx-react';
-import { Tooltip } from '@mui/material';
 import {
   basicGray, ExtraPairWidth, greyScaleRange, largeFontSize,
 } from '../../../../Presets/Constants';
 import Store from '../../../../Interfaces/Store';
+import { ExtraPairTooltip } from './ExtraPairTooltip';
 
 interface OwnProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -40,26 +40,7 @@ function ExtraPairBasic({
       <g transform={`translate(0,${secondaryDataSet ? aggregationScale().bandwidth() * 0.5 : 0})`}>
         {Object.entries(dataSet).map(([val, dataVal], idx) => (
           <g key={idx}>
-            <Tooltip
-              placement="bottom"
-              arrow
-              title={`${dataVal.actualVal}/${dataVal.outOfTotal}`}
-              slotProps={{
-                popper: {
-                  modifiers: [
-                    {
-                      name: 'offset',
-                      options: {
-                        offset: [0, -5],
-                      },
-                    },
-                  ],
-                  sx: {
-                    pointerEvents: 'none',
-                  },
-                },
-              }}
-            >
+            <ExtraPairTooltip title={`${dataVal.actualVal}/${dataVal.outOfTotal}`}>
               <rect
                 id="my-anchor-element"
                 x={0}
@@ -69,7 +50,7 @@ function ExtraPairBasic({
                 width={ExtraPairWidth.Basic}
                 height={(secondaryDataSet ? 0.5 : 1) * aggregationScale().bandwidth()}
               />
-            </Tooltip>
+            </ExtraPairTooltip>
             <line
               opacity={!Number.isNaN(dataVal.calculated) ? 0 : 1}
               y1={(secondaryDataSet ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
@@ -97,7 +78,7 @@ function ExtraPairBasic({
       <g>
         {secondaryDataSet ? Object.entries(secondaryDataSet).map(([val, dataVal], idx) => (
           <g key={idx}>
-            <Tooltip title={`${dataVal.actualVal}/${dataVal.outOfTotal}`}>
+            <ExtraPairTooltip title={`${dataVal.actualVal}/${dataVal.outOfTotal}`}>
               <rect
                 x={0}
                 y={aggregationScale()(val)}
@@ -106,7 +87,7 @@ function ExtraPairBasic({
                 width={ExtraPairWidth.Basic}
                 height={aggregationScale().bandwidth() * 0.5}
               />
-            </Tooltip>
+            </ExtraPairTooltip>
             <line
               opacity={!Number.isNaN(dataVal.calculated) ? 0 : 1}
               y1={0.25 * aggregationScale().bandwidth() + aggregationScale()(val)!}
