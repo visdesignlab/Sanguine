@@ -50,26 +50,6 @@ There are several routes set up for accessing the patient and surgery data. Here
     curl '127.0.0.1:8000/api/get_procedure_counts'
     ```
 
-- Name: `/api/fetch_surgery`
-  - Allowed Methods: `GET`
-  - Parameters:  
-    `case_id`: A case id.  
-  - Description: Returns a lot of information for one surgery case. This route gives case date, case start time, case end time, case elapsed time, case type description, surgeon id, anesthesiologist id, case procedure description, and ICU length of stay.
-  - Example:
-    ```
-    curl '127.0.0.1:8000/api/fetch_surgery?case_id=85103152'
-    ```
-
-- Name: `/api/fetch_patient`
-  - Allowed Methods: `GET`
-  - Parameters:  
-    `patient_id`: A case id.  
-  - Description: Returns a lot of information for one patient. This route gives birth date, gender code, gender description, race code, race description, ethnicity code, ethnicity description, and death date.
-  - Example:
-    ```
-    curl '127.0.0.1:8000/api/fetch_patient?patient_id=68175619'
-    ```
-
 - Name: `/api/state`
   - Allowed Methods: `GET, POST, PUT, DELETE`
   - Parameters:  
