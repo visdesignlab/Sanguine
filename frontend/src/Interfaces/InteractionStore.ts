@@ -19,6 +19,7 @@ export class InteractionStore {
     // Currently interacted case IDs
     this._hoveredCaseIds = [];
     this._selectedCaseIds = [];
+    this._brushSelectedCaseIds = [];
 
     // Currently interacted provider IDs
     this._hoveredAttribute = undefined;
@@ -32,6 +33,8 @@ export class InteractionStore {
   private _hoveredCaseIds: number[];
 
   private _selectedCaseIds: number[];
+
+  private _brushSelectedCaseIds: number[];
 
   private _hoveredAttribute?: Attribute;
 
@@ -47,19 +50,30 @@ export class InteractionStore {
   }
 
   get selectedCaseIds() {
-    return this._selectedCaseIds;
+    // Combination of brush selected and selected case IDs
+    const selectedCaseIds = this._selectedCaseIds.concat(this._brushSelectedCaseIds);
+    return selectedCaseIds;
   }
 
   set selectedCaseIds(ids: number[]) {
-    // Sets the selected case IDs to the passed in IDs
     this._selectedCaseIds = structuredClone(ids);
+    this.applyCombinedSelection();
+  }
 
-    // Get the SingleCasePoints which match the ID's
-    const selectedCases = this.rootStore.filteredCases
-      .filter((caseRecord) => ids.includes(caseRecord.CASE_ID));
+  set brushSelectedCaseIds(ids: number[]) {
+    this._brushSelectedCaseIds = structuredClone(ids);
+    this.applyCombinedSelection();
+  }
 
-    // Update the selected patient group with the selected cases
-    this.updateSelectedPatients(selectedCases);
+  private applyCombinedSelection() {
+    // union both ID arrays and dedupe via a Set
+    const allIds = new Set([...this._selectedCaseIds, ...this._brushSelectedCaseIds]);
+
+    // grab only the cases whose CASE_ID is in that union
+    const uniqueCases = this.rootStore.filteredCases
+      .filter((c) => allIds.has(c.CASE_ID));
+
+    this.updateSelectedPatients(uniqueCases);
   }
 
   // Attributes Getters and Setters ---------------------------------------------------
@@ -172,6 +186,10 @@ export class InteractionStore {
   clearSelectedCases() {
     this._selectedAttributes = undefined;
     this.selectedCaseIds = [];
+  }
+
+  clearBrushSelectedCases() {
+    this.brushSelectedCaseIds = [];
   }
 
   // Provenance  --------------------------------------------------------------
