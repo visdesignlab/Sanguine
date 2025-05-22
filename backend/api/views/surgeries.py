@@ -1,11 +1,15 @@
 from collections import Counter, defaultdict
-from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
+from datetime import datetime, date, time
+from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 from django.views.decorators.http import require_http_methods
+from django.forms.models import model_to_dict
+
+from api.models.intelvia import Patient
 
 from .decorators.conditional_login_required import conditional_login_required
-from .sql_queries import procedure_count_query, patient_query, surgery_query, surgery_case_query
-from .utils.utils import cpt, get_all_cpt_code_filters, log_request, execute_sql, execute_sql_dict
+from .sql_queries import procedure_count_query
+from .utils.utils import cpt, get_all_cpt_code_filters, log_request, execute_sql
 
 
 @require_http_methods(["GET"])
@@ -84,55 +88,59 @@ def get_procedure_counts(request):
 
 @require_http_methods(["GET"])
 @conditional_login_required
-def fetch_surgery(request):
+def get_all_data(request):
     log_request(request)
 
-    # Get the values from the request
-    case_id = request.GET.get("case_id")
+    # Get all patients including the visits and jsonify it
+    patients = Patient.objects \
+        .prefetch_related("visit_set") \
+        .prefetch_related("visit_set__surgerycase_set") \
+        .prefetch_related("visit_set__transfusion_set") \
+        .prefetch_related("visit_set__medication_set") \
+        .prefetch_related("visit_set__lab_set") \
+        .prefetch_related("visit_set__billingcode_set") \
+        .all()
 
-    if not case_id:
-        return HttpResponseBadRequest("case_id must be supplied.")
+    pats = [{
+        **model_to_dict(pat),
+        "visits": [
+            {
+                **model_to_dict(visit),
+                "surgeries": [
+                    {
+                        **model_to_dict(surgery_case),
+                        "surgery_start_dtm": surgery_case.surgery_start_dtm.timestamp() * 1000,
+                        "surgery_end_dtm": surgery_case.surgery_end_dtm.timestamp() * 1000,
+                        "case_date": datetime.combine(surgery_case.case_date, time.min).timestamp() * 1000,
+                        "year": surgery_case.case_date.year,
+                        "quarter": f"{str(surgery_case.case_date.year)[-2:]}-{(surgery_case.case_date.month - 1) // 3 + 1}",
+                        "transfusions": [
+                            model_to_dict(transfusion)
+                            for transfusion in visit.transfusion_set.all()
+                            if transfusion.trnsfsn_dtm <= surgery_case.surgery_end_dtm and transfusion.trnsfsn_dtm >= surgery_case.surgery_start_dtm
+                        ],
+                    }
+                    for surgery_case in visit.surgerycase_set.all()
+                ],
+                "transfusions": [
+                    model_to_dict(transfusion)
+                    for transfusion in visit.transfusion_set.all()
+                ],
+                "medications": [
+                    model_to_dict(medication)
+                    for medication in visit.medication_set.all()
+                ],
+                "labs": [
+                    model_to_dict(lab)
+                    for lab in visit.lab_set.all()
+                ],
+                "billing_codes": [
+                    model_to_dict(billing_code)
+                    for billing_code in visit.billingcode_set.all()
+                ],
+            }
+            for visit in pat.visit_set.all()
+        ],
+    } for pat in patients]
 
-    command = surgery_query
-
-    cpts = cpt()
-    data = execute_sql_dict(command=command, id=case_id)
-    for row in data:
-        print(row)
-        row["cpt"] = list(set([cpt[2] for cpt in cpts if cpt[1] in row["CODES"]]))
-        del row["CODES"]
-
-    return JsonResponse({"result": data})
-
-
-@require_http_methods(["GET"])
-@conditional_login_required
-def fetch_patient(request):
-    log_request(request)
-
-    # Get the values from the request
-    patient_id = request.GET.get("patient_id")
-
-    if not patient_id:
-        return HttpResponseBadRequest("patient_id must be supplied.")
-
-    command = patient_query
-
-    data = execute_sql_dict(command=command, id=patient_id)
-
-    return JsonResponse({"result": data})
-
-
-@require_http_methods(["GET"])
-@conditional_login_required
-def get_sanguine_surgery_cases(request):
-    log_request(request)
-
-    filters, bind_names, _ = get_all_cpt_code_filters()
-
-    # Get the data from the database
-    command = surgery_case_query
-
-    result = execute_sql_dict(command, **dict(zip(bind_names, filters)))
-
-    return JsonResponse({"result": result})
+    return JsonResponse(pats, safe=False)

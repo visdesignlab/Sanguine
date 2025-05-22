@@ -45,7 +45,7 @@ function CustomizedAxisBand({
 
   // Helper to get all case IDs for a column (using dp.xVal)
   const getCaseIds = (columnValue: number): number[] => data.filter((dp: ScatterDataPoint) => dp.xVal === columnValue)
-    .map((dp: ScatterDataPoint) => Number(dp.case.CASE_ID));
+    .map((dp: ScatterDataPoint) => Number(dp.case.case_id));
 
   // Hover handler using the helper function.
   const handleColumnHover = (columnValue: number | null) => {

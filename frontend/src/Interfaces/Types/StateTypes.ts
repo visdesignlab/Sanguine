@@ -23,7 +23,7 @@ export type ApplicationState = {
     layoutArray: LayoutElement[];
     currentSelectPatient: SingleCasePoint | null;
     bloodFilter: Record<BloodComponent | HemoOption, [number, number]>;
-    allCases: SingleCasePoint[];
-    setAllCases: (input: SingleCasePoint[]) => void;
+    allVisits: SingleCasePoint[];
+    setallVisits: (input: SingleCasePoint[]) => void;
     filteredCases: SingleCasePoint[];
 };

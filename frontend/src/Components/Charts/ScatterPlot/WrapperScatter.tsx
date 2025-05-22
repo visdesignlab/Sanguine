@@ -51,10 +51,10 @@ function WrapperScatter({ layout }: { layout: ScatterLayoutElement }) {
         let xValue = parseInt(`${ob[xAxisVar]}`, 10);
 
         if ((!Number.isNaN(yValue) && showZero) || (!showZero && !Number.isNaN(yValue) && xValue > 0)) {
-          if ((xValue > 100 && xAxisVar === 'PRBC_UNITS')) {
+          if ((xValue > 100 && xAxisVar === 'rbc_units')) {
             xValue -= 999;
           }
-          if ((xValue > 100 && xAxisVar === 'PLT_UNITS')) {
+          if ((xValue > 100 && xAxisVar === 'plt_units')) {
             xValue -= 245;
           }
           tempYMin = yValue < tempYMin ? yValue : tempYMin;

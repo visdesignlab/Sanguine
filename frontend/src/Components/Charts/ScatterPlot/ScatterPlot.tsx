@@ -74,7 +74,7 @@ function ScatterPlot({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const xAxisScale = useCallback<any>(() => {
     let innerXAxisScale;
-    if (xAxisVar === 'CELL_SAVER_ML') {
+    if (xAxisVar === 'cell_saver_ml') {
       innerXAxisScale = scaleLinear()
         .domain([0.9 * xMin, 1.1 * xMax])
         .range([currentOffset.left, width - currentOffset.right - currentOffset.margin]).nice();
@@ -99,7 +99,7 @@ function ScatterPlot({
 
   // helper function to determine the correct x position for a given data point
   const getCX = (dPoint: ScatterDataPoint) => {
-    if (xAxisVar === 'CELL_SAVER_ML') {
+    if (xAxisVar === 'cell_saver_ml') {
       return (xAxisScale()(dPoint.xVal)) || 0;
     }
     return ((xAxisScale()(dPoint.xVal) || 0) + dPoint.randomFactor * xAxisScale().bandwidth());
@@ -127,7 +127,7 @@ function ScatterPlot({
           store.interactionStore.clearSelectedCases();
         }
       } else {
-        store.interactionStore.selectedCaseIds = caseList.map((d) => d.CASE_ID);
+        store.interactionStore.selectedCaseIds = caseList.map((d) => d.case_id);
       }
     } else if (store.provenanceState.currentSelectedPatientGroup.length > 0) {
       store.interactionStore.clearSelectedCases();
@@ -146,7 +146,7 @@ function ScatterPlot({
   }, [data]);
 
   useEffect(() => {
-    const newbrushedCaseList = currentSelectedPatientGroup.map((d) => d.CASE_ID);
+    const newbrushedCaseList = currentSelectedPatientGroup.map((d) => d.case_id);
     stateUpdateWrapperUseJSON(brushedCaseList, newbrushedCaseList, updatebrushedCaseList);
     if (currentSelectedPatientGroup.length === 0) {
       clearBrush();
@@ -180,7 +180,7 @@ function ScatterPlot({
       AcronymDictionary[yAxisVar] ? AcronymDictionary[yAxisVar] : yAxisVar,
     );
 
-  if (xAxisVar === 'CELL_SAVER_ML') {
+  if (xAxisVar === 'cell_saver_ml') {
     svgSelection.select('.axes')
       .select('.x-axis')
       .call(xAxisLabel as never)
@@ -210,7 +210,7 @@ function ScatterPlot({
   // Generate the statistical lines for all median sets
   const generateStatisticalLines = (medianSet: Record<string, number[]>) => {
     let lineSet: JSX.Element[] = [];
-    if (xAxisVar !== 'CELL_SAVER_ML') {
+    if (xAxisVar !== 'cell_saver_ml') {
       for (const [key, value] of Object.entries(medianSet)) {
         const meanVal = mean(value) || 0;
         const std = deviation(value) || 0;
@@ -246,11 +246,11 @@ function ScatterPlot({
     const medianSet: Record<string, number[]> = {};
 
     data.forEach((dataPoint, idx) => {
-      // Get the exact value for CELL_SAVER_ML or a jittered xVal
+      // Get the exact value for cell_saver_ml or a jittered xVal
       const cx = getCX(dataPoint);
       // Check if the data point is hovered
-      const hovered = interactionStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
-      const selected = interactionStore.selectedCaseIds.includes(dataPoint.case.CASE_ID);
+      const hovered = interactionStore.hoveredCaseIds.includes(dataPoint.case.case_id);
+      const selected = interactionStore.selectedCaseIds.includes(dataPoint.case.case_id);
       if (medianSet[dataPoint.xVal]) {
         medianSet[dataPoint.xVal].push(dataPoint.yVal);
       } else {
@@ -259,7 +259,7 @@ function ScatterPlot({
       const cy = yAxisScale()(dataPoint.yVal);
 
       // Check if the data point is brushed
-      const brushed = brushedSet.has(dataPoint.case.CASE_ID);
+      const brushed = brushedSet.has(dataPoint.case.case_id);
       // Append the scatterdot JSX element
       scatterDots.push(
         <ScatterDot
@@ -274,13 +274,13 @@ function ScatterPlot({
           onClick={() => {
             // If selected, deselect this case.
             if (selected) {
-              store.interactionStore.deselectCaseIds([dataPoint.case.CASE_ID]);
+              store.interactionStore.deselectCaseIds([dataPoint.case.case_id]);
             } else {
               // If not selected, select this case.
-              store.interactionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
+              store.interactionStore.selectedCaseIds = [dataPoint.case.case_id];
             }
           }}
-          onMouseEnter={() => { interactionStore.hoveredCaseIds = [dataPoint.case.CASE_ID]; }}
+          onMouseEnter={() => { interactionStore.hoveredCaseIds = [dataPoint.case.case_id]; }}
           onMouseLeave={() => { interactionStore.hoveredCaseIds = []; }}
         />,
       );
@@ -309,7 +309,7 @@ function ScatterPlot({
       <g className="axes">
         <g className="y-axis" />
         <g className="x-axis" transform={`translate(0 ,${height - currentOffset.bottom} )`}>
-          {xAxisVar !== 'CELL_SAVER_ML' ? <CustomizedAxisBand scalePadding={scalePadding} scaleDomain={JSON.stringify(xAxisScale().domain())} scaleRange={JSON.stringify(xAxisScale().range())} chartHeight={height - currentOffset.bottom - currentOffset.top} data={data} xAxisVar={xAxisVar} /> : null}
+          {xAxisVar !== 'cell_saver_ml' ? <CustomizedAxisBand scalePadding={scalePadding} scaleDomain={JSON.stringify(xAxisScale().domain())} scaleRange={JSON.stringify(xAxisScale().range())} chartHeight={height - currentOffset.bottom - currentOffset.top} data={data} xAxisVar={xAxisVar} /> : null}
         </g>
         <text className="x-label" />
         <text className="y-label" />

@@ -4,10 +4,11 @@ import {
 } from './Actions/SelectionActions';
 // eslint-disable-next-line import/no-cycle
 import { RootStore } from './Store';
-import { ProcedureEntry, SingleCasePoint } from './Types/DataTypes';
+import { ProcedureEntry, Surgery } from './Types/DataTypes';
 import { normalizeAttribute } from '../HelperFunctions/NormalizeAttributes';
+import { EXTRA_PAIR_OPTIONS } from '../Presets/DataDict';
 
-type HoveredAttribute = [AttributeName: string, value: string | number | boolean];
+type HoveredAttribute = [AttributeName: typeof EXTRA_PAIR_OPTIONS[number], value: string | number | boolean];
 
 export class InteractionStore {
   rootStore: RootStore;
@@ -29,9 +30,9 @@ export class InteractionStore {
   }
 
   // Hovering ---------------------------------------------------------
-  private _hoveredCaseIds: number[];
+  private _hoveredCaseIds: string[];
 
-  private _selectedCaseIds: number[];
+  private _selectedCaseIds: string[];
 
   // Interacted Attributes
   private _hoveredAttribute?: HoveredAttribute;
@@ -44,13 +45,13 @@ export class InteractionStore {
       return this.rootStore.filteredCases
         // Normalize attribute returns the value of that case's attribute. Compare it to the store's hovered attribute value
         .filter((caseRecord) => (normalizeAttribute(caseRecord[this._hoveredAttribute![0]], this._hoveredAttribute![0]) === this._hoveredAttribute![1]))
-        .map((caseRecord) => caseRecord.CASE_ID);
+        .map((caseRecord) => caseRecord.case_id);
     }
 
     return this._hoveredCaseIds;
   }
 
-  set hoveredCaseIds(ids: number[]) {
+  set hoveredCaseIds(ids) {
     this._hoveredCaseIds = structuredClone(ids);
   }
 
@@ -58,13 +59,13 @@ export class InteractionStore {
     return this._selectedCaseIds;
   }
 
-  set selectedCaseIds(ids: number[]) {
+  set selectedCaseIds(ids) {
     // Sets the selected case IDs to the passed in IDs
     this._selectedCaseIds = structuredClone(ids);
 
     // Get the SingleCasePoints which match the ID's
     const selectedCases = this.rootStore.filteredCases
-      .filter((caseRecord) => ids.includes(caseRecord.CASE_ID));
+      .filter((caseRecord) => ids.includes(caseRecord.case_id));
 
     // Update the selected patient group with the selected cases
     this.updateSelectedPatients(selectedCases);
@@ -96,16 +97,16 @@ export class InteractionStore {
     this.clearSelectedCases();
     this._selectedAttribute = selectedAttribute;
 
-    let selectedCaseIds: number[] = [];
+    let selectedCaseIds: string[] = [];
     // Get all case IDs which match the selected attribute
     if (this._selectedAttribute !== undefined) {
       selectedCaseIds = this.rootStore.filteredCases
         .filter((caseRecord) => (normalizeAttribute(caseRecord[this._selectedAttribute![0]], this._selectedAttribute![0]) === this._selectedAttribute![1]))
-        .map((caseRecord) => caseRecord.CASE_ID);
+        .map((caseRecord) => caseRecord.case_id);
     }
     // Get the SingleCasePoints from the selected case IDs
     const selectedCases = this.rootStore.filteredCases
-      .filter((caseRecord) => selectedCaseIds.includes(caseRecord.CASE_ID));
+      .filter((caseRecord) => selectedCaseIds.includes(caseRecord.case_id));
 
     // Set the selected case IDs in this store.
     this._selectedCaseIds = selectedCaseIds;
@@ -113,13 +114,13 @@ export class InteractionStore {
     this.updateSelectedPatients(selectedCases);
   }
 
-  deselectCaseIds(caseIds: number[]) {
+  deselectCaseIds(caseIds: string[]) {
     // Remove the passed in case IDs from the selected case IDs
     const filteredCaseIds = this._selectedCaseIds.filter((caseId) => !caseIds.includes(caseId));
 
     // Get the SingleCasePoints from the selected case IDs
     const selectedCases = this.rootStore.filteredCases
-      .filter((caseRecord) => filteredCaseIds.includes(caseRecord.CASE_ID));
+      .filter((caseRecord) => filteredCaseIds.includes(caseRecord.case_id));
 
     // Set the selected case IDs in this store.
     this._selectedCaseIds = filteredCaseIds;
@@ -133,7 +134,7 @@ export class InteractionStore {
     return this.rootStore.provenance;
   }
 
-  updateFilteredPatientGroup(caseList: SingleCasePoint[]) {
+  updateFilteredPatientGroup(caseList: Surgery[]) {
     this.provenance.apply(updateFilteredPatientGroup(caseList));
   }
 
@@ -141,11 +142,11 @@ export class InteractionStore {
     this.provenance.apply(updateProcedureSelection(newProcedures, removing, parentProcedure));
   }
 
-  updateSelectedPatients(caseList: SingleCasePoint[]) {
+  updateSelectedPatients(caseList: Surgery[]) {
     this.provenance.apply(updateSelectedPatients(caseList));
   }
 
-  setCurrentSelectPatient(newCase: SingleCasePoint | null) {
+  setCurrentSelectPatient(newCase: Surgery | null) {
     this.provenance.apply(setCurrentSelectPatient(newCase));
   }
 

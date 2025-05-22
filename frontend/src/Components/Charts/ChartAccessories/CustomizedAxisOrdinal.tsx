@@ -46,7 +46,7 @@ function CustomizedAxisOrdinal({
 
   // Helper to get all case IDs for a column
   const getCaseIds = (columnValue: number): number[] => data.filter((dp: DumbbellDataPoint) => dp.yVal === columnValue)
-    .map((dp: DumbbellDataPoint) => Number(dp.case.CASE_ID));
+    .map((dp: DumbbellDataPoint) => Number(dp.case.case_id));
 
   // Hover handler using the helper function.
   const handleColumnHover = (columnValue: number | null) => {

@@ -24,7 +24,7 @@ import Store from '../../Interfaces/Store';
 import GeneratorExtraPair, { ExtraPairLabels } from './ChartAccessories/ExtraPairPlots/GeneratorExtraPair';
 import { generateExtrapairPlotData, generateExtraAttributeData } from '../../HelperFunctions/ExtraPairDataGenerator';
 import { stateUpdateWrapperUseJSON } from '../../Interfaces/StateChecker';
-import { CostBarChartDataPoint, SingleCasePoint } from '../../Interfaces/Types/DataTypes';
+import { CostBarChartDataPoint } from '../../Interfaces/Types/DataTypes';
 import { sortHelper } from '../../HelperFunctions/ChartSorting';
 import ComparisonLegend from './ChartAccessories/ComparisonLegend';
 import { CostLayoutElement } from '../../Interfaces/Types/LayoutTypes';
@@ -32,14 +32,14 @@ import { usePrivateProvLabel } from '../Hooks/PrivateModeLabeling';
 
 type TempDataItem = {
   aggregateAttribute: string | number;
-  PRBC_UNITS: number;
-  FFP_UNITS: number;
-  CRYO_UNITS: number;
-  PLT_UNITS: number;
-  CELL_SAVER_ML: number;
+  rbc_units: number;
+  ffp_units: number;
+  cryo_units: number;
+  plt_units: number;
+  cell_saver_ml: number;
   caseNum: number;
   SALVAGE_USAGE: number;
-  caseIDList: Set<number>;
+  caseIDList: Set<string>;
 };
 
 type CostBarDataPoint = {
@@ -128,22 +128,22 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
           const label = getLabel(d.aggregateAttribute, yAxisVar);
           return [
             showPotential ? {
-              rowLabel: label, value: d.cellSalvageVolume * -0.004 * BloodProductCost.PRBC_UNITS, bloodProduct: 'savings', type: 'false',
+              rowLabel: label, value: d.cellSalvageVolume * -0.004 * BloodProductCost.rbc_units, bloodProduct: 'savings', type: 'false',
             } : null,
             {
-              rowLabel: label, value: d.PRBC_UNITS, bloodProduct: 'PRBC', type: 'false',
+              rowLabel: label, value: d.rbc_units, bloodProduct: 'RBC', type: 'false',
             },
             {
-              rowLabel: label, value: d.FFP_UNITS, bloodProduct: 'FFP', type: 'false',
+              rowLabel: label, value: d.ffp_units, bloodProduct: 'FFP', type: 'false',
             },
             {
-              rowLabel: label, value: d.CRYO_UNITS, bloodProduct: 'CRYO', type: 'false',
+              rowLabel: label, value: d.cryo_units, bloodProduct: 'CRYO', type: 'false',
             },
             {
-              rowLabel: label, value: d.PLT_UNITS, bloodProduct: 'PLT', type: 'false',
+              rowLabel: label, value: d.plt_units, bloodProduct: 'PLT', type: 'false',
             },
             {
-              rowLabel: label, value: d.CELL_SAVER_ML, bloodProduct: 'CELL_SAVER', type: 'false',
+              rowLabel: label, value: d.cell_saver_ml, bloodProduct: 'CELL_SAVER', type: 'false',
             },
           ];
         }).filter((d) => d !== null),
@@ -155,22 +155,22 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
             const label = getLabel(d.aggregateAttribute, yAxisVar);
             return [
               showPotential ? {
-                rowLabel: label, value: d.cellSalvageVolume * -0.004 * BloodProductCost.PRBC_UNITS, bloodProduct: 'savings', type: 'true',
+                rowLabel: label, value: d.cellSalvageVolume * -0.004 * BloodProductCost.rbc_units, bloodProduct: 'savings', type: 'true',
               } : null,
               {
-                rowLabel: label, value: d.PRBC_UNITS, bloodProduct: 'PRBC', type: 'true',
+                rowLabel: label, value: d.rbc_units, bloodProduct: 'RBC', type: 'true',
               },
               {
-                rowLabel: label, value: d.FFP_UNITS, bloodProduct: 'FFP', type: 'true',
+                rowLabel: label, value: d.ffp_units, bloodProduct: 'FFP', type: 'true',
               },
               {
-                rowLabel: label, value: d.CRYO_UNITS, bloodProduct: 'CRYO', type: 'true',
+                rowLabel: label, value: d.cryo_units, bloodProduct: 'CRYO', type: 'true',
               },
               {
-                rowLabel: label, value: d.PLT_UNITS, bloodProduct: 'PLT', type: 'true',
+                rowLabel: label, value: d.plt_units, bloodProduct: 'PLT', type: 'true',
               },
               {
-                rowLabel: label, value: d.CELL_SAVER_ML, bloodProduct: 'CELL_SAVER', type: 'true',
+                rowLabel: label, value: d.cell_saver_ml, bloodProduct: 'CELL_SAVER', type: 'true',
               },
             ];
           })
@@ -178,7 +178,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
       );
     }
     return plotDataTemp;
-  }, [BloodProductCost.PRBC_UNITS, costSavingsData, secondaryCostSavingsData, showPotential, yAxisVar, getLabel]);
+  }, [BloodProductCost.rbc_units, costSavingsData, secondaryCostSavingsData, showPotential, yAxisVar, getLabel]);
 
   const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
   useEffect(() => {
@@ -191,8 +191,8 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   // useDeepCompareEffect COPIED FROM WrapperHeatMap.tsx, which correctly generates the extra attribute data for the extra pair plot ------------------------------------------------------------
 
   // Creating the Extra Attribute Data (NOT the cost-savings data), to be used for the extra pair plot (GeneratorExtraPair) -----------------------------------------------------------------------------------
-  // Default xAxisVar is PRBC_UNITS (because cost savings chart doesn't have different x-Axes). (So additional attributes like Total Transfused, Per Case, etc. are currently in terms of 'PRBC_UNITS').
-  const xAxisVar = 'PRBC_UNITS';
+  // Default xAxisVar is rbc_units (because cost savings chart doesn't have different x-Axes). (So additional attributes like Total Transfused, Per Case, etc. are currently in terms of 'rbc_units').
+  const xAxisVar = 'rbc_units';
   useDeepCompareEffect(() => {
     const [tempCaseCount, secondaryTempCaseCount, outputData, secondaryOutputData] = generateExtraAttributeData(filteredCases, yAxisVar, outcomeComparison, interventionDate, store.provenanceState.showZero, xAxisVar);
     stateUpdateWrapperUseJSON(extraAttributeData, outputData, setExtraAttributeData);
@@ -214,14 +214,14 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   const makeDataObj = (dataItem: TempDataItem) => {
     const newDataObj: CostBarChartDataPoint = {
       aggregateAttribute: dataItem.aggregateAttribute,
-      PRBC_UNITS: ((dataItem.PRBC_UNITS * (BloodProductCost.PRBC_UNITS)) / dataItem.caseNum) || 0,
-      FFP_UNITS: ((dataItem.FFP_UNITS * (BloodProductCost.FFP_UNITS)) / dataItem.caseNum) || 0,
-      PLT_UNITS: ((dataItem.PLT_UNITS * (BloodProductCost.PLT_UNITS)) / dataItem.caseNum) || 0,
-      CRYO_UNITS: ((dataItem.CRYO_UNITS * (BloodProductCost.CRYO_UNITS)) / dataItem.caseNum) || 0,
-      CELL_SAVER_ML: ((dataItem.SALVAGE_USAGE * BloodProductCost.CELL_SAVER_ML) / dataItem.caseNum) || 0,
+      rbc_units: ((dataItem.rbc_units * (BloodProductCost.rbc_units)) / dataItem.caseNum) || 0,
+      ffp_units: ((dataItem.ffp_units * (BloodProductCost.ffp_units)) / dataItem.caseNum) || 0,
+      plt_units: ((dataItem.plt_units * (BloodProductCost.plt_units)) / dataItem.caseNum) || 0,
+      cryo_units: ((dataItem.cryo_units * (BloodProductCost.cryo_units)) / dataItem.caseNum) || 0,
+      cell_saver_ml: ((dataItem.SALVAGE_USAGE * BloodProductCost.cell_saver_ml) / dataItem.caseNum) || 0,
       caseCount: dataItem.caseNum,
       cellSalvageUsage: (dataItem.SALVAGE_USAGE / dataItem.caseNum) || 0,
-      cellSalvageVolume: (dataItem.CELL_SAVER_ML / dataItem.caseNum) || 0,
+      cellSalvageVolume: (dataItem.cell_saver_ml / dataItem.caseNum) || 0,
       totalVal: 0,
       zeroCaseNum: 0,
       caseIDList: Array.from(dataItem.caseIDList),
@@ -253,49 +253,49 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     const outputData: CostBarChartDataPoint[] = [];
     const secondaryOutputData: CostBarChartDataPoint[] = [];
 
-    filteredCases.forEach((singleCase: SingleCasePoint) => {
+    filteredCases.forEach((singleCase) => {
       if (!temporaryDataHolder[singleCase[yAxisVar]]) {
         temporaryDataHolder[singleCase[yAxisVar]] = {
           aggregateAttribute: singleCase[yAxisVar],
-          PRBC_UNITS: 0,
-          FFP_UNITS: 0,
-          CRYO_UNITS: 0,
-          PLT_UNITS: 0,
-          CELL_SAVER_ML: 0,
+          rbc_units: 0,
+          ffp_units: 0,
+          cryo_units: 0,
+          plt_units: 0,
+          cell_saver_ml: 0,
           caseNum: 0,
           SALVAGE_USAGE: 0,
           caseIDList: new Set(),
         };
         secondaryTemporaryDataHolder[singleCase[yAxisVar]] = {
           aggregateAttribute: singleCase[yAxisVar],
-          PRBC_UNITS: 0,
-          FFP_UNITS: 0,
-          CRYO_UNITS: 0,
-          PLT_UNITS: 0,
-          CELL_SAVER_ML: 0,
+          rbc_units: 0,
+          ffp_units: 0,
+          cryo_units: 0,
+          plt_units: 0,
+          cell_saver_ml: 0,
           caseNum: 0,
           SALVAGE_USAGE: 0,
           caseIDList: new Set(),
         };
       }
-      if ((outcomeComparison && singleCase[outcomeComparison] as number > 0) || (interventionDate && singleCase.CASE_DATE < interventionDate)) {
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].PRBC_UNITS += singleCase.PRBC_UNITS;
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].FFP_UNITS += singleCase.FFP_UNITS;
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].CRYO_UNITS += singleCase.CRYO_UNITS;
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].PLT_UNITS += singleCase.PLT_UNITS;
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0);
+      if ((outcomeComparison && singleCase[outcomeComparison] as number > 0) || (interventionDate && singleCase.case_date < interventionDate)) {
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].rbc_units += singleCase.rbc_units;
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].ffp_units += singleCase.ffp_units;
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].cryo_units += singleCase.cryo_units;
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].plt_units += singleCase.plt_units;
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].cell_saver_ml += singleCase.cell_saver_ml;
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].SALVAGE_USAGE += (singleCase.cell_saver_ml > 0 ? 1 : 0);
         secondaryTemporaryDataHolder[singleCase[yAxisVar]].caseNum += 1;
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].caseIDList.add(singleCase.CASE_ID);
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].caseIDList.add(singleCase.case_id);
       } else {
-        temporaryDataHolder[singleCase[yAxisVar]].PRBC_UNITS += singleCase.PRBC_UNITS;
-        temporaryDataHolder[singleCase[yAxisVar]].FFP_UNITS += singleCase.FFP_UNITS;
-        temporaryDataHolder[singleCase[yAxisVar]].CRYO_UNITS += singleCase.CRYO_UNITS;
-        temporaryDataHolder[singleCase[yAxisVar]].PLT_UNITS += singleCase.PLT_UNITS;
-        temporaryDataHolder[singleCase[yAxisVar]].CELL_SAVER_ML += singleCase.CELL_SAVER_ML;
-        temporaryDataHolder[singleCase[yAxisVar]].SALVAGE_USAGE += (singleCase.CELL_SAVER_ML > 0 ? 1 : 0);
+        temporaryDataHolder[singleCase[yAxisVar]].rbc_units += singleCase.rbc_units;
+        temporaryDataHolder[singleCase[yAxisVar]].ffp_units += singleCase.ffp_units;
+        temporaryDataHolder[singleCase[yAxisVar]].cryo_units += singleCase.cryo_units;
+        temporaryDataHolder[singleCase[yAxisVar]].plt_units += singleCase.plt_units;
+        temporaryDataHolder[singleCase[yAxisVar]].cell_saver_ml += singleCase.cell_saver_ml;
+        temporaryDataHolder[singleCase[yAxisVar]].SALVAGE_USAGE += (singleCase.cell_saver_ml > 0 ? 1 : 0);
         temporaryDataHolder[singleCase[yAxisVar]].caseNum += 1;
-        temporaryDataHolder[singleCase[yAxisVar]].caseIDList.add(singleCase.CASE_ID);
+        temporaryDataHolder[singleCase[yAxisVar]].caseIDList.add(singleCase.case_id);
       }
     });
     let totalCaseCountTemp = 0;
@@ -303,9 +303,9 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     Object.values(temporaryDataHolder).forEach((dataItem) => {
       const newDataObj = makeDataObj(dataItem);
       totalCaseCountTemp += newDataObj.caseCount;
-      const sumCost = newDataObj.PRBC_UNITS + newDataObj.FFP_UNITS + newDataObj.CRYO_UNITS + newDataObj.PLT_UNITS + newDataObj.CELL_SAVER_ML;
+      const sumCost = newDataObj.rbc_units + newDataObj.ffp_units + newDataObj.cryo_units + newDataObj.plt_units + newDataObj.cell_saver_ml;
       tempmaxCost = tempmaxCost > sumCost ? tempmaxCost : sumCost;
-      const costSaved = -(newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.CELL_SAVER_ML);
+      const costSaved = -(newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.rbc_units - newDataObj.cell_saver_ml);
       if (!Number.isNaN(costSaved)) {
         tempMinCost = tempMinCost < costSaved ? tempMinCost : costSaved;
       }
@@ -315,9 +315,9 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
       Object.values(secondaryTemporaryDataHolder).forEach((dataItem) => {
         const newDataObj = makeDataObj(dataItem);
         secondaryCaseCountTemp += newDataObj.caseCount;
-        const sumCost = newDataObj.PRBC_UNITS + newDataObj.FFP_UNITS + newDataObj.CRYO_UNITS + newDataObj.PLT_UNITS + newDataObj.CELL_SAVER_ML;
+        const sumCost = newDataObj.rbc_units + newDataObj.ffp_units + newDataObj.cryo_units + newDataObj.plt_units + newDataObj.cell_saver_ml;
         tempmaxCost = tempmaxCost > sumCost ? tempmaxCost : sumCost;
-        const costSaved = -(newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.PRBC_UNITS - newDataObj.CELL_SAVER_ML);
+        const costSaved = -(newDataObj.cellSalvageVolume * 0.004 * BloodProductCost.rbc_units - newDataObj.cell_saver_ml);
         if (!Number.isNaN(costSaved)) {
           tempMinCost = tempMinCost < costSaved ? tempMinCost : costSaved;
         }
@@ -337,7 +337,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     data: { name: 'values' },
     transform: [
       {
-        calculate: "indexof(['PRBC', 'FFP', 'PLT', 'CRYO', 'CELL_SAVER'], datum.bloodProduct)",
+        calculate: "indexof(['RBC', 'FFP', 'PLT', 'CRYO', 'CELL_SAVER'], datum.bloodProduct)",
         as: 'order',
       },
     ],

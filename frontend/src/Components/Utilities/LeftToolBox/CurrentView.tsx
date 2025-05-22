@@ -12,7 +12,7 @@ import { ProcedureStringGenerator } from '../../../HelperFunctions/ProcedureStri
 
 function CurrentView() {
   const store = useContext(Store);
-  const { allCases } = store;
+  const { allVisits } = store;
 
   const generateSurgery = () => {
     const output: JSX.Element[] = [];
@@ -66,7 +66,7 @@ function CurrentView() {
           <ListItem key="AggreCaseCount">
             <ListItemText
               primary="Aggregated Cases"
-              secondary={`${store.chartStore.totalAggregatedCaseCount}/${allCases.length}`}
+              secondary={`${store.chartStore.totalAggregatedCaseCount}/${allVisits.length}`}
             />
 
           </ListItem>
@@ -74,7 +74,7 @@ function CurrentView() {
           <ListItem key="IndiCaseCount">
             <ListItemText
               primary="Individual Cases"
-              secondary={`${store.chartStore.totalIndividualCaseCount}/${allCases.length}`}
+              secondary={`${store.chartStore.totalIndividualCaseCount}/${allVisits.length}`}
             />
             <ListItemSecondaryAction>
               <Tooltip title="Case count can be reduced by both filter and missing data.">

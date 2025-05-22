@@ -34,7 +34,7 @@ function HeatMapAxis({
   if (isValueScaleBand) {
     valueLabel = axisBottom(valueScale() as ScaleBand<string>)
     // eslint-disable-next-line no-nested-ternary, @typescript-eslint/no-explicit-any
-      .tickFormat((d, i) => (xAxisVar === 'CELL_SAVER_ML' ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[xAxisVar as BloodComponent] as any ? `${d}+` : d)));
+      .tickFormat((d, i) => (xAxisVar === 'cell_saver_ml' ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[xAxisVar as BloodComponent] as any ? `${d}+` : d)));
   } else {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     valueLabel = axisBottom(valueScale() as any);

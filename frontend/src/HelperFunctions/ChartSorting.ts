@@ -23,14 +23,14 @@ export const sortHelper = (data: BasicAggregatedDatePoint[], xAxisVar: string, s
       newCaseMax = newCaseMax > calcualtedCaseCount ? newCaseMax : calcualtedCaseCount;
     });
     dataXVals.sort((a, b) => {
-      if (xAxisVar === 'YEAR') {
+      if (xAxisVar === 'year') {
         return parseInt(a, 10) - parseInt(b, 10);
       }
       return dataToObj[a] - dataToObj[b];
     });
   } else {
     dataXVals = data.sort((a, b) => {
-      if (xAxisVar === 'YEAR') {
+      if (xAxisVar === 'year') {
         return a.aggregateAttribute - b.aggregateAttribute;
       }
       if (showZero) { return a.caseCount - b.caseCount; }

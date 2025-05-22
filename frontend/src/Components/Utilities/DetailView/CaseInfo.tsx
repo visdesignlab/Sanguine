@@ -35,37 +35,20 @@ function CaseInfo() {
   };
 
   useEffect(() => {
-    async function fetchIndividualInformaiton() {
-      if (currentSelectPatient) {
-        stateUpdateWrapperUseJSON(individualInfo, null, setIndividualInfo);
-        const fetchResult = await fetch(`${import.meta.env.VITE_QUERY_URL}fetch_patient?patient_id=${currentSelectPatient.MRN}`);
+    if (currentSelectPatient) {
+      stateUpdateWrapperUseJSON(individualInfo, null, setIndividualInfo);
+      const individualInfoJSON = currentSelectPatient;
 
-        const fetchResultJson = await fetchResult.json();
-        const individualInfoJSON = fetchResultJson.result[0];
+      const outcomeAttributes = ['DEATH', 'ECMO', 'STROKE', 'VENT', 'AMICAR', 'TXA', 'B12', 'IRON'];
+      outcomeAttributes.forEach((attribute) => {
+        individualInfoJSON[attribute] = individualInfoJSON[attribute] === 0 ? 'No' : 'Yes';
+      });
 
-        const fetchSurgery = await fetch(`${import.meta.env.VITE_QUERY_URL}fetch_surgery?case_id=${currentSelectPatient.CASE_ID}`);
-        const fetchSurgeryJson = await fetchSurgery.json();
-        const surgeryInfo = fetchSurgeryJson.result[0];
-        surgeryInfo['CPT Codes'] = surgeryInfo.cpt.join(', ');
-        delete surgeryInfo.cpt;
-
-        let finalResult = Object.assign(individualInfoJSON, surgeryInfo);
-
-        finalResult = Object.assign(finalResult, currentSelectPatient);
-
-        const outcomeAttributes = ['DEATH', 'ECMO', 'STROKE', 'VENT', 'AMICAR', 'TXA', 'B12', 'IRON'];
-        outcomeAttributes.forEach((attribute) => {
-          finalResult[attribute] = finalResult[attribute] === 0 ? 'No' : 'Yes';
-        });
-
-        finalResult.SURGERY_TYPE_DESC = SurgeryUrgencyArray[finalResult.SURGERY_TYPE_DESC];
-        stateUpdateWrapperUseJSON(individualInfo, finalResult, setIndividualInfo);
-      } else {
-        stateUpdateWrapperUseJSON(individualInfo, null, setIndividualInfo);
-      }
+      individualInfoJSON.surgery_type_desc = SurgeryUrgencyArray[individualInfoJSON.surgery_type_desc];
+      stateUpdateWrapperUseJSON(individualInfo, individualInfoJSON, setIndividualInfo);
+    } else {
+      stateUpdateWrapperUseJSON(individualInfo, null, setIndividualInfo);
     }
-    fetchIndividualInformaiton();
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSelectPatient]);
   return (
@@ -104,7 +87,14 @@ function CaseInfo() {
           </ListItemSecondaryAction>
         </ListSubheader>
 
-        {individualInfo ? generateListItems() : <CenterAlignedDiv><CircularProgress /></CenterAlignedDiv>}
+        {individualInfo
+          // ? generateListItems()
+          ? JSON.stringify(individualInfo, null, 2).split('\n').map((line, idx) => (
+            <ListItem key={`case-info-${idx}`}>
+              <ListItemText primary={line} />
+            </ListItem>
+          ))
+          : <CenterAlignedDiv><CircularProgress /></CenterAlignedDiv>}
       </List>
     </Box>
   );
