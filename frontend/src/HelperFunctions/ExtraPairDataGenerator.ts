@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  median, min, max, mean, sum,
+  median, min, max,
 } from 'd3';
 import { create as createpd } from 'pdfast';
 import {
@@ -8,28 +8,33 @@ import {
 } from '../Interfaces/Types/DataTypes';
 import { generateRegularData } from './ChartDataGenerator';
 
-const outcomeDataGenerate = (aggregatedBy: string, name: string, label: string, data: BasicAggregatedDatePoint[], hemoglobinDataSet: SingleCasePoint[]) => {
+// Returns ExtraPairData point for 'Basic' extra pair data type.
+const getBasicExtraPairData = (aggregatedBy: string, attributeName: string, attributeLabel: string, data: BasicAggregatedDatePoint[], hemoglobinDataSet: SingleCasePoint[]) => {
   const temporaryDataHolder: any = {};
-  const newData = {} as any;
+  const attributeData = {} as any;
   const caseDictionary = {} as any;
   data.forEach((dataPoint: BasicAggregatedDatePoint) => {
     temporaryDataHolder[dataPoint.aggregateAttribute] = [];
     caseDictionary[dataPoint.aggregateAttribute] = new Set(dataPoint.caseIDList);
-    newData[dataPoint.aggregateAttribute] = { outOfTotal: dataPoint.caseCount };
+    attributeData[dataPoint.aggregateAttribute] = { rowCaseCount: dataPoint.caseCount };
   });
+
   hemoglobinDataSet.forEach((ob: any) => {
     if (temporaryDataHolder[ob[aggregatedBy]] && caseDictionary[ob[aggregatedBy]].has(ob.CASE_ID)) {
-      temporaryDataHolder[ob[aggregatedBy]].push(ob[name]);
+      temporaryDataHolder[ob[aggregatedBy]].push(ob[attributeName]);
     }
   });
   for (const [key, value] of Object.entries(temporaryDataHolder)) {
-    newData[key].calculated = mean(value as any);
-    newData[key].actualVal = sum(value as any);
+    attributeData[key].attributeCaseCount = (value as any)
+      .filter((v: any) => v != null && v > 0)
+      .length;
   }
+  // Return an extra pair datapoint which is a basic type
   return ({
-    name, label, data: newData, type: 'Basic',
+    name: attributeName, label: attributeLabel, data: attributeData, type: 'Basic',
   }) as ExtraPairPoint;
 };
+
 // Generate the data for the extra attribute plot(s) specifically. (Taken from WrapperHeatMap.tsx, to be re-used in CostBarChart.tsx)
 export const generateExtraAttributeData = (filteredCases: SingleCasePoint[], yAxisVar: string, outcomeComparison: string | undefined, interventionDate: number | undefined, showZero: boolean, xAxisVar: string) => {
   const temporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }> = {};
@@ -76,7 +81,6 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
     extraPairArray.forEach((variable: string) => {
       const newData = {} as any;
       const caseDictionary = {} as any;
-      const temporaryDataHolder: any = {};
       const medianData = {} as any;
       let kdeMaxTemp: any = 0;
       switch (variable) {
@@ -101,7 +105,7 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
         case 'ZERO_TRANS':
           // let newDataPerCase = {} as any;
           data.forEach((dataPoint: BasicAggregatedDatePoint) => {
-            newData[dataPoint.aggregateAttribute] = { actualVal: dataPoint.zeroCaseNum, calculated: dataPoint.zeroCaseNum / dataPoint.caseCount, outOfTotal: dataPoint.caseCount };
+            newData[dataPoint.aggregateAttribute] = { attributeCaseCount: dataPoint.zeroCaseNum, rowCaseCount: dataPoint.caseCount };
           });
           newExtraPairData.push({
             name: 'ZERO_TRANS', label: 'Zero %', data: newData, type: 'Basic',
@@ -109,28 +113,28 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
           break;
 
         case 'DEATH':
-          newExtraPairData.push(outcomeDataGenerate(aggregatedBy, 'DEATH', 'Death', data, hemoglobinDataSet));
+          newExtraPairData.push(getBasicExtraPairData(aggregatedBy, 'DEATH', 'Death', data, hemoglobinDataSet));
           break;
         case 'VENT':
-          newExtraPairData.push(outcomeDataGenerate(aggregatedBy, 'VENT', 'Vent', data, hemoglobinDataSet));
+          newExtraPairData.push(getBasicExtraPairData(aggregatedBy, 'VENT', 'Vent', data, hemoglobinDataSet));
           break;
         case 'ECMO':
-          newExtraPairData.push(outcomeDataGenerate(aggregatedBy, 'ECMO', 'ECMO', data, hemoglobinDataSet));
+          newExtraPairData.push(getBasicExtraPairData(aggregatedBy, 'ECMO', 'ECMO', data, hemoglobinDataSet));
           break;
         case 'STROKE':
-          newExtraPairData.push(outcomeDataGenerate(aggregatedBy, 'STROKE', 'Stroke', data, hemoglobinDataSet));
+          newExtraPairData.push(getBasicExtraPairData(aggregatedBy, 'STROKE', 'Stroke', data, hemoglobinDataSet));
           break;
         case 'AMICAR':
-          newExtraPairData.push(outcomeDataGenerate(aggregatedBy, 'AMICAR', 'Amicar', data, hemoglobinDataSet));
+          newExtraPairData.push(getBasicExtraPairData(aggregatedBy, 'AMICAR', 'Amicar', data, hemoglobinDataSet));
           break;
         case 'B12':
-          newExtraPairData.push(outcomeDataGenerate(aggregatedBy, 'B12', 'B12', data, hemoglobinDataSet));
+          newExtraPairData.push(getBasicExtraPairData(aggregatedBy, 'B12', 'B12', data, hemoglobinDataSet));
           break;
         case 'TXA':
-          newExtraPairData.push(outcomeDataGenerate(aggregatedBy, 'TXA', 'TXA', data, hemoglobinDataSet));
+          newExtraPairData.push(getBasicExtraPairData(aggregatedBy, 'TXA', 'TXA', data, hemoglobinDataSet));
           break;
         case 'IRON':
-          newExtraPairData.push(outcomeDataGenerate(aggregatedBy, 'IRON', 'Iron', data, hemoglobinDataSet));
+          newExtraPairData.push(getBasicExtraPairData(aggregatedBy, 'IRON', 'Iron', data, hemoglobinDataSet));
           break;
 
         case 'DRG_WEIGHT':

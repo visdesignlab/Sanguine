@@ -38,76 +38,100 @@ function ExtraPairBasic({
   return (
     <>
       <g transform={`translate(0,${secondaryDataSet ? aggregationScale().bandwidth() * 0.5 : 0})`}>
-        {Object.entries(dataSet).map(([val, dataVal], idx) => (
-          <g key={idx}>
-            <Tooltip title={`${dataVal.actualVal}/${dataVal.outOfTotal}`}>
-              <rect
-                x={0}
-                y={aggregationScale()(val)}
-                fill={!Number.isNaN(dataVal.calculated) ? interpolateGreys(valueScale(dataVal.calculated)) : 'white'}
-                opacity={0.8}
-                width={ExtraPairWidth.Basic}
-                height={(secondaryDataSet ? 0.5 : 1) * aggregationScale().bandwidth()}
+        {Object.entries(dataSet).map(([val, dataVal], idx) => {
+        // Are there any cases in this row?
+          const hasData = dataVal.rowCaseCount > 0;
+          // Find percentage of non-zero attribute value cases out of row case count.
+          const casePercent = hasData
+            ? dataVal.attributeCaseCount / dataVal.rowCaseCount
+            : 0;
+          return (
+            <g key={idx}>
+              <Tooltip title={`${dataVal.attributeCaseCount}/${dataVal.rowCaseCount}`}>
+                <rect
+                  x={0}
+                  y={aggregationScale()(val)}
+                  fill={hasData
+                    ? interpolateGreys(valueScale(casePercent))
+                    : 'white'}
+                  opacity={0.8}
+                  width={ExtraPairWidth.Basic}
+                  height={(secondaryDataSet ? 0.5 : 1) * aggregationScale().bandwidth()}
+                />
+              </Tooltip>
+
+              <line
+                opacity={hasData ? 0 : 1}
+                y1={(secondaryDataSet ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                y2={(secondaryDataSet ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                x1={0.35 * ExtraPairWidth.Basic}
+                x2={0.65 * ExtraPairWidth.Basic}
+                strokeWidth={0.5}
+                stroke={basicGray}
               />
-            </Tooltip>
-            <line
-              opacity={!Number.isNaN(dataVal.calculated) ? 0 : 1}
-              y1={(secondaryDataSet ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
-              y2={(secondaryDataSet ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
-              x1={0.35 * ExtraPairWidth.Basic}
-              x2={0.65 * ExtraPairWidth.Basic}
-              strokeWidth={0.5}
-              stroke={basicGray}
-            />
-            <text
-              x={ExtraPairWidth.Basic * 0.5}
-              y={aggregationScale()(val)! + (secondaryDataSet ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth()}
-              opacity={!Number.isNaN(dataVal.calculated) ? 1 : 0}
-              fill={valueScale(dataVal.calculated) > 0.4 ? 'white' : 'black'}
-              alignmentBaseline="central"
-              fontSize={store.configStore.largeFont ? largeFontSize : 12}
-              textAnchor="middle"
-            >
-              {Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? '<1%' : format('.0%')(dataVal.calculated)}
-            </text>
-          </g>
-        ))}
+
+              <text
+                x={ExtraPairWidth.Basic * 0.5}
+                y={aggregationScale()(val)! + (secondaryDataSet ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth()}
+                opacity={hasData ? 1 : 0}
+                fill={valueScale(casePercent) > 0.4 ? 'white' : 'black'}
+                alignmentBaseline="central"
+                fontSize={store.configStore.largeFont ? largeFontSize : 12}
+                textAnchor="middle"
+              >
+                {casePercent > 0 ? format('.0%')(casePercent) : '<1%'}
+              </text>
+            </g>
+          );
+        })}
       </g>
       <g>
-        {secondaryDataSet ? Object.entries(secondaryDataSet).map(([val, dataVal], idx) => (
-          <g key={idx}>
-            <Tooltip title={`${dataVal.actualVal}/${dataVal.outOfTotal}`}>
-              <rect
-                x={0}
-                y={aggregationScale()(val)}
-                fill={!Number.isNaN(dataVal.calculated) ? interpolateGreys(valueScale(dataVal.calculated)) : 'white'}
-                opacity={0.8}
-                width={ExtraPairWidth.Basic}
-                height={aggregationScale().bandwidth() * 0.5}
+        {secondaryDataSet ? Object.entries(secondaryDataSet).map(([val, dataVal], idx) => {
+        // Are there any cases in this row?
+          const hasData = dataVal.rowCaseCount > 0;
+          // Find percentage of non-zero attribute value cases out of row case count.
+          const casePercent = hasData
+            ? dataVal.attributeCaseCount / dataVal.rowCaseCount
+            : 0;
+          return (
+            <g key={idx}>
+              <Tooltip title={`${dataVal.attributeCaseCount}/${dataVal.rowCaseCount}`}>
+                <rect
+                  x={0}
+                  y={aggregationScale()(val)}
+                  fill={hasData
+                    ? interpolateGreys(valueScale(casePercent))
+                    : 'white'}
+                  opacity={0.8}
+                  width={ExtraPairWidth.Basic}
+                  height={aggregationScale().bandwidth() * 0.5}
+                />
+              </Tooltip>
+
+              <line
+                opacity={hasData ? 0 : 1}
+                y1={0.25 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                y2={0.25 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                x1={0.35 * ExtraPairWidth.Basic}
+                x2={0.65 * ExtraPairWidth.Basic}
+                strokeWidth={0.5}
+                stroke={basicGray}
               />
-            </Tooltip>
-            <line
-              opacity={!Number.isNaN(dataVal.calculated) ? 0 : 1}
-              y1={0.25 * aggregationScale().bandwidth() + aggregationScale()(val)!}
-              y2={0.25 * aggregationScale().bandwidth() + aggregationScale()(val)!}
-              x1={0.35 * ExtraPairWidth.Basic}
-              x2={0.65 * ExtraPairWidth.Basic}
-              strokeWidth={0.5}
-              stroke={basicGray}
-            />
-            <text
-              x={ExtraPairWidth.Basic * 0.5}
-              y={aggregationScale()(val)! + 0.25 * aggregationScale().bandwidth()}
-              opacity={!Number.isNaN(dataVal.calculated) ? 1 : 0}
-              fill={valueScale(dataVal.calculated) > 0.4 ? 'white' : 'black'}
-              alignmentBaseline="central"
-              fontSize={store.configStore.largeFont ? largeFontSize : 12}
-              textAnchor="middle"
-            >
-              {Math.round(dataVal.calculated * 100) === 0 && dataVal.calculated > 0 ? '<1%' : format('.0%')(dataVal.calculated)}
-            </text>
-          </g>
-        )) : null}
+
+              <text
+                x={ExtraPairWidth.Basic * 0.5}
+                y={aggregationScale()(val)! + 0.25 * aggregationScale().bandwidth()}
+                opacity={hasData ? 1 : 0}
+                fill={valueScale(casePercent) > 0.4 ? 'white' : 'black'}
+                alignmentBaseline="central"
+                fontSize={store.configStore.largeFont ? largeFontSize : 12}
+                textAnchor="middle"
+              >
+                {casePercent > 0 ? format('.0%')(casePercent) : '<1%'}
+              </text>
+            </g>
+          );
+        }) : null}
       </g>
     </>
   );
