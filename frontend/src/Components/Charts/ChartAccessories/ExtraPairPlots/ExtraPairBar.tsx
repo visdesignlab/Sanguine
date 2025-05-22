@@ -39,7 +39,27 @@ function ExtraPairBar({
     <>
       <g transform={`translate(0,${secondaryDataSet ? aggregationScale().bandwidth() * 0.5 : 0})`}>
         {Object.entries(dataSet).map(([val, dataVal], idx) => (
-          <Tooltip title={format('.4r')(dataVal)} key={idx}>
+          <Tooltip
+            placement="bottom"
+            arrow
+            title={format('.4r')(dataVal)}
+            slotProps={{
+              popper: {
+                modifiers: [
+                  {
+                    name: 'offset',
+                    options: {
+                      offset: [0, -5],
+                    },
+                  },
+                ],
+                sx: {
+                  pointerEvents: 'none',
+                },
+              },
+            }}
+            key={idx}
+          >
             <rect
               x={0}
               y={aggregationScale()(val)}
@@ -53,7 +73,27 @@ function ExtraPairBar({
       </g>
       <g>
         {secondaryDataSet ? Object.entries(secondaryDataSet).map(([val, dataVal], idx) => (
-          <Tooltip title={format('.4r')(dataVal)} key={idx}>
+          <Tooltip
+            placement="bottom"
+            arrow
+            title={format('.4r')(dataVal)}
+            slotProps={{
+              popper: {
+                modifiers: [
+                  {
+                    name: 'offset',
+                    options: {
+                      offset: [0, -5],
+                    },
+                  },
+                ],
+                sx: {
+                  pointerEvents: 'none',
+                },
+              },
+            }}
+            key={idx}
+          >
             <rect
               x={0}
               y={aggregationScale()(val)}

@@ -40,8 +40,28 @@ function ExtraPairBasic({
       <g transform={`translate(0,${secondaryDataSet ? aggregationScale().bandwidth() * 0.5 : 0})`}>
         {Object.entries(dataSet).map(([val, dataVal], idx) => (
           <g key={idx}>
-            <Tooltip title={`${dataVal.actualVal}/${dataVal.outOfTotal}`}>
+            <Tooltip
+              placement="bottom"
+              arrow
+              title={`${dataVal.actualVal}/${dataVal.outOfTotal}`}
+              slotProps={{
+                popper: {
+                  modifiers: [
+                    {
+                      name: 'offset',
+                      options: {
+                        offset: [0, -5],
+                      },
+                    },
+                  ],
+                  sx: {
+                    pointerEvents: 'none',
+                  },
+                },
+              }}
+            >
               <rect
+                id="my-anchor-element"
                 x={0}
                 y={aggregationScale()(val)}
                 fill={!Number.isNaN(dataVal.calculated) ? interpolateGreys(valueScale(dataVal.calculated)) : 'white'}
@@ -60,6 +80,7 @@ function ExtraPairBasic({
               stroke={basicGray}
             />
             <text
+              pointerEvents="none"
               x={ExtraPairWidth.Basic * 0.5}
               y={aggregationScale()(val)! + (secondaryDataSet ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth()}
               opacity={!Number.isNaN(dataVal.calculated) ? 1 : 0}
@@ -96,6 +117,7 @@ function ExtraPairBasic({
               stroke={basicGray}
             />
             <text
+              pointerEvents="none"
               x={ExtraPairWidth.Basic * 0.5}
               y={aggregationScale()(val)! + 0.25 * aggregationScale().bandwidth()}
               opacity={!Number.isNaN(dataVal.calculated) ? 1 : 0}

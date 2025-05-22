@@ -3,7 +3,7 @@ import {
 } from 'react';
 import { observer } from 'mobx-react';
 import {
-  scaleLinear, line, min, max, curveCatmullRom, format, scaleBand, select, extent, axisBottom,
+  scaleLinear, line, min, max, curveCatmullRom, format, scaleBand, select, axisBottom,
 } from 'd3';
 import { Tooltip } from '@mui/material';
 import styled from '@emotion/styled';
@@ -124,7 +124,26 @@ function ExtraPairViolin({
           const tooltipMessage = medianSet[val] ? `Median ${format('.2f')(medianSet[val])}` : 'No data avalaible.';
           return (
             <g key={idx}>
-              <Tooltip title={tooltipMessage}>
+              <Tooltip
+                placement="bottom"
+                arrow
+                title={tooltipMessage}
+                slotProps={{
+                  popper: {
+                    modifiers: [
+                      {
+                        name: 'offset',
+                        options: {
+                          offset: [0, -5],
+                        },
+                      },
+                    ],
+                    sx: {
+                      pointerEvents: 'none',
+                    },
+                  },
+                }}
+              >
                 {generateViolin(result.dataPoints as never, result.kdeArray, val)}
               </Tooltip>
 
@@ -137,7 +156,26 @@ function ExtraPairViolin({
           const secondaryTooltipMessage = secondaryMedianSet[val] ? `Median ${format('.2f')(secondaryMedianSet[val])}` : 'No data avalaible.';
           return (
             <g key={idx}>
-              <Tooltip title={secondaryTooltipMessage}>
+              <Tooltip
+                placement="bottom"
+                arrow
+                title={secondaryTooltipMessage}
+                slotProps={{
+                  popper: {
+                    modifiers: [
+                      {
+                        name: 'offset',
+                        options: {
+                          offset: [0, -5],
+                        },
+                      },
+                    ],
+                    sx: {
+                      pointerEvents: 'none',
+                    },
+                  },
+                }}
+              >
                 <g>
                   {generateViolin(result.dataPoints as never, result.kdeArray, val)}
                 </g>
