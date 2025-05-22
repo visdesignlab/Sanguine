@@ -105,7 +105,7 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           tempXMin = postopHgb < tempXMin ? postopHgb : tempXMin;
           tempXMax = preopHgb > tempXMax ? preopHgb : tempXMax;
           tempXMax = postopHgb > tempXMax ? postopHgb : tempXMax;
-          existingCaseID.add(ob.CASE_ID);
+          existingCaseID.add(ob.case_id);
           caseCount += 1;
           const newOb: DumbbellDataPoint = {
             case: ob,

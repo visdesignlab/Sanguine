@@ -41,12 +41,12 @@ function CaseList() {
         </ListSubheader>
         {currentSelectedPatientGroup.map((d) => (
           <ListItem
-            key={d.CASE_ID}
-            selected={(currentSelectPatient && currentSelectPatient.CASE_ID === d.CASE_ID) || false}
+            key={d.case_id}
+            selected={(currentSelectPatient && currentSelectPatient.case_id === d.case_id) || false}
           >
             <ListItemButton onClick={() => store.interactionStore.setCurrentSelectPatient(d)}>
               <ListItemText primary={
-                                store.configStore.privateMode ? d.CASE_ID : '----------'
+                                store.configStore.privateMode ? d.case_id : '----------'
                             }
               />
             </ListItemButton>

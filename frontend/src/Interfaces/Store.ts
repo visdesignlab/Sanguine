@@ -9,7 +9,7 @@ import { ProjectConfigStore } from './ProjectConfigStore';
 import { InteractionStore } from './InteractionStore';
 import { ActionEvents } from './Types/EventTypes';
 import { ApplicationState } from './Types/StateTypes';
-import { SingleCasePoint } from './Types/DataTypes';
+import { Patient } from './Types/DataTypes';
 import { SurgeryUrgencyArray } from '../Presets/DataDict';
 
 export class RootStore {
@@ -21,7 +21,7 @@ export class RootStore {
 
   chartStore: ChartStore;
 
-  _allCases: SingleCasePoint[];
+  _allPatients: Patient[];
 
   private _mainCompWidth: number;
 
@@ -36,7 +36,7 @@ export class RootStore {
     this.chartStore = new ChartStore(this);
     this.interactionStore = new InteractionStore(this);
 
-    this._allCases = [];
+    this._allPatients = [];
 
     makeAutoObservable(this);
   }
@@ -53,41 +53,60 @@ export class RootStore {
     return this.provenance.current.children.length === 0;
   }
 
-  get allCases() {
-    return this._allCases;
+  get allPatients() {
+    return this._allPatients;
   }
 
-  set allCases(input: SingleCasePoint[]) {
-    this._allCases = input;
+  set allPatients(input) {
+    this._allPatients = input;
   }
 
-  get providerMapping() {
-    const surgeons = this._allCases.map((d) => [d.SURGEON_PROV_ID, d.SURGEON_PROV_NAME]);
-    const anesths = this._allCases.map((d) => [d.ANESTH_PROV_ID, d.ANESTH_PROV_NAME]);
-    const merged = surgeons.concat(anesths);
-    return Object.fromEntries(merged);
+  get allVisits() {
+    return this._allPatients.flatMap((d) => d.visits);
+  }
+
+  get allSurgeries() {
+    return this._allPatients.flatMap((d) => d.visits.flatMap((v) => v.surgeries));
+  }
+
+  get providerMappping() {
+    return this._allPatients.reduce((acc, d) => {
+      d.visits.map((v) => {
+        v.surgeries.map((s) => {
+          if (!acc[s.surgeon_prov_id]) {
+            acc[s.surgeon_prov_id] = s.surgeon_prov_name;
+          }
+          if (!acc[s.anesth_prov_id]) {
+            acc[s.anesth_prov_id] = s.anesth_prov_name;
+          }
+          return null;
+        });
+        return null;
+      });
+      return acc;
+    }, {} as Record<string, string>);
   }
 
   get filteredCases() {
-    return this._allCases.filter((d) => {
+    return this.allSurgeries.filter((d) => {
       // Filter panel items
-      if (!(d.CASE_DATE >= this.provenanceState.rawDateRange[0] && d.CASE_DATE <= this.provenanceState.rawDateRange[1])) {
+      if (!(d.case_date >= this.provenanceState.rawDateRange[0] && d.case_date <= this.provenanceState.rawDateRange[1])) {
         return false;
       }
       if (this.provenanceState.outcomeFilter.length > 0) {
         return !this.provenanceState.outcomeFilter.some((outcome) => !d[outcome]);
       }
-      if (!this.provenanceState.surgeryUrgencySelection[SurgeryUrgencyArray.indexOf(d.SURGERY_TYPE_DESC)]) {
+      if (!this.provenanceState.surgeryUrgencySelection[SurgeryUrgencyArray.indexOf(d.surgery_type_desc)]) {
         return false;
       }
       // surgeon cases performed
-      if (this.surgeonCasesPerformedRange[d.SURGEON_PROV_ID] < this.provenanceState.surgeonCasesPerformed[0] || this.surgeonCasesPerformedRange[d.SURGEON_PROV_ID] > this.provenanceState.surgeonCasesPerformed[1]) {
+      if (this.surgeonCasesPerformedRange[d.surgeon_prov_id] < this.provenanceState.surgeonCasesPerformed[0] || this.surgeonCasesPerformedRange[d.surgeon_prov_id] > this.provenanceState.surgeonCasesPerformed[1]) {
         return false;
       }
 
       if (
         this.provenanceState.currentFilteredPatientGroup.length > 0
-        && !this.provenanceState.currentFilteredPatientGroup.some((patient) => patient.CASE_ID === d.CASE_ID)
+        && !this.provenanceState.currentFilteredPatientGroup.some((patient) => patient.case_id === d.case_id)
       ) {
         return false;
       }
@@ -111,7 +130,8 @@ export class RootStore {
       // Chart selection filters
 
       // Procedure filters
-      const patientCodes = d.ALL_CODES.split(',');
+      const visit = this.allVisits.find((v) => v.visit_no === d.visit_no)!;
+      const patientCodes = visit.billing_codes.map((code) => code.cpt_code);
       const procedureFiltered = !this.provenanceState.proceduresSelection.every((procedure) => {
         if (procedure.overlapList && procedure.overlapList.length > 0) {
           // If we're here, then we have a multiple procedures
@@ -136,15 +156,15 @@ export class RootStore {
 
   get filterRange() {
     const filterRange: Record<string, [number, number]> = {
-      PRBC_UNITS: [0, 0],
-      FFP_UNITS: [0, 0],
-      PLT_UNITS: [0, 0],
-      CRYO_UNITS: [0, 0],
-      CELL_SAVER_ML: [0, 0],
+      rbc_units: [0, 0],
+      ffp_units: [0, 0],
+      plt_units: [0, 0],
+      cryo_units: [0, 0],
+      cell_saver_ml: [0, 0],
       PREOP_HEMO: [0, 0],
       POSTOP_HEMO: [0, 0],
     };
-    this.allCases.forEach((d) => {
+    this.allPatients.forEach((d) => {
       Object.keys(filterRange).forEach((key) => {
         filterRange[key][1] = Math.max(d[key] as number, filterRange[key][1]);
       });
@@ -153,11 +173,11 @@ export class RootStore {
   }
 
   get surgeonCasesPerformedRange() {
-    const surgeonCases = this._allCases.reduce((acc, d) => {
-      if (!acc[d.SURGEON_PROV_ID]) {
-        acc[d.SURGEON_PROV_ID] = 0;
+    const surgeonCases = this.allSurgeries.reduce((acc, d) => {
+      if (!acc[d.surgeon_prov_id]) {
+        acc[d.surgeon_prov_id] = 0;
       }
-      acc[d.SURGEON_PROV_ID] += 1;
+      acc[d.surgeon_prov_id] += 1;
       return acc;
     }, {} as Record<string, number>);
     return surgeonCases;

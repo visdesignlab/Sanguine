@@ -1,34 +1,22 @@
-import { sum } from 'd3';
-import { HeatMapDataPoint, SingleCasePoint } from '../Interfaces/Types/DataTypes';
+import { HeatMapDataPoint, Surgery } from '../Interfaces/Types/DataTypes';
 import { BloodProductCap } from '../Presets/Constants';
 import { BloodComponent } from '../Presets/DataDict';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const generateRegularData = (temporaryDataHolder: Record<string | number, { data: SingleCasePoint[], aggregateAttribute: string | number, patientIDList: Set<number> }>, showZero: boolean, valueToVisualize: BloodComponent) => {
+export const generateRegularData = (temporaryDataHolder: Record<string | number, { data: Surgery[], aggregateAttribute: string | number, patientIDList: Set<number> }>, showZero: boolean, valueToVisualize: BloodComponent) => {
   let totalCaseCount = 0;
   const outputData: HeatMapDataPoint[] = [];
   Object.values(temporaryDataHolder).forEach((computedData) => {
-    const caseIDArray: number[] = [];
-    const dataArray: SingleCasePoint[] = computedData.data;
+    const caseIDArray: string[] = [];
+    const dataArray = computedData.data;
     let zeroNum = 0;
-
-    zeroNum = dataArray.filter((d) => {
-      if (!showZero) {
-        if (d[valueToVisualize] > 0) {
-          caseIDArray.push(d.CASE_ID);
-        }
-      } else {
-        caseIDArray.push(d.CASE_ID);
-      }
-      return d[valueToVisualize] === 0;
-    }).length;
 
     totalCaseCount += caseIDArray.length;
 
-    const countDict: Record<number, SingleCasePoint[]> = {};
+    const countDict: Record<number, Surgery[]> = {};
     const cap: number = BloodProductCap[valueToVisualize];
 
-    if (valueToVisualize === 'CELL_SAVER_ML') {
+    if (valueToVisualize === 'cell_saver_ml') {
       countDict[-1] = [];
       for (let i = 0; i <= cap; i += 100) {
         countDict[i] = [];
@@ -39,15 +27,35 @@ export const generateRegularData = (temporaryDataHolder: Record<string | number,
       }
     }
 
-    dataArray.forEach((d: SingleCasePoint) => {
-      let transfusionOutput = d[valueToVisualize] as number;
-      if (valueToVisualize === 'PRBC_UNITS' && transfusionOutput > 100) {
-        transfusionOutput = Math.ceil(d[valueToVisualize] / 1000);
-      } else if (transfusionOutput > 100 && valueToVisualize === 'PLT_UNITS') {
-        transfusionOutput = (d[valueToVisualize] - 245);
+    dataArray.forEach((d) => {
+      const sumTransfusion = d.transfusions.reduce((acc, transfusion) => {
+        let value = transfusion[valueToVisualize] || 0;
+        if (valueToVisualize === 'rbc_units' && value > 100) {
+          value -= 999;
+        } if (valueToVisualize === 'plt_units' && value > 100) {
+          value -= 245;
+        }
+        // eslint-disable-next-line no-param-reassign
+        acc += value;
+        return acc;
+      }, 0);
+      if (!showZero) {
+        if (sumTransfusion > 0) {
+          caseIDArray.push(d.case_id);
+        }
+      } else {
+        caseIDArray.push(d.case_id);
+      }
+      zeroNum += sumTransfusion === 0 ? 1 : 0;
+
+      let transfusionOutput = sumTransfusion as number;
+      if (valueToVisualize === 'rbc_units' && transfusionOutput > 100) {
+        transfusionOutput = Math.ceil(sumTransfusion / 1000);
+      } else if (transfusionOutput > 100 && valueToVisualize === 'plt_units') {
+        transfusionOutput = (sumTransfusion - 245);
       }
 
-      if (valueToVisualize === 'CELL_SAVER_ML') {
+      if (valueToVisualize === 'cell_saver_ml') {
         const roundedAnswer = Math.floor(transfusionOutput / 100) * 100;
         if (transfusionOutput === 0) {
           countDict[-1].push(d);
@@ -66,14 +74,7 @@ export const generateRegularData = (temporaryDataHolder: Record<string | number,
     outputData.push(
       {
         aggregateAttribute: computedData.aggregateAttribute,
-        totalVal: sum(dataArray, (d) => {
-          if (valueToVisualize === 'PRBC_UNITS' && d[valueToVisualize] > 100) {
-            return (d[valueToVisualize] - 999);
-          } if (d[valueToVisualize] > 100 && valueToVisualize === 'PLT_UNITS') {
-            return (d[valueToVisualize] - 245);
-          }
-          return (d[valueToVisualize] as number);
-        }),
+        totalVal: -2,
         caseIDList: caseIDArray,
         zeroCaseNum: zeroNum,
         countDict,

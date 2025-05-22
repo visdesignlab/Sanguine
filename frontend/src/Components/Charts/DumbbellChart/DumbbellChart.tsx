@@ -50,7 +50,7 @@ const sortDataHelper = (originalData: DumbbellDataPoint[], sortModeInput: 'preop
             return 0;
         }
       } else {
-        if (['SURGEON_PROV_ID', 'ANESTH_PROV_ID'].includes(xAxisVar)) {
+        if (['surgeon_prov_id', 'anesth_prov_id'].includes(xAxisVar)) {
           // Sort by count of y values, or if equal counts sort by provider name
           return countOfYVals[b.yVal] - countOfYVals[a.yVal] || a.yVal.toString().localeCompare(b.yVal.toString());
         }
@@ -228,8 +228,8 @@ function DumbbellChart({
 
     if (xVal) {
       // Checks if dumbbell the only currently selected case
-      const isHovered = store.interactionStore.hoveredCaseIds.includes(dataPoint.case.CASE_ID);
-      const isSelected = store.interactionStore.selectedCaseIds.includes(dataPoint.case.CASE_ID);
+      const isHovered = store.interactionStore.hoveredCaseIds.includes(dataPoint.case.case_id);
+      const isSelected = store.interactionStore.selectedCaseIds.includes(dataPoint.case.case_id);
       return (
         <SingleDumbbell
           xVal={xVal}
@@ -245,14 +245,14 @@ function DumbbellChart({
           onClick={() => {
             // If selected, deselect this case.
             if (isSelected) {
-              store.interactionStore.deselectCaseIds([dataPoint.case.CASE_ID]);
+              store.interactionStore.deselectCaseIds([dataPoint.case.case_id]);
             } else {
               // If not selected, select this case.
-              store.interactionStore.selectedCaseIds = [dataPoint.case.CASE_ID];
+              store.interactionStore.selectedCaseIds = [dataPoint.case.case_id];
             }
           }}
           onMouseEnter={() => {
-            store.interactionStore.hoveredCaseIds = [dataPoint.case.CASE_ID];
+            store.interactionStore.hoveredCaseIds = [dataPoint.case.case_id];
           }}
           onMouseLeave={() => {
             store.interactionStore.hoveredCaseIds = [];

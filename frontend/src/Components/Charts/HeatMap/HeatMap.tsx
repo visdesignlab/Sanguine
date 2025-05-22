@@ -73,7 +73,7 @@ function HeatMap({
 
   const valueScale = useCallback(() => {
     let outputRange;
-    if (xAxisVar === 'CELL_SAVER_ML') {
+    if (xAxisVar === 'cell_saver_ml') {
       outputRange = [-1].concat(range(0, BloodProductCap[xAxisVar] + 100, 100));
     } else {
       outputRange = range(0, BloodProductCap[xAxisVar] + 1);

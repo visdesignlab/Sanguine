@@ -46,7 +46,7 @@ function ComponentRangePicker({ label, isTestValue }: Props) {
             valueLabelDisplay="auto"
             aria-labelledby="range-slider"
             value={rangeValue}
-            step={isTestValue ? 0.1 : (label === 'CELL_SAVER_ML' ? 1000 : undefined)}
+            step={isTestValue ? 0.1 : (label === 'cell_saver_ml' ? 1000 : undefined)}
             onChangeCommitted={(e, nV) => {
               if (isTestValue) {
                 store.configStore.changeBloodFilter(label, (nV as [number, number]));

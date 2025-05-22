@@ -47,11 +47,11 @@ export const DumbbellMinimumWidth = 8;
 export const DifferentialSquareWidth = 10;
 
 export const BloodProductCap = {
-  PRBC_UNITS: 5,
-  FFP_UNITS: 5,
-  CRYO_UNITS: 10, // we don't know about that
-  PLT_UNITS: 5,
-  CELL_SAVER_ML: 1000,
+  rbc_units: 5,
+  ffp_units: 5,
+  cryo_units: 10, // we don't know about that
+  plt_units: 5,
+  cell_saver_ml: 1000,
 };
 
 export const ExtraPairLimit = 5;
