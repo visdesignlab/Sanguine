@@ -51,7 +51,7 @@ export class InteractionStore {
 
   get selectedCaseIds() {
     // Combination of brush selected and selected case IDs
-    const selectedCaseIds = this._selectedCaseIds.concat(this._brushSelectedCaseIds);
+    const selectedCaseIds = [...this._selectedCaseIds, ...this._brushSelectedCaseIds];
     return selectedCaseIds;
   }
 
