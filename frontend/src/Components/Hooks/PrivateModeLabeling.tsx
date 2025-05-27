@@ -23,16 +23,15 @@ export function usePrivateProvLabel(): (label: string | number, attribute: strin
       const labelStr = String(label);
 
       // If the label is an id, find the corresponding provider name.
-      const id = Object
-        .keys(store.providerMapping)
-        .find((key) => store.providerMapping[key] === labelStr);
+      const id = Object.entries(store.providerMapping)
+        .find(([_, value]) => value === labelStr);
 
       // if we found one, return it, otherwise return the label itself
-      return id ?? labelStr;
+      return id?.[0] ?? labelStr;
     }
 
     // If private mode is disabled, return the provider name.
-    const name = store.providerMapping[label] as string;
+    const name = store.providerMapping[label];
     return name ?? String(label);
   }, [store.configStore.privateMode, store.providerMapping]);
 }
