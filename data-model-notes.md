@@ -60,3 +60,7 @@ Meds:
 TODO:
 Room trace:
 Provider:
+Make meds better
+
+poetry run python manage.py destroydata
+poetry run python manage.py mockdata
