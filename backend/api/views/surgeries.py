@@ -18,8 +18,8 @@ def index(request):
 def whoami(request):
     if request.user.is_authenticated:
         return HttpResponse(request.user.username)
-    elif settings.DEBUG:
-        return HttpResponse("DEBUG")
+    elif settings.DISABLE_LOGINS:
+        return HttpResponse("Login disabled")
     else:
         return HttpResponse("Unauthorized", status=401)
 

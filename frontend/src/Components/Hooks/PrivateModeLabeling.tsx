@@ -13,11 +13,25 @@ export function usePrivateProvLabel(): (label: string | number, attribute: strin
 
   // Convert the label to a provider name or id depending on private mode setting.
   return useCallback((label: string | number, attribute: string): string => {
-    // If getting provider label, get the provider name if private mode is disabled.
-    if (!store.configStore.privateMode && attribute.includes('PROV_ID')) {
-      const name = store.providerMapping[label] as string;
-      return name ? `${name.charAt(0)}${name.slice(1).toLowerCase()}` : String(label);
+    // If the attribute is not a provider, return the label as is.
+    if (!attribute.includes('PROV_ID')) {
+      return String(label);
     }
-    return String(label);
+
+    // If private mode is enabled, return the provider id.
+    if (store.configStore.privateMode) {
+      const labelStr = String(label);
+
+      // If the label is an id, find the corresponding provider name.
+      const id = Object.entries(store.providerMapping)
+        .find(([_, value]) => value === labelStr);
+
+      // if we found one, return it, otherwise return the label itself
+      return id?.[0] ?? labelStr;
+    }
+
+    // If private mode is disabled, return the provider name.
+    const name = store.providerMapping[label];
+    return name ?? String(label);
   }, [store.configStore.privateMode, store.providerMapping]);
 }
