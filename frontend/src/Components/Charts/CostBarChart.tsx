@@ -278,22 +278,37 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
           caseIDList: new Set(),
         };
       }
+      const unitsUsed = singleCase.transfusions.reduce((acc, transfusion) => {
+        acc.rbc_units += transfusion.rbc_units || 0;
+        acc.ffp_units += transfusion.ffp_units || 0;
+        acc.cryo_units += transfusion.cryo_units || 0;
+        acc.plt_units += transfusion.plt_units || 0;
+        acc.cell_saver_ml += transfusion.cell_saver_ml || 0;
+        return acc;
+      }, {
+        rbc_units: 0,
+        ffp_units: 0,
+        cryo_units: 0,
+        plt_units: 0,
+        cell_saver_ml: 0,
+      });
+
       if ((outcomeComparison && singleCase[outcomeComparison] as number > 0) || (interventionDate && singleCase.case_date < interventionDate)) {
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].rbc_units += singleCase.rbc_units;
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].ffp_units += singleCase.ffp_units;
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].cryo_units += singleCase.cryo_units;
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].plt_units += singleCase.plt_units;
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].cell_saver_ml += singleCase.cell_saver_ml;
-        secondaryTemporaryDataHolder[singleCase[yAxisVar]].SALVAGE_USAGE += (singleCase.cell_saver_ml > 0 ? 1 : 0);
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].rbc_units += unitsUsed.rbc_units;
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].ffp_units += unitsUsed.ffp_units;
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].cryo_units += unitsUsed.cryo_units;
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].plt_units += unitsUsed.plt_units;
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].cell_saver_ml += unitsUsed.cell_saver_ml;
+        secondaryTemporaryDataHolder[singleCase[yAxisVar]].SALVAGE_USAGE += (unitsUsed.cell_saver_ml > 0 ? 1 : 0);
         secondaryTemporaryDataHolder[singleCase[yAxisVar]].caseNum += 1;
         secondaryTemporaryDataHolder[singleCase[yAxisVar]].caseIDList.add(singleCase.case_id);
       } else {
-        temporaryDataHolder[singleCase[yAxisVar]].rbc_units += singleCase.rbc_units;
-        temporaryDataHolder[singleCase[yAxisVar]].ffp_units += singleCase.ffp_units;
-        temporaryDataHolder[singleCase[yAxisVar]].cryo_units += singleCase.cryo_units;
-        temporaryDataHolder[singleCase[yAxisVar]].plt_units += singleCase.plt_units;
-        temporaryDataHolder[singleCase[yAxisVar]].cell_saver_ml += singleCase.cell_saver_ml;
-        temporaryDataHolder[singleCase[yAxisVar]].SALVAGE_USAGE += (singleCase.cell_saver_ml > 0 ? 1 : 0);
+        temporaryDataHolder[singleCase[yAxisVar]].rbc_units += unitsUsed.rbc_units;
+        temporaryDataHolder[singleCase[yAxisVar]].ffp_units += unitsUsed.ffp_units;
+        temporaryDataHolder[singleCase[yAxisVar]].cryo_units += unitsUsed.cryo_units;
+        temporaryDataHolder[singleCase[yAxisVar]].plt_units += unitsUsed.plt_units;
+        temporaryDataHolder[singleCase[yAxisVar]].cell_saver_ml += unitsUsed.cell_saver_ml;
+        temporaryDataHolder[singleCase[yAxisVar]].SALVAGE_USAGE += (unitsUsed.cell_saver_ml > 0 ? 1 : 0);
         temporaryDataHolder[singleCase[yAxisVar]].caseNum += 1;
         temporaryDataHolder[singleCase[yAxisVar]].caseIDList.add(singleCase.case_id);
       }
