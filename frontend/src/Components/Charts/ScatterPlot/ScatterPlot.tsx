@@ -64,11 +64,6 @@ function ScatterPlot({
   const [isFirstRender, updateIsFirstRender] = useState(true);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updateBrush = (e: any) => {
-    updateBrushLoc(e.selection);
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const xAxisScale = useCallback<any>(() => {
     let innerXAxisScale;
     if (xAxisVar === 'CELL_SAVER_ML') {
@@ -91,7 +86,7 @@ function ScatterPlot({
 
   const brushDef = brush()
     .extent([[xAxisScale().range()[0], yAxisScale().range()[1]], [xAxisScale().range()[1], yAxisScale().range()[0]]])
-    .on('end', updateBrush);
+    .on('end', (e) => { updateBrushLoc(e.selection); });
   svgSelection.select('.brush-layer').call(brushDef as never);
 
   // helper function to determine the correct x position for a given data point
@@ -117,7 +112,6 @@ function ScatterPlot({
       });
       if (caseList.length === 0) {
         updateBrushLoc(null);
-        // brushDef.move(svgSelection.select('.brush-layer'), null);
         if (store.provenanceState.currentSelectedPatientGroup.length > 0) {
           store.interactionStore.clearBrushSelectedCases();
         }
