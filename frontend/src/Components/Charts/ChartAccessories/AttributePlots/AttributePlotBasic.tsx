@@ -5,24 +5,22 @@ import {
 import { observer } from 'mobx-react';
 import { Tooltip } from '@mui/material';
 import {
-  basicGray, ExtraPairWidth, greyScaleRange, largeFontSize,
+  basicGray, AttributePlotWidth, greyScaleRange, largeFontSize,
 } from '../../../../Presets/Constants';
 import Store from '../../../../Interfaces/Store';
+import { AttributePlotData } from '../../../../Interfaces/Types/DataTypes';
 
-interface OwnProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dataSet: any[];
+function AttributePlotBasic({
+  plotData,
+  secondaryPlotData,
+  aggregationScaleRange,
+  aggregationScaleDomain,
+}: {
+  plotData: AttributePlotData<'Basic'>;
+  secondaryPlotData?: AttributePlotData<'Basic'>;
   aggregationScaleDomain: string;
   aggregationScaleRange: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  secondaryDataSet?: any[];
-}
-
-type Props = OwnProps;
-
-function ExtraPairBasic({
-  secondaryDataSet, dataSet, aggregationScaleRange, aggregationScaleDomain,
-}: Props) {
+}) {
   const store = useContext(Store);
 
   const aggregationScale = useCallback(() => {
@@ -37,8 +35,8 @@ function ExtraPairBasic({
 
   return (
     <>
-      <g transform={`translate(0,${secondaryDataSet ? aggregationScale().bandwidth() * 0.5 : 0})`}>
-        {Object.entries(dataSet).map(([val, dataVal], idx) => {
+      <g transform={`translate(0,${secondaryPlotData ? aggregationScale().bandwidth() * 0.5 : 0})`}>
+        {Object.entries(plotData).map(([val, dataVal], idx) => {
         // Are there any cases in this row?
           const hasData = dataVal.rowCaseCount > 0;
           // Find percentage of non-zero attribute value cases out of row case count.
@@ -55,25 +53,25 @@ function ExtraPairBasic({
                     ? interpolateGreys(valueScale(casePercent))
                     : 'white'}
                   opacity={0.8}
-                  width={ExtraPairWidth.Basic}
-                  height={(secondaryDataSet ? 0.5 : 1) * aggregationScale().bandwidth()}
+                  width={AttributePlotWidth.Basic}
+                  height={(secondaryPlotData ? 0.5 : 1) * aggregationScale().bandwidth()}
                 />
               </Tooltip>
 
               <line
                 opacity={hasData ? 0 : 1}
-                y1={(secondaryDataSet ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
-                y2={(secondaryDataSet ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
-                x1={0.35 * ExtraPairWidth.Basic}
-                x2={0.65 * ExtraPairWidth.Basic}
+                y1={(secondaryPlotData ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                y2={(secondaryPlotData ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                x1={0.35 * AttributePlotWidth.Basic}
+                x2={0.65 * AttributePlotWidth.Basic}
                 strokeWidth={0.5}
                 stroke={basicGray}
               />
 
               <text
                 pointerEvents="none"
-                x={ExtraPairWidth.Basic * 0.5}
-                y={aggregationScale()(val)! + (secondaryDataSet ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth()}
+                x={AttributePlotWidth.Basic * 0.5}
+                y={aggregationScale()(val)! + (secondaryPlotData ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth()}
                 opacity={hasData ? 1 : 0}
                 fill={valueScale(casePercent) > 0.4 ? 'white' : 'black'}
                 alignmentBaseline="central"
@@ -87,7 +85,7 @@ function ExtraPairBasic({
         })}
       </g>
       <g>
-        {secondaryDataSet ? Object.entries(secondaryDataSet).map(([val, dataVal], idx) => {
+        {secondaryPlotData ? Object.entries(secondaryPlotData).map(([val, dataVal], idx) => {
         // Are there any cases in this row?
           const hasData = dataVal.rowCaseCount > 0;
           // Find percentage of non-zero attribute value cases out of row case count.
@@ -104,7 +102,7 @@ function ExtraPairBasic({
                     ? interpolateGreys(valueScale(casePercent))
                     : 'white'}
                   opacity={0.8}
-                  width={ExtraPairWidth.Basic}
+                  width={AttributePlotWidth.Basic}
                   height={aggregationScale().bandwidth() * 0.5}
                 />
               </Tooltip>
@@ -113,15 +111,15 @@ function ExtraPairBasic({
                 opacity={hasData ? 0 : 1}
                 y1={0.25 * aggregationScale().bandwidth() + aggregationScale()(val)!}
                 y2={0.25 * aggregationScale().bandwidth() + aggregationScale()(val)!}
-                x1={0.35 * ExtraPairWidth.Basic}
-                x2={0.65 * ExtraPairWidth.Basic}
+                x1={0.35 * AttributePlotWidth.Basic}
+                x2={0.65 * AttributePlotWidth.Basic}
                 strokeWidth={0.5}
                 stroke={basicGray}
               />
 
               <text
                 pointerEvents="none"
-                x={ExtraPairWidth.Basic * 0.5}
+                x={AttributePlotWidth.Basic * 0.5}
                 y={aggregationScale()(val)! + 0.25 * aggregationScale().bandwidth()}
                 opacity={hasData ? 1 : 0}
                 fill={valueScale(casePercent) > 0.4 ? 'white' : 'black'}
@@ -139,4 +137,4 @@ function ExtraPairBasic({
   );
 }
 
-export default observer(ExtraPairBasic);
+export default observer(AttributePlotBasic);

@@ -4,16 +4,18 @@ import {
 } from 'd3';
 import { create as createpd } from 'pdfast';
 import {
-  SingleCasePoint, BasicAggregatedDatePoint, ExtraPairPoint,
+  SingleCasePoint, BasicAggregatedDataPoint, AttributePlotData,
 } from '../Interfaces/Types/DataTypes';
 import { generateRegularData } from './ChartDataGenerator';
+import { EXTRA_PAIR_OPTIONS } from '../Presets/DataDict';
 
-// Returns ExtraPairData point for 'Basic' extra pair data type.
-const getBasicExtraPairData = (aggregatedBy: string, attributeName: string, attributeLabel: string, data: BasicAggregatedDatePoint[], hemoglobinDataSet: SingleCasePoint[]) => {
-  const temporaryDataHolder: any = {};
-  const attributeData = {} as any;
-  const caseDictionary = {} as any;
-  data.forEach((dataPoint: BasicAggregatedDatePoint) => {
+// Returns AttributePlotData point for 'Basic' extra pair data type.
+const getBasicAttributePlotData = (aggregatedBy: string, attributeName: typeof EXTRA_PAIR_OPTIONS[number], attributeLabel: string, data: BasicAggregatedDataPoint[], hemoglobinDataSet: SingleCasePoint[]): AttributePlotData<'Basic'> => {
+  const temporaryDataHolder: Record<string, number[]> = {};
+  const attributeData: AttributePlotData<'Basic'>['attributeData'] = {};
+  const caseDictionary: Record<string, Set<number>> = {};
+
+  data.forEach((dataPoint: BasicAggregatedDataPoint) => {
     temporaryDataHolder[dataPoint.aggregateAttribute] = [];
     caseDictionary[dataPoint.aggregateAttribute] = new Set(dataPoint.caseIDList);
     attributeData[dataPoint.aggregateAttribute] = { rowCaseCount: dataPoint.caseCount };
@@ -24,15 +26,20 @@ const getBasicExtraPairData = (aggregatedBy: string, attributeName: string, attr
       temporaryDataHolder[ob[aggregatedBy]].push(ob[attributeName]);
     }
   });
+
   for (const [key, value] of Object.entries(temporaryDataHolder)) {
     attributeData[key].attributeCaseCount = (value as any)
       .filter((v: any) => v != null && v > 0)
       .length;
   }
+
   // Return an extra pair datapoint which is a basic type
-  return ({
-    name: attributeName, label: attributeLabel, data: attributeData, type: 'Basic',
-  }) as ExtraPairPoint;
+  return {
+    attributeName,
+    attributeLabel,
+    attributeData,
+    type: 'Basic',
+  };
 };
 
 // Generate the data for the extra attribute plot(s) specifically. (Taken from WrapperHeatMap.tsx, to be re-used in CostBarChart.tsx)
@@ -75,105 +82,108 @@ function getAttributeMinMax(input: Record<string, number[]>): { attributeMin: nu
   return { attributeMin: min(attributeData)!, attributeMax: max(attributeData)! };
 }
 
-export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], extraPairArray: string[], data: BasicAggregatedDatePoint[]) => {
-  const newExtraPairData: ExtraPairPoint[] = [];
-  if (extraPairArray.length > 0) {
-    extraPairArray.forEach((variable: string) => {
-      const newData = {} as any;
+export const generateAttributePlotData = (aggregatedBy: string, hemoglobinDataSet: SingleCasePoint[], attributePlotArray: string[], data: BasicAggregatedDataPoint[]) => {
+  const newAttributePlotData: AttributePlotData<'Violin' | 'BarChart' | 'Basic'>[] = [];
+  if (attributePlotArray.length > 0) {
+    attributePlotArray.forEach((attributeName: string) => {
+      const attributeData: AttributePlotData<'Violin' | 'BarChart' | 'Basic'>['attributeData'] = {};
       const caseDictionary = {} as any;
       const medianData = {} as any;
       let kdeMaxTemp: any = 0;
-      switch (variable) {
+
+      switch (attributeName) {
         case 'TOTAL_TRANS':
-          // let newDataBar = {} as any;
           data.forEach((dataPoint) => {
-            newData[dataPoint.aggregateAttribute] = dataPoint.totalVal;
+            attributeData[dataPoint.aggregateAttribute] = dataPoint.totalVal; // Using 1 as rowCaseCount gives total per attribute (instead of per case)
           });
-          newExtraPairData.push({
-            name: 'TOTAL_TRANS', label: 'Total', data: newData, type: 'BarChart',
+          newAttributePlotData.push({
+            attributeName: 'TOTAL_TRANS', attributeLabel: 'Total', attributeData, type: 'BarChart',
           });
           break;
         case 'PER_CASE':
-          // let newDataPerCase = {} as any;
-          data.forEach((dataPoint: BasicAggregatedDatePoint) => {
-            newData[dataPoint.aggregateAttribute] = dataPoint.totalVal / dataPoint.caseCount;
+          data.forEach((dataPoint: BasicAggregatedDataPoint) => {
+            attributeData[dataPoint.aggregateAttribute] = dataPoint.totalVal / dataPoint.caseCount;
           });
-          newExtraPairData.push({
-            name: 'PER_CASE', label: 'Per Case', data: newData, type: 'BarChart',
+          newAttributePlotData.push({
+            attributeName: 'PER_CASE', attributeLabel: 'Per Case', attributeData, type: 'BarChart',
           });
           break;
         case 'ZERO_TRANS':
-          // let newDataPerCase = {} as any;
-          data.forEach((dataPoint: BasicAggregatedDatePoint) => {
-            newData[dataPoint.aggregateAttribute] = { attributeCaseCount: dataPoint.zeroCaseNum, rowCaseCount: dataPoint.caseCount };
+          data.forEach((dataPoint: BasicAggregatedDataPoint) => {
+            attributeData[dataPoint.aggregateAttribute] = { attributeCaseCount: dataPoint.zeroCaseNum, rowCaseCount: dataPoint.caseCount };
           });
-          newExtraPairData.push({
-            name: 'ZERO_TRANS', label: 'Zero %', data: newData, type: 'Basic',
+          newAttributePlotData.push({
+            attributeName: 'ZERO_TRANS', attributeLabel: 'Zero %', attributeData, type: 'Basic',
           });
           break;
 
         case 'DEATH':
-          newExtraPairData.push(getBasicExtraPairData(aggregatedBy, 'DEATH', 'Death', data, hemoglobinDataSet));
+          newAttributePlotData.push(getBasicAttributePlotData(aggregatedBy, 'DEATH', 'Death', data, hemoglobinDataSet));
           break;
         case 'VENT':
-          newExtraPairData.push(getBasicExtraPairData(aggregatedBy, 'VENT', 'Vent', data, hemoglobinDataSet));
+          newAttributePlotData.push(getBasicAttributePlotData(aggregatedBy, 'VENT', 'Vent', data, hemoglobinDataSet));
           break;
         case 'ECMO':
-          newExtraPairData.push(getBasicExtraPairData(aggregatedBy, 'ECMO', 'ECMO', data, hemoglobinDataSet));
+          newAttributePlotData.push(getBasicAttributePlotData(aggregatedBy, 'ECMO', 'ECMO', data, hemoglobinDataSet));
           break;
         case 'STROKE':
-          newExtraPairData.push(getBasicExtraPairData(aggregatedBy, 'STROKE', 'Stroke', data, hemoglobinDataSet));
+          newAttributePlotData.push(getBasicAttributePlotData(aggregatedBy, 'STROKE', 'Stroke', data, hemoglobinDataSet));
           break;
         case 'AMICAR':
-          newExtraPairData.push(getBasicExtraPairData(aggregatedBy, 'AMICAR', 'Amicar', data, hemoglobinDataSet));
+          newAttributePlotData.push(getBasicAttributePlotData(aggregatedBy, 'AMICAR', 'Amicar', data, hemoglobinDataSet));
           break;
         case 'B12':
-          newExtraPairData.push(getBasicExtraPairData(aggregatedBy, 'B12', 'B12', data, hemoglobinDataSet));
+          newAttributePlotData.push(getBasicAttributePlotData(aggregatedBy, 'B12', 'B12', data, hemoglobinDataSet));
           break;
         case 'TXA':
-          newExtraPairData.push(getBasicExtraPairData(aggregatedBy, 'TXA', 'TXA', data, hemoglobinDataSet));
+          newAttributePlotData.push(getBasicAttributePlotData(aggregatedBy, 'TXA', 'TXA', data, hemoglobinDataSet));
           break;
         case 'IRON':
-          newExtraPairData.push(getBasicExtraPairData(aggregatedBy, 'IRON', 'Iron', data, hemoglobinDataSet));
+          newAttributePlotData.push(getBasicAttributePlotData(aggregatedBy, 'IRON', 'Iron', data, hemoglobinDataSet));
           break;
 
         case 'DRG_WEIGHT':
         case 'PREOP_HEMO':
         case 'POSTOP_HEMO': {
-          // let newData = {} as any;
-          data.forEach((dataPoint: BasicAggregatedDatePoint) => {
-            newData[dataPoint.aggregateAttribute] = [];
+          const dataPoints: Record<string, number[]> = {};
+          data.forEach((dataPoint: BasicAggregatedDataPoint) => {
+            dataPoints[dataPoint.aggregateAttribute] = [] as number[];
             caseDictionary[dataPoint.aggregateAttribute] = new Set(dataPoint.caseIDList);
           });
           hemoglobinDataSet.forEach((ob: any) => {
-            const resultValue = ob[variable];
-            if (newData[ob[aggregatedBy]] && resultValue > 0 && caseDictionary[ob[aggregatedBy]].has(ob.CASE_ID)) {
-              newData[ob[aggregatedBy]].push(resultValue);
+            const resultValue = ob[attributeName];
+            if (dataPoints[ob[aggregatedBy]] && resultValue > 0 && caseDictionary[ob[aggregatedBy]].has(ob.CASE_ID)) {
+              (dataPoints[ob[aggregatedBy]] as number[]).push(resultValue);
             }
           });
 
           // Compute the attribute-wide min and max for 'POSTOP_HEMO'
-          const { attributeMin, attributeMax } = getAttributeMinMax(newData);
+          const { attributeMin, attributeMax } = getAttributeMinMax(dataPoints);
 
-          for (const prop in newData) {
-            if (Object.hasOwn(newData, prop)) {
-              medianData[prop] = median(newData[prop]);
+          Object.entries(dataPoints).forEach(([key, value]) => {
+            if (value.length > 0) {
+              medianData[key] = median(value);
 
               // Create the KDE for the attribute using the computed min and max
-              let pd = createpd(newData[prop], { width: 2, min: attributeMin, max: attributeMax });
+              let pd = createpd(value, { width: 2, min: attributeMin, max: attributeMax });
               pd = [{ x: 0, y: 0 }].concat(pd);
 
-              if ((newData[prop] as any).length > 5) {
+              if (value.length > 5) {
                 kdeMaxTemp = (max(pd, (val: any) => val.y) as any) > kdeMaxTemp ? max(pd, (val: any) => val.y) : kdeMaxTemp;
               }
 
               const reversePd = pd.map((pair: any) => ({ x: pair.x, y: -pair.y })).reverse();
               pd = pd.concat(reversePd);
-              newData[prop] = { kdeArray: pd, dataPoints: newData[prop] };
+              attributeData[key] = { kdeArray: pd, dataPoints: value };
             }
-          }
-          newExtraPairData.push({
-            name: variable, label: variable, data: newData, type: 'Violin', medianSet: medianData, kdeMax: kdeMaxTemp,
+          });
+          newAttributePlotData.push({
+            attributeName,
+            attributeLabel: attributeName,
+            attributeData,
+            type: 'Violin',
+            medianSet: medianData,
+            kdeMax: kdeMaxTemp,
           });
           break;
         }
@@ -182,5 +192,5 @@ export const generateExtrapairPlotData = (aggregatedBy: string, hemoglobinDataSe
       }
     });
   }
-  return newExtraPairData;
+  return newAttributePlotData;
 };

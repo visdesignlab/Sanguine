@@ -71,13 +71,13 @@ function AddModeTopMenu({ chartType, sx }: { chartType: ChartType; sx: React.CSS
         h: 1,
         annotationText: '',
         chartType,
-        extraPair: chartType === 'HEATMAP' || chartType === 'COST' ? JSON.stringify([]) : undefined,
+        attributePlots: chartType === 'HEATMAP' || chartType === 'COST' ? [] : undefined,
       };
       newChart.xAxisVar = xAxisSelection as xAxisOption;
       newChart.yAxisVar = yAxisSelection as yAxisOption;
 
       if (newChart.chartType === 'HEATMAP' || newChart.chartType === 'COST') {
-        newChart.extraPair = JSON.stringify([]);
+        newChart.attributePlots = [];
         newChart.outcomeComparison = outcomeComparisonSelection || undefined;
         newChart.interventionDate = interventionDate || undefined;
       }

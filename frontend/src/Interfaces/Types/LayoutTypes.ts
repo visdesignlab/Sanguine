@@ -27,7 +27,7 @@ export type HeatMapLayoutElement = BaseLayoutElement & {
     chartType: 'HEATMAP';
     xAxisVar: BloodComponent;
     yAxisVar: Aggregation;
-    extraPair?: string;
+    attributePlots?: string[];
     interventionDate?: number;
     outcomeComparison?: Outcome;
 };
@@ -36,7 +36,7 @@ export type CostLayoutElement = BaseLayoutElement & {
     chartType: 'COST';
     xAxisVar: 'COST';
     yAxisVar: Aggregation;
-    extraPair?: string;
+    attributePlots?: string[];
     interventionDate?: number;
     outcomeComparison?: Outcome;
 };

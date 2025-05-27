@@ -39,8 +39,8 @@ export const CELL_SAVER_TICKS = ['0', '0-1h', '1h-2h', '2h-3h', '3h-4h', '4h-5h'
 
 export const MIN_HEATMAP_BANDWIDTH = (secondaryData: unknown) => (secondaryData ? 40 : 20);
 
-export const ExtraPairWidth = { Violin: 100, BarChart: 50, Basic: 40 };
-export const ExtraPairPadding = 10;
+export const AttributePlotWidth = { Violin: 100, BarChart: 50, Basic: 40 };
+export const AttributePlotPadding = 10;
 export const CaseRectWidth = 30;
 export const DumbbellGroupMinimumWidth = 100;
 export const DumbbellMinimumWidth = 8;
@@ -54,7 +54,7 @@ export const BloodProductCap = {
   CELL_SAVER_ML: 1000,
 };
 
-export const ExtraPairLimit = 5;
+export const AttributePlotLimit = 5;
 
 export const ManualInfinity = 5000000000;
 

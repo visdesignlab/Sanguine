@@ -3,44 +3,41 @@ import {
 } from 'react';
 import { observer } from 'mobx-react';
 import {
-  scaleLinear, line, min, max, curveCatmullRom, format, scaleBand, select, extent, axisBottom,
+  scaleLinear, line, min, max, curveCatmullRom, format, scaleBand, select, axisBottom,
 } from 'd3';
 import { Tooltip } from '@mui/material';
 import styled from '@emotion/styled';
 import {
-  basicGray, ExtraPairWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, thirdGray,
+  basicGray, AttributePlotWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, thirdGray,
 } from '../../../../Presets/Constants';
-import { SingleCasePoint, ExtraPairPoint } from '../../../../Interfaces/Types/DataTypes';
+import { AttributePlotData } from '../../../../Interfaces/Types/DataTypes';
 
 const ViolinLine = styled('path')`
     fill: ${basicGray};
     stroke: ${basicGray};
   `;
-
-type Props = {
-  dataSet: SingleCasePoint[];
-  aggregationScaleDomain: string;
-  aggregationScaleRange: string;
-  medianSet: ExtraPairPoint['medianSet'];
-  kdeMax: number;
-  name: string;
-  secondaryDataSet?: SingleCasePoint[];
-  secondaryMedianSet?: ExtraPairPoint['medianSet'];
-};
-
 /**
  * Get the x domain of the KDE for the attribute.
  * @param dataSet - The data set to get the domain from.
  * @returns The x domain of the KDE from the data set.
  */
-function getAttributeXDomain(dataSet: ExtraPairPoint['data']) {
+function getAttributeXDomain(dataSet: AttributePlotData<'Violin'>['attributeData']) {
   const allKdeX = Object.values(dataSet).flatMap((result) => result.kdeArray.map((point: { x: number }) => point.x));
   return [min(allKdeX) ?? 0, max(allKdeX) ?? 20];
 }
 
-function ExtraPairViolin({
-  kdeMax, dataSet, aggregationScaleDomain, aggregationScaleRange, medianSet, name, secondaryDataSet, secondaryMedianSet,
-}: Props) {
+function AttributePlotViolin({
+  plotData,
+  secondaryPlotData,
+  aggregationScaleDomain,
+  aggregationScaleRange,
+}: {
+  plotData: AttributePlotData<'Violin'>;
+  secondaryPlotData?: AttributePlotData<'Violin'>;
+  aggregationScaleDomain: string;
+  aggregationScaleRange: string;
+}) {
+  const kdeMax = secondaryPlotData ? Math.max(plotData.kdeMax || 0, secondaryPlotData.kdeMax || 0) : (plotData.kdeMax || 0);
   const aggregationScale = useCallback(() => {
     const domain = JSON.parse(aggregationScaleDomain).map((d: number) => d.toString());
     const range = JSON.parse(aggregationScaleRange);
@@ -49,14 +46,14 @@ function ExtraPairViolin({
   }, [aggregationScaleDomain, aggregationScaleRange]);
 
   // Get the x domain dynamically for the attribute
-  const attributeXDomain = getAttributeXDomain(dataSet);
+  const attributeXDomain = getAttributeXDomain(plotData.attributeData);
   // Set x scale for the entire attribute (Violin plots, etc.)
   const valueScale = scaleLinear()
     .domain(attributeXDomain)
-    .range([0, ExtraPairWidth.Violin]);
+    .range([0, AttributePlotWidth.Violin]);
 
   const lineFunction = useCallback(() => {
-    const calculatedKdeRange = secondaryDataSet ? [-0.25 * aggregationScale().bandwidth(), 0.25 * aggregationScale().bandwidth()] : [-0.5 * aggregationScale().bandwidth(), 0.5 * aggregationScale().bandwidth()];
+    const calculatedKdeRange = secondaryPlotData ? [-0.25 * aggregationScale().bandwidth(), 0.25 * aggregationScale().bandwidth()] : [-0.5 * aggregationScale().bandwidth(), 0.5 * aggregationScale().bandwidth()];
     const kdeScale = scaleLinear()
       .domain([-kdeMax, kdeMax])
       .range(calculatedKdeRange);
@@ -113,15 +110,15 @@ function ExtraPairViolin({
     <>
       <line
         style={{ stroke: '#e5ab73', strokeWidth: '2', strokeDasharray: '5,5' }}
-        x1={valueScale(name === 'PREOP_HEMO' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
-        x2={valueScale(name === 'PREOP_HEMO' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
-        opacity={name === 'DRG_WEIGHT' ? 0 : 1}
+        x1={valueScale(plotData.attributeName === 'PREOP_HEMO' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
+        x2={valueScale(plotData.attributeName === 'PREOP_HEMO' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
+        opacity={plotData.attributeName === 'DRG_WEIGHT' ? 0 : 1}
         y1={aggregationScale().range()[0]}
         y2={aggregationScale().range()[1] - 0.25 * aggregationScale().bandwidth()}
       />
-      <g transform={`translate(0,${secondaryDataSet ? aggregationScale().bandwidth() * 0.25 : 0})`}>
-        {Object.entries(dataSet).map(([val, result], idx) => {
-          const tooltipMessage = medianSet[val] ? `Median ${format('.2f')(medianSet[val])}` : 'No data avalaible.';
+      <g transform={`translate(0,${secondaryPlotData ? aggregationScale().bandwidth() * 0.25 : 0})`}>
+        {Object.entries(plotData).map(([val, result], idx) => {
+          const tooltipMessage = plotData.medianSet[val] ? `Median ${format('.2f')(plotData.medianSet[val])}` : 'No data avalaible.';
           return (
             <g key={idx}>
               <Tooltip title={tooltipMessage}>
@@ -133,8 +130,8 @@ function ExtraPairViolin({
         })}
       </g>
       <g transform={`translate(0,${-aggregationScale().bandwidth() * 0.25})`}>
-        {secondaryDataSet ? Object.entries(secondaryDataSet).map(([val, result], idx) => {
-          const secondaryTooltipMessage = secondaryMedianSet[val] ? `Median ${format('.2f')(secondaryMedianSet[val])}` : 'No data avalaible.';
+        {secondaryPlotData ? Object.entries(secondaryPlotData).map(([val, result], idx) => {
+          const secondaryTooltipMessage = secondaryPlotData.medianSet[val] ? `Median ${format('.2f')(secondaryPlotData.medianSet[val])}` : 'No data avalaible.';
           return (
             <g key={idx}>
               <Tooltip title={secondaryTooltipMessage}>
@@ -151,22 +148,22 @@ function ExtraPairViolin({
   );
 }
 
-export default observer(ExtraPairViolin);
+export default observer(AttributePlotViolin);
 
-export function ExtraPairViolinAxis({
+export function AttributePlotViolinAxis({
   yPos, // Vertical positioning
   xPos, // Horizontal positioning
 }: {
   yPos: number;
   xPos: number;
 }) {
-  const valueScale = scaleLinear().domain([0, 18]).range([0, ExtraPairWidth.Violin]);
+  const valueScale = scaleLinear().domain([0, 18]).range([0, AttributePlotWidth.Violin]);
 
   const axisRef = useRef<SVGSVGElement>(null);
   useEffect(() => {
     const svgSelection = select(axisRef.current);
     const scaleLabel = axisBottom(valueScale).ticks(3);
-    svgSelection.select('.axis').call(scaleLabel as any);
+    svgSelection.select('.axis').call(scaleLabel as never);
   }, [axisRef, valueScale]);
 
   return (
