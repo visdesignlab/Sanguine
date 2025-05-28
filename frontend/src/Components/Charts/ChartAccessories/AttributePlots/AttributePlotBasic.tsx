@@ -1,4 +1,4 @@
-import { useCallback, useContext } from 'react';
+import { useContext, useMemo } from 'react';
 import {
   scaleLinear, format, interpolateGreys, scaleBand,
 } from 'd3';
@@ -23,116 +23,107 @@ function AttributePlotBasic({
 }) {
   const store = useContext(Store);
 
-  const aggregationScale = useCallback(() => {
+  // Band scale for vertical row positioning
+  const aggScale = useMemo(() => {
     const domain = JSON.parse(aggregationScaleDomain).map((d: number) => d.toString());
-    const range = JSON.parse(aggregationScaleRange);
-
-    const aggScale = scaleBand().domain(domain).range(range).paddingInner(0.1);
-    return aggScale;
+    const range = JSON.parse(aggregationScaleRange) as number[];
+    return scaleBand<string>()
+      .domain(domain)
+      .range(range)
+      .paddingInner(0.1);
   }, [aggregationScaleDomain, aggregationScaleRange]);
 
-  const valueScale = scaleLinear().domain([0, 1]).range(greyScaleRange);
+  // Linear color scale (0,1) to greyscale
+  const colorScale = useMemo(
+    () => scaleLinear<number>().domain([0, 1]).range(greyScaleRange),
+    [],
+  );
+
+  /**
+   * Render all rows of the attribute plot
+   * @param data  Attribute counts by row
+   * @param heightFactor  Fraction of vertical space to use per row
+   */
+  const renderRows = (
+    data: AttributePlotData<'Basic'>,
+    heightFactor: number,
+  ) => Object.entries(data.attributeData).map(
+    ([rowName, { rowCaseCount, attributeCaseCount }], idx) => {
+      const hasData = rowCaseCount > 0;
+      // Attribute percentage label (Ex: 3/5 cases used TXA)
+      const attributePercent = hasData ? (attributeCaseCount ?? 0) / rowCaseCount : 0;
+
+      // Positioning and color
+      const y = aggScale(rowName)!;
+      const barHeight = aggScale.bandwidth() * heightFactor;
+      const midY = y + barHeight * 0.5;
+      const fillColor = hasData ? interpolateGreys(colorScale(attributePercent)) : 'white';
+      const textColor = colorScale(attributePercent) > 0.4 ? 'white' : 'black';
+
+      return (
+        <g key={idx}>
+          {/* Bar for row */}
+          <Tooltip title={`${attributeCaseCount}/${rowCaseCount}`}>
+            <rect
+              x={0}
+              y={y}
+              width={AttributePlotWidth.Basic}
+              height={barHeight}
+              fill={fillColor}
+              opacity={0.8}
+            />
+          </Tooltip>
+
+          {/* If no data, draw a small line to indicate “empty” */}
+          {!hasData && (
+          <line
+            x1={0.35 * AttributePlotWidth.Basic}
+            x2={0.65 * AttributePlotWidth.Basic}
+            y1={midY}
+            y2={midY}
+            stroke={basicGray}
+            strokeWidth={0.5}
+          />
+          )}
+
+          {/* Attribute percentage label (Ex: 3/5 cases used TXA) */}
+          {hasData && (
+          <text
+            x={AttributePlotWidth.Basic * 0.5}
+            y={midY}
+            textAnchor="middle"
+            alignmentBaseline="central"
+            fill={textColor}
+            fontSize={store.configStore.largeFont ? largeFontSize : 12}
+            pointerEvents="none"
+          >
+            {attributePercent > 0 ? format('.0%')(attributePercent) : '<1%'}
+          </text>
+          )}
+        </g>
+      );
+    },
+  );
+  // Half vertical bandwidth for secondary plot positioning
+  const halfBand = aggScale.bandwidth() * 0.5;
 
   return (
     <>
-      <g transform={`translate(0,${secondaryPlotData ? aggregationScale().bandwidth() * 0.5 : 0})`}>
-        {Object.entries(plotData.attributeData).map(([rowName, { rowCaseCount, attributeCaseCount }], idx) => {
-          // Are there any cases in this row?
-          const hasData = rowCaseCount > 0;
-          // Find percentage of non-zero attribute value cases out of row case count.
-          const casePercent = hasData
-            ? (attributeCaseCount ?? 0) / rowCaseCount
-            : 0;
-          return (
-            <g key={idx}>
-              <Tooltip title={`${attributeCaseCount}/${rowCaseCount}`}>
-                <rect
-                  x={0}
-                  y={aggregationScale()(rowName)}
-                  fill={hasData
-                    ? interpolateGreys(valueScale(casePercent))
-                    : 'white'}
-                  opacity={0.8}
-                  width={AttributePlotWidth.Basic}
-                  height={(secondaryPlotData ? 0.5 : 1) * aggregationScale().bandwidth()}
-                />
-              </Tooltip>
-
-              <line
-                opacity={hasData ? 0 : 1}
-                y1={(secondaryPlotData ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(rowName)!}
-                y2={(secondaryPlotData ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(rowName)!}
-                x1={0.35 * AttributePlotWidth.Basic}
-                x2={0.65 * AttributePlotWidth.Basic}
-                strokeWidth={0.5}
-                stroke={basicGray}
-              />
-
-              <text
-                pointerEvents="none"
-                x={AttributePlotWidth.Basic * 0.5}
-                y={aggregationScale()(rowName)! + (secondaryPlotData ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth()}
-                opacity={hasData ? 1 : 0}
-                fill={valueScale(casePercent) > 0.4 ? 'white' : 'black'}
-                alignmentBaseline="central"
-                fontSize={store.configStore.largeFont ? largeFontSize : 12}
-                textAnchor="middle"
-              >
-                {casePercent > 0 ? format('.0%')(casePercent) : '<1%'}
-              </text>
-            </g>
-          );
-        })}
+      {/* Primary plot shift down by half‐band if there’s an outcome comparison (secondary) */}
+      <g
+        transform={
+          secondaryPlotData
+            ? `translate(0, ${halfBand})`
+            : undefined
+        }
+      >
+        {renderRows(plotData, secondaryPlotData ? 0.5 : 1)}
       </g>
-      <g>
-        {secondaryPlotData ? Object.entries(secondaryPlotData.attributeData).map(([rowName, { rowCaseCount, attributeCaseCount }], idx) => {
-        // Are there any cases in this row?
-          const hasData = rowCaseCount > 0;
-          // Find percentage of non-zero attribute value cases out of row case count.
-          const casePercent = hasData
-            ? (attributeCaseCount ?? 0) / rowCaseCount
-            : 0;
-          return (
-            <g key={idx}>
-              <Tooltip title={`${attributeCaseCount}/${rowCaseCount}`}>
-                <rect
-                  x={0}
-                  y={aggregationScale()(rowName)}
-                  fill={hasData
-                    ? interpolateGreys(valueScale(casePercent))
-                    : 'white'}
-                  opacity={0.8}
-                  width={AttributePlotWidth.Basic}
-                  height={aggregationScale().bandwidth() * 0.5}
-                />
-              </Tooltip>
 
-              <line
-                opacity={hasData ? 0 : 1}
-                y1={0.25 * aggregationScale().bandwidth() + aggregationScale()(rowName)!}
-                y2={0.25 * aggregationScale().bandwidth() + aggregationScale()(rowName)!}
-                x1={0.35 * AttributePlotWidth.Basic}
-                x2={0.65 * AttributePlotWidth.Basic}
-                strokeWidth={0.5}
-                stroke={basicGray}
-              />
-
-              <text
-                pointerEvents="none"
-                x={AttributePlotWidth.Basic * 0.5}
-                y={aggregationScale()(rowName)! + 0.25 * aggregationScale().bandwidth()}
-                opacity={hasData ? 1 : 0}
-                fill={valueScale(casePercent) > 0.4 ? 'white' : 'black'}
-                alignmentBaseline="central"
-                fontSize={store.configStore.largeFont ? largeFontSize : 12}
-                textAnchor="middle"
-              >
-                {casePercent > 0 ? format('.0%')(casePercent) : '<1%'}
-              </text>
-            </g>
-          );
-        }) : null}
-      </g>
+      {/* Optional outcome-comparison (secondary) plot - always half‐height */}
+      {secondaryPlotData && (
+        <g>{renderRows(secondaryPlotData, 0.5)}</g>
+      )}
     </>
   );
 }
