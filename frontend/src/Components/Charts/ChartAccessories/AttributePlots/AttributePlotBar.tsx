@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useMemo } from 'react';
 import {
   scaleLinear, max, format, scaleBand,
 } from 'd3';
@@ -18,55 +18,65 @@ function AttributePlotBar({
   aggregationScaleDomain: string;
   aggregationScaleRange: string;
 }) {
-  const aggregationScale = useCallback(() => {
+  // Band scale for y‐positioning categories
+  const aggregationScale = useMemo(() => {
     const domain = JSON.parse(aggregationScaleDomain).map((d: number) => d.toString());
-    const range = JSON.parse(aggregationScaleRange);
-    const aggScale = scaleBand().domain(domain).range(range).paddingInner(0.1);
-    return aggScale;
+    const range = JSON.parse(aggregationScaleRange) as [number, number];
+    return scaleBand().domain(domain).range(range).paddingInner(0.1);
   }, [aggregationScaleDomain, aggregationScaleRange]);
 
-  const valueScale = useCallback(() => {
-    let maxVal = max(Object.values(plotData.attributeData).concat([1])) || 0;
-    if (secondaryPlotData) {
-      maxVal = max(Object.values(secondaryPlotData.attributeData).concat([maxVal])) ?? maxVal;
-    }
-    const valScale = scaleLinear().domain([0, maxVal]).range([0, AttributePlotWidth.BarChart]);
-    return valScale;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plotData]);
+  // Linear x-scale that is global max of all data
+  const valueScale = useMemo(() => {
+    // Find max from primary dataset
+    const primaryMax = max(Object.values(plotData.attributeData).concat([1])) ?? 0;
+    // If secondary (outcome comparison) is given, find max of both
+    const globalMax = secondaryPlotData
+      ? max(Object.values(secondaryPlotData.attributeData).concat([primaryMax])) ?? primaryMax
+      : primaryMax;
+    return scaleLinear().domain([0, globalMax]).range([0, AttributePlotWidth.BarChart]);
+  }, [plotData, secondaryPlotData]);
+
+  // Precompute bar heights
+  const fullBarHeight = aggregationScale.bandwidth();
+  const halfBarHeight = fullBarHeight * 0.5;
 
   return (
     <>
-      <g transform={`translate(0,${secondaryPlotData ? aggregationScale().bandwidth() * 0.5 : 0})`}>
-        {Object.entries(plotData.attributeData).map(([rowName, dataVal], idx) => (
-          <Tooltip title={format('.4r')(dataVal)} key={idx}>
+      {/* Primary bar rows */}
+      <g transform={`translate(0,${secondaryPlotData ? halfBarHeight : 0})`}>
+        {Object.entries(plotData.attributeData).map(([key, value], idx) => (
+          <Tooltip key={idx} title={format('.4r')(value)}>
             <rect
               x={0}
-              y={aggregationScale()(rowName)}
+              y={aggregationScale(key)}
+              width={valueScale(value)}
+              height={secondaryPlotData ? halfBarHeight : fullBarHeight}
               fill="#404040"
               opacity={0.8}
-              width={valueScale()(dataVal)}
-              height={(secondaryPlotData ? 0.5 : 1) * aggregationScale().bandwidth()}
             />
           </Tooltip>
         ))}
       </g>
-      <g>
-        {secondaryPlotData ? Object.entries(secondaryPlotData.attributeData).map(([rowName, dataVal], idx) => (
-          <Tooltip title={format('.4r')(dataVal)} key={idx}>
-            <rect
-              x={0}
-              y={aggregationScale()(rowName)}
-              fill="#404040"
-              opacity={0.8}
-              width={valueScale()(dataVal)}
-              height={aggregationScale().bandwidth() * 0.5}
-            />
-          </Tooltip>
-        )) : null}
-      </g>
+
+      {/* Optional outcome comparison (secondary) bar rows */}
+      {secondaryPlotData && (
+        <g>
+          {Object.entries(secondaryPlotData.attributeData).map(([key, value], idx) => (
+            <Tooltip key={idx} title={format('.4r')(value)}>
+              <rect
+                x={0}
+                y={aggregationScale(key)}
+                width={valueScale(value)}
+                height={halfBarHeight}
+                fill="#404040"
+                opacity={0.8}
+              />
+            </Tooltip>
+          ))}
+        </g>
+      )}
     </>
   );
 }
 
-export default (observer(AttributePlotBar));
+export default observer(AttributePlotBar);
