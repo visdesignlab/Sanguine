@@ -67,83 +67,116 @@ function AttributePlotViolin({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aggregationScale, valueScale, kdeMax]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const generateViolin = (dataPoints: (number)[], pdArray: any, aggregationAttribute: string) => {
-    const validDP = dataPoints.filter((d) => d);
-    if (validDP.length > 5) {
+  /**
+   * Render a single violin plot based on data count
+   */
+  const generateViolin = (
+    dataPoints: number[],
+    kdeArray: any,
+    rowKey: string,
+  ) => {
+    const count = dataPoints.filter(Boolean).length;
+    const y0 = aggregationScale()(rowKey)!;
+    const bandwidth = aggregationScale().bandwidth();
+
+    // Greater than 5 points: Smooth KDE path
+    if (count > 5) {
       return (
         <ViolinLine
-          d={lineFunction()(pdArray)!}
-          transform={`translate(0,${aggregationScale()(aggregationAttribute)!})`}
+          d={lineFunction()(kdeArray)!}
+          transform={`translate(0,${y0})`}
         />
       );
     }
-    if (validDP.length === 0) {
+    // 0 points: Draw a line in the middle of the bandwidth
+    if (count === 0) {
+      const yC = y0 + 0.5 * bandwidth;
+      const [x1, x2] = [0.3, 0.7].map((f) => f * valueScale.range()[1]);
       return (
         <line
           opacity={0.75}
           strokeWidth={1.5}
           stroke={thirdGray}
-          x1={0.3 * valueScale.range()[1]}
-          x2={0.7 * valueScale.range()[1]}
-          y1={aggregationScale().bandwidth() * 0.5 + (aggregationScale()(aggregationAttribute) || 0)}
-          y2={aggregationScale().bandwidth() * 0.5 + (aggregationScale()(aggregationAttribute) || 0)}
+          x1={x1}
+          x2={x2}
+          y1={yC}
+          y2={yC}
         />
       );
     }
 
-    const result = dataPoints.map((d, idx) => (
-      <circle
-        key={idx}
-        r={2}
-        fill={basicGray}
-        opacity={d ? 1 : 0}
-        cx={valueScale(d)}
-        cy={(aggregationScale()(aggregationAttribute) || 0) + Math.random() * aggregationScale().bandwidth() * 0.5 + aggregationScale().bandwidth() * 0.25}
-      />
-    ));
-
-    return <g>{result}</g>;
+    // 1–5 points: jitter small circles
+    return (
+      <g>
+        {dataPoints.map((d, i) => (d ? (
+          <circle
+            key={i}
+            r={2}
+            fill={basicGray}
+            cx={valueScale(d)}
+            cy={y0 + bandwidth * (0.25 + Math.random() * 0.5)}
+          />
+        ) : null))}
+      </g>
+    );
   };
+
+  /**
+   * Render one full layer of violins, shifted vertically by offset.
+   */
+  const generateViolins = (
+    attributeData: AttributePlotData<'Violin'>['attributeData'],
+    offset: number,
+  ) => (
+    <g transform={`translate(0,${offset})`}>
+      {Object.entries(attributeData).map(([rowName, { dataPoints, kdeArray }]) => {
+        const median = plotData.medianSet[rowName];
+        const title = median
+          ? `Median ${format('.2f')(median)}`
+          : 'No data available.';
+        return (
+          <g key={rowName}>
+            <Tooltip title={title}>
+              {generateViolin(dataPoints, kdeArray, rowName)}
+            </Tooltip>
+          </g>
+        );
+      })}
+    </g>
+  );
 
   return (
     <>
+      {/* HGB standard reference vertical line */}
       <line
         style={{ stroke: '#e5ab73', strokeWidth: '2', strokeDasharray: '5,5' }}
-        x1={valueScale(plotData.attributeName === 'PREOP_HEMO' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
-        x2={valueScale(plotData.attributeName === 'PREOP_HEMO' ? HGB_HIGH_STANDARD : HGB_LOW_STANDARD)}
+        x1={valueScale(
+          plotData.attributeName === 'PREOP_HEMO'
+            ? HGB_HIGH_STANDARD
+            : HGB_LOW_STANDARD,
+        )}
+        x2={valueScale(
+          plotData.attributeName === 'PREOP_HEMO'
+            ? HGB_HIGH_STANDARD
+            : HGB_LOW_STANDARD,
+        )}
         opacity={plotData.attributeName === 'DRG_WEIGHT' ? 0 : 1}
         y1={aggregationScale().range()[0]}
         y2={aggregationScale().range()[1] - 0.25 * aggregationScale().bandwidth()}
       />
-      <g transform={`translate(0,${secondaryPlotData ? aggregationScale().bandwidth() * 0.25 : 0})`}>
-        {Object.entries(plotData).map(([val, result], idx) => {
-          const tooltipMessage = plotData.medianSet[val] ? `Median ${format('.2f')(plotData.medianSet[val])}` : 'No data avalaible.';
-          return (
-            <g key={idx}>
-              <Tooltip title={tooltipMessage}>
-                {generateViolin(result.dataPoints as never, result.kdeArray, val)}
-              </Tooltip>
 
-            </g>
-          );
-        })}
-      </g>
-      <g transform={`translate(0,${-aggregationScale().bandwidth() * 0.25})`}>
-        {secondaryPlotData ? Object.entries(secondaryPlotData).map(([val, result], idx) => {
-          const secondaryTooltipMessage = secondaryPlotData.medianSet[val] ? `Median ${format('.2f')(secondaryPlotData.medianSet[val])}` : 'No data avalaible.';
-          return (
-            <g key={idx}>
-              <Tooltip title={secondaryTooltipMessage}>
-                <g>
-                  {generateViolin(result.dataPoints as never, result.kdeArray, val)}
-                </g>
-              </Tooltip>
+      {/* Primary violins */}
+      {generateViolins(
+        plotData.attributeData,
+        secondaryPlotData ? aggregationScale().bandwidth() * 0.25 : 0,
+      )}
 
-            </g>
-          );
-        }) : null}
-      </g>
+      {/* Optional outcome-comparison 'secondary' violins */}
+      {secondaryPlotData
+        && generateViolins(
+          secondaryPlotData.attributeData,
+          -aggregationScale().bandwidth() * 0.25,
+        )}
     </>
   );
 }
