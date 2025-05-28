@@ -25,11 +25,11 @@ export const ListSVG = styled.svg<ListSVGProps>`
 `;
 interface ChartGProps {
   currentOffset: Offset;
-  extraPairTotalWidth: number;
+  attributePlotTotalWidth: number;
 }
 
 export const ChartG = styled('g') <ChartGProps>`
-  transform: translate(${(props) => (props.currentOffset.left + props.extraPairTotalWidth)}px,0px)
+  transform: translate(${(props) => (props.currentOffset.left + props.attributePlotTotalWidth)}px,0px)
 `;
 
 export const HeatMapRect = styled('rect')`

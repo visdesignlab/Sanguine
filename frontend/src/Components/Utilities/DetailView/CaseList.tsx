@@ -46,7 +46,7 @@ function CaseList() {
           >
             <ListItemButton onClick={() => store.interactionStore.setCurrentSelectPatient(d)}>
               <ListItemText primary={
-                                store.configStore.privateMode ? d.CASE_ID : '----------'
+                                store.configStore.privateMode ? '----------' : d.CASE_ID
                             }
               />
             </ListItemButton>

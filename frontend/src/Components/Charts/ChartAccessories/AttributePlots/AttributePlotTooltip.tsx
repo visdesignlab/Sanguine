@@ -7,7 +7,7 @@ const textColor = '#000';
 const border = `1px solid ${textColor}`;
 const disablePointer = { pointerEvents: 'none' };
 
-export function ExtraPairTooltip({
+export function AttributePlotTooltip({
   children,
   title,
 }: {children: ReactElement, title: React.ReactNode}) {
