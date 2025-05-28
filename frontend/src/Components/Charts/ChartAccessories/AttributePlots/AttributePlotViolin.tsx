@@ -72,10 +72,11 @@ function AttributePlotViolin({
    */
   const generateViolin = (
     dataPoints: number[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     kdeArray: any,
     rowKey: string,
   ) => {
-    const count = dataPoints.filter(Boolean).length;
+    const count = dataPoints.filter((d) => d).length;
     const y0 = aggregationScale()(rowKey)!;
     const bandwidth = aggregationScale().bandwidth();
 
@@ -91,7 +92,8 @@ function AttributePlotViolin({
     // 0 points: Draw a line in the middle of the bandwidth
     if (count === 0) {
       const yC = y0 + 0.5 * bandwidth;
-      const [x1, x2] = [0.3, 0.7].map((f) => f * valueScale.range()[1]);
+      const x1 = 0.3 * valueScale.range()[1];
+      const x2 = 0.7 * valueScale.range()[1];
       return (
         <line
           opacity={0.75}
@@ -108,9 +110,9 @@ function AttributePlotViolin({
     // 1–5 points: jitter small circles
     return (
       <g>
-        {dataPoints.map((d, i) => (d ? (
+        {dataPoints.map((d, idx) => (d ? (
           <circle
-            key={i}
+            key={idx}
             r={2}
             fill={basicGray}
             cx={valueScale(d)}
