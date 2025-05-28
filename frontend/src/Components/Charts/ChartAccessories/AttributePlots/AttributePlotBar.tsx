@@ -26,9 +26,9 @@ function AttributePlotBar({
   }, [aggregationScaleDomain, aggregationScaleRange]);
 
   const valueScale = useCallback(() => {
-    let maxVal = max(Object.values(plotData));
+    let maxVal = max(Object.values(plotData.attributeData).concat([1])) || 0;
     if (secondaryPlotData) {
-      maxVal = max(Object.values(secondaryPlotData).concat([maxVal]));
+      maxVal = max(Object.values(secondaryPlotData.attributeData).concat([maxVal])) ?? maxVal;
     }
     const valScale = scaleLinear().domain([0, maxVal]).range([0, AttributePlotWidth.BarChart]);
     return valScale;
@@ -38,11 +38,11 @@ function AttributePlotBar({
   return (
     <>
       <g transform={`translate(0,${secondaryPlotData ? aggregationScale().bandwidth() * 0.5 : 0})`}>
-        {Object.entries(plotData).map(([val, dataVal], idx) => (
+        {Object.entries(plotData.attributeData).map(([rowName, dataVal], idx) => (
           <Tooltip title={format('.4r')(dataVal)} key={idx}>
             <rect
               x={0}
-              y={aggregationScale()(val)}
+              y={aggregationScale()(rowName)}
               fill="#404040"
               opacity={0.8}
               width={valueScale()(dataVal)}
@@ -52,11 +52,11 @@ function AttributePlotBar({
         ))}
       </g>
       <g>
-        {secondaryPlotData ? Object.entries(secondaryPlotData).map(([val, dataVal], idx) => (
+        {secondaryPlotData ? Object.entries(secondaryPlotData.attributeData).map(([rowName, dataVal], idx) => (
           <Tooltip title={format('.4r')(dataVal)} key={idx}>
             <rect
               x={0}
-              y={aggregationScale()(val)}
+              y={aggregationScale()(rowName)}
               fill="#404040"
               opacity={0.8}
               width={valueScale()(dataVal)}
