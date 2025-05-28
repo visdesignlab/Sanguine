@@ -4,7 +4,7 @@ import { timeFormat } from 'd3';
 import { makeAutoObservable } from 'mobx';
 import { createContext } from 'react';
 import { ChartStore } from './ChartStore';
-import { defaultState } from './DefaultState';
+import { defaultState } from './DefaultStates/DefaultState';
 import { ProjectConfigStore } from './ProjectConfigStore';
 import { InteractionStore } from './InteractionStore';
 import { ActionEvents } from './Types/EventTypes';

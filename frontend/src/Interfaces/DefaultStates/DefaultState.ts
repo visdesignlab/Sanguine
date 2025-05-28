@@ -1,5 +1,5 @@
-import { ManualInfinity } from '../Presets/Constants';
-import { ApplicationState } from './Types/StateTypes';
+import { ManualInfinity } from '../../Presets/Constants';
+import { ApplicationState } from '../Types/StateTypes';
 
 const today = new Date();
 today.setDate(today.getDate() + 1);
