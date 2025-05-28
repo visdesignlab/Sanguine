@@ -2,7 +2,7 @@
 import { observer } from 'mobx-react';
 import styled from '@emotion/styled';
 import { Tooltip } from '@mui/material';
-import { useContext } from 'react';
+import React, { useContext } from 'react';
 import { format } from 'd3';
 import { AttributePlotData } from '../../../../Interfaces/Types/DataTypes';
 import {
@@ -204,17 +204,21 @@ export function AttributePlotLabels({
   const store = useContext(Store);
   return (
     <>
-      {attributePlotData.map((plotData, idx) => attributePlotTextGenerator(
-        store,
-        plotData.attributeName,
-        plotData.attributeLabel,
-        plotData.type,
-        plotData,
-        idx,
-        attributePlotData,
-        chartId,
-        dimensionHeight,
-        currentOffset,
+      {attributePlotData.map((plotData, idx) => (
+        <React.Fragment key={`${chartId}-${plotData.attributeName}-${idx}`}>
+          {attributePlotTextGenerator(
+            store,
+            plotData.attributeName,
+            plotData.attributeLabel,
+            plotData.type,
+            plotData,
+            idx,
+            attributePlotData,
+            chartId,
+            dimensionHeight,
+            currentOffset,
+          )}
+        </React.Fragment>
       ))}
     </>
   );
