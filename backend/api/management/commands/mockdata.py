@@ -59,7 +59,7 @@ class Command(BaseCommand):
         ]
 
         # Generate mock data for PATIENT
-        for _ in range(100):
+        for _ in range(1000):
             mrn = fake.unique.random_number(digits=10)
             race_idx = random.randint(0, 7)
             eth_idx = random.randint(0, 3)
@@ -171,13 +171,13 @@ class Command(BaseCommand):
 
         # Generate mock data for SURGERY_CASE
         for pat, bad_pat, visit in visits:
-            surg1_start = fake.date_time_between(
+            surg1_start = make_aware(fake.date_time_between(
                 start_date=visit.adm_dtm, end_date=visit.adm_dtm + timedelta(days=1)
-            )
-            surg2_start = fake.date_time_between(
+            ))
+            surg2_start = make_aware(fake.date_time_between(
                 start_date=visit.adm_dtm + timedelta(days=3),
                 end_date=visit.adm_dtm + timedelta(days=4),
-            )
+            ))
             surg_starts = [surg1_start, surg2_start] if bad_pat else [surg1_start]
             for start_time in surg_starts:
                 surg_end = start_time + timedelta(hours=5)
@@ -261,8 +261,8 @@ class Command(BaseCommand):
                         left_digits=2,
                         right_digits=1,
                         positive=True,
-                        min_value=5,
-                        max_value=8 if bad_pat else 9,
+                        min_value=5 if bad_pat else 10,
+                        max_value=9 if bad_pat else 14,
                     ),
                     uom_code=fake.random_element(elements=("g/dL", "g/L")),
                     lower_limit=12,
@@ -279,12 +279,14 @@ class Command(BaseCommand):
                     )
                 )
                 last_value = lab.result_value
+                min_value = last_value + 1 if last_value < 8 else max(last_value - 1, 5)
+                max_value = last_value + 2 if last_value < 8 else min(last_value + 2, 20)
                 new_value = last_value + 1 if last_value < 8 else fake.pydecimal(
                     left_digits=2,
                     right_digits=1,
                     positive=True,
-                    min_value=min(last_value - 2, 5),
-                    max_value=min(last_value + 2, 20),
+                    min_value=min_value,
+                    max_value=max_value,
                 )
                 lab = Lab.objects.create(
                     visit_no=visit,
@@ -399,7 +401,7 @@ class Command(BaseCommand):
         for rank, (surg, lab) in enumerate(labs):
             rcb_units = 0
             if lab.result_value < 6:
-                rcb_units = fake.random_int(min=2, max=4)
+                rcb_units = fake.random_int(min=2, max=3)
             elif lab.result_value < 7:
                 rcb_units = fake.random_int(min=1, max=2)
             elif lab.result_value < 9:

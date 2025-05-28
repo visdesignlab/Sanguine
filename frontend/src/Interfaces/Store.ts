@@ -9,7 +9,7 @@ import { ProjectConfigStore } from './ProjectConfigStore';
 import { InteractionStore } from './InteractionStore';
 import { ActionEvents } from './Types/EventTypes';
 import { ApplicationState } from './Types/StateTypes';
-import { Patient } from './Types/DataTypes';
+import { Visit } from './Types/DataTypes';
 import { SurgeryUrgencyArray } from '../Presets/DataDict';
 
 export class RootStore {
@@ -21,7 +21,7 @@ export class RootStore {
 
   chartStore: ChartStore;
 
-  _allPatients: Patient[];
+  _allVisits: Visit[];
 
   private _mainCompWidth: number;
 
@@ -36,7 +36,7 @@ export class RootStore {
     this.chartStore = new ChartStore(this);
     this.interactionStore = new InteractionStore(this);
 
-    this._allPatients = [];
+    this._allVisits = [];
 
     makeAutoObservable(this);
   }
@@ -53,34 +53,31 @@ export class RootStore {
     return this.provenance.current.children.length === 0;
   }
 
-  get allPatients() {
-    return this._allPatients;
-  }
-
-  set allPatients(input) {
-    this._allPatients = input;
-  }
-
   get allVisits() {
-    return this._allPatients.flatMap((d) => d.visits);
+    return this._allVisits;
+  }
+
+  set allVisits(input) {
+    this._allVisits = input;
+  }
+
+  get allPatients() {
+    return this._allVisits.flatMap((d) => d.patient);
   }
 
   get allSurgeries() {
-    return this._allPatients.flatMap((d) => d.visits.flatMap((v) => v.surgeries));
+    return this.allVisits.flatMap((v) => v.surgeries);
   }
 
   get providerMappping() {
-    return this._allPatients.reduce((acc, d) => {
-      d.visits.map((v) => {
-        v.surgeries.map((s) => {
-          if (!acc[s.surgeon_prov_id]) {
-            acc[s.surgeon_prov_id] = s.surgeon_prov_name;
-          }
-          if (!acc[s.anesth_prov_id]) {
-            acc[s.anesth_prov_id] = s.anesth_prov_name;
-          }
-          return null;
-        });
+    return this._allVisits.reduce((acc, v) => {
+      v.surgeries.map((s) => {
+        if (!acc[s.surgeon_prov_id]) {
+          acc[s.surgeon_prov_id] = s.surgeon_prov_name;
+        }
+        if (!acc[s.anesth_prov_id]) {
+          acc[s.anesth_prov_id] = s.anesth_prov_name;
+        }
         return null;
       });
       return acc;

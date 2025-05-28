@@ -79,6 +79,16 @@ export interface BillingCode {
     prov_name: string;
     code_rank: number;
 }
+export type Patient = {
+    mrn: string;
+    last_name: string;
+    first_name: string;
+    birth_date: string; // ISO date string
+    sex_code: string;
+    race_desc: string;
+    ethnicity_desc: string;
+    death_date: string | null;
+};
 export interface Visit {
     visit_no: string; // BigIntegerField, primary key
     mrn: string; // ForeignKey to Patient, use string to match Patient.mrn
@@ -119,24 +129,13 @@ export interface Visit {
     cci_hiv_aids: number | null;
     cci_score: number | null;
 
+    patient: Patient;
     transfusions: TransfusionEvent[];
     surgeries: Surgery[];
     labs: Lab[];
     meds: Medication[];
     billing_codes: BillingCode[];
 }
-export type Patient = {
-    mrn: string;
-    last_name: string;
-    first_name: string;
-    birth_date: string; // ISO date string
-    sex_code: string;
-    race_desc: string;
-    ethnicity_desc: string;
-    death_date: string | null;
-    // other patient metadata
-    visits: Visit[];
-};
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type ProcedureEntry = {

@@ -6,7 +6,7 @@ import Store from './Interfaces/Store';
 import { logoutHandler, whoamiAPICall } from './Interfaces/UserManagement';
 import BrowserWarning from './Components/Modals/BrowserWarning';
 import DataRetrieval from './Components/Modals/DataRetrieval';
-import { Patient } from './Interfaces/Types/DataTypes';
+import { Visit } from './Interfaces/Types/DataTypes';
 
 function App() {
   const store = useContext(Store);
@@ -25,14 +25,14 @@ function App() {
   useEffect(() => {
     async function fetchAllPatients() {
       try {
-        const patsRequest = await fetch(`${import.meta.env.VITE_QUERY_URL}get_all_data`);
-        const pats = await patsRequest.json() as Patient[];
+        const visitsRequest = await fetch(`${import.meta.env.VITE_QUERY_URL}get_all_data`);
+        const visits = await visitsRequest.json() as Visit[];
 
-        if (pats.length === 0) {
+        if (visits.length === 0) {
           throw new Error('There was an issue fetching data. No results were returned.');
         }
 
-        store.allPatients = pats;
+        store.allVisits = visits;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         setDataLoadingFailed(true);
