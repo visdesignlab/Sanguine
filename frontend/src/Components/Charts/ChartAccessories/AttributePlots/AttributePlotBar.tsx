@@ -3,9 +3,9 @@ import {
   scaleLinear, max, format, scaleBand,
 } from 'd3';
 import { observer } from 'mobx-react';
-import { Tooltip } from '@mui/material';
 import { AttributePlotWidth } from '../../../../Presets/Constants';
 import { AttributePlotData } from '../../../../Interfaces/Types/DataTypes';
+import { AttributePlotTooltip } from './AttributePlotTooltip';
 
 function AttributePlotBar({
   plotData,
@@ -45,7 +45,7 @@ function AttributePlotBar({
       {/* Primary bar rows */}
       <g transform={`translate(0,${secondaryPlotData ? halfBarHeight : 0})`}>
         {Object.entries(plotData.attributeData).map(([key, value], idx) => (
-          <Tooltip key={idx} title={format('.4r')(value)}>
+          <AttributePlotTooltip key={idx} title={format('.4r')(value)}>
             <rect
               x={0}
               y={aggregationScale(key)}
@@ -54,7 +54,7 @@ function AttributePlotBar({
               fill="#404040"
               opacity={0.8}
             />
-          </Tooltip>
+          </AttributePlotTooltip>
         ))}
       </g>
 
@@ -62,7 +62,7 @@ function AttributePlotBar({
       {secondaryPlotData && (
         <g>
           {Object.entries(secondaryPlotData.attributeData).map(([key, value], idx) => (
-            <Tooltip key={idx} title={format('.4r')(value)}>
+            <AttributePlotTooltip key={idx} title={format('.4r')(value)}>
               <rect
                 x={0}
                 y={aggregationScale(key)}
@@ -71,7 +71,7 @@ function AttributePlotBar({
                 fill="#404040"
                 opacity={0.8}
               />
-            </Tooltip>
+            </AttributePlotTooltip>
           ))}
         </g>
       )}

@@ -3,12 +3,12 @@ import {
   scaleLinear, format, interpolateGreys, scaleBand,
 } from 'd3';
 import { observer } from 'mobx-react';
-import { Tooltip } from '@mui/material';
 import {
   basicGray, AttributePlotWidth, greyScaleRange, largeFontSize,
 } from '../../../../Presets/Constants';
 import Store from '../../../../Interfaces/Store';
 import { AttributePlotData } from '../../../../Interfaces/Types/DataTypes';
+import { AttributePlotTooltip } from './AttributePlotTooltip';
 
 function AttributePlotBasic({
   plotData,
@@ -63,7 +63,7 @@ function AttributePlotBasic({
       return (
         <g key={idx}>
           {/* Bar for row */}
-          <Tooltip title={`${attributeCaseCount}/${rowCaseCount}`}>
+          <AttributePlotTooltip title={`${attributeCaseCount}/${rowCaseCount}`}>
             <rect
               x={0}
               y={y}
@@ -72,7 +72,7 @@ function AttributePlotBasic({
               fill={fillColor}
               opacity={0.8}
             />
-          </Tooltip>
+          </AttributePlotTooltip>
 
           {/* If no data, draw a small line to indicate “empty” */}
           {!hasData && (

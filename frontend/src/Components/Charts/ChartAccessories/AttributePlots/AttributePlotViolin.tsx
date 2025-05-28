@@ -5,12 +5,12 @@ import { observer } from 'mobx-react';
 import {
   scaleLinear, line, min, max, curveCatmullRom, format, scaleBand, select, axisBottom,
 } from 'd3';
-import { Tooltip } from '@mui/material';
 import styled from '@emotion/styled';
 import {
   basicGray, AttributePlotWidth, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, thirdGray,
 } from '../../../../Presets/Constants';
 import { AttributePlotData } from '../../../../Interfaces/Types/DataTypes';
+import { AttributePlotTooltip } from './AttributePlotTooltip';
 
 const ViolinLine = styled('path')`
     fill: ${basicGray};
@@ -138,9 +138,9 @@ function AttributePlotViolin({
           : 'No data available.';
         return (
           <g key={rowName}>
-            <Tooltip title={title}>
+            <AttributePlotTooltip title={title}>
               {generateViolin(dataPoints, kdeArray, rowName)}
-            </Tooltip>
+            </AttributePlotTooltip>
           </g>
         );
       })}
