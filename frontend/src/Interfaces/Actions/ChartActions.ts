@@ -4,30 +4,30 @@ import { LayoutElement, xAxisOption, yAxisOption } from '../Types/LayoutTypes';
 import { ApplicationState } from '../Types/StateTypes';
 import { ChartType, Outcome } from '../../Presets/DataDict';
 
-export const addExtraPair = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, newExtraPair) => {
+export const addAttributePlot = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, newAttributePlot) => {
   state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
-    if (d.i === chartID && (d.chartType === 'HEATMAP' || d.chartType === 'COST') && d.extraPair) {
-      if (!d.extraPair.includes(newExtraPair)) {
-        const originalArray = JSON.parse(d.extraPair);
-        originalArray.push(newExtraPair);
-        d.extraPair = JSON.stringify(originalArray);
+    if (d.i === chartID && (d.chartType === 'HEATMAP' || d.chartType === 'COST') && d.attributePlots) {
+      if (!d.attributePlots.includes(newAttributePlot)) {
+        const newArray = structuredClone(d.attributePlots);
+        newArray.push(newAttributePlot);
+        d.attributePlots = newArray;
       }
     }
     return d;
   });
-}).setLabel('addExtraPair');
+}).setLabel('addAttributePlot');
 
-export const removeExtraPair = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, removingPairName) => {
+export const removeAttributePlot = createAction<ApplicationState, [string, string], ActionEvents>((state, chartID, removingPairName) => {
   state.layoutArray = state.layoutArray.map((d: LayoutElement) => {
-    if (d.i === chartID && (d.chartType === 'HEATMAP' || d.chartType === 'COST') && d.extraPair) {
-      const originalArray = JSON.parse(d.extraPair);
+    if (d.i === chartID && (d.chartType === 'HEATMAP' || d.chartType === 'COST') && d.attributePlots) {
+      const originalArray = structuredClone(d.attributePlots);
 
       const newArray = (originalArray.filter((l: string) => (l !== removingPairName)));
-      d.extraPair = JSON.stringify(newArray);
+      d.attributePlots = newArray;
     }
     return d;
   });
-}).setLabel('removeExtraPair');
+}).setLabel('removeAttributePlot');
 
 // change the case num when this changes in store instead of here
 export const removeChart = createAction<ApplicationState, [string], ActionEvents>((state, indexToRemove) => {

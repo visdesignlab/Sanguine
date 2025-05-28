@@ -15,7 +15,7 @@ type Props = {
   currentOffset: Offset;
   dimensionHeight: number;
   dimensionWidth: number;
-  extraPairTotalWidth: number;
+  attributePlotTotalWidth: number;
   yAxisVar: yAxisOption;
   valueScaleDomain: string;
   valueScaleRange: string;
@@ -23,7 +23,7 @@ type Props = {
   isValueScaleBand: boolean;
 };
 function HeatMapAxis({
-  svg, currentOffset, extraPairTotalWidth, dimensionHeight, yAxisVar, valueScaleRange, valueScaleDomain, xAxisVar, dimensionWidth, isValueScaleBand,
+  svg, currentOffset, attributePlotTotalWidth, dimensionHeight, yAxisVar, valueScaleRange, valueScaleDomain, xAxisVar, dimensionWidth, isValueScaleBand,
 }: Props) {
   const store = useContext(Store);
 
@@ -55,12 +55,12 @@ function HeatMapAxis({
 
   svgSelection
     .select('.x-label')
-    .attr('x', (dimensionWidth - extraPairTotalWidth) * 0.5)
+    .attr('x', (dimensionWidth - attributePlotTotalWidth) * 0.5)
     .attr('y', dimensionHeight - currentOffset.bottom + 25)
     .attr('alignment-baseline', 'hanging')
     .attr('font-size', store.configStore.largeFont ? largeFontSize : regularFontSize)
     .attr('text-anchor', 'middle')
-    .attr('transform', `translate(${extraPairTotalWidth},0)`)
+    .attr('transform', `translate(${attributePlotTotalWidth},0)`)
     .text(() => (AcronymDictionary[xAxisVar] ? AcronymDictionary[xAxisVar] : xAxisVar));
 
   svgSelection
@@ -70,7 +70,7 @@ function HeatMapAxis({
     .attr('font-size', store.configStore.largeFont ? largeFontSize : regularFontSize)
     .attr('text-anchor', 'start')
     .attr('alignment-baseline', 'hanging')
-    .attr('transform', `translate(${extraPairTotalWidth},0)`)
+    .attr('transform', `translate(${attributePlotTotalWidth},0)`)
     .text(
       AcronymDictionary[yAxisVar] ? AcronymDictionary[yAxisVar] : yAxisVar,
     );
