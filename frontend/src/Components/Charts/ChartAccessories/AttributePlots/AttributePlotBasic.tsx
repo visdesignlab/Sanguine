@@ -36,19 +36,19 @@ function AttributePlotBasic({
   return (
     <>
       <g transform={`translate(0,${secondaryPlotData ? aggregationScale().bandwidth() * 0.5 : 0})`}>
-        {Object.entries(plotData).map(([val, dataVal], idx) => {
-        // Are there any cases in this row?
-          const hasData = dataVal.rowCaseCount > 0;
+        {Object.entries(plotData.attributeData).map(([rowName, { rowCaseCount, attributeCaseCount }], idx) => {
+          // Are there any cases in this row?
+          const hasData = rowCaseCount > 0;
           // Find percentage of non-zero attribute value cases out of row case count.
           const casePercent = hasData
-            ? dataVal.attributeCaseCount / dataVal.rowCaseCount
+            ? (attributeCaseCount ?? 0) / rowCaseCount
             : 0;
           return (
             <g key={idx}>
-              <Tooltip title={`${dataVal.attributeCaseCount}/${dataVal.rowCaseCount}`}>
+              <Tooltip title={`${attributeCaseCount}/${rowCaseCount}`}>
                 <rect
                   x={0}
-                  y={aggregationScale()(val)}
+                  y={aggregationScale()(rowName)}
                   fill={hasData
                     ? interpolateGreys(valueScale(casePercent))
                     : 'white'}
@@ -60,8 +60,8 @@ function AttributePlotBasic({
 
               <line
                 opacity={hasData ? 0 : 1}
-                y1={(secondaryPlotData ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
-                y2={(secondaryPlotData ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                y1={(secondaryPlotData ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(rowName)!}
+                y2={(secondaryPlotData ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth() + aggregationScale()(rowName)!}
                 x1={0.35 * AttributePlotWidth.Basic}
                 x2={0.65 * AttributePlotWidth.Basic}
                 strokeWidth={0.5}
@@ -71,7 +71,7 @@ function AttributePlotBasic({
               <text
                 pointerEvents="none"
                 x={AttributePlotWidth.Basic * 0.5}
-                y={aggregationScale()(val)! + (secondaryPlotData ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth()}
+                y={aggregationScale()(rowName)! + (secondaryPlotData ? 0.5 : 1) * 0.5 * aggregationScale().bandwidth()}
                 opacity={hasData ? 1 : 0}
                 fill={valueScale(casePercent) > 0.4 ? 'white' : 'black'}
                 alignmentBaseline="central"
@@ -85,19 +85,19 @@ function AttributePlotBasic({
         })}
       </g>
       <g>
-        {secondaryPlotData ? Object.entries(secondaryPlotData).map(([val, dataVal], idx) => {
+        {secondaryPlotData ? Object.entries(secondaryPlotData.attributeData).map(([rowName, { rowCaseCount, attributeCaseCount }], idx) => {
         // Are there any cases in this row?
-          const hasData = dataVal.rowCaseCount > 0;
+          const hasData = rowCaseCount > 0;
           // Find percentage of non-zero attribute value cases out of row case count.
           const casePercent = hasData
-            ? dataVal.attributeCaseCount / dataVal.rowCaseCount
+            ? (attributeCaseCount ?? 0) / rowCaseCount
             : 0;
           return (
             <g key={idx}>
-              <Tooltip title={`${dataVal.attributeCaseCount}/${dataVal.rowCaseCount}`}>
+              <Tooltip title={`${attributeCaseCount}/${rowCaseCount}`}>
                 <rect
                   x={0}
-                  y={aggregationScale()(val)}
+                  y={aggregationScale()(rowName)}
                   fill={hasData
                     ? interpolateGreys(valueScale(casePercent))
                     : 'white'}
@@ -109,8 +109,8 @@ function AttributePlotBasic({
 
               <line
                 opacity={hasData ? 0 : 1}
-                y1={0.25 * aggregationScale().bandwidth() + aggregationScale()(val)!}
-                y2={0.25 * aggregationScale().bandwidth() + aggregationScale()(val)!}
+                y1={0.25 * aggregationScale().bandwidth() + aggregationScale()(rowName)!}
+                y2={0.25 * aggregationScale().bandwidth() + aggregationScale()(rowName)!}
                 x1={0.35 * AttributePlotWidth.Basic}
                 x2={0.65 * AttributePlotWidth.Basic}
                 strokeWidth={0.5}
@@ -120,7 +120,7 @@ function AttributePlotBasic({
               <text
                 pointerEvents="none"
                 x={AttributePlotWidth.Basic * 0.5}
-                y={aggregationScale()(val)! + 0.25 * aggregationScale().bandwidth()}
+                y={aggregationScale()(rowName)! + 0.25 * aggregationScale().bandwidth()}
                 opacity={hasData ? 1 : 0}
                 fill={valueScale(casePercent) > 0.4 ? 'white' : 'black'}
                 alignmentBaseline="central"
