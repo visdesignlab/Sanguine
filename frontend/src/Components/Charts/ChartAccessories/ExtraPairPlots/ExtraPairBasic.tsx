@@ -42,7 +42,6 @@ function ExtraPairBasic({
           <g key={idx}>
             <ExtraPairTooltip title={`${dataVal.actualVal}/${dataVal.outOfTotal}`}>
               <rect
-                id="my-anchor-element"
                 x={0}
                 y={aggregationScale()(val)}
                 fill={!Number.isNaN(dataVal.calculated) ? interpolateGreys(valueScale(dataVal.calculated)) : 'white'}
