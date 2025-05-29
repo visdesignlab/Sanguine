@@ -5,7 +5,7 @@ import {
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import styled from '@emotion/styled';
 import Store from '../../../Interfaces/Store';
-import { ScatterDataPoint, SingleCasePoint } from '../../../Interfaces/Types/DataTypes';
+import { ScatterDataPoint, Surgery } from '../../../Interfaces/Types/DataTypes';
 import ChartConfigMenu from '../ChartAccessories/ChartConfigMenu';
 import { ChartSVG } from '../../../Presets/StyledSVGComponents';
 import ScatterPlot from './ScatterPlot';
@@ -46,7 +46,7 @@ function WrapperScatter({ layout }: { layout: ScatterLayoutElement }) {
     let tempXMin = Infinity;
     let tempXMax = 0;
     if (filteredCases) {
-      let castData = filteredCases.map((ob: SingleCasePoint) => {
+      let castData = filteredCases.map((ob: Surgery) => {
         const yValue = yAxisVar === 'PREOP_HEMO' ? ob.PREOP_HEMO : ob.POSTOP_HEMO;
         let xValue = parseInt(`${ob[xAxisVar]}`, 10);
 

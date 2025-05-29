@@ -1,4 +1,4 @@
-import { AcronymDictionary, EXTRA_PAIR_OPTIONS } from '../../Presets/DataDict';
+import { EXTRA_PAIR_OPTIONS, SurgeryUrgencyType } from '../../Presets/DataDict';
 
 export interface TransfusionEvent {
     visit_no: string; // ForeignKey to Visit, use string to match Visit.visit_no
@@ -25,7 +25,7 @@ export interface Surgery {
     surgery_start_dtm: string; // ISO datetime string
     surgery_end_dtm: string; // ISO datetime string
     surgery_elap: number;
-    surgery_type_desc: string;
+    surgery_type_desc: SurgeryUrgencyType;
     surgeon_prov_id: string;
     surgeon_prov_name: string;
     anesth_prov_id: string;
@@ -145,7 +145,7 @@ export type ProcedureEntry = {
     overlapList?: ProcedureEntry[];
 };
 
-export type BasicAggregatedDatePoint = {
+export type BasicAggregatedDataPoint = {
     aggregateAttribute: any;
     totalVal: number;
     caseCount: number;
@@ -153,7 +153,7 @@ export type BasicAggregatedDatePoint = {
     // patientIDList: number[];
     caseIDList: string[];
 };
-export type CostBarChartDataPoint = BasicAggregatedDatePoint & {
+export type CostBarChartDataPoint = BasicAggregatedDataPoint & {
     rbc_units: number;
     ffp_units: number;
     cryo_units: number;
@@ -163,7 +163,7 @@ export type CostBarChartDataPoint = BasicAggregatedDatePoint & {
     cellSalvageVolume: number;
 };
 
-export type HeatMapDataPoint = BasicAggregatedDatePoint & {
+export type HeatMapDataPoint = BasicAggregatedDataPoint & {
     countDict: any;
 };
 
@@ -181,12 +181,18 @@ export type DumbbellDataPoint = {
     case: Surgery;
 };
 
-export type ExtraPairPoint = {
-    name: typeof EXTRA_PAIR_OPTIONS[number];
-    data: any[];
-    type: 'Violin' | 'BarChart' | 'Basic';
-    label: string;
+export type AttributePlotData<T extends'Violin' | 'BarChart' | 'Basic'> = {
+    attributeName: typeof EXTRA_PAIR_OPTIONS[number];
+    attributeLabel: string;
+    attributeData: Record<string, T extends 'Basic'
+        ? { rowCaseCount: number; attributeCaseCount?: number } :
+        T extends 'Violin'
+            ? { kdeArray: any, dataPoints: number[] } :
+            T extends 'BarChart'
+                ? number
+                : never
+    >;
+    type: T;
     medianSet?: any;
     kdeMax?: number;
 };
-export type ExtendedExtraPairPoint = Omit<ExtraPairPoint, 'name'> & { name: keyof typeof AcronymDictionary | 'TOTAL_TRANS' | 'PER_CASE' | 'ZERO_TRANS' };

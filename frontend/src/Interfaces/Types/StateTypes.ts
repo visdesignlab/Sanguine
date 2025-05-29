@@ -1,5 +1,5 @@
 import { BloodComponent, HemoOption } from '../../Presets/DataDict';
-import { ProcedureEntry, SingleCasePoint } from './DataTypes';
+import { ProcedureEntry, Surgery } from './DataTypes';
 import { LayoutElement } from './LayoutTypes';
 import { SelectSet } from './SelectionTypes';
 
@@ -15,15 +15,15 @@ export type ApplicationState = {
     currentOutputFilterSet: SelectSet[];
     showZero: boolean;
     // This two are both case ids
-    currentFilteredPatientGroup: SingleCasePoint[];
-    currentSelectedPatientGroup: SingleCasePoint[];
+    currentFilteredPatientGroup: Surgery[];
+    currentSelectedPatientGroup: Surgery[];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
     BloodProductCost: any;
     nextAddingIndex: number;
     layoutArray: LayoutElement[];
-    currentSelectPatient: SingleCasePoint | null;
+    currentSelectPatient: Surgery | null;
     bloodFilter: Record<BloodComponent | HemoOption, [number, number]>;
-    allVisits: SingleCasePoint[];
-    setallVisits: (input: SingleCasePoint[]) => void;
-    filteredCases: SingleCasePoint[];
+    allVisits: Surgery[];
+    setallVisits: (input: Surgery[]) => void;
+    filteredCases: Surgery[];
 };

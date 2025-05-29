@@ -1,10 +1,10 @@
 import { createAction } from '@visdesignlab/trrack';
-import { ProcedureEntry, SingleCasePoint } from '../Types/DataTypes';
+import { ProcedureEntry, Surgery } from '../Types/DataTypes';
 import { ActionEvents } from '../Types/EventTypes';
 import { ApplicationState } from '../Types/StateTypes';
 
 // This is a filter
-export const updateFilteredPatientGroup = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
+export const updateFilteredPatientGroup = createAction<ApplicationState, [Surgery[]], ActionEvents>((state, caseList) => {
   state.currentFilteredPatientGroup = caseList;
 }).setLabel('updateFilteredPatientGroup');
 
@@ -38,14 +38,14 @@ export const updateProcedureSelection = createAction<ApplicationState, [Procedur
   }
 }).setLabel('updateProcedureSelection');
 
-export const updateSelectedPatients = createAction<ApplicationState, [SingleCasePoint[]], ActionEvents>((state, caseList) => {
+export const updateSelectedPatients = createAction<ApplicationState, [Surgery[]], ActionEvents>((state, caseList) => {
   state.currentSelectedPatientGroup = caseList;
   if (caseList.length === 0) {
     state.currentSelectPatient = null;
   }
 }).setLabel('updateSelectedPatients');
 
-export const setCurrentSelectPatient = createAction<ApplicationState, [SingleCasePoint | null], ActionEvents>((state, newCase) => {
+export const setCurrentSelectPatient = createAction<ApplicationState, [Surgery | null], ActionEvents>((state, newCase) => {
   state.currentSelectPatient = newCase;
 }).setLabel('updateCaseSelect');
 

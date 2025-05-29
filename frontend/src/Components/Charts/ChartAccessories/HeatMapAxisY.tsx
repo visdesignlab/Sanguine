@@ -15,11 +15,11 @@ type Props = {
     currentOffset: Offset;
     xVals: string[];
     dimensionHeight: number;
-    extraPairTotalWidth: number;
+    attributePlotTotalWidth: number;
     yAxisVar: Aggregation;
 };
 function HeatMapAxis({
-  svg, currentOffset, extraPairTotalWidth, xVals, dimensionHeight, yAxisVar,
+  svg, currentOffset, attributePlotTotalWidth, xVals, dimensionHeight, yAxisVar,
 }: Props) {
   const store = useContext(Store);
   const aggregationScale = useCallback(() => AggregationScaleGenerator(xVals, dimensionHeight, currentOffset), [dimensionHeight, xVals, currentOffset]);
@@ -35,20 +35,17 @@ function HeatMapAxis({
     .select('.y-axis')
     .attr(
       'transform',
-      `translate(${currentOffset.left + extraPairTotalWidth}, 0)`,
+      `translate(${currentOffset.left + attributePlotTotalWidth}, 0)`,
     )
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .call(aggregationLabel as any)
     .selectAll('text')
     .attr('font-size', store.configStore.largeFont ? largeFontSize : regularFontSize)
     .attr('transform', `translate(-${CaseRectWidth + 2},0)`)
+    .attr('pointer-events', 'none')
+    .style('user-select', 'none')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .text((d: any) => getLabel(d, yAxisVar))
-    .attr('cursor', 'pointer')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .on('click', (e, d: any) => {
-      store.interactionStore.selectSet(yAxisVar, d.toString(), !e.shiftKey);
-    });
+    .text((d: any) => getLabel(d, yAxisVar));
 
   return (
     <g className="axes-y">

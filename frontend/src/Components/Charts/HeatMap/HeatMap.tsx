@@ -6,7 +6,7 @@ import { range } from 'd3';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import { sortHelper } from '../../../HelperFunctions/ChartSorting';
 import Store from '../../../Interfaces/Store';
-import { ExtraPairPoint, HeatMapDataPoint } from '../../../Interfaces/Types/DataTypes';
+import { AttributePlotData, HeatMapDataPoint } from '../../../Interfaces/Types/DataTypes';
 import {
   BloodProductCap, MIN_HEATMAP_BANDWIDTH, OffsetDict, backgroundSelectedColor, backgroundHoverColor,
 } from '../../../Presets/Constants';
@@ -17,7 +17,7 @@ import DualColorLegend from '../ChartAccessories/DualColorLegend';
 import SingleColorLegend from '../ChartAccessories/SingleColorLegend';
 import SingleHeatRow from './SingleHeatRow';
 import CaseCountHeader from '../ChartAccessories/CaseCountHeader';
-import GeneratorExtraPair, { ExtraPairLabels } from '../ChartAccessories/ExtraPairPlots/GeneratorExtraPair';
+import GeneratorAttributePlot, { AttributePlotLabels } from '../ChartAccessories/AttributePlots/GeneratorAttributePlot';
 import ComparisonLegend from '../ChartAccessories/ComparisonLegend';
 import HeatMapAxisX from '../ChartAccessories/HeatMapAxisX';
 import HeatMapAxisY from '../ChartAccessories/HeatMapAxisY';
@@ -38,18 +38,18 @@ type Props = {
     chartId: string;
     data: HeatMapDataPoint[];
     svg: React.RefObject<SVGSVGElement>;
-    extraPairDataSet: ExtraPairPoint[];
-    extraPairTotalWidth: number;
+    attributePlotData: AttributePlotData<'Violin' | 'BarChart' | 'Basic'>[];
+    attributePlotTotalWidth: number;
     interventionDate?: number;
     secondaryData?: HeatMapDataPoint[];
-    secondaryExtraPairDataSet?: ExtraPairPoint[];
+    secondaryAttributePlotData?: AttributePlotData<'Violin' | 'BarChart' | 'Basic'>[];
     firstTotal: number;
     secondTotal: number;
     outcomeComparison?: Outcome;
 };
 
 function HeatMap({
-  outcomeComparison, interventionDate, secondaryExtraPairDataSet, dimensionHeight, secondaryData, dimensionWidth, yAxisVar, xAxisVar, chartId, data, svg, extraPairDataSet, extraPairTotalWidth, firstTotal, secondTotal,
+  outcomeComparison, interventionDate, secondaryAttributePlotData, dimensionHeight, secondaryData, dimensionWidth, yAxisVar, xAxisVar, chartId, data, svg, attributePlotData, attributePlotTotalWidth, firstTotal, secondTotal,
 }: Props) {
   const store = useContext(Store);
   const { interactionStore } = store;
@@ -78,8 +78,8 @@ function HeatMap({
     } else {
       outputRange = range(0, BloodProductCap[xAxisVar] + 1);
     }
-    return ValueScaleGenerator(outputRange, currentOffset, dimensionWidth, extraPairTotalWidth);
-  }, [dimensionWidth, extraPairTotalWidth, xAxisVar, currentOffset]);
+    return ValueScaleGenerator(outputRange, currentOffset, dimensionWidth, attributePlotTotalWidth);
+  }, [dimensionWidth, attributePlotTotalWidth, xAxisVar, currentOffset]);
 
   const innerSvg = useRef<SVGSVGElement | null>(null);
   const svgHeight = chartHeight - currentOffset.top;
@@ -88,18 +88,20 @@ function HeatMap({
   function rowHovered(attribute: string, value: string) {
     return interactionStore.hoveredAttribute?.[0] === attribute && interactionStore.hoveredAttribute?.[1] === value;
   }
-  // Checks if current row is selected based on the attribute value.
+  // Checks if current row is selected based on any of the selected attributes.
   function rowSelected(attribute: string, value: string) {
-    return interactionStore.selectedAttribute?.[0] === attribute && interactionStore.selectedAttribute?.[1] === value;
+    return interactionStore.selectedAttributes
+      ?.some(([attrName, attrValue]) => attrName === attribute && attrValue === value)
+    ?? false;
   }
 
   // Sets the selected attribute in the store.
   function handleRowClick(attribute: string, value: string) {
     // If the row is already selected, deselect the row.
     if (rowSelected(attribute, value)) {
-      interactionStore.clearSelectedCases();
+      interactionStore.deselectAttribute([attribute, value]);
     } else {
-      interactionStore.selectedAttribute = [attribute, value];
+      interactionStore.addSelectedAttribute([attribute, value]);
     }
   }
 
@@ -161,7 +163,7 @@ function HeatMap({
                   // Now rendered at y=0 within this transformed group
                     howToTransform="translate(0,0)"
                   />
-                  <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
+                  <ChartG currentOffset={currentOffset} attributePlotTotalWidth={attributePlotTotalWidth}>
                     <CaseCountHeader
                       caseCount={dataPoint.caseCount}
                       yPos={0}
@@ -201,7 +203,7 @@ function HeatMap({
                     dataPoint={dataPoint}
                     howToTransform={`translate(0,${(aggregationScale()(dataPoint.aggregateAttribute) || 0)})`}
                   />
-                  <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
+                  <ChartG currentOffset={currentOffset} attributePlotTotalWidth={attributePlotTotalWidth}>
                     <CaseCountHeader
                       showComparisonRect
                       isFalseComparison={false}
@@ -221,14 +223,14 @@ function HeatMap({
               currentOffset={currentOffset}
               xVals={xVals}
               dimensionHeight={chartHeight}
-              extraPairTotalWidth={extraPairTotalWidth}
+              attributePlotTotalWidth={attributePlotTotalWidth}
               yAxisVar={yAxisVar}
             />
           </g>
-          <g className="extraPairChart">
-            <GeneratorExtraPair
-              extraPairDataSet={extraPairDataSet}
-              secondaryExtraPairDataSet={secondaryExtraPairDataSet || undefined}
+          <g>
+            <GeneratorAttributePlot
+              attributePlotData={attributePlotData}
+              secondaryAttributePlotData={secondaryAttributePlotData || undefined}
               aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
               aggregationScaleRange={JSON.stringify(aggregationScale().range())}
             />
@@ -236,7 +238,7 @@ function HeatMap({
         </svg>
       </foreignObject>
       <g>
-        <ExtraPairLabels extraPairDataSet={extraPairDataSet} dimensionHeight={dimensionHeight} currentOffset={currentOffset} chartId={chartId} />
+        <AttributePlotLabels attributePlotData={attributePlotData} dimensionHeight={dimensionHeight} currentOffset={currentOffset} chartId={chartId} />
       </g>
 
       {/* Render after chart to render on top */}
@@ -246,7 +248,7 @@ function HeatMap({
         isValueScaleBand
         dimensionHeight={dimensionHeight}
         dimensionWidth={dimensionWidth}
-        extraPairTotalWidth={extraPairTotalWidth}
+        attributePlotTotalWidth={attributePlotTotalWidth}
         xAxisVar={xAxisVar}
         valueScaleDomain={JSON.stringify(valueScale().domain())}
         valueScaleRange={JSON.stringify(valueScale().range())}

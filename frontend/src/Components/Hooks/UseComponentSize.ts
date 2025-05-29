@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 function useComponentSize(ref: React.RefObject<SVGElement>) {
   const [size, setSize] = useState({ width: 0, height: 0 });
