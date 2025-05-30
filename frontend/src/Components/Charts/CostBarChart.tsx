@@ -28,7 +28,7 @@ import { CostBarChartDataPoint } from '../../Interfaces/Types/DataTypes';
 import { sortHelper } from '../../HelperFunctions/ChartSorting';
 import ComparisonLegend from './ChartAccessories/ComparisonLegend';
 import { CostLayoutElement } from '../../Interfaces/Types/LayoutTypes';
-import { usePrivateProvLabel } from '../Hooks/PrivateModeLabeling';
+import { usePrivateProvLabel } from '../Hooks/UsePrivateModeLabeling';
 
 type TempDataItem = {
   aggregateAttribute: string | number;

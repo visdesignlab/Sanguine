@@ -12,7 +12,7 @@ import {
   AxisText, CustomAxisColumnBackground, CustomAxisLine, CustomAxisLineBox,
 } from '../../../Presets/StyledSVGComponents';
 import Store from '../../../Interfaces/Store';
-import { usePrivateProvLabel } from '../../Hooks/PrivateModeLabeling';
+import { usePrivateProvLabel } from '../../Hooks/UsePrivateModeLabeling';
 
 function CustomizedAxisOrdinal({
   numberList, scaleDomain, scaleRange, xAxisVar, chartHeight,

@@ -11,7 +11,7 @@ import { AcronymDictionary } from '../../../Presets/DataDict';
 import {
   InheritWidthGrid, CenterAlignedDiv, Title,
 } from '../../../Presets/StyledComponents';
-import { usePrivateProvLabel } from '../../Hooks/PrivateModeLabeling';
+import { usePrivateProvLabel } from '../../Hooks/UsePrivateModeLabeling';
 
 const TinyFontButton = styled(Button)({
   fontSize: 'xx-small!important',

@@ -8,7 +8,7 @@ import { AggregationScaleGenerator } from '../../../HelperFunctions/Scales';
 import { Offset } from '../../../Interfaces/Types/OffsetType';
 import Store from '../../../Interfaces/Store';
 import { Aggregation } from '../../../Presets/DataDict';
-import { usePrivateProvLabel } from '../../Hooks/PrivateModeLabeling';
+import { usePrivateProvLabel } from '../../Hooks/UsePrivateModeLabeling';
 
 type Props = {
     svg: RefObject<SVGSVGElement>;
