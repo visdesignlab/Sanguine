@@ -27,6 +27,7 @@
         "eslint-plugin-jsx-a11y": "^6.10.0",
         "eslint-plugin-react": "^7.36.1",
         "eslint-plugin-react-hooks": "^4.6.2",
+        "healthicons-react": "^3.2.5",
         "html-to-image": "^1.11.13",
         "mobx": "^6.3.2",
         "mobx-react": "^7.2.0",

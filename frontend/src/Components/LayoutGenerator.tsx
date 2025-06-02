@@ -4,7 +4,13 @@ import {
 } from 'react';
 import { Responsive } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
-import { Container, Typography } from '@mui/material';
+import {
+  Container, List, ListItemButton, ListItemIcon, ListItemText, Typography,
+} from '@mui/material';
+import {
+  BloodCells, BloodTransfusion, MedicineBottle, BloodBag, Dollar,
+} from 'healthicons-react';
+import ArrowOutward from '@mui/icons-material/ArrowOutward';
 import Store from '../Interfaces/Store';
 import { LayoutElement } from '../Interfaces/Types/LayoutTypes';
 import WrapperCostBar from './Charts/CostBarChart';
@@ -71,10 +77,73 @@ function LayoutGenerator() {
     }
   });
 
+  const defaultOptions = [
+    { label: 'How many RBCs transfused per surgeon in CABG cases?', Icon: BloodCells },
+    { label: 'Transfusion appropriateness - pre-op & post-op HGB levels?', Icon: BloodTransfusion },
+    { label: 'What are the outcomes of cases using antifibrinolytics?', Icon: MedicineBottle },
+    { label: 'What is the cell salvage usage by anesthesiologist?', Icon: BloodBag },
+    { label: 'What are the costs and potential savings of surgical blood products?', Icon: Dollar },
+  ];
+  const loadPresetState = (label: string) => () => {
+    // store.provenanceState.loadPresetState(label);
+  };
+
   return (
     <Container ref={tabRef}>
       {store.provenanceState.layoutArray.length === 0 && (
-        <Typography variant="h4" mt={2} sx={{ opacity: 0.4 }}>Click &quot;Add Chart&quot; above to visualize transfusion data.</Typography>
+        <>
+          <Typography variant="h4" mt={2} sx={{ opacity: 0.4, fontStyle: 'italic' }}>
+            Preset Visualizations ...
+          </Typography>
+          <List sx={{ width: '100%', mt: 1 }}>
+            {defaultOptions.map(({ label, Icon }) => (
+              <ListItemButton
+                key={label}
+                sx={{
+                  alignItems: 'center',
+                  // lift arrow
+                  '&:hover .arrow-icon': {
+                    transform: 'translateY(-8px)',
+                    opacity: 0.7,
+                  },
+                  // darken the icon wrapper
+                  '&:hover .item-icon': {
+                    opacity: 0.7,
+                  },
+                  // darken the primary text
+                  '&:hover .MuiListItemText-primary': {
+                    opacity: 0.7,
+                  },
+                  mt: 1,
+                }}
+                onClick={loadPresetState(label)}
+              >
+                <ListItemIcon className="item-icon" sx={{ opacity: 0.4 }}>
+                  <Icon />
+                </ListItemIcon>
+                <ListItemText
+                  primary={label}
+                  primaryTypographyProps={{
+                    variant: 'h5',
+                    sx: {
+                      opacity: 0.4,
+                      fontStyle: 'italic',
+                      lineHeight: 1,
+                    },
+                  }}
+                />
+                <ArrowOutward
+                  className="arrow-icon"
+                  sx={{
+                    ml: 'auto',
+                    opacity: 0.4,
+                    transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
+                  }}
+                />
+              </ListItemButton>
+            ))}
+          </List>
+        </>
       )}
       <Responsive
         onResizeStop={(e) => { store.chartStore.onLayoutChange(e); }}
