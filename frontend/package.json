@@ -37,7 +37,7 @@
         "react-grid-layout": "^1.2.5",
         "react-idle-timer": "^4.6.4",
         "react-vega": "^7.6.0",
-        "typescript": "5.5.4",
+        "typescript": "^5.8.3",
         "use-deep-compare-effect": "^1.6.1",
         "vega": "^5.30.0",
         "vega-lite": "^5.21.0",

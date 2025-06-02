@@ -1,6 +1,6 @@
-import { BasicAggregatedDatePoint } from '../Interfaces/Types/DataTypes';
+import { BasicAggregatedDataPoint } from '../Interfaces/Types/DataTypes';
 
-export const sortHelper = (data: BasicAggregatedDatePoint[], xAxisVar: string, showZero: boolean, secondaryData?: BasicAggregatedDatePoint[]) => {
+export const sortHelper = (data: BasicAggregatedDataPoint[], xAxisVar: string, showZero: boolean, secondaryData?: BasicAggregatedDataPoint[]) => {
   let newCaseMax = 0;
   let dataXVals: string[] = [];
   if (secondaryData) {

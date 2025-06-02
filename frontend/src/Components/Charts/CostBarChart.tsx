@@ -11,18 +11,18 @@ import {
 import { scaleBand } from 'd3';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import {
-  ExtraPairPadding, ExtraPairWidth, MIN_HEATMAP_BANDWIDTH, OffsetDict, postopColor, preopColor,
+  AttributePlotPadding, AttributePlotWidth, MIN_HEATMAP_BANDWIDTH, OffsetDict, postopColor, preopColor,
 } from '../../Presets/Constants';
-import { BloodComponentOptions, CostSavingsExtraPairOptions } from '../../Presets/DataDict';
+import { BloodComponentOptions, CostSavingsAttributePlotOptions } from '../../Presets/DataDict';
 import { ChartWrapperContainer, ChartAccessoryDiv } from '../../Presets/StyledComponents';
 import AnnotationForm from './ChartAccessories/AnnotationForm';
 import CostInputDialog from '../Modals/CostInputDialog';
 import ChartConfigMenu from './ChartAccessories/ChartConfigMenu';
-import ExtraPairButtons from './ChartAccessories/ExtraPairButtons';
+import AttributePlotButtons from './ChartAccessories/AttributePlotButtons';
 import ChartStandardButtons from './ChartStandardButtons';
 import Store from '../../Interfaces/Store';
-import GeneratorExtraPair, { ExtraPairLabels } from './ChartAccessories/ExtraPairPlots/GeneratorExtraPair';
-import { generateExtrapairPlotData, generateExtraAttributeData } from '../../HelperFunctions/ExtraPairDataGenerator';
+import GeneratorAttributePlot, { AttributePlotLabels } from './ChartAccessories/AttributePlots/GeneratorAttributePlot';
+import { generateAttributePlotData, generateExtraAttributeData } from '../../HelperFunctions/AttributePlotDataGenerator';
 import { stateUpdateWrapperUseJSON } from '../../Interfaces/StateChecker';
 import { CostBarChartDataPoint, SingleCasePoint } from '../../Interfaces/Types/DataTypes';
 import { sortHelper } from '../../HelperFunctions/ChartSorting';
@@ -50,7 +50,7 @@ type CostBarDataPoint = {
 
 function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
   const {
-    yAxisVar, i: chartId, h: layoutH, w: layoutW, annotationText, extraPair, interventionDate, outcomeComparison,
+    yAxisVar, i: chartId, h: layoutH, w: layoutW, annotationText, attributePlots, interventionDate, outcomeComparison,
   } = layout;
 
   const store = useContext(Store);
@@ -180,17 +180,17 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     return plotDataTemp;
   }, [BloodProductCost.PRBC_UNITS, costSavingsData, secondaryCostSavingsData, showPotential, yAxisVar, getLabel]);
 
-  const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
+  const [attributePlotArray, setAttributePlotArray] = useState<string[]>([]);
   useEffect(() => {
-    if (extraPair) {
-      stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray);
+    if (attributePlots) {
+      stateUpdateWrapperUseJSON(attributePlotArray, attributePlots, setAttributePlotArray);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [extraPair]);
+  }, [attributePlots]);
 
   // useDeepCompareEffect COPIED FROM WrapperHeatMap.tsx, which correctly generates the extra attribute data for the extra pair plot ------------------------------------------------------------
 
-  // Creating the Extra Attribute Data (NOT the cost-savings data), to be used for the extra pair plot (GeneratorExtraPair) -----------------------------------------------------------------------------------
+  // Creating the Extra Attribute Data (NOT the cost-savings data), to be used for the extra pair plot (GeneratorAttributePlot) -----------------------------------------------------------------------------------
   // Default xAxisVar is PRBC_UNITS (because cost savings chart doesn't have different x-Axes). (So additional attributes like Total Transfused, Per Case, etc. are currently in terms of 'PRBC_UNITS').
   const xAxisVar = 'PRBC_UNITS';
   useDeepCompareEffect(() => {
@@ -207,9 +207,9 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     interventionDate,
     filteredCases]);
 
-  const extraPairData = useMemo(() => generateExtrapairPlotData(yAxisVar, filteredCases, extraPairArray, extraAttributeData), [yAxisVar, filteredCases, extraPairArray, extraAttributeData]);
-  const secondaryExtraPairData = generateExtrapairPlotData(yAxisVar, filteredCases, extraPairArray, secondaryExtraAttributeData);
-  const extraPairTotalWidth = useMemo(() => extraPairData.map((pair) => ExtraPairWidth[pair.type] + ExtraPairPadding).reduce((a, b) => a + b, 0), [extraPairData]);
+  const attributePlotData = useMemo(() => generateAttributePlotData(yAxisVar, filteredCases, attributePlotArray, extraAttributeData), [yAxisVar, filteredCases, attributePlotArray, extraAttributeData]);
+  const secondaryAttributePlotData = generateAttributePlotData(yAxisVar, filteredCases, attributePlotArray, secondaryExtraAttributeData);
+  const attributePlotTotalWidth = useMemo(() => attributePlotData.map((pair) => AttributePlotWidth[pair.type] + AttributePlotPadding).reduce((a, b) => a + b, 0), [attributePlotData]);
 
   const makeDataObj = (dataItem: TempDataItem) => {
     const newDataObj: CostBarChartDataPoint = {
@@ -429,7 +429,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
             <Switch checked={showPotential} onChange={(e) => { setShowPotential(e.target.checked); }} />
           </Tooltip>
         </FormControl>
-        <ExtraPairButtons disbleButton={dimensionWidth * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} buttonOptions={CostSavingsExtraPairOptions} />
+        <AttributePlotButtons disbleButton={dimensionWidth * 0.6 < attributePlotTotalWidth} attributePlotLength={attributePlotArray.length} chartId={chartId} buttonOptions={CostSavingsAttributePlotOptions} />
         <ChartConfigMenu layout={layout} />
         <Tooltip title="Change blood component cost">
           <IconButton size="small" onClick={handleClick}>
@@ -483,10 +483,10 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
           display: 'flex',
         }}
       >
-        <svg width={extraPairTotalWidth} height={vegaHeight}>
-          <GeneratorExtraPair
-            extraPairDataSet={extraPairData}
-            secondaryExtraPairDataSet={outcomeComparison || interventionDate ? secondaryExtraPairData : undefined}
+        <svg width={attributePlotTotalWidth} height={vegaHeight}>
+          <GeneratorAttributePlot
+            attributePlotData={attributePlotData}
+            secondaryAttributePlotData={outcomeComparison || interventionDate ? secondaryAttributePlotData : undefined}
             aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
             aggregationScaleRange={`[${outcomeComparison || interventionDate ? vegaHeight - 45 : vegaHeight - 40}, ${outcomeComparison || interventionDate ? 15 : 6}]`}
           />
@@ -497,7 +497,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
             data={plotData}
             actions={false}
             signalListeners={{ barClick }}
-            width={dimensionWidth - extraPairTotalWidth - 20}
+            width={dimensionWidth - attributePlotTotalWidth - 20}
             className="vega-vis"
           />
 
@@ -517,7 +517,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
             spec={axisSpec as never}
             data={plotData}
             actions={false}
-            width={dimensionWidth - extraPairTotalWidth - 20}
+            width={dimensionWidth - attributePlotTotalWidth - 20}
             style={{
               position: 'fixed',
               bottom: 50,
@@ -528,15 +528,15 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
         </Stack>
         {/* Bottom additional attribute labels */}
         <svg
-          width={extraPairTotalWidth}
+          width={attributePlotTotalWidth}
           height={vegaHeight}
           style={{
             position: 'fixed',
             bottom: 0,
           }}
         >
-          <ExtraPairLabels
-            extraPairDataSet={extraPairData}
+          <AttributePlotLabels
+            attributePlotData={attributePlotData}
             dimensionHeight={vegaHeight - xAxisOverlayHeight}
             currentOffset={currentOffset}
             chartId={chartId}

@@ -16,10 +16,10 @@ export const AggregationScaleGenerator = (
 
 export const CaseScaleGenerator = (caseMax: number) => scaleLinear().domain([0, caseMax]).range(greyScaleRange);
 
-export const ValueScaleGenerator = (outputRange: number[], currentOffset: Offset, dimensionWidth: number, extraPairTotalWidth: number) => scaleBand()
+export const ValueScaleGenerator = (outputRange: number[], currentOffset: Offset, dimensionWidth: number, attributePlotTotalWidth: number) => scaleBand()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   .domain(outputRange as any)
-  .range([currentOffset.left + extraPairTotalWidth, dimensionWidth - currentOffset.right - currentOffset.margin])
+  .range([currentOffset.left + attributePlotTotalWidth, dimensionWidth - currentOffset.right - currentOffset.margin])
   .paddingInner(0.01);
 
 export const ValueScaleGeneratorFromDomainRange = (valueScaleDomain: string, valueScaleRange: string, isScaleBand: boolean) => {

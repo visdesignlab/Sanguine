@@ -1,6 +1,6 @@
 import { makeAutoObservable } from 'mobx';
 import {
-  addExtraPair, addNewChart, changeChart, changeNotation, clearAllCharts, onLayoutChange, removeChart, removeExtraPair,
+  addAttributePlot, addNewChart, changeChart, changeNotation, clearAllCharts, onLayoutChange, removeChart, removeAttributePlot,
 } from './Actions/ChartActions';
 // eslint-disable-next-line import/no-cycle
 import { RootStore } from './Store';
@@ -42,12 +42,12 @@ export class ChartStore {
     this._totalAggregatedCaseCount = input;
   }
 
-  addExtraPair(chartID: string, newExtraPair: string) {
-    this.provenance.apply(addExtraPair(chartID, newExtraPair));
+  addAttributePlot(chartID: string, newAttributePlot: string) {
+    this.provenance.apply(addAttributePlot(chartID, newAttributePlot));
   }
 
-  removeExtraPair(chartID: string, removingPairName: string) {
-    this.provenance.apply(removeExtraPair(chartID, removingPairName));
+  removeAttributePlot(chartID: string, removingPairName: string) {
+    this.provenance.apply(removeAttributePlot(chartID, removingPairName));
   }
 
   removeChart(chartID: string) {
