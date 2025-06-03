@@ -5,7 +5,7 @@ import {
 import { Responsive } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import {
-  Container, List, ListItemButton, ListItemIcon, ListItemText, Typography,
+  Container, List, ListItemButton, ListItemIcon, ListItemText, Typography, Divider,
 } from '@mui/material';
 import {
   BloodCells, BloodTransfusion, MedicineBottle, BloodBag, Dollar,
@@ -79,7 +79,7 @@ function LayoutGenerator() {
     }
   });
 
-  const defaultOptions = [
+  const presetOptions = [
     {
       groupLabel: 'Guideline Adherence',
       options: [
@@ -90,14 +90,14 @@ function LayoutGenerator() {
     {
       groupLabel: 'Outcomes',
       options: [
-        { label: 'What are the outcomes of cases using antifibrinolytics?', Icon: MedicineBottle, state: preopAnemiaState},
+        { label: 'What are the outcomes of cases using antifibrinolytics?', Icon: MedicineBottle, state: preopAnemiaState },
         { label: 'What are the outcomes of using cell salvage, for each anesthesiologist?', Icon: BloodBag, state: preopAnemiaState },
       ],
     },
     {
       groupLabel: 'Cost / Savings',
       options: [
-        { label: 'What are the costs and potential savings for surgical blood products?', Icon: Dollar, state: preopAnemiaState },
+        { label: 'What are the costs and potential savings for surgical blood products?', Icon: Dollar, state: costSavingsState },
       ],
     },
   ];
@@ -112,13 +112,15 @@ function LayoutGenerator() {
     <Container ref={tabRef}>
       {store.provenanceState.layoutArray.length === 0 && (
         <>
-          <Typography variant="h4" mt={2} sx={{ opacity: 0.4, fontStyle: 'italic' }}>
+          <Typography variant="h4" mt={2} mb={2} sx={{ opacity: 0.4, fontStyle: 'italic' }}>
             Presets
           </Typography>
+          <Divider sx={{ width: '50%' }} />
           <List sx={{ width: '100%', mt: 1 }}>
-            {defaultOptions.map(({ groupLabel, options }) => (
+            {/* For every question in presetOptions, show the group label, questions, and icons */}
+            {presetOptions.map(({ groupLabel, options }) => (
               <div key={groupLabel}>
-                <Typography variant="h6" mt={2} sx={{ opacity: 0.4, fontStyle: 'italic' }}>
+                <Typography variant="h5" mt={2} sx={{ opacity: 0.4, fontStyle: 'italic' }}>
                   {groupLabel}
                 </Typography>
                 {options.map(({ label, Icon, state }) => (
@@ -139,8 +141,10 @@ function LayoutGenerator() {
                     <ListItemText
                       primary={label}
                       primaryTypographyProps={{
-                        variant: 'h5',
-                        sx: { opacity: 0.4, fontStyle: 'italic', lineHeight: 1 },
+                        variant: 'h6',
+                        sx: {
+                          opacity: 0.4, fontStyle: 'italic', lineHeight: 1, fontWeight: 400,
+                        },
                       }}
                     />
                     <ArrowOutward
