@@ -17,6 +17,8 @@ import WrapperCostBar from './Charts/CostBarChart';
 import WrapperDumbbell from './Charts/DumbbellChart/WrapperDumbbell';
 import WrapperHeatMap from './Charts/HeatMap/WrapperHeatMap';
 import WrapperScatter from './Charts/ScatterPlot/WrapperScatter';
+import { costSavingsState, preopAnemiaState } from '../Interfaces/PresetStates/PresetStates';
+import { ApplicationState } from '../Interfaces/Types/StateTypes';
 
 function LayoutGenerator() {
   const store = useContext(Store);
@@ -78,14 +80,32 @@ function LayoutGenerator() {
   });
 
   const defaultOptions = [
-    { label: 'How many RBCs transfused per surgeon in CABG cases?', Icon: BloodCells },
-    { label: 'Transfusion appropriateness - pre-op & post-op HGB levels?', Icon: BloodTransfusion },
-    { label: 'What are the outcomes of cases using antifibrinolytics?', Icon: MedicineBottle },
-    { label: 'What is the cell salvage usage by anesthesiologist?', Icon: BloodBag },
-    { label: 'What are the costs and potential savings of surgical blood products?', Icon: Dollar },
+    {
+      groupLabel: 'Guideline Adherence',
+      options: [
+        { label: 'In cases with preoperative anemia, how many RBCs were transfused per surgeon?', Icon: BloodCells, state: preopAnemiaState },
+        { label: 'What were the pre-op and post-op HGB levels of cases per surgeon?', Icon: BloodTransfusion, state: preopAnemiaState },
+      ],
+    },
+    {
+      groupLabel: 'Outcomes',
+      options: [
+        { label: 'What are the outcomes of cases using antifibrinolytics?', Icon: MedicineBottle, state: preopAnemiaState},
+        { label: 'What are the outcomes of using cell salvage, for each anesthesiologist?', Icon: BloodBag, state: preopAnemiaState },
+      ],
+    },
+    {
+      groupLabel: 'Cost / Savings',
+      options: [
+        { label: 'What are the costs and potential savings for surgical blood products?', Icon: Dollar, state: preopAnemiaState },
+      ],
+    },
   ];
-  const loadPresetState = (label: string) => () => {
-    // store.provenanceState.loadPresetState(label);
+
+  const loadPresetState = (state: ApplicationState) => () => {
+    if (state) {
+      store.configStore.loadPreset(state.layoutArray);
+    }
   };
 
   return (
@@ -93,54 +113,47 @@ function LayoutGenerator() {
       {store.provenanceState.layoutArray.length === 0 && (
         <>
           <Typography variant="h4" mt={2} sx={{ opacity: 0.4, fontStyle: 'italic' }}>
-            Preset Visualizations ...
+            Presets
           </Typography>
           <List sx={{ width: '100%', mt: 1 }}>
-            {defaultOptions.map(({ label, Icon }) => (
-              <ListItemButton
-                key={label}
-                sx={{
-                  alignItems: 'center',
-                  // lift arrow
-                  '&:hover .arrow-icon': {
-                    transform: 'translateY(-8px)',
-                    opacity: 0.7,
-                  },
-                  // darken the icon wrapper
-                  '&:hover .item-icon': {
-                    opacity: 0.7,
-                  },
-                  // darken the primary text
-                  '&:hover .MuiListItemText-primary': {
-                    opacity: 0.7,
-                  },
-                  mt: 1,
-                }}
-                onClick={loadPresetState(label)}
-              >
-                <ListItemIcon className="item-icon" sx={{ opacity: 0.4 }}>
-                  <Icon />
-                </ListItemIcon>
-                <ListItemText
-                  primary={label}
-                  primaryTypographyProps={{
-                    variant: 'h5',
-                    sx: {
-                      opacity: 0.4,
-                      fontStyle: 'italic',
-                      lineHeight: 1,
-                    },
-                  }}
-                />
-                <ArrowOutward
-                  className="arrow-icon"
-                  sx={{
-                    ml: 'auto',
-                    opacity: 0.4,
-                    transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
-                  }}
-                />
-              </ListItemButton>
+            {defaultOptions.map(({ groupLabel, options }) => (
+              <div key={groupLabel}>
+                <Typography variant="h6" mt={2} sx={{ opacity: 0.4, fontStyle: 'italic' }}>
+                  {groupLabel}
+                </Typography>
+                {options.map(({ label, Icon, state }) => (
+                  <ListItemButton
+                    key={label}
+                    sx={{
+                      alignItems: 'center',
+                      '&:hover .arrow-icon': { transform: 'translateY(-8px)', opacity: 0.7 },
+                      '&:hover .item-icon': { opacity: 0.7 },
+                      '&:hover .MuiListItemText-primary': { opacity: 0.7 },
+                      mt: 1,
+                    }}
+                    onClick={loadPresetState(state)}
+                  >
+                    <ListItemIcon className="item-icon" sx={{ opacity: 0.4 }}>
+                      <Icon />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={label}
+                      primaryTypographyProps={{
+                        variant: 'h5',
+                        sx: { opacity: 0.4, fontStyle: 'italic', lineHeight: 1 },
+                      }}
+                    />
+                    <ArrowOutward
+                      className="arrow-icon"
+                      sx={{
+                        ml: 'auto',
+                        opacity: 0.4,
+                        transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
+                      }}
+                    />
+                  </ListItemButton>
+                ))}
+              </div>
             ))}
           </List>
         </>
