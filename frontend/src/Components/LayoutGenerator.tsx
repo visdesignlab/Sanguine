@@ -17,8 +17,37 @@ import WrapperCostBar from './Charts/CostBarChart';
 import WrapperDumbbell from './Charts/DumbbellChart/WrapperDumbbell';
 import WrapperHeatMap from './Charts/HeatMap/WrapperHeatMap';
 import WrapperScatter from './Charts/ScatterPlot/WrapperScatter';
-import { costSavingsState, preopAnemiaState } from '../Interfaces/PresetStates/PresetStates';
+import {
+  costSavingsState, preopAnemiaState, dumbbellState, antifibrinState, cellSalvageState,
+} from '../Interfaces/PresetStates/PresetStates';
 import { ApplicationState } from '../Interfaces/Types/StateTypes';
+
+// Groups of preset visualization questions with labels and icons
+const presetGroups: {
+  groupLabel: string;
+  options: { label: string; Icon: React.FC; state: ApplicationState }[];
+}[] = [
+  {
+    groupLabel: 'Guideline Adherence',
+    options: [
+      { label: 'In cases with preoperative anemia, how many RBCs were transfused per surgeon?', Icon: BloodCells, state: preopAnemiaState },
+      { label: 'What were the pre-op and post-op HGB levels of cases per surgeon?', Icon: BloodTransfusion, state: dumbbellState },
+    ],
+  },
+  {
+    groupLabel: 'Outcomes',
+    options: [
+      { label: 'What are the outcomes of cases using antifibrinolytics?', Icon: MedicineBottle, state: antifibrinState },
+      { label: 'What are the outcomes of using cell salvage, for each anesthesiologist?', Icon: BloodBag, state: cellSalvageState },
+    ],
+  },
+  {
+    groupLabel: 'Cost / Savings',
+    options: [
+      { label: 'What are the costs and potential savings for surgical blood products?', Icon: Dollar, state: costSavingsState },
+    ],
+  },
+];
 
 function LayoutGenerator() {
   const store = useContext(Store);
@@ -79,32 +108,12 @@ function LayoutGenerator() {
     }
   });
 
-  const presetOptions = [
-    {
-      groupLabel: 'Guideline Adherence',
-      options: [
-        { label: 'In cases with preoperative anemia, how many RBCs were transfused per surgeon?', Icon: BloodCells, state: preopAnemiaState },
-        { label: 'What were the pre-op and post-op HGB levels of cases per surgeon?', Icon: BloodTransfusion, state: preopAnemiaState },
-      ],
-    },
-    {
-      groupLabel: 'Outcomes',
-      options: [
-        { label: 'What are the outcomes of cases using antifibrinolytics?', Icon: MedicineBottle, state: preopAnemiaState },
-        { label: 'What are the outcomes of using cell salvage, for each anesthesiologist?', Icon: BloodBag, state: preopAnemiaState },
-      ],
-    },
-    {
-      groupLabel: 'Cost / Savings',
-      options: [
-        { label: 'What are the costs and potential savings for surgical blood products?', Icon: Dollar, state: costSavingsState },
-      ],
-    },
-  ];
-
+  // Loads a preset state into the store, making preset plots appear
   const loadPresetState = (state: ApplicationState) => () => {
     if (state) {
-      store.configStore.loadPreset(state.layoutArray);
+      const jsonState = JSON.stringify(state);
+      const jsonParsed = JSON.parse(jsonState);
+      store.provenance.importState(jsonParsed);
     }
   };
 
@@ -118,14 +127,17 @@ function LayoutGenerator() {
           <Divider sx={{ width: '50%' }} />
           <List sx={{ width: '100%', mt: 1 }}>
             {/* For every question in presetOptions, show the group label, questions, and icons */}
-            {presetOptions.map(({ groupLabel, options }) => (
+            {presetGroups.map(({ groupLabel, options }) => (
               <div key={groupLabel}>
+                {/* Group label for each preset group */}
                 <Typography variant="h5" mt={2} sx={{ opacity: 0.4, fontStyle: 'italic' }}>
                   {groupLabel}
                 </Typography>
+                {/* Each question option */}
                 {options.map(({ label, Icon, state }) => (
                   <ListItemButton
                     key={label}
+                    // Hover actions, darken text and make arrow bounce
                     sx={{
                       alignItems: 'center',
                       '&:hover .arrow-icon': { transform: 'translateY(-8px)', opacity: 0.7 },
