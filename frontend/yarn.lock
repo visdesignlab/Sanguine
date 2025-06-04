@@ -2885,6 +2885,11 @@ hasown@^2.0.2:
   dependencies:
     function-bind "^1.1.2"
 
+healthicons-react@^3.2.5:
+  version "3.2.5"
+  resolved "https://registry.yarnpkg.com/healthicons-react/-/healthicons-react-3.2.5.tgz#a3e29356cf73e4acb6d3442967a526fe69bb5697"
+  integrity sha512-4gicOvfUi/IAE9InG8RWEhbes+Dr0N6UDop+3ae2gV0Ap1MhJlZvxV0cz6RS1eMtS+lX3SaZzR3RcboCVb7g/A==
+
 hoist-non-react-statics@^3.3.1:
   version "3.3.2"
   resolved "https://registry.yarnpkg.com/hoist-non-react-statics/-/hoist-non-react-statics-3.3.2.tgz#ece0acaf71d62c2969c2ec59feff42a4b1a85b45"

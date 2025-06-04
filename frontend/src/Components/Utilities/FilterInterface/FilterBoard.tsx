@@ -13,7 +13,7 @@ import {
 import Store from '../../../Interfaces/Store';
 import ComponentRangePicker from './ComponentRangePicker';
 import { Title } from '../../../Presets/StyledComponents';
-import { defaultState } from '../../../Interfaces/DefaultState';
+import { defaultState } from '../../../Interfaces/PresetStates/DefaultState';
 import OutcomeChipGroup from './OutcomeChipGroup';
 import SurgeryUrgencyChipGroup from './SurgeryUrgencyChipGroup';
 import { SelectSet } from '../../../Interfaces/Types/SelectionTypes';
