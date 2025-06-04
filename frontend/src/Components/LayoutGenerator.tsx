@@ -21,6 +21,7 @@ import {
   costSavingsState, preopAnemiaState, dumbbellState, antifibrinState, cellSalvageState,
 } from '../Interfaces/PresetStates/PresetStates';
 import { ApplicationState } from '../Interfaces/Types/StateTypes';
+import { ArrowUpward } from '@mui/icons-material';
 
 // Groups of preset visualization questions with labels and icons
 const presetGroups: {
@@ -121,10 +122,16 @@ function LayoutGenerator() {
     <Container ref={tabRef}>
       {store.provenanceState.layoutArray.length === 0 && (
         <>
-          <Typography variant="h4" mt={2} mb={2} sx={{ opacity: 0.4, fontStyle: 'italic' }}>
-            Presets
+          <Typography
+            variant="h5"
+            mt={2}
+            mb={2}
+            sx={{ opacity: 0.4, fontStyle: 'italic', textAlign: 'right' }}
+          >
+            Create custom visualizations (Add Chart)
+            <ArrowUpward fontSize="small" sx={{ verticalAlign: 'middle', ml: 1, mr: 5 }} />
           </Typography>
-          <Divider sx={{ width: '50%' }} />
+          <Divider sx={{ width: '100%' }} />
           <List sx={{ width: '100%', mt: 1 }}>
             {/* For every question in presetOptions, show the group label, questions, and icons */}
             {presetGroups.map(({ groupLabel, options }) => (
