@@ -1,7 +1,8 @@
 /** @jsxImportSource @emotion/react */
 import {
-  Box, Button, ButtonGroup, Grid,
+  Box, Button, ButtonGroup, Grid, TextField,
 } from '@mui/material';
+
 import { observer } from 'mobx-react';
 import {
   useContext, useRef, useState,
@@ -13,7 +14,9 @@ import { bloodComponentOutlierHandler } from '../../../HelperFunctions/CaseListP
 import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import Store from '../../../Interfaces/Store';
 import { DumbbellDataPoint } from '../../../Interfaces/Types/DataTypes';
-import { basicGray, postopColor, preopColor } from '../../../Presets/Constants';
+import {
+  basicGray, postopColor, preopColor, hgbTransfuseThresholdRange, hgbPostOpTargetRange,
+} from '../../../Presets/Constants';
 import DumbbellChart from './DumbbellChart';
 import ChartConfigMenu from '../ChartAccessories/ChartConfigMenu';
 import AnnotationForm from '../ChartAccessories/AnnotationForm';
@@ -65,9 +68,9 @@ const ButtonStyles = {
 };
 
 const DumbbellUtilTitle = styled.div({
-  width: 'max-content',
   padding: '2px',
   fontSize: '0.8rem',
+  whiteSpace: 'nowrap',
 });
 
 function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
@@ -85,6 +88,11 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
   const [showPreop, setShowPreop] = useState(true);
   const [showPostop, setShowPostop] = useState(true);
   const [data, setData] = useState<DumbbellDataPoint[]>([]);
+
+  // Pre-op hgb threshold (<X g/dL) that warrants transfusion
+  const [hgbTransfuseRange, setHgbTransfuseRange] = useState(hgbTransfuseThresholdRange);
+  // Post-op hgb target range
+  const [hgbPostTargetRange, setHgbPostTargetRange] = useState(hgbPostOpTargetRange);
 
   const size = useComponentSize(svgRef);
 
@@ -127,7 +135,15 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
 
   return (
     <Grid container direction="row" alignItems="center" style={{ height: '100%' }}>
-      <Grid item xs={1}>
+      <Grid
+        item
+        xs={1}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
         <DumbbellUtilTitle>Sort By</DumbbellUtilTitle>
         <ButtonGroup
           variant="outlined"
@@ -176,7 +192,105 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
             Postop
           </Button>
         </ButtonGroup>
+        <DumbbellUtilTitle style={{ marginTop: '8px' }}>Hgb Target</DumbbellUtilTitle>
+        <Box sx={{
+          display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5,
+        }}
+        >
+          <TextField
+            type="number"
+            size="small"
+            variant="outlined"
+            value={hgbPostTargetRange[0]}
+            sx={{ width: 40, minWidth: 20 }}
+            inputProps={{
+              style: { padding: '2px 4px', fontSize: '0.75rem', textAlign: 'center' },
+            }}
+            onChange={(e) => {
+              const raw = e.target.value;
+              if (raw === '') {
+                setHgbPostTargetRange([undefined, hgbPostTargetRange[1]]);
+                return;
+              }
+              const low = parseFloat(raw);
+              if (!Number.isNaN(low)) {
+                setHgbPostTargetRange([low, hgbPostTargetRange[1]]);
+              }
+            }}
+          />
+          <TextField
+            type="number"
+            size="small"
+            variant="outlined"
+            value={hgbPostTargetRange[1]}
+            sx={{ width: 40, minWidth: 20 }}
+            inputProps={{
+              style: { padding: '2px 4px', fontSize: '0.75rem', textAlign: 'center' },
+            }}
+            onChange={(e) => {
+              const raw = e.target.value;
+              if (raw === '') {
+                setHgbPostTargetRange([hgbPostTargetRange[0], undefined]);
+                return;
+              }
+              const high = parseFloat(raw);
+              if (!Number.isNaN(high)) {
+                setHgbPostTargetRange([hgbPostTargetRange[0], high]);
+              }
+            }}
+          />
+        </Box>
+        <DumbbellUtilTitle style={{ marginTop: '4px' }}>Hgb Transfuse</DumbbellUtilTitle>
+        <Box sx={{
+          display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5,
+        }}
+        >
+          {/* low threshold */}
+          <TextField
+            type="number"
+            size="small"
+            variant="outlined"
+            value={hgbTransfuseRange[0] ?? ''}
+            sx={{ width: 40, minWidth: 20 }}
+            inputProps={{
+              style: { padding: '2px 4px', fontSize: '0.75rem', textAlign: 'center' },
+            }}
+            onChange={(e) => {
+              const raw = e.target.value;
+              if (raw === '') {
+                setHgbTransfuseRange([undefined, hgbTransfuseRange[1]]);
+                return;
+              }
+              const low = parseFloat(raw);
+              if (!Number.isNaN(low)) {
+                setHgbTransfuseRange([low, hgbTransfuseRange[1]]);
+              }
+            }}
+          />
 
+          {/* high threshold */}
+          <TextField
+            type="number"
+            size="small"
+            variant="outlined"
+            value={hgbTransfuseRange[1] ?? ''}
+            sx={{ width: 40, minWidth: 20 }}
+            inputProps={{
+              style: { padding: '2px 4px', fontSize: '0.75rem', textAlign: 'center' },
+            }}
+            onChange={(e) => {
+              const raw = e.target.value;
+              if (raw === '') {
+                setHgbTransfuseRange([hgbTransfuseRange[0], undefined]);
+                return;
+              }
+              const high = parseFloat(raw);
+              if (!Number.isNaN(high)) {
+                setHgbTransfuseRange([hgbTransfuseRange[0], high]);
+              }
+            }}
+          />
+        </Box>
       </Grid>
       <Grid item xs={11} style={{ height: '100%' }}>
         <ChartWrapperContainer>
@@ -187,7 +301,20 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           </ChartAccessoryDiv>
           <Box style={{ height: 'calc(100% - 100px)', overflow: 'auto' }}>
             <svg ref={svgRef} style={{ height: 'calc(100% - 10px)' }}>
-              <DumbbellChart data={data} svg={svgRef} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} xAxisVar={xAxisVar} dimensionWidth={size.width} dimensionHeight={size.height} xMin={xMin} xMax={xMax} />
+              <DumbbellChart
+                data={data}
+                svg={svgRef}
+                showPostop={showPostop}
+                showPreop={showPreop}
+                sortMode={sortMode}
+                xAxisVar={xAxisVar}
+                dimensionWidth={size.width}
+                dimensionHeight={size.height}
+                xMin={xMin}
+                xMax={xMax}
+                hgbTransfuseThresholdRange={hgbTransfuseRange}
+                hgbPostOpTargetRange={hgbPostTargetRange}
+              />
             </svg>
           </Box>
           <AnnotationForm chartI={chartId} annotationText={annotationText} />

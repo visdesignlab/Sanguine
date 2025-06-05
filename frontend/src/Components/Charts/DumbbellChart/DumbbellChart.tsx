@@ -11,8 +11,7 @@ import Store from '../../../Interfaces/Store';
 import { DumbbellDataPoint } from '../../../Interfaces/Types/DataTypes';
 import {
   OffsetDict, DumbbellGroupMinimumWidth, largeFontSize, regularFontSize,
-  DumbbellMinimumWidth, smallHoverColor, smallSelectColor, hgbPostOpTargetRange, targetLevelsColor,
-  HGB_LOW_STANDARD,
+  DumbbellMinimumWidth, smallHoverColor, smallSelectColor, targetLevelsColor,
 } from '../../../Presets/Constants';
 import { AcronymDictionary } from '../../../Presets/DataDict';
 import { DumbbellLine } from '../../../Presets/StyledSVGComponents';
@@ -74,9 +73,11 @@ type Props = {
     sortMode: 'preop' | 'postop' | 'gap';
     showPreop: boolean;
     showPostop: boolean;
+    hgbTransfuseThresholdRange?: number[];
+    hgbPostOpTargetRange?: number[];
 };
 function DumbbellChart({
-  data, xAxisVar, dimensionHeight, dimensionWidth, svg, xMax, xMin, showPostop, showPreop, sortMode,
+  data, xAxisVar, dimensionHeight, dimensionWidth, svg, xMax, xMin, showPostop, showPreop, sortMode, hgbTransfuseThresholdRange, hgbPostOpTargetRange,
 }: Props) {
   const [averageForEachTransfused, setAverage] = useState<Record<number | string, { averageStart: number, averageEnd: number }>>({});
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([]);
@@ -84,8 +85,6 @@ function DumbbellChart({
   const [dataPointDict, setDataPointDict] = useState<{ title: number, length: number; }[]>([]);
   const [resultRange, setResultRange] = useState<number[]>([]);
   const [indices, setIndices] = useState([]);
-  const [hgbTransfuseThreshold, setHgbTransfuseThreshold] = useState(HGB_LOW_STANDARD);
-  const [hgbPostTargetRange, setHgbPostTargetRange] = useState(hgbPostOpTargetRange);
 
   const store = useContext(Store);
   const { currentSelectSet } = store.provenanceState;
@@ -314,8 +313,8 @@ function DumbbellChart({
         <text className="x-label" />
       </g>
       <g className="chart-comp" transform={`translate(${paddingFromLeft},0)`}>
-        {renderTargetRange([xMin, hgbTransfuseThreshold])}
-        {renderTargetRange(hgbPostTargetRange)}
+        {renderTargetRange(hgbTransfuseThresholdRange ? [xMin, hgbTransfuseThresholdRange[1]] : [])}
+        {renderTargetRange(hgbPostOpTargetRange ?? [])}
         {generateDumbbells()}
         {numberList.map((numberOb, idx) => {
           if (Object.keys(averageForEachTransfused).length > 0) {
