@@ -10,8 +10,9 @@ import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import Store from '../../../Interfaces/Store';
 import { DumbbellDataPoint } from '../../../Interfaces/Types/DataTypes';
 import {
-  OffsetDict, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, DumbbellGroupMinimumWidth, largeFontSize, regularFontSize,
-  DumbbellMinimumWidth, smallHoverColor, smallSelectColor,
+  OffsetDict, DumbbellGroupMinimumWidth, largeFontSize, regularFontSize,
+  DumbbellMinimumWidth, smallHoverColor, smallSelectColor, hgbPostOpTargetRange, targetLevelsColor,
+  HGB_LOW_STANDARD,
 } from '../../../Presets/Constants';
 import { AcronymDictionary } from '../../../Presets/DataDict';
 import { DumbbellLine } from '../../../Presets/StyledSVGComponents';
@@ -83,6 +84,8 @@ function DumbbellChart({
   const [dataPointDict, setDataPointDict] = useState<{ title: number, length: number; }[]>([]);
   const [resultRange, setResultRange] = useState<number[]>([]);
   const [indices, setIndices] = useState([]);
+  const [hgbTransfuseThreshold, setHgbTransfuseThreshold] = useState(HGB_LOW_STANDARD);
+  const [hgbPostTargetRange, setHgbPostTargetRange] = useState(hgbPostOpTargetRange);
 
   const store = useContext(Store);
   const { currentSelectSet } = store.provenanceState;
@@ -266,6 +269,39 @@ function DumbbellChart({
     return null;
   });
 
+  const renderTargetRange = (targetRange: number[]) => {
+    const [low, high] = targetRange;
+    const yHigh = testValueScale()(high);
+    const yBottom = dimensionHeight - currentOffset.bottom;
+    // if low === chart’s min, extend to bottom
+    const yLow = low === xMin
+      ? yBottom
+      : testValueScale()(low);
+
+    const x = currentOffset.left;
+    const width = dimensionWidth - currentOffset.left - currentOffset.right;
+    const lineProps = {
+      x1: x,
+      x2: x + width,
+      style: { stroke: targetLevelsColor, strokeWidth: 2, strokeDasharray: '5,5' },
+    };
+
+    return (
+      <g>
+        <rect
+          x={x}
+          y={yHigh}
+          width={width}
+          height={yLow - yHigh}
+          fill={targetLevelsColor}
+          fillOpacity={0.2}
+        />
+        <line {...lineProps} y1={yHigh} y2={yHigh} />
+        {low !== xMin && <line {...lineProps} y1={yLow} y2={yLow} />}
+      </g>
+    );
+  };
+
   const paddingFromLeft = 5;
   return (
     <>
@@ -278,10 +314,8 @@ function DumbbellChart({
         <text className="x-label" />
       </g>
       <g className="chart-comp" transform={`translate(${paddingFromLeft},0)`}>
-
-        <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(HGB_HIGH_STANDARD)} y2={testValueScale()(HGB_HIGH_STANDARD)} style={{ stroke: '#e5ab73', strokeWidth: '2', strokeDasharray: '5,5' }} />
-        <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(HGB_LOW_STANDARD)} y2={testValueScale()(HGB_LOW_STANDARD)} style={{ stroke: '#e5ab73', strokeWidth: '2', strokeDasharray: '5,5' }} />
-
+        {renderTargetRange([xMin, hgbTransfuseThreshold])}
+        {renderTargetRange(hgbPostTargetRange)}
         {generateDumbbells()}
         {numberList.map((numberOb, idx) => {
           if (Object.keys(averageForEachTransfused).length > 0) {

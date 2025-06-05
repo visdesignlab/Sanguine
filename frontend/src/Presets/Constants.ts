@@ -19,9 +19,12 @@ export const secondaryGray = '#666666';
 export const thirdGray = '#a2a2a2';
 export const greyScaleRange = [0.3, 0.85];
 
+// Target Levels Colors
+export const targetLevelsColor = '#e5ab73';
 // -----------------------------------------
 export const HGB_LOW_STANDARD = 7.5;
 export const HGB_HIGH_STANDARD = 13;
+export const hgbPostOpTargetRange = [HGB_HIGH_STANDARD - 1, HGB_HIGH_STANDARD + 1];
 export const SnackBarCloseTime = 5000;
 export const OffsetDict = {
   regular: {
