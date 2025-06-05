@@ -22,9 +22,15 @@ export const greyScaleRange = [0.3, 0.85];
 // Target Levels Colors
 export const targetLevelsColor = '#e5ab73';
 // -----------------------------------------
+// Pre-op hgb threshold (<X g/dL) that warrants transfusion
 export const HGB_LOW_STANDARD = 7.5;
+// Pre-op hgb transfusion threshold range
+export const hgbTransfuseThresholdRange = [0, HGB_LOW_STANDARD + 0.5];
+// Post-op hgb target standard
 export const HGB_HIGH_STANDARD = 13;
+// Post-op hgb target standard range
 export const hgbPostOpTargetRange = [HGB_HIGH_STANDARD - 1, HGB_HIGH_STANDARD + 1];
+
 export const SnackBarCloseTime = 5000;
 export const OffsetDict = {
   regular: {
