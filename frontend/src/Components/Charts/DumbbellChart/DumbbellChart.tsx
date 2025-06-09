@@ -73,8 +73,8 @@ type Props = {
     sortMode: 'preop' | 'postop' | 'gap';
     showPreop: boolean;
     showPostop: boolean;
-    hgbPostOpTargetRange?: number[];
-    hgbPreOpTargetRange?: number[];
+    hgbPostOpTargetRange?: (number | undefined) [];
+    hgbPreOpTargetRange?: (number | undefined) [];
 };
 function DumbbellChart({
   data, xAxisVar, dimensionHeight, dimensionWidth, svg, xMax, xMin, showPostop, showPreop, sortMode, hgbPostOpTargetRange, hgbPreOpTargetRange,
@@ -268,9 +268,7 @@ function DumbbellChart({
     return null;
   });
 
-  const renderTargetRange = ([low, high]: number[] = []) => {
-
-    console.log("Initial:", [low, high]);
+  const renderTargetRange = ([low, high]: (number | undefined)[] = []) => {
     // Range must fit in current domain.
     if (
       low == null
@@ -293,8 +291,6 @@ function DumbbellChart({
       style: { stroke: targetLevelsColor, strokeWidth: 2, strokeDasharray: '5,5' },
     };
     const targetLine = (y: number) => <line {...targetLineProps} y1={y} y2={y} />;
-
-    console.log([yLow, yHigh]);
     return (
       <g>
         {/* Target Range Rectangle */}

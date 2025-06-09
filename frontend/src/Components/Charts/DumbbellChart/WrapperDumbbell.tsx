@@ -1,8 +1,7 @@
 /** @jsxImportSource @emotion/react */
 import {
-  Box, Button, ButtonGroup, Grid, TextField,
+  Box, Button, ButtonGroup, Grid,
 } from '@mui/material';
-
 import { observer } from 'mobx-react';
 import {
   useContext, useRef, useState,
@@ -20,6 +19,7 @@ import {
 import DumbbellChart from './DumbbellChart';
 import ChartConfigMenu from '../ChartAccessories/ChartConfigMenu';
 import AnnotationForm from '../ChartAccessories/AnnotationForm';
+import TargetRangeInput from '../ChartAccessories/TargetRangeInput';
 import ChartStandardButtons from '../ChartStandardButtons';
 import { ChartAccessoryDiv, ChartWrapperContainer } from '../../../Presets/StyledComponents';
 import { DumbbellLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
@@ -91,8 +91,8 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
   const [data, setData] = useState<DumbbellDataPoint[]>([]);
 
   // Pre-op & post-op hemoglobin target range
-  const [hgbPreTargetRange, setHgbPreTargetRange] = useState<(number)[]>(hgbPreOpTargetRange);
-  const [hgbPostTargetRange, setHgbPostTargetRange] = useState<(number)[]>(hgbPostOpTargetRange);
+  const [hgbPreTargetRange, setHgbPreTargetRange] = useState<(number | undefined)[]>(hgbPreOpTargetRange);
+  const [hgbPostTargetRange, setHgbPostTargetRange] = useState<(number | undefined)[]>(hgbPostOpTargetRange);
 
   const size = useComponentSize(svgRef);
 
@@ -136,49 +136,6 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
     setHgbPreTargetRange([hgbPreOpTargetRange[0], tempXMax + yRangePadding]);
   }, [rawDateRange, proceduresSelection, filteredCases, xAxisVar, showZero]);
 
-  const renderThresholdInput = (
-    targetRange: (number)[],
-    setTargetRange: React.Dispatch<React.SetStateAction<(number)[]>>,
-    bound: 0 | 1,
-  ) => {
-    const value = targetRange[bound] ?? '';
-    return (
-      <TextField
-        key={bound}
-        type="number"
-        size="small"
-        variant="outlined"
-        value={value}
-        sx={{ width: 40, minWidth: 20 }}
-        inputProps={{
-          style: { padding: '2px 4px', fontSize: '0.75rem', textAlign: 'center' },
-          min: xMin,
-          max: xMax,
-        }}
-        onChange={(e) => {
-          const raw = e.target.value;
-          if (raw === '') {
-            // clear just this bound
-            setTargetRange([targetRange[0], targetRange[1]]);
-            return;
-          }
-          const parsed = parseFloat(raw);
-          if (!Number.isNaN(parsed)) {
-            const clamped = Math.min(Math.max(parsed, xMin), xMax);
-            let [low, high] = targetRange;
-            if (bound === 0) {
-              low = clamped;
-              if (high !== undefined && low > high) high = low;
-            } else {
-              high = clamped;
-              if (low !== undefined && high < low) low = high;
-            }
-            setTargetRange([low, high]);
-          }
-        }}
-      />
-    );
-  };
   return (
     <Grid container direction="row" alignItems="center" style={{ height: '100%' }}>
       <Grid
@@ -239,12 +196,13 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           </Button>
         </ButtonGroup>
         <DumbbellUtilTitle style={{ marginTop: '8px' }}>Pre-op target</DumbbellUtilTitle>
-        <Box sx={{
-          display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5,
-        }}
-        >
-          {renderThresholdInput(hgbPreTargetRange, setHgbPreTargetRange, 0)}
-          {renderThresholdInput(hgbPreTargetRange, setHgbPreTargetRange, 1)}
+        <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
+          <TargetRangeInput
+            targetRange={hgbPreTargetRange}
+            setTargetRange={setHgbPreTargetRange}
+            xMin={xMin}
+            xMax={xMax}
+          />
         </Box>
 
         <DumbbellUtilTitle style={{ marginTop: '4px', textAlign: 'center' }}>
@@ -256,8 +214,12 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5,
         }}
         >
-          {renderThresholdInput(hgbPostTargetRange, setHgbPostTargetRange, 0)}
-          {renderThresholdInput(hgbPostTargetRange, setHgbPostTargetRange, 1)}
+          <TargetRangeInput
+            targetRange={hgbPostTargetRange}
+            setTargetRange={setHgbPostTargetRange}
+            xMin={xMin}
+            xMax={xMax}
+          />
         </Box>
       </Grid>
       <Grid item xs={11} style={{ height: '100%' }}>
