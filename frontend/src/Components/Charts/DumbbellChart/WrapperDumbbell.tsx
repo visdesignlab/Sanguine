@@ -15,7 +15,7 @@ import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import Store from '../../../Interfaces/Store';
 import { DumbbellDataPoint } from '../../../Interfaces/Types/DataTypes';
 import {
-  basicGray, postopColor, preopColor, hgbTransfuseThresholdRange, hgbPostOpTargetRange,
+  basicGray, postopColor, preopColor, hgbPreOpTargetRange, hgbPostOpTargetRange,
 } from '../../../Presets/Constants';
 import DumbbellChart from './DumbbellChart';
 import ChartConfigMenu from '../ChartAccessories/ChartConfigMenu';
@@ -84,15 +84,15 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [xMin, setXMin] = useState(Infinity);
   const [xMax, setXMax] = useState(0);
+  const yRangePadding = 1;
   const [sortMode, setSortMode] = useState<'preop' | 'postop' | 'gap'>('postop');
   const [showPreop, setShowPreop] = useState(true);
   const [showPostop, setShowPostop] = useState(true);
   const [data, setData] = useState<DumbbellDataPoint[]>([]);
 
-  // Pre-op hgb threshold (<X g/dL) that warrants transfusion
-  const [hgbTransfuseRange, setHgbTransfuseRange] = useState(hgbTransfuseThresholdRange);
-  // Post-op hgb target range
-  const [hgbPostTargetRange, setHgbPostTargetRange] = useState(hgbPostOpTargetRange);
+  // Pre-op & post-op hemoglobin target range
+  const [hgbPreTargetRange, setHgbPreTargetRange] = useState<(number)[]>(hgbPreOpTargetRange);
+  const [hgbPostTargetRange, setHgbPostTargetRange] = useState<(number)[]>(hgbPostOpTargetRange);
 
   const size = useComponentSize(svgRef);
 
@@ -129,10 +129,56 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
     const filteredDataOutput = (dataOutput.filter((d) => d)) as DumbbellDataPoint[];
     store.chartStore.totalIndividualCaseCount = caseCount;
     stateUpdateWrapperUseJSON(data, filteredDataOutput, setData);
-    setXMin(tempXMin);
-    setXMax(tempXMax);
+
+    // Set Min and Max Ranges
+    setXMin(tempXMin - yRangePadding);
+    setXMax(tempXMax + yRangePadding);
+    setHgbPreTargetRange([hgbPreOpTargetRange[0], tempXMax + yRangePadding]);
   }, [rawDateRange, proceduresSelection, filteredCases, xAxisVar, showZero]);
 
+  const renderThresholdInput = (
+    targetRange: (number)[],
+    setTargetRange: React.Dispatch<React.SetStateAction<(number)[]>>,
+    bound: 0 | 1,
+  ) => {
+    const value = targetRange[bound] ?? '';
+    return (
+      <TextField
+        key={bound}
+        type="number"
+        size="small"
+        variant="outlined"
+        value={value}
+        sx={{ width: 40, minWidth: 20 }}
+        inputProps={{
+          style: { padding: '2px 4px', fontSize: '0.75rem', textAlign: 'center' },
+          min: xMin,
+          max: xMax,
+        }}
+        onChange={(e) => {
+          const raw = e.target.value;
+          if (raw === '') {
+            // clear just this bound
+            setTargetRange([targetRange[0], targetRange[1]]);
+            return;
+          }
+          const parsed = parseFloat(raw);
+          if (!Number.isNaN(parsed)) {
+            const clamped = Math.min(Math.max(parsed, xMin), xMax);
+            let [low, high] = targetRange;
+            if (bound === 0) {
+              low = clamped;
+              if (high !== undefined && low > high) high = low;
+            } else {
+              high = clamped;
+              if (low !== undefined && high < low) low = high;
+            }
+            setTargetRange([low, high]);
+          }
+        }}
+      />
+    );
+  };
   return (
     <Grid container direction="row" alignItems="center" style={{ height: '100%' }}>
       <Grid
@@ -197,103 +243,21 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5,
         }}
         >
-          <TextField
-            type="number"
-            size="small"
-            variant="outlined"
-            value={hgbPostTargetRange[0]}
-            sx={{ width: 40, minWidth: 20 }}
-            inputProps={{
-              style: { padding: '2px 4px', fontSize: '0.75rem', textAlign: 'center' },
-            }}
-            onChange={(e) => {
-              const raw = e.target.value;
-              if (raw === '') {
-                setHgbPostTargetRange([undefined, hgbPostTargetRange[1]]);
-                return;
-              }
-              const low = parseFloat(raw);
-              if (!Number.isNaN(low)) {
-                setHgbPostTargetRange([low, hgbPostTargetRange[1]]);
-              }
-            }}
-          />
-          <TextField
-            type="number"
-            size="small"
-            variant="outlined"
-            value={hgbPostTargetRange[1]}
-            sx={{ width: 40, minWidth: 20 }}
-            inputProps={{
-              style: { padding: '2px 4px', fontSize: '0.75rem', textAlign: 'center' },
-            }}
-            onChange={(e) => {
-              const raw = e.target.value;
-              if (raw === '') {
-                setHgbPostTargetRange([hgbPostTargetRange[0], undefined]);
-                return;
-              }
-              const high = parseFloat(raw);
-              if (!Number.isNaN(high)) {
-                setHgbPostTargetRange([hgbPostTargetRange[0], high]);
-              }
-            }}
-          />
+          {renderThresholdInput(hgbPreTargetRange, setHgbPreTargetRange, 0)}
+          {renderThresholdInput(hgbPreTargetRange, setHgbPreTargetRange, 1)}
         </Box>
+
         <DumbbellUtilTitle style={{ marginTop: '4px', textAlign: 'center' }}>
           Post-op target
           <br />
-          (Transfused)
+          Transfused
         </DumbbellUtilTitle>
         <Box sx={{
           display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5,
         }}
         >
-          {/* low threshold */}
-          <TextField
-            type="number"
-            size="small"
-            variant="outlined"
-            value={hgbTransfuseRange[0] ?? ''}
-            sx={{ width: 40, minWidth: 20 }}
-            inputProps={{
-              style: { padding: '2px 4px', fontSize: '0.75rem', textAlign: 'center' },
-            }}
-            onChange={(e) => {
-              const raw = e.target.value;
-              if (raw === '') {
-                setHgbTransfuseRange([undefined, hgbTransfuseRange[1]]);
-                return;
-              }
-              const low = parseFloat(raw);
-              if (!Number.isNaN(low)) {
-                setHgbTransfuseRange([low, hgbTransfuseRange[1]]);
-              }
-            }}
-          />
-
-          {/* high threshold */}
-          <TextField
-            type="number"
-            size="small"
-            variant="outlined"
-            value={hgbTransfuseRange[1] ?? ''}
-            sx={{ width: 40, minWidth: 20 }}
-            inputProps={{
-              style: { padding: '2px 4px', fontSize: '0.75rem', textAlign: 'center' },
-            }}
-            onChange={(e) => {
-              const raw = e.target.value;
-              if (raw === '') {
-                setHgbTransfuseRange([hgbTransfuseRange[0], undefined]);
-                return;
-              }
-              const high = parseFloat(raw);
-              if (!Number.isNaN(high)) {
-                setHgbTransfuseRange([hgbTransfuseRange[0], high]);
-              }
-            }}
-          />
+          {renderThresholdInput(hgbPostTargetRange, setHgbPostTargetRange, 0)}
+          {renderThresholdInput(hgbPostTargetRange, setHgbPostTargetRange, 1)}
         </Box>
       </Grid>
       <Grid item xs={11} style={{ height: '100%' }}>
@@ -316,7 +280,7 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
                 dimensionHeight={size.height}
                 xMin={xMin}
                 xMax={xMax}
-                hgbTransfuseThresholdRange={hgbTransfuseRange}
+                hgbPreOpTargetRange={hgbPreTargetRange}
                 hgbPostOpTargetRange={hgbPostTargetRange}
               />
             </svg>

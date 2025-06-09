@@ -73,11 +73,11 @@ type Props = {
     sortMode: 'preop' | 'postop' | 'gap';
     showPreop: boolean;
     showPostop: boolean;
-    hgbTransfuseThresholdRange?: number[];
     hgbPostOpTargetRange?: number[];
+    hgbPreOpTargetRange?: number[];
 };
 function DumbbellChart({
-  data, xAxisVar, dimensionHeight, dimensionWidth, svg, xMax, xMin, showPostop, showPreop, sortMode, hgbTransfuseThresholdRange, hgbPostOpTargetRange,
+  data, xAxisVar, dimensionHeight, dimensionWidth, svg, xMax, xMin, showPostop, showPreop, sortMode, hgbPostOpTargetRange, hgbPreOpTargetRange,
 }: Props) {
   const [averageForEachTransfused, setAverage] = useState<Record<number | string, { averageStart: number, averageEnd: number }>>({});
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([]);
@@ -184,7 +184,7 @@ function DumbbellChart({
   }, [dataPointDict, dimensionWidth, currentOffset, sortedData, data]);
 
   const testValueScale = useCallback(() => scaleLinear()
-    .domain([0.9 * xMin, 1.1 * xMax])
+    .domain([xMin, xMax])
     .range([dimensionHeight - currentOffset.bottom, currentOffset.top]), [xMin, xMax, dimensionHeight, currentOffset]);
 
   const valueScale = useCallback(() => scaleOrdinal()
@@ -268,25 +268,36 @@ function DumbbellChart({
     return null;
   });
 
-  const renderTargetRange = (targetRange: number[]) => {
-    const [low, high] = targetRange;
-    const yHigh = testValueScale()(high);
-    const yBottom = dimensionHeight - currentOffset.bottom;
-    // if low === chart’s min, extend to bottom
-    const yLow = low === xMin
-      ? yBottom
-      : testValueScale()(low);
+  const renderTargetRange = ([low, high]: number[] = []) => {
 
+    console.log("Initial:", [low, high]);
+    // Range must fit in current domain.
+    if (
+      low == null
+      || high == null
+      || low < xMin
+      || high > xMax
+    ) return null;
+    // Y-positions of the target range
+    const yLow = testValueScale()(low);
+    const yHigh = testValueScale()(high);
+
+    // X-positions of the target range
     const x = currentOffset.left;
-    const width = dimensionWidth - currentOffset.left - currentOffset.right;
-    const lineProps = {
+    const width = dimensionWidth - x - currentOffset.right;
+
+    // Target Line
+    const targetLineProps = {
       x1: x,
       x2: x + width,
       style: { stroke: targetLevelsColor, strokeWidth: 2, strokeDasharray: '5,5' },
     };
+    const targetLine = (y: number) => <line {...targetLineProps} y1={y} y2={y} />;
 
+    console.log([yLow, yHigh]);
     return (
       <g>
+        {/* Target Range Rectangle */}
         <rect
           x={x}
           y={yHigh}
@@ -295,8 +306,9 @@ function DumbbellChart({
           fill={targetLevelsColor}
           fillOpacity={0.2}
         />
-        <line {...lineProps} y1={yHigh} y2={yHigh} />
-        {low !== xMin && <line {...lineProps} y1={yLow} y2={yLow} />}
+        {/* Target Lines */}
+        {low !== xMin && targetLine(yLow)}
+        {high !== xMax && targetLine(yHigh)}
       </g>
     );
   };
@@ -313,7 +325,7 @@ function DumbbellChart({
         <text className="x-label" />
       </g>
       <g className="chart-comp" transform={`translate(${paddingFromLeft},0)`}>
-        {renderTargetRange(hgbTransfuseThresholdRange ? [xMin, hgbTransfuseThresholdRange[1]] : [])}
+        {renderTargetRange(hgbPreOpTargetRange ?? [])}
         {renderTargetRange(hgbPostOpTargetRange ?? [])}
         {generateDumbbells()}
         {numberList.map((numberOb, idx) => {
