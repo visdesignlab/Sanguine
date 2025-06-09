@@ -192,7 +192,7 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
             Postop
           </Button>
         </ButtonGroup>
-        <DumbbellUtilTitle style={{ marginTop: '8px' }}>Hgb Target</DumbbellUtilTitle>
+        <DumbbellUtilTitle style={{ marginTop: '8px' }}>Pre-op target</DumbbellUtilTitle>
         <Box sx={{
           display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5,
         }}
@@ -240,7 +240,11 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
             }}
           />
         </Box>
-        <DumbbellUtilTitle style={{ marginTop: '4px' }}>Hgb Transfuse</DumbbellUtilTitle>
+        <DumbbellUtilTitle style={{ marginTop: '4px', textAlign: 'center' }}>
+          Post-op target
+          <br />
+          (Transfused)
+        </DumbbellUtilTitle>
         <Box sx={{
           display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5,
         }}
