@@ -13,10 +13,13 @@ import { bloodComponentOutlierHandler } from '../../../HelperFunctions/CaseListP
 import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import Store from '../../../Interfaces/Store';
 import { DumbbellDataPoint } from '../../../Interfaces/Types/DataTypes';
-import { basicGray, postopColor, preopColor } from '../../../Presets/Constants';
+import {
+  basicGray, postopColor, preopColor, hgbPreOpTargetRange, hgbPostOpTargetRange,
+} from '../../../Presets/Constants';
 import DumbbellChart from './DumbbellChart';
 import ChartConfigMenu from '../ChartAccessories/ChartConfigMenu';
 import AnnotationForm from '../ChartAccessories/AnnotationForm';
+import TargetRangeInput from '../ChartAccessories/TargetRangeInput';
 import ChartStandardButtons from '../ChartStandardButtons';
 import { ChartAccessoryDiv, ChartWrapperContainer } from '../../../Presets/StyledComponents';
 import { DumbbellLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
@@ -65,9 +68,9 @@ const ButtonStyles = {
 };
 
 const DumbbellUtilTitle = styled.div({
-  width: 'max-content',
   padding: '2px',
   fontSize: '0.8rem',
+  whiteSpace: 'nowrap',
 });
 
 function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
@@ -81,10 +84,15 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [xMin, setXMin] = useState(Infinity);
   const [xMax, setXMax] = useState(0);
+  const yRangePadding = 1;
   const [sortMode, setSortMode] = useState<'preop' | 'postop' | 'gap'>('postop');
   const [showPreop, setShowPreop] = useState(true);
   const [showPostop, setShowPostop] = useState(true);
   const [data, setData] = useState<DumbbellDataPoint[]>([]);
+
+  // Pre-op & post-op hemoglobin target range
+  const [hgbPreTargetRange, setHgbPreTargetRange] = useState<(number | undefined)[]>(hgbPreOpTargetRange);
+  const [hgbPostTargetRange, setHgbPostTargetRange] = useState<(number | undefined)[]>(hgbPostOpTargetRange);
 
   const size = useComponentSize(svgRef);
 
@@ -121,13 +129,24 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
     const filteredDataOutput = (dataOutput.filter((d) => d)) as DumbbellDataPoint[];
     store.chartStore.totalIndividualCaseCount = caseCount;
     stateUpdateWrapperUseJSON(data, filteredDataOutput, setData);
-    setXMin(tempXMin);
-    setXMax(tempXMax);
+
+    // Set Min and Max Ranges
+    setXMin(tempXMin - yRangePadding);
+    setXMax(tempXMax + yRangePadding);
+    setHgbPreTargetRange([hgbPreOpTargetRange[0], tempXMax + yRangePadding]);
   }, [rawDateRange, proceduresSelection, filteredCases, xAxisVar, showZero]);
 
   return (
     <Grid container direction="row" alignItems="center" style={{ height: '100%' }}>
-      <Grid item xs={1}>
+      <Grid
+        item
+        xs={1}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
         <DumbbellUtilTitle>Sort By</DumbbellUtilTitle>
         <ButtonGroup
           variant="outlined"
@@ -176,7 +195,32 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
             Postop
           </Button>
         </ButtonGroup>
+        <DumbbellUtilTitle style={{ marginTop: '8px' }}>Pre-op target</DumbbellUtilTitle>
+        <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
+          <TargetRangeInput
+            targetRange={hgbPreTargetRange}
+            setTargetRange={setHgbPreTargetRange}
+            xMin={xMin}
+            xMax={xMax}
+          />
+        </Box>
 
+        <DumbbellUtilTitle style={{ marginTop: '4px', textAlign: 'center' }}>
+          Post-op target
+          <br />
+          Transfused
+        </DumbbellUtilTitle>
+        <Box sx={{
+          display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5,
+        }}
+        >
+          <TargetRangeInput
+            targetRange={hgbPostTargetRange}
+            setTargetRange={setHgbPostTargetRange}
+            xMin={xMin}
+            xMax={xMax}
+          />
+        </Box>
       </Grid>
       <Grid item xs={11} style={{ height: '100%' }}>
         <ChartWrapperContainer>
@@ -187,7 +231,20 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           </ChartAccessoryDiv>
           <Box style={{ height: 'calc(100% - 100px)', overflow: 'auto' }}>
             <svg ref={svgRef} style={{ height: 'calc(100% - 10px)' }}>
-              <DumbbellChart data={data} svg={svgRef} showPostop={showPostop} showPreop={showPreop} sortMode={sortMode} xAxisVar={xAxisVar} dimensionWidth={size.width} dimensionHeight={size.height} xMin={xMin} xMax={xMax} />
+              <DumbbellChart
+                data={data}
+                svg={svgRef}
+                showPostop={showPostop}
+                showPreop={showPreop}
+                sortMode={sortMode}
+                xAxisVar={xAxisVar}
+                dimensionWidth={size.width}
+                dimensionHeight={size.height}
+                xMin={xMin}
+                xMax={xMax}
+                hgbPreOpTargetRange={hgbPreTargetRange}
+                hgbPostOpTargetRange={hgbPostTargetRange}
+              />
             </svg>
           </Box>
           <AnnotationForm chartI={chartId} annotationText={annotationText} />

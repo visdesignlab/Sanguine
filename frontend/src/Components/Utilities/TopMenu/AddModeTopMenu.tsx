@@ -67,7 +67,7 @@ function AddModeTopMenu({ chartType, sx }: { chartType: ChartType; sx: React.CSS
         i: store.provenanceState.nextAddingIndex.toString(),
         x: 0,
         y: ManualInfinity,
-        w: 1,
+        w: 2,
         h: 1,
         annotationText: '',
         chartType,
