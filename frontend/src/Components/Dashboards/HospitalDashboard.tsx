@@ -8,8 +8,10 @@ import {
   AccordionDetails,
   MenuItem,
   Select,
+  IconButton,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import MoreVert from '@mui/icons-material/MoreVert';
 import { Cardiogram, HealthLiteracyOutline, Dollar } from 'healthicons-react';
 import DashboardCard from './DashboardCard';
 
@@ -85,6 +87,14 @@ const outcomeCards = [
     percentChange: 3,
     info: () => {},
   },
+  {
+    title: 'Readmission Percentage',
+    value: '14.5%',
+    interval: 'Year to Date',
+    trend: 'up',
+    percentChange: 8,
+    info: () => {},
+  },
 ];
 
 function OutcomesDashboard() {
@@ -107,81 +117,147 @@ function OutcomesDashboard() {
     </Box>
   );
 }
-const adherenceDashboard = () => <div>Adherence Dashboard</div>;
+
+const adherenceCards = [
+  {
+    title: 'Provider Adherence RBC',
+    value: '55%',
+    interval: 'Year to Date',
+    trend: 'up',
+    percentChange: 35,
+    info: () => {},
+  },
+  {
+    title: 'Provider Adherence PLT',
+    value: '65%',
+    interval: 'Year to Date',
+    trend: 'down',
+    percentChange: 10,
+    info: () => {},
+  },
+  {
+    title: 'Provider Adherence FFP',
+    value: '35%',
+    interval: 'Year to Date',
+    trend: 'up',
+    percentChange: 45,
+    info: () => {},
+  },
+];
+function AdherenceDashboard() {
+  return (
+    <Box
+      sx={{
+        width: '100%',
+        minWidth: 0,
+        mt: 1,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: horizontalItemGap,
+      }}
+    >
+      {adherenceCards.map((card) => (
+        <DashboardCard key={card.title} {...card} />
+      ))}
+    </Box>
+  );
+}
 
 const hospitalSummaryGroups: SummaryGroup[] = [
   { groupLabel: 'Costs & Savings', icon: Dollar, component: CostSavingsDashboard },
   { groupLabel: 'Patient Outcomes', icon: Cardiogram, component: OutcomesDashboard },
-  { groupLabel: 'Guideline Adherence', icon: HealthLiteracyOutline, component: adherenceDashboard },
+  { groupLabel: 'Guideline Adherence', icon: HealthLiteracyOutline, component: AdherenceDashboard },
 ];
-function HospitalDashboard(): JSX.Element {
-  const [interval, setInterval] = useState<string>('Year to Date');
 
+function SummaryAccordionSection({ groupLabel, icon: Icon, component: Component }: SummaryGroupProps) {
+  const [interval, setInterval] = useState<string>('Year to Date');
+  const [pickerOpen, setPickerOpen] = useState(false);
   return (
-    <>
-      {hospitalSummaryGroups.map(({ groupLabel, icon: Icon, component: Component }) => (
-        <Accordion
-          key={groupLabel}
-          defaultExpanded
-          square
-          disableGutters
+    <Accordion
+      key={groupLabel}
+      defaultExpanded
+      square
+      disableGutters
+      sx={{
+        width: '100%',
+        boxShadow: 'none',
+        '&:before': { display: 'none' },
+      }}
+    >
+      <AccordionSummary
+        expandIcon={<ExpandMoreIcon />}
+        sx={{
+          bgcolor: 'background.paper',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          display: 'flex',
+          alignItems: 'center',
+          px: 2,
+        }}
+      >
+        <Typography variant="h5" sx={{ opacity }}>
+          {groupLabel}
+        </Typography>
+        <ListItemIcon
           sx={{
-            width: '100%',
-            mb: 1,
-            boxShadow: 'none',
-            '&:before': { display: 'none' },
+            opacity,
+            minWidth: 0,
+            ml: 1,
+            display: 'flex',
+            alignItems: 'center',
           }}
         >
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            sx={{
-              bgcolor: 'background.paper',
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              display: 'flex', // make flex container
-              alignItems: 'center', // vertically center icon & text
-              px: 2,
-            }}
-          >
-            <Typography variant="h5" sx={{ opacity }}>
-              {groupLabel}
-            </Typography>
-            <ListItemIcon
-              sx={{
-                opacity,
-                minWidth: 0, // remove default 56px gap
-                ml: 1, // small gap to the right
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <Icon />
-            </ListItemIcon>
-            <Box sx={{ flexGrow: 1 }} />
-            <Select
-              value={interval}
-              onChange={(e) => setInterval(e.target.value as string)}
-              variant="standard"
-              disableUnderline
-              sx={{
-                mx: 1,
-                fontStyle: 'italic',
-                opacity: opacity + 0.2,
-              }}
-            >
-              <MenuItem value="3 Months">3 Months</MenuItem>
-              <MenuItem value="6 Months">6 Months</MenuItem>
-              <MenuItem value="Year to Date">Year to Date</MenuItem>
-              <MenuItem value="Two Years">Two Years</MenuItem>
-              <MenuItem value="Three Years">Three Years</MenuItem>
-              <MenuItem value="Five Years">Five Years</MenuItem>
-            </Select>
-          </AccordionSummary>
-          <AccordionDetails>
-            {Component && <Component />}
-            {/* TODO: add summary widgets for {groupLabel} here */}
-          </AccordionDetails>
-        </Accordion>
+          <Icon />
+        </ListItemIcon>
+        <Box sx={{ flexGrow: 1 }} />
+        <IconButton
+          onClick={(e) => { e.stopPropagation(); setPickerOpen(true); }}
+          sx={{
+            opacity: 1,
+            minWidth: 0,
+            ml: 1,
+            display: 'flex',
+            alignItems: 'center',
+            borderRadius: '50%', // make container circular
+            p: 0.5, // add some padding
+            transition: 'background-color 0.2s, opacity 0.2s',
+            '&:hover': {
+              backgroundColor: 'grey.100', // light grey on hover
+            },
+          }}
+        >
+          <MoreVert />
+        </IconButton>
+        <Select
+          value={interval}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onChange={(e) => setInterval(e.target.value as string)}
+          variant="standard"
+          disableUnderline
+          sx={{ mx: 1, fontStyle: 'italic', opacity: opacity + 0.2 }}
+        >
+          <MenuItem value="3 Months">3 Months</MenuItem>
+          <MenuItem value="6 Months">6 Months</MenuItem>
+          <MenuItem value="Year to Date">Year to Date</MenuItem>
+          <MenuItem value="Two Years">Two Years</MenuItem>
+          <MenuItem value="Three Years">Three Years</MenuItem>
+          <MenuItem value="Five Years">Five Years</MenuItem>
+        </Select>
+      </AccordionSummary>
+      <AccordionDetails>
+        {Component && <Component />}
+      </AccordionDetails>
+    </Accordion>
+  );
+}
+
+function HospitalDashboard(): JSX.Element {
+  return (
+    <>
+      {hospitalSummaryGroups.map((group) => (
+        <SummaryAccordionSection key={group.groupLabel} {...group} />
       ))}
     </>
   );
