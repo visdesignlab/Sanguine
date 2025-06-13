@@ -17,9 +17,10 @@ type Props = {
     dimensionHeight: number;
     attributePlotTotalWidth: number;
     yAxisVar: Aggregation;
+    labelMaxChars?: number;
 };
-function HeatMapAxis({
-  svg, currentOffset, attributePlotTotalWidth, xVals, dimensionHeight, yAxisVar,
+function HeatMapAxisY({
+  svg, currentOffset, attributePlotTotalWidth, xVals, dimensionHeight, yAxisVar, labelMaxChars = 17,
 }: Props) {
   const store = useContext(Store);
   const aggregationScale = useCallback(() => AggregationScaleGenerator(xVals, dimensionHeight, currentOffset), [dimensionHeight, xVals, currentOffset]);
@@ -29,6 +30,10 @@ function HeatMapAxis({
 
   // Gets the provider name depending on the private mode setting
   const getLabel = usePrivateProvLabel();
+  const truncate = (label: string) => {
+    if (label.length <= labelMaxChars) return label;
+    return `${label.slice(0, labelMaxChars - 3)}...`;
+  };
 
   svgSelection
     .select('.axes-y')
@@ -45,7 +50,7 @@ function HeatMapAxis({
     .attr('pointer-events', 'none')
     .style('user-select', 'none')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .text((d: any) => getLabel(d, yAxisVar));
+    .text((d: any) => truncate(getLabel(d, yAxisVar)));
 
   return (
     <g className="axes-y">
@@ -54,4 +59,4 @@ function HeatMapAxis({
   );
 }
 
-export default observer(HeatMapAxis);
+export default observer(HeatMapAxisY);
