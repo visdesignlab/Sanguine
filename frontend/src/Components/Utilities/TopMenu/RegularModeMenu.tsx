@@ -1,7 +1,7 @@
 /** @jsxImportSource @emotion/react */
 import * as htmlToImage from 'html-to-image';
 import {
-  Menu, MenuItem, Button, AppBar, Typography, IconButton, Tooltip, ListItemIcon, Toolbar, Stack,
+  Switch, Menu, MenuItem, Button, AppBar, Typography, IconButton, Tooltip, ListItemIcon, Toolbar, Stack,
 } from '@mui/material';
 import { observer } from 'mobx-react';
 import { useContext, useState } from 'react';
@@ -214,6 +214,13 @@ function RegularModeMenu() {
           </Tooltip>
         </IconButton>
         <Menu anchorEl={anchorMore} open={Boolean(anchorMore)} onClose={handleMoreClose}>
+          <MenuItem>
+            <ListItemIcon>
+              <VpnKeyIcon css={store.configStore.privateMode ? '' : ManualDisableCSS} />
+            </ListItemIcon>
+            Private
+            <Switch onClick={() => { store.configStore.privateMode = !store.configStore.privateMode; }} />
+          </MenuItem>
           <a href="https://github.com/visdesignlab/Sanguine/issues" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: ' black' }}>
             <MenuItem onClick={handleMoreClose}>
               <ListItemIcon>
@@ -227,12 +234,6 @@ function RegularModeMenu() {
               <InfoOutlinedIcon />
             </ListItemIcon>
             About
-          </MenuItem>
-          <MenuItem onClick={() => { handleMoreClose(); store.configStore.privateMode = !store.configStore.privateMode; }} css={store.configStore.privateMode ? '' : ManualDisableCSS}>
-            <ListItemIcon>
-              <VpnKeyIcon css={store.configStore.privateMode ? '' : ManualDisableCSS} />
-            </ListItemIcon>
-            Private Mode
           </MenuItem>
           <MenuItem onClick={() => { logoutHandler(); }}>
             <ListItemIcon>
