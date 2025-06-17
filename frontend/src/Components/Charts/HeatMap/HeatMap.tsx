@@ -9,6 +9,7 @@ import Store from '../../../Interfaces/Store';
 import { AttributePlotData, HeatMapDataPoint } from '../../../Interfaces/Types/DataTypes';
 import {
   BloodProductCap, MIN_HEATMAP_BANDWIDTH, OffsetDict, backgroundSelectedColor, backgroundHoverColor,
+  CaseRectWidth,
 } from '../../../Presets/Constants';
 import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import { AggregationScaleGenerator, ValueScaleGenerator } from '../../../HelperFunctions/Scales';
@@ -22,6 +23,7 @@ import ComparisonLegend from '../ChartAccessories/ComparisonLegend';
 import HeatMapAxisX from '../ChartAccessories/HeatMapAxisX';
 import HeatMapAxisY from '../ChartAccessories/HeatMapAxisY';
 import { Aggregation, BloodComponent, Outcome } from '../../../Presets/DataDict';
+import { usePrivateProvLabel } from '../../Hooks/PrivateModeLabeling';
 
 const outputGradientLegend = (showZero: boolean, dimensionWidth: number) => {
   if (!showZero) {
@@ -115,8 +117,31 @@ function HeatMap({
     interactionStore.hoveredAttribute = undefined;
   }
 
-  // Calculates the height of each row based on whether secondary data is present.
-  const rowHeight = useMemo(() => (secondaryData ? aggregationScale().bandwidth() * 0.5 : aggregationScale().bandwidth()), [secondaryData, aggregationScale]);
+  // Scale and bandwidth
+  const scale = aggregationScale();
+  const band = scale.bandwidth();
+  const padding = 2;
+
+  // Row-height is just bandwidth × 0.5 or 1
+  const rowHeight = useMemo(
+    () => band * (secondaryData ? 0.5 : 1),
+    [secondaryData, band],
+  );
+
+  // Y-axis labels ---------------------------
+  const getLabel = usePrivateProvLabel();
+  // Position of the Y Axis Labels
+  const yAxisPos: [number, number] = [attributePlotTotalWidth + currentOffset.left / 2, 0];
+  const maxChars = 16;
+  // Y Axis Labels have a y position, text, and tooltip text.
+  const yAxisLabels = xVals.map((val) => {
+    const y = (scale(val) ?? 0) + band / 2 + padding;
+    return {
+      y,
+      text: getLabel(val, yAxisVar, maxChars),
+      tooltipLabel: getLabel(val, yAxisVar, undefined, false),
+    };
+  });
 
   return (
     <g>
@@ -144,7 +169,7 @@ function HeatMap({
                     x={0}
                     y={0}
                     width={dimensionWidth}
-                    height={rowHeight + 2}
+                    height={rowHeight + padding}
                     fill="transparent"
                   />
                   {/** Background row hover highlight rectangle for display */}
@@ -217,14 +242,12 @@ function HeatMap({
                 </g>
               );
             }) : null}
+
             {/** Row labels rendered on top */}
             <HeatMapAxisY
-              svg={innerSvg}
-              currentOffset={currentOffset}
-              xVals={xVals}
-              dimensionHeight={chartHeight}
-              attributePlotTotalWidth={attributePlotTotalWidth}
-              yAxisVar={yAxisVar}
+              position={yAxisPos}
+              width={CaseRectWidth}
+              rowLabels={yAxisLabels}
             />
           </g>
           <g>
