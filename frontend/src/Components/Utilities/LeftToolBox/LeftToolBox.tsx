@@ -26,11 +26,17 @@ function LeftToolBox() {
 
       // Process the result into the data type required.
       const result = procedureInput.result.map((procedure) => {
-        const procedureOverlapList = Object.keys(procedure.overlapList).map((subProcedureName) => ({
-          procedureName: subProcedureName,
-          count: procedure.overlapList[subProcedureName],
-          codes: procedureInput.result.find((p) => p.procedureName === subProcedureName)?.procedureCodes || [],
-        }));
+        console.log('Procedure:', procedure);
+
+        // Overlap List
+        const procedureOverlapList = Object.keys(procedure.overlapList).map((subProcedureName) => {
+          // Strip "Only " prefix for lookup
+          const baseName = subProcedureName.startsWith('Only ') ? subProcedureName.replace(/^Only\s+/, '') : subProcedureName;
+          return {
+            procedureName: subProcedureName,
+            count: procedure.overlapList[subProcedureName],
+            codes: procedureInput.result.find((p) => p.procedureName === baseName)?.procedureCodes || [],
+          }});
         procedureOverlapList.sort((a, b) => {
           if (a.procedureName.includes('Only')) {
             return -1;
