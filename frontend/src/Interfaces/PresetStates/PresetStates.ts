@@ -57,7 +57,7 @@ const preopAnemiaLayout: LayoutElement[] = [
 ];
 export const preopAnemiaState = makePresetState(
   preopAnemiaLayout,
-  { PREOP_HEMO: [0, 7] },
+  { PREOP_HEMO: [0, 13] },
 );
 
 /**
