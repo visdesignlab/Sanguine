@@ -112,9 +112,16 @@ function LayoutGenerator() {
   // Loads a preset state into the store, making preset plots appear
   const loadPresetState = (state: ApplicationState) => () => {
     if (state) {
-      const jsonState = JSON.stringify(state);
+      // Remove layout array from the state (to avoid duplicating charts)
+      const spreadState = { ...state };
+      const stateWithoutLayout = { ...spreadState, layoutArray: [] };
+      // Add the state (without layout array) to the store's provenance
+      const jsonState = JSON.stringify(stateWithoutLayout);
       const jsonParsed = JSON.parse(jsonState);
       store.provenance.importState(jsonParsed);
+
+      // Set the layout array to the chart store
+      state.layoutArray.map((d: LayoutElement) => store.chartStore.addNewChart(d));
     }
   };
 
