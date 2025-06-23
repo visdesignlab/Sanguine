@@ -2,6 +2,7 @@ from collections import Counter, defaultdict
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.conf import settings
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .decorators.conditional_login_required import conditional_login_required
 from .sql_queries import procedure_count_query, patient_query, surgery_query, surgery_case_query
@@ -23,6 +24,9 @@ def whoami(request):
     else:
         return HttpResponse("Unauthorized", status=401)
 
+@ensure_csrf_cookie
+def get_csrf_token(request):
+    return JsonResponse({'detail': 'CSRF cookie set'})
 
 @require_http_methods(["GET"])
 @conditional_login_required

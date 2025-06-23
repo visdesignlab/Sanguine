@@ -40,8 +40,8 @@ function SaveStateModal({ visible, setVisibility }: Props) {
     console.error('There has been a problem with your fetch operation:', errorMessage);
   };
 
-  const saveNewState = () => {
-    const csrftoken = simulateAPIClick();
+  const saveNewState = async () => {
+    const csrftoken = await simulateAPIClick();
     if (store.configStore.stateToUpdate) {
       fetch(`${import.meta.env.VITE_QUERY_URL}state`, {
         method: 'PUT',
@@ -80,7 +80,6 @@ function SaveStateModal({ visible, setVisibility }: Props) {
           Accept: 'application/x-www-form-urlencoded',
           'Content-Type': 'application/x-www-form-urlencoded',
           'X-CSRFToken': csrftoken || '',
-          'Access-Control-Allow-Credentials': 'true',
         },
         body: `csrfmiddlewaretoken=${csrftoken}&name=${stateName}&definition=${store.provenance.exportState(false)}&public=${publicAccess.toString()}`,
       }).then((response) => {

@@ -8,8 +8,7 @@ urlpatterns = [
     path("api/admin/", admin.site.urls),
     path('api/accounts/login/', django_cas_ng.views.LoginView.as_view(), name='cas_ng_login'),
     path('api/accounts/logout/', django_cas_ng.views.LogoutView.as_view(), name='cas_ng_logout'),
-
-
+    path("api/csrf/", views.get_csrf_token, name="get_csrf_token"),
     path("api/", views.index, name="index"),
     path("api/whoami", views.whoami, name="whoami"),
     path("api/get_procedure_counts", views.get_procedure_counts, name="get_procedure_counts"),
