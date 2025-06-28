@@ -51,6 +51,7 @@ const attributePlotTextGenerator = (
   currentOffset: Offset,
   isDescending: boolean,
   onSortClick: () => void,
+  activeSortIdx: number,
 ) => {
   // Defines the explanation for the tooltip
   let explanation = '';
@@ -86,6 +87,7 @@ const attributePlotTextGenerator = (
   const tooltipTitle = isDescending ? 'Sort Descending' : 'Sort Ascending';
 
   const ARROW_SIZE = 24; // px
+  const arrowColor = activeSortIdx === idx ? '#000' : '#bbb';
   return (
     <>
       {/* Generates the Violin Axis */}
@@ -109,12 +111,12 @@ const attributePlotTextGenerator = (
           {/* Plain SVG arrow */}
           {isDescending ? (
             <svg width={ARROW_SIZE} height={ARROW_SIZE} viewBox="0 0 24 24">
-              <path d="M7 14l5-5 5 5H7z" fill="#666" />
+              <path d="M7 14l5-5 5 5H7z" fill={arrowColor} />
             </svg>
           )
             : (
               <svg width={ARROW_SIZE} height={ARROW_SIZE} viewBox="0 0 24 24">
-                <path d="M7 10l5 5 5-5H7z" fill="#666" />
+                <path d="M7 10l5 5 5-5H7z" fill={arrowColor} />
               </svg>
             )}
         </Tooltip>
@@ -226,11 +228,13 @@ export function AttributePlotLabels({
 }): JSX.Element {
   const store = useContext(Store);
   const [sortDirections, setSortDirections] = useState<boolean[]>(() => attributePlotData.map(() => false));
+  const [activeSortIdx, setActiveSortIdx] = useState<number | null>(null);
 
   const handleSortClick = (idx: number) => {
     setSortDirections((prev) => {
       const next = [...prev];
       next[idx] = !next[idx];
+      setActiveSortIdx(idx);
       return next;
     });
   };
@@ -251,6 +255,7 @@ export function AttributePlotLabels({
             currentOffset,
             sortDirections[idx],
             () => handleSortClick(idx),
+            activeSortIdx ?? -1,
           )}
         </Fragment>
       ))}
