@@ -2,7 +2,7 @@
 import { observer } from 'mobx-react';
 import styled from '@emotion/styled';
 import { Tooltip } from '@mui/material';
-import { Fragment, useContext } from 'react';
+import { Fragment, useContext, useState } from 'react';
 import { format } from 'd3';
 import { AttributePlotData } from '../../../../Interfaces/Types/DataTypes';
 import {
@@ -49,6 +49,8 @@ const attributePlotTextGenerator = (
   chartId: string,
   dimensionHeight: number,
   currentOffset: Offset,
+  isDescending: boolean,
+  onSortClick: () => void,
 ) => {
   // Defines the explanation for the tooltip
   let explanation = '';
@@ -81,16 +83,42 @@ const attributePlotTextGenerator = (
   // Calculates the x value for the text, based on the width of the previous extra pairs.
   const labelX: number = allAttributePlots.slice(0, idx + 1).map((attributePlot) => AttributePlotWidth[attributePlot.type] + AttributePlotPadding).reduce((partialSum, a) => partialSum + a, 0);
 
+  const tooltipTitle = isDescending ? 'Sort Descending' : 'Sort Ascending';
+
+  const ARROW_SIZE = 24; // px
   return (
     <>
       {/* Generates the Violin Axis */}
       {plotData.type === 'Violin' && (
-        <AttributePlotViolinAxis
-          key={`violin-axis-${idx}`}
-          yPos={dimensionHeight - currentOffset.bottom}
-          xPos={labelX - AttributePlotWidth.Violin}
-        />
+      <AttributePlotViolinAxis
+        key={`violin-axis-${idx}`}
+        yPos={dimensionHeight - currentOffset.bottom}
+        xPos={labelX - AttributePlotWidth.Violin}
+      />
       )}
+      {/* Absolutely positioned IconButton overlay */}
+      <g
+        style={{
+          cursor: 'pointer',
+          pointerEvents: 'auto',
+        }}
+        transform={`translate(${labelX - AttributePlotWidth[type] / 2 - ARROW_SIZE / 2}, ${dimensionHeight - currentOffset.bottom + 5})`}
+        onClick={onSortClick}
+      >
+        <Tooltip title={tooltipTitle}>
+          {/* Plain SVG arrow */}
+          {isDescending ? (
+            <svg width={ARROW_SIZE} height={ARROW_SIZE} viewBox="0 0 24 24">
+              <path d="M7 14l5-5 5 5H7z" fill="#666" />
+            </svg>
+          )
+            : (
+              <svg width={ARROW_SIZE} height={ARROW_SIZE} viewBox="0 0 24 24">
+                <path d="M7 10l5 5 5-5H7z" fill="#666" />
+              </svg>
+            )}
+        </Tooltip>
+      </g>
       {/* Generates the Attribute Label */}
       <Tooltip title={tooltipText}>
         <AttributePlotText
@@ -102,11 +130,19 @@ const attributePlotTextGenerator = (
           }}
         >
           {labelInput}
-          <RemoveTSpan x={labelX - AttributePlotWidth[type] / 2} dy="-0.5em">
-            x
-          </RemoveTSpan>
         </AttributePlotText>
       </Tooltip>
+      {/* 'x' below the label */}
+      <RemoveTSpan
+        x={labelX - AttributePlotWidth[type] / 2}
+        dy="2.5em"
+        onClick={() => {
+          store.chartStore.removeAttributePlot(chartId, nameInput);
+        }}
+        style={{ cursor: 'pointer' }}
+      >
+        x
+      </RemoveTSpan>
     </>
   );
 };
@@ -126,59 +162,46 @@ function GeneratorAttributePlot({
   let transferedDistance = 0;
   const returningComponents: JSX.Element[] = [];
 
-  // For each extra pair, generate the appropriate plot.
   attributePlotData.forEach((plotData, idx) => {
     let temporarySecondary = secondaryAttributePlotData;
     if (secondaryAttributePlotData) {
       temporarySecondary = secondaryAttributePlotData.length > 0 ? temporarySecondary : undefined;
     }
 
-    if (plotData.type === 'Violin') {
-      const violinPlotData = plotData as AttributePlotData<'Violin'>;
-      const secondaryViolinPlotData = (temporarySecondary ? temporarySecondary[idx] : undefined) as AttributePlotData<'Violin'> | undefined;
+    // Calculate the X position for centering the plot
+    const plotWidth = AttributePlotWidth[plotData.type];
+    transferedDistance += (plotWidth + AttributePlotPadding);
+    const plotX = transferedDistance - plotWidth;
 
-      transferedDistance += (AttributePlotWidth.Violin + AttributePlotPadding);
-      returningComponents.push(
-        <g transform={`translate(${transferedDistance - (AttributePlotWidth.Violin)},0)`} key={violinPlotData.attributeName}>
-          <AttributePlotViolin
-            plotData={violinPlotData}
-            secondaryPlotData={secondaryViolinPlotData}
-            aggregationScaleDomain={aggregationScaleDomain}
-            aggregationScaleRange={aggregationScaleRange}
-          />
-        </g>,
-      );
-    } else if (plotData.type === 'BarChart') {
-      const barPlotData = plotData as AttributePlotData<'BarChart'>;
-      const secondaryBarPlotData = (temporarySecondary ? temporarySecondary[idx] : undefined) as AttributePlotData<'BarChart'> | undefined;
-
-      transferedDistance += (AttributePlotWidth.BarChart + AttributePlotPadding);
-      returningComponents.push(
-        <g transform={`translate(${transferedDistance - (AttributePlotWidth.BarChart)},0)`} key={barPlotData.attributeName}>
-          <AttributePlotBar
-            plotData={barPlotData}
-            secondaryPlotData={secondaryBarPlotData}
-            aggregationScaleDomain={aggregationScaleDomain}
-            aggregationScaleRange={aggregationScaleRange}
-          />
-        </g>,
-      );
-    } else {
-      const basicPlotData = plotData as AttributePlotData<'Basic'>;
-      const secondaryBasicPlotData = (temporarySecondary ? temporarySecondary[idx] : undefined) as AttributePlotData<'Basic'> | undefined;
-
-      transferedDistance += (AttributePlotWidth.Basic + AttributePlotPadding);
-      returningComponents.push(
-        <g transform={`translate(${transferedDistance - (AttributePlotWidth.Basic)},0)`} key={plotData.attributeName}>
-          <AttributePlotBasic
-            plotData={basicPlotData}
-            secondaryPlotData={secondaryBasicPlotData}
-            aggregationScaleDomain={aggregationScaleDomain}
-            aggregationScaleRange={aggregationScaleRange}
-          />
-        </g>,
-      );
-    }
+    returningComponents.push(
+      <g key={plotData.attributeName}>
+        {/* The plot itself */}
+        <g transform={`translate(${plotX}, 0)`}>
+          {plotData.type === 'Violin' ? (
+            <AttributePlotViolin
+              plotData={plotData as AttributePlotData<'Violin'>}
+              secondaryPlotData={temporarySecondary ? (temporarySecondary[idx] as AttributePlotData<'Violin'>) : undefined}
+              aggregationScaleDomain={aggregationScaleDomain}
+              aggregationScaleRange={aggregationScaleRange}
+            />
+          ) : plotData.type === 'BarChart' ? (
+            <AttributePlotBar
+              plotData={plotData as AttributePlotData<'BarChart'>}
+              secondaryPlotData={temporarySecondary ? (temporarySecondary[idx] as AttributePlotData<'BarChart'>) : undefined}
+              aggregationScaleDomain={aggregationScaleDomain}
+              aggregationScaleRange={aggregationScaleRange}
+            />
+          ) : (
+            <AttributePlotBasic
+              plotData={plotData as AttributePlotData<'Basic'>}
+              secondaryPlotData={temporarySecondary ? (temporarySecondary[idx] as AttributePlotData<'Basic'>) : undefined}
+              aggregationScaleDomain={aggregationScaleDomain}
+              aggregationScaleRange={aggregationScaleRange}
+            />
+          )}
+        </g>
+      </g>,
+    );
   });
   return (
     <g>
@@ -202,6 +225,15 @@ export function AttributePlotLabels({
   currentOffset: Offset;
 }): JSX.Element {
   const store = useContext(Store);
+  const [sortDirections, setSortDirections] = useState<boolean[]>(() => attributePlotData.map(() => false));
+
+  const handleSortClick = (idx: number) => {
+    setSortDirections((prev) => {
+      const next = [...prev];
+      next[idx] = !next[idx];
+      return next;
+    });
+  };
   return (
     <>
       {attributePlotData.map((plotData, idx) => (
@@ -217,6 +249,8 @@ export function AttributePlotLabels({
             chartId,
             dimensionHeight,
             currentOffset,
+            sortDirections[idx],
+            () => handleSortClick(idx),
           )}
         </Fragment>
       ))}
