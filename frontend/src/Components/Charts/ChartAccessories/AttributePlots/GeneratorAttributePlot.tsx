@@ -92,11 +92,11 @@ const attributePlotTextGenerator = (
     <>
       {/* Generates the Violin Axis */}
       {plotData.type === 'Violin' && (
-      <AttributePlotViolinAxis
-        key={`violin-axis-${idx}`}
-        yPos={dimensionHeight - currentOffset.bottom}
-        xPos={labelX - AttributePlotWidth.Violin}
-      />
+        <AttributePlotViolinAxis
+          key={`violin-axis-${idx}`}
+          yPos={dimensionHeight - currentOffset.bottom}
+          xPos={labelX - AttributePlotWidth.Violin}
+        />
       )}
       {/* Absolutely positioned IconButton overlay */}
       <g
@@ -156,10 +156,10 @@ function GeneratorAttributePlot({
   aggregationScaleDomain,
   aggregationScaleRange,
 }: {
-    attributePlotData: AttributePlotData<'Violin' | 'BarChart' | 'Basic'>[];
-    secondaryAttributePlotData?: AttributePlotData<'Violin' | 'BarChart' | 'Basic'>[];
-    aggregationScaleDomain: string;
-    aggregationScaleRange: string;
+  attributePlotData: AttributePlotData<'Violin' | 'BarChart' | 'Basic'>[];
+  secondaryAttributePlotData?: AttributePlotData<'Violin' | 'BarChart' | 'Basic'>[];
+  aggregationScaleDomain: string;
+  aggregationScaleRange: string;
 }) {
   let transferedDistance = 0;
   const returningComponents: JSX.Element[] = [];
@@ -220,23 +220,26 @@ export function AttributePlotLabels({
   chartId,
   dimensionHeight,
   currentOffset,
+  onSortClick,
 }: {
   attributePlotData: AttributePlotData<'Violin' | 'BarChart' | 'Basic'>[];
   chartId: string;
   dimensionHeight: number;
   currentOffset: Offset;
+  onSortClick: (attributeName: typeof EXTRA_PAIR_OPTIONS[number]) => void;
 }): JSX.Element {
   const store = useContext(Store);
   const [sortDirections, setSortDirections] = useState<boolean[]>(() => attributePlotData.map(() => false));
   const [activeSortIdx, setActiveSortIdx] = useState<number | null>(null);
 
-  const handleSortClick = (idx: number) => {
+  const handleSortClick = (attributeName: typeof EXTRA_PAIR_OPTIONS[number], idx: number) => {
     setSortDirections((prev) => {
       const next = [...prev];
       next[idx] = !next[idx];
       setActiveSortIdx(idx);
       return next;
     });
+    onSortClick(attributeName);
   };
   return (
     <>
@@ -254,7 +257,7 @@ export function AttributePlotLabels({
             dimensionHeight,
             currentOffset,
             sortDirections[idx],
-            () => handleSortClick(idx),
+            () => handleSortClick(plotData.attributeName, idx),
             activeSortIdx ?? -1,
           )}
         </Fragment>

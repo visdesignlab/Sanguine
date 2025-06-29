@@ -31,21 +31,21 @@ const outputGradientLegend = (showZero: boolean, dimensionWidth: number) => {
 };
 
 type Props = {
-    dimensionWidth: number;
-    dimensionHeight: number;
-    xAxisVar: BloodComponent;
-    yAxisVar: Aggregation;
-    chartId: string;
-    data: HeatMapDataPoint[];
-    svg: React.RefObject<SVGSVGElement>;
-    attributePlotData: AttributePlotData<'Violin' | 'BarChart' | 'Basic'>[];
-    attributePlotTotalWidth: number;
-    interventionDate?: number;
-    secondaryData?: HeatMapDataPoint[];
-    secondaryAttributePlotData?: AttributePlotData<'Violin' | 'BarChart' | 'Basic'>[];
-    firstTotal: number;
-    secondTotal: number;
-    outcomeComparison?: Outcome;
+  dimensionWidth: number;
+  dimensionHeight: number;
+  xAxisVar: BloodComponent;
+  yAxisVar: Aggregation;
+  chartId: string;
+  data: HeatMapDataPoint[];
+  svg: React.RefObject<SVGSVGElement>;
+  attributePlotData: AttributePlotData<'Violin' | 'BarChart' | 'Basic'>[];
+  attributePlotTotalWidth: number;
+  interventionDate?: number;
+  secondaryData?: HeatMapDataPoint[];
+  secondaryAttributePlotData?: AttributePlotData<'Violin' | 'BarChart' | 'Basic'>[];
+  firstTotal: number;
+  secondTotal: number;
+  outcomeComparison?: Outcome;
 };
 
 function HeatMap({
@@ -92,7 +92,7 @@ function HeatMap({
   function rowSelected(attribute: string, value: string) {
     return interactionStore.selectedAttributes
       ?.some(([attrName, attrValue]) => attrName === attribute && attrValue === value)
-    ?? false;
+      ?? false;
   }
 
   // Sets the selected attribute in the store.
@@ -115,6 +115,11 @@ function HeatMap({
     interactionStore.hoveredAttribute = undefined;
   }
 
+  const handleSortClick = useCallback((attributeName: string) => {
+    // Sort logic using attributeName
+    console.log(`Sorting by ${attributeName}`);
+  }, []);
+
   // Calculates the height of each row based on whether secondary data is present.
   const rowHeight = useMemo(() => (secondaryData ? aggregationScale().bandwidth() * 0.5 : aggregationScale().bandwidth()), [secondaryData, aggregationScale]);
 
@@ -129,9 +134,9 @@ function HeatMap({
         <svg style={{ height: `${svgHeight}px`, width: '100%' }} ref={innerSvg}>
           <g>
             {data.map((dataPoint, idx) => {
-            // Calculate vertical placement and height for each primary row
+              // Calculate vertical placement and height for each primary row
               const rowY = (aggregationScale()(dataPoint.aggregateAttribute) || 0)
-              + (secondaryData ? aggregationScale().bandwidth() * 0.5 : 0);
+                + (secondaryData ? aggregationScale().bandwidth() * 0.5 : 0);
 
               // For this row, is the row selected or hovered?
               const isSelected = rowSelected(yAxisVar, dataPoint.aggregateAttribute);
@@ -160,7 +165,7 @@ function HeatMap({
                     valueScaleDomain={JSON.stringify(valueScale().domain())}
                     valueScaleRange={JSON.stringify(valueScale().range())}
                     dataPoint={dataPoint}
-                  // Now rendered at y=0 within this transformed group
+                    // Now rendered at y=0 within this transformed group
                     howToTransform="translate(0,0)"
                   />
                   <ChartG currentOffset={currentOffset} attributePlotTotalWidth={attributePlotTotalWidth}>
@@ -180,7 +185,7 @@ function HeatMap({
             {secondaryData ? secondaryData.map((dataPoint, idx) => {
               // Calculate vertical placement and height for each primary row
               const rowY = (aggregationScale()(dataPoint.aggregateAttribute) || 0)
-              + (aggregationScale().bandwidth() * 0.5);
+                + (aggregationScale().bandwidth() * 0.5);
 
               // For this secondary row, is the row selected or hovered?
               const isSelected = rowSelected(yAxisVar, dataPoint.aggregateAttribute);
@@ -238,7 +243,7 @@ function HeatMap({
         </svg>
       </foreignObject>
       <g>
-        <AttributePlotLabels attributePlotData={attributePlotData} dimensionHeight={dimensionHeight} currentOffset={currentOffset} chartId={chartId} />
+        <AttributePlotLabels attributePlotData={attributePlotData} dimensionHeight={dimensionHeight} currentOffset={currentOffset} chartId={chartId} onSortClick={handleSortClick} />
       </g>
 
       {/* Render after chart to render on top */}
