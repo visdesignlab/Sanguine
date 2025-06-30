@@ -1,19 +1,17 @@
 import React from 'react';
 import { TextField, Box } from '@mui/material';
 
-export interface TargetRangeInputProps {
-  targetRange: (number | undefined)[];
-  setTargetRange: React.Dispatch<React.SetStateAction<(number | undefined)[]>>;
-  xMin: number;
-  xMax: number;
-}
-
 function TargetRangeInput({
   targetRange,
   setTargetRange,
   xMin,
   xMax,
-}: TargetRangeInputProps) {
+}: {
+  targetRange: (number | undefined)[];
+  setTargetRange: React.Dispatch<React.SetStateAction<(number | undefined)[]>>;
+  xMin: number;
+  xMax: number;
+}) {
   const handleChange = (index: 0 | 1) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value;
     const parsed = text === '' ? undefined : parseFloat(text);
