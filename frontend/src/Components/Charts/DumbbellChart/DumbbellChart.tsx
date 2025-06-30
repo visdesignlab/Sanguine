@@ -73,8 +73,8 @@ type Props = {
   sortMode: 'preop' | 'postop' | 'gap';
   showPreop: boolean;
   showPostop: boolean;
-  hgbPostOpTargetRange?: (number | undefined)[];
-  hgbPreOpTargetRange?: (number | undefined)[];
+  hgbPostOpTargetRange: (number)[];
+  hgbPreOpTargetRange: (number)[];
 };
 function DumbbellChart({
   data, xAxisVar, dimensionHeight, dimensionWidth, svg, xMax, xMin, showPostop, showPreop, sortMode, hgbPostOpTargetRange, hgbPreOpTargetRange,
@@ -268,7 +268,7 @@ function DumbbellChart({
     return null;
   });
 
-  const renderTargetRange = ([low, high]: (number | undefined)[], color: string = '') => {
+  const renderTargetRange = ([low, high]: (number)[], color: string = '') => {
     // Range must fit in current domain.
     if (
       low == null
@@ -323,8 +323,8 @@ function DumbbellChart({
         <text className="x-label" />
       </g>
       <g className="chart-comp" transform={`translate(${paddingFromLeft},0)`}>
-        {renderTargetRange(hgbPreOpTargetRange ?? [], preopColor)}
-        {renderTargetRange(hgbPostOpTargetRange ?? [], postopColor)}
+        {renderTargetRange(hgbPreOpTargetRange, preopColor)}
+        {renderTargetRange(hgbPostOpTargetRange, postopColor)}
         {generateDumbbells()}
         {numberList.map((numberOb, idx) => {
           if (Object.keys(averageForEachTransfused).length > 0) {
