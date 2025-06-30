@@ -1,7 +1,7 @@
 import React from 'react';
 import { TextField, Box } from '@mui/material';
 
-function TargetRangeInput({
+export function TargetRangeInput({
   targetRange,
   setTargetRange,
   xMin,
@@ -49,5 +49,3 @@ function TargetRangeInput({
     </Box>
   );
 }
-
-export default TargetRangeInput;
