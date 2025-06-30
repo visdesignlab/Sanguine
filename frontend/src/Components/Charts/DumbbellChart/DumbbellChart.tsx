@@ -10,8 +10,8 @@ import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import Store from '../../../Interfaces/Store';
 import { DumbbellDataPoint } from '../../../Interfaces/Types/DataTypes';
 import {
-  OffsetDict, HGB_HIGH_STANDARD, HGB_LOW_STANDARD, DumbbellGroupMinimumWidth, largeFontSize, regularFontSize,
-  DumbbellMinimumWidth, smallHoverColor, smallSelectColor,
+  OffsetDict, DumbbellGroupMinimumWidth, largeFontSize, regularFontSize,
+  DumbbellMinimumWidth, smallHoverColor, smallSelectColor, preopColor, postopColor,
 } from '../../../Presets/Constants';
 import { AcronymDictionary } from '../../../Presets/DataDict';
 import { DumbbellLine } from '../../../Presets/StyledSVGComponents';
@@ -63,19 +63,21 @@ const sortDataHelper = (originalData: DumbbellDataPoint[], sortModeInput: 'preop
 };
 
 type Props = {
-    data: DumbbellDataPoint[];
-    xAxisVar: DumbbellLayoutElement['xAxisVar'];
-    dimensionWidth: number,
-    dimensionHeight: number;
-    svg: React.RefObject<SVGSVGElement>;
-    xMin: number;
-    xMax: number;
-    sortMode: 'preop' | 'postop' | 'gap';
-    showPreop: boolean;
-    showPostop: boolean;
+  data: DumbbellDataPoint[];
+  xAxisVar: DumbbellLayoutElement['xAxisVar'];
+  dimensionWidth: number,
+  dimensionHeight: number;
+  svg: React.RefObject<SVGSVGElement>;
+  xMin: number;
+  xMax: number;
+  sortMode: 'preop' | 'postop' | 'gap';
+  showPreop: boolean;
+  showPostop: boolean;
+  hgbPostOpTargetRange: (number)[];
+  hgbPreOpTargetRange: (number)[];
 };
 function DumbbellChart({
-  data, xAxisVar, dimensionHeight, dimensionWidth, svg, xMax, xMin, showPostop, showPreop, sortMode,
+  data, xAxisVar, dimensionHeight, dimensionWidth, svg, xMax, xMin, showPostop, showPreop, sortMode, hgbPostOpTargetRange, hgbPreOpTargetRange,
 }: Props) {
   const [averageForEachTransfused, setAverage] = useState<Record<number | string, { averageStart: number, averageEnd: number }>>({});
   const [sortedData, setSortedData] = useState<DumbbellDataPoint[]>([]);
@@ -182,7 +184,7 @@ function DumbbellChart({
   }, [dataPointDict, dimensionWidth, currentOffset, sortedData, data]);
 
   const testValueScale = useCallback(() => scaleLinear()
-    .domain([0.9 * xMin, 1.1 * xMax])
+    .domain([xMin, xMax])
     .range([dimensionHeight - currentOffset.bottom, currentOffset.top]), [xMin, xMax, dimensionHeight, currentOffset]);
 
   const valueScale = useCallback(() => scaleOrdinal()
@@ -266,6 +268,49 @@ function DumbbellChart({
     return null;
   });
 
+  const renderTargetRange = ([low, high]: (number)[], color: string = '') => {
+    // Range must fit in current domain.
+    if (
+      low == null
+      || high == null
+      || low < xMin
+      || high > xMax
+    ) return null;
+    // Y-positions of the target range
+    const yLow = testValueScale()(low);
+    const yHigh = testValueScale()(high);
+
+    // X-positions of the target range
+    const x = currentOffset.left;
+    const width = dimensionWidth - x - currentOffset.right;
+
+    // Target Line
+    const targetLineProps = {
+      x1: x,
+      x2: x + width,
+      style: {
+        stroke: color, opacity: 0.5, strokeWidth: 2, strokeDasharray: '5,5',
+      },
+    };
+    const targetLine = (y: number) => <line {...targetLineProps} y1={y} y2={y} />;
+    return (
+      <g>
+        {/* Target Range Rectangle */}
+        <rect
+          x={x}
+          y={yHigh}
+          width={width}
+          height={yLow - yHigh}
+          fill={color}
+          fillOpacity={0.1}
+        />
+        {/* Target Lines */}
+        {low !== xMin && targetLine(yLow)}
+        {high !== xMax && targetLine(yHigh)}
+      </g>
+    );
+  };
+
   const paddingFromLeft = 5;
   return (
     <>
@@ -278,10 +323,8 @@ function DumbbellChart({
         <text className="x-label" />
       </g>
       <g className="chart-comp" transform={`translate(${paddingFromLeft},0)`}>
-
-        <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(HGB_HIGH_STANDARD)} y2={testValueScale()(HGB_HIGH_STANDARD)} style={{ stroke: '#e5ab73', strokeWidth: '2', strokeDasharray: '5,5' }} />
-        <line x1={currentOffset.left} x2={dimensionWidth - currentOffset.right} y1={testValueScale()(HGB_LOW_STANDARD)} y2={testValueScale()(HGB_LOW_STANDARD)} style={{ stroke: '#e5ab73', strokeWidth: '2', strokeDasharray: '5,5' }} />
-
+        {renderTargetRange(hgbPreOpTargetRange, preopColor)}
+        {renderTargetRange(hgbPostOpTargetRange, postopColor)}
         {generateDumbbells()}
         {numberList.map((numberOb, idx) => {
           if (Object.keys(averageForEachTransfused).length > 0) {

@@ -135,8 +135,9 @@ function LayoutGenerator() {
             mb={2}
             sx={{ opacity: 0.4, fontStyle: 'italic', textAlign: 'right' }}
           >
-            Create custom visualizations (Add Chart)
-            <ArrowUpward fontSize="small" sx={{ verticalAlign: 'middle', ml: 1, mr: 5 }} />
+            For custom visualizations,  
+            <ArrowUpward fontSize="small" sx={{ verticalAlign: 'middle', ml: 1 }} />
+            Add Chart
           </Typography>
           <Divider sx={{ width: '100%' }} />
           <List sx={{ width: '100%', mt: 1 }}>
