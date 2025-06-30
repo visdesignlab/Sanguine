@@ -73,8 +73,6 @@ type Props = {
   sortMode: 'preop' | 'postop' | 'gap';
   showPreop: boolean;
   showPostop: boolean;
-  hgbPostOpTargetRange: (number | undefined)[];
-  hgbPreOpTargetRange: (number | undefined)[];
   hgbPostOpTargetRange: (number)[];
   hgbPreOpTargetRange: (number)[];
 };
