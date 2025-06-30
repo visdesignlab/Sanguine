@@ -73,8 +73,8 @@ type Props = {
   sortMode: 'preop' | 'postop' | 'gap';
   showPreop: boolean;
   showPostop: boolean;
-  hgbPostOpTargetRange?: (number | undefined)[];
-  hgbPreOpTargetRange?: (number | undefined)[];
+  hgbPostOpTargetRange: (number | undefined)[];
+  hgbPreOpTargetRange: (number | undefined)[];
 };
 function DumbbellChart({
   data, xAxisVar, dimensionHeight, dimensionWidth, svg, xMax, xMin, showPostop, showPreop, sortMode, hgbPostOpTargetRange, hgbPreOpTargetRange,
