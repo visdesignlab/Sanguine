@@ -19,7 +19,7 @@ import {
 import DumbbellChart from './DumbbellChart';
 import ChartConfigMenu from '../ChartAccessories/ChartConfigMenu';
 import AnnotationForm from '../ChartAccessories/AnnotationForm';
-import TargetRangeInput from '../ChartAccessories/TargetRangeInput';
+import { TargetRangeInput } from '../ChartAccessories/TargetRangeInput';
 import ChartStandardButtons from '../ChartStandardButtons';
 import { ChartAccessoryDiv, ChartWrapperContainer } from '../../../Presets/StyledComponents';
 import { DumbbellLayoutElement } from '../../../Interfaces/Types/LayoutTypes';
@@ -137,15 +137,13 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
   }, [rawDateRange, proceduresSelection, filteredCases, xAxisVar, showZero]);
 
   return (
-    <Grid container direction="row" alignItems="center" style={{ height: '100%' }}>
+    <Grid container direction="row" alignItems="center" height="100%">
       <Grid
         item
         xs={1}
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
       >
         <DumbbellUtilTitle>Sort By</DumbbellUtilTitle>
         <ButtonGroup
@@ -153,7 +151,7 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           size="small"
           aria-label="small outlined button group"
           orientation="vertical"
-          sx={{ minHeight: '75px' }}
+          minHeight={75}
         >
           {showPreop && (
             <Button
@@ -196,7 +194,7 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           </Button>
         </ButtonGroup>
         <DumbbellUtilTitle style={{ marginTop: '8px' }}>Pre-op target</DumbbellUtilTitle>
-        <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
+        <Box display="flex" gap={0.5} mt={0.5}>
           <TargetRangeInput
             targetRange={hgbPreTargetRange}
             setTargetRange={setHgbPreTargetRange}
@@ -210,10 +208,7 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           <br />
           Transfused
         </DumbbellUtilTitle>
-        <Box sx={{
-          display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5,
-        }}
-        >
+        <Box display="flex" alignItems="center" gap={0.5} mt={0.5}>
           <TargetRangeInput
             targetRange={hgbPostTargetRange}
             setTargetRange={setHgbPostTargetRange}
