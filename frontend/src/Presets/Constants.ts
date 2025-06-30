@@ -19,8 +19,6 @@ export const secondaryGray = '#666666';
 export const thirdGray = '#a2a2a2';
 export const greyScaleRange = [0.3, 0.85];
 
-// Target Levels Colors
-export const targetLevelsColor = '#e5ab73';
 // -----------------------------------------
 // Pre-op hgb threshold (<X g/dL) that warrants transfusion
 export const HGB_LOW_STANDARD = 7.5;

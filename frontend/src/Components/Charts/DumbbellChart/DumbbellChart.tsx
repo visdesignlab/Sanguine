@@ -11,7 +11,7 @@ import Store from '../../../Interfaces/Store';
 import { DumbbellDataPoint } from '../../../Interfaces/Types/DataTypes';
 import {
   OffsetDict, DumbbellGroupMinimumWidth, largeFontSize, regularFontSize,
-  DumbbellMinimumWidth, smallHoverColor, smallSelectColor, targetLevelsColor,
+  DumbbellMinimumWidth, smallHoverColor, smallSelectColor, preopColor, postopColor,
 } from '../../../Presets/Constants';
 import { AcronymDictionary } from '../../../Presets/DataDict';
 import { DumbbellLine } from '../../../Presets/StyledSVGComponents';
@@ -63,18 +63,18 @@ const sortDataHelper = (originalData: DumbbellDataPoint[], sortModeInput: 'preop
 };
 
 type Props = {
-    data: DumbbellDataPoint[];
-    xAxisVar: DumbbellLayoutElement['xAxisVar'];
-    dimensionWidth: number,
-    dimensionHeight: number;
-    svg: React.RefObject<SVGSVGElement>;
-    xMin: number;
-    xMax: number;
-    sortMode: 'preop' | 'postop' | 'gap';
-    showPreop: boolean;
-    showPostop: boolean;
-    hgbPostOpTargetRange?: (number | undefined) [];
-    hgbPreOpTargetRange?: (number | undefined) [];
+  data: DumbbellDataPoint[];
+  xAxisVar: DumbbellLayoutElement['xAxisVar'];
+  dimensionWidth: number,
+  dimensionHeight: number;
+  svg: React.RefObject<SVGSVGElement>;
+  xMin: number;
+  xMax: number;
+  sortMode: 'preop' | 'postop' | 'gap';
+  showPreop: boolean;
+  showPostop: boolean;
+  hgbPostOpTargetRange?: (number | undefined)[];
+  hgbPreOpTargetRange?: (number | undefined)[];
 };
 function DumbbellChart({
   data, xAxisVar, dimensionHeight, dimensionWidth, svg, xMax, xMin, showPostop, showPreop, sortMode, hgbPostOpTargetRange, hgbPreOpTargetRange,
@@ -268,7 +268,7 @@ function DumbbellChart({
     return null;
   });
 
-  const renderTargetRange = ([low, high]: (number | undefined)[] = []) => {
+  const renderTargetRange = ([low, high]: (number | undefined)[], color: string = '') => {
     // Range must fit in current domain.
     if (
       low == null
@@ -288,7 +288,9 @@ function DumbbellChart({
     const targetLineProps = {
       x1: x,
       x2: x + width,
-      style: { stroke: targetLevelsColor, strokeWidth: 2, strokeDasharray: '5,5' },
+      style: {
+        stroke: color, opacity: 0.5, strokeWidth: 2, strokeDasharray: '5,5',
+      },
     };
     const targetLine = (y: number) => <line {...targetLineProps} y1={y} y2={y} />;
     return (
@@ -299,8 +301,8 @@ function DumbbellChart({
           y={yHigh}
           width={width}
           height={yLow - yHigh}
-          fill={targetLevelsColor}
-          fillOpacity={0.2}
+          fill={color}
+          fillOpacity={0.1}
         />
         {/* Target Lines */}
         {low !== xMin && targetLine(yLow)}
@@ -321,8 +323,8 @@ function DumbbellChart({
         <text className="x-label" />
       </g>
       <g className="chart-comp" transform={`translate(${paddingFromLeft},0)`}>
-        {renderTargetRange(hgbPreOpTargetRange ?? [])}
-        {renderTargetRange(hgbPostOpTargetRange ?? [])}
+        {renderTargetRange(hgbPreOpTargetRange ?? [], preopColor)}
+        {renderTargetRange(hgbPostOpTargetRange ?? [], postopColor)}
         {generateDumbbells()}
         {numberList.map((numberOb, idx) => {
           if (Object.keys(averageForEachTransfused).length > 0) {
