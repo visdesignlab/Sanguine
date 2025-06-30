@@ -26,11 +26,13 @@ export async function whoamiAPICall() {
   }
 }
 
-export const simulateAPIClick = () => {
-  fetch(`${import.meta.env.VITE_QUERY_URL}accounts/login/`, {
+export const simulateAPIClick = async () => {
+  await fetch(`${import.meta.env.VITE_QUERY_URL}csrf/`, {
     method: 'GET',
     credentials: 'include',
   });
+  // Wait a tick to ensure the cookie is set
+  await new Promise<void>((resolve) => { setTimeout(resolve, 10); });
   const csrftoken = getCookie('csrftoken');
   return csrftoken;
 };

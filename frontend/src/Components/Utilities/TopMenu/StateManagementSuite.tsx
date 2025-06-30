@@ -74,14 +74,6 @@ function StateManagementSuite() {
             </MenuItem>
           )) : <MenuItem disabled>No Available</MenuItem>}
         </NestedMenuItem>
-
-        {/* TODO add presets. */}
-
-        <NestedMenuItem parentMenuOpen={Boolean(anchorEl)} label="Load from Preset">
-          <MenuItem>Preset 1</MenuItem>
-          <MenuItem>Preset 2</MenuItem>
-          <MenuItem>Preset 3</MenuItem>
-        </NestedMenuItem>
         <MenuItem onClick={() => { handleClose(); setOpenSaveState(true); }}>Save as a New State</MenuItem>
         <MenuItem onClick={() => { handleClose(); setOpenManageState(true); }}>Manage Saved States</MenuItem>
       </Menu>
