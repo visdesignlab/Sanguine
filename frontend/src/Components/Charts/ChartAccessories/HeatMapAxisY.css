@@ -1,0 +1,7 @@
+.y-axis-label-ellipsis {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    user-select: none;
+    text-align: right;
+    overflow: hidden;
+}

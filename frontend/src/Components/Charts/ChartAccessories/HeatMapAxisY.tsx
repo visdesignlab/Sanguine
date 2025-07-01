@@ -1,57 +1,55 @@
-import { axisLeft, select } from 'd3';
-import { RefObject, useCallback, useContext } from 'react';
+import React from 'react';
 import { observer } from 'mobx-react';
-import {
-  CaseRectWidth, largeFontSize, regularFontSize,
-} from '../../../Presets/Constants';
-import { AggregationScaleGenerator } from '../../../HelperFunctions/Scales';
-import { Offset } from '../../../Interfaces/Types/OffsetType';
 import Store from '../../../Interfaces/Store';
-import { Aggregation } from '../../../Presets/DataDict';
-import { usePrivateProvLabel } from '../../Hooks/PrivateModeLabeling';
+import { largeFontSize, regularFontSize } from '../../../Presets/Constants';
+import { AttributePlotTooltip } from './AttributePlots/AttributePlotTooltip';
+import './HeatMapAxisY.css';
 
-type Props = {
-    svg: RefObject<SVGSVGElement>;
-    currentOffset: Offset;
-    xVals: string[];
-    dimensionHeight: number;
-    attributePlotTotalWidth: number;
-    yAxisVar: Aggregation;
-};
-function HeatMapAxis({
-  svg, currentOffset, attributePlotTotalWidth, xVals, dimensionHeight, yAxisVar,
-}: Props) {
-  const store = useContext(Store);
-  const aggregationScale = useCallback(() => AggregationScaleGenerator(xVals, dimensionHeight, currentOffset), [dimensionHeight, xVals, currentOffset]);
-
-  const svgSelection = select(svg.current);
-  const aggregationLabel = axisLeft(aggregationScale());
-
-  // Gets the provider name depending on the private mode setting
-  const getLabel = usePrivateProvLabel();
-
-  svgSelection
-    .select('.axes-y')
-    .select('.y-axis')
-    .attr(
-      'transform',
-      `translate(${currentOffset.left + attributePlotTotalWidth}, 0)`,
-    )
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .call(aggregationLabel as any)
-    .selectAll('text')
-    .attr('font-size', store.configStore.largeFont ? largeFontSize : regularFontSize)
-    .attr('transform', `translate(-${CaseRectWidth + 2},0)`)
-    .attr('pointer-events', 'none')
-    .style('user-select', 'none')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .text((d: any) => getLabel(d, yAxisVar));
-
+/**
+ * Creates a y axis of hoverable rowLabels for a heatmap.
+ * @param position - The [x, y] position of the axis.
+ * @param width - The width of the axis.
+ * @param rowLabels - An array of rowLabel objects. Each rowLabel has `y` position, `text` label, and `tooltipLabel`.
+ */
+function HeatMapAxisY({
+  position,
+  width,
+  rowLabels,
+}: {
+  position: [number, number];
+  width: number;
+  rowLabels: { y: number; text: string; tooltipLabel: string }[];
+}) {
+  const store = React.useContext(Store);
   return (
-    <g className="axes-y">
-      <g className="y-axis" />
+    <g className="axes-y" transform={`translate(${position[0]}, ${position[1]})`}>
+      {/** For every row label, create and position it with a tooltip */}
+      {rowLabels.map(({ y, text, tooltipLabel }, i) => {
+        const textHeight = store.configStore.largeFont ? largeFontSize * 1.5 : regularFontSize * 1.5;
+        return (
+          <AttributePlotTooltip key={i} title={tooltipLabel}>
+            <foreignObject
+              x={0}
+              y={y - textHeight / 2}
+              width={width}
+              height={textHeight}
+              style={{ overflow: 'visible' }}
+            >
+              <div
+                className="y-axis-label-ellipsis"
+                style={{
+                  fontSize: store.configStore.largeFont ? largeFontSize : regularFontSize,
+                  justifyContent: 'right',
+                }}
+              >
+                {text}
+              </div>
+            </foreignObject>
+          </AttributePlotTooltip>
+        );
+      })}
     </g>
   );
 }
 
-export default observer(HeatMapAxis);
+export default observer(HeatMapAxisY);

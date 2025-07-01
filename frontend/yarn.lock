@@ -1330,6 +1330,11 @@
   dependencies:
     undici-types "~6.20.0"
 
+"@types/parse-full-name@^1.2.5":
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/@types/parse-full-name/-/parse-full-name-1.2.5.tgz#fb72bd34941942f75744ff1b3b3c9d4bfc2d6ba2"
+  integrity sha512-WUF23RA1BnYknAOlmeECS08OPWuySK1xaC15Gik10lcL+TUnhAWkAvEEaqRaKETXHp8y5TpzUqhIvaW12fqI0g==
+
 "@types/parse-json@^4.0.0":
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/@types/parse-json/-/parse-json-4.0.2.tgz#5950e50960793055845e956c427fc2b0d70c5239"
@@ -3522,6 +3527,11 @@ parent-module@^1.0.0:
   integrity sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==
   dependencies:
     callsites "^3.0.0"
+
+parse-full-name@^1.2.6:
+  version "1.2.6"
+  resolved "https://registry.yarnpkg.com/parse-full-name/-/parse-full-name-1.2.6.tgz#97e2643c0167b79ca404dab254ea79e89b025704"
+  integrity sha512-uIaENXJFmZfzulBndhHJayi7ZEifJ1bXKaWYmySa04EmMX7eIcsufiAgWTYiJqWRa/Sq7JWPGtCIXFAoUfF7gw==
 
 parse-json@^5.0.0:
   version "5.2.0"
