@@ -24,19 +24,20 @@ function LeftToolBox() {
       const procedureFetch = await fetch(`${import.meta.env.VITE_QUERY_URL}get_procedure_counts`);
       const procedureInput = await procedureFetch.json() as { result: { procedureName: string, procedureCodes: string[], count: number, overlapList: { [key: string]: number } }[] };
 
-      // Process the result into the data type required.
-      const result = procedureInput.result.map((procedure) => {
-        console.log('Procedure:', procedure);
-
-        // Overlap List
+      // For each procedure, create a ProcedureEntry object
+      const procedures = procedureInput.result.map((procedure) => {
+        // Overlap List (Co-occurences of procedures)
         const procedureOverlapList = Object.keys(procedure.overlapList).map((subProcedureName) => {
           // Strip "Only " prefix for lookup
-          const baseName = subProcedureName.startsWith('Only ') ? subProcedureName.replace(/^Only\s+/, '') : subProcedureName;
+          const baseSubProcedureName = subProcedureName.startsWith('Only ') ? subProcedureName.replace(/^Only\s+/, '') : subProcedureName;
           return {
             procedureName: subProcedureName,
             count: procedure.overlapList[subProcedureName],
-            codes: procedureInput.result.find((p) => p.procedureName === baseName)?.procedureCodes || [],
-          }});
+            // Access the codes for this sub-procedure by looking up the procedure's codes for that name
+            codes: procedureInput.result.find((p) => p.procedureName === baseSubProcedureName)?.procedureCodes || [],
+          };
+        });
+        // Sort the co-occurrence list by count, and prioritize "Only" procedures
         procedureOverlapList.sort((a, b) => {
           if (a.procedureName.includes('Only')) {
             return -1;
@@ -46,6 +47,7 @@ function LeftToolBox() {
 
           return b.count - a.count;
         });
+        // Return the ProcedureEntry object
         return {
           procedureName: procedure.procedureName,
           count: procedure.count,
@@ -53,8 +55,9 @@ function LeftToolBox() {
           overlapList: procedureOverlapList,
         };
       });
-      const tempSurgeryList: ProcedureEntry[] = result;
-      let tempMaxCaseCount = (max(result, (d) => d.count)) || 0;
+
+      const tempSurgeryList: ProcedureEntry[] = procedures;
+      let tempMaxCaseCount = (max(procedures, (d) => d.count)) || 0;
 
       tempMaxCaseCount *= 1.1;
       setMaxCaseCount(tempMaxCaseCount);
