@@ -7,18 +7,11 @@ import Store from '../../Interfaces/Store';
  *
  * @param label - The label to be transformed (string or number).
  * @param attribute - The attribute associated with the label.
- * @param charLimit - Optional character limit for the label.
  * @param normalizeProvNames - If truthy, skip normalizing provider names.
  * @returns The transformed label.
  */
-export function usePrivateProvLabel(): (label: string | number, attribute: string, charLimit?: number, normalizeProvNames?: boolean) => string {
+export function usePrivateProvLabel(): (label: string | number, attribute: string, normalizeProvNames?: boolean) => string {
   const store = useContext(Store);
-
-  // Truncates the label to a specified character limit, adding ellipsis if necessary
-  const truncateLabel = useCallback((label: string, charLimit: number): string => {
-    if (label.length <= charLimit) return label;
-    return `${label.slice(0, charLimit - 3)}...`;
-  }, []);
 
   // Normalizes provider names by parsing full names and formatting them
   const normalizeProviderLabel = (label: string): string => {
@@ -72,8 +65,6 @@ export function usePrivateProvLabel(): (label: string | number, attribute: strin
     }
 
     // Truncate the label if requested.
-    return charLimit
-      ? truncateLabel(outputLabel, charLimit)
-      : outputLabel;
-  }, [store.configStore.privateMode, store.providerMapping, truncateLabel]);
+    return outputLabel;
+  }, [store.configStore.privateMode, store.providerMapping]);
 }

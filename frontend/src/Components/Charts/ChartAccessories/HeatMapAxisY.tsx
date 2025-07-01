@@ -3,6 +3,7 @@ import { observer } from 'mobx-react';
 import Store from '../../../Interfaces/Store';
 import { largeFontSize, regularFontSize } from '../../../Presets/Constants';
 import { AttributePlotTooltip } from './AttributePlots/AttributePlotTooltip';
+import './HeatMapAxisY.css';
 
 /**
  * Creates a y axis of hoverable rowLabels for a heatmap.
@@ -23,20 +24,30 @@ function HeatMapAxisY({
   return (
     <g className="axes-y" transform={`translate(${position[0]}, ${position[1]})`}>
       {/** For every row label, create and position it with a tooltip */}
-      {rowLabels.map(({ y, text, tooltipLabel }, i) => (
-        <AttributePlotTooltip key={i} title={tooltipLabel}>
-          <text
-            className="y-axis-label"
-            x={width}
-            y={y}
-            fontSize={store.configStore.largeFont ? largeFontSize : regularFontSize}
-            style={{ userSelect: 'none' }}
-            textAnchor="end"
-          >
-            {text}
-          </text>
-        </AttributePlotTooltip>
-      ))}
+      {rowLabels.map(({ y, text, tooltipLabel }, i) => {
+        const textHeight = store.configStore.largeFont ? largeFontSize * 1.5 : regularFontSize * 1.5;
+        return (
+          <AttributePlotTooltip key={i} title={tooltipLabel}>
+            <foreignObject
+              x={0}
+              y={y - textHeight / 2}
+              width={width}
+              height={textHeight}
+              style={{ overflow: 'visible' }}
+            >
+              <div
+                className="y-axis-label-ellipsis"
+                style={{
+                  fontSize: store.configStore.largeFont ? largeFontSize : regularFontSize,
+                  justifyContent: 'right',
+                }}
+              >
+                {text}
+              </div>
+            </foreignObject>
+          </AttributePlotTooltip>
+        );
+      })}
     </g>
   );
 }
