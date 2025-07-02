@@ -15,9 +15,19 @@ jobs:
         run: cp .env.default .env
 
       # go into the frontend, install dependencies, lint, and build
-      - name: Install frontend dependencies, lint, and build
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'yarn'
+          cache-dependency-path: frontend/yarn.lock
+    
+      - name: Install dependencies
+        run: yarn --cwd=./frontend install --immutable
+
+      - name: Lint frontend
         run: |
-          cd frontend
-          yarn install
-          yarn run lint
-          yarn run build
+          yarn --cwd=./frontend lint
+      
+      - name: Build frontend
+        run: |
+          yarn --cwd=./frontend lint
