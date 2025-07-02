@@ -1,0 +1,23 @@
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint_and_build_test:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Copy .env.default to .env
+        run: cp .env.default .env
+
+      # go into the frontend, install dependencies, lint, and build
+      - name: Install frontend dependencies, lint, and build
+        run: |
+          cd frontend
+          yarn install
+          yarn run lint
+          yarn run build
