@@ -35,13 +35,5 @@ services:
     depends_on:
       - backend
 
-  sftp:
-    image: docker.io/atmoz/sftp
-    volumes:
-      - ./sftp/upload:/home/intelvia
-    ports:
-      - "2222:22"
-    command: intelvia:password:1001
-
 volumes:
   mariadb_data:
