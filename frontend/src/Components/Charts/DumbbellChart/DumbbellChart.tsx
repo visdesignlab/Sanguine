@@ -87,7 +87,6 @@ function DumbbellChart({
   const [indices, setIndices] = useState([]);
 
   const store = useContext(Store);
-  const { currentSelectSet } = store.provenanceState;
 
   const currentOffset = OffsetDict.minimum;
   const svgSelection = select(svg.current);
@@ -223,8 +222,6 @@ function DumbbellChart({
     .attr('text-anchor', 'middle')
     .text('Hemoglobin Value');
 
-  const decideIfSelectSet = (d: DumbbellDataPoint) => currentSelectSet.length > 0 && !!currentSelectSet.find((selected) => selected.setValues.includes(`${d.case[selected.setName]}`));
-
   const generateDumbbells = () => sortedData.map((dataPoint, idx) => {
     const xVal = (valueScale() as unknown as ScaleOrdinal<number, number>)(idx);
 
@@ -235,7 +232,6 @@ function DumbbellChart({
       return (
         <SingleDumbbell
           xVal={xVal}
-          isSelectSet={decideIfSelectSet(dataPoint)}
           dataPoint={dataPoint}
           showGap={showGap}
           showPostop={showPostop}
