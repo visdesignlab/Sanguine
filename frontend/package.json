@@ -53,7 +53,7 @@
     "serve": "vite --host=0.0.0.0 --port=8080",
     "build": "tsc && vite build",
     "lint": "eslint src",
-    "prepare": "husky"
+    "postinstall": "cd .. && husky frontend/.husky"
   },
   "devDependencies": {
     "husky": "^9.1.7",

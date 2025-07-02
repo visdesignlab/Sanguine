@@ -223,7 +223,7 @@ function FilterBoard() {
                   step={1}
                   valueLabelDisplay="auto"
                 />
-                <Input value={maxSurgeonCasesPerformed} onChange={(e) => { store.configStore.changeSurgeonCasesPerformed([surgeonCasesPerformed[0], parseInt(e.target.value, 10)]); }} sx={{ width: '75px' }}/>
+                <Input value={maxSurgeonCasesPerformed} onChange={(e) => { store.configStore.changeSurgeonCasesPerformed([surgeonCasesPerformed[0], parseInt(e.target.value, 10)]); }} sx={{ width: '75px' }} />
               </Stack>
             )}
           />

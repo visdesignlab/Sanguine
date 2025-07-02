@@ -58,6 +58,7 @@ export const AttributePlotOptions: { key: typeof EXTRA_PAIR_OPTIONS[number]; val
 ]);
 
 // Temporary options for cost/savings charts in terms of RBC only. (Because these charts dont have a variable x-axis)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const CostSavingsAttributePlotOptions: { key: typeof EXTRA_PAIR_OPTIONS[number]; value: string }[] = (OutcomeOptions as any).concat([
   { key: 'PREOP_HEMO', value: 'Preop HGB' },
   { key: 'POSTOP_HEMO', value: 'Postop HGB' },

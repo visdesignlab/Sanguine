@@ -65,7 +65,7 @@ export class RootStore {
     const surgeons = this._allCases.map((d) => [d.SURGEON_PROV_ID, d.SURGEON_PROV_NAME]);
     const anesths = this._allCases.map((d) => [d.ANESTH_PROV_ID, d.ANESTH_PROV_NAME]);
     return Object.fromEntries(
-      [...surgeons, ...anesths].filter((d) => d[0] !== null && d[1] !== null)
+      [...surgeons, ...anesths].filter((d) => d[0] !== null && d[1] !== null),
     );
   }
 

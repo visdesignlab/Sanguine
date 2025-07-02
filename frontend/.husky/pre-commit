@@ -1,1 +1,1 @@
-yarn run lint-staged
+cd ./frontend && yarn lint
