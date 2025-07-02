@@ -8,7 +8,6 @@ env = environ.Env(
     DJANGO_DEBUG=(bool, False),  # Cast to bool, default to False
     DJANGO_HOSTNAME=(str, "localhost"),
     DJANGO_DISABLE_LOGINS=(bool, False),
-    DJANGO_LOGOUT_REDIRECT=(str, "")
 )
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -154,4 +153,3 @@ CAS_FORCE_SSL_SERVICE_URL = True
 CAS_VERSION = '3'
 CAS_USERNAME_ATTRIBUTE = "unid"
 CAS_ROOT_PROXIED_AS = "https://sanguine.med.utah.edu"
-CAS_REDIRECT_URL = env("DJANGO_LOGOUT_REDIRECT")
