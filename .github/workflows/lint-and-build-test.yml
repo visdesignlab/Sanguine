@@ -30,4 +30,4 @@ jobs:
       
       - name: Build frontend
         run: |
-          yarn --cwd=./frontend lint
+          yarn --cwd=./frontend build
