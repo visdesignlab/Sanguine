@@ -40,7 +40,6 @@ export function usePrivateProvLabel(): (label: string | number, attribute: strin
   return useCallback((
     label: string | number,
     attribute: string,
-    charLimit?: number,
     normalizeProvNames: boolean = true,
   ): string => {
     // Is this label is a provider

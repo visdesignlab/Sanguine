@@ -7,15 +7,15 @@ export function TargetRangeInput({
   xMin,
   xMax,
 }: {
-  targetRange: (number | undefined)[];
-  setTargetRange: React.Dispatch<React.SetStateAction<(number | undefined)[]>>;
+  targetRange: [number | undefined, number | undefined];
+  setTargetRange: React.Dispatch<React.SetStateAction<[number | undefined, number | undefined]>>;
   xMin: number;
   xMax: number;
 }) {
   const handleChange = (index: 0 | 1) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value;
     const parsed = text === '' ? undefined : parseFloat(text);
-    const newRange: (number | undefined)[] = [...targetRange];
+    const newRange: [number | undefined, number | undefined] = [...targetRange];
     newRange[index] = parsed;
     setTargetRange(newRange);
   };

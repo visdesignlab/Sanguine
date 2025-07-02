@@ -11,6 +11,7 @@ import {
   BloodCells, BloodTransfusion, MedicineBottle, BloodBag, Dollar,
 } from 'healthicons-react';
 import ArrowOutward from '@mui/icons-material/ArrowOutward';
+import { ArrowUpward } from '@mui/icons-material';
 import Store from '../Interfaces/Store';
 import { LayoutElement } from '../Interfaces/Types/LayoutTypes';
 import WrapperCostBar from './Charts/CostBarChart';
@@ -21,7 +22,6 @@ import {
   costSavingsState, preopAnemiaState, dumbbellState, antifibrinState, cellSalvageState,
 } from '../Interfaces/PresetStates/PresetStates';
 import { ApplicationState } from '../Interfaces/Types/StateTypes';
-import { ArrowUpward } from '@mui/icons-material';
 
 // Groups of preset visualization questions with labels and icons
 const presetGroups: {
@@ -135,7 +135,7 @@ function LayoutGenerator() {
             mb={2}
             sx={{ opacity: 0.4, fontStyle: 'italic', textAlign: 'right' }}
           >
-            For custom visualizations,  
+            For custom visualizations,
             <ArrowUpward fontSize="small" sx={{ verticalAlign: 'middle', ml: 1 }} />
             Add Chart
           </Typography>

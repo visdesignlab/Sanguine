@@ -91,8 +91,8 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
   const [data, setData] = useState<DumbbellDataPoint[]>([]);
 
   // Pre-op & post-op hemoglobin target range
-  const [hgbPreTargetRange, setHgbPreTargetRange] = useState<(number)[]>(hgbPreOpTargetRange);
-  const [hgbPostTargetRange, setHgbPostTargetRange] = useState<(number)[]>(hgbPostOpTargetRange);
+  const [hgbPreTargetRange, setHgbPreTargetRange] = useState<[number | undefined, number | undefined]>(hgbPreOpTargetRange);
+  const [hgbPostTargetRange, setHgbPostTargetRange] = useState<[number | undefined, number | undefined]>(hgbPostOpTargetRange);
 
   const size = useComponentSize(svgRef);
 
@@ -151,7 +151,7 @@ function WrapperDumbbell({ layout }: { layout: DumbbellLayoutElement }) {
           size="small"
           aria-label="small outlined button group"
           orientation="vertical"
-          minHeight={75}
+          sx={{ minHeight: 75 }}
         >
           {showPreop && (
             <Button

@@ -143,7 +143,7 @@ function HeatMap({
     return {
       y,
       text: getLabel(val, yAxisVar),
-      tooltipLabel: getLabel(val, yAxisVar, undefined, false),
+      tooltipLabel: getLabel(val, yAxisVar, false),
     };
   });
 

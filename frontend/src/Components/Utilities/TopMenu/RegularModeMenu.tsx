@@ -70,8 +70,8 @@ function RegularModeMenu() {
     }
   };
 
-  const updateState = () => {
-    const csrftoken = simulateAPIClick();
+  const updateState = async () => {
+    const csrftoken = await simulateAPIClick();
     fetch(`${import.meta.env.VITE_QUERY_URL}state`, {
       method: 'PUT',
       credentials: 'include',

@@ -51,8 +51,8 @@ function StateAccessControl({ stateName, openStateAccessControl, setOpenStateAcc
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stateName]);
 
-  const changeAccess = (uID: string, newAccess: string) => {
-    const csrftoken = simulateAPIClick();
+  const changeAccess = async (uID: string, newAccess: string) => {
+    const csrftoken = await simulateAPIClick();
     fetch(`${import.meta.env.VITE_QUERY_URL}share_state`, {
       method: 'POST',
       credentials: 'include',
