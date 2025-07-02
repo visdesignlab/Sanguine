@@ -14,7 +14,7 @@ ARG VITE_QUERY_URL="/api/"
 
 # Install the dependencies
 RUN set -ex; \
-      yarn install --frozen-lockfile --production; \
+      yarn install --frozen-lockfile; \
       yarn cache clean; \
       yarn run build
 
