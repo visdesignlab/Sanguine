@@ -7,7 +7,6 @@ import { DumbbellCircle, DumbbellRect } from '../../../Presets/StyledSVGComponen
 type Props = {
     xVal: number;
     dataPoint: DumbbellDataPoint;
-    isSelectSet: boolean;
     showPreop: boolean;
     showPostop: boolean;
     showGap: boolean;
@@ -25,7 +24,6 @@ type Props = {
 function SingleDumbbell({
   xVal,
   dataPoint,
-  isSelectSet,
   showGap,
   showPostop,
   showPreop,
