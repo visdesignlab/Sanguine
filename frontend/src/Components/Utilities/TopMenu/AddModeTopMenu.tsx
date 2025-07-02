@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react';
-import React, {
+import {
   useState, useContext, Fragment, useEffect,
 } from 'react';
 import {
@@ -67,17 +67,17 @@ function AddModeTopMenu({ chartType, sx }: { chartType: ChartType; sx: React.CSS
         i: store.provenanceState.nextAddingIndex.toString(),
         x: 0,
         y: ManualInfinity,
-        w: 1,
+        w: 2,
         h: 1,
         annotationText: '',
         chartType,
-        extraPair: chartType === 'HEATMAP' || chartType === 'COST' ? JSON.stringify([]) : undefined,
+        attributePlots: chartType === 'HEATMAP' || chartType === 'COST' ? [] : undefined,
       };
       newChart.xAxisVar = xAxisSelection as xAxisOption;
       newChart.yAxisVar = yAxisSelection as yAxisOption;
 
       if (newChart.chartType === 'HEATMAP' || newChart.chartType === 'COST') {
-        newChart.extraPair = JSON.stringify([]);
+        newChart.attributePlots = [];
         newChart.outcomeComparison = outcomeComparisonSelection || undefined;
         newChart.interventionDate = interventionDate || undefined;
       }

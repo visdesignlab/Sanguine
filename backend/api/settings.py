@@ -7,6 +7,8 @@ DATABASE_ROUTERS = ['api.routers.SanguineRouter']
 env = environ.Env(
     DJANGO_DEBUG=(bool, False),  # Cast to bool, default to False
     DJANGO_HOSTNAME=(str, "localhost"),
+    DJANGO_DISABLE_LOGINS=(bool, False),
+    DJANGO_LOGOUT_REDIRECT=(str, "")
 )
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -14,6 +16,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env("DJANGO_DEBUG")
+DISABLE_LOGINS = env("DJANGO_DISABLE_LOGINS")
 
 # We're allowing localhost for local development and for production deployment with containers
 ALLOWED_HOSTS = [
@@ -151,16 +154,17 @@ CAS_FORCE_SSL_SERVICE_URL = True
 CAS_VERSION = '3'
 CAS_USERNAME_ATTRIBUTE = "unid"
 CAS_ROOT_PROXIED_AS = "https://sanguine.med.utah.edu"
+CAS_REDIRECT_URL = env("DJANGO_LOGOUT_REDIRECT")
 
-#added to make oracle work
+# added to make oracle work
 import oracledb
 DATABASE_ROUTERS = ['api.routers.SanguineRouter']
 DATABASES["hospital"] = {
-        'ENGINE': 'django.db.backends.oracle',
-        "NAME": f"{env('ORACLE_HOST')}:{env('ORACLE_PORT')}/{env('ORACLE_SERVICE_NAME')}",
-        "USER": env("ORACLE_USER"),
-        "PASSWORD": env("ORACLE_PASSWORD"),
-        "OPTIONS": {
-            "mode": oracledb.AUTH_MODE_DEFAULT,
-        }
+    "ENGINE": 'django.db.backends.oracle',
+    "NAME": f"{env('ORACLE_HOST')}:{env('ORACLE_PORT')}/{env('ORACLE_SERVICE_NAME')}",
+    "USER": env("ORACLE_USER"),
+    "PASSWORD": env("ORACLE_PASSWORD"),
+    "OPTIONS": {
+        "mode": oracledb.AUTH_MODE_DEFAULT,
     }
+}

@@ -25,8 +25,8 @@ function ManageStateDialog({ setOpenSaveState, setVisbility, visible }: Props) {
 
   const [openStateAccessControl, setOpenStateAccessControl] = useState(false);
 
-  const removeState = (stateName: string) => {
-    const csrftoken = simulateAPIClick();
+  const removeState = async (stateName: string) => {
+    const csrftoken = await simulateAPIClick();
     fetch(`${import.meta.env.VITE_QUERY_URL}state`, {
       method: 'DELETE',
       credentials: 'include',

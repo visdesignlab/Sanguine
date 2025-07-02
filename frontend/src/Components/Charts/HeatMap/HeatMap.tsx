@@ -6,9 +6,10 @@ import { range } from 'd3';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import { sortHelper } from '../../../HelperFunctions/ChartSorting';
 import Store from '../../../Interfaces/Store';
-import { ExtraPairPoint, HeatMapDataPoint } from '../../../Interfaces/Types/DataTypes';
+import { AttributePlotData, HeatMapDataPoint } from '../../../Interfaces/Types/DataTypes';
 import {
   BloodProductCap, MIN_HEATMAP_BANDWIDTH, OffsetDict, backgroundSelectedColor, backgroundHoverColor,
+  CaseRectWidth,
 } from '../../../Presets/Constants';
 import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
 import { AggregationScaleGenerator, ValueScaleGenerator } from '../../../HelperFunctions/Scales';
@@ -17,11 +18,12 @@ import DualColorLegend from '../ChartAccessories/DualColorLegend';
 import SingleColorLegend from '../ChartAccessories/SingleColorLegend';
 import SingleHeatRow from './SingleHeatRow';
 import CaseCountHeader from '../ChartAccessories/CaseCountHeader';
-import GeneratorExtraPair, { ExtraPairLabels } from '../ChartAccessories/ExtraPairPlots/GeneratorExtraPair';
+import GeneratorAttributePlot, { AttributePlotLabels } from '../ChartAccessories/AttributePlots/GeneratorAttributePlot';
 import ComparisonLegend from '../ChartAccessories/ComparisonLegend';
 import HeatMapAxisX from '../ChartAccessories/HeatMapAxisX';
 import HeatMapAxisY from '../ChartAccessories/HeatMapAxisY';
 import { Aggregation, BloodComponent, Outcome } from '../../../Presets/DataDict';
+import { usePrivateProvLabel } from '../../Hooks/PrivateModeLabeling';
 
 const outputGradientLegend = (showZero: boolean, dimensionWidth: number) => {
   if (!showZero) {
@@ -31,25 +33,25 @@ const outputGradientLegend = (showZero: boolean, dimensionWidth: number) => {
 };
 
 type Props = {
-    dimensionWidth: number;
-    dimensionHeight: number;
-    xAxisVar: BloodComponent;
-    yAxisVar: Aggregation;
-    chartId: string;
-    data: HeatMapDataPoint[];
-    svg: React.RefObject<SVGSVGElement>;
-    extraPairDataSet: ExtraPairPoint[];
-    extraPairTotalWidth: number;
-    interventionDate?: number;
-    secondaryData?: HeatMapDataPoint[];
-    secondaryExtraPairDataSet?: ExtraPairPoint[];
-    firstTotal: number;
-    secondTotal: number;
-    outcomeComparison?: Outcome;
+  dimensionWidth: number;
+  dimensionHeight: number;
+  xAxisVar: BloodComponent;
+  yAxisVar: Aggregation;
+  chartId: string;
+  data: HeatMapDataPoint[];
+  svg: React.RefObject<SVGSVGElement>;
+  attributePlotData: AttributePlotData<'Violin' | 'BarChart' | 'Basic'>[];
+  attributePlotTotalWidth: number;
+  interventionDate?: number;
+  secondaryData?: HeatMapDataPoint[];
+  secondaryAttributePlotData?: AttributePlotData<'Violin' | 'BarChart' | 'Basic'>[];
+  firstTotal: number;
+  secondTotal: number;
+  outcomeComparison?: Outcome;
 };
 
 function HeatMap({
-  outcomeComparison, interventionDate, secondaryExtraPairDataSet, dimensionHeight, secondaryData, dimensionWidth, yAxisVar, xAxisVar, chartId, data, svg, extraPairDataSet, extraPairTotalWidth, firstTotal, secondTotal,
+  outcomeComparison, interventionDate, secondaryAttributePlotData, dimensionHeight, secondaryData, dimensionWidth, yAxisVar, xAxisVar, chartId, data, svg, attributePlotData, attributePlotTotalWidth, firstTotal, secondTotal,
 }: Props) {
   const store = useContext(Store);
   const { interactionStore } = store;
@@ -78,8 +80,8 @@ function HeatMap({
     } else {
       outputRange = range(0, BloodProductCap[xAxisVar] + 1);
     }
-    return ValueScaleGenerator(outputRange, currentOffset, dimensionWidth, extraPairTotalWidth);
-  }, [dimensionWidth, extraPairTotalWidth, xAxisVar, currentOffset]);
+    return ValueScaleGenerator(outputRange, currentOffset, dimensionWidth, attributePlotTotalWidth);
+  }, [dimensionWidth, attributePlotTotalWidth, xAxisVar, currentOffset]);
 
   const innerSvg = useRef<SVGSVGElement | null>(null);
   const svgHeight = chartHeight - currentOffset.top;
@@ -88,18 +90,20 @@ function HeatMap({
   function rowHovered(attribute: string, value: string) {
     return interactionStore.hoveredAttribute?.[0] === attribute && interactionStore.hoveredAttribute?.[1] === value;
   }
-  // Checks if current row is selected based on the attribute value.
+  // Checks if current row is selected based on any of the selected attributes.
   function rowSelected(attribute: string, value: string) {
-    return interactionStore.selectedAttribute?.[0] === attribute && interactionStore.selectedAttribute?.[1] === value;
+    return interactionStore.selectedAttributes
+      ?.some(([attrName, attrValue]) => attrName === attribute && attrValue === value)
+      ?? false;
   }
 
   // Sets the selected attribute in the store.
   function handleRowClick(attribute: string, value: string) {
     // If the row is already selected, deselect the row.
     if (rowSelected(attribute, value)) {
-      interactionStore.clearSelectedCases();
+      interactionStore.deselectAttribute([attribute, value]);
     } else {
-      interactionStore.selectedAttribute = [attribute, value];
+      interactionStore.addSelectedAttribute([attribute, value]);
     }
   }
 
@@ -113,8 +117,35 @@ function HeatMap({
     interactionStore.hoveredAttribute = undefined;
   }
 
-  // Calculates the height of each row based on whether secondary data is present.
-  const rowHeight = useMemo(() => (secondaryData ? aggregationScale().bandwidth() * 0.5 : aggregationScale().bandwidth()), [secondaryData, aggregationScale]);
+  // Scale and bandwidth
+  const scale = aggregationScale();
+  const band = scale.bandwidth();
+  const padding = 2;
+
+  // Row-height is just bandwidth × 0.5 or 1
+  const rowHeight = useMemo(
+    () => band * (secondaryData ? 0.5 : 1),
+    [secondaryData, band],
+  );
+
+  // Y-axis labels ---------------------------
+  const getLabel = usePrivateProvLabel();
+
+  // Position of the Y Axis
+  const yAxisWidthOffset = CaseRectWidth * 2;
+  const yAxisPos: [number, number] = [attributePlotTotalWidth + (currentOffset.left / 2) - yAxisWidthOffset, 0];
+
+  // Width of the Y Axis
+  const yAxisWidth = yAxisWidthOffset * 1.5;
+  // Y Axis Labels have a y position, text, and tooltip text.
+  const yAxisLabels = xVals.map((val) => {
+    const y = (scale(val) ?? 0) + band / 2 + padding;
+    return {
+      y,
+      text: getLabel(val, yAxisVar),
+      tooltipLabel: getLabel(val, yAxisVar, false),
+    };
+  });
 
   return (
     <g>
@@ -127,9 +158,9 @@ function HeatMap({
         <svg style={{ height: `${svgHeight}px`, width: '100%' }} ref={innerSvg}>
           <g>
             {data.map((dataPoint, idx) => {
-            // Calculate vertical placement and height for each primary row
+              // Calculate vertical placement and height for each primary row
               const rowY = (aggregationScale()(dataPoint.aggregateAttribute) || 0)
-              + (secondaryData ? aggregationScale().bandwidth() * 0.5 : 0);
+                + (secondaryData ? aggregationScale().bandwidth() * 0.5 : 0);
 
               // For this row, is the row selected or hovered?
               const isSelected = rowSelected(yAxisVar, dataPoint.aggregateAttribute);
@@ -142,7 +173,7 @@ function HeatMap({
                     x={0}
                     y={0}
                     width={dimensionWidth}
-                    height={rowHeight + 2}
+                    height={rowHeight + padding}
                     fill="transparent"
                   />
                   {/** Background row hover highlight rectangle for display */}
@@ -158,10 +189,10 @@ function HeatMap({
                     valueScaleDomain={JSON.stringify(valueScale().domain())}
                     valueScaleRange={JSON.stringify(valueScale().range())}
                     dataPoint={dataPoint}
-                  // Now rendered at y=0 within this transformed group
+                    // Now rendered at y=0 within this transformed group
                     howToTransform="translate(0,0)"
                   />
-                  <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
+                  <ChartG currentOffset={currentOffset} attributePlotTotalWidth={attributePlotTotalWidth}>
                     <CaseCountHeader
                       caseCount={dataPoint.caseCount}
                       yPos={0}
@@ -178,7 +209,7 @@ function HeatMap({
             {secondaryData ? secondaryData.map((dataPoint, idx) => {
               // Calculate vertical placement and height for each primary row
               const rowY = (aggregationScale()(dataPoint.aggregateAttribute) || 0)
-              + (aggregationScale().bandwidth() * 0.5);
+                + (aggregationScale().bandwidth() * 0.5);
 
               // For this secondary row, is the row selected or hovered?
               const isSelected = rowSelected(yAxisVar, dataPoint.aggregateAttribute);
@@ -201,7 +232,7 @@ function HeatMap({
                     dataPoint={dataPoint}
                     howToTransform={`translate(0,${(aggregationScale()(dataPoint.aggregateAttribute) || 0)})`}
                   />
-                  <ChartG currentOffset={currentOffset} extraPairTotalWidth={extraPairTotalWidth}>
+                  <ChartG currentOffset={currentOffset} attributePlotTotalWidth={attributePlotTotalWidth}>
                     <CaseCountHeader
                       showComparisonRect
                       isFalseComparison={false}
@@ -215,20 +246,18 @@ function HeatMap({
                 </g>
               );
             }) : null}
+
             {/** Row labels rendered on top */}
             <HeatMapAxisY
-              svg={innerSvg}
-              currentOffset={currentOffset}
-              xVals={xVals}
-              dimensionHeight={chartHeight}
-              extraPairTotalWidth={extraPairTotalWidth}
-              yAxisVar={yAxisVar}
+              position={yAxisPos}
+              width={yAxisWidth}
+              rowLabels={yAxisLabels}
             />
           </g>
-          <g className="extraPairChart">
-            <GeneratorExtraPair
-              extraPairDataSet={extraPairDataSet}
-              secondaryExtraPairDataSet={secondaryExtraPairDataSet || undefined}
+          <g>
+            <GeneratorAttributePlot
+              attributePlotData={attributePlotData}
+              secondaryAttributePlotData={secondaryAttributePlotData || undefined}
               aggregationScaleDomain={JSON.stringify(aggregationScale().domain())}
               aggregationScaleRange={JSON.stringify(aggregationScale().range())}
             />
@@ -236,7 +265,7 @@ function HeatMap({
         </svg>
       </foreignObject>
       <g>
-        <ExtraPairLabels extraPairDataSet={extraPairDataSet} dimensionHeight={dimensionHeight} currentOffset={currentOffset} chartId={chartId} />
+        <AttributePlotLabels attributePlotData={attributePlotData} dimensionHeight={dimensionHeight} currentOffset={currentOffset} chartId={chartId} />
       </g>
 
       {/* Render after chart to render on top */}
@@ -246,7 +275,7 @@ function HeatMap({
         isValueScaleBand
         dimensionHeight={dimensionHeight}
         dimensionWidth={dimensionWidth}
-        extraPairTotalWidth={extraPairTotalWidth}
+        attributePlotTotalWidth={attributePlotTotalWidth}
         xAxisVar={xAxisVar}
         valueScaleDomain={JSON.stringify(valueScale().domain())}
         valueScaleRange={JSON.stringify(valueScale().range())}

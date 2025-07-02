@@ -1,0 +1,33 @@
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint_and_build_test:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Copy .env.default to .env
+        run: cp .env.default .env
+
+      # go into the frontend, install dependencies, lint, and build
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'yarn'
+          cache-dependency-path: frontend/yarn.lock
+    
+      - name: Install dependencies
+        run: yarn --cwd=./frontend install --immutable
+
+      - name: Lint frontend
+        run: |
+          yarn --cwd=./frontend lint
+      
+      - name: Build frontend
+        run: |
+          yarn --cwd=./frontend build

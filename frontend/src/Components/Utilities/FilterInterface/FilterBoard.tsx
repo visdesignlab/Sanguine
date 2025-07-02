@@ -13,7 +13,7 @@ import {
 import Store from '../../../Interfaces/Store';
 import ComponentRangePicker from './ComponentRangePicker';
 import { Title } from '../../../Presets/StyledComponents';
-import { defaultState } from '../../../Interfaces/DefaultState';
+import { defaultState } from '../../../Interfaces/PresetStates/DefaultState';
 import OutcomeChipGroup from './OutcomeChipGroup';
 import SurgeryUrgencyChipGroup from './SurgeryUrgencyChipGroup';
 import { SelectSet } from '../../../Interfaces/Types/SelectionTypes';
@@ -223,7 +223,7 @@ function FilterBoard() {
                   step={1}
                   valueLabelDisplay="auto"
                 />
-                <Input value={maxSurgeonCasesPerformed} onChange={(e) => { store.configStore.changeSurgeonCasesPerformed([surgeonCasesPerformed[0], parseInt(e.target.value, 10)]); }} sx={{ width: '75px' }}/>
+                <Input value={maxSurgeonCasesPerformed} onChange={(e) => { store.configStore.changeSurgeonCasesPerformed([surgeonCasesPerformed[0], parseInt(e.target.value, 10)]); }} sx={{ width: '75px' }} />
               </Stack>
             )}
           />

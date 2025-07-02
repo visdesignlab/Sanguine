@@ -12,24 +12,22 @@ import {
   AxisText, CustomAxisColumnBackground, CustomAxisLine, CustomAxisLineBox,
 } from '../../../Presets/StyledSVGComponents';
 import Store from '../../../Interfaces/Store';
-import { ScatterDataPoint } from '../../../Interfaces/Types/DataTypes';
 
 type Props = {
   scaleDomain: string;
   scaleRange: string;
   scalePadding: number;
   chartHeight: number;
-  data: ScatterDataPoint[];
   xAxisVar: string;
 };
 
 function CustomizedAxisBand({
-  scaleDomain, scaleRange, scalePadding, chartHeight, data, xAxisVar,
+  scaleDomain, scaleRange, scalePadding, chartHeight, xAxisVar,
 }: Props) {
   const store = useContext(Store);
 
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
-  const [selectedColumn, setSelectedColumn] = useState<number | null>(null);
+  const [selectedColumns, setSelectedColumns] = useState<number[] | null>([]);
 
   const scale = useCallback(() => {
     const domain = JSON.parse(scaleDomain);
@@ -43,55 +41,46 @@ function CustomizedAxisBand({
     return sc;
   }, [scaleDomain, scaleRange, scalePadding]);
 
-  // Helper to get all case IDs for a column (using dp.xVal)
-  const getCaseIds = (columnValue: number): number[] => data.filter((dp: ScatterDataPoint) => dp.xVal === columnValue)
-    .map((dp: ScatterDataPoint) => Number(dp.case.CASE_ID));
-
   // Hover handler using the helper function.
   const handleColumnHover = (columnValue: number | null) => {
     if (columnValue !== null) {
-      if (selectedColumn !== columnValue) {
+      if (selectedColumns && !selectedColumns.includes(columnValue)) {
         setHoveredColumn(columnValue);
       }
-      const caseIds = getCaseIds(columnValue);
-      store.interactionStore.hoveredCaseIds = caseIds;
       store.interactionStore.hoveredAttribute = [xAxisVar, columnValue];
     }
   };
 
   // Click handler using the helper function.
   const handleColumnClick = (columnValue: number) => {
-    const caseIds = getCaseIds(columnValue);
-
     // If the column is already selected, deselect it.
-    if (selectedColumn === columnValue) {
-      setSelectedColumn(null);
-      store.interactionStore.clearSelectedCases();
-      store.interactionStore.deselectCaseIds(caseIds);
+    if (selectedColumns && selectedColumns.includes(columnValue)) {
+      // Deselect this column.
+      setSelectedColumns((prevSelectedColumns) => prevSelectedColumns?.filter((col) => col !== columnValue) || null);
+      store.interactionStore.deselectAttribute([xAxisVar, columnValue]);
       return;
     }
     // Sets the selected column locally (for background highlighting).
-    setSelectedColumn(columnValue);
+    setSelectedColumns((prevSelectedColumns) => [...(prevSelectedColumns || []), columnValue]);
 
-    // Sets selected case IDs & attribute from this column in the store.
-    store.interactionStore.selectedCaseIds = caseIds;
-    store.interactionStore.selectedAttribute = [xAxisVar, columnValue];
+    // Adds all cases matching the selected column to the store's selected case IDs.
+    store.interactionStore.addSelectedAttribute([xAxisVar, columnValue]);
   };
 
-  // Reset locally selected column when another component updates the store's selectedCaseIds.
+  // Update locally selected columns when the store's selected attributes change.
   useEffect(() => {
-    if (selectedColumn !== null) {
-      const columnCaseIds = getCaseIds(selectedColumn);
-      const storeCaseIds = store.interactionStore.selectedCaseIds;
-
-      // If the store's selected case IDs don't match the column's case IDs, reset the selected column.
-      const isSame = columnCaseIds.length === storeCaseIds.length
-        && columnCaseIds.every((id) => storeCaseIds.includes(id));
-      if (!isSame) {
-        setSelectedColumn(null);
-      }
+    const storeAttrs = store.interactionStore.selectedAttributes;
+    if (!storeAttrs) {
+      setSelectedColumns(null);
+    } else {
+    // Only keep those attributes that match this axis, pull out their values
+      const cols = storeAttrs
+        .filter(([attrName]) => attrName === xAxisVar)
+        .map(([, value]) => value as number);
+      // Set the selected columns to the store's selected attributes
+      setSelectedColumns(cols.length > 0 ? cols : null);
     }
-  }, [store.interactionStore.selectedCaseIds, data, selectedColumn]);
+  }, [store.interactionStore.selectedAttributes, xAxisVar]);
 
   return (
     <>
@@ -115,7 +104,7 @@ function CustomizedAxisBand({
               width={x2 - x1}
               chartHeight={chartHeight}
               fill={
-                selectedColumn === idx
+                selectedColumns?.includes(idx)
                   ? backgroundSelectedColor
                   : hoveredColumn === idx
                     ? backgroundHoverColor
@@ -123,7 +112,7 @@ function CustomizedAxisBand({
                       ? 'white'
                       : 'black'
               }
-              opacity={selectedColumn === idx || hoveredColumn === idx ? 0.5 : 0.05}
+              opacity={selectedColumns?.includes(idx) || hoveredColumn === idx ? 0.5 : 0.05}
             />
             <AxisText biggerFont={store.configStore.largeFont} x={x1} width={x2 - x1}>{number}</AxisText>
           </g>

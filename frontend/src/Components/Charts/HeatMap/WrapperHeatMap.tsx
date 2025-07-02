@@ -4,14 +4,14 @@ import {
 } from 'react';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import { Box, Container } from '@mui/material';
-import { generateExtrapairPlotData, generateExtraAttributeData } from '../../../HelperFunctions/ExtraPairDataGenerator';
+import { generateAttributePlotData, generateExtraAttributeData } from '../../../HelperFunctions/AttributePlotDataGenerator';
 import { stateUpdateWrapperUseJSON } from '../../../Interfaces/StateChecker';
-import { ExtraPairPadding, ExtraPairWidth } from '../../../Presets/Constants';
+import { AttributePlotPadding, AttributePlotWidth } from '../../../Presets/Constants';
 import Store from '../../../Interfaces/Store';
-import { ExtraPairPoint, HeatMapDataPoint } from '../../../Interfaces/Types/DataTypes';
+import { AttributePlotData, HeatMapDataPoint } from '../../../Interfaces/Types/DataTypes';
 import HeatMap from './HeatMap';
-import ExtraPairButtons from '../ChartAccessories/ExtraPairButtons';
-import { ExtraPairOptions } from '../../../Presets/DataDict';
+import AttributePlotButtons from '../ChartAccessories/AttributePlotButtons';
+import { AttributePlotOptions } from '../../../Presets/DataDict';
 import ChartConfigMenu from '../ChartAccessories/ChartConfigMenu';
 import AnnotationForm from '../ChartAccessories/AnnotationForm';
 import ChartStandardButtons from '../ChartStandardButtons';
@@ -21,55 +21,55 @@ import useComponentSize from '../../Hooks/UseComponentSize';
 
 function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
   const {
-    xAxisVar, yAxisVar, i: chartId, annotationText, extraPair, interventionDate, outcomeComparison,
+    xAxisVar, yAxisVar, i: chartId, annotationText, attributePlots, interventionDate, outcomeComparison,
   } = layout;
   const store = useContext(Store);
 
   const { filteredCases } = store;
   const { surgeryUrgencySelection, rawDateRange, proceduresSelection } = store.provenanceState;
   const svgRef = useRef<SVGSVGElement>(null);
-  const [extraPairData, setExtraPairData] = useState<ExtraPairPoint[]>([]);
-  const [extraPairArray, setExtraPairArray] = useState<string[]>([]);
+  const [attributePlotData, setAttributePlotData] = useState<AttributePlotData<'Violin' | 'BarChart' | 'Basic'>[]>([]);
+  const [attributePlotArray, setAttributePlotArray] = useState<string[]>([]);
   const [data, setData] = useState<HeatMapDataPoint[]>([]);
   const [secondaryData, setSecondaryData] = useState<HeatMapDataPoint[]>([]);
-  const [secondaryExtraPairData, setSecondaryExtraPairData] = useState<ExtraPairPoint[]>([]);
-  const [extraPairTotalWidth, setExtraPairTotalWidth] = useState(0);
+  const [secondaryAttributePlotData, setSecondaryAttributePlotData] = useState<AttributePlotData<'Violin' | 'BarChart' | 'Basic'>[]>([]);
+  const [attributePlotTotalWidth, setAttributePlotTotalWidth] = useState(0);
   const [caseCount, setCaseCount] = useState(0);
   const [secondaryCaseCount, setSecondaryCaseCount] = useState(0);
 
   useEffect(() => {
-    if (extraPair) {
-      stateUpdateWrapperUseJSON(extraPairArray, JSON.parse(extraPair), setExtraPairArray);
+    if (attributePlots) {
+      stateUpdateWrapperUseJSON(attributePlotArray, attributePlots, setAttributePlotArray);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [extraPair]);
+  }, [attributePlots]);
 
   useDeepCompareEffect(() => {
-    const newExtraPairData = generateExtrapairPlotData(yAxisVar, filteredCases, extraPairArray, data);
+    const newAttributePlotData = generateAttributePlotData(yAxisVar, filteredCases, attributePlotArray, data);
     if (outcomeComparison || interventionDate) {
-      const newSecondaryExtraPairData = generateExtrapairPlotData(yAxisVar, filteredCases, extraPairArray, secondaryData);
-      stateUpdateWrapperUseJSON(secondaryExtraPairData, newSecondaryExtraPairData, setSecondaryExtraPairData);
+      const newSecondaryAttributePlotData = generateAttributePlotData(yAxisVar, filteredCases, attributePlotArray, secondaryData);
+      stateUpdateWrapperUseJSON(secondaryAttributePlotData, newSecondaryAttributePlotData, setSecondaryAttributePlotData);
     }
-    let totalWidth = newExtraPairData.length > 0 ? (newExtraPairData.length + 1) * ExtraPairPadding : 0;
-    newExtraPairData.forEach((d) => {
-      totalWidth += (ExtraPairWidth[d.type]);
+    let totalWidth = newAttributePlotData.length > 0 ? (newAttributePlotData.length + 1) * AttributePlotPadding : 0;
+    newAttributePlotData.forEach((d) => {
+      totalWidth += (AttributePlotWidth[d.type]);
     });
-    setExtraPairTotalWidth(totalWidth);
-    stateUpdateWrapperUseJSON(extraPairData, newExtraPairData, setExtraPairData);
+    setAttributePlotTotalWidth(totalWidth);
+    stateUpdateWrapperUseJSON(attributePlotData, newAttributePlotData, setAttributePlotData);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [extraPairArray, data, filteredCases, secondaryData, outcomeComparison, interventionDate]);
+  }, [attributePlotArray, data, filteredCases, secondaryData, outcomeComparison, interventionDate]);
 
   const size = useComponentSize(svgRef);
 
   // Generating the extra attribute data for the extra pair plot ------------------------------------------------------------
   useDeepCompareEffect(() => {
-    const [tempCaseCount, secondaryTempCaseCount, outputData, secondaryOutputData] = generateExtraAttributeData(filteredCases, yAxisVar, outcomeComparison, interventionDate, store.provenanceState.showZero, xAxisVar);
+    const [secondCaseCount, tempCaseCount, outputData, secondaryOutputData] = generateExtraAttributeData(filteredCases, yAxisVar, outcomeComparison, interventionDate, store.provenanceState.showZero, xAxisVar);
     stateUpdateWrapperUseJSON(data, outputData, setData);
     stateUpdateWrapperUseJSON(secondaryData, secondaryOutputData, setSecondaryData);
-    store.chartStore.totalAggregatedCaseCount = (tempCaseCount as number) + (secondaryTempCaseCount as number);
+    store.chartStore.totalAggregatedCaseCount = (tempCaseCount as number) + (secondCaseCount as number);
     // Marks the 'true' and 'false' if attribute === 0.
     setCaseCount(tempCaseCount as number);
-    setSecondaryCaseCount(secondaryTempCaseCount as number);
+    setSecondaryCaseCount(secondCaseCount as number);
   }, [proceduresSelection, surgeryUrgencySelection, store.provenanceState.outcomeFilter,
     rawDateRange,
     store.provenanceState.showZero,
@@ -83,7 +83,7 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
     <Container style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <ChartAccessoryDiv>
         {`Heatmap${(outcomeComparison || interventionDate) ? ' with Comparison' : ''}`}
-        <ExtraPairButtons disbleButton={size.width * 0.6 < extraPairTotalWidth} extraPairLength={extraPairArray.length} chartId={chartId} buttonOptions={ExtraPairOptions} />
+        <AttributePlotButtons disbleButton={size.width * 0.6 < attributePlotTotalWidth} attributePlotLength={attributePlotArray.length} chartId={chartId} buttonOptions={AttributePlotOptions} />
         <ChartConfigMenu layout={layout} />
         <ChartStandardButtons chartID={chartId} />
       </ChartAccessoryDiv>
@@ -95,12 +95,12 @@ function WrapperHeatMap({ layout }: { layout: HeatMapLayoutElement }) {
             dimensionWidth={size.width}
             data={data}
             svg={svgRef}
-            extraPairTotalWidth={extraPairTotalWidth}
+            attributePlotTotalWidth={attributePlotTotalWidth}
             yAxisVar={yAxisVar}
             xAxisVar={xAxisVar}
             chartId={chartId}
-            extraPairDataSet={extraPairData}
-            secondaryExtraPairDataSet={(outcomeComparison || interventionDate) ? secondaryExtraPairData : undefined}
+            attributePlotData={attributePlotData}
+            secondaryAttributePlotData={(outcomeComparison || interventionDate) ? secondaryAttributePlotData : undefined}
             secondaryData={(outcomeComparison || interventionDate) ? secondaryData : undefined}
             firstTotal={caseCount}
             secondTotal={secondaryCaseCount}

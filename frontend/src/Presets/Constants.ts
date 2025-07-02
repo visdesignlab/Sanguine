@@ -20,8 +20,15 @@ export const thirdGray = '#a2a2a2';
 export const greyScaleRange = [0.3, 0.85];
 
 // -----------------------------------------
+// Pre-op hgb threshold (<X g/dL) that warrants transfusion
 export const HGB_LOW_STANDARD = 7.5;
+// Pre-op hgb transfusion threshold range
+export const hgbPostOpTargetRange: [number | undefined, number | undefined] = [HGB_LOW_STANDARD, HGB_LOW_STANDARD + 2];
+// Post-op hgb target standard
 export const HGB_HIGH_STANDARD = 13;
+// Post-op hgb target standard range
+export const hgbPreOpTargetRange: [number | undefined, number | undefined] = [HGB_HIGH_STANDARD, 21];
+
 export const SnackBarCloseTime = 5000;
 export const OffsetDict = {
   regular: {
@@ -39,8 +46,8 @@ export const CELL_SAVER_TICKS = ['0', '0-1h', '1h-2h', '2h-3h', '3h-4h', '4h-5h'
 
 export const MIN_HEATMAP_BANDWIDTH = (secondaryData: unknown) => (secondaryData ? 40 : 20);
 
-export const ExtraPairWidth = { Violin: 100, BarChart: 50, Basic: 40 };
-export const ExtraPairPadding = 10;
+export const AttributePlotWidth = { Violin: 100, BarChart: 50, Basic: 40 };
+export const AttributePlotPadding = 10;
 export const CaseRectWidth = 30;
 export const DumbbellGroupMinimumWidth = 100;
 export const DumbbellMinimumWidth = 8;
@@ -54,7 +61,7 @@ export const BloodProductCap = {
   CELL_SAVER_ML: 1000,
 };
 
-export const ExtraPairLimit = 5;
+export const AttributePlotLimit = 5;
 
 export const ManualInfinity = 5000000000;
 
