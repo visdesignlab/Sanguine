@@ -65,12 +65,12 @@ export class RootStore {
     const surgeons = this._allCases.map((d) => [d.SURGEON_PROV_ID, d.SURGEON_PROV_NAME]);
     const anesths = this._allCases.map((d) => [d.ANESTH_PROV_ID, d.ANESTH_PROV_NAME]);
     return Object.fromEntries(
-      [...surgeons, ...anesths].filter((d) => d[0] !== null && d[1] !== null)
+      [...surgeons, ...anesths].filter((d) => d[0] !== null && d[1] !== null),
     );
   }
 
   get filteredCases() {
-    return this._allCases.filter((d) => {
+    const cases = this._allCases.filter((d) => {
       // Date range filter
       if (!(d.CASE_DATE >= this.provenanceState.rawDateRange[0] && d.CASE_DATE <= this.provenanceState.rawDateRange[1])) {
         return false;
@@ -117,15 +117,28 @@ export class RootStore {
 
       // If there are selected procedures, filter cases based on the selected procedures
       const procedureFiltered = hasAnyProcedure && !this.provenanceState.proceduresSelection.some((procedure) => {
+        // This case's procedure codes. Example: [A code matching ECMO, A code matching CABG, ...]
         const patientCodes = d.ALL_CODES.split(',');
 
-        // Sub-procedures selected (overlapList)
+        // If sub-procedures selected (overlapList) Example: ["ECMO" is selected as the sub-procedure of "CABG"]
         if (procedure.overlapList && procedure.overlapList.length > 0) {
-          return procedure.codes.some((code) => patientCodes.includes(code))
-            && procedure.overlapList.some((subProcedure) => subProcedure.codes.some((code) => patientCodes.includes(code)));
+          return procedure.overlapList.some((subProcedure) => {
+            // Handle "Only " sub-procedure logic
+            if (subProcedure.procedureName.startsWith('Only ')) {
+              // Only include cases where the patients codes is the same or subset of the sub-procedure codes
+              // Example: Patients codes are ["123"] and subProcedure codes are ["123", "456", "789"] (All ECMO codes)
+              return patientCodes.length > 0 && patientCodes.every((code) => subProcedure.codes.includes(code));
+            }
+            // Otherwise, check if the patient has at least one of both the main procedure and the sub-procedure codes
+            // (Example: At least one from both "ECMO" codes & "CABG" codes)
+            return (
+              procedure.codes.some((code) => patientCodes.includes(code))
+              && subProcedure.codes.some((code) => patientCodes.includes(code))
+            );
+          });
         }
 
-        // Main procedure selected
+        // Only the Main procedure selected: Check if the patient has at least one of the main procedure codes
         return procedure.codes.some((code) => patientCodes.includes(code));
       });
       if (procedureFiltered) {
@@ -134,6 +147,8 @@ export class RootStore {
 
       return true;
     });
+    console.log('Filtered cases:', cases);
+    return cases;
   }
 
   get filterRange() {
