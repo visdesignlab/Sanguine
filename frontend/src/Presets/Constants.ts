@@ -42,7 +42,7 @@ export const OffsetDict = {
   } as Offset,
 };
 
-export const CELL_SAVER_TICKS = ['0', '0-1h', '1h-2h', '2h-3h', '3h-4h', '4h-5h', '5h-6h', '6h-7h', '7h-8h', '8h-9h', '9h-1k', '1k+'];
+export const CELL_SAVER_TICKS = ['0', '0-1h', '1-2h', '2-3h', '3-4h', '4-5h', '5-6h', '6-7h', '7-8h', '8-9h', '9-1k', '1k+'];
 
 export const MIN_HEATMAP_BANDWIDTH = (secondaryData: unknown) => (secondaryData ? 40 : 20);
 
