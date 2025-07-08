@@ -33,7 +33,7 @@ function HeatMapAxis({
   let valueLabel;
   if (isValueScaleBand) {
     valueLabel = axisBottom(valueScale() as ScaleBand<string>)
-    // eslint-disable-next-line no-nested-ternary, @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line no-nested-ternary, @typescript-eslint/no-explicit-any
       .tickFormat((d, i) => (xAxisVar === 'CELL_SAVER_ML' ? CELL_SAVER_TICKS[i] : (d === BloodProductCap[xAxisVar as BloodComponent] as any ? `${d}+` : d)));
   } else {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,7 +61,11 @@ function HeatMapAxis({
     .attr('font-size', store.configStore.largeFont ? largeFontSize : regularFontSize)
     .attr('text-anchor', 'middle')
     .attr('transform', `translate(${attributePlotTotalWidth},0)`)
-    .text(() => (AcronymDictionary[xAxisVar] ? AcronymDictionary[xAxisVar] : xAxisVar));
+    .text(() => (
+      xAxisVar === 'CELL_SAVER_ML'
+        ? 'Cell Salvage Volume (Hundreds of mL)'
+        : (AcronymDictionary[xAxisVar] ? AcronymDictionary[xAxisVar] : xAxisVar)
+    ));
 
   svgSelection
     .select('.y-label')
