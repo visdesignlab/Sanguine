@@ -1,42 +1,39 @@
+import { useDisclosure } from '@mantine/hooks';
 import {
-  Divider, Snackbar, Alert, Grid,
-} from '@mui/material';
-import { observer } from 'mobx-react';
-import { useContext } from 'react';
+  AppShell, Burger, Group, Skeleton,
+} from '@mantine/core';
+import { MantineLogo } from '@mantinex/mantine-logo';
 
-import LeftToolBox from './Components/Utilities/LeftToolBox/LeftToolBox';
-import RegularModeMenu from './Components/Utilities/TopMenu/RegularModeMenu';
-
-import LayoutGenerator from './Components/LayoutGenerator';
-import DetailView from './Components/Utilities/DetailView/DetailView';
-import Store from './Interfaces/Store';
-import { SnackBarCloseTime } from './Presets/Constants';
-
-function Shell() {
-  const store = useContext(Store);
+export function Shell() {
+  const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
+  const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
 
   return (
-    <div id="shell">
-      <RegularModeMenu />
-      <Grid container direction="row">
-        <Grid item xs={2} sx={{ height: 'calc(100vh - 64px)', overflow: 'auto' }}>
-          <LeftToolBox />
-        </Grid>
-        <Divider orientation="vertical" flexItem style={{ marginRight: '-1px' }} />
-        <Grid item xs={8} sx={{ height: 'calc(100vh - 64px)', overflow: 'auto' }}>
-          <LayoutGenerator />
-        </Grid>
-        <Divider orientation="vertical" flexItem style={{ marginRight: '-1px' }} />
-        <Grid item xs={2} sx={{ height: 'calc(100vh - 64px)', overflow: 'auto' }}>
-          <DetailView />
-        </Grid>
-      </Grid>
-      <Snackbar open={store.configStore.openSnackBar} autoHideDuration={SnackBarCloseTime} onClose={() => { store.configStore.openSnackBar = false; }}>
-        <Alert onClose={() => { store.configStore.openSnackBar = false; }} severity={store.configStore.snackBarIsError ? 'error' : 'success'}>
-          {store.configStore.snackBarMessage}
-        </Alert>
-      </Snackbar>
-    </div>
+    <AppShell
+      header={{ height: 60 }}
+      navbar={{
+        width: 300,
+        breakpoint: 'sm',
+        collapsed: { mobile: !mobileOpened, desktop: !desktopOpened },
+      }}
+      padding="md"
+    >
+      <AppShell.Header>
+        <Group h="100%" px="md">
+          <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" />
+          <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm" />
+          <MantineLogo size={30} />
+        </Group>
+      </AppShell.Header>
+      <AppShell.Navbar p="md">
+        Navbar
+        {Array(15)
+          .fill(0)
+          .map((_, index) => (
+            <Skeleton key={index} h={28} mt="sm" animate={false} />
+          ))}
+      </AppShell.Navbar>
+      <AppShell.Main>Main</AppShell.Main>
+    </AppShell>
   );
 }
-export default observer(Shell);

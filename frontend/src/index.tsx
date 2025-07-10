@@ -1,3 +1,4 @@
+import '@mantine/core/styles.css';
 import ReactDOM from 'react-dom';
 import App from './App';
 
