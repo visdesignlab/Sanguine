@@ -12,7 +12,7 @@ import DetailView from './Components/Utilities/DetailView/DetailView';
 import Store from './Interfaces/Store';
 import { SnackBarCloseTime } from './Presets/Constants';
 
-function AppLayout() {
+function Shell() {
   const store = useContext(Store);
 
   return (
@@ -39,4 +39,4 @@ function AppLayout() {
     </div>
   );
 }
-export default observer(AppLayout);
+export default observer(Shell);

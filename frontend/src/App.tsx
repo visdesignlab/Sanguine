@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react';
 import { useContext, useState, useEffect } from 'react';
 import { useIdleTimer } from 'react-idle-timer';
-import AppLayout from './AppLayout';
+import Shell from './Shell';
 import Store from './Interfaces/Store';
 import { logoutHandler, whoamiAPICall } from './Interfaces/UserManagement';
 import BrowserWarning from './Components/Modals/BrowserWarning';
@@ -46,7 +46,7 @@ function App() {
 
   return (
     <>
-      <AppLayout />
+      <Shell />
       <>
         <BrowserWarning />
         <DataRetrieval dataLoading={dataLoading} dataLoadingFailed={dataLoadingFailed} />
