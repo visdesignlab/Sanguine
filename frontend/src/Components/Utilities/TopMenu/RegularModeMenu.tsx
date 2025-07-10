@@ -109,7 +109,7 @@ function RegularModeMenu() {
     const filter = (node: HTMLElement): boolean => node.tagName !== 'NOSCRIPT';
     // Temporarily set the Shell grid items to overflow visible (for full-page screenshot)
     const tempStyleEl: HTMLStyleElement = document.createElement('style');
-    tempStyleEl.innerHTML = '#app-layout .MuiGrid-item { overflow: visible !important; }';
+    tempStyleEl.innerHTML = '#shell .MuiGrid-item { overflow: visible !important; }';
     document.head.appendChild(tempStyleEl);
 
     // Screenshot options

@@ -16,7 +16,7 @@ function Shell() {
   const store = useContext(Store);
 
   return (
-    <div id="app-layout">
+    <div id="shell">
       <RegularModeMenu />
       <Grid container direction="row">
         <Grid item xs={2} sx={{ height: 'calc(100vh - 64px)', overflow: 'auto' }}>
