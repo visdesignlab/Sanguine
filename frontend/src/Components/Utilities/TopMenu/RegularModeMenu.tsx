@@ -107,9 +107,9 @@ function RegularModeMenu() {
     const htmlEl = document.documentElement;
     // Filter out the elements that should not be captured
     const filter = (node: HTMLElement): boolean => node.tagName !== 'NOSCRIPT';
-    // Temporarily set the dashboard grid items to overflow visible (for full-page screenshot)
+    // Temporarily set the AppLayout grid items to overflow visible (for full-page screenshot)
     const tempStyleEl: HTMLStyleElement = document.createElement('style');
-    tempStyleEl.innerHTML = '#full-dashboard .MuiGrid-item { overflow: visible !important; }';
+    tempStyleEl.innerHTML = '#app-layout .MuiGrid-item { overflow: visible !important; }';
     document.head.appendChild(tempStyleEl);
 
     // Screenshot options
@@ -140,7 +140,7 @@ function RegularModeMenu() {
     } catch (error) {
       console.error('Screenshot failed:', error);
     } finally {
-      // Change dashboard grid items back to overflow auto
+      // Change AppLayout grid items back to overflow auto
       document.head.removeChild(tempStyleEl);
     }
   };

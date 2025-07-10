@@ -12,11 +12,11 @@ import DetailView from './Components/Utilities/DetailView/DetailView';
 import Store from './Interfaces/Store';
 import { SnackBarCloseTime } from './Presets/Constants';
 
-function Dashboard() {
+function AppLayout() {
   const store = useContext(Store);
 
   return (
-    <div id="full-dashboard">
+    <div id="app-layout">
       <RegularModeMenu />
       <Grid container direction="row">
         <Grid item xs={2} sx={{ height: 'calc(100vh - 64px)', overflow: 'auto' }}>
@@ -39,4 +39,4 @@ function Dashboard() {
     </div>
   );
 }
-export default observer(Dashboard);
+export default observer(AppLayout);

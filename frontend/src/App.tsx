@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react';
 import { useContext, useState, useEffect } from 'react';
 import { useIdleTimer } from 'react-idle-timer';
-import Dashboard from './Dashboard';
+import AppLayout from './AppLayout';
 import Store from './Interfaces/Store';
 import { logoutHandler, whoamiAPICall } from './Interfaces/UserManagement';
 import BrowserWarning from './Components/Modals/BrowserWarning';
@@ -33,7 +33,7 @@ function App() {
         }
 
         store.allVisits = visits;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         setDataLoadingFailed(true);
       } finally {
@@ -46,7 +46,7 @@ function App() {
 
   return (
     <>
-      <Dashboard />
+      <AppLayout />
       <>
         <BrowserWarning />
         <DataRetrieval dataLoading={dataLoading} dataLoadingFailed={dataLoadingFailed} />
