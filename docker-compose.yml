@@ -1,6 +1,6 @@
 services:
   backend:
-    image: intelvia/intelvia-backend:v0.0.7
+    image: intelvia/intelvia-backend:v0.0.8
     env_file:
       - .env
     ports:
@@ -29,7 +29,7 @@ services:
       timeout: 5s
 
   frontend:
-    image: intelvia/intelvia-frontend:v0.0.7
+    image: intelvia/intelvia-frontend:v0.0.8
     ports:
       - "8080:8080"
     depends_on:
