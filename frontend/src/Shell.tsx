@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useDisclosure } from '@mantine/hooks';
 import {
-  AppShell, Group, ScrollArea, Tabs, ActionIcon, Title, Flex,
+  AppShell, Group, Tabs, ActionIcon, Title, Flex,
   Container,
 } from '@mantine/core';
 import {
@@ -125,13 +125,11 @@ export function Shell() {
       </AppShell.Navbar>
       {/** Main Area */}
       <AppShell.Main>
-        <ScrollArea>
-          <Container fluid>
-            {activeTab === DASHBOARD_TAB && <PBMDashboard />}
-            {activeTab === PROVIDERS_TAB && <ProvidersView />}
-            {activeTab === EXPLORE_TAB && <ExploreView />}
-          </Container>
-        </ScrollArea>
+        <Container fluid>
+          {activeTab === DASHBOARD_TAB && <PBMDashboard />}
+          {activeTab === PROVIDERS_TAB && <ProvidersView />}
+          {activeTab === EXPLORE_TAB && <ExploreView />}
+        </Container>
       </AppShell.Main>
     </AppShell>
   );
