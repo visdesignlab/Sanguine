@@ -17,8 +17,13 @@ import { PBMDashboard } from './Components/Views/PBMDashboard';
  * Includes a header toolbar (Intelvia), left toolbar, and main content area.
  */
 export function Shell() {
+  // View tabs names
+  const DASHBOARD_TAB = 'Dashboard';
+  const PROVIDERS_TAB = 'Providers';
+  const EXPLORE_TAB = 'Explore';
+
   // Active tab in the view tabs
-  const [activeTab, setActiveTab] = useState('PBM Dashboard');
+  const [activeTab, setActiveTab] = useState(DASHBOARD_TAB);
   // Open and close the left toolbar, burger toggle visible on hover.
   const [leftToolbarOpened, { toggle: toggleLeftToolbar }] = useDisclosure(true);
   const [burgerHovered, setBurgerHovered] = useState(false);
@@ -30,9 +35,6 @@ export function Shell() {
 
   // Size of icons
   const ICON_SIZE_NUM = 24;
-
-  // X offset of the left toolbar icons
-  const LEFT_ICON_X_OFFSET = TOOLBARS_WIDTH / 2 - (ICON_SIZE_NUM / 2);
 
   // Left toolbar icons
   const leftToolbarIcons: { icon: any; label: string }[] = [
@@ -64,15 +66,18 @@ export function Shell() {
     >
       {/** Header Toolbar */}
       <AppShell.Header>
-        <Group h="100%" gap={LEFT_ICON_X_OFFSET + 20} px={LEFT_ICON_X_OFFSET} justify="space-between">
+        <Group h="100%" justify="space-between" style={{ width: '100%' }}>
           {/** Left Toolbar Toggle Burger Icon */}
           <div
             onMouseEnter={() => setBurgerHovered(true)}
             onMouseLeave={() => setBurgerHovered(false)}
             style={{
+              width: TOOLBARS_WIDTH,
               transition: 'opacity 0.2s',
               opacity: showBurger ? 1 : 0,
               display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             <ActionIcon variant="subtle" color="grey" aria-label="Toggle Left Toolbar" size={ICON_SIZE_NUM}>
@@ -89,7 +94,7 @@ export function Shell() {
               if (value) setActiveTab(value);
             }}
             radius="md"
-            defaultValue="PBM Dashboard"
+            defaultValue={DASHBOARD_TAB}
             styles={{
               tabLabel: {
                 position: 'relative',
@@ -103,9 +108,9 @@ export function Shell() {
                 paddingTop: 10,
               }}
             >
-              <Tabs.Tab value="PBM Dashboard">PBM Dashboard</Tabs.Tab>
-              <Tabs.Tab value="Providers">Providers</Tabs.Tab>
-              <Tabs.Tab value="Explore">Explore</Tabs.Tab>
+              <Tabs.Tab value={DASHBOARD_TAB}>Dashboard</Tabs.Tab>
+              <Tabs.Tab value={PROVIDERS_TAB}>Providers</Tabs.Tab>
+              <Tabs.Tab value={EXPLORE_TAB}>Explore</Tabs.Tab>
             </Tabs.List>
           </Tabs>
           {/** Header Icons, right-aligned */}
@@ -138,9 +143,9 @@ export function Shell() {
       {/** Main Area */}
       <AppShell.Main>
         <ScrollArea>
-          {activeTab === 'PBM Dashboard' && <PBMDashboard />}
-          {activeTab === 'Providers' && <ProvidersView />}
-          {activeTab === 'Explore' && <ExploreView />}
+          {activeTab === DASHBOARD_TAB && <PBMDashboard />}
+          {activeTab === PROVIDERS_TAB && <ProvidersView />}
+          {activeTab === EXPLORE_TAB && <ExploreView />}
         </ScrollArea>
       </AppShell.Main>
     </AppShell>
