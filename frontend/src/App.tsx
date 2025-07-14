@@ -10,7 +10,14 @@ import DataRetrieval from './Components/Modals/DataRetrieval';
 import { Visit } from './Interfaces/Types/DataTypes';
 
 const theme = createTheme({
-  /** Put your mantine theme override here */
+  headings: {
+    sizes: {
+      h1: {
+        fontWeight: '400',
+        fontSize: '1.5rem',
+      },
+    },
+  },
 });
 
 function App() {
