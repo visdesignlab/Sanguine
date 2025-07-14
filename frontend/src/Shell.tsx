@@ -66,7 +66,7 @@ export function Shell() {
     >
       {/** Header Toolbar */}
       <AppShell.Header>
-        <Group h="100%" justify="space-between" style={{ width: '100%' }}>
+        <Group h="100%" justify="space-between">
           {/** Left Toolbar Toggle Burger Icon */}
           <div
             onMouseEnter={() => setBurgerHovered(true)}
@@ -76,7 +76,6 @@ export function Shell() {
               transition: 'opacity 0.2s',
               opacity: showBurger ? 1 : 0,
               display: 'flex',
-              alignItems: 'center',
               justifyContent: 'center',
             }}
           >
@@ -101,6 +100,7 @@ export function Shell() {
                 top: '-4px',
               },
             }}
+            pl="lg"
           >
             <Tabs.List
               h={TOOLBARS_WIDTH}
@@ -114,7 +114,7 @@ export function Shell() {
             </Tabs.List>
           </Tabs>
           {/** Header Icons, right-aligned */}
-          <Group gap="lg" ml="auto">
+          <Group gap="lg" ml="auto" pr="lg">
             {headerIcons.map(({ icon: Icon, label }) => (
               <ActionIcon key={label} variant="subtle" color="grey" aria-label={label} size={ICON_SIZE_NUM}>
                 <Icon size={ICON_SIZE_NUM} />
