@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { useDisclosure } from '@mantine/hooks';
 import {
-  AppShell, Group, ScrollArea, Tabs, ActionIcon, Title,
+  AppShell, Group, ScrollArea, Tabs, ActionIcon, Title, Flex,
+  Container,
 } from '@mantine/core';
-import { PiBookOpenLight, PiDotsThreeOutlineVerticalThin } from 'react-icons/pi';
 import {
-  CiFilter, CiSettings, CiDatabase, CiMenuBurger, CiTrash, CiLogout, CiCamera, CiSaveDown2,
-} from 'react-icons/ci';
-import { IoIosArrowRoundBack, IoIosArrowRoundForward } from 'react-icons/io';
-import { ExploreView } from './Components/Views/ExploreView';
-import { ProvidersView } from './Components/Views/ProvidersView';
-import { PBMDashboard } from './Components/Views/PBMDashboard';
+  IconDatabase, IconSettings, IconFilter, IconBook, IconTrash, IconArrowNarrowLeftDashed, IconArrowNarrowRightDashed, IconDeviceFloppy, IconCamera, IconLogout, IconDotsVertical,
+  IconMenu,
+} from '@tabler/icons-react';
+import { ExploreView } from './Components/Views/ExploreView/ExploreView';
+import { ProvidersView } from './Components/Views/ProvidersView/ProvidersView';
+import { PBMDashboard } from './Components/Views/PBMDashboard/PBMDashboard';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -26,33 +26,30 @@ export function Shell() {
   const [activeTab, setActiveTab] = useState(DASHBOARD_TAB);
   // Open and close the left toolbar, burger toggle visible on hover.
   const [leftToolbarOpened, { toggle: toggleLeftToolbar }] = useDisclosure(true);
-  const [burgerHovered, setBurgerHovered] = useState(false);
-  const [leftToolbarHovered, setleftToolbarHovered] = useState(false);
-  const showBurger = burgerHovered || leftToolbarHovered;
 
   // Width of the header toolbar & left toolbar
   const TOOLBARS_WIDTH = 60;
 
   // Size of icons
-  const ICON_SIZE_NUM = 24;
+  const ICON_SIZE = 24;
 
   // Left toolbar icons
-  const leftToolbarIcons: { icon: any; label: string }[] = [
-    { icon: CiDatabase, label: 'Database' },
-    { icon: CiSettings, label: 'Settings' },
-    { icon: CiFilter, label: 'Filter' },
-    { icon: PiBookOpenLight, label: 'Book' },
+  const leftToolbarIcons: { icon: React.ComponentType<{ size?: string | number }>; label: string }[] = [
+    { icon: IconFilter, label: 'Filter' },
+    { icon: IconSettings, label: 'Settings' },
+    { icon: IconDatabase, label: 'Database' },
+    { icon: IconBook, label: 'Book' },
   ];
 
   // Header toolbar icons
-  const headerIcons: { icon: any; label: string }[] = [
-    { icon: CiTrash, label: 'Delete' },
-    { icon: IoIosArrowRoundBack, label: 'Back' },
-    { icon: IoIosArrowRoundForward, label: 'Forward' },
-    { icon: CiSaveDown2, label: 'Save' },
-    { icon: CiCamera, label: 'Camera' },
-    { icon: CiLogout, label: 'Logout' },
-    { icon: PiDotsThreeOutlineVerticalThin, label: 'Info' },
+  const headerIcons: { icon: React.ComponentType<{ size?: string | number }>; label: string }[] = [
+    { icon: IconTrash, label: 'Delete' },
+    { icon: IconArrowNarrowLeftDashed, label: 'Back' },
+    { icon: IconArrowNarrowRightDashed, label: 'Forward' },
+    { icon: IconDeviceFloppy, label: 'Save' },
+    { icon: IconCamera, label: 'Camera' },
+    { icon: IconLogout, label: 'Logout' },
+    { icon: IconDotsVertical, label: 'Info' },
   ];
 
   return (
@@ -60,82 +57,68 @@ export function Shell() {
       header={{ height: TOOLBARS_WIDTH }}
       navbar={{
         width: TOOLBARS_WIDTH,
-        breakpoint: 'sm',
+        breakpoint: 0,
         collapsed: { desktop: !leftToolbarOpened },
       }}
+      padding="md"
     >
       {/** Header Toolbar */}
       <AppShell.Header>
-        <Group h="100%" justify="space-between">
-          {/** Left Toolbar Toggle Burger Icon */}
-          <div
-            onMouseEnter={() => setBurgerHovered(true)}
-            onMouseLeave={() => setBurgerHovered(false)}
-            style={{
-              width: TOOLBARS_WIDTH,
-              transition: 'opacity 0.2s',
-              opacity: showBurger ? 1 : 0,
-              display: 'flex',
-              justifyContent: 'center',
-            }}
-          >
-            <ActionIcon variant="subtle" color="grey" aria-label="Toggle Left Toolbar" size={ICON_SIZE_NUM}>
-              <CiMenuBurger size={ICON_SIZE_NUM - 5} onClick={toggleLeftToolbar} />
-            </ActionIcon>
-          </div>
-          {/** Intelvia Title */}
-          <Title order={1} fs="italic">Intelvia</Title>
-          {/** View Tabs */}
-          <Tabs
-            variant="outline"
-            value={activeTab}
-            onChange={(value) => {
-              if (value) setActiveTab(value);
-            }}
-            radius="md"
-            defaultValue={DASHBOARD_TAB}
-            styles={{
-              tabLabel: {
-                position: 'relative',
-                top: '-4px',
-              },
-            }}
-            pl="lg"
-          >
-            <Tabs.List
-              h={TOOLBARS_WIDTH}
-              style={{
-                paddingTop: 10,
+        <Group justify="space-between">
+          <Group>
+            {/** Left Toolbar Toggle Burger Icon */}
+            <Flex justify="center" w={TOOLBARS_WIDTH}>
+              <ActionIcon variant="subtle" color="grey" aria-label="Toggle Left Toolbar" size="xl">
+                <IconMenu size={ICON_SIZE} onClick={toggleLeftToolbar} />
+              </ActionIcon>
+            </Flex>
+            {/** Intelvia Title */}
+            <Title order={1}>Intelvia</Title>
+            {/** View Tabs */}
+            <Tabs
+              variant="outline"
+              value={activeTab}
+              onChange={(value) => {
+                if (value) setActiveTab(value);
               }}
+              radius="md"
+              defaultValue={DASHBOARD_TAB}
+              styles={{
+                tabLabel: {
+                  marginTop: -4,
+                },
+              }}
+              pl="lg"
             >
-              <Tabs.Tab value={DASHBOARD_TAB}>Dashboard</Tabs.Tab>
-              <Tabs.Tab value={PROVIDERS_TAB}>Providers</Tabs.Tab>
-              <Tabs.Tab value={EXPLORE_TAB}>Explore</Tabs.Tab>
-            </Tabs.List>
-          </Tabs>
+              <Tabs.List
+                h={TOOLBARS_WIDTH}
+                style={{
+                  paddingTop: 10,
+                }}
+              >
+                <Tabs.Tab value={DASHBOARD_TAB}>Dashboard</Tabs.Tab>
+                <Tabs.Tab value={PROVIDERS_TAB}>Providers</Tabs.Tab>
+                <Tabs.Tab value={EXPLORE_TAB}>Explore</Tabs.Tab>
+              </Tabs.List>
+            </Tabs>
+          </Group>
           {/** Header Icons, right-aligned */}
-          <Group gap="lg" ml="auto" pr="lg">
+          <Group gap="sm" pr="md">
             {headerIcons.map(({ icon: Icon, label }) => (
-              <ActionIcon key={label} variant="subtle" color="grey" aria-label={label} size={ICON_SIZE_NUM}>
-                <Icon size={ICON_SIZE_NUM} />
+              <ActionIcon key={label} variant="subtle" color="grey" aria-label={label} size="lg">
+                <Icon />
               </ActionIcon>
             ))}
           </Group>
         </Group>
       </AppShell.Header>
       {/** Left Toolbar */}
-      <AppShell.Navbar
-        p="lg"
-        onMouseEnter={() => setleftToolbarHovered(true)}
-        onMouseLeave={() => setleftToolbarHovered(false)}
-      >
+      <AppShell.Navbar>
         {/** Left Toolbar Icons */}
-        <Group
-          justify="center"
-        >
+        <Group justify="center" pt="md" w="100%">
           {leftToolbarIcons.map(({ icon: Icon, label }) => (
-            <ActionIcon key={label} variant="subtle" color="grey" aria-label={label} size={ICON_SIZE_NUM}>
-              <Icon size={ICON_SIZE_NUM} />
+            <ActionIcon key={label} variant="subtle" color="grey" aria-label={label} size="lg">
+              <Icon />
             </ActionIcon>
           ))}
         </Group>
@@ -143,9 +126,11 @@ export function Shell() {
       {/** Main Area */}
       <AppShell.Main>
         <ScrollArea>
-          {activeTab === DASHBOARD_TAB && <PBMDashboard />}
-          {activeTab === PROVIDERS_TAB && <ProvidersView />}
-          {activeTab === EXPLORE_TAB && <ExploreView />}
+          <Container fluid>
+            {activeTab === DASHBOARD_TAB && <PBMDashboard />}
+            {activeTab === PROVIDERS_TAB && <ProvidersView />}
+            {activeTab === EXPLORE_TAB && <ExploreView />}
+          </Container>
         </ScrollArea>
       </AppShell.Main>
     </AppShell>

@@ -13,8 +13,20 @@ const theme = createTheme({
   headings: {
     sizes: {
       h1: {
-        fontWeight: '400',
+        fontWeight: '600',
         fontSize: '1.5rem',
+      },
+      h2: {
+        fontWeight: '600',
+        fontSize: '1.25rem',
+      },
+      h3: {
+        fontWeight: '600',
+        fontSize: '1.125rem',
+      },
+      h4: {
+        fontWeight: '400',
+        fontSize: '1rem',
       },
     },
   },
