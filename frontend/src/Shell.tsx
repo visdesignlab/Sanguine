@@ -30,9 +30,6 @@ export function Shell() {
   // Width of the header toolbar & left toolbar
   const TOOLBARS_WIDTH = 60;
 
-  // Size of icons
-  const ICON_SIZE = 24;
-
   // Left toolbar icons
   const leftToolbarIcons: { icon: React.ComponentType<{ size?: string | number }>; label: string }[] = [
     { icon: IconFilter, label: 'Filter' },
@@ -68,8 +65,8 @@ export function Shell() {
           <Group>
             {/** Left Toolbar Toggle Burger Icon */}
             <Flex justify="center" w={TOOLBARS_WIDTH}>
-              <ActionIcon variant="subtle" color="grey" aria-label="Toggle Left Toolbar" size="xl">
-                <IconMenu size={ICON_SIZE} onClick={toggleLeftToolbar} />
+              <ActionIcon variant="subtle" color="grey" aria-label="Toggle Left Toolbar" size="lg">
+                <IconMenu onClick={toggleLeftToolbar} />
               </ActionIcon>
             </Flex>
             {/** Intelvia Title */}
