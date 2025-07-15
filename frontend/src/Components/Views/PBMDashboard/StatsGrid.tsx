@@ -2,9 +2,8 @@ import {
   IconArrowDownRight,
   IconArrowUpRight,
   IconCoin,
-  IconDiscount2,
-  IconReceipt2,
-  IconUserPlus,
+  IconTestPipe2,
+  IconShieldHeart
 } from '@tabler/icons-react';
 import {
   Group, Paper, SimpleGrid, Text,
@@ -12,24 +11,20 @@ import {
 import classes from './StatsGrid.module.css';
 
 const icons = {
-  user: IconUserPlus,
-  discount: IconDiscount2,
-  receipt: IconReceipt2,
   coin: IconCoin,
+  tube: IconTestPipe2,
+  shield: IconShieldHeart,
 };
 
 const data = [
   {
-    title: 'Revenue', icon: 'receipt', value: '$13,456', diff: 34,
+    title: 'Estimated Savings', icon: 'coin', value: '$13,456', diff: 34,
   },
   {
-    title: 'Profit', icon: 'coin', value: '$4,145', diff: -13,
+    title: 'Guideline Adherence', icon: 'tube', value: '85%', diff: 18,
   },
   {
-    title: 'Coupons usage', icon: 'discount', value: '745', diff: 18,
-  },
-  {
-    title: 'New customers', icon: 'user', value: '188', diff: -30,
+    title: 'AVG Length of Stay', icon: 'shield', value: '10 days', diff: -30,
   },
 ] as const;
 

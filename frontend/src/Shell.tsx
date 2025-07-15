@@ -3,10 +3,12 @@ import { useDisclosure } from '@mantine/hooks';
 import {
   AppShell, Group, Tabs, ActionIcon, Title, Flex,
   Container,
+  Menu,
 } from '@mantine/core';
 import {
   IconDatabase, IconSettings, IconFilter, IconBook, IconTrash, IconArrowNarrowLeftDashed, IconArrowNarrowRightDashed, IconDeviceFloppy, IconCamera, IconLogout, IconDotsVertical,
   IconMenu,
+  IconRestore,
 } from '@tabler/icons-react';
 import { ExploreView } from './Components/Views/ExploreView/ExploreView';
 import { ProvidersView } from './Components/Views/ProvidersView/ProvidersView';
@@ -45,8 +47,6 @@ export function Shell() {
     { icon: IconArrowNarrowRightDashed, label: 'Forward' },
     { icon: IconDeviceFloppy, label: 'Save' },
     { icon: IconCamera, label: 'Camera' },
-    { icon: IconLogout, label: 'Logout' },
-    { icon: IconDotsVertical, label: 'Info' },
   ];
 
   return (
@@ -106,6 +106,26 @@ export function Shell() {
                 <Icon />
               </ActionIcon>
             ))}
+
+            <Menu shadow="md" width={200}>
+              <Menu.Target>
+                <ActionIcon variant="subtle" color="grey" aria-label="more" size="lg">
+                  <IconDotsVertical />
+                </ActionIcon>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                <Menu.Label>Application</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconRestore size={14} />}
+                >
+                  Reset to defaults
+                </Menu.Item>
+                <Menu.Item leftSection={<IconLogout size={14} />}>
+                  Log out
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </Group>
         </Group>
       </AppShell.Header>

@@ -2,14 +2,15 @@ import { useMemo } from 'react';
 import {
   Title, Stack, Card,
 } from '@mantine/core';
-import { Responsive, WidthProvider } from 'react-grid-layout';
+import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
 import { StatsGrid } from './StatsGrid';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
 export function PBMDashboard() {
-  const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive), []);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive) as any, []);
 
   const layouts = {
     lg: [
@@ -46,7 +47,10 @@ export function PBMDashboard() {
       >
         {['0', '1', '2', '3'].map((i) => (
           <Card key={i} withBorder>
-            <Title order={4}>Card {i}</Title>
+            <Title order={4}>
+              Card
+              {` ${i}`}
+            </Title>
           </Card>
         ))}
       </ResponsiveGridLayout>
