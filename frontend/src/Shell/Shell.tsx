@@ -145,7 +145,7 @@ export function Shell() {
               w={TOOLBARS_WIDTH}
               pt="md"
             >
-              {leftToolbarIcons.map(({ icon: Icon, label, content }, index) => (
+              {leftToolbarIcons.map(({ icon: Icon, label }, index) => (
                 <ActionIcon
                   key={label}
                   variant="subtle"
