@@ -1,18 +1,22 @@
-import { useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import { useDisclosure } from '@mantine/hooks';
 import {
   AppShell, Group, Tabs, ActionIcon, Title, Flex,
   Container,
   Menu,
+  Box,
+  Text,
 } from '@mantine/core';
 import {
   IconDatabase, IconSettings, IconFilter, IconBook, IconTrash, IconArrowNarrowLeftDashed, IconArrowNarrowRightDashed, IconDeviceFloppy, IconCamera, IconLogout, IconDotsVertical,
   IconMenu,
   IconRestore,
 } from '@tabler/icons-react';
-import { ExploreView } from './Components/Views/ExploreView/ExploreView';
-import { ProvidersView } from './Components/Views/ProvidersView/ProvidersView';
-import { PBMDashboard } from './Components/Views/PBMDashboard/PBMDashboard';
+import { ExploreView } from '../Components/Views/ExploreView/ExploreView';
+import { ProvidersView } from '../Components/Views/ProvidersView/ProvidersView';
+import { PBMDashboard } from '../Components/Views/PBMDashboard/PBMDashboard';
+
+import classes from './Shell.module.css';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -33,12 +37,14 @@ export function Shell() {
   const TOOLBARS_WIDTH = 60;
 
   // Left toolbar icons
-  const leftToolbarIcons: { icon: React.ComponentType<{ size?: string | number }>; label: string }[] = [
-    { icon: IconFilter, label: 'Filter' },
-    { icon: IconSettings, label: 'Settings' },
-    { icon: IconDatabase, label: 'Database' },
-    { icon: IconBook, label: 'Book' },
+  const leftToolbarIcons: { icon: React.ComponentType<{ size?: string | number }>; label: string, content: ReactNode }[] = [
+    { icon: IconFilter, label: 'Filter Panel', content: <Text>Filter panel content</Text> },
+    { icon: IconSettings, label: 'Settings', content: <Text>Settings content</Text> },
+    { icon: IconDatabase, label: 'Database', content: <Text>Database content</Text> },
+    { icon: IconBook, label: 'Book', content: <Text>Book content</Text> },
   ];
+  const [active, setActive] = useState<number | null>(null);
+  const navbarWidth = useMemo(() => (active === null ? TOOLBARS_WIDTH : 6 * TOOLBARS_WIDTH), [active]);
 
   // Header toolbar icons
   const headerIcons: { icon: React.ComponentType<{ size?: string | number }>; label: string }[] = [
@@ -53,7 +59,7 @@ export function Shell() {
     <AppShell
       header={{ height: TOOLBARS_WIDTH }}
       navbar={{
-        width: TOOLBARS_WIDTH,
+        width: navbarWidth,
         breakpoint: 0,
         collapsed: { desktop: !leftToolbarOpened },
       }}
@@ -132,13 +138,42 @@ export function Shell() {
       {/** Left Toolbar */}
       <AppShell.Navbar>
         {/** Left Toolbar Icons */}
-        <Group justify="center" pt="md" w="100%">
-          {leftToolbarIcons.map(({ icon: Icon, label }) => (
-            <ActionIcon key={label} variant="subtle" color="grey" aria-label={label} size="lg">
-              <Icon />
-            </ActionIcon>
-          ))}
-        </Group>
+        <Flex direction="row" h="100%" w={navbarWidth}>
+          <Box h="100%" style={{ borderRight: active !== null ? '1px solid var(--mantine-color-gray-3)' : 'none' }}>
+            <Group
+              justify="center"
+              w={TOOLBARS_WIDTH}
+              pt="md"
+            >
+              {leftToolbarIcons.map(({ icon: Icon, label, content }, index) => (
+                <ActionIcon
+                  key={label}
+                  variant="subtle"
+                  color="grey"
+                  aria-label={label}
+                  size="lg"
+                  onClick={() => (index === active ? setActive(null) : setActive(index))}
+                  data-active={index === active}
+                  className={classes.leftToolbarIcon}
+                >
+                  <Icon />
+                </ActionIcon>
+              ))}
+            </Group>
+          </Box>
+
+          {/** Left Toolbar Content */}
+          {active !== null && (
+            <Box style={{ flexGrow: 1 }} p="md">
+              <Title order={3}>
+                {leftToolbarIcons[active].label}
+              </Title>
+              <Box>
+                {leftToolbarIcons[active].content}
+              </Box>
+            </Box>
+          )}
+        </Flex>
       </AppShell.Navbar>
       {/** Main Area */}
       <AppShell.Main>

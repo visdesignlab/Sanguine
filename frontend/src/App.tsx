@@ -2,7 +2,7 @@ import { observer } from 'mobx-react';
 import { useContext, useState, useEffect } from 'react';
 import { createTheme, MantineProvider } from '@mantine/core';
 import { useIdleTimer } from 'react-idle-timer';
-import { Shell } from './Shell';
+import { Shell } from './Shell/Shell';
 import Store from './Interfaces/Store';
 import { logoutHandler, whoamiAPICall } from './Interfaces/UserManagement';
 import BrowserWarning from './Components/Modals/BrowserWarning';
