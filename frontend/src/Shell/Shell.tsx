@@ -28,15 +28,15 @@ export function Shell() {
   // Active tab in the view tabs
   const [activeTab, setActiveTab] = useState(DASHBOARD_TAB);
 
-  // Toolbar states ----------------------
+  // Toolbar & Left Panel states ----------------------
   // Width of the header toolbar & left toolbar
   const TOOLBARS_WIDTH = 60;
   const OPEN_NAVBAR_WIDTH = 6 * TOOLBARS_WIDTH;
 
   // Open and close the left toolbar, burger toggle visible on hover.
   const [leftToolbarOpened, { toggle: toggleLeftToolbar }] = useDisclosure(true);
-  const [activeNavbar, setActiveNavbar] = useState<number | null>(null);
-  const navbarWidth = useMemo(() => (activeNavbar === null ? TOOLBARS_WIDTH : OPEN_NAVBAR_WIDTH), [activeNavbar, OPEN_NAVBAR_WIDTH]);
+  const [activeLeftPanel, setActiveLeftPanel] = useState<number | null>(null);
+  const navbarWidth = useMemo(() => (activeLeftPanel === null ? TOOLBARS_WIDTH : OPEN_NAVBAR_WIDTH), [activeLeftPanel, OPEN_NAVBAR_WIDTH]);
 
   // Toolbar icons ----------------------
   // Left toolbar icons
@@ -150,7 +150,7 @@ export function Shell() {
       <AppShell.Navbar>
         {/** Left Toolbar Icons */}
         <Flex direction="row" h="100%" w={navbarWidth}>
-          <Box h="100%" style={{ borderRight: activeNavbar !== null ? '1px solid var(--mantine-color-gray-3)' : 'none' }}>
+          <Box h="100%" style={{ borderRight: activeLeftPanel !== null ? '1px solid var(--mantine-color-gray-3)' : 'none' }}>
             <Group
               justify="center"
               w={TOOLBARS_WIDTH}
@@ -168,8 +168,8 @@ export function Shell() {
                     color="dark"
                     aria-label={label}
                     size="lg"
-                    onClick={() => (index === activeNavbar ? setActiveNavbar(null) : setActiveNavbar(index))}
-                    data-active={index === activeNavbar}
+                    onClick={() => (index === activeLeftPanel ? setActiveLeftPanel(null) : setActiveLeftPanel(index))}
+                    data-active={index === activeLeftPanel}
                     className={classes.leftToolbarIcon}
                   >
                     <Icon
@@ -181,14 +181,14 @@ export function Shell() {
             </Group>
           </Box>
 
-          {/** Left Toolbar Content */}
-          {activeNavbar !== null && (
+          {/** Left Panel Content */}
+          {activeLeftPanel !== null && (
             <Box style={{ flexGrow: 1 }} p="md">
               <Title order={3}>
-                {leftToolbarIcons[activeNavbar].label}
+                {leftToolbarIcons[activeLeftPanel].label}
               </Title>
               <Box>
-                {leftToolbarIcons[activeNavbar].content}
+                {leftToolbarIcons[activeLeftPanel].content}
               </Box>
             </Box>
           )}
