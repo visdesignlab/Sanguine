@@ -7,7 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ShareIcon from '@mui/icons-material/Share';
 import EditIcon from '@mui/icons-material/Edit';
 import { observer } from 'mobx-react';
-import { simulateAPIClick } from '../../Interfaces/UserManagement';
+import { simulateAPIClick } from '../../../Store/UserManagement';
 import Store from '../../Interfaces/Store';
 import StateAccessControl from './StateAccessControl';
 import { BiggerTooltip } from '../../Presets/StyledComponents';

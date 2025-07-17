@@ -7,8 +7,8 @@ import { LineChart } from '@mantine/charts';
 import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
 import { mean, rollup, sum } from 'd3';
 import { StatsGrid } from './StatsGrid';
-import { BloodComponentOptions } from '../../../Presets/DataDict';
-import Store from '../../../Interfaces/Store';
+import { BloodComponentOptions } from '../../../Types/application';
+import { Store } from '../../../Store/Store';
 
 export function PBMDashboard() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,13 +36,6 @@ export function PBMDashboard() {
   // Load in data from the store
   const store = useContext(Store);
   const { allVisits } = store;
-
-  
-  // Card gets its own data type
-  // Data for the cards
-  
-  // Each chart gets its own data type
-  // Data for the charts
 
   // For each visit, get the quarter and rbc units used
   const allChartData = allVisits.map((visit) => ({

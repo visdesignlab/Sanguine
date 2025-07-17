@@ -4,7 +4,7 @@ import {
 import { observer } from 'mobx-react';
 import { useContext, useState } from 'react';
 import Store from '../../Interfaces/Store';
-import { simulateAPIClick } from '../../Interfaces/UserManagement';
+import { simulateAPIClick } from '../../../Store/UserManagement';
 
 type Props = {
     stateName: string;

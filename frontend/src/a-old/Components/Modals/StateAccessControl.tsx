@@ -5,7 +5,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { observer } from 'mobx-react';
 import { useContext, useEffect, useState } from 'react';
 import Store from '../../Interfaces/Store';
-import { simulateAPIClick } from '../../Interfaces/UserManagement';
+import { simulateAPIClick } from '../../../Store/UserManagement';
 import UIDInputModal from './UIDInputModal';
 
 type Props = {

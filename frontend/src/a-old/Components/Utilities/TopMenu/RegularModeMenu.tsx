@@ -21,7 +21,7 @@ import InfoDialog from '../../Modals/InfoDialog';
 import StateManagementSuite from './StateManagementSuite';
 import UndoRedoButtons from './UndoRedoButtons';
 import AddModeTopMenu from './AddModeTopMenu';
-import { logoutHandler, simulateAPIClick } from '../../../Interfaces/UserManagement';
+import { logoutHandler, simulateAPIClick } from '../../../../Store/UserManagement';
 import Store from '../../../Interfaces/Store';
 import { ChartType } from '../../../Presets/DataDict';
 

@@ -1,9 +1,8 @@
 import {
   Modal, Text, Title, Group, Loader, Stack,
 } from '@mantine/core';
-import { observer } from 'mobx-react';
 
-function DataRetrievalModal({ dataLoading, dataLoadingFailed }: { dataLoading: boolean; dataLoadingFailed: boolean; }) {
+export function DataRetrieval({ dataLoading, dataLoadingFailed }: { dataLoading: boolean; dataLoadingFailed: boolean; }) {
   return (
     <Modal
       opened={dataLoading || dataLoadingFailed}
@@ -11,28 +10,25 @@ function DataRetrievalModal({ dataLoading, dataLoadingFailed }: { dataLoading: b
       withCloseButton={false}
       centered
       size="md"
+      title={<Title order={3}>{dataLoadingFailed ? 'Data Retrieval Failed' : 'Retrieving Data'}</Title>}
     >
       {/* Data loading modal, pass or fails */}
       {dataLoadingFailed ? (
-        <Stack align="center">
-          <Title order={2}>Failed</Title>
-          <Text>
-            Data retrieval failed. Please try later or contact the admins.
-          </Text>
-        </Stack>
-      ) : (
-        <Stack align="center">
-          <Title order={2}>One moment ...</Title>
-          <Group>
-            <Loader size="sm" />
+          <>
             <Text>
-              Retrieving data, this may take a few seconds.
+              Please try later or contact your systems administrator.
             </Text>
-          </Group>
-        </Stack>
+          </>
+      ) : (
+          <>
+            <Group>
+              <Loader size="sm" />
+              <Text>
+                This may take a few seconds.
+              </Text>
+            </Group>
+          </>
       )}
     </Modal>
   );
 }
-
-export default observer(DataRetrievalModal);
