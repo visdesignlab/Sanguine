@@ -2,8 +2,20 @@
 import { makeAutoObservable } from 'mobx';
 import { createContext } from 'react';
 import { Visit } from '../Types/database';
+import { DashboardStore } from './DashboardStore';
 
 export class RootStore {
+
+  // Provenance
+
+
+  // Stores
+  dashboardStore = new DashboardStore(this);
+  // providersStore:
+  // exploreStore:
+
+
+  // Visits - Main data type
   _allVisits: Visit[];
 
   constructor() {
@@ -26,12 +38,6 @@ export class RootStore {
 
   get allSurgeries() {
     return this.allVisits.flatMap((v) => v.surgeries);
-  }
-
-  get filteredCases() {
-    return this.allSurgeries.filter((d) => {
-      return true; // Placeholder for actual filtering logic
-    });
   }
 }
 export const Store = createContext(new RootStore());
