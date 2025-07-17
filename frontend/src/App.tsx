@@ -39,11 +39,11 @@ const theme = createTheme({
       styles: {
         tooltip: {
           backgroundColor: 'white',
-          border: '2px solid var(--mantine-color-gray-6)',
-          color: 'var(--mantine-color-gray-7)',
+          border: '1px solid var(--mantine-color-black)',
+          color: 'var(--mantine-color-black)',
         },
         arrow: {
-          border: '2px solid var(--mantine-color-gray-6)',
+          border: '1px solid var(--mantine-color-black)',
           backgroundColor: 'white',
         },
       },
