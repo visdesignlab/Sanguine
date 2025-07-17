@@ -5,12 +5,13 @@ import {
   Container,
   Menu,
   Box,
-  Text,
+  Text, Tooltip,
 } from '@mantine/core';
 import {
-  IconDatabase, IconSettings, IconFilter, IconBook, IconTrash, IconArrowNarrowLeftDashed, IconArrowNarrowRightDashed, IconDeviceFloppy, IconCamera, IconLogout, IconDotsVertical,
+  IconDatabase, IconSettings, IconFilter, IconBook, IconTrash, IconArrowNarrowLeftDashed, IconArrowNarrowRightDashed, IconDeviceFloppy, IconCamera, IconLogout, IconUser,
   IconMenu,
   IconRestore,
+  type IconProps,
 } from '@tabler/icons-react';
 import { ExploreView } from '../Components/Views/ExploreView/ExploreView';
 import { ProvidersView } from '../Components/Views/ProvidersView/ProvidersView';
@@ -37,17 +38,17 @@ export function Shell() {
   const TOOLBARS_WIDTH = 60;
 
   // Left toolbar icons
-  const leftToolbarIcons: { icon: React.ComponentType<{ size?: string | number }>; label: string, content: ReactNode }[] = [
+  const leftToolbarIcons: { icon: React.ComponentType<IconProps>; label: string, content: ReactNode }[] = [
     { icon: IconFilter, label: 'Filter Panel', content: <Text>Filter panel content</Text> },
     { icon: IconSettings, label: 'Settings', content: <Text>Settings content</Text> },
     { icon: IconDatabase, label: 'Database', content: <Text>Database content</Text> },
-    { icon: IconBook, label: 'Book', content: <Text>Book content</Text> },
+    { icon: IconBook, label: 'Learn', content: <Text>Learning content</Text> },
   ];
   const [active, setActive] = useState<number | null>(null);
   const navbarWidth = useMemo(() => (active === null ? TOOLBARS_WIDTH : 6 * TOOLBARS_WIDTH), [active]);
 
   // Header toolbar icons
-  const headerIcons: { icon: React.ComponentType<{ size?: string | number }>; label: string }[] = [
+  const headerIcons: { icon: React.ComponentType<IconProps>; label: string }[] = [
     { icon: IconTrash, label: 'Delete' },
     { icon: IconArrowNarrowLeftDashed, label: 'Back' },
     { icon: IconArrowNarrowRightDashed, label: 'Forward' },
@@ -108,20 +109,30 @@ export function Shell() {
           {/** Header Icons, right-aligned */}
           <Group gap="sm" pr="md">
             {headerIcons.map(({ icon: Icon, label }) => (
-              <ActionIcon key={label} variant="subtle" color="grey" aria-label={label} size="lg">
-                <Icon />
-              </ActionIcon>
+              <Tooltip
+                key={label}
+                label={label}
+              >
+                <ActionIcon variant="subtle" color="dark" aria-label={label} size="lg">
+                  <Icon stroke={1} />
+                </ActionIcon>
+              </Tooltip>
             ))}
 
             <Menu shadow="md" width={200}>
               <Menu.Target>
-                <ActionIcon variant="subtle" color="grey" aria-label="more" size="lg">
-                  <IconDotsVertical />
-                </ActionIcon>
+                <Tooltip
+                  key="User"
+                  label="User"
+                >
+                  <ActionIcon variant="subtle" color="dark" aria-label="more" size="lg">
+                    <IconUser stroke={1} />
+                  </ActionIcon>
+                </Tooltip>
               </Menu.Target>
 
               <Menu.Dropdown>
-                <Menu.Label>Application</Menu.Label>
+                <Menu.Label>User</Menu.Label>
                 <Menu.Item
                   leftSection={<IconRestore size={14} />}
                 >
@@ -146,18 +157,26 @@ export function Shell() {
               pt="md"
             >
               {leftToolbarIcons.map(({ icon: Icon, label }, index) => (
-                <ActionIcon
+                <Tooltip
                   key={label}
-                  variant="subtle"
-                  color="grey"
-                  aria-label={label}
-                  size="lg"
-                  onClick={() => (index === active ? setActive(null) : setActive(index))}
-                  data-active={index === active}
-                  className={classes.leftToolbarIcon}
+                  label={label}
+                  position="right"
                 >
-                  <Icon />
-                </ActionIcon>
+                  <ActionIcon
+                    key={label}
+                    variant="subtle"
+                    color="dark"
+                    aria-label={label}
+                    size="lg"
+                    onClick={() => (index === active ? setActive(null) : setActive(index))}
+                    data-active={index === active}
+                    className={classes.leftToolbarIcon}
+                  >
+                    <Icon
+                      stroke={1}
+                    />
+                  </ActionIcon>
+                </Tooltip>
               ))}
             </Group>
           </Box>

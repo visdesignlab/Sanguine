@@ -30,6 +30,25 @@ const theme = createTheme({
       },
     },
   },
+  components: {
+    Tooltip: {
+      defaultProps: {
+        withArrow: true,
+        arrowSize: 10,
+      },
+      styles: {
+        tooltip: {
+          backgroundColor: 'white',
+          border: '2px solid var(--mantine-color-gray-6)',
+          color: 'var(--mantine-color-gray-7)',
+        },
+        arrow: {
+          border: '2px solid var(--mantine-color-gray-6)',
+          backgroundColor: 'white',
+        },
+      },
+    },
+  },
 });
 
 function App() {
