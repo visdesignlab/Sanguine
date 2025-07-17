@@ -5,15 +5,12 @@ import { Visit } from '../Types/database';
 import { DashboardStore } from './DashboardStore';
 
 export class RootStore {
-
   // Provenance
-
 
   // Stores
   dashboardStore = new DashboardStore(this);
   // providersStore:
   // exploreStore:
-
 
   // Visits - Main data type
   _allVisits: Visit[];

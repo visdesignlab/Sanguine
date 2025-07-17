@@ -1,5 +1,5 @@
 import {
-  Modal, Text, Title, Group, Loader, Stack,
+  Modal, Text, Title, Group, Loader,
 } from '@mantine/core';
 
 export function DataRetrieval({ dataLoading, dataLoadingFailed }: { dataLoading: boolean; dataLoadingFailed: boolean; }) {
@@ -14,11 +14,9 @@ export function DataRetrieval({ dataLoading, dataLoadingFailed }: { dataLoading:
     >
       {/* Data loading modal, pass or fails */}
       {dataLoadingFailed ? (
-          <>
-            <Text>
-              Please try later or contact your systems administrator.
-            </Text>
-          </>
+        <Text>
+          Please try later or contact your systems administrator.
+        </Text>
       ) : (
           <>
             <Group>

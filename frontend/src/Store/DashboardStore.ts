@@ -1,7 +1,7 @@
-import { makeAutoObservable } from "mobx";
-import type { DashboardChartLayoutElement } from "../Types/application";
-import type { RootStore } from "./Store";
-import { mean, rollup, sum } from "d3";
+import { makeAutoObservable } from 'mobx';
+import { mean, rollup, sum } from 'd3';
+import type { DashboardChartLayoutElement } from '../Types/application';
+import type { RootStore } from './Store';
 
 export class DashboardStore {
   _rootStore: RootStore;
@@ -23,7 +23,7 @@ export class DashboardStore {
     ],
   };
 
-  constructor(rootStore: any) {
+  constructor(rootStore: RootStore) {
     this._rootStore = rootStore;
 
     makeAutoObservable(this);
@@ -34,7 +34,6 @@ export class DashboardStore {
   }
 
   set layouts(input: { lg: DashboardChartLayoutElement[] }) {
-    console.log('updating layouts', input);
     this._layouts = input;
   }
 
@@ -43,17 +42,18 @@ export class DashboardStore {
     const visitData = this._rootStore.allVisits.map((visit) => ({
       quarter: `${new Date(visit.dsch_dtm).getFullYear()}-Q${Math.floor((new Date(visit.dsch_dtm).getMonth()) / 3) + 1}`,
 
-      rbc_units: visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.rbc_units || 0), 0),
-      ffp_units: visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.ffp_units || 0), 0),
-      plt_units: visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.plt_units || 0), 0),
-      cryo_units: visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.cryo_units || 0), 0),
-      cell_saver_ml: visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.cell_saver_ml || 0), 0),
+      rbc_units: visit.transfusions.reduce((s, transfusion) => s + (transfusion.rbc_units || 0), 0),
+      ffp_units: visit.transfusions.reduce((s, transfusion) => s + (transfusion.ffp_units || 0), 0),
+      plt_units: visit.transfusions.reduce((s, transfusion) => s + (transfusion.plt_units || 0), 0),
+      cryo_units: visit.transfusions.reduce((s, transfusion) => s + (transfusion.cryo_units || 0), 0),
+      cell_saver_ml: visit.transfusions.reduce((s, transfusion) => s + (transfusion.cell_saver_ml || 0), 0),
 
       los: (new Date(visit.dsch_dtm).getTime() - new Date(visit.adm_dtm).getTime()) / (1000 * 60 * 60 * 24),
     }));
 
     // Aggregate visit attributes by quarter
-    const quarterlyData = rollup(visitData,
+    const quarterlyData = rollup(
+      visitData,
       (visit) => ({
         rbc_units: sum(visit, (d) => d.rbc_units),
         ffp_units: sum(visit, (d) => d.ffp_units),
@@ -63,7 +63,7 @@ export class DashboardStore {
 
         los: mean(visit, (d) => d.los) || 0,
       }),
-      (d) => d.quarter
+      (d) => d.quarter,
     );
 
     // Return quarterly visit data sorted by date
@@ -72,11 +72,11 @@ export class DashboardStore {
         i,
         Array.from(quarterlyData.entries())
           .map(([quarter, group]) => ({
-            quarter: quarter,
+            quarter,
             data: group[yAxisVar],
           }))
           .sort((a, b) => a.quarter.localeCompare(b.quarter)),
-      ])
+      ]),
     );
   }
 }

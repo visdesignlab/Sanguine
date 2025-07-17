@@ -8,7 +8,7 @@ export const BloodComponentOptions: { value: BloodComponent; label: string }[] =
   { value: 'cell_saver_ml', label: 'Cell Salvage Volume (ml) Used' },
 ];
 
-const OUTCOMES = ['los'] as const;
+export const OUTCOMES = ['los'] as const;
 export type Outcome = typeof OUTCOMES[number];
 export const OutcomeOptions: { value: Outcome; label: string }[] = [
   { value: 'los', label: 'Length of Stay' },

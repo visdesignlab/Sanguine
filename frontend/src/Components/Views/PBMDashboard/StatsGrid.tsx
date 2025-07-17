@@ -3,7 +3,7 @@ import {
   IconArrowUpRight,
   IconCoin,
   IconTestPipe2,
-  IconShieldHeart
+  IconShieldHeart,
 } from '@tabler/icons-react';
 import {
   Group, Paper, SimpleGrid, Text,

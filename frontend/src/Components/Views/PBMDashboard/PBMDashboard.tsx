@@ -1,25 +1,25 @@
-import { useContext, useMemo, useState } from 'react';
+import { useContext, useMemo } from 'react';
 import {
   Title, Stack, Card, Flex, Select,
 } from '@mantine/core';
 import { IconGripVertical } from '@tabler/icons-react';
 import { LineChart } from '@mantine/charts';
 import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
+import { useObserver } from 'mobx-react';
 import { StatsGrid } from './StatsGrid';
 import { BloodComponentOptions, type DashboardChartLayoutElement } from '../../../Types/application';
 import { Store } from '../../../Store/Store';
-import { useObserver } from 'mobx-react';
 
 export function PBMDashboard() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive) as any, []);
+
+  const store = useContext(Store);
+
   return useObserver(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive) as any, []);
-
-
     const chartRowHeight = 300;
     // Load in data from the store
-    const store = useContext(Store);
-    let { layouts, chartData } = store.dashboardStore
+    const { layouts, chartData } = store.dashboardStore;
 
     return (
       <Stack mb="xl">
@@ -38,10 +38,9 @@ export function PBMDashboard() {
           containerPadding={[0, 0]}
           draggableHandle=".move-icon"
           onLayoutChange={(_: never, newLayouts: Record<'lg', Layout[]>) => {
-            console.log(newLayouts);
             newLayouts.lg.forEach((l) => {
-              let existingLayoutIndex = layouts.lg.findIndex((el) => el.i === l.i);
-              
+              const existingLayoutIndex = layouts.lg.findIndex((el) => el.i === l.i);
+
               if (existingLayoutIndex !== -1) {
                 layouts.lg[existingLayoutIndex] = {
                   ...layouts.lg[existingLayoutIndex],
@@ -49,23 +48,31 @@ export function PBMDashboard() {
                   y: l.y,
                   w: l.w,
                   h: l.h,
-                }
+                };
               }
             });
           }}
         >
-          {Object.values(layouts.lg).map(({i, x, y, w, h, maxH, yAxisVar, aggregation}) => (
-            <Card key={i} data-grid={{ i, x, y, w, h, maxH }} withBorder>
+          {Object.values(layouts.lg).map(({
+            i, x, y, w, h, maxH, yAxisVar, aggregation,
+          }) => (
+            <Card
+              key={i}
+              data-grid={{
+                i, x, y, w, h, maxH,
+              }}
+              withBorder
+            >
               <Flex direction="column" gap="sm" h="100%">
                 <Flex direction="row" justify="space-between" align="center" h={40} px="md">
                   <Flex direction="row" align="center" gap="md" ml={-12}>
-                    <IconGripVertical className="move-icon" size={18} color="grey"/>
+                    <IconGripVertical className="move-icon" size={18} color="grey" />
                     <Title order={4}>
                       {`${aggregation} of ${yAxisVar}`}
                     </Title>
                   </Flex>
 
-                  <Select 
+                  <Select
                     data={BloodComponentOptions}
                     defaultValue={yAxisVar}
                     onChange={(value) => {
@@ -90,7 +97,7 @@ export function PBMDashboard() {
                     interval: 'equidistantPreserveStart',
                   }}
                 />
-                </Flex>
+              </Flex>
             </Card>
           ))}
         </ResponsiveGridLayout>
