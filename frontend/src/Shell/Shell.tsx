@@ -15,55 +15,33 @@ import { ProvidersView } from '../Components/Views/ProvidersView/ProvidersView';
 import { PBMDashboard } from '../Components/Views/PBMDashboard/PBMDashboard';
 import classes from './Shell.module.css';
 
-// Configuration constants -------------------------
-const CONFIG = {
-  // Toolbar and Left Panel dimensions
-  TOOLBARS_WIDTH: 60,
-  get OPEN_PANEL_WIDTH() { return 6 * this.TOOLBARS_WIDTH; },
-  // View Tabs
-  TABS: {
-    DASHBOARD: 'Dashboard',
-    PROVIDERS: 'Providers',
-    EXPLORE: 'Explore',
-  } as const,
-  // Tab styles
-  TAB_MARGINS: {
-    tabLabel: { marginTop: -4 },
-    tabsList: { paddingTop: 10 },
-  },
-  // Icons stroke width
-  ICON_STROKE: 1,
-};
-
 /** *
  * Shell component that provides the main layout for the application.
  * Includes a header toolbar (Intelvia), left toolbar, and main content area.
  */
 export function Shell() {
-  // View Tabs ----------------------
-  const [activeTab, setActiveTab] = useState<keyof typeof CONFIG.TABS | string>(CONFIG.TABS.DASHBOARD);
+  // View tabs -----------------
+  const TABS = {
+    DASHBOARD: 'Dashboard',
+    PROVIDERS: 'Providers',
+    EXPLORE: 'Explore',
+  } as const;
 
-  // Toolbar & Left Panel ----------------------
+  // Active tab in the view tabs
+  const [activeTab, setActiveTab] = useState<keyof typeof TABS | string>(TABS.DASHBOARD);
+
+  // Toolbar & Left Panel states ----------------------
+  // Width of the header toolbar & left toolbar
+  const TOOLBARS_WIDTH = 60;
+  const OPEN_NAVBAR_WIDTH = 6 * TOOLBARS_WIDTH;
+
   // Open and close the left toolbar, burger toggle visible on hover.
   const [leftToolbarOpened, { toggle: toggleLeftToolbar }] = useDisclosure(true);
   const [activeLeftPanel, setActiveLeftPanel] = useState<number | null>(null);
-  const leftNavbarWidth = useMemo(() => (
-    activeLeftPanel === null ? CONFIG.TOOLBARS_WIDTH : CONFIG.OPEN_PANEL_WIDTH
-  ), [activeLeftPanel]);
+  const navbarWidth = useMemo(() => (activeLeftPanel === null ? TOOLBARS_WIDTH : OPEN_NAVBAR_WIDTH), [activeLeftPanel, OPEN_NAVBAR_WIDTH]);
 
-  // Tabs ----------------------
-  const TAB_COMPONENTS = {
-    [CONFIG.TABS.DASHBOARD]: PBMDashboard,
-    [CONFIG.TABS.PROVIDERS]: ProvidersView,
-    [CONFIG.TABS.EXPLORE]: ExploreView,
-  } as const;
-
-  const renderTabContent = () => {
-    const Component = TAB_COMPONENTS[activeTab as keyof typeof TAB_COMPONENTS];
-    return Component ? <Component /> : null;
-  };
-
-  // Icons ----------------------
+  // Toolbar icons ----------------------
+  const ICON_STROKE = 1;
   // Left toolbar icons
   const leftToolbarIcons: { icon: React.ComponentType<IconProps>; label: string, content: ReactNode }[] = [
     { icon: IconFilter, label: 'Filter Panel', content: <Text>Filter panel content</Text> },
@@ -81,161 +59,149 @@ export function Shell() {
     { icon: IconCamera, label: 'Camera' },
   ];
 
-  // Header ----------------------
-  const header = (
-    <AppShell.Header>
-      <Group justify="space-between">
-        <Group>
-          {/** Left Toolbar Toggle Burger Icon */}
-          <Flex justify="center" w={CONFIG.TOOLBARS_WIDTH}>
-            <ActionIcon aria-label="Toggle Left Toolbar">
-              <IconMenu onClick={toggleLeftToolbar} stroke={CONFIG.ICON_STROKE} />
-            </ActionIcon>
-          </Flex>
-          {/** Intelvia Title */}
-          <Title order={1}>Intelvia</Title>
-          {/** View Tabs */}
-          <Tabs
-            variant="outline"
-            value={activeTab}
-            onChange={(value) => {
-              if (value) setActiveTab(value);
-            }}
-            radius="md"
-            defaultValue={CONFIG.TABS.DASHBOARD}
-            styles={{
-              tabLabel: CONFIG.TAB_MARGINS.tabLabel,
-            }}
-            pl="lg"
-          >
-            <Tabs.List
-              h={CONFIG.TOOLBARS_WIDTH}
-              style={CONFIG.TAB_MARGINS.tabsList}
-            >
-              <Tabs.Tab value={CONFIG.TABS.DASHBOARD}>Dashboard</Tabs.Tab>
-              <Tabs.Tab value={CONFIG.TABS.PROVIDERS}>Providers</Tabs.Tab>
-              <Tabs.Tab value={CONFIG.TABS.EXPLORE}>Explore</Tabs.Tab>
-            </Tabs.List>
-          </Tabs>
-        </Group>
-        {/** Header Icons, right-aligned */}
-        <Group gap="sm" pr="md">
-          {headerIcons.map(({ icon: Icon, label }) => (
-            <Tooltip
-              key={label}
-              label={label}
-            >
-              <ActionIcon aria-label={label}>
-                <Icon stroke={CONFIG.ICON_STROKE} />
-              </ActionIcon>
-            </Tooltip>
-          ))}
-          {/** Header Icon - User Menu */}
-          <Menu shadow="md" width={200}>
-            <Menu.Target>
-              <Tooltip
-                key="User"
-                label="User"
-              >
-                <ActionIcon aria-label="User">
-                  <IconUser stroke={CONFIG.ICON_STROKE} />
-                </ActionIcon>
-              </Tooltip>
-            </Menu.Target>
-
-            <Menu.Dropdown>
-              <Menu.Label>User</Menu.Label>
-              <Menu.Item
-                leftSection={<IconRestore size={14} />}
-              >
-                Reset to defaults
-              </Menu.Item>
-              <Menu.Item leftSection={<IconLogout size={14} />}>
-                Log out
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
-        </Group>
-      </Group>
-    </AppShell.Header>
-  );
-
-  // Left Toolbar ----------------------
-  const leftToolbar = (
-    <Box h="100%" style={{ borderRight: activeLeftPanel !== null ? '1px solid var(--mantine-color-gray-3)' : 'none' }}>
-      <Group
-        justify="center"
-        w={CONFIG.TOOLBARS_WIDTH}
-        pt="md"
-      >
-        {leftToolbarIcons.map(({ icon: Icon, label }, index) => (
-          <Tooltip
-            key={label}
-            label={label}
-            position="right"
-          >
-            <ActionIcon
-              key={label}
-              aria-label={label}
-              onClick={() => (index === activeLeftPanel ? setActiveLeftPanel(null) : setActiveLeftPanel(index))}
-              data-active={index === activeLeftPanel}
-              className={classes.leftToolbarIcon}
-            >
-              <Icon
-                stroke={CONFIG.ICON_STROKE}
-              />
-            </ActionIcon>
-          </Tooltip>
-        ))}
-      </Group>
-    </Box>
-  );
-
-  // Left Panel ----------------------
-  const leftPanel = activeLeftPanel !== null && (
-    <Box style={{ flexGrow: 1 }} p="md">
-      <Title order={3}>
-        {leftToolbarIcons[activeLeftPanel].label}
-      </Title>
-      <Box>
-        {leftToolbarIcons[activeLeftPanel].content}
-      </Box>
-    </Box>
-  );
-
-  // Left Navbar ----------------------
-  const leftNavbar = (
-    <AppShell.Navbar>
-      <Flex direction="row" h="100%" w={leftNavbarWidth}>
-        {leftToolbar}
-        {leftPanel}
-      </Flex>
-    </AppShell.Navbar>
-  );
-
-  // Main Content ----------------------
-  const mainContent = (
-    <AppShell.Main>
-      <Container fluid>
-        {renderTabContent()}
-      </Container>
-    </AppShell.Main>
-  );
-
-  // Main Return ----------------------
   return (
     <AppShell
-      header={{ height: CONFIG.TOOLBARS_WIDTH }}
+      header={{ height: TOOLBARS_WIDTH }}
       navbar={{
-        width: leftNavbarWidth,
+        width: navbarWidth,
         breakpoint: 0,
         collapsed: { desktop: !leftToolbarOpened },
       }}
       padding="md"
     >
-      {header}
-      {leftNavbar}
-      {mainContent}
+      {/** Header Toolbar */}
+      <AppShell.Header>
+        <Group justify="space-between">
+          <Group>
+            {/** Left Toolbar Toggle Burger Icon */}
+            <Flex justify="center" w={TOOLBARS_WIDTH}>
+              <ActionIcon aria-label="Toggle Left Toolbar">
+                <IconMenu onClick={toggleLeftToolbar} stroke={ICON_STROKE} />
+              </ActionIcon>
+            </Flex>
+            {/** Intelvia Title */}
+            <Title order={1}>Intelvia</Title>
+            {/** View Tabs */}
+            <Tabs
+              variant="outline"
+              value={activeTab}
+              onChange={(value) => {
+                if (value) setActiveTab(value);
+              }}
+              radius="md"
+              defaultValue={TABS.DASHBOARD}
+              styles={{
+                tabLabel: {
+                  marginTop: -4,
+                },
+              }}
+              pl="lg"
+            >
+              <Tabs.List
+                h={TOOLBARS_WIDTH}
+                style={{
+                  paddingTop: 10,
+                }}
+              >
+                <Tabs.Tab value={TABS.DASHBOARD}>Dashboard</Tabs.Tab>
+                <Tabs.Tab value={TABS.PROVIDERS}>Providers</Tabs.Tab>
+                <Tabs.Tab value={TABS.EXPLORE}>Explore</Tabs.Tab>
+              </Tabs.List>
+            </Tabs>
+          </Group>
+          {/** Header Icons, right-aligned */}
+          <Group gap="sm" pr="md">
+            {headerIcons.map(({ icon: Icon, label }) => (
+              <Tooltip
+                key={label}
+                label={label}
+              >
+                <ActionIcon aria-label={label}>
+                  <Icon stroke={ICON_STROKE} />
+                </ActionIcon>
+              </Tooltip>
+            ))}
+            {/** Header Icon - User Menu */}
+            <Menu shadow="md" width={200}>
+              <Menu.Target>
+                <Tooltip
+                  key="User"
+                  label="User"
+                >
+                  <ActionIcon aria-label="User">
+                    <IconUser stroke={ICON_STROKE} />
+                  </ActionIcon>
+                </Tooltip>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                <Menu.Label>User</Menu.Label>
+                <Menu.Item
+                  leftSection={<IconRestore size={14} />}
+                >
+                  Reset to defaults
+                </Menu.Item>
+                <Menu.Item leftSection={<IconLogout size={14} />}>
+                  Log out
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </Group>
+        </Group>
+      </AppShell.Header>
+      {/** Left Toolbar */}
+      <AppShell.Navbar>
+        {/** Left Toolbar Icons */}
+        <Flex direction="row" h="100%" w={navbarWidth}>
+          <Box h="100%" style={{ borderRight: activeLeftPanel !== null ? '1px solid var(--mantine-color-gray-3)' : 'none' }}>
+            <Group
+              justify="center"
+              w={TOOLBARS_WIDTH}
+              pt="md"
+            >
+              {leftToolbarIcons.map(({ icon: Icon, label }, index) => (
+                <Tooltip
+                  key={label}
+                  label={label}
+                  position="right"
+                >
+                  <ActionIcon
+                    key={label}
+                    aria-label={label}
+                    onClick={() => (index === activeLeftPanel ? setActiveLeftPanel(null) : setActiveLeftPanel(index))}
+                    data-active={index === activeLeftPanel}
+                    className={classes.leftToolbarIcon}
+                  >
+                    <Icon
+                      stroke={ICON_STROKE}
+                    />
+                  </ActionIcon>
+                </Tooltip>
+              ))}
+            </Group>
+          </Box>
+
+          {/** Left Panel Content */}
+          {activeLeftPanel !== null && (
+            <Box style={{ flexGrow: 1 }} p="md">
+              <Title order={3}>
+                {leftToolbarIcons[activeLeftPanel].label}
+              </Title>
+              <Box>
+                {leftToolbarIcons[activeLeftPanel].content}
+              </Box>
+            </Box>
+          )}
+        </Flex>
+      </AppShell.Navbar>
+      {/** Main Area */}
+      <AppShell.Main>
+        <Container fluid>
+          {activeTab === TABS.DASHBOARD && <PBMDashboard />}
+          {activeTab === TABS.PROVIDERS && <ProvidersView />}
+          {activeTab === TABS.EXPLORE && <ExploreView />}
+        </Container>
+      </AppShell.Main>
     </AppShell>
   );
 }
