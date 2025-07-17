@@ -15,33 +15,55 @@ import { ProvidersView } from '../Components/Views/ProvidersView/ProvidersView';
 import { PBMDashboard } from '../Components/Views/PBMDashboard/PBMDashboard';
 import classes from './Shell.module.css';
 
+// Configuration constants -------------------------
+const CONFIG = {
+  // Toolbar and Left Panel dimensions
+  TOOLBARS_WIDTH: 60,
+  get OPEN_PANEL_WIDTH() { return 6 * this.TOOLBARS_WIDTH; },
+  // View Tabs
+  TABS: {
+    DASHBOARD: 'Dashboard',
+    PROVIDERS: 'Providers',
+    EXPLORE: 'Explore',
+  } as const,
+  // Tab styles
+  TAB_MARGINS: {
+    tabLabel: { marginTop: -4 },
+    tabsList: { paddingTop: 10 },
+  },
+  // Icons stroke width
+  ICON_STROKE: 1,
+};
+
 /** *
  * Shell component that provides the main layout for the application.
  * Includes a header toolbar (Intelvia), left toolbar, and main content area.
  */
 export function Shell() {
-  // View tabs -----------------
-  const TABS = {
-    DASHBOARD: 'Dashboard',
-    PROVIDERS: 'Providers',
-    EXPLORE: 'Explore',
-  } as const;
+  // View Tabs ----------------------
+  const [activeTab, setActiveTab] = useState<keyof typeof CONFIG.TABS | string>(CONFIG.TABS.DASHBOARD);
 
-  // Active tab in the view tabs
-  const [activeTab, setActiveTab] = useState<keyof typeof TABS | string>(TABS.DASHBOARD);
-
-  // Toolbar & Left Panel states ----------------------
-  // Width of the header toolbar & left toolbar
-  const TOOLBARS_WIDTH = 60;
-  const OPEN_NAVBAR_WIDTH = 6 * TOOLBARS_WIDTH;
-
+  // Toolbar & Left Panel ----------------------
   // Open and close the left toolbar, burger toggle visible on hover.
   const [leftToolbarOpened, { toggle: toggleLeftToolbar }] = useDisclosure(true);
   const [activeLeftPanel, setActiveLeftPanel] = useState<number | null>(null);
-  const leftNavbarWidth = useMemo(() => (activeLeftPanel === null ? TOOLBARS_WIDTH : OPEN_NAVBAR_WIDTH), [activeLeftPanel, OPEN_NAVBAR_WIDTH]);
+  const leftNavbarWidth = useMemo(() => (
+    activeLeftPanel === null ? CONFIG.TOOLBARS_WIDTH : CONFIG.OPEN_PANEL_WIDTH
+  ), [activeLeftPanel]);
 
-  // Toolbar icons ----------------------
-  const ICON_STROKE = 1;
+  // Tabs ----------------------
+  const TAB_COMPONENTS = {
+    [CONFIG.TABS.DASHBOARD]: PBMDashboard,
+    [CONFIG.TABS.PROVIDERS]: ProvidersView,
+    [CONFIG.TABS.EXPLORE]: ExploreView,
+  } as const;
+
+  const renderTabContent = () => {
+    const Component = TAB_COMPONENTS[activeTab as keyof typeof TAB_COMPONENTS];
+    return Component ? <Component /> : null;
+  };
+
+  // Icons ----------------------
   // Left toolbar icons
   const leftToolbarIcons: { icon: React.ComponentType<IconProps>; label: string, content: ReactNode }[] = [
     { icon: IconFilter, label: 'Filter Panel', content: <Text>Filter panel content</Text> },
@@ -65,9 +87,9 @@ export function Shell() {
       <Group justify="space-between">
         <Group>
           {/** Left Toolbar Toggle Burger Icon */}
-          <Flex justify="center" w={TOOLBARS_WIDTH}>
+          <Flex justify="center" w={CONFIG.TOOLBARS_WIDTH}>
             <ActionIcon aria-label="Toggle Left Toolbar">
-              <IconMenu onClick={toggleLeftToolbar} stroke={ICON_STROKE} />
+              <IconMenu onClick={toggleLeftToolbar} stroke={CONFIG.ICON_STROKE} />
             </ActionIcon>
           </Flex>
           {/** Intelvia Title */}
@@ -80,23 +102,19 @@ export function Shell() {
               if (value) setActiveTab(value);
             }}
             radius="md"
-            defaultValue={TABS.DASHBOARD}
+            defaultValue={CONFIG.TABS.DASHBOARD}
             styles={{
-              tabLabel: {
-                marginTop: -4,
-              },
+              tabLabel: CONFIG.TAB_MARGINS.tabLabel,
             }}
             pl="lg"
           >
             <Tabs.List
-              h={TOOLBARS_WIDTH}
-              style={{
-                paddingTop: 10,
-              }}
+              h={CONFIG.TOOLBARS_WIDTH}
+              style={CONFIG.TAB_MARGINS.tabsList}
             >
-              <Tabs.Tab value={TABS.DASHBOARD}>Dashboard</Tabs.Tab>
-              <Tabs.Tab value={TABS.PROVIDERS}>Providers</Tabs.Tab>
-              <Tabs.Tab value={TABS.EXPLORE}>Explore</Tabs.Tab>
+              <Tabs.Tab value={CONFIG.TABS.DASHBOARD}>Dashboard</Tabs.Tab>
+              <Tabs.Tab value={CONFIG.TABS.PROVIDERS}>Providers</Tabs.Tab>
+              <Tabs.Tab value={CONFIG.TABS.EXPLORE}>Explore</Tabs.Tab>
             </Tabs.List>
           </Tabs>
         </Group>
@@ -108,7 +126,7 @@ export function Shell() {
               label={label}
             >
               <ActionIcon aria-label={label}>
-                <Icon stroke={ICON_STROKE} />
+                <Icon stroke={CONFIG.ICON_STROKE} />
               </ActionIcon>
             </Tooltip>
           ))}
@@ -120,7 +138,7 @@ export function Shell() {
                 label="User"
               >
                 <ActionIcon aria-label="User">
-                  <IconUser stroke={ICON_STROKE} />
+                  <IconUser stroke={CONFIG.ICON_STROKE} />
                 </ActionIcon>
               </Tooltip>
             </Menu.Target>
@@ -147,7 +165,7 @@ export function Shell() {
     <Box h="100%" style={{ borderRight: activeLeftPanel !== null ? '1px solid var(--mantine-color-gray-3)' : 'none' }}>
       <Group
         justify="center"
-        w={TOOLBARS_WIDTH}
+        w={CONFIG.TOOLBARS_WIDTH}
         pt="md"
       >
         {leftToolbarIcons.map(({ icon: Icon, label }, index) => (
@@ -164,7 +182,7 @@ export function Shell() {
               className={classes.leftToolbarIcon}
             >
               <Icon
-                stroke={ICON_STROKE}
+                stroke={CONFIG.ICON_STROKE}
               />
             </ActionIcon>
           </Tooltip>
@@ -199,9 +217,7 @@ export function Shell() {
   const mainContent = (
     <AppShell.Main>
       <Container fluid>
-        {activeTab === TABS.DASHBOARD && <PBMDashboard />}
-        {activeTab === TABS.PROVIDERS && <ProvidersView />}
-        {activeTab === TABS.EXPLORE && <ExploreView />}
+        {renderTabContent()}
       </Container>
     </AppShell.Main>
   );
@@ -209,7 +225,7 @@ export function Shell() {
   // Main Return ----------------------
   return (
     <AppShell
-      header={{ height: TOOLBARS_WIDTH }}
+      header={{ height: CONFIG.TOOLBARS_WIDTH }}
       navbar={{
         width: leftNavbarWidth,
         breakpoint: 0,
