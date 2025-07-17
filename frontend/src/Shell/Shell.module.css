@@ -1,5 +1,7 @@
 .leftToolbarIcon {
   &[data-active="true"] {
-    color: var(--mantine-color-blue-6);
+    color: var(--mantine-color-blue-6) !important;
+    background-color: var(--mantine-color-blue-0);
+    border-color: var(--mantine-color-blue-3) !important;
   }
 }

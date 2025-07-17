@@ -8,48 +8,7 @@ import { logoutHandler, whoamiAPICall } from './Interfaces/UserManagement';
 import BrowserWarning from './Components/Modals/BrowserWarning';
 import DataRetrieval from './Components/Modals/DataRetrieval';
 import { Visit } from './Interfaces/Types/DataTypes';
-
-const theme = createTheme({
-  headings: {
-    sizes: {
-      h1: {
-        fontWeight: '600',
-        fontSize: '1.5rem',
-      },
-      h2: {
-        fontWeight: '600',
-        fontSize: '1.25rem',
-      },
-      h3: {
-        fontWeight: '600',
-        fontSize: '1.125rem',
-      },
-      h4: {
-        fontWeight: '400',
-        fontSize: '1rem',
-      },
-    },
-  },
-  components: {
-    Tooltip: {
-      defaultProps: {
-        withArrow: true,
-        arrowSize: 10,
-      },
-      styles: {
-        tooltip: {
-          backgroundColor: 'white',
-          border: '1px solid var(--mantine-color-black)',
-          color: 'var(--mantine-color-black)',
-        },
-        arrow: {
-          border: '1px solid var(--mantine-color-black)',
-          backgroundColor: 'white',
-        },
-      },
-    },
-  },
-});
+import { mantineTheme } from './Themes/mantineTheme';
 
 function App() {
   const store = useContext(Store);
@@ -88,7 +47,7 @@ function App() {
   }, []);
 
   return (
-    <MantineProvider theme={theme}>
+    <MantineProvider theme={mantineTheme}>
       <Shell />
       <>
         <BrowserWarning />
