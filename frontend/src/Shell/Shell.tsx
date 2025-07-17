@@ -21,12 +21,14 @@ import classes from './Shell.module.css';
  */
 export function Shell() {
   // View tabs -----------------
-  const DASHBOARD_TAB = 'Dashboard';
-  const PROVIDERS_TAB = 'Providers';
-  const EXPLORE_TAB = 'Explore';
+  const TABS = {
+    DASHBOARD: 'Dashboard',
+    PROVIDERS: 'Providers',
+    EXPLORE: 'Explore',
+  } as const;
 
   // Active tab in the view tabs
-  const [activeTab, setActiveTab] = useState(DASHBOARD_TAB);
+  const [activeTab, setActiveTab] = useState<keyof typeof TABS | string>(TABS.DASHBOARD);
 
   // Toolbar & Left Panel states ----------------------
   // Width of the header toolbar & left toolbar
@@ -74,7 +76,7 @@ export function Shell() {
             {/** Left Toolbar Toggle Burger Icon */}
             <Flex justify="center" w={TOOLBARS_WIDTH}>
               <ActionIcon aria-label="Toggle Left Toolbar">
-                <IconMenu onClick={toggleLeftToolbar} />
+                <IconMenu onClick={toggleLeftToolbar} stroke={ICON_STROKE} />
               </ActionIcon>
             </Flex>
             {/** Intelvia Title */}
@@ -87,7 +89,7 @@ export function Shell() {
                 if (value) setActiveTab(value);
               }}
               radius="md"
-              defaultValue={DASHBOARD_TAB}
+              defaultValue={TABS.DASHBOARD}
               styles={{
                 tabLabel: {
                   marginTop: -4,
@@ -101,9 +103,9 @@ export function Shell() {
                   paddingTop: 10,
                 }}
               >
-                <Tabs.Tab value={DASHBOARD_TAB}>Dashboard</Tabs.Tab>
-                <Tabs.Tab value={PROVIDERS_TAB}>Providers</Tabs.Tab>
-                <Tabs.Tab value={EXPLORE_TAB}>Explore</Tabs.Tab>
+                <Tabs.Tab value={TABS.DASHBOARD}>Dashboard</Tabs.Tab>
+                <Tabs.Tab value={TABS.PROVIDERS}>Providers</Tabs.Tab>
+                <Tabs.Tab value={TABS.EXPLORE}>Explore</Tabs.Tab>
               </Tabs.List>
             </Tabs>
           </Group>
@@ -119,7 +121,7 @@ export function Shell() {
                 </ActionIcon>
               </Tooltip>
             ))}
-
+            {/** Header Icon - User Menu */}
             <Menu shadow="md" width={200}>
               <Menu.Target>
                 <Tooltip
@@ -195,9 +197,9 @@ export function Shell() {
       {/** Main Area */}
       <AppShell.Main>
         <Container fluid>
-          {activeTab === DASHBOARD_TAB && <PBMDashboard />}
-          {activeTab === PROVIDERS_TAB && <ProvidersView />}
-          {activeTab === EXPLORE_TAB && <ExploreView />}
+          {activeTab === TABS.DASHBOARD && <PBMDashboard />}
+          {activeTab === TABS.PROVIDERS && <ProvidersView />}
+          {activeTab === TABS.EXPLORE && <ExploreView />}
         </Container>
       </AppShell.Main>
     </AppShell>
