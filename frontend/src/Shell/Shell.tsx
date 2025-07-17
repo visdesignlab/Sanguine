@@ -39,6 +39,7 @@ export function Shell() {
   const navbarWidth = useMemo(() => (activeLeftPanel === null ? TOOLBARS_WIDTH : OPEN_NAVBAR_WIDTH), [activeLeftPanel, OPEN_NAVBAR_WIDTH]);
 
   // Toolbar icons ----------------------
+  const ICON_STROKE = 1;
   // Left toolbar icons
   const leftToolbarIcons: { icon: React.ComponentType<IconProps>; label: string, content: ReactNode }[] = [
     { icon: IconFilter, label: 'Filter Panel', content: <Text>Filter panel content</Text> },
@@ -72,7 +73,7 @@ export function Shell() {
           <Group>
             {/** Left Toolbar Toggle Burger Icon */}
             <Flex justify="center" w={TOOLBARS_WIDTH}>
-              <ActionIcon variant="subtle" color="grey" aria-label="Toggle Left Toolbar" size="lg">
+              <ActionIcon aria-label="Toggle Left Toolbar">
                 <IconMenu onClick={toggleLeftToolbar} />
               </ActionIcon>
             </Flex>
@@ -114,7 +115,7 @@ export function Shell() {
                 label={label}
               >
                 <ActionIcon aria-label={label}>
-                  <Icon stroke={1} />
+                  <Icon stroke={ICON_STROKE} />
                 </ActionIcon>
               </Tooltip>
             ))}
@@ -126,7 +127,7 @@ export function Shell() {
                   label="User"
                 >
                   <ActionIcon aria-label="User">
-                    <IconUser stroke={1} />
+                    <IconUser stroke={ICON_STROKE} />
                   </ActionIcon>
                 </Tooltip>
               </Menu.Target>
@@ -170,7 +171,7 @@ export function Shell() {
                     className={classes.leftToolbarIcon}
                   >
                     <Icon
-                      stroke={1}
+                      stroke={ICON_STROKE}
                     />
                   </ActionIcon>
                 </Tooltip>
