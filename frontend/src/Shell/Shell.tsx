@@ -1,22 +1,18 @@
 import { ReactNode, useMemo, useState } from 'react';
 import { useDisclosure } from '@mantine/hooks';
 import {
-  AppShell, Group, Tabs, ActionIcon, Title, Flex,
-  Container,
-  Menu,
-  Box,
-  Text, Tooltip,
+  AppShell, Group, Tabs, ActionIcon, Title, Flex, Container, Menu, Box, Text, Tooltip,
 } from '@mantine/core';
 import {
-  IconDatabase, IconSettings, IconFilter, IconBook, IconTrash, IconArrowNarrowLeftDashed, IconArrowNarrowRightDashed, IconDeviceFloppy, IconCamera, IconLogout, IconUser,
-  IconMenu,
-  IconRestore,
-  type IconProps,
+  IconDatabase, IconSettings, IconFilter, IconBook,
+  IconTrash, IconArrowNarrowLeftDashed,
+  IconArrowNarrowRightDashed, IconDeviceFloppy,
+  IconCamera, IconLogout, IconUser, IconMenu,
+  IconRestore, type IconProps,
 } from '@tabler/icons-react';
 import { ExploreView } from '../Components/Views/ExploreView/ExploreView';
 import { ProvidersView } from '../Components/Views/ProvidersView/ProvidersView';
 import { PBMDashboard } from '../Components/Views/PBMDashboard/PBMDashboard';
-
 import classes from './Shell.module.css';
 
 /** *
@@ -24,19 +20,25 @@ import classes from './Shell.module.css';
  * Includes a header toolbar (Intelvia), left toolbar, and main content area.
  */
 export function Shell() {
-  // View tabs names
+  // View tabs -----------------
   const DASHBOARD_TAB = 'Dashboard';
   const PROVIDERS_TAB = 'Providers';
   const EXPLORE_TAB = 'Explore';
 
   // Active tab in the view tabs
   const [activeTab, setActiveTab] = useState(DASHBOARD_TAB);
-  // Open and close the left toolbar, burger toggle visible on hover.
-  const [leftToolbarOpened, { toggle: toggleLeftToolbar }] = useDisclosure(true);
 
+  // Toolbar states ----------------------
   // Width of the header toolbar & left toolbar
   const TOOLBARS_WIDTH = 60;
+  const NAVBAR_WIDTH = 6 * TOOLBARS_WIDTH;
 
+  // Open and close the left toolbar, burger toggle visible on hover.
+  const [leftToolbarOpened, { toggle: toggleLeftToolbar }] = useDisclosure(true);
+  const [activeNavbar, setActiveNavbar] = useState<number | null>(null);
+  const navbarWidth = useMemo(() => (activeNavbar === null ? TOOLBARS_WIDTH : NAVBAR_WIDTH), [activeNavbar, NAVBAR_WIDTH]);
+
+  // Toolbar icons ----------------------
   // Left toolbar icons
   const leftToolbarIcons: { icon: React.ComponentType<IconProps>; label: string, content: ReactNode }[] = [
     { icon: IconFilter, label: 'Filter Panel', content: <Text>Filter panel content</Text> },
@@ -44,8 +46,6 @@ export function Shell() {
     { icon: IconDatabase, label: 'Database', content: <Text>Database content</Text> },
     { icon: IconBook, label: 'Learn', content: <Text>Learning content</Text> },
   ];
-  const [active, setActive] = useState<number | null>(null);
-  const navbarWidth = useMemo(() => (active === null ? TOOLBARS_WIDTH : 6 * TOOLBARS_WIDTH), [active]);
 
   // Header toolbar icons
   const headerIcons: { icon: React.ComponentType<IconProps>; label: string }[] = [
@@ -150,7 +150,7 @@ export function Shell() {
       <AppShell.Navbar>
         {/** Left Toolbar Icons */}
         <Flex direction="row" h="100%" w={navbarWidth}>
-          <Box h="100%" style={{ borderRight: active !== null ? '1px solid var(--mantine-color-gray-3)' : 'none' }}>
+          <Box h="100%" style={{ borderRight: activeNavbar !== null ? '1px solid var(--mantine-color-gray-3)' : 'none' }}>
             <Group
               justify="center"
               w={TOOLBARS_WIDTH}
@@ -168,8 +168,8 @@ export function Shell() {
                     color="dark"
                     aria-label={label}
                     size="lg"
-                    onClick={() => (index === active ? setActive(null) : setActive(index))}
-                    data-active={index === active}
+                    onClick={() => (index === activeNavbar ? setActiveNavbar(null) : setActiveNavbar(index))}
+                    data-active={index === activeNavbar}
                     className={classes.leftToolbarIcon}
                   >
                     <Icon
@@ -182,13 +182,13 @@ export function Shell() {
           </Box>
 
           {/** Left Toolbar Content */}
-          {active !== null && (
+          {activeNavbar !== null && (
             <Box style={{ flexGrow: 1 }} p="md">
               <Title order={3}>
-                {leftToolbarIcons[active].label}
+                {leftToolbarIcons[activeNavbar].label}
               </Title>
               <Box>
-                {leftToolbarIcons[active].content}
+                {leftToolbarIcons[activeNavbar].content}
               </Box>
             </Box>
           )}
