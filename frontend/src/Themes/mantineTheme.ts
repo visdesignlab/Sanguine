@@ -47,6 +47,11 @@ export const mantineTheme = createTheme({
   },
   components: {
     ActionIcon: {
+      defaultProps: {
+        variant: 'subtle',
+        color: 'dark',
+        size: 'lg',
+      },
       styles: {
         root: {
           ...TRANSPARENT_BORDER,

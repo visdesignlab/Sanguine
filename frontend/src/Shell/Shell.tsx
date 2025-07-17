@@ -113,7 +113,7 @@ export function Shell() {
                 key={label}
                 label={label}
               >
-                <ActionIcon variant="subtle" color="dark" aria-label={label} size="lg">
+                <ActionIcon aria-label={label}>
                   <Icon stroke={1} />
                 </ActionIcon>
               </Tooltip>
@@ -125,7 +125,7 @@ export function Shell() {
                   key="User"
                   label="User"
                 >
-                  <ActionIcon variant="subtle" color="dark" aria-label="more" size="lg">
+                  <ActionIcon aria-label="User">
                     <IconUser stroke={1} />
                   </ActionIcon>
                 </Tooltip>
@@ -164,10 +164,7 @@ export function Shell() {
                 >
                   <ActionIcon
                     key={label}
-                    variant="subtle"
-                    color="dark"
                     aria-label={label}
-                    size="lg"
                     onClick={() => (index === activeLeftPanel ? setActiveLeftPanel(null) : setActiveLeftPanel(index))}
                     data-active={index === activeLeftPanel}
                     className={classes.leftToolbarIcon}
