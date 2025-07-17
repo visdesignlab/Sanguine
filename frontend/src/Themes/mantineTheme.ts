@@ -23,6 +23,7 @@ const TRANSPARENT_BORDER = {
   borderLeftColor: 'transparent',
 };
 
+// Default theme stylings throughout entire application
 export const mantineTheme = createTheme({
   headings: {
     sizes: {
@@ -45,6 +46,13 @@ export const mantineTheme = createTheme({
     },
   },
   components: {
+    ActionIcon: {
+      styles: {
+        root: {
+          ...TRANSPARENT_BORDER,
+        },
+      },
+    },
     Tooltip: {
       defaultProps: {
         withArrow: true,
@@ -59,13 +67,6 @@ export const mantineTheme = createTheme({
         arrow: {
           ...BLACK_BORDER,
           backgroundColor: 'white',
-        },
-      },
-    },
-    ActionIcon: {
-      styles: {
-        root: {
-          ...TRANSPARENT_BORDER,
         },
       },
     },
