@@ -1,14 +1,14 @@
-import { observer } from 'mobx-react';
 import { useContext, useState, useEffect } from 'react';
-import { createTheme, MantineProvider } from '@mantine/core';
+import { observer } from 'mobx-react';
+import { MantineProvider } from '@mantine/core';
 import { useIdleTimer } from 'react-idle-timer';
 import { Shell } from './Shell/Shell';
 import Store from './Interfaces/Store';
+import { mantineTheme } from './Themes/mantineTheme';
+import { Visit } from './Interfaces/Types/DataTypes';
 import { logoutHandler, whoamiAPICall } from './Interfaces/UserManagement';
 import BrowserWarning from './Components/Modals/BrowserWarning';
 import DataRetrieval from './Components/Modals/DataRetrieval';
-import { Visit } from './Interfaces/Types/DataTypes';
-import { mantineTheme } from './Themes/mantineTheme';
 
 function App() {
   const store = useContext(Store);
