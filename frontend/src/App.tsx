@@ -4,7 +4,7 @@ import { MantineProvider } from '@mantine/core';
 import { useIdleTimer } from 'react-idle-timer';
 import { Shell } from './Shell/Shell';
 import Store from './Interfaces/Store';
-import { mantineTheme } from './Themes/mantineTheme';
+import { mantineTheme } from './Theme/mantineTheme';
 import { Visit } from './Interfaces/Types/DataTypes';
 import { logoutHandler, whoamiAPICall } from './Interfaces/UserManagement';
 import BrowserWarning from './Components/Modals/BrowserWarning';
