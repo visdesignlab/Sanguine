@@ -31,12 +31,12 @@ export function Shell() {
   // Toolbar states ----------------------
   // Width of the header toolbar & left toolbar
   const TOOLBARS_WIDTH = 60;
-  const NAVBAR_WIDTH = 6 * TOOLBARS_WIDTH;
+  const OPEN_NAVBAR_WIDTH = 6 * TOOLBARS_WIDTH;
 
   // Open and close the left toolbar, burger toggle visible on hover.
   const [leftToolbarOpened, { toggle: toggleLeftToolbar }] = useDisclosure(true);
   const [activeNavbar, setActiveNavbar] = useState<number | null>(null);
-  const navbarWidth = useMemo(() => (activeNavbar === null ? TOOLBARS_WIDTH : NAVBAR_WIDTH), [activeNavbar, NAVBAR_WIDTH]);
+  const navbarWidth = useMemo(() => (activeNavbar === null ? TOOLBARS_WIDTH : OPEN_NAVBAR_WIDTH), [activeNavbar, OPEN_NAVBAR_WIDTH]);
 
   // Toolbar icons ----------------------
   // Left toolbar icons
