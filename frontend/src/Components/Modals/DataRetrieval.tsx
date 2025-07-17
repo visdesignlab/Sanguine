@@ -18,14 +18,12 @@ export function DataRetrieval({ dataLoading, dataLoadingFailed }: { dataLoading:
           Please try later or contact your systems administrator.
         </Text>
       ) : (
-          <>
-            <Group>
-              <Loader size="sm" />
-              <Text>
-                This may take a few seconds.
-              </Text>
-            </Group>
-          </>
+        <Group>
+          <Loader size="sm" />
+          <Text>
+            This may take a few seconds.
+          </Text>
+        </Group>
       )}
     </Modal>
   );
