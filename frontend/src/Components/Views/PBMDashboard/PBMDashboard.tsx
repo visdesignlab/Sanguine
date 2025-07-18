@@ -26,6 +26,7 @@ export function PBMDashboard() {
         <Title order={3}>Patient Blood Management Dashboard</Title>
 
         <StatsGrid />
+
         <ResponsiveGridLayout
           className="layout"
           breakpoints={{
@@ -66,9 +67,9 @@ export function PBMDashboard() {
               <Flex direction="column" gap="sm" h="100%">
                 <Flex direction="row" justify="space-between" align="center" px="md">
                   <Flex direction="row" align="center" gap="md" ml={-12}>
-                    <IconGripVertical className="move-icon" size={18} color="grey" />
+                    <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
                     <Title order={4}>
-                      {`${aggregation} of ${yAxisVar}`}
+                      {`${aggregation.charAt(0).toUpperCase() + aggregation.slice(1)} of ${BloodComponentOptions.find((opt) => opt.value === yAxisVar)?.label || yAxisVar}`}
                     </Title>
                   </Flex>
 
