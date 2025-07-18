@@ -64,7 +64,7 @@ export function PBMDashboard() {
               withBorder
             >
               <Flex direction="column" gap="sm" h="100%">
-                <Flex direction="row" justify="space-between" align="center" h={40} px="md">
+                <Flex direction="row" justify="space-between" align="center" px="md">
                   <Flex direction="row" align="center" gap="md" ml={-12}>
                     <IconGripVertical className="move-icon" size={18} color="grey" />
                     <Title order={4}>
@@ -87,7 +87,7 @@ export function PBMDashboard() {
                 <LineChart
                   h="calc(100% - 40px)"
                   data={chartData[i] || []}
-                  dataKey="date"
+                  dataKey="quarter"
                   series={[
                     { name: 'data', color: 'indigo.6' },
                   ]}
@@ -96,6 +96,7 @@ export function PBMDashboard() {
                   xAxisProps={{
                     interval: 'equidistantPreserveStart',
                   }}
+                  tooltipAnimationDuration={200}
                 />
               </Flex>
             </Card>
