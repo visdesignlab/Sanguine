@@ -8,7 +8,8 @@ import {
 import {
   Group, Paper, SimpleGrid, Text,
 } from '@mantine/core';
-import classes from './StatsGrid.module.css';
+import gridItemStyles from '../GridLayoutItem.module.css';
+import statsGridStyles from './StatsGrid.module.css';
 
 const icons = {
   coin: IconCoin,
@@ -34,17 +35,17 @@ export function StatsGrid() {
     const DiffIcon = stat.diff > 0 ? IconArrowUpRight : IconArrowDownRight;
 
     return (
-      <Paper withBorder p="md" radius="md" key={stat.title}>
+      <Paper withBorder p="md" radius="md" key={stat.title} className={gridItemStyles.gridItem}>
         <Group justify="space-between">
-          <Text size="xs" c="dimmed" className={classes.title}>
+          <Text size="xs" c="dimmed" className={statsGridStyles.title}>
             {stat.title}
           </Text>
-          <Icon className={classes.icon} size={22} stroke={1.5} />
+          <Icon className={statsGridStyles.icon} size={22} stroke={1.5} />
         </Group>
 
         <Group align="flex-end" gap="xs" mt={25}>
-          <Text className={classes.value}>{stat.value}</Text>
-          <Text c={stat.diff > 0 ? 'teal' : 'red'} fz="sm" fw={500} className={classes.diff}>
+          <Text className={statsGridStyles.value}>{stat.value}</Text>
+          <Text c={stat.diff > 0 ? 'teal' : 'red'} fz="sm" fw={500} className={statsGridStyles.diff}>
             <span>
               {stat.diff}
               %

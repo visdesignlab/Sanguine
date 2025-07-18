@@ -9,6 +9,7 @@ import { useObserver } from 'mobx-react';
 import { StatsGrid } from './StatsGrid';
 import { BloodComponentOptions, type DashboardChartLayoutElement } from '../../../Types/application';
 import { Store } from '../../../Store/Store';
+import classes from '../GridLayoutItem.module.css';
 
 export function PBMDashboard() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -63,6 +64,7 @@ export function PBMDashboard() {
                 i, x, y, w, h, maxH,
               }}
               withBorder
+              className={classes.gridItem}
             >
               <Flex direction="column" gap="sm" h="100%">
                 <Flex direction="row" justify="space-between" align="center" px="md">
