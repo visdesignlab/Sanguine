@@ -1,15 +1,15 @@
-import { Title } from '@mantine/core';
 import {
-  IconArrowDownRight,
+  Title, Card, Group, Box, Text, Stack, ActionIcon,
+} from '@mantine/core';
+import {
   IconArrowUpRight,
   IconCoin,
   IconTestPipe2,
-  IconShieldHeart,
 } from '@tabler/icons-react';
 
 export function ExploreView() {
   // Groups of preset visualization questions with labels and icons
-const presetGroups: {
+  const presetGroups: {
   groupLabel: string;
   options: { label: string; Icon: React.FC; state: any }[];
 }[] = [
@@ -34,5 +34,49 @@ const presetGroups: {
     ],
   },
 ];
-  return <Title order={1}>Default States</Title>;
+  return (
+    <Stack>
+      {presetGroups.map(({ groupLabel, options }) => (
+        <Box key={groupLabel}>
+          <Title order={2} mb="md">{groupLabel}</Title>
+          <Stack>
+            {options.map(({ label, Icon }) => (
+              <Card
+                key={label}
+                shadow="md"
+                radius="md"
+                p="lg"
+                withBorder
+                style={{ width: '100%', minHeight: 80 }}
+              >
+                <Group justify="space-between" align="center">
+                  <Group>
+                    <Box mr="md">
+                      <Icon size={10} />
+                    </Box>
+                    <Text size="lg">{label}</Text>
+                  </Group>
+                  <ActionIcon
+                    variant="subtle"
+                    size="lg"
+                    style={{
+                      transition: 'transform 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.transform = 'translateY(-6px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.transform = '';
+                    }}
+                  >
+                    <IconArrowUpRight size={28} />
+                  </ActionIcon>
+                </Group>
+              </Card>
+            ))}
+          </Stack>
+        </Box>
+      ))}
+    </Stack>
+  );
 }
