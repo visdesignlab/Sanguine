@@ -35,7 +35,7 @@ export function ExploreView() {
       ],
     },
   ];
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [hoveredIdx, setHoveredIdx] = useState<{ group: number; card: number } | null>(null);
 
   return (
     <Stack>
@@ -52,29 +52,62 @@ export function ExploreView() {
             transform: translateY(-8px);
             color: var(--mantine-color-blue-6);
           }
+          .default-state-card .explore-label {
+            color: var(--mantine-color-dimmed);
+            transition: color 0.2s;
+          }
+          .default-state-card:hover .explore-label {
+            color: var(--mantine-color-black);
+          }
+          .default-state-card .explore-icon {
+            color: var(--mantine-color-dimmed);
+            transition: color 0.2s;
+          }
+          .default-state-card:hover .explore-icon {
+            color: var(--mantine-color-black);
+          }
+          .title {
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--mantine-color-dimmed);
+            transition: color 0.2s;
+          }
+          .title.active {
+            color: var(--mantine-color-black);
+          }
         `}
       </style>
-      {presetGroups.map(({ groupLabel, options }) => (
+
+      <Title order={3} mb="md">Explore</Title>
+      {presetGroups.map(({ groupLabel, options }, groupIdx) => (
         <Box key={groupLabel}>
-          <Title order={3} mb="md">{groupLabel}</Title>
+          <Text
+            size="xs"
+            mb="md"
+            className={`title${hoveredIdx && hoveredIdx.group === groupIdx ? ' active' : ''}`}
+          >
+            {groupLabel}
+          </Text>
           <Stack>
-            {options.map(({ label, Icon }, idx) => (
+            {options.map(({ label, Icon }, cardIdx) => (
               <Card
                 key={label}
                 radius="md"
                 p="lg"
                 withBorder
                 className={`default-state-card ${gridItemStyles.gridItem}`}
-                style={{ width: '100%', minHeight: 80, display: 'flex', alignItems: 'center' }}
-                onMouseEnter={() => setHoveredIdx(idx)}
+                style={{
+                  width: '100%', minHeight: 80, display: 'flex', alignItems: 'center',
+                }}
+                onMouseEnter={() => setHoveredIdx({ group: groupIdx, card: cardIdx })}
                 onMouseLeave={() => setHoveredIdx(null)}
               >
                 <Group justify="space-between" align="center" style={{ width: '100%' }}>
                   <Group align="center">
                     <Box mr="sm" style={{ display: 'flex', alignItems: 'center' }}>
-                      <Icon size={24} stroke={1.5} />
+                      <Icon size={24} stroke={1.5} className="explore-icon" />
                     </Box>
-                    <Text size="md">{label}</Text>
+                    <Text size="sm" className="explore-label">{label}</Text>
                   </Group>
                   <ActionIcon variant="subtle" size="lg">
                     <IconArrowUpRight
