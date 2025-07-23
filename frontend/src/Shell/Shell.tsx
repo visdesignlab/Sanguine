@@ -21,14 +21,25 @@ import classes from './Shell.module.css';
  */
 export function Shell() {
   // View tabs -----------------
-  const TABS = {
-    DASHBOARD: 'Dashboard',
-    PROVIDERS: 'Providers',
-    EXPLORE: 'Explore',
-  } as const;
+  const TABS = [
+    {
+      key: 'Dashboard',
+      content: <PBMDashboard />,
+    },
+    {
+      key: 'Providers',
+      content: <ProvidersView />,
+    },
+    {
+      key: 'Explore',
+      content: <ExploreView />,
+    },
+  ];
+  // Default tab shown initial load
+  const defaultTab = TABS[0].key;
 
   // Active tab in the view tabs
-  const [activeTab, setActiveTab] = useState<keyof typeof TABS | string>(TABS.DASHBOARD);
+  const [activeTab, setActiveTab] = useState<string>(defaultTab);
 
   // Toolbar & Left Panel states ----------------------
   // Width of the header toolbar & left toolbar
@@ -89,7 +100,7 @@ export function Shell() {
                 if (value) setActiveTab(value);
               }}
               radius="md"
-              defaultValue={TABS.DASHBOARD}
+              defaultValue={defaultTab}
               styles={{
                 tabLabel: {
                   marginTop: -4,
@@ -97,15 +108,11 @@ export function Shell() {
               }}
               pl="lg"
             >
-              <Tabs.List
-                h={TOOLBARS_WIDTH}
-                style={{
-                  paddingTop: 10,
-                }}
-              >
-                <Tabs.Tab value={TABS.DASHBOARD}>Dashboard</Tabs.Tab>
-                <Tabs.Tab value={TABS.PROVIDERS}>Providers</Tabs.Tab>
-                <Tabs.Tab value={TABS.EXPLORE}>Explore</Tabs.Tab>
+              {/** Render each tab in tabs list */}
+              <Tabs.List h={TOOLBARS_WIDTH} style={{ paddingTop: 10 }}>
+                {Object.values(TABS).map((tab) => (
+                  <Tabs.Tab key={tab.key} value={tab.key}>{tab.key}</Tabs.Tab>
+                ))}
               </Tabs.List>
             </Tabs>
           </Group>
@@ -197,9 +204,8 @@ export function Shell() {
       {/** Main Area */}
       <AppShell.Main>
         <Container fluid>
-          {activeTab === TABS.DASHBOARD && <PBMDashboard />}
-          {activeTab === TABS.PROVIDERS && <ProvidersView />}
-          {activeTab === TABS.EXPLORE && <ExploreView />}
+          {/** Display content of active tab */}
+          {TABS.find((tab) => tab.key === activeTab)?.content}
         </Container>
       </AppShell.Main>
     </AppShell>
