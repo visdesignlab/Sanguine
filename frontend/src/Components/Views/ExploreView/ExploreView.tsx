@@ -10,7 +10,6 @@ import { useState } from 'react';
 import gridItemStyles from '../GridLayoutItem.module.css';
 
 export function ExploreView() {
-  // Groups of preset visualization questions with labels and icons
   const presetGroups: {
     groupLabel: string;
     options: { label: string; Icon: React.FC; state: any }[];
@@ -36,7 +35,6 @@ export function ExploreView() {
       ],
     },
   ];
-  // Card hover state for each card
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   return (
@@ -47,7 +45,7 @@ export function ExploreView() {
             cursor: pointer;
           }
           .default-state-card .explore-arrow {
-            transition: transform 0.2s, color 0.2s;
+            transition: transform 0.1s, color 0.2s;
             color: var(--mantine-color-dimmed);
           }
           .default-state-card:hover .explore-arrow {
@@ -58,30 +56,30 @@ export function ExploreView() {
       </style>
       {presetGroups.map(({ groupLabel, options }) => (
         <Box key={groupLabel}>
-          <Title order={2} mb="md">{groupLabel}</Title>
+          <Title order={3} mb="md">{groupLabel}</Title>
           <Stack>
             {options.map(({ label, Icon }, idx) => (
               <Card
                 key={label}
-                shadow="md"
                 radius="md"
                 p="lg"
                 withBorder
                 className={`default-state-card ${gridItemStyles.gridItem}`}
-                style={{ width: '100%', minHeight: 80 }}
+                style={{ width: '100%', minHeight: 80, display: 'flex', alignItems: 'center' }}
                 onMouseEnter={() => setHoveredIdx(idx)}
                 onMouseLeave={() => setHoveredIdx(null)}
               >
-                <Group justify="space-between" align="center">
-                  <Group>
-                    <Box mr="md">
-                      <Icon size={36} />
+                <Group justify="space-between" align="center" style={{ width: '100%' }}>
+                  <Group align="center">
+                    <Box mr="sm" style={{ display: 'flex', alignItems: 'center' }}>
+                      <Icon size={24} stroke={1.5} />
                     </Box>
-                    <Text size="lg">{label}</Text>
+                    <Text size="md">{label}</Text>
                   </Group>
                   <ActionIcon variant="subtle" size="lg">
                     <IconArrowUpRight
-                      size={28}
+                      size={24}
+                      stroke={1.5}
                       className="explore-arrow"
                     />
                   </ActionIcon>
