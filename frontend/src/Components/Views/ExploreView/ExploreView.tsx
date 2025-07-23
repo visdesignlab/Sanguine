@@ -5,6 +5,9 @@ import {
   IconArrowUpRight,
   IconCoin,
   IconTestPipe2,
+  IconDropletHalf2Filled,
+  IconVaccineBottle,
+  IconRecycle,
 } from '@tabler/icons-react';
 import { useState } from 'react';
 import gridItemStyles from '../GridLayoutItem.module.css';
@@ -17,15 +20,15 @@ export function ExploreView() {
     {
       groupLabel: 'Guideline Adherence',
       options: [
-        { label: 'In cases with preoperative anemia, how many RBCs were transfused per surgeon?', Icon: IconTestPipe2, state: '' },
+        { label: 'In cases with preoperative anemia, how many RBCs were transfused per surgeon?', Icon: IconDropletHalf2Filled, state: '' },
         { label: 'What were the pre-op and post-op HGB levels of cases per surgeon?', Icon: IconTestPipe2, state: '' },
       ],
     },
     {
       groupLabel: 'Outcomes',
       options: [
-        { label: 'What are the outcomes of cases using antifibrinolytics?', Icon: IconTestPipe2, state: '' },
-        { label: 'What are the outcomes of using cell salvage, for each anesthesiologist?', Icon: IconTestPipe2, state: '' },
+        { label: 'What are the outcomes of cases using antifibrinolytics?', Icon: IconVaccineBottle, state: '' },
+        { label: 'What are the outcomes of using cell salvage, for each anesthesiologist?', Icon: IconRecycle, state: '' },
       ],
     },
     {
@@ -37,6 +40,7 @@ export function ExploreView() {
   ];
   const [hoveredIdx, setHoveredIdx] = useState<{ group: number; card: number } | null>(null);
 
+  const iconSize = 20;
   return (
     <Stack>
       <style>
@@ -60,11 +64,11 @@ export function ExploreView() {
             color: var(--mantine-color-black);
           }
           .default-state-card .explore-icon {
-            color: var(--mantine-color-dimmed);
+            color: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-3));
             transition: color 0.2s;
           }
           .default-state-card:hover .explore-icon {
-            color: var(--mantine-color-black);
+            color: var(--mantine-color-blue-6);
           }
           .title {
             font-weight: 700;
@@ -105,14 +109,13 @@ export function ExploreView() {
                 <Group justify="space-between" align="center" style={{ width: '100%' }}>
                   <Group align="center">
                     <Box mr="sm" style={{ display: 'flex', alignItems: 'center' }}>
-                      <Icon size={24} stroke={1.5} className="explore-icon" />
+                      <Icon size={iconSize} stroke={1.5} className="explore-icon" />
                     </Box>
-                    <Text size="sm" className="explore-label">{label}</Text>
+                    <Text size="sm" className="explore-label" style={{ fontStyle: 'italic' }}>{label}</Text>
                   </Group>
-                  <ActionIcon variant="subtle" size="lg">
+                  <ActionIcon variant="subtle" className="icon" size="lg">
                     <IconArrowUpRight
-                      size={24}
-                      stroke={1.5}
+                      size={iconSize}
                       className="explore-arrow"
                     />
                   </ActionIcon>
