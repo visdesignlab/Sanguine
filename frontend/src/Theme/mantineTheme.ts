@@ -76,4 +76,9 @@ export const mantineTheme = createTheme({
       },
     },
   },
+  other: {
+    iconSizes: {
+      card: 22,
+    },
+  },
 });
