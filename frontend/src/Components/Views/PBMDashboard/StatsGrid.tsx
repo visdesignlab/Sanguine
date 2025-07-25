@@ -61,6 +61,7 @@ export function StatsGrid() {
     );
   });
   return (
+    // TODO: Breakpoints should be the same for the entire dashboard
     <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>{stats}</SimpleGrid>
   );
 }

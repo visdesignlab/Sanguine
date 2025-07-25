@@ -1,6 +1,6 @@
 import { useContext, useMemo } from 'react';
 import {
-  Title, Stack, Card, Flex, Select,
+  Title, Stack, Card, Flex, Select, useMantineTheme
 } from '@mantine/core';
 import { IconGripVertical } from '@tabler/icons-react';
 import { LineChart } from '@mantine/charts';
@@ -16,6 +16,8 @@ export function PBMDashboard() {
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive) as any, []);
 
   const store = useContext(Store);
+  const theme = useMantineTheme();
+  const mediumPadding = theme.spacing.md;
 
   return useObserver(() => {
     const chartRowHeight = 300;
@@ -30,6 +32,7 @@ export function PBMDashboard() {
 
         <ResponsiveGridLayout
           className="layout"
+          // TODO: Breakpoints should be the same for the stats cards.
           breakpoints={{
             lg: 852, sm: 0,
           }}
@@ -66,7 +69,9 @@ export function PBMDashboard() {
               withBorder
               className={classes.gridItem}
             >
+              {/** All chart content within the card */}
               <Flex direction="column" gap="sm" h="100%">
+                {/** Header - Grip, Title, Select Menu */}
                 <Flex direction="row" justify="space-between" align="center" px="md">
                   <Flex direction="row" align="center" gap="md" ml={-12}>
                     <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
@@ -87,8 +92,10 @@ export function PBMDashboard() {
                     }}
                   />
                 </Flex>
+                {/** Chart - Line Chart */}
                 <LineChart
-                  h="calc(100% - 40px)"
+                  // Line Chart Height offset should not be hard coded (what is 40px?)
+                  h={`calc(100% - (${mediumPadding} * 2))`}
                   data={chartData[i] || []}
                   dataKey="quarter"
                   series={[
