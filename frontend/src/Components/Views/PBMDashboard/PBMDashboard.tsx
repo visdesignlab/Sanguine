@@ -25,7 +25,7 @@ export function PBMDashboard() {
     const { layouts, chartData } = store.dashboardStore;
 
     return (
-      <Stack mb="xl">
+      <Stack mb="xl" gap="lg">
         <Title order={3}>Patient Blood Management Dashboard</Title>
 
         <StatsGrid />
