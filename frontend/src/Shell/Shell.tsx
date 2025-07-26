@@ -1,7 +1,7 @@
 import { ReactNode, useMemo, useState } from 'react';
 import { useDisclosure } from '@mantine/hooks';
 import {
-  AppShell, Group, Tabs, ActionIcon, Title, Flex, Container, Menu, Box, Text, Tooltip,
+  AppShell, Group, Tabs, ActionIcon, Title, Flex, Container, Menu, Box, Text, Tooltip, useMantineTheme, px,
 } from '@mantine/core';
 import {
   IconDatabase, IconSettings, IconFilter, IconBook,
@@ -43,13 +43,16 @@ export function Shell() {
 
   // Toolbar & Left Panel states ----------------------
   // Width of the header toolbar & left toolbar
-  const TOOLBARS_WIDTH = 60;
-  const OPEN_NAVBAR_WIDTH = 6 * TOOLBARS_WIDTH;
+  const theme = useMantineTheme();
+  // 3x icon size in pixels (large margin on both sides)
+  const TOOLBARS_WIDTH = 3 * Number(px(theme.spacing.lg));
+  // Width of the navbar when left toolbar is open
+  const LEFT_PANEL_WIDTH = 6 * TOOLBARS_WIDTH;
 
   // Open and close the left toolbar, burger toggle visible on hover.
   const [leftToolbarOpened, { toggle: toggleLeftToolbar }] = useDisclosure(true);
   const [activeLeftPanel, setActiveLeftPanel] = useState<number | null>(null);
-  const navbarWidth = useMemo(() => (activeLeftPanel === null ? TOOLBARS_WIDTH : OPEN_NAVBAR_WIDTH), [activeLeftPanel, OPEN_NAVBAR_WIDTH]);
+  const navbarWidth = useMemo(() => (activeLeftPanel === null ? TOOLBARS_WIDTH : LEFT_PANEL_WIDTH), [activeLeftPanel, LEFT_PANEL_WIDTH]);
 
   // Toolbar icons ----------------------
   const ICON_STROKE = 1;
@@ -78,7 +81,6 @@ export function Shell() {
         breakpoint: 0,
         collapsed: { desktop: !leftToolbarOpened },
       }}
-      mt="xs"
       padding="xs"
     >
       {/** Header Toolbar */}
@@ -204,7 +206,7 @@ export function Shell() {
       </AppShell.Navbar>
       {/** Main Area */}
       <AppShell.Main>
-        <Container fluid>
+        <Container fluid mt="xs">
           {/** Display content of active tab */}
           {TABS.find((tab) => tab.key === activeTab)?.content}
         </Container>
