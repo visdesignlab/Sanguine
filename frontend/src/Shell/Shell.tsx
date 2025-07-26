@@ -78,7 +78,8 @@ export function Shell() {
         breakpoint: 0,
         collapsed: { desktop: !leftToolbarOpened },
       }}
-      padding="md"
+      mt="xs"
+      padding="xs"
     >
       {/** Header Toolbar */}
       <AppShell.Header>
@@ -91,7 +92,7 @@ export function Shell() {
               </ActionIcon>
             </Flex>
             {/** Intelvia Title */}
-            <Title order={1}>Intelvia</Title>
+            <Title order={1} pl="xs">Intelvia</Title>
             {/** View Tabs */}
             <Tabs
               variant="outline"
@@ -106,7 +107,7 @@ export function Shell() {
                   marginTop: -4,
                 },
               }}
-              pl="lg"
+              pl="md"
             >
               {/** Render each tab in tabs list */}
               <Tabs.List h={TOOLBARS_WIDTH} style={{ paddingTop: 10 }}>
