@@ -1,5 +1,5 @@
 import {
-  Title, Card, Group, Box, Text, Stack, ActionIcon,
+  Title, Card, Group, Box, Text, Stack, ActionIcon, useMantineTheme,
 } from '@mantine/core';
 import {
   IconArrowUpRight,
@@ -13,6 +13,9 @@ import { useState } from 'react';
 import gridItemStyles from '../GridLayoutItem.module.css';
 
 export function ExploreView() {
+  const theme = useMantineTheme();
+  const cardIconSize = theme.other.iconSizes.card;
+
   const presetGroups: {
     groupLabel: string;
     options: { label: string; Icon: React.FC; state: any }[];
@@ -39,8 +42,6 @@ export function ExploreView() {
     },
   ];
   const [hoveredIdx, setHoveredIdx] = useState<{ group: number; card: number } | null>(null);
-
-  const iconSize = 20;
   return (
     <Stack>
       <style>
@@ -109,13 +110,13 @@ export function ExploreView() {
                 <Group justify="space-between" align="center" style={{ width: '100%' }}>
                   <Group align="center">
                     <Box mr="sm" style={{ display: 'flex', alignItems: 'center' }}>
-                      <Icon size={iconSize} stroke={1.5} className="explore-icon" />
+                      <Icon size={cardIconSize} stroke={1.5} className="explore-icon" />
                     </Box>
                     <Text size="sm" className="explore-label" style={{ fontStyle: 'italic' }}>{label}</Text>
                   </Group>
                   <ActionIcon variant="subtle" className="icon" size="lg">
                     <IconArrowUpRight
-                      size={iconSize}
+                      size={cardIconSize}
                       className="explore-arrow"
                     />
                   </ActionIcon>
