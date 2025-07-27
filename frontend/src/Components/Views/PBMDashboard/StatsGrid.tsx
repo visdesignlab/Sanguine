@@ -1,9 +1,6 @@
 import {
   IconArrowDownRight,
   IconArrowUpRight,
-  IconCoin,
-  IconTestPipe2,
-  IconShieldHeart,
 } from '@tabler/icons-react';
 import {
   Group, Paper, SimpleGrid, Text, useMantineTheme,
@@ -11,24 +8,7 @@ import {
 import { useState } from 'react';
 import gridItemStyles from '../GridLayoutItem.module.css';
 import statsGridStyles from './StatsGrid.module.css';
-
-const icons = {
-  coin: IconCoin,
-  tube: IconTestPipe2,
-  shield: IconShieldHeart,
-};
-
-const data = [
-  {
-    title: 'Estimated Savings', icon: 'coin', value: '$13,456', diff: 34,
-  },
-  {
-    title: 'Guideline Adherence', icon: 'tube', value: '85%', diff: 18,
-  },
-  {
-    title: 'AVG Length of Stay', icon: 'shield', value: '10 days', diff: -30,
-  },
-] as const;
+import { icons, stats } from './stats';
 
 export function StatsGrid() {
   // Icon size
@@ -40,7 +20,7 @@ export function StatsGrid() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   // For every stat, create a card describing it.
-  const stats = data.map((stat, idx) => {
+  const statCards = stats.map((stat, idx) => {
     const Icon = icons[stat.icon];
     // Positive or negative change in value
     const DiffIcon = stat.diff > 0 ? IconArrowUpRight : IconArrowDownRight;
@@ -102,6 +82,6 @@ export function StatsGrid() {
   });
   return (
     // TODO: Breakpoints should be the same for the entire dashboard
-    <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>{stats}</SimpleGrid>
+    <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>{statCards}</SimpleGrid>
   );
 }
