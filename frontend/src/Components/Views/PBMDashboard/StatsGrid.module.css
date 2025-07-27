@@ -14,8 +14,6 @@
   color: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-3));
 }
 
-.title {
-  font-size: var(--mantine-font-size-xs);
-  font-weight: 700;
-  text-transform: uppercase;
+.iconHovered {
+  color: var(--mantine-color-blue-6);
 }

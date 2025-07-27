@@ -21,23 +21,16 @@
 
 /* Card content default colors */
 .arrow,
-.question,
-.groupTitle {
-    color: var(--mantine-color-gray-5);
+.question {
+    color: var(--mantine-color-gray-6);
     transition: color 0.2s;
 }
 
 /* Group title styles */
-.groupTitle {
-    font-size: var(--mantine-font-size-xs);
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
 /* Hover states */
 .presetStateCard:hover .arrow,
 .presetStateCard:hover .question,
-.groupTitle.active {
+.title.active {
     color: var(--mantine-color-blue-6);
 }
 .presetStateCard:hover .arrow {

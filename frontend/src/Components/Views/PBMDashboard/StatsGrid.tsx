@@ -8,6 +8,7 @@ import {
 import {
   Group, Paper, SimpleGrid, Text, useMantineTheme,
 } from '@mantine/core';
+import { useState } from 'react';
 import gridItemStyles from '../GridLayoutItem.module.css';
 import statsGridStyles from './StatsGrid.module.css';
 
@@ -35,20 +36,49 @@ export function StatsGrid() {
   const cardIconSize = theme.other.iconSizes.card;
   const cardIconStroke = theme.other.iconStroke.card;
 
+  // Track hovered card index
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
   // For every stat, create a card describing it.
-  const stats = data.map((stat) => {
+  const stats = data.map((stat, idx) => {
     const Icon = icons[stat.icon];
     // Positive or negative change in value
     const DiffIcon = stat.diff > 0 ? IconArrowUpRight : IconArrowDownRight;
 
     return (
-      <Paper withBorder p="md" radius="md" key={stat.title} className={gridItemStyles.gridItem}>
+      <Paper
+        withBorder
+        p="md"
+        radius="md"
+        key={stat.title}
+        className={
+          hoveredIdx === idx
+            ? `${gridItemStyles.gridItem} ${gridItemStyles.gridItemHovered}`
+            : gridItemStyles.gridItem
+        }
+        onMouseEnter={() => setHoveredIdx(idx)}
+        onMouseLeave={() => setHoveredIdx(null)}
+      >
         {/** Stat Text */}
         <Group justify="space-between">
-          <Text c="dimmed" className={statsGridStyles.title}>
+          <Text
+            className={
+              hoveredIdx === idx
+                ? `${gridItemStyles.variableTitle} ${gridItemStyles.active}`
+                : gridItemStyles.variableTitle
+            }
+          >
             {stat.title}
           </Text>
-          <Icon className={statsGridStyles.icon} size={cardIconSize} stroke={cardIconStroke} />
+          <Icon
+            className={
+              hoveredIdx === idx
+                ? `${statsGridStyles.icon} ${statsGridStyles.iconHovered}`
+                : statsGridStyles.icon
+            }
+            size={cardIconSize}
+            stroke={cardIconStroke}
+          />
         </Group>
 
         <Group align="flex-end" gap="xs" mt={25}>

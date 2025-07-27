@@ -28,8 +28,8 @@ export function ExploreView() {
           <Text
             mb="md"
             className={clsx(
-              cardStyles.groupTitle,
-              hoveredIdx && hoveredIdx.group === groupIdx && cardStyles.active,
+              gridItemStyles.variableTitle,
+              hoveredIdx && hoveredIdx.group === groupIdx && gridItemStyles.active,
             )}
           >
             {groupLabel}
