@@ -3,7 +3,7 @@ import {
   Title, Card, Group, Box, Text, Stack, useMantineTheme,
 } from '@mantine/core';
 import {
-  IconArrowUpRight, IconCoin, IconTestPipe2, IconDropletHalf2Filled, IconVaccineBottle, IconRecycle,
+  IconArrowUpRight, IconCoin, IconTestPipe2, IconDropletHalf2Filled, IconVaccineBottle, IconRecycle, IconProps,
 } from '@tabler/icons-react';
 import clsx from 'clsx';
 import gridItemStyles from '../GridLayoutItem.module.css';
@@ -21,7 +21,8 @@ export function ExploreView() {
   // Preset groups and options for the Explore view
   const presetGroups: {
     groupLabel: string;
-    options: { question: string; Icon: React.FC; state: any }[];
+    options: { question: string; Icon: React.ComponentType<IconProps>; state: string }[];
+
   }[] = [
     {
       groupLabel: 'Guideline Adherence',

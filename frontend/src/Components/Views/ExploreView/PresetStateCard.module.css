@@ -1,8 +1,10 @@
+/* Preset State Card */
 .presetStateCard {
     cursor: pointer;
     height: 80px;
 }
 
+/* Inside preset state card */
 .presetStateContent {
   display: flex;
   justify-content: space-between;
@@ -11,6 +13,7 @@
   height: 100%;
 }
 
+/* Left icon container */
 .iconContainer {
   display: flex;
   margin-right: var(--mantine-spacing-sm);
