@@ -80,5 +80,8 @@ export const mantineTheme = createTheme({
     iconSizes: {
       card: 22,
     },
+    iconStroke: {
+      card: 1.5,
+    },
   },
 });

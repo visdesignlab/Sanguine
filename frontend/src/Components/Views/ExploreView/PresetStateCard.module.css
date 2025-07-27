@@ -1,0 +1,41 @@
+.presetStateCard {
+    cursor: pointer;
+    height: 80px;
+}
+
+.presetStateContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.iconContainer {
+  display: flex;
+  margin-right: var(--mantine-spacing-sm);
+}
+
+/* Card content default colors */
+.arrow,
+.question,
+.groupTitle {
+    color: var(--mantine-color-gray-5);
+    transition: color 0.2s;
+}
+
+/* Group title styles */
+.groupTitle { 
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* Hover states */
+.presetStateCard:hover .arrow,
+.presetStateCard:hover .question,
+.groupTitle.active {
+    color: var(--mantine-color-blue-6);
+}
+.presetStateCard:hover .arrow {
+    transform: translateY(-8px);
+}

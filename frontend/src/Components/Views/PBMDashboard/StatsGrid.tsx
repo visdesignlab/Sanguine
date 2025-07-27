@@ -33,6 +33,7 @@ export function StatsGrid() {
   // Icon size
   const theme = useMantineTheme();
   const cardIconSize = theme.other.iconSizes.card;
+  const cardIconStroke = theme.other.iconStroke.card;
 
   // For every stat, create a card describing it.
   const stats = data.map((stat) => {
@@ -47,7 +48,7 @@ export function StatsGrid() {
           <Text size="xs" c="dimmed" className={statsGridStyles.title}>
             {stat.title}
           </Text>
-          <Icon className={statsGridStyles.icon} size={cardIconSize} stroke={1.5} />
+          <Icon className={statsGridStyles.icon} size={cardIconSize} stroke={cardIconStroke} />
         </Group>
 
         <Group align="flex-end" gap="xs" mt={25}>
@@ -59,7 +60,7 @@ export function StatsGrid() {
               {stat.diff}
               %
             </span>
-            <DiffIcon size={16} stroke={1.5} />
+            <DiffIcon size={16} stroke={cardIconStroke} />
           </Text>
         </Group>
         {/** Comparison Text */}
