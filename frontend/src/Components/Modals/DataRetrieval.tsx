@@ -1,5 +1,5 @@
 import {
-  Modal, Text, Title, Group, Loader,
+  Modal, Text, Group, Loader,
 } from '@mantine/core';
 
 export function DataRetrieval({ dataLoading, dataLoadingFailed }: { dataLoading: boolean; dataLoadingFailed: boolean; }) {
@@ -10,7 +10,7 @@ export function DataRetrieval({ dataLoading, dataLoadingFailed }: { dataLoading:
       withCloseButton={false}
       centered
       size="md"
-      title={<Title order={3}>{dataLoadingFailed ? 'Data Retrieval Failed' : 'Retrieving Data'}</Title>}
+      title={<Text fw={500}>{dataLoadingFailed ? 'Data Retrieval Failed' : 'Retrieving Data'}</Text>}
     >
       {/* Data loading modal, pass or fails */}
       {dataLoadingFailed ? (
