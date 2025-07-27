@@ -45,7 +45,7 @@ export function StatsGrid() {
       <Paper withBorder p="md" radius="md" key={stat.title} className={gridItemStyles.gridItem}>
         {/** Stat Text */}
         <Group justify="space-between">
-          <Text size="xs" c="dimmed" className={statsGridStyles.title}>
+          <Text c="dimmed" className={statsGridStyles.title}>
             {stat.title}
           </Text>
           <Icon className={statsGridStyles.icon} size={cardIconSize} stroke={cardIconStroke} />
