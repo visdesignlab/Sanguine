@@ -2,12 +2,11 @@ import { useState } from 'react';
 import {
   Title, Card, Group, Box, Text, Stack, useMantineTheme,
 } from '@mantine/core';
-import {
-  IconArrowUpRight, IconCoin, IconTestPipe2, IconDropletHalf2Filled, IconVaccineBottle, IconRecycle, IconProps,
-} from '@tabler/icons-react';
+import { IconArrowUpRight } from '@tabler/icons-react';
 import clsx from 'clsx';
 import gridItemStyles from '../GridLayoutItem.module.css';
-import presetState from './PresetStateCard.module.css';
+import cardStyles from './PresetStateCard.module.css';
+import { presetStateCards } from './PresetStateCards';
 
 export function ExploreView() {
   // Hovered preset card
@@ -18,48 +17,20 @@ export function ExploreView() {
   const cardIconSize = theme.other.iconSizes.card;
   const cardIconStroke = theme.other.iconStroke.card;
 
-  // Preset groups and options for the Explore view
-  const presetGroups: {
-    groupLabel: string;
-    options: { question: string; Icon: React.ComponentType<IconProps>; state: string }[];
-
-  }[] = [
-    {
-      groupLabel: 'Guideline Adherence',
-      options: [
-        { question: 'In cases with preoperative anemia, how many RBCs were transfused per surgeon?', Icon: IconDropletHalf2Filled, state: '' },
-        { question: 'What were the pre-op and post-op HGB levels of cases per surgeon?', Icon: IconTestPipe2, state: '' },
-      ],
-    },
-    {
-      groupLabel: 'Outcomes',
-      options: [
-        { question: 'What are the outcomes of cases using antifibrinolytics?', Icon: IconVaccineBottle, state: '' },
-        { question: 'What are the outcomes of using cell salvage, for each anesthesiologist?', Icon: IconRecycle, state: '' },
-      ],
-    },
-    {
-      groupLabel: 'Cost / Savings',
-      options: [
-        { question: 'What are the costs and potential savings for surgical blood products?', Icon: IconCoin, state: '' },
-      ],
-    },
-  ];
-
   return (
     <Stack>
       {/** Page Title */}
       <Title order={3} mb="md">Explore</Title>
-      {/** Groups of preset states */}
-      {presetGroups.map(({ groupLabel, options }, groupIdx) => (
+      {/** Groups of preset state cards */}
+      {presetStateCards.map(({ groupLabel, options }, groupIdx) => (
         <Box key={groupLabel}>
           {/** Preset state group label */}
           <Text
             size="xs"
             mb="md"
             className={clsx(
-              presetState.groupTitle,
-              hoveredIdx && hoveredIdx.group === groupIdx && presetState.active,
+              cardStyles.groupTitle,
+              hoveredIdx && hoveredIdx.group === groupIdx && cardStyles.active,
             )}
           >
             {groupLabel}
@@ -70,14 +41,14 @@ export function ExploreView() {
               <Card
                 key={question}
                 withBorder
-                className={clsx(presetState.presetStateCard, gridItemStyles.gridItem)}
+                className={clsx(cardStyles.presetStateCard, gridItemStyles.gridItem)}
                 onMouseEnter={() => setHoveredIdx({ group: groupIdx, card: cardIdx })}
                 onMouseLeave={() => setHoveredIdx(null)}
               >
-                <Group className={presetState.presetStateContent}>
-                  <Group className={presetState.question}>
+                <Group className={cardStyles.presetStateContent}>
+                  <Group className={cardStyles.question}>
                     {/** Preset state icon */}
-                    <Box className={presetState.iconContainer}>
+                    <Box className={cardStyles.iconContainer}>
                       <Icon size={cardIconSize} stroke={cardIconStroke} />
                     </Box>
                     {/** Preset state question */}
@@ -87,7 +58,7 @@ export function ExploreView() {
                   <IconArrowUpRight
                     size={cardIconSize}
                     stroke={cardIconStroke}
-                    className={`${presetState.arrow}`}
+                    className={`${cardStyles.arrow}`}
                   />
                 </Group>
               </Card>
