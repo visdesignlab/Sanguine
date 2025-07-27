@@ -26,7 +26,6 @@ export function ExploreView() {
         <Box key={groupLabel}>
           {/** Preset state group label */}
           <Text
-            size="xs"
             mb="md"
             className={clsx(
               cardStyles.groupTitle,

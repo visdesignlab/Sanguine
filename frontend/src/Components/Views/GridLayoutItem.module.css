@@ -7,3 +7,14 @@
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
   z-index: 1;
 }
+.variableTitle {
+    font-size: var(--mantine-font-size-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--mantine-color-gray-6);
+    transition: color 0.2s;
+}
+
+.variableTitle.active {
+    color: var(--mantine-color-blue-6);
+}
