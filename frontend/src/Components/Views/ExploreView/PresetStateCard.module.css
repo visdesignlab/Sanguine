@@ -23,6 +23,7 @@
 .arrow,
 .question {
     color: var(--mantine-color-gray-6);
+    font-style: italic;
     transition: color 0.2s;
 }
 
