@@ -109,7 +109,7 @@ export function Shell() {
                   marginTop: -4,
                 },
               }}
-              pl="md"
+              pl="xs"
             >
               {/** Render each tab in tabs list */}
               <Tabs.List h={TOOLBARS_WIDTH} style={{ paddingTop: 10 }}>
