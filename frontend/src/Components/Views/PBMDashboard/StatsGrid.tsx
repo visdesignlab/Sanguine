@@ -3,18 +3,17 @@ import {
   IconArrowUpRight,
 } from '@tabler/icons-react';
 import {
-  Group, Paper, SimpleGrid, Text, useMantineTheme,
+  Group, Paper, SimpleGrid, Text,
 } from '@mantine/core';
 import { useState } from 'react';
+import { useThemeConstants } from '../../../Theme/mantineTheme';
 import gridItemStyles from '../GridLayoutItem.module.css';
 import statsGridStyles from './StatsGrid.module.css';
 import { icons, stats } from './stats';
 
 export function StatsGrid() {
-  // Icon size
-  const theme = useMantineTheme();
-  const cardIconSize = theme.other.iconSizes.card;
-  const cardIconStroke = theme.other.iconStroke.card;
+  // Icon styles
+  const { cardIconSize, cardIconStroke } = useThemeConstants();
 
   // Track hovered card index
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);

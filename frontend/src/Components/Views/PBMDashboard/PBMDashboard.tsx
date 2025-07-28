@@ -1,6 +1,6 @@
 import { useContext, useMemo } from 'react';
 import {
-  Title, Stack, Card, Flex, Select, useMantineTheme
+  Title, Stack, Card, Flex, Select, useMantineTheme, 
 } from '@mantine/core';
 import { IconGripVertical } from '@tabler/icons-react';
 import { LineChart } from '@mantine/charts';
@@ -17,7 +17,6 @@ export function PBMDashboard() {
 
   const store = useContext(Store);
   const theme = useMantineTheme();
-  const mediumPadding = theme.spacing.md;
 
   return useObserver(() => {
     const chartRowHeight = 300;
@@ -94,8 +93,7 @@ export function PBMDashboard() {
                 </Flex>
                 {/** Chart - Line Chart */}
                 <LineChart
-                  // Line Chart Height offset should not be hard coded (what is 40px?)
-                  h={`calc(100% - (${mediumPadding} * 2))`}
+                  h={`calc(100% - (${theme.spacing.md} * 2))`}
                   data={chartData[i] || []}
                   dataKey="quarter"
                   series={[

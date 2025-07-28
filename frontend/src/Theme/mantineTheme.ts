@@ -1,4 +1,4 @@
-import { createTheme } from '@mantine/core';
+import { createTheme, useMantineTheme, px } from '@mantine/core';
 
 // Icon border colors and styles ------------------
 const BORDER_COLOR = 'var(--mantine-color-black)';
@@ -85,3 +85,27 @@ export const mantineTheme = createTheme({
     },
   },
 });
+
+/**
+ * @returns Object containing theme constants for use in components.
+ */
+export function useThemeConstants() {
+  // Use Mantine's "MantineTheme" hook to access theme values
+  const theme = useMantineTheme();
+
+  const spacingPx = Object.fromEntries(
+    Object.entries(theme.spacing).map(([key, value]) => [key, Number(px(value))]),
+  );
+  return {
+    cardIconSize: theme.other.iconSizes.card,
+    cardIconStroke: theme.other.iconStroke.card,
+    /**
+     * Mantine theme spacing in pixels
+     *
+     ***Example:** spacingPx.lg === 24 (24px)
+     *
+     ***Keys:** xs, sm, md, lg, xl
+     */
+    spacingPx,
+  };
+}

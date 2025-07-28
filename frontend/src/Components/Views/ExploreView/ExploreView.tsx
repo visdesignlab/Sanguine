@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import {
-  Title, Card, Group, Box, Text, Stack, useMantineTheme,
+  Title, Card, Group, Box, Text, Stack,
 } from '@mantine/core';
 import { IconArrowUpRight } from '@tabler/icons-react';
 import clsx from 'clsx';
+import { useThemeConstants } from '../../../Theme/mantineTheme';
 import gridItemStyles from '../GridLayoutItem.module.css';
 import cardStyles from './PresetStateCard.module.css';
 import { presetStateCards } from './PresetStateCards';
@@ -13,9 +14,7 @@ export function ExploreView() {
   const [hoveredIdx, setHoveredIdx] = useState<{ group: number; card: number } | null>(null);
 
   // Icon styles
-  const theme = useMantineTheme();
-  const cardIconSize = theme.other.iconSizes.card;
-  const cardIconStroke = theme.other.iconStroke.card;
+  const { cardIconSize, cardIconStroke } = useThemeConstants();
 
   return (
     <Stack>

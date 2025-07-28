@@ -10,6 +10,7 @@ import {
   IconCamera, IconLogout, IconUser, IconMenu,
   IconRestore, type IconProps,
 } from '@tabler/icons-react';
+import { useThemeConstants } from '../Theme/mantineTheme';
 import { ExploreView } from '../Components/Views/ExploreView/ExploreView';
 import { ProvidersView } from '../Components/Views/ProvidersView/ProvidersView';
 import { PBMDashboard } from '../Components/Views/PBMDashboard/PBMDashboard';
@@ -43,9 +44,9 @@ export function Shell() {
 
   // Toolbar & Left Panel states ----------------------
   // Width of the header toolbar & left toolbar
-  const theme = useMantineTheme();
+  const { spacingPx } = useThemeConstants();
   // 3x icon size in pixels (large margin on both sides)
-  const TOOLBARS_WIDTH = 3 * Number(px(theme.spacing.lg));
+  const TOOLBARS_WIDTH = 3 * spacingPx.lg;
   // Width of the navbar when left toolbar is open
   const LEFT_PANEL_WIDTH = 6 * TOOLBARS_WIDTH;
 
