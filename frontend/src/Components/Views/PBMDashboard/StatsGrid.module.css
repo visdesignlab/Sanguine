@@ -1,13 +1,14 @@
-.value {
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1;
+.diff {
+  font-size: 1rem;
+  font-weight: 500;
 }
 
-.diff {
-  line-height: 1;
-  display: flex;
-  align-items: center;
+.diffPositive {
+  color: var(--mantine-color-teal-6, #12b886);
+}
+
+.diffNegative {
+  color: var(--mantine-color-red-6, #fa5252);
 }
 
 .icon {

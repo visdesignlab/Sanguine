@@ -4,6 +4,7 @@ import {
 } from '@tabler/icons-react';
 import {
   Group, Paper, SimpleGrid, Text,
+  Title,
 } from '@mantine/core';
 import { useState } from 'react';
 import clsx from 'clsx';
@@ -14,7 +15,7 @@ import { icons, stats } from './stats';
 
 export function StatsGrid() {
   // Icon styles
-  const { cardIconSize, cardIconStroke } = useThemeConstants();
+  const { cardIconSize, cardIconStroke, spacingPx } = useThemeConstants();
 
   // Track hovered card index
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -28,9 +29,6 @@ export function StatsGrid() {
     const isHovered = hoveredIdx === idx;
     return (
       <Paper
-        withBorder
-        p="md"
-        radius="md"
         key={stat.title}
         className={clsx(
           gridItemStyles.gridItem,
@@ -59,20 +57,25 @@ export function StatsGrid() {
           />
         </Group>
 
-        <Group align="flex-end" gap="xs" mt={25}>
+        <Group align="flex-end" gap="sm" mt="md">
           {/** Stat Value */}
-          <Text className={statsGridStyles.value}>{stat.value}</Text>
+          <Title order={1}>{stat.value}</Title>
           {/** Stat % Change in Value */}
-          <Text c={stat.diff > 0 ? 'teal' : 'red'} fz="sm" fw={500} className={statsGridStyles.diff}>
+          <Text
+            className={clsx(
+              statsGridStyles.diff,
+              stat.diff > 0 ? statsGridStyles.diffPositive : statsGridStyles.diffNegative,
+            )}
+          >
             <span>
               {stat.diff}
               %
             </span>
-            <DiffIcon size={16} stroke={cardIconStroke} />
+            <DiffIcon size={spacingPx.sm} stroke={cardIconStroke} />
           </Text>
         </Group>
         {/** Comparison Text */}
-        <Text fz="xs" c="dimmed" mt={7}>
+        <Text fz="xs" c="dimmed" mt="xs">
           Compared to previous month
         </Text>
       </Paper>
