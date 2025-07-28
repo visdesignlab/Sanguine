@@ -1,13 +1,13 @@
 import { useContext, useMemo } from 'react';
 import {
-  Title, Stack, Card, Flex, Select, useMantineTheme, 
+  Title, Stack, Card, Flex, Select, useMantineTheme,
 } from '@mantine/core';
 import { IconGripVertical } from '@tabler/icons-react';
 import { LineChart } from '@mantine/charts';
 import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
 import { useObserver } from 'mobx-react';
 import { StatsGrid } from './StatsGrid';
-import { BloodComponentOptions, type DashboardChartLayoutElement } from '../../../Types/application';
+import { BloodComponentOptions, type DashboardChartConfig } from '../../../Types/application';
 import { Store } from '../../../Store/Store';
 import classes from '../GridLayoutItem.module.css';
 
@@ -21,7 +21,7 @@ export function PBMDashboard() {
   return useObserver(() => {
     const chartRowHeight = 300;
     // Load in data from the store
-    const { layouts, chartData } = store.dashboardStore;
+    const { chartConfigs, chartData } = store.dashboardStore;
 
     return (
       <Stack mb="xl" gap="lg">
@@ -41,26 +41,24 @@ export function PBMDashboard() {
           rowHeight={chartRowHeight}
           containerPadding={[0, 0]}
           draggableHandle=".move-icon"
+          // Update layouts in the store when layout changes
           onLayoutChange={(_: never, newLayouts: Record<string, Layout[]>) => {
-            Object.keys(newLayouts).forEach((key) => {
-              const layoutArr = layouts[key];
-              if (!layoutArr) return;
-              newLayouts[key].forEach((l: Layout) => {
-                const existingLayoutIndex = layoutArr.findIndex((el: DashboardChartLayoutElement) => el.i === l.i);
-                if (existingLayoutIndex !== -1) {
-                  layoutArr[existingLayoutIndex] = {
-                    ...layoutArr[existingLayoutIndex],
-                    x: l.x,
-                    y: l.y,
-                    w: l.w,
-                    h: l.h,
-                  };
-                }
+            // For each new layout, update the store's layouts
+            Object.entries(newLayouts).forEach(([key, newLayoutArr]) => {
+              if (!chartConfigs[key]) return;
+              // For every matching layout in the store, update
+              chartConfigs[key] = chartConfigs[key].map((item) => {
+                const updated = newLayoutArr.find((l) => l.i === item.i);
+                return updated
+                  ? {
+                    ...item, x: updated.x, y: updated.y, w: updated.w, h: updated.h,
+                  }
+                  : item;
               });
             });
           }}
         >
-          {Object.values(layouts.lg).map(({
+          {Object.values(chartConfigs.lg).map(({
             i, x, y, w, h, maxH, yAxisVar, aggregation,
           }) => (
             <Card
@@ -86,10 +84,10 @@ export function PBMDashboard() {
                     data={BloodComponentOptions}
                     defaultValue={yAxisVar}
                     onChange={(value) => {
-                      const existingLayoutIndex = layouts.lg.findIndex((el) => el.i === i);
-                      const existingLayout = layouts.lg[existingLayoutIndex];
+                      const existingLayoutIndex = chartConfigs.lg.findIndex((el) => el.i === i);
+                      const existingLayout = chartConfigs.lg[existingLayoutIndex];
                       if (existingLayout) {
-                        layouts.lg[existingLayoutIndex].yAxisVar = value as DashboardChartLayoutElement['yAxisVar'];
+                        chartConfigs.lg[existingLayoutIndex].yAxisVar = value as DashboardChartConfig['yAxisVar'];
                       }
                     }}
                   />

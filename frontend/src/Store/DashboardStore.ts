@@ -3,10 +3,20 @@ import { mean, rollup, sum } from 'd3';
 import type { DashboardChartConfig } from '../Types/application';
 import type { RootStore } from './Store';
 
+/**
+ * DashboardStore manages the state of the PBM dashboard: stats, layouts, and chart data.
+ */
 export class DashboardStore {
   _rootStore: RootStore;
 
-  _layouts: { [key: string]: DashboardChartConfig[] } = {
+  // Initialize store with the root store
+  constructor(rootStore: RootStore) {
+    this._rootStore = rootStore;
+    makeAutoObservable(this);
+  }
+
+  // Chart configurations ------------------------------
+  _chartConfigs: { [key: string]: DashboardChartConfig[] } = {
     lg: [
       {
         i: '0', x: 0, y: 0, w: 2, h: 1, maxH: 2, yAxisVar: 'rbc_units', aggregation: 'sum',
@@ -23,20 +33,18 @@ export class DashboardStore {
     ],
   };
 
-  constructor(rootStore: RootStore) {
-    this._rootStore = rootStore;
-
-    makeAutoObservable(this);
+  get chartConfigs(): { [key: string]: DashboardChartConfig[] } {
+    return this._chartConfigs;
   }
 
-  get layouts(): { [key: string]: DashboardChartConfig[] } {
-    return this._layouts;
+  set chartConfigs(input: { [key: string]: DashboardChartConfig[] }) {
+    this._chartConfigs = input;
   }
 
-  set layouts(input: { [key: string]: DashboardChartConfig[] }) {
-    this._layouts = input;
-  }
-
+  // Chart data ------------------------------
+  /**
+   * Returns all chart data for the dashboard
+   */
   get chartData(): Record<string, { quarter: string, data: number }[] | undefined> {
     // For each visit, get the quarter and values
     const visitData = this._rootStore.allVisits.map((visit) => ({
@@ -76,7 +84,7 @@ export class DashboardStore {
 
     // Return quarterly visit data sorted by date
     return Object.fromEntries(
-      this.layouts.lg.map(({ i, yAxisVar }) => [
+      this.chartConfigs.lg.map(({ i, yAxisVar }) => [
         i,
         Array.from(quarterlyData.entries())
           .map(([quarter, group]) => ({
