@@ -6,7 +6,7 @@ import type { RootStore } from './Store';
 export class DashboardStore {
   _rootStore: RootStore;
 
-  _layouts: { lg: DashboardChartLayoutElement[] } = {
+  _layouts: { [key: string]: DashboardChartLayoutElement[] } = {
     lg: [
       {
         i: '0', x: 0, y: 0, w: 2, h: 1, maxH: 2, yAxisVar: 'rbc_units', aggregation: 'sum',
@@ -29,11 +29,11 @@ export class DashboardStore {
     makeAutoObservable(this);
   }
 
-  get layouts() {
+  get layouts(): { [key: string]: DashboardChartLayoutElement[] } {
     return this._layouts;
   }
 
-  set layouts(input: { lg: DashboardChartLayoutElement[] }) {
+  set layouts(input: { [key: string]: DashboardChartLayoutElement[] }) {
     this._layouts = input;
   }
 

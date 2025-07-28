@@ -41,19 +41,22 @@ export function PBMDashboard() {
           rowHeight={chartRowHeight}
           containerPadding={[0, 0]}
           draggableHandle=".move-icon"
-          onLayoutChange={(_: never, newLayouts: Record<'lg', Layout[]>) => {
-            newLayouts.lg.forEach((l) => {
-              const existingLayoutIndex = layouts.lg.findIndex((el) => el.i === l.i);
-
-              if (existingLayoutIndex !== -1) {
-                layouts.lg[existingLayoutIndex] = {
-                  ...layouts.lg[existingLayoutIndex],
-                  x: l.x,
-                  y: l.y,
-                  w: l.w,
-                  h: l.h,
-                };
-              }
+          onLayoutChange={(_: never, newLayouts: Record<string, Layout[]>) => {
+            Object.keys(newLayouts).forEach((key) => {
+              const layoutArr = layouts[key];
+              if (!layoutArr) return;
+              newLayouts[key].forEach((l: Layout) => {
+                const existingLayoutIndex = layoutArr.findIndex((el: DashboardChartLayoutElement) => el.i === l.i);
+                if (existingLayoutIndex !== -1) {
+                  layoutArr[existingLayoutIndex] = {
+                    ...layoutArr[existingLayoutIndex],
+                    x: l.x,
+                    y: l.y,
+                    w: l.w,
+                    h: l.h,
+                  };
+                }
+              });
             });
           }}
         >
