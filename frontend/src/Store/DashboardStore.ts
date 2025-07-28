@@ -1,5 +1,6 @@
 import { makeAutoObservable } from 'mobx';
 import { mean, rollup, sum } from 'd3';
+import { Layout } from 'react-grid-layout';
 import type { DashboardChartConfig } from '../Types/application';
 import type { RootStore } from './Store';
 
@@ -16,29 +17,68 @@ export class DashboardStore {
   }
 
   // Chart configurations ------------------------------
-  _chartConfigs: { [key: string]: DashboardChartConfig[] } = {
+  _chartLayouts: { [key: string]: Layout[] } = {
     main: [
       {
-        i: '0', x: 0, y: 0, w: 2, h: 1, maxH: 2, yAxisVar: 'rbc_units', aggregation: 'sum',
+        i: '0', x: 0, y: 0, w: 2, h: 1, maxH: 2,
       },
       {
-        i: '1', x: 0, y: 1, w: 1, h: 1, maxH: 2, yAxisVar: 'ffp_units', aggregation: 'sum',
+        i: '1', x: 0, y: 1, w: 1, h: 1, maxH: 2,
       },
       {
-        i: '2', x: 1, y: 1, w: 1, h: 1, maxH: 2, yAxisVar: 'plt_units', aggregation: 'sum',
+        i: '2', x: 1, y: 1, w: 1, h: 1, maxH: 2,
       },
       {
-        i: '3', x: 0, y: 2, w: 2, h: 1, maxH: 2, yAxisVar: 'cryo_units', aggregation: 'sum',
+        i: '3', x: 0, y: 2, w: 2, h: 1, maxH: 2,
       },
     ],
   };
 
-  get chartConfigs(): { [key: string]: DashboardChartConfig[] } {
+  get chartLayouts() {
+    return this._chartLayouts;
+  }
+
+  set chartLayouts(input: { [key: string]: Layout[] }) {
+    this._chartLayouts = input;
+  }
+
+  _chartConfigs: DashboardChartConfig[] = [
+    {
+      i: '0', yAxisVar: 'rbc_units', aggregation: 'sum',
+    },
+    {
+      i: '1', yAxisVar: 'ffp_units', aggregation: 'sum',
+    },
+    {
+      i: '2', yAxisVar: 'plt_units', aggregation: 'sum',
+    },
+    {
+      i: '3', yAxisVar: 'cryo_units', aggregation: 'sum',
+    },
+  ];
+
+  get chartConfigs() {
     return this._chartConfigs;
   }
 
-  set chartConfigs(input: { [key: string]: DashboardChartConfig[] }) {
+  set chartConfigs(input: DashboardChartConfig[]) {
     this._chartConfigs = input;
+  }
+
+  setChartConfig(id: string, input: DashboardChartConfig) {
+    this._chartConfigs = this._chartConfigs.map((config) => {
+      if (config.i === id) {
+        return { ...config, ...input };
+      }
+      return config;
+    });
+  }
+
+  removeChart(id: string) {
+    this._chartConfigs = this._chartConfigs.filter((config) => config.i !== id);
+
+    this._chartLayouts.main = this._chartLayouts.main.filter((layout) => layout.i !== id);
+    this._chartLayouts.sm = this._chartLayouts.sm.filter((layout) => layout.i !== id);
   }
 
   // Chart data ------------------------------
@@ -63,33 +103,40 @@ export class DashboardStore {
     const quarterlyData = rollup(
       visitData,
       (visit) => ({
-        rbc_units: sum(visit, (d) => d.rbc_units),
-        ffp_units: sum(visit, (d) => d.ffp_units),
-        plt_units: sum(visit, (d) => d.plt_units),
-        cryo_units: sum(visit, (d) => d.cryo_units),
-        cell_saver_ml: sum(visit, (d) => d.cell_saver_ml),
-        los: mean(visit, (d) => d.los) || 0,
-        // TODO: Add other outcomes
-        death: 0,
-        vent: 0,
-        stroke: 0,
-        ecmo: 0,
-        b12: 0,
-        iron: 0,
-        txa: 0,
-        amicar: 0,
+        sum_rbc_units: sum(visit, (d) => d.rbc_units),
+        sum_ffp_units: sum(visit, (d) => d.ffp_units),
+        sum_plt_units: sum(visit, (d) => d.plt_units),
+        sum_cryo_units: sum(visit, (d) => d.cryo_units),
+        sum_cell_saver_ml: sum(visit, (d) => d.cell_saver_ml),
+
+        average_rbc_units: mean(visit, (d) => d.rbc_units),
+        average_ffp_units: mean(visit, (d) => d.ffp_units),
+        average_plt_units: mean(visit, (d) => d.plt_units),
+        average_cryo_units: mean(visit, (d) => d.cryo_units),
+        average_cell_saver_ml: mean(visit, (d) => d.cell_saver_ml),
+
+        // los: mean(visit, (d) => d.los) || 0,
+        // // TODO: Add other outcomes
+        // death: 0,
+        // vent: 0,
+        // stroke: 0,
+        // ecmo: 0,
+        // b12: 0,
+        // iron: 0,
+        // txa: 0,
+        // amicar: 0,
       }),
       (d) => d.quarter,
     );
 
     // Return quarterly visit data sorted by date
     return Object.fromEntries(
-      this.chartConfigs.main.map(({ i, yAxisVar }) => [
+      this.chartConfigs.map(({ i, yAxisVar, aggregation }) => [
         i,
         Array.from(quarterlyData.entries())
           .map(([quarter, group]) => ({
             quarter,
-            data: group[yAxisVar],
+            data: group[`${aggregation}_${yAxisVar}`] || 0,
           }))
           .sort((a, b) => a.quarter.localeCompare(b.quarter)),
       ]),

@@ -1,8 +1,10 @@
-import { useContext, useMemo } from 'react';
+import { useCallback, useContext, useMemo } from 'react';
 import {
   Title, Stack, Card, Flex, Select, useMantineTheme, Button,
+  CloseButton,
+  ActionIcon,
 } from '@mantine/core';
-import { IconGripVertical, IconPlus } from '@tabler/icons-react';
+import { IconGripVertical, IconPercentage, IconPlus } from '@tabler/icons-react';
 import { LineChart } from '@mantine/charts';
 import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
 import { useObserver } from 'mobx-react';
@@ -22,10 +24,12 @@ export function PBMDashboard() {
   // Get theme constants
   const { buttonIconSize, cardIconStroke } = useThemeConstants();
 
+  const handleRemoveChart = useCallback((id: string) => {
+    store.dashboardStore.removeChart(id);
+  }, [store.dashboardStore]);
+
   return useObserver(() => {
     const chartRowHeight = 300;
-    // Load in data from the store
-    const { chartConfigs, chartData } = store.dashboardStore;
 
     return (
       <Stack mb="xl" gap="lg">
@@ -42,7 +46,6 @@ export function PBMDashboard() {
 
         <ResponsiveGridLayout
           className="layout"
-          // TODO: Breakpoints should be the same for the stats cards.
           breakpoints={{
             main: 852, sm: 0,
           }}
@@ -52,38 +55,23 @@ export function PBMDashboard() {
           rowHeight={chartRowHeight}
           containerPadding={[0, 0]}
           draggableHandle=".move-icon"
-          // Update layouts in the store when layout changes
-          onLayoutChange={(_: never, newLayouts: Record<string, Layout[]>) => {
-            // For each new layout, update the store's layouts
-            Object.entries(newLayouts).forEach(([key, newLayoutArr]) => {
-              if (!chartConfigs[key]) return;
-              // For every matching layout in the store, update with new one
-              chartConfigs[key] = chartConfigs[key].map((item) => {
-                const updated = newLayoutArr.find((l) => l.i === item.i);
-                return updated
-                  ? {
-                    ...item, x: updated.x, y: updated.y, w: updated.w, h: updated.h,
-                  }
-                  : item;
-              });
-            });
+          onLayoutChange={(currentLayout: Layout[], newLayouts: Record<string, Layout[]>) => {
+            store.dashboardStore.chartLayouts = newLayouts;
           }}
+          layouts={store.dashboardStore.chartLayouts}
         >
-          {Object.values(chartConfigs.main).map(({
-            i, x, y, w, h, maxH, yAxisVar, aggregation,
+          {Object.values(store.dashboardStore.chartConfigs).map(({
+            i, yAxisVar, aggregation,
           }) => (
             <Card
               key={i}
-              data-grid={{
-                i, x, y, w, h, maxH,
-              }}
               withBorder
               className={classes.gridItem}
             >
               {/** All chart content within the card */}
               <Flex direction="column" gap="sm" h="100%">
                 {/** Header - Grip, Title, Select Menu */}
-                <Flex direction="row" justify="space-between" align="center" px="md">
+                <Flex direction="row" justify="space-between" align="center" pl="md">
                   <Flex direction="row" align="center" gap="md" ml={-12}>
                     <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
                     <Title order={4}>
@@ -91,22 +79,29 @@ export function PBMDashboard() {
                     </Title>
                   </Flex>
 
-                  <Select
-                    data={BloodComponentOptions}
-                    defaultValue={yAxisVar}
-                    onChange={(value) => {
-                      const existingLayoutIndex = chartConfigs.main.findIndex((el) => el.i === i);
-                      const existingLayout = chartConfigs.main[existingLayoutIndex];
-                      if (existingLayout) {
-                        chartConfigs.main[existingLayoutIndex].yAxisVar = value as DashboardChartConfig['yAxisVar'];
-                      }
-                    }}
-                  />
+                  <Flex direction="row" align="center" gap="sm">
+                    <ActionIcon variant="subtle" onClick={() => store.dashboardStore.setChartConfig(i, { i, yAxisVar, aggregation: aggregation === 'sum' ? 'average' : 'sum' })}>
+                      <IconPercentage size={18} color={aggregation === 'average' ? theme.colors.indigo[6] : theme.colors.gray[6]} stroke={3} />
+                    </ActionIcon>
+                    <Select
+                      data={BloodComponentOptions}
+                      defaultValue={yAxisVar}
+                      onChange={(value) => {
+                        store.dashboardStore.setChartConfig(i, {
+                          i,
+                          yAxisVar: value as DashboardChartConfig['yAxisVar'],
+                          aggregation,
+                        });
+                      }}
+                    />
+
+                    <CloseButton onClick={() => handleRemoveChart(i)} />
+                  </Flex>
                 </Flex>
                 {/** Chart - Line Chart */}
                 <LineChart
                   h={`calc(100% - (${theme.spacing.md} * 2))`}
-                  data={chartData[i] || []}
+                  data={store.dashboardStore.chartData[i] || []}
                   dataKey="quarter"
                   series={[
                     { name: 'data', color: 'indigo.6' },

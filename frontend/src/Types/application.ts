@@ -1,5 +1,3 @@
-import { Layout } from 'react-grid-layout';
-
 // Blood components -----------------------
 export const BLOOD_COMPONENTS = [
   { value: 'rbc_units', label: 'RBCs Transfused' },
@@ -30,8 +28,8 @@ export type Outcome = typeof OUTCOMES[number]['value'];
 // Readonly array of outcome options
 export const OutcomeOptions = OUTCOMES as ReadonlyArray<{ value: Outcome; label: string }>;
 
-// 
-export type DashboardChartConfig = Layout & {
-  yAxisVar: BloodComponent | Outcome;
-  aggregation: 'sum';
+export type DashboardChartConfig = {
+  i: string;
+  yAxisVar: BloodComponent;
+  aggregation: 'sum' | 'average';
 };
