@@ -1,7 +1,7 @@
 import { ReactNode, useMemo, useState } from 'react';
 import { useDisclosure } from '@mantine/hooks';
 import {
-  AppShell, Group, Tabs, ActionIcon, Title, Flex, Container, Menu, Box, Text, Tooltip, useMantineTheme, px,
+  AppShell, Group, Tabs, ActionIcon, Title, Flex, Container, Menu, Box, Text, Tooltip,
 } from '@mantine/core';
 import {
   IconDatabase, IconSettings, IconFilter, IconBook,
@@ -48,6 +48,8 @@ export function Shell() {
   // 3x icon size in pixels (large margin on both sides)
   // Width of the navbar when left toolbar is open
   const LEFT_PANEL_WIDTH = 6 * toolbarWidth;
+  console.log('toolbarWidth', toolbarWidth);
+  console.log('LEFT_PANEL_WIDTH', LEFT_PANEL_WIDTH);
 
   // Open and close the left toolbar, burger toggle visible on hover.
   const [leftToolbarOpened, { toggle: toggleLeftToolbar }] = useDisclosure(true);

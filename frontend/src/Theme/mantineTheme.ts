@@ -90,7 +90,6 @@ export const mantineTheme = createTheme({
     iconStroke: {
       card: 1.5,
     },
-    toolbarWidth: 'calc(var(--mantine-spacing-lg) * 3)',
   },
 });
 
@@ -104,6 +103,9 @@ export function useThemeConstants() {
   const spacingPx = Object.fromEntries(
     Object.entries(theme.spacing).map(([key, value]) => [key, Number(px(value))]),
   );
+
+  // Toolbar width - equal margin on both sides of 'lg' icons.
+  const toolbarWidth = 3 * Number(px(theme.spacing.lg));
   return {
     cardIconSize: theme.other.iconSizes.card,
     cardIconStroke: theme.other.iconStroke.card,
@@ -115,6 +117,6 @@ export function useThemeConstants() {
      ***Keys:** xs, sm, md, lg, xl
      */
     spacingPx,
-    toolbarWidth: theme.other.toolbarWidth,
+    toolbarWidth,
   };
 }
