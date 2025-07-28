@@ -6,6 +6,7 @@ import {
   Group, Paper, SimpleGrid, Text,
 } from '@mantine/core';
 import { useState } from 'react';
+import clsx from 'clsx';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import gridItemStyles from '../GridLayoutItem.module.css';
 import statsGridStyles from './StatsGrid.module.css';
@@ -23,38 +24,36 @@ export function StatsGrid() {
     const Icon = icons[stat.icon];
     // Positive or negative change in value
     const DiffIcon = stat.diff > 0 ? IconArrowUpRight : IconArrowDownRight;
-
+    // Determine if this card is currently hovered
+    const isHovered = hoveredIdx === idx;
     return (
       <Paper
         withBorder
         p="md"
         radius="md"
         key={stat.title}
-        className={
-          hoveredIdx === idx
-            ? `${gridItemStyles.gridItem} ${gridItemStyles.gridItemHovered}`
-            : gridItemStyles.gridItem
-        }
+        className={clsx(
+          gridItemStyles.gridItem,
+          isHovered && gridItemStyles.gridItemHovered,
+        )}
         onMouseEnter={() => setHoveredIdx(idx)}
         onMouseLeave={() => setHoveredIdx(null)}
       >
         {/** Stat Text */}
         <Group justify="space-between">
           <Text
-            className={
-              hoveredIdx === idx
-                ? `${gridItemStyles.variableTitle} ${gridItemStyles.active}`
-                : gridItemStyles.variableTitle
-            }
+            className={clsx(
+              gridItemStyles.variableTitle,
+              isHovered && gridItemStyles.active,
+            )}
           >
             {stat.title}
           </Text>
           <Icon
-            className={
-              hoveredIdx === idx
-                ? `${statsGridStyles.icon} ${statsGridStyles.iconHovered}`
-                : statsGridStyles.icon
-            }
+            className={clsx(
+              statsGridStyles.icon,
+              isHovered && statsGridStyles.iconHovered,
+            )}
             size={cardIconSize}
             stroke={cardIconStroke}
           />
