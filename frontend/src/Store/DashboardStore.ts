@@ -1,12 +1,12 @@
 import { makeAutoObservable } from 'mobx';
 import { mean, rollup, sum } from 'd3';
-import type { DashboardChartLayoutElement } from '../Types/application';
+import type { DashboardChartConfig } from '../Types/application';
 import type { RootStore } from './Store';
 
 export class DashboardStore {
   _rootStore: RootStore;
 
-  _layouts: { [key: string]: DashboardChartLayoutElement[] } = {
+  _layouts: { [key: string]: DashboardChartConfig[] } = {
     lg: [
       {
         i: '0', x: 0, y: 0, w: 2, h: 1, maxH: 2, yAxisVar: 'rbc_units', aggregation: 'sum',
@@ -29,11 +29,11 @@ export class DashboardStore {
     makeAutoObservable(this);
   }
 
-  get layouts(): { [key: string]: DashboardChartLayoutElement[] } {
+  get layouts(): { [key: string]: DashboardChartConfig[] } {
     return this._layouts;
   }
 
-  set layouts(input: { [key: string]: DashboardChartLayoutElement[] }) {
+  set layouts(input: { [key: string]: DashboardChartConfig[] }) {
     this._layouts = input;
   }
 
