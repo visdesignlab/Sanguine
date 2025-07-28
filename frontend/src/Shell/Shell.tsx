@@ -44,16 +44,15 @@ export function Shell() {
 
   // Toolbar & Left Panel states ----------------------
   // Width of the header toolbar & left toolbar
-  const { spacingPx } = useThemeConstants();
+  const { toolbarWidth } = useThemeConstants();
   // 3x icon size in pixels (large margin on both sides)
-  const TOOLBARS_WIDTH = 3 * spacingPx.lg;
   // Width of the navbar when left toolbar is open
-  const LEFT_PANEL_WIDTH = 6 * TOOLBARS_WIDTH;
+  const LEFT_PANEL_WIDTH = 6 * toolbarWidth;
 
   // Open and close the left toolbar, burger toggle visible on hover.
   const [leftToolbarOpened, { toggle: toggleLeftToolbar }] = useDisclosure(true);
   const [activeLeftPanel, setActiveLeftPanel] = useState<number | null>(null);
-  const navbarWidth = useMemo(() => (activeLeftPanel === null ? TOOLBARS_WIDTH : LEFT_PANEL_WIDTH), [activeLeftPanel, LEFT_PANEL_WIDTH]);
+  const navbarWidth = useMemo(() => (activeLeftPanel === null ? toolbarWidth : LEFT_PANEL_WIDTH), [activeLeftPanel, LEFT_PANEL_WIDTH, toolbarWidth]);
 
   // Toolbar icons ----------------------
   const ICON_STROKE = 1;
@@ -76,7 +75,7 @@ export function Shell() {
 
   return (
     <AppShell
-      header={{ height: TOOLBARS_WIDTH }}
+      header={{ height: toolbarWidth }}
       navbar={{
         width: navbarWidth,
         breakpoint: 0,
@@ -89,7 +88,7 @@ export function Shell() {
         <Group justify="space-between">
           <Group>
             {/** Left Toolbar Toggle Burger Icon */}
-            <Flex justify="center" w={TOOLBARS_WIDTH}>
+            <Flex justify="center" w={toolbarWidth}>
               <ActionIcon aria-label="Toggle Left Toolbar">
                 <IconMenu onClick={toggleLeftToolbar} stroke={ICON_STROKE} />
               </ActionIcon>
@@ -113,7 +112,7 @@ export function Shell() {
               pl="xs"
             >
               {/** Render each tab in tabs list */}
-              <Tabs.List h={TOOLBARS_WIDTH} style={{ paddingTop: 10 }}>
+              <Tabs.List h={toolbarWidth} style={{ paddingTop: 10 }}>
                 {Object.values(TABS).map((tab) => (
                   <Tabs.Tab key={tab.key} value={tab.key}>{tab.key}</Tabs.Tab>
                 ))}
@@ -167,7 +166,7 @@ export function Shell() {
           <Box h="100%" style={{ borderRight: activeLeftPanel !== null ? '1px solid var(--mantine-color-gray-3)' : 'none' }}>
             <Group
               justify="center"
-              w={TOOLBARS_WIDTH}
+              w={toolbarWidth}
               pt="md"
             >
               {leftToolbarIcons.map(({ icon: Icon, label }, index) => (
