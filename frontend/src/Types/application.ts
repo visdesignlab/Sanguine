@@ -1,3 +1,5 @@
+import { Layout } from 'react-grid-layout';
+
 export const BLOOD_COMPONENTS = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml'] as const;
 export type BloodComponent = typeof BLOOD_COMPONENTS[number];
 export const BloodComponentOptions: { value: BloodComponent; label: string }[] = [
@@ -14,18 +16,8 @@ export const OutcomeOptions: { value: Outcome; label: string }[] = [
   { value: 'los', label: 'Length of Stay' },
 ];
 
-// A layout element has a ID, size, positions
-type BaseLayoutElement = {
-  i: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  maxH: 2;
-};
-
 // Dashboard Layout of each dashboard chart type
-export type DashboardChartLayoutElement = BaseLayoutElement & {
+export type DashboardChartLayoutElement = Layout & {
   yAxisVar: BloodComponent | Outcome;
   aggregation: 'sum';
 };
