@@ -13,19 +13,20 @@ export function ExploreView() {
   // Hovered preset card
   const [hoveredIdx, setHoveredIdx] = useState<{ group: number; card: number } | null>(null);
 
-  // Icon styles
-  const { cardIconSize, cardIconStroke } = useThemeConstants();
+  // Sizes
+  const { cardIconSize, cardIconStroke, toolbarWidth } = useThemeConstants();
+  const verticalMargin = 'md';
 
   return (
     <Stack>
       {/** Page Title */}
-      <Title order={3} mb="md">Explore</Title>
+      <Title order={3} mb={verticalMargin}>Explore</Title>
       {/** Groups of preset state cards */}
       {presetStateCards.map(({ groupLabel, options }, groupIdx) => (
         <Box key={groupLabel}>
           {/** Preset state group label */}
           <Text
-            mb="md"
+            mb={verticalMargin}
             className={clsx(
               gridItemStyles.variableTitle,
               hoveredIdx && hoveredIdx.group === groupIdx && gridItemStyles.active,
@@ -39,6 +40,7 @@ export function ExploreView() {
               <Card
                 key={question}
                 withBorder
+                style={{ height: toolbarWidth }}
                 className={clsx(cardStyles.presetStateCard, gridItemStyles.gridItem)}
                 onMouseEnter={() => setHoveredIdx({ group: groupIdx, card: cardIdx })}
                 onMouseLeave={() => setHoveredIdx(null)}

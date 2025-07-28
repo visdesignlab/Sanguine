@@ -75,6 +75,13 @@ export const mantineTheme = createTheme({
         },
       },
     },
+    Paper: {
+      defaultProps: {
+        withBorder: true,
+        p: 'md',
+        radius: 'md',
+      },
+    },
   },
   other: {
     iconSizes: {
@@ -83,6 +90,7 @@ export const mantineTheme = createTheme({
     iconStroke: {
       card: 1.5,
     },
+    toolbarWidth: 'calc(var(--mantine-spacing-lg) * 3)',
   },
 });
 
@@ -107,5 +115,6 @@ export function useThemeConstants() {
      ***Keys:** xs, sm, md, lg, xl
      */
     spacingPx,
+    toolbarWidth: theme.other.toolbarWidth,
   };
 }
