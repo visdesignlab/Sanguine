@@ -82,12 +82,21 @@ export const mantineTheme = createTheme({
         radius: 'md',
       },
     },
+    Button: {
+      defaultProps: {
+        variant: 'outline',
+        color: 'dark',
+        style: { borderWidth: 1, fontWeight: 400 },
+      },
+    },
   },
   other: {
     iconSizes: {
       card: 22,
+      button: 18,
     },
     iconStroke: {
+      base: 1,
       card: 1.5,
     },
   },
@@ -109,6 +118,8 @@ export function useThemeConstants() {
   return {
     cardIconSize: theme.other.iconSizes.card,
     cardIconStroke: theme.other.iconStroke.card,
+    buttonIconSize: theme.other.iconSizes.button,
+    iconStroke: theme.other.iconStroke.base,
     /**
      * Mantine theme spacing in pixels
      *

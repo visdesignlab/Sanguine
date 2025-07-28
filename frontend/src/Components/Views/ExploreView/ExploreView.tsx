@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import {
-  Title, Card, Group, Box, Text, Stack,
+  Title, Card, Group, Box, Text, Stack, Flex, Button,
 } from '@mantine/core';
-import { IconArrowUpRight } from '@tabler/icons-react';
+import { IconPlus, IconArrowUpRight } from '@tabler/icons-react';
 import clsx from 'clsx';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import gridItemStyles from '../GridLayoutItem.module.css';
@@ -14,13 +14,24 @@ export function ExploreView() {
   const [hoveredIdx, setHoveredIdx] = useState<{ group: number; card: number } | null>(null);
 
   // Sizes
-  const { cardIconSize, cardIconStroke, toolbarWidth } = useThemeConstants();
+  const {
+    cardIconSize,
+    cardIconStroke,
+    toolbarWidth,
+    buttonIconSize,
+  } = useThemeConstants();
   const verticalMargin = 'md';
 
   return (
     <Stack>
-      {/** Page Title */}
-      <Title order={3} mb={verticalMargin}>Explore</Title>
+      {/* Title, Add Chart Button */}
+      <Flex direction="row" justify="space-between" align="center">
+        <Title order={3}>Patient Blood Management Dashboard</Title>
+        <Button>
+          <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
+          Add Chart
+        </Button>
+      </Flex>
       {/** Groups of preset state cards */}
       {presetStateCards.map(({ groupLabel, options }, groupIdx) => (
         <Box key={groupLabel}>

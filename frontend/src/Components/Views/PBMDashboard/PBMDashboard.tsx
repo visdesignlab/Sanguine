@@ -1,14 +1,15 @@
 import { useContext, useMemo } from 'react';
 import {
-  Title, Stack, Card, Flex, Select, useMantineTheme,
+  Title, Stack, Card, Flex, Select, useMantineTheme, Button,
 } from '@mantine/core';
-import { IconGripVertical } from '@tabler/icons-react';
+import { IconGripVertical, IconPlus } from '@tabler/icons-react';
 import { LineChart } from '@mantine/charts';
 import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
 import { useObserver } from 'mobx-react';
 import { StatsGrid } from './StatsGrid';
 import { BloodComponentOptions, type DashboardChartConfig } from '../../../Types/application';
 import { Store } from '../../../Store/Store';
+import { useThemeConstants } from '../../../Theme/mantineTheme';
 import classes from '../GridLayoutItem.module.css';
 
 export function PBMDashboard() {
@@ -18,6 +19,9 @@ export function PBMDashboard() {
   const store = useContext(Store);
   const theme = useMantineTheme();
 
+  // Get theme constants
+  const { buttonIconSize, cardIconStroke } = useThemeConstants();
+
   return useObserver(() => {
     const chartRowHeight = 300;
     // Load in data from the store
@@ -25,7 +29,14 @@ export function PBMDashboard() {
 
     return (
       <Stack mb="xl" gap="lg">
-        <Title order={3}>Patient Blood Management Dashboard</Title>
+        {/** Title, Add Chart Button */}
+        <Flex direction="row" justify="space-between" align="center">
+          <Title order={3}>Patient Blood Management Dashboard</Title>
+          <Button>
+            <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
+            Add Chart
+          </Button>
+        </Flex>
 
         <StatsGrid />
 

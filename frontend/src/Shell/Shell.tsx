@@ -44,12 +44,10 @@ export function Shell() {
 
   // Toolbar & Left Panel states ----------------------
   // Width of the header toolbar & left toolbar
-  const { toolbarWidth } = useThemeConstants();
-  // 3x icon size in pixels (large margin on both sides)
+  const { toolbarWidth, iconStroke } = useThemeConstants();
+
   // Width of the navbar when left toolbar is open
   const LEFT_PANEL_WIDTH = 6 * toolbarWidth;
-  console.log('toolbarWidth', toolbarWidth);
-  console.log('LEFT_PANEL_WIDTH', LEFT_PANEL_WIDTH);
 
   // Open and close the left toolbar, burger toggle visible on hover.
   const [leftToolbarOpened, { toggle: toggleLeftToolbar }] = useDisclosure(true);
@@ -57,7 +55,6 @@ export function Shell() {
   const navbarWidth = useMemo(() => (activeLeftPanel === null ? toolbarWidth : LEFT_PANEL_WIDTH), [activeLeftPanel, LEFT_PANEL_WIDTH, toolbarWidth]);
 
   // Toolbar icons ----------------------
-  const ICON_STROKE = 1;
   // Left toolbar icons
   const leftToolbarIcons: { icon: React.ComponentType<IconProps>; label: string, content: ReactNode }[] = [
     { icon: IconFilter, label: 'Filter Panel', content: <Text>Filter panel content</Text> },
@@ -92,7 +89,7 @@ export function Shell() {
             {/** Left Toolbar Toggle Burger Icon */}
             <Flex justify="center" w={toolbarWidth}>
               <ActionIcon aria-label="Toggle Left Toolbar">
-                <IconMenu onClick={toggleLeftToolbar} stroke={ICON_STROKE} />
+                <IconMenu onClick={toggleLeftToolbar} stroke={iconStroke} />
               </ActionIcon>
             </Flex>
             {/** Intelvia Title */}
@@ -129,7 +126,7 @@ export function Shell() {
                 label={label}
               >
                 <ActionIcon aria-label={label}>
-                  <Icon stroke={ICON_STROKE} />
+                  <Icon stroke={iconStroke} />
                 </ActionIcon>
               </Tooltip>
             ))}
@@ -141,7 +138,7 @@ export function Shell() {
                   label="User"
                 >
                   <ActionIcon aria-label="User">
-                    <IconUser stroke={ICON_STROKE} />
+                    <IconUser stroke={iconStroke} />
                   </ActionIcon>
                 </Tooltip>
               </Menu.Target>
@@ -185,7 +182,7 @@ export function Shell() {
                     className={classes.leftToolbarIcon}
                   >
                     <Icon
-                      stroke={ICON_STROKE}
+                      stroke={iconStroke}
                     />
                   </ActionIcon>
                 </Tooltip>
