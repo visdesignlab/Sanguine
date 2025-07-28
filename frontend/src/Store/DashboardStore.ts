@@ -17,7 +17,7 @@ export class DashboardStore {
 
   // Chart configurations ------------------------------
   _chartConfigs: { [key: string]: DashboardChartConfig[] } = {
-    lg: [
+    main: [
       {
         i: '0', x: 0, y: 0, w: 2, h: 1, maxH: 2, yAxisVar: 'rbc_units', aggregation: 'sum',
       },
@@ -84,7 +84,7 @@ export class DashboardStore {
 
     // Return quarterly visit data sorted by date
     return Object.fromEntries(
-      this.chartConfigs.lg.map(({ i, yAxisVar }) => [
+      this.chartConfigs.main.map(({ i, yAxisVar }) => [
         i,
         Array.from(quarterlyData.entries())
           .map(([quarter, group]) => ({

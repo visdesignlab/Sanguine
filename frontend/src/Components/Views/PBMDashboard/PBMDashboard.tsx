@@ -33,10 +33,10 @@ export function PBMDashboard() {
           className="layout"
           // TODO: Breakpoints should be the same for the stats cards.
           breakpoints={{
-            lg: 852, sm: 0,
+            main: 852, sm: 0,
           }}
           cols={{
-            lg: 2, sm: 1,
+            main: 2, sm: 1,
           }}
           rowHeight={chartRowHeight}
           containerPadding={[0, 0]}
@@ -46,7 +46,7 @@ export function PBMDashboard() {
             // For each new layout, update the store's layouts
             Object.entries(newLayouts).forEach(([key, newLayoutArr]) => {
               if (!chartConfigs[key]) return;
-              // For every matching layout in the store, update
+              // For every matching layout in the store, update with new one
               chartConfigs[key] = chartConfigs[key].map((item) => {
                 const updated = newLayoutArr.find((l) => l.i === item.i);
                 return updated
@@ -58,7 +58,7 @@ export function PBMDashboard() {
             });
           }}
         >
-          {Object.values(chartConfigs.lg).map(({
+          {Object.values(chartConfigs.main).map(({
             i, x, y, w, h, maxH, yAxisVar, aggregation,
           }) => (
             <Card
@@ -84,10 +84,10 @@ export function PBMDashboard() {
                     data={BloodComponentOptions}
                     defaultValue={yAxisVar}
                     onChange={(value) => {
-                      const existingLayoutIndex = chartConfigs.lg.findIndex((el) => el.i === i);
-                      const existingLayout = chartConfigs.lg[existingLayoutIndex];
+                      const existingLayoutIndex = chartConfigs.main.findIndex((el) => el.i === i);
+                      const existingLayout = chartConfigs.main[existingLayoutIndex];
                       if (existingLayout) {
-                        chartConfigs.lg[existingLayoutIndex].yAxisVar = value as DashboardChartConfig['yAxisVar'];
+                        chartConfigs.main[existingLayoutIndex].yAxisVar = value as DashboardChartConfig['yAxisVar'];
                       }
                     }}
                   />
