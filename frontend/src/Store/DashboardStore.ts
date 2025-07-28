@@ -60,8 +60,16 @@ export class DashboardStore {
         plt_units: sum(visit, (d) => d.plt_units),
         cryo_units: sum(visit, (d) => d.cryo_units),
         cell_saver_ml: sum(visit, (d) => d.cell_saver_ml),
-
         los: mean(visit, (d) => d.los) || 0,
+        // TODO: Add other outcomes
+        death: 0,
+        vent: 0,
+        stroke: 0,
+        ecmo: 0,
+        b12: 0,
+        iron: 0,
+        txa: 0,
+        amicar: 0,
       }),
       (d) => d.quarter,
     );
