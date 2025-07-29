@@ -56,6 +56,8 @@ function HeatMap({
   const currentOffset = OffsetDict.regular;
   const [xVals, setXVals] = useState<[]>([]);
   const [caseMax, setCaseMax] = useState(0);
+  const [sortAttribute, setSortAttribute] = useState<string | null>(null);
+  const [sortDescending, setSortDescending] = useState(true);
 
   useDeepCompareEffect(() => {
     const [tempxVals, newCaseMax] = sortHelper(data, yAxisVar, store.provenanceState.showZero, secondaryData);
@@ -64,12 +66,70 @@ function HeatMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, store.provenanceState.showZero, yAxisVar, secondaryData]);
 
+  const sortedData = useMemo(() => {
+    // If not sorting by attribute, return original data
+    if (!sortAttribute) return data;
+
+    // Find the plot data for the attribute
+    const plot = attributePlotData.find((p) => p.attributeName === sortAttribute);
+    if (!plot) return data;
+
+    // A map of values of the attribute to sort by
+    const sortAttributeMap = plot.attributeData;
+    const medianSet = plot.type === 'Violin' ? plot.medianSet : undefined;
+
+    // Helper to get the value for sorting
+    function getSortValue(val: any, rowKey?: string): number {
+      if (plot?.type === 'Violin' && medianSet && rowKey && medianSet[rowKey] !== undefined) {
+        return medianSet[rowKey];
+      }
+      // If it's an object with attributeCaseCount and rowCaseCount, use the percentage
+      if (
+        val
+        && typeof val === 'object'
+        && typeof val.attributeCaseCount === 'number'
+        && typeof val.rowCaseCount === 'number'
+        && val.rowCaseCount > 0
+      ) {
+        return val.attributeCaseCount / val.rowCaseCount;
+      }
+      // If it's a number, use it directly
+      if (typeof val === 'number') return val;
+      // If it's an object with a value property, use that
+      if (val && typeof val === 'object') {
+        if ('value' in val && typeof val.value === 'number') return val.value;
+        if ('median' in val && typeof val.median === 'number') return val.median;
+        const numVal = Object.values(val).find((v) => typeof v === 'number');
+        if (typeof numVal === 'number') return numVal;
+      }
+      // Fallback to 0
+      return 0;
+    }
+
+    // Sort 'data' based on the sortAttribute, and return.
+    const attributeSortedData = [...data].sort((a, b) => {
+      const aVal = getSortValue(sortAttributeMap[a.aggregateAttribute], a.aggregateAttribute);
+      const bVal = getSortValue(sortAttributeMap[b.aggregateAttribute], b.aggregateAttribute);
+      return sortDescending ? bVal - aVal : aVal - bVal;
+    });
+    return attributeSortedData;
+  }, [data, sortAttribute, sortDescending, attributePlotData]);
+
+  // Use sortedData to generate xVals for the aggregation scale
+  const sortedXVals = useMemo(
+    () => sortedData.map((d) => d.aggregateAttribute),
+    [sortedData],
+  );
+
   const chartHeight = useMemo(() => Math.max(
     dimensionHeight,
     data.length * MIN_HEATMAP_BANDWIDTH(secondaryData) + OffsetDict.regular.top + OffsetDict.regular.bottom,
   ), [data.length, dimensionHeight, secondaryData]);
 
-  const aggregationScale = useCallback(() => AggregationScaleGenerator(xVals, chartHeight, currentOffset), [xVals, currentOffset, chartHeight]);
+  const aggregationScale = useCallback(
+    () => AggregationScaleGenerator(sortedXVals, chartHeight, currentOffset),
+    [sortedXVals, chartHeight, currentOffset],
+  );
 
   const valueScale = useCallback(() => {
     let outputRange;
@@ -116,8 +176,17 @@ function HeatMap({
   }
 
   const handleSortClick = useCallback((attributeName: string) => {
-    // Sort logic using attributeName
-    console.log(`Sorting by ${attributeName}`);
+    console.log(`Sorting by ${attributeName} in ${sortDescending ? 'descending' : 'ascending'} order`);
+    setSortAttribute((prevAttr) => {
+      // If we've previously sorted by this attribute, toggle the sort direction.
+      if (prevAttr === attributeName) {
+        console.log(`Toggling sort direction for ${attributeName}`);
+        setSortDescending((prevDesc) => !prevDesc);
+        return prevAttr;
+      }
+      setSortDescending(true); // default to descending on new attribute
+      return attributeName;
+    });
   }, []);
 
   // Calculates the height of each row based on whether secondary data is present.
@@ -133,7 +202,7 @@ function HeatMap({
       >
         <svg style={{ height: `${svgHeight}px`, width: '100%' }} ref={innerSvg}>
           <g>
-            {data.map((dataPoint, idx) => {
+            {sortedData.map((dataPoint, idx) => {
               // Calculate vertical placement and height for each primary row
               const rowY = (aggregationScale()(dataPoint.aggregateAttribute) || 0)
                 + (secondaryData ? aggregationScale().bandwidth() * 0.5 : 0);
@@ -226,7 +295,7 @@ function HeatMap({
             <HeatMapAxisY
               svg={innerSvg}
               currentOffset={currentOffset}
-              xVals={xVals}
+              xVals={sortedXVals}
               dimensionHeight={chartHeight}
               attributePlotTotalWidth={attributePlotTotalWidth}
               yAxisVar={yAxisVar}
