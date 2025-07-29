@@ -4,6 +4,7 @@ import {
 } from 'react';
 import { VegaLite } from 'react-vega';
 import HelpIcon from '@mui/icons-material/Help';
+import SortIcon from '@mui/icons-material/Sort';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import {
   FormControl, Tooltip, Switch, IconButton, Menu, MenuItem, Stack,
@@ -62,6 +63,10 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     rawDateRange,
   } = store.provenanceState;
 
+  // Sorting state for cost
+  const [sortDescending, setSortDescending] = useState(true);
+  const [sortByCost, setSortByCost] = useState(false);
+
   const chartDiv = useRef<HTMLDivElement>(null);
   const [vegaHeight, setVegaHeight] = useState(0);
   const [dimensionHeight, setDimensionHeight] = useState(0);
@@ -110,8 +115,6 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
 
   // Gets the provider name depending on the private mode setting
   const getLabel = usePrivateProvLabel();
-
-  // Separate data for the cost savings chart, and the extra attribute plot(s) ------------------------------------------------------------
 
   // Cost Savings Chart Data
   const [costSavingsData, setCostSavingsData] = useState<CostBarChartDataPoint[]>([]);
@@ -188,10 +191,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attributePlots]);
 
-  // useDeepCompareEffect COPIED FROM WrapperHeatMap.tsx, which correctly generates the extra attribute data for the extra pair plot ------------------------------------------------------------
-
-  // Creating the Extra Attribute Data (NOT the cost-savings data), to be used for the extra pair plot (GeneratorAttributePlot) -----------------------------------------------------------------------------------
-  // Default xAxisVar is PRBC_UNITS (because cost savings chart doesn't have different x-Axes). (So additional attributes like Total Transfused, Per Case, etc. are currently in terms of 'PRBC_UNITS').
+  // Creating the Extra Attribute Data (NOT the cost-savings data), to be used for the extra pair plot (GeneratorAttributePlot)
   const xAxisVar = 'PRBC_UNITS';
   useDeepCompareEffect(() => {
     const [tempCaseCount, secondaryTempCaseCount, outputData, secondaryOutputData] = generateExtraAttributeData(filteredCases, yAxisVar, outcomeComparison, interventionDate, store.provenanceState.showZero, xAxisVar);
@@ -332,6 +332,46 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
     stateUpdateWrapperUseJSON(costSavingsData, outputData, setCostSavingsData);
   }, [proceduresSelection, rawDateRange, yAxisVar, currentOutputFilterSet, BloodProductCost, filteredCases, outcomeComparison, interventionDate, store.configStore.privateMode]);
 
+  // Sort xVals by total cost if sortByCost is true, otherwise use default xVals
+  const sortedXVals = useMemo(() => {
+    if (!sortByCost) return xVals;
+    // Calculate total cost for each row
+    const costMap: Record<string, number> = {};
+    costSavingsData.forEach((d) => {
+      const label = getLabel(d.aggregateAttribute, yAxisVar);
+      if (!costMap[label]) costMap[label] = 0;
+      costMap[label] +=
+        (d.PRBC_UNITS || 0) +
+        (d.FFP_UNITS || 0) +
+        (d.CRYO_UNITS || 0) +
+        (d.PLT_UNITS || 0) +
+        (d.CELL_SAVER_ML || 0);
+    });
+    // If secondary data is present, include it as well
+    secondaryCostSavingsData.forEach((d) => {
+      const label = getLabel(d.aggregateAttribute, yAxisVar);
+      if (!costMap[label]) costMap[label] = 0;
+      costMap[label] +=
+        (d.PRBC_UNITS || 0) +
+        (d.FFP_UNITS || 0) +
+        (d.CRYO_UNITS || 0) +
+        (d.PLT_UNITS || 0) +
+        (d.CELL_SAVER_ML || 0);
+    });
+    // Sort labels by total cost
+    const labels = Object.keys(costMap);
+    labels.sort((a, b) =>
+      sortDescending ? costMap[b] - costMap[a] : costMap[a] - costMap[b]
+    );
+    return labels;
+  }, [costSavingsData, secondaryCostSavingsData, getLabel, yAxisVar, sortDescending, sortByCost, xVals]);
+
+  // Toggle sort direction and enable cost sort on icon click
+  const handleSortClick = useCallback(() => {
+    setSortByCost(true);
+    setSortDescending((prev) => !prev);
+  }, []);
+
   const spec = useMemo(() => ({
     $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
     data: { name: 'values' },
@@ -348,7 +388,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
         aggregate: 'sum',
         axis: { grid: false, title: 'Cost' },
       },
-      y: { field: 'rowLabel', type: 'ordinal', sort: xVals.toReversed() },
+      y: { field: 'rowLabel', type: 'ordinal', sort: sortedXVals.toReversed() },
       yOffset: outcomeComparison || interventionDate ? { field: 'type', type: 'ordinal', scale: { paddingOuter: -8, domain: ['true', 'false'] } } : undefined,
       color: { field: 'bloodProduct', type: 'nominal', legend: null },
       fillOpacity: {
@@ -380,7 +420,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
             },
             x: { value: -20 },
             x2: { value: -5 },
-            opacity: { value: 0.2 }, // 0.2 because there are 5 copies stacked on top of each other
+            opacity: { value: 0.2 },
           },
         },
       ] : []),
@@ -389,7 +429,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
       type: 'fit',
       contains: 'padding',
     },
-    height: { step: Math.max(MIN_HEATMAP_BANDWIDTH(secondaryCostSavingsData), (dimensionHeight - 50) / xVals.length) },
+    height: { step: Math.max(MIN_HEATMAP_BANDWIDTH(secondaryCostSavingsData), (dimensionHeight - 50) / sortedXVals.length) },
     config: {
       axisY: {
         title: null,
@@ -399,7 +439,7 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
         stroke: 'transparent',
       },
     },
-  }), [xVals, outcomeComparison, interventionDate, secondaryCostSavingsData, dimensionHeight]);
+  }), [sortedXVals, outcomeComparison, interventionDate, secondaryCostSavingsData, dimensionHeight]);
 
   const axisSpec = useMemo(() => ({
     ...spec,
@@ -424,11 +464,13 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
       <ChartAccessoryDiv>
         Cost/Saving Chart
         <FormControl style={{ verticalAlign: 'middle' }}>
-          {/* <FormHelperText>Potential cost</FormHelperText> */}
           <Tooltip title="Show potential RBC cost without cell salvage">
             <Switch checked={showPotential} onChange={(e) => { setShowPotential(e.target.checked); }} />
           </Tooltip>
         </FormControl>
+        <IconButton onClick={handleSortClick} color={sortByCost ? 'primary' : 'default'}>
+          <SortIcon />
+        </IconButton>
         <AttributePlotButtons disbleButton={dimensionWidth * 0.6 < attributePlotTotalWidth} attributePlotLength={attributePlotArray.length} chartId={chartId} buttonOptions={CostSavingsAttributePlotOptions} />
         <ChartConfigMenu layout={layout} />
         <Tooltip title="Change blood component cost">
@@ -471,7 +513,6 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
             secondTotal={secondaryCostSavingsData.reduce((a, b) => a + b.caseCount, 0)}
             outcomeComparison={outcomeComparison}
           />
-
         </svg>
       )}
       <div
@@ -500,8 +541,6 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
             width={dimensionWidth - attributePlotTotalWidth - 20}
             className="vega-vis"
           />
-
-          {/* Permanent x axis overlay with white background */}
           <div
             style={{
               height: xAxisOverlayHeight,
@@ -526,7 +565,6 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
             }}
           />
         </Stack>
-        {/* Bottom additional attribute labels */}
         <svg
           width={attributePlotTotalWidth}
           height={vegaHeight}
@@ -540,6 +578,8 @@ function WrapperCostBar({ layout }: { layout: CostLayoutElement }) {
             dimensionHeight={vegaHeight - xAxisOverlayHeight}
             currentOffset={currentOffset}
             chartId={chartId}
+            // No sorting
+            onSortClick={() => {}}
           />
         </svg>
       </div>
