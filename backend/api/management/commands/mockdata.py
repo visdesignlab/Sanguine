@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from datetime import datetime, timedelta
+from decimal import Decimal
 from django.utils.timezone import make_aware
 from django.core.management.base import BaseCommand
 from faker import Faker
@@ -18,6 +19,105 @@ from api.models import (
     # RoomTrace,
 )
 from api.views.utils.utils import get_all_cpt_code_filters
+
+
+def make_and_save_lab(fake, pat, visit, lab_draw_dtm, last_lab, test_type):
+    """Helper function to create and save a lab entry."""
+    if test_type == ["HGB", "Hemoglobin"]:
+        # If this the first lab
+        if last_lab is None:
+            result_value = fake.pydecimal(left_digits=2, right_digits=1, positive=True, min_value=6, max_value=16)
+        # Otherwise, increment or decrement based on last lab value
+        else:
+            if last_lab.result_value < 6:
+                result_value = last_lab.result_value + 2
+            elif last_lab.result_value < 8:
+                result_value = last_lab.result_value + 1
+            else:
+                result_value = fake.pydecimal(
+                    left_digits=2,
+                    right_digits=1,
+                    positive=True,
+                    min_value=max(last_lab.result_value - 2, 5),
+                    max_value=min(last_lab.result_value + 2, 20),
+                )
+        lower_limit = 12
+        upper_limit = 18
+        uom = "g/dL"
+    elif test_type == ["INR"]:
+        if last_lab is None:
+            result_value = fake.pydecimal(left_digits=2, right_digits=2, positive=True, min_value=0.5, max_value=5.0)
+        else:
+            if last_lab.result_value > 4.0:
+                result_value = last_lab.result_value - Decimal(1.5)
+            elif last_lab.result_value > 2.0:
+                result_value = last_lab.result_value - Decimal(0.5)
+            else:
+                result_value = fake.pydecimal(
+                    left_digits=2,
+                    right_digits=2,
+                    positive=True,
+                    min_value=max(last_lab.result_value - 1, 1.0),
+                    max_value=min(last_lab.result_value + 1, 5.0),
+                )
+        lower_limit = 0.8
+        upper_limit = 1.2
+        uom = "unitless"
+    elif test_type == ["PLT", "Platelet Count"]:
+        if last_lab is None:
+            result_value = fake.pydecimal(left_digits=5, right_digits=0, positive=True, min_value=5000, max_value=100000)
+        else:
+            if last_lab.result_value < 10000:
+                result_value = last_lab.result_value + 5000
+            elif last_lab.result_value < 20000:
+                result_value = last_lab.result_value + 2000
+            else:
+                result_value = fake.pydecimal(
+                    left_digits=5,
+                    right_digits=0,
+                    positive=True,
+                    min_value=max(last_lab.result_value - 10000, 2000),
+                    max_value=min(last_lab.result_value + 10000, 100000),
+                )
+        lower_limit = 15000
+        upper_limit = 45000
+        uom = "cells/uL"
+    elif test_type == ["Fibrinogen"]:
+        if last_lab is None:
+            result_value = fake.pydecimal(left_digits=3, right_digits=1, positive=True, min_value=80, max_value=300)
+        else:
+            if last_lab.result_value < 150:
+                result_value = last_lab.result_value + 100
+            elif last_lab.result_value < 200:
+                result_value = last_lab.result_value + 50
+            else:
+                result_value = fake.pydecimal(
+                    left_digits=3,
+                    right_digits=1,
+                    positive=True,
+                    min_value=max(last_lab.result_value - 100, 50),
+                    max_value=min(last_lab.result_value + 100, 400),
+                )
+        lower_limit = 150
+        upper_limit = 400
+        uom = "mg/dL"
+
+    return Lab.objects.create(
+        visit_no=visit,
+        mrn=pat,
+        lab_id=fake.unique.random_number(digits=10),
+        lab_draw_dtm=lab_draw_dtm,
+        lab_panel_code=fake.unique.random_number(digits=10),
+        lab_panel_desc=fake.sentence(),
+        result_dtm=lab_draw_dtm + timedelta(hours=random.randint(1, 12)),
+        result_code=fake.unique.random_number(digits=10),
+        result_loinc=fake.unique.random_number(digits=10),
+        result_desc=fake.random_element(elements=test_type),
+        result_value=result_value,
+        uom_code=uom,
+        lower_limit=lower_limit,
+        upper_limit=upper_limit,
+    )
 
 
 class Command(BaseCommand):
@@ -237,108 +337,41 @@ class Command(BaseCommand):
 
         # Generate mock data for LAB
         labs = []
-        result_desc_options = ["HGB", "Hemoglobin"]
+        result_desc_options = [["HGB", "Hemoglobin"], ["INR"], ["PLT", "Platelet Count"], ["Fibrinogen"]]
         for pat, bad_pat, visit, surgery in surgeries:
             # Generate pre-op labs
-            for i in range(2):
-                draw_dtm = make_aware(
-                    fake.date_time_between(
-                        start_date=visit.adm_dtm, end_date=surgery.surgery_start_dtm - timedelta(minutes=30)
+            for result_desc_option in result_desc_options:
+                lab = None
+                for i in range(2):
+                    draw_dtm = make_aware(
+                        fake.date_time_between(
+                            start_date=visit.adm_dtm, end_date=surgery.surgery_start_dtm - timedelta(minutes=30)
+                        )
                     )
-                )
-                lab = Lab.objects.create(
-                    visit_no=visit,
-                    mrn=pat,
-                    lab_id=fake.unique.random_number(digits=10),
-                    lab_draw_dtm=draw_dtm,
-                    lab_panel_code=fake.unique.random_number(digits=10),
-                    lab_panel_desc=fake.sentence(),
-                    result_dtm=draw_dtm + timedelta(hours=random.randint(1, 12)),
-                    result_code=fake.unique.random_number(digits=10),
-                    result_loinc=fake.unique.random_number(digits=10),
-                    result_desc=fake.random_element(elements=result_desc_options),
-                    result_value=fake.pydecimal(
-                        left_digits=2,
-                        right_digits=1,
-                        positive=True,
-                        min_value=5 if bad_pat else 10,
-                        max_value=9 if bad_pat else 14,
-                    ),
-                    uom_code=fake.random_element(elements=("g/dL", "g/L")),
-                    lower_limit=12,
-                    upper_limit=18,
-                )
-                labs.append((surgery, lab))
+                    lab = make_and_save_lab(fake, pat, visit, draw_dtm, lab, result_desc_option)
+                    labs.append((surgery, lab))
 
-            # Generate intra-op labs
-            for i in range(random.randint(1, 5)):
-                draw_dtm = make_aware(
-                    fake.date_time_between(
-                        start_date=surgery.surgery_start_dtm + timedelta(hours=i),
-                        end_date=surgery.surgery_start_dtm + timedelta(hours=i + 1),
+                # Generate intra-op labs
+                for i in range(random.randint(1, 5)):
+                    draw_dtm = make_aware(
+                        fake.date_time_between(
+                            start_date=surgery.surgery_start_dtm + timedelta(hours=i),
+                            end_date=surgery.surgery_start_dtm + timedelta(hours=i + 1),
+                        )
                     )
-                )
-                last_value = lab.result_value
-                min_value = last_value + 1 if last_value < 8 else max(last_value - 1, 5)
-                max_value = last_value + 2 if last_value < 8 else min(last_value + 2, 20)
-                new_value = last_value + 1 if last_value < 8 else fake.pydecimal(
-                    left_digits=2,
-                    right_digits=1,
-                    positive=True,
-                    min_value=min_value,
-                    max_value=max_value,
-                )
-                lab = Lab.objects.create(
-                    visit_no=visit,
-                    mrn=pat,
-                    lab_id=fake.unique.random_number(digits=10),
-                    lab_draw_dtm=draw_dtm,
-                    lab_panel_code=fake.unique.random_number(digits=10),
-                    lab_panel_desc=fake.sentence(),
-                    result_dtm=draw_dtm + timedelta(hours=random.randint(1, 12)),
-                    result_code=fake.unique.random_number(digits=10),
-                    result_loinc=fake.unique.random_number(digits=10),
-                    result_desc=fake.random_element(elements=result_desc_options),
-                    result_value=new_value,
-                    uom_code=fake.random_element(elements=("g/dL", "g/L")),
-                    lower_limit=12,
-                    upper_limit=18,
-                )
-                labs.append((surgery, lab))
+                    lab = make_and_save_lab(fake, pat, visit, draw_dtm, lab, result_desc_option)
+                    labs.append((surgery, lab))
 
-            # Generate post-op labs
-            for i in range(random.randint(1, 2)):
-                draw_dtm = make_aware(
-                    fake.date_time_between(
-                        start_date=surgery.surgery_end_dtm + timedelta(hours=i),
-                        end_date=surgery.surgery_end_dtm + timedelta(hours=i + 1),
+                # Generate post-op labs
+                for i in range(random.randint(1, 2)):
+                    draw_dtm = make_aware(
+                        fake.date_time_between(
+                            start_date=surgery.surgery_end_dtm + timedelta(hours=i),
+                            end_date=surgery.surgery_end_dtm + timedelta(hours=i + 1),
+                        )
                     )
-                )
-                last_value = lab.result_value
-                new_value = last_value + 1 if last_value < 8 else fake.pydecimal(
-                    left_digits=2,
-                    right_digits=1,
-                    positive=True,
-                    min_value=min(last_value - 2, 5),
-                    max_value=min(last_value + 2, 20),
-                )
-                lab = Lab.objects.create(
-                    visit_no=visit,
-                    mrn=pat,
-                    lab_id=fake.unique.random_number(digits=10),
-                    lab_draw_dtm=draw_dtm,
-                    lab_panel_code=fake.unique.random_number(digits=10),
-                    lab_panel_desc=fake.sentence(),
-                    result_dtm=draw_dtm + timedelta(hours=random.randint(1, 12)),
-                    result_code=fake.unique.random_number(digits=10),
-                    result_loinc=fake.unique.random_number(digits=10),
-                    result_desc=fake.random_element(elements=result_desc_options),
-                    result_value=new_value,
-                    uom_code=fake.random_element(elements=("g/dL", "g/L")),
-                    lower_limit=12,
-                    upper_limit=18,
-                )
-                labs.append((surgery, lab))
+                    lab = make_and_save_lab(fake, pat, visit, draw_dtm, lab, result_desc_option)
+                    labs.append((surgery, lab))
         self.stdout.write(self.style.SUCCESS("Successfully generated visit labs data"))
 
         # Generate mock data for MEDICATION
@@ -400,41 +433,75 @@ class Command(BaseCommand):
         # Generate mock data for TRANSFUSION
         for rank, (surg, lab) in enumerate(labs):
             rcb_units = 0
-            if lab.result_value < 6:
-                rcb_units = fake.random_int(min=2, max=3)
-            elif lab.result_value < 7:
-                rcb_units = fake.random_int(min=1, max=2)
-            elif lab.result_value < 9:
-                rcb_units = fake.random_int(min=0, max=1)
+            cell_saver_ml = 0
+            if lab.result_desc in ["HGB", "Hemoglobin"]:
+                if lab.result_value < 6:
+                    rcb_units = fake.random_int(min=2, max=3)
+                    cell_saver_ml = fake.random_int(min=300, max=1000)
+                elif lab.result_value < 7:
+                    rcb_units = fake.random_int(min=1, max=2)
+                    cell_saver_ml = fake.random_int(min=100, max=500)
+                elif lab.result_value < 8:
+                    rcb_units = fake.random_int(min=0, max=1)
+                    cell_saver_ml = fake.random_int(min=100, max=200)
+
             rbcs = rcb_units
-            ffp = 0
-            plt = 0
-            cryo = 0
+            cell_saver = cell_saver_ml
+
+            # FFP if INR > 2
+            ffp_units = 0
+            if lab.result_desc == "INR":
+                if lab.result_value > 2:
+                    ffp_units = fake.random_int(min=2, max=4)
+                elif lab.result_value > 4:
+                    ffp_units = fake.random_int(min=3, max=7)
+            ffp = ffp_units
+
+            # PLT if PLT count below 10,000
+            plt_units = 0
+            if lab.result_desc in ["PLT", "Platelet Count"]:
+                if lab.result_value < 10000:
+                    # One plt unit = ~6 Pooled WB Units
+                    plt_units = fake.random_int(min=1, max=2)
+                elif lab.result_value < 20000:
+                    plt_units = fake.random_int(min=0, max=1)
+            plt = plt_units
+
+            # CRYO if Fibrinogen < 150 mg/dL in bleeding patient
+            cryo_units = 0
+            if lab.result_desc == "Fibrinogen":
+                if lab.result_value < 150:
+                    cryo_units = fake.random_int(min=1, max=2)
+                elif lab.result_value < 200:
+                    cryo_units = fake.random_int(min=0, max=1)
+            cryo = cryo_units
+
             whole = 0
             type = fake.random_element(elements=("unit", "vol"))
 
-            Transfusion.objects.create(
-                visit_no=surg.visit_no,
-                trnsfsn_dtm=make_aware(
-                    fake.date_time_between(
-                        start_date=surg.surgery_start_dtm,
-                        end_date=surg.surgery_end_dtm,
-                    )
-                ),
-                transfusion_rank=rank,
-                blood_unit_number=fake.unique.random_number(digits=10),
-                rbc_units=rbcs if type == "unit" else None,
-                ffp_units=ffp if type == "unit" else None,
-                plt_units=plt if type == "unit" else None,
-                cryo_units=cryo if type == "unit" else None,
-                whole_units=whole if type == "unit" else None,
-                rbc_vol=rbcs * 250 if type == "vol" else None,
-                ffp_vol=ffp * 220 if type == "vol" else None,
-                plt_vol=plt * 300 if type == "vol" else None,
-                cryo_vol=cryo * 75 if type == "vol" else None,
-                whole_vol=whole * 450 if type == "vol" else None,
-                cell_saver_ml=0
-            )
+            if rbcs + cell_saver + ffp + plt + cryo + whole > 0:
+                Transfusion.objects.create(
+                    visit_no=surg.visit_no,
+                    trnsfsn_dtm=make_aware(
+                        fake.date_time_between(
+                            start_date=surg.surgery_start_dtm,
+                            end_date=surg.surgery_end_dtm,
+                        )
+                    ),
+                    transfusion_rank=rank,
+                    blood_unit_number=fake.unique.random_number(digits=10),
+                    rbc_units=rbcs if type == "unit" else None,
+                    ffp_units=ffp if type == "unit" else None,
+                    plt_units=plt if type == "unit" else None,
+                    cryo_units=cryo if type == "unit" else None,
+                    whole_units=whole if type == "unit" else None,
+                    rbc_vol=rbcs * 250 if type == "vol" else None,
+                    ffp_vol=ffp * 220 if type == "vol" else None,
+                    plt_vol=plt * 300 if type == "vol" else None,
+                    cryo_vol=cryo * 75 if type == "vol" else None,
+                    whole_vol=whole * 450 if type == "vol" else None,
+                    cell_saver_ml=cell_saver
+                )
         self.stdout.write(
             self.style.SUCCESS("Successfully generated intraop transfusion data")
         )
