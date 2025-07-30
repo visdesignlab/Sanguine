@@ -15,7 +15,7 @@ const standardTextSizes = {
     fontSize: '1.125rem',
   },
   h4: {
-    fontWeight: '400',
+    fontWeight: '500',
     fontSize: '1rem',
   },
 };
