@@ -115,7 +115,7 @@ export function ExploreView() {
     <Stack>
       {/* Title, Add Chart Button */}
       <Flex direction="row" justify="space-between" align="center">
-        <Title order={3}>Patient Blood Management Dashboard</Title>
+        <Title order={3}>Explore</Title>
         <Button>
           <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
           Add Chart
