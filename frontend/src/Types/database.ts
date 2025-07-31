@@ -42,7 +42,7 @@ export interface Surgery {
 export interface Lab {
   visit_no: string; // ForeignKey to Visit, use string to match Visit.visit_no
   mrn: string; // ForeignKey to Patient, use string to match Patient.mrn
-  lab_id: string;
+  lab_id: number;
   lab_draw_dtm: string; // ISO datetime string
   lab_panel_code: string;
   lab_panel_desc: string;
@@ -50,7 +50,7 @@ export interface Lab {
   result_code: string;
   result_loinc: string;
   result_desc: string;
-  result_value: string;
+  result_value: number;
   uom_code: string;
   lower_limit: number;
   upper_limit: number;
@@ -133,6 +133,6 @@ export interface Visit {
   transfusions: TransfusionEvent[];
   surgeries: Surgery[];
   labs: Lab[];
-  meds: Medication[];
+  medications: Medication[];
   billing_codes: BillingCode[];
 }

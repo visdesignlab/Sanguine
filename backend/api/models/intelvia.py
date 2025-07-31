@@ -116,7 +116,7 @@ class Medication(models.Model):
 class Lab(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
     mrn = models.ForeignKey(Patient, on_delete=models.CASCADE, db_column="mrn")
-    lab_id = models.CharField(max_length=16)
+    lab_id = models.BigIntegerField()
     lab_draw_dtm = models.DateTimeField()
     lab_panel_code = models.CharField(max_length=30)
     lab_panel_desc = models.CharField(max_length=256)
@@ -124,10 +124,10 @@ class Lab(models.Model):
     result_code = models.CharField(max_length=30)
     result_loinc = models.CharField(max_length=30)
     result_desc = models.CharField(max_length=256)
-    result_value = models.CharField(max_length=1000)
+    result_value = models.DecimalField(max_digits=20, decimal_places=4, null=True)
     uom_code = models.CharField(max_length=30)
-    lower_limit = models.FloatField()
-    upper_limit = models.FloatField()
+    lower_limit = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    upper_limit = models.DecimalField(max_digits=20, decimal_places=4, null=True)
 
     class Meta:
         db_table = "Lab"

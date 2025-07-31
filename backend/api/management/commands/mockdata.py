@@ -253,7 +253,7 @@ class Command(BaseCommand):
                             "UNI INPATIENT",
                         )
                     ),
-                    pat_expired_f=fake.random_element(elements=("Y", None)),
+                    pat_expired_f=fake.random_element(elements=tuple(["Y"] + [None] * 9)),
                     invasive_vent_f=fake.random_element(elements=("Y", None)),
                     total_vent_mins=fake.random_int(min=0, max=10000),
                     total_vent_days=fake.random_int(min=0, max=50),
@@ -331,6 +331,29 @@ class Command(BaseCommand):
                     prov_name=surgery.surgeon_prov_name,
                     code_rank=rank,
                 )
+            # Add ecmo codes
+            if bad_pat and random.random() < 0.2:
+                BillingCode.objects.create(
+                    visit_no=surgery.visit_no,
+                    cpt_code=fake.random_element(elements=['33946', '33947', '33948', '33949', '33950', '33951', '33952', '33953', '33954', '33955', '33956', '33957', '33958', '33959', '33960', '33961', '33962', '33963', '33964', '33965', '33966', '33969', '33984', '33985', '33986', '33987', '33988', '33989']),
+                    cpt_code_desc=fake.sentence(),
+                    proc_dtm=surgery.surgery_start_dtm,
+                    prov_id=surgery.anesth_prov_id,
+                    prov_name=surgery.anesth_prov_name,
+                    code_rank=rank + 1,
+                )
+            # Add stroke codes
+            if bad_pat and random.random() < 0.05:
+                BillingCode.objects.create(
+                    visit_no=surgery.visit_no,
+                    cpt_code=fake.random_element(elements=['99291', '1065F', '1066F']),
+                    cpt_code_desc=fake.sentence(),
+                    proc_dtm=surgery.surgery_start_dtm,
+                    prov_id=surgery.anesth_prov_id,
+                    prov_name=surgery.anesth_prov_name,
+                    code_rank=rank + 2,
+                )
+
         self.stdout.write(
             self.style.SUCCESS("Successfully generated billing codes data")
         )

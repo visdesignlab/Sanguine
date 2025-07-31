@@ -9,7 +9,9 @@ import { LineChart } from '@mantine/charts';
 import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
 import { useObserver } from 'mobx-react';
 import { StatsGrid } from './StatsGrid';
-import { BloodComponentOptions, type DashboardChartConfig } from '../../../Types/application';
+import {
+  BloodComponentOptions, GuidelineAdherenceOptions, OutcomeOptions, ProphylMedOptions, type DashboardChartConfig,
+} from '../../../Types/application';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import classes from '../GridLayoutItem.module.css';
@@ -27,6 +29,8 @@ export function PBMDashboard() {
   const handleRemoveChart = useCallback((id: string) => {
     store.dashboardStore.removeChart(id);
   }, [store.dashboardStore]);
+
+  const chartOptions = [...BloodComponentOptions, ...GuidelineAdherenceOptions, ...OutcomeOptions, ...ProphylMedOptions];
 
   return useObserver(() => {
     const chartRowHeight = 300;
@@ -75,7 +79,7 @@ export function PBMDashboard() {
                   <Flex direction="row" align="center" gap="md" ml={-12}>
                     <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
                     <Title order={4}>
-                      {`${aggregation.charAt(0).toUpperCase() + aggregation.slice(1)} of ${BloodComponentOptions.find((opt) => opt.value === yAxisVar)?.label || yAxisVar}`}
+                      {`${aggregation.charAt(0).toUpperCase() + aggregation.slice(1)}${aggregation === 'sum' ? ' of' : ''} ${chartOptions.find((opt) => opt.value === yAxisVar)?.label || yAxisVar}${aggregation === 'average' ? ' Per Visit' : ''}`}
                     </Title>
                   </Flex>
 
@@ -83,8 +87,9 @@ export function PBMDashboard() {
                     <ActionIcon variant="subtle" onClick={() => store.dashboardStore.setChartConfig(i, { i, yAxisVar, aggregation: aggregation === 'sum' ? 'average' : 'sum' })}>
                       <IconPercentage size={18} color={aggregation === 'average' ? theme.colors.indigo[6] : theme.colors.gray[6]} stroke={3} />
                     </ActionIcon>
+                    {/** Select Attribute Menu */}
                     <Select
-                      data={BloodComponentOptions}
+                      data={chartOptions}
                       defaultValue={yAxisVar}
                       onChange={(value) => {
                         store.dashboardStore.setChartConfig(i, {
@@ -101,7 +106,7 @@ export function PBMDashboard() {
                 {/** Chart - Line Chart */}
                 <LineChart
                   h={`calc(100% - (${theme.spacing.md} * 2))`}
-                  data={store.dashboardStore.chartData[i] || []}
+                  data={store.dashboardStore.chartData[`${aggregation}_${yAxisVar}`] || []}
                   dataKey="quarter"
                   series={[
                     { name: 'data', color: 'indigo.6' },
