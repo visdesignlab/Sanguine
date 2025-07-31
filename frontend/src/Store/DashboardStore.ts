@@ -47,13 +47,13 @@ export class DashboardStore {
       i: '0', yAxisVar: 'rbc_units', aggregation: 'sum',
     },
     {
-      i: '1', yAxisVar: 'ffp_units', aggregation: 'sum',
+      i: '1', yAxisVar: 'rbc_adherence', aggregation: 'average',
     },
     {
-      i: '2', yAxisVar: 'plt_units', aggregation: 'sum',
+      i: '2', yAxisVar: 'los', aggregation: 'average',
     },
     {
-      i: '3', yAxisVar: 'cryo_units', aggregation: 'sum',
+      i: '3', yAxisVar: 'iron', aggregation: 'average',
     },
   ];
 
