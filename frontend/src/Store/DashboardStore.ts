@@ -1,7 +1,15 @@
 import { makeAutoObservable } from 'mobx';
 import { mean, rollup, sum } from 'd3';
 import { Layout } from 'react-grid-layout';
-import { AggregationOptions, type DashboardChartConfig, dashboardYAxisVars } from '../Types/application';
+import {
+  BloodComponentOptions,
+  GuidelineAdherenceOptions,
+  OutcomeOptions,
+  ProphylMedOptions,
+  AggregationOptions,
+  type DashboardChartConfig,
+  dashboardYAxisVars,
+} from '../Types/application';
 import type { RootStore } from './Store';
 
 /**
@@ -281,65 +289,47 @@ export class DashboardStore {
       });
     });
 
-    // Aggregate visit attributes by quarter
+    // Aggregate visit attribute values by quarter (e.g. sum RBC units per quarter)
     const quarterlyData = rollup(
       visitData,
-      (visit) => ({
-        // Blood Products
-        sum_rbc_units: sum(visit, (d) => d.rbc_units),
-        sum_ffp_units: sum(visit, (d) => d.ffp_units),
-        sum_plt_units: sum(visit, (d) => d.plt_units),
-        sum_cryo_units: sum(visit, (d) => d.cryo_units),
-        sum_cell_saver_ml: sum(visit, (d) => d.cell_saver_ml),
+      (visit) => {
+        const agg: Record<string, number | undefined> = {};
 
-        average_rbc_units: mean(visit, (d) => d.rbc_units),
-        average_ffp_units: mean(visit, (d) => d.ffp_units),
-        average_plt_units: mean(visit, (d) => d.plt_units),
-        average_cryo_units: mean(visit, (d) => d.cryo_units),
-        average_cell_saver_ml: mean(visit, (d) => d.cell_saver_ml),
+        // Blood Components
+        for (const { value } of BloodComponentOptions) {
+          agg[`sum_${value}`] = sum(visit, (d) => d[value]);
+          agg[`average_${value}`] = mean(visit, (d) => d[value]);
+        }
 
-        // Guideline adherence for each blood product
-        sum_rbc_adherence: sum(visit, (d) => d.rbcAdherent),
-        sum_ffp_adherence: sum(visit, (d) => d.ffpAdherent),
-        sum_plt_adherence: sum(visit, (d) => d.pltAdherent),
-        sum_cryo_adherence: sum(visit, (d) => d.cryoAdherent),
-
-        average_rbc_adherence: mean(visit, (d) => (d.rbcTotal > 0 ? d.rbcAdherent / d.rbcTotal : null)),
-        average_ffp_adherence: mean(visit, (d) => (d.ffpTotal > 0 ? d.ffpAdherent / d.ffpTotal : null)),
-        average_plt_adherence: mean(visit, (d) => (d.pltTotal > 0 ? d.pltAdherent / d.pltTotal : null)),
-        average_cryo_adherence: mean(visit, (d) => (d.cryoTotal > 0 ? d.cryoAdherent / d.cryoTotal : null)),
+        // Guideline Adherence
+        for (const { value } of GuidelineAdherenceOptions) {
+          // e.g. rbc_adherence -> rbcAdherent, rbcTotal
+          const adherentKey = value.replace('_adherence', 'Adherent');
+          const totalKey = value.replace('_adherence', 'Total');
+          agg[`sum_${value}`] = sum(visit, (d) => (d)[adherentKey]);
+          agg[`average_${value}`] = mean(visit, (d) => ((d)[totalKey] > 0 ? (d)[adherentKey] / (d)[totalKey] : null));
+        }
 
         // Outcomes
-        sum_los: sum(visit, (d) => d.los),
-        sum_death: sum(visit, (d) => d.death),
-        sum_vent: sum(visit, (d) => d.vent),
-        sum_stroke: sum(visit, (d) => d.stroke),
-        sum_ecmo: sum(visit, (d) => d.ecmo),
+        for (const { value } of OutcomeOptions) {
+          agg[`sum_${value}`] = sum(visit, (d) => d[value]);
+          agg[`average_${value}`] = mean(visit, (d) => d[value]);
+        }
 
-        average_los: mean(visit, (d) => d.los),
-        average_death: mean(visit, (d) => d.death),
-        average_vent: mean(visit, (d) => d.vent),
-        average_stroke: mean(visit, (d) => d.stroke),
-        average_ecmo: mean(visit, (d) => d.ecmo),
+        // Prophylactic Medications
+        for (const { value } of ProphylMedOptions) {
+          agg[`sum_${value}`] = sum(visit, (d) => d[value]);
+          agg[`average_${value}`] = mean(visit, (d) => d[value]);
+        }
 
-        // Prophylactic medications
-        sum_b12: sum(visit, (d) => d.b12),
-        sum_iron: sum(visit, (d) => d.iron),
-        sum_txa: sum(visit, (d) => d.txa),
-        sum_amicar: sum(visit, (d) => d.amicar),
+        // TODO: Cost calculations
 
-        average_b12: mean(visit, (d) => d.b12),
-        average_iron: mean(visit, (d) => d.iron),
-        average_txa: mean(visit, (d) => d.txa),
-        average_amicar: mean(visit, (d) => d.amicar),
-
-        // Cost calculations
-      }),
+        return agg;
+      },
       (d) => d.quarter,
     );
 
     // Return every combination of aggregation and yAxisVar
-    // Build all possible keys from AggregationOptions and all yAxisVars
     const result = {} as Record<`${typeof AggregationOptions[number]}_${DashboardChartConfig['yAxisVar']}`, { quarter: string, data: number }[]>;
 
     for (const aggregation of AggregationOptions) {
