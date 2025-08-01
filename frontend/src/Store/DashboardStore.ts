@@ -24,7 +24,8 @@ export class DashboardStore {
     makeAutoObservable(this);
   }
 
-  // Chart configurations ------------------------------
+  // Chart settings ------------------------------
+  // Chart Layouts
   _chartLayouts: { [key: string]: Layout[] } = {
     main: [
       {
@@ -50,6 +51,7 @@ export class DashboardStore {
     this._chartLayouts = input;
   }
 
+  // Chart configs
   _chartConfigs: DashboardChartConfig[] = [
     {
       i: '0', yAxisVar: 'rbc_units', aggregation: 'sum',
@@ -73,6 +75,7 @@ export class DashboardStore {
     this._chartConfigs = input;
   }
 
+  // Chart management ------------------------------
   setChartConfig(id: string, input: DashboardChartConfig) {
     this._chartConfigs = this._chartConfigs.map((config) => {
       if (config.i === id) {
@@ -84,7 +87,6 @@ export class DashboardStore {
 
   removeChart(id: string) {
     this._chartConfigs = this._chartConfigs.filter((config) => config.i !== id);
-
     this._chartLayouts.main = this._chartLayouts.main.filter((layout) => layout.i !== id);
     this._chartLayouts.sm = this._chartLayouts.sm.filter((layout) => layout.i !== id);
   }
@@ -94,62 +96,43 @@ export class DashboardStore {
    * Returns all chart data for the dashboard
    */
   get chartData(): Record<`${typeof AggregationOptions[number]}_${DashboardChartConfig['yAxisVar']}`, { quarter: string, data: number }[]> {
-    // For each visit, get the quarter and values
+    // For each visit, get the dashboard data, un-aggregated -------------------------------------------
     const visitData = this._rootStore.allVisits.map((visit) => {
+      // --- Pre-surgery periods ---
       const preSurgeryTimePeriods = visit.surgeries.map((surgery) => {
         const surgeryStart = new Date(surgery.surgery_start_dtm);
-
-        // [start - 2 days, start]
         return [surgeryStart.getTime() - 2 * 24 * 60 * 60 * 1000, surgeryStart.getTime()];
       });
 
-      // Prophylactic medications
-      const {
-        b12,
-        iron,
-        txa,
-        amicar,
-      } = visit.medications.reduce((acc, med) => {
+      // --- Prophylactic medications ---
+      const prophMedFlags = visit.medications.reduce((acc, med) => {
         const medTime = new Date(med.order_dtm).getTime();
         if (preSurgeryTimePeriods.some(([start, end]) => medTime >= start && medTime <= end)) {
           const lowerMedName = med.medication_name.toLowerCase();
-          if (lowerMedName.includes('b12') || lowerMedName.includes('cobalamin')) {
-            acc.b12 = 1;
-          }
-          if (lowerMedName.includes('iron') || lowerMedName.includes('ferrous') || lowerMedName.includes('ferric')) {
-            acc.iron = 1;
-          }
-          if (lowerMedName.includes('tranexamic') || lowerMedName.includes('txa')) {
-            acc.txa = 1;
-          }
-          if (lowerMedName.includes('amicar') || lowerMedName.includes('aminocaproic')) {
-            acc.amicar = 1;
-          }
+          if (lowerMedName.includes('b12') || lowerMedName.includes('cobalamin')) acc.b12 = 1;
+          if (lowerMedName.includes('iron') || lowerMedName.includes('ferrous') || lowerMedName.includes('ferric')) acc.iron = 1;
+          if (lowerMedName.includes('tranexamic') || lowerMedName.includes('txa')) acc.txa = 1;
+          if (lowerMedName.includes('amicar') || lowerMedName.includes('aminocaproic')) acc.amicar = 1;
         }
         return acc;
       }, {
-        b12: 0,
-        iron: 0,
-        txa: 0,
-        amicar: 0,
+        b12: 0, iron: 0, txa: 0, amicar: 0,
       });
 
-      // Crude guideline adherence for a given blood product
-      const {
-        rbcAdherent,
-        rbcTotal,
-        ffpAdherent,
-        ffpTotal,
-        pltAdherent,
-        pltTotal,
-        cryoAdherent,
-        cryoTotal,
-      } = visit.transfusions.reduce((acc, transfusion) => {
+      // --- Blood product units ---
+      const bloodProductUnits = {
+        rbc_units: visit.transfusions.reduce((s, t) => s + (t.rbc_units || 0), 0),
+        ffp_units: visit.transfusions.reduce((s, t) => s + (t.ffp_units || 0), 0),
+        plt_units: visit.transfusions.reduce((s, t) => s + (t.plt_units || 0), 0),
+        cryo_units: visit.transfusions.reduce((s, t) => s + (t.cryo_units || 0), 0),
+        cell_saver_ml: visit.transfusions.reduce((s, t) => s + (t.cell_saver_ml || 0), 0),
+      };
+
+      // --- Adherence flags ---
+      const adherenceFlags = visit.transfusions.reduce((acc, transfusion) => {
         // RBCS
         if ((transfusion.rbc_units && transfusion.rbc_units > 0) || (transfusion.rbc_vol && transfusion.rbc_vol > 0)) {
-          // Find the RBC lab test for this transfusion, prior to the transfusion time, sorted time descending
           const rbcLab = visit.labs
-            // Within 2 hours of the transfusion
             .filter((lab) => {
               const labDrawDtm = new Date(lab.lab_draw_dtm).getTime();
               const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
@@ -161,18 +144,12 @@ export class DashboardStore {
             })
             .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
             .at(0);
-          if (rbcLab && rbcLab.result_value <= 7.5) {
-            // If the lab result is within the normal range, return 1 (adherent), otherwise 0 (not adherent)
-            acc.rbcAdherent += 1;
-          }
-          acc.rbcTotal += 1; // Count this transfusion
+          if (rbcLab && rbcLab.result_value <= 7.5) acc.rbcAdherent += 1;
+          acc.rbcTotal += 1;
         }
-
         // Plasma
         if ((transfusion.ffp_units && transfusion.ffp_units > 0) || (transfusion.ffp_vol && transfusion.ffp_vol > 0)) {
-          // Find the FFP lab test for this transfusion, prior to the transfusion time, sorted time descending
           const ffpLab = visit.labs
-            // Within 2 hours of the transfusion
             .filter((lab) => {
               const labDrawDtm = new Date(lab.lab_draw_dtm).getTime();
               const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
@@ -184,19 +161,12 @@ export class DashboardStore {
             })
             .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
             .at(0);
-
-          if (ffpLab && ffpLab.result_value >= 1.5) {
-            // If the lab result is within the normal range, return 1 (adherent), otherwise 0 (not adherent)
-            acc.ffpAdherent += 1;
-          }
-          acc.ffpTotal += 1; // Count this transfusion
+          if (ffpLab && ffpLab.result_value >= 1.5) acc.ffpAdherent += 1;
+          acc.ffpTotal += 1;
         }
-
         // Platelets
         if ((transfusion.plt_units && transfusion.plt_units > 0) || (transfusion.plt_vol && transfusion.plt_vol > 0)) {
-          // Find the platelet lab test for this transfusion, prior to the transfusion time, sorted time descending
           const pltLab = visit.labs
-            // Within 2 hours of the transfusion
             .filter((lab) => {
               const labDrawDtm = new Date(lab.lab_draw_dtm).getTime();
               const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
@@ -208,19 +178,12 @@ export class DashboardStore {
             })
             .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
             .at(0);
-
-          if (pltLab && pltLab.result_value >= 15000) {
-            // If the lab result is within the normal range, return 1 (adherent), otherwise 0 (not adherent)
-            acc.pltAdherent += 1;
-          }
-          acc.pltTotal += 1; // Count this transfusion
+          if (pltLab && pltLab.result_value >= 15000) acc.pltAdherent += 1;
+          acc.pltTotal += 1;
         }
-
         // Cryoprecipitate
         if ((transfusion.cryo_units && transfusion.cryo_units > 0) || (transfusion.cryo_vol && transfusion.cryo_vol > 0)) {
-          // Find the cryo lab test for this transfusion, prior to the transfusion time, sorted time descending
           const cryoLab = visit.labs
-            // Within 2 hours of the transfusion
             .filter((lab) => {
               const labDrawDtm = new Date(lab.lab_draw_dtm).getTime();
               const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
@@ -232,13 +195,9 @@ export class DashboardStore {
             })
             .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
             .at(0);
-          if (cryoLab && cryoLab.result_value >= 175) {
-            // If the lab result is within the normal range, return 1 (adherent), otherwise 0 (not adherent)
-            acc.cryoAdherent += 1;
-          }
-          acc.cryoTotal += 1; // Count this transfusion
+          if (cryoLab && cryoLab.result_value >= 175) acc.cryoAdherent += 1;
+          acc.cryoTotal += 1;
         }
-
         return acc;
       }, {
         rbcAdherent: 0,
@@ -251,42 +210,28 @@ export class DashboardStore {
         cryoTotal: 0,
       });
 
-      return ({
-        quarter: `${new Date(visit.dsch_dtm).getFullYear()}-Q${Math.floor((new Date(visit.dsch_dtm).getMonth()) / 3) + 1}`,
-
-        // Blood products
-        rbc_units: visit.transfusions.reduce((s, transfusion) => s + (transfusion.rbc_units || 0), 0),
-        ffp_units: visit.transfusions.reduce((s, transfusion) => s + (transfusion.ffp_units || 0), 0),
-        plt_units: visit.transfusions.reduce((s, transfusion) => s + (transfusion.plt_units || 0), 0),
-        cryo_units: visit.transfusions.reduce((s, transfusion) => s + (transfusion.cryo_units || 0), 0),
-        cell_saver_ml: visit.transfusions.reduce((s, transfusion) => s + (transfusion.cell_saver_ml || 0), 0),
-
-        // For a transfusion, if no test, not adherent, if a test, check test value.
-        rbcAdherent,
-        rbcTotal,
-        ffpAdherent,
-        ffpTotal,
-        pltAdherent,
-        pltTotal,
-        cryoAdherent,
-        cryoTotal,
-
-        // Outcomes
+      // --- Outcome flags ---
+      const outcomeFlags = {
         los: (new Date(visit.dsch_dtm).getTime() - new Date(visit.adm_dtm).getTime()) / (1000 * 60 * 60 * 24),
         death: visit.pat_expired_f ? 1 : 0,
         vent: visit.total_vent_mins > 1440 ? 1 : 0,
-        // TODO: ECMO & Stroke codes pulled from somewhere
         stroke: visit.billing_codes.some((code) => ['99291', '1065F', '1066F'].includes(code.cpt_code)) ? 1 : 0,
         ecmo: visit.billing_codes
-          .some((code) => ['33946', '33947', '33948', '33949', '33950', '33951', '33952', '33953', '33954', '33955', '33956', '33957', '33958', '33959', '33960', '33961', '33962', '33963', '33964', '33965', '33966', '33969', '33984', '33985', '33986', '33987', '33988', '33989']
-            .includes(code.cpt_code)) ? 1 : 0,
+          .some((code) => [
+            '33946', '33947', '33948', '33949', '33950', '33951', '33952', '33953', '33954', '33955',
+            '33956', '33957', '33958', '33959', '33960', '33961', '33962', '33963', '33964', '33965',
+            '33966', '33969', '33984', '33985', '33986', '33987', '33988', '33989',
+          ].includes(code.cpt_code)) ? 1 : 0,
+      };
 
-        // Prophylactic medications
-        b12,
-        iron,
-        txa,
-        amicar,
-      });
+      // --- Return cleaned visit data ---
+      return {
+        quarter: `${new Date(visit.dsch_dtm).getFullYear()}-Q${Math.floor((new Date(visit.dsch_dtm).getMonth()) / 3) + 1}`,
+        ...bloodProductUnits,
+        ...adherenceFlags,
+        ...outcomeFlags,
+        ...prophMedFlags,
+      };
     });
 
     // Aggregate visit attribute values by quarter (e.g. sum RBC units per quarter)
@@ -328,10 +273,8 @@ export class DashboardStore {
       },
       (d) => d.quarter,
     );
-
     // Return every combination of aggregation and yAxisVar
     const result = {} as Record<`${typeof AggregationOptions[number]}_${DashboardChartConfig['yAxisVar']}`, { quarter: string, data: number }[]>;
-
     for (const aggregation of AggregationOptions) {
       for (const yAxisVar of dashboardYAxisVars) {
         const key = `${aggregation}_${yAxisVar}` as `${typeof aggregation}_${typeof yAxisVar}`;
