@@ -181,8 +181,9 @@ export class DashboardStore {
    */
   getPreSurgeryTimePeriods(visit: Visit): [number, number][] {
     return visit.surgeries.map((surgery) => {
+      const twoDays = 2 * 24 * 60 * 60 * 1000;
       const surgeryStart = new Date(surgery.surgery_start_dtm);
-      return [surgeryStart.getTime() - 2 * 24 * 60 * 60 * 1000, surgeryStart.getTime()];
+      return [surgeryStart.getTime() - twoDays, surgeryStart.getTime()];
     });
   }
 
@@ -276,12 +277,13 @@ export class DashboardStore {
           // Find relevant lab result within 2 hours of transfusion
           const relevantLab = visit.labs
             .filter((lab) => {
+              const twoHoursInMs = 2 * 60 * 60 * 1000;
               const labDrawDtm = new Date(lab.lab_draw_dtm).getTime();
               const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
               return (
                 labDesc.includes(lab.result_desc)
                 && labDrawDtm <= transfusionDtm
-                && labDrawDtm >= transfusionDtm - 2 * 60 * 60 * 1000
+                && labDrawDtm >= transfusionDtm - twoHoursInMs
               );
             })
             .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
