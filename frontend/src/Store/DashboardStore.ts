@@ -119,7 +119,7 @@ export class DashboardStore {
 
       // Return cleaned visit data
       return {
-        quarter: this.getQuarterFromDate(new Date(visit.dsch_dtm)),
+        quarter: this.getQuarterFromDate(this.safeParseDate(visit.dsch_dtm)),
         ...bloodProductUnits,
         ...adherenceFlags,
         ...outcomeFlags,
@@ -187,6 +187,20 @@ export class DashboardStore {
   // Helper functions for chart data ---------------------------------------------
 
   /**
+   * Safely parse a date string with error handling
+   */
+  private safeParseDate(dateInput: string | Date | null | undefined): Date {
+    if (!dateInput) {
+      throw new Error('Date input is null or undefined');
+    }
+    const date = new Date(dateInput);
+    if (Number.isNaN(date.getTime())) {
+      throw new Error(`Invalid date format: ${dateInput}`);
+    }
+    return date;
+  }
+
+  /**
    * Calculate quarter string from a date
   */
   private getQuarterFromDate(date: Date): Quarter {
@@ -200,7 +214,7 @@ export class DashboardStore {
    */
   getPreSurgeryTimePeriods(visit: Visit): [number, number][] {
     return visit.surgeries.map((surgery) => {
-      const surgeryStart = new Date(surgery.surgery_start_dtm);
+      const surgeryStart = this.safeParseDate(surgery.surgery_start_dtm);
       return [surgeryStart.getTime() - TIME_CONSTANTS.TWO_DAYS_MS, surgeryStart.getTime()];
     });
   }
@@ -211,7 +225,7 @@ export class DashboardStore {
   getProphMedFlags(visit: Visit): Record<ProphylMed, number> {
     return visit.medications.reduce((acc: Record<ProphylMed, number>, med) => {
       const preSurgeryTimePeriods = this.getPreSurgeryTimePeriods(visit);
-      const medTime = new Date(med.order_dtm).getTime();
+      const medTime = this.safeParseDate(med.order_dtm).getTime();
       // Check if med given pre-surgery
       if (preSurgeryTimePeriods.some(([start, end]) => medTime >= start && medTime <= end)) {
         const lowerMedName = med.medication_name.toLowerCase();
@@ -276,15 +290,15 @@ export class DashboardStore {
           // Find relevant lab result within 2 hours of transfusion
           const relevantLab = visit.labs
             .filter((lab) => {
-              const labDrawDtm = new Date(lab.lab_draw_dtm).getTime();
-              const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
+              const labDrawDtm = this.safeParseDate(lab.lab_draw_dtm).getTime();
+              const transfusionDtm = this.safeParseDate(transfusion.trnsfsn_dtm).getTime();
               return (
                 labDesc.includes(lab.result_desc)
                 && labDrawDtm <= transfusionDtm
                 && labDrawDtm >= transfusionDtm - TIME_CONSTANTS.TWO_HOURS_MS
               );
             })
-            .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
+            .sort((a, b) => this.safeParseDate(b.lab_draw_dtm).getTime() - this.safeParseDate(a.lab_draw_dtm).getTime())
             .at(0);
 
           // If relevant lab exists and adheres to guidelines, increment counts
@@ -312,7 +326,7 @@ export class DashboardStore {
    */
   getOutcomeFlags(visit: Visit): Record<Outcome, number> {
     return {
-      los: (new Date(visit.dsch_dtm).getTime() - new Date(visit.adm_dtm).getTime()) / (TIME_CONSTANTS.ONE_DAY_MS),
+      los: (this.safeParseDate(visit.dsch_dtm).getTime() - this.safeParseDate(visit.adm_dtm).getTime()) / (TIME_CONSTANTS.ONE_DAY_MS),
       death: visit.pat_expired_f ? 1 : 0,
       vent: visit.total_vent_mins > TIME_CONSTANTS.VENTILATOR_THRESHOLD_MINS ? 1 : 0,
       stroke: this.hasMatchingCptCode(visit, CPT_CODES.stroke) ? 1 : 0,
