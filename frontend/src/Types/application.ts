@@ -115,3 +115,5 @@ export type DashboardChartConfig = {
   yAxisVar: typeof dashboardYAxisVars[number];
   aggregation: typeof AggregationOptions[number];
 };
+
+export type DashboardChartData = Record<`${typeof AggregationOptions[number]}_${DashboardChartConfig['yAxisVar']}`, { quarter: string, data: number }[]>;

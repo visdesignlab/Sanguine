@@ -15,6 +15,7 @@ import {
   AggregationOptions,
   type DashboardChartConfig,
   dashboardYAxisVars,
+  DashboardChartData,
 } from '../Types/application';
 import type { RootStore } from './Store';
 import { Visit } from '../Types/database';
@@ -102,8 +103,8 @@ export class DashboardStore {
   /**
    * Returns all chart data for the dashboard
    */
-  get chartData(): Record<`${typeof AggregationOptions[number]}_${DashboardChartConfig['yAxisVar']}`, { quarter: string, data: number }[]> {
-    // For each visit, get the dashboard data, un-aggregated ---------------------
+  get chartData(): DashboardChartData {
+    // For each visit, get the dashboard data, un-aggregated ------
     const visitData = this._rootStore.allVisits.map((visit: Visit) => {
       const prophMedFlags = this.getProphMedFlags(visit);
       const bloodProductUnits = this.getBloodProductUnits(visit);
@@ -120,7 +121,7 @@ export class DashboardStore {
       };
     });
 
-    // Aggregate visit attribute values by quarter (e.g. sum RBC units per quarter) -------------------------
+    // Aggregate visit attribute values by quarter (e.g. sum RBC units per quarter) -----
     const quarterlyData = rollup(
       visitData,
       (visit) => {
@@ -158,7 +159,7 @@ export class DashboardStore {
     );
 
     // Return every possible chart configuration - (combinations of aggregation and yAxisVar) --------------------------------
-    const result = {} as Record<`${typeof AggregationOptions[number]}_${DashboardChartConfig['yAxisVar']}`, { quarter: string, data: number }[]>;
+    const result = {} as DashboardChartData;
     for (const aggregation of AggregationOptions) {
       for (const yAxisVar of dashboardYAxisVars) {
         const key = `${aggregation}_${yAxisVar}` as `${typeof aggregation}_${typeof yAxisVar}`;
