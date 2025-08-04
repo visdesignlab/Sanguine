@@ -143,3 +143,10 @@ export type DashboardChartData = Record<`${typeof AggregationOptions[number]}_${
 
 // Time formatting ------------------------------------------------
 export type Quarter = `${number}-Q${1 | 2 | 3 | 4}`;
+
+export const TIME_CONSTANTS = {
+  TWO_HOURS_MS: 2 * 60 * 60 * 1000,
+  TWO_DAYS_MS: 2 * 24 * 60 * 60 * 1000,
+  ONE_DAY_MS: 24 * 60 * 60 * 1000,
+  VENTILATOR_THRESHOLD_MINS: 1440,
+} as const;

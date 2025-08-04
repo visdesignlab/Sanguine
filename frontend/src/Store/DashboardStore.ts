@@ -19,10 +19,12 @@ import {
   dashboardYAxisVars,
   DashboardChartData,
   CPT_CODES,
+  TIME_CONSTANTS,
   type DashboardChartConfig,
   type DashboardChartConfigKey,
   Quarter,
 } from '../Types/application';
+import { TIME } from 'vega-lite/build/src/channel';
 
 /**
  * DashboardStore manages the state of the PBM dashboard: stats, layouts, and chart data.
@@ -198,9 +200,8 @@ export class DashboardStore {
    */
   getPreSurgeryTimePeriods(visit: Visit): [number, number][] {
     return visit.surgeries.map((surgery) => {
-      const twoDays = 2 * 24 * 60 * 60 * 1000;
       const surgeryStart = new Date(surgery.surgery_start_dtm);
-      return [surgeryStart.getTime() - twoDays, surgeryStart.getTime()];
+      return [surgeryStart.getTime() - TIME_CONSTANTS.TWO_DAYS_MS, surgeryStart.getTime()];
     });
   }
 
@@ -275,13 +276,12 @@ export class DashboardStore {
           // Find relevant lab result within 2 hours of transfusion
           const relevantLab = visit.labs
             .filter((lab) => {
-              const twoHoursInMs = 2 * 60 * 60 * 1000;
               const labDrawDtm = new Date(lab.lab_draw_dtm).getTime();
               const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
               return (
                 labDesc.includes(lab.result_desc)
                 && labDrawDtm <= transfusionDtm
-                && labDrawDtm >= transfusionDtm - twoHoursInMs
+                && labDrawDtm >= transfusionDtm - TIME_CONSTANTS.TWO_HOURS_MS
               );
             })
             .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
@@ -312,9 +312,9 @@ export class DashboardStore {
    */
   getOutcomeFlags(visit: Visit): Record<Outcome, number> {
     return {
-      los: (new Date(visit.dsch_dtm).getTime() - new Date(visit.adm_dtm).getTime()) / (1000 * 60 * 60 * 24),
+      los: (new Date(visit.dsch_dtm).getTime() - new Date(visit.adm_dtm).getTime()) / (TIME_CONSTANTS.ONE_DAY_MS),
       death: visit.pat_expired_f ? 1 : 0,
-      vent: visit.total_vent_mins > 1440 ? 1 : 0,
+      vent: visit.total_vent_mins > TIME_CONSTANTS.VENTILATOR_THRESHOLD_MINS ? 1 : 0,
       stroke: this.hasMatchingCptCode(visit, CPT_CODES.stroke) ? 1 : 0,
       ecmo: this.hasMatchingCptCode(visit, CPT_CODES.ecmo) ? 1 : 0,
     } as Record<Outcome, number>;
