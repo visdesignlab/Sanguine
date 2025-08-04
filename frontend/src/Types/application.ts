@@ -1,3 +1,5 @@
+import { TransfusionEvent } from './database';
+
 // Blood components -----------------------
 export const BLOOD_COMPONENTS = [
   { value: 'rbc_units', label: 'RBCs Transfused' },
@@ -116,6 +118,8 @@ export const GuidelineAdherenceOptions = Object.values(GUIDELINE_ADHERENCE) as R
   adherentCount: AdherentCountField;
   totalTransfused: TotalTransfusedField;
   labDesc: readonly string[];
+  adherenceCheck: (labValue: number) => boolean;
+  transfusionUnits: readonly (keyof TransfusionEvent)[];
 }>;
 
 // PBM Dashboard ---------------------------

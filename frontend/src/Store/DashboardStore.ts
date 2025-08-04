@@ -9,7 +9,6 @@ import {
   BloodComponentOptions,
   BloodComponent,
   GuidelineAdherenceOptions,
-  GUIDELINE_ADHERENCE,
   AdherentCountField,
   TotalTransfusedField,
   OutcomeOptions,
@@ -252,13 +251,13 @@ export class DashboardStore {
 
     // For each transfusion, count adherence and total transfused for each blood product
     visit.transfusions.forEach((transfusion: TransfusionEvent) => {
-    // For each adherence spec (rbc, ffp), check if transfusion adheres to guidelines
-      Object.values(GUIDELINE_ADHERENCE).forEach(({
+      // For each adherence spec (rbc, ffp), check if transfusion adheres to guidelines
+      GuidelineAdherenceOptions.forEach(({
         transfusionUnits, labDesc, adherenceCheck, adherentCount, totalTransfused,
       }) => {
-        // Check if blood product unit given
+      // Check if blood product unit given
         if (this.isBloodProductTransfused(transfusion, transfusionUnits)) {
-          // Find relevant lab result within 2 hours of transfusion
+        // Find relevant lab result within 2 hours of transfusion
           const relevantLab = visit.labs
             .filter((lab) => {
               const twoHoursInMs = 2 * 60 * 60 * 1000;
@@ -266,8 +265,8 @@ export class DashboardStore {
               const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
               return (
                 labDesc.includes(lab.result_desc)
-              && labDrawDtm <= transfusionDtm
-              && labDrawDtm >= transfusionDtm - twoHoursInMs
+            && labDrawDtm <= transfusionDtm
+            && labDrawDtm >= transfusionDtm - twoHoursInMs
               );
             })
             .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
@@ -282,7 +281,6 @@ export class DashboardStore {
         }
       });
     });
-
     return adherenceFlags;
   }
 
