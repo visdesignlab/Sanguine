@@ -17,6 +17,7 @@ import {
   dashboardYAxisVars,
 } from '../Types/application';
 import type { RootStore } from './Store';
+import { Visit } from '../Types/database';
 
 /**
  * DashboardStore manages the state of the PBM dashboard: stats, layouts, and chart data.
@@ -102,129 +103,14 @@ export class DashboardStore {
    * Returns all chart data for the dashboard
    */
   get chartData(): Record<`${typeof AggregationOptions[number]}_${DashboardChartConfig['yAxisVar']}`, { quarter: string, data: number }[]> {
-    // For each visit, get the dashboard data, un-aggregated -------------------------------------------
-    const visitData = this._rootStore.allVisits.map((visit) => {
-      // --- Pre-surgery periods (2 days before surgery) ---
-      const preSurgeryTimePeriods = visit.surgeries.map((surgery) => {
-        const surgeryStart = new Date(surgery.surgery_start_dtm);
-        return [surgeryStart.getTime() - 2 * 24 * 60 * 60 * 1000, surgeryStart.getTime()];
-      });
+    // For each visit, get the dashboard data, un-aggregated ---------------------
+    const visitData = this._rootStore.allVisits.map((visit: Visit) => {
+      const prophMedFlags = this.getProphMedFlags(visit);
+      const bloodProductUnits = this.getBloodProductUnits(visit);
+      const adherenceFlags = this.getAdherenceFlags(visit);
+      const outcomeFlags = this.getOutcomeFlags(visit);
 
-      // --- Prophylactic medications ---
-      // For each visit, count number of each prophyl med given in pre-surgery period
-      const prophMedFlags = visit.medications.reduce((acc, med) => {
-        const medTime = new Date(med.order_dtm).getTime();
-        // Check if med given pre-surgery
-        if (preSurgeryTimePeriods.some(([start, end]) => medTime >= start && medTime <= end)) {
-          const lowerMedName = med.medication_name.toLowerCase();
-          // Increase count if med matches prophyl med type
-          ProphylMedOptions.forEach((medType) => {
-            if (medType.aliases.some((alias) => lowerMedName.includes(alias))) {
-              acc[medType.value] = 1;
-            }
-          });
-        }
-        return acc;
-      }, ProphylMedOptions.reduce((acc, medType) => {
-        acc[medType.value] = 0;
-        return acc;
-      }, {} as Record<ProphylMed, number>));
-
-      // --- Blood product units ---
-      const bloodProductUnits = BloodComponentOptions.reduce((acc, component) => {
-        acc[component.value] = visit.transfusions.reduce((s, t) => s + (t[component.value] || 0), 0);
-        return acc;
-      }, {} as Record<BloodComponent, number>);
-
-      // --- Adherence flags ---
-      const adherenceFlags = {
-        // For each adherence spec, initialize counts
-        ...GuidelineAdherenceOptions.reduce((acc, spec) => {
-          acc[spec.adherentCount] = 0;
-          acc[spec.totalTransfused] = 0;
-          return acc;
-        }, {} as Record<AdherentCountField | TotalTransfusedField, number>),
-      };
-
-      // For each transfusion, count adherence and total transfused for each blood product
-      visit.transfusions.forEach((transfusion) => {
-        // Adherence checks for each blood product
-        const adherenceSpecs = [
-          {
-            unitCheck: (transfusion.rbc_units && transfusion.rbc_units > 0) || (transfusion.rbc_vol && transfusion.rbc_vol > 0),
-            labDesc: GUIDELINE_ADHERENCE.rbc.labDesc,
-            adherenceCheck: (labValue: number) => labValue <= 7.5,
-            adherentCount: GUIDELINE_ADHERENCE.rbc.adherentCount,
-            totalTransfused: GUIDELINE_ADHERENCE.rbc.totalTransfused,
-          },
-          {
-            unitCheck: (transfusion.ffp_units && transfusion.ffp_units > 0) || (transfusion.ffp_vol && transfusion.ffp_vol > 0),
-            labDesc: GUIDELINE_ADHERENCE.ffp.labDesc,
-            adherenceCheck: (labValue: number) => labValue >= 1.5,
-            adherentCount: GUIDELINE_ADHERENCE.ffp.adherentCount,
-            totalTransfused: GUIDELINE_ADHERENCE.ffp.totalTransfused,
-          },
-          {
-            unitCheck: (transfusion.plt_units && transfusion.plt_units > 0) || (transfusion.plt_vol && transfusion.plt_vol > 0),
-            labDesc: GUIDELINE_ADHERENCE.plt.labDesc,
-            adherenceCheck: (labValue: number) => labValue >= 15000,
-            adherentCount: GUIDELINE_ADHERENCE.plt.adherentCount,
-            totalTransfused: GUIDELINE_ADHERENCE.plt.totalTransfused,
-          },
-          {
-            unitCheck: (transfusion.cryo_units && transfusion.cryo_units > 0) || (transfusion.cryo_vol && transfusion.cryo_vol > 0),
-            labDesc: GUIDELINE_ADHERENCE.cryo.labDesc,
-            adherenceCheck: (labValue: number) => labValue >= 175,
-            adherentCount: GUIDELINE_ADHERENCE.cryo.adherentCount,
-            totalTransfused: GUIDELINE_ADHERENCE.cryo.totalTransfused,
-          },
-        ];
-
-        // For each adherence spec, check if transfusion adheres to guidelines
-        adherenceSpecs.forEach(({
-          unitCheck, labDesc, adherenceCheck, adherentCount, totalTransfused,
-        }) => {
-          // Check if [blood product] unit given
-          if (unitCheck) {
-            // Find relevant lab result within 2 hours of transfusion
-            const relevantLab = visit.labs
-              .filter((lab) => {
-                const labDrawDtm = new Date(lab.lab_draw_dtm).getTime();
-                const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
-                return (
-                  labDesc.includes(lab.result_desc)
-                  && labDrawDtm <= transfusionDtm
-                  && labDrawDtm >= transfusionDtm - 2 * 60 * 60 * 1000
-                );
-              })
-              .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
-              .at(0);
-
-            // If relevant lab exists and adheres to guidelines, increment counts
-            if (relevantLab && adherenceCheck(relevantLab.result_value)) {
-              adherenceFlags[adherentCount] += 1;
-            }
-            // Increment total [blood product] transfused regardless
-            adherenceFlags[totalTransfused] += 1;
-          }
-        });
-      });
-
-      // --- Outcome flags ---
-      const outcomeFlags = ({
-        los: (new Date(visit.dsch_dtm).getTime() - new Date(visit.adm_dtm).getTime()) / (1000 * 60 * 60 * 24),
-        death: visit.pat_expired_f ? 1 : 0,
-        vent: visit.total_vent_mins > 1440 ? 1 : 0,
-        stroke: visit.billing_codes.some((code) => ['99291', '1065F', '1066F'].includes(code.cpt_code)) ? 1 : 0,
-        ecmo: visit.billing_codes
-          .some((code) => [
-            '33946', '33947', '33948', '33949', '33950', '33951', '33952', '33953', '33954', '33955',
-            '33956', '33957', '33958', '33959', '33960', '33961', '33962', '33963', '33964', '33965',
-            '33966', '33969', '33984', '33985', '33986', '33987', '33988', '33989',
-          ].includes(code.cpt_code)) ? 1 : 0,
-      }) as Record<Outcome, number>;
-
-      // --- Return cleaned visit data ---
+      // Return cleaned visit data
       return {
         quarter: `${new Date(visit.dsch_dtm).getFullYear()}-Q${Math.floor((new Date(visit.dsch_dtm).getMonth()) / 3) + 1}`,
         ...bloodProductUnits,
@@ -286,5 +172,148 @@ export class DashboardStore {
       }
     }
     return result;
+  }
+
+  // Helper functions for chart data ------------------------------------------
+  /**
+   * Calculate pre-surgery time periods (2 days before each surgery)
+   */
+  getPreSurgeryTimePeriods(visit: Visit): [number, number][] {
+    return visit.surgeries.map((surgery) => {
+      const surgeryStart = new Date(surgery.surgery_start_dtm);
+      return [surgeryStart.getTime() - 2 * 24 * 60 * 60 * 1000, surgeryStart.getTime()];
+    });
+  }
+
+  /**
+   * Calculate prophylactic medication flags for a visit
+   */
+  getProphMedFlags(visit: Visit): Record<ProphylMed, number> {
+    return visit.medications.reduce((acc: Record<ProphylMed, number>, med) => {
+      const preSurgeryTimePeriods = this.getPreSurgeryTimePeriods(visit);
+      const medTime = new Date(med.order_dtm).getTime();
+      // Check if med given pre-surgery
+      if (preSurgeryTimePeriods.some(([start, end]) => medTime >= start && medTime <= end)) {
+        const lowerMedName = med.medication_name.toLowerCase();
+        // Increase count if med matches prophyl med type
+        ProphylMedOptions.forEach((medType) => {
+          if (medType.aliases.some((alias) => lowerMedName.includes(alias))) {
+            acc[medType.value] = 1;
+          }
+        });
+      }
+      return acc;
+    }, ProphylMedOptions.reduce((acc, medType) => {
+      acc[medType.value] = 0;
+      return acc;
+    }, {} as Record<ProphylMed, number>));
+  }
+
+  /**
+   * Calculate blood product units for a visit
+   */
+  getBloodProductUnits(visit: Visit): Record<BloodComponent, number> {
+    return BloodComponentOptions.reduce((acc, component) => {
+      acc[component.value] = visit.transfusions.reduce((s: number, t) => s + (t[component.value] || 0), 0);
+      return acc;
+    }, {} as Record<BloodComponent, number>);
+  }
+
+  /**
+   * Calculate adherence flags for a visit
+   */
+  getAdherenceFlags(visit: Visit): Record<AdherentCountField | TotalTransfusedField, number> {
+    const adherenceFlags = {
+      // For each adherence spec, initialize counts
+      ...GuidelineAdherenceOptions.reduce((acc, spec) => {
+        acc[spec.adherentCount] = 0;
+        acc[spec.totalTransfused] = 0;
+        return acc;
+      }, {} as Record<AdherentCountField | TotalTransfusedField, number>),
+    };
+
+    // For each transfusion, count adherence and total transfused for each blood product
+    visit.transfusions.forEach((transfusion) => {
+      // Adherence checks for each blood product
+      const adherenceSpecs = [
+        {
+          unitCheck: (transfusion.rbc_units && transfusion.rbc_units > 0) || (transfusion.rbc_vol && transfusion.rbc_vol > 0),
+          labDesc: GUIDELINE_ADHERENCE.rbc.labDesc,
+          adherenceCheck: (labValue: number) => labValue <= 7.5,
+          adherentCount: GUIDELINE_ADHERENCE.rbc.adherentCount,
+          totalTransfused: GUIDELINE_ADHERENCE.rbc.totalTransfused,
+        },
+        {
+          unitCheck: (transfusion.ffp_units && transfusion.ffp_units > 0) || (transfusion.ffp_vol && transfusion.ffp_vol > 0),
+          labDesc: GUIDELINE_ADHERENCE.ffp.labDesc,
+          adherenceCheck: (labValue: number) => labValue >= 1.5,
+          adherentCount: GUIDELINE_ADHERENCE.ffp.adherentCount,
+          totalTransfused: GUIDELINE_ADHERENCE.ffp.totalTransfused,
+        },
+        {
+          unitCheck: (transfusion.plt_units && transfusion.plt_units > 0) || (transfusion.plt_vol && transfusion.plt_vol > 0),
+          labDesc: GUIDELINE_ADHERENCE.plt.labDesc,
+          adherenceCheck: (labValue: number) => labValue >= 15000,
+          adherentCount: GUIDELINE_ADHERENCE.plt.adherentCount,
+          totalTransfused: GUIDELINE_ADHERENCE.plt.totalTransfused,
+        },
+        {
+          unitCheck: (transfusion.cryo_units && transfusion.cryo_units > 0) || (transfusion.cryo_vol && transfusion.cryo_vol > 0),
+          labDesc: GUIDELINE_ADHERENCE.cryo.labDesc,
+          adherenceCheck: (labValue: number) => labValue >= 175,
+          adherentCount: GUIDELINE_ADHERENCE.cryo.adherentCount,
+          totalTransfused: GUIDELINE_ADHERENCE.cryo.totalTransfused,
+        },
+      ];
+
+      // For each adherence spec, check if transfusion adheres to guidelines
+      adherenceSpecs.forEach(({
+        unitCheck, labDesc, adherenceCheck, adherentCount, totalTransfused,
+      }) => {
+        // Check if [blood product] unit given
+        if (unitCheck) {
+          // Find relevant lab result within 2 hours of transfusion
+          const relevantLab = visit.labs
+            .filter((lab) => {
+              const labDrawDtm = new Date(lab.lab_draw_dtm).getTime();
+              const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
+              return (
+                labDesc.includes(lab.result_desc)
+                && labDrawDtm <= transfusionDtm
+                && labDrawDtm >= transfusionDtm - 2 * 60 * 60 * 1000
+              );
+            })
+            .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
+            .at(0);
+
+          // If relevant lab exists and adheres to guidelines, increment counts
+          if (relevantLab && adherenceCheck(relevantLab.result_value)) {
+            adherenceFlags[adherentCount] += 1;
+          }
+          // Increment total [blood product] transfused regardless
+          adherenceFlags[totalTransfused] += 1;
+        }
+      });
+    });
+
+    return adherenceFlags;
+  }
+
+  /**
+   * Calculate outcome flags for a visit
+   */
+  getOutcomeFlags(visit: Visit): Record<Outcome, number> {
+    return {
+      los: (new Date(visit.dsch_dtm).getTime() - new Date(visit.adm_dtm).getTime()) / (1000 * 60 * 60 * 24),
+      death: visit.pat_expired_f ? 1 : 0,
+      vent: visit.total_vent_mins > 1440 ? 1 : 0,
+      stroke: visit.billing_codes.some((code) => ['99291', '1065F', '1066F'].includes(code.cpt_code)) ? 1 : 0,
+      ecmo: visit.billing_codes
+        .some((code) => [
+          '33946', '33947', '33948', '33949', '33950', '33951', '33952', '33953', '33954', '33955',
+          '33956', '33957', '33958', '33959', '33960', '33961', '33962', '33963', '33964', '33965',
+          '33966', '33969', '33984', '33985', '33986', '33987', '33988', '33989',
+        ].includes(code.cpt_code)) ? 1 : 0,
+    } as Record<Outcome, number>;
   }
 }
