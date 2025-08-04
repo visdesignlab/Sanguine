@@ -24,7 +24,6 @@ import {
   type DashboardChartConfigKey,
   Quarter,
 } from '../Types/application';
-import { TIME } from 'vega-lite/build/src/channel';
 
 /**
  * DashboardStore manages the state of the PBM dashboard: stats, layouts, and chart data.
@@ -111,21 +110,23 @@ export class DashboardStore {
    */
   get chartData(): DashboardChartData {
     // --- For each visit, get the dashboard data, un-aggregated ---
-    const visitData = this._rootStore.allVisits.map((visit: Visit) => {
-      const prophMedFlags = this.getProphMedFlags(visit);
-      const bloodProductUnits = this.getBloodProductUnits(visit);
-      const adherenceFlags = this.getAdherenceFlags(visit);
-      const outcomeFlags = this.getOutcomeFlags(visit);
+    const visitData = this._rootStore.allVisits
+      .filter((visit) => this.isValidVisit(visit))
+      .map((visit: Visit) => {
+        const prophMedFlags = this.getProphMedFlags(visit);
+        const bloodProductUnits = this.getBloodProductUnits(visit);
+        const adherenceFlags = this.getAdherenceFlags(visit);
+        const outcomeFlags = this.getOutcomeFlags(visit);
 
-      // Return cleaned visit data
-      return {
-        quarter: this.getQuarterFromDate(this.safeParseDate(visit.dsch_dtm)),
-        ...bloodProductUnits,
-        ...adherenceFlags,
-        ...outcomeFlags,
-        ...prophMedFlags,
-      };
-    });
+        // Return cleaned visit data
+        return {
+          quarter: this.getQuarterFromDate(this.safeParseDate(visit.dsch_dtm)),
+          ...bloodProductUnits,
+          ...adherenceFlags,
+          ...outcomeFlags,
+          ...prophMedFlags,
+        };
+      });
 
     // --- Aggregate visit attribute values by quarter ---
     // (e.g. Sum RBC units per quarter)
@@ -198,6 +199,31 @@ export class DashboardStore {
       throw new Error(`Invalid date format: ${dateInput}`);
     }
     return date;
+  }
+
+  /**
+   * Validate that required visit data exists
+   */
+  private isValidVisit(visit: Visit): boolean {
+    if (!visit) {
+      console.warn('Null or undefined visit');
+      return false;
+    }
+    if (!visit.dsch_dtm || !visit.adm_dtm) {
+      console.warn('Visit missing required dates:', { id: visit.visit_no, dsch_dtm: visit.dsch_dtm, adm_dtm: visit.adm_dtm });
+      return false;
+    }
+    const dischDate = this.safeParseDate(visit.dsch_dtm);
+    const admDate = this.safeParseDate(visit.adm_dtm);
+    if (!dischDate || !admDate) {
+      console.warn('Visit has invalid date formats:', { id: visit.visit_no, dsch_dtm: visit.dsch_dtm, adm_dtm: visit.adm_dtm });
+      return false;
+    }
+    if (dischDate.getTime() < admDate.getTime()) {
+      console.warn('Visit discharge date before admission date:', { id: visit.visit_no, dischDate, admDate });
+      return false;
+    }
+    return true;
   }
 
   /**
