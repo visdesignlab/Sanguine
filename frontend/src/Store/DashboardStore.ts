@@ -20,6 +20,8 @@ import {
   DashboardChartData,
   CPT_CODES,
   type DashboardChartConfig,
+  type DashboardChartConfigKey,
+  Quarter,
 } from '../Types/application';
 
 /**
@@ -34,7 +36,7 @@ export class DashboardStore {
     makeAutoObservable(this);
   }
 
-  // Chart settings ------------------------------
+  // Chart settings -----------------------------------------------------------
   // Chart Layouts
   _chartLayouts: { [key: string]: Layout[] } = {
     main: [
@@ -85,7 +87,7 @@ export class DashboardStore {
     this._chartConfigs = input;
   }
 
-  // Chart management ------------------------------
+  // Chart management ----------------------------------------------------------
   setChartConfig(id: string, input: DashboardChartConfig) {
     this._chartConfigs = this._chartConfigs.map((config) => {
       if (config.i === id) {
@@ -101,12 +103,12 @@ export class DashboardStore {
     this._chartLayouts.sm = this._chartLayouts.sm.filter((layout) => layout.i !== id);
   }
 
-  // Chart data ------------------------------------------
+  // Chart data ----------------------------------------------------------------
   /**
    * Returns all chart data for the dashboard
    */
   get chartData(): DashboardChartData {
-    // For each visit, get the dashboard data, un-aggregated ------
+    // --- For each visit, get the dashboard data, un-aggregated ---
     const visitData = this._rootStore.allVisits.map((visit: Visit) => {
       const prophMedFlags = this.getProphMedFlags(visit);
       const bloodProductUnits = this.getBloodProductUnits(visit);
@@ -115,7 +117,7 @@ export class DashboardStore {
 
       // Return cleaned visit data
       return {
-        quarter: `${new Date(visit.dsch_dtm).getFullYear()}-Q${Math.floor((new Date(visit.dsch_dtm).getMonth()) / 3) + 1}`,
+        quarter: this.getQuarterFromDate(new Date(visit.dsch_dtm)),
         ...bloodProductUnits,
         ...adherenceFlags,
         ...outcomeFlags,
@@ -123,7 +125,8 @@ export class DashboardStore {
       };
     });
 
-    // Aggregate visit attribute values by quarter (e.g. sum RBC units per quarter) -----
+    // --- Aggregate visit attribute values by quarter ---
+    // (e.g. Sum RBC units per quarter)
     const quarterlyData = rollup(
       visitData,
       (visit) => {
@@ -160,24 +163,36 @@ export class DashboardStore {
       (d) => d.quarter,
     );
 
-    // Return every possible chart configuration - (combinations of aggregation and yAxisVar) --------------------------------
+    // --- Return every possible chart configuration ---
+    // (Combins. of aggregation and yAxisVar)
     const result = {} as DashboardChartData;
     for (const aggregation of AggregationOptions) {
       for (const yAxisVar of dashboardYAxisVars) {
-        const key = `${aggregation}_${yAxisVar}` as `${typeof aggregation}_${typeof yAxisVar}`;
+        const key: DashboardChartConfigKey = `${aggregation}_${yAxisVar}`;
         const data = Array.from(quarterlyData.entries())
           .map(([quarter, group]) => ({
             quarter,
-            data: group[`${aggregation}_${yAxisVar}`] || 0,
+            data: group[key] || 0,
           }))
           .sort((a, b) => a.quarter.localeCompare(b.quarter));
+        // Assign to current chart configuration
         result[key] = data;
       }
     }
     return result;
   }
 
-  // Helper functions for chart data -------------------------------------
+  // Helper functions for chart data ---------------------------------------------
+
+  /**
+   * Calculate quarter string from a date
+  */
+  private getQuarterFromDate(date: Date): Quarter {
+    const year = date.getFullYear();
+    const quarter = Math.floor(date.getMonth() / 3) + 1 as 1 | 2 | 3 | 4;
+    return `${year}-Q${quarter}`;
+  }
+
   /**
    * Calculate pre-surgery time periods (2 days before each surgery)
    */
@@ -237,11 +252,11 @@ export class DashboardStore {
   }
 
   /**
- * Calculate adherence flags for a visit
- */
+  * Calculate adherence flags for a visit
+  */
   getAdherenceFlags(visit: Visit): Record<AdherentCountField | TotalTransfusedField, number> {
     const adherenceFlags = {
-    // For each adherence spec, initialize counts
+    // --- For each adherence spec, initialize counts ---
       ...GuidelineAdherenceOptions.reduce((acc, spec) => {
         acc[spec.adherentCount] = 0;
         acc[spec.totalTransfused] = 0;
@@ -249,15 +264,15 @@ export class DashboardStore {
       }, {} as Record<AdherentCountField | TotalTransfusedField, number>),
     };
 
-    // For each transfusion, count adherence and total transfused for each blood product
+    // --- For each transfusion, count adherence and total transfused for each blood product ---
     visit.transfusions.forEach((transfusion: TransfusionEvent) => {
       // For each adherence spec (rbc, ffp), check if transfusion adheres to guidelines
       GuidelineAdherenceOptions.forEach(({
         transfusionUnits, labDesc, adherenceCheck, adherentCount, totalTransfused,
       }) => {
-      // Check if blood product unit given
+        // Check if blood product unit given
         if (this.isBloodProductTransfused(transfusion, transfusionUnits)) {
-        // Find relevant lab result within 2 hours of transfusion
+          // Find relevant lab result within 2 hours of transfusion
           const relevantLab = visit.labs
             .filter((lab) => {
               const twoHoursInMs = 2 * 60 * 60 * 1000;
@@ -265,8 +280,8 @@ export class DashboardStore {
               const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
               return (
                 labDesc.includes(lab.result_desc)
-            && labDrawDtm <= transfusionDtm
-            && labDrawDtm >= transfusionDtm - twoHoursInMs
+                && labDrawDtm <= transfusionDtm
+                && labDrawDtm >= transfusionDtm - twoHoursInMs
               );
             })
             .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
@@ -281,6 +296,7 @@ export class DashboardStore {
         }
       });
     });
+
     return adherenceFlags;
   }
 

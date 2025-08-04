@@ -138,4 +138,8 @@ export type DashboardChartConfig = {
   aggregation: typeof AggregationOptions[number];
 };
 
+export type DashboardChartConfigKey = `${typeof AggregationOptions[number]}_${typeof dashboardYAxisVars[number]}`;
 export type DashboardChartData = Record<`${typeof AggregationOptions[number]}_${DashboardChartConfig['yAxisVar']}`, { quarter: string, data: number }[]>;
+
+// Time formatting ------------------------------------------------
+export type Quarter = `${number}-Q${1 | 2 | 3 | 4}`;
