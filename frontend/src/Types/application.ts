@@ -1,5 +1,15 @@
 import { TransfusionEvent } from './database';
 
+// Time formatting ------------------------------------------------
+export type Quarter = `${number}-Q${1 | 2 | 3 | 4}`;
+
+export const TIME_CONSTANTS = {
+  TWO_HOURS_MS: 2 * 60 * 60 * 1000,
+  TWO_DAYS_MS: 2 * 24 * 60 * 60 * 1000,
+  ONE_DAY_MS: 24 * 60 * 60 * 1000,
+  VENTILATOR_THRESHOLD_MINS: 1440,
+} as const;
+
 // Blood components -----------------------
 export const BLOOD_COMPONENTS = [
   { value: 'rbc_units', label: 'RBCs Transfused' },
@@ -139,14 +149,4 @@ export type DashboardChartConfig = {
 };
 
 export type DashboardChartConfigKey = `${typeof AggregationOptions[number]}_${typeof dashboardYAxisVars[number]}`;
-export type DashboardChartData = Record<`${typeof AggregationOptions[number]}_${DashboardChartConfig['yAxisVar']}`, { quarter: string, data: number }[]>;
-
-// Time formatting ------------------------------------------------
-export type Quarter = `${number}-Q${1 | 2 | 3 | 4}`;
-
-export const TIME_CONSTANTS = {
-  TWO_HOURS_MS: 2 * 60 * 60 * 1000,
-  TWO_DAYS_MS: 2 * 24 * 60 * 60 * 1000,
-  ONE_DAY_MS: 24 * 60 * 60 * 1000,
-  VENTILATOR_THRESHOLD_MINS: 1440,
-} as const;
+export type DashboardChartData = Record<`${typeof AggregationOptions[number]}_${DashboardChartConfig['yAxisVar']}`, { quarter: Quarter, data: number }[]>;
