@@ -3,7 +3,7 @@ import { mean, rollup, sum } from 'd3';
 import { Layout } from 'react-grid-layout';
 
 import type { RootStore } from './Store';
-import { Visit } from '../Types/database';
+import { TransfusionEvent, Visit } from '../Types/database';
 
 import {
   BloodComponentOptions,
@@ -225,11 +225,24 @@ export class DashboardStore {
   }
 
   /**
-   * Calculate adherence flags for a visit
+   * Check if a blood product was transfused
    */
+  private isBloodProductTransfused(transfusion: TransfusionEvent, bloodProductUnit: readonly string[]): boolean {
+    return bloodProductUnit.some((field) => {
+      if (!(field in transfusion)) {
+        throw new Error(`Field "${field}" is not a key of TransfusionEvent`);
+      }
+      const value = transfusion[field as keyof TransfusionEvent];
+      return typeof value === 'number' && value > 0;
+    });
+  }
+
+  /**
+ * Calculate adherence flags for a visit
+ */
   getAdherenceFlags(visit: Visit): Record<AdherentCountField | TotalTransfusedField, number> {
     const adherenceFlags = {
-      // For each adherence spec, initialize counts
+    // For each adherence spec, initialize counts
       ...GuidelineAdherenceOptions.reduce((acc, spec) => {
         acc[spec.adherentCount] = 0;
         acc[spec.totalTransfused] = 0;
@@ -238,45 +251,13 @@ export class DashboardStore {
     };
 
     // For each transfusion, count adherence and total transfused for each blood product
-    visit.transfusions.forEach((transfusion) => {
-      // Adherence checks for each blood product
-      const adherenceSpecs = [
-        {
-          unitCheck: (transfusion.rbc_units && transfusion.rbc_units > 0) || (transfusion.rbc_vol && transfusion.rbc_vol > 0),
-          labDesc: GUIDELINE_ADHERENCE.rbc.labDesc,
-          adherenceCheck: (labValue: number) => labValue <= 7.5,
-          adherentCount: GUIDELINE_ADHERENCE.rbc.adherentCount,
-          totalTransfused: GUIDELINE_ADHERENCE.rbc.totalTransfused,
-        },
-        {
-          unitCheck: (transfusion.ffp_units && transfusion.ffp_units > 0) || (transfusion.ffp_vol && transfusion.ffp_vol > 0),
-          labDesc: GUIDELINE_ADHERENCE.ffp.labDesc,
-          adherenceCheck: (labValue: number) => labValue >= 1.5,
-          adherentCount: GUIDELINE_ADHERENCE.ffp.adherentCount,
-          totalTransfused: GUIDELINE_ADHERENCE.ffp.totalTransfused,
-        },
-        {
-          unitCheck: (transfusion.plt_units && transfusion.plt_units > 0) || (transfusion.plt_vol && transfusion.plt_vol > 0),
-          labDesc: GUIDELINE_ADHERENCE.plt.labDesc,
-          adherenceCheck: (labValue: number) => labValue >= 15000,
-          adherentCount: GUIDELINE_ADHERENCE.plt.adherentCount,
-          totalTransfused: GUIDELINE_ADHERENCE.plt.totalTransfused,
-        },
-        {
-          unitCheck: (transfusion.cryo_units && transfusion.cryo_units > 0) || (transfusion.cryo_vol && transfusion.cryo_vol > 0),
-          labDesc: GUIDELINE_ADHERENCE.cryo.labDesc,
-          adherenceCheck: (labValue: number) => labValue >= 175,
-          adherentCount: GUIDELINE_ADHERENCE.cryo.adherentCount,
-          totalTransfused: GUIDELINE_ADHERENCE.cryo.totalTransfused,
-        },
-      ];
-
-      // For each adherence spec, check if transfusion adheres to guidelines
-      adherenceSpecs.forEach(({
-        unitCheck, labDesc, adherenceCheck, adherentCount, totalTransfused,
+    visit.transfusions.forEach((transfusion: TransfusionEvent) => {
+    // For each adherence spec (rbc, ffp), check if transfusion adheres to guidelines
+      Object.values(GUIDELINE_ADHERENCE).forEach(({
+        transfusionUnits, labDesc, adherenceCheck, adherentCount, totalTransfused,
       }) => {
-        // Check if [blood product] unit given
-        if (unitCheck) {
+        // Check if blood product unit given
+        if (this.isBloodProductTransfused(transfusion, transfusionUnits)) {
           // Find relevant lab result within 2 hours of transfusion
           const relevantLab = visit.labs
             .filter((lab) => {
@@ -285,8 +266,8 @@ export class DashboardStore {
               const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
               return (
                 labDesc.includes(lab.result_desc)
-                && labDrawDtm <= transfusionDtm
-                && labDrawDtm >= transfusionDtm - twoHoursInMs
+              && labDrawDtm <= transfusionDtm
+              && labDrawDtm >= transfusionDtm - twoHoursInMs
               );
             })
             .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())

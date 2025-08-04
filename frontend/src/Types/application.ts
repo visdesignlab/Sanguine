@@ -74,6 +74,8 @@ export const GUIDELINE_ADHERENCE = {
     adherentCount: 'rbc_adherent',
     totalTransfused: 'rbc_total',
     labDesc: ['HGB', 'Hemoglobin'],
+    adherenceCheck: (labValue: number) => labValue <= 7.5,
+    transfusionUnits: ['rbc_units', 'rbc_vol'] as const,
   },
   ffp: {
     value: 'ffp_adherence',
@@ -81,6 +83,8 @@ export const GUIDELINE_ADHERENCE = {
     adherentCount: 'ffp_adherent',
     totalTransfused: 'ffp_total',
     labDesc: ['INR'],
+    adherenceCheck: (labValue: number) => labValue >= 1.5,
+    transfusionUnits: ['ffp_units', 'ffp_vol'] as const,
   },
   plt: {
     value: 'plt_adherence',
@@ -88,6 +92,8 @@ export const GUIDELINE_ADHERENCE = {
     adherentCount: 'plt_adherent',
     totalTransfused: 'plt_total',
     labDesc: ['PLT', 'Platelet Count'],
+    adherenceCheck: (labValue: number) => labValue >= 15000,
+    transfusionUnits: ['plt_units', 'plt_vol'] as const,
   },
   cryo: {
     value: 'cryo_adherence',
@@ -95,6 +101,8 @@ export const GUIDELINE_ADHERENCE = {
     adherentCount: 'cryo_adherent',
     totalTransfused: 'cryo_total',
     labDesc: ['Fibrinogen'],
+    adherenceCheck: (labValue: number) => labValue >= 175,
+    transfusionUnits: ['cryo_units', 'cryo_vol'],
   },
 } as const;
 
