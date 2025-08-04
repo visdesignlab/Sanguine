@@ -23,7 +23,14 @@ export const OUTCOMES = [
 export type Outcome = typeof OUTCOMES[number]['value'];
 // Readonly array of outcome options
 export const OutcomeOptions = OUTCOMES as ReadonlyArray<{ value: Outcome; label: string }>;
-
+export const CPT_CODES = {
+  stroke: ['99291', '1065F', '1066F'],
+  ecmo: [
+    '33946', '33947', '33948', '33949', '33950', '33951', '33952', '33953', '33954', '33955',
+    '33956', '33957', '33958', '33959', '33960', '33961', '33962', '33963', '33964', '33965',
+    '33966', '33969', '33984', '33985', '33986', '33987', '33988', '33989',
+  ],
+} as const;
 // Prophylactic Medications -------------------
 export const PROPHYL_MEDS = [
   {

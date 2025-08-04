@@ -16,6 +16,7 @@ import {
   type DashboardChartConfig,
   dashboardYAxisVars,
   DashboardChartData,
+  CPT_CODES,
 } from '../Types/application';
 import type { RootStore } from './Store';
 import { Visit } from '../Types/database';
@@ -303,6 +304,13 @@ export class DashboardStore {
   }
 
   /**
+   * Check if a visit has any of the specified CPT codes
+   */
+  private hasMatchingCptCode(visit: Visit, cptCodes: readonly string[]): boolean {
+    return visit.billing_codes.some((code) => cptCodes.includes(code.cpt_code));
+  }
+
+  /**
    * Calculate outcome flags for a visit
    */
   getOutcomeFlags(visit: Visit): Record<Outcome, number> {
@@ -310,13 +318,8 @@ export class DashboardStore {
       los: (new Date(visit.dsch_dtm).getTime() - new Date(visit.adm_dtm).getTime()) / (1000 * 60 * 60 * 24),
       death: visit.pat_expired_f ? 1 : 0,
       vent: visit.total_vent_mins > 1440 ? 1 : 0,
-      stroke: visit.billing_codes.some((code) => ['99291', '1065F', '1066F'].includes(code.cpt_code)) ? 1 : 0,
-      ecmo: visit.billing_codes
-        .some((code) => [
-          '33946', '33947', '33948', '33949', '33950', '33951', '33952', '33953', '33954', '33955',
-          '33956', '33957', '33958', '33959', '33960', '33961', '33962', '33963', '33964', '33965',
-          '33966', '33969', '33984', '33985', '33986', '33987', '33988', '33989',
-        ].includes(code.cpt_code)) ? 1 : 0,
+      stroke: this.hasMatchingCptCode(visit, CPT_CODES.stroke) ? 1 : 0,
+      ecmo: this.hasMatchingCptCode(visit, CPT_CODES.ecmo) ? 1 : 0,
     } as Record<Outcome, number>;
   }
 }
