@@ -5,17 +5,16 @@ import {
   BloodComponentOptions,
   BloodComponent,
   GuidelineAdherenceOptions,
-  AdherentCountOptions,
-  TotalTransfusedOptions,
+  GUIDELINE_ADHERENCE,
   AdherentCountField,
   TotalTransfusedField,
   OutcomeOptions,
+  Outcome,
   ProphylMedOptions,
+  ProphylMed,
   AggregationOptions,
   type DashboardChartConfig,
   dashboardYAxisVars,
-  ProphylMed,
-  Outcome,
 } from '../Types/application';
 import type { RootStore } from './Store';
 
@@ -139,88 +138,76 @@ export class DashboardStore {
 
       // --- Adherence flags ---
       const adherenceFlags = {
-        // Initialize adherent count fields
-        ...AdherentCountOptions.reduce((acc, field) => {
-          acc[field.value] = 0;
+        // For each adherence spec, initialize counts
+        ...GuidelineAdherenceOptions.reduce((acc, spec) => {
+          acc[spec.adherentCount] = 0;
+          acc[spec.totalTransfused] = 0;
           return acc;
-        }, {} as Record<AdherentCountField, number>),
-
-        // Initialize total transfused fields
-        ...TotalTransfusedOptions.reduce((acc, field) => {
-          acc[field.value] = 0;
-          return acc;
-        }, {} as Record<TotalTransfusedField, number>),
+        }, {} as Record<AdherentCountField | TotalTransfusedField, number>),
       };
 
+      // For each transfusion, count adherence and total transfused for each blood product
       visit.transfusions.forEach((transfusion) => {
-        // RBCS
-        if ((transfusion.rbc_units && transfusion.rbc_units > 0) || (transfusion.rbc_vol && transfusion.rbc_vol > 0)) {
-          const rbcLab = visit.labs
-            .filter((lab) => {
-              const labDrawDtm = new Date(lab.lab_draw_dtm).getTime();
-              const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
-              return (
-                ['HGB', 'Hemoglobin'].includes(lab.result_desc)
-                && labDrawDtm <= transfusionDtm
-                && labDrawDtm >= transfusionDtm - 2 * 60 * 60 * 1000
-              );
-            })
-            .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
-            .at(0);
-          if (rbcLab && rbcLab.result_value <= 7.5) adherenceFlags.rbc_adherent += 1;
-          adherenceFlags.rbc_total += 1;
-        }
-        // Plasma
-        if ((transfusion.ffp_units && transfusion.ffp_units > 0) || (transfusion.ffp_vol && transfusion.ffp_vol > 0)) {
-          const ffpLab = visit.labs
-            .filter((lab) => {
-              const labDrawDtm = new Date(lab.lab_draw_dtm).getTime();
-              const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
-              return (
-                ['INR'].includes(lab.result_desc)
-                && labDrawDtm <= transfusionDtm
-                && labDrawDtm >= transfusionDtm - 2 * 60 * 60 * 1000
-              );
-            })
-            .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
-            .at(0);
-          if (ffpLab && ffpLab.result_value >= 1.5) adherenceFlags.ffp_adherent += 1;
-          adherenceFlags.ffp_total += 1;
-        }
-        // Platelets
-        if ((transfusion.plt_units && transfusion.plt_units > 0) || (transfusion.plt_vol && transfusion.plt_vol > 0)) {
-          const pltLab = visit.labs
-            .filter((lab) => {
-              const labDrawDtm = new Date(lab.lab_draw_dtm).getTime();
-              const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
-              return (
-                ['PLT', 'Platelet Count'].includes(lab.result_desc)
-                && labDrawDtm <= transfusionDtm
-                && labDrawDtm >= transfusionDtm - 2 * 60 * 60 * 1000
-              );
-            })
-            .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
-            .at(0);
-          if (pltLab && pltLab.result_value >= 15000) adherenceFlags.plt_adherent += 1;
-          adherenceFlags.plt_total += 1;
-        }
-        // Cryoprecipitate
-        if ((transfusion.cryo_units && transfusion.cryo_units > 0) || (transfusion.cryo_vol && transfusion.cryo_vol > 0)) {
-          const cryoLab = visit.labs
-            .filter((lab) => {
-              const labDrawDtm = new Date(lab.lab_draw_dtm).getTime();
-              const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
-              return (
-                ['Fibrinogen'].includes(lab.result_desc)
-                && labDrawDtm <= transfusionDtm
-                && labDrawDtm >= transfusionDtm - 2 * 60 * 60 * 1000
-              );
-            })
-            .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
-            .at(0);
-          if (cryoLab && cryoLab.result_value >= 175) adherenceFlags.cryo_adherent += 1;
-          adherenceFlags.cryo_total += 1;
-        }
+        // Adherence checks for each blood product
+        const adherenceSpecs = [
+          {
+            unitCheck: (transfusion.rbc_units && transfusion.rbc_units > 0) || (transfusion.rbc_vol && transfusion.rbc_vol > 0),
+            labDesc: GUIDELINE_ADHERENCE.rbc.labDesc,
+            adherenceCheck: (labValue: number) => labValue <= 7.5,
+            adherentCount: GUIDELINE_ADHERENCE.rbc.adherentCount,
+            totalTransfused: GUIDELINE_ADHERENCE.rbc.totalTransfused,
+          },
+          {
+            unitCheck: (transfusion.ffp_units && transfusion.ffp_units > 0) || (transfusion.ffp_vol && transfusion.ffp_vol > 0),
+            labDesc: GUIDELINE_ADHERENCE.ffp.labDesc,
+            adherenceCheck: (labValue: number) => labValue >= 1.5,
+            adherentCount: GUIDELINE_ADHERENCE.ffp.adherentCount,
+            totalTransfused: GUIDELINE_ADHERENCE.ffp.totalTransfused,
+          },
+          {
+            unitCheck: (transfusion.plt_units && transfusion.plt_units > 0) || (transfusion.plt_vol && transfusion.plt_vol > 0),
+            labDesc: GUIDELINE_ADHERENCE.plt.labDesc,
+            adherenceCheck: (labValue: number) => labValue >= 15000,
+            adherentCount: GUIDELINE_ADHERENCE.plt.adherentCount,
+            totalTransfused: GUIDELINE_ADHERENCE.plt.totalTransfused,
+          },
+          {
+            unitCheck: (transfusion.cryo_units && transfusion.cryo_units > 0) || (transfusion.cryo_vol && transfusion.cryo_vol > 0),
+            labDesc: GUIDELINE_ADHERENCE.cryo.labDesc,
+            adherenceCheck: (labValue: number) => labValue >= 175,
+            adherentCount: GUIDELINE_ADHERENCE.cryo.adherentCount,
+            totalTransfused: GUIDELINE_ADHERENCE.cryo.totalTransfused,
+          },
+        ];
+
+        // For each adherence spec, check if transfusion adheres to guidelines
+        adherenceSpecs.forEach(({
+          unitCheck, labDesc, adherenceCheck, adherentCount, totalTransfused,
+        }) => {
+          // Check if [blood product] unit given
+          if (unitCheck) {
+            // Find relevant lab result within 2 hours of transfusion
+            const relevantLab = visit.labs
+              .filter((lab) => {
+                const labDrawDtm = new Date(lab.lab_draw_dtm).getTime();
+                const transfusionDtm = new Date(transfusion.trnsfsn_dtm).getTime();
+                return (
+                  labDesc.includes(lab.result_desc)
+                  && labDrawDtm <= transfusionDtm
+                  && labDrawDtm >= transfusionDtm - 2 * 60 * 60 * 1000
+                );
+              })
+              .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
+              .at(0);
+
+            // If relevant lab exists and adheres to guidelines, increment counts
+            if (relevantLab && adherenceCheck(relevantLab.result_value)) {
+              adherenceFlags[adherentCount] += 1;
+            }
+            // Increment total [blood product] transfused regardless
+            adherenceFlags[totalTransfused] += 1;
+          }
+        });
       });
 
       // --- Outcome flags ---
