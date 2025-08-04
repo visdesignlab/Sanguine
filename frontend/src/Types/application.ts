@@ -26,15 +26,35 @@ export const OutcomeOptions = OUTCOMES as ReadonlyArray<{ value: Outcome; label:
 
 // Prophylactic Medications -------------------
 export const PROPHYL_MEDS = [
-  { value: 'b12', label: 'B12' },
-  { value: 'iron', label: 'Iron' },
-  { value: 'txa', label: 'Tranexamic Acid' },
-  { value: 'amicar', label: 'Amicar' },
+  {
+    value: 'b12',
+    label: 'B12',
+    aliases: ['b12', 'cobalamin'],
+  },
+  {
+    value: 'iron',
+    label: 'Iron',
+    aliases: ['iron', 'ferrous', 'ferric'],
+  },
+  {
+    value: 'txa',
+    label: 'Tranexamic Acid',
+    aliases: ['tranexamic', 'txa'],
+  },
+  {
+    value: 'amicar',
+    label: 'Amicar',
+    aliases: ['amicar', 'aminocaproic'],
+  },
 ] as const;
   // Values of prophylactic medications
 export type ProphylMed = typeof PROPHYL_MEDS[number]['value'];
 // Readonly array of prophylactic medication options
-export const ProphylMedOptions = PROPHYL_MEDS as ReadonlyArray<{ value: ProphylMed; label: string }>;
+export const ProphylMedOptions = PROPHYL_MEDS as ReadonlyArray<{
+  value: ProphylMed;
+  label: string;
+  aliases: readonly string[];
+}>;
 
 // Guideline adherence ---------------------------
 export const GUIDELINE_ADHERENCE = [

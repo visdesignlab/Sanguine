@@ -3,6 +3,7 @@ import { mean, rollup, sum } from 'd3';
 import { Layout } from 'react-grid-layout';
 import {
   BloodComponentOptions,
+  BloodComponent,
   GuidelineAdherenceOptions,
   AdherentCountOptions,
   TotalTransfusedOptions,
@@ -13,6 +14,7 @@ import {
   AggregationOptions,
   type DashboardChartConfig,
   dashboardYAxisVars,
+  ProphylMed,
 } from '../Types/application';
 import type { RootStore } from './Store';
 
@@ -109,28 +111,30 @@ export class DashboardStore {
       });
 
       // --- Prophylactic medications ---
+      // For each visit, count number of each prophyl med given in pre-surgery period
       const prophMedFlags = visit.medications.reduce((acc, med) => {
         const medTime = new Date(med.order_dtm).getTime();
+        // Check if med given pre-surgery
         if (preSurgeryTimePeriods.some(([start, end]) => medTime >= start && medTime <= end)) {
           const lowerMedName = med.medication_name.toLowerCase();
-          if (lowerMedName.includes('b12') || lowerMedName.includes('cobalamin')) acc.b12 = 1;
-          if (lowerMedName.includes('iron') || lowerMedName.includes('ferrous') || lowerMedName.includes('ferric')) acc.iron = 1;
-          if (lowerMedName.includes('tranexamic') || lowerMedName.includes('txa')) acc.txa = 1;
-          if (lowerMedName.includes('amicar') || lowerMedName.includes('aminocaproic')) acc.amicar = 1;
+          // Increase count if med matches prophyl med type
+          ProphylMedOptions.forEach((medType) => {
+            if (medType.aliases.some((alias) => lowerMedName.includes(alias))) {
+              acc[medType.value] = 1;
+            }
+          });
         }
         return acc;
-      }, {
-        b12: 0, iron: 0, txa: 0, amicar: 0,
-      });
+      }, ProphylMedOptions.reduce((acc, medType) => {
+        acc[medType.value] = 0;
+        return acc;
+      }, {} as Record<ProphylMed, number>));
 
       // --- Blood product units ---
-      const bloodProductUnits = {
-        rbc_units: visit.transfusions.reduce((s, t) => s + (t.rbc_units || 0), 0),
-        ffp_units: visit.transfusions.reduce((s, t) => s + (t.ffp_units || 0), 0),
-        plt_units: visit.transfusions.reduce((s, t) => s + (t.plt_units || 0), 0),
-        cryo_units: visit.transfusions.reduce((s, t) => s + (t.cryo_units || 0), 0),
-        cell_saver_ml: visit.transfusions.reduce((s, t) => s + (t.cell_saver_ml || 0), 0),
-      };
+      const bloodProductUnits = BloodComponentOptions.reduce((acc, component) => {
+        acc[component.value] = visit.transfusions.reduce((s, t) => s + (t[component.value] || 0), 0);
+        return acc;
+      }, {} as Record<BloodComponent, number>);
 
       // --- Adherence flags ---
       const adherenceFlags = {
