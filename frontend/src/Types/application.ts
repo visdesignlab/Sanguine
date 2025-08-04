@@ -36,17 +36,74 @@ export type ProphylMed = typeof PROPHYL_MEDS[number]['value'];
 // Readonly array of prophylactic medication options
 export const ProphylMedOptions = PROPHYL_MEDS as ReadonlyArray<{ value: ProphylMed; label: string }>;
 
-// Guideline adherence --------------------
+// Guideline adherence ---------------------------
 export const GUIDELINE_ADHERENCE = [
-  { value: 'rbc_adherence', label: 'Guideline Adherent RBC Transfusions' },
-  { value: 'ffp_adherence', label: 'Guideline Adherent FFP Transfusions' },
-  { value: 'plt_adherence', label: 'Guideline Adherent Platelet Transfusions' },
-  { value: 'cryo_adherence', label: 'Guideline Adherent Cryo Transfusions' },
+  {
+    value: 'rbc_adherence',
+    label: 'Guideline Adherent RBC Transfusions',
+    adherentCount: 'rbc_adherent',
+    totalTransfused: 'rbc_total',
+  },
+  {
+    value: 'ffp_adherence',
+    label: 'Guideline Adherent FFP Transfusions',
+    adherentCount: 'ffp_adherent',
+    totalTransfused: 'ffp_total',
+  },
+  {
+    value: 'plt_adherence',
+    label: 'Guideline Adherent Platelet Transfusions',
+    adherentCount: 'plt_adherent',
+    totalTransfused: 'plt_total',
+  },
+  {
+    value: 'cryo_adherence',
+    label: 'Guideline Adherent Cryo Transfusions',
+    adherentCount: 'cryo_adherent',
+    totalTransfused: 'cryo_total',
+  },
 ] as const;
+
+// Adherent count fields
+export const ADHERENT_COUNT_FIELDS = [
+  { value: 'rbc_adherent', label: 'RBC Adherent Count' },
+  { value: 'ffp_adherent', label: 'FFP Adherent Count' },
+  { value: 'plt_adherent', label: 'Platelet Adherent Count' },
+  { value: 'cryo_adherent', label: 'Cryo Adherent Count' },
+] as const;
+
+// Total transfused fields
+export const TOTAL_TRANSFUSED_FIELDS = [
+  { value: 'rbc_total', label: 'Total RBC Transfusions' },
+  { value: 'ffp_total', label: 'Total FFP Transfusions' },
+  { value: 'plt_total', label: 'Total Platelet Transfusions' },
+  { value: 'cryo_total', label: 'Total Cryo Transfusions' },
+] as const;
+
 // Values of guideline adherence
 export type GuidelineAdherence = typeof GUIDELINE_ADHERENCE[number]['value'];
+// Values of adherent count fields
+export type AdherentCountField = typeof ADHERENT_COUNT_FIELDS[number]['value'];
+// Values of total transfused fields
+export type TotalTransfusedField = typeof TOTAL_TRANSFUSED_FIELDS[number]['value'];
+
 // Readonly array of guideline adherence options
-export const GuidelineAdherenceOptions = GUIDELINE_ADHERENCE as ReadonlyArray<{ value: GuidelineAdherence; label: string }>;
+export const GuidelineAdherenceOptions = GUIDELINE_ADHERENCE as ReadonlyArray<{
+  value: GuidelineAdherence;
+  label: string;
+  adherentCount: AdherentCountField;
+  totalTransfused: TotalTransfusedField;
+}>;
+// Readonly array of adherent count options
+export const AdherentCountOptions = ADHERENT_COUNT_FIELDS as ReadonlyArray<{
+  value: AdherentCountField;
+  label: string;
+}>;
+// Readonly array of total transfused options
+export const TotalTransfusedOptions = TOTAL_TRANSFUSED_FIELDS as ReadonlyArray<{
+  value: TotalTransfusedField;
+  label: string;
+}>;
 
 // PBM Dashboard --------------------
 export const AggregationOptions = ['sum', 'average'] as const;

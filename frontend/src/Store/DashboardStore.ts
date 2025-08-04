@@ -4,6 +4,10 @@ import { Layout } from 'react-grid-layout';
 import {
   BloodComponentOptions,
   GuidelineAdherenceOptions,
+  AdherentCountOptions,
+  TotalTransfusedOptions,
+  AdherentCountField,
+  TotalTransfusedField,
   OutcomeOptions,
   ProphylMedOptions,
   AggregationOptions,
@@ -91,14 +95,14 @@ export class DashboardStore {
     this._chartLayouts.sm = this._chartLayouts.sm.filter((layout) => layout.i !== id);
   }
 
-  // Chart data ------------------------------
+  // Chart data ------------------------------------------
   /**
    * Returns all chart data for the dashboard
    */
   get chartData(): Record<`${typeof AggregationOptions[number]}_${DashboardChartConfig['yAxisVar']}`, { quarter: string, data: number }[]> {
     // For each visit, get the dashboard data, un-aggregated -------------------------------------------
     const visitData = this._rootStore.allVisits.map((visit) => {
-      // --- Pre-surgery periods ---
+      // --- Pre-surgery periods (2 days before surgery) ---
       const preSurgeryTimePeriods = visit.surgeries.map((surgery) => {
         const surgeryStart = new Date(surgery.surgery_start_dtm);
         return [surgeryStart.getTime() - 2 * 24 * 60 * 60 * 1000, surgeryStart.getTime()];
@@ -129,7 +133,21 @@ export class DashboardStore {
       };
 
       // --- Adherence flags ---
-      const adherenceFlags = visit.transfusions.reduce((acc, transfusion) => {
+      const adherenceFlags = {
+        // Initialize adherent count fields
+        ...AdherentCountOptions.reduce((acc, field) => {
+          acc[field.value] = 0;
+          return acc;
+        }, {} as Record<AdherentCountField, number>),
+
+        // Initialize total transfused fields
+        ...TotalTransfusedOptions.reduce((acc, field) => {
+          acc[field.value] = 0;
+          return acc;
+        }, {} as Record<TotalTransfusedField, number>),
+      };
+
+      visit.transfusions.forEach((transfusion) => {
         // RBCS
         if ((transfusion.rbc_units && transfusion.rbc_units > 0) || (transfusion.rbc_vol && transfusion.rbc_vol > 0)) {
           const rbcLab = visit.labs
@@ -144,8 +162,8 @@ export class DashboardStore {
             })
             .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
             .at(0);
-          if (rbcLab && rbcLab.result_value <= 7.5) acc.rbcAdherent += 1;
-          acc.rbcTotal += 1;
+          if (rbcLab && rbcLab.result_value <= 7.5) adherenceFlags.rbc_adherent += 1;
+          adherenceFlags.rbc_total += 1;
         }
         // Plasma
         if ((transfusion.ffp_units && transfusion.ffp_units > 0) || (transfusion.ffp_vol && transfusion.ffp_vol > 0)) {
@@ -161,8 +179,8 @@ export class DashboardStore {
             })
             .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
             .at(0);
-          if (ffpLab && ffpLab.result_value >= 1.5) acc.ffpAdherent += 1;
-          acc.ffpTotal += 1;
+          if (ffpLab && ffpLab.result_value >= 1.5) adherenceFlags.ffp_adherent += 1;
+          adherenceFlags.ffp_total += 1;
         }
         // Platelets
         if ((transfusion.plt_units && transfusion.plt_units > 0) || (transfusion.plt_vol && transfusion.plt_vol > 0)) {
@@ -178,8 +196,8 @@ export class DashboardStore {
             })
             .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
             .at(0);
-          if (pltLab && pltLab.result_value >= 15000) acc.pltAdherent += 1;
-          acc.pltTotal += 1;
+          if (pltLab && pltLab.result_value >= 15000) adherenceFlags.plt_adherent += 1;
+          adherenceFlags.plt_total += 1;
         }
         // Cryoprecipitate
         if ((transfusion.cryo_units && transfusion.cryo_units > 0) || (transfusion.cryo_vol && transfusion.cryo_vol > 0)) {
@@ -195,19 +213,9 @@ export class DashboardStore {
             })
             .sort((a, b) => new Date(b.lab_draw_dtm).getTime() - new Date(a.lab_draw_dtm).getTime())
             .at(0);
-          if (cryoLab && cryoLab.result_value >= 175) acc.cryoAdherent += 1;
-          acc.cryoTotal += 1;
+          if (cryoLab && cryoLab.result_value >= 175) adherenceFlags.cryo_adherent += 1;
+          adherenceFlags.cryo_total += 1;
         }
-        return acc;
-      }, {
-        rbcAdherent: 0,
-        rbcTotal: 0,
-        ffpAdherent: 0,
-        ffpTotal: 0,
-        pltAdherent: 0,
-        pltTotal: 0,
-        cryoAdherent: 0,
-        cryoTotal: 0,
       });
 
       // --- Outcome flags ---
@@ -234,7 +242,7 @@ export class DashboardStore {
       };
     });
 
-    // Aggregate visit attribute values by quarter (e.g. sum RBC units per quarter)
+    // Aggregate visit attribute values by quarter (e.g. sum RBC units per quarter) -------------------------
     const quarterlyData = rollup(
       visitData,
       (visit) => {
@@ -247,12 +255,9 @@ export class DashboardStore {
         }
 
         // Guideline Adherence
-        for (const { value } of GuidelineAdherenceOptions) {
-          // e.g. rbc_adherence -> rbcAdherent, rbcTotal
-          const adherentKey = value.replace('_adherence', 'Adherent');
-          const totalKey = value.replace('_adherence', 'Total');
-          agg[`sum_${value}`] = sum(visit, (d) => (d)[adherentKey]);
-          agg[`average_${value}`] = mean(visit, (d) => ((d)[totalKey] > 0 ? (d)[adherentKey] / (d)[totalKey] : null));
+        for (const { value, adherentCount, totalTransfused } of GuidelineAdherenceOptions) {
+          agg[`sum_${value}`] = sum(visit, (d) => d[adherentCount]);
+          agg[`average_${value}`] = mean(visit, (d) => (d[totalTransfused] > 0 ? d[adherentCount] / d[totalTransfused] : null));
         }
 
         // Outcomes
@@ -273,7 +278,8 @@ export class DashboardStore {
       },
       (d) => d.quarter,
     );
-    // Return every combination of aggregation and yAxisVar
+
+    // Return every possible chart configuration - (combinations of aggregation and yAxisVar) --------------------------------
     const result = {} as Record<`${typeof AggregationOptions[number]}_${DashboardChartConfig['yAxisVar']}`, { quarter: string, data: number }[]>;
     for (const aggregation of AggregationOptions) {
       for (const yAxisVar of dashboardYAxisVars) {
