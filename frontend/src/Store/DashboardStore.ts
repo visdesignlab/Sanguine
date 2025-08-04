@@ -1,6 +1,10 @@
 import { makeAutoObservable } from 'mobx';
 import { mean, rollup, sum } from 'd3';
 import { Layout } from 'react-grid-layout';
+
+import type { RootStore } from './Store';
+import { Visit } from '../Types/database';
+
 import {
   BloodComponentOptions,
   BloodComponent,
@@ -13,13 +17,11 @@ import {
   ProphylMedOptions,
   ProphylMed,
   AggregationOptions,
-  type DashboardChartConfig,
   dashboardYAxisVars,
   DashboardChartData,
   CPT_CODES,
+  type DashboardChartConfig,
 } from '../Types/application';
-import type { RootStore } from './Store';
-import { Visit } from '../Types/database';
 
 /**
  * DashboardStore manages the state of the PBM dashboard: stats, layouts, and chart data.
@@ -60,7 +62,7 @@ export class DashboardStore {
     this._chartLayouts = input;
   }
 
-  // Chart configs
+  // Chart configurations
   _chartConfigs: DashboardChartConfig[] = [
     {
       i: '0', yAxisVar: 'rbc_units', aggregation: 'sum',
@@ -176,7 +178,7 @@ export class DashboardStore {
     return result;
   }
 
-  // Helper functions for chart data ------------------------------------------
+  // Helper functions for chart data -------------------------------------
   /**
    * Calculate pre-surgery time periods (2 days before each surgery)
    */
