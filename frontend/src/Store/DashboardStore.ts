@@ -135,31 +135,38 @@ export class DashboardStore {
       (visit) => {
         const agg: Record<string, number | undefined> = {};
 
-        // Blood Components
-        for (const { value } of BloodComponentOptions) {
-          agg[`sum_${value}`] = sum(visit, (d) => d[value]);
-          agg[`average_${value}`] = mean(visit, (d) => d[value]);
-        }
+        // Safely aggregate each category
+        try {
+          // Blood Components
+          for (const { value } of BloodComponentOptions) {
+            agg[`sum_${value}`] = sum(visit, (d) => d[value] || 0);
+            agg[`average_${value}`] = mean(visit, (d) => d[value] || 0);
+          }
 
-        // Guideline Adherence
-        for (const { value, adherentCount, totalTransfused } of GuidelineAdherenceOptions) {
-          agg[`sum_${value}`] = sum(visit, (d) => d[adherentCount]);
-          agg[`average_${value}`] = mean(visit, (d) => (d[totalTransfused] > 0 ? d[adherentCount] / d[totalTransfused] : null));
-        }
+          // Guideline Adherence
+          for (const { value, adherentCount, totalTransfused } of GuidelineAdherenceOptions) {
+            agg[`sum_${value}`] = sum(visit, (d) => d[adherentCount] || 0);
+            agg[`average_${value}`] = mean(visit, (d) => {
+              const total = d[totalTransfused] || 0;
+              const adherent = d[adherentCount] || 0;
+              return total > 0 ? adherent / total : 0;
+            });
+          }
 
-        // Outcomes
-        for (const { value } of OutcomeOptions) {
-          agg[`sum_${value}`] = sum(visit, (d) => d[value]);
-          agg[`average_${value}`] = mean(visit, (d) => d[value]);
-        }
+          // Outcomes
+          for (const { value } of OutcomeOptions) {
+            agg[`sum_${value}`] = sum(visit, (d) => d[value] || 0);
+            agg[`average_${value}`] = mean(visit, (d) => d[value] || 0);
+          }
 
-        // Prophylactic Medications
-        for (const { value } of ProphylMedOptions) {
-          agg[`sum_${value}`] = sum(visit, (d) => d[value]);
-          agg[`average_${value}`] = mean(visit, (d) => d[value]);
+          // Prophylactic Medications
+          for (const { value } of ProphylMedOptions) {
+            agg[`sum_${value}`] = sum(visit, (d) => d[value] || 0);
+            agg[`average_${value}`] = mean(visit, (d) => d[value] || 0);
+          }
+        } catch (error) {
+          console.error('Error aggregating data:', error);
         }
-
-        // TODO: Cost calculations
 
         return agg;
       },
@@ -176,6 +183,11 @@ export class DashboardStore {
           .map(([quarter, group]) => ({
             quarter,
             data: group[key] || 0,
+          }))
+          .filter((item) => item.quarter !== null)
+          .map((item) => ({
+            quarter: item.quarter as Quarter,
+            data: item.data,
           }))
           .sort((a, b) => a.quarter.localeCompare(b.quarter));
         // Assign to current chart configuration
@@ -229,7 +241,11 @@ export class DashboardStore {
   /**
    * Calculate quarter string from a date
   */
-  private getQuarterFromDate(date: Date): Quarter {
+  private getQuarterFromDate(date: Date): Quarter | null {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+      console.error('Invalid date for quarter calculation:', date);
+      return null;
+    }
     const year = date.getFullYear();
     const quarter = Math.floor(date.getMonth() / 3) + 1 as 1 | 2 | 3 | 4;
     return `${year}-Q${quarter}`;
@@ -240,8 +256,13 @@ export class DashboardStore {
    */
   getPreSurgeryTimePeriods(visit: Visit): [number, number][] {
     return visit.surgeries.map((surgery) => {
-      const surgeryStart = this.safeParseDate(surgery.surgery_start_dtm);
-      return [surgeryStart.getTime() - TIME_CONSTANTS.TWO_DAYS_MS, surgeryStart.getTime()];
+      try {
+        const surgeryStart = this.safeParseDate(surgery.surgery_start_dtm);
+        return [surgeryStart.getTime() - TIME_CONSTANTS.TWO_DAYS_MS, surgeryStart.getTime()];
+      } catch (error) {
+        console.warn('Invalid surgery_start_dtm:', surgery.surgery_start_dtm, error);
+        return [0, 0];
+      }
     });
   }
 
@@ -250,16 +271,25 @@ export class DashboardStore {
    */
   getProphMedFlags(visit: Visit): Record<ProphylMed, number> {
     return visit.medications.reduce((acc: Record<ProphylMed, number>, med) => {
-      const preSurgeryTimePeriods = this.getPreSurgeryTimePeriods(visit);
-      const medTime = this.safeParseDate(med.order_dtm).getTime();
-      // Check if med given pre-surgery
-      if (preSurgeryTimePeriods.some(([start, end]) => medTime >= start && medTime <= end)) {
-        const lowerMedName = med.medication_name.toLowerCase();
-        // Increase count if med matches prophyl med type
-        ProphylMedOptions.forEach((medType) => {
-          if (medType.aliases.some((alias) => lowerMedName.includes(alias))) {
-            acc[medType.value] = 1;
-          }
+      try {
+        const preSurgeryTimePeriods = this.getPreSurgeryTimePeriods(visit);
+        const medTime = this.safeParseDate(med.order_dtm).getTime();
+        // Check if med given pre-surgery
+        if (preSurgeryTimePeriods.some(([start, end]) => medTime >= start && medTime <= end)) {
+          const lowerMedName = med.medication_name?.toLowerCase() || '';
+          // Increase count if med matches prophyl med type
+          ProphylMedOptions.forEach((medType) => {
+            if (medType.aliases.some((alias) => lowerMedName.includes(alias))) {
+              acc[medType.value] = 1;
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error calculating medications:', {
+          visitId: visit.visit_no,
+          medication: med.medication_name,
+          orderDtm: med.order_dtm,
+          error,
         });
       }
       return acc;
@@ -274,7 +304,16 @@ export class DashboardStore {
    */
   getBloodProductUnits(visit: Visit): Record<BloodComponent, number> {
     return BloodComponentOptions.reduce((acc, component) => {
-      acc[component.value] = visit.transfusions.reduce((s: number, t) => s + (t[component.value] || 0), 0);
+      try {
+        acc[component.value] = visit.transfusions.reduce((s: number, t) => s + (t[component.value] || 0), 0);
+      } catch (error) {
+        console.error('Error calculating blood product units:', {
+          visitId: visit.visit_no,
+          component: component.value,
+          error,
+        });
+        acc[component.value] = 0;
+      }
       return acc;
     }, {} as Record<BloodComponent, number>);
   }
@@ -344,19 +383,31 @@ export class DashboardStore {
    * Check if a visit has any of the specified CPT codes
    */
   private hasMatchingCptCode(visit: Visit, cptCodes: readonly string[]): boolean {
-    return visit.billing_codes.some((code) => cptCodes.includes(code.cpt_code));
+    try {
+      return visit.billing_codes.some((code) => cptCodes.includes(code.cpt_code));
+    } catch (error) {
+      console.error('Error matching cpt code:', { visitId: visit.visit_no, error });
+      return false;
+    }
   }
 
   /**
    * Calculate outcome flags for a visit
    */
   getOutcomeFlags(visit: Visit): Record<Outcome, number> {
-    return {
-      los: (this.safeParseDate(visit.dsch_dtm).getTime() - this.safeParseDate(visit.adm_dtm).getTime()) / (TIME_CONSTANTS.ONE_DAY_MS),
-      death: visit.pat_expired_f ? 1 : 0,
-      vent: visit.total_vent_mins > TIME_CONSTANTS.VENTILATOR_THRESHOLD_MINS ? 1 : 0,
-      stroke: this.hasMatchingCptCode(visit, CPT_CODES.stroke) ? 1 : 0,
-      ecmo: this.hasMatchingCptCode(visit, CPT_CODES.ecmo) ? 1 : 0,
-    } as Record<Outcome, number>;
+    try {
+      return {
+        los: (this.safeParseDate(visit.dsch_dtm).getTime() - this.safeParseDate(visit.adm_dtm).getTime()) / (TIME_CONSTANTS.ONE_DAY_MS),
+        death: visit.pat_expired_f ? 1 : 0,
+        vent: visit.total_vent_mins > TIME_CONSTANTS.VENTILATOR_THRESHOLD_MINS ? 1 : 0,
+        stroke: this.hasMatchingCptCode(visit, CPT_CODES.stroke) ? 1 : 0,
+        ecmo: this.hasMatchingCptCode(visit, CPT_CODES.ecmo) ? 1 : 0,
+      } as Record<Outcome, number>;
+    } catch (error) {
+      console.error('Error fetching outcome flags:', { visitId: visit.visit_no, error });
+      return {
+        los: 0, death: 0, vent: 0, stroke: 0, ecmo: 0,
+      };
+    }
   }
 }
