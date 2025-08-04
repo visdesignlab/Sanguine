@@ -15,6 +15,7 @@ import {
   type DashboardChartConfig,
   dashboardYAxisVars,
   ProphylMed,
+  Outcome,
 } from '../Types/application';
 import type { RootStore } from './Store';
 
@@ -223,7 +224,7 @@ export class DashboardStore {
       });
 
       // --- Outcome flags ---
-      const outcomeFlags = {
+      const outcomeFlags = ({
         los: (new Date(visit.dsch_dtm).getTime() - new Date(visit.adm_dtm).getTime()) / (1000 * 60 * 60 * 24),
         death: visit.pat_expired_f ? 1 : 0,
         vent: visit.total_vent_mins > 1440 ? 1 : 0,
@@ -234,7 +235,7 @@ export class DashboardStore {
             '33956', '33957', '33958', '33959', '33960', '33961', '33962', '33963', '33964', '33965',
             '33966', '33969', '33984', '33985', '33986', '33987', '33988', '33989',
           ].includes(code.cpt_code)) ? 1 : 0,
-      };
+      }) as Record<Outcome, number>;
 
       // --- Return cleaned visit data ---
       return {
