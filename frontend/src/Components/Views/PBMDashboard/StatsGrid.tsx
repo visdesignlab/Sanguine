@@ -71,9 +71,7 @@ export function StatsGrid() {
 
       // Get the stat value from statData
       const aggregationKey = statConfig.aggregation || 'sum';
-      console.log('Stat Config.aggregation:', aggregationKey);
       const dataKey = `${aggregationKey}_${statConfig.var}` as keyof typeof store.dashboardStore.statData;
-      console.log('stat data:', store.dashboardStore.statData);
       const statValue = store.dashboardStore.statData[dataKey]?.data || '0';
 
       // Hard coded diff for now (10%)
