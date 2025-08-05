@@ -218,8 +218,8 @@ export class DashboardStore {
 
   // Stats data ----------------------------------------------------------------
   /**
-  * Returns all possible stats data needed for the dashboard
-  */
+* Returns stats data for the last quarter with percentage change from previous quarter
+*/
   get statData(): DashboardStatData {
   // --- For each visit, get the stats data, un-aggregated ---
     const visitData = this._rootStore.allVisits
@@ -231,72 +231,101 @@ export class DashboardStore {
         const outcomeFlags = this.getOutcomeFlags(visit);
 
         return {
+          quarter: this.getQuarterFromDate(this.safeParseDate(visit.dsch_dtm)),
           ...bloodProductUnits,
           ...adherenceFlags,
           ...outcomeFlags,
           ...prophMedFlags,
         };
-      });
+      })
+      .filter((data) => data.quarter !== null);
 
-    // --- Aggregate visit attribute values by AGGREGATION_OPTIONS ---
-    // (e.g. Total RBC units transfused across all visits, all of time = 420000)
-    const globalAggregations: Record<string, number> = {};
+    // --- Group data by quarter ---
+    const quarterlyData = rollup(
+      visitData,
+      (visits) => {
+        const agg: Record<string, number> = {};
 
-    try {
-      // Blood Components
-      BLOOD_COMPONENT_OPTIONS.forEach(({ value }) => {
-        globalAggregations[`sum_${value}`] = sum(visitData, (d) => d[value] || 0);
-        globalAggregations[`avg_${value}`] = mean(visitData, (d) => d[value] || 0) || 0;
-      });
+        try {
+        // Blood Components
+          BLOOD_COMPONENT_OPTIONS.forEach(({ value }) => {
+            agg[`sum_${value}`] = sum(visits, (d) => d[value] || 0);
+            agg[`avg_${value}`] = mean(visits, (d) => d[value] || 0) || 0;
+          });
 
-      // Guideline Adherence
-      GUIDELINE_ADHERENCE_OPTIONS.forEach(({ value, adherentCount, totalTransfused }) => {
-        const totalAdherentTransfusions = visitData.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
-        const totalTransfusions = visitData.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
+          // Guideline Adherence
+          GUIDELINE_ADHERENCE_OPTIONS.forEach(({ value, adherentCount, totalTransfused }) => {
+            const totalAdherentTransfusions = visits.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
+            const totalTransfusions = visits.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
 
-        globalAggregations[`sum_${value}`] = totalAdherentTransfusions;
-        globalAggregations[`avg_${value}`] = totalTransfusions > 0 ? totalAdherentTransfusions / totalTransfusions : 0;
-      });
+            agg[`sum_${value}`] = totalAdherentTransfusions;
+            agg[`avg_${value}`] = totalTransfusions > 0 ? totalAdherentTransfusions / totalTransfusions : 0;
+          });
 
-      // Outcomes
-      OUTCOME_OPTIONS.forEach(({ value }) => {
-        globalAggregations[`sum_${value}`] = sum(visitData, (d) => d[value] || 0);
-        globalAggregations[`avg_${value}`] = mean(visitData, (d) => d[value] || 0) || 0;
-      });
+          // Outcomes
+          OUTCOME_OPTIONS.forEach(({ value }) => {
+            agg[`sum_${value}`] = sum(visits, (d) => d[value] || 0);
+            agg[`avg_${value}`] = mean(visits, (d) => d[value] || 0) || 0;
+          });
 
-      // Prophylactic Medications
-      PROPHYL_MED_OPTIONS.forEach(({ value }) => {
-        globalAggregations[`sum_${value}`] = sum(visitData, (d) => d[value] || 0);
-        globalAggregations[`avg_${value}`] = mean(visitData, (d) => d[value] || 0) || 0;
-      });
-    } catch (error) {
-      console.error('Error aggregating global stats data:', error);
-    }
+          // Prophylactic Medications
+          PROPHYL_MED_OPTIONS.forEach(({ value }) => {
+            agg[`sum_${value}`] = sum(visits, (d) => d[value] || 0);
+            agg[`avg_${value}`] = mean(visits, (d) => d[value] || 0) || 0;
+          });
+        } catch (error) {
+          console.error('Error aggregating quarterly stats data:', error);
+        }
 
-    // Return every possible stat configuration, where the data returned is a single number as a string
+        return agg;
+      },
+      (d) => d.quarter,
+    );
+
+    // --- Get last two quarters ---
+    const sortedQuarters = Array.from(quarterlyData.keys()).sort();
+    const lastQuarter = sortedQuarters[sortedQuarters.length - 1];
+    const previousQuarter = sortedQuarters[sortedQuarters.length - 2];
+
+    const lastQuarterData = quarterlyData.get(lastQuarter) || {};
+    const previousQuarterData = quarterlyData.get(previousQuarter) || {};
+
+    // --- Calculate percentage change and format data ---
     const result = {} as DashboardStatData;
     for (const aggregation of Object.keys(AGGREGATION_OPTIONS) as (keyof typeof AGGREGATION_OPTIONS)[]) {
       for (const yAxisVar of dashboardYAxisVars) {
         const key: `${keyof typeof AGGREGATION_OPTIONS}_${typeof yAxisVar}` = `${aggregation}_${yAxisVar}`;
-        const value = globalAggregations[key] || 0;
+        const currentValue = lastQuarterData[key] || 0;
+        const previousValue = previousQuarterData[key] || 0;
 
-        // Format the value appropriately based on the variable type
+        // Calculate percentage change
+        let diff = 0;
+        if (previousValue !== 0) {
+          diff = ((currentValue - previousValue) / previousValue) * 100;
+        } else if (currentValue > 0) {
+          diff = 100; // If previous was 0 and current > 0, it's a 100% increase
+        }
+
+        // Format the current value appropriately based on the variable type
         let formattedValue: string;
         if (yAxisVar.includes('adherence')) {
         // Format adherence as percentage
-          formattedValue = `${(value * 100).toFixed(1)}%`;
+          formattedValue = `${(currentValue * 100).toFixed(1)}%`;
         } else if (yAxisVar === 'los') {
         // Format length of stay as days
-          formattedValue = `${value.toFixed(1)} days`;
+          formattedValue = `${currentValue.toFixed(1)} days`;
         } else if (yAxisVar.includes('units') || yAxisVar.includes('ml')) {
         // Format units as whole numbers
-          formattedValue = Math.round(value).toString();
+          formattedValue = Math.round(currentValue).toString();
         } else {
         // Default formatting for other metrics
-          formattedValue = value.toFixed(1);
+          formattedValue = currentValue.toFixed(1);
         }
 
-        result[key] = { data: formattedValue };
+        result[key] = {
+          data: formattedValue,
+          diff: Math.round(diff), // Round to nearest whole percent
+        };
       }
     }
 

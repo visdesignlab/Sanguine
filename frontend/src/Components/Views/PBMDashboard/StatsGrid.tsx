@@ -31,25 +31,21 @@ export const icons = {
   costSavings: IconCoin,
 };
 
-// Map variable types to icon categories
+// Choose icon based on variable name
 const getIconForVar = (varName: DashboardStatConfig['var']) => {
-  // Check blood components
   const bloodComponent = BLOOD_COMPONENT_OPTIONS.find((opt) => opt.value === varName);
   if (bloodComponent) return 'bloodComponent';
 
-  // Check guideline adherence
   const adherence = GUIDELINE_ADHERENCE_OPTIONS.find((opt) => opt.value === varName);
   if (adherence) return 'adherence';
 
-  // Check outcomes
   const outcome = OUTCOME_OPTIONS.find((opt) => opt.value === varName);
   if (outcome) return 'outcome';
 
-  // Check prophylactic medications
   const prophylMed = PROPHYL_MED_OPTIONS.find((opt) => opt.value === varName);
   if (prophylMed) return 'prophylMed';
 
-  // Default fallback
+  // Default
   return 'bloodComponent';
 };
 
@@ -66,17 +62,20 @@ export function StatsGrid() {
   return useObserver(() => {
     // For every stat config, create a card describing it.
     const statCards = store.dashboardStore._statConfigs.map((statConfig, idx) => {
-      const iconKey = getIconForVar(statConfig.var);
-      const Icon = icons[iconKey];
-
       // Get the stat value from statData
       const aggregationKey = statConfig.aggregation || 'sum';
       const dataKey = `${aggregationKey}_${statConfig.var}` as keyof typeof store.dashboardStore.statData;
-      const statValue = store.dashboardStore.statData[dataKey]?.data || '0';
+      // Stat data for this card
+      const statData = store.dashboardStore.statData[dataKey];
+      const statValue = statData?.data || '0';
+      const diff = statData?.diff || 0;
 
-      // Hard coded diff for now (10%)
-      const diff = 10;
+      // Get the icon for this stat
+      const iconKey = getIconForVar(statConfig.var);
+      const Icon = icons[iconKey];
+      // Get the value diff icon
       const DiffIcon = diff > 0 ? IconArrowUpRight : IconArrowDownRight;
+      const diffClassName = diff >= 0 ? statsGridStyles.diffPositive : statsGridStyles.diffNegative;
 
       // Determine if this card is currently hovered
       const isHovered = hoveredIdx === idx;
@@ -115,9 +114,7 @@ export function StatsGrid() {
             {/** Stat Value */}
             <Title order={1}>{statValue}</Title>
             {/** Stat % Change in Value */}
-            <Text
-              className={statsGridStyles.diffPositive}
-            >
+            <Text className={diffClassName}>
               <span>
                 {diff}
                 %

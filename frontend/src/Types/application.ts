@@ -164,4 +164,4 @@ export type DashboardStatConfig = {
   title: string;
 };
 
-export type DashboardStatData = Record<`${keyof typeof AGGREGATION_OPTIONS}_${DashboardStatConfig['var']}`, {data: string} >;
+export type DashboardStatData = Record<`${keyof typeof AGGREGATION_OPTIONS}_${DashboardStatConfig['var']}`, {data: string, diff: number} >;
