@@ -93,7 +93,7 @@ export class DashboardStore {
   // Stats settings ---------------------------------------------------
   _statConfigs: DashboardStatConfig[] = [
     {
-      i: '1', var: 'rbc_adherence', title: 'Guideline Adherence',
+      i: '1', var: 'rbc_adherence', aggregation: 'avg', title: 'Guideline Adherence',
     },
     {
       i: '2', var: 'los', aggregation: 'avg', title: 'Average Length of Stay',
@@ -158,32 +158,31 @@ export class DashboardStore {
         // Aggregate (e.g. average iron used)
         try {
           // Blood Components
-          for (const { value } of BLOOD_COMPONENT_OPTIONS) {
+          BLOOD_COMPONENT_OPTIONS.forEach(({ value }) => {
             agg[`sum_${value}`] = sum(visit, (d) => d[value] || 0);
             agg[`avg_${value}`] = mean(visit, (d) => d[value] || 0);
-          }
+          });
 
           // Guideline Adherence
-          for (const { value, adherentCount, totalTransfused } of GUIDELINE_ADHERENCE_OPTIONS) {
-            agg[`sum_${value}`] = sum(visit, (d) => d[adherentCount] || 0);
-            agg[`avg_${value}`] = mean(visit, (d) => {
-              const total = d[totalTransfused] || 0;
-              const adherent = d[adherentCount] || 0;
-              return total > 0 ? adherent / total : 0;
-            });
-          }
+          GUIDELINE_ADHERENCE_OPTIONS.forEach(({ value, adherentCount, totalTransfused }) => {
+            const totalAdherentTransfusions = visit.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
+            const totalTransfusions = visit.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
+
+            agg[`sum_${value}`] = totalAdherentTransfusions;
+            agg[`avg_${value}`] = totalTransfusions > 0 ? totalAdherentTransfusions / totalTransfusions : 0;
+          });
 
           // Outcomes
-          for (const { value } of OUTCOME_OPTIONS) {
+          OUTCOME_OPTIONS.forEach(({ value }) => {
             agg[`sum_${value}`] = sum(visit, (d) => d[value] || 0);
             agg[`avg_${value}`] = mean(visit, (d) => d[value] || 0);
-          }
+          });
 
           // Prophylactic Medications
-          for (const { value } of PROPHYL_MED_OPTIONS) {
+          PROPHYL_MED_OPTIONS.forEach(({ value }) => {
             agg[`sum_${value}`] = sum(visit, (d) => d[value] || 0);
             agg[`avg_${value}`] = mean(visit, (d) => d[value] || 0);
-          }
+          });
         } catch (error) {
           console.error('Error aggregating data:', error);
         }
@@ -245,30 +244,31 @@ export class DashboardStore {
 
     try {
       // Blood Components
-      for (const { value } of BLOOD_COMPONENT_OPTIONS) {
+      BLOOD_COMPONENT_OPTIONS.forEach(({ value }) => {
         globalAggregations[`sum_${value}`] = sum(visitData, (d) => d[value] || 0);
         globalAggregations[`avg_${value}`] = mean(visitData, (d) => d[value] || 0) || 0;
-      }
+      });
 
       // Guideline Adherence
-      for (const { value, adherentCount, totalTransfused } of GUIDELINE_ADHERENCE_OPTIONS) {
-        globalAggregations[`sum_${value}`] = sum(visitData, (d) => d[adherentCount] || 0);
-        const totalTransfusedSum = sum(visitData, (d) => d[totalTransfused] || 0);
-        const adherentSum = sum(visitData, (d) => d[adherentCount] || 0);
-        globalAggregations[`avg_${value}`] = totalTransfusedSum > 0 ? adherentSum / totalTransfusedSum : 0;
-      }
+      GUIDELINE_ADHERENCE_OPTIONS.forEach(({ value, adherentCount, totalTransfused }) => {
+        const totalAdherentTransfusions = visitData.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
+        const totalTransfusions = visitData.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
+
+        globalAggregations[`sum_${value}`] = totalAdherentTransfusions;
+        globalAggregations[`avg_${value}`] = totalTransfusions > 0 ? totalAdherentTransfusions / totalTransfusions : 0;
+      });
 
       // Outcomes
-      for (const { value } of OUTCOME_OPTIONS) {
+      OUTCOME_OPTIONS.forEach(({ value }) => {
         globalAggregations[`sum_${value}`] = sum(visitData, (d) => d[value] || 0);
         globalAggregations[`avg_${value}`] = mean(visitData, (d) => d[value] || 0) || 0;
-      }
+      });
 
       // Prophylactic Medications
-      for (const { value } of PROPHYL_MED_OPTIONS) {
+      PROPHYL_MED_OPTIONS.forEach(({ value }) => {
         globalAggregations[`sum_${value}`] = sum(visitData, (d) => d[value] || 0);
         globalAggregations[`avg_${value}`] = mean(visitData, (d) => d[value] || 0) || 0;
-      }
+      });
     } catch (error) {
       console.error('Error aggregating global stats data:', error);
     }
