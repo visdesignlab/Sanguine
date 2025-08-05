@@ -18,6 +18,7 @@ import {
   AGGREGATION_OPTIONS,
   dashboardYAxisVars,
   DashboardChartData,
+  DashboardStatData,
   CPT_CODES,
   TIME_CONSTANTS,
   type DashboardChartConfig,
@@ -71,13 +72,13 @@ export class DashboardStore {
       i: '0', yAxisVar: 'rbc_units', aggregation: 'sum',
     },
     {
-      i: '1', yAxisVar: 'rbc_adherence', aggregation: 'average',
+      i: '1', yAxisVar: 'rbc_adherence', aggregation: 'avg',
     },
     {
-      i: '2', yAxisVar: 'los', aggregation: 'average',
+      i: '2', yAxisVar: 'los', aggregation: 'avg',
     },
     {
-      i: '3', yAxisVar: 'iron', aggregation: 'average',
+      i: '3', yAxisVar: 'iron', aggregation: 'avg',
     },
   ];
 
@@ -95,7 +96,7 @@ export class DashboardStore {
       i: '1', var: 'rbc_adherence', title: 'Guideline Adherence',
     },
     {
-      i: '2', var: 'los', aggregation: 'average', title: 'Average Length of Stay',
+      i: '2', var: 'los', aggregation: 'avg', title: 'Average Length of Stay',
     },
   ];
 
@@ -125,10 +126,10 @@ export class DashboardStore {
 
   // Chart data ----------------------------------------------------------------
   /**
-   * Returns all chart data for the dashboard
+   * Returns all possible chart data needed for the dashboard
    */
   get chartData(): DashboardChartData {
-    // --- For each visit, get the dashboard data, un-aggregated ---
+    // --- For each visit, get the chart data, un-aggregated ---
     const visitData = this._rootStore.allVisits
       .filter((visit) => this.isValidVisit(visit))
       .map((visit: Visit) => {
@@ -147,7 +148,7 @@ export class DashboardStore {
         };
       });
 
-    // --- Aggregate visit attribute values by quarter ---
+    // --- Aggregate visit attribute values by quarter & aggregations ---
     // (e.g. Sum RBC units per quarter)
     const quarterlyData = rollup(
       visitData,
@@ -159,13 +160,13 @@ export class DashboardStore {
           // Blood Components
           for (const { value } of BLOOD_COMPONENT_OPTIONS) {
             agg[`sum_${value}`] = sum(visit, (d) => d[value] || 0);
-            agg[`average_${value}`] = mean(visit, (d) => d[value] || 0);
+            agg[`avg_${value}`] = mean(visit, (d) => d[value] || 0);
           }
 
           // Guideline Adherence
           for (const { value, adherentCount, totalTransfused } of GUIDELINE_ADHERENCE_OPTIONS) {
             agg[`sum_${value}`] = sum(visit, (d) => d[adherentCount] || 0);
-            agg[`average_${value}`] = mean(visit, (d) => {
+            agg[`avg_${value}`] = mean(visit, (d) => {
               const total = d[totalTransfused] || 0;
               const adherent = d[adherentCount] || 0;
               return total > 0 ? adherent / total : 0;
@@ -175,13 +176,13 @@ export class DashboardStore {
           // Outcomes
           for (const { value } of OUTCOME_OPTIONS) {
             agg[`sum_${value}`] = sum(visit, (d) => d[value] || 0);
-            agg[`average_${value}`] = mean(visit, (d) => d[value] || 0);
+            agg[`avg_${value}`] = mean(visit, (d) => d[value] || 0);
           }
 
           // Prophylactic Medications
           for (const { value } of PROPHYL_MED_OPTIONS) {
             agg[`sum_${value}`] = sum(visit, (d) => d[value] || 0);
-            agg[`average_${value}`] = mean(visit, (d) => d[value] || 0);
+            agg[`avg_${value}`] = mean(visit, (d) => d[value] || 0);
           }
         } catch (error) {
           console.error('Error aggregating data:', error);
@@ -195,7 +196,7 @@ export class DashboardStore {
     // --- Return every possible chart configuration ---
     // (Combins. of aggregation and yAxisVar)
     const result = {} as DashboardChartData;
-    for (const aggregation of AGGREGATION_OPTIONS) {
+    for (const aggregation of Object.keys(AGGREGATION_OPTIONS) as (keyof typeof AGGREGATION_OPTIONS)[]) {
       for (const yAxisVar of dashboardYAxisVars) {
         const key: DashboardChartConfigKey = `${aggregation}_${yAxisVar}`;
         const data = Array.from(quarterlyData.entries())
@@ -215,6 +216,18 @@ export class DashboardStore {
     }
     return result;
   }
+
+  // Stats data ----------------------------------------------------------------
+  /**
+   * Returns all possible stats data needed for the dashboard
+   */
+  // get statData(): DashboardStatData {
+  // // --- For each visit, get the stats data, un-aggregated ---
+  // // const statData = this._rootStore.allVisits
+
+  // // --- Aggregate visit attribute values by quarter ---
+  
+  // }
 
   // Helper functions for chart data ---------------------------------------------
 

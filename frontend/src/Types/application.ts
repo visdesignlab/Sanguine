@@ -135,7 +135,10 @@ export const CPT_CODES = {
 // PBM Dashboard ------------------------------------------------------
 
 // --- Dashboard charts ---
-export const AGGREGATION_OPTIONS = ['sum', 'average'] as const;
+export const AGGREGATION_OPTIONS = {
+  sum: { label: 'Sum' },
+  avg: { label: 'Average' },
+} as const;
 
 export const dashboardYAxisVars = [
   ...BLOOD_COMPONENT_OPTIONS,
@@ -147,16 +150,18 @@ export const dashboardYAxisVars = [
 export type DashboardChartConfig = {
   i: string;
   yAxisVar: typeof dashboardYAxisVars[number];
-  aggregation: typeof AGGREGATION_OPTIONS[number];
+  aggregation: keyof typeof AGGREGATION_OPTIONS;
 };
 
-export type DashboardChartConfigKey = `${typeof AGGREGATION_OPTIONS[number]}_${typeof dashboardYAxisVars[number]}`;
-export type DashboardChartData = Record<`${typeof AGGREGATION_OPTIONS[number]}_${DashboardChartConfig['yAxisVar']}`, { quarter: Quarter, data: number }[]>;
+export type DashboardChartConfigKey = `${keyof typeof AGGREGATION_OPTIONS}_${typeof dashboardYAxisVars[number]}`;
+export type DashboardChartData = Record<`${keyof typeof AGGREGATION_OPTIONS}_${DashboardChartConfig['yAxisVar']}`, { quarter: Quarter, data: number }[]>;
 
 // --- Dashboard stats ---
 export type DashboardStatConfig = {
   i: string;
   var: typeof dashboardYAxisVars[number];
-  aggregation?: typeof AGGREGATION_OPTIONS[number];
+  aggregation?: keyof typeof AGGREGATION_OPTIONS;
   title: string;
 };
+
+export type DashboardStatData = Record<`${keyof typeof AGGREGATION_OPTIONS}_${DashboardStatConfig['var']}`, {data: string} >;
