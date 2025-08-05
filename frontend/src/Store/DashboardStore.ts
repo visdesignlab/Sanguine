@@ -6,22 +6,23 @@ import type { RootStore } from './Store';
 import { TransfusionEvent, Visit } from '../Types/database';
 
 import {
-  BloodComponentOptions,
+  BLOOD_COMPONENT_OPTIONS,
   BloodComponent,
-  GuidelineAdherenceOptions,
+  GUIDELINE_ADHERENCE_OPTIONS,
   AdherentCountField,
   TotalTransfusedField,
-  OutcomeOptions,
+  OUTCOME_OPTIONS,
   Outcome,
-  ProphylMedOptions,
+  PROPHYL_MED_OPTIONS,
   ProphylMed,
-  AggregationOptions,
+  AGGREGATION_OPTIONS,
   dashboardYAxisVars,
   DashboardChartData,
   CPT_CODES,
   TIME_CONSTANTS,
   type DashboardChartConfig,
   type DashboardChartConfigKey,
+  type DashboardStatConfig,
   Quarter,
 } from '../Types/application';
 
@@ -88,6 +89,24 @@ export class DashboardStore {
     this._chartConfigs = input;
   }
 
+  // Stats settings ---------------------------------------------------
+  _statConfigs: DashboardStatConfig[] = [
+    {
+      i: '1', var: 'rbc_adherence', title: 'Guideline Adherence',
+    },
+    {
+      i: '2', var: 'los', aggregation: 'average', title: 'Average Length of Stay',
+    },
+  ];
+
+  get statConfigs() {
+    return this._statConfigs;
+  }
+
+  set statConfigs(input: DashboardStatConfig[]) {
+    this._statConfigs = input;
+  }
+
   // Chart management ----------------------------------------------------------
   setChartConfig(id: string, input: DashboardChartConfig) {
     this._chartConfigs = this._chartConfigs.map((config) => {
@@ -135,16 +154,16 @@ export class DashboardStore {
       (visit) => {
         const agg: Record<string, number | undefined> = {};
 
-        // Safely aggregate each category
+        // Aggregate (e.g. average iron used)
         try {
           // Blood Components
-          for (const { value } of BloodComponentOptions) {
+          for (const { value } of BLOOD_COMPONENT_OPTIONS) {
             agg[`sum_${value}`] = sum(visit, (d) => d[value] || 0);
             agg[`average_${value}`] = mean(visit, (d) => d[value] || 0);
           }
 
           // Guideline Adherence
-          for (const { value, adherentCount, totalTransfused } of GuidelineAdherenceOptions) {
+          for (const { value, adherentCount, totalTransfused } of GUIDELINE_ADHERENCE_OPTIONS) {
             agg[`sum_${value}`] = sum(visit, (d) => d[adherentCount] || 0);
             agg[`average_${value}`] = mean(visit, (d) => {
               const total = d[totalTransfused] || 0;
@@ -154,13 +173,13 @@ export class DashboardStore {
           }
 
           // Outcomes
-          for (const { value } of OutcomeOptions) {
+          for (const { value } of OUTCOME_OPTIONS) {
             agg[`sum_${value}`] = sum(visit, (d) => d[value] || 0);
             agg[`average_${value}`] = mean(visit, (d) => d[value] || 0);
           }
 
           // Prophylactic Medications
-          for (const { value } of ProphylMedOptions) {
+          for (const { value } of PROPHYL_MED_OPTIONS) {
             agg[`sum_${value}`] = sum(visit, (d) => d[value] || 0);
             agg[`average_${value}`] = mean(visit, (d) => d[value] || 0);
           }
@@ -176,7 +195,7 @@ export class DashboardStore {
     // --- Return every possible chart configuration ---
     // (Combins. of aggregation and yAxisVar)
     const result = {} as DashboardChartData;
-    for (const aggregation of AggregationOptions) {
+    for (const aggregation of AGGREGATION_OPTIONS) {
       for (const yAxisVar of dashboardYAxisVars) {
         const key: DashboardChartConfigKey = `${aggregation}_${yAxisVar}`;
         const data = Array.from(quarterlyData.entries())
@@ -278,7 +297,7 @@ export class DashboardStore {
         if (preSurgeryTimePeriods.some(([start, end]) => medTime >= start && medTime <= end)) {
           const lowerMedName = med.medication_name?.toLowerCase() || '';
           // Increase count if med matches prophyl med type
-          ProphylMedOptions.forEach((medType) => {
+          PROPHYL_MED_OPTIONS.forEach((medType) => {
             if (medType.aliases.some((alias) => lowerMedName.includes(alias))) {
               acc[medType.value] = 1;
             }
@@ -293,7 +312,7 @@ export class DashboardStore {
         });
       }
       return acc;
-    }, ProphylMedOptions.reduce((acc, medType) => {
+    }, PROPHYL_MED_OPTIONS.reduce((acc, medType) => {
       acc[medType.value] = 0;
       return acc;
     }, {} as Record<ProphylMed, number>));
@@ -303,7 +322,7 @@ export class DashboardStore {
    * Calculate blood product units for a visit
    */
   getBloodProductUnits(visit: Visit): Record<BloodComponent, number> {
-    return BloodComponentOptions.reduce((acc, component) => {
+    return BLOOD_COMPONENT_OPTIONS.reduce((acc, component) => {
       try {
         acc[component.value] = visit.transfusions.reduce((s: number, t) => s + (t[component.value] || 0), 0);
       } catch (error) {
@@ -337,7 +356,7 @@ export class DashboardStore {
   getAdherenceFlags(visit: Visit): Record<AdherentCountField | TotalTransfusedField, number> {
     const adherenceFlags = {
     // --- For each adherence spec, initialize counts ---
-      ...GuidelineAdherenceOptions.reduce((acc, spec) => {
+      ...GUIDELINE_ADHERENCE_OPTIONS.reduce((acc, spec) => {
         acc[spec.adherentCount] = 0;
         acc[spec.totalTransfused] = 0;
         return acc;
@@ -347,7 +366,7 @@ export class DashboardStore {
     // --- For each transfusion, count adherence and total transfused for each blood product ---
     visit.transfusions.forEach((transfusion: TransfusionEvent) => {
       // For each adherence spec (rbc, ffp), check if transfusion adheres to guidelines
-      GuidelineAdherenceOptions.forEach(({
+      GUIDELINE_ADHERENCE_OPTIONS.forEach(({
         transfusionUnits, labDesc, adherenceCheck, adherentCount, totalTransfused,
       }) => {
         // Check if blood product unit given

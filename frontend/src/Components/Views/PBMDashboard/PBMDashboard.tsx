@@ -10,7 +10,7 @@ import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
 import { useObserver } from 'mobx-react';
 import { StatsGrid } from './StatsGrid';
 import {
-  BloodComponentOptions, GuidelineAdherenceOptions, OutcomeOptions, ProphylMedOptions, type DashboardChartConfig,
+  BLOOD_COMPONENT_OPTIONS, GUIDELINE_ADHERENCE_OPTIONS, OUTCOME_OPTIONS, PROPHYL_MED_OPTIONS, type DashboardChartConfig,
 } from '../../../Types/application';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
@@ -30,7 +30,7 @@ export function PBMDashboard() {
     store.dashboardStore.removeChart(id);
   }, [store.dashboardStore]);
 
-  const chartOptions = [...BloodComponentOptions, ...GuidelineAdherenceOptions, ...OutcomeOptions, ...ProphylMedOptions];
+  const chartOptions = [...BLOOD_COMPONENT_OPTIONS, ...GUIDELINE_ADHERENCE_OPTIONS, ...OUTCOME_OPTIONS, ...PROPHYL_MED_OPTIONS];
 
   return useObserver(() => {
     const chartRowHeight = 300;

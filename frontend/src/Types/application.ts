@@ -21,7 +21,7 @@ export const BLOOD_COMPONENTS = [
 // Values of blood components
 export type BloodComponent = typeof BLOOD_COMPONENTS[number]['value'];
 // Readonly array of blood component options
-export const BloodComponentOptions = BLOOD_COMPONENTS as ReadonlyArray<{ value: BloodComponent; label: string }>;
+export const BLOOD_COMPONENT_OPTIONS = BLOOD_COMPONENTS as ReadonlyArray<{ value: BloodComponent; label: string }>;
 
 // Outcomes -------------------------------
 export const OUTCOMES = [
@@ -34,7 +34,7 @@ export const OUTCOMES = [
 // Values of outcomes
 export type Outcome = typeof OUTCOMES[number]['value'];
 // Readonly array of outcome options
-export const OutcomeOptions = OUTCOMES as ReadonlyArray<{ value: Outcome; label: string }>;
+export const OUTCOME_OPTIONS = OUTCOMES as ReadonlyArray<{ value: Outcome; label: string }>;
 
 // Prophylactic Medications -------------------
 export const PROPHYL_MEDS = [
@@ -62,7 +62,7 @@ export const PROPHYL_MEDS = [
   // Values of prophylactic medications
 export type ProphylMed = typeof PROPHYL_MEDS[number]['value'];
 // Readonly array of prophylactic medication options
-export const ProphylMedOptions = PROPHYL_MEDS as ReadonlyArray<{
+export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
   value: ProphylMed;
   label: string;
   aliases: readonly string[];
@@ -112,7 +112,7 @@ export type GuidelineAdherence = typeof GUIDELINE_ADHERENCE[keyof typeof GUIDELI
 export type AdherentCountField = typeof GUIDELINE_ADHERENCE[keyof typeof GUIDELINE_ADHERENCE]['adherentCount'];
 export type TotalTransfusedField = typeof GUIDELINE_ADHERENCE[keyof typeof GUIDELINE_ADHERENCE]['totalTransfused'];
 
-export const GuidelineAdherenceOptions = Object.values(GUIDELINE_ADHERENCE) as ReadonlyArray<{
+export const GUIDELINE_ADHERENCE_OPTIONS = Object.values(GUIDELINE_ADHERENCE) as ReadonlyArray<{
   value: GuidelineAdherence;
   label: string;
   adherentCount: AdherentCountField;
@@ -133,20 +133,30 @@ export const CPT_CODES = {
 } as const;
 
 // PBM Dashboard ------------------------------------------------------
-export const AggregationOptions = ['sum', 'average'] as const;
+
+// --- Dashboard charts ---
+export const AGGREGATION_OPTIONS = ['sum', 'average'] as const;
 
 export const dashboardYAxisVars = [
-  ...BloodComponentOptions,
-  ...GuidelineAdherenceOptions,
-  ...OutcomeOptions,
-  ...ProphylMedOptions,
+  ...BLOOD_COMPONENT_OPTIONS,
+  ...GUIDELINE_ADHERENCE_OPTIONS,
+  ...OUTCOME_OPTIONS,
+  ...PROPHYL_MED_OPTIONS,
 ].map((opt) => opt.value);
 
 export type DashboardChartConfig = {
   i: string;
   yAxisVar: typeof dashboardYAxisVars[number];
-  aggregation: typeof AggregationOptions[number];
+  aggregation: typeof AGGREGATION_OPTIONS[number];
 };
 
-export type DashboardChartConfigKey = `${typeof AggregationOptions[number]}_${typeof dashboardYAxisVars[number]}`;
-export type DashboardChartData = Record<`${typeof AggregationOptions[number]}_${DashboardChartConfig['yAxisVar']}`, { quarter: Quarter, data: number }[]>;
+export type DashboardChartConfigKey = `${typeof AGGREGATION_OPTIONS[number]}_${typeof dashboardYAxisVars[number]}`;
+export type DashboardChartData = Record<`${typeof AGGREGATION_OPTIONS[number]}_${DashboardChartConfig['yAxisVar']}`, { quarter: Quarter, data: number }[]>;
+
+// --- Dashboard stats ---
+export type DashboardStatConfig = {
+  i: string;
+  var: typeof dashboardYAxisVars[number];
+  aggregation?: typeof AGGREGATION_OPTIONS[number];
+  title: string;
+};
