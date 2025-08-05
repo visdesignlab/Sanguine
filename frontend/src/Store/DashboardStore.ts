@@ -196,7 +196,7 @@ export class DashboardStore {
     // --- Return every possible chart configuration ---
     // (Combins. of aggregation and yAxisVar)
     const result = {} as DashboardChartData;
-    for (const aggregation of Object.keys(AGGREGATION_OPTIONS) as (keyof typeof AGGREGATION_OPTIONS)[]) {
+    for (const aggregation of Object.keys(AGGREGATION_OPTIONS)) {
       for (const yAxisVar of dashboardYAxisVars) {
         const key: DashboardChartConfigKey = `${aggregation}_${yAxisVar}`;
         const data = Array.from(quarterlyData.entries())
