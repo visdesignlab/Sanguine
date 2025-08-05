@@ -196,7 +196,7 @@ export class DashboardStore {
     // --- Return every possible chart configuration ---
     // (Combins. of aggregation and yAxisVar)
     const result = {} as DashboardChartData;
-    for (const aggregation of Object.keys(AGGREGATION_OPTIONS)) {
+    for (const aggregation of Object.keys(AGGREGATION_OPTIONS) as (keyof typeof AGGREGATION_OPTIONS)[]) {
       for (const yAxisVar of dashboardYAxisVars) {
         const key: DashboardChartConfigKey = `${aggregation}_${yAxisVar}`;
         const data = Array.from(quarterlyData.entries())
@@ -219,15 +219,89 @@ export class DashboardStore {
 
   // Stats data ----------------------------------------------------------------
   /**
-   * Returns all possible stats data needed for the dashboard
-   */
-  // get statData(): DashboardStatData {
-  // // --- For each visit, get the stats data, un-aggregated ---
-  // // const statData = this._rootStore.allVisits
+  * Returns all possible stats data needed for the dashboard
+  */
+  get statData(): DashboardStatData {
+  // --- For each visit, get the stats data, un-aggregated ---
+    const visitData = this._rootStore.allVisits
+      .filter((visit) => this.isValidVisit(visit))
+      .map((visit: Visit) => {
+        const prophMedFlags = this.getProphMedFlags(visit);
+        const bloodProductUnits = this.getBloodProductUnits(visit);
+        const adherenceFlags = this.getAdherenceFlags(visit);
+        const outcomeFlags = this.getOutcomeFlags(visit);
 
-  // // --- Aggregate visit attribute values by quarter ---
-  
-  // }
+        return {
+          ...bloodProductUnits,
+          ...adherenceFlags,
+          ...outcomeFlags,
+          ...prophMedFlags,
+        };
+      });
+
+    // --- Aggregate visit attribute values by AGGREGATION_OPTIONS ---
+    // (e.g. Total RBC units transfused across all visits, all of time = 420000)
+    const globalAggregations: Record<string, number> = {};
+
+    try {
+      // Blood Components
+      for (const { value } of BLOOD_COMPONENT_OPTIONS) {
+        globalAggregations[`sum_${value}`] = sum(visitData, (d) => d[value] || 0);
+        globalAggregations[`avg_${value}`] = mean(visitData, (d) => d[value] || 0) || 0;
+      }
+
+      // Guideline Adherence
+      for (const { value, adherentCount, totalTransfused } of GUIDELINE_ADHERENCE_OPTIONS) {
+        globalAggregations[`sum_${value}`] = sum(visitData, (d) => d[adherentCount] || 0);
+        const totalTransfusedSum = sum(visitData, (d) => d[totalTransfused] || 0);
+        const adherentSum = sum(visitData, (d) => d[adherentCount] || 0);
+        globalAggregations[`avg_${value}`] = totalTransfusedSum > 0 ? adherentSum / totalTransfusedSum : 0;
+      }
+
+      // Outcomes
+      for (const { value } of OUTCOME_OPTIONS) {
+        globalAggregations[`sum_${value}`] = sum(visitData, (d) => d[value] || 0);
+        globalAggregations[`avg_${value}`] = mean(visitData, (d) => d[value] || 0) || 0;
+      }
+
+      // Prophylactic Medications
+      for (const { value } of PROPHYL_MED_OPTIONS) {
+        globalAggregations[`sum_${value}`] = sum(visitData, (d) => d[value] || 0);
+        globalAggregations[`avg_${value}`] = mean(visitData, (d) => d[value] || 0) || 0;
+      }
+    } catch (error) {
+      console.error('Error aggregating global stats data:', error);
+    }
+
+    // Return every possible stat configuration, where the data returned is a single number as a string
+    const result = {} as DashboardStatData;
+    for (const aggregation of Object.keys(AGGREGATION_OPTIONS) as (keyof typeof AGGREGATION_OPTIONS)[]) {
+      for (const yAxisVar of dashboardYAxisVars) {
+        const key: `${keyof typeof AGGREGATION_OPTIONS}_${typeof yAxisVar}` = `${aggregation}_${yAxisVar}`;
+        const value = globalAggregations[key] || 0;
+
+        // Format the value appropriately based on the variable type
+        let formattedValue: string;
+        if (yAxisVar.includes('adherence')) {
+        // Format adherence as percentage
+          formattedValue = `${(value * 100).toFixed(1)}%`;
+        } else if (yAxisVar === 'los') {
+        // Format length of stay as days
+          formattedValue = `${value.toFixed(1)} days`;
+        } else if (yAxisVar.includes('units') || yAxisVar.includes('ml')) {
+        // Format units as whole numbers
+          formattedValue = Math.round(value).toString();
+        } else {
+        // Default formatting for other metrics
+          formattedValue = value.toFixed(1);
+        }
+
+        result[key] = { data: formattedValue };
+      }
+    }
+
+    return result;
+  }
 
   // Helper functions for chart data ---------------------------------------------
 
@@ -376,7 +450,7 @@ export class DashboardStore {
       }, {} as Record<AdherentCountField | TotalTransfusedField, number>),
     };
 
-    // --- For each transfusion, count adherence and total transfused for each blood product ---
+    // --- For each transfusion, count adherence # and total transfused # for each blood product ---
     visit.transfusions.forEach((transfusion: TransfusionEvent) => {
       // For each adherence spec (rbc, ffp), check if transfusion adheres to guidelines
       GUIDELINE_ADHERENCE_OPTIONS.forEach(({

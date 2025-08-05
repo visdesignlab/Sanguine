@@ -32,6 +32,8 @@ export function PBMDashboard() {
 
   const chartOptions = [...BLOOD_COMPONENT_OPTIONS, ...GUIDELINE_ADHERENCE_OPTIONS, ...OUTCOME_OPTIONS, ...PROPHYL_MED_OPTIONS];
 
+  console.log("Stat Data:", store.dashboardStore.statData); // Debugging line to check stat data
+  // console.log("Stat Data:", store.dashboardStore.statData);
   return useObserver(() => {
     const chartRowHeight = 300;
 
@@ -84,8 +86,8 @@ export function PBMDashboard() {
                   </Flex>
 
                   <Flex direction="row" align="center" gap="sm">
-                    <ActionIcon variant="subtle" onClick={() => store.dashboardStore.setChartConfig(i, { i, yAxisVar, aggregation: aggregation === 'sum' ? 'average' : 'sum' })}>
-                      <IconPercentage size={18} color={aggregation === 'average' ? theme.colors.indigo[6] : theme.colors.gray[6]} stroke={3} />
+                    <ActionIcon variant="subtle" onClick={() => store.dashboardStore.setChartConfig(i, { i, yAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum' })}>
+                      <IconPercentage size={18} color={aggregation === 'avg' ? theme.colors.indigo[6] : theme.colors.gray[6]} stroke={3} />
                     </ActionIcon>
                     {/** Select Attribute Menu */}
                     <Select
