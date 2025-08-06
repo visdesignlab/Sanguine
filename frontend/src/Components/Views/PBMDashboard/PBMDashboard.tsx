@@ -1,16 +1,23 @@
-import { useCallback, useContext, useMemo } from 'react';
+import {
+  useCallback, useContext, useMemo, useState,
+} from 'react';
 import {
   Title, Stack, Card, Flex, Select, useMantineTheme, Button,
   CloseButton,
   ActionIcon,
+  Menu,
+  Modal,
 } from '@mantine/core';
-import { IconGripVertical, IconPercentage, IconPlus } from '@tabler/icons-react';
+import {
+  IconChartLine, IconGripVertical, IconNumbers, IconPercentage, IconPlus,
+} from '@tabler/icons-react';
 import { LineChart } from '@mantine/charts';
 import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
 import { useObserver } from 'mobx-react';
+import { useDisclosure } from '@mantine/hooks';
 import { StatsGrid } from './StatsGrid';
 import {
-  BLOOD_COMPONENT_OPTIONS, GUIDELINE_ADHERENCE_OPTIONS, OUTCOME_OPTIONS, PROPHYL_MED_OPTIONS, type DashboardChartConfig,
+  dashboardYAxisOptions, AGGREGATION_OPTIONS, type DashboardChartConfig,
 } from '../../../Types/application';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
@@ -24,15 +31,45 @@ export function PBMDashboard() {
   const theme = useMantineTheme();
 
   // Get theme constants
-  const { buttonIconSize, cardIconStroke } = useThemeConstants();
+  const { buttonIconSize, cardIconSize, cardIconStroke } = useThemeConstants();
+
+  // Modal state
+  const [opened, { open, close }] = useDisclosure(false);
+  const [selectedAggregation, setSelectedAggregation] = useState<string>('sum');
+  const [selectedAttribute, setSelectedAttribute] = useState<string>('');
+  const [modalType, setModalType] = useState<'chart' | 'stat'>('chart');
 
   const handleRemoveChart = useCallback((id: string) => {
     store.dashboardStore.removeChart(id);
   }, [store.dashboardStore]);
 
-  const chartOptions = [...BLOOD_COMPONENT_OPTIONS, ...GUIDELINE_ADHERENCE_OPTIONS, ...OUTCOME_OPTIONS, ...PROPHYL_MED_OPTIONS];
+  const handleAddStat = useCallback(() => {
+    setModalType('stat');
+    open();
+  }, [open]);
 
-  console.log("Stat Data:", store.dashboardStore.statData); // Debugging line to check stat data
+  const handleAddChart = useCallback(() => {
+    setModalType('chart');
+    open();
+  }, [open]);
+
+  const handleDoneAdd = useCallback(() => {
+    console.log('Selected aggregation:', selectedAggregation);
+    console.log('Selected attribute:', selectedAttribute);
+
+    if (modalType === 'chart') {
+      // TODO: Implement actual chart addition
+      console.log('Adding chart...');
+    } else {
+      // TODO: Implement actual stat addition
+      console.log('Adding stat...');
+    }
+
+    close();
+  }, [selectedAggregation, selectedAttribute, modalType, close]);
+
+  const aggregationOptions = Object.entries(AGGREGATION_OPTIONS).map(([value, { label }]) => ({ value, label }));
+
   // console.log("Stat Data:", store.dashboardStore.statData);
   return useObserver(() => {
     const chartRowHeight = 300;
@@ -42,11 +79,61 @@ export function PBMDashboard() {
         {/** Title, Add Chart Button */}
         <Flex direction="row" justify="space-between" align="center">
           <Title order={3}>Patient Blood Management Dashboard</Title>
-          <Button>
-            <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
-            Add Chart
-          </Button>
+          <Menu width="md">
+            <Menu.Target>
+              <Button>
+                <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
+                Add Item
+              </Button>
+            </Menu.Target>
+
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<IconChartLine size={cardIconSize} stroke={cardIconStroke} />}
+                onClick={handleAddChart}
+              >
+                Add Chart
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconNumbers size={cardIconSize} stroke={cardIconStroke} />}
+                onClick={handleAddStat}
+              >
+                Add Stat
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         </Flex>
+        {/** Add Item Modal */}
+        <Modal
+          opened={opened}
+          onClose={close}
+          title={`Add ${modalType === 'chart' ? 'Chart' : 'Stat'} To Dashboard`}
+          centered
+        >
+          <Stack gap="md">
+            <Select
+              label="Select Aggregation"
+              placeholder="Choose aggregation type"
+              data={aggregationOptions}
+              value={selectedAggregation}
+              onChange={(value) => setSelectedAggregation(value || 'sum')}
+            />
+            <Select
+              label="Select Attribute"
+              placeholder={`Choose ${modalType} attribute`}
+              data={dashboardYAxisOptions}
+              value={selectedAttribute}
+              onChange={(value) => setSelectedAttribute(value || '')}
+            />
+            <Button
+              onClick={handleDoneAdd}
+              disabled={!selectedAttribute}
+              fullWidth
+            >
+              Done
+            </Button>
+          </Stack>
+        </Modal>
 
         <StatsGrid />
 
@@ -66,6 +153,7 @@ export function PBMDashboard() {
           }}
           layouts={store.dashboardStore.chartLayouts}
         >
+          {/** Render each chart within the configuration */}
           {Object.values(store.dashboardStore.chartConfigs).map(({
             i, yAxisVar, aggregation,
           }) => (
@@ -81,7 +169,7 @@ export function PBMDashboard() {
                   <Flex direction="row" align="center" gap="md" ml={-12}>
                     <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
                     <Title order={4}>
-                      {`${aggregation.charAt(0).toUpperCase() + aggregation.slice(1)}${aggregation === 'sum' ? ' of' : ''} ${chartOptions.find((opt) => opt.value === yAxisVar)?.label || yAxisVar}${aggregation === 'average' ? ' Per Visit' : ''}`}
+                      {`${aggregation.charAt(0).toUpperCase() + aggregation.slice(1)}${aggregation === 'sum' ? ' of' : ''} ${dashboardYAxisOptions.find((opt) => opt.value === yAxisVar)?.label || yAxisVar}${aggregation === 'average' ? ' Per Visit' : ''}`}
                     </Title>
                   </Flex>
 
@@ -91,7 +179,7 @@ export function PBMDashboard() {
                     </ActionIcon>
                     {/** Select Attribute Menu */}
                     <Select
-                      data={chartOptions}
+                      data={dashboardYAxisOptions}
                       defaultValue={yAxisVar}
                       onChange={(value) => {
                         store.dashboardStore.setChartConfig(i, {

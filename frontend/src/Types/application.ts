@@ -139,13 +139,8 @@ export const AGGREGATION_OPTIONS = {
   sum: { label: 'Sum' },
   avg: { label: 'Average' },
 } as const;
-
-export const dashboardYAxisVars = [
-  ...BLOOD_COMPONENT_OPTIONS,
-  ...GUIDELINE_ADHERENCE_OPTIONS,
-  ...OUTCOME_OPTIONS,
-  ...PROPHYL_MED_OPTIONS,
-].map((opt) => opt.value);
+export const dashboardYAxisOptions = [...BLOOD_COMPONENT_OPTIONS, ...GUIDELINE_ADHERENCE_OPTIONS, ...OUTCOME_OPTIONS, ...PROPHYL_MED_OPTIONS];
+export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 
 export type DashboardChartConfig = {
   i: string;
