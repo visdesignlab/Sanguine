@@ -20,6 +20,7 @@ import {
   GUIDELINE_ADHERENCE_OPTIONS,
   OUTCOME_OPTIONS,
   PROPHYL_MED_OPTIONS,
+  TOTAL_GUIDELINE_ADHERENCE,
   type DashboardStatConfig,
 } from '../../../Types/application';
 
@@ -38,6 +39,7 @@ const getIconForVar = (varName: DashboardStatConfig['var']) => {
 
   const adherence = GUIDELINE_ADHERENCE_OPTIONS.find((opt) => opt.value === varName);
   if (adherence) return 'adherence';
+  if (adherence || varName === TOTAL_GUIDELINE_ADHERENCE.value) return 'adherence';
 
   const outcome = OUTCOME_OPTIONS.find((opt) => opt.value === varName);
   if (outcome) return 'outcome';

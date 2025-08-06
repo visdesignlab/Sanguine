@@ -125,9 +125,17 @@ export const GUIDELINE_ADHERENCE = {
   },
 } as const;
 
+// Total guideline adherence (mean across all blood products)
+export const TOTAL_GUIDELINE_ADHERENCE = {
+  value: 'total_adherence',
+  label: 'Overall Guideline Adherence',
+  unit: '%',
+} as const;
+
 export type GuidelineAdherence = typeof GUIDELINE_ADHERENCE[keyof typeof GUIDELINE_ADHERENCE]['value'];
 export type AdherentCountField = typeof GUIDELINE_ADHERENCE[keyof typeof GUIDELINE_ADHERENCE]['adherentCount'];
 export type TotalTransfusedField = typeof GUIDELINE_ADHERENCE[keyof typeof GUIDELINE_ADHERENCE]['totalTransfused'];
+export type TotalGuidelineAdherence = typeof TOTAL_GUIDELINE_ADHERENCE['value'];
 
 export const GUIDELINE_ADHERENCE_OPTIONS = Object.values(GUIDELINE_ADHERENCE) as ReadonlyArray<{
   value: GuidelineAdherence;
@@ -157,7 +165,7 @@ export const AGGREGATION_OPTIONS = {
   sum: { label: 'Sum' },
   avg: { label: 'Average' },
 } as const;
-export const dashboardYAxisOptions = [...BLOOD_COMPONENT_OPTIONS, ...GUIDELINE_ADHERENCE_OPTIONS, ...OUTCOME_OPTIONS, ...PROPHYL_MED_OPTIONS];
+export const dashboardYAxisOptions = [...BLOOD_COMPONENT_OPTIONS, ...GUIDELINE_ADHERENCE_OPTIONS, ...OUTCOME_OPTIONS, ...PROPHYL_MED_OPTIONS, TOTAL_GUIDELINE_ADHERENCE];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 
 export type DashboardChartConfig = {

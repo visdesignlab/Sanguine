@@ -21,6 +21,7 @@ import {
   DashboardStatData,
   CPT_CODES,
   TIME_CONSTANTS,
+  TOTAL_GUIDELINE_ADHERENCE,
   type DashboardChartConfig,
   type DashboardChartConfigKey,
   type DashboardStatConfig,
@@ -94,7 +95,7 @@ export class DashboardStore {
   // Stats settings ---------------------------------------------------
   _statConfigs: DashboardStatConfig[] = [
     {
-      i: '1', var: 'rbc_adherence', aggregation: 'avg', title: 'Guideline Adherence',
+      i: '1', var: 'total_adherence', aggregation: 'avg', title: 'Overall Guideline Adherence',
     },
     {
       i: '2', var: 'los', aggregation: 'avg', title: 'Average Length of Stay',
@@ -204,6 +205,7 @@ export class DashboardStore {
         const bloodProductUnits = this.getBloodProductUnits(visit);
         const adherenceFlags = this.getAdherenceFlags(visit);
         const outcomeFlags = this.getOutcomeFlags(visit);
+        const totalAdherence = this.calculateTotalAdherence(adherenceFlags);
 
         // Return cleaned visit data
         return {
@@ -212,6 +214,7 @@ export class DashboardStore {
           ...adherenceFlags,
           ...outcomeFlags,
           ...prophMedFlags,
+          ...totalAdherence,
         };
       });
 
@@ -238,6 +241,10 @@ export class DashboardStore {
             agg[`sum_${value}`] = totalAdherentTransfusions;
             agg[`avg_${value}`] = totalTransfusions > 0 ? totalAdherentTransfusions / totalTransfusions : 0;
           });
+
+          // Total Guideline Adherence
+          agg[`sum_${TOTAL_GUIDELINE_ADHERENCE.value}`] = sum(visit, (d) => d[TOTAL_GUIDELINE_ADHERENCE.value] || 0);
+          agg[`avg_${TOTAL_GUIDELINE_ADHERENCE.value}`] = mean(visit, (d) => d[TOTAL_GUIDELINE_ADHERENCE.value] || 0) || 0;
 
           // Outcomes
           OUTCOME_OPTIONS.forEach(({ value }) => {
@@ -296,13 +303,14 @@ export class DashboardStore {
         const bloodProductUnits = this.getBloodProductUnits(visit);
         const adherenceFlags = this.getAdherenceFlags(visit);
         const outcomeFlags = this.getOutcomeFlags(visit);
-
+        const totalAdherence = this.calculateTotalAdherence(adherenceFlags);
         return {
           dischargeDate: this.safeParseDate(visit.dsch_dtm),
           ...bloodProductUnits,
           ...adherenceFlags,
           ...outcomeFlags,
           ...prophMedFlags,
+          ...totalAdherence,
         };
       })
       .filter((data) => data.dischargeDate !== null);
@@ -361,6 +369,11 @@ export class DashboardStore {
           agg[`sum_${value}`] = totalAdherentTransfusions;
           agg[`avg_${value}`] = totalTransfusions > 0 ? totalAdherentTransfusions / totalTransfusions : 0;
         });
+
+        // Total Guideline Adherence
+        agg[`sum_${TOTAL_GUIDELINE_ADHERENCE.value}`] = sum(visits, (d) => d[TOTAL_GUIDELINE_ADHERENCE.value] || 0);
+        agg[`avg_${TOTAL_GUIDELINE_ADHERENCE.value}`] = mean(visits, (d) => d[TOTAL_GUIDELINE_ADHERENCE.value] || 0) || 0;
+
 
         // Outcomes
         OUTCOME_OPTIONS.forEach(({ value }) => {
@@ -626,6 +639,32 @@ export class DashboardStore {
         los: 0, death: 0, vent: 0, stroke: 0, ecmo: 0,
       };
     }
+  }
+
+  /**
+   * Calculate total adherence as the mean of all individual adherence rates for a visit
+   */
+  private calculateTotalAdherence(adherenceFlags: Record<AdherentCountField | TotalTransfusedField, number>): Record<typeof TOTAL_GUIDELINE_ADHERENCE.value, number> {
+    const adherenceRates: number[] = [];
+
+    // Calculate adherence rate for each blood product
+    GUIDELINE_ADHERENCE_OPTIONS.forEach(({ adherentCount, totalTransfused }) => {
+      const adherent = adherenceFlags[adherentCount] || 0;
+      const total = adherenceFlags[totalTransfused] || 0;
+
+      if (total > 0) {
+        adherenceRates.push(adherent / total);
+      }
+    });
+
+    // Return mean adherence rate (0 if no transfusions)
+    const meanAdherence = adherenceRates.length > 0
+      ? adherenceRates.reduce((count, rate) => count + rate, 0) / adherenceRates.length
+      : 0;
+
+    return {
+      [TOTAL_GUIDELINE_ADHERENCE.value]: meanAdherence,
+    };
   }
 
   // Helper method to generate chart titles (extracted from existing logic)
