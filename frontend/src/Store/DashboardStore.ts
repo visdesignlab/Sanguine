@@ -6,27 +6,22 @@ import type { RootStore } from './Store';
 import { TransfusionEvent, Visit } from '../Types/database';
 
 import {
-  BLOOD_COMPONENT_OPTIONS,
-  BloodComponent,
-  GUIDELINE_ADHERENCE_OPTIONS,
+  TIME_CONSTANTS, Quarter, // Time constants
+  BLOOD_COMPONENT_OPTIONS, BloodComponent, // Blood components
+  OUTCOME_OPTIONS, Outcome, // Outcomes
+  PROPHYL_MED_OPTIONS, ProphylMed, // Prophylactic medications
+  GUIDELINE_ADHERENCE_OPTIONS, // Guideline adherence
   AdherentCountField,
   TotalTransfusedField,
-  OUTCOME_OPTIONS,
-  Outcome,
-  PROPHYL_MED_OPTIONS,
-  ProphylMed,
-  AGGREGATION_OPTIONS,
-  dashboardYAxisVars,
-  DashboardChartData,
-  DashboardStatData,
-  CPT_CODES,
-  TIME_CONSTANTS,
   TOTAL_GUIDELINE_ADHERENCE,
+  CPT_CODES, // CPT codes
+  AGGREGATION_OPTIONS, // Dashboard configuration
+  dashboardYAxisVars,
+  dashboardYAxisOptions,
   type DashboardChartConfig,
   type DashboardChartConfigKey,
   type DashboardStatConfig,
-  Quarter,
-  dashboardYAxisOptions,
+  DashboardChartData, DashboardStatData, // Dashboard data types
 } from '../Types/application';
 
 /**
@@ -373,7 +368,6 @@ export class DashboardStore {
         // Total Guideline Adherence
         agg[`sum_${TOTAL_GUIDELINE_ADHERENCE.value}`] = sum(visits, (d) => d[TOTAL_GUIDELINE_ADHERENCE.value] || 0);
         agg[`avg_${TOTAL_GUIDELINE_ADHERENCE.value}`] = mean(visits, (d) => d[TOTAL_GUIDELINE_ADHERENCE.value] || 0) || 0;
-
 
         // Outcomes
         OUTCOME_OPTIONS.forEach(({ value }) => {
