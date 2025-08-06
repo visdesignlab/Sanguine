@@ -1,8 +1,10 @@
 import { TransfusionEvent } from './database';
 
 // Time formatting ------------------------------------------------
+// Quarter - e.g. "2023-Q1"
 export type Quarter = `${number}-Q${1 | 2 | 3 | 4}`;
 
+// Time consts for application
 export const TIME_CONSTANTS = {
   TWO_HOURS_MS: 2 * 60 * 60 * 1000,
   TWO_DAYS_MS: 2 * 24 * 60 * 60 * 1000,
@@ -10,7 +12,7 @@ export const TIME_CONSTANTS = {
   VENTILATOR_THRESHOLD_MINS: 1440,
 } as const;
 
-// Blood components -----------------------
+// Blood components -----------------------------------------------
 export const BLOOD_COMPONENTS = [
   { value: 'rbc_units', label: 'RBCs Transfused', unit: 'units' },
   { value: 'ffp_units', label: 'FFP Transfused', unit: 'units' },
@@ -27,7 +29,7 @@ export const BLOOD_COMPONENT_OPTIONS = BLOOD_COMPONENTS as ReadonlyArray<{
   unit: string;
 }>;
 
-// Outcomes -------------------------------
+// Outcomes -------------------------------------------------------
 export const OUTCOMES = [
   { value: 'los', label: 'Length of Stay', unit: 'days' },
   { value: 'death', label: 'Death', unit: 'visits' },
@@ -44,7 +46,7 @@ export const OUTCOME_OPTIONS = OUTCOMES as ReadonlyArray<{
   unit: string;
 }>;
 
-// Prophylactic Medications -------------------
+// Prophylactic Medications ---------------------------------------
 export const PROPHYL_MEDS = [
   {
     value: 'b12',
@@ -81,7 +83,7 @@ export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
   unit: string;
 }>;
 
-// Guideline adherence ---------------------------
+// Guideline adherence ---------------------------------------------
 export const GUIDELINE_ADHERENCE = {
   rbc: {
     value: 'rbc_adherence',
@@ -125,7 +127,7 @@ export const GUIDELINE_ADHERENCE = {
   },
 } as const;
 
-// Total guideline adherence (mean across all blood products)
+// Total guideline adherence (Across all blood products)
 export const OVERALL_GUIDELINE_ADHERENCE = {
   value: 'overall_adherence',
   adherentCount: 'overall_adherent',
@@ -144,6 +146,7 @@ export type OverallAdherentCountField = typeof OVERALL_GUIDELINE_ADHERENCE['adhe
 export type OverallTotalTransfusedField = typeof OVERALL_GUIDELINE_ADHERENCE['totalTransfused'];
 export type OverallGuidelineAdherence = typeof OVERALL_GUIDELINE_ADHERENCE['value'];
 
+// Readonly array of guideline adherence options
 export const GUIDELINE_ADHERENCE_OPTIONS = Object.values(GUIDELINE_ADHERENCE) as ReadonlyArray<{
   value: GuidelineAdherence;
   label: string;
@@ -155,7 +158,7 @@ export const GUIDELINE_ADHERENCE_OPTIONS = Object.values(GUIDELINE_ADHERENCE) as
   unit: string;
 }>;
 
-// CPT Codes -------------------------------
+// CPT Codes -------------------------------------------------------
 export const CPT_CODES = {
   stroke: ['99291', '1065F', '1066F'],
   ecmo: [
@@ -165,16 +168,20 @@ export const CPT_CODES = {
   ],
 } as const;
 
-// PBM Dashboard ------------------------------------------------------
+// PBM Dashboard ---------------------------------------------------
 
 // --- Dashboard charts ---
+// Chart aggregation options
 export const AGGREGATION_OPTIONS = {
   sum: { label: 'Sum' },
   avg: { label: 'Average' },
 } as const;
+
+// Chart y-axis variable options
 export const dashboardYAxisOptions = [...BLOOD_COMPONENT_OPTIONS, ...GUIDELINE_ADHERENCE_OPTIONS, ...OUTCOME_OPTIONS, ...PROPHYL_MED_OPTIONS, OVERALL_GUIDELINE_ADHERENCE];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 
+// Chart configuration type
 export type DashboardChartConfig = {
   i: string;
   yAxisVar: typeof dashboardYAxisVars[number];
