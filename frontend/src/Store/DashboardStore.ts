@@ -38,7 +38,7 @@ export class DashboardStore {
     makeAutoObservable(this);
   }
 
-  // Chart settings -----------------------------------------------------------
+  // Chart settings ------------------------------------------------------------
   // Chart Layouts
   _chartLayouts: { [key: string]: Layout[] } = {
     main: [
@@ -89,7 +89,8 @@ export class DashboardStore {
     this._chartConfigs = input;
   }
 
-  // Stats settings ---------------------------------------------------
+  // Stats settings ------------------------------------------------------------
+  // Stat configurations
   _statConfigs: DashboardStatConfig[] = [
     {
       i: '1', var: 'overall_adherence', aggregation: 'avg', title: 'Overall Guideline Adherence',
@@ -111,6 +112,9 @@ export class DashboardStore {
   }
 
   // Chart management ----------------------------------------------------------
+  /**
+   * Initializes the dashboard with default chart configurations.
+   */
   setChartConfig(id: string, input: DashboardChartConfig) {
     this._chartConfigs = this._chartConfigs.map((config) => {
       if (config.i === id) {
@@ -120,6 +124,9 @@ export class DashboardStore {
     });
   }
 
+  /**
+   * Removes chart from the dashboard by ID.
+   */
   removeChart(id: string) {
     this._chartConfigs = this._chartConfigs.filter((config) => config.i !== id);
     this._chartLayouts.main = this._chartLayouts.main.filter((layout) => layout.i !== id);
@@ -175,7 +182,7 @@ export class DashboardStore {
     };
   }
 
-  // Stat management ----------------------------------------------------------
+  // Stat management -----------------------------------------------------------
   /**
    * @param statVar Variable to use for the stat (e.g. 'total_adherence')
    * @param aggregation Aggregation method to use (e.g. 'avg', 'sum')
@@ -197,6 +204,9 @@ export class DashboardStore {
     this._statConfigs = [...this._statConfigs, fullStatConfig];
   }
 
+  /**
+   * Remove stat from dashboard by ID
+   */
   removeStat(id: string) {
     this._statConfigs = this._statConfigs.filter((config) => config.i !== id);
   }
@@ -304,7 +314,8 @@ export class DashboardStore {
 
   // Stats data ----------------------------------------------------------------
   /**
-   * Returns stats data for the last 30 days with percentage change from previous month
+   * Returns stats data for the last 30 days,
+   * with percentage change from nearest non-overlapping month
    */
   get statData(): DashboardStatData {
     // --- For each visit, get the stats data, un-aggregated ---
@@ -437,73 +448,46 @@ export class DashboardStore {
     return result;
   }
 
-  // Helper functions for chart data ---------------------------------------------
+  // Helper functions for chart data -------------------------------------------
 
+  // Variable data formatting ---------
   /**
-   * Safely parse a date string with error handling
+   * Calculate blood product units for a visit
    */
-  private safeParseDate(dateInput: string | Date | null | undefined): Date {
-    if (!dateInput) {
-      throw new Error('Date input is null or undefined');
-    }
-    const date = new Date(dateInput);
-    if (Number.isNaN(date.getTime())) {
-      throw new Error(`Invalid date format: ${dateInput}`);
-    }
-    return date;
-  }
-
-  /**
-   * Validate that required visit data exists
-   */
-  private isValidVisit(visit: Visit): boolean {
-    if (!visit) {
-      console.warn('Null or undefined visit');
-      return false;
-    }
-    if (!visit.dsch_dtm || !visit.adm_dtm) {
-      console.warn('Visit missing required dates:', { id: visit.visit_no, dsch_dtm: visit.dsch_dtm, adm_dtm: visit.adm_dtm });
-      return false;
-    }
-    const dischDate = this.safeParseDate(visit.dsch_dtm);
-    const admDate = this.safeParseDate(visit.adm_dtm);
-    if (!dischDate || !admDate) {
-      console.warn('Visit has invalid date formats:', { id: visit.visit_no, dsch_dtm: visit.dsch_dtm, adm_dtm: visit.adm_dtm });
-      return false;
-    }
-    if (dischDate.getTime() < admDate.getTime()) {
-      console.warn('Visit discharge date before admission date:', { id: visit.visit_no, dischDate, admDate });
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Calculate quarter string from a date
-  */
-  private getQuarterFromDate(date: Date): Quarter | null {
-    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
-      console.error('Invalid date for quarter calculation:', date);
-      return null;
-    }
-    const year = date.getFullYear();
-    const quarter = Math.floor(date.getMonth() / 3) + 1 as 1 | 2 | 3 | 4;
-    return `${year}-Q${quarter}`;
-  }
-
-  /**
-   * Calculate pre-surgery time periods (2 days before each surgery)
-   */
-  getPreSurgeryTimePeriods(visit: Visit): [number, number][] {
-    return visit.surgeries.map((surgery) => {
+  getBloodProductUnits(visit: Visit): Record<BloodComponent, number> {
+    return BLOOD_COMPONENT_OPTIONS.reduce((acc, component) => {
       try {
-        const surgeryStart = this.safeParseDate(surgery.surgery_start_dtm);
-        return [surgeryStart.getTime() - TIME_CONSTANTS.TWO_DAYS_MS, surgeryStart.getTime()];
+        acc[component.value] = visit.transfusions.reduce((s: number, t) => s + (t[component.value] || 0), 0);
       } catch (error) {
-        console.warn('Invalid surgery_start_dtm:', surgery.surgery_start_dtm, error);
-        return [0, 0];
+        console.error('Error calculating blood product units:', {
+          visitId: visit.visit_no,
+          component: component.value,
+          error,
+        });
+        acc[component.value] = 0;
       }
-    });
+      return acc;
+    }, {} as Record<BloodComponent, number>);
+  }
+
+  /**
+   * Calculate outcome flags for a visit
+   */
+  getOutcomeFlags(visit: Visit): Record<Outcome, number> {
+    try {
+      return {
+        los: (this.safeParseDate(visit.dsch_dtm).getTime() - this.safeParseDate(visit.adm_dtm).getTime()) / (TIME_CONSTANTS.ONE_DAY_MS),
+        death: visit.pat_expired_f ? 1 : 0,
+        vent: visit.total_vent_mins > TIME_CONSTANTS.VENTILATOR_THRESHOLD_MINS ? 1 : 0,
+        stroke: this.hasMatchingCptCode(visit, CPT_CODES.stroke) ? 1 : 0,
+        ecmo: this.hasMatchingCptCode(visit, CPT_CODES.ecmo) ? 1 : 0,
+      } as Record<Outcome, number>;
+    } catch (error) {
+      console.error('Error fetching outcome flags:', { visitId: visit.visit_no, error });
+      return {
+        los: 0, death: 0, vent: 0, stroke: 0, ecmo: 0,
+      };
+    }
   }
 
   /**
@@ -537,38 +521,6 @@ export class DashboardStore {
       acc[medType.value] = 0;
       return acc;
     }, {} as Record<ProphylMed, number>));
-  }
-
-  /**
-   * Calculate blood product units for a visit
-   */
-  getBloodProductUnits(visit: Visit): Record<BloodComponent, number> {
-    return BLOOD_COMPONENT_OPTIONS.reduce((acc, component) => {
-      try {
-        acc[component.value] = visit.transfusions.reduce((s: number, t) => s + (t[component.value] || 0), 0);
-      } catch (error) {
-        console.error('Error calculating blood product units:', {
-          visitId: visit.visit_no,
-          component: component.value,
-          error,
-        });
-        acc[component.value] = 0;
-      }
-      return acc;
-    }, {} as Record<BloodComponent, number>);
-  }
-
-  /**
-   * Check if a blood product was transfused
-   */
-  private isBloodProductTransfused(transfusion: TransfusionEvent, bloodProductUnit: readonly string[]): boolean {
-    return bloodProductUnit.some((field) => {
-      if (!(field in transfusion)) {
-        throw new Error(`Field "${field}" is not a key of TransfusionEvent`);
-      }
-      const value = transfusion[field as keyof TransfusionEvent];
-      return typeof value === 'number' && value > 0;
-    });
   }
 
   /**
@@ -620,38 +572,6 @@ export class DashboardStore {
   }
 
   /**
-   * Check if a visit has any of the specified CPT codes
-   */
-  private hasMatchingCptCode(visit: Visit, cptCodes: readonly string[]): boolean {
-    try {
-      return visit.billing_codes.some((code) => cptCodes.includes(code.cpt_code));
-    } catch (error) {
-      console.error('Error matching cpt code:', { visitId: visit.visit_no, error });
-      return false;
-    }
-  }
-
-  /**
-   * Calculate outcome flags for a visit
-   */
-  getOutcomeFlags(visit: Visit): Record<Outcome, number> {
-    try {
-      return {
-        los: (this.safeParseDate(visit.dsch_dtm).getTime() - this.safeParseDate(visit.adm_dtm).getTime()) / (TIME_CONSTANTS.ONE_DAY_MS),
-        death: visit.pat_expired_f ? 1 : 0,
-        vent: visit.total_vent_mins > TIME_CONSTANTS.VENTILATOR_THRESHOLD_MINS ? 1 : 0,
-        stroke: this.hasMatchingCptCode(visit, CPT_CODES.stroke) ? 1 : 0,
-        ecmo: this.hasMatchingCptCode(visit, CPT_CODES.ecmo) ? 1 : 0,
-      } as Record<Outcome, number>;
-    } catch (error) {
-      console.error('Error fetching outcome flags:', { visitId: visit.visit_no, error });
-      return {
-        los: 0, death: 0, vent: 0, stroke: 0, ecmo: 0,
-      };
-    }
-  }
-
-  /**
    * @input adherenceFlags - Individual blood product adherence flags
    * @returns Total adherent transfusions and total transfusions across all blood products
    */
@@ -668,7 +588,66 @@ export class DashboardStore {
     };
   }
 
-  // Helper method to generate chart titles (extracted from existing logic)
+  // Chart data fetching helpers ---------
+  /**
+   * Calculate pre-surgery time periods (2 days before each surgery)
+   */
+  getPreSurgeryTimePeriods(visit: Visit): [number, number][] {
+    return visit.surgeries.map((surgery) => {
+      try {
+        const surgeryStart = this.safeParseDate(surgery.surgery_start_dtm);
+        return [surgeryStart.getTime() - TIME_CONSTANTS.TWO_DAYS_MS, surgeryStart.getTime()];
+      } catch (error) {
+        console.warn('Invalid surgery_start_dtm:', surgery.surgery_start_dtm, error);
+        return [0, 0];
+      }
+    });
+  }
+
+  /**
+     * Check if a blood product was transfused
+     */
+  private isBloodProductTransfused(transfusion: TransfusionEvent, bloodProductUnit: readonly string[]): boolean {
+    return bloodProductUnit.some((field) => {
+      if (!(field in transfusion)) {
+        throw new Error(`Field "${field}" is not a key of TransfusionEvent`);
+      }
+      const value = transfusion[field as keyof TransfusionEvent];
+      return typeof value === 'number' && value > 0;
+    });
+  }
+
+  /**
+     * Check if a visit has any of the specified CPT codes
+     */
+  private hasMatchingCptCode(visit: Visit, cptCodes: readonly string[]): boolean {
+    try {
+      return visit.billing_codes.some((code) => cptCodes.includes(code.cpt_code));
+    } catch (error) {
+      console.error('Error matching cpt code:', { visitId: visit.visit_no, error });
+      return false;
+    }
+  }
+
+  // Variable data formatting helpers ---------
+  /**
+   * Calculate quarter string from a date
+  */
+  private getQuarterFromDate(date: Date): Quarter | null {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+      console.error('Invalid date for quarter calculation:', date);
+      return null;
+    }
+    const year = date.getFullYear();
+    const quarter = Math.floor(date.getMonth() / 3) + 1 as 1 | 2 | 3 | 4;
+    return `${year}-Q${quarter}`;
+  }
+
+  /**
+   * @param yAxisVar Variable to use for the chart (e.g. 'rbc_units')
+   * @param aggregation Aggregation type ('sum' or 'avg')
+   * @returns Chart title based on yAxis variable and aggregation type
+   */
   generateChartTitle(yAxisVar: DashboardChartConfig['yAxisVar'], aggregation: keyof typeof AGGREGATION_OPTIONS): string {
     const option = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
     const label = option?.label || yAxisVar;
@@ -680,8 +659,47 @@ export class DashboardStore {
     return `${aggregationText}${ofText} ${label}${perVisitText}`;
   }
 
-  // Stats data helper functions -------------------------------------------------
+  // Data validation helpers ---------
+  /**
+   * Safely parse a date string with error handling
+   */
+  private safeParseDate(dateInput: string | Date | null | undefined): Date {
+    if (!dateInput) {
+      throw new Error('Date input is null or undefined');
+    }
+    const date = new Date(dateInput);
+    if (Number.isNaN(date.getTime())) {
+      throw new Error(`Invalid date format: ${dateInput}`);
+    }
+    return date;
+  }
 
+  /**
+   * Validate that required visit data exists
+   */
+  private isValidVisit(visit: Visit): boolean {
+    if (!visit) {
+      console.warn('Null or undefined visit');
+      return false;
+    }
+    if (!visit.dsch_dtm || !visit.adm_dtm) {
+      console.warn('Visit missing required dates:', { id: visit.visit_no, dsch_dtm: visit.dsch_dtm, adm_dtm: visit.adm_dtm });
+      return false;
+    }
+    const dischDate = this.safeParseDate(visit.dsch_dtm);
+    const admDate = this.safeParseDate(visit.adm_dtm);
+    if (!dischDate || !admDate) {
+      console.warn('Visit has invalid date formats:', { id: visit.visit_no, dsch_dtm: visit.dsch_dtm, adm_dtm: visit.adm_dtm });
+      return false;
+    }
+    if (dischDate.getTime() < admDate.getTime()) {
+      console.warn('Visit discharge date before admission date:', { id: visit.visit_no, dischDate, admDate });
+      return false;
+    }
+    return true;
+  }
+
+  // Stats data helper functions ------------------------------------------------
   /**
    * Determines if a percentage change is "good" based on the metric type
    * @param metricVar - The dashboard variable being measured
@@ -712,7 +730,9 @@ export class DashboardStore {
     return diffPercent >= 0;
   }
 
-  // Helper method to generate stat titles using the same logic as charts
+  /**
+   * Generate a stat title based on the variable and aggregation type
+   */
   private generateStatTitle(yAxisVar: DashboardStatConfig['var'], aggregation: keyof typeof AGGREGATION_OPTIONS): string {
     const option = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
     const label = option?.label || yAxisVar;
