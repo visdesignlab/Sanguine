@@ -6,7 +6,7 @@ import type { RootStore } from './Store';
 import { TransfusionEvent, Visit } from '../Types/database';
 
 import {
-  TIME_CONSTANTS, Quarter, // Time constants
+  TIME_CONSTANTS, // Time constants
   BLOOD_COMPONENT_OPTIONS, BloodComponent, // Blood components
   OUTCOME_OPTIONS, Outcome, // Outcomes
   PROPHYL_MED_OPTIONS, ProphylMed, // Prophylactic medications
@@ -23,7 +23,11 @@ import {
   type DashboardStatConfig,
   DashboardChartData, DashboardStatData,
   OverallAdherentCountField,
-  OverallTotalTransfusedField, // Dashboard data types
+  OverallTotalTransfusedField,
+  TimeAggregation,
+  TimePeriod,
+  TIME_AGGREGATION_OPTIONS,
+  dashboardXAxisVars, // Dashboard data types
 } from '../Types/application';
 
 /**
@@ -39,6 +43,7 @@ export class DashboardStore {
   }
 
   // Chart settings ------------------------------------------------------------
+
   // Chart Layouts
   _chartLayouts: { [key: string]: Layout[] } = {
     main: [
@@ -68,16 +73,16 @@ export class DashboardStore {
   // Chart configurations
   _chartConfigs: DashboardChartConfig[] = [
     {
-      i: '0', yAxisVar: 'rbc_units', aggregation: 'sum',
+      i: '0', xAxisVar: 'quarter', yAxisVar: 'rbc_units', aggregation: 'sum',
     },
     {
-      i: '1', yAxisVar: 'rbc_adherence', aggregation: 'avg',
+      i: '1', xAxisVar: 'quarter', yAxisVar: 'rbc_adherence', aggregation: 'avg',
     },
     {
-      i: '2', yAxisVar: 'los', aggregation: 'avg',
+      i: '2', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg',
     },
     {
-      i: '3', yAxisVar: 'iron', aggregation: 'avg',
+      i: '3', xAxisVar: 'quarter', yAxisVar: 'iron', aggregation: 'avg',
     },
   ];
 
@@ -213,103 +218,17 @@ export class DashboardStore {
 
   // Chart data ----------------------------------------------------------------
   /**
-   * Returns all possible chart data needed for the dashboard
-   */
+ * Returns all possible chart data needed for the dashboard
+ */
   get chartData(): DashboardChartData {
-    // --- For each visit, get the chart data, un-aggregated ---
-    const visitVariableData = this._rootStore.allVisits
-      .filter((visit) => this.isValidVisit(visit))
-      .map((visit: Visit) => {
-        const prophMedFlags = this.getProphMedFlags(visit);
-        const bloodProductUnits = this.getBloodProductUnits(visit);
-        const adherenceFlags = this.getAdherenceFlags(visit);
-        const outcomeFlags = this.getOutcomeFlags(visit);
-        const overallAdherenceFlags = this.getOverallAdherenceFlags(adherenceFlags);
+    // Step 1: For each visit, get variables needed for charting (E.g. adherence flags)
+    const visitVariablesData = this.getVisitVariablesData();
 
-        // Return cleaned visit data
-        return {
-          quarter: this.getQuarterFromDate(this.safeParseDate(visit.dsch_dtm)),
-          ...bloodProductUnits,
-          ...adherenceFlags,
-          ...outcomeFlags,
-          ...prophMedFlags,
-          ...overallAdherenceFlags,
-        };
-      });
+    // Step 2: Aggregate by the every possible time period
+    const timeAggregations = this.aggregateByTimePeriod(visitVariablesData);
 
-    // --- Aggregate visit attribute values by quarter & aggregations ---
-    // (e.g. Sum RBC units per quarter)
-    const quarterlyData = rollup(
-      visitVariableData,
-      (visit) => {
-        const agg: Record<string, number | undefined> = {};
-
-        // Aggregate (e.g. average iron used)
-        try {
-          // Blood Components
-          BLOOD_COMPONENT_OPTIONS.forEach(({ value }) => {
-            agg[`sum_${value}`] = sum(visit, (d) => d[value] || 0);
-            agg[`avg_${value}`] = mean(visit, (d) => d[value] || 0);
-          });
-
-          // Guideline Adherence
-          GUIDELINE_ADHERENCE_OPTIONS.forEach(({ value, adherentCount, totalTransfused }) => {
-            const totalAdherentTransfusions = visit.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
-            const totalTransfusions = visit.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
-
-            agg[`sum_${value}`] = totalAdherentTransfusions;
-            agg[`avg_${value}`] = totalTransfusions > 0 ? totalAdherentTransfusions / totalTransfusions : 0;
-          });
-
-          // Total Guideline Adherence
-          const totalAdherentTransfusions = visit.reduce((acc, d) => acc + (d[OVERALL_GUIDELINE_ADHERENCE.adherentCount] || 0), 0);
-          const totalTransfusions = visit.reduce((acc, d) => acc + (d[OVERALL_GUIDELINE_ADHERENCE.totalTransfused] || 0), 0);
-
-          agg[`sum_${OVERALL_GUIDELINE_ADHERENCE.value}`] = totalAdherentTransfusions;
-          agg[`avg_${OVERALL_GUIDELINE_ADHERENCE.value}`] = totalTransfusions > 0 ? totalAdherentTransfusions / totalTransfusions : 0;
-
-          // Outcomes
-          OUTCOME_OPTIONS.forEach(({ value }) => {
-            agg[`sum_${value}`] = sum(visit, (d) => d[value] || 0);
-            agg[`avg_${value}`] = mean(visit, (d) => d[value] || 0);
-          });
-
-          // Prophylactic Medications
-          PROPHYL_MED_OPTIONS.forEach(({ value }) => {
-            agg[`sum_${value}`] = sum(visit, (d) => d[value] || 0);
-            agg[`avg_${value}`] = mean(visit, (d) => d[value] || 0);
-          });
-        } catch (error) {
-          console.error('Error aggregating data:', error);
-        }
-
-        return agg;
-      },
-      (d) => d.quarter,
-    );
-
-    // --- Return every possible chart configuration ---
-    // (Combins. of aggregation and yAxisVar)
-    const result = {} as DashboardChartData;
-    for (const aggregation of Object.keys(AGGREGATION_OPTIONS) as (keyof typeof AGGREGATION_OPTIONS)[]) {
-      for (const yAxisVar of dashboardYAxisVars) {
-        const key: DashboardChartConfigKey = `${aggregation}_${yAxisVar}`;
-        const data = Array.from(quarterlyData.entries())
-          .map(([quarter, group]) => ({
-            quarter,
-            data: group[key] || 0,
-          }))
-          .filter((item) => item.quarter !== null)
-          .map((item) => ({
-            quarter: item.quarter as Quarter,
-            data: item.data,
-          }))
-          .sort((a, b) => a.quarter.localeCompare(b.quarter));
-        // Assign to current chart configuration
-        result[key] = data;
-      }
-    }
-    return result;
+    // Step 3: Return data for every possible chart configuration
+    return this.getAllPossibleChartData(timeAggregations);
   }
 
   // Stats data ----------------------------------------------------------------
@@ -319,7 +238,7 @@ export class DashboardStore {
    */
   get statData(): DashboardStatData {
     // --- For each visit, get the stats data, un-aggregated ---
-    const visitVariableData = this._rootStore.allVisits
+    const visitVariablesData = this._rootStore.allVisits
       .filter((visit) => this.isValidVisit(visit))
       .map((visit: Visit) => {
         const prophMedFlags = this.getProphMedFlags(visit);
@@ -339,7 +258,7 @@ export class DashboardStore {
       .filter((data) => data.dischargeDate !== null);
 
     // Find the latest discharge date in the dataset
-    const latestDate = new Date(Math.max(...visitVariableData.map((v) => v.dischargeDate.getTime())));
+    const latestDate = new Date(Math.max(...visitVariablesData.map((v) => v.dischargeDate.getTime())));
 
     // Calculate current period (last 30 days)
     const currentPeriodStart = new Date(latestDate.getTime() - (30 * TIME_CONSTANTS.ONE_DAY_MS));
@@ -364,12 +283,12 @@ export class DashboardStore {
     const previousPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
 
     // Filter visits by time periods
-    const currentPeriodVisits = visitVariableData.filter((v) => v.dischargeDate >= currentPeriodStart && v.dischargeDate <= latestDate);
+    const currentPeriodVisits = visitVariablesData.filter((v) => v.dischargeDate >= currentPeriodStart && v.dischargeDate <= latestDate);
 
-    const previousPeriodVisits = visitVariableData.filter((v) => v.dischargeDate >= previousPeriodStart && v.dischargeDate <= previousPeriodEnd);
+    const previousPeriodVisits = visitVariablesData.filter((v) => v.dischargeDate >= previousPeriodStart && v.dischargeDate <= previousPeriodEnd);
 
     // Helper function to aggregate period data
-    const aggregatePeriodData = (visits: typeof visitVariableData) => {
+    const aggregatePeriodData = (visits: typeof visitVariablesData) => {
       const agg: Record<string, number> = {};
 
       try {
@@ -588,6 +507,227 @@ export class DashboardStore {
     };
   }
 
+  /**
+ * Get all visit variables needed for charting
+ * @returns Array of variables describing each visit (e.g. adherence flags, discharge date)
+ */
+  private getVisitVariablesData() {
+    return this._rootStore.allVisits
+      .filter((visit) => this.isValidVisit(visit))
+      .map((visit: Visit) => {
+        const prophMedFlags = this.getProphMedFlags(visit);
+        const bloodProductUnits = this.getBloodProductUnits(visit);
+        const adherenceFlags = this.getAdherenceFlags(visit);
+        const outcomeFlags = this.getOutcomeFlags(visit);
+        const overallAdherenceFlags = this.getOverallAdherenceFlags(adherenceFlags);
+
+        return {
+          dischargeDate: visit.dsch_dtm,
+          ...bloodProductUnits,
+          ...adherenceFlags,
+          ...outcomeFlags,
+          ...prophMedFlags,
+          ...overallAdherenceFlags,
+        };
+      });
+  }
+
+  /**
+ * Aggregate visit data by the selected time period using d3 rollup
+ */
+  private aggregateByTimePeriod(visitVariablesData: ReturnType<typeof this.getVisitVariablesData>) {
+    // Create a map to store aggregations for all time periods
+    const allTimeAggregations = new Map<TimePeriod, Record<DashboardChartConfigKey, number>>();
+
+    // Aggregate by every time aggregation type
+    for (const timeAggregation of Object.keys(TIME_AGGREGATION_OPTIONS) as TimeAggregation[]) {
+      // For each visit, find the time period specified (e.g. 'quarter', 'month')
+      const visitDataWithTimePeriod = visitVariablesData.map((visit) => ({
+        ...visit,
+        timePeriod: this.getTimePeriodFromDate(this.safeParseDate(visit.dischargeDate), timeAggregation),
+      })).filter((visit) => visit.timePeriod !== null);
+
+      // Aggregate by this time period (e.g. 'quarter', 'month')
+      const timeData = rollup(
+        visitDataWithTimePeriod,
+        (visits) => this.aggregateVisitVariables(visits),
+        (d) => d.timePeriod,
+      );
+
+      // Add the aggregated data to the map
+      for (const [timePeriod, aggregations] of timeData.entries()) {
+        if (timePeriod !== null) {
+          allTimeAggregations.set(timePeriod, aggregations);
+        }
+      }
+    }
+
+    return allTimeAggregations;
+  }
+
+  /**
+   * Aggregate visit variables data for the dashboard
+   * E.g. rbc_units -> sum_rbc_units, avg_rbc_units, etc.
+   */
+  private aggregateVisitVariables(visits: ReturnType<typeof this.getVisitVariablesData>) {
+    const aggregations: Record<DashboardChartConfigKey, number> = {} as Record<DashboardChartConfigKey, number>;
+
+    try {
+      // Blood Components
+      this.aggregateBloodComponents(visits, aggregations);
+
+      // Guideline Adherence (individual blood products)
+      this.aggregateGuidelineAdherence(visits, aggregations);
+
+      // Overall Guideline Adherence
+      this.aggregateOverallAdherence(visits, aggregations);
+
+      // Outcomes
+      this.aggregateOutcomes(visits, aggregations);
+
+      // Prophylactic Medications
+      this.aggregateProphylMeds(visits, aggregations);
+    } catch (error) {
+      console.error('Error aggregating time period data:', error);
+    }
+
+    return aggregations;
+  }
+
+  /**
+ * Aggregate blood component data
+ */
+  private aggregateBloodComponents(
+    visits: ReturnType<typeof this.getVisitVariablesData>,
+    aggregations: Record<DashboardChartConfigKey, number>,
+  ) {
+    BLOOD_COMPONENT_OPTIONS.forEach(({ value }) => {
+      const sumKey: DashboardChartConfigKey = `sum_${value}`;
+      const avgKey: DashboardChartConfigKey = `avg_${value}`;
+
+      aggregations[sumKey] = sum(visits, (d) => d[value] || 0);
+      aggregations[avgKey] = mean(visits, (d) => d[value] || 0) || 0;
+    });
+  }
+
+  /**
+ * Aggregate guideline adherence data for individual blood products
+ */
+  private aggregateGuidelineAdherence(
+    visits: ReturnType<typeof this.getVisitVariablesData>,
+    aggregations: Record<DashboardChartConfigKey, number>,
+  ) {
+    GUIDELINE_ADHERENCE_OPTIONS.forEach(({ value, adherentCount, totalTransfused }) => {
+      const totalAdherent = visits.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
+      const totalTransfusions = visits.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
+
+      const sumKey: DashboardChartConfigKey = `sum_${value}`;
+      const avgKey: DashboardChartConfigKey = `avg_${value}`;
+
+      aggregations[sumKey] = totalAdherent;
+      aggregations[avgKey] = totalTransfusions > 0 ? totalAdherent / totalTransfusions : 0;
+    });
+  }
+
+  /**
+ * Aggregate overall guideline adherence data
+ */
+  private aggregateOverallAdherence(
+    visits: ReturnType<typeof this.getVisitVariablesData>,
+    aggregations: Record<DashboardChartConfigKey, number>,
+  ) {
+    const { value, adherentCount, totalTransfused } = OVERALL_GUIDELINE_ADHERENCE;
+
+    const totalAdherent = visits.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
+    const totalTransfusions = visits.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
+
+    const sumKey: DashboardChartConfigKey = `sum_${value}`;
+    const avgKey: DashboardChartConfigKey = `avg_${value}`;
+
+    aggregations[sumKey] = totalAdherent;
+    aggregations[avgKey] = totalTransfusions > 0 ? totalAdherent / totalTransfusions : 0;
+  }
+
+  /**
+ * Aggregate outcome data
+ */
+  private aggregateOutcomes(
+    visits: ReturnType<typeof this.getVisitVariablesData>,
+    aggregations: Record<DashboardChartConfigKey, number>,
+  ) {
+    OUTCOME_OPTIONS.forEach(({ value }) => {
+      const sumKey: DashboardChartConfigKey = `sum_${value}`;
+      const avgKey: DashboardChartConfigKey = `avg_${value}`;
+
+      aggregations[sumKey] = sum(visits, (d) => d[value] || 0);
+      aggregations[avgKey] = mean(visits, (d) => d[value] || 0) || 0;
+    });
+  }
+
+  /**
+ * Aggregate prophylactic medication data
+ */
+  private aggregateProphylMeds(
+    visits: ReturnType<typeof this.getVisitVariablesData>,
+    aggregations: Record<DashboardChartConfigKey, number>,
+  ) {
+    PROPHYL_MED_OPTIONS.forEach(({ value }) => {
+      const sumKey: DashboardChartConfigKey = `sum_${value}`;
+      const avgKey: DashboardChartConfigKey = `avg_${value}`;
+
+      aggregations[sumKey] = sum(visits, (d) => d[value] || 0);
+      aggregations[avgKey] = mean(visits, (d) => d[value] || 0) || 0;
+    });
+  }
+
+  /**
+   *
+   * @param timeData - Map where each key is a time period (x-axis value), and each value is a record of aggregated y-axis metrics.
+   * @returns DashboardChartData - All possible chart configurations for every aggregation, y-axis, and x-axis variable.
+   */
+  private getAllPossibleChartData(timeData: Map<TimePeriod, Record<DashboardChartConfigKey, number>>): DashboardChartData {
+    const result = {} as DashboardChartData;
+
+    for (const aggregation of Object.keys(AGGREGATION_OPTIONS) as (keyof typeof AGGREGATION_OPTIONS)[]) {
+      for (const yAxisVar of dashboardYAxisVars) {
+        for (const xAxisVar of dashboardXAxisVars) {
+          const key: DashboardChartConfigKey = `${aggregation}_${yAxisVar}`;
+
+          // Filter time periods based on xAxisVar format
+          const filteredTimeData = Array.from(timeData.entries())
+            .filter(([timePeriod]) => {
+              switch (xAxisVar) {
+                case 'quarter':
+                  return timePeriod.includes('Q');
+                case 'month':
+                  return timePeriod.includes('-') && !timePeriod.includes('Q');
+                case 'year':
+                  return !timePeriod.includes('-');
+                default:
+                  return false;
+              }
+            })
+            .map(([timePeriod, aggregations]) => ({
+              timePeriod,
+              data: aggregations[key] || 0,
+            }))
+            .sort((a, b) => this.compareTimePeriods(a.timePeriod, b.timePeriod));
+
+          // Log filtered data for debugging
+          if (filteredTimeData.length === 0) {
+            console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and key "${key}"`);
+          }
+
+          // Store the data with a composite key that includes xAxisVar
+          const compositeKey = `${key}_${xAxisVar}` as keyof DashboardChartData;
+          result[compositeKey] = filteredTimeData;
+        }
+      }
+    }
+
+    return result;
+  }
+
   // Chart data fetching helpers ---------
   /**
    * Calculate pre-surgery time periods (2 days before each surgery)
@@ -631,16 +771,64 @@ export class DashboardStore {
 
   // Variable data formatting helpers ---------
   /**
-   * Calculate quarter string from a date
-  */
-  private getQuarterFromDate(date: Date): Quarter | null {
+   * Calculate time period string from a date based on aggregation type
+   */
+  private getTimePeriodFromDate(date: Date, aggregation: TimeAggregation): TimePeriod | null {
     if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
-      console.error('Invalid date for quarter calculation:', date);
+      console.error('Invalid date for time period calculation:', date);
       return null;
     }
+
     const year = date.getFullYear();
-    const quarter = Math.floor(date.getMonth() / 3) + 1 as 1 | 2 | 3 | 4;
-    return `${year}-Q${quarter}`;
+
+    switch (aggregation) {
+      case 'quarter': {
+        const quarter = Math.floor(date.getMonth() / 3) + 1 as 1 | 2 | 3 | 4;
+        return `${year}-Q${quarter}`;
+      }
+      case 'month': {
+        const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+        return `${year}-${monthName}`;
+      }
+      case 'year': {
+        return `${year}`;
+      }
+      default:
+        console.error('Unknown time aggregation type:', aggregation);
+        return null;
+    }
+  }
+
+  /**
+   * Compare two time periods for sorting
+   */
+  private compareTimePeriods(a: TimePeriod, b: TimePeriod): number {
+    // Extract year from both periods
+    const yearA = parseInt(a.split('-')[0], 10);
+    const yearB = parseInt(b.split('-')[0], 10);
+
+    if (yearA !== yearB) {
+      return yearA - yearB;
+    }
+
+    // If same year, compare based on type
+    if (a.includes('Q') && b.includes('Q')) {
+      // Quarter comparison
+      const quarterA = parseInt(a.split('Q')[1], 10);
+      const quarterB = parseInt(b.split('Q')[1], 10);
+      return quarterA - quarterB;
+    }
+
+    if (a.includes('-') && b.includes('-') && !a.includes('Q') && !b.includes('Q')) {
+      // Month comparison
+      const monthA = a.split('-')[1];
+      const monthB = b.split('-')[1];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return months.indexOf(monthA) - months.indexOf(monthB);
+    }
+
+    // Year only - already compared above
+    return 0;
   }
 
   /**
@@ -701,27 +889,28 @@ export class DashboardStore {
 
   // Stats data helper functions ------------------------------------------------
   /**
-   * Determines if a percentage change is "good" based on the metric type
-   * @param metricVar - The dashboard variable being measured
-   * @param diffPercent - The percentage change (positive or negative)
-   * @returns true if the change is considered good, false if bad
-   */
+ * Determines if a percentage change is "good" based on the metric type
+ * @param metricVar - The dashboard variable being measured
+ * @param diffPercent - The percentage change (positive or negative)
+ * @returns true if the change is considered good, false if bad
+ */
   isMetricChangeGood(metricVar: typeof dashboardYAxisVars[number], diffPercent: number): boolean {
-    // Blood components and outcomes - lower is better (negative change is good)
+  // Blood components and outcomes - lower is better (negative change is good)
     const isBloodComponent = BLOOD_COMPONENT_OPTIONS.some((opt) => opt.value === metricVar);
     const isOutcome = OUTCOME_OPTIONS.some((opt) => opt.value === metricVar);
 
     // Guideline adherence and prophylactic medications - higher is better (positive change is good)
     const isAdherence = GUIDELINE_ADHERENCE_OPTIONS.some((opt) => opt.value === metricVar);
+    const isOverallAdherence = metricVar === OVERALL_GUIDELINE_ADHERENCE.value;
     const isProphylMed = PROPHYL_MED_OPTIONS.some((opt) => opt.value === metricVar);
 
     if (isBloodComponent || isOutcome) {
-      // For blood components and outcomes, negative change is good
+    // For blood components and outcomes, negative change is good
       return diffPercent < 0;
     }
 
-    if (isAdherence || isProphylMed) {
-      // For adherence and prophylactic medications, positive change is good
+    if (isAdherence || isOverallAdherence || isProphylMed) {
+    // For adherence (including overall) and prophylactic medications, positive change is good
       return diffPercent > 0;
     }
 

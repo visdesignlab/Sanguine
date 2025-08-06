@@ -1,8 +1,11 @@
 import { TransfusionEvent } from './database';
 
 // Time formatting ------------------------------------------------
-// Quarter - e.g. "2023-Q1"
+// Time period types
 export type Quarter = `${number}-Q${1 | 2 | 3 | 4}`;
+export type Month = `${number}-${string}`; // e.g. "2023-Jan"
+export type Year = `${number}`; // e.g. "2023"
+export type TimePeriod = Quarter | Month | Year;
 
 // Time consts for application
 export const TIME_CONSTANTS = {
@@ -177,6 +180,19 @@ export const AGGREGATION_OPTIONS = {
   avg: { label: 'Average' },
 } as const;
 
+// X-axis time aggregation options for dashboard
+export const TIME_AGGREGATION_OPTIONS = {
+  quarter: { label: 'Quarter' },
+  month: { label: 'Month' },
+  year: { label: 'Year' },
+} as const;
+
+export type TimeAggregation = keyof typeof TIME_AGGREGATION_OPTIONS;
+
+// Dashboard x-axis variable options (time aggregation)
+export const dashboardXAxisOptions = Object.entries(TIME_AGGREGATION_OPTIONS).map(([value, { label }]) => ({ value, label }));
+export const dashboardXAxisVars = dashboardXAxisOptions.map((opt) => opt.value);
+
 // Chart y-axis variable options
 export const dashboardYAxisOptions = [...BLOOD_COMPONENT_OPTIONS, ...GUIDELINE_ADHERENCE_OPTIONS, ...OUTCOME_OPTIONS, ...PROPHYL_MED_OPTIONS, OVERALL_GUIDELINE_ADHERENCE];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
@@ -184,12 +200,13 @@ export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 // Chart configuration type
 export type DashboardChartConfig = {
   i: string;
+  xAxisVar: typeof dashboardXAxisVars[number];
   yAxisVar: typeof dashboardYAxisVars[number];
   aggregation: keyof typeof AGGREGATION_OPTIONS;
 };
 
 export type DashboardChartConfigKey = `${keyof typeof AGGREGATION_OPTIONS}_${typeof dashboardYAxisVars[number]}`;
-export type DashboardChartData = Record<`${keyof typeof AGGREGATION_OPTIONS}_${DashboardChartConfig['yAxisVar']}`, { quarter: Quarter, data: number }[]>;
+export type DashboardChartData = Record<`${DashboardChartConfigKey}_${typeof dashboardXAxisVars[number]}`, { timePeriod: TimePeriod, data: number }[]>;
 
 // --- Dashboard stats ---
 export type DashboardStatConfig = {

@@ -20,13 +20,25 @@ import { StatsGrid } from './StatsGrid';
 import {
   dashboardYAxisOptions, AGGREGATION_OPTIONS, type DashboardChartConfig,
   DashboardStatConfig,
+  dashboardXAxisOptions,
 } from '../../../Types/application';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import classes from '../GridLayoutItem.module.css';
 
-// Custom tooltip component
-function CustomTooltip({ active, payload, label, yAxisVar }: any & { yAxisVar: string }) {
+// --- Custom tooltip component ---
+function CustomTooltip({
+  active, payload, label, yAxisVar,
+}: {
+  active?: boolean;
+  payload?: Array<{
+    value?: number;
+    name?: string;
+    color?: string;
+  }>;
+  label?: string;
+  yAxisVar: string;
+}) {
   if (!active || !payload || !payload.length) {
     return null;
   }
@@ -49,7 +61,7 @@ function CustomTooltip({ active, payload, label, yAxisVar }: any & { yAxisVar: s
         {label}
       </Title>
       <Title size="sm" c="dimmed">
-        {formatValue(payload[0].value)}
+        {formatValue(payload[0].value ?? 0)}
       </Title>
     </Paper>
   );
@@ -67,21 +79,23 @@ export function PBMDashboard() {
 
   // Modal state
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedAggregation, setSelectedAggregation] = useState<string>('Average');
-  const [selectedAttribute, setSelectedAttribute] = useState<string>('');
+  const [selectedAggregation, setSelectedAggregation] = useState<string>('sum');
+  const [selectedXAxisVar, setSelectedXAxisVar] = useState<string>('quarter'); // X-axis selection
+  const [selectedYAxisVar, setSelectedYAxisVar] = useState<string>(''); // Y-axis selection
   const [modalType, setModalType] = useState<'chart' | 'stat'>('chart');
-
-  const handleRemoveChart = useCallback((id: string) => {
-    store.dashboardStore.removeChart(id);
-  }, [store.dashboardStore]);
 
   const handleAddStat = useCallback(() => {
     setModalType('stat');
+    setSelectedAggregation('sum'); // Reset to default for stats
+    setSelectedYAxisVar('');
     open();
   }, [open]);
 
   const handleAddChart = useCallback(() => {
     setModalType('chart');
+    setSelectedAggregation('sum'); // Reset to default for charts
+    setSelectedXAxisVar('quarter'); // Reset to default x-axis
+    setSelectedYAxisVar('');
     open();
   }, [open]);
 
@@ -89,23 +103,27 @@ export function PBMDashboard() {
     if (modalType === 'chart') {
       store.dashboardStore.addChart({
         i: `chart-${Date.now()}`, // Unique ID for the chart
-        yAxisVar: selectedAttribute as DashboardChartConfig['yAxisVar'],
-        aggregation: selectedAggregation,
+        xAxisVar: selectedXAxisVar as DashboardChartConfig['xAxisVar'],
+        yAxisVar: selectedYAxisVar as DashboardChartConfig['yAxisVar'],
+        aggregation: selectedAggregation as DashboardChartConfig['aggregation'],
       });
     } else {
       // Add stat with proper typing
       store.dashboardStore.addStat(
-        selectedAttribute as DashboardStatConfig['var'],
+        selectedYAxisVar as DashboardStatConfig['var'],
         selectedAggregation as DashboardStatConfig['aggregation'],
       );
     }
 
     close();
-  }, [selectedAggregation, selectedAttribute, modalType, close, store.dashboardStore]);
+  }, [selectedAggregation, selectedXAxisVar, selectedYAxisVar, modalType, close, store.dashboardStore]);
+
+  const handleRemoveChart = useCallback((chartId: string) => {
+    store.dashboardStore.removeChart(chartId);
+  }, [store.dashboardStore]);
 
   const aggregationOptions = Object.entries(AGGREGATION_OPTIONS).map(([value, { label }]) => ({ value, label }));
 
-  // console.log("Stat Data:", store.dashboardStore.statData);
   return useObserver(() => {
     const chartRowHeight = 300;
 
@@ -147,23 +165,32 @@ export function PBMDashboard() {
         >
           <Stack gap="md">
             <Select
-              label="Select Aggregation"
+              label="Aggregation"
               placeholder="Choose aggregation type"
               data={aggregationOptions}
               value={selectedAggregation}
               onChange={(value) => setSelectedAggregation(value || 'Average')}
             />
             <Select
-              label="Select Attribute"
-              placeholder={`Choose ${modalType} attribute`}
+              label={`${modalType === 'chart' ? 'Metric (Y-Axis)' : 'Metric'}`}
+              placeholder={`Choose ${modalType} metric`}
               data={dashboardYAxisOptions}
-              value={selectedAttribute}
-              onChange={(value) => setSelectedAttribute(value || '')}
+              value={selectedYAxisVar}
+              onChange={(value) => setSelectedYAxisVar(value || '')}
             />
+            {modalType === 'chart' && (
+              <Select
+                label="Time Period (X-Axis)"
+                placeholder="Choose time aggregation"
+                data={dashboardXAxisOptions}
+                value={selectedXAxisVar}
+                onChange={(value) => setSelectedXAxisVar(value || 'quarter')}
+              />
+            )}
             <Button
               mt="md"
               onClick={handleDoneAdd}
-              disabled={!selectedAttribute}
+              disabled={!selectedYAxisVar || (modalType === 'chart' && !selectedXAxisVar)}
               fullWidth
             >
               Done
@@ -191,7 +218,7 @@ export function PBMDashboard() {
         >
           {/** Render each chart within the configuration */}
           {Object.values(store.dashboardStore.chartConfigs).map(({
-            i, yAxisVar, aggregation,
+            i, yAxisVar, xAxisVar, aggregation,
           }) => (
             <Card
               key={i}
@@ -210,7 +237,12 @@ export function PBMDashboard() {
                   </Flex>
 
                   <Flex direction="row" align="center" gap="sm">
-                    <ActionIcon variant="subtle" onClick={() => store.dashboardStore.setChartConfig(i, { i, yAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum' })}>
+                    <ActionIcon
+                      variant="subtle"
+                      onClick={() => store.dashboardStore.setChartConfig(i, {
+                        i, yAxisVar, xAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum',
+                      })}
+                    >
                       <IconPercentage size={18} color={aggregation === 'avg' ? theme.colors.indigo[6] : theme.colors.gray[6]} stroke={3} />
                     </ActionIcon>
                     {/** Select Attribute Menu */}
@@ -220,6 +252,7 @@ export function PBMDashboard() {
                       onChange={(value) => {
                         store.dashboardStore.setChartConfig(i, {
                           i,
+                          xAxisVar,
                           yAxisVar: value as DashboardChartConfig['yAxisVar'],
                           aggregation,
                         });
@@ -232,8 +265,8 @@ export function PBMDashboard() {
                 {/** Chart - Line Chart */}
                 <LineChart
                   h={`calc(100% - (${theme.spacing.md} * 2))`}
-                  data={store.dashboardStore.chartData[`${aggregation}_${yAxisVar}`] || []}
-                  dataKey="quarter"
+                  data={store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || []}
+                  dataKey="timePeriod"
                   series={[
                     { name: 'data', color: 'indigo.6' },
                   ]}
