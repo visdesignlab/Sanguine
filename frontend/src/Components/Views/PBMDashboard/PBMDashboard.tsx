@@ -94,11 +94,10 @@ export function PBMDashboard() {
       });
     } else {
       // Add stat with proper typing
-      store.dashboardStore.addStat({
-        i: `stat-${Date.now()}`, // Unique ID for the stat
-        var: selectedAttribute as DashboardStatConfig['var'],
-        aggregation: selectedAggregation as keyof typeof AGGREGATION_OPTIONS,
-      });
+      store.dashboardStore.addStat(
+        selectedAttribute as DashboardStatConfig['var'],
+        selectedAggregation as DashboardStatConfig['aggregation'],
+      );
     }
 
     close();

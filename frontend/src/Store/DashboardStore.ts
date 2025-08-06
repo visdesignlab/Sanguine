@@ -124,11 +124,15 @@ export class DashboardStore {
     this._chartLayouts.sm = this._chartLayouts.sm.filter((layout) => layout.i !== id);
   }
 
+  /**
+   * Adds new chart to the top of the dashboard
+   * @param config Chart data specification for chart to add
+   */
   addChart(config: DashboardChartConfig) {
-    // Add the chart configuration at the beginning of the array
+    // Chart data - Add chart config to beginning of array ----
     this._chartConfigs = [config, ...this._chartConfigs];
 
-    // Create a completely new layouts object to ensure MobX detects the change
+    // Layouts - create a new layout object ----
     const newMainLayouts = this._chartLayouts.main.map((layout) => ({
       ...layout,
       y: layout.y + 1,
@@ -155,7 +159,7 @@ export class DashboardStore {
         i: config.i,
         x: 0,
         y: 0,
-        w: 1, // Full width for small screens (1 column)
+        w: 1, // Full width for small (1 column)
         h: 1,
         maxH: 2,
       });
@@ -170,17 +174,25 @@ export class DashboardStore {
   }
 
   // Stat management ----------------------------------------------------------
-  addStat(config: Omit<DashboardStatConfig, 'title'> & { var: DashboardStatConfig['var']; aggregation: DashboardStatConfig['aggregation'] }) {
-    // Generate the title using the same logic as chart titles
-    const title = this.generateStatTitle(config.var, config.aggregation || 'sum');
+  /**
+   * @param statVar Variable to use for the stat (e.g. 'total_adherence')
+   * @param aggregation Aggregation method to use (e.g. 'avg', 'sum')
+   * @description Adds new stat to dashboard with a generated title.
+   */
+  addStat(statVar: DashboardStatConfig['var'], aggregation: DashboardStatConfig['aggregation']) {
+    // Generate unique ID and title internally
+    const i = `stat-${Date.now()}`;
+    const title = this.generateStatTitle(statVar, aggregation || 'sum');
 
-    const fullConfig: DashboardStatConfig = {
-      ...config,
+    const fullStatConfig: DashboardStatConfig = {
+      i,
+      var: statVar,
+      aggregation,
       title,
     };
 
-    // Add the stat configuration
-    this._statConfigs = [...this._statConfigs, fullConfig];
+    // Add the stat
+    this._statConfigs = [...this._statConfigs, fullStatConfig];
   }
 
   removeStat(id: string) {
