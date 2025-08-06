@@ -25,6 +25,7 @@ import {
   type DashboardChartConfigKey,
   type DashboardStatConfig,
   Quarter,
+  dashboardYAxisOptions,
 } from '../Types/application';
 
 /**
@@ -98,6 +99,9 @@ export class DashboardStore {
     {
       i: '2', var: 'los', aggregation: 'avg', title: 'Average Length of Stay',
     },
+    {
+      i: '3', var: 'ffp_units', aggregation: 'sum', title: 'Total Plasma Transfused',
+    },
   ];
 
   get statConfigs() {
@@ -122,6 +126,69 @@ export class DashboardStore {
     this._chartConfigs = this._chartConfigs.filter((config) => config.i !== id);
     this._chartLayouts.main = this._chartLayouts.main.filter((layout) => layout.i !== id);
     this._chartLayouts.sm = this._chartLayouts.sm.filter((layout) => layout.i !== id);
+  }
+
+  addChart(config: DashboardChartConfig) {
+    // Add the chart configuration at the beginning of the array
+    this._chartConfigs = [config, ...this._chartConfigs];
+
+    // Create a completely new layouts object to ensure MobX detects the change
+    const newMainLayouts = this._chartLayouts.main.map((layout) => ({
+      ...layout,
+      y: layout.y + 1,
+    }));
+
+    // Add new chart layout at the top (full width)
+    newMainLayouts.unshift({
+      i: config.i,
+      x: 0,
+      y: 0,
+      w: 2, // Full width (2 columns)
+      h: 1,
+      maxH: 2,
+    });
+
+    // Also handle sm breakpoint if it exists
+    const newSmLayouts = this._chartLayouts.sm ? this._chartLayouts.sm.map((layout) => ({
+      ...layout,
+      y: layout.y + 1,
+    })) : [];
+
+    if (this._chartLayouts.sm) {
+      newSmLayouts.unshift({
+        i: config.i,
+        x: 0,
+        y: 0,
+        w: 1, // Full width for small screens (1 column)
+        h: 1,
+        maxH: 2,
+      });
+    }
+
+    // Replace the entire layouts object
+    this._chartLayouts = {
+      ...this._chartLayouts,
+      main: newMainLayouts,
+      ...(this._chartLayouts.sm && { sm: newSmLayouts }),
+    };
+  }
+
+  // Stat management ----------------------------------------------------------
+  addStat(config: Omit<DashboardStatConfig, 'title'> & { var: DashboardStatConfig['var']; aggregation: DashboardStatConfig['aggregation'] }) {
+    // Generate the title using the same logic as chart titles
+    const title = this.generateStatTitle(config.var, config.aggregation || 'sum');
+
+    const fullConfig: DashboardStatConfig = {
+      ...config,
+      title,
+    };
+
+    // Add the stat configuration
+    this._statConfigs = [...this._statConfigs, fullConfig];
+  }
+
+  removeStat(id: string) {
+    this._statConfigs = this._statConfigs.filter((config) => config.i !== id);
   }
 
   // Chart data ----------------------------------------------------------------
@@ -218,10 +285,10 @@ export class DashboardStore {
 
   // Stats data ----------------------------------------------------------------
   /**
-* Returns stats data for the last quarter with percentage change from previous quarter
-*/
+   * Returns stats data for the last 30 days with percentage change from previous month
+   */
   get statData(): DashboardStatData {
-  // --- For each visit, get the stats data, un-aggregated ---
+    // --- For each visit, get the stats data, un-aggregated ---
     const visitData = this._rootStore.allVisits
       .filter((visit) => this.isValidVisit(visit))
       .map((visit: Visit) => {
@@ -231,100 +298,115 @@ export class DashboardStore {
         const outcomeFlags = this.getOutcomeFlags(visit);
 
         return {
-          quarter: this.getQuarterFromDate(this.safeParseDate(visit.dsch_dtm)),
+          dischargeDate: this.safeParseDate(visit.dsch_dtm),
           ...bloodProductUnits,
           ...adherenceFlags,
           ...outcomeFlags,
           ...prophMedFlags,
         };
       })
-      .filter((data) => data.quarter !== null);
+      .filter((data) => data.dischargeDate !== null);
 
-    // --- Group data by quarter ---
-    const quarterlyData = rollup(
-      visitData,
-      (visits) => {
-        const agg: Record<string, number> = {};
+    // Find the latest discharge date in the dataset
+    const latestDate = new Date(Math.max(...visitData.map((v) => v.dischargeDate.getTime())));
 
-        try {
+    // Calculate current period (last 30 days)
+    const currentPeriodStart = new Date(latestDate.getTime() - (30 * TIME_CONSTANTS.ONE_DAY_MS));
+
+    // Find the most recent complete month that doesn't overlap with our 30-day window
+    // Start by going back to the month before the current period starts
+    const currentPeriodStartMonth = currentPeriodStart.getMonth();
+    const currentPeriodStartYear = currentPeriodStart.getFullYear();
+
+    // Get the previous month
+    let comparisonMonth = currentPeriodStartMonth - 1;
+    let comparisonYear = currentPeriodStartYear;
+
+    // Handle year rollover
+    if (comparisonMonth < 0) {
+      comparisonMonth = 11; // December
+      comparisonYear -= 1;
+    }
+
+    // Create comparison period boundaries (full month)
+    const previousPeriodStart = new Date(comparisonYear, comparisonMonth, 1, 0, 0, 0, 0);
+    const previousPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
+
+    console.log('Latest discharge date:', latestDate);
+    console.log('Current period start:', currentPeriodStart);
+    console.log('Previous period start:', previousPeriodStart);
+    console.log('Previous period end:', previousPeriodEnd);
+
+    // Filter visits by time periods
+    const currentPeriodVisits = visitData.filter((v) => v.dischargeDate >= currentPeriodStart && v.dischargeDate <= latestDate);
+
+    const previousPeriodVisits = visitData.filter((v) => v.dischargeDate >= previousPeriodStart && v.dischargeDate <= previousPeriodEnd);
+
+    // Helper function to aggregate period data
+    const aggregatePeriodData = (visits: typeof visitData) => {
+      const agg: Record<string, number> = {};
+
+      try {
         // Blood Components
-          BLOOD_COMPONENT_OPTIONS.forEach(({ value }) => {
-            agg[`sum_${value}`] = sum(visits, (d) => d[value] || 0);
-            agg[`avg_${value}`] = mean(visits, (d) => d[value] || 0) || 0;
-          });
+        BLOOD_COMPONENT_OPTIONS.forEach(({ value }) => {
+          agg[`sum_${value}`] = sum(visits, (d) => d[value] || 0);
+          agg[`avg_${value}`] = mean(visits, (d) => d[value] || 0) || 0;
+        });
 
-          // Guideline Adherence
-          GUIDELINE_ADHERENCE_OPTIONS.forEach(({ value, adherentCount, totalTransfused }) => {
-            const totalAdherentTransfusions = visits.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
-            const totalTransfusions = visits.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
+        // Guideline Adherence
+        GUIDELINE_ADHERENCE_OPTIONS.forEach(({ value, adherentCount, totalTransfused }) => {
+          const totalAdherentTransfusions = visits.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
+          const totalTransfusions = visits.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
 
-            agg[`sum_${value}`] = totalAdherentTransfusions;
-            agg[`avg_${value}`] = totalTransfusions > 0 ? totalAdherentTransfusions / totalTransfusions : 0;
-          });
+          agg[`sum_${value}`] = totalAdherentTransfusions;
+          agg[`avg_${value}`] = totalTransfusions > 0 ? totalAdherentTransfusions / totalTransfusions : 0;
+        });
 
-          // Outcomes
-          OUTCOME_OPTIONS.forEach(({ value }) => {
-            agg[`sum_${value}`] = sum(visits, (d) => d[value] || 0);
-            agg[`avg_${value}`] = mean(visits, (d) => d[value] || 0) || 0;
-          });
+        // Outcomes
+        OUTCOME_OPTIONS.forEach(({ value }) => {
+          agg[`sum_${value}`] = sum(visits, (d) => d[value] || 0);
+          agg[`avg_${value}`] = mean(visits, (d) => d[value] || 0) || 0;
+        });
 
-          // Prophylactic Medications
-          PROPHYL_MED_OPTIONS.forEach(({ value }) => {
-            agg[`sum_${value}`] = sum(visits, (d) => d[value] || 0);
-            agg[`avg_${value}`] = mean(visits, (d) => d[value] || 0) || 0;
-          });
-        } catch (error) {
-          console.error('Error aggregating quarterly stats data:', error);
-        }
+        // Prophylactic Medications
+        PROPHYL_MED_OPTIONS.forEach(({ value }) => {
+          agg[`sum_${value}`] = sum(visits, (d) => d[value] || 0);
+          agg[`avg_${value}`] = mean(visits, (d) => d[value] || 0) || 0;
+        });
+      } catch (error) {
+        console.error('Error aggregating period stats data:', error);
+      }
 
-        return agg;
-      },
-      (d) => d.quarter,
-    );
+      return agg;
+    };
 
-    // --- Get last two quarters ---
-    const sortedQuarters = Array.from(quarterlyData.keys()).sort();
-    const lastQuarter = sortedQuarters[sortedQuarters.length - 1];
-    const previousQuarter = sortedQuarters[sortedQuarters.length - 2];
+    const currentPeriodData = aggregatePeriodData(currentPeriodVisits);
+    const previousPeriodData = aggregatePeriodData(previousPeriodVisits);
 
-    const lastQuarterData = quarterlyData.get(lastQuarter) || {};
-    const previousQuarterData = quarterlyData.get(previousQuarter) || {};
+    // Get month name for comparison text
+    const previousMonthName = previousPeriodStart.toLocaleDateString('en-US', { month: 'short' });
 
     // --- Calculate percentage change and format data ---
     const result = {} as DashboardStatData;
     for (const aggregation of Object.keys(AGGREGATION_OPTIONS) as (keyof typeof AGGREGATION_OPTIONS)[]) {
       for (const yAxisVar of dashboardYAxisVars) {
-        const key: `${keyof typeof AGGREGATION_OPTIONS}_${typeof yAxisVar}` = `${aggregation}_${yAxisVar}`;
-        const currentValue = lastQuarterData[key] || 0;
-        const previousValue = previousQuarterData[key] || 0;
+        const key = `${aggregation}_${yAxisVar}` as keyof DashboardStatData;
+
+        const currentValue = currentPeriodData[key] || 0;
+        const previousValue = previousPeriodData[key] || 0;
 
         // Calculate percentage change
-        let diff = 0;
-        if (previousValue !== 0) {
-          diff = ((currentValue - previousValue) / previousValue) * 100;
-        } else if (currentValue > 0) {
-          diff = 100; // If previous was 0 and current > 0, it's a 100% increase
-        }
+        const diff = previousValue === 0
+          ? (currentValue > 0 ? 100 : 0)
+          : ((currentValue - previousValue) / previousValue) * 100;
 
-        // Format the current value appropriately based on the variable type
-        let formattedValue: string;
-        if (yAxisVar.includes('adherence')) {
-        // Format adherence as percentage
-          formattedValue = `${(currentValue * 100).toFixed(1)}%`;
-        } else if (yAxisVar === 'los') {
-        // Format length of stay as days
-          formattedValue = `${currentValue.toFixed(1)} days`;
-        } else if (yAxisVar.includes('units') || yAxisVar.includes('ml')) {
-        // Format units as whole numbers
-          formattedValue = Math.round(currentValue).toString();
-        } else {
-        // Default formatting for other metrics
-          formattedValue = currentValue.toFixed(1);
-        }
+        // Use the type-safe formatting method
+        const formattedValue = this.formatStatValue(yAxisVar, currentValue, aggregation);
 
         result[key] = {
           data: formattedValue,
-          diff: Math.round(diff), // Round to nearest whole percent
+          diff: Math.round(diff),
+          comparedTo: previousMonthName,
         };
       }
     }
@@ -543,6 +625,105 @@ export class DashboardStore {
       return {
         los: 0, death: 0, vent: 0, stroke: 0, ecmo: 0,
       };
+    }
+  }
+
+  // Helper method to generate chart titles (extracted from existing logic)
+  generateChartTitle(yAxisVar: DashboardChartConfig['yAxisVar'], aggregation: keyof typeof AGGREGATION_OPTIONS): string {
+    const option = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
+    const label = option?.label || yAxisVar;
+
+    const aggregationText = aggregation.charAt(0).toUpperCase() + aggregation.slice(1);
+    const ofText = aggregation === 'sum' ? ' of' : '';
+    const perVisitText = aggregation === 'avg' ? ' Per Visit' : '';
+
+    return `${aggregationText}${ofText} ${label}${perVisitText}`;
+  }
+
+  // Stats data helper functions -------------------------------------------------
+
+  /**
+   * Determines if a percentage change is "good" based on the metric type
+   * @param metricVar - The dashboard variable being measured
+   * @param diffPercent - The percentage change (positive or negative)
+   * @returns true if the change is considered good, false if bad
+   */
+  isMetricChangeGood(metricVar: typeof dashboardYAxisVars[number], diffPercent: number): boolean {
+    // Blood components and outcomes - lower is better (negative change is good)
+    const isBloodComponent = BLOOD_COMPONENT_OPTIONS.some((opt) => opt.value === metricVar);
+    const isOutcome = OUTCOME_OPTIONS.some((opt) => opt.value === metricVar);
+
+    // Guideline adherence and prophylactic medications - higher is better (positive change is good)
+    const isAdherence = GUIDELINE_ADHERENCE_OPTIONS.some((opt) => opt.value === metricVar);
+    const isProphylMed = PROPHYL_MED_OPTIONS.some((opt) => opt.value === metricVar);
+
+    if (isBloodComponent || isOutcome) {
+      // For blood components and outcomes, negative change is good
+      return diffPercent < 0;
+    }
+
+    if (isAdherence || isProphylMed) {
+      // For adherence and prophylactic medications, positive change is good
+      return diffPercent > 0;
+    }
+
+    // Default fallback - log warning for unclassified metrics
+    console.warn(`Unclassified metric: ${metricVar}`);
+    return diffPercent >= 0;
+  }
+
+  // Helper method to generate stat titles using the same logic as charts
+  private generateStatTitle(yAxisVar: DashboardStatConfig['var'], aggregation: keyof typeof AGGREGATION_OPTIONS): string {
+    const option = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
+    const label = option?.label || yAxisVar;
+    // Check if this is a blood component with units using the typed options
+    const bloodComponentOption = BLOOD_COMPONENT_OPTIONS.find((opt) => opt.value === yAxisVar);
+    const hasUnits = bloodComponentOption && bloodComponentOption.unit === 'units';
+
+    if (aggregation === 'avg') {
+      if (yAxisVar === 'los') {
+        return 'Average Length of Stay';
+      }
+      if (hasUnits) {
+        return `Average ${label} Per Visit`;
+      }
+      return `Average ${label}`;
+    }
+
+    // For sums, use "Total" prefix
+    return `Total ${label}`;
+  }
+
+  /**
+   * Format stat values appropriately based on the variable type
+   * @param yAxisVar - The dashboard variable being formatted
+   * @param value - The numeric value to format
+   * @param aggregation - The aggregation type ('sum' or 'avg')
+   * @returns A formatted string for display
+   */
+  private formatStatValue(yAxisVar: typeof dashboardYAxisVars[number], value: number, aggregation?: keyof typeof AGGREGATION_OPTIONS): string {
+    // Find the option that matches this variable
+    const yAxisOption = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
+
+    if (!yAxisOption || !('unit' in yAxisOption)) {
+      console.warn(`No unit found for variable: ${yAxisVar}`);
+      return value.toFixed(0);
+    }
+
+    const { unit } = yAxisOption;
+    // Check if this is an adherence metric
+    const isAdherence = GUIDELINE_ADHERENCE_OPTIONS.some((opt) => opt.value === yAxisVar);
+    // Determine if we should show decimals
+    const showDecimals = aggregation === 'avg' || isAdherence;
+
+    // Special formatting based on unit type
+    switch (unit) {
+      case '%':
+        // Adherence percentages should show decimals
+        return `${(value * 100).toFixed(1)}%`;
+      default:
+        // Units, cases, ml - averages show decimals, totals don't
+        return `${value.toFixed(showDecimals ? 1 : 0)} ${unit}`;
     }
   }
 }

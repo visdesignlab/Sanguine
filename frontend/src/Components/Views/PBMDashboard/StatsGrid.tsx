@@ -75,7 +75,9 @@ export function StatsGrid() {
       const Icon = icons[iconKey];
       // Get the value diff icon
       const DiffIcon = diff > 0 ? IconArrowUpRight : IconArrowDownRight;
-      const diffClassName = diff >= 0 ? statsGridStyles.diffPositive : statsGridStyles.diffNegative;
+      const diffClassName = store.dashboardStore.isMetricChangeGood(statConfig.var, diff)
+        ? statsGridStyles.diffGood
+        : statsGridStyles.diffBad;
 
       // Determine if this card is currently hovered
       const isHovered = hoveredIdx === idx;
@@ -124,7 +126,7 @@ export function StatsGrid() {
           </Group>
           {/** Comparison Text */}
           <Text fz="xs" c="dimmed" mt="xs">
-            Compared to previous quarter
+            {`Last 30 days compared to ${statData.comparedTo || 'previous period'}`}
           </Text>
         </Paper>
       );

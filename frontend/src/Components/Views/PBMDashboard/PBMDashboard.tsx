@@ -18,6 +18,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { StatsGrid } from './StatsGrid';
 import {
   dashboardYAxisOptions, AGGREGATION_OPTIONS, type DashboardChartConfig,
+  DashboardStatConfig,
 } from '../../../Types/application';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
@@ -35,7 +36,7 @@ export function PBMDashboard() {
 
   // Modal state
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedAggregation, setSelectedAggregation] = useState<string>('sum');
+  const [selectedAggregation, setSelectedAggregation] = useState<string>('Average');
   const [selectedAttribute, setSelectedAttribute] = useState<string>('');
   const [modalType, setModalType] = useState<'chart' | 'stat'>('chart');
 
@@ -54,19 +55,23 @@ export function PBMDashboard() {
   }, [open]);
 
   const handleDoneAdd = useCallback(() => {
-    console.log('Selected aggregation:', selectedAggregation);
-    console.log('Selected attribute:', selectedAttribute);
-
     if (modalType === 'chart') {
-      // TODO: Implement actual chart addition
-      console.log('Adding chart...');
+      store.dashboardStore.addChart({
+        i: `chart-${Date.now()}`, // Unique ID for the chart
+        yAxisVar: selectedAttribute as DashboardChartConfig['yAxisVar'],
+        aggregation: selectedAggregation,
+      });
     } else {
-      // TODO: Implement actual stat addition
-      console.log('Adding stat...');
+      // Add stat with proper typing
+      store.dashboardStore.addStat({
+        i: `stat-${Date.now()}`, // Unique ID for the stat
+        var: selectedAttribute as DashboardStatConfig['var'],
+        aggregation: selectedAggregation as keyof typeof AGGREGATION_OPTIONS,
+      });
     }
 
     close();
-  }, [selectedAggregation, selectedAttribute, modalType, close]);
+  }, [selectedAggregation, selectedAttribute, modalType, close, store.dashboardStore]);
 
   const aggregationOptions = Object.entries(AGGREGATION_OPTIONS).map(([value, { label }]) => ({ value, label }));
 
@@ -116,7 +121,7 @@ export function PBMDashboard() {
               placeholder="Choose aggregation type"
               data={aggregationOptions}
               value={selectedAggregation}
-              onChange={(value) => setSelectedAggregation(value || 'sum')}
+              onChange={(value) => setSelectedAggregation(value || 'Average')}
             />
             <Select
               label="Select Attribute"
@@ -126,6 +131,7 @@ export function PBMDashboard() {
               onChange={(value) => setSelectedAttribute(value || '')}
             />
             <Button
+              mt="md"
               onClick={handleDoneAdd}
               disabled={!selectedAttribute}
               fullWidth
@@ -169,7 +175,7 @@ export function PBMDashboard() {
                   <Flex direction="row" align="center" gap="md" ml={-12}>
                     <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
                     <Title order={4}>
-                      {`${aggregation.charAt(0).toUpperCase() + aggregation.slice(1)}${aggregation === 'sum' ? ' of' : ''} ${dashboardYAxisOptions.find((opt) => opt.value === yAxisVar)?.label || yAxisVar}${aggregation === 'average' ? ' Per Visit' : ''}`}
+                      {store.dashboardStore.generateChartTitle(yAxisVar, aggregation)}
                     </Title>
                   </Flex>
 

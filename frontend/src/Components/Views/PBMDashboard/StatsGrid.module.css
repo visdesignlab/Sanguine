@@ -3,11 +3,11 @@
   font-weight: 500;
 }
 
-.diffPositive {
+.diffGood {
   color: var(--mantine-color-teal-6, #12b886);
 }
 
-.diffNegative {
+.diffBad {
   color: var(--mantine-color-red-6, #fa5252);
 }
 

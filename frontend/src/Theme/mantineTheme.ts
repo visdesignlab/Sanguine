@@ -91,6 +91,14 @@ export const mantineTheme = createTheme({
         },
       },
     },
+    Modal: {
+      styles: {
+        title: {
+          fontSize: standardTextSizes.h3.fontSize,
+          fontWeight: standardTextSizes.h3.fontWeight,
+        },
+      },
+    },
   },
 });
 

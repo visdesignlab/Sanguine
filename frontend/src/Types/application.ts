@@ -12,29 +12,37 @@ export const TIME_CONSTANTS = {
 
 // Blood components -----------------------
 export const BLOOD_COMPONENTS = [
-  { value: 'rbc_units', label: 'RBCs Transfused' },
-  { value: 'ffp_units', label: 'FFP Transfused' },
-  { value: 'plt_units', label: 'Platelets Transfused' },
-  { value: 'cryo_units', label: 'Cryo Transfused' },
-  { value: 'cell_saver_ml', label: 'Cell Salvage Volume (ml) Used' },
+  { value: 'rbc_units', label: 'RBCs Transfused', unit: 'units' },
+  { value: 'ffp_units', label: 'FFP Transfused', unit: 'units' },
+  { value: 'plt_units', label: 'Platelets Transfused', unit: 'units' },
+  { value: 'cryo_units', label: 'Cryo Transfused', unit: 'units' },
+  { value: 'cell_saver_ml', label: 'Cell Salvage Volume (ml) Used', unit: 'ml' },
 ] as const;
 // Values of blood components
 export type BloodComponent = typeof BLOOD_COMPONENTS[number]['value'];
 // Readonly array of blood component options
-export const BLOOD_COMPONENT_OPTIONS = BLOOD_COMPONENTS as ReadonlyArray<{ value: BloodComponent; label: string }>;
+export const BLOOD_COMPONENT_OPTIONS = BLOOD_COMPONENTS as ReadonlyArray<{
+  value: BloodComponent;
+  label: string;
+  unit: string;
+}>;
 
 // Outcomes -------------------------------
 export const OUTCOMES = [
-  { value: 'los', label: 'Length of Stay' },
-  { value: 'death', label: 'Death' },
-  { value: 'vent', label: 'Ventilator >24hr' },
-  { value: 'stroke', label: 'Stroke' },
-  { value: 'ecmo', label: 'ECMO' },
+  { value: 'los', label: 'Length of Stay', unit: 'days' },
+  { value: 'death', label: 'Death', unit: 'visits' },
+  { value: 'vent', label: 'Ventilator >24hr', unit: 'visits' },
+  { value: 'stroke', label: 'Stroke', unit: 'visits' },
+  { value: 'ecmo', label: 'ECMO', unit: 'visits' },
 ] as const;
 // Values of outcomes
 export type Outcome = typeof OUTCOMES[number]['value'];
 // Readonly array of outcome options
-export const OUTCOME_OPTIONS = OUTCOMES as ReadonlyArray<{ value: Outcome; label: string }>;
+export const OUTCOME_OPTIONS = OUTCOMES as ReadonlyArray<{
+  value: Outcome;
+  label: string;
+  unit: string;
+}>;
 
 // Prophylactic Medications -------------------
 export const PROPHYL_MEDS = [
@@ -42,30 +50,35 @@ export const PROPHYL_MEDS = [
     value: 'b12',
     label: 'B12',
     aliases: ['b12', 'cobalamin'],
+    unit: 'doses',
   },
   {
     value: 'iron',
     label: 'Iron',
     aliases: ['iron', 'ferrous', 'ferric'],
+    unit: 'doses',
   },
   {
     value: 'txa',
     label: 'Tranexamic Acid',
     aliases: ['tranexamic', 'txa'],
+    unit: 'doses',
   },
   {
     value: 'amicar',
     label: 'Amicar',
     aliases: ['amicar', 'aminocaproic'],
+    unit: 'doses',
   },
 ] as const;
-  // Values of prophylactic medications
+// Values of prophylactic medications
 export type ProphylMed = typeof PROPHYL_MEDS[number]['value'];
 // Readonly array of prophylactic medication options
 export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
   value: ProphylMed;
   label: string;
   aliases: readonly string[];
+  unit: string;
 }>;
 
 // Guideline adherence ---------------------------
@@ -78,6 +91,7 @@ export const GUIDELINE_ADHERENCE = {
     labDesc: ['HGB', 'Hemoglobin'],
     adherenceCheck: (labValue: number) => labValue <= 7.5,
     transfusionUnits: ['rbc_units', 'rbc_vol'] as const,
+    unit: '%',
   },
   ffp: {
     value: 'ffp_adherence',
@@ -87,6 +101,7 @@ export const GUIDELINE_ADHERENCE = {
     labDesc: ['INR'],
     adherenceCheck: (labValue: number) => labValue >= 1.5,
     transfusionUnits: ['ffp_units', 'ffp_vol'] as const,
+    unit: '%',
   },
   plt: {
     value: 'plt_adherence',
@@ -96,6 +111,7 @@ export const GUIDELINE_ADHERENCE = {
     labDesc: ['PLT', 'Platelet Count'],
     adherenceCheck: (labValue: number) => labValue >= 15000,
     transfusionUnits: ['plt_units', 'plt_vol'] as const,
+    unit: '%',
   },
   cryo: {
     value: 'cryo_adherence',
@@ -105,6 +121,7 @@ export const GUIDELINE_ADHERENCE = {
     labDesc: ['Fibrinogen'],
     adherenceCheck: (labValue: number) => labValue >= 175,
     transfusionUnits: ['cryo_units', 'cryo_vol'],
+    unit: '%',
   },
 } as const;
 
@@ -120,6 +137,7 @@ export const GUIDELINE_ADHERENCE_OPTIONS = Object.values(GUIDELINE_ADHERENCE) as
   labDesc: readonly string[];
   adherenceCheck: (labValue: number) => boolean;
   transfusionUnits: readonly (keyof TransfusionEvent)[];
+  unit: string;
 }>;
 
 // CPT Codes -------------------------------
@@ -159,4 +177,4 @@ export type DashboardStatConfig = {
   title: string;
 };
 
-export type DashboardStatData = Record<`${keyof typeof AGGREGATION_OPTIONS}_${DashboardStatConfig['var']}`, {data: string, diff: number} >;
+export type DashboardStatData = Record<`${keyof typeof AGGREGATION_OPTIONS}_${DashboardStatConfig['var']}`, {data: string, diff: number, comparedTo?: string} >;
