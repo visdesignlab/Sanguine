@@ -217,7 +217,7 @@ export class DashboardStore {
    */
   get chartData(): DashboardChartData {
     // --- For each visit, get the chart data, un-aggregated ---
-    const visitData = this._rootStore.allVisits
+    const visitVariableData = this._rootStore.allVisits
       .filter((visit) => this.isValidVisit(visit))
       .map((visit: Visit) => {
         const prophMedFlags = this.getProphMedFlags(visit);
@@ -240,7 +240,7 @@ export class DashboardStore {
     // --- Aggregate visit attribute values by quarter & aggregations ---
     // (e.g. Sum RBC units per quarter)
     const quarterlyData = rollup(
-      visitData,
+      visitVariableData,
       (visit) => {
         const agg: Record<string, number | undefined> = {};
 
@@ -319,7 +319,7 @@ export class DashboardStore {
    */
   get statData(): DashboardStatData {
     // --- For each visit, get the stats data, un-aggregated ---
-    const visitData = this._rootStore.allVisits
+    const visitVariableData = this._rootStore.allVisits
       .filter((visit) => this.isValidVisit(visit))
       .map((visit: Visit) => {
         const prophMedFlags = this.getProphMedFlags(visit);
@@ -339,7 +339,7 @@ export class DashboardStore {
       .filter((data) => data.dischargeDate !== null);
 
     // Find the latest discharge date in the dataset
-    const latestDate = new Date(Math.max(...visitData.map((v) => v.dischargeDate.getTime())));
+    const latestDate = new Date(Math.max(...visitVariableData.map((v) => v.dischargeDate.getTime())));
 
     // Calculate current period (last 30 days)
     const currentPeriodStart = new Date(latestDate.getTime() - (30 * TIME_CONSTANTS.ONE_DAY_MS));
@@ -364,12 +364,12 @@ export class DashboardStore {
     const previousPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
 
     // Filter visits by time periods
-    const currentPeriodVisits = visitData.filter((v) => v.dischargeDate >= currentPeriodStart && v.dischargeDate <= latestDate);
+    const currentPeriodVisits = visitVariableData.filter((v) => v.dischargeDate >= currentPeriodStart && v.dischargeDate <= latestDate);
 
-    const previousPeriodVisits = visitData.filter((v) => v.dischargeDate >= previousPeriodStart && v.dischargeDate <= previousPeriodEnd);
+    const previousPeriodVisits = visitVariableData.filter((v) => v.dischargeDate >= previousPeriodStart && v.dischargeDate <= previousPeriodEnd);
 
     // Helper function to aggregate period data
-    const aggregatePeriodData = (visits: typeof visitData) => {
+    const aggregatePeriodData = (visits: typeof visitVariableData) => {
       const agg: Record<string, number> = {};
 
       try {
