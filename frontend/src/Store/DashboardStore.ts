@@ -13,7 +13,7 @@ import {
   GUIDELINE_ADHERENCE_OPTIONS, // Guideline adherence
   AdherentCountField,
   TotalTransfusedField,
-  TOTAL_GUIDELINE_ADHERENCE,
+  OVERALL_GUIDELINE_ADHERENCE,
   CPT_CODES, // CPT codes
   AGGREGATION_OPTIONS, // Dashboard configuration
   dashboardYAxisVars,
@@ -21,7 +21,9 @@ import {
   type DashboardChartConfig,
   type DashboardChartConfigKey,
   type DashboardStatConfig,
-  DashboardChartData, DashboardStatData, // Dashboard data types
+  DashboardChartData, DashboardStatData,
+  OverallAdherentCountField,
+  OverallTotalTransfusedField, // Dashboard data types
 } from '../Types/application';
 
 /**
@@ -90,7 +92,7 @@ export class DashboardStore {
   // Stats settings ---------------------------------------------------
   _statConfigs: DashboardStatConfig[] = [
     {
-      i: '1', var: 'total_adherence', aggregation: 'avg', title: 'Overall Guideline Adherence',
+      i: '1', var: 'overall_adherence', aggregation: 'avg', title: 'Overall Guideline Adherence',
     },
     {
       i: '2', var: 'los', aggregation: 'avg', title: 'Average Length of Stay',
@@ -212,7 +214,7 @@ export class DashboardStore {
         const bloodProductUnits = this.getBloodProductUnits(visit);
         const adherenceFlags = this.getAdherenceFlags(visit);
         const outcomeFlags = this.getOutcomeFlags(visit);
-        const totalAdherence = this.calculateTotalAdherence(adherenceFlags);
+        const overallAdherenceFlags = this.getOverallAdherenceFlags(adherenceFlags);
 
         // Return cleaned visit data
         return {
@@ -221,7 +223,7 @@ export class DashboardStore {
           ...adherenceFlags,
           ...outcomeFlags,
           ...prophMedFlags,
-          ...totalAdherence,
+          ...overallAdherenceFlags,
         };
       });
 
@@ -250,8 +252,11 @@ export class DashboardStore {
           });
 
           // Total Guideline Adherence
-          agg[`sum_${TOTAL_GUIDELINE_ADHERENCE.value}`] = sum(visit, (d) => d[TOTAL_GUIDELINE_ADHERENCE.value] || 0);
-          agg[`avg_${TOTAL_GUIDELINE_ADHERENCE.value}`] = mean(visit, (d) => d[TOTAL_GUIDELINE_ADHERENCE.value] || 0) || 0;
+          const totalAdherentTransfusions = visit.reduce((acc, d) => acc + (d[OVERALL_GUIDELINE_ADHERENCE.adherentCount] || 0), 0);
+          const totalTransfusions = visit.reduce((acc, d) => acc + (d[OVERALL_GUIDELINE_ADHERENCE.totalTransfused] || 0), 0);
+
+          agg[`sum_${OVERALL_GUIDELINE_ADHERENCE.value}`] = totalAdherentTransfusions;
+          agg[`avg_${OVERALL_GUIDELINE_ADHERENCE.value}`] = totalTransfusions > 0 ? totalAdherentTransfusions / totalTransfusions : 0;
 
           // Outcomes
           OUTCOME_OPTIONS.forEach(({ value }) => {
@@ -310,14 +315,14 @@ export class DashboardStore {
         const bloodProductUnits = this.getBloodProductUnits(visit);
         const adherenceFlags = this.getAdherenceFlags(visit);
         const outcomeFlags = this.getOutcomeFlags(visit);
-        const totalAdherence = this.calculateTotalAdherence(adherenceFlags);
+        const overallAdherenceFlags = this.getOverallAdherenceFlags(adherenceFlags);
         return {
           dischargeDate: this.safeParseDate(visit.dsch_dtm),
           ...bloodProductUnits,
           ...adherenceFlags,
           ...outcomeFlags,
           ...prophMedFlags,
-          ...totalAdherence,
+          ...overallAdherenceFlags,
         };
       })
       .filter((data) => data.dischargeDate !== null);
@@ -347,11 +352,6 @@ export class DashboardStore {
     const previousPeriodStart = new Date(comparisonYear, comparisonMonth, 1, 0, 0, 0, 0);
     const previousPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
 
-    console.log('Latest discharge date:', latestDate);
-    console.log('Current period start:', currentPeriodStart);
-    console.log('Previous period start:', previousPeriodStart);
-    console.log('Previous period end:', previousPeriodEnd);
-
     // Filter visits by time periods
     const currentPeriodVisits = visitData.filter((v) => v.dischargeDate >= currentPeriodStart && v.dischargeDate <= latestDate);
 
@@ -370,16 +370,20 @@ export class DashboardStore {
 
         // Guideline Adherence
         GUIDELINE_ADHERENCE_OPTIONS.forEach(({ value, adherentCount, totalTransfused }) => {
-          const totalAdherentTransfusions = visits.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
-          const totalTransfusions = visits.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
+          // Total adherent transfusions and total transfusions for this blood product (BP)
+          const totalBPAdherentTransfusions = visits.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
+          const totalBPTransfusions = visits.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
 
-          agg[`sum_${value}`] = totalAdherentTransfusions;
-          agg[`avg_${value}`] = totalTransfusions > 0 ? totalAdherentTransfusions / totalTransfusions : 0;
+          agg[`sum_${value}`] = totalBPAdherentTransfusions;
+          agg[`avg_${value}`] = totalBPTransfusions > 0 ? totalBPAdherentTransfusions / totalBPTransfusions : 0;
         });
 
         // Total Guideline Adherence
-        agg[`sum_${TOTAL_GUIDELINE_ADHERENCE.value}`] = sum(visits, (d) => d[TOTAL_GUIDELINE_ADHERENCE.value] || 0);
-        agg[`avg_${TOTAL_GUIDELINE_ADHERENCE.value}`] = mean(visits, (d) => d[TOTAL_GUIDELINE_ADHERENCE.value] || 0) || 0;
+        const totalAdherentTransfusions = visits.reduce((acc, d) => acc + (d[OVERALL_GUIDELINE_ADHERENCE.adherentCount] || 0), 0);
+        const totalTransfusions = visits.reduce((acc, d) => acc + (d[OVERALL_GUIDELINE_ADHERENCE.totalTransfused] || 0), 0);
+
+        agg[`sum_${OVERALL_GUIDELINE_ADHERENCE.value}`] = totalAdherentTransfusions;
+        agg[`avg_${OVERALL_GUIDELINE_ADHERENCE.value}`] = totalTransfusions > 0 ? totalAdherentTransfusions / totalTransfusions : 0;
 
         // Outcomes
         OUTCOME_OPTIONS.forEach(({ value }) => {
@@ -648,28 +652,19 @@ export class DashboardStore {
   }
 
   /**
-   * Calculate total adherence as the mean of all individual adherence rates for a visit
+   * @input adherenceFlags - Individual blood product adherence flags
+   * @returns Total adherent transfusions and total transfusions across all blood products
    */
-  private calculateTotalAdherence(adherenceFlags: Record<AdherentCountField | TotalTransfusedField, number>): Record<typeof TOTAL_GUIDELINE_ADHERENCE.value, number> {
-    const adherenceRates: number[] = [];
+  private getOverallAdherenceFlags(adherenceFlags: Record<AdherentCountField | TotalTransfusedField, number>): Record<OverallAdherentCountField | OverallTotalTransfusedField, number> {
+    // Sum all adherent transfusions across all blood products
+    const totalAdherentTransfusions = GUIDELINE_ADHERENCE_OPTIONS.reduce((count, { adherentCount }) => count + (adherenceFlags[adherentCount] || 0), 0);
 
-    // Calculate adherence rate for each blood product
-    GUIDELINE_ADHERENCE_OPTIONS.forEach(({ adherentCount, totalTransfused }) => {
-      const adherent = adherenceFlags[adherentCount] || 0;
-      const total = adherenceFlags[totalTransfused] || 0;
-
-      if (total > 0) {
-        adherenceRates.push(adherent / total);
-      }
-    });
-
-    // Return mean adherence rate (0 if no transfusions)
-    const meanAdherence = adherenceRates.length > 0
-      ? adherenceRates.reduce((count, rate) => count + rate, 0) / adherenceRates.length
-      : 0;
+    // Sum all transfusions across all blood products
+    const totalTransfusions = GUIDELINE_ADHERENCE_OPTIONS.reduce((count, { totalTransfused }) => count + (adherenceFlags[totalTransfused] || 0), 0);
 
     return {
-      [TOTAL_GUIDELINE_ADHERENCE.value]: meanAdherence,
+      [OVERALL_GUIDELINE_ADHERENCE.adherentCount]: totalAdherentTransfusions,
+      [OVERALL_GUIDELINE_ADHERENCE.totalTransfused]: totalTransfusions,
     };
   }
 
