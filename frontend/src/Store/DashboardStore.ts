@@ -216,137 +216,37 @@ export class DashboardStore {
     this._statConfigs = this._statConfigs.filter((config) => config.i !== id);
   }
 
-  // Chart data ----------------------------------------------------------------
+  // Dashboard data ----------------------------------------------------------------
   /**
- * Returns all possible chart data needed for the dashboard
- */
-  get chartData(): DashboardChartData {
-    // Step 1: For each visit, get variables needed for charting (E.g. adherence flags)
+   * Returns all possible dashboard data: both chart data and stat data
+   * Computes everything once to avoid duplication
+   */
+  get dashboardData(): { chartData: DashboardChartData; statData: DashboardStatData } {
+    // Step 1: For each visit, get variables needed (E.g. rbc_units)
     const visitVariablesData = this.getVisitVariablesData();
 
-    // Step 2: Aggregate by the every possible time period
+    // Step 2: Aggregate by time periods for chart data
     const timeAggregations = this.aggregateByTimePeriod(visitVariablesData);
 
-    // Step 3: Return data for every possible chart configuration
-    return this.getAllPossibleChartData(timeAggregations);
+    // Step 3: Retrieve all possible chart and stat data
+    const chartData = this.getAllPossibleChartData(timeAggregations);
+    const statData = this.getAllPossibleStatData(visitVariablesData);
+
+    return { chartData, statData };
   }
 
-  // Stats data ----------------------------------------------------------------
   /**
-   * Returns stats data for the last 30 days,
-   * with percentage change from nearest non-overlapping month
+   * Returns all possible chart data needed for the dashboard.
+   */
+  get chartData(): DashboardChartData {
+    return this.dashboardData.chartData;
+  }
+
+  /**
+   * Returns all stat chart data needed for the dashboard.
    */
   get statData(): DashboardStatData {
-    // Step 1: For each visit, get variables needed for stats (E.g. adherence flags)
-    const visitVariablesData = this.getVisitVariablesData();
-    // Find the latest discharge date
-    const latestDate = new Date(Math.max(...visitVariablesData.map((v) => v.dischargeDate.getTime())));
-
-    // Calculate current period (last 30 days)
-    const currentPeriodStart = new Date(latestDate.getTime() - (30 * TIME_CONSTANTS.ONE_DAY_MS));
-
-    // Find most recent full month that doesn't overlap with 30-day window
-    // Find month before period starts
-    const currentPeriodStartMonth = currentPeriodStart.getMonth();
-    const currentPeriodStartYear = currentPeriodStart.getFullYear();
-
-    // Get the previous month
-    let comparisonMonth = currentPeriodStartMonth - 1;
-    let comparisonYear = currentPeriodStartYear;
-
-    // Handle year rollover
-    if (comparisonMonth < 0) {
-      comparisonMonth = 11; // December
-      comparisonYear -= 1;
-    }
-
-    // Create comparison period boundaries (full month)
-    const previousPeriodStart = new Date(comparisonYear, comparisonMonth, 1, 0, 0, 0, 0);
-    const previousPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
-
-    // Filter visits by time periods
-    const currentPeriodVisits = visitVariablesData.filter((v) => v.dischargeDate >= currentPeriodStart && v.dischargeDate <= latestDate);
-
-    const previousPeriodVisits = visitVariablesData.filter((v) => v.dischargeDate >= previousPeriodStart && v.dischargeDate <= previousPeriodEnd);
-
-    // Helper function to aggregate period data
-    const aggregatePeriodData = (visits: typeof visitVariablesData) => {
-      const agg: Record<string, number> = {};
-
-      try {
-        // Blood Components
-        BLOOD_COMPONENT_OPTIONS.forEach(({ value }) => {
-          agg[`sum_${value}`] = sum(visits, (d) => d[value] || 0);
-          agg[`avg_${value}`] = mean(visits, (d) => d[value] || 0) || 0;
-        });
-
-        // Guideline Adherence
-        GUIDELINE_ADHERENCE_OPTIONS.forEach(({ value, adherentCount, totalTransfused }) => {
-          // Total adherent transfusions and total transfusions for this blood product (BP)
-          const totalBPAdherentTransfusions = visits.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
-          const totalBPTransfusions = visits.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
-
-          agg[`sum_${value}`] = totalBPAdherentTransfusions;
-          agg[`avg_${value}`] = totalBPTransfusions > 0 ? totalBPAdherentTransfusions / totalBPTransfusions : 0;
-        });
-
-        // Total Guideline Adherence
-        const totalAdherentTransfusions = visits.reduce((acc, d) => acc + (d[OVERALL_GUIDELINE_ADHERENCE.adherentCount] || 0), 0);
-        const totalTransfusions = visits.reduce((acc, d) => acc + (d[OVERALL_GUIDELINE_ADHERENCE.totalTransfused] || 0), 0);
-
-        agg[`sum_${OVERALL_GUIDELINE_ADHERENCE.value}`] = totalAdherentTransfusions;
-        agg[`avg_${OVERALL_GUIDELINE_ADHERENCE.value}`] = totalTransfusions > 0 ? totalAdherentTransfusions / totalTransfusions : 0;
-
-        // Outcomes
-        OUTCOME_OPTIONS.forEach(({ value }) => {
-          agg[`sum_${value}`] = sum(visits, (d) => d[value] || 0);
-          agg[`avg_${value}`] = mean(visits, (d) => d[value] || 0) || 0;
-        });
-
-        // Prophylactic Medications
-        PROPHYL_MED_OPTIONS.forEach(({ value }) => {
-          agg[`sum_${value}`] = sum(visits, (d) => d[value] || 0);
-          agg[`avg_${value}`] = mean(visits, (d) => d[value] || 0) || 0;
-        });
-      } catch (error) {
-        console.error('Error aggregating period stats data:', error);
-      }
-
-      return agg;
-    };
-
-    const currentPeriodData = aggregatePeriodData(currentPeriodVisits);
-    const previousPeriodData = aggregatePeriodData(previousPeriodVisits);
-
-    // Get month name for comparison text
-    const previousMonthName = previousPeriodStart.toLocaleDateString('en-US', { month: 'short' });
-
-    // --- Calculate percentage change and format data ---
-    const result = {} as DashboardStatData;
-    for (const aggregation of Object.keys(AGGREGATION_OPTIONS) as (keyof typeof AGGREGATION_OPTIONS)[]) {
-      for (const yAxisVar of dashboardYAxisVars) {
-        const key = `${aggregation}_${yAxisVar}` as keyof DashboardStatData;
-
-        const currentValue = currentPeriodData[key] || 0;
-        const previousValue = previousPeriodData[key] || 0;
-
-        // Calculate percentage change
-        const diff = previousValue === 0
-          ? (currentValue > 0 ? 100 : 0)
-          : ((currentValue - previousValue) / previousValue) * 100;
-
-        // Use the type-safe formatting method
-        const formattedValue = this.formatStatValue(yAxisVar, currentValue, aggregation);
-
-        result[key] = {
-          data: formattedValue,
-          diff: Math.round(diff),
-          comparedTo: previousMonthName,
-        };
-      }
-    }
-
-    return result;
+    return this.dashboardData.statData;
   }
 
   // Helper functions for chart data -------------------------------------------
@@ -832,6 +732,77 @@ export class DashboardStore {
   }
 
   // Stats data helper functions ------------------------------------------------
+  /**
+ * Calculate stats data from visit variables data
+ * @param visitVariablesData - Pre-computed visit variables
+ * @returns Dashboard stat data with formatted values and percentage changes
+ */
+  private getAllPossibleStatData(visitVariablesData: ReturnType<typeof this.getVisitVariablesData>): DashboardStatData {
+  // Find the latest discharge date
+    const latestDate = new Date(Math.max(...visitVariablesData.map((v) => v.dischargeDate.getTime())));
+
+    // Calculate current period (last 30 days)
+    const currentPeriodStart = new Date(latestDate.getTime() - (30 * TIME_CONSTANTS.ONE_DAY_MS));
+
+    // Find most recent full month that doesn't overlap with 30-day window
+    const currentPeriodStartMonth = currentPeriodStart.getMonth();
+    const currentPeriodStartYear = currentPeriodStart.getFullYear();
+
+    // Get the previous month
+    let comparisonMonth = currentPeriodStartMonth - 1;
+    let comparisonYear = currentPeriodStartYear;
+
+    // Handle year rollover
+    if (comparisonMonth < 0) {
+      comparisonMonth = 11; // December
+      comparisonYear -= 1;
+    }
+
+    // Create comparison period boundaries (full month)
+    const previousPeriodStart = new Date(comparisonYear, comparisonMonth, 1, 0, 0, 0, 0);
+    const previousPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
+
+    // Filter visits by time periods
+    const currentPeriodVisits = visitVariablesData.filter((v) => v.dischargeDate >= currentPeriodStart && v.dischargeDate <= latestDate);
+
+    const previousPeriodVisits = visitVariablesData.filter((v) => v.dischargeDate >= previousPeriodStart && v.dischargeDate <= previousPeriodEnd);
+
+    // Aggregate both periods using the same logic as chart data
+    const currentPeriodData = this.aggregateVisitVariables(currentPeriodVisits);
+    const previousPeriodData = this.aggregateVisitVariables(previousPeriodVisits);
+
+    // Get month name for comparison text
+    const previousMonthName = previousPeriodStart.toLocaleDateString('en-US', { month: 'short' });
+
+    // Calculate percentage change and format data
+    const result = {} as DashboardStatData;
+    for (const aggregation of Object.keys(AGGREGATION_OPTIONS) as (keyof typeof AGGREGATION_OPTIONS)[]) {
+      for (const yAxisVar of dashboardYAxisVars) {
+        const key = `${aggregation}_${yAxisVar}` as keyof DashboardStatData;
+
+        const currentValue = currentPeriodData[key] || 0;
+        const previousValue = previousPeriodData[key] || 0;
+
+        // Calculate percentage change
+        const diff = previousValue === 0
+          ? (currentValue > 0 ? 100 : 0)
+          : ((currentValue - previousValue) / previousValue) * 100;
+
+        // Use the type-safe formatting method
+        const formattedValue = this.formatStatValue(yAxisVar, currentValue, aggregation);
+
+        result[key] = {
+          data: formattedValue,
+          diff: Math.round(diff),
+          comparedTo: previousMonthName,
+        };
+      }
+    }
+
+    console.log('Dashboard stats data:', result);
+    return result;
+  }
+
   /**
  * Determines if a percentage change is "good" based on the metric type
  * @param metricVar - The dashboard variable being measured
