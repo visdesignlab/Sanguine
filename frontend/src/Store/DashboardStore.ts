@@ -496,11 +496,13 @@ export class DashboardStore {
   private getAllPossibleChartData(visitVariablesData: ReturnType<typeof this.getVisitVariablesData>): DashboardChartData {
     const result = {} as DashboardChartData;
 
-    // --- Return data for every possible chart (aggregation, y-axis variable, x-axis variable (time agg)) ---
-    for (const aggregation of Object.keys(AGGREGATION_OPTIONS) as (keyof typeof AGGREGATION_OPTIONS)[]) {
-      for (const yAxisVar of dashboardYAxisVars) {
-        for (const xAxisVar of dashboardXAxisVars) {
-          const aggVar: DashboardAggYAxisVar = `${aggregation}_${yAxisVar}`;
+    // --- Calculate data for every possible chart (aggregation, yAxisVar, xAxisVar) combination ---
+    Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
+      const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
+
+      dashboardYAxisVars.forEach((yAxisVar) => {
+        dashboardXAxisVars.forEach((xAxisVar) => {
+          const aggVar: DashboardAggYAxisVar = `${aggType}_${yAxisVar}`;
 
           // Get the time aggregation that matches the xAxisVar time aggregation
           const timeAggregation = xAxisVar as TimeAggregation;
@@ -536,9 +538,10 @@ export class DashboardStore {
           // Return result
           const compositeKey = `${aggVar}_${xAxisVar}` as keyof DashboardChartData;
           result[compositeKey] = chartData;
-        }
-      }
-    }
+        });
+      });
+    });
+
     return result;
   }
 
@@ -750,9 +753,12 @@ export class DashboardStore {
 
     // --- Return data for every possible stat (aggregation, yAxisVar) combination ---
     const result = {} as DashboardStatData;
-    for (const aggregation of Object.keys(AGGREGATION_OPTIONS) as (keyof typeof AGGREGATION_OPTIONS)[]) {
-      for (const yAxisVar of dashboardYAxisVars) {
-        const key = `${aggregation}_${yAxisVar}` as DashboardAggYAxisVar;
+
+    Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
+      const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
+
+      dashboardYAxisVars.forEach((yAxisVar) => {
+        const key = `${aggType}_${yAxisVar}` as DashboardAggYAxisVar;
 
         // Calculate percentage change (diff)
         const currentValue = currentPeriodData[key] || 0;
@@ -763,15 +769,16 @@ export class DashboardStore {
           : ((currentValue - previousValue) / previousValue) * 100;
 
         // Format the stat value (E.g. "Overall Guideline Adherence")
-        const formattedValue = this.formatStatValue(yAxisVar, currentValue, aggregation);
+        const formattedValue = this.formatStatValue(yAxisVar, currentValue, aggType);
 
         result[key] = {
           data: formattedValue,
           diff: Math.round(diff),
           comparedTo: previousMonthName,
         };
-      }
-    }
+      });
+    });
+
     return result;
   }
 
