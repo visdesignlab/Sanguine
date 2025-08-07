@@ -19,15 +19,14 @@ import {
   dashboardYAxisVars,
   dashboardYAxisOptions,
   type DashboardChartConfig,
-  type DashboardChartConfigKey,
   type DashboardStatConfig,
   DashboardChartData, DashboardStatData,
   OverallAdherentCountField,
   OverallTotalTransfusedField,
   TimeAggregation,
   TimePeriod,
-  TIME_AGGREGATION_OPTIONS,
-  dashboardXAxisVars, // Dashboard data types
+  dashboardXAxisVars,
+  type DashboardAggYAxisVar, // Dashboard data types
 } from '../Types/application';
 
 /**
@@ -222,10 +221,10 @@ export class DashboardStore {
  * Performs a single computation to prevent redundant processing.
  */
   get dashboardData(): { chartData: DashboardChartData; statData: DashboardStatData } {
-  // Step 1: For each visit, get variables needed (E.g. rbc_units)
+    // Step 1: For each visit, get variables needed (E.g. rbc_units)
     const visitVariablesData = this.getVisitVariablesData();
 
-    // Step 2: Retrieve all possible chart data & stat data
+    // Step 2: Calculate all possible chart data & stat data
     const chartData = this.getAllPossibleChartData(visitVariablesData);
     const statData = this.getAllPossibleStatData(visitVariablesData);
 
@@ -412,44 +411,11 @@ export class DashboardStore {
   }
 
   /**
-  * Aggregate visit data by the selected time period using d3 rollup
-  */
-  private aggregateByTimePeriod(visitVariablesData: ReturnType<typeof this.getVisitVariablesData>) {
-    // Create a map to store aggregations for all time periods
-    const allTimeAggregations = new Map<TimePeriod, Record<DashboardChartConfigKey, number>>();
-
-    // Aggregate by every time aggregation type
-    for (const timeAggregation of Object.keys(TIME_AGGREGATION_OPTIONS) as TimeAggregation[]) {
-      // For each visit, find the time period specified (e.g. 'quarter', 'month')
-      const visitDataWithTimePeriod = visitVariablesData.map((visit) => ({
-        ...visit,
-        timePeriod: this.getTimePeriodFromDate(this.safeParseDate(visit.dischargeDate), timeAggregation),
-      })).filter((visit) => visit.timePeriod !== null);
-
-      // Aggregate by this time period (e.g. 'quarter', 'month')
-      const timeData = rollup(
-        visitDataWithTimePeriod,
-        (visits) => this.aggregateVisitVariables(visits),
-        (d) => d.timePeriod,
-      );
-
-      // Add the aggregated data to the map
-      for (const [timePeriod, aggregations] of timeData.entries()) {
-        if (timePeriod !== null) {
-          allTimeAggregations.set(timePeriod, aggregations);
-        }
-      }
-    }
-
-    return allTimeAggregations;
-  }
-
-  /**
    * Aggregate visit variables data for the dashboard
    * E.g. rbc_units -> sum_rbc_units, avg_rbc_units, etc.
   */
   private aggregateVisitVariables(visits: ReturnType<typeof this.getVisitVariablesData>) {
-    const aggregations: Record<DashboardChartConfigKey, number> = {} as Record<DashboardChartConfigKey, number>;
+    const aggregations: Record<DashboardAggYAxisVar, number> = {} as Record<DashboardAggYAxisVar, number>;
 
     try {
       // Simple aggregations (Blood Components, Outcomes, Prophylactic Medications)
@@ -472,12 +438,12 @@ export class DashboardStore {
   */
   private aggregateSimpleMetrics<T extends { value: string }>(
     visits: ReturnType<typeof this.getVisitVariablesData>,
-    aggregations: Record<DashboardChartConfigKey, number>,
+    aggregations: Record<DashboardAggYAxisVar, number>,
     options: readonly T[],
   ) {
     options.forEach(({ value }) => {
-      const sumKey = `sum_${value}` as DashboardChartConfigKey;
-      const avgKey = `avg_${value}` as DashboardChartConfigKey;
+      const sumKey = `sum_${value}` as DashboardAggYAxisVar;
+      const avgKey = `avg_${value}` as DashboardAggYAxisVar;
 
       aggregations[sumKey] = sum(visits, (d) => d[value as keyof typeof d] as number || 0);
       aggregations[avgKey] = mean(visits, (d) => d[value as keyof typeof d] as number || 0) || 0;
@@ -489,14 +455,14 @@ export class DashboardStore {
  */
   private aggregateGuidelineAdherence(
     visits: ReturnType<typeof this.getVisitVariablesData>,
-    aggregations: Record<DashboardChartConfigKey, number>,
+    aggregations: Record<DashboardAggYAxisVar, number>,
   ) {
     GUIDELINE_ADHERENCE_OPTIONS.forEach(({ value, adherentCount, totalTransfused }) => {
       const totalAdherent = visits.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
       const totalTransfusions = visits.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
 
-      const sumKey: DashboardChartConfigKey = `sum_${value}`;
-      const avgKey: DashboardChartConfigKey = `avg_${value}`;
+      const sumKey: DashboardAggYAxisVar = `sum_${value}`;
+      const avgKey: DashboardAggYAxisVar = `avg_${value}`;
 
       aggregations[sumKey] = totalAdherent;
       aggregations[avgKey] = totalTransfusions > 0 ? totalAdherent / totalTransfusions : 0;
@@ -508,15 +474,15 @@ export class DashboardStore {
  */
   private aggregateOverallAdherence(
     visits: ReturnType<typeof this.getVisitVariablesData>,
-    aggregations: Record<DashboardChartConfigKey, number>,
+    aggregations: Record<DashboardAggYAxisVar, number>,
   ) {
     const { value, adherentCount, totalTransfused } = OVERALL_GUIDELINE_ADHERENCE;
 
     const totalAdherent = visits.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
     const totalTransfusions = visits.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
 
-    const sumKey: DashboardChartConfigKey = `sum_${value}`;
-    const avgKey: DashboardChartConfigKey = `avg_${value}`;
+    const sumKey: DashboardAggYAxisVar = `sum_${value}`;
+    const avgKey: DashboardAggYAxisVar = `avg_${value}`;
 
     aggregations[sumKey] = totalAdherent;
     aggregations[avgKey] = totalTransfusions > 0 ? totalAdherent / totalTransfusions : 0;
@@ -530,12 +496,13 @@ export class DashboardStore {
   private getAllPossibleChartData(visitVariablesData: ReturnType<typeof this.getVisitVariablesData>): DashboardChartData {
     const result = {} as DashboardChartData;
 
+    // --- Return data for every possible chart (aggregation, y-axis variable, x-axis variable (time agg)) ---
     for (const aggregation of Object.keys(AGGREGATION_OPTIONS) as (keyof typeof AGGREGATION_OPTIONS)[]) {
       for (const yAxisVar of dashboardYAxisVars) {
         for (const xAxisVar of dashboardXAxisVars) {
-          const key: DashboardChartConfigKey = `${aggregation}_${yAxisVar}`;
+          const aggVar: DashboardAggYAxisVar = `${aggregation}_${yAxisVar}`;
 
-          // Get the time aggregation that matches the xAxisVar
+          // Get the time aggregation that matches the xAxisVar time aggregation
           const timeAggregation = xAxisVar as TimeAggregation;
 
           // For each visit, add the time period and filter by the current xAxisVar
@@ -546,7 +513,7 @@ export class DashboardStore {
             }))
             .filter((visit) => visit.timePeriod !== null);
 
-          // Aggregate by this time period using d3 rollup
+          // Aggregate by this time period
           const timeData = rollup(
             visitDataWithTimePeriod,
             (visits) => this.aggregateVisitVariables(visits),
@@ -557,17 +524,17 @@ export class DashboardStore {
           const chartData = Array.from(timeData.entries())
             .map(([timePeriod, aggregations]) => ({
               timePeriod: timePeriod!,
-              data: aggregations[key] || 0,
+              data: aggregations[aggVar] || 0,
             }))
             .sort((a, b) => this.compareTimePeriods(a.timePeriod, b.timePeriod));
 
           // Log filtered data for debugging
           if (chartData.length === 0) {
-            console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and key "${key}"`);
+            console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and aggVar "${aggVar}"`);
           }
 
-          // Store the data with a composite key that includes xAxisVar
-          const compositeKey = `${key}_${xAxisVar}` as keyof DashboardChartData;
+          // Return result
+          const compositeKey = `${aggVar}_${xAxisVar}` as keyof DashboardChartData;
           result[compositeKey] = chartData;
         }
       }
@@ -756,7 +723,7 @@ export class DashboardStore {
     const currentPeriodStartMonth = currentPeriodStart.getMonth();
     const currentPeriodStartYear = currentPeriodStart.getFullYear();
 
-    // --- Find previous period (closest non-overlapping month) ---
+    // --- Find previous period (closest non-overlapping calendar month) ---
     let comparisonMonth = currentPeriodStartMonth - 1;
     let comparisonYear = currentPeriodStartYear;
 
@@ -785,7 +752,7 @@ export class DashboardStore {
     const result = {} as DashboardStatData;
     for (const aggregation of Object.keys(AGGREGATION_OPTIONS) as (keyof typeof AGGREGATION_OPTIONS)[]) {
       for (const yAxisVar of dashboardYAxisVars) {
-        const key = `${aggregation}_${yAxisVar}` as keyof DashboardStatData;
+        const key = `${aggregation}_${yAxisVar}` as DashboardAggYAxisVar;
 
         // Calculate percentage change (diff)
         const currentValue = currentPeriodData[key] || 0;

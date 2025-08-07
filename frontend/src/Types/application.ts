@@ -197,6 +197,9 @@ export const dashboardXAxisVars = dashboardXAxisOptions.map((opt) => opt.value);
 export const dashboardYAxisOptions = [...BLOOD_COMPONENT_OPTIONS, ...GUIDELINE_ADHERENCE_OPTIONS, ...OUTCOME_OPTIONS, ...PROPHYL_MED_OPTIONS, OVERALL_GUIDELINE_ADHERENCE];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 
+// Dashboard aggregate y-axis variable type
+export type DashboardAggYAxisVar = `${keyof typeof AGGREGATION_OPTIONS}_${typeof dashboardYAxisVars[number]}`;
+
 // Chart configuration type
 export type DashboardChartConfig = {
   i: string;
@@ -205,8 +208,8 @@ export type DashboardChartConfig = {
   aggregation: keyof typeof AGGREGATION_OPTIONS;
 };
 
-export type DashboardChartConfigKey = `${keyof typeof AGGREGATION_OPTIONS}_${typeof dashboardYAxisVars[number]}`;
-export type DashboardChartData = Record<`${DashboardChartConfigKey}_${typeof dashboardXAxisVars[number]}`, { timePeriod: TimePeriod, data: number }[]>;
+export type DashboardChartConfigKey = `${DashboardAggYAxisVar}_${typeof dashboardXAxisVars[number]}`;
+export type DashboardChartData = Record<DashboardChartConfigKey, { timePeriod: TimePeriod, data: number }[]>;
 
 // --- Dashboard stats ---
 export type DashboardStatConfig = {
@@ -216,4 +219,4 @@ export type DashboardStatConfig = {
   title: string;
 };
 
-export type DashboardStatData = Record<`${keyof typeof AGGREGATION_OPTIONS}_${DashboardStatConfig['var']}`, {data: string, diff: number, comparedTo?: string} >;
+export type DashboardStatData = Record<DashboardAggYAxisVar, {data: string, diff: number, comparedTo?: string} >;
