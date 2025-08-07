@@ -218,18 +218,15 @@ export class DashboardStore {
 
   // Dashboard data ----------------------------------------------------------------
   /**
-   * Returns all possible dashboard data: both chart data and stat data
-   * Computes everything once to avoid duplication
-   */
+ * Retrieves all dashboard data, including chart and stat metrics.
+ * Performs a single computation to prevent redundant processing.
+ */
   get dashboardData(): { chartData: DashboardChartData; statData: DashboardStatData } {
-    // Step 1: For each visit, get variables needed (E.g. rbc_units)
+  // Step 1: For each visit, get variables needed (E.g. rbc_units)
     const visitVariablesData = this.getVisitVariablesData();
 
-    // Step 2: Aggregate by time periods for chart data
-    const timeAggregations = this.aggregateByTimePeriod(visitVariablesData);
-
-    // Step 3: Retrieve all possible chart and stat data
-    const chartData = this.getAllPossibleChartData(timeAggregations);
+    // Step 2: Retrieve all possible chart data & stat data
+    const chartData = this.getAllPossibleChartData(visitVariablesData);
     const statData = this.getAllPossibleStatData(visitVariablesData);
 
     return { chartData, statData };
@@ -415,8 +412,8 @@ export class DashboardStore {
   }
 
   /**
- * Aggregate visit data by the selected time period using d3 rollup
- */
+  * Aggregate visit data by the selected time period using d3 rollup
+  */
   private aggregateByTimePeriod(visitVariablesData: ReturnType<typeof this.getVisitVariablesData>) {
     // Create a map to store aggregations for all time periods
     const allTimeAggregations = new Map<TimePeriod, Record<DashboardChartConfigKey, number>>();
@@ -526,11 +523,11 @@ export class DashboardStore {
   }
 
   /**
-   *
-   * @param timeData - Map where each key is a time period (x-axis value), and each value is a record of aggregated y-axis metrics.
+   * Generate all possible chart data from visit variables
+   * @param visitVariablesData - Visit variables data
    * @returns DashboardChartData - All possible chart configurations for every aggregation, y-axis, and x-axis variable.
-   */
-  private getAllPossibleChartData(timeData: Map<TimePeriod, Record<DashboardChartConfigKey, number>>): DashboardChartData {
+  */
+  private getAllPossibleChartData(visitVariablesData: ReturnType<typeof this.getVisitVariablesData>): DashboardChartData {
     const result = {} as DashboardChartData;
 
     for (const aggregation of Object.keys(AGGREGATION_OPTIONS) as (keyof typeof AGGREGATION_OPTIONS)[]) {
@@ -538,34 +535,40 @@ export class DashboardStore {
         for (const xAxisVar of dashboardXAxisVars) {
           const key: DashboardChartConfigKey = `${aggregation}_${yAxisVar}`;
 
-          // Filter time periods based on xAxisVar format
-          const filteredTimeData = Array.from(timeData.entries())
-            .filter(([timePeriod]) => {
-              switch (xAxisVar) {
-                case 'quarter':
-                  return timePeriod.includes('Q');
-                case 'month':
-                  return timePeriod.includes('-') && !timePeriod.includes('Q');
-                case 'year':
-                  return !timePeriod.includes('-');
-                default:
-                  return false;
-              }
-            })
+          // Get the time aggregation that matches the xAxisVar
+          const timeAggregation = xAxisVar as TimeAggregation;
+
+          // For each visit, add the time period and filter by the current xAxisVar
+          const visitDataWithTimePeriod = visitVariablesData
+            .map((visit) => ({
+              ...visit,
+              timePeriod: this.getTimePeriodFromDate(visit.dischargeDate, timeAggregation),
+            }))
+            .filter((visit) => visit.timePeriod !== null);
+
+          // Aggregate by this time period using d3 rollup
+          const timeData = rollup(
+            visitDataWithTimePeriod,
+            (visits) => this.aggregateVisitVariables(visits),
+            (d) => d.timePeriod,
+          );
+
+          // Convert to the format needed for charts
+          const chartData = Array.from(timeData.entries())
             .map(([timePeriod, aggregations]) => ({
-              timePeriod,
+              timePeriod: timePeriod!,
               data: aggregations[key] || 0,
             }))
             .sort((a, b) => this.compareTimePeriods(a.timePeriod, b.timePeriod));
 
           // Log filtered data for debugging
-          if (filteredTimeData.length === 0) {
+          if (chartData.length === 0) {
             console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and key "${key}"`);
           }
 
           // Store the data with a composite key that includes xAxisVar
           const compositeKey = `${key}_${xAxisVar}` as keyof DashboardChartData;
-          result[compositeKey] = filteredTimeData;
+          result[compositeKey] = chartData;
         }
       }
     }
