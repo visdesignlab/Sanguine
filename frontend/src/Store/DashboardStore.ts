@@ -237,34 +237,16 @@ export class DashboardStore {
    * with percentage change from nearest non-overlapping month
    */
   get statData(): DashboardStatData {
-    // --- For each visit, get the stats data, un-aggregated ---
-    const visitVariablesData = this._rootStore.allVisits
-      .filter((visit) => this.isValidVisit(visit))
-      .map((visit: Visit) => {
-        const prophMedFlags = this.getProphMedFlags(visit);
-        const bloodProductUnits = this.getBloodProductUnits(visit);
-        const adherenceFlags = this.getAdherenceFlags(visit);
-        const outcomeFlags = this.getOutcomeFlags(visit);
-        const overallAdherenceFlags = this.getOverallAdherenceFlags(adherenceFlags);
-        return {
-          dischargeDate: this.safeParseDate(visit.dsch_dtm),
-          ...bloodProductUnits,
-          ...adherenceFlags,
-          ...outcomeFlags,
-          ...prophMedFlags,
-          ...overallAdherenceFlags,
-        };
-      })
-      .filter((data) => data.dischargeDate !== null);
-
-    // Find the latest discharge date in the dataset
+    // Step 1: For each visit, get variables needed for stats (E.g. adherence flags)
+    const visitVariablesData = this.getVisitVariablesData();
+    // Find the latest discharge date
     const latestDate = new Date(Math.max(...visitVariablesData.map((v) => v.dischargeDate.getTime())));
 
     // Calculate current period (last 30 days)
     const currentPeriodStart = new Date(latestDate.getTime() - (30 * TIME_CONSTANTS.ONE_DAY_MS));
 
-    // Find the most recent complete month that doesn't overlap with our 30-day window
-    // Start by going back to the month before the current period starts
+    // Find most recent full month that doesn't overlap with 30-day window
+    // Find month before period starts
     const currentPeriodStartMonth = currentPeriodStart.getMonth();
     const currentPeriodStartYear = currentPeriodStart.getFullYear();
 
@@ -522,7 +504,7 @@ export class DashboardStore {
         const overallAdherenceFlags = this.getOverallAdherenceFlags(adherenceFlags);
 
         return {
-          dischargeDate: visit.dsch_dtm,
+          dischargeDate: this.safeParseDate(visit.dsch_dtm),
           ...bloodProductUnits,
           ...adherenceFlags,
           ...outcomeFlags,
@@ -568,25 +550,19 @@ export class DashboardStore {
   /**
    * Aggregate visit variables data for the dashboard
    * E.g. rbc_units -> sum_rbc_units, avg_rbc_units, etc.
-   */
+  */
   private aggregateVisitVariables(visits: ReturnType<typeof this.getVisitVariablesData>) {
     const aggregations: Record<DashboardChartConfigKey, number> = {} as Record<DashboardChartConfigKey, number>;
 
     try {
-      // Blood Components
-      this.aggregateBloodComponents(visits, aggregations);
+      // Simple aggregations (Blood Components, Outcomes, Prophylactic Medications)
+      this.aggregateSimpleMetrics(visits, aggregations, BLOOD_COMPONENT_OPTIONS);
+      this.aggregateSimpleMetrics(visits, aggregations, OUTCOME_OPTIONS);
+      this.aggregateSimpleMetrics(visits, aggregations, PROPHYL_MED_OPTIONS);
 
-      // Guideline Adherence (individual blood products)
+      // Complex aggregations (Guideline Adherence)
       this.aggregateGuidelineAdherence(visits, aggregations);
-
-      // Overall Guideline Adherence
       this.aggregateOverallAdherence(visits, aggregations);
-
-      // Outcomes
-      this.aggregateOutcomes(visits, aggregations);
-
-      // Prophylactic Medications
-      this.aggregateProphylMeds(visits, aggregations);
     } catch (error) {
       console.error('Error aggregating time period data:', error);
     }
@@ -595,18 +571,19 @@ export class DashboardStore {
   }
 
   /**
- * Aggregate blood component data
- */
-  private aggregateBloodComponents(
+   * Generic aggregation for simple metrics that just sum/average visit values
+  */
+  private aggregateSimpleMetrics<T extends { value: string }>(
     visits: ReturnType<typeof this.getVisitVariablesData>,
     aggregations: Record<DashboardChartConfigKey, number>,
+    options: readonly T[],
   ) {
-    BLOOD_COMPONENT_OPTIONS.forEach(({ value }) => {
-      const sumKey: DashboardChartConfigKey = `sum_${value}`;
-      const avgKey: DashboardChartConfigKey = `avg_${value}`;
+    options.forEach(({ value }) => {
+      const sumKey = `sum_${value}` as DashboardChartConfigKey;
+      const avgKey = `avg_${value}` as DashboardChartConfigKey;
 
-      aggregations[sumKey] = sum(visits, (d) => d[value] || 0);
-      aggregations[avgKey] = mean(visits, (d) => d[value] || 0) || 0;
+      aggregations[sumKey] = sum(visits, (d) => d[value as keyof typeof d] as number || 0);
+      aggregations[avgKey] = mean(visits, (d) => d[value as keyof typeof d] as number || 0) || 0;
     });
   }
 
@@ -646,38 +623,6 @@ export class DashboardStore {
 
     aggregations[sumKey] = totalAdherent;
     aggregations[avgKey] = totalTransfusions > 0 ? totalAdherent / totalTransfusions : 0;
-  }
-
-  /**
- * Aggregate outcome data
- */
-  private aggregateOutcomes(
-    visits: ReturnType<typeof this.getVisitVariablesData>,
-    aggregations: Record<DashboardChartConfigKey, number>,
-  ) {
-    OUTCOME_OPTIONS.forEach(({ value }) => {
-      const sumKey: DashboardChartConfigKey = `sum_${value}`;
-      const avgKey: DashboardChartConfigKey = `avg_${value}`;
-
-      aggregations[sumKey] = sum(visits, (d) => d[value] || 0);
-      aggregations[avgKey] = mean(visits, (d) => d[value] || 0) || 0;
-    });
-  }
-
-  /**
- * Aggregate prophylactic medication data
- */
-  private aggregateProphylMeds(
-    visits: ReturnType<typeof this.getVisitVariablesData>,
-    aggregations: Record<DashboardChartConfigKey, number>,
-  ) {
-    PROPHYL_MED_OPTIONS.forEach(({ value }) => {
-      const sumKey: DashboardChartConfigKey = `sum_${value}`;
-      const avgKey: DashboardChartConfigKey = `avg_${value}`;
-
-      aggregations[sumKey] = sum(visits, (d) => d[value] || 0);
-      aggregations[avgKey] = mean(visits, (d) => d[value] || 0) || 0;
-    });
   }
 
   /**
@@ -724,7 +669,6 @@ export class DashboardStore {
         }
       }
     }
-
     return result;
   }
 
