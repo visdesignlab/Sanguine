@@ -1,33 +1,24 @@
 import { makeAutoObservable } from 'mobx';
-import { mean, rollup, sum } from 'd3';
+import { rollup } from 'd3';
 import { Layout } from 'react-grid-layout';
 
 import type { RootStore } from './Store';
-import { TransfusionEvent, Visit } from '../Types/database';
 
 import {
   TIME_CONSTANTS, // Time constants
-  BLOOD_COMPONENT_OPTIONS, BloodComponent, // Blood components
-  OUTCOME_OPTIONS, Outcome, // Outcomes
-  PROPHYL_MED_OPTIONS, ProphylMed, // Prophylactic medications
-  GUIDELINE_ADHERENCE_OPTIONS, // Guideline adherence
-  AdherentCountField,
-  TotalTransfusedField,
-  OVERALL_GUIDELINE_ADHERENCE,
-  CPT_CODES, // CPT codes
   AGGREGATION_OPTIONS, // Dashboard configuration
   dashboardYAxisVars,
-  dashboardYAxisOptions,
   type DashboardChartConfig,
   type DashboardStatConfig,
   DashboardChartData, DashboardStatData,
-  OverallAdherentCountField,
-  OverallTotalTransfusedField,
   TimeAggregation,
-  TimePeriod,
   dashboardXAxisVars,
   type DashboardAggYAxisVar, // Dashboard data types
 } from '../Types/application';
+import {
+  aggregateYAxisVisitVars,
+  compareTimePeriods, formatStatValue, generateStatTitle, getTimePeriodFromDate,
+} from '../Utils/dashboard';
 
 /**
  * DashboardStore manages the state of the PBM dashboard: stats, layouts, and chart data.
@@ -195,7 +186,7 @@ export class DashboardStore {
   addStat(statVar: DashboardStatConfig['var'], aggregation: DashboardStatConfig['aggregation']) {
     // Generate unique ID and title internally
     const i = `stat-${Date.now()}`;
-    const title = this.generateStatTitle(statVar, aggregation || 'sum');
+    const title = generateStatTitle(statVar, aggregation || 'sum');
 
     const fullStatConfig: DashboardStatConfig = {
       i,
@@ -220,280 +211,11 @@ export class DashboardStore {
  * Retrieves all dashboard data, including chart and stat metrics.
  * Performs a single computation to prevent redundant processing.
  */
-  get dashboardData(): { chartData: DashboardChartData; statData: DashboardStatData } {
-    // Step 1: For each visit, get variables needed (E.g. rbc_units)
-    const visitVariablesData = this.getVisitVariablesData();
-
-    // Step 2: Calculate all possible chart data & stat data
-    const chartData = this.getAllPossibleChartData(visitVariablesData);
-    const statData = this.getAllPossibleStatData(visitVariablesData);
-
-    return { chartData, statData };
-  }
 
   /**
    * Returns all possible chart data needed for the dashboard.
    */
   get chartData(): DashboardChartData {
-    return this.dashboardData.chartData;
-  }
-
-  /**
-   * Returns all stat chart data needed for the dashboard.
-   */
-  get statData(): DashboardStatData {
-    return this.dashboardData.statData;
-  }
-
-  // Helper functions for chart data -------------------------------------------
-
-  // Variable data formatting ---------
-  /**
-   * Calculate blood product units for a visit
-   */
-  getBloodProductUnits(visit: Visit): Record<BloodComponent, number> {
-    return BLOOD_COMPONENT_OPTIONS.reduce((acc, component) => {
-      try {
-        acc[component.value] = visit.transfusions.reduce((s: number, t) => s + (t[component.value] || 0), 0);
-      } catch (error) {
-        console.error('Error calculating blood product units:', {
-          visitId: visit.visit_no,
-          component: component.value,
-          error,
-        });
-        acc[component.value] = 0;
-      }
-      return acc;
-    }, {} as Record<BloodComponent, number>);
-  }
-
-  /**
-   * Calculate outcome flags for a visit
-   */
-  getOutcomeFlags(visit: Visit): Record<Outcome, number> {
-    try {
-      return {
-        los: (this.safeParseDate(visit.dsch_dtm).getTime() - this.safeParseDate(visit.adm_dtm).getTime()) / (TIME_CONSTANTS.ONE_DAY_MS),
-        death: visit.pat_expired_f ? 1 : 0,
-        vent: visit.total_vent_mins > TIME_CONSTANTS.VENTILATOR_THRESHOLD_MINS ? 1 : 0,
-        stroke: this.hasMatchingCptCode(visit, CPT_CODES.stroke) ? 1 : 0,
-        ecmo: this.hasMatchingCptCode(visit, CPT_CODES.ecmo) ? 1 : 0,
-      } as Record<Outcome, number>;
-    } catch (error) {
-      console.error('Error fetching outcome flags:', { visitId: visit.visit_no, error });
-      return {
-        los: 0, death: 0, vent: 0, stroke: 0, ecmo: 0,
-      };
-    }
-  }
-
-  /**
-   * Calculate prophylactic medication flags for a visit
-   */
-  getProphMedFlags(visit: Visit): Record<ProphylMed, number> {
-    return visit.medications.reduce((acc: Record<ProphylMed, number>, med) => {
-      try {
-        const preSurgeryTimePeriods = this.getPreSurgeryTimePeriods(visit);
-        const medTime = this.safeParseDate(med.order_dtm).getTime();
-        // Check if med given pre-surgery
-        if (preSurgeryTimePeriods.some(([start, end]) => medTime >= start && medTime <= end)) {
-          const lowerMedName = med.medication_name?.toLowerCase() || '';
-          // Increase count if med matches prophyl med type
-          PROPHYL_MED_OPTIONS.forEach((medType) => {
-            if (medType.aliases.some((alias) => lowerMedName.includes(alias))) {
-              acc[medType.value] = 1;
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Error calculating medications:', {
-          visitId: visit.visit_no,
-          medication: med.medication_name,
-          orderDtm: med.order_dtm,
-          error,
-        });
-      }
-      return acc;
-    }, PROPHYL_MED_OPTIONS.reduce((acc, medType) => {
-      acc[medType.value] = 0;
-      return acc;
-    }, {} as Record<ProphylMed, number>));
-  }
-
-  /**
-  * Calculate adherence flags for a visit
-  */
-  getAdherenceFlags(visit: Visit): Record<AdherentCountField | TotalTransfusedField, number> {
-    const adherenceFlags = {
-    // --- For each adherence spec, initialize counts ---
-      ...GUIDELINE_ADHERENCE_OPTIONS.reduce((acc, spec) => {
-        acc[spec.adherentCount] = 0;
-        acc[spec.totalTransfused] = 0;
-        return acc;
-      }, {} as Record<AdherentCountField | TotalTransfusedField, number>),
-    };
-
-    // --- For each transfusion, count adherence # and total transfused # for each blood product ---
-    visit.transfusions.forEach((transfusion: TransfusionEvent) => {
-      // For each adherence spec (rbc, ffp), check if transfusion adheres to guidelines
-      GUIDELINE_ADHERENCE_OPTIONS.forEach(({
-        transfusionUnits, labDesc, adherenceCheck, adherentCount, totalTransfused,
-      }) => {
-        // Check if blood product unit given
-        if (this.isBloodProductTransfused(transfusion, transfusionUnits)) {
-          // Find relevant lab result within 2 hours of transfusion
-          const relevantLab = visit.labs
-            .filter((lab) => {
-              const labDrawDtm = this.safeParseDate(lab.lab_draw_dtm).getTime();
-              const transfusionDtm = this.safeParseDate(transfusion.trnsfsn_dtm).getTime();
-              return (
-                labDesc.includes(lab.result_desc)
-                && labDrawDtm <= transfusionDtm
-                && labDrawDtm >= transfusionDtm - TIME_CONSTANTS.TWO_HOURS_MS
-              );
-            })
-            .sort((a, b) => this.safeParseDate(b.lab_draw_dtm).getTime() - this.safeParseDate(a.lab_draw_dtm).getTime())
-            .at(0);
-
-          // If relevant lab exists and adheres to guidelines, increment counts
-          if (relevantLab && adherenceCheck(relevantLab.result_value)) {
-            adherenceFlags[adherentCount] += 1;
-          }
-          // Increment total [blood product] transfused regardless
-          adherenceFlags[totalTransfused] += 1;
-        }
-      });
-    });
-
-    return adherenceFlags;
-  }
-
-  /**
-   * @input adherenceFlags - Individual blood product adherence flags
-   * @returns Total adherent transfusions and total transfusions across all blood products
-   */
-  private getOverallAdherenceFlags(adherenceFlags: Record<AdherentCountField | TotalTransfusedField, number>): Record<OverallAdherentCountField | OverallTotalTransfusedField, number> {
-    // Sum all adherent transfusions across all blood products
-    const totalAdherentTransfusions = GUIDELINE_ADHERENCE_OPTIONS.reduce((count, { adherentCount }) => count + (adherenceFlags[adherentCount] || 0), 0);
-
-    // Sum all transfusions across all blood products
-    const totalTransfusions = GUIDELINE_ADHERENCE_OPTIONS.reduce((count, { totalTransfused }) => count + (adherenceFlags[totalTransfused] || 0), 0);
-
-    return {
-      [OVERALL_GUIDELINE_ADHERENCE.adherentCount]: totalAdherentTransfusions,
-      [OVERALL_GUIDELINE_ADHERENCE.totalTransfused]: totalTransfusions,
-    };
-  }
-
-  /**
- * Get all visit variables needed for charting
- * @returns Array of variables describing each visit (e.g. adherence flags, discharge date)
- */
-  private getVisitVariablesData() {
-    return this._rootStore.allVisits
-      .filter((visit) => this.isValidVisit(visit))
-      .map((visit: Visit) => {
-        const prophMedFlags = this.getProphMedFlags(visit);
-        const bloodProductUnits = this.getBloodProductUnits(visit);
-        const adherenceFlags = this.getAdherenceFlags(visit);
-        const outcomeFlags = this.getOutcomeFlags(visit);
-        const overallAdherenceFlags = this.getOverallAdherenceFlags(adherenceFlags);
-
-        return {
-          dischargeDate: this.safeParseDate(visit.dsch_dtm),
-          ...bloodProductUnits,
-          ...adherenceFlags,
-          ...outcomeFlags,
-          ...prophMedFlags,
-          ...overallAdherenceFlags,
-        };
-      });
-  }
-
-  /**
-   * Aggregate visit variables data for the dashboard
-   * E.g. rbc_units -> sum_rbc_units, avg_rbc_units, etc.
-  */
-  private aggregateVisitVariables(visits: ReturnType<typeof this.getVisitVariablesData>) {
-    const aggregations: Record<DashboardAggYAxisVar, number> = {} as Record<DashboardAggYAxisVar, number>;
-
-    try {
-      // Simple aggregations (Blood Components, Outcomes, Prophylactic Medications)
-      this.aggregateSimpleMetrics(visits, aggregations, BLOOD_COMPONENT_OPTIONS);
-      this.aggregateSimpleMetrics(visits, aggregations, OUTCOME_OPTIONS);
-      this.aggregateSimpleMetrics(visits, aggregations, PROPHYL_MED_OPTIONS);
-
-      // Complex aggregations (Guideline Adherence)
-      this.aggregateGuidelineAdherence(visits, aggregations);
-      this.aggregateOverallAdherence(visits, aggregations);
-    } catch (error) {
-      console.error('Error aggregating time period data:', error);
-    }
-
-    return aggregations;
-  }
-
-  /**
-   * Generic aggregation for simple metrics that just sum/average visit values
-  */
-  private aggregateSimpleMetrics<T extends { value: string }>(
-    visits: ReturnType<typeof this.getVisitVariablesData>,
-    aggregations: Record<DashboardAggYAxisVar, number>,
-    options: readonly T[],
-  ) {
-    options.forEach(({ value }) => {
-      const sumKey = `sum_${value}` as DashboardAggYAxisVar;
-      const avgKey = `avg_${value}` as DashboardAggYAxisVar;
-
-      aggregations[sumKey] = sum(visits, (d) => d[value as keyof typeof d] as number || 0);
-      aggregations[avgKey] = mean(visits, (d) => d[value as keyof typeof d] as number || 0) || 0;
-    });
-  }
-
-  /**
- * Aggregate guideline adherence data for individual blood products
- */
-  private aggregateGuidelineAdherence(
-    visits: ReturnType<typeof this.getVisitVariablesData>,
-    aggregations: Record<DashboardAggYAxisVar, number>,
-  ) {
-    GUIDELINE_ADHERENCE_OPTIONS.forEach(({ value, adherentCount, totalTransfused }) => {
-      const totalAdherent = visits.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
-      const totalTransfusions = visits.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
-
-      const sumKey: DashboardAggYAxisVar = `sum_${value}`;
-      const avgKey: DashboardAggYAxisVar = `avg_${value}`;
-
-      aggregations[sumKey] = totalAdherent;
-      aggregations[avgKey] = totalTransfusions > 0 ? totalAdherent / totalTransfusions : 0;
-    });
-  }
-
-  /**
- * Aggregate overall guideline adherence data
- */
-  private aggregateOverallAdherence(
-    visits: ReturnType<typeof this.getVisitVariablesData>,
-    aggregations: Record<DashboardAggYAxisVar, number>,
-  ) {
-    const { value, adherentCount, totalTransfused } = OVERALL_GUIDELINE_ADHERENCE;
-
-    const totalAdherent = visits.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
-    const totalTransfusions = visits.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
-
-    const sumKey: DashboardAggYAxisVar = `sum_${value}`;
-    const avgKey: DashboardAggYAxisVar = `avg_${value}`;
-
-    aggregations[sumKey] = totalAdherent;
-    aggregations[avgKey] = totalTransfusions > 0 ? totalAdherent / totalTransfusions : 0;
-  }
-
-  /**
-   * Generate all possible chart data from visit variables
-   * @param visitVariablesData - Visit variables data
-   * @returns DashboardChartData - All possible chart configurations for every aggregation, y-axis, and x-axis variable.
-  */
-  private getAllPossibleChartData(visitVariablesData: ReturnType<typeof this.getVisitVariablesData>): DashboardChartData {
     const result = {} as DashboardChartData;
 
     // --- Calculate data for every possible chart (aggregation, yAxisVar, xAxisVar) combination ---
@@ -507,37 +229,37 @@ export class DashboardStore {
           // Get the time aggregation that matches the xAxisVar time aggregation
           const timeAggregation = xAxisVar as TimeAggregation;
 
-          // For each visit, add the time period and filter by the current xAxisVar
-          const visitDataWithTimePeriod = visitVariablesData
+          // For each visit, add the time period and filter out nulls
+          const visitDataWithTimePeriod = this._rootStore.allVisits
             .map((visit) => ({
               ...visit,
-              timePeriod: this.getTimePeriodFromDate(visit.dischargeDate, timeAggregation),
+              timePeriod: getTimePeriodFromDate(visit.dischargeDate, timeAggregation),
             }))
             .filter((visit) => visit.timePeriod !== null);
 
           // Aggregate by this time period
           const timeData = rollup(
             visitDataWithTimePeriod,
-            (visits) => this.aggregateVisitVariables(visits),
+            (visits) => aggregateYAxisVisitVars(visits),
             (d) => d.timePeriod,
           );
 
           // Convert to the format needed for charts
-          const chartData = Array.from(timeData.entries())
+          const chartDatum = Array.from(timeData.entries())
             .map(([timePeriod, aggregations]) => ({
               timePeriod: timePeriod!,
               data: aggregations[aggVar] || 0,
             }))
-            .sort((a, b) => this.compareTimePeriods(a.timePeriod, b.timePeriod));
+            .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
 
           // Log filtered data for debugging
-          if (chartData.length === 0) {
+          if (chartDatum.length === 0) {
             console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and aggVar "${aggVar}"`);
           }
 
           // Return result
           const compositeKey = `${aggVar}_${xAxisVar}` as keyof DashboardChartData;
-          result[compositeKey] = chartData;
+          result[compositeKey] = chartDatum;
         });
       });
     });
@@ -545,179 +267,13 @@ export class DashboardStore {
     return result;
   }
 
-  // Chart data fetching helpers ---------
   /**
-   * Calculate pre-surgery time periods (2 days before each surgery)
+   * Returns all stat chart data needed for the dashboard.
    */
-  getPreSurgeryTimePeriods(visit: Visit): [number, number][] {
-    return visit.surgeries.map((surgery) => {
-      try {
-        const surgeryStart = this.safeParseDate(surgery.surgery_start_dtm);
-        return [surgeryStart.getTime() - TIME_CONSTANTS.TWO_DAYS_MS, surgeryStart.getTime()];
-      } catch (error) {
-        console.warn('Invalid surgery_start_dtm:', surgery.surgery_start_dtm, error);
-        return [0, 0];
-      }
-    });
-  }
-
-  /**
-     * Check if a blood product was transfused
-     */
-  private isBloodProductTransfused(transfusion: TransfusionEvent, bloodProductUnit: readonly string[]): boolean {
-    return bloodProductUnit.some((field) => {
-      if (!(field in transfusion)) {
-        throw new Error(`Field "${field}" is not a key of TransfusionEvent`);
-      }
-      const value = transfusion[field as keyof TransfusionEvent];
-      return typeof value === 'number' && value > 0;
-    });
-  }
-
-  /**
-     * Check if a visit has any of the specified CPT codes
-     */
-  private hasMatchingCptCode(visit: Visit, cptCodes: readonly string[]): boolean {
-    try {
-      return visit.billing_codes.some((code) => cptCodes.includes(code.cpt_code));
-    } catch (error) {
-      console.error('Error matching cpt code:', { visitId: visit.visit_no, error });
-      return false;
-    }
-  }
-
-  // Variable data formatting helpers ---------
-  /**
-   * Calculate time period string from a date based on aggregation type
-   */
-  private getTimePeriodFromDate(date: Date, aggregation: TimeAggregation): TimePeriod | null {
-    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
-      console.error('Invalid date for time period calculation:', date);
-      return null;
-    }
-
-    const year = date.getFullYear();
-
-    switch (aggregation) {
-      case 'quarter': {
-        const quarter = Math.floor(date.getMonth() / 3) + 1 as 1 | 2 | 3 | 4;
-        return `${year}-Q${quarter}`;
-      }
-      case 'month': {
-        const monthName = date.toLocaleDateString('en-US', { month: 'short' });
-        return `${year}-${monthName}`;
-      }
-      case 'year': {
-        return `${year}`;
-      }
-      default:
-        console.error('Unknown time aggregation type:', aggregation);
-        return null;
-    }
-  }
-
-  /**
-   * Compare two time periods for sorting
-   */
-  private compareTimePeriods(a: TimePeriod, b: TimePeriod): number {
-    // Extract year from both periods
-    const yearA = parseInt(a.split('-')[0], 10);
-    const yearB = parseInt(b.split('-')[0], 10);
-
-    if (yearA !== yearB) {
-      return yearA - yearB;
-    }
-
-    // If same year, compare based on type
-    if (a.includes('Q') && b.includes('Q')) {
-      // Quarter comparison
-      const quarterA = parseInt(a.split('Q')[1], 10);
-      const quarterB = parseInt(b.split('Q')[1], 10);
-      return quarterA - quarterB;
-    }
-
-    if (a.includes('-') && b.includes('-') && !a.includes('Q') && !b.includes('Q')) {
-      // Month comparison
-      const monthA = a.split('-')[1];
-      const monthB = b.split('-')[1];
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return months.indexOf(monthA) - months.indexOf(monthB);
-    }
-
-    // Year only - already compared above
-    return 0;
-  }
-
-  /**
-   * @param yAxisVar Variable to use for the chart (e.g. 'rbc_units')
-   * @param aggregation Aggregation type ('sum' or 'avg')
-   * @returns Chart title based on yAxis variable and aggregation type
-   */
-  generateChartTitle(yAxisVar: DashboardChartConfig['yAxisVar'], aggregation: keyof typeof AGGREGATION_OPTIONS): string {
-    const option = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
-    const label = option?.label || yAxisVar;
-
-    const aggregationText = aggregation.charAt(0).toUpperCase() + aggregation.slice(1);
-    const ofText = aggregation === 'sum' ? ' of' : '';
-    const perVisitText = aggregation === 'avg' ? ' Per Visit' : '';
-
-    return `${aggregationText}${ofText} ${label}${perVisitText}`;
-  }
-
-  // Data validation helpers ---------
-  /**
-   * Safely parse a date string with error handling
-   */
-  private safeParseDate(dateInput: string | Date | null | undefined): Date {
-    if (!dateInput) {
-      throw new Error('Date input is null or undefined');
-    }
-    const date = new Date(dateInput);
-    if (Number.isNaN(date.getTime())) {
-      throw new Error(`Invalid date format: ${dateInput}`);
-    }
-    return date;
-  }
-
-  /**
-   * Validate that required visit data exists
-   */
-  private isValidVisit(visit: Visit): boolean {
-    if (!visit) {
-      console.warn('Null or undefined visit');
-      return false;
-    }
-    if (!visit.dsch_dtm || !visit.adm_dtm) {
-      console.warn('Visit missing required dates:', { id: visit.visit_no, dsch_dtm: visit.dsch_dtm, adm_dtm: visit.adm_dtm });
-      return false;
-    }
-    const dischDate = this.safeParseDate(visit.dsch_dtm);
-    const admDate = this.safeParseDate(visit.adm_dtm);
-    if (!dischDate || !admDate) {
-      console.warn('Visit has invalid date formats:', { id: visit.visit_no, dsch_dtm: visit.dsch_dtm, adm_dtm: visit.adm_dtm });
-      return false;
-    }
-    if (dischDate.getTime() < admDate.getTime()) {
-      console.warn('Visit discharge date before admission date:', { id: visit.visit_no, dischDate, admDate });
-      return false;
-    }
-    return true;
-  }
-
-  // Stats data helper functions ------------------------------------------------
-  /**
-   * Calculate stats data from visit variables data.
-   * Stats from the last 30 days compared to the closest non-overlapping month.
-   * @param visitVariablesData - Pre-computed visit variables
-   * @returns DashboardStatData, each key is a stat metric (e.g. 'avg_los', 'sum_rbc_units'). Each object contains:
-   *   - data: string - Formatted stat value for display
-   *   - diff: number - Percentage change compared to previous period
-   *   - comparedTo: string - Name of previous period (e.g. 'May')
-   */
-  private getAllPossibleStatData(visitVariablesData: ReturnType<typeof this.getVisitVariablesData>): DashboardStatData {
+  get statData(): DashboardStatData {
     // --- Find the current period (last 30 days) ---
     // Find the latest discharge date
-    const latestDate = new Date(Math.max(...visitVariablesData.map((v) => v.dischargeDate.getTime())));
+    const latestDate = new Date(Math.max(...this._rootStore.allVisits.map((v) => v.dischargeDate.getTime())));
 
     // Calculate current period (last 30 days)
     const currentPeriodStart = new Date(latestDate.getTime() - (30 * TIME_CONSTANTS.ONE_DAY_MS));
@@ -741,12 +297,12 @@ export class DashboardStore {
     const previousPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
 
     // --- Filter visits by time periods ---
-    const currentPeriodVisits = visitVariablesData.filter((v) => v.dischargeDate >= currentPeriodStart && v.dischargeDate <= latestDate);
-    const previousPeriodVisits = visitVariablesData.filter((v) => v.dischargeDate >= previousPeriodStart && v.dischargeDate <= previousPeriodEnd);
+    const currentPeriodVisits = this._rootStore.allVisits.filter((v) => v.dischargeDate >= currentPeriodStart && v.dischargeDate <= latestDate);
+    const previousPeriodVisits = this._rootStore.allVisits.filter((v) => v.dischargeDate >= previousPeriodStart && v.dischargeDate <= previousPeriodEnd);
 
     // Aggregate both periods using the same logic as chart data
-    const currentPeriodData = this.aggregateVisitVariables(currentPeriodVisits);
-    const previousPeriodData = this.aggregateVisitVariables(previousPeriodVisits);
+    const currentPeriodData = aggregateYAxisVisitVars(currentPeriodVisits);
+    const previousPeriodData = aggregateYAxisVisitVars(previousPeriodVisits);
 
     // Get month name for comparison text
     const previousMonthName = previousPeriodStart.toLocaleDateString('en-US', { month: 'short' });
@@ -769,7 +325,7 @@ export class DashboardStore {
           : ((currentValue - previousValue) / previousValue) * 100;
 
         // Format the stat value (E.g. "Overall Guideline Adherence")
-        const formattedValue = this.formatStatValue(yAxisVar, currentValue, aggType);
+        const formattedValue = formatStatValue(yAxisVar, currentValue, aggType);
 
         result[key] = {
           data: formattedValue,
@@ -780,93 +336,5 @@ export class DashboardStore {
     });
 
     return result;
-  }
-
-  /**
- * Determines if a percentage change is "good" based on the metric type
- * @param metricVar - The dashboard variable being measured
- * @param diffPercent - The percentage change (positive or negative)
- * @returns true if the change is considered good, false if bad
- */
-  isMetricChangeGood(metricVar: typeof dashboardYAxisVars[number], diffPercent: number): boolean {
-  // Blood components and outcomes - lower is better (negative change is good)
-    const isBloodComponent = BLOOD_COMPONENT_OPTIONS.some((opt) => opt.value === metricVar);
-    const isOutcome = OUTCOME_OPTIONS.some((opt) => opt.value === metricVar);
-
-    // Guideline adherence and prophylactic medications - higher is better (positive change is good)
-    const isAdherence = GUIDELINE_ADHERENCE_OPTIONS.some((opt) => opt.value === metricVar);
-    const isOverallAdherence = metricVar === OVERALL_GUIDELINE_ADHERENCE.value;
-    const isProphylMed = PROPHYL_MED_OPTIONS.some((opt) => opt.value === metricVar);
-
-    if (isBloodComponent || isOutcome) {
-    // For blood components and outcomes, negative change is good
-      return diffPercent < 0;
-    }
-
-    if (isAdherence || isOverallAdherence || isProphylMed) {
-    // For adherence (including overall) and prophylactic medications, positive change is good
-      return diffPercent > 0;
-    }
-
-    // Default fallback - log warning for unclassified metrics
-    console.warn(`Unclassified metric: ${metricVar}`);
-    return diffPercent >= 0;
-  }
-
-  /**
-   * Generate a stat title based on the variable and aggregation type
-   */
-  private generateStatTitle(yAxisVar: DashboardStatConfig['var'], aggregation: keyof typeof AGGREGATION_OPTIONS): string {
-    const option = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
-    const label = option?.label || yAxisVar;
-    // Check if this is a blood component with units using the typed options
-    const bloodComponentOption = BLOOD_COMPONENT_OPTIONS.find((opt) => opt.value === yAxisVar);
-    const hasUnits = bloodComponentOption && bloodComponentOption.unit === 'units';
-
-    if (aggregation === 'avg') {
-      if (yAxisVar === 'los') {
-        return 'Average Length of Stay';
-      }
-      if (hasUnits) {
-        return `Average ${label} Per Visit`;
-      }
-      return `Average ${label}`;
-    }
-
-    // For sums, use "Total" prefix
-    return `Total ${label}`;
-  }
-
-  /**
-   * Format stat values appropriately based on the variable type
-   * @param yAxisVar - The dashboard variable being formatted
-   * @param value - The numeric value to format
-   * @param aggregation - The aggregation type ('sum' or 'avg')
-   * @returns A formatted string for display
-   */
-  private formatStatValue(yAxisVar: typeof dashboardYAxisVars[number], value: number, aggregation?: keyof typeof AGGREGATION_OPTIONS): string {
-    // Find the option that matches this variable
-    const yAxisOption = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
-
-    if (!yAxisOption || !('unit' in yAxisOption)) {
-      console.warn(`No unit found for variable: ${yAxisVar}`);
-      return value.toFixed(0);
-    }
-
-    const { unit } = yAxisOption;
-    // Check if this is an adherence metric
-    const isAdherence = GUIDELINE_ADHERENCE_OPTIONS.some((opt) => opt.value === yAxisVar);
-    // Determine if we should show decimals
-    const showDecimals = aggregation === 'avg' || isAdherence;
-
-    // Special formatting based on unit type
-    switch (unit) {
-      case '%':
-        // Adherence percentages should show decimals
-        return `${(value * 100).toFixed(1)}%`;
-      default:
-        // Units, cases, ml - averages show decimals, totals don't
-        return `${value.toFixed(showDecimals ? 1 : 0)} ${unit}`;
-    }
   }
 }

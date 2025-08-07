@@ -23,6 +23,7 @@ import {
   OVERALL_GUIDELINE_ADHERENCE,
   type DashboardStatConfig,
 } from '../../../Types/application';
+import { isMetricChangeGood } from '../../../Utils/dashboard';
 
 export const icons = {
   bloodComponent: IconDropletHalf2Filled,
@@ -77,7 +78,7 @@ export function StatsGrid() {
       const Icon = icons[iconKey];
       // Get the value diff icon
       const DiffIcon = diff > 0 ? IconArrowUpRight : IconArrowDownRight;
-      const diffClassName = store.dashboardStore.isMetricChangeGood(statConfig.var, diff)
+      const diffClassName = isMetricChangeGood(statConfig.var, diff)
         ? statsGridStyles.diffGood
         : statsGridStyles.diffBad;
 

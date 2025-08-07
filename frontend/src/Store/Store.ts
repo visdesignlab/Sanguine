@@ -3,6 +3,13 @@ import { makeAutoObservable } from 'mobx';
 import { createContext } from 'react';
 import { Visit } from '../Types/database';
 import { DashboardStore } from './DashboardStore';
+import {
+  getAdherenceFlags, getOverallAdherenceFlags, getProphMedFlags, isValidVisit, safeParseDate,
+} from '../Utils/store';
+import {
+  BloodComponent, BLOOD_COMPONENT_OPTIONS, TIME_CONSTANTS, CPT_CODES
+  ,
+} from '../Types/application';
 
 export class RootStore {
   // Provenance
@@ -22,7 +29,35 @@ export class RootStore {
   }
 
   get allVisits() {
-    return this._allVisits;
+    return this._allVisits
+      .filter((v) => isValidVisit(v))
+      .map((visit: Visit) => {
+        const bloodProductUnits = BLOOD_COMPONENT_OPTIONS.reduce((acc, component) => {
+          acc[component.value] = visit.transfusions.reduce((s: number, t) => s + (t[component.value] || 0), 0);
+          return acc;
+        }, {} as Record<BloodComponent, number>);
+        const outcomeFlags = {
+          los: (safeParseDate(visit.dsch_dtm).getTime() - safeParseDate(visit.adm_dtm).getTime()) / (TIME_CONSTANTS.ONE_DAY_MS),
+          death: visit.pat_expired_f ? 1 : 0,
+          vent: visit.total_vent_mins > TIME_CONSTANTS.VENTILATOR_THRESHOLD_MINS ? 1 : 0,
+          stroke: visit.billing_codes.some((code) => (CPT_CODES.stroke as readonly string[]).includes(code.cpt_code)) ? 1 : 0,
+          ecmo: visit.billing_codes.some((code) => (CPT_CODES.ecmo as readonly string[]).includes(code.cpt_code)) ? 1 : 0,
+        };
+
+        const prophMedFlags = getProphMedFlags(visit);
+        const adherenceFlags = getAdherenceFlags(visit);
+        const overallAdherenceFlags = getOverallAdherenceFlags(adherenceFlags);
+
+        return {
+          ...visit,
+          dischargeDate: safeParseDate(visit.dsch_dtm),
+          ...bloodProductUnits,
+          ...adherenceFlags,
+          ...outcomeFlags,
+          ...prophMedFlags,
+          ...overallAdherenceFlags,
+        };
+      });
   }
 
   set allVisits(input) {
@@ -37,4 +72,5 @@ export class RootStore {
     return this.allVisits.flatMap((v) => v.surgeries);
   }
 }
+
 export const Store = createContext(new RootStore());

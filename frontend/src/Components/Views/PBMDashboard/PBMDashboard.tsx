@@ -22,6 +22,7 @@ import {
   DashboardStatConfig,
   dashboardXAxisOptions,
 } from '../../../Types/application';
+import { generateChartTitle } from '../../../Utils/dashboard';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import classes from '../GridLayoutItem.module.css';
@@ -232,7 +233,7 @@ export function PBMDashboard() {
                   <Flex direction="row" align="center" gap="md" ml={-12}>
                     <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
                     <Title order={4}>
-                      {store.dashboardStore.generateChartTitle(yAxisVar, aggregation)}
+                      {generateChartTitle(yAxisVar, aggregation)}
                     </Title>
                   </Flex>
 

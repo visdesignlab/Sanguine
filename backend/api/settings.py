@@ -5,9 +5,9 @@ from corsheaders.defaults import default_headers
 
 
 env = environ.Env(
-    DJANGO_DEBUG=(bool, False),  # Cast to bool, default to False
+    DJANGO_DEBUG=(bool, True),  # Cast to bool, default to False
     DJANGO_HOSTNAME=(str, "localhost"),
-    DJANGO_DISABLE_LOGINS=(bool, False),
+    DJANGO_DISABLE_LOGINS=(bool, True),
     DJANGO_LOGOUT_REDIRECT=(str, "")
 )
 
