@@ -53,11 +53,14 @@ function App() {
   }, [store]);
 
   return (
+    // MantineProvider to apply the custom theme
     <MantineProvider theme={mantineTheme}>
+      {/** App Shell (Header, Main Content, etc.) */}
       <Shell />
       <>
-        { /* Data loading modal */}
+        {/** Browser incompatibility warning modal */}
         <BrowserWarning />
+        { /* Data loading modal */}
         <DataRetrieval dataLoading={dataLoading} dataLoadingFailed={dataLoadingFailed} />
       </>
     </MantineProvider>
