@@ -11,12 +11,9 @@ import {
   OUTCOME_OPTIONS,
   OVERALL_GUIDELINE_ADHERENCE,
   PROPHYL_MED_OPTIONS,
-  TIME_CONSTANTS,
   TimeAggregation,
   TimePeriod,
 } from '../Types/application';
-import { Visit } from '../Types/database';
-import { safeParseDate } from './store';
 import { type RootStore } from '../Store/Store';
 
 /**
@@ -182,21 +179,6 @@ export function generateChartTitle(yAxisVar: DashboardChartConfig['yAxisVar'], a
   const perVisitText = aggregation === 'avg' ? ' Per Visit' : '';
 
   return `${aggregationText}${ofText} ${label}${perVisitText}`;
-}
-
-/**
-   * Calculate pre-surgery time periods (2 days before each surgery)
-   */
-export function getPreSurgeryTimePeriods(visit: Visit): [number, number][] {
-  return visit.surgeries.map((surgery) => {
-    try {
-      const surgeryStart = safeParseDate(surgery.surgery_start_dtm);
-      return [surgeryStart.getTime() - TIME_CONSTANTS.TWO_DAYS_MS, surgeryStart.getTime()];
-    } catch (error) {
-      console.warn('Invalid surgery_start_dtm:', surgery.surgery_start_dtm, error);
-      return [0, 0];
-    }
-  });
 }
 
 /**

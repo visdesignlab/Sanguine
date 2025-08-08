@@ -2,7 +2,6 @@ import {
   AdherentCountField, GUIDELINE_ADHERENCE_OPTIONS, OVERALL_GUIDELINE_ADHERENCE, OverallAdherentCountField, OverallTotalTransfusedField, PROPHYL_MED_OPTIONS, ProphylMed, TIME_CONSTANTS, TotalTransfusedField,
 } from '../Types/application';
 import { TransfusionEvent, Visit } from '../Types/database';
-import { getPreSurgeryTimePeriods } from './dashboard';
 
 /**
    * Safely parse a date string with error handling
@@ -41,6 +40,20 @@ export function isValidVisit(visit: Visit): boolean {
     return false;
   }
   return true;
+}
+/**
+   * Calculate pre-surgery time periods (2 days before each surgery)
+   */
+export function getPreSurgeryTimePeriods(visit: Visit): [number, number][] {
+  return visit.surgeries.map((surgery) => {
+    try {
+      const surgeryStart = safeParseDate(surgery.surgery_start_dtm);
+      return [surgeryStart.getTime() - TIME_CONSTANTS.TWO_DAYS_MS, surgeryStart.getTime()];
+    } catch (error) {
+      console.warn('Invalid surgery_start_dtm:', surgery.surgery_start_dtm, error);
+      return [0, 0];
+    }
+  });
 }
 
 /**
