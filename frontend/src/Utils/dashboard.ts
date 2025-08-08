@@ -1,5 +1,8 @@
 import { sum, mean } from 'd3';
 import {
+  IconCoin, IconDropletHalf2Filled, IconMedicineSyrup, IconShieldHeart, IconTestPipe2,
+} from '@tabler/icons-react';
+import {
   AGGREGATION_OPTIONS,
   BLOOD_COMPONENT_OPTIONS,
   DashboardAggYAxisVar,
@@ -15,7 +18,6 @@ import {
   TimePeriod,
 } from '../Types/application';
 import { type RootStore } from '../Store/Store';
-import { IconCoin, IconDropletHalf2Filled, IconMedicineSyrup, IconShieldHeart, IconTestPipe2 } from '@tabler/icons-react';
 
 /**
  * Format stat values appropriately based on the variable type
