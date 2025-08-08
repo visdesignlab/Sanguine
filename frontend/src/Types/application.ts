@@ -16,21 +16,23 @@ export const TIME_CONSTANTS = {
 } as const;
 
 // Blood components -----------------------------------------------
+const BLOOD_COMPONENT_DECIMALS = { sum: 0, avg: 2 };
+
 export const BLOOD_COMPONENTS = [
   {
-    value: 'rbc_units', label: 'RBCs Transfused', units: { sum: 'RBC units', avg: 'RBC units' },
+    value: 'rbc_units', label: 'RBCs Transfused', units: { sum: 'RBC units', avg: 'RBC units' }, decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
-    value: 'ffp_units', label: 'FFP Transfused', units: { sum: 'plasma units', avg: 'plasma units' },
+    value: 'ffp_units', label: 'FFP Transfused', units: { sum: 'plasma units', avg: 'plasma units' }, decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
-    value: 'plt_units', label: 'Platelets Transfused', units: { sum: 'platelet units', avg: 'platelet units' },
+    value: 'plt_units', label: 'Platelets Transfused', units: { sum: 'platelet units', avg: 'platelet units' }, decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
-    value: 'cryo_units', label: 'Cryo Transfused', units: { sum: 'cryo units', avg: 'cryo units' },
+    value: 'cryo_units', label: 'Cryo Transfused', units: { sum: 'cryo units', avg: 'cryo units' }, decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
-    value: 'cell_saver_ml', label: 'Cell Salvage Volume (ml) Used', units: { sum: 'ml', avg: 'ml' },
+    value: 'cell_saver_ml', label: 'Cell Salvage Volume (ml) Used', units: { sum: 'ml', avg: 'ml' }, decimals: BLOOD_COMPONENT_DECIMALS,
   },
 ] as const;
 // Values of blood components
@@ -40,15 +42,26 @@ export const BLOOD_COMPONENT_OPTIONS = BLOOD_COMPONENTS as ReadonlyArray<{
   value: BloodComponent;
   label: string;
   units: { sum: string; avg: string };
+  decimals: { sum: number; avg: number };
 }>;
 
 // Outcomes -------------------------------------------------------
 export const OUTCOMES = [
-  { value: 'los', label: 'Length of Stay', units: { sum: 'days', avg: 'days' } },
-  { value: 'death', label: 'Death', units: { sum: 'visits', avg: '% of visits' } },
-  { value: 'vent', label: 'Ventilator >24hr', units: { sum: 'visits', avg: '% of visits' } },
-  { value: 'stroke', label: 'Stroke', units: { sum: 'visits', avg: '% of visits' } },
-  { value: 'ecmo', label: 'ECMO', units: { sum: 'visits', avg: '% of visits' } },
+  {
+    value: 'los', label: 'Length of Stay', units: { sum: 'days', avg: 'days' }, decimals: { sum: 0, avg: 2 },
+  },
+  {
+    value: 'death', label: 'Death', units: { sum: 'visits', avg: '% of visits' }, decimals: { sum: 0, avg: 1 },
+  },
+  {
+    value: 'vent', label: 'Ventilator >24hr', units: { sum: 'visits', avg: '% of visits' }, decimals: 0,
+  },
+  {
+    value: 'stroke', label: 'Stroke', units: { sum: 'visits', avg: '% of visits' }, decimals: 0,
+  },
+  {
+    value: 'ecmo', label: 'ECMO', units: { sum: 'visits', avg: '% of visits' }, decimals: 0,
+  },
 ] as const;
 // Values of outcomes
 export type Outcome = typeof OUTCOMES[number]['value'];
@@ -57,6 +70,7 @@ export const OUTCOME_OPTIONS = OUTCOMES as ReadonlyArray<{
   value: Outcome;
   label: string;
   units: { sum: string; avg: string };
+  decimals: number | { sum: number; avg: number };
 }>;
 
 // Prophylactic Medications ---------------------------------------
@@ -66,24 +80,28 @@ export const PROPHYL_MEDS = [
     label: 'B12',
     aliases: ['b12', 'cobalamin'],
     units: { sum: 'visits', avg: '% of visits' },
+    decimals: 0,
   },
   {
     value: 'iron',
     label: 'Iron',
     aliases: ['iron', 'ferrous', 'ferric'],
     units: { sum: 'visits', avg: '% of visits' },
+    decimals: 0,
   },
   {
     value: 'txa',
     label: 'Tranexamic Acid',
     aliases: ['tranexamic', 'txa'],
     units: { sum: 'visits', avg: '% of visits' },
+    decimals: 0,
   },
   {
     value: 'amicar',
     label: 'Amicar',
     aliases: ['amicar', 'aminocaproic'],
     units: { sum: 'visits', avg: '% of visits' },
+    decimals: 0,
   },
 ] as const;
 // Values of prophylactic medications
@@ -94,6 +112,7 @@ export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
   label: string;
   aliases: readonly string[];
   units: { sum: string; avg: string };
+  decimals: number;
 }>;
 
 // Guideline adherence ---------------------------------------------
@@ -101,12 +120,17 @@ export const GUIDELINE_ADHERENCE = {
   rbc: {
     value: 'rbc_adherence',
     label: 'Guideline Adherent RBC Transfusions',
+    // To calculate adherence, we need:
     adherentCount: 'rbc_adherent',
     totalTransfused: 'rbc_total',
+    // The lab description used to determine adherence
     labDesc: ['HGB', 'Hemoglobin'],
     adherenceCheck: (labValue: number) => labValue <= 7.5,
+    // Units used for transfusion counts
     transfusionUnits: ['rbc_units', 'rbc_vol'] as const,
+    // Adherence units & decimal truncation for display
     units: { sum: 'adherent RBC transfusions', avg: '% adherent RBC transfusions' },
+    decimals: 0,
   },
   ffp: {
     value: 'ffp_adherence',
@@ -117,6 +141,7 @@ export const GUIDELINE_ADHERENCE = {
     adherenceCheck: (labValue: number) => labValue >= 1.5,
     transfusionUnits: ['ffp_units', 'ffp_vol'] as const,
     units: { sum: 'adherent plasma transfusions', avg: '% adherent plasma transfusions' },
+    decimals: 0,
   },
   plt: {
     value: 'plt_adherence',
@@ -127,6 +152,7 @@ export const GUIDELINE_ADHERENCE = {
     adherenceCheck: (labValue: number) => labValue >= 15000,
     transfusionUnits: ['plt_units', 'plt_vol'] as const,
     units: { sum: 'adherent platelet transfusions', avg: '% adherent platelet transfusions' },
+    decimals: 0,
   },
   cryo: {
     value: 'cryo_adherence',
@@ -137,6 +163,7 @@ export const GUIDELINE_ADHERENCE = {
     adherenceCheck: (labValue: number) => labValue >= 175,
     transfusionUnits: ['cryo_units', 'cryo_vol'] as const,
     units: { sum: 'adherent cryo transfusions', avg: '% adherent cryo transfusions' },
+    decimals: 0,
   },
 } as const;
 
@@ -147,6 +174,7 @@ export const OVERALL_GUIDELINE_ADHERENCE = {
   totalTransfused: 'overall_transfused',
   label: 'Overall Guideline Adherence',
   units: { sum: 'adherent transfusions', avg: '% adherent transfusions' },
+  decimals: 0,
 } as const;
 
 // Types for guideline adherence fields
@@ -159,7 +187,7 @@ export type OverallAdherentCountField = typeof OVERALL_GUIDELINE_ADHERENCE['adhe
 export type OverallTotalTransfusedField = typeof OVERALL_GUIDELINE_ADHERENCE['totalTransfused'];
 export type OverallGuidelineAdherence = typeof OVERALL_GUIDELINE_ADHERENCE['value'];
 
-// Readonly array of guideline adherence options
+// Guideline adherence options for dashboard
 export const GUIDELINE_ADHERENCE_OPTIONS = Object.values(GUIDELINE_ADHERENCE) as ReadonlyArray<{
   value: GuidelineAdherence;
   label: string;
@@ -169,6 +197,7 @@ export const GUIDELINE_ADHERENCE_OPTIONS = Object.values(GUIDELINE_ADHERENCE) as
   adherenceCheck: (labValue: number) => boolean;
   transfusionUnits: readonly (keyof TransfusionEvent)[];
   units: { sum: string; avg: string };
+  decimals: number;
 }>;
 
 // CPT Codes -------------------------------------------------------

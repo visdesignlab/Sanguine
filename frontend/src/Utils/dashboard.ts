@@ -41,11 +41,22 @@ export function formatStatValue(
   // Select correct unit based on aggregation, fallback to empty string if not found
   const unit = yAxisOption?.units?.[aggregation] ?? '';
 
-  // Format the value based on unit type
-  if (unit.startsWith('%')) {
-    return `${(value * 100).toFixed(1)}${unit}`;
+  // Determine decimal places
+  let decimals = 0;
+  if ('decimals' in yAxisOption) {
+    if (typeof yAxisOption.decimals === 'object') {
+      decimals = yAxisOption.decimals[aggregation] ?? 0;
+    } else {
+      const { decimals: decimalsValue } = yAxisOption;
+      decimals = decimalsValue;
+    }
   }
-  return `${value.toLocaleString()} ${unit}`;
+
+  // Format the value based on unit type and decimals
+  if (unit.startsWith('%')) {
+    return `${(value * 100).toFixed(decimals)}${unit}`;
+  }
+  return `${value.toFixed(decimals)} ${unit}`;
 }
 
 /**
