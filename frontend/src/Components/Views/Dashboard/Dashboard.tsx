@@ -31,71 +31,81 @@ import {
   DashboardStatConfig,
 } from '../../../Types/application';
 
+/**
+ * @returns Patient Blood Management Dashboard - Stats and Charts
+ */
 export function Dashboard() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive) as any, []);
 
+  // --- Store and styles ---
   const store = useContext(Store);
   const theme = useMantineTheme();
-
-  // Get theme constants
   const { buttonIconSize, cardIconSize, cardIconStroke } = useThemeConstants();
 
-  // Modal state
-  const [opened, { open, close }] = useDisclosure(false);
+  // --- Charts ---
+  const aggregationOptions = Object.entries(AGGREGATION_OPTIONS).map(([value, { label }]) => ({ value, label }));
+
+  // Remove chart from dashboard
+  const handleRemoveChart = useCallback((chartId: string) => {
+    store.dashboardStore.removeChart(chartId);
+  }, [store.dashboardStore]);
+
+  // --- Add Item to Dashboard ---
+  // Add Item Modal state
+  const [isAddItemModalOpen, { open, close }] = useDisclosure(false);
+  const [itemModalType, setitemModalType] = useState<'chart' | 'stat'>('chart');
+
+  // Add Item Modal selections
   const [selectedAggregation, setSelectedAggregation] = useState<string>('sum');
   const [selectedXAxisVar, setSelectedXAxisVar] = useState<string>('quarter'); // X-axis selection
   const [selectedYAxisVar, setSelectedYAxisVar] = useState<string>(''); // Y-axis selection
-  const [modalType, setModalType] = useState<'chart' | 'stat'>('chart');
 
-  const handleAddStat = useCallback(() => {
-    setModalType('stat');
-    setSelectedAggregation('sum'); // Reset to default for stats
+  const openAddChartModal = useCallback(() => {
+    setitemModalType('chart');
+    setSelectedAggregation('sum'); // Default y-axis aggregation
+    setSelectedXAxisVar('quarter'); // Default x-axis aggregation
     setSelectedYAxisVar('');
     open();
   }, [open]);
 
-  const handleAddChart = useCallback(() => {
-    setModalType('chart');
-    setSelectedAggregation('sum'); // Reset to default for charts
-    setSelectedXAxisVar('quarter'); // Reset to default x-axis
+  const openAddStatModal = useCallback(() => {
+    setitemModalType('stat');
+    setSelectedAggregation('sum'); // Default aggregation for stat
     setSelectedYAxisVar('');
     open();
   }, [open]);
 
-  const handleDoneAdd = useCallback(() => {
-    if (modalType === 'chart') {
+  const addItemToDashboard = useCallback(() => {
+    if (itemModalType === 'chart') {
+      // Add chart
       store.dashboardStore.addChart({
-        chartId: `chart-${Date.now()}`, // Unique ID for the chart
+        chartId: `chart-${Date.now()}`,
         xAxisVar: selectedXAxisVar as DashboardChartConfig['xAxisVar'],
         yAxisVar: selectedYAxisVar as DashboardChartConfig['yAxisVar'],
         aggregation: selectedAggregation as DashboardChartConfig['aggregation'],
       });
     } else {
-      // Add stat with proper typing
+      // Add stat
       store.dashboardStore.addStat(
         selectedYAxisVar as DashboardStatConfig['var'],
         selectedAggregation as DashboardStatConfig['aggregation'],
       );
     }
-
+    // Close modal after adding item
     close();
-  }, [selectedAggregation, selectedXAxisVar, selectedYAxisVar, modalType, close, store.dashboardStore]);
+  }, [selectedAggregation, selectedXAxisVar, selectedYAxisVar, itemModalType, close, store.dashboardStore]);
 
-  const handleRemoveChart = useCallback((chartId: string) => {
-    store.dashboardStore.removeChart(chartId);
-  }, [store.dashboardStore]);
-
-  const aggregationOptions = Object.entries(AGGREGATION_OPTIONS).map(([value, { label }]) => ({ value, label }));
-
+  // --- Render Dashboard ---
   return useObserver(() => {
     const chartRowHeight = 300;
 
     return (
       <Stack mb="xl" gap="lg">
-        {/** Title, Add Chart Button */}
         <Flex direction="row" justify="space-between" align="center">
+          {/** Dashboard Title */}
           <Title order={3}>Patient Blood Management Dashboard</Title>
+          {/** Add Item Button */}
           <Menu width="md">
             <Menu.Target>
               <Button>
@@ -103,31 +113,32 @@ export function Dashboard() {
                 Add Item
               </Button>
             </Menu.Target>
-
+            {/** Add Chart or Add Stat */}
             <Menu.Dropdown>
               <Menu.Item
                 leftSection={<IconChartLine size={cardIconSize} stroke={cardIconStroke} />}
-                onClick={handleAddChart}
+                onClick={openAddChartModal}
               >
                 Add Chart
               </Menu.Item>
               <Menu.Item
                 leftSection={<IconNumbers size={cardIconSize} stroke={cardIconStroke} />}
-                onClick={handleAddStat}
+                onClick={openAddStatModal}
               >
                 Add Stat
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
         </Flex>
-        {/** Add Item Modal */}
+        {/** Modal when add chart or stat clicked */}
         <Modal
-          opened={opened}
+          opened={isAddItemModalOpen}
           onClose={close}
-          title={`Add ${modalType === 'chart' ? 'Chart' : 'Stat'} To Dashboard`}
+          title={`Add ${itemModalType === 'chart' ? 'Chart' : 'Stat'} To Dashboard`}
           centered
         >
           <Stack gap="md">
+            {/** Modal - choose aggregation for chart or stat */}
             <Select
               label="Aggregation"
               placeholder="Choose aggregation type"
@@ -135,14 +146,16 @@ export function Dashboard() {
               value={selectedAggregation}
               onChange={(value) => setSelectedAggregation(value || 'Average')}
             />
+            {/** Modal - choose y-axis for chart or stat */}
             <Select
-              label={`${modalType === 'chart' ? 'Metric (Y-Axis)' : 'Metric'}`}
-              placeholder={`Choose ${modalType} metric`}
+              label={`${itemModalType === 'chart' ? 'Metric (Y-Axis)' : 'Metric'}`}
+              placeholder={`Choose ${itemModalType} metric`}
               data={dashboardYAxisOptions}
               value={selectedYAxisVar}
               onChange={(value) => setSelectedYAxisVar(value || '')}
             />
-            {modalType === 'chart' && (
+            {/** Modal - choose x-axis for chart only */}
+            {itemModalType === 'chart' && (
               <Select
                 label="Time Period (X-Axis)"
                 placeholder="Choose time aggregation"
@@ -151,19 +164,20 @@ export function Dashboard() {
                 onChange={(value) => setSelectedXAxisVar(value || 'quarter')}
               />
             )}
+            {/** Done Button - Add chart or stat to dashboard */}
             <Button
               mt="md"
-              onClick={handleDoneAdd}
-              disabled={!selectedYAxisVar || (modalType === 'chart' && !selectedXAxisVar)}
+              onClick={addItemToDashboard}
+              disabled={!selectedYAxisVar || (itemModalType === 'chart' && !selectedXAxisVar)}
               fullWidth
             >
               Done
             </Button>
           </Stack>
         </Modal>
-
+        {/** Stats Grid - Display stats at the top of the dashboard */}
         <StatsGrid />
-
+        {/** Layout for charts */}
         <ResponsiveGridLayout
           className="layout"
           breakpoints={{
