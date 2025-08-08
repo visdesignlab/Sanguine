@@ -202,7 +202,7 @@ export type DashboardAggYAxisVar = `${keyof typeof AGGREGATION_OPTIONS}_${typeof
 
 // Chart configuration type
 export type DashboardChartConfig = {
-  i: string;
+  chartId: string;
   xAxisVar: typeof dashboardXAxisVars[number];
   yAxisVar: typeof dashboardYAxisVars[number];
   aggregation: keyof typeof AGGREGATION_OPTIONS;
@@ -213,7 +213,7 @@ export type DashboardChartData = Record<DashboardChartConfigKey, { timePeriod: T
 
 // --- Dashboard stats ---
 export type DashboardStatConfig = {
-  i: string;
+  statId: string;
   var: typeof dashboardYAxisVars[number];
   aggregation?: keyof typeof AGGREGATION_OPTIONS;
   title: string;

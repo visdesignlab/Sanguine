@@ -87,7 +87,7 @@ export function StatsGrid() {
 
       return (
         <Paper
-          key={statConfig.i}
+          key={statConfig.statId}
           className={clsx(
             gridItemStyles.gridItem,
             isHovered && gridItemStyles.gridItemHovered,

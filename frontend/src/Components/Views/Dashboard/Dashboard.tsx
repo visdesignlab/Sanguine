@@ -103,7 +103,7 @@ export function Dashboard() {
   const handleDoneAdd = useCallback(() => {
     if (modalType === 'chart') {
       store.dashboardStore.addChart({
-        i: `chart-${Date.now()}`, // Unique ID for the chart
+        chartId: `chart-${Date.now()}`, // Unique ID for the chart
         xAxisVar: selectedXAxisVar as DashboardChartConfig['xAxisVar'],
         yAxisVar: selectedYAxisVar as DashboardChartConfig['yAxisVar'],
         aggregation: selectedAggregation as DashboardChartConfig['aggregation'],
@@ -219,10 +219,10 @@ export function Dashboard() {
         >
           {/** Render each chart within the configuration */}
           {Object.values(store.dashboardStore.chartConfigs).map(({
-            i, yAxisVar, xAxisVar, aggregation,
+            chartId, yAxisVar, xAxisVar, aggregation,
           }) => (
             <Card
-              key={i}
+              key={chartId}
               withBorder
               className={classes.gridItem}
             >
@@ -240,8 +240,8 @@ export function Dashboard() {
                   <Flex direction="row" align="center" gap="sm">
                     <ActionIcon
                       variant="subtle"
-                      onClick={() => store.dashboardStore.setChartConfig(i, {
-                        i, yAxisVar, xAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum',
+                      onClick={() => store.dashboardStore.setChartConfig(chartId, {
+                        chartId, yAxisVar, xAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum',
                       })}
                     >
                       <IconPercentage size={18} color={aggregation === 'avg' ? theme.colors.indigo[6] : theme.colors.gray[6]} stroke={3} />
@@ -251,8 +251,8 @@ export function Dashboard() {
                       data={dashboardYAxisOptions}
                       defaultValue={yAxisVar}
                       onChange={(value) => {
-                        store.dashboardStore.setChartConfig(i, {
-                          i,
+                        store.dashboardStore.setChartConfig(chartId, {
+                          chartId,
                           xAxisVar,
                           yAxisVar: value as DashboardChartConfig['yAxisVar'],
                           aggregation,
@@ -260,7 +260,7 @@ export function Dashboard() {
                       }}
                     />
 
-                    <CloseButton onClick={() => handleRemoveChart(i)} />
+                    <CloseButton onClick={() => handleRemoveChart(chartId)} />
                   </Flex>
                 </Flex>
                 {/** Chart - Line Chart */}

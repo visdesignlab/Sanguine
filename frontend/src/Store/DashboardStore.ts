@@ -63,16 +63,16 @@ export class DashboardStore {
   // Chart configurations
   _chartConfigs: DashboardChartConfig[] = [
     {
-      i: '0', xAxisVar: 'quarter', yAxisVar: 'rbc_units', aggregation: 'sum',
+      chartId: '0', xAxisVar: 'quarter', yAxisVar: 'rbc_units', aggregation: 'sum',
     },
     {
-      i: '1', xAxisVar: 'quarter', yAxisVar: 'rbc_adherence', aggregation: 'avg',
+      chartId: '1', xAxisVar: 'quarter', yAxisVar: 'rbc_adherence', aggregation: 'avg',
     },
     {
-      i: '2', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg',
+      chartId: '2', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg',
     },
     {
-      i: '3', xAxisVar: 'quarter', yAxisVar: 'iron', aggregation: 'avg',
+      chartId: '3', xAxisVar: 'quarter', yAxisVar: 'iron', aggregation: 'avg',
     },
   ];
 
@@ -88,13 +88,13 @@ export class DashboardStore {
   // Stat configurations
   _statConfigs: DashboardStatConfig[] = [
     {
-      i: '1', var: 'overall_adherence', aggregation: 'avg', title: 'Overall Guideline Adherence',
+      statId: '1', var: 'overall_adherence', aggregation: 'avg', title: 'Overall Guideline Adherence',
     },
     {
-      i: '2', var: 'los', aggregation: 'avg', title: 'Average Length of Stay',
+      statId: '2', var: 'los', aggregation: 'avg', title: 'Average Length of Stay',
     },
     {
-      i: '3', var: 'ffp_units', aggregation: 'sum', title: 'Total Plasma Transfused',
+      statId: '3', var: 'ffp_units', aggregation: 'sum', title: 'Total Plasma Transfused',
     },
   ];
 
@@ -110,9 +110,9 @@ export class DashboardStore {
   /**
    * Initializes the dashboard with default chart configurations.
    */
-  setChartConfig(id: string, input: DashboardChartConfig) {
+  setChartConfig(chartId: string, input: DashboardChartConfig) {
     this._chartConfigs = this._chartConfigs.map((config) => {
-      if (config.i === id) {
+      if (config.chartId === chartId) {
         return { ...config, ...input };
       }
       return config;
@@ -122,10 +122,10 @@ export class DashboardStore {
   /**
    * Removes chart from the dashboard by ID.
    */
-  removeChart(id: string) {
-    this._chartConfigs = this._chartConfigs.filter((config) => config.i !== id);
-    this._chartLayouts.main = this._chartLayouts.main.filter((layout) => layout.i !== id);
-    this._chartLayouts.sm = this._chartLayouts.sm.filter((layout) => layout.i !== id);
+  removeChart(chartId: string) {
+    this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
+    this._chartLayouts.main = this._chartLayouts.main.filter((layout) => layout.i !== chartId);
+    this._chartLayouts.sm = this._chartLayouts.sm.filter((layout) => layout.i !== chartId);
   }
 
   /**
@@ -144,7 +144,7 @@ export class DashboardStore {
 
     // Add new chart layout at the top (full width)
     newMainLayouts.unshift({
-      i: config.i,
+      i: config.chartId,
       x: 0,
       y: 0,
       w: 2, // Full width (2 columns)
@@ -160,7 +160,7 @@ export class DashboardStore {
 
     if (this._chartLayouts.sm) {
       newSmLayouts.unshift({
-        i: config.i,
+        i: config.chartId,
         x: 0,
         y: 0,
         w: 1, // Full width for small (1 column)
@@ -185,11 +185,11 @@ export class DashboardStore {
    */
   addStat(statVar: DashboardStatConfig['var'], aggregation: DashboardStatConfig['aggregation']) {
     // Generate unique ID and title internally
-    const i = `stat-${Date.now()}`;
+    const statId = `stat-${Date.now()}`;
     const title = generateStatTitle(statVar, aggregation || 'sum');
 
     const fullStatConfig: DashboardStatConfig = {
-      i,
+      statId,
       var: statVar,
       aggregation,
       title,
@@ -202,8 +202,8 @@ export class DashboardStore {
   /**
    * Remove stat from dashboard by ID
    */
-  removeStat(id: string) {
-    this._statConfigs = this._statConfigs.filter((config) => config.i !== id);
+  removeStat(statId: string) {
+    this._statConfigs = this._statConfigs.filter((config) => config.statId !== statId);
   }
 
   // Dashboard data ----------------------------------------------------------------
