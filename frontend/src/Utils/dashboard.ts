@@ -38,18 +38,17 @@ export function formatStatValue(
     return value.toFixed(0);
   }
 
-  // Select correct unit based on aggregation, fallback to empty string if not found
+  // Select correct unit (days, %, etc.) based on variable & aggregation
   const unit = yAxisOption?.units?.[aggregation] ?? '';
 
-  // Determine decimal places
+  // Determine decimal place of value
   let decimals = 0;
-  if ('decimals' in yAxisOption) {
-    if (typeof yAxisOption.decimals === 'object') {
-      decimals = yAxisOption.decimals[aggregation] ?? 0;
-    } else {
-      const { decimals: decimalsValue } = yAxisOption;
-      decimals = decimalsValue;
-    }
+  // Check if decimal place depends on aggregation (sum, avg)
+  if (typeof yAxisOption.decimals === 'object') {
+    decimals = yAxisOption.decimals[aggregation] ?? 0;
+  } else {
+    const { decimals: decimalsValue } = yAxisOption;
+    decimals = decimalsValue;
   }
 
   // Format the value based on unit type and decimals
