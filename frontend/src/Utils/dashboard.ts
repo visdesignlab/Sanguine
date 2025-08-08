@@ -15,6 +15,7 @@ import {
   TimePeriod,
 } from '../Types/application';
 import { type RootStore } from '../Store/Store';
+import { IconCoin, IconDropletHalf2Filled, IconMedicineSyrup, IconShieldHeart, IconTestPipe2 } from '@tabler/icons-react';
 
 /**
  * Format stat values appropriately based on the variable type
@@ -179,6 +180,38 @@ export function generateChartTitle(yAxisVar: DashboardChartConfig['yAxisVar'], a
   const perVisitText = aggregation === 'avg' ? ' Per Visit' : '';
 
   return `${aggregationText}${ofText} ${label}${perVisitText}`;
+}
+
+// Icon mapping to variable type
+export const icons = {
+  bloodComponent: IconDropletHalf2Filled,
+  adherence: IconTestPipe2,
+  outcome: IconShieldHeart,
+  prophylMed: IconMedicineSyrup,
+  costSavings: IconCoin,
+};
+
+/**
+ * @param varName Variable name to get the icon for
+ * @returns Icon based on the variable type
+ */
+export function getIconForVar(varName: typeof dashboardYAxisVars[number]) {
+  // E.g. If blood component, return blood component icon
+  const bloodComponent = BLOOD_COMPONENT_OPTIONS.find((opt) => opt.value === varName);
+  if (bloodComponent) return icons.bloodComponent;
+
+  const adherence = GUIDELINE_ADHERENCE_OPTIONS.find((opt) => opt.value === varName);
+  if (adherence) return icons.adherence;
+  if (adherence || varName === OVERALL_GUIDELINE_ADHERENCE.value) return icons.adherence;
+
+  const outcome = OUTCOME_OPTIONS.find((opt) => opt.value === varName);
+  if (outcome) return icons.outcome;
+
+  const prophylMed = PROPHYL_MED_OPTIONS.find((opt) => opt.value === varName);
+  if (prophylMed) return icons.prophylMed;
+
+  // Default icon
+  return icons.bloodComponent;
 }
 
 /**

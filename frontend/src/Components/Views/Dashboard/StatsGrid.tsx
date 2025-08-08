@@ -1,8 +1,6 @@
 import {
   IconArrowDownRight,
   IconArrowUpRight,
-  IconCoin, IconTestPipe2, IconShieldHeart, IconMedicineSyrup,
-  IconDropletHalf2Filled,
 } from '@tabler/icons-react';
 import {
   Group, Paper, SimpleGrid, Text,
@@ -15,42 +13,7 @@ import { useThemeConstants } from '../../../Theme/mantineTheme';
 import gridItemStyles from '../GridLayoutItem.module.css';
 import statsGridStyles from './StatsGrid.module.css';
 import { Store } from '../../../Store/Store';
-import {
-  BLOOD_COMPONENT_OPTIONS,
-  GUIDELINE_ADHERENCE_OPTIONS,
-  OUTCOME_OPTIONS,
-  PROPHYL_MED_OPTIONS,
-  OVERALL_GUIDELINE_ADHERENCE,
-  type DashboardStatConfig,
-} from '../../../Types/application';
-import { isMetricChangeGood } from '../../../Utils/dashboard';
-
-export const icons = {
-  bloodComponent: IconDropletHalf2Filled,
-  adherence: IconTestPipe2,
-  outcome: IconShieldHeart,
-  prophylMed: IconMedicineSyrup,
-  costSavings: IconCoin,
-};
-
-// Choose icon based on variable name
-const getIconForVar = (varName: DashboardStatConfig['var']) => {
-  const bloodComponent = BLOOD_COMPONENT_OPTIONS.find((opt) => opt.value === varName);
-  if (bloodComponent) return 'bloodComponent';
-
-  const adherence = GUIDELINE_ADHERENCE_OPTIONS.find((opt) => opt.value === varName);
-  if (adherence) return 'adherence';
-  if (adherence || varName === OVERALL_GUIDELINE_ADHERENCE.value) return 'adherence';
-
-  const outcome = OUTCOME_OPTIONS.find((opt) => opt.value === varName);
-  if (outcome) return 'outcome';
-
-  const prophylMed = PROPHYL_MED_OPTIONS.find((opt) => opt.value === varName);
-  if (prophylMed) return 'prophylMed';
-
-  // Default
-  return 'bloodComponent';
-};
+import { getIconForVar, isMetricChangeGood } from '../../../Utils/dashboard';
 
 export function StatsGrid() {
   // Icon styles
@@ -74,8 +37,8 @@ export function StatsGrid() {
       const diff = statData?.diff || 0;
 
       // Get the icon for this stat
-      const iconKey = getIconForVar(statConfig.var);
-      const Icon = icons[iconKey];
+      const Icon = getIconForVar(statConfig.var);
+
       // Get the value diff icon
       const DiffIcon = diff > 0 ? IconArrowUpRight : IconArrowDownRight;
       const diffClassName = isMetricChangeGood(statConfig.var, diff)
