@@ -1,31 +1,35 @@
 import {
   useCallback, useContext, useMemo, useState,
 } from 'react';
+import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
+import { useObserver } from 'mobx-react';
+
+// Mantine
+import { useDisclosure } from '@mantine/hooks';
 import {
-  Title, Stack, Card, Flex, Select, useMantineTheme, Button,
-  CloseButton,
-  ActionIcon,
-  Menu,
-  Modal,
+  useMantineTheme, Title, Stack, Card, Flex, Select, Button, CloseButton, ActionIcon, Menu, Modal,
 } from '@mantine/core';
+import { LineChart } from '@mantine/charts';
 import {
   IconChartLine, IconGripVertical, IconNumbers, IconPercentage, IconPlus,
 } from '@tabler/icons-react';
-import { LineChart } from '@mantine/charts';
-import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
-import { useObserver } from 'mobx-react';
-import { useDisclosure } from '@mantine/hooks';
+
+// Dashboard
 import { StatsGrid } from './StatsGrid';
-import {
-  dashboardYAxisOptions, AGGREGATION_OPTIONS, type DashboardChartConfig,
-  DashboardStatConfig,
-  dashboardXAxisOptions,
-} from '../../../Types/application';
+import { DashboardChartTooltip } from './DashboardChartTooltip';
+import classes from '../GridLayoutItem.module.css';
 import { generateChartTitle } from '../../../Utils/dashboard';
+
+// Application
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
-import classes from '../GridLayoutItem.module.css';
-import { DashboardChartTooltip } from './DashboardChartTooltip';
+import {
+  dashboardYAxisOptions,
+  AGGREGATION_OPTIONS,
+  dashboardXAxisOptions,
+  type DashboardChartConfig,
+  DashboardStatConfig,
+} from '../../../Types/application';
 
 export function Dashboard() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
