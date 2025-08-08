@@ -8,6 +8,7 @@ import { useObserver } from 'mobx-react';
 import { useDisclosure } from '@mantine/hooks';
 import {
   useMantineTheme, Title, Stack, Card, Flex, Select, Button, CloseButton, ActionIcon, Menu, Modal,
+  Divider,
 } from '@mantine/core';
 import { LineChart } from '@mantine/charts';
 import {
@@ -104,7 +105,7 @@ export function Dashboard() {
       <Stack mb="xl" gap="lg">
         <Flex direction="row" justify="space-between" align="center">
           {/** Dashboard Title */}
-          <Title order={3}>Patient Blood Management Dashboard</Title>
+          <Title order={3}>Dashboard</Title>
           {/** Add Item Button */}
           <Menu width="md">
             <Menu.Target>
@@ -130,6 +131,7 @@ export function Dashboard() {
             </Menu.Dropdown>
           </Menu>
         </Flex>
+        <Divider />
         {/** Modal when add chart or stat clicked */}
         <Modal
           opened={isAddItemModalOpen}

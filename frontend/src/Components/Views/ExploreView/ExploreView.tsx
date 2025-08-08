@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Title, Card, Group, Box, Text, Stack, Flex, Button, ActionIcon, useMantineTheme,
   CloseButton,
+  Divider,
 } from '@mantine/core';
 import {
   IconPlus, IconArrowUpRight, IconGripVertical, IconPercentage, IconSortAscending, IconSortDescending,
@@ -121,7 +122,7 @@ export function ExploreView() {
           Add Chart
         </Button>
       </Flex>
-
+      <Divider />
       {/* Show chart if cost/savings selected, else show preset cards */}
       {showCostChart ? (
         <Card
