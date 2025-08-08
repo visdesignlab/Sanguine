@@ -13,7 +13,7 @@ import {
 import { useThemeConstants } from '../Theme/mantineTheme';
 import { ExploreView } from '../Components/Views/ExploreView/ExploreView';
 import { ProvidersView } from '../Components/Views/ProvidersView/ProvidersView';
-import { PBMDashboard } from '../Components/Views/PBMDashboard/PBMDashboard';
+import { Dashboard } from '../Components/Views/Dashboard/Dashboard';
 import classes from './Shell.module.css';
 
 /** *
@@ -25,7 +25,7 @@ export function Shell() {
   const TABS = [
     {
       key: 'Dashboard',
-      content: <PBMDashboard />,
+      content: <Dashboard />,
     },
     {
       key: 'Providers',

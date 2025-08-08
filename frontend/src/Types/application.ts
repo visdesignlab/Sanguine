@@ -189,11 +189,11 @@ export const TIME_AGGREGATION_OPTIONS = {
 
 export type TimeAggregation = keyof typeof TIME_AGGREGATION_OPTIONS;
 
-// Dashboard x-axis variable options (time aggregation)
+// Dashboard chart x-axis variable options (time aggregation)
 export const dashboardXAxisOptions = Object.entries(TIME_AGGREGATION_OPTIONS).map(([value, { label }]) => ({ value, label }));
 export const dashboardXAxisVars = dashboardXAxisOptions.map((opt) => opt.value);
 
-// Chart y-axis variable options
+// Dashboard chart y-axis variable options
 export const dashboardYAxisOptions = [...BLOOD_COMPONENT_OPTIONS, ...GUIDELINE_ADHERENCE_OPTIONS, ...OUTCOME_OPTIONS, ...PROPHYL_MED_OPTIONS, OVERALL_GUIDELINE_ADHERENCE];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 

@@ -68,7 +68,7 @@ function CustomTooltip({
   );
 }
 
-export function PBMDashboard() {
+export function Dashboard() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive) as any, []);
 
