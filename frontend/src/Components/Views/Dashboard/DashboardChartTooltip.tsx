@@ -28,10 +28,10 @@ export function DashboardChartTooltip({
   return (
     <Paper p="xs" shadow="md" radius="sm" style={tooltipStyles}>
       <Title order={4}>
-        {xAxisVar}
+        {formattedValue}
       </Title>
       <Title order={5} c="dimmed">
-        {formattedValue}
+        {xAxisVar}
       </Title>
     </Paper>
   );
