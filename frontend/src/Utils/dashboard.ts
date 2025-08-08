@@ -55,15 +55,15 @@ export function formatStatValue(yAxisVar: typeof dashboardYAxisVars[number], val
 /**
  * Generate a stat title based on the variable and aggregation type
  */
-export function generateStatTitle(yAxisVar: DashboardStatConfig['var'], aggregation: keyof typeof AGGREGATION_OPTIONS): string {
-  const option = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
-  const label = option?.label || yAxisVar;
+export function generateStatTitle(statVar: DashboardStatConfig['var'], aggregation: keyof typeof AGGREGATION_OPTIONS): string {
+  const yAxisOption = dashboardYAxisOptions.find((opt) => opt.value === statVar);
+  const label = yAxisOption?.label || statVar;
   // Check if this is a blood component with units using the typed options
-  const bloodComponentOption = BLOOD_COMPONENT_OPTIONS.find((opt) => opt.value === yAxisVar);
+  const bloodComponentOption = BLOOD_COMPONENT_OPTIONS.find((opt) => opt.value === statVar);
   const hasUnits = bloodComponentOption && bloodComponentOption.unit === 'units';
 
   if (aggregation === 'avg') {
-    if (yAxisVar === 'los') {
+    if (statVar === 'los') {
       return 'Average Length of Stay';
     }
     if (hasUnits) {
@@ -108,8 +108,8 @@ export function isMetricChangeGood(metricVar: typeof dashboardYAxisVars[number],
 }
 
 /**
-   * Calculate time period string from a date based on aggregation type
-   */
+ * Calculate time period string from a date based on aggregation type
+ */
 export function getTimePeriodFromDate(date: Date, aggregation: TimeAggregation): TimePeriod | null {
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
     console.error('Invalid date for time period calculation:', date);
@@ -137,8 +137,8 @@ export function getTimePeriodFromDate(date: Date, aggregation: TimeAggregation):
 }
 
 /**
-   * Compare two time periods for sorting
-   */
+ * Compare two time periods for sorting
+ */
 export function compareTimePeriods(a: TimePeriod, b: TimePeriod): number {
   // Extract year from both periods
   const yearA = parseInt(a.split('-')[0], 10);
@@ -200,14 +200,15 @@ export function getPreSurgeryTimePeriods(visit: Visit): [number, number][] {
 }
 
 /**
- * Aggregate visit variables data for the dashboard
- * E.g. rbc_units -> sum_rbc_units, avg_rbc_units, etc.
+ * Aggregate visit y-axis variables data for the dashboard
+ * (E.g. rbc_units -> sum_rbc_units, avg_rbc_units, etc.)
+ * Aggregates by each y-axis aggregation type (sum, avg)
 */
 export function aggregateYAxisVisitVars(visits: RootStore['allVisits']) {
   const aggregations: Record<DashboardAggYAxisVar, number> = {} as Record<DashboardAggYAxisVar, number>;
 
   try {
-    // Simple aggregations (Blood components, outcomes, prophylactic meds)
+    // Aggregate Blood components, Outcomes, Prophylactic Meds by sum and average
     [BLOOD_COMPONENT_OPTIONS, OUTCOME_OPTIONS, PROPHYL_MED_OPTIONS].forEach((options) => {
       options.forEach(({ value }) => {
         const sumKey: DashboardAggYAxisVar = `sum_${value}`;
@@ -218,7 +219,7 @@ export function aggregateYAxisVisitVars(visits: RootStore['allVisits']) {
       });
     });
 
-    // Complex aggregations (Guideline Adherence)
+    // Aggregate Guideline Adherence by sum and average
     GUIDELINE_ADHERENCE_OPTIONS.forEach(({ value, adherentCount, totalTransfused }) => {
       const totalAdherent = visits.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
       const totalTransfusions = visits.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
@@ -230,7 +231,7 @@ export function aggregateYAxisVisitVars(visits: RootStore['allVisits']) {
       aggregations[avgKey] = totalTransfusions > 0 ? totalAdherent / totalTransfusions : 0;
     });
 
-    // Complex aggregations (Overall Guideline Adherence)
+    // Aggregate Overall Guideline Adherence by sum and average
     const { value, adherentCount, totalTransfused } = OVERALL_GUIDELINE_ADHERENCE;
 
     const totalAdherent = visits.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
