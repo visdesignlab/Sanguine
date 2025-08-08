@@ -54,7 +54,7 @@ export function Dashboard() {
   // --- Add Item to Dashboard ---
   // Add Item Modal state
   const [isAddItemModalOpen, { open, close }] = useDisclosure(false);
-  const [itemModalType, setitemModalType] = useState<'chart' | 'stat'>('chart');
+  const [itemModalType, setItemModalType] = useState<'chart' | 'stat'>('chart');
 
   // Add Item Modal selections
   const [selectedAggregation, setSelectedAggregation] = useState<string>('sum');
@@ -62,7 +62,7 @@ export function Dashboard() {
   const [selectedYAxisVar, setSelectedYAxisVar] = useState<string>(''); // Y-axis selection
 
   const openAddChartModal = useCallback(() => {
-    setitemModalType('chart');
+    setItemModalType('chart');
     setSelectedAggregation('sum'); // Default y-axis aggregation
     setSelectedXAxisVar('quarter'); // Default x-axis aggregation
     setSelectedYAxisVar('');
@@ -70,7 +70,7 @@ export function Dashboard() {
   }, [open]);
 
   const openAddStatModal = useCallback(() => {
-    setitemModalType('stat');
+    setItemModalType('stat');
     setSelectedAggregation('sum'); // Default aggregation for stat
     setSelectedYAxisVar('');
     open();
