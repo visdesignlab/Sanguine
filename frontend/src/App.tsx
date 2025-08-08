@@ -39,7 +39,7 @@ function App() {
         }
 
         // Update the store with fetched visits
-        store.allVisits = visits;
+        store._allVisits = visits;
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         setDataLoadingFailed(true);
