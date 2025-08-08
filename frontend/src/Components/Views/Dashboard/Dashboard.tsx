@@ -259,7 +259,7 @@ export function Dashboard() {
                       <DashboardChartTooltip
                         active={active}
                         payload={payload}
-                        label={label}
+                        xAxisVar={label}
                         yAxisVar={yAxisVar}
                         aggregation={aggregation}
                       />

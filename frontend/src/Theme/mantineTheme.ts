@@ -18,6 +18,11 @@ const standardTextSizes = {
     fontWeight: '500',
     fontSize: '1rem',
   },
+  h5: {
+    fontWeight: '500',
+    fontSize: '0.875rem',
+    c: 'dimmed',
+  },
 };
 
 // Application stroke styles ------------------
@@ -122,6 +127,8 @@ export function useThemeConstants() {
     // Icon stroke widths
     cardIconStroke: DIMMED_STROKE_WIDTH,
     iconStroke: STROKE_WIDTH,
+    // Tooltip styles
+    tooltipStyles: TOOLTIP_STYLES,
     /**
      * Mantine theme spacing in pixels
      *
