@@ -126,7 +126,7 @@ export const GUIDELINE_ADHERENCE = {
     labDesc: ['PLT', 'Platelet Count'],
     adherenceCheck: (labValue: number) => labValue >= 15000,
     transfusionUnits: ['plt_units', 'plt_vol'] as const,
-    units: { sum: 'adherent Platelet transfusions', avg: '% adherent platelet transfusions' },
+    units: { sum: 'adherent platelet transfusions', avg: '% adherent platelet transfusions' },
   },
   cryo: {
     value: 'cryo_adherence',
@@ -136,7 +136,7 @@ export const GUIDELINE_ADHERENCE = {
     labDesc: ['Fibrinogen'],
     adherenceCheck: (labValue: number) => labValue >= 175,
     transfusionUnits: ['cryo_units', 'cryo_vol'] as const,
-    units: { sum: 'adherent Cryo transfusions', avg: '% adherent cryo transfusions' },
+    units: { sum: 'adherent cryo transfusions', avg: '% adherent cryo transfusions' },
   },
 } as const;
 
