@@ -256,7 +256,13 @@ export function Dashboard() {
                   tooltipAnimationDuration={200}
                   tooltipProps={{
                     content: ({ active, payload, label }) => (
-                      <DashboardChartTooltip active={active} payload={payload} label={label} yAxisVar={yAxisVar} />
+                      <DashboardChartTooltip
+                        active={active}
+                        payload={payload}
+                        label={label}
+                        yAxisVar={yAxisVar}
+                        aggregation={aggregation}
+                      />
                     ),
                   }}
                 />

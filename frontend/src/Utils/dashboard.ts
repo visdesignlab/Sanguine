@@ -26,30 +26,26 @@ import { type RootStore } from '../Store/Store';
  * @param aggregation - The aggregation type ('sum' or 'avg')
  * @returns A formatted string for display
  */
-export function formatStatValue(yAxisVar: typeof dashboardYAxisVars[number], value: number, aggregation?: keyof typeof AGGREGATION_OPTIONS): string {
-  // Find the option that matches this variable
+export function formatStatValue(
+  yAxisVar: typeof dashboardYAxisVars[number],
+  value: number,
+  aggregation: keyof typeof AGGREGATION_OPTIONS,
+): string {
   const yAxisOption = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
 
-  if (!yAxisOption || !('unit' in yAxisOption)) {
-    console.warn(`No unit found for variable: ${yAxisVar}`);
+  if (!yAxisOption || !('units' in yAxisOption)) {
+    console.warn(`No units found for variable: ${yAxisVar}`);
     return value.toFixed(0);
   }
 
-  const { unit } = yAxisOption;
-  // Check if this is an adherence metric
-  const isAdherence = GUIDELINE_ADHERENCE_OPTIONS.some((opt) => opt.value === yAxisVar);
-  // Determine if we should show decimals
-  const showDecimals = aggregation === 'avg' || isAdherence;
+  // Select correct unit based on aggregation, fallback to empty string if not found
+  const unit = yAxisOption?.units?.[aggregation] ?? '';
 
-  // Special formatting based on unit type
-  switch (unit) {
-    case '%':
-      // Adherence percentages should show decimals
-      return `${(value * 100).toFixed(1)}%`;
-    default:
-      // Units, cases, ml - averages show decimals, totals don't
-      return `${value.toFixed(showDecimals ? 1 : 0)} ${unit}`;
+  // Format the value based on unit type
+  if (unit.startsWith('%')) {
+    return `${(value * 100).toFixed(1)}${unit}`;
   }
+  return `${value.toLocaleString()} ${unit}`;
 }
 
 /**
@@ -58,16 +54,10 @@ export function formatStatValue(yAxisVar: typeof dashboardYAxisVars[number], val
 export function generateStatTitle(statVar: DashboardStatConfig['var'], aggregation: keyof typeof AGGREGATION_OPTIONS): string {
   const yAxisOption = dashboardYAxisOptions.find((opt) => opt.value === statVar);
   const label = yAxisOption?.label || statVar;
-  // Check if this is a blood component with units using the typed options
-  const bloodComponentOption = BLOOD_COMPONENT_OPTIONS.find((opt) => opt.value === statVar);
-  const hasUnits = bloodComponentOption && bloodComponentOption.unit === 'units';
 
   if (aggregation === 'avg') {
     if (statVar === 'los') {
       return 'Average Length of Stay';
-    }
-    if (hasUnits) {
-      return `Average ${label} Per Visit`;
     }
     return `Average ${label}`;
   }
@@ -174,8 +164,8 @@ export function compareTimePeriods(a: TimePeriod, b: TimePeriod): number {
    * @returns Chart title based on yAxis variable and aggregation type
    */
 export function generateChartTitle(yAxisVar: DashboardChartConfig['yAxisVar'], aggregation: keyof typeof AGGREGATION_OPTIONS): string {
-  const option = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
-  const label = option?.label || yAxisVar;
+  const yAxisOption = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
+  const label = yAxisOption?.label || yAxisVar;
 
   const aggregationText = aggregation.charAt(0).toUpperCase() + aggregation.slice(1);
   const ofText = aggregation === 'sum' ? ' of' : '';

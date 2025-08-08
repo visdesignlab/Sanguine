@@ -215,7 +215,7 @@ export class DashboardStore {
   /**
    * Returns all possible chart data needed for the dashboard.
    */
-  get chartData(): DashboardChartData {
+  get chartData() {
     const result = {} as DashboardChartData;
 
     // --- Calculate data for every possible chart (aggregation, yAxisVar, xAxisVar) combination ---
@@ -237,7 +237,7 @@ export class DashboardStore {
             }))
             .filter((visit) => visit.timePeriod !== null);
 
-          // Aggregate by this time period
+          // Aggregate by this time period, and y-axis aggregations (sum, avg)
           const timeData = rollup(
             visitDataWithTimePeriod,
             (visits) => aggregateYAxisVisitVars(visits),
@@ -270,7 +270,7 @@ export class DashboardStore {
   /**
    * Returns all stat chart data needed for the dashboard.
    */
-  get statData(): DashboardStatData {
+  get statData() {
     // --- Find the current period (last 30 days) ---
     // Find the latest discharge date
     const latestDate = new Date(Math.max(...this._rootStore.allVisits.map((v) => v.dischargeDate.getTime())));

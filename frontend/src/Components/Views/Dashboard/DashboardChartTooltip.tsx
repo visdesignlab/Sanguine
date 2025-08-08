@@ -1,9 +1,10 @@
 import { Title, Paper } from '@mantine/core';
-import { dashboardYAxisOptions } from '../../../Types/application';
+import { dashboardYAxisVars } from '../../../Types/application';
+import { formatStatValue } from '../../../Utils/dashboard';
 
 // --- Custom tooltip component ---
 export function DashboardChartTooltip({
-  active, payload, label, yAxisVar,
+  active, payload, label, yAxisVar, aggregation,
 }: {
   active?: boolean;
   payload?: Array<{
@@ -12,23 +13,14 @@ export function DashboardChartTooltip({
     color?: string;
   }>;
   label?: string;
-  yAxisVar: string;
+  yAxisVar: typeof dashboardYAxisVars[number];
+  aggregation: 'sum' | 'avg';
 }) {
   if (!active || !payload || !payload.length) {
     return null;
   }
 
-  // Find the option that matches this variable to get the unit
-  const yAxisOption = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
-  const unit = yAxisOption?.unit || '';
-
-  // Format the value based on unit type
-  const formatValue = (value: number) => {
-    if (unit === '%') {
-      return `${(value * 100).toFixed(1)}%`;
-    }
-    return `${value.toLocaleString()} ${unit}`;
-  };
+  const formattedValue = formatStatValue(yAxisVar, payload[0].value ?? 0, aggregation);
 
   return (
     <Paper p="xs" shadow="md" radius="sm" style={{ border: '1px solid #e9ecef' }}>
@@ -36,7 +28,7 @@ export function DashboardChartTooltip({
         {label}
       </Title>
       <Title size="sm" c="dimmed">
-        {formatValue(payload[0].value ?? 0)}
+        {formattedValue}
       </Title>
     </Paper>
   );

@@ -80,7 +80,7 @@ export function StatsGrid() {
 
           <Group align="flex-end" gap="sm" mt="md">
             {/** Stat Value */}
-            <Title order={1}>{statValue}</Title>
+            <Title order={2}>{statValue}</Title>
             {/** Stat % Change in Value */}
             <Text className={diffClassName}>
               <span>
