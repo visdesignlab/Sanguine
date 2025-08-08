@@ -207,7 +207,14 @@ export function Shell() {
       <AppShell.Main>
         <Container fluid mt="xs">
           {/** Display content of active tab */}
-          {TABS.find((tab) => tab.key === activeTab)?.content}
+          {TABS.map((tab) => (
+            <Box
+              key={tab.key}
+              style={{ display: activeTab === tab.key ? 'block' : 'none' }}
+            >
+              {tab.content}
+            </Box>
+          ))}
         </Container>
       </AppShell.Main>
     </AppShell>
