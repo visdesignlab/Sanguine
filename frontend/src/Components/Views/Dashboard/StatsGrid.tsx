@@ -97,35 +97,37 @@ export function StatsGrid() {
               )}
             </Group>
           </Group>
-          <Group align="flex-end" gap={5} mt="md">
+          <Group align="center" gap={5} mt="md">
             {/** Stat Value */}
             <Title order={2}>{statValue}</Title>
-            {/** Stat Sparkline */}
-            <Sparkline
-              w={30}
-              h={20}
-              data={statSparklineData}
-              curveType="linear"
-              fillOpacity={0.6}
-              strokeWidth={0.8}
-              color={statColor}
-            />
-            {/** Stat % Change in Value */}
-            <Text
-              size="xs"
-              style={{
-                color: statColor,
-                display: 'flex',
-                alignItems: 'flex-end',
-              }}
-            >
-              {/** Stat Up / Down Arrow */}
-              <DiffIcon size={spacingPx.md} stroke={cardIconStroke} />
-              <span>
-                {diff}
-                %
-              </span>
-            </Text>
+            <Group align="center" gap={0}>
+              {/** Stat Sparkline */}
+              <Sparkline
+                w={30}
+                h={20}
+                data={statSparklineData}
+                curveType="linear"
+                fillOpacity={0.6}
+                strokeWidth={0.8}
+                color={statColor}
+              />
+              {/** Stat % Change in Value */}
+              <Text
+                size="xs"
+                style={{
+                  color: statColor,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                {/** Stat Up / Down Arrow */}
+                <DiffIcon size={spacingPx.md} stroke={cardIconStroke} />
+                <span>
+                  {diff}
+                  %
+                </span>
+              </Text>
+            </Group>
           </Group>
           {/* Comparison Text */}
           <Text
