@@ -28,6 +28,7 @@ const standardTextSizes = {
 // Application stroke styles ------------------
 // Stroke color
 const BLACK_STROKE_COLOR = 'var(--mantine-color-black)';
+const DIMMED_STROKE_COLOR = 'var(--mantine-color-gray-6)';
 const HIGHLIGHT_STROKE_COLOR = 'var(--mantine-color-blue-6)';
 const POSITIVE_STROKE_COLOR = 'var(--mantine-color-teal-6, #12b886)';
 const NEGATIVE_STROKE_COLOR = 'var(--mantine-color-red-6, #fa5252)';
@@ -95,6 +96,13 @@ export const mantineTheme = createTheme({
           borderWidth: STROKE_WIDTH,
           fontWeight: standardTextSizes.h4.fontWeight,
           '--button-hover-color': HIGHLIGHT_STROKE_COLOR,
+        },
+      },
+    },
+    CloseButton: {
+      styles: {
+        root: {
+          color: DIMMED_STROKE_COLOR,
         },
       },
     },
