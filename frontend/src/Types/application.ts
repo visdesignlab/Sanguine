@@ -32,7 +32,7 @@ export const BLOOD_COMPONENTS = [
       sum: 'Total RBCs Transfused',
       avg: 'Average RBCs Transfused Per Visit',
     },
-    units: { sum: 'RBC units', avg: 'RBC units' },
+    units: { sum: 'RBC Units', avg: 'RBC Units' },
     decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
@@ -42,7 +42,7 @@ export const BLOOD_COMPONENTS = [
       sum: 'Total FFP Transfused',
       avg: 'Average FFP Transfused Per Visit',
     },
-    units: { sum: 'plasma units', avg: 'plasma units' },
+    units: { sum: 'Plasma Units', avg: 'Plasma Units' },
     decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
@@ -52,7 +52,7 @@ export const BLOOD_COMPONENTS = [
       sum: 'Total Platelets Transfused',
       avg: 'Average Platelets Transfused Per Visit',
     },
-    units: { sum: 'platelet units', avg: 'platelet units' },
+    units: { sum: 'Platelet Units', avg: 'Platelet Units' },
     decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
@@ -62,7 +62,7 @@ export const BLOOD_COMPONENTS = [
       sum: 'Total Cryo Transfused',
       avg: 'Average Cryo Transfused Per Visit',
     },
-    units: { sum: 'cryo units', avg: 'cryo units' },
+    units: { sum: 'Cryo Units', avg: 'Cryo Units' },
     decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
@@ -72,7 +72,7 @@ export const BLOOD_COMPONENTS = [
       sum: 'Total Cell Salvage Volume (ml) Used',
       avg: 'Average Cell Salvage Volume (ml) Used Per Visit',
     },
-    units: { sum: 'ml', avg: 'ml' },
+    units: { sum: 'mL', avg: 'mL' },
     decimals: BLOOD_COMPONENT_DECIMALS,
   },
 ] as const;
@@ -95,7 +95,7 @@ export const OUTCOMES = [
       sum: 'Total Length of Stay',
       avg: 'Average Length of Stay',
     },
-    units: { sum: 'days', avg: 'days' },
+    units: { sum: 'Days', avg: 'Days' },
     decimals: { sum: 0, avg: 2 },
   },
   {
@@ -105,7 +105,7 @@ export const OUTCOMES = [
       sum: 'Total Deaths',
       avg: 'Percentage of Visits with Death',
     },
-    units: { sum: 'visits', avg: '% of visits' },
+    units: { sum: 'Visits', avg: '% of Visits' },
     decimals: { sum: 0, avg: 1 },
   },
   {
@@ -115,7 +115,7 @@ export const OUTCOMES = [
       sum: 'Total Ventilator >24hr',
       avg: 'Percentage of Visits with Ventilator >24hr',
     },
-    units: { sum: 'visits', avg: '% of visits' },
+    units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
   },
   {
@@ -125,7 +125,7 @@ export const OUTCOMES = [
       sum: 'Total Stroke',
       avg: 'Percentage of Visits with Stroke',
     },
-    units: { sum: 'visits', avg: '% of visits' },
+    units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
   },
   {
@@ -135,7 +135,7 @@ export const OUTCOMES = [
       sum: 'Total ECMO',
       avg: 'Percentage of Visits with ECMO',
     },
-    units: { sum: 'visits', avg: '% of visits' },
+    units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
   },
 ] as const;
@@ -159,7 +159,7 @@ export const PROPHYL_MEDS = [
       avg: 'Percentage of Visits Used B12 Pre-Surgery',
     },
     aliases: ['b12', 'cobalamin'],
-    units: { sum: 'visits', avg: '% of visits' },
+    units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
   },
   {
@@ -170,7 +170,7 @@ export const PROPHYL_MEDS = [
       avg: 'Percentage of Visits Used Iron Pre-Surgery',
     },
     aliases: ['iron', 'ferrous', 'ferric'],
-    units: { sum: 'visits', avg: '% of visits' },
+    units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
   },
   {
@@ -181,7 +181,7 @@ export const PROPHYL_MEDS = [
       avg: 'Percentage of Visits Used Tranexamic Acid Pre-Surgery',
     },
     aliases: ['tranexamic', 'txa'],
-    units: { sum: 'visits', avg: '% of visits' },
+    units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
   },
   {
@@ -192,7 +192,7 @@ export const PROPHYL_MEDS = [
       avg: 'Percentage of Visits Used Amicar Pre-Surgery',
     },
     aliases: ['amicar', 'aminocaproic'],
-    units: { sum: 'visits', avg: '% of visits' },
+    units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
   },
 ] as const;
@@ -225,7 +225,7 @@ export const GUIDELINE_ADHERENCE = {
     // Units used for transfusion counts
     transfusionUnits: ['rbc_units', 'rbc_vol'] as const,
     // Adherence units & decimal truncation for display
-    units: { sum: 'adherent RBC transfusions', avg: '% adherent RBC transfusions' },
+    units: { sum: 'Adherent RBC Transfusions', avg: '% Adherent RBC Transfusions' },
     decimals: 0,
   },
   ffp: {
@@ -240,7 +240,7 @@ export const GUIDELINE_ADHERENCE = {
     labDesc: ['INR'],
     adherenceCheck: (labValue: number) => labValue >= 1.5,
     transfusionUnits: ['ffp_units', 'ffp_vol'] as const,
-    units: { sum: 'adherent plasma transfusions', avg: '% adherent plasma transfusions' },
+    units: { sum: 'Adherent Plasma Transfusions', avg: '% Adherent Plasma Transfusions' },
     decimals: 0,
   },
   plt: {
@@ -255,7 +255,7 @@ export const GUIDELINE_ADHERENCE = {
     labDesc: ['PLT', 'Platelet Count'],
     adherenceCheck: (labValue: number) => labValue >= 15000,
     transfusionUnits: ['plt_units', 'plt_vol'] as const,
-    units: { sum: 'adherent platelet transfusions', avg: '% adherent platelet transfusions' },
+    units: { sum: 'Adherent Platelet Transfusions', avg: '% Adherent Platelet Transfusions' },
     decimals: 0,
   },
   cryo: {
@@ -270,7 +270,7 @@ export const GUIDELINE_ADHERENCE = {
     labDesc: ['Fibrinogen'],
     adherenceCheck: (labValue: number) => labValue >= 175,
     transfusionUnits: ['cryo_units', 'cryo_vol'] as const,
-    units: { sum: 'adherent cryo transfusions', avg: '% adherent cryo transfusions' },
+    units: { sum: 'Adherent Cryo Transfusions', avg: '% Adherent Cryo Transfusions' },
     decimals: 0,
   },
 } as const;
@@ -285,7 +285,7 @@ export const OVERALL_GUIDELINE_ADHERENCE = {
     sum: 'Total Guideline Adherent Transfusions',
     avg: 'Percentage of Guideline Adherent Transfusions',
   },
-  units: { sum: 'adherent transfusions', avg: '% adherent transfusions' },
+  units: { sum: 'Adherent Transfusions', avg: '% Adherent Transfusions' },
   decimals: 0,
 } as const;
 
