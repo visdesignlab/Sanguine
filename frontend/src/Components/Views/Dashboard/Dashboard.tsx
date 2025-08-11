@@ -253,7 +253,7 @@ export function Dashboard() {
                         });
                       }}
                     />
-
+                    {/** Remove / Delete chart */}
                     <CloseButton onClick={() => handleRemoveChart(chartId)} />
                   </Flex>
                 </Flex>

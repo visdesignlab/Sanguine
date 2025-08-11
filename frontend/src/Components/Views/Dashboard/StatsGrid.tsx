@@ -3,10 +3,11 @@ import {
   IconArrowUpRight,
 } from '@tabler/icons-react';
 import {
+  CloseButton,
   Group, Paper, SimpleGrid, Text,
   Title,
 } from '@mantine/core';
-import { useState, useContext } from 'react';
+import { useState, useContext, useCallback } from 'react';
 import clsx from 'clsx';
 import { useObserver } from 'mobx-react';
 import { Sparkline } from '@mantine/charts';
@@ -27,6 +28,11 @@ export function StatsGrid() {
 
   // Track hovered card index
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
+  // Remove stat handler
+  const handleRemoveStat = useCallback((statId: string) => {
+    store.dashboardStore.removeStat(statId);
+  }, [store.dashboardStore]);
 
   return useObserver(() => {
     // For every stat config, create a card describing it.
@@ -64,26 +70,33 @@ export function StatsGrid() {
           onMouseEnter={() => setHoveredIdx(idx)}
           onMouseLeave={() => setHoveredIdx(null)}
         >
-          {/** Stat Text */}
-          <Group justify="space-between">
+          <Group justify="space-between" align="center">
+            {/** Stat Title */}
             <Text
               className={clsx(
                 gridItemStyles.variableTitle,
                 isHovered && gridItemStyles.active,
               )}
+              style={{ flex: 1, textAlign: 'left' }}
             >
               {statConfig.title}
             </Text>
-            <Icon
-              className={clsx(
-                statsGridStyles.icon,
-                isHovered && statsGridStyles.iconHovered,
+            <Group gap={4} align="center" style={{ justifyContent: 'flex-end' }}>
+              {/** Stat Icon */}
+              <Icon
+                className={clsx(
+                  statsGridStyles.icon,
+                  isHovered && statsGridStyles.iconHovered,
+                )}
+                size={cardIconSize}
+                stroke={cardIconStroke}
+              />
+              {/** Stat Close / Delete Button */}
+              {isHovered && (
+              <CloseButton size="xs" onClick={() => handleRemoveStat(statConfig.statId)} />
               )}
-              size={cardIconSize}
-              stroke={cardIconStroke}
-            />
+            </Group>
           </Group>
-
           <Group align="flex-end" gap={5} mt="md">
             {/** Stat Value */}
             <Title order={2}>{statValue}</Title>
@@ -114,8 +127,15 @@ export function StatsGrid() {
               </span>
             </Text>
           </Group>
-          {/** Comparison Text */}
-          <Text fz="xs" c="dimmed" mt="xs">
+          {/* Comparison Text */}
+          <Text
+            fz="xs"
+            mt="xs"
+            className={clsx(
+              statsGridStyles.comparisonText,
+              isHovered && statsGridStyles.comparisonTextHovered,
+            )}
+          >
             {`Last 30 days compared to ${statData.comparedTo || 'previous period'}`}
           </Text>
         </Paper>

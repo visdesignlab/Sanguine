@@ -1,3 +1,11 @@
+.comparisonText {
+  color: var(--mantine-color-gray-6);
+  transition: color 0.2s;
+}
+
+.comparisonTextHovered {
+  color: var(--mantine-color-blue-6);
+}
 .diff {
   font-size: 1rem;
   font-weight: 500;
