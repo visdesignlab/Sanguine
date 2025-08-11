@@ -103,7 +103,7 @@ export const OUTCOMES = [
     label: {
       base: 'Death',
       sum: 'Total Deaths',
-      avg: 'Visits with Death',
+      avg: 'Percentage of Visits with Death',
     },
     units: { sum: 'visits', avg: '% of visits' },
     decimals: { sum: 0, avg: 1 },
@@ -113,7 +113,7 @@ export const OUTCOMES = [
     label: {
       base: 'Ventilator >24hr',
       sum: 'Total Ventilator >24hr',
-      avg: 'Visits with Ventilator >24hr',
+      avg: 'Percentage of Visits with Ventilator >24hr',
     },
     units: { sum: 'visits', avg: '% of visits' },
     decimals: 0,
@@ -123,7 +123,7 @@ export const OUTCOMES = [
     label: {
       base: 'Stroke',
       sum: 'Total Stroke',
-      avg: 'Visits with Stroke',
+      avg: 'Percentage of Visits with Stroke',
     },
     units: { sum: 'visits', avg: '% of visits' },
     decimals: 0,
@@ -133,7 +133,7 @@ export const OUTCOMES = [
     label: {
       base: 'ECMO',
       sum: 'Total ECMO',
-      avg: 'Visits with ECMO',
+      avg: 'Percentage of Visits with ECMO',
     },
     units: { sum: 'visits', avg: '% of visits' },
     decimals: 0,
@@ -154,9 +154,9 @@ export const PROPHYL_MEDS = [
   {
     value: 'b12',
     label: {
-      base: 'B12 Before Surgery',
-      sum: 'Total Visits Using B12 Before Surgery',
-      avg: 'Visits Using B12 Before Surgery %',
+      base: 'B12 Pre-Surgery',
+      sum: 'Total Visits Using B12 Pre-Surgery',
+      avg: 'Percentage of Visits Used B12 Pre-Surgery',
     },
     aliases: ['b12', 'cobalamin'],
     units: { sum: 'visits', avg: '% of visits' },
@@ -165,9 +165,9 @@ export const PROPHYL_MEDS = [
   {
     value: 'iron',
     label: {
-      base: 'Iron Before Surgery',
-      sum: 'Total Visits Using Iron Before Surgery',
-      avg: 'Visits Using Iron Before Surgery %',
+      base: 'Iron Pre-Surgery',
+      sum: 'Total Visits Using Iron Pre-Surgery',
+      avg: 'Percentage of Visits Used Iron Pre-Surgery',
     },
     aliases: ['iron', 'ferrous', 'ferric'],
     units: { sum: 'visits', avg: '% of visits' },
@@ -176,9 +176,9 @@ export const PROPHYL_MEDS = [
   {
     value: 'txa',
     label: {
-      base: 'Tranexamic Acid Before Surgery',
-      sum: 'Total Visits Using Tranexamic Acid Before Surgery',
-      avg: 'Visits Using Tranexamic Acid Before Surgery %',
+      base: 'Tranexamic Acid Pre-Surgery',
+      sum: 'Total Visits Using Tranexamic Acid Pre-Surgery',
+      avg: 'Percentage of Visits Used Tranexamic Acid Pre-Surgery',
     },
     aliases: ['tranexamic', 'txa'],
     units: { sum: 'visits', avg: '% of visits' },
@@ -187,9 +187,9 @@ export const PROPHYL_MEDS = [
   {
     value: 'amicar',
     label: {
-      base: 'Amicar Before Surgery',
-      sum: 'Total Visits Using Amicar Before Surgery',
-      avg: 'Visits Using Amicar Before Surgery %',
+      base: 'Amicar Pre-Surgery',
+      sum: 'Total Visits Using Amicar Pre-Surgery',
+      avg: 'Percentage of Visits Used Amicar Pre-Surgery',
     },
     aliases: ['amicar', 'aminocaproic'],
     units: { sum: 'visits', avg: '% of visits' },
@@ -214,7 +214,7 @@ export const GUIDELINE_ADHERENCE = {
     label: {
       base: 'Guideline Adherent RBC Transfusions',
       sum: 'Total Guideline Adherent RBC Transfusions',
-      avg: 'Guideline Adherent RBC Transfusions %',
+      avg: 'Percentage of Guideline Adherent RBC Transfusions',
     },
     // To calculate adherence, we need:
     adherentCount: 'rbc_adherent',
@@ -233,7 +233,7 @@ export const GUIDELINE_ADHERENCE = {
     label: {
       base: 'Guideline Adherent FFP Transfusions',
       sum: 'Total Guideline Adherent FFP Transfusions',
-      avg: 'Guideline Adherent FFP Transfusions %',
+      avg: 'Percentage of Guideline Adherent FFP Transfusions',
     },
     adherentCount: 'ffp_adherent',
     totalTransfused: 'ffp_total',
@@ -248,7 +248,7 @@ export const GUIDELINE_ADHERENCE = {
     label: {
       base: 'Guideline Adherent Platelet Transfusions',
       sum: 'Total Guideline Adherent Platelet Transfusions',
-      avg: 'Guideline Adherent Platelet Transfusions %',
+      avg: 'Percentage of Adherent Platelet Transfusions',
     },
     adherentCount: 'plt_adherent',
     totalTransfused: 'plt_total',
@@ -263,7 +263,7 @@ export const GUIDELINE_ADHERENCE = {
     label: {
       base: 'Guideline Adherent Cryo Transfusions',
       sum: 'Total Guideline Adherent Cryo Transfusions',
-      avg: 'Guideline Adherent Cryo Transfusions %',
+      avg: 'Percentage of Guideline Adherent Cryo Transfusions',
     },
     adherentCount: 'cryo_adherent',
     totalTransfused: 'cryo_total',
@@ -283,7 +283,7 @@ export const OVERALL_GUIDELINE_ADHERENCE = {
   label: {
     base: 'Guideline Adherent Transfusions',
     sum: 'Total Guideline Adherent Transfusions',
-    avg: 'Guideline Adherent Transfusions %',
+    avg: 'Percentage of Guideline Adherent Transfusions',
   },
   units: { sum: 'adherent transfusions', avg: '% adherent transfusions' },
   decimals: 0,
