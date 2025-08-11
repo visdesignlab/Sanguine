@@ -84,7 +84,7 @@ export function StatsGrid() {
             />
           </Group>
 
-          <Group align="flex-end" gap="sm" mt="md">
+          <Group align="flex-end" gap={5} mt="md">
             {/** Stat Value */}
             <Title order={2}>{statValue}</Title>
             <Sparkline
@@ -97,12 +97,19 @@ export function StatsGrid() {
               color={statColor}
             />
             {/** Stat % Change in Value */}
-            <Text style={{ color: statColor }}>
+            <Text
+              size="xs"
+              style={{
+                color: statColor,
+                display: 'flex',
+                alignItems: 'flex-end',
+              }}
+            >
+              <DiffIcon size={spacingPx.md} stroke={cardIconStroke} />
               <span>
                 {diff}
                 %
               </span>
-              <DiffIcon size={spacingPx.sm} stroke={cardIconStroke} />
             </Text>
           </Group>
           {/** Comparison Text */}
