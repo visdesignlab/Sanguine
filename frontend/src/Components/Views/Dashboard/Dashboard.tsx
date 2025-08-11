@@ -281,6 +281,18 @@ export function Dashboard() {
                       />
                     ),
                   }}
+                  // Truncate by decimals, convert to percentage if needed
+                  valueFormatter={(value) => {
+                    const yAxisOption = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
+                    const unit = yAxisOption?.units?.[aggregation] ?? '';
+                    const decimals = typeof yAxisOption?.decimals === 'object'
+                      ? yAxisOption.decimals[aggregation] ?? 0
+                      : yAxisOption?.decimals ?? 0;
+                    if (unit.startsWith('%')) {
+                      return `${(value * 100).toFixed(decimals)}%`;
+                    }
+                    return value.toFixed(decimals);
+                  }}
                 />
               </Flex>
             </Card>
