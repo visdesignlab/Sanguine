@@ -6,8 +6,6 @@ import {
   AGGREGATION_OPTIONS,
   BLOOD_COMPONENT_OPTIONS,
   DashboardAggYAxisVar,
-  DashboardChartConfig,
-  DashboardStatConfig,
   dashboardYAxisOptions,
   dashboardYAxisVars,
   GUIDELINE_ADHERENCE_OPTIONS,
@@ -56,24 +54,6 @@ export function formatStatValue(
     return `${(value * 100).toFixed(decimals)}${unit}`;
   }
   return `${value.toFixed(decimals)} ${unit}`;
-}
-
-/**
- * Generate a stat title based on the variable and aggregation type
- */
-export function generateStatTitle(statVar: DashboardStatConfig['var'], aggregation: keyof typeof AGGREGATION_OPTIONS): string {
-  const yAxisOption = dashboardYAxisOptions.find((opt) => opt.value === statVar);
-  const label = yAxisOption?.label || statVar;
-
-  if (aggregation === 'avg') {
-    if (statVar === 'los') {
-      return 'Average Length of Stay';
-    }
-    return `Average ${label}`;
-  }
-
-  // For sums, use "Total" prefix
-  return `Total ${label}`;
 }
 
 /**
@@ -166,23 +146,6 @@ export function compareTimePeriods(a: TimePeriod, b: TimePeriod): number {
 
   // Year only - already compared above
   return 0;
-}
-
-/**
-   * @param yAxisVar Variable to use for the chart (e.g. 'rbc_units')
-   * @param aggregation Aggregation type ('sum' or 'avg')
-   * @returns Chart title based on yAxis variable and aggregation type
-   */
-export function generateChartTitle(yAxisVar: DashboardChartConfig['yAxisVar'], aggregation: keyof typeof AGGREGATION_OPTIONS): string {
-  const yAxisOption = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
-  const label = yAxisOption?.label || yAxisVar;
-
-  // E.g. "Total RBC Units" or "Average RBC Units"
-  const aggregationText = aggregation === 'sum' ? 'Total' : (AGGREGATION_OPTIONS[aggregation].label || aggregation);
-  const perVisitText = aggregation === 'avg' ? 'Per Visit' : '';
-
-  // E.g. "Total RBC Units Per Visit" or "Average Guideline Adherence"
-  return `${aggregationText} ${label} ${perVisitText}`;
 }
 
 // Icon mapping to variable type

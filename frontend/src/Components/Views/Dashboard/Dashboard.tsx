@@ -19,7 +19,6 @@ import {
 import { StatsGrid } from './StatsGrid';
 import { DashboardChartTooltip } from './DashboardChartTooltip';
 import classes from '../GridLayoutItem.module.css';
-import { generateChartTitle } from '../../../Utils/dashboard';
 
 // Application
 import { Store } from '../../../Store/Store';
@@ -152,7 +151,10 @@ export function Dashboard() {
             <Select
               label={`${itemModalType === 'chart' ? 'Metric (Y-Axis)' : 'Metric'}`}
               placeholder={`Choose ${itemModalType} metric`}
-              data={dashboardYAxisOptions}
+              data={dashboardYAxisOptions.map((opt) => ({
+                value: opt.value,
+                label: opt.label.base,
+              }))}
               value={selectedYAxisVar}
               onChange={(value) => setSelectedYAxisVar(value || '')}
             />
@@ -207,16 +209,24 @@ export function Dashboard() {
             >
               {/** All chart content within the card */}
               <Flex direction="column" gap="sm" h="100%">
-                {/** Header - Grip, Title, Select Menu */}
+                {/** Chart Header */}
                 <Flex direction="row" justify="space-between" align="center" pl="md">
                   <Flex direction="row" align="center" gap="md" ml={-12}>
                     <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
+                    {/** Chart Title */}
                     <Title order={4}>
-                      {generateChartTitle(yAxisVar, aggregation)}
+                      {
+                        (() => {
+                          // E.g. "rbc_units"
+                          const chartYAxis = dashboardYAxisOptions.find((o) => o.value === yAxisVar);
+                          // E.g. "Average RBCs Transfused"
+                          return chartYAxis?.label?.[aggregation] || yAxisVar;
+                        })()
+                      }
                     </Title>
                   </Flex>
-
                   <Flex direction="row" align="center" gap="sm">
+                    {/** Chart y-axis aggregation toggle */}
                     <ActionIcon
                       variant="subtle"
                       onClick={() => store.dashboardStore.setChartConfig(chartId, {
@@ -227,8 +237,12 @@ export function Dashboard() {
                     </ActionIcon>
                     {/** Select Attribute Menu */}
                     <Select
-                      data={dashboardYAxisOptions}
+                      data={dashboardYAxisOptions.map((opt) => ({
+                        value: opt.value,
+                        label: opt.label.base,
+                      }))}
                       defaultValue={yAxisVar}
+                      value={yAxisVar}
                       onChange={(value) => {
                         store.dashboardStore.setChartConfig(chartId, {
                           chartId,

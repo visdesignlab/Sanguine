@@ -15,24 +15,65 @@ export const TIME_CONSTANTS = {
   VENTILATOR_THRESHOLD_MINS: 1440,
 } as const;
 
+// Variable aggregation options
+export const AGGREGATION_OPTIONS = {
+  sum: { label: 'Sum' },
+  avg: { label: 'Average' },
+} as const;
+
 // Blood components -----------------------------------------------
 const BLOOD_COMPONENT_DECIMALS = { sum: 0, avg: 2 };
 
 export const BLOOD_COMPONENTS = [
   {
-    value: 'rbc_units', label: 'RBCs Transfused', units: { sum: 'RBC units', avg: 'RBC units' }, decimals: BLOOD_COMPONENT_DECIMALS,
+    value: 'rbc_units',
+    label: {
+      base: 'RBCs Transfused',
+      sum: 'Total RBCs Transfused',
+      avg: 'Average RBCs Transfused Per Visit',
+    },
+    units: { sum: 'RBC units', avg: 'RBC units' },
+    decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
-    value: 'ffp_units', label: 'FFP Transfused', units: { sum: 'plasma units', avg: 'plasma units' }, decimals: BLOOD_COMPONENT_DECIMALS,
+    value: 'ffp_units',
+    label: {
+      base: 'FFP Transfused',
+      sum: 'Total FFP Transfused',
+      avg: 'Average FFP Transfused Per Visit',
+    },
+    units: { sum: 'plasma units', avg: 'plasma units' },
+    decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
-    value: 'plt_units', label: 'Platelets Transfused', units: { sum: 'platelet units', avg: 'platelet units' }, decimals: BLOOD_COMPONENT_DECIMALS,
+    value: 'plt_units',
+    label: {
+      base: 'Platelets Transfused',
+      sum: 'Total Platelets Transfused',
+      avg: 'Average Platelets Transfused Per Visit',
+    },
+    units: { sum: 'platelet units', avg: 'platelet units' },
+    decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
-    value: 'cryo_units', label: 'Cryo Transfused', units: { sum: 'cryo units', avg: 'cryo units' }, decimals: BLOOD_COMPONENT_DECIMALS,
+    value: 'cryo_units',
+    label: {
+      base: 'Cryo Transfused',
+      sum: 'Total Cryo Transfused',
+      avg: 'Average Cryo Transfused Per Visit',
+    },
+    units: { sum: 'cryo units', avg: 'cryo units' },
+    decimals: BLOOD_COMPONENT_DECIMALS,
   },
   {
-    value: 'cell_saver_ml', label: 'Cell Salvage Volume (ml) Used', units: { sum: 'ml', avg: 'ml' }, decimals: BLOOD_COMPONENT_DECIMALS,
+    value: 'cell_saver_ml',
+    label: {
+      base: 'Cell Salvage Volume (ml) Used',
+      sum: 'Total Cell Salvage Volume (ml) Used',
+      avg: 'Average Cell Salvage Volume (ml) Used Per Visit',
+    },
+    units: { sum: 'ml', avg: 'ml' },
+    decimals: BLOOD_COMPONENT_DECIMALS,
   },
 ] as const;
 // Values of blood components
@@ -40,7 +81,7 @@ export type BloodComponent = typeof BLOOD_COMPONENTS[number]['value'];
 // Readonly array of blood component options
 export const BLOOD_COMPONENT_OPTIONS = BLOOD_COMPONENTS as ReadonlyArray<{
   value: BloodComponent;
-  label: string;
+  label: { base: string; sum: string; avg: string };
   units: { sum: string; avg: string };
   decimals: { sum: number; avg: number };
 }>;
@@ -48,19 +89,54 @@ export const BLOOD_COMPONENT_OPTIONS = BLOOD_COMPONENTS as ReadonlyArray<{
 // Outcomes -------------------------------------------------------
 export const OUTCOMES = [
   {
-    value: 'los', label: 'Length of Stay', units: { sum: 'days', avg: 'days' }, decimals: { sum: 0, avg: 2 },
+    value: 'los',
+    label: {
+      base: 'Length of Stay',
+      sum: 'Total Length of Stay',
+      avg: 'Average Length of Stay',
+    },
+    units: { sum: 'days', avg: 'days' },
+    decimals: { sum: 0, avg: 2 },
   },
   {
-    value: 'death', label: 'Death', units: { sum: 'visits', avg: '% of visits' }, decimals: { sum: 0, avg: 1 },
+    value: 'death',
+    label: {
+      base: 'Death',
+      sum: 'Total Deaths',
+      avg: 'Visits with Death',
+    },
+    units: { sum: 'visits', avg: '% of visits' },
+    decimals: { sum: 0, avg: 1 },
   },
   {
-    value: 'vent', label: 'Ventilator >24hr', units: { sum: 'visits', avg: '% of visits' }, decimals: 0,
+    value: 'vent',
+    label: {
+      base: 'Ventilator >24hr',
+      sum: 'Total Ventilator >24hr',
+      avg: 'Visits with Ventilator >24hr',
+    },
+    units: { sum: 'visits', avg: '% of visits' },
+    decimals: 0,
   },
   {
-    value: 'stroke', label: 'Stroke', units: { sum: 'visits', avg: '% of visits' }, decimals: 0,
+    value: 'stroke',
+    label: {
+      base: 'Stroke',
+      sum: 'Total Stroke',
+      avg: 'Visits with Stroke',
+    },
+    units: { sum: 'visits', avg: '% of visits' },
+    decimals: 0,
   },
   {
-    value: 'ecmo', label: 'ECMO', units: { sum: 'visits', avg: '% of visits' }, decimals: 0,
+    value: 'ecmo',
+    label: {
+      base: 'ECMO',
+      sum: 'Total ECMO',
+      avg: 'Visits with ECMO',
+    },
+    units: { sum: 'visits', avg: '% of visits' },
+    decimals: 0,
   },
 ] as const;
 // Values of outcomes
@@ -68,7 +144,7 @@ export type Outcome = typeof OUTCOMES[number]['value'];
 // Readonly array of outcome options
 export const OUTCOME_OPTIONS = OUTCOMES as ReadonlyArray<{
   value: Outcome;
-  label: string;
+  label: { base: string; sum: string; avg: string };
   units: { sum: string; avg: string };
   decimals: number | { sum: number; avg: number };
 }>;
@@ -77,28 +153,44 @@ export const OUTCOME_OPTIONS = OUTCOMES as ReadonlyArray<{
 export const PROPHYL_MEDS = [
   {
     value: 'b12',
-    label: 'B12',
+    label: {
+      base: 'B12 Before Surgery',
+      sum: 'Total Visits Using B12 Before Surgery',
+      avg: 'Visits Using B12 Before Surgery %',
+    },
     aliases: ['b12', 'cobalamin'],
     units: { sum: 'visits', avg: '% of visits' },
     decimals: 0,
   },
   {
     value: 'iron',
-    label: 'Iron',
+    label: {
+      base: 'Iron Before Surgery',
+      sum: 'Total Visits Using Iron Before Surgery',
+      avg: 'Visits Using Iron Before Surgery %',
+    },
     aliases: ['iron', 'ferrous', 'ferric'],
     units: { sum: 'visits', avg: '% of visits' },
     decimals: 0,
   },
   {
     value: 'txa',
-    label: 'Tranexamic Acid',
+    label: {
+      base: 'Tranexamic Acid Before Surgery',
+      sum: 'Total Visits Using Tranexamic Acid Before Surgery',
+      avg: 'Visits Using Tranexamic Acid Before Surgery %',
+    },
     aliases: ['tranexamic', 'txa'],
     units: { sum: 'visits', avg: '% of visits' },
     decimals: 0,
   },
   {
     value: 'amicar',
-    label: 'Amicar',
+    label: {
+      base: 'Amicar Before Surgery',
+      sum: 'Total Visits Using Amicar Before Surgery',
+      avg: 'Visits Using Amicar Before Surgery %',
+    },
     aliases: ['amicar', 'aminocaproic'],
     units: { sum: 'visits', avg: '% of visits' },
     decimals: 0,
@@ -109,7 +201,7 @@ export type ProphylMed = typeof PROPHYL_MEDS[number]['value'];
 // Readonly array of prophylactic medication options
 export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
   value: ProphylMed;
-  label: string;
+  label: { base: string; sum: string; avg: string };
   aliases: readonly string[];
   units: { sum: string; avg: string };
   decimals: number;
@@ -119,7 +211,11 @@ export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
 export const GUIDELINE_ADHERENCE = {
   rbc: {
     value: 'rbc_adherence',
-    label: 'Guideline Adherent RBC Transfusions',
+    label: {
+      base: 'Guideline Adherent RBC Transfusions',
+      sum: 'Total Guideline Adherent RBC Transfusions',
+      avg: 'Guideline Adherent RBC Transfusions %',
+    },
     // To calculate adherence, we need:
     adherentCount: 'rbc_adherent',
     totalTransfused: 'rbc_total',
@@ -134,7 +230,11 @@ export const GUIDELINE_ADHERENCE = {
   },
   ffp: {
     value: 'ffp_adherence',
-    label: 'Guideline Adherent FFP Transfusions',
+    label: {
+      base: 'Guideline Adherent FFP Transfusions',
+      sum: 'Total Guideline Adherent FFP Transfusions',
+      avg: 'Guideline Adherent FFP Transfusions %',
+    },
     adherentCount: 'ffp_adherent',
     totalTransfused: 'ffp_total',
     labDesc: ['INR'],
@@ -145,7 +245,11 @@ export const GUIDELINE_ADHERENCE = {
   },
   plt: {
     value: 'plt_adherence',
-    label: 'Guideline Adherent Platelet Transfusions',
+    label: {
+      base: 'Guideline Adherent Platelet Transfusions',
+      sum: 'Total Guideline Adherent Platelet Transfusions',
+      avg: 'Guideline Adherent Platelet Transfusions %',
+    },
     adherentCount: 'plt_adherent',
     totalTransfused: 'plt_total',
     labDesc: ['PLT', 'Platelet Count'],
@@ -156,7 +260,11 @@ export const GUIDELINE_ADHERENCE = {
   },
   cryo: {
     value: 'cryo_adherence',
-    label: 'Guideline Adherent Cryo Transfusions',
+    label: {
+      base: 'Guideline Adherent Cryo Transfusions',
+      sum: 'Total Guideline Adherent Cryo Transfusions',
+      avg: 'Guideline Adherent Cryo Transfusions %',
+    },
     adherentCount: 'cryo_adherent',
     totalTransfused: 'cryo_total',
     labDesc: ['Fibrinogen'],
@@ -172,7 +280,11 @@ export const OVERALL_GUIDELINE_ADHERENCE = {
   value: 'overall_adherence',
   adherentCount: 'overall_adherent',
   totalTransfused: 'overall_transfused',
-  label: 'Overall Guideline Adherence',
+  label: {
+    base: 'Guideline Adherent Transfusions',
+    sum: 'Total Guideline Adherent Transfusions',
+    avg: 'Guideline Adherent Transfusions %',
+  },
   units: { sum: 'adherent transfusions', avg: '% adherent transfusions' },
   decimals: 0,
 } as const;
@@ -190,7 +302,7 @@ export type OverallGuidelineAdherence = typeof OVERALL_GUIDELINE_ADHERENCE['valu
 // Guideline adherence options for dashboard
 export const GUIDELINE_ADHERENCE_OPTIONS = Object.values(GUIDELINE_ADHERENCE) as ReadonlyArray<{
   value: GuidelineAdherence;
-  label: string;
+  label: { base: string; sum: string; avg: string };
   adherentCount: AdherentCountField;
   totalTransfused: TotalTransfusedField;
   labDesc: readonly string[];
@@ -213,11 +325,6 @@ export const CPT_CODES = {
 // PBM Dashboard ---------------------------------------------------
 
 // --- Dashboard charts ---
-// Chart aggregation options
-export const AGGREGATION_OPTIONS = {
-  sum: { label: 'Sum' },
-  avg: { label: 'Average' },
-} as const;
 
 // X-axis time aggregation options for dashboard
 export const TIME_AGGREGATION_OPTIONS = {
@@ -233,7 +340,7 @@ export const dashboardXAxisOptions = Object.entries(TIME_AGGREGATION_OPTIONS).ma
 export const dashboardXAxisVars = dashboardXAxisOptions.map((opt) => opt.value);
 
 // Dashboard chart y-axis variable options
-export const dashboardYAxisOptions = [...BLOOD_COMPONENT_OPTIONS, ...GUIDELINE_ADHERENCE_OPTIONS, ...OUTCOME_OPTIONS, ...PROPHYL_MED_OPTIONS, OVERALL_GUIDELINE_ADHERENCE];
+export const dashboardYAxisOptions = [...BLOOD_COMPONENT_OPTIONS, OVERALL_GUIDELINE_ADHERENCE, ...GUIDELINE_ADHERENCE_OPTIONS, ...OUTCOME_OPTIONS, ...PROPHYL_MED_OPTIONS];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 
 // Dashboard aggregate y-axis variable type

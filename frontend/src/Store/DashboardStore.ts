@@ -13,11 +13,12 @@ import {
   DashboardChartData, DashboardStatData,
   TimeAggregation,
   dashboardXAxisVars,
-  type DashboardAggYAxisVar, // Dashboard data types
+  type DashboardAggYAxisVar,
+  dashboardYAxisOptions, // Dashboard data types
 } from '../Types/application';
 import {
   aggregateYAxisVisitVars,
-  compareTimePeriods, formatStatValue, generateStatTitle, getTimePeriodFromDate,
+  compareTimePeriods, formatStatValue, getTimePeriodFromDate,
 } from '../Utils/dashboard';
 
 /**
@@ -184,9 +185,10 @@ export class DashboardStore {
    * @description Adds new stat to dashboard with a generated title.
    */
   addStat(statVar: DashboardStatConfig['var'], aggregation: DashboardStatConfig['aggregation']) {
-    // Generate unique ID and title internally
+  // Generate unique ID and title internally
     const statId = `stat-${Date.now()}`;
-    const title = generateStatTitle(statVar, aggregation || 'sum');
+    const opt = dashboardYAxisOptions.find((o) => o.value === statVar);
+    const title = opt?.label?.[aggregation || 'sum'] || statVar;
 
     const fullStatConfig: DashboardStatConfig = {
       statId,
@@ -208,11 +210,6 @@ export class DashboardStore {
 
   // Dashboard data ----------------------------------------------------------------
   /**
- * Retrieves all dashboard data, including chart and stat metrics.
- * Performs a single computation to prevent redundant processing.
- */
-
-  /**
    * Returns all possible chart data needed for the dashboard.
    */
   get chartData() {
@@ -224,6 +221,7 @@ export class DashboardStore {
 
       dashboardYAxisVars.forEach((yAxisVar) => {
         dashboardXAxisVars.forEach((xAxisVar) => {
+          // E.g. "sum_rbc_units_quarter" or "avg_guideline_adherence_month"
           const aggVar: DashboardAggYAxisVar = `${aggType}_${yAxisVar}`;
 
           // Get the time aggregation that matches the xAxisVar time aggregation
