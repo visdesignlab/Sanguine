@@ -25,7 +25,7 @@ import { type RootStore } from '../Store/Store';
  * @param includeUnits - Whether to include units in the formatted string (default: true)
  * @returns A formatted string for display
  */
-export function formatStatValue(
+export function formatValueForDisplay(
   yAxisVar: typeof dashboardYAxisVars[number],
   value: number,
   aggregation: keyof typeof AGGREGATION_OPTIONS,

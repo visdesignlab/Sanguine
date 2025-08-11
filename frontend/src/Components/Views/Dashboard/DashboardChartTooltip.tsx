@@ -1,6 +1,6 @@
 import { Title, Paper } from '@mantine/core';
 import { dashboardYAxisVars } from '../../../Types/application';
-import { formatStatValue } from '../../../Utils/dashboard';
+import { formatValueForDisplay } from '../../../Utils/dashboard';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 
 // --- Custom tooltip component ---
@@ -23,7 +23,7 @@ export function DashboardChartTooltip({
     return null;
   }
 
-  const formattedValue = formatStatValue(yAxisVar, payload[0].value ?? 0, aggregation);
+  const formattedValue = formatValueForDisplay(yAxisVar, payload[0].value ?? 0, aggregation);
 
   return (
     <Paper p="xs" shadow="md" radius="sm" style={tooltipStyles}>

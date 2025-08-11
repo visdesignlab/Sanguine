@@ -30,7 +30,7 @@ import {
   type DashboardChartConfig,
   DashboardStatConfig,
 } from '../../../Types/application';
-import { formatStatValue } from '../../../Utils/dashboard';
+import { formatValueForDisplay } from '../../../Utils/dashboard';
 
 /**
  * @returns Patient Blood Management Dashboard - Stats and Charts
@@ -283,7 +283,7 @@ export function Dashboard() {
                     ),
                   }}
                   // Truncate by decimals, convert to percentage if needed
-                  valueFormatter={(value) => formatStatValue(yAxisVar, value, aggregation, false)}
+                  valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
                 />
               </Flex>
             </Card>

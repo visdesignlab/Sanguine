@@ -18,7 +18,7 @@ import {
 } from '../Types/application';
 import {
   aggregateYAxisVisitVars,
-  compareTimePeriods, formatStatValue, getTimePeriodFromDate,
+  compareTimePeriods, formatValueForDisplay, getTimePeriodFromDate,
 } from '../Utils/dashboard';
 
 /**
@@ -323,7 +323,7 @@ export class DashboardStore {
           : ((currentValue - previousValue) / previousValue) * 100;
 
         // Format the stat value (E.g. "Overall Guideline Adherence")
-        const formattedValue = formatStatValue(yAxisVar, currentValue, aggType);
+        const formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
 
         result[key] = {
           data: formattedValue,
