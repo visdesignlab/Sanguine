@@ -326,9 +326,10 @@ export class DashboardStore {
         const formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
 
         result[key] = {
-          data: formattedValue,
+          value: formattedValue,
           diff: Math.round(diff),
           comparedTo: comparisonMonthName,
+          sparklineData: [3, 22, 2, 5, 1],
         };
       });
     });

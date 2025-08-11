@@ -325,7 +325,6 @@ export const CPT_CODES = {
 // PBM Dashboard ---------------------------------------------------
 
 // --- Dashboard charts ---
-
 // X-axis time aggregation options for dashboard
 export const TIME_AGGREGATION_OPTIONS = {
   quarter: { label: 'Quarter' },
@@ -355,6 +354,7 @@ export type DashboardChartConfig = {
 };
 
 export type DashboardChartConfigKey = `${DashboardAggYAxisVar}_${typeof dashboardXAxisVars[number]}`;
+// Dashboard chart data type (key, {x-axis, y-axis})
 export type DashboardChartData = Record<DashboardChartConfigKey, { timePeriod: TimePeriod, data: number }[]>;
 
 // --- Dashboard stats ---
@@ -365,4 +365,4 @@ export type DashboardStatConfig = {
   title: string;
 };
 
-export type DashboardStatData = Record<DashboardAggYAxisVar, {data: string, diff: number, comparedTo?: string} >;
+export type DashboardStatData = Record<DashboardAggYAxisVar, {value: string, diff: number, comparedTo?: string, sparklineData: number[]} >;

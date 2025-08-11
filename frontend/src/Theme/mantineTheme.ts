@@ -29,6 +29,8 @@ const standardTextSizes = {
 // Stroke color
 const BLACK_STROKE_COLOR = 'var(--mantine-color-black)';
 const HIGHLIGHT_STROKE_COLOR = 'var(--mantine-color-blue-6)';
+const POSITIVE_STROKE_COLOR = 'var(--mantine-color-teal-6, #12b886)';
+const NEGATIVE_STROKE_COLOR = 'var(--mantine-color-red-6, #fa5252)';
 // Stroke widths
 const STROKE_WIDTH = '1px';
 const DIMMED_STROKE_WIDTH = '1.5px';
@@ -138,5 +140,7 @@ export function useThemeConstants() {
      */
     spacingPx,
     toolbarWidth,
+    positiveColor: POSITIVE_STROKE_COLOR,
+    negativeColor: NEGATIVE_STROKE_COLOR,
   };
 }

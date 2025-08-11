@@ -9,6 +9,7 @@ import {
 import { useState, useContext } from 'react';
 import clsx from 'clsx';
 import { useObserver } from 'mobx-react';
+import { Sparkline } from '@mantine/charts';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import gridItemStyles from '../GridLayoutItem.module.css';
 import statsGridStyles from './StatsGrid.module.css';
@@ -17,7 +18,9 @@ import { getIconForVar, isMetricChangeGood } from '../../../Utils/dashboard';
 
 export function StatsGrid() {
   // Icon styles
-  const { cardIconSize, cardIconStroke, spacingPx } = useThemeConstants();
+  const {
+    cardIconSize, cardIconStroke, spacingPx, positiveColor, negativeColor,
+  } = useThemeConstants();
 
   // Get store context
   const store = useContext(Store);
@@ -33,17 +36,20 @@ export function StatsGrid() {
       const dataKey = `${aggregationKey}_${statConfig.var}` as keyof typeof store.dashboardStore.statData;
       // Stat data for this card
       const statData = store.dashboardStore.statData[dataKey];
-      const statValue = statData?.data || '0';
+      const statValue = statData?.value || '0';
       const diff = statData?.diff || 0;
+      const statSparklineData = statData?.sparklineData || [];
 
       // Get the icon for this stat
       const Icon = getIconForVar(statConfig.var);
 
       // Get the value diff icon
       const DiffIcon = diff > 0 ? IconArrowUpRight : IconArrowDownRight;
-      const diffClassName = isMetricChangeGood(statConfig.var, diff)
-        ? statsGridStyles.diffGood
-        : statsGridStyles.diffBad;
+
+      // Positive (green) or negative (red) color based on diff
+      const statColor = isMetricChangeGood(statConfig.var, diff)
+        ? positiveColor
+        : negativeColor;
 
       // Determine if this card is currently hovered
       const isHovered = hoveredIdx === idx;
@@ -81,8 +87,17 @@ export function StatsGrid() {
           <Group align="flex-end" gap="sm" mt="md">
             {/** Stat Value */}
             <Title order={2}>{statValue}</Title>
+            <Sparkline
+              w={40}
+              h={20}
+              data={statSparklineData}
+              curveType="natural"
+              fillOpacity={0.6}
+              strokeWidth={0.8}
+              color={statColor}
+            />
             {/** Stat % Change in Value */}
-            <Text className={diffClassName}>
+            <Text style={{ color: statColor }}>
               <span>
                 {diff}
                 %
