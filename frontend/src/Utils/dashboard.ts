@@ -177,10 +177,11 @@ export function generateChartTitle(yAxisVar: DashboardChartConfig['yAxisVar'], a
   const yAxisOption = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
   const label = yAxisOption?.label || yAxisVar;
 
-  const aggregationText = aggregation.charAt(0).toUpperCase() + aggregation.slice(1);
+  const aggregationText = AGGREGATION_OPTIONS[aggregation].label || aggregation;
   const ofText = aggregation === 'sum' ? ' of' : '';
   const perVisitText = aggregation === 'avg' ? ' Per Visit' : '';
 
+  // E.g. "Sum of RBC Units Per Visit" or "Average Guideline Adherence"
   return `${aggregationText}${ofText} ${label}${perVisitText}`;
 }
 
