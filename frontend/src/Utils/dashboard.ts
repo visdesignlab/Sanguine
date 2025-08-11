@@ -22,38 +22,51 @@ import { type RootStore } from '../Store/Store';
  * @param yAxisVar - The dashboard variable being formatted
  * @param value - The numeric value to format
  * @param aggregation - The aggregation type ('sum' or 'avg')
+ * @param includeUnits - Whether to include units in the formatted string (default: true)
  * @returns A formatted string for display
  */
 export function formatStatValue(
   yAxisVar: typeof dashboardYAxisVars[number],
   value: number,
   aggregation: keyof typeof AGGREGATION_OPTIONS,
+  includeUnits?: boolean,
 ): string {
-  const yAxisOption = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
+  // Show units by default unless specified otherwise
+  const showUnits = includeUnits !== undefined ? includeUnits : true;
 
-  if (!yAxisOption || !('units' in yAxisOption)) {
-    console.warn(`No units found for variable: ${yAxisVar}`);
-    return value.toFixed(0);
+  // Y-Axis variable object
+  const yAxisOption = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
+  if (!yAxisOption) {
+    console.warn(`Invalid yAxisVar: ${yAxisVar} is not present in dashboardYAxisOptions`);
+    return value.toString();
   }
 
-  // Select correct unit (days, %, etc.) based on variable & aggregation
+  // Units for display
   const unit = yAxisOption?.units?.[aggregation] ?? '';
 
-  // Determine decimal place of value
-  let decimals = 0;
-  // Check if decimal place depends on aggregation (sum, avg)
-  if (typeof yAxisOption.decimals === 'object') {
-    decimals = yAxisOption.decimals[aggregation] ?? 0;
+  // Decimal count
+  let decimalCount: number;
+  const { decimals: yAxisDecimals } = yAxisOption;
+  if (typeof yAxisDecimals === 'number') {
+    decimalCount = yAxisDecimals;
   } else {
-    const { decimals: decimalsValue } = yAxisOption;
-    decimals = decimalsValue;
+    // If decimal count based on aggregation
+    decimalCount = (yAxisDecimals && yAxisDecimals[aggregation]) ?? 0;
   }
 
-  // Format the value based on unit type and decimals
+  // If unit is percentage, format (E.g. 0.52 -> 52%)
   if (unit.startsWith('%')) {
-    return `${(value * 100).toFixed(decimals)}${unit}`;
+    const formatted = (value * 100).toFixed(decimalCount);
+    return showUnits ? `${formatted}${unit}` : `${formatted}%`;
   }
-  return `${value.toFixed(decimals)} ${unit}`;
+  // If the value is a whole number, format without decimals
+  if (Number.isInteger(value)) {
+    return showUnits ? `${value} ${unit}`.trim() : value.toString();
+  }
+
+  // Otherwise, format with decimal count
+  const formatted = value.toFixed(decimalCount);
+  return showUnits ? `${formatted} ${unit}`.trim() : formatted;
 }
 
 /**

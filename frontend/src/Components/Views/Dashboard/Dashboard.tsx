@@ -30,6 +30,7 @@ import {
   type DashboardChartConfig,
   DashboardStatConfig,
 } from '../../../Types/application';
+import { formatStatValue } from '../../../Utils/dashboard';
 
 /**
  * @returns Patient Blood Management Dashboard - Stats and Charts
@@ -282,17 +283,7 @@ export function Dashboard() {
                     ),
                   }}
                   // Truncate by decimals, convert to percentage if needed
-                  valueFormatter={(value) => {
-                    const yAxisOption = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
-                    const unit = yAxisOption?.units?.[aggregation] ?? '';
-                    const decimals = typeof yAxisOption?.decimals === 'object'
-                      ? yAxisOption.decimals[aggregation] ?? 0
-                      : yAxisOption?.decimals ?? 0;
-                    if (unit.startsWith('%')) {
-                      return `${(value * 100).toFixed(decimals)}%`;
-                    }
-                    return value.toFixed(decimals);
-                  }}
+                  valueFormatter={(value) => formatStatValue(yAxisVar, value, aggregation, false)}
                 />
               </Flex>
             </Card>
