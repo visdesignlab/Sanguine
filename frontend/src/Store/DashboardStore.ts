@@ -269,7 +269,7 @@ export class DashboardStore {
    * Returns all stat chart data needed for the dashboard.
    */
   get statData() {
-    // --- Find the current period (last 30 days) ---
+    // --- Find the current period (last 30 days) for the stats ---
     // Find the latest discharge date
     const latestDate = new Date(Math.max(...this._rootStore.allVisits.map((v) => v.dischargeDate.getTime())));
 
@@ -280,7 +280,7 @@ export class DashboardStore {
     const currentPeriodStartMonth = currentPeriodStart.getMonth();
     const currentPeriodStartYear = currentPeriodStart.getFullYear();
 
-    // --- Find previous period (closest non-overlapping calendar month) ---
+    // --- Find comparison period (closest non-overlapping calendar month) for the stats ---
     let comparisonMonth = currentPeriodStartMonth - 1;
     let comparisonYear = currentPeriodStartYear;
 
@@ -291,19 +291,19 @@ export class DashboardStore {
     }
 
     // Create comparison period boundaries (full month)
-    const previousPeriodStart = new Date(comparisonYear, comparisonMonth, 1);
-    const previousPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
+    const comparisonPeriodStart = new Date(comparisonYear, comparisonMonth, 1);
+    const comparisonPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
 
     // --- Filter visits by time periods ---
     const currentPeriodVisits = this._rootStore.allVisits.filter((v) => v.dischargeDate >= currentPeriodStart && v.dischargeDate <= latestDate);
-    const previousPeriodVisits = this._rootStore.allVisits.filter((v) => v.dischargeDate >= previousPeriodStart && v.dischargeDate <= previousPeriodEnd);
+    const comparisonPeriodVisits = this._rootStore.allVisits.filter((v) => v.dischargeDate >= comparisonPeriodStart && v.dischargeDate <= comparisonPeriodEnd);
 
     // Aggregate both periods using the same logic as chart data
     const currentPeriodData = aggregateYAxisVisitVars(currentPeriodVisits);
-    const previousPeriodData = aggregateYAxisVisitVars(previousPeriodVisits);
+    const comparisonPeriodData = aggregateYAxisVisitVars(comparisonPeriodVisits);
 
     // Get month name for comparison text
-    const previousMonthName = previousPeriodStart.toLocaleDateString('en-US', { month: 'short' });
+    const comparisonMonthName = comparisonPeriodStart.toLocaleDateString('en-US', { month: 'short' });
 
     // --- Return data for every possible stat (aggregation, yAxisVar) combination ---
     const result = {} as DashboardStatData;
@@ -316,11 +316,11 @@ export class DashboardStore {
 
         // Calculate percentage change (diff)
         const currentValue = currentPeriodData[key] || 0;
-        const previousValue = previousPeriodData[key] || 0;
+        const comparisonValue = comparisonPeriodData[key] || 0;
 
-        const diff = previousValue === 0
+        const diff = comparisonValue === 0
           ? (currentValue > 0 ? 100 : 0)
-          : ((currentValue - previousValue) / previousValue) * 100;
+          : ((currentValue - comparisonValue) / comparisonValue) * 100;
 
         // Format the stat value (E.g. "Overall Guideline Adherence")
         const formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
@@ -328,7 +328,7 @@ export class DashboardStore {
         result[key] = {
           data: formattedValue,
           diff: Math.round(diff),
-          comparedTo: previousMonthName,
+          comparedTo: comparisonMonthName,
         };
       });
     });
