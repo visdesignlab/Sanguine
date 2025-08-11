@@ -87,11 +87,12 @@ export function StatsGrid() {
           <Group align="flex-end" gap={5} mt="md">
             {/** Stat Value */}
             <Title order={2}>{statValue}</Title>
+            {/** Stat Sparkline */}
             <Sparkline
-              w={40}
+              w={30}
               h={20}
               data={statSparklineData}
-              curveType="natural"
+              curveType="linear"
               fillOpacity={0.6}
               strokeWidth={0.8}
               color={statColor}
@@ -105,6 +106,7 @@ export function StatsGrid() {
                 alignItems: 'flex-end',
               }}
             >
+              {/** Stat Up / Down Arrow */}
               <DiffIcon size={spacingPx.md} stroke={cardIconStroke} />
               <span>
                 {diff}

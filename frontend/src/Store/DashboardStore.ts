@@ -294,16 +294,22 @@ export class DashboardStore {
     const comparisonPeriodStart = new Date(comparisonYear, comparisonMonth, 1);
     const comparisonPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
 
+    // Get month name for comparison text
+    const comparisonMonthName = comparisonPeriodStart.toLocaleDateString('en-US', { month: 'short' });
+
+    // --- Sparkline Data - Find intermediate periods between current and comparison periods ---
+    const intermediatePeriodNumber = 4;
+    const sparklineStart = comparisonPeriodStart < currentPeriodStart ? comparisonPeriodStart : currentPeriodStart;
+    const sparklineEnd = latestDate;
+    const intervalMs = Math.floor((sparklineEnd.getTime() - sparklineStart.getTime()) / intermediatePeriodNumber);
+
     // --- Filter visits by time periods ---
     const currentPeriodVisits = this._rootStore.allVisits.filter((v) => v.dischargeDate >= currentPeriodStart && v.dischargeDate <= latestDate);
     const comparisonPeriodVisits = this._rootStore.allVisits.filter((v) => v.dischargeDate >= comparisonPeriodStart && v.dischargeDate <= comparisonPeriodEnd);
 
-    // Aggregate both periods using the same logic as chart data
+    // --- Aggregate both periods using the same logic as chart data ---
     const currentPeriodData = aggregateYAxisVisitVars(currentPeriodVisits);
     const comparisonPeriodData = aggregateYAxisVisitVars(comparisonPeriodVisits);
-
-    // Get month name for comparison text
-    const comparisonMonthName = comparisonPeriodStart.toLocaleDateString('en-US', { month: 'short' });
 
     // --- Return data for every possible stat (aggregation, yAxisVar) combination ---
     const result = {} as DashboardStatData;
@@ -317,7 +323,6 @@ export class DashboardStore {
         // Calculate percentage change (diff)
         const currentValue = currentPeriodData[key] || 0;
         const comparisonValue = comparisonPeriodData[key] || 0;
-
         const diff = comparisonValue === 0
           ? (currentValue > 0 ? 100 : 0)
           : ((currentValue - comparisonValue) / comparisonValue) * 100;
@@ -325,11 +330,24 @@ export class DashboardStore {
         // Format the stat value (E.g. "Overall Guideline Adherence")
         const formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
 
+        // --- Sparkline calculation ---
+        const sparklineData: number[] = [];
+        for (let i = 0; i < intermediatePeriodNumber; i += 1) {
+          const periodStart = new Date(sparklineStart.getTime() + i * intervalMs);
+          const periodEnd = new Date(periodStart.getTime() + intervalMs - 1);
+
+          const periodVisits = this._rootStore.allVisits.filter(
+            (v) => v.dischargeDate >= periodStart && v.dischargeDate <= periodEnd,
+          );
+          const periodData = aggregateYAxisVisitVars(periodVisits);
+          sparklineData.push((periodData[key] || 0) ** 2); // Square values for visibility
+        }
+
         result[key] = {
           value: formattedValue,
           diff: Math.round(diff),
           comparedTo: comparisonMonthName,
-          sparklineData: [3, 22, 2, 5, 1],
+          sparklineData,
         };
       });
     });
