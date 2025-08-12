@@ -1,5 +1,5 @@
 .gridItem {
-  transition: all 0.2s ease-out;
+  transition: border-color 0.2s ease-out, box-shadow 0.2s ease-out;
 }
 
 .gridItem:hover {
@@ -7,14 +7,17 @@
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
   z-index: 1;
 }
+
+/* Stat (variable) title */
 .variableTitle {
-    font-size: var(--mantine-font-size-xs);
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--mantine-color-gray-6);
-    transition: color 0.2s;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--mantine-color-gray-6);
 }
 
-.variableTitle.active {
-    color: var(--mantine-color-blue-6);
+/* Hover / active highlight */
+.variableTitle.active,
+.chartTitleHovered {
+  color: var(--mantine-color-blue-6);
 }

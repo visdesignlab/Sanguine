@@ -52,6 +52,9 @@ export function Dashboard() {
     store.dashboardStore.removeChart(chartId);
   }, [store.dashboardStore]);
 
+  // Handle Chart Hover
+  const [hoveredChartId, setHoveredChartId] = useState<string | null>(null);
+
   // --- Add Item to Dashboard ---
   // Add Item Modal state
   const [isAddItemModalOpen, { open, close }] = useDisclosure(false);
@@ -207,6 +210,8 @@ export function Dashboard() {
               key={chartId}
               withBorder
               className={classes.gridItem}
+              onMouseEnter={() => setHoveredChartId(chartId)}
+              onMouseLeave={() => setHoveredChartId(null)}
             >
               {/** All chart content within the card */}
               <Flex direction="column" gap="sm" h="100%">
@@ -215,7 +220,10 @@ export function Dashboard() {
                   <Flex direction="row" align="center" gap="md" ml={-12}>
                     <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
                     {/** Chart Title */}
-                    <Title order={4}>
+                    <Title
+                      order={4}
+                      className={hoveredChartId === chartId ? classes.chartTitleHovered : undefined}
+                    >
                       {
                         (() => {
                           // E.g. "rbc_units"
