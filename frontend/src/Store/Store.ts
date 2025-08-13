@@ -7,8 +7,9 @@ import {
   getAdherenceFlags, getOverallAdherenceFlags, getProphMedFlags, isValidVisit, safeParseDate,
 } from '../Utils/store';
 import {
-  BloodComponent, BLOOD_COMPONENT_OPTIONS, TIME_CONSTANTS, CPT_CODES
-  ,
+  BloodComponent, BLOOD_COMPONENT_OPTIONS, TIME_CONSTANTS, CPT_CODES,
+  COSTS,
+  Cost,
 } from '../Types/application';
 
 export class RootStore {
@@ -48,6 +49,16 @@ export class RootStore {
         const adherenceFlags = getAdherenceFlags(visit);
         const overallAdherenceFlags = getOverallAdherenceFlags(adherenceFlags);
 
+        const bloodProductCosts = Object.entries(COSTS).reduce((acc, [costKey, costObj]) => {
+          if (!('unitCost' in costObj)) return acc;
+          // Map costKey (e.g. 'rbc_cost') to blood product key (e.g. 'rbc_units')
+          const productKey = costKey.slice(0, -'_cost'.length);
+          acc[costKey as keyof typeof COSTS] = (bloodProductUnits[productKey as BloodComponent] || 0) * (costObj.unitCost || 0);
+          return acc;
+        }, {} as Record<Cost, number>);
+
+        const totalBloodProductCosts = Object.values(bloodProductCosts).reduce((sum, cost) => sum + cost, 0);
+
         return {
           ...visit,
           dischargeDate: safeParseDate(visit.dsch_dtm),
@@ -56,6 +67,8 @@ export class RootStore {
           ...outcomeFlags,
           ...prophMedFlags,
           ...overallAdherenceFlags,
+          ...bloodProductCosts,
+          total_blood_product_costs: totalBloodProductCosts,
         };
       });
   }

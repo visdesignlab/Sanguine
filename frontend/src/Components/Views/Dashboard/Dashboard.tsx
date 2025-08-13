@@ -10,7 +10,7 @@ import {
   useMantineTheme, Title, Stack, Card, Flex, Select, Button, CloseButton, ActionIcon, Menu, Modal,
   Divider,
 } from '@mantine/core';
-import { LineChart } from '@mantine/charts';
+import { BarChart, LineChart } from '@mantine/charts';
 import {
   IconChartLine, IconGripVertical, IconNumbers, IconPercentage, IconPlus,
 } from '@tabler/icons-react';
@@ -202,9 +202,9 @@ export function Dashboard() {
           }}
           layouts={store.dashboardStore.chartLayouts}
         >
-          {/** Render each chart within the configuration */}
+          {/** Render each chart defined in the store's chart configs */}
           {Object.values(store.dashboardStore.chartConfigs).map(({
-            chartId, yAxisVar, xAxisVar, aggregation,
+            chartId, yAxisVar, xAxisVar, aggregation, chartType,
           }) => (
             <Card
               key={chartId}
@@ -244,7 +244,7 @@ export function Dashboard() {
                     >
                       <IconPercentage size={18} color={aggregation === 'avg' ? theme.colors.indigo[6] : theme.colors.gray[6]} stroke={3} />
                     </ActionIcon>
-                    {/** Select Attribute Menu */}
+                    {/** Chart Select Attribute Menu */}
                     <Select
                       data={dashboardYAxisOptions.map((opt) => ({
                         value: opt.value,
@@ -253,11 +253,15 @@ export function Dashboard() {
                       defaultValue={yAxisVar}
                       value={yAxisVar}
                       onChange={(value) => {
+                        // TODO: Remove inferredChartType. This must be defined elsewhere.
+                        const selectedOption = dashboardYAxisOptions.find((opt) => opt.value === value);
+                        const inferredChartType = selectedOption && selectedOption.units?.sum === '$' ? 'bar' : 'line';
                         store.dashboardStore.setChartConfig(chartId, {
                           chartId,
                           xAxisVar,
                           yAxisVar: value as DashboardChartConfig['yAxisVar'],
                           aggregation,
+                          chartType: inferredChartType,
                         });
                       }}
                     />
@@ -265,34 +269,59 @@ export function Dashboard() {
                     <CloseButton onClick={() => handleRemoveChart(chartId)} />
                   </Flex>
                 </Flex>
-                {/** Chart - Line Chart */}
-                <LineChart
-                  h={`calc(100% - (${theme.spacing.md} * 2))`}
-                  data={store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || []}
-                  dataKey="timePeriod"
-                  series={[
-                    { name: 'data', color: 'indigo.6' },
-                  ]}
-                  curveType="linear"
-                  tickLine="none"
-                  xAxisProps={{
-                    interval: 'equidistantPreserveStart',
-                  }}
-                  tooltipAnimationDuration={200}
-                  tooltipProps={{
-                    content: ({ active, payload, label }) => (
-                      <DashboardChartTooltip
-                        active={active}
-                        payload={payload}
-                        xAxisVar={label}
-                        yAxisVar={yAxisVar}
-                        aggregation={aggregation}
-                      />
-                    ),
-                  }}
-                  // Truncate by decimals, convert to percentage if needed
-                  valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
-                />
+                {chartType === 'bar' ? (
+                  <BarChart
+                    h={`calc(100% - (${theme.spacing.md} * 2))`}
+                    data={store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || []}
+                    dataKey="timePeriod"
+                    series={[
+                      { name: 'data', color: 'indigo.6' },
+                    ]}
+                    xAxisProps={{
+                      interval: 'equidistantPreserveStart',
+                    }}
+                    tooltipAnimationDuration={200}
+                    tooltipProps={{
+                      content: ({ active, payload, label }) => (
+                        <DashboardChartTooltip
+                          active={active}
+                          payload={payload}
+                          xAxisVar={label}
+                          yAxisVar={yAxisVar}
+                          aggregation={aggregation}
+                        />
+                      ),
+                    }}
+                    valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
+                  />
+                ) : (
+                  <LineChart
+                    h={`calc(100% - (${theme.spacing.md} * 2))`}
+                    data={store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || []}
+                    dataKey="timePeriod"
+                    series={[
+                      { name: 'data', color: 'indigo.6' },
+                    ]}
+                    curveType="linear"
+                    tickLine="none"
+                    xAxisProps={{
+                      interval: 'equidistantPreserveStart',
+                    }}
+                    tooltipAnimationDuration={200}
+                    tooltipProps={{
+                      content: ({ active, payload, label }) => (
+                        <DashboardChartTooltip
+                          active={active}
+                          payload={payload}
+                          xAxisVar={label}
+                          yAxisVar={yAxisVar}
+                          aggregation={aggregation}
+                        />
+                      ),
+                    }}
+                    valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
+                  />
+                )}
               </Flex>
             </Card>
           ))}

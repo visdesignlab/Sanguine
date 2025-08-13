@@ -50,6 +50,9 @@ export class DashboardStore {
       {
         i: '3', x: 0, y: 2, w: 2, h: 1, maxH: 2,
       },
+      {
+        i: '4', x: 0, y: 2, w: 2, h: 1, maxH: 2,
+      },
     ],
   };
 
@@ -74,6 +77,9 @@ export class DashboardStore {
     },
     {
       chartId: '3', xAxisVar: 'quarter', yAxisVar: 'iron', aggregation: 'avg',
+    },
+    {
+      chartId: '4', xAxisVar: 'quarter', yAxisVar: 'total_blood_product_costs', aggregation: 'sum', chartType: 'bar',
     },
   ];
 
@@ -261,7 +267,6 @@ export class DashboardStore {
         });
       });
     });
-
     return result;
   }
 

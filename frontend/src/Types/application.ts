@@ -312,6 +312,88 @@ export const GUIDELINE_ADHERENCE_OPTIONS = Object.values(GUIDELINE_ADHERENCE) as
   decimals: number;
 }>;
 
+// Costs / Savings -------------------------------------------------
+// Types of costs
+export const COSTS = {
+  rbc_units_cost: {
+    value: 'rbc_units_cost',
+    label: {
+      base: 'RBC Cost',
+      sum: 'Total RBC Cost',
+      avg: 'Average RBC Cost Per Visit',
+    },
+    units: { sum: '$', avg: '$' },
+    decimals: { sum: 0, avg: 2 },
+    unitCost: 200,
+  },
+  ffp_units_cost: {
+    value: 'ffp_units_cost',
+    label: {
+      base: 'FFP Cost',
+      sum: 'Total FFP Cost',
+      avg: 'Average FFP Cost Per Visit',
+    },
+    units: { sum: '$', avg: '$' },
+    decimals: { sum: 0, avg: 2 },
+    unitCost: 55,
+  },
+  plt_units_cost: {
+    value: 'plt_units_cost',
+    label: {
+      base: 'Platelet Cost',
+      sum: 'Total Platelet Cost',
+      avg: 'Average Platelet Cost Per Visit',
+    },
+    units: { sum: '$', avg: '$' },
+    decimals: { sum: 0, avg: 2 },
+    unitCost: 650,
+  },
+  cryo_units_cost: {
+    value: 'cryo_units_cost',
+    label: {
+      base: 'Cryo Cost',
+      sum: 'Total Cryo Cost',
+      avg: 'Average Cryo Cost Per Visit',
+    },
+    units: { sum: '$', avg: '$' },
+    decimals: { sum: 0, avg: 2 },
+    unitCost: 70,
+  },
+  cell_saver_ml_cost: {
+    value: 'cell_saver_ml_cost',
+    label: {
+      base: 'Cell Salvage Cost',
+      sum: 'Total Cell Salvage Cost',
+      avg: 'Average Cell Salvage Cost Per Visit',
+    },
+    units: { sum: '$', avg: '$' },
+    decimals: { sum: 0, avg: 2 },
+    unitCost: 2.50,
+  },
+} as const;
+
+// Values of prophylactic medications
+export type Cost = typeof COSTS[keyof typeof COSTS]['value'];
+// Readonly array of prophylactic medication options
+export const COST_OPTIONS = Object.values(COSTS) as ReadonlyArray<{
+  value: Cost;
+  label: { base: string; sum: string; avg: string };
+  units: { sum: string; avg: string };
+  decimals: { sum: number; avg: number };
+}>;
+
+export const OVERALL_BLOOD_PRODUCT_COST = {
+  value: 'total_blood_product_costs',
+  label: {
+    base: 'Blood Product Costs',
+    sum: 'Total Blood Product Costs',
+    avg: 'Average Blood Product Costs Per Visit',
+  },
+  units: { sum: '$', avg: '$' },
+  decimals: { sum: 0, avg: 2 },
+  unitCost: 0, // Not used for total
+};
+
 // CPT Codes -------------------------------------------------------
 export const CPT_CODES = {
   stroke: ['99291', '1065F', '1066F'],
@@ -339,7 +421,15 @@ export const dashboardXAxisOptions = Object.entries(TIME_AGGREGATION_OPTIONS).ma
 export const dashboardXAxisVars = dashboardXAxisOptions.map((opt) => opt.value);
 
 // Dashboard chart y-axis variable options
-export const dashboardYAxisOptions = [...BLOOD_COMPONENT_OPTIONS, OVERALL_GUIDELINE_ADHERENCE, ...GUIDELINE_ADHERENCE_OPTIONS, ...OUTCOME_OPTIONS, ...PROPHYL_MED_OPTIONS];
+export const dashboardYAxisOptions = [
+  ...BLOOD_COMPONENT_OPTIONS,
+  OVERALL_GUIDELINE_ADHERENCE,
+  ...GUIDELINE_ADHERENCE_OPTIONS,
+  ...OUTCOME_OPTIONS,
+  ...PROPHYL_MED_OPTIONS,
+  ...COST_OPTIONS,
+  OVERALL_BLOOD_PRODUCT_COST,
+];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 
 // Dashboard aggregate y-axis variable type
@@ -351,6 +441,7 @@ export type DashboardChartConfig = {
   xAxisVar: typeof dashboardXAxisVars[number];
   yAxisVar: typeof dashboardYAxisVars[number];
   aggregation: keyof typeof AGGREGATION_OPTIONS;
+  chartType?: 'line' | 'bar';
 };
 
 export type DashboardChartConfigKey = `${DashboardAggYAxisVar}_${typeof dashboardXAxisVars[number]}`;

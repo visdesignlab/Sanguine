@@ -14,6 +14,8 @@ import {
   PROPHYL_MED_OPTIONS,
   TimeAggregation,
   TimePeriod,
+  COST_OPTIONS,
+  OVERALL_BLOOD_PRODUCT_COST,
 } from '../Types/application';
 import { type RootStore } from '../Store/Store';
 
@@ -236,6 +238,20 @@ export function aggregateYAxisVisitVars(visits: RootStore['allVisits']) {
 
     aggregations[sumKey] = totalAdherent;
     aggregations[avgKey] = totalTransfusions > 0 ? totalAdherent / totalTransfusions : 0;
+
+    // Aggregate cost per blood product by sum and average
+    COST_OPTIONS.forEach(({ value: costVar }) => {
+      const costSumKey: DashboardAggYAxisVar = `sum_${costVar}`;
+      const costAvgKey: DashboardAggYAxisVar = `avg_${costVar}`;
+      // Each visit has cost fields like rbc_cost, ffp_cost, etc.
+      aggregations[costSumKey] = sum(visits, (d) => d[costVar as keyof typeof d] as number || 0);
+      aggregations[costAvgKey] = mean(visits, (d) => d[costVar as keyof typeof d] as number || 0) || 0;
+    });
+
+    // Aggregate overall blood product cost (total)
+    const totalCostKey = OVERALL_BLOOD_PRODUCT_COST.value as keyof typeof visits[0];
+    aggregations[`sum_${totalCostKey}` as DashboardAggYAxisVar] = sum(visits, (v) => v[totalCostKey] as number || 0);
+    aggregations[`avg_${totalCostKey}` as DashboardAggYAxisVar] = mean(visits, (v) => v[totalCostKey] as number || 0) || 0;
   } catch (error) {
     console.error('Error aggregating time period data:', error);
   }
