@@ -47,27 +47,39 @@ export function formatValueForDisplay(
   const unit = yAxisOption?.units?.[aggregation] ?? '';
 
   // Decimal count
-  let decimalCount: number;
   const { decimals: yAxisDecimals } = yAxisOption;
-  if (typeof yAxisDecimals === 'number') {
-    decimalCount = yAxisDecimals;
-  } else {
-    // If decimal count based on aggregation
-    decimalCount = (yAxisDecimals && yAxisDecimals[aggregation]) ?? 0;
-  }
+  const decimalCount = typeof yAxisDecimals === 'number'
+    ? yAxisDecimals
+    : (yAxisDecimals && yAxisDecimals[aggregation]) ?? 0;
 
-  // If unit is percentage, format (E.g. 0.52 -> 52%)
+  // Format with thousands separator for large numbers
+  const formatWithCommas = (num: number, decimals: number) => num.toLocaleString(undefined, {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+
+  let formatted: string;
+
+  // Handle percentage units
   if (unit.startsWith('%')) {
-    const formatted = (value * 100).toFixed(decimalCount);
+    formatted = formatWithCommas(value * 100, decimalCount);
     return showUnits ? `${formatted}${unit}` : `${formatted}%`;
   }
-  // If the value is a whole number, format without decimals
-  if (Number.isInteger(value)) {
-    return showUnits ? `${value} ${unit}`.trim() : value.toString();
+
+  // Handle cost units
+  if (unit.startsWith('$')) {
+    formatted = formatWithCommas(value, decimalCount);
+    return showUnits ? `${unit}${formatted}` : formatted;
   }
 
-  // Otherwise, format with decimal count
-  const formatted = value.toFixed(decimalCount);
+  // Handle integer values
+  if (Number.isInteger(value)) {
+    formatted = formatWithCommas(value, 0);
+  } else {
+    // Otherwise, format with decimal count and commas
+    formatted = formatWithCommas(value, decimalCount);
+  }
+
   return showUnits ? `${formatted} ${unit}`.trim() : formatted;
 }
 
