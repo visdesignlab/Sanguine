@@ -15,11 +15,12 @@ import {
   dashboardXAxisVars,
   type DashboardAggYAxisVar,
   dashboardYAxisOptions,
+  TimePeriod,
   COST_OPTIONS, // Dashboard data types
 } from '../Types/application';
 import {
   aggregateVisitsBySumAvg,
-  compareTimePeriods, formatValueForDisplay, getTimePeriodFromDate,
+  compareTimePeriods, formatValueForDisplay,
 } from '../Utils/dashboard';
 
 /**
@@ -106,7 +107,7 @@ export class DashboardStore {
     },
     {
       statId: '4', var: 'total_blood_product_costs', aggregation: 'sum', title: 'Total Blood Product Costs',
-    }
+    },
   ];
 
   get statConfigs() {
@@ -226,18 +227,6 @@ export class DashboardStore {
   get chartData() {
     const result = {} as DashboardChartData;
 
-    // --- Add the timePeriod (E.g month) for all visits ---
-    const timePeriodMap: Record<TimeAggregation, Array<{ [key: string]: any }>> = {} as any;
-    dashboardXAxisVars.forEach((xAxisVar) => {
-      const timeAggregation = xAxisVar as TimeAggregation;
-      timePeriodMap[timeAggregation] = this._rootStore.allVisits
-        .map((visit) => ({
-          ...visit,
-          timePeriod: getTimePeriodFromDate(visit.dischargeDate, timeAggregation),
-        }))
-        .filter((visit) => visit.timePeriod !== null);
-    });
-
     // --- Calculate data for every possible chart (aggregation, yAxisVar, xAxisVar) combination ---
     // For each aggregation option (e.g. sum, avg)...
     Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
@@ -245,41 +234,27 @@ export class DashboardStore {
       // For each xAxisVar (e.g. quarter, month)...
       dashboardXAxisVars.forEach((xAxisVar) => {
         const timeAggregation = xAxisVar as TimeAggregation;
-        const visitsWithPeriod = timePeriodMap[timeAggregation];
-
-        // --- Special handling for Blood Product Costs stacked bar ---
-        if (dashboardYAxisVars.includes('total_blood_product_costs')) {
-          const aggVar: DashboardAggYAxisVar = `${aggType}_total_blood_product_costs`;
-          const aggregatedData = rollup(
-            visitsWithPeriod,
-            (visits) => {
-              const obj: Record<string, number> = {};
-              COST_OPTIONS.forEach(({ value: costVar }) => {
-                obj[costVar] = aggType === 'sum'
-                  ? visits.reduce((acc, v) => acc + (v[costVar] || 0), 0)
-                  : visits.length > 0
-                    ? visits.reduce((acc, v) => acc + (v[costVar] || 0), 0) / visits.length
-                    : 0;
-              });
-              return obj;
-            },
-            (d) => d.timePeriod,
-          );
-          const chartDatum = Array.from(aggregatedData.entries())
-            .map(([timePeriod, data]) => ({
-              timePeriod: timePeriod!,
-              ...data,
-            }))
-            .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
-          result[`${aggVar}_${xAxisVar}`] = chartDatum;
-        }
 
         // --- Aggregate all other yAxisVars by time period, sum, and avg ---
         const aggregatedData = rollup(
-          visitsWithPeriod,
+          this._rootStore.allVisits,
           (visits) => aggregateVisitsBySumAvg(visits),
-          (d) => d.timePeriod,
+          (d) => d[timeAggregation],
         );
+        // Derive the sum & avg total_blood_product_costs for each time period
+        result[`${aggType}_total_blood_product_costs_${timeAggregation}`] = Array.from(aggregatedData.entries())
+          .map(([timePeriod, aggregations]) => {
+            const costObj: Record<string, number> = {};
+            COST_OPTIONS.forEach(({ value: costVar }) => {
+              const key = `${aggType}_${costVar}` as DashboardAggYAxisVar;
+              costObj[costVar] = aggregations[key] || 0;
+            });
+            return {
+              timePeriod: timePeriod! as TimePeriod,
+              ...costObj,
+            };
+          })
+          .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
 
         // For each yAxisVar (e.g. rbc_units, guideline_adherence)...
         dashboardYAxisVars.forEach((yAxisVar) => {
@@ -288,7 +263,7 @@ export class DashboardStore {
           // Format the aggregated data into chart format: (timePeriod, data)
           const chartDatum = Array.from(aggregatedData.entries())
             .map(([timePeriod, aggregations]) => ({
-              timePeriod: timePeriod!,
+              timePeriod: timePeriod! as TimePeriod,
               data: aggregations[aggVar] || 0,
             }))
             .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));

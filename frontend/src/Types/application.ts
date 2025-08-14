@@ -359,6 +359,7 @@ export const COSTS = {
     decimals: { sum: 0, avg: 2 },
     unitCost: 70,
   },
+  // TODO: Unit cost is wrong
   cell_saver_ml_cost: {
     value: 'cell_saver_ml_cost',
     label: {
@@ -391,7 +392,7 @@ export const OVERALL_BLOOD_PRODUCT_COST = {
   },
   units: { sum: '$', avg: '$' },
   decimals: { sum: 0, avg: 2 },
-  unitCost: 0, // Not used for total
+  unitCost: -1, // Not used for total
 };
 
 // CPT Codes -------------------------------------------------------
@@ -448,7 +449,7 @@ export type DashboardChartConfig = {
 export type DashboardChartConfigKey = `${DashboardAggYAxisVar}_${typeof dashboardXAxisVars[number]}`;
 
 // Dashboard chart data type (key, value)
-export type DashboardChartData = Record<DashboardChartConfigKey, Array<{ timePeriod: TimePeriod } & Record<string, number>>>;
+export type DashboardChartData = Record<DashboardChartConfigKey, ({ timePeriod: TimePeriod, [key: string]: string | number })[]>;
 
 // --- Dashboard stats ---
 export type DashboardStatConfig = {

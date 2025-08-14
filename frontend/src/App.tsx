@@ -5,7 +5,7 @@ import { useIdleTimer } from 'react-idle-timer';
 import { Shell } from './Shell/Shell';
 import { Store } from './Store/Store';
 import { mantineTheme } from './Theme/mantineTheme';
-import type { Visit } from './Types/database';
+import type { DatabaseVisit } from './Types/database';
 import { logoutHandler, whoamiAPICall } from './Store/UserManagement';
 import { BrowserWarning } from './Components/Modals/BrowserWarning';
 import { DataRetrieval } from './Components/Modals/DataRetrieval';
@@ -31,7 +31,7 @@ function App() {
       try {
         // Fetch all visits data
         const visitsRequest = await fetch(`${import.meta.env.VITE_QUERY_URL}get_all_data`);
-        const visits = await visitsRequest.json() as Visit[];
+        const visits = await visitsRequest.json() as DatabaseVisit[];
 
         // Check if visits data is empty
         if (visits.length === 0) {

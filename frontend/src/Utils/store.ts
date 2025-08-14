@@ -1,7 +1,7 @@
 import {
   AdherentCountField, GUIDELINE_ADHERENCE_OPTIONS, OVERALL_GUIDELINE_ADHERENCE, OverallAdherentCountField, OverallTotalTransfusedField, PROPHYL_MED_OPTIONS, ProphylMed, TIME_CONSTANTS, TotalTransfusedField,
 } from '../Types/application';
-import { TransfusionEvent, Visit } from '../Types/database';
+import { TransfusionEvent, DatabaseVisit } from '../Types/database';
 
 /**
    * Safely parse a date string with error handling
@@ -20,7 +20,7 @@ export function safeParseDate(dateInput: string | Date | null | undefined): Date
 /**
    * Validate that required visit data exists
    */
-export function isValidVisit(visit: Visit): boolean {
+export function isValidVisit(visit: DatabaseVisit): boolean {
   if (!visit) {
     console.warn('Null or undefined visit');
     return false;
@@ -44,7 +44,7 @@ export function isValidVisit(visit: Visit): boolean {
 /**
    * Calculate pre-surgery time periods (2 days before each surgery)
    */
-export function getPreSurgeryTimePeriods(visit: Visit): [number, number][] {
+export function getPreSurgeryTimePeriods(visit: DatabaseVisit): [number, number][] {
   return visit.surgeries.map((surgery) => {
     try {
       const surgeryStart = safeParseDate(surgery.surgery_start_dtm);
@@ -60,7 +60,7 @@ export function getPreSurgeryTimePeriods(visit: Visit): [number, number][] {
  * Calculate prophylactic (before surgery) medication flags for a visit
  * @returns Record of prophylactic medication flags: 1 if medication was given pre-surgery, 0 if not
  */
-export function getProphMedFlags(visit: Visit): Record<ProphylMed, number> {
+export function getProphMedFlags(visit: DatabaseVisit): Record<ProphylMed, number> {
   return visit.medications.reduce((acc: Record<ProphylMed, number>, med) => {
     try {
       const preSurgeryTimePeriods = getPreSurgeryTimePeriods(visit);
@@ -94,7 +94,7 @@ export function getProphMedFlags(visit: Visit): Record<ProphylMed, number> {
  * Calculate adherence flags for a visit
  * @returns Record of adherence flags: 1 if transfusion adheres to guideline, 0 if not; and total transfused counts
  */
-export function getAdherenceFlags(visit: Visit): Record<AdherentCountField | TotalTransfusedField, number> {
+export function getAdherenceFlags(visit: DatabaseVisit): Record<AdherentCountField | TotalTransfusedField, number> {
   const adherenceFlags = {
   // --- For each adherence spec, initialize counts ---
     ...GUIDELINE_ADHERENCE_OPTIONS.reduce((acc, spec) => {

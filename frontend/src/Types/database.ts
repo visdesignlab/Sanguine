@@ -1,7 +1,7 @@
 export type SurgeryUrgencyType = 'Urgent' | 'Elective' | 'Emergent' | 'Unknown';
 
 export interface TransfusionEvent {
-  visit_no: string; // ForeignKey to Visit, use string to match Visit.visit_no
+  visit_no: string; // ForeignKey to DatabaseVisit, use string to match DatabaseVisit.visit_no
   trnsfsn_dtm: string; // ISO datetime string
   transfusion_rank: number;
   blood_unit_number: string;
@@ -19,7 +19,7 @@ export interface TransfusionEvent {
 }
 export interface Surgery {
   case_id: string; // BigIntegerField, primary key
-  visit_no: string; // ForeignKey to Visit, use string to match Visit.visit_no
+  visit_no: string; // ForeignKey to DatabaseVisit, use string to match DatabaseVisit.visit_no
   mrn: string; // ForeignKey to Patient, use string to match Patient.mrn
   case_date: number; // timestamp
   surgery_start_dtm: string; // ISO datetime string
@@ -40,7 +40,7 @@ export interface Surgery {
   transfusions: TransfusionEvent[];
 }
 export interface Lab {
-  visit_no: string; // ForeignKey to Visit, use string to match Visit.visit_no
+  visit_no: string; // ForeignKey to DatabaseVisit, use string to match DatabaseVisit.visit_no
   mrn: string; // ForeignKey to Patient, use string to match Patient.mrn
   lab_id: number;
   lab_draw_dtm: string; // ISO datetime string
@@ -56,7 +56,7 @@ export interface Lab {
   upper_limit: number;
 }
 export interface Medication {
-  visit_no: string; // ForeignKey to Visit, use string to match Visit.visit_no
+  visit_no: string; // ForeignKey to DatabaseVisit, use string to match DatabaseVisit.visit_no
   order_med_id: string; // Decimal as string
   order_dtm: string; // ISO datetime string
   medication_id: string; // Decimal as string
@@ -71,7 +71,7 @@ export interface Medication {
   med_end_dtm: string; // ISO datetime string
 }
 export interface BillingCode {
-  visit_no: string; // ForeignKey to Visit, use string to match Visit.visit_no
+  visit_no: string; // ForeignKey to DatabaseVisit, use string to match DatabaseVisit.visit_no
   cpt_code: string;
   cpt_code_desc: string;
   proc_dtm: string; // ISO datetime string
@@ -89,7 +89,7 @@ export type Patient = {
   ethnicity_desc: string;
   death_date: string | null;
 };
-export interface Visit {
+export interface DatabaseVisit {
   visit_no: string; // BigIntegerField, primary key
   mrn: string; // ForeignKey to Patient, use string to match Patient.mrn
   epic_pat_id: string;

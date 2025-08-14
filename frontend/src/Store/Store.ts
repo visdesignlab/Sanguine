@@ -1,7 +1,7 @@
 /* eslint-disable import/no-cycle */
 import { makeAutoObservable } from 'mobx';
 import { createContext } from 'react';
-import { Visit } from '../Types/database';
+import { DatabaseVisit } from '../Types/database';
 import { DashboardStore } from './DashboardStore';
 import {
   getAdherenceFlags, getOverallAdherenceFlags, getProphMedFlags, isValidVisit, safeParseDate,
@@ -10,7 +10,32 @@ import {
   BloodComponent, BLOOD_COMPONENT_OPTIONS, TIME_CONSTANTS, CPT_CODES,
   COSTS,
   Cost,
+  ProphylMed,
+  Month,
+  Quarter,
+  Year,
+  AdherentCountField,
+  TotalTransfusedField,
+  Outcome,
+  OverallAdherentCountField,
+  OverallTotalTransfusedField,
 } from '../Types/application';
+import { getTimePeriodFromDate } from '../Utils/dashboard';
+
+export type Visit = DatabaseVisit & {
+  dischargeDate: Date;
+  month: Month | null; // E.g. '2023-01'
+  quarter: Quarter | null; // E.g. '2023-Q1'
+  year: Year | null; // E.g. '2023'
+
+  total_blood_product_costs: number;
+}
+& Record<BloodComponent, number>
+& Record<AdherentCountField | TotalTransfusedField, number>
+& Record<Outcome, number>
+& Record<ProphylMed, number>
+& Record<OverallAdherentCountField | OverallTotalTransfusedField, number>
+& Record<Cost, number>;
 
 export class RootStore {
   // Provenance
@@ -40,17 +65,17 @@ export class RootStore {
    * - Blood product costs (e.g., rbc_cost, ffp_cost)
    * - Total blood product costs
    */
-  get allVisits() {
+  get allVisits(): Visit[] {
     return this._allVisits
       .filter((v) => isValidVisit(v))
       // Add derived fields to each visit
-      .map((visit: Visit) => {
+      .map((visit: DatabaseVisit) => {
         const bloodProductUnits = BLOOD_COMPONENT_OPTIONS.reduce((acc, component) => {
           acc[component.value] = visit.transfusions.reduce((s: number, t) => s + (t[component.value] || 0), 0);
           return acc;
         }, {} as Record<BloodComponent, number>);
 
-        const outcomeFlags = {
+        const outcomeFlags: Record<Outcome, number> = {
           los: (safeParseDate(visit.dsch_dtm).getTime() - safeParseDate(visit.adm_dtm).getTime()) / (TIME_CONSTANTS.ONE_DAY_MS),
           death: visit.pat_expired_f ? 1 : 0,
           vent: visit.total_vent_mins > TIME_CONSTANTS.VENTILATOR_THRESHOLD_MINS ? 1 : 0,
@@ -78,6 +103,9 @@ export class RootStore {
         return {
           ...visit,
           dischargeDate: safeParseDate(visit.dsch_dtm),
+          month: getTimePeriodFromDate(safeParseDate(visit.adm_dtm), 'month'),
+          quarter: getTimePeriodFromDate(safeParseDate(visit.adm_dtm), 'quarter'),
+          year: getTimePeriodFromDate(safeParseDate(visit.adm_dtm), 'year'),
           ...bloodProductUnits,
           ...adherenceFlags,
           ...outcomeFlags,

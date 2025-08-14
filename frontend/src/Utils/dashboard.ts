@@ -16,6 +16,9 @@ import {
   TimePeriod,
   COST_OPTIONS,
   OVERALL_BLOOD_PRODUCT_COST,
+  Year,
+  Month,
+  Quarter,
 } from '../Types/application';
 import { type RootStore } from '../Store/Store';
 
@@ -117,6 +120,9 @@ export function isMetricChangeGood(metricVar: typeof dashboardYAxisVars[number],
 /**
  * Calculate time period string from a date based on aggregation type
  */
+export function getTimePeriodFromDate(date: Date, aggregation: 'month'): Month | null;
+export function getTimePeriodFromDate(date: Date, aggregation: 'quarter'): Quarter | null
+export function getTimePeriodFromDate(date: Date, aggregation: 'year'): Year | null;
 export function getTimePeriodFromDate(date: Date, aggregation: TimeAggregation): TimePeriod | null {
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
     console.error('Invalid date for time period calculation:', date);

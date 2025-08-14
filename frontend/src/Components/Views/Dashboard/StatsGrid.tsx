@@ -97,49 +97,45 @@ export function StatsGrid() {
               )}
             </Group>
           </Group>
-          <Group align="center" gap={5} mt="md">
+          <Group align="center" gap={5} mt="sm">
             {/** Stat Value */}
             <Title order={2}>{statValue}</Title>
-            <Group align="center" gap={0}>
-              {/** Stat Sparkline */}
-              <Sparkline
-                w={30}
-                h={20}
-                data={statSparklineData}
-                curveType="linear"
-                fillOpacity={0.6}
-                strokeWidth={0.8}
-                color={statColor}
-              />
-              {/** Stat % Change in Value */}
-              <Text
-                size="xs"
-                style={{
-                  color: statColor,
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                {/** Stat Up / Down Arrow */}
-                <DiffIcon size={spacingPx.md} stroke={cardIconStroke} />
-                <span>
-                  {diff}
-                  %
-                </span>
-              </Text>
-            </Group>
+            {/** Stat Sparkline */}
+            <Sparkline
+              w={60}
+              h={25}
+              data={statSparklineData}
+              curveType="linear"
+              fillOpacity={0.4}
+              strokeWidth={0.6}
+              color={statColor}
+              mb={-4}
+            />
           </Group>
           {/* Comparison Text */}
-          <Text
-            fz="xs"
-            mt="xs"
-            className={clsx(
-              statsGridStyles.comparisonText,
-              isHovered && statsGridStyles.comparisonTextHovered,
-            )}
-          >
-            {`Last 30 days compared to ${statData.comparedTo || 'previous period'}`}
-          </Text>
+          {/** Stat % Change in Value */}
+          <Group align="center" mt="sm" gap={2}>
+            <DiffIcon size={spacingPx.md} stroke={cardIconStroke} color={statColor} />
+            <Text
+              size="xs"
+              component="span"
+              color={statColor}
+            >
+              {diff}
+              %
+            </Text>
+            {/** Comparison Text */}
+            <Text
+              size="xs"
+              ml={2}
+              className={clsx(
+                statsGridStyles.comparisonText,
+                isHovered && statsGridStyles.comparisonTextHovered,
+              )}
+            >
+              {`last 30 days vs. ${statData.comparedTo || 'previous period'}`}
+            </Text>
+          </Group>
         </Paper>
       );
     });

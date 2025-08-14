@@ -9,9 +9,11 @@ import { useDisclosure } from '@mantine/hooks';
 import {
   useMantineTheme, Title, Stack, Card, Flex, Select, Button, CloseButton, ActionIcon, Menu, Modal,
   Divider,
+  Tooltip,
 } from '@mantine/core';
 import { BarChart, LineChart } from '@mantine/charts';
 import {
+  IconCalendarCode,
   IconChartLine, IconGripVertical, IconNumbers, IconPercentage, IconPlus,
 } from '@tabler/icons-react';
 
@@ -242,14 +244,26 @@ export function Dashboard() {
                     </Flex>
                     <Flex direction="row" align="center" gap="sm">
                       {/* Chart y-axis aggregation toggle */}
-                      <ActionIcon
-                        variant="subtle"
-                        onClick={() => store.dashboardStore.setChartConfig(chartId, {
-                          chartId, yAxisVar, xAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum',
-                        })}
-                      >
-                        <IconPercentage size={18} color={aggregation === 'avg' ? theme.colors.indigo[6] : theme.colors.gray[6]} stroke={3} />
-                      </ActionIcon>
+                      <Tooltip label={`Change aggregation to ${aggregation === 'sum' ? 'average' : 'sum'}`}>
+                        <ActionIcon
+                          variant="subtle"
+                          onClick={() => store.dashboardStore.setChartConfig(chartId, {
+                            chartId, yAxisVar, xAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum',
+                          })}
+                        >
+                          <IconPercentage size={18} color={aggregation === 'avg' ? theme.colors.indigo[6] : theme.colors.gray[6]} stroke={3} />
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip label={`Change X-Axis to ${xAxisVar === 'month' ? 'quarter' : xAxisVar === 'quarter' ? 'year' : 'month'}`}>
+                        <ActionIcon
+                          variant="subtle"
+                          onClick={() => store.dashboardStore.setChartConfig(chartId, {
+                            chartId, yAxisVar, xAxisVar: xAxisVar === 'month' ? 'quarter' : xAxisVar === 'quarter' ? 'year' : 'month', aggregation,
+                          })}
+                        >
+                          <IconCalendarCode size={18} color={theme.colors.gray[6]} stroke={3} />
+                        </ActionIcon>
+                      </Tooltip>
                       {/* Chart Select Attribute Menu */}
                       <Select
                         data={dashboardYAxisOptions.map((opt) => ({
@@ -287,7 +301,7 @@ export function Dashboard() {
                         chartDataKeys.map((name, idx) => ({
                           name,
                           color: ['#de6e56', '#2d5d8b', '#63bff0', '#b4a34b', '#e1a692'][idx % 5],
-                          label: name,
+                          label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
                         }))
                       }
                       xAxisProps={{
@@ -310,7 +324,7 @@ export function Dashboard() {
                           }
                           : {}
                       }
-                      valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
+                      valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation)}
                     />
                   ) : (
                     // Line Chart
