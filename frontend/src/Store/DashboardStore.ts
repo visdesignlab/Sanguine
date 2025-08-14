@@ -17,7 +17,7 @@ import {
   dashboardYAxisOptions, // Dashboard data types
 } from '../Types/application';
 import {
-  aggregateYAxisVisitVars,
+  aggregateVisitsBySumAvg,
   compareTimePeriods, formatValueForDisplay, getTimePeriodFromDate,
 } from '../Utils/dashboard';
 
@@ -244,7 +244,7 @@ export class DashboardStore {
           // Aggregate by this time period, and y-axis aggregations (sum, avg)
           const timeData = rollup(
             visitDataWithTimePeriod,
-            (visits) => aggregateYAxisVisitVars(visits),
+            (visits) => aggregateVisitsBySumAvg(visits),
             (d) => d.timePeriod,
           );
 
@@ -313,8 +313,8 @@ export class DashboardStore {
     const comparisonPeriodVisits = this._rootStore.allVisits.filter((v) => v.dischargeDate >= comparisonPeriodStart && v.dischargeDate <= comparisonPeriodEnd);
 
     // --- Aggregate both periods using the same logic as chart data ---
-    const currentPeriodData = aggregateYAxisVisitVars(currentPeriodVisits);
-    const comparisonPeriodData = aggregateYAxisVisitVars(comparisonPeriodVisits);
+    const currentPeriodData = aggregateVisitsBySumAvg(currentPeriodVisits);
+    const comparisonPeriodData = aggregateVisitsBySumAvg(comparisonPeriodVisits);
 
     // --- Return data for every possible stat (aggregation, yAxisVar) combination ---
     const result = {} as DashboardStatData;
@@ -344,7 +344,7 @@ export class DashboardStore {
           const periodVisits = this._rootStore.allVisits.filter(
             (v) => v.dischargeDate >= periodStart && v.dischargeDate <= periodEnd,
           );
-          const periodData = aggregateYAxisVisitVars(periodVisits);
+          const periodData = aggregateVisitsBySumAvg(periodVisits);
           sparklineData.push((periodData[key] || 0) ** 2); // Square values for visibility
         }
 
