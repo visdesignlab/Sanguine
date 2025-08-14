@@ -307,10 +307,10 @@ export class DashboardStore {
 
   /**
    * Returns all stat chart data needed for the dashboard.
+   * Optimized to avoid redundant filtering and aggregation.
    */
   get statData() {
     // --- Find the current period (last 30 days) for the stats ---
-    // Find the latest discharge date
     const latestDate = new Date(Math.max(...this._rootStore.allVisits.map((v) => v.dischargeDate.getTime())));
 
     // Calculate current period (last 30 days)
@@ -323,18 +323,12 @@ export class DashboardStore {
     // --- Find comparison period (closest non-overlapping calendar month) for the stats ---
     let comparisonMonth = currentPeriodStartMonth - 1;
     let comparisonYear = currentPeriodStartYear;
-
-    // Handle year rollover
     if (comparisonMonth < 0) {
       comparisonMonth = 11; // December
       comparisonYear -= 1;
     }
-
-    // Create comparison period boundaries (full month)
     const comparisonPeriodStart = new Date(comparisonYear, comparisonMonth, 1);
     const comparisonPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
-
-    // Get month name for comparison text
     const comparisonMonthName = comparisonPeriodStart.toLocaleDateString('en-US', { month: 'short' });
 
     // --- Sparkline Data - Find intermediate periods between current and comparison periods ---
@@ -343,24 +337,47 @@ export class DashboardStore {
     const sparklineEnd = latestDate;
     const intervalMs = Math.floor((sparklineEnd.getTime() - sparklineStart.getTime()) / intermediatePeriodNumber);
 
-    // --- Filter visits by time periods ---
-    const currentPeriodVisits = this._rootStore.allVisits.filter((v) => v.dischargeDate >= currentPeriodStart && v.dischargeDate <= latestDate);
-    const comparisonPeriodVisits = this._rootStore.allVisits.filter((v) => v.dischargeDate >= comparisonPeriodStart && v.dischargeDate <= comparisonPeriodEnd);
+    // Calculate sparkline periods
+    const sparklinePeriods: Array<{ start: Date, end: Date }> = [];
+    for (let i = 0; i < intermediatePeriodNumber; i += 1) {
+      const periodStart = new Date(sparklineStart.getTime() + i * intervalMs);
+      const periodEnd = new Date(periodStart.getTime() + intervalMs - 1);
+      sparklinePeriods.push({ start: periodStart, end: periodEnd });
+    }
 
-    // --- Aggregate both periods using the same logic as chart data ---
+    // --- Find visits from each time period (current, comparison, sparkline periods) ---
+    const currentPeriodVisits: typeof this._rootStore.allVisits = [];
+    const comparisonPeriodVisits: typeof this._rootStore.allVisits = [];
+    const sparklineVisits: typeof this._rootStore.allVisits[] = Array(intermediatePeriodNumber).fill(null).map(() => []);
+
+    for (const v of this._rootStore.allVisits) {
+      const t = v.dischargeDate.getTime();
+      if (t >= currentPeriodStart.getTime() && t <= latestDate.getTime()) {
+        currentPeriodVisits.push(v);
+      }
+      if (t >= comparisonPeriodStart.getTime() && t <= comparisonPeriodEnd.getTime()) {
+        comparisonPeriodVisits.push(v);
+      }
+      for (let i = 0; i < intermediatePeriodNumber; i += 1) {
+        if (t >= sparklinePeriods[i].start.getTime() && t <= sparklinePeriods[i].end.getTime()) {
+          sparklineVisits[i].push(v);
+        }
+      }
+    }
+
+    // --- For each period of visits, aggregate by sum and average ---
     const currentPeriodData = aggregateVisitsBySumAvg(currentPeriodVisits);
     const comparisonPeriodData = aggregateVisitsBySumAvg(comparisonPeriodVisits);
+    const sparklinePeriodData = sparklineVisits.map((visits) => aggregateVisitsBySumAvg(visits));
 
     // --- Return data for every possible stat (aggregation, yAxisVar) combination ---
     const result = {} as DashboardStatData;
-    // For each aggregation type (sum, avg)
+    // For each aggregation option (e.g. sum, avg)...
     Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
       const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
-      // For each yAxisVar (e.g. rbc_units, guideline_adherence)
+      // For each yAxisVar (e.g. rbc_units, guideline_adherence)...
       dashboardYAxisVars.forEach((yAxisVar) => {
-        // E.g. "sum_rbc_units" or "avg_guideline_adherence"
         const key = `${aggType}_${yAxisVar}` as DashboardAggYAxisVar;
-
         // Calculate percentage change (diff)
         const currentValue = currentPeriodData[key] || 0;
         const comparisonValue = comparisonPeriodData[key] || 0;
@@ -371,24 +388,15 @@ export class DashboardStore {
         // Format the stat value (E.g. "Overall Guideline Adherence")
         const formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
 
-        // --- Sparkline calculation ---
-        const sparklineData: number[] = [];
-        for (let i = 0; i < intermediatePeriodNumber; i += 1) {
-          const periodStart = new Date(sparklineStart.getTime() + i * intervalMs);
-          const periodEnd = new Date(periodStart.getTime() + intervalMs - 1);
+        // Sparkline calculation
+        const sparklineData: number[] = sparklinePeriodData.map((periodData) => (periodData[key] || 0) ** 2);
 
-          const periodVisits = this._rootStore.allVisits.filter(
-            (v) => v.dischargeDate >= periodStart && v.dischargeDate <= periodEnd,
-          );
-          const periodData = aggregateVisitsBySumAvg(periodVisits);
-          sparklineData.push((periodData[key] || 0) ** 2); // Square values for visibility
-        }
         // Return result
         result[key] = {
-          value: formattedValue, // E.g. 13 RBC units
-          diff: Math.round(diff), // E.g. 22%
-          comparedTo: comparisonMonthName, // E.g. "Feb"
-          sparklineData, // E.g. [5,1,3,2]
+          value: formattedValue, // E.g. "85 Units"
+          diff: Math.round(diff), // E.g. 20 (percentage change)
+          comparedTo: comparisonMonthName || '', // E.g. "Jan"
+          sparklineData, // E.g. [80, 90, 85, 95]
         };
       });
     });
