@@ -441,12 +441,21 @@ export type DashboardChartConfig = {
   xAxisVar: typeof dashboardXAxisVars[number];
   yAxisVar: typeof dashboardYAxisVars[number];
   aggregation: keyof typeof AGGREGATION_OPTIONS;
-  chartType?: 'line' | 'bar';
+  chartType?: 'line' | 'bar' | 'stackedBar';
 };
 
+// Dashboard chart configuration key type
 export type DashboardChartConfigKey = `${DashboardAggYAxisVar}_${typeof dashboardXAxisVars[number]}`;
-// Dashboard chart data type (key, {x-axis, y-axis})
-export type DashboardChartData = Record<DashboardChartConfigKey, { timePeriod: TimePeriod, data: number }[]>;
+
+// Dashboard chart data value type
+export type DashboardChartDataValue =
+  // E.g. ({ timePeriod: '2023-Q1', data: 100 })
+  | Array<{ timePeriod: TimePeriod; data: number }>
+  // E.g. ({ timePeriod: '2023-Q1', rbc_units: 50, ffp_units: 30 })
+  | Array<{ timePeriod: TimePeriod } & Record<string, number>>;
+
+// Dashboard chart data type (key, value)
+export type DashboardChartData = Record<DashboardChartConfigKey, DashboardChartDataValue>;
 
 // --- Dashboard stats ---
 export type DashboardStatConfig = {

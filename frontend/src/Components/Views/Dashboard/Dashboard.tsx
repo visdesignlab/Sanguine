@@ -29,6 +29,7 @@ import {
   dashboardXAxisOptions,
   type DashboardChartConfig,
   DashboardStatConfig,
+  COST_OPTIONS,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 
@@ -82,21 +83,30 @@ export function Dashboard() {
 
   const addItemToDashboard = useCallback(() => {
     if (itemModalType === 'chart') {
-      // Add chart
+    // Infer chartType
+      let chartType: DashboardChartConfig['chartType'] = 'line';
+      if (selectedYAxisVar === 'total_blood_product_costs') {
+        chartType = 'stackedBar';
+      } else {
+        const selectedOption = dashboardYAxisOptions.find((opt) => opt.value === selectedYAxisVar);
+        if (selectedOption && selectedOption.units?.sum === '$') {
+          chartType = 'bar';
+        }
+      }
       store.dashboardStore.addChart({
         chartId: `chart-${Date.now()}`,
         xAxisVar: selectedXAxisVar as DashboardChartConfig['xAxisVar'],
         yAxisVar: selectedYAxisVar as DashboardChartConfig['yAxisVar'],
         aggregation: selectedAggregation as DashboardChartConfig['aggregation'],
+        chartType,
       });
     } else {
-      // Add stat
+    // Add stat
       store.dashboardStore.addStat(
-        selectedYAxisVar as DashboardStatConfig['var'],
-        selectedAggregation as DashboardStatConfig['aggregation'],
+      selectedYAxisVar as DashboardStatConfig['var'],
+      selectedAggregation as DashboardStatConfig['aggregation'],
       );
     }
-    // Close modal after adding item
     close();
   }, [selectedAggregation, selectedXAxisVar, selectedYAxisVar, itemModalType, close, store.dashboardStore]);
 
@@ -202,7 +212,7 @@ export function Dashboard() {
           }}
           layouts={store.dashboardStore.chartLayouts}
         >
-          {/** Render each chart defined in the store's chart configs */}
+          {/** Render each chart - defined in the store's chart configs */}
           {Object.values(store.dashboardStore.chartConfigs).map(({
             chartId, yAxisVar, xAxisVar, aggregation, chartType,
           }) => (
@@ -253,9 +263,13 @@ export function Dashboard() {
                       defaultValue={yAxisVar}
                       value={yAxisVar}
                       onChange={(value) => {
-                        // TODO: Remove inferredChartType. This must be defined elsewhere.
                         const selectedOption = dashboardYAxisOptions.find((opt) => opt.value === value);
-                        const inferredChartType = selectedOption && selectedOption.units?.sum === '$' ? 'bar' : 'line';
+                        let inferredChartType: DashboardChartConfig['chartType'] = 'line';
+                        if (value === 'total_blood_product_costs') {
+                          inferredChartType = 'stackedBar';
+                        } else if (selectedOption && selectedOption.units?.sum === '$') {
+                          inferredChartType = 'bar';
+                        }
                         store.dashboardStore.setChartConfig(chartId, {
                           chartId,
                           xAxisVar,
@@ -269,7 +283,34 @@ export function Dashboard() {
                     <CloseButton onClick={() => handleRemoveChart(chartId)} />
                   </Flex>
                 </Flex>
-                {chartType === 'bar' ? (
+                {/** Render Chart Type (Stacked Bar, Bar, Line) */}
+                {chartType === 'stackedBar' ? (
+                  // Stacked Bar Chart
+                  <BarChart
+                    h={`calc(100% - (${theme.spacing.md} * 2))`}
+                    data={store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || []}
+                    dataKey="timePeriod"
+                    series={COST_OPTIONS.map(({ value, label }, idx) => ({
+                      name: value,
+                      color: [
+                        '#de6e56',
+                        '#2d5d8b',
+                        '#63bff0',
+                        '#b4a34b',
+                        '#e1a692',
+                      ][idx % 5],
+                      valueKey: value,
+                      label: label.base,
+                      stacked: true,
+                    }))}
+                    xAxisProps={{
+                      interval: 'equidistantPreserveStart',
+                    }}
+                    type="stacked"
+                    valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
+                  />
+                ) : chartType === 'bar' ? (
+                  // Bar Chart
                   <BarChart
                     h={`calc(100% - (${theme.spacing.md} * 2))`}
                     data={store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || []}
@@ -295,6 +336,7 @@ export function Dashboard() {
                     valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
                   />
                 ) : (
+                  // Line Chart
                   <LineChart
                     h={`calc(100% - (${theme.spacing.md} * 2))`}
                     data={store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || []}
