@@ -104,6 +104,9 @@ export class DashboardStore {
     {
       statId: '3', var: 'ffp_units', aggregation: 'sum', title: 'Total Plasma Transfused',
     },
+    {
+      statId: '4', var: 'total_blood_product_costs', aggregation: 'sum', title: 'Total Blood Product Costs',
+    }
   ];
 
   get statConfigs() {
