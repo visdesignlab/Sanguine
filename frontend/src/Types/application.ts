@@ -447,11 +447,8 @@ export type DashboardChartConfig = {
 // Dashboard chart configuration key type
 export type DashboardChartConfigKey = `${DashboardAggYAxisVar}_${typeof dashboardXAxisVars[number]}`;
 
-// Dashboard chart data value type: E.g. { timePeriod: '2023-Q1', rbc_units: 50, ffp_units: 30 }
-export type DashboardChartDataValue = Array<{ timePeriod: TimePeriod } & Record<string, number>>;
-
 // Dashboard chart data type (key, value)
-export type DashboardChartData = Record<DashboardChartConfigKey, DashboardChartDataValue>;
+export type DashboardChartData = Record<DashboardChartConfigKey, Array<{ timePeriod: TimePeriod } & Record<string, number>>>;
 
 // --- Dashboard stats ---
 export type DashboardStatConfig = {
