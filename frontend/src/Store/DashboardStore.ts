@@ -222,10 +222,12 @@ export class DashboardStore {
     const result = {} as DashboardChartData;
 
     // --- Calculate data for every possible chart (aggregation, yAxisVar, xAxisVar) combination ---
+    // For each aggregation type (sum, avg)
     Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
       const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
-
+      // For each yAxisVar (e.g. rbc_units, guideline_adherence)
       dashboardYAxisVars.forEach((yAxisVar) => {
+        // For each xAxisVar (e.g. month, quarter)
         dashboardXAxisVars.forEach((xAxisVar) => {
           // E.g. "sum_rbc_units_quarter" or "avg_guideline_adherence_month"
           const aggVar: DashboardAggYAxisVar = `${aggType}_${yAxisVar}`;
@@ -241,15 +243,15 @@ export class DashboardStore {
             }))
             .filter((visit) => visit.timePeriod !== null);
 
-          // Aggregate by this time period, and y-axis aggregations (sum, avg)
-          const timeData = rollup(
+          // Aggregate visit variables by this time period (e.g. month), and y-axis aggregations (sum, avg)
+          const aggregatedData = rollup(
             visitDataWithTimePeriod,
             (visits) => aggregateVisitsBySumAvg(visits),
             (d) => d.timePeriod,
           );
 
-          // Convert to the format needed for charts
-          const chartDatum = Array.from(timeData.entries())
+          // Convert to the format needed for charts: (x-axis: time period, y-axis: data), sorted.
+          const chartDatum = Array.from(aggregatedData.entries())
             .map(([timePeriod, aggregations]) => ({
               timePeriod: timePeriod!,
               data: aggregations[aggVar] || 0,
@@ -261,7 +263,7 @@ export class DashboardStore {
             console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and aggVar "${aggVar}"`);
           }
 
-          // Return result
+          // Return result (E.g. Key: "sum_rbc_units_quarter", Value: chartDatum)
           const compositeKey = `${aggVar}_${xAxisVar}` as keyof DashboardChartData;
           result[compositeKey] = chartDatum;
         });
@@ -318,11 +320,12 @@ export class DashboardStore {
 
     // --- Return data for every possible stat (aggregation, yAxisVar) combination ---
     const result = {} as DashboardStatData;
-
+    // For each aggregation type (sum, avg)
     Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
       const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
-
+      // For each yAxisVar (e.g. rbc_units, guideline_adherence)
       dashboardYAxisVars.forEach((yAxisVar) => {
+        // E.g. "sum_rbc_units" or "avg_guideline_adherence"
         const key = `${aggType}_${yAxisVar}` as DashboardAggYAxisVar;
 
         // Calculate percentage change (diff)
@@ -347,12 +350,12 @@ export class DashboardStore {
           const periodData = aggregateVisitsBySumAvg(periodVisits);
           sparklineData.push((periodData[key] || 0) ** 2); // Square values for visibility
         }
-
+        // Return result
         result[key] = {
-          value: formattedValue,
-          diff: Math.round(diff),
-          comparedTo: comparisonMonthName,
-          sparklineData,
+          value: formattedValue, // E.g. 13 RBC units
+          diff: Math.round(diff), // E.g. 22%
+          comparedTo: comparisonMonthName, // E.g. "Feb"
+          sparklineData, // E.g. [5,1,3,2]
         };
       });
     });
