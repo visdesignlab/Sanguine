@@ -206,117 +206,98 @@ export function Dashboard() {
           {/** Render each chart - defined in the store's chart configs */}
           {Object.values(store.dashboardStore.chartConfigs).map(({
             chartId, yAxisVar, xAxisVar, aggregation, chartType,
-          }) => (
-            <Card
-              key={chartId}
-              withBorder
-              className={classes.gridItem}
-              onMouseEnter={() => setHoveredChartId(chartId)}
-              onMouseLeave={() => setHoveredChartId(null)}
-            >
-              {/** All chart content within the card */}
-              <Flex direction="column" gap="sm" h="100%">
-                {/** Chart Header */}
-                <Flex direction="row" justify="space-between" align="center" pl="md">
-                  <Flex direction="row" align="center" gap="md" ml={-12}>
-                    <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
-                    {/** Chart Title */}
-                    <Title
-                      order={4}
-                      className={hoveredChartId === chartId ? classes.chartTitleHovered : undefined}
-                    >
-                      {
-                        (() => {
-                          // E.g. "rbc_units"
-                          const chartYAxis = dashboardYAxisOptions.find((o) => o.value === yAxisVar);
-                          // E.g. "Average RBCs Transfused"
-                          return chartYAxis?.label?.[aggregation] || yAxisVar;
-                        })()
-                      }
-                    </Title>
-                  </Flex>
-                  <Flex direction="row" align="center" gap="sm">
-                    {/** Chart y-axis aggregation toggle */}
-                    <ActionIcon
-                      variant="subtle"
-                      onClick={() => store.dashboardStore.setChartConfig(chartId, {
-                        chartId, yAxisVar, xAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum',
-                      })}
-                    >
-                      <IconPercentage size={18} color={aggregation === 'avg' ? theme.colors.indigo[6] : theme.colors.gray[6]} stroke={3} />
-                    </ActionIcon>
-                    {/** Chart Select Attribute Menu */}
-                    <Select
-                      data={dashboardYAxisOptions.map((opt) => ({
-                        value: opt.value,
-                        label: opt.label.base,
-                      }))}
-                      defaultValue={yAxisVar}
-                      value={yAxisVar}
-                      onChange={(value) => {
-                        const selectedOption = dashboardYAxisOptions.find((opt) => opt.value === value);
-                        let inferredChartType: DashboardChartConfig['chartType'] = 'line';
-                        if (selectedOption && selectedOption.units?.sum === '$') {
-                          inferredChartType = 'bar';
+          }) => {
+            const chartData = store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
+            const chartDataKeys = chartData.length > 0
+              ? Object.keys(chartData[0]).filter((k) => k !== 'timePeriod')
+              : [];
+
+            return (
+              <Card
+                key={chartId}
+                withBorder
+                className={classes.gridItem}
+                onMouseEnter={() => setHoveredChartId(chartId)}
+                onMouseLeave={() => setHoveredChartId(null)}
+              >
+                <Flex direction="column" gap="sm" h="100%">
+                  {/* Chart Header */}
+                  <Flex direction="row" justify="space-between" align="center" pl="md">
+                    <Flex direction="row" align="center" gap="md" ml={-12}>
+                      <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
+                      {/* Chart Title */}
+                      <Title
+                        order={4}
+                        className={hoveredChartId === chartId ? classes.chartTitleHovered : undefined}
+                      >
+                        {
+                          (() => {
+                            // E.g. "sum_rbc_units"
+                            const chartYAxis = dashboardYAxisOptions.find((o) => o.value === yAxisVar);
+                            // E.g. "Total RBC Units"
+                            return chartYAxis?.label?.[aggregation] || yAxisVar;
+                          })()
                         }
-                        store.dashboardStore.setChartConfig(chartId, {
-                          chartId,
-                          xAxisVar,
-                          yAxisVar: value as DashboardChartConfig['yAxisVar'],
-                          aggregation,
-                          chartType: inferredChartType,
-                        });
-                      }}
-                    />
-                    {/** Remove / Delete chart */}
-                    <CloseButton onClick={() => handleRemoveChart(chartId)} />
+                      </Title>
+                    </Flex>
+                    <Flex direction="row" align="center" gap="sm">
+                      {/* Chart y-axis aggregation toggle */}
+                      <ActionIcon
+                        variant="subtle"
+                        onClick={() => store.dashboardStore.setChartConfig(chartId, {
+                          chartId, yAxisVar, xAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum',
+                        })}
+                      >
+                        <IconPercentage size={18} color={aggregation === 'avg' ? theme.colors.indigo[6] : theme.colors.gray[6]} stroke={3} />
+                      </ActionIcon>
+                      {/* Chart Select Attribute Menu */}
+                      <Select
+                        data={dashboardYAxisOptions.map((opt) => ({
+                          value: opt.value,
+                          label: opt.label.base,
+                        }))}
+                        defaultValue={yAxisVar}
+                        value={yAxisVar}
+                        onChange={(value) => {
+                          const selectedOption = dashboardYAxisOptions.find((opt) => opt.value === value);
+                          let inferredChartType: DashboardChartConfig['chartType'] = 'line';
+                          if (selectedOption && selectedOption.units?.sum === '$') {
+                            inferredChartType = 'bar';
+                          }
+                          store.dashboardStore.setChartConfig(chartId, {
+                            chartId,
+                            xAxisVar,
+                            yAxisVar: value as DashboardChartConfig['yAxisVar'],
+                            aggregation,
+                            chartType: inferredChartType,
+                          });
+                        }}
+                      />
+                      {/* Remove / Delete chart */}
+                      <CloseButton onClick={() => handleRemoveChart(chartId)} />
+                    </Flex>
                   </Flex>
-                </Flex>
-                { chartType === 'bar' ? (
-                  // Bar Chart
-                  <BarChart
-                    h={`calc(100% - (${theme.spacing.md} * 2))`}
-                    data={store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || []}
-                    dataKey="timePeriod"
-                    series={
-                      (() => {
-                        // Color palette for series
-                        const colors = [
-                          '#de6e56',
-                          '#2d5d8b',
-                          '#63bff0',
-                          '#b4a34b',
-                          '#e1a692',
-                        ];
-                        // Get keys from first datum (excluding timePeriod)
-                        const chartData = store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
-                        const keys = chartData.length > 0
-                          ? Object.keys(chartData[0]).filter((k) => k !== 'timePeriod')
-                          : [];
-                        // Map each key to a color
-                        return keys.map((name, idx) => {
-                          const option = dashboardYAxisOptions.find((opt) => opt.value === name);
-                          return {
-                            name,
-                            color: colors[idx % colors.length],
-                            label: option?.label.base || name,
-                          };
-                        });
-                      })()
-                    }
-                    xAxisProps={{
-                      interval: 'equidistantPreserveStart',
-                    }}
-                    type="stacked"
-                    tooltipAnimationDuration={200}
-                    tooltipProps={
-                      (() => {
-                        const chartData = store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
-                        const keys = chartData.length > 0
-                          ? Object.keys(chartData[0]).filter((k) => k !== 'timePeriod')
-                          : [];
-                        if (keys.length === 1) {
-                          return {
+                  { chartType === 'bar' ? (
+                    // Bar Chart
+                    <BarChart
+                      h={`calc(100% - (${theme.spacing.md} * 2))`}
+                      data={chartData}
+                      dataKey="timePeriod"
+                      series={
+                        chartDataKeys.map((name, idx) => ({
+                          name,
+                          color: ['#de6e56', '#2d5d8b', '#63bff0', '#b4a34b', '#e1a692'][idx % 5],
+                          label: name,
+                        }))
+                      }
+                      xAxisProps={{
+                        interval: 'equidistantPreserveStart',
+                      }}
+                      type="stacked"
+                      tooltipAnimationDuration={200}
+                      tooltipProps={
+                        chartDataKeys.length === 1
+                          ? {
                             content: ({ active, payload, label }) => (
                               <DashboardChartTooltip
                                 active={active}
@@ -326,46 +307,44 @@ export function Dashboard() {
                                 aggregation={aggregation}
                               />
                             ),
-                          };
-                        }
-                        // Default tooltip
-                        return {};
-                      })()
-                    }
-                    valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
-                  />
-                ) : (
-                  // Line Chart
-                  <LineChart
-                    h={`calc(100% - (${theme.spacing.md} * 2))`}
-                    data={store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || []}
-                    dataKey="timePeriod"
-                    series={[
-                      { name: 'data', color: 'indigo.6' },
-                    ]}
-                    curveType="linear"
-                    tickLine="none"
-                    xAxisProps={{
-                      interval: 'equidistantPreserveStart',
-                    }}
-                    tooltipAnimationDuration={200}
-                    tooltipProps={{
-                      content: ({ active, payload, label }) => (
-                        <DashboardChartTooltip
-                          active={active}
-                          payload={payload}
-                          xAxisVar={label}
-                          yAxisVar={yAxisVar}
-                          aggregation={aggregation}
-                        />
-                      ),
-                    }}
-                    valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
-                  />
-                )}
-              </Flex>
-            </Card>
-          ))}
+                          }
+                          : {}
+                      }
+                      valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
+                    />
+                  ) : (
+                    // Line Chart
+                    <LineChart
+                      h={`calc(100% - (${theme.spacing.md} * 2))`}
+                      data={chartData}
+                      dataKey="timePeriod"
+                      series={[
+                        { name: 'data', color: 'indigo.6' },
+                      ]}
+                      curveType="linear"
+                      tickLine="none"
+                      xAxisProps={{
+                        interval: 'equidistantPreserveStart',
+                      }}
+                      tooltipAnimationDuration={200}
+                      tooltipProps={{
+                        content: ({ active, payload, label }) => (
+                          <DashboardChartTooltip
+                            active={active}
+                            payload={payload}
+                            xAxisVar={label}
+                            yAxisVar={yAxisVar}
+                            aggregation={aggregation}
+                          />
+                        ),
+                      }}
+                      valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
+                    />
+                  )}
+                </Flex>
+              </Card>
+            );
+          })}
         </ResponsiveGridLayout>
       </Stack>
     );
