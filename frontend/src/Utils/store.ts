@@ -57,7 +57,8 @@ export function getPreSurgeryTimePeriods(visit: Visit): [number, number][] {
 }
 
 /**
- * Calculate prophylactic medication flags for a visit
+ * Calculate prophylactic (before surgery) medication flags for a visit
+ * @returns Record of prophylactic medication flags: 1 if medication was given pre-surgery, 0 if not
  */
 export function getProphMedFlags(visit: Visit): Record<ProphylMed, number> {
   return visit.medications.reduce((acc: Record<ProphylMed, number>, med) => {
@@ -90,8 +91,9 @@ export function getProphMedFlags(visit: Visit): Record<ProphylMed, number> {
 }
 
 /**
-* Calculate adherence flags for a visit
-*/
+ * Calculate adherence flags for a visit
+ * @returns Record of adherence flags: 1 if transfusion adheres to guideline, 0 if not; and total transfused counts
+ */
 export function getAdherenceFlags(visit: Visit): Record<AdherentCountField | TotalTransfusedField, number> {
   const adherenceFlags = {
   // --- For each adherence spec, initialize counts ---
@@ -142,7 +144,7 @@ export function getAdherenceFlags(visit: Visit): Record<AdherentCountField | Tot
 
 /**
  * @input adherenceFlags - Individual blood product adherence flags
- * @returns Total adherent transfusions and total transfusions across all blood products
+ * @returns Record of overall adherence flags: total adherent transfusions and total transfusions across all blood products
  */
 export function getOverallAdherenceFlags(adherenceFlags: Record<AdherentCountField | TotalTransfusedField, number>): Record<OverallAdherentCountField | OverallTotalTransfusedField, number> {
   // Sum all adherent transfusions across all blood products

@@ -29,14 +29,27 @@ export class RootStore {
     makeAutoObservable(this);
   }
 
+  /**
+   * Returns all visits, filtering out invalid ones and calculating derived fields.
+   * Derived fields include:
+   * - Blood product units (e.g., rbc_units, ffp_units)
+   * - Outcome flags (e.g., length of stay, death, ventilator use, stroke, ECMO)
+   * - Prophylactic medication flags
+   * - Adherence flags
+   * - Overall adherence flags
+   * - Blood product costs (e.g., rbc_cost, ffp_cost)
+   * - Total blood product costs
+   */
   get allVisits() {
     return this._allVisits
       .filter((v) => isValidVisit(v))
+      // Add derived fields to each visit
       .map((visit: Visit) => {
         const bloodProductUnits = BLOOD_COMPONENT_OPTIONS.reduce((acc, component) => {
           acc[component.value] = visit.transfusions.reduce((s: number, t) => s + (t[component.value] || 0), 0);
           return acc;
         }, {} as Record<BloodComponent, number>);
+
         const outcomeFlags = {
           los: (safeParseDate(visit.dsch_dtm).getTime() - safeParseDate(visit.adm_dtm).getTime()) / (TIME_CONSTANTS.ONE_DAY_MS),
           death: visit.pat_expired_f ? 1 : 0,
@@ -46,7 +59,9 @@ export class RootStore {
         };
 
         const prophMedFlags = getProphMedFlags(visit);
+
         const adherenceFlags = getAdherenceFlags(visit);
+
         const overallAdherenceFlags = getOverallAdherenceFlags(adherenceFlags);
 
         const bloodProductCosts = Object.entries(COSTS).reduce((acc, [costKey, costObj]) => {
@@ -57,6 +72,7 @@ export class RootStore {
           return acc;
         }, {} as Record<Cost, number>);
 
+        // All blood products combined into one cost
         const totalBloodProductCosts = Object.values(bloodProductCosts).reduce((sum, cost) => sum + cost, 0);
 
         return {
