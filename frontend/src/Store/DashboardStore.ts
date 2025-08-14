@@ -80,7 +80,7 @@ export class DashboardStore {
       chartId: '3', xAxisVar: 'quarter', yAxisVar: 'iron', aggregation: 'avg',
     },
     {
-      chartId: '4', xAxisVar: 'quarter', yAxisVar: 'total_blood_product_costs', aggregation: 'sum', chartType: 'stackedBar',
+      chartId: '4', xAxisVar: 'quarter', yAxisVar: 'total_blood_product_costs', aggregation: 'sum', chartType: 'bar',
     },
   ];
 
@@ -267,7 +267,7 @@ export class DashboardStore {
             const chartDatum = Array.from(aggregatedData.entries())
               .map(([timePeriod, data]) => ({
                 timePeriod: timePeriod!,
-                ...data
+                ...data,
               }))
               .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
 

@@ -29,7 +29,6 @@ import {
   dashboardXAxisOptions,
   type DashboardChartConfig,
   DashboardStatConfig,
-  COST_OPTIONS,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 
@@ -84,15 +83,7 @@ export function Dashboard() {
   const addItemToDashboard = useCallback(() => {
     if (itemModalType === 'chart') {
     // Infer chartType
-      let chartType: DashboardChartConfig['chartType'] = 'line';
-      if (selectedYAxisVar === 'total_blood_product_costs') {
-        chartType = 'stackedBar';
-      } else {
-        const selectedOption = dashboardYAxisOptions.find((opt) => opt.value === selectedYAxisVar);
-        if (selectedOption && selectedOption.units?.sum === '$') {
-          chartType = 'bar';
-        }
-      }
+      const chartType: DashboardChartConfig['chartType'] = 'line';
       store.dashboardStore.addChart({
         chartId: `chart-${Date.now()}`,
         xAxisVar: selectedXAxisVar as DashboardChartConfig['xAxisVar'],
@@ -265,9 +256,7 @@ export function Dashboard() {
                       onChange={(value) => {
                         const selectedOption = dashboardYAxisOptions.find((opt) => opt.value === value);
                         let inferredChartType: DashboardChartConfig['chartType'] = 'line';
-                        if (value === 'total_blood_product_costs') {
-                          inferredChartType = 'stackedBar';
-                        } else if (selectedOption && selectedOption.units?.sum === '$') {
+                        if (selectedOption && selectedOption.units?.sum === '$') {
                           inferredChartType = 'bar';
                         }
                         store.dashboardStore.setChartConfig(chartId, {
@@ -283,56 +272,62 @@ export function Dashboard() {
                     <CloseButton onClick={() => handleRemoveChart(chartId)} />
                   </Flex>
                 </Flex>
-                {/** Render Chart Type (Stacked Bar, Bar, Line) */}
-                {chartType === 'stackedBar' ? (
-                  // Stacked Bar Chart
-                  <BarChart
-                    h={`calc(100% - (${theme.spacing.md} * 2))`}
-                    data={store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || []}
-                    dataKey="timePeriod"
-                    series={COST_OPTIONS.map(({ value, label }, idx) => ({
-                      name: value,
-                      color: [
-                        '#de6e56',
-                        '#2d5d8b',
-                        '#63bff0',
-                        '#b4a34b',
-                        '#e1a692',
-                      ][idx % 5],
-                      valueKey: value,
-                      label: label.base,
-                      stacked: true,
-                    }))}
-                    xAxisProps={{
-                      interval: 'equidistantPreserveStart',
-                    }}
-                    type="stacked"
-                    valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
-                  />
-                ) : chartType === 'bar' ? (
+                { chartType === 'bar' ? (
                   // Bar Chart
                   <BarChart
                     h={`calc(100% - (${theme.spacing.md} * 2))`}
                     data={store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || []}
                     dataKey="timePeriod"
-                    series={[
-                      { name: 'data', color: 'indigo.6' },
-                    ]}
+                    series={
+                      (() => {
+                        // Color palette for series
+                        const colors = [
+                          '#de6e56',
+                          '#2d5d8b',
+                          '#63bff0',
+                          '#b4a34b',
+                          '#e1a692',
+                        ];
+                        // Get keys from first datum (excluding timePeriod)
+                        const chartData = store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
+                        const keys = chartData.length > 0
+                          ? Object.keys(chartData[0]).filter((k) => k !== 'timePeriod')
+                          : [];
+                        // Map each key to a color
+                        return keys.map((name, idx) => ({
+                          name,
+                          color: colors[idx % colors.length],
+                        }));
+                      })()
+                    }
                     xAxisProps={{
                       interval: 'equidistantPreserveStart',
                     }}
+                    type="stacked"
                     tooltipAnimationDuration={200}
-                    tooltipProps={{
-                      content: ({ active, payload, label }) => (
-                        <DashboardChartTooltip
-                          active={active}
-                          payload={payload}
-                          xAxisVar={label}
-                          yAxisVar={yAxisVar}
-                          aggregation={aggregation}
-                        />
-                      ),
-                    }}
+                    tooltipProps={
+                      (() => {
+                        const chartData = store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
+                        const keys = chartData.length > 0
+                          ? Object.keys(chartData[0]).filter((k) => k !== 'timePeriod')
+                          : [];
+                        if (keys.length === 1) {
+                          return {
+                            content: ({ active, payload, label }) => (
+                              <DashboardChartTooltip
+                                active={active}
+                                payload={payload}
+                                xAxisVar={label}
+                                yAxisVar={yAxisVar}
+                                aggregation={aggregation}
+                              />
+                            ),
+                          };
+                        }
+                        // Default tooltip
+                        return {};
+                      })()
+                    }
                     valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
                   />
                 ) : (
