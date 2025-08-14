@@ -294,10 +294,14 @@ export function Dashboard() {
                           ? Object.keys(chartData[0]).filter((k) => k !== 'timePeriod')
                           : [];
                         // Map each key to a color
-                        return keys.map((name, idx) => ({
-                          name,
-                          color: colors[idx % colors.length],
-                        }));
+                        return keys.map((name, idx) => {
+                          const option = dashboardYAxisOptions.find((opt) => opt.value === name);
+                          return {
+                            name,
+                            color: colors[idx % colors.length],
+                            label: option?.label.base || name,
+                          };
+                        });
                       })()
                     }
                     xAxisProps={{
