@@ -1,7 +1,7 @@
 from django.db import models
 
 
-#added for oracle
+# added for oracle
 class SanguineManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().using('hospital')
@@ -109,6 +109,7 @@ class BillingCode(models.Model):
 
     class Meta:
         db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_BILLING_CODES"'
+        unique_together = (('visit_no', 'code_rank'),)
 
 
 class Medication(models.Model):
@@ -131,13 +132,14 @@ class Medication(models.Model):
 
     class Meta:
         db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_MEDS"'
+        unique_together = (('order_med_id', 'med_admin_line'),)
 
 
 class Lab(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
     mrn = models.ForeignKey(Patient, on_delete=models.CASCADE, db_column="mrn")
     lab_visit_no = models.BigIntegerField()
-    lab_id = models.BigIntegerField()
+    lab_id = models.BigIntegerField(primary_key=True)
     lab_draw_dtm = models.DateTimeField()
     lab_panel_code = models.CharField(max_length=30)
     lab_panel_desc = models.CharField(max_length=256)
@@ -179,6 +181,7 @@ class Transfusion(models.Model):
 
     class Meta:
         db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_TRANSFUSION"'
+        unique_together = (('visit_no', 'transfusion_rank'),)
 
 
 class AttendingProvider(models.Model):
@@ -214,3 +217,4 @@ class RoomTrace(models.Model):
 
     class Meta:
         db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_DEPT_SERV"'
+        unique_together = (('visit_no', 'bed_room_dept_line'),)
