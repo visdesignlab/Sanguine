@@ -9,18 +9,19 @@ class SanguineManager(models.Manager):
 
 class Patient(models.Model):
     mrn = models.CharField(max_length=20, primary_key=True)
-    last_name = models.CharField(max_length=30)
-    first_name = models.CharField(max_length=30)
+    pat_last_name = models.CharField(max_length=30)
+    pat_first_name = models.CharField(max_length=30)
     birth_date = models.DateField()
-    sex_code = models.CharField(max_length=80)
-    race_desc = models.CharField(max_length=80)
-    ethnicity_desc = models.CharField(max_length=2000)
+    sex_c = models.CharField(max_length=80)
+    pat_race_desc = models.CharField(max_length=80)
+    ethnic_group_desc = models.CharField(max_length=2000)
     death_date = models.DateField(null=True)
 
     objects = SanguineManager()
     use_hospital_db = True
+
     class Meta:
-        db_table = "BLOOD_PRODUCTS_DM.INTELVIA_CL_PATIENT"
+        db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_PATIENT"'
 
 
 class Visit(models.Model):
@@ -33,7 +34,6 @@ class Visit(models.Model):
     clinical_los = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     age_at_adm = models.FloatField()
     pat_class_desc = models.CharField(max_length=2000)
-    pat_type_desc = models.CharField(max_length=2000)
     pat_expired_f = models.CharField(max_length=1, null=True)
     invasive_vent_f = models.CharField(max_length=1, null=True)
     total_vent_mins = models.FloatField()
@@ -65,8 +65,9 @@ class Visit(models.Model):
 
     objects = SanguineManager()
     use_hospital_db = True
+
     class Meta:
-        db_table = "BLOOD_PRODUCTS_DM.INTELVIA_CL_VISIT"
+        db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_VISIT"'
 
 
 class SurgeryCase(models.Model):
@@ -89,23 +90,25 @@ class SurgeryCase(models.Model):
 
     objects = SanguineManager()
     use_hospital_db = True
+
     class Meta:
-        db_table = "BLOOD_PRODUCTS_DM.INTELVIA_CL_SURGERY_CASE"
+        db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_SURGERY_CASE"'
 
 
 class BillingCode(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
     cpt_code = models.CharField(max_length=80)
     cpt_code_desc = models.CharField(max_length=2000)
-    proc_dtm = models.DateTimeField()
-    prov_id = models.CharField(max_length=25)
-    prov_name = models.CharField(max_length=100)
+    proc_date = models.DateTimeField()
+    proc_prov_id = models.CharField(max_length=25)
+    proc_prov_name = models.CharField(max_length=100)
     code_rank = models.FloatField()
 
     objects = SanguineManager()
     use_hospital_db = True
+
     class Meta:
-        db_table = "BLOOD_PRODUCTS_DM.INTELVIA_CL_BILLING_CODES"
+        db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_BILLING_CODES"'
 
 
 class Medication(models.Model):
@@ -125,13 +128,15 @@ class Medication(models.Model):
 
     objects = SanguineManager()
     use_hospital_db = True
+
     class Meta:
-        db_table = "BLOOD_PRODUCTS_DM.INTELVIA_CL_MEDS"
+        db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_MEDS"'
 
 
 class Lab(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
     mrn = models.ForeignKey(Patient, on_delete=models.CASCADE, db_column="mrn")
+    lab_visit_no = models.BigIntegerField()
     lab_id = models.BigIntegerField()
     lab_draw_dtm = models.DateTimeField()
     lab_panel_code = models.CharField(max_length=30)
@@ -147,8 +152,9 @@ class Lab(models.Model):
 
     objects = SanguineManager()
     use_hospital_db = True
+
     class Meta:
-        db_table = "BLOOD_PRODUCTS_DM.INTELVIA_CL_VISIT_LABS"
+        db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_VISIT_LABS"'
 
 
 class Transfusion(models.Model):
@@ -156,7 +162,7 @@ class Transfusion(models.Model):
     trnsfsn_dtm = models.DateTimeField()
     transfusion_rank = models.FloatField()
     blood_unit_number = models.CharField(max_length=600)
-    rbc_units = models.FloatField(null=True)
+    prbc_units = models.FloatField(null=True)
     ffp_units = models.FloatField(null=True)
     plt_units = models.FloatField(null=True)
     cryo_units = models.FloatField(null=True)
@@ -170,22 +176,24 @@ class Transfusion(models.Model):
 
     objects = SanguineManager()
     use_hospital_db = True
+
     class Meta:
-        db_table = "BLOOD_PRODUCTS_DM.INTELVIA_CL_TRANSFUSION"
+        db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_TRANSFUSION"'
 
 
 class AttendingProvider(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
-    prov_id = models.CharField(max_length=25)
-    prov_name = models.CharField(max_length=100)
+    attend_prov_id = models.CharField(max_length=25)
+    attend_prov_name = models.CharField(max_length=100)
     attend_start_dtm = models.DateTimeField()
     attend_end_dtm = models.DateTimeField()
     attend_prov_line = models.DecimalField(max_digits=38, decimal_places=0)
 
     objects = SanguineManager()
     use_hospital_db = True
+
     class Meta:
-        db_table = "BLOOD_PRODUCTS_DM.INTELVIA_CL_ATTENDING_PROVIDERS"
+        db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_ATTENDING_PROVIDERS"'
 
 
 class RoomTrace(models.Model):
@@ -203,5 +211,6 @@ class RoomTrace(models.Model):
 
     objects = SanguineManager()
     use_hospital_db = True
+
     class Meta:
-        db_table = "BLOOD_PRODUCTS_DM.INTELVIA_CL_DEPT_SERV"
+        db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_DEPT_SERV"'
