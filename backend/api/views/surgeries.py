@@ -66,7 +66,7 @@ def get_all_data(request):
                     "transfusions": [
                         model_to_dict(transfusion)
                         for transfusion in visit.transfusion_set.all()
-                        if surgery_case.surgery_start_dtm and surgery_case.surgery_end_dtm and (
+                        if surgery_case.surgery_start_dtm and surgery_case.surgery_end_dtm and transfusion.trnsfsn_dtm and (
                             transfusion.trnsfsn_dtm <= surgery_case.surgery_end_dtm and transfusion.trnsfsn_dtm >= surgery_case.surgery_start_dtm
                         )
                     ],
