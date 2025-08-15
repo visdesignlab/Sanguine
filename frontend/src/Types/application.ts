@@ -323,7 +323,7 @@ export const COSTS = {
       avg: 'Average RBC Cost Per Visit',
     },
     units: { sum: '$', avg: '$' },
-    decimals: { sum: 0, avg: 2 },
+    decimals: { sum: 0, avg: 0 },
     unitCost: 200,
   },
   ffp_units_cost: {
@@ -334,7 +334,7 @@ export const COSTS = {
       avg: 'Average FFP Cost Per Visit',
     },
     units: { sum: '$', avg: '$' },
-    decimals: { sum: 0, avg: 2 },
+    decimals: { sum: 0, avg: 0 },
     unitCost: 55,
   },
   plt_units_cost: {
@@ -345,7 +345,7 @@ export const COSTS = {
       avg: 'Average Platelet Cost Per Visit',
     },
     units: { sum: '$', avg: '$' },
-    decimals: { sum: 0, avg: 2 },
+    decimals: { sum: 0, avg: 0 },
     unitCost: 650,
   },
   cryo_units_cost: {
@@ -356,7 +356,7 @@ export const COSTS = {
       avg: 'Average Cryo Cost Per Visit',
     },
     units: { sum: '$', avg: '$' },
-    decimals: { sum: 0, avg: 2 },
+    decimals: { sum: 0, avg: 0 },
     unitCost: 70,
   },
   // TODO: Unit cost is wrong
@@ -368,7 +368,7 @@ export const COSTS = {
       avg: 'Average Cell Salvage Cost Per Visit',
     },
     units: { sum: '$', avg: '$' },
-    decimals: { sum: 0, avg: 2 },
+    decimals: { sum: 0, avg: 0 },
     unitCost: 2.50,
   },
 } as const;
@@ -391,7 +391,7 @@ export const OVERALL_BLOOD_PRODUCT_COST = {
     avg: 'Average Blood Product Costs Per Visit',
   },
   units: { sum: '$', avg: '$' },
-  decimals: { sum: 0, avg: 2 },
+  decimals: { sum: 0, avg: 0 },
   unitCost: -1, // Not used for total
 };
 
