@@ -46,7 +46,7 @@ export class RootStore {
   // exploreStore:
 
   // Visits - Main data type
-  _allVisits: Visit[];
+  _allVisits: DatabaseVisit[];
 
   constructor() {
     this._allVisits = [];
