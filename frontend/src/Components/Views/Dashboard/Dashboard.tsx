@@ -244,7 +244,7 @@ export function Dashboard() {
                     </Flex>
                     <Flex direction="row" align="center" gap="sm">
                       {/* Chart y-axis aggregation toggle */}
-                      <Tooltip label={`Change aggregation to ${aggregation === 'sum' ? 'average' : 'sum'}`}>
+                      <Tooltip label={`Change aggregation to ${aggregation === 'sum' ? 'Average' : 'Sum'}`}>
                         <ActionIcon
                           variant="subtle"
                           onClick={() => store.dashboardStore.setChartConfig(chartId, {
@@ -254,7 +254,7 @@ export function Dashboard() {
                           <IconPercentage size={18} color={aggregation === 'avg' ? theme.colors.indigo[6] : theme.colors.gray[6]} stroke={3} />
                         </ActionIcon>
                       </Tooltip>
-                      <Tooltip label={`Change X-Axis to ${xAxisVar === 'month' ? 'quarter' : xAxisVar === 'quarter' ? 'year' : 'month'}`}>
+                      <Tooltip label={`Change X-Axis to ${xAxisVar === 'month' ? 'Quarter' : xAxisVar === 'quarter' ? 'Year' : 'Month'}`}>
                         <ActionIcon
                           variant="subtle"
                           onClick={() => store.dashboardStore.setChartConfig(chartId, {
