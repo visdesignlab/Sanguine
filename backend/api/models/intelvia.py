@@ -103,6 +103,7 @@ class BillingCode(models.Model):
     proc_prov_id = models.CharField(max_length=25)
     proc_prov_name = models.CharField(max_length=100)
     code_rank = models.FloatField()
+    load_dtm = models.DateTimeField(primary_key=True)
 
     objects = SanguineManager()
     use_hospital_db = True
@@ -113,6 +114,7 @@ class BillingCode(models.Model):
             models.UniqueConstraint(fields=['visit_no', 'code_rank'], name='unique_visit_code_rank')
         ]
         managed = False
+
 
 class Medication(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
@@ -128,6 +130,7 @@ class Medication(models.Model):
     dose_unit_desc = models.CharField(max_length=254)
     med_start_dtm = models.DateTimeField()
     med_end_dtm = models.DateTimeField()
+    load_dtm = models.DateTimeField(primary_key=True)
 
     objects = SanguineManager()
     use_hospital_db = True
@@ -180,6 +183,7 @@ class Transfusion(models.Model):
     cryo_vol = models.FloatField(null=True)
     whole_vol = models.FloatField(null=True)
     cell_saver_ml = models.FloatField(null=True)
+    load_dtm = models.DateTimeField(primary_key=True)
 
     objects = SanguineManager()
     use_hospital_db = True
@@ -219,6 +223,7 @@ class RoomTrace(models.Model):
     out_dtm = models.DateTimeField()
     duration_days = models.FloatField()
     bed_room_dept_line = models.FloatField()
+    load_dtm = models.DateTimeField(primary_key=True)
 
     objects = SanguineManager()
     use_hospital_db = True
