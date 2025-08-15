@@ -267,9 +267,7 @@ export function Dashboard() {
                             chartId, yAxisVar, xAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum',
                           })}
                         >
-                          { aggregation === 'avg' ? (
-                            <IconSum size={18} color={theme.colors.gray[6]} stroke={3} />)
-                            : (<IconPercentage size={18} color={theme.colors.gray[6]} stroke={3} />)}
+                          <IconPercentage size={18} color={theme.colors.gray[6]} stroke={3} />
                         </ActionIcon>
                       </Tooltip>
                       {/** Chart x-axis aggregation toggle */}
@@ -319,7 +317,13 @@ export function Dashboard() {
                       series={
                         chartDataKeys.map((name, idx) => ({
                           name,
-                          color: ['#2d5d8b', '#de6e56', '#63bff0', '#b4a34b', '#e1a692'][idx % 5],
+                          color: [
+                            '#EF2026',
+                            '#897BD3',
+                            '#73C3C5',
+                            '#FFD13C',
+                            '#1770B8',
+                          ][idx % 6],
                           label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
                         }))
                       }
@@ -354,7 +358,13 @@ export function Dashboard() {
                       series={
                         chartDataKeys.map((name, idx) => ({
                           name,
-                          color: ['#2d5d8b', '#de6e56', '#63bff0', '#b4a34b', '#e1a692'][idx % 5],
+                          color: [
+                            '#EF2026',
+                            '#897BD3',
+                            '#73C3C5',
+                            '#FFD13C',
+                            '#1770B8',
+                          ][idx % 6],
                           label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
                         }))
                       }
