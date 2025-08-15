@@ -16,6 +16,11 @@ RUN apt-get update && apt-get install -y \
     mariadb-client  # This is useful to connect to the database from the container
 
 RUN pip install poetry
+
+# Copy the backend code into the container
+COPY . /app
+WORKDIR /app
+
 RUN poetry config virtualenvs.create false
 RUN poetry lock
 RUN poetry install

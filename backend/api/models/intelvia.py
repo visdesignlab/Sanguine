@@ -109,7 +109,9 @@ class BillingCode(models.Model):
 
     class Meta:
         db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_BILLING_CODES"'
-        unique_together = (('visit_no', 'code_rank'),)
+        constraints = [
+            models.UniqueConstraint(fields=['visit_no', 'code_rank'], name='unique_visit_code_rank')
+        ]
 
 
 class Medication(models.Model):
@@ -132,7 +134,9 @@ class Medication(models.Model):
 
     class Meta:
         db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_MEDS"'
-        unique_together = (('order_med_id', 'med_admin_line'),)
+        constraints = [
+            models.UniqueConstraint(fields=['order_med_id', 'med_admin_line'], name='unique_order_med_admin_line')
+        ]
 
 
 class Lab(models.Model):
@@ -181,7 +185,9 @@ class Transfusion(models.Model):
 
     class Meta:
         db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_TRANSFUSION"'
-        unique_together = (('visit_no', 'transfusion_rank'),)
+        constraints = [
+            models.UniqueConstraint(fields=['visit_no', 'transfusion_rank'], name='unique_visit_transfusion_rank')
+        ]
 
 
 class AttendingProvider(models.Model):
@@ -217,4 +223,6 @@ class RoomTrace(models.Model):
 
     class Meta:
         db_table = '"BLOOD_PRODUCTS_DM"."INTELVIA_CL_DEPT_SERV"'
-        unique_together = (('visit_no', 'bed_room_dept_line'),)
+        constraints = [
+            models.UniqueConstraint(fields=['visit_no', 'bed_room_dept_line'], name='unique_visit_bed_room_dept_line')
+        ]
