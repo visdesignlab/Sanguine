@@ -58,15 +58,17 @@ def get_all_data(request):
             "surgeries": [
                 {
                     **model_to_dict(surgery_case),
-                    "surgery_start_dtm": surgery_case.surgery_start_dtm.timestamp() * 1000,
-                    "surgery_end_dtm": surgery_case.surgery_end_dtm.timestamp() * 1000,
+                    "surgery_start_dtm": surgery_case.surgery_start_dtm.timestamp() * 1000 if surgery_case.surgery_start_dtm else None,
+                    "surgery_end_dtm": surgery_case.surgery_end_dtm.timestamp() * 1000 if surgery_case.surgery_end_dtm else None,
                     "case_date": datetime.combine(surgery_case.case_date, time.min).timestamp() * 1000,
                     "year": surgery_case.case_date.year,
-                    "quarter": f"{str(surgery_case.case_date.year)[-2:]}-{(surgery_case.case_date.month - 1) // 3 + 1}",
+                    "quarter": f"{str(surgery_case.case_date.year)[-2:]}-{(surgery_case.case_date.month - 1) // 3 + 1}" if surgery_case.case_date else None,
                     "transfusions": [
                         model_to_dict(transfusion)
                         for transfusion in visit.transfusion_set.all()
-                        if transfusion.trnsfsn_dtm <= surgery_case.surgery_end_dtm and transfusion.trnsfsn_dtm >= surgery_case.surgery_start_dtm
+                        if surgery_case.surgery_start_dtm and surgery_case.surgery_end_dtm and (
+                            transfusion.trnsfsn_dtm <= surgery_case.surgery_end_dtm and transfusion.trnsfsn_dtm >= surgery_case.surgery_start_dtm
+                        )
                     ],
                 }
                 for surgery_case in visit.surgerycase_set.all()
