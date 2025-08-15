@@ -223,7 +223,7 @@ export function getIconForVar(varName: typeof dashboardYAxisVars[number]) {
 
 /**
  * Aggregate visit y-axis variables data for the dashboard
- * (E.g. rbc_units -> sum_rbc_units, avg_rbc_units, etc.)
+ * (E.g. prbc_units -> sum_prbc_units, avg_prbc_units, etc.)
  * Aggregates by each y-axis aggregation type (sum, avg)
 */
 export function aggregateVisitsBySumAvg(visits: RootStore['allVisits']) {

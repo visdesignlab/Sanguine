@@ -234,7 +234,7 @@ export function Dashboard() {
                       >
                         {
                           (() => {
-                            // E.g. "sum_rbc_units"
+                            // E.g. "sum_prbc_units"
                             const chartYAxis = dashboardYAxisOptions.find((o) => o.value === yAxisVar);
                             // E.g. "Total RBC Units"
                             return chartYAxis?.label?.[aggregation] || yAxisVar;

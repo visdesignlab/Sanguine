@@ -26,7 +26,7 @@ const BLOOD_COMPONENT_DECIMALS = { sum: 0, avg: 2 };
 
 export const BLOOD_COMPONENTS = [
   {
-    value: 'rbc_units',
+    value: 'prbc_units',
     label: {
       base: 'RBCs Transfused',
       sum: 'Total RBCs Transfused',
@@ -223,7 +223,7 @@ export const GUIDELINE_ADHERENCE = {
     labDesc: ['HGB', 'Hemoglobin'],
     adherenceCheck: (labValue: number) => labValue <= 7.5,
     // Units used for transfusion counts
-    transfusionUnits: ['rbc_units', 'rbc_vol'] as const,
+    transfusionUnits: ['prbc_units', 'rbc_vol'] as const,
     // Adherence units & decimal truncation for display
     units: { sum: 'Adherent RBC Transfusions', avg: '% Adherent RBC Transfusions' },
     decimals: 0,
@@ -315,8 +315,8 @@ export const GUIDELINE_ADHERENCE_OPTIONS = Object.values(GUIDELINE_ADHERENCE) as
 // Costs / Savings -------------------------------------------------
 // Types of costs
 export const COSTS = {
-  rbc_units_cost: {
-    value: 'rbc_units_cost',
+  prbc_units_cost: {
+    value: 'prbc_units_cost',
     label: {
       base: 'RBC Cost',
       sum: 'Total RBC Cost',

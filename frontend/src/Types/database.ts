@@ -5,7 +5,7 @@ export interface TransfusionEvent {
   trnsfsn_dtm: string; // ISO datetime string
   transfusion_rank: number;
   blood_unit_number: string;
-  rbc_units: number | null;
+  prbc_units: number | null;
   ffp_units: number | null;
   plt_units: number | null;
   cryo_units: number | null;

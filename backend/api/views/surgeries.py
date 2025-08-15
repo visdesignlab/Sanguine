@@ -43,7 +43,7 @@ def get_all_data(request):
         "medication_set",
         "lab_set",
         "billingcode_set",
-    ).all()[:1000]  # Limit to 1000 visits for performance
+    ).all()[:5000]  # Limit to 1000 visits for performance
 
     list(visits)  # Force evaluation of the queryset to fetch all data
 

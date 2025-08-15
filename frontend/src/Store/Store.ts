@@ -57,7 +57,7 @@ export class RootStore {
   /**
    * Returns all visits, filtering out invalid ones and calculating derived fields.
    * Derived fields include:
-   * - Blood product units (e.g., rbc_units, ffp_units)
+   * - Blood product units (e.g., prbc_units, ffp_units)
    * - Outcome flags (e.g., length of stay, death, ventilator use, stroke, ECMO)
    * - Prophylactic medication flags
    * - Adherence flags
@@ -91,7 +91,7 @@ export class RootStore {
 
         const bloodProductCosts = Object.entries(COSTS).reduce((acc, [costKey, costObj]) => {
           if (!('unitCost' in costObj)) return acc;
-          // Map costKey (e.g. 'rbc_cost') to blood product key (e.g. 'rbc_units')
+          // Map costKey (e.g. 'rbc_cost') to blood product key (e.g. 'prbc_units')
           const productKey = costKey.slice(0, -'_cost'.length);
           acc[costKey as keyof typeof COSTS] = (bloodProductUnits[productKey as BloodComponent] || 0) * (costObj.unitCost || 0);
           return acc;

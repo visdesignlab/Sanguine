@@ -69,7 +69,7 @@ export class DashboardStore {
   // Chart configurations
   _chartConfigs: DashboardChartConfig[] = [
     {
-      chartId: '0', xAxisVar: 'quarter', yAxisVar: 'rbc_units', aggregation: 'sum', chartType: 'line',
+      chartId: '0', xAxisVar: 'quarter', yAxisVar: 'prbc_units', aggregation: 'sum', chartType: 'line',
     },
     {
       chartId: '1', xAxisVar: 'quarter', yAxisVar: 'rbc_adherence', aggregation: 'avg', chartType: 'line',
@@ -256,7 +256,7 @@ export class DashboardStore {
           })
           .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
 
-        // For each yAxisVar (e.g. rbc_units, guideline_adherence)...
+        // For each yAxisVar (e.g. prbc_units, guideline_adherence)...
         dashboardYAxisVars.forEach((yAxisVar) => {
           if (yAxisVar === 'total_blood_product_costs') return; // Already handled above
           const aggVar: DashboardAggYAxisVar = `${aggType}_${yAxisVar}`;
@@ -273,7 +273,7 @@ export class DashboardStore {
             console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and aggVar "${aggVar}"`);
           }
 
-          // Return result (E.g. Key: "sum_rbc_units_quarter", Value: chartDatum)
+          // Return result (E.g. Key: "sum_prbc_units_quarter", Value: chartDatum)
           const compositeKey = `${aggVar}_${xAxisVar}` as keyof DashboardChartData;
           result[compositeKey] = chartDatum;
         });
@@ -353,7 +353,7 @@ export class DashboardStore {
     // For each aggregation option (e.g. sum, avg)...
     Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
       const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
-      // For each yAxisVar (e.g. rbc_units, guideline_adherence)...
+      // For each yAxisVar (e.g. prbc_units, guideline_adherence)...
       dashboardYAxisVars.forEach((yAxisVar) => {
         const key = `${aggType}_${yAxisVar}` as DashboardAggYAxisVar;
         // Calculate percentage change (diff)
