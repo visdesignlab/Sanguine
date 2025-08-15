@@ -61,29 +61,37 @@ export function formatValueForDisplay(
     maximumFractionDigits: decimals,
   });
 
-  let formatted: string;
+  // Format millions as "X.XXXM" (no space before M)
+  const formatMillions = (num: number, decimals: number) => {
+    const millions = num / 1_000_000;
+    return `${millions.toLocaleString(undefined, {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    })}M`;
+  };
 
-  // Handle percentage units
-  if (unit.startsWith('%')) {
-    formatted = formatWithCommas(value * 100, decimalCount);
-    return showFullUnits ? `${formatted}${unit}` : `${formatted}%`;
-  }
+  let displayValue: string;
+  const isPercent = unit.startsWith('%');
+  const isDollar = unit.startsWith('$');
+  const rawValue = isPercent ? value * 100 : value;
 
-  // Handle cost units
-  if (unit.startsWith('$')) {
-    formatted = formatWithCommas(value, decimalCount);
-    return `${unit}${formatted}`;
-  }
-
-  // Handle integer values
-  if (Number.isInteger(value)) {
-    formatted = formatWithCommas(value, 0);
+  // First, check for millions
+  if (Math.abs(rawValue) >= 1_000_000) {
+    displayValue = formatMillions(rawValue, 3);
+  } else if (Number.isInteger(rawValue)) {
+    displayValue = formatWithCommas(rawValue, 0);
   } else {
-    // Otherwise, format with decimal count and commas
-    formatted = formatWithCommas(value, decimalCount);
+    displayValue = formatWithCommas(rawValue, decimalCount);
   }
 
-  return showFullUnits ? `${formatted} ${unit}`.trim() : formatted;
+  // Compose final string
+  if (isDollar) {
+    return `${unit}${displayValue}`;
+  }
+  if (isPercent) {
+    return showFullUnits ? `${displayValue}${unit}` : `${displayValue}%`;
+  }
+  return showFullUnits ? `${displayValue} ${unit}`.trim() : displayValue;
 }
 
 /**
