@@ -319,7 +319,7 @@ export function Dashboard() {
                       series={
                         chartDataKeys.map((name, idx) => ({
                           name,
-                          color: ['#de6e56', '#2d5d8b', '#63bff0', '#b4a34b', '#e1a692'][idx % 5],
+                          color: ['#2d5d8b', '#de6e56', '#63bff0', '#b4a34b', '#e1a692'][idx % 5],
                           label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
                         }))
                       }
@@ -354,7 +354,7 @@ export function Dashboard() {
                       series={
                         chartDataKeys.map((name, idx) => ({
                           name,
-                          color: ['#de6e56', '#2d5d8b', '#63bff0', '#b4a34b', '#e1a692'][idx % 5],
+                          color: ['#2d5d8b', '#de6e56', '#63bff0', '#b4a34b', '#e1a692'][idx % 5],
                           label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
                         }))
                       }
