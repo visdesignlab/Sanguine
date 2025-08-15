@@ -112,7 +112,7 @@ class BillingCode(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['visit_no', 'code_rank'], name='unique_visit_code_rank')
         ]
-
+        managed = False
 
 class Medication(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
@@ -137,6 +137,7 @@ class Medication(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['order_med_id', 'med_admin_line'], name='unique_order_med_admin_line')
         ]
+        managed = False
 
 
 class Lab(models.Model):
@@ -188,6 +189,7 @@ class Transfusion(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['visit_no', 'transfusion_rank'], name='unique_visit_transfusion_rank')
         ]
+        managed = False
 
 
 class AttendingProvider(models.Model):
@@ -226,3 +228,4 @@ class RoomTrace(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['visit_no', 'bed_room_dept_line'], name='unique_visit_bed_room_dept_line')
         ]
+        managed = False
