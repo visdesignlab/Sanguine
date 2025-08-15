@@ -27,17 +27,17 @@ import { type RootStore } from '../Store/Store';
  * @param yAxisVar - The dashboard variable being formatted
  * @param value - The numeric value to format
  * @param aggregation - The aggregation type ('sum' or 'avg')
- * @param includeUnits - Whether to include units in the formatted string (default: true)
+ * @param fullUnits - Whether to include units in the formatted string (default: true)
  * @returns A formatted string for display
  */
 export function formatValueForDisplay(
   yAxisVar: typeof dashboardYAxisVars[number],
   value: number,
   aggregation: keyof typeof AGGREGATION_OPTIONS,
-  includeUnits?: boolean,
+  fullUnits?: boolean,
 ): string {
   // Show units by default unless specified otherwise
-  const showUnits = includeUnits !== undefined ? includeUnits : true;
+  const showFullUnits = fullUnits !== undefined ? fullUnits : true;
 
   // Y-Axis variable object
   const yAxisOption = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
@@ -66,7 +66,7 @@ export function formatValueForDisplay(
   // Handle percentage units
   if (unit.startsWith('%')) {
     formatted = formatWithCommas(value * 100, decimalCount);
-    return showUnits ? `${formatted}${unit}` : `${formatted}%`;
+    return showFullUnits ? `${formatted}${unit}` : `${formatted}%`;
   }
 
   // Handle cost units
@@ -83,7 +83,7 @@ export function formatValueForDisplay(
     formatted = formatWithCommas(value, decimalCount);
   }
 
-  return showUnits ? `${formatted} ${unit}`.trim() : formatted;
+  return showFullUnits ? `${formatted} ${unit}`.trim() : formatted;
 }
 
 /**
