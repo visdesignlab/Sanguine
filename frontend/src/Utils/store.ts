@@ -8,7 +8,8 @@ import { TransfusionEvent, DatabaseVisit } from '../Types/database';
    */
 export function safeParseDate(dateInput: string | Date | null | undefined): Date {
   if (!dateInput) {
-    throw new Error('Date input is null or undefined');
+    // throw new Error('Date input is null or undefined');
+    return new Date(); // Return current date if input is invalid
   }
   const date = new Date(dateInput);
   if (Number.isNaN(date.getTime())) {
