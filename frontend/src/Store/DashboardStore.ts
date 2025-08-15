@@ -69,16 +69,16 @@ export class DashboardStore {
   // Chart configurations
   _chartConfigs: DashboardChartConfig[] = [
     {
-      chartId: '0', xAxisVar: 'quarter', yAxisVar: 'rbc_units', aggregation: 'sum',
+      chartId: '0', xAxisVar: 'quarter', yAxisVar: 'rbc_units', aggregation: 'sum', chartType: 'line',
     },
     {
-      chartId: '1', xAxisVar: 'quarter', yAxisVar: 'rbc_adherence', aggregation: 'avg',
+      chartId: '1', xAxisVar: 'quarter', yAxisVar: 'rbc_adherence', aggregation: 'avg', chartType: 'line',
     },
     {
-      chartId: '2', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg',
+      chartId: '2', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'line',
     },
     {
-      chartId: '3', xAxisVar: 'quarter', yAxisVar: 'iron', aggregation: 'avg',
+      chartId: '3', xAxisVar: 'quarter', yAxisVar: 'iron', aggregation: 'avg', chartType: 'line',
     },
     {
       chartId: '4', xAxisVar: 'quarter', yAxisVar: 'total_blood_product_costs', aggregation: 'sum', chartType: 'bar',

@@ -13,8 +13,8 @@ import {
 } from '@mantine/core';
 import { BarChart, LineChart } from '@mantine/charts';
 import {
-  IconCalendarCode,
-  IconChartLine, IconGripVertical, IconNumbers, IconPercentage, IconPlus,
+  IconCalendarCode, IconGripVertical, IconNumbers, IconPercentage, IconPlus, IconChartBar, IconChartLine,
+  IconSum,
 } from '@tabler/icons-react';
 
 // Dashboard
@@ -243,17 +243,36 @@ export function Dashboard() {
                       </Title>
                     </Flex>
                     <Flex direction="row" align="center" gap="sm">
+                      {/* Chart Type Toggle */}
+                      <Tooltip label={`Change chart type to ${chartType === 'line' ? 'Bar' : 'Line'}`}>
+                        <ActionIcon
+                          variant="subtle"
+                          onClick={() => store.dashboardStore.setChartConfig(chartId, {
+                            chartId, yAxisVar, xAxisVar, aggregation, chartType: chartType === 'line' ? 'bar' : 'line',
+                          })}
+                        >
+                          {chartType === 'bar' ? (
+                            <IconChartLine size={18} color={theme.colors.gray[6]} stroke={3} />
+                          ) : (
+                            <IconChartBar size={18} color={theme.colors.gray[6]} stroke={3} />
+                          )}
+                        </ActionIcon>
+                      </Tooltip>
+
                       {/* Chart y-axis aggregation toggle */}
-                      <Tooltip label={`Change aggregation to ${aggregation === 'sum' ? 'Average' : 'Sum'}`}>
+                      <Tooltip label={`Change Y-Axis Aggregation to ${aggregation === 'sum' ? 'Average' : 'Sum'}`}>
                         <ActionIcon
                           variant="subtle"
                           onClick={() => store.dashboardStore.setChartConfig(chartId, {
                             chartId, yAxisVar, xAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum',
                           })}
                         >
-                          <IconPercentage size={18} color={aggregation === 'avg' ? theme.colors.indigo[6] : theme.colors.gray[6]} stroke={3} />
+                          { aggregation === 'avg' ? (
+                            <IconSum size={18} color={theme.colors.gray[6]} stroke={3} />)
+                            : (<IconPercentage size={18} color={theme.colors.gray[6]} stroke={3} />)}
                         </ActionIcon>
                       </Tooltip>
+                      {/** Chart x-axis aggregation toggle */}
                       <Tooltip label={`Change X-Axis to ${xAxisVar === 'month' ? 'Quarter' : xAxisVar === 'quarter' ? 'Year' : 'Month'}`}>
                         <ActionIcon
                           variant="subtle"
@@ -324,7 +343,7 @@ export function Dashboard() {
                           }
                           : {}
                       }
-                      valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation)}
+                      valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
                     />
                   ) : (
                     // Line Chart
@@ -332,26 +351,34 @@ export function Dashboard() {
                       h={`calc(100% - (${theme.spacing.md} * 2))`}
                       data={chartData}
                       dataKey="timePeriod"
-                      series={[
-                        { name: 'data', color: 'indigo.6' },
-                      ]}
+                      series={
+                        chartDataKeys.map((name, idx) => ({
+                          name,
+                          color: ['#de6e56', '#2d5d8b', '#63bff0', '#b4a34b', '#e1a692'][idx % 5],
+                          label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
+                        }))
+                      }
                       curveType="linear"
                       tickLine="none"
                       xAxisProps={{
                         interval: 'equidistantPreserveStart',
                       }}
                       tooltipAnimationDuration={200}
-                      tooltipProps={{
-                        content: ({ active, payload, label }) => (
-                          <DashboardChartTooltip
-                            active={active}
-                            payload={payload}
-                            xAxisVar={label}
-                            yAxisVar={yAxisVar}
-                            aggregation={aggregation}
-                          />
-                        ),
-                      }}
+                      tooltipProps={
+                        chartDataKeys.length === 1
+                          ? {
+                            content: ({ active, payload, label }) => (
+                              <DashboardChartTooltip
+                                active={active}
+                                payload={payload}
+                                xAxisVar={label}
+                                yAxisVar={yAxisVar}
+                                aggregation={aggregation}
+                              />
+                            ),
+                          }
+                          : {}
+                      }
                       valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
                     />
                   )}

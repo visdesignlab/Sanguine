@@ -72,7 +72,7 @@ export function formatValueForDisplay(
   // Handle cost units
   if (unit.startsWith('$')) {
     formatted = formatWithCommas(value, decimalCount);
-    return showUnits ? `${unit}${formatted}` : formatted;
+    return `${unit}${formatted}`;
   }
 
   // Handle integer values
