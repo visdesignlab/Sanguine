@@ -12,7 +12,6 @@ urlpatterns = [
 
     path("api/", views.index, name="index"),
     path("api/whoami", views.whoami, name="whoami"),
-    path("api/get_procedure_counts", views.get_procedure_counts, name="get_procedure_counts"),
     path("api/state", views.state, name="state"),
     path("api/share_state", views.share_state, name="share_state"),
     path("api/state_unids", views.state_unids, name="state_unids"),

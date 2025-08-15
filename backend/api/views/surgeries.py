@@ -1,9 +1,9 @@
-from collections import Counter, defaultdict
-from datetime import datetime, date, time
+from datetime import datetime, time
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 from django.views.decorators.http import require_http_methods
 from django.forms.models import model_to_dict
+import time as t
 
 from api.models import Visit
 
@@ -27,7 +27,6 @@ def whoami(request):
         return HttpResponse("Unauthorized", status=401)
 
 
-import time as t
 @require_http_methods(["GET"])
 @conditional_login_required
 def get_all_data(request):
@@ -89,7 +88,7 @@ def get_all_data(request):
                 for billing_code in visit.billingcode_set.all()
             ],
         }
-    for visit in visits]
+        for visit in visits]
 
     # log the time taken to process the data
     elapsed_time2 = t.time() - start_time
