@@ -14,9 +14,9 @@ ARG VITE_QUERY_URL="/api/"
 
 # Install the dependencies
 RUN set -ex; \
-      yarn install --frozen-lockfile --production; \
+      yarn install --frozen-lockfile; \
       yarn cache clean; \
-      yarn run build
+      yarn build
 
 # Use nginx:stable as the base image
 FROM docker.io/nginx:stable-alpine

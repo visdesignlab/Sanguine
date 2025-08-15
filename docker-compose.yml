@@ -1,6 +1,7 @@
 services:
   backend:
-    image: docker.io/intelvia/intelvia-backend:v0.0.4
+    build:
+      context: ./backend
     env_file:
       - .env
     ports:
@@ -19,7 +20,7 @@ services:
     expose:
       - "3306"
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - intelvia_mariadb_data:/var/lib/mysql
       - ./mariadb/conf.d:/etc/mysql/conf.d:z
       # - ./sftp/upload:/var/lib/mysql-files
     healthcheck:
@@ -29,19 +30,12 @@ services:
       timeout: 5s
 
   frontend:
-    image: docker.io/intelvia/intelvia-frontend:v0.0.4
+    build:
+      context: ./frontend
     ports:
       - "8080:8080"
     depends_on:
       - backend
 
-  # sftp:
-  #   image: docker.io/atmoz/sftp
-  #   volumes:
-  #     - ./sftp/upload:/home/intelvia
-  #   ports:
-  #     - "2222:22"
-  #   command: intelvia:password:1001
-
 volumes:
-  mariadb_data:
+  intelvia_mariadb_data:

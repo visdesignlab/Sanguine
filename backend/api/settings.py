@@ -155,3 +155,17 @@ CAS_VERSION = '3'
 CAS_USERNAME_ATTRIBUTE = "unid"
 CAS_ROOT_PROXIED_AS = "https://sanguine.med.utah.edu"
 CAS_REDIRECT_URL = env("DJANGO_LOGOUT_REDIRECT")
+
+# added to make oracle work
+import oracledb
+DATABASE_ROUTERS = ['api.routers.SanguineRouter']
+DATABASES["hospital"] = {
+    "ENGINE": 'django.db.backends.oracle',
+    "NAME": f"{env('ORACLE_HOST')}:{env('ORACLE_PORT')}/{env('ORACLE_SERVICE_NAME')}",
+    "USER": env("ORACLE_USER"),
+    "PASSWORD": env("ORACLE_PASSWORD"),
+    "OPTIONS": {
+        "mode": oracledb.AUTH_MODE_DEFAULT,
+    }
+}
+
