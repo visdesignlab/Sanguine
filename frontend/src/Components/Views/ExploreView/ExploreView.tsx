@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import { useContext, useState } from 'react';
 import {
   Title, Card, Group, Box, Text, Stack, Flex, Button, ActionIcon, useMantineTheme,
   CloseButton,
   Divider,
+  Tooltip,
 } from '@mantine/core';
 import {
   IconPlus, IconArrowUpRight, IconGripVertical, IconPercentage, IconSortAscending, IconSortDescending,
@@ -13,8 +14,10 @@ import { useThemeConstants } from '../../../Theme/mantineTheme';
 import gridItemStyles from '../GridLayoutItem.module.css';
 import cardStyles from './PresetStateCard.module.css';
 import { presetStateCards } from './PresetStateCards';
+import { Store } from '../../../Store/Store';
 
 export function ExploreView() {
+  const store = useContext(Store);
   // Hovered preset card
   const [hoveredIdx, setHoveredIdx] = useState<{ group: number; card: number } | null>(null);
   // State to show chart view
@@ -115,12 +118,22 @@ export function ExploreView() {
   return (
     <Stack>
       {/* Title, Add Chart Button */}
-      <Flex direction="row" justify="space-between" align="center">
+      <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
         <Title order={3}>Explore</Title>
-        <Button>
-          <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
-          Add Chart
-        </Button>
+
+        <Flex direction="row" align="center" gap="md">
+          <Tooltip label="Visible visits after filters" position="bottom">
+            <Title order={5} c="dimmed">
+              {`${store.filteredVisits.length} / ${store.allVisits.length}`}
+              {' '}
+              Visits
+            </Title>
+          </Tooltip>
+          <Button>
+            <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
+            Add Chart
+          </Button>
+        </Flex>
       </Flex>
       <Divider />
       {/* Show chart if cost/savings selected, else show preset cards */}

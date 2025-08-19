@@ -7,9 +7,7 @@ import { useObserver } from 'mobx-react';
 // Mantine
 import { useDisclosure } from '@mantine/hooks';
 import {
-  useMantineTheme, Title, Stack, Card, Flex, Select, Button, CloseButton, ActionIcon, Menu, Modal,
-  Divider,
-  Tooltip,
+  useMantineTheme, Title, Stack, Card, Flex, Select, Button, CloseButton, ActionIcon, Menu, Modal, Divider, Tooltip,
 } from '@mantine/core';
 import { BarChart, LineChart } from '@mantine/charts';
 import {
@@ -43,7 +41,9 @@ export function Dashboard() {
   // --- Store and styles ---
   const store = useContext(Store);
   const theme = useMantineTheme();
-  const { buttonIconSize, cardIconSize, cardIconStroke } = useThemeConstants();
+  const {
+    buttonIconSize, cardIconSize, cardIconStroke, toolbarWidth,
+  } = useThemeConstants();
 
   // --- Charts ---
   const aggregationOptions = Object.entries(AGGREGATION_OPTIONS).map(([value, { label }]) => ({ value, label }));
@@ -108,33 +108,43 @@ export function Dashboard() {
 
     return (
       <Stack mb="xl" gap="lg">
-        <Flex direction="row" justify="space-between" align="center">
+        <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
           {/** Dashboard Title */}
           <Title order={3}>Dashboard</Title>
-          {/** Add Item Button */}
-          <Menu width="md">
-            <Menu.Target>
-              <Button>
-                <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
-                Add Item
-              </Button>
-            </Menu.Target>
-            {/** Add Chart or Add Stat */}
-            <Menu.Dropdown>
-              <Menu.Item
-                leftSection={<IconChartLine size={cardIconSize} stroke={cardIconStroke} />}
-                onClick={openAddChartModal}
-              >
-                Add Chart
-              </Menu.Item>
-              <Menu.Item
-                leftSection={<IconNumbers size={cardIconSize} stroke={cardIconStroke} />}
-                onClick={openAddStatModal}
-              >
-                Add Stat
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
+          <Flex direction="row" align="center" gap="md">
+            <Tooltip label="Visible visits after filters" position="bottom">
+              <Title order={5} c="dimmed">
+                {`${store.filteredVisits.length} / ${store.allVisits.length}`}
+                {' '}
+                Visits
+              </Title>
+            </Tooltip>
+
+            {/** Add Item Button */}
+            <Menu width="md">
+              <Menu.Target>
+                <Button>
+                  <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
+                  Add Item
+                </Button>
+              </Menu.Target>
+              {/** Add Stat or Add Chart */}
+              <Menu.Dropdown>
+                <Menu.Item
+                  leftSection={<IconNumbers size={cardIconSize} stroke={cardIconStroke} />}
+                  onClick={openAddStatModal}
+                >
+                  Add Stat
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconChartLine size={cardIconSize} stroke={cardIconStroke} />}
+                  onClick={openAddChartModal}
+                >
+                  Add Chart
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </Flex>
         </Flex>
         <Divider />
         {/** Modal when add chart or stat clicked */}
