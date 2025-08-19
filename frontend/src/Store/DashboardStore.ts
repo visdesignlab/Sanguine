@@ -364,7 +364,12 @@ export class DashboardStore {
           : ((currentValue - comparisonValue) / comparisonValue) * 100;
 
         // Format the stat value (E.g. "Overall Guideline Adherence")
-        const formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
+        let formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
+
+        // For adherence variables, don't include full units
+        if (yAxisVar.includes('adherence')) {
+          formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType, false);
+        }
 
         // Sparkline calculation
         const sparklineData: number[] = sparklinePeriodData.map((periodData) => (periodData[key] || 0) ** 2);
