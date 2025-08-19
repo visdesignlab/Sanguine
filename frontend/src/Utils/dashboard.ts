@@ -226,7 +226,7 @@ export function getIconForVar(varName: typeof dashboardYAxisVars[number]) {
  * (E.g. rbc_units -> sum_rbc_units, avg_rbc_units, etc.)
  * Aggregates by each y-axis aggregation type (sum, avg)
 */
-export function aggregateVisitsBySumAvg(visits: RootStore['allVisits']) {
+export function aggregateVisitsBySumAvg(visits: Visit[]) {
   const aggregations: Record<DashboardAggYAxisVar, number> = {} as Record<DashboardAggYAxisVar, number>;
 
   try {

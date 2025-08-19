@@ -237,7 +237,7 @@ export class DashboardStore {
 
         // --- Aggregate all other yAxisVars by time period, sum, and avg ---
         const aggregatedData = rollup(
-          this._rootStore.allVisits,
+          this._rootStore.filteredVisits,
           (visits) => aggregateVisitsBySumAvg(visits),
           (d) => d[timeAggregation],
         );
@@ -289,7 +289,7 @@ export class DashboardStore {
    */
   get statData() {
     // --- Find the current period (last 30 days) for the stats ---
-    const latestDate = new Date(Math.max(...this._rootStore.allVisits.map((v) => v.dischargeDate.getTime())));
+    const latestDate = new Date(Math.max(...this._rootStore.filteredVisits.map((v) => v.dischargeDate.getTime())));
 
     // Calculate current period (last 30 days)
     const currentPeriodStart = new Date(latestDate.getTime() - (30 * TIME_CONSTANTS.ONE_DAY_MS));
@@ -324,11 +324,11 @@ export class DashboardStore {
     }
 
     // --- Find visits from each time period (current, comparison, sparkline periods) ---
-    const currentPeriodVisits: typeof this._rootStore.allVisits = [];
-    const comparisonPeriodVisits: typeof this._rootStore.allVisits = [];
-    const sparklineVisits: typeof this._rootStore.allVisits[] = Array(intermediatePeriodNumber).fill(null).map(() => []);
+    const currentPeriodVisits: typeof this._rootStore.filteredVisits = [];
+    const comparisonPeriodVisits: typeof this._rootStore.filteredVisits = [];
+    const sparklineVisits: typeof this._rootStore.filteredVisits[] = Array(intermediatePeriodNumber).fill(null).map(() => []);
 
-    for (const v of this._rootStore.allVisits) {
+    for (const v of this._rootStore.filteredVisits) {
       const t = v.dischargeDate.getTime();
       if (t >= currentPeriodStart.getTime() && t <= latestDate.getTime()) {
         currentPeriodVisits.push(v);

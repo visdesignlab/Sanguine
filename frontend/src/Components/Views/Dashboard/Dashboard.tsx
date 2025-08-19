@@ -14,7 +14,6 @@ import {
 import { BarChart, LineChart } from '@mantine/charts';
 import {
   IconCalendarCode, IconGripVertical, IconNumbers, IconPercentage, IconPlus, IconChartBar, IconChartLine,
-  IconSum,
 } from '@tabler/icons-react';
 
 // Dashboard

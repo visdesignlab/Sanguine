@@ -28,6 +28,7 @@ function App() {
   // Fetch all visits data on initial load
   useEffect(() => {
     async function fetchAllVisits() {
+      setDataLoading(true);
       try {
         // Fetch all visits data
         const visitsRequest = await fetch(`${import.meta.env.VITE_QUERY_URL}get_all_data`);
@@ -40,6 +41,7 @@ function App() {
 
         // Update the store with fetched visits
         store._allVisits = visits;
+        store.filtersStore.calculateDefaultFilterValues();
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         setDataLoadingFailed(true);

@@ -15,6 +15,7 @@ import { ExploreView } from '../Components/Views/ExploreView/ExploreView';
 import { ProvidersView } from '../Components/Views/ProvidersView/ProvidersView';
 import { Dashboard } from '../Components/Views/Dashboard/Dashboard';
 import classes from './Shell.module.css';
+import { FilterToolbar } from '../Components/Toolbar/FilterToolbar';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -57,7 +58,7 @@ export function Shell() {
   // Toolbar icons ----------------------
   // Left toolbar icons
   const leftToolbarIcons: { icon: React.ComponentType<IconProps>; label: string, content: ReactNode }[] = [
-    { icon: IconFilter, label: 'Filter Panel', content: <Text>Filter panel content</Text> },
+    { icon: IconFilter, label: 'Filter Panel', content: <FilterToolbar /> },
     { icon: IconSettings, label: 'Settings', content: <Text>Settings content</Text> },
     { icon: IconDatabase, label: 'Database', content: <Text>Database content</Text> },
     { icon: IconBook, label: 'Learn', content: <Text>Learning content</Text> },

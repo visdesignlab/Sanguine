@@ -21,6 +21,7 @@ import {
   OverallTotalTransfusedField,
 } from '../Types/application';
 import { getTimePeriodFromDate } from '../Utils/dashboard';
+import { FiltersStore } from './FiltersStore';
 
 export type Visit = DatabaseVisit & {
   dischargeDate: Date;
@@ -41,15 +42,19 @@ export class RootStore {
   // Provenance
 
   // Stores
-  dashboardStore = new DashboardStore(this);
+  dashboardStore: DashboardStore;
+
+  filtersStore: FiltersStore;
   // providersStore:
   // exploreStore:
 
   // Visits - Main data type
-  _allVisits: DatabaseVisit[];
+  _allVisits: DatabaseVisit[] = [];
 
   constructor() {
-    this._allVisits = [];
+    // Initialize stores
+    this.dashboardStore = new DashboardStore(this);
+    this.filtersStore = new FiltersStore(this);
 
     makeAutoObservable(this);
   }
@@ -121,8 +126,36 @@ export class RootStore {
     this._allVisits = input;
   }
 
+  get filteredVisits() {
+    return this.allVisits
+      // Apply filter store filters
+      .filter((visit) => {
+        const { filterValues } = this.filtersStore;
+
+        // Check date range
+        const dateFrom = filterValues.dateFrom.getTime();
+        const dateTo = filterValues.dateTo.getTime();
+        const visitDate = safeParseDate(visit.adm_dtm).getTime();
+        if (visitDate < dateFrom || visitDate > dateTo) {
+          return false;
+        }
+
+        // Check RBCs range
+        if (visit.rbc_units < filterValues.visitRBCs[0] || visit.rbc_units > filterValues.visitRBCs[1]) {
+          return false;
+        }
+
+        // Check FFPs range
+        if (visit.ffp_units < filterValues.visitFFPs[0] || visit.ffp_units > filterValues.visitFFPs[1]) {
+          return false;
+        }
+
+        return true;
+      });
+  }
+
   get allPatients() {
-    return this._allVisits.flatMap((d) => d.patient);
+    return this.allVisits.flatMap((d) => d.patient);
   }
 
   get allSurgeries() {
