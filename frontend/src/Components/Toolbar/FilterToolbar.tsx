@@ -1,7 +1,7 @@
 import { DateInput } from '@mantine/dates';
 import { useContext } from 'react';
 import {
-  Accordion, Flex, Input, RangeSlider, Text,
+  Accordion, Chip, Flex, Input, RangeSlider, Text,
 } from '@mantine/core';
 import { useObserver } from 'mobx-react';
 import { Store } from '../../Store/Store';
@@ -15,7 +15,12 @@ export function FilterToolbar() {
     <Accordion multiple defaultValue={['date-filters', 'blood-component-filters']}>
       <Accordion.Item value="date-filters" key="date-filters">
         <Accordion.Control px="xs">
-          <Text>Visit Date</Text>
+          <Flex justify="space-between" align="center" gap="xs" mr="xs">
+            <Text>Visit Date</Text>
+            <Chip color="blue" radius="sm" variant="light" checked>
+              2
+            </Chip>
+          </Flex>
         </Accordion.Control>
         <Accordion.Panel>
           <Flex direction="row" justify="space-between" align="center">
@@ -43,7 +48,12 @@ export function FilterToolbar() {
 
       <Accordion.Item value="blood-component-filters" key="blood-component-filters">
         <Accordion.Control px="xs">
-          <Text>Visit Blood Component</Text>
+          <Flex justify="space-between" align="center" gap="xs" mr="xs">
+            <Text>Blood Component Used</Text>
+            <Chip color="blue" radius="sm" variant="light" checked>
+              2
+            </Chip>
+          </Flex>
         </Accordion.Control>
         <Accordion.Panel>
           <Input.Wrapper label="RBCs" mb="lg">

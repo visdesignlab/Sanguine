@@ -106,6 +106,18 @@ export const mantineTheme = createTheme({
         },
       },
     },
+    Chip: {
+      styles: {
+        root: {
+          '--chip-bg': 'var(--mantine-color-blue-2)',
+          '--chip-color': 'white',
+          '--chip-bd': 'var(--mantine-color-blue-6)',
+          '--chip-checked-padding': '0.5rem',
+          '--chip-spacing': '0',
+          '--chip-icon-size': '0',
+        },
+      },
+    },
     Modal: {
       styles: {
         title: {
