@@ -56,7 +56,7 @@ export function FilterToolbar() {
           </Flex>
         </Accordion.Control>
         <Accordion.Panel>
-          <Input.Wrapper label="RBCs" mb="lg">
+          <Input.Wrapper label="RBC Units" mb="lg">
             <RangeSlider
               defaultValue={store.filtersStore.filterValues.visitRBCs}
               onChangeEnd={(value) => store.filtersStore.setFilterValue('visitRBCs', value)}
@@ -69,7 +69,7 @@ export function FilterToolbar() {
             />
           </Input.Wrapper>
 
-          <Input.Wrapper label="FFPs" mb="lg">
+          <Input.Wrapper label="FFP Units" mb="lg">
             <RangeSlider
               defaultValue={store.filtersStore.filterValues.visitRBCs}
               onChangeEnd={(value) => store.filtersStore.setFilterValue('visitRBCs', value)}
@@ -81,7 +81,7 @@ export function FilterToolbar() {
             />
           </Input.Wrapper>
 
-          <Input.Wrapper label="PLTs" mb="lg">
+          <Input.Wrapper label="Platelet Units" mb="lg">
             <RangeSlider
               defaultValue={store.filtersStore.filterValues.visitPLTs}
               onChangeEnd={(value) => store.filtersStore.setFilterValue('visitPLTs', value)}
@@ -93,7 +93,7 @@ export function FilterToolbar() {
             />
           </Input.Wrapper>
 
-          <Input.Wrapper label="Cryo" mb="lg">
+          <Input.Wrapper label="Cryo Units" mb="lg">
             <RangeSlider
               defaultValue={store.filtersStore.filterValues.visitCryo}
               onChangeEnd={(value) => store.filtersStore.setFilterValue('visitCryo', value)}
@@ -105,7 +105,7 @@ export function FilterToolbar() {
             />
           </Input.Wrapper>
 
-          <Input.Wrapper label="Cell Saver" mb="lg">
+          <Input.Wrapper label="Cell Saver (mL)" mb="lg">
             <RangeSlider
               defaultValue={store.filtersStore.filterValues.visitCellSaver}
               onChangeEnd={(value) => store.filtersStore.setFilterValue('visitCellSaver', value)}
