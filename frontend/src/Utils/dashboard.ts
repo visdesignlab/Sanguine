@@ -20,7 +20,7 @@ import {
   Month,
   Quarter,
 } from '../Types/application';
-import { type RootStore } from '../Store/Store';
+import type { Visit } from '../Store/Store';
 
 /**
  * Format stat values appropriately based on the variable type
@@ -101,17 +101,18 @@ export function formatValueForDisplay(
  * @returns true if the change is considered good, false if bad
  */
 export function isMetricChangeGood(metricVar: typeof dashboardYAxisVars[number], diffPercent: number): boolean {
-// Blood components and outcomes - lower is better (negative change is good)
+  // Blood components, outcomes, and cost - lower is better (negative change is good)
   const isBloodComponent = BLOOD_COMPONENT_OPTIONS.some((opt) => opt.value === metricVar);
   const isOutcome = OUTCOME_OPTIONS.some((opt) => opt.value === metricVar);
+  const isCost = [...COST_OPTIONS, OVERALL_BLOOD_PRODUCT_COST].some((opt) => opt.value === metricVar);
 
   // Guideline adherence and prophylactic medications - higher is better (positive change is good)
   const isAdherence = GUIDELINE_ADHERENCE_OPTIONS.some((opt) => opt.value === metricVar);
   const isOverallAdherence = metricVar === OVERALL_GUIDELINE_ADHERENCE.value;
   const isProphylMed = PROPHYL_MED_OPTIONS.some((opt) => opt.value === metricVar);
 
-  if (isBloodComponent || isOutcome) {
-  // For blood components and outcomes, negative change is good
+  if (isBloodComponent || isOutcome || isCost) {
+  // For blood components and outcomes and costs, negative change is good
     return diffPercent < 0;
   }
 
