@@ -150,6 +150,21 @@ export class RootStore {
           return false;
         }
 
+        // Check PLTs range
+        if (visit.plt_units < filterValues.visitPLTs[0] || visit.plt_units > filterValues.visitPLTs[1]) {
+          return false;
+        }
+
+        // Check Cryo range
+        if (visit.cryo_units < filterValues.visitCryo[0] || visit.cryo_units > filterValues.visitCryo[1]) {
+          return false;
+        }
+
+        // Check Cell Saver range
+        if (visit.cell_saver_ml < filterValues.visitCellSaver[0] || visit.cell_saver_ml > filterValues.visitCellSaver[1]) {
+          return false;
+        }
+
         return true;
       });
   }

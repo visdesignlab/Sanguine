@@ -70,6 +70,42 @@ export function FilterToolbar() {
               minRange={1}
             />
           </Input.Wrapper>
+
+          <Input.Wrapper label="PLTs" mb="lg">
+            <RangeSlider
+              defaultValue={store.filtersStore.filterValues.visitPLTs}
+              onChangeEnd={(value) => store.filtersStore.setFilterValue('visitPLTs', value)}
+              min={store.filtersStore.initialFilterValues.visitPLTs[0]}
+              max={store.filtersStore.initialFilterValues.visitPLTs[1]}
+              step={1}
+              marks={store.filtersStore.initialFilterValues.visitPLTs.map((val) => ({ value: val, label: String(val) }))}
+              minRange={1}
+            />
+          </Input.Wrapper>
+
+          <Input.Wrapper label="Cryo" mb="lg">
+            <RangeSlider
+              defaultValue={store.filtersStore.filterValues.visitCryo}
+              onChangeEnd={(value) => store.filtersStore.setFilterValue('visitCryo', value)}
+              min={store.filtersStore.initialFilterValues.visitCryo[0]}
+              max={store.filtersStore.initialFilterValues.visitCryo[1]}
+              step={1}
+              marks={store.filtersStore.initialFilterValues.visitCryo.map((val) => ({ value: val, label: String(val) }))}
+              minRange={1}
+            />
+          </Input.Wrapper>
+
+          <Input.Wrapper label="Cell Saver" mb="lg">
+            <RangeSlider
+              defaultValue={store.filtersStore.filterValues.visitCellSaver}
+              onChangeEnd={(value) => store.filtersStore.setFilterValue('visitCellSaver', value)}
+              min={store.filtersStore.initialFilterValues.visitCellSaver[0]}
+              max={store.filtersStore.initialFilterValues.visitCellSaver[1]}
+              step={50}
+              marks={store.filtersStore.initialFilterValues.visitCellSaver.map((val) => ({ value: val, label: String(val) }))}
+              minRange={1}
+            />
+          </Input.Wrapper>
         </Accordion.Panel>
       </Accordion.Item>
     </Accordion>

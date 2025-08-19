@@ -11,6 +11,9 @@ export class FiltersStore {
     dateTo: new Date(),
     visitRBCs: [0, Infinity] as [number, number],
     visitFFPs: [0, Infinity] as [number, number],
+    visitPLTs: [0, Infinity] as [number, number],
+    visitCryo: [0, Infinity] as [number, number],
+    visitCellSaver: [0, Infinity] as [number, number],
   };
 
   _filterValues: typeof this._initialFilterValues = {
@@ -18,6 +21,9 @@ export class FiltersStore {
     dateTo: new Date(),
     visitRBCs: [0, Infinity],
     visitFFPs: [0, Infinity],
+    visitPLTs: [0, Infinity],
+    visitCryo: [0, Infinity],
+    visitCellSaver: [0, Infinity],
   };
 
   // Initialize store with the root store
@@ -50,16 +56,32 @@ export class FiltersStore {
     const dateFrom = new Date(Math.min(...admDates));
     const dateTo = new Date(Math.max(...dschDates));
 
-    const { visitRBCs, visitFFPs } = allVisits.reduce((acc, visit) => {
+    const {
+      visitRBCs,
+      visitFFPs,
+      visitPLTs,
+      visitCryo,
+      visitCellSaver,
+    } = allVisits.reduce((acc, visit) => {
       const rbcUnits = visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.rbc_units || 0), 0);
       const ffpUnits = visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.ffp_units || 0), 0);
+      const pltUnits = visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.plt_units || 0), 0);
+      const cryoUnits = visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.cryo_units || 0), 0);
+      const cellSaverMl = visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.cell_saver_ml || 0), 0);
+
       return {
         visitRBCs: [Math.min(acc.visitRBCs[0], rbcUnits), Math.max(acc.visitRBCs[1], rbcUnits)] as [number, number],
         visitFFPs: [Math.min(acc.visitFFPs[0], ffpUnits), Math.max(acc.visitFFPs[1], ffpUnits)] as [number, number],
+        visitPLTs: [Math.min(acc.visitPLTs[0], pltUnits), Math.max(acc.visitPLTs[1], pltUnits)] as [number, number],
+        visitCryo: [Math.min(acc.visitCryo[0], cryoUnits), Math.max(acc.visitCryo[1], cryoUnits)] as [number, number],
+        visitCellSaver: [Math.min(acc.visitCellSaver[0], cellSaverMl), Math.max(acc.visitCellSaver[1], cellSaverMl)] as [number, number],
       };
     }, {
       visitRBCs: [Infinity, -Infinity] as [number, number],
       visitFFPs: [Infinity, -Infinity] as [number, number],
+      visitPLTs: [Infinity, -Infinity] as [number, number],
+      visitCryo: [Infinity, -Infinity] as [number, number],
+      visitCellSaver: [Infinity, -Infinity] as [number, number],
     });
 
     this._filterValues = {
@@ -67,6 +89,9 @@ export class FiltersStore {
       dateTo,
       visitRBCs,
       visitFFPs,
+      visitPLTs,
+      visitCryo,
+      visitCellSaver,
     };
 
     this._initialFilterValues = { ...this._filterValues };
