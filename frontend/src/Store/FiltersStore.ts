@@ -14,6 +14,9 @@ export class FiltersStore {
     visitPLTs: [0, Infinity] as [number, number],
     visitCryo: [0, Infinity] as [number, number],
     visitCellSaver: [0, Infinity] as [number, number],
+    death: false as boolean | null,
+    vent: false as boolean | null,
+    stroke: false as boolean | null,
   };
 
   _filterValues: typeof this._initialFilterValues = {
@@ -24,6 +27,9 @@ export class FiltersStore {
     visitPLTs: [0, Infinity],
     visitCryo: [0, Infinity],
     visitCellSaver: [0, Infinity],
+    death: null,
+    vent: null,
+    stroke: null,
   };
 
   // Initialize store with the root store
@@ -92,6 +98,9 @@ export class FiltersStore {
       visitPLTs,
       visitCryo,
       visitCellSaver,
+      death: null,
+      vent: null,
+      stroke: null,
     };
 
     this._initialFilterValues = { ...this._filterValues };

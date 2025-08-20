@@ -165,6 +165,24 @@ export class RootStore {
           return false;
         }
 
+        // Check death flag
+        if (filterValues.death && visit.pat_expired_f === null) {
+          return false;
+        }
+        if (filterValues.death === false && visit.pat_expired_f !== null) {
+          return false;
+        }
+
+        // Check ventilator flag
+        if (filterValues.vent && visit.total_vent_mins <= TIME_CONSTANTS.VENTILATOR_THRESHOLD_MINS) {
+          return false;
+        }
+        if (filterValues.vent === false && visit.total_vent_mins >= TIME_CONSTANTS.VENTILATOR_THRESHOLD_MINS) {
+          return false;
+        }
+
+        // TODO: Check stroke flag
+
         return true;
       });
   }
