@@ -22,6 +22,7 @@ export function FilterToolbar() {
   const {
     dateFiltersAppliedCount: dateFilterCount,
     bloodComponentFiltersAppliedCount: bloodComponentFilterCount,
+    patientOutcomeFiltersAppliedCount: outcomeFilterCount,
   } = store.filtersStore;
   const { toolbarWidth } = useThemeConstants();
 
@@ -67,15 +68,15 @@ export function FilterToolbar() {
         <Accordion.Item value="date-filters" key="date-filters">
           <Accordion.Control px="xs">
             <Flex justify="space-between" align="center" gap="xs" mr="xs">
-              <Title order={4}>Visit Date</Title>
+              <Title order={4} c={dateFilterCount > 0 ? 'blue.6' : undefined}>Visit Date</Title>
               {dateFilterCount > 0 && (
-              <Badge
-                color="blue"
-                radius="sm"
-                variant="light"
-              >
-                {dateFilterCount}
-              </Badge>
+                <Badge
+                  color="blue"
+                  radius="sm"
+                  variant="light"
+                >
+                  {dateFilterCount}
+                </Badge>
               )}
             </Flex>
           </Accordion.Control>
@@ -118,7 +119,7 @@ export function FilterToolbar() {
         <Accordion.Item value="blood-component-filters" key="blood-component-filters">
           <Accordion.Control px="xs">
             <Flex justify="space-between" align="center" gap="xs" mr="xs" h={toolbarWidth / 2}>
-              <Title order={4}>Blood Component Used</Title>
+              <Title order={4} c={bloodComponentFilterCount > 0 ? 'blue' : undefined}>Blood Component Used</Title>
               {bloodComponentFilterCount > 0 && (
                 <Badge
                   color="blue"
@@ -313,7 +314,18 @@ export function FilterToolbar() {
 
         <Accordion.Item value="outcome-filters" key="outcome-filters">
           <Accordion.Control px="xs">
-            <Title order={4}>Patient Outcome</Title>
+            <Flex justify="space-between" align="center" gap="xs" mr="xs">
+              <Title order={4} c={outcomeFilterCount > 0 ? 'blue.6' : undefined}>Patient Outcome</Title>
+              {outcomeFilterCount > 0 && (
+                <Badge
+                  color="blue"
+                  radius="sm"
+                  variant="light"
+                >
+                  {outcomeFilterCount}
+                </Badge>
+              )}
+            </Flex>
           </Accordion.Control>
           <Accordion.Panel>
             <Stack gap={0}>

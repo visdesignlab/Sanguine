@@ -116,6 +116,18 @@ export class FiltersStore {
             || dateTo.getTime() !== this._initialFilterValues.dateTo.getTime()) ? 1 : 0;
   }
 
+  /**
+   * Returns count of patient outcome filters applied
+   */
+  get patientOutcomeFiltersAppliedCount(): number {
+    let count = 0;
+    const keys: (keyof typeof this._filterValues)[] = ['death', 'vent', 'stroke'];
+    keys.forEach((key) => {
+      if (this._filterValues[key] !== this._initialFilterValues[key]) count += 1;
+    });
+    return count;
+  }
+
   /*
   * Returns count of blood component filters applied
   */
