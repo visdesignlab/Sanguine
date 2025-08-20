@@ -84,7 +84,7 @@ export function Shell() {
       padding="xs"
     >
       {/** Header Toolbar */}
-      <AppShell.Header>
+      <AppShell.Header withBorder>
         <Group justify="space-between">
           <Group>
             {/** Left Toolbar Toggle Burger Icon */}
@@ -104,10 +104,8 @@ export function Shell() {
               }}
               radius="md"
               defaultValue={defaultTab}
-              styles={{
-                tabLabel: {
-                  marginTop: -4,
-                },
+              classNames={{
+                tab: activeLeftPanel !== null ? classes.tabOutlineActive : undefined,
               }}
               pl="xs"
             >

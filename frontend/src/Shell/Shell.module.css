@@ -5,3 +5,6 @@
     border-color: var(--mantine-color-blue-3) !important;
   }
 }
+.tabOutlineActive {
+  border-bottom: 1px solid var(--mantine-color-gray-3) !important;
+}
