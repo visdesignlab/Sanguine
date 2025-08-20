@@ -4,6 +4,7 @@ import {
   Accordion, ActionIcon, Badge, Flex, Grid, Input, RangeSlider, Rating, ScrollArea, Stack, Text, ThemeIcon,
   Title,
   Tooltip,
+  useMantineTheme,
 } from '@mantine/core';
 import { useObserver } from 'mobx-react';
 import {
@@ -18,6 +19,7 @@ const dateSimplify = (date: Date) => date.toISOString().split('T')[0]; // Format
 
 export function FilterToolbar() {
   const store = useContext(Store);
+  const theme = useMantineTheme();
   const [showBloodComponentHistogram, setShowBloodComponentHistogram] = useState(false);
   const {
     dateFiltersAppliedCount: dateFilterCount,
@@ -61,6 +63,9 @@ export function FilterToolbar() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.filtersStore.filterValues.visitCellSaver]);
+
+  // Helper to determine if a filter active
+  const hasAttributeBeenFiltered = (range: [number, number], initial: [number, number]) => range[0] !== initial[0] || range[1] !== initial[1];
 
   return useObserver(() => (
     <ScrollArea h={`calc(100vh - ${toolbarWidth}px - 45px)`} type="scroll" overscrollBehavior="contain">
@@ -154,7 +159,11 @@ export function FilterToolbar() {
                 </ActionIcon>
               </Tooltip>
             </Flex>
-            <Input.Wrapper label="RBC Units" mb="lg">
+            <Input.Wrapper
+              label="RBC Units"
+              labelProps={hasAttributeBeenFiltered(rbcRange, store.filtersStore.initialFilterValues.visitRBCs) ? { style: { color: theme.colors.blue[6] } } : undefined}
+              mb="lg"
+            >
               {showBloodComponentHistogram && (
               <Flex justify="center">
                 <BarChart
@@ -186,7 +195,11 @@ export function FilterToolbar() {
               />
             </Input.Wrapper>
 
-            <Input.Wrapper label="FFP Units" mb="lg">
+            <Input.Wrapper
+              label="FFP Units"
+              labelProps={hasAttributeBeenFiltered(ffpRange, store.filtersStore.initialFilterValues.visitFFPs) ? { style: { color: theme.colors.blue[6] } } : undefined}
+              mb="lg"
+            >
               {showBloodComponentHistogram && (
               <Flex justify="center">
                 <BarChart
@@ -217,7 +230,11 @@ export function FilterToolbar() {
               />
             </Input.Wrapper>
 
-            <Input.Wrapper label="Platelet Units" mb="lg">
+            <Input.Wrapper
+              label="Platelet Units"
+              labelProps={hasAttributeBeenFiltered(pltRange, store.filtersStore.initialFilterValues.visitPLTs) ? { style: { color: theme.colors.blue[6] } } : undefined}
+              mb="lg"
+            >
               {showBloodComponentHistogram && (
               <Flex justify="center">
                 <BarChart
@@ -248,7 +265,11 @@ export function FilterToolbar() {
               />
             </Input.Wrapper>
 
-            <Input.Wrapper label="Cryo Units" mb="lg">
+            <Input.Wrapper
+              label="Cryo Units"
+              labelProps={hasAttributeBeenFiltered(cryoRange, store.filtersStore.initialFilterValues.visitCryo) ? { style: { color: theme.colors.blue[6] } } : undefined}
+              mb="lg"
+            >
               {showBloodComponentHistogram && (
               <Flex justify="center">
                 <BarChart
