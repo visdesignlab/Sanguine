@@ -118,7 +118,7 @@ export function FilterToolbar() {
           <Input.Wrapper label="FFP Units" mb="lg">
             <RangeSlider
               defaultValue={store.filtersStore.filterValues.visitFFPs}
-              onChangeEnd={(value) => store.filtersStore.setFilterValue('visitRBCs', value)}
+              onChangeEnd={(value) => store.filtersStore.setFilterValue('visitFFPs', value)}
               min={store.filtersStore.initialFilterValues.visitFFPs[0]}
               max={store.filtersStore.initialFilterValues.visitFFPs[1]}
               step={1}
