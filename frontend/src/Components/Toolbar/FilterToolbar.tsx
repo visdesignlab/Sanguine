@@ -2,7 +2,7 @@ import { DateInput } from '@mantine/dates';
 import { useContext } from 'react';
 import {
   Accordion, ActionIcon, Chip, Flex, Input, RangeSlider,
-  Title,
+  Title, Tooltip,
 } from '@mantine/core';
 import { useObserver } from 'mobx-react';
 import { IconChartBar, IconHelpSquare, IconRestore } from '@tabler/icons-react';
@@ -40,15 +40,16 @@ export function FilterToolbar() {
         </Accordion.Control>
         <Accordion.Panel>
           <Flex justify="flex-start" align="center" gap="sm" mt={0} mb="xs">
-            <ActionIcon size="xs" onClick={() => store.filtersStore.resetDateFilters()}>
-              <IconRestore stroke={1} />
-            </ActionIcon>
-            <ActionIcon size="xs">
-              <IconChartBar stroke={1} />
-            </ActionIcon>
-            <ActionIcon size="xs">
-              <IconHelpSquare stroke={1} />
-            </ActionIcon>
+            <Tooltip label="Reset Date Filters">
+              <ActionIcon size="xs" onClick={() => store.filtersStore.resetDateFilters()}>
+                <IconRestore stroke={1} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Explain Date Filters">
+              <ActionIcon size="xs">
+                <IconHelpSquare stroke={1} />
+              </ActionIcon>
+            </Tooltip>
           </Flex>
           <Flex direction="row" justify="space-between" align="center">
             <DateInput
@@ -92,15 +93,21 @@ export function FilterToolbar() {
         </Accordion.Control>
         <Accordion.Panel>
           <Flex justify="flex-start" align="center" gap="sm" mt={0} mb="xs">
-            <ActionIcon size="xs" onClick={() => store.filtersStore.resetBloodComponentFilters()}>
-              <IconRestore stroke={1} />
-            </ActionIcon>
-            <ActionIcon size="xs">
-              <IconChartBar stroke={1} />
-            </ActionIcon>
-            <ActionIcon size="xs">
-              <IconHelpSquare stroke={1} />
-            </ActionIcon>
+            <Tooltip label="Reset Blood Component Filters">
+              <ActionIcon size="xs" onClick={() => store.filtersStore.resetBloodComponentFilters()}>
+                <IconRestore stroke={1} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Show Visit Count Histograms">
+              <ActionIcon size="xs">
+                <IconChartBar stroke={1} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Explain Blood Component Filters">
+              <ActionIcon size="xs">
+                <IconHelpSquare stroke={1} />
+              </ActionIcon>
+            </Tooltip>
           </Flex>
           <Input.Wrapper label="RBC Units" mb="lg">
             <RangeSlider
