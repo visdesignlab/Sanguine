@@ -58,7 +58,7 @@ export function Shell() {
   // Toolbar icons ----------------------
   // Left toolbar icons
   const leftToolbarIcons: { icon: React.ComponentType<IconProps>; label: string, content: ReactNode }[] = [
-    { icon: IconFilter, label: 'Filter Panel', content: <FilterToolbar /> },
+    { icon: IconFilter, label: 'Filter Visits By', content: <FilterToolbar /> },
     { icon: IconSettings, label: 'Settings', content: <Text>Settings content</Text> },
     { icon: IconDatabase, label: 'Database', content: <Text>Database content</Text> },
     { icon: IconBook, label: 'Learn', content: <Text>Learning content</Text> },
