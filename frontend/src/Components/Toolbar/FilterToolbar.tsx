@@ -63,7 +63,7 @@ export function FilterToolbar() {
 
   return useObserver(() => (
     <ScrollArea h={`calc(100vh - ${toolbarWidth}px - 45px)`} type="scroll" overscrollBehavior="contain">
-      <Accordion multiple defaultValue={['date-filters', 'blood-component-filters', 'outcome-filters']}>
+      <Accordion multiple defaultValue={['date-filters', 'blood-component-filters', 'outcome-filters']} mt="xs">
         <Accordion.Item value="date-filters" key="date-filters">
           <Accordion.Control px="xs">
             <Flex justify="space-between" align="center" gap="xs" mr="xs">
@@ -313,7 +313,7 @@ export function FilterToolbar() {
 
         <Accordion.Item value="outcome-filters" key="outcome-filters">
           <Accordion.Control px="xs">
-            <Text>Outcome Filters</Text>
+            <Title order={4}>Patient Outcome</Title>
           </Accordion.Control>
           <Accordion.Panel>
             <Stack gap={0}>
