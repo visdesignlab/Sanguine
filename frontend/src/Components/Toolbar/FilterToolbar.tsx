@@ -1,7 +1,7 @@
 import { DateInput } from '@mantine/dates';
 import { useContext, useEffect, useState } from 'react';
 import {
-  Accordion, ActionIcon, Chip, Flex, Grid, Input, RangeSlider, Rating, ScrollArea, Stack, Text, ThemeIcon,
+  Accordion, ActionIcon, Badge, Flex, Grid, Input, RangeSlider, Rating, ScrollArea, Stack, Text, ThemeIcon,
   Title,
   Tooltip,
 } from '@mantine/core';
@@ -69,15 +69,13 @@ export function FilterToolbar() {
             <Flex justify="space-between" align="center" gap="xs" mr="xs">
               <Title order={4}>Visit Date</Title>
               {dateFilterCount > 0 && (
-              <Chip
+              <Badge
                 color="blue"
                 radius="sm"
                 variant="light"
-                checked
-                style={{ marginBottom: 8 }}
               >
                 {dateFilterCount}
-              </Chip>
+              </Badge>
               )}
             </Flex>
           </Accordion.Control>
@@ -122,15 +120,13 @@ export function FilterToolbar() {
             <Flex justify="space-between" align="center" gap="xs" mr="xs" h={toolbarWidth / 2}>
               <Title order={4}>Blood Component Used</Title>
               {bloodComponentFilterCount > 0 && (
-                <Chip
+                <Badge
                   color="blue"
                   radius="sm"
                   variant="light"
-                  checked
-                  style={{ marginBottom: 8 }}
                 >
                   {bloodComponentFilterCount}
-                </Chip>
+                </Badge>
               )}
             </Flex>
           </Accordion.Control>
