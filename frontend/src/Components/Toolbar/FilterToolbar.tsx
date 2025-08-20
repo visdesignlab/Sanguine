@@ -1,5 +1,5 @@
 import { DateInput } from '@mantine/dates';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import {
   Accordion, ActionIcon, Chip, Flex, Grid, Input, RangeSlider, Rating, ScrollArea, Stack, Text, ThemeIcon,
   Title,
@@ -24,6 +24,42 @@ export function FilterToolbar() {
     bloodComponentFiltersAppliedCount: bloodComponentFilterCount,
   } = store.filtersStore;
   const { toolbarWidth } = useThemeConstants();
+
+  const [rbcRange, setRbcRange] = useState(store.filtersStore.filterValues.visitRBCs);
+  useEffect(() => {
+    if (store.filtersStore.filterValues.visitRBCs[0] !== rbcRange[0] || store.filtersStore.filterValues.visitRBCs[1] !== rbcRange[1]) {
+      setRbcRange(store.filtersStore.filterValues.visitRBCs);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.filtersStore.filterValues.visitRBCs]);
+  const [ffpRange, setFfpRange] = useState(store.filtersStore.filterValues.visitFFPs);
+  useEffect(() => {
+    if (store.filtersStore.filterValues.visitFFPs[0] !== ffpRange[0] || store.filtersStore.filterValues.visitFFPs[1] !== ffpRange[1]) {
+      setFfpRange(store.filtersStore.filterValues.visitFFPs);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.filtersStore.filterValues.visitFFPs]);
+  const [pltRange, setPltRange] = useState(store.filtersStore.filterValues.visitPLTs);
+  useEffect(() => {
+    if (store.filtersStore.filterValues.visitPLTs[0] !== pltRange[0] || store.filtersStore.filterValues.visitPLTs[1] !== pltRange[1]) {
+      setPltRange(store.filtersStore.filterValues.visitPLTs);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.filtersStore.filterValues.visitPLTs]);
+  const [cryoRange, setCryoRange] = useState(store.filtersStore.filterValues.visitCryo);
+  useEffect(() => {
+    if (store.filtersStore.filterValues.visitCryo[0] !== cryoRange[0] || store.filtersStore.filterValues.visitCryo[1] !== cryoRange[1]) {
+      setCryoRange(store.filtersStore.filterValues.visitCryo);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.filtersStore.filterValues.visitCryo]);
+  const [cellSaverRange, setCellSaverRange] = useState(store.filtersStore.filterValues.visitCellSaver);
+  useEffect(() => {
+    if (store.filtersStore.filterValues.visitCellSaver[0] !== cellSaverRange[0] || store.filtersStore.filterValues.visitCellSaver[1] !== cellSaverRange[1]) {
+      setCellSaverRange(store.filtersStore.filterValues.visitCellSaver);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.filtersStore.filterValues.visitCellSaver]);
 
   return useObserver(() => (
     <ScrollArea h={`calc(100vh - ${toolbarWidth}px - 45px)`} type="scroll" overscrollBehavior="contain">
@@ -141,6 +177,8 @@ export function FilterToolbar() {
               )}
               <RangeSlider
                 defaultValue={store.filtersStore.filterValues.visitRBCs}
+                value={rbcRange}
+                onChange={setRbcRange}
                 onChangeEnd={(value) => store.filtersStore.setFilterValue('visitRBCs', value)}
                 min={store.filtersStore.initialFilterValues.visitRBCs[0]}
                 max={store.filtersStore.initialFilterValues.visitRBCs[1]}
@@ -171,6 +209,8 @@ export function FilterToolbar() {
               )}
               <RangeSlider
                 defaultValue={store.filtersStore.filterValues.visitFFPs}
+                value={ffpRange}
+                onChange={setFfpRange}
                 onChangeEnd={(value) => store.filtersStore.setFilterValue('visitFFPs', value)}
                 min={store.filtersStore.initialFilterValues.visitFFPs[0]}
                 max={store.filtersStore.initialFilterValues.visitFFPs[1]}
@@ -200,7 +240,9 @@ export function FilterToolbar() {
               )}
               <RangeSlider
                 defaultValue={store.filtersStore.filterValues.visitPLTs}
-                onChange={(value) => store.filtersStore.setFilterValue('visitPLTs', value)}
+                value={pltRange}
+                onChange={setPltRange}
+                onChangeEnd={(value) => store.filtersStore.setFilterValue('visitPLTs', value)}
                 min={store.filtersStore.initialFilterValues.visitPLTs[0]}
                 max={store.filtersStore.initialFilterValues.visitPLTs[1]}
                 step={1}
@@ -229,6 +271,8 @@ export function FilterToolbar() {
               )}
               <RangeSlider
                 defaultValue={store.filtersStore.filterValues.visitCryo}
+                value={cryoRange}
+                onChange={setCryoRange}
                 onChangeEnd={(value) => store.filtersStore.setFilterValue('visitCryo', value)}
                 min={store.filtersStore.initialFilterValues.visitCryo[0]}
                 max={store.filtersStore.initialFilterValues.visitCryo[1]}
@@ -258,6 +302,8 @@ export function FilterToolbar() {
               )}
               <RangeSlider
                 defaultValue={store.filtersStore.filterValues.visitCellSaver}
+                value={cellSaverRange}
+                onChange={setCellSaverRange}
                 onChangeEnd={(value) => store.filtersStore.setFilterValue('visitCellSaver', value)}
                 min={store.filtersStore.initialFilterValues.visitCellSaver[0]}
                 max={store.filtersStore.initialFilterValues.visitCellSaver[1]}
@@ -286,6 +332,42 @@ export function FilterToolbar() {
                   <Text>True</Text>
                 </Grid.Col>
               </Grid>
+              <Flex>
+                <Text w="45%">Death</Text>
+                <Rating
+                  value={store.filtersStore.filterValues.death === true ? 3 : store.filtersStore.filterValues.death === false ? 1 : 2}
+                  color="blue"
+                  count={3}
+                  highlightSelectedOnly
+                  emptySymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircle /></ThemeIcon>}
+                  fullSymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircleFilled /></ThemeIcon>}
+                  onChange={(value) => store.filtersStore.setFilterValue('death', value === 3 ? true : value === 1 ? false : null)}
+                />
+              </Flex>
+              <Flex>
+                <Text w="45%">Vent</Text>
+                <Rating
+                  value={store.filtersStore.filterValues.vent === true ? 3 : store.filtersStore.filterValues.vent === false ? 1 : 2}
+                  color="blue"
+                  count={3}
+                  highlightSelectedOnly
+                  emptySymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircle /></ThemeIcon>}
+                  fullSymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircleFilled /></ThemeIcon>}
+                  onChange={(value) => store.filtersStore.setFilterValue('vent', value === 3 ? true : value === 1 ? false : null)}
+                />
+              </Flex>
+              <Flex>
+                <Text w="45%">Stroke</Text>
+                <Rating
+                  value={store.filtersStore.filterValues.stroke === true ? 3 : store.filtersStore.filterValues.stroke === false ? 1 : 2}
+                  color="blue"
+                  count={3}
+                  highlightSelectedOnly
+                  emptySymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircle /></ThemeIcon>}
+                  fullSymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircleFilled /></ThemeIcon>}
+                  onChange={(value) => store.filtersStore.setFilterValue('stroke', value === 3 ? true : value === 1 ? false : null)}
+                />
+              </Flex>
               <Flex>
                 <Text w="45%">Death</Text>
                 <Rating
