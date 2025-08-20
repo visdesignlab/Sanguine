@@ -7,6 +7,7 @@ import {
 import { useObserver } from 'mobx-react';
 import { IconChartBar, IconHelpSquare, IconRestore } from '@tabler/icons-react';
 import { Store } from '../../Store/Store';
+import { useThemeConstants } from '../../Theme/mantineTheme';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0]; // Format as YYYY-MM-DD;
 
@@ -16,6 +17,7 @@ export function FilterToolbar() {
     dateFiltersAppliedCount: dateFilterCount,
     bloodComponentFiltersAppliedCount: bloodComponentFilterCount,
   } = store.filtersStore;
+  const { toolbarWidth } = useThemeConstants();
 
   return useObserver(() => (
     <Accordion multiple defaultValue={['date-filters', 'blood-component-filters']} mt="xs">
@@ -24,15 +26,21 @@ export function FilterToolbar() {
           <Flex justify="space-between" align="center" gap="xs" mr="xs">
             <Title order={4}>Visit Date</Title>
             {dateFilterCount > 0 && (
-              <Chip color="blue" radius="sm" variant="light" checked>
-                {dateFilterCount}
-              </Chip>
+            <Chip
+              color="blue"
+              radius="sm"
+              variant="light"
+              checked
+              style={{ marginBottom: 8 }}
+            >
+              {dateFilterCount}
+            </Chip>
             )}
           </Flex>
         </Accordion.Control>
         <Accordion.Panel>
           <Flex justify="flex-start" align="center" gap="sm" mt={0} mb="xs">
-            <ActionIcon size="xs">
+            <ActionIcon size="xs" onClick={() => store.filtersStore.resetDateFilters()}>
               <IconRestore stroke={1} />
             </ActionIcon>
             <ActionIcon size="xs">
@@ -67,10 +75,16 @@ export function FilterToolbar() {
 
       <Accordion.Item value="blood-component-filters" key="blood-component-filters">
         <Accordion.Control px="xs">
-          <Flex justify="space-between" align="center" gap="xs" mr="xs">
+          <Flex justify="space-between" align="center" gap="xs" mr="xs" h={toolbarWidth / 2}>
             <Title order={4}>Blood Component Used</Title>
             {bloodComponentFilterCount > 0 && (
-              <Chip color="blue" radius="sm" variant="light" checked>
+              <Chip
+                color="blue"
+                radius="sm"
+                variant="light"
+                checked
+                style={{ marginBottom: 8 }}
+              >
                 {bloodComponentFilterCount}
               </Chip>
             )}
@@ -78,7 +92,7 @@ export function FilterToolbar() {
         </Accordion.Control>
         <Accordion.Panel>
           <Flex justify="flex-start" align="center" gap="sm" mt={0} mb="xs">
-            <ActionIcon size="xs">
+            <ActionIcon size="xs" onClick={() => store.filtersStore.resetBloodComponentFilters()}>
               <IconRestore stroke={1} />
             </ActionIcon>
             <ActionIcon size="xs">

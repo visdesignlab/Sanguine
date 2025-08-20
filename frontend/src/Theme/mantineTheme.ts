@@ -109,6 +109,8 @@ export const mantineTheme = createTheme({
     Chip: {
       styles: {
         root: {
+          '--chip-size': '0.25rem',
+          '--chip-fz': '0.75rem',
           '--chip-bg': 'var(--mantine-color-blue-2)',
           '--chip-color': 'white',
           '--chip-bd': 'var(--mantine-color-blue-6)',
