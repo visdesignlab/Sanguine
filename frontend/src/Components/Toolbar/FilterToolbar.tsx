@@ -17,7 +17,7 @@ export function FilterToolbar() {
   } = store.filtersStore;
 
   return useObserver(() => (
-    <Accordion multiple defaultValue={['date-filters', 'blood-component-filters']}>
+    <Accordion multiple defaultValue={['date-filters', 'blood-component-filters']} mt="xs">
       <Accordion.Item value="date-filters" key="date-filters">
         <Accordion.Control px="xs">
           <Flex justify="space-between" align="center" gap="xs" mr="xs">
@@ -32,7 +32,7 @@ export function FilterToolbar() {
         <Accordion.Panel>
           <Flex direction="row" justify="space-between" align="center">
             <DateInput
-              label="Date from"
+              label="Date From"
               value={dateSimplify(store.filtersStore.filterValues.dateFrom)}
               onChange={(date) => date && store.filtersStore.setFilterValue('dateFrom', new Date(date))}
               minDate={dateSimplify(store.filtersStore.initialFilterValues.dateFrom)}
@@ -41,7 +41,7 @@ export function FilterToolbar() {
               w="45%"
             />
             <DateInput
-              label="Date to"
+              label="Date To"
               value={dateSimplify(store.filtersStore.filterValues.dateTo)}
               onChange={(date) => date && store.filtersStore.setFilterValue('dateTo', new Date(date))}
               minDate={dateSimplify(store.filtersStore.initialFilterValues.dateFrom)}
