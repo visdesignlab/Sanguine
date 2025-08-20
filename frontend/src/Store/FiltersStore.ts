@@ -151,4 +151,52 @@ export class FiltersStore {
       this._filterValues[key] = [...this._initialFilterValues[key]] as [number, number];
     });
   }
+
+  // Cached histogram data for each blood component
+  get rbcUnitsHistogramData() {
+    return this._getBloodComponentHistogramData('rbc_units');
+  }
+
+  get ffpUnitsHistogramData() {
+    return this._getBloodComponentHistogramData('ffp_units');
+  }
+
+  get pltUnitsHistogramData() {
+    return this._getBloodComponentHistogramData('plt_units');
+  }
+
+  get cryoUnitsHistogramData() {
+    return this._getBloodComponentHistogramData('cryo_units');
+  }
+
+  get cellSaverHistogramData() {
+    return this._getBloodComponentHistogramData('cell_saver_ml');
+  }
+
+  // Internal method for computing histogram data
+  private _getBloodComponentHistogramData(
+    component: 'rbc_units' | 'ffp_units' | 'plt_units' | 'cryo_units' | 'cell_saver_ml',
+  ): Array<{ units: string, count: number }> {
+    const filterKeyMap = {
+      rbc_units: 'visitRBCs',
+      ffp_units: 'visitFFPs',
+      plt_units: 'visitPLTs',
+      cryo_units: 'visitCryo',
+      cell_saver_ml: 'visitCellSaver',
+    } as const;
+    const filterKey = filterKeyMap[component];
+    const [min, max] = this._initialFilterValues[filterKey];
+    const visits = this._rootStore.allVisits;
+    const data: Array<{ units: string, count: number }> = [];
+
+    for (let binStart = min; binStart < max; binStart += 1) {
+      const binEnd = binStart + 1;
+      const isLastBin = binEnd === max;
+      const count = visits.filter((v) => (isLastBin
+        ? v[component] >= binStart && v[component] <= binEnd
+        : v[component] >= binStart && v[component] < binEnd)).length;
+      data.push({ units: `${binStart}-${binEnd}`, count });
+    }
+    return data;
+  }
 }

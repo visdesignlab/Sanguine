@@ -1,5 +1,5 @@
 import { DateInput } from '@mantine/dates';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import {
   Accordion, ActionIcon, Chip, Flex, Grid, Input, RangeSlider, Rating, ScrollArea, Stack, Text, ThemeIcon,
   Title,
@@ -9,13 +9,16 @@ import { useObserver } from 'mobx-react';
 import {
   IconChartBar, IconCircle, IconCircleFilled, IconHelpSquare, IconRestore,
 } from '@tabler/icons-react';
+import { BarChart } from '@mantine/charts';
 import { Store } from '../../Store/Store';
 import { useThemeConstants } from '../../Theme/mantineTheme';
+import shellStyles from '../../Shell/Shell.module.css';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0]; // Format as YYYY-MM-DD;
 
 export function FilterToolbar() {
   const store = useContext(Store);
+  const [showBloodComponentHistogram, setShowBloodComponentHistogram] = useState(false);
   const {
     dateFiltersAppliedCount: dateFilterCount,
     bloodComponentFiltersAppliedCount: bloodComponentFilterCount,
@@ -45,12 +48,12 @@ export function FilterToolbar() {
           <Accordion.Panel>
             <Flex justify="flex-start" align="center" gap="sm" mt={0} mb="xs">
               <Tooltip label="Reset Date Filters">
-                <ActionIcon size="xs" onClick={() => store.filtersStore.resetDateFilters()}>
+                <ActionIcon size="sm" onClick={() => store.filtersStore.resetDateFilters()}>
                   <IconRestore stroke={1} />
                 </ActionIcon>
               </Tooltip>
               <Tooltip label="Explain Date Filters">
-                <ActionIcon size="xs">
+                <ActionIcon size="sm">
                   <IconHelpSquare stroke={1} />
                 </ActionIcon>
               </Tooltip>
@@ -98,22 +101,44 @@ export function FilterToolbar() {
           <Accordion.Panel>
             <Flex justify="flex-start" align="center" gap="sm" mt={0} mb="xs">
               <Tooltip label="Reset Blood Component Filters">
-                <ActionIcon size="xs" onClick={() => store.filtersStore.resetBloodComponentFilters()}>
+                <ActionIcon size="sm" onClick={() => store.filtersStore.resetBloodComponentFilters()}>
                   <IconRestore stroke={1} />
                 </ActionIcon>
               </Tooltip>
               <Tooltip label="Show Visit Count Histograms">
-                <ActionIcon size="xs">
+                <ActionIcon
+                  size="sm"
+                  onClick={() => setShowBloodComponentHistogram((prev) => !prev)}
+                  data-active={showBloodComponentHistogram}
+                  className={shellStyles.leftToolbarIcon}
+                >
                   <IconChartBar stroke={1} />
                 </ActionIcon>
               </Tooltip>
               <Tooltip label="Explain Blood Component Filters">
-                <ActionIcon size="xs">
+                <ActionIcon size="sm">
                   <IconHelpSquare stroke={1} />
                 </ActionIcon>
               </Tooltip>
             </Flex>
             <Input.Wrapper label="RBC Units" mb="lg">
+              {showBloodComponentHistogram && (
+              <Flex justify="center">
+                <BarChart
+                  h={30}
+                  style={{ width: 'calc(100% - 12px)' }}
+                  barProps={{ barSize: '100%' }}
+                  data={store.filtersStore.rbcUnitsHistogramData}
+                  dataKey="units"
+                  withXAxis={false}
+                  withYAxis={false}
+                  withTooltip={false}
+                  gridAxis="none"
+                  series={[{ name: 'count', color: 'blue' }]}
+                  ml={1}
+                />
+              </Flex>
+              )}
               <RangeSlider
                 defaultValue={store.filtersStore.filterValues.visitRBCs}
                 onChangeEnd={(value) => store.filtersStore.setFilterValue('visitRBCs', value)}
@@ -127,6 +152,23 @@ export function FilterToolbar() {
             </Input.Wrapper>
 
             <Input.Wrapper label="FFP Units" mb="lg">
+              {showBloodComponentHistogram && (
+              <Flex justify="center">
+                <BarChart
+                  h={30}
+                  style={{ width: 'calc(100% - 12px)' }}
+                  barProps={{ barSize: '100%' }}
+                  data={store.filtersStore.ffpUnitsHistogramData}
+                  dataKey="units"
+                  withXAxis={false}
+                  withYAxis={false}
+                  withTooltip={false}
+                  gridAxis="none"
+                  series={[{ name: 'count', color: 'blue' }]}
+                  ml={1}
+                />
+              </Flex>
+              )}
               <RangeSlider
                 defaultValue={store.filtersStore.filterValues.visitFFPs}
                 onChangeEnd={(value) => store.filtersStore.setFilterValue('visitFFPs', value)}
@@ -139,6 +181,23 @@ export function FilterToolbar() {
             </Input.Wrapper>
 
             <Input.Wrapper label="Platelet Units" mb="lg">
+              {showBloodComponentHistogram && (
+              <Flex justify="center">
+                <BarChart
+                  h={30}
+                  style={{ width: 'calc(100% - 12px)' }}
+                  barProps={{ barSize: '100%' }}
+                  data={store.filtersStore.pltUnitsHistogramData}
+                  dataKey="units"
+                  withXAxis={false}
+                  withYAxis={false}
+                  withTooltip={false}
+                  gridAxis="none"
+                  series={[{ name: 'count', color: 'blue' }]}
+                  ml={1}
+                />
+              </Flex>
+              )}
               <RangeSlider
                 defaultValue={store.filtersStore.filterValues.visitPLTs}
                 onChange={(value) => store.filtersStore.setFilterValue('visitPLTs', value)}
@@ -151,6 +210,23 @@ export function FilterToolbar() {
             </Input.Wrapper>
 
             <Input.Wrapper label="Cryo Units" mb="lg">
+              {showBloodComponentHistogram && (
+              <Flex justify="center">
+                <BarChart
+                  h={30}
+                  style={{ width: 'calc(100% - 12px)' }}
+                  barProps={{ barSize: '100%' }}
+                  data={store.filtersStore.cryoUnitsHistogramData}
+                  dataKey="units"
+                  withXAxis={false}
+                  withYAxis={false}
+                  withTooltip={false}
+                  gridAxis="none"
+                  series={[{ name: 'count', color: 'blue' }]}
+                  ml={1}
+                />
+              </Flex>
+              )}
               <RangeSlider
                 defaultValue={store.filtersStore.filterValues.visitCryo}
                 onChangeEnd={(value) => store.filtersStore.setFilterValue('visitCryo', value)}
@@ -163,6 +239,23 @@ export function FilterToolbar() {
             </Input.Wrapper>
 
             <Input.Wrapper label="Cell Saver (mL)" mb="lg">
+              {showBloodComponentHistogram && (
+              <Flex justify="center">
+                <BarChart
+                  h={30}
+                  style={{ width: 'calc(100% - 12px)' }}
+                  barProps={{ barSize: '100%' }}
+                  data={store.filtersStore.cellSaverHistogramData}
+                  dataKey="units"
+                  withXAxis={false}
+                  withYAxis={false}
+                  withTooltip={false}
+                  gridAxis="none"
+                  series={[{ name: 'count', color: 'blue' }]}
+                  ml={1}
+                />
+              </Flex>
+              )}
               <RangeSlider
                 defaultValue={store.filtersStore.filterValues.visitCellSaver}
                 onChangeEnd={(value) => store.filtersStore.setFilterValue('visitCellSaver', value)}
