@@ -1,7 +1,8 @@
 import { DateInput } from '@mantine/dates';
 import { useContext } from 'react';
 import {
-  Accordion, Chip, Flex, Input, RangeSlider, Text,
+  Accordion, ActionIcon, Chip, Flex, Input, RangeSlider,
+  Title,
 } from '@mantine/core';
 import { useObserver } from 'mobx-react';
 import { Store } from '../../Store/Store';
@@ -10,16 +11,22 @@ const dateSimplify = (date: Date) => date.toISOString().split('T')[0]; // Format
 
 export function FilterToolbar() {
   const store = useContext(Store);
+  const {
+    dateFiltersAppliedCount: dateFilterCount,
+    bloodComponentFiltersAppliedCount: bloodComponentFilterCount,
+  } = store.filtersStore;
 
   return useObserver(() => (
     <Accordion multiple defaultValue={['date-filters', 'blood-component-filters']}>
       <Accordion.Item value="date-filters" key="date-filters">
         <Accordion.Control px="xs">
           <Flex justify="space-between" align="center" gap="xs" mr="xs">
-            <Text>Visit Date</Text>
-            <Chip color="blue" radius="sm" variant="light" checked>
-              2
-            </Chip>
+            <Title order={4}>Visit Date</Title>
+            {dateFilterCount > 0 && (
+              <Chip color="blue" radius="sm" variant="light" checked>
+                {dateFilterCount}
+              </Chip>
+            )}
           </Flex>
         </Accordion.Control>
         <Accordion.Panel>
@@ -49,10 +56,12 @@ export function FilterToolbar() {
       <Accordion.Item value="blood-component-filters" key="blood-component-filters">
         <Accordion.Control px="xs">
           <Flex justify="space-between" align="center" gap="xs" mr="xs">
-            <Text>Blood Component Used</Text>
-            <Chip color="blue" radius="sm" variant="light" checked>
-              2
-            </Chip>
+            <Title order={4}>Blood Component Used</Title>
+            {bloodComponentFilterCount > 0 && (
+              <Chip color="blue" radius="sm" variant="light" checked>
+                {bloodComponentFilterCount}
+              </Chip>
+            )}
           </Flex>
         </Accordion.Control>
         <Accordion.Panel>

@@ -96,4 +96,30 @@ export class FiltersStore {
 
     this._initialFilterValues = { ...this._filterValues };
   }
+
+  /**
+   * Returns 1 if filters are applied, 0 otherwise.
+   */
+  get dateFiltersAppliedCount(): number {
+    const { dateFrom, dateTo } = this._filterValues;
+    // Only count if user has changed from initial values
+    return (dateFrom.getTime() !== this._initialFilterValues.dateFrom.getTime()
+            || dateTo.getTime() !== this._initialFilterValues.dateTo.getTime()) ? 1 : 0;
+  }
+
+  /*
+  * Returns count of blood component filters applied
+  */
+  get bloodComponentFiltersAppliedCount(): number {
+    let count = 0;
+    const keys: (keyof typeof this._filterValues)[] = [
+      'visitRBCs', 'visitFFPs', 'visitPLTs', 'visitCryo', 'visitCellSaver',
+    ];
+    keys.forEach((key) => {
+      const [min, max] = this._filterValues[key] as [number, number];
+      const [initMin, initMax] = this._initialFilterValues[key] as [number, number];
+      if (min !== initMin || max !== initMax) count += 1;
+    });
+    return count;
+  }
 }
