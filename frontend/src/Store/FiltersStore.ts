@@ -122,4 +122,24 @@ export class FiltersStore {
     });
     return count;
   }
+
+  /**
+   * Resets all filters to their initial values.
+   */
+  resetDateFilters() {
+    this._filterValues.dateFrom = new Date(this._initialFilterValues.dateFrom);
+    this._filterValues.dateTo = new Date(this._initialFilterValues.dateTo);
+  }
+
+  /**
+  * Reset only blood component filters to initial values
+  */
+  resetBloodComponentFilters() {
+    const bloodKeys: Array<'visitRBCs' | 'visitFFPs' | 'visitPLTs' | 'visitCryo' | 'visitCellSaver'> = [
+      'visitRBCs', 'visitFFPs', 'visitPLTs', 'visitCryo', 'visitCellSaver',
+    ];
+    bloodKeys.forEach((key) => {
+      this._filterValues[key] = [...this._initialFilterValues[key]] as [number, number];
+    });
+  }
 }

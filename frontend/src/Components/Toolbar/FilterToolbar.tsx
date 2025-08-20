@@ -104,8 +104,8 @@ export function FilterToolbar() {
           </Flex>
           <Input.Wrapper label="RBC Units" mb="lg">
             <RangeSlider
-              defaultValue={store.filtersStore.filterValues.visitRBCs}
-              onChangeEnd={(value) => store.filtersStore.setFilterValue('visitRBCs', value)}
+              value={store.filtersStore.filterValues.visitRBCs}
+              onChange={(value) => store.filtersStore.setFilterValue('visitRBCs', value)}
               min={store.filtersStore.initialFilterValues.visitRBCs[0]}
               max={store.filtersStore.initialFilterValues.visitRBCs[1]}
               step={1}
@@ -117,8 +117,8 @@ export function FilterToolbar() {
 
           <Input.Wrapper label="FFP Units" mb="lg">
             <RangeSlider
-              defaultValue={store.filtersStore.filterValues.visitFFPs}
-              onChangeEnd={(value) => store.filtersStore.setFilterValue('visitFFPs', value)}
+              value={store.filtersStore.filterValues.visitFFPs}
+              onChange={(value) => store.filtersStore.setFilterValue('visitFFPs', value)}
               min={store.filtersStore.initialFilterValues.visitFFPs[0]}
               max={store.filtersStore.initialFilterValues.visitFFPs[1]}
               step={1}
@@ -129,8 +129,8 @@ export function FilterToolbar() {
 
           <Input.Wrapper label="Platelet Units" mb="lg">
             <RangeSlider
-              defaultValue={store.filtersStore.filterValues.visitPLTs}
-              onChangeEnd={(value) => store.filtersStore.setFilterValue('visitPLTs', value)}
+              value={store.filtersStore.filterValues.visitPLTs}
+              onChange={(value) => store.filtersStore.setFilterValue('visitPLTs', value)}
               min={store.filtersStore.initialFilterValues.visitPLTs[0]}
               max={store.filtersStore.initialFilterValues.visitPLTs[1]}
               step={1}
@@ -141,8 +141,8 @@ export function FilterToolbar() {
 
           <Input.Wrapper label="Cryo Units" mb="lg">
             <RangeSlider
-              defaultValue={store.filtersStore.filterValues.visitCryo}
-              onChangeEnd={(value) => store.filtersStore.setFilterValue('visitCryo', value)}
+              value={store.filtersStore.filterValues.visitCryo}
+              onChange={(value) => store.filtersStore.setFilterValue('visitCryo', value)}
               min={store.filtersStore.initialFilterValues.visitCryo[0]}
               max={store.filtersStore.initialFilterValues.visitCryo[1]}
               step={1}
@@ -153,8 +153,8 @@ export function FilterToolbar() {
 
           <Input.Wrapper label="Cell Saver (mL)" mb="lg">
             <RangeSlider
-              defaultValue={store.filtersStore.filterValues.visitCellSaver}
-              onChangeEnd={(value) => store.filtersStore.setFilterValue('visitCellSaver', value)}
+              value={store.filtersStore.filterValues.visitCellSaver}
+              onChange={(value) => store.filtersStore.setFilterValue('visitCellSaver', value)}
               min={store.filtersStore.initialFilterValues.visitCellSaver[0]}
               max={store.filtersStore.initialFilterValues.visitCellSaver[1]}
               step={50}
