@@ -5,6 +5,7 @@ import {
   Title,
 } from '@mantine/core';
 import { useObserver } from 'mobx-react';
+import { IconChartBar, IconHelpSquare, IconRestore } from '@tabler/icons-react';
 import { Store } from '../../Store/Store';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0]; // Format as YYYY-MM-DD;
@@ -30,6 +31,17 @@ export function FilterToolbar() {
           </Flex>
         </Accordion.Control>
         <Accordion.Panel>
+          <Flex justify="flex-start" align="center" gap="sm" mt={0} mb="xs">
+            <ActionIcon size="xs">
+              <IconRestore stroke={1} />
+            </ActionIcon>
+            <ActionIcon size="xs">
+              <IconChartBar stroke={1} />
+            </ActionIcon>
+            <ActionIcon size="xs">
+              <IconHelpSquare stroke={1} />
+            </ActionIcon>
+          </Flex>
           <Flex direction="row" justify="space-between" align="center">
             <DateInput
               label="Date From"
@@ -65,6 +77,17 @@ export function FilterToolbar() {
           </Flex>
         </Accordion.Control>
         <Accordion.Panel>
+          <Flex justify="flex-start" align="center" gap="sm" mt={0} mb="xs">
+            <ActionIcon size="xs">
+              <IconRestore stroke={1} />
+            </ActionIcon>
+            <ActionIcon size="xs">
+              <IconChartBar stroke={1} />
+            </ActionIcon>
+            <ActionIcon size="xs">
+              <IconHelpSquare stroke={1} />
+            </ActionIcon>
+          </Flex>
           <Input.Wrapper label="RBC Units" mb="lg">
             <RangeSlider
               defaultValue={store.filtersStore.filterValues.visitRBCs}
