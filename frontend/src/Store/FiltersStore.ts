@@ -170,45 +170,45 @@ export class FiltersStore {
   }
 
   // Cached histogram data for each blood component
-  get rbcUnitsHistogramData() {
-    return this._getBloodComponentHistogramData('rbc_units');
+  get visitRBCsHistogramData() {
+    return this._getHistogramData('visitRBCs');
   }
 
-  get ffpUnitsHistogramData() {
-    return this._getBloodComponentHistogramData('ffp_units');
+  get visitFFPsHistogramData() {
+    return this._getHistogramData('visitFFPs');
   }
 
-  get pltUnitsHistogramData() {
-    return this._getBloodComponentHistogramData('plt_units');
+  get visitPLTsHistogramData() {
+    return this._getHistogramData('visitPLTs');
   }
 
-  get cryoUnitsHistogramData() {
-    return this._getBloodComponentHistogramData('cryo_units');
+  get visitCryoHistogramData() {
+    return this._getHistogramData('visitCryo');
   }
 
-  get cellSaverHistogramData() {
-    return this._getBloodComponentHistogramData('cell_saver_ml');
+  get visitCellSaverHistogramData() {
+    return this._getHistogramData('visitCellSaver');
   }
 
   get losHistogramData() {
-    return this._getBloodComponentHistogramData('los');
+    return this._getHistogramData('los');
   }
 
   // Internal method for computing histogram data
-  private _getBloodComponentHistogramData(
-    component: 'rbc_units' | 'ffp_units' | 'plt_units' | 'cryo_units' | 'cell_saver_ml' | 'los',
+  private _getHistogramData(
+    component: 'visitRBCs' | 'visitFFPs' | 'visitPLTs' | 'visitCryo' | 'visitCellSaver' | 'los',
   ): Array<{ units: string, count: number }> {
     console.log('recomputing histogram data', component);
     const filterKeyMap = {
-      rbc_units: 'visitRBCs',
-      ffp_units: 'visitFFPs',
-      plt_units: 'visitPLTs',
-      cryo_units: 'visitCryo',
-      cell_saver_ml: 'visitCellSaver',
+      visitRBCs: 'rbc_units',
+      visitFFPs: 'ffp_units',
+      visitPLTs: 'plt_units',
+      visitCryo: 'cryo_units',
+      visitCellSaver: 'cell_saver_ml',
       los: 'los',
     } as const;
-    const filterKey = filterKeyMap[component];
-    const [min, max] = this._initialFilterValues[filterKey];
+    const visitKey = filterKeyMap[component];
+    const [min, max] = this._initialFilterValues[component];
     const visits = this._rootStore.allVisits;
     const data: Array<{ units: string, count: number }> = [];
 
@@ -216,8 +216,8 @@ export class FiltersStore {
       const binEnd = binStart + 1;
       const isLastBin = binEnd === max;
       const count = visits.filter((v) => (isLastBin
-        ? v[component] >= binStart && v[component] <= binEnd
-        : v[component] >= binStart && v[component] < binEnd)).length;
+        ? v[visitKey] >= binStart && v[visitKey] <= binEnd
+        : v[visitKey] >= binStart && v[visitKey] < binEnd)).length;
       data.push({ units: `${binStart}-${binEnd}`, count });
     }
     return data;

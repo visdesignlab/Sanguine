@@ -1,10 +1,9 @@
 import { DateInput } from '@mantine/dates';
-import { useCallback, useContext } from 'react';
+import { useContext } from 'react';
 import {
   Accordion, ActionIcon, Badge, Divider, Flex, Grid, Input, Rating, ScrollArea, Stack, Text, ThemeIcon,
   Title,
   Tooltip,
-  useMantineTheme,
 } from '@mantine/core';
 import { useObserver } from 'mobx-react';
 import {
@@ -13,22 +12,16 @@ import {
 import { BarChart } from '@mantine/charts';
 import { Store } from '../../Store/Store';
 import { useThemeConstants } from '../../Theme/mantineTheme';
-import { FilterRangeSlider } from './FilterSlider';
+import { FilterRangeSlider } from './FilterRangeSlider';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0]; // Format as YYYY-MM-DD;
 
 export function FilterToolbar() {
   const store = useContext(Store);
-  const theme = useMantineTheme();
-  const {
-    dateFiltersAppliedCount: dateFilterCount,
-    bloodComponentFiltersAppliedCount: bloodComponentFilterCount,
-    patientOutcomeFiltersAppliedCount: outcomeFilterCount,
-  } = store.filtersStore;
   const { toolbarWidth } = useThemeConstants();
 
   // Helper to determine if a filter active
-  const hasAttributeBeenFiltered = useCallback((range: [number, number], initial: [number, number]) => range[0] !== initial[0] || range[1] !== initial[1], []);
+  // const hasAttributeBeenFiltered = useCallback((range: [number, number], initial: [number, number]) => range[0] !== initial[0] || range[1] !== initial[1], []);
 
   console.log('FilterToolbar rendered');
 
@@ -39,14 +32,14 @@ export function FilterToolbar() {
           <Flex align="center">
             <Accordion.Control px="xs">
               <Flex justify="space-between" align="center" gap="xs" mr="xs">
-                <Title order={4} c={dateFilterCount > 0 ? 'blue.6' : undefined}>Visit Date</Title>
-                {dateFilterCount > 0 && (
+                <Title order={4} c={store.filtersStore.dateFiltersAppliedCount > 0 ? 'blue.6' : undefined}>Visit Date</Title>
+                {store.filtersStore.dateFiltersAppliedCount > 0 && (
                 <Badge
                   color="blue"
                   radius="sm"
                   variant="light"
                 >
-                  {dateFilterCount}
+                  {store.filtersStore.dateFiltersAppliedCount}
                 </Badge>
                 )}
               </Flex>
@@ -85,14 +78,14 @@ export function FilterToolbar() {
           <Flex align="center">
             <Accordion.Control px="xs">
               <Flex justify="space-between" align="center" gap="xs" mr="xs" h={toolbarWidth / 2}>
-                <Title order={4} c={bloodComponentFilterCount > 0 ? 'blue' : undefined}>Blood Products Used</Title>
-                {bloodComponentFilterCount > 0 && (
+                <Title order={4} c={store.filtersStore.bloodComponentFiltersAppliedCount > 0 ? 'blue' : undefined}>Blood Products Used</Title>
+                {store.filtersStore.bloodComponentFiltersAppliedCount > 0 && (
                   <Badge
                     color="blue"
                     radius="sm"
                     variant="light"
                   >
-                    {bloodComponentFilterCount}
+                    {store.filtersStore.bloodComponentFiltersAppliedCount}
                   </Badge>
                 )}
               </Flex>
@@ -106,7 +99,7 @@ export function FilterToolbar() {
           <Accordion.Panel>
             <Input.Wrapper
               label="RBC Units"
-              // labelProps={hasAttributeBeenFiltered(rbcRange, store.filtersStore.initialFilterValues.visitRBCs) ? { style: { color: theme.colors.blue[6] } } : undefined}
+              // labelProps={hasAttributeBeenFiltered(store.filtersStore.filterValues.visitRBCs, store.filtersStore.initialFilterValues.visitRBCs) ? { style: { color: theme.colors.blue[6] } } : undefined}
               mb="lg"
             >
               <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
@@ -114,7 +107,7 @@ export function FilterToolbar() {
                   h={30}
                   style={{ width: 'calc(100% - 12px)' }}
                   barProps={{ barSize: '100%' }}
-                  data={store.filtersStore.rbcUnitsHistogramData}
+                  data={store.filtersStore.visitRBCsHistogramData}
                   dataKey="units"
                   withXAxis={false}
                   withYAxis={false}
@@ -137,7 +130,7 @@ export function FilterToolbar() {
                   h={30}
                   style={{ width: 'calc(100% - 12px)' }}
                   barProps={{ barSize: '100%' }}
-                  data={store.filtersStore.ffpUnitsHistogramData}
+                  data={store.filtersStore.visitFFPsHistogramData}
                   dataKey="units"
                   withXAxis={false}
                   withYAxis={false}
@@ -160,7 +153,7 @@ export function FilterToolbar() {
                   h={30}
                   style={{ width: 'calc(100% - 12px)' }}
                   barProps={{ barSize: '100%' }}
-                  data={store.filtersStore.pltUnitsHistogramData}
+                  data={store.filtersStore.visitPLTsHistogramData}
                   dataKey="units"
                   withXAxis={false}
                   withYAxis={false}
@@ -183,7 +176,7 @@ export function FilterToolbar() {
                   h={30}
                   style={{ width: 'calc(100% - 12px)' }}
                   barProps={{ barSize: '100%' }}
-                  data={store.filtersStore.cryoUnitsHistogramData}
+                  data={store.filtersStore.visitCryoHistogramData}
                   dataKey="units"
                   withXAxis={false}
                   withYAxis={false}
@@ -202,7 +195,7 @@ export function FilterToolbar() {
                   h={30}
                   style={{ width: 'calc(100% - 12px)' }}
                   barProps={{ barSize: '100%' }}
-                  data={store.filtersStore.cellSaverHistogramData}
+                  data={store.filtersStore.visitCellSaverHistogramData}
                   dataKey="units"
                   withXAxis={false}
                   withYAxis={false}
@@ -235,7 +228,7 @@ export function FilterToolbar() {
                   h={30}
                   style={{ width: 'calc(100% - 12px)' }}
                   barProps={{ barSize: '100%' }}
-                  data={store.filtersStore.cryoUnitsHistogramData}
+                  data={store.filtersStore.visitCryoHistogramData}
                   dataKey="units"
                   withXAxis={false}
                   withYAxis={false}
@@ -263,14 +256,14 @@ export function FilterToolbar() {
         <Accordion.Item value="outcome-filters" key="outcome-filters">
           <Accordion.Control px="xs">
             <Flex justify="space-between" align="center" gap="xs" mr="xs">
-              <Title order={4} c={outcomeFilterCount > 0 ? 'blue.6' : undefined}>Patient Outcome</Title>
-              {outcomeFilterCount > 0 && (
+              <Title order={4} c={store.filtersStore.patientOutcomeFiltersAppliedCount > 0 ? 'blue.6' : undefined}>Patient Outcome</Title>
+              {store.filtersStore.patientOutcomeFiltersAppliedCount > 0 && (
                 <Badge
                   color="blue"
                   radius="sm"
                   variant="light"
                 >
-                  {outcomeFilterCount}
+                  {store.filtersStore.patientOutcomeFiltersAppliedCount}
                 </Badge>
               )}
             </Flex>
