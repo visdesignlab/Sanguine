@@ -181,7 +181,10 @@ export class RootStore {
           return false;
         }
 
-        // TODO: Check stroke flag
+        // Check length of stay
+        if (visit.los < filterValues.los[0] || visit.los > filterValues.los[1]) {
+          return false;
+        }
 
         return true;
       });

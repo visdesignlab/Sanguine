@@ -16,7 +16,7 @@ export class FiltersStore {
     visitCellSaver: [0, Infinity] as [number, number],
     death: false as boolean | null,
     vent: false as boolean | null,
-    stroke: false as boolean | null,
+    los: [0, Infinity] as [number, number],
   };
 
   _filterValues: typeof this._initialFilterValues = {
@@ -29,8 +29,10 @@ export class FiltersStore {
     visitCellSaver: [0, Infinity],
     death: null,
     vent: null,
-    stroke: null,
+    los: [0, Infinity],
   };
+
+  showFilterHistograms = false;
 
   // Initialize store with the root store
   constructor(rootStore: RootStore) {
@@ -68,6 +70,7 @@ export class FiltersStore {
       visitPLTs,
       visitCryo,
       visitCellSaver,
+      los,
     } = allVisits.reduce((acc, visit) => {
       const rbcUnits = visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.rbc_units || 0), 0);
       const ffpUnits = visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.ffp_units || 0), 0);
@@ -81,6 +84,7 @@ export class FiltersStore {
         visitPLTs: [Math.min(acc.visitPLTs[0], pltUnits), Math.max(acc.visitPLTs[1], pltUnits)] as [number, number],
         visitCryo: [Math.min(acc.visitCryo[0], cryoUnits), Math.max(acc.visitCryo[1], cryoUnits)] as [number, number],
         visitCellSaver: [Math.min(acc.visitCellSaver[0], cellSaverMl), Math.max(acc.visitCellSaver[1], cellSaverMl)] as [number, number],
+        los: [Math.min(acc.los[0], visit.los || 0), Math.max(acc.los[1], visit.los || 0)] as [number, number],
       };
     }, {
       visitRBCs: [Infinity, -Infinity] as [number, number],
@@ -88,6 +92,7 @@ export class FiltersStore {
       visitPLTs: [Infinity, -Infinity] as [number, number],
       visitCryo: [Infinity, -Infinity] as [number, number],
       visitCellSaver: [Infinity, -Infinity] as [number, number],
+      los: [Infinity, -Infinity] as [number, number],
     });
 
     this._filterValues = {
@@ -100,7 +105,7 @@ export class FiltersStore {
       visitCellSaver,
       death: null,
       vent: null,
-      stroke: null,
+      los,
     };
 
     this._initialFilterValues = { ...this._filterValues };
@@ -121,7 +126,7 @@ export class FiltersStore {
    */
   get patientOutcomeFiltersAppliedCount(): number {
     let count = 0;
-    const keys: (keyof typeof this._filterValues)[] = ['death', 'vent', 'stroke'];
+    const keys: (keyof typeof this._filterValues)[] = ['death', 'vent'];
     keys.forEach((key) => {
       if (this._filterValues[key] !== this._initialFilterValues[key]) count += 1;
     });
@@ -185,16 +190,22 @@ export class FiltersStore {
     return this._getBloodComponentHistogramData('cell_saver_ml');
   }
 
+  get losHistogramData() {
+    return this._getBloodComponentHistogramData('los');
+  }
+
   // Internal method for computing histogram data
   private _getBloodComponentHistogramData(
-    component: 'rbc_units' | 'ffp_units' | 'plt_units' | 'cryo_units' | 'cell_saver_ml',
+    component: 'rbc_units' | 'ffp_units' | 'plt_units' | 'cryo_units' | 'cell_saver_ml' | 'los',
   ): Array<{ units: string, count: number }> {
+    console.log('recomputing histogram data', component);
     const filterKeyMap = {
       rbc_units: 'visitRBCs',
       ffp_units: 'visitFFPs',
       plt_units: 'visitPLTs',
       cryo_units: 'visitCryo',
       cell_saver_ml: 'visitCellSaver',
+      los: 'los',
     } as const;
     const filterKey = filterKeyMap[component];
     const [min, max] = this._initialFilterValues[filterKey];

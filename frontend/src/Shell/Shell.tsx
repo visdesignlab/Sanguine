@@ -1,4 +1,6 @@
-import { ReactNode, useMemo, useState } from 'react';
+import {
+  ReactNode, useContext, useMemo, useState,
+} from 'react';
 import { useDisclosure } from '@mantine/hooks';
 import {
   AppShell, Group, Tabs, ActionIcon, Title, Flex, Container, Menu, Box, Text, Tooltip,
@@ -9,6 +11,7 @@ import {
   IconArrowNarrowRightDashed, IconDeviceFloppy,
   IconCamera, IconLogout, IconUser, IconMenu,
   IconRestore, type IconProps,
+  IconChartBar,
 } from '@tabler/icons-react';
 import { useThemeConstants } from '../Theme/mantineTheme';
 import { ExploreView } from '../Components/Views/ExploreView/ExploreView';
@@ -16,12 +19,14 @@ import { ProvidersView } from '../Components/Views/ProvidersView/ProvidersView';
 import { Dashboard } from '../Components/Views/Dashboard/Dashboard';
 import classes from './Shell.module.css';
 import { FilterToolbar } from '../Components/Toolbar/FilterToolbar';
+import { Store } from '../Store/Store';
 
 /** *
  * Shell component that provides the main layout for the application.
  * Includes a header toolbar (Intelvia), left toolbar, and main content area.
  */
 export function Shell() {
+  const store = useContext(Store);
   // View tabs -----------------
   const TABS = [
     {
@@ -57,8 +62,17 @@ export function Shell() {
 
   // Toolbar icons ----------------------
   // Left toolbar icons
-  const leftToolbarIcons: { icon: React.ComponentType<IconProps>; label: string, content: ReactNode }[] = [
-    { icon: IconFilter, label: 'Filter Visits By', content: <FilterToolbar /> },
+  const leftToolbarIcons: { icon: React.ComponentType<IconProps>; label: string, content: ReactNode, actionButtons?: ReactNode[] }[] = [
+    {
+      icon: IconFilter,
+      label: 'Filter Panel',
+      content: <FilterToolbar />,
+      actionButtons: [
+        <ActionIcon key="toggle-filter-histograms" aria-label="Toggle filter historgrams" onClick={() => { store.filtersStore.showFilterHistograms = !store.filtersStore.showFilterHistograms; }} data-active={store.filtersStore.showFilterHistograms} className={classes.leftToolbarIcon}>
+          <IconChartBar stroke={iconStroke} />
+        </ActionIcon>,
+      ],
+    },
     { icon: IconSettings, label: 'Settings', content: <Text>Settings content</Text> },
     { icon: IconDatabase, label: 'Database', content: <Text>Database content</Text> },
     { icon: IconBook, label: 'Learn', content: <Text>Learning content</Text> },
@@ -192,9 +206,18 @@ export function Shell() {
           {/** Left Panel Content */}
           {activeLeftPanel !== null && (
             <Box style={{ flexGrow: 1 }} p="md">
-              <Title order={3}>
-                {leftToolbarIcons[activeLeftPanel].label}
-              </Title>
+              <Flex direction="row" justify="space-between" align="center">
+                <Title order={3}>
+                  {leftToolbarIcons[activeLeftPanel].label}
+                </Title>
+                <Flex direction="row" align="center">
+                  {leftToolbarIcons[activeLeftPanel].actionButtons?.map((button, index) => (
+                    <Box key={index} ml="xs">
+                      {button}
+                    </Box>
+                  ))}
+                </Flex>
+              </Flex>
               <Box>
                 {leftToolbarIcons[activeLeftPanel].content}
               </Box>
