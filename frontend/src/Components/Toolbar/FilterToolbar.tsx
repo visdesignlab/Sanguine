@@ -1,7 +1,7 @@
 import { DateInput } from '@mantine/dates';
 import { useContext } from 'react';
 import {
-  Accordion, ActionIcon, Badge, Divider, Flex, Grid, Input, Rating, ScrollArea, Stack, Text, ThemeIcon,
+  Accordion, ActionIcon, Divider, Flex, Grid, Input, Rating, ScrollArea, Stack, Text, ThemeIcon,
   Title,
   Tooltip,
 } from '@mantine/core';
@@ -29,20 +29,13 @@ export function FilterToolbar() {
   return useObserver(() => (
     <ScrollArea h={`calc(100vh - ${toolbarWidth}px - 45px)`} type="scroll" overscrollBehavior="contain">
       <Accordion multiple defaultValue={['date-filters', 'blood-component-filters']} mt="xs">
+        {/** Date Filters */}
         <Accordion.Item value="date-filters" key="date-filters">
           <Flex align="center">
             <Accordion.Control px="xs">
               <Flex justify="space-between" align="center" gap="xs" mr="xs">
                 <Title order={4} c={store.filtersStore.dateFiltersAppliedCount > 0 ? 'blue.6' : undefined}>Visit Date</Title>
-                {store.filtersStore.dateFiltersAppliedCount > 0 && (
-                <Badge
-                  color="blue"
-                  radius="sm"
-                  variant="light"
-                >
-                  {store.filtersStore.dateFiltersAppliedCount}
-                </Badge>
-                )}
+                <FilterCountBadge type="date" />
               </Flex>
             </Accordion.Control>
             <Tooltip label="Reset Date Filters">
@@ -74,7 +67,7 @@ export function FilterToolbar() {
             </Flex>
           </Accordion.Panel>
         </Accordion.Item>
-
+        {/** Blood Component Filters */}
         <Accordion.Item value="blood-component-filters" key="blood-component-filters">
           <Flex align="center">
             <Accordion.Control px="xs">
@@ -246,6 +239,7 @@ export function FilterToolbar() {
             </Input.Wrapper>
           </Accordion.Panel>
         </Accordion.Item>
+        {/** Patient Outcome Filters */}
         <Accordion.Item value="outcome-filters" key="outcome-filters">
           <Accordion.Control px="xs">
             <Flex justify="space-between" align="center" gap="xs" mr="xs">
