@@ -13,6 +13,7 @@ import { BarChart } from '@mantine/charts';
 import { Store } from '../../Store/Store';
 import { useThemeConstants } from '../../Theme/mantineTheme';
 import { FilterRangeSlider } from './FilterRangeSlider';
+import { FilterCountBadge } from './FilterCountBadge';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0]; // Format as YYYY-MM-DD;
 
@@ -79,15 +80,7 @@ export function FilterToolbar() {
             <Accordion.Control px="xs">
               <Flex justify="space-between" align="center" gap="xs" mr="xs" h={toolbarWidth / 2}>
                 <Title order={4} c={store.filtersStore.bloodComponentFiltersAppliedCount > 0 ? 'blue' : undefined}>Blood Products Used</Title>
-                {store.filtersStore.bloodComponentFiltersAppliedCount > 0 && (
-                  <Badge
-                    color="blue"
-                    radius="sm"
-                    variant="light"
-                  >
-                    {store.filtersStore.bloodComponentFiltersAppliedCount}
-                  </Badge>
-                )}
+                <FilterCountBadge type="bloodComponent" />
               </Flex>
             </Accordion.Control>
             <Tooltip label="Reset Blood Product Filters">
@@ -257,15 +250,7 @@ export function FilterToolbar() {
           <Accordion.Control px="xs">
             <Flex justify="space-between" align="center" gap="xs" mr="xs">
               <Title order={4} c={store.filtersStore.patientOutcomeFiltersAppliedCount > 0 ? 'blue.6' : undefined}>Patient Outcome</Title>
-              {store.filtersStore.patientOutcomeFiltersAppliedCount > 0 && (
-                <Badge
-                  color="blue"
-                  radius="sm"
-                  variant="light"
-                >
-                  {store.filtersStore.patientOutcomeFiltersAppliedCount}
-                </Badge>
-              )}
+              <FilterCountBadge type="patientOutcome" />
             </Flex>
           </Accordion.Control>
           <Accordion.Panel>
