@@ -1,4 +1,5 @@
 import { useContext } from 'react';
+import { useObserver } from 'mobx-react-lite';
 import {
   Accordion, Badge, Divider, Flex, Grid, Input, Rating, Stack, Text, ThemeIcon, Title,
 } from '@mantine/core';
@@ -10,7 +11,7 @@ import { FilterRangeSlider } from './FilterRangeSlider';
 export function OutcomeFilters() {
   const store = useContext(Store);
 
-  return (
+  return useObserver(() => (
     <Accordion.Item value="outcome-filters" key="outcome-filters">
       <Accordion.Control px="xs">
         <Flex justify="space-between" align="center" gap="xs" mr="xs">
@@ -83,5 +84,5 @@ export function OutcomeFilters() {
         </Stack>
       </Accordion.Panel>
     </Accordion.Item>
-  );
+  ));
 }
