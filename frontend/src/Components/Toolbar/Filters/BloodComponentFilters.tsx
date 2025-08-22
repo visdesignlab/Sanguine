@@ -1,6 +1,7 @@
 import { useContext } from 'react';
 import {
   Accordion, Flex, ActionIcon, Tooltip, Title, Input,
+  Badge,
 } from '@mantine/core';
 import { useObserver } from 'mobx-react';
 import { IconRestore } from '@tabler/icons-react';
@@ -8,7 +9,6 @@ import { BarChart } from '@mantine/charts';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import { FilterRangeSlider } from './FilterRangeSlider';
-import { FilterCountBadge } from './FilterCountBadge';
 
 export function BloodComponentFilters() {
   const store = useContext(Store);
@@ -19,7 +19,12 @@ export function BloodComponentFilters() {
         <Accordion.Control px="xs">
           <Flex justify="space-between" align="center" gap="xs" mr="xs" h={toolbarWidth / 2}>
             <Title order={4} c={store.filtersStore.bloodComponentFiltersAppliedCount > 0 ? 'blue' : undefined}>Blood Products Used</Title>
-            <FilterCountBadge type="bloodComponent" />
+            {/** Filter count badge */}
+            {store.filtersStore.bloodComponentFiltersAppliedCount > 0 ? (
+              <Badge color="blue" radius="sm" variant="light">
+                {store.filtersStore.bloodComponentFiltersAppliedCount}
+              </Badge>
+            ) : null}
           </Flex>
         </Accordion.Control>
         <Tooltip label="Reset Blood Product Filters">

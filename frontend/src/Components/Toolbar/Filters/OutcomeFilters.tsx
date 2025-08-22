@@ -1,11 +1,10 @@
 import { useContext } from 'react';
 import {
-  Accordion, Divider, Flex, Grid, Input, Rating, Stack, Text, ThemeIcon, Title,
+  Accordion, Badge, Divider, Flex, Grid, Input, Rating, Stack, Text, ThemeIcon, Title,
 } from '@mantine/core';
 import { IconCircle, IconCircleFilled } from '@tabler/icons-react';
 import { BarChart } from '@mantine/charts';
 import { Store } from '../../../Store/Store';
-import { FilterCountBadge } from './FilterCountBadge';
 import { FilterRangeSlider } from './FilterRangeSlider';
 
 export function OutcomeFilters() {
@@ -16,7 +15,11 @@ export function OutcomeFilters() {
       <Accordion.Control px="xs">
         <Flex justify="space-between" align="center" gap="xs" mr="xs">
           <Title order={4} c={store.filtersStore.patientOutcomeFiltersAppliedCount > 0 ? 'blue.6' : undefined}>Patient Outcome</Title>
-          <FilterCountBadge type="patientOutcome" />
+          {store.filtersStore.patientOutcomeFiltersAppliedCount > 0 ? (
+            <Badge color="blue" radius="sm" variant="light">
+              {store.filtersStore.patientOutcomeFiltersAppliedCount}
+            </Badge>
+          ) : null}
         </Flex>
       </Accordion.Control>
       <Accordion.Panel>
