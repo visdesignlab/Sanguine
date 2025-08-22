@@ -18,7 +18,7 @@ import { ExploreView } from '../Components/Views/ExploreView/ExploreView';
 import { ProvidersView } from '../Components/Views/ProvidersView/ProvidersView';
 import { Dashboard } from '../Components/Views/Dashboard/Dashboard';
 import classes from './Shell.module.css';
-import { FilterToolbar } from '../Components/Toolbar/FilterToolbar';
+import { FilterPanel } from '../Components/Toolbar/Filters/FilterPanel';
 import { Store } from '../Store/Store';
 
 /** *
@@ -66,7 +66,7 @@ export function Shell() {
     {
       icon: IconFilter,
       label: 'Filter Panel',
-      content: <FilterToolbar />,
+      content: <FilterPanel />,
       actionButtons: [
         <ActionIcon key="toggle-filter-histograms" aria-label="Toggle filter historgrams" onClick={() => { store.filtersStore.showFilterHistograms = !store.filtersStore.showFilterHistograms; }} data-active={store.filtersStore.showFilterHistograms} className={classes.leftToolbarIcon}>
           <IconChartBar stroke={iconStroke} />

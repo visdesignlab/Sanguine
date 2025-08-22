@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { RangeSlider } from '@mantine/core';
-import { Store } from '../../Store/Store';
-import { FiltersStore } from '../../Store/FiltersStore';
+import { Store } from '../../../Store/Store';
+import { FiltersStore } from '../../../Store/FiltersStore';
 
 type NumberArrayKeys<T> = {
   [K in keyof T]: T[K] extends number[] ? K : never

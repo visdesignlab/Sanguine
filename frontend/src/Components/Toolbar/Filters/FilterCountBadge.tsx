@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react';
 import { Badge } from '@mantine/core';
 import { useContext } from 'react';
-import { Store } from '../../Store/Store';
+import { Store } from '../../../Store/Store';
 
 // A small badge that shows the number of filters applied in a given category (date, blood component, patient outcome)
 export const FilterCountBadge = observer(({ type }: { type: 'date' | 'bloodComponent' | 'patientOutcome' }) => {
