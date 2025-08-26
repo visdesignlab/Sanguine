@@ -28,6 +28,7 @@ import {
   dashboardXAxisOptions,
   type DashboardChartConfig,
   DashboardStatConfig,
+  chartColors,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 
@@ -326,13 +327,7 @@ export function Dashboard() {
                       series={
                         chartDataKeys.map((name, idx) => ({
                           name,
-                          color: [
-                            '#EF2026',
-                            '#897BD3',
-                            '#73C3C5',
-                            '#FFD13C',
-                            '#1770B8',
-                          ][idx % 6],
+                          color: chartColors[idx % chartColors.length],
                           label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
                         }))
                       }
@@ -367,13 +362,7 @@ export function Dashboard() {
                       series={
                         chartDataKeys.map((name, idx) => ({
                           name,
-                          color: [
-                            '#EF2026',
-                            '#897BD3',
-                            '#73C3C5',
-                            '#FFD13C',
-                            '#1770B8',
-                          ][idx % 6],
+                          color: chartColors[idx % chartColors.length],
                           label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
                         }))
                       }
