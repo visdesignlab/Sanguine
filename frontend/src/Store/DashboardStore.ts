@@ -97,10 +97,10 @@ export class DashboardStore {
       statId: '4', var: 'total_blood_product_costs', aggregation: 'sum', title: 'Total Blood Product Costs',
     },
     {
-      statId: '5', var: 'rbc_adherence', aggregation: 'avg', title: 'Percentage of Guideline Adherent RBC Transfusions',
+      statId: '5', var: 'rbc_adherence', aggregation: 'avg', title: 'Guideline Adherent RBC Transfusions',
     },
     {
-      statId: '6', var: 'plt_adherence', aggregation: 'avg', title: 'Percentage of Guideline Adherent Platelet Transfusions',
+      statId: '6', var: 'plt_adherence', aggregation: 'avg', title: 'Guideline Adherent Platelet Transfusions',
     },
   ];
 
