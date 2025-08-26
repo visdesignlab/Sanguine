@@ -49,12 +49,6 @@ export class DashboardStore {
       {
         i: '2', x: 1, y: 1, w: 1, h: 1, maxH: 2,
       },
-      {
-        i: '3', x: 0, y: 2, w: 2, h: 1, maxH: 2,
-      },
-      {
-        i: '4', x: 0, y: 2, w: 2, h: 1, maxH: 2,
-      },
     ],
   };
 
@@ -66,22 +60,16 @@ export class DashboardStore {
     this._chartLayouts = input;
   }
 
-  // Chart configurations
+  // Chart configurations by default
   _chartConfigs: DashboardChartConfig[] = [
     {
-      chartId: '0', xAxisVar: 'quarter', yAxisVar: 'rbc_units', aggregation: 'sum', chartType: 'line',
+      chartId: '0', xAxisVar: 'quarter', yAxisVar: 'amicar', aggregation: 'sum', chartType: 'line',
     },
     {
-      chartId: '1', xAxisVar: 'quarter', yAxisVar: 'rbc_adherence', aggregation: 'avg', chartType: 'line',
+      chartId: '1', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'line',
     },
     {
-      chartId: '2', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'line',
-    },
-    {
-      chartId: '3', xAxisVar: 'quarter', yAxisVar: 'iron', aggregation: 'avg', chartType: 'line',
-    },
-    {
-      chartId: '4', xAxisVar: 'quarter', yAxisVar: 'total_blood_product_costs', aggregation: 'sum', chartType: 'bar',
+      chartId: '2', xAxisVar: 'quarter', yAxisVar: 'total_blood_product_costs', aggregation: 'sum', chartType: 'bar',
     },
   ];
 
@@ -94,19 +82,25 @@ export class DashboardStore {
   }
 
   // Stats settings ------------------------------------------------------------
-  // Stat configurations
+  // Stat configurations by default
   _statConfigs: DashboardStatConfig[] = [
     {
-      statId: '1', var: 'overall_adherence', aggregation: 'avg', title: 'Overall Guideline Adherence',
+      statId: '1', var: 'rbc_units', aggregation: 'avg', title: 'RBC Units Transfused',
     },
     {
-      statId: '2', var: 'los', aggregation: 'avg', title: 'Average Length of Stay',
+      statId: '2', var: 'plt_units', aggregation: 'avg', title: 'Platelet Units Transfused',
     },
     {
-      statId: '3', var: 'ffp_units', aggregation: 'sum', title: 'Total Plasma Transfused',
+      statId: '3', var: 'cell_saver_ml', aggregation: 'sum', title: 'Total Cell Salvage Volume (ml) Used',
     },
     {
       statId: '4', var: 'total_blood_product_costs', aggregation: 'sum', title: 'Total Blood Product Costs',
+    },
+    {
+      statId: '5', var: 'rbc_adherence', aggregation: 'avg', title: 'Percentage of Guideline Adherent RBC Transfusions',
+    },
+    {
+      statId: '6', var: 'plt_adherence', aggregation: 'avg', title: 'Percentage of Guideline Adherent Platelet Transfusions',
     },
   ];
 
