@@ -20,6 +20,7 @@ import { Dashboard } from '../Components/Views/Dashboard/Dashboard';
 import classes from './Shell.module.css';
 import { FilterPanel } from '../Components/Toolbar/Filters/FilterPanel';
 import { Store } from '../Store/Store';
+import { SettingsPanel } from '../Components/Toolbar/Settings/SettingsPanel';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -73,7 +74,7 @@ export function Shell() {
         </ActionIcon>,
       ],
     },
-    { icon: IconSettings, label: 'Settings', content: <Text>Settings content</Text> },
+    { icon: IconSettings, label: 'Settings Panel', content: <SettingsPanel /> },
     { icon: IconDatabase, label: 'Database', content: <Text>Database content</Text> },
     { icon: IconBook, label: 'Learn', content: <Text>Learning content</Text> },
   ];
