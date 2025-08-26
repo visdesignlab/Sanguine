@@ -124,13 +124,24 @@ export class FiltersStore {
   /**
    * Returns count of patient outcome filters applied
    */
-  get patientOutcomeFiltersAppliedCount(): number {
+  get outcomeFiltersAppliedCount(): number {
     let count = 0;
-    const keys: (keyof typeof this._filterValues)[] = ['death', 'vent'];
+    const keys = ['death', 'vent', 'los'] as const;
     keys.forEach((key) => {
-      if (this._filterValues[key] !== this._initialFilterValues[key]) count += 1;
+      if (key === 'los'
+        ? (this._filterValues.los[0] !== this._initialFilterValues.los[0]
+          || this._filterValues.los[1] !== this._initialFilterValues.los[1])
+        : this._filterValues[key] !== this._initialFilterValues[key]
+      ) {
+        count += 1;
+      }
     });
     return count;
+  }
+
+  get medicationsFiltersAppliedCount(): number {
+    // Currently no medication filters, so this is always 0
+    return 0;
   }
 
   /*
@@ -161,11 +172,22 @@ export class FiltersStore {
   * Reset only blood component filters to initial values
   */
   resetBloodComponentFilters() {
-    const bloodKeys: Array<'visitRBCs' | 'visitFFPs' | 'visitPLTs' | 'visitCryo' | 'visitCellSaver'> = [
-      'visitRBCs', 'visitFFPs', 'visitPLTs', 'visitCryo', 'visitCellSaver',
-    ];
+    const bloodKeys = ['visitRBCs', 'visitFFPs', 'visitPLTs', 'visitCryo', 'visitCellSaver'] as const;
     bloodKeys.forEach((key) => {
-      this._filterValues[key] = [...this._initialFilterValues[key]] as [number, number];
+      this._filterValues[key] = [...this._initialFilterValues[key]];
+    });
+  }
+
+  resetMedicationsFilters() {
+    // Currently no medication filters, so this is a no-op
+  }
+
+  // Reset Patient Outcome filters to initial values
+  resetOutcomeFilters() {
+    const outcomeKeys = ['death', 'vent', 'los'] as const;
+    outcomeKeys.forEach((key) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
     });
   }
 
@@ -198,7 +220,6 @@ export class FiltersStore {
   private _getHistogramData(
     component: 'visitRBCs' | 'visitFFPs' | 'visitPLTs' | 'visitCryo' | 'visitCellSaver' | 'los',
   ): Array<{ units: string, count: number }> {
-    console.log('recomputing histogram data', component);
     const filterKeyMap = {
       visitRBCs: 'rbc_units',
       visitFFPs: 'ffp_units',

@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { RangeSlider } from '@mantine/core';
+import { useObserver } from 'mobx-react-lite';
 import { Store } from '../../../Store/Store';
 import { FiltersStore } from '../../../Store/FiltersStore';
 
@@ -18,7 +19,7 @@ export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<Filter
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.filtersStore.filterValues[varName]]);
 
-  return (
+  return useObserver(() => (
     <RangeSlider
       defaultValue={store.filtersStore.filterValues[varName]}
       value={value}
@@ -31,5 +32,5 @@ export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<Filter
       minRange={0}
       mb="md"
     />
-  );
+  ));
 }
