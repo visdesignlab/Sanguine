@@ -207,6 +207,20 @@ export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
   decimals: number;
 }>;
 
+export const ANTIFIBRINOLYTIC_USED = {
+  value: 'antifibrinolytic_used',
+  label: {
+    base: 'Antifibrinolytics Used Pre-Surgery',
+    sum: 'Total Visits Using Antifibrinolytics Pre-Surgery',
+    avg: 'Percentage of Visits Used Antifibrinolytics Pre-Surgery',
+  },
+  units: { sum: 'Visits', avg: '% of Visits' },
+  decimals: 0,
+} as const;
+
+// Types for overall antifibrinolytic fields
+export type AntifibrinolyticUsed = typeof ANTIFIBRINOLYTIC_USED['value'];
+
 // Guideline adherence ---------------------------------------------
 export const GUIDELINE_ADHERENCE = {
   rbc: {
@@ -430,6 +444,7 @@ export const dashboardYAxisOptions = [
   ...PROPHYL_MED_OPTIONS,
   ...COST_OPTIONS,
   OVERALL_BLOOD_PRODUCT_COST,
+  ANTIFIBRINOLYTIC_USED,
 ];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 

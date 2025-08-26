@@ -30,6 +30,7 @@ export type Visit = DatabaseVisit & {
   year: Year | null; // E.g. '2023'
 
   total_blood_product_costs: number;
+  antifibrinolytic_used: number;
 }
 & Record<BloodComponent, number>
 & Record<AdherentCountField | TotalTransfusedField, number>
@@ -89,6 +90,7 @@ export class RootStore {
         };
 
         const prophMedFlags = getProphMedFlags(visit);
+        const antifibrinolyticUsed = (prophMedFlags.txa || prophMedFlags.amicar) ? 1 : 0;
 
         const adherenceFlags = getAdherenceFlags(visit);
 
@@ -115,6 +117,7 @@ export class RootStore {
           ...adherenceFlags,
           ...outcomeFlags,
           ...prophMedFlags,
+          antifibrinolytic_used: antifibrinolyticUsed,
           ...overallAdherenceFlags,
           ...bloodProductCosts,
           total_blood_product_costs: totalBloodProductCosts,
