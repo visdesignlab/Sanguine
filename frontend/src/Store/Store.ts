@@ -7,37 +7,45 @@ import {
   getAdherenceFlags, getOverallAdherenceFlags, getProphMedFlags, isValidVisit, safeParseDate,
 } from '../Utils/store';
 import {
-  BloodComponent, BLOOD_COMPONENT_OPTIONS, TIME_CONSTANTS, CPT_CODES,
+  AdherentCountField,
+  AntifibrinolyticUsed,
+  ANTIFIBRINOLYTIC_USED,
+  BloodComponent,
+  BLOOD_COMPONENT_OPTIONS,
   COSTS,
   Cost,
-  ProphylMed,
+  CPT_CODES,
   Month,
-  Quarter,
-  Year,
-  AdherentCountField,
-  TotalTransfusedField,
   Outcome,
   OverallAdherentCountField,
+  OverallBloodProductCost,
   OverallTotalTransfusedField,
+  ProphylMed,
+  Quarter,
+  TIME_CONSTANTS,
+  TotalTransfusedField,
+  Year,
+  OVERALL_BLOOD_PRODUCT_COST,
 } from '../Types/application';
 import { getTimePeriodFromDate } from '../Utils/dashboard';
 import { FiltersStore } from './FiltersStore';
 
 export type Visit = DatabaseVisit & {
   dischargeDate: Date;
-  month: Month | null; // E.g. '2023-01'
-  quarter: Quarter | null; // E.g. '2023-Q1'
-  year: Year | null; // E.g. '2023'
-
-  total_blood_product_costs: number;
-  antifibrinolytic_used: number;
+  month: Month | null;
+  quarter: Quarter | null;
+  year: Year | null;
 }
 & Record<BloodComponent, number>
-& Record<AdherentCountField | TotalTransfusedField, number>
+& Record<AdherentCountField, number>
+& Record<TotalTransfusedField, number>
 & Record<Outcome, number>
 & Record<ProphylMed, number>
-& Record<OverallAdherentCountField | OverallTotalTransfusedField, number>
-& Record<Cost, number>;
+& Record<AntifibrinolyticUsed, number>
+& Record<OverallAdherentCountField, number>
+& Record<OverallTotalTransfusedField, number>
+& Record<Cost, number>
+& Record<OverallBloodProductCost, number>;
 
 export class RootStore {
   // Provenance
@@ -90,7 +98,9 @@ export class RootStore {
         };
 
         const prophMedFlags = getProphMedFlags(visit);
-        const antifibrinolyticUsed = (prophMedFlags.txa || prophMedFlags.amicar) ? 1 : 0;
+        const antifibrinolyticUsed: Record<AntifibrinolyticUsed, number> = {
+          [ANTIFIBRINOLYTIC_USED.value]: (prophMedFlags.txa || prophMedFlags.amicar) ? 1 : 0,
+        };
 
         const adherenceFlags = getAdherenceFlags(visit);
 
@@ -105,7 +115,9 @@ export class RootStore {
         }, {} as Record<Cost, number>);
 
         // All blood products combined into one cost
-        const totalBloodProductCosts = Object.values(bloodProductCosts).reduce((sum, cost) => sum + cost, 0);
+        const totalBloodProductCosts: Record<OverallBloodProductCost, number> = {
+          [OVERALL_BLOOD_PRODUCT_COST.value]: Object.values(bloodProductCosts).reduce((sum, cost) => sum + cost, 0),
+        };
 
         return {
           ...visit,
@@ -117,11 +129,11 @@ export class RootStore {
           ...adherenceFlags,
           ...outcomeFlags,
           ...prophMedFlags,
-          antifibrinolytic_used: antifibrinolyticUsed,
+          ...antifibrinolyticUsed,
           ...overallAdherenceFlags,
           ...bloodProductCosts,
-          total_blood_product_costs: totalBloodProductCosts,
-        };
+          ...totalBloodProductCosts,
+        } as Visit;
       });
   }
 

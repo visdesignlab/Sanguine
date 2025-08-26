@@ -409,6 +409,8 @@ export const OVERALL_BLOOD_PRODUCT_COST = {
   unitCost: -1, // Not used for total
 };
 
+export type OverallBloodProductCost = typeof OVERALL_BLOOD_PRODUCT_COST['value'];
+
 // CPT Codes -------------------------------------------------------
 export const CPT_CODES = {
   stroke: ['99291', '1065F', '1066F'],
