@@ -28,7 +28,7 @@ export function FilterPanel() {
 
   return useObserver(() => (
     <ScrollArea h={`calc(100vh - ${toolbarWidth}px - 45px)`} type="scroll" overscrollBehavior="contain">
-      <Accordion multiple>
+      <Accordion multiple defaultValue={['date-filters', 'blood-component-filters']}>
         {/** Date Filters */}
         <Accordion.Item value="date-filters" key="date-filters">
           <FilterHeader countName="dateFiltersAppliedCount" title="Visit Date" resetFunc={() => store.filtersStore.resetDateFilters()} />
@@ -154,6 +154,57 @@ export function FilterPanel() {
         {/** Medication Filters */}
         <Accordion.Item value="medication-filters" key="medication-filters">
           <FilterHeader countName="medicationsFiltersAppliedCount" title="Medications Used" resetFunc={() => store.filtersStore.resetMedicationsFilters()} />
+          <Accordion.Panel>
+            <Stack gap={0}>
+              <Grid>
+                <Grid.Col span={7}>
+                  <Text ta="right">False</Text>
+                </Grid.Col>
+                <Grid.Col span={2}>
+                  <Text>Off</Text>
+                </Grid.Col>
+                <Grid.Col span={3}>
+                  <Text>True</Text>
+                </Grid.Col>
+              </Grid>
+              <Flex>
+                <Text w="45%">B12</Text>
+                <Rating
+                  value={store.filtersStore.filterValues.b12 === true ? 3 : store.filtersStore.filterValues.b12 === false ? 1 : 2}
+                  color="blue"
+                  count={3}
+                  highlightSelectedOnly
+                  emptySymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircle /></ThemeIcon>}
+                  fullSymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircleFilled /></ThemeIcon>}
+                  onChange={(value) => store.filtersStore.setFilterValue('b12', value === 3 ? true : value === 1 ? false : null)}
+                />
+              </Flex>
+              <Flex>
+                <Text w="45%">Iron</Text>
+                <Rating
+                  value={store.filtersStore.filterValues.iron === true ? 3 : store.filtersStore.filterValues.iron === false ? 1 : 2}
+                  color="blue"
+                  count={3}
+                  highlightSelectedOnly
+                  emptySymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircle /></ThemeIcon>}
+                  fullSymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircleFilled /></ThemeIcon>}
+                  onChange={(value) => store.filtersStore.setFilterValue('iron', value === 3 ? true : value === 1 ? false : null)}
+                />
+              </Flex>
+              <Flex>
+                <Text w="45%">Antifibrinolytic </Text>
+                <Rating
+                  value={store.filtersStore.filterValues.antifibrinolytic === true ? 3 : store.filtersStore.filterValues.antifibrinolytic === false ? 1 : 2}
+                  color="blue"
+                  count={3}
+                  highlightSelectedOnly
+                  emptySymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircle /></ThemeIcon>}
+                  fullSymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircleFilled /></ThemeIcon>}
+                  onChange={(value) => store.filtersStore.setFilterValue('antifibrinolytic', value === 3 ? true : value === 1 ? false : null)}
+                />
+              </Flex>
+            </Stack>
+          </Accordion.Panel>
         </Accordion.Item>
         {/** Outcome Filters */}
         <Accordion.Item value="outcome-filters" key="outcome-filters">
@@ -193,6 +244,30 @@ export function FilterPanel() {
                   emptySymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircle /></ThemeIcon>}
                   fullSymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircleFilled /></ThemeIcon>}
                   onChange={(value) => store.filtersStore.setFilterValue('vent', value === 3 ? true : value === 1 ? false : null)}
+                />
+              </Flex>
+              <Flex>
+                <Text w="45%">Stroke</Text>
+                <Rating
+                  value={store.filtersStore.filterValues.stroke === true ? 3 : store.filtersStore.filterValues.stroke === false ? 1 : 2}
+                  color="blue"
+                  count={3}
+                  highlightSelectedOnly
+                  emptySymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircle /></ThemeIcon>}
+                  fullSymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircleFilled /></ThemeIcon>}
+                  onChange={(value) => store.filtersStore.setFilterValue('stroke', value === 3 ? true : value === 1 ? false : null)}
+                />
+              </Flex>
+              <Flex>
+                <Text w="45%">ECMO</Text>
+                <Rating
+                  value={store.filtersStore.filterValues.ecmo === true ? 3 : store.filtersStore.filterValues.ecmo === false ? 1 : 2}
+                  color="blue"
+                  count={3}
+                  highlightSelectedOnly
+                  emptySymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircle /></ThemeIcon>}
+                  fullSymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircleFilled /></ThemeIcon>}
+                  onChange={(value) => store.filtersStore.setFilterValue('ecmo', value === 3 ? true : value === 1 ? false : null)}
                 />
               </Flex>
               <Divider my="xs" />

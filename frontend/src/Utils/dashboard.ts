@@ -19,7 +19,6 @@ import {
   Year,
   Month,
   Quarter,
-  ANTIFIBRINOLYTIC_USED,
 } from '../Types/application';
 import type { Visit } from '../Store/Store';
 
@@ -242,14 +241,6 @@ export function aggregateVisitsBySumAvg(visits: Visit[]) {
         aggregations[avgKey] = mean(visits, (d) => d[value as keyof typeof d] as number || 0) || 0;
       });
     });
-
-    // Aggregate Antifibrinolytic use by sum and average
-    const antifibVar = ANTIFIBRINOLYTIC_USED.value;
-    const antifibSumKey: DashboardAggYAxisVar = `sum_${antifibVar}`;
-    const antifibAggKey: DashboardAggYAxisVar = `avg_${antifibVar}`;
-
-    aggregations[antifibSumKey] = sum(visits, (d) => d[antifibVar as keyof typeof d] as number || 0);
-    aggregations[antifibAggKey] = mean(visits, (d) => d[antifibVar as keyof typeof d] as number || 0) || 0;
 
     // Aggregate Guideline Adherence by sum and average
     GUIDELINE_ADHERENCE_OPTIONS.forEach(({ value, adherentCount, totalTransfused }) => {

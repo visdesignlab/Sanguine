@@ -8,8 +8,6 @@ import {
 } from '../Utils/store';
 import {
   AdherentCountField,
-  AntifibrinolyticUsed,
-  ANTIFIBRINOLYTIC_USED,
   BloodComponent,
   BLOOD_COMPONENT_OPTIONS,
   COSTS,
@@ -41,7 +39,6 @@ export type Visit = DatabaseVisit & {
 & Record<TotalTransfusedField, number>
 & Record<Outcome, number>
 & Record<ProphylMed, number>
-& Record<AntifibrinolyticUsed, number>
 & Record<OverallAdherentCountField, number>
 & Record<OverallTotalTransfusedField, number>
 & Record<Cost, number>
@@ -59,6 +56,14 @@ export class RootStore {
 
   // Visits - Main data type
   _allVisits: DatabaseVisit[] = [];
+
+  unitCosts: Record<Cost, number> = {
+    rbc_units_cost: 200,
+    ffp_units_cost: 55,
+    plt_units_cost: 650,
+    cryo_units_cost: 70,
+    cell_saver_ml_cost: 2.5,
+  };
 
   constructor() {
     // Initialize stores
@@ -98,19 +103,15 @@ export class RootStore {
         };
 
         const prophMedFlags = getProphMedFlags(visit);
-        const antifibrinolyticUsed: Record<AntifibrinolyticUsed, number> = {
-          [ANTIFIBRINOLYTIC_USED.value]: (prophMedFlags.txa || prophMedFlags.amicar) ? 1 : 0,
-        };
 
         const adherenceFlags = getAdherenceFlags(visit);
 
         const overallAdherenceFlags = getOverallAdherenceFlags(adherenceFlags);
 
-        const bloodProductCosts = Object.entries(COSTS).reduce((acc, [costKey, costObj]) => {
-          if (!('unitCost' in costObj)) return acc;
+        const bloodProductCosts = Object.keys(COSTS).reduce((acc, costKey) => {
           // Map costKey (e.g. 'rbc_cost') to blood product key (e.g. 'rbc_units')
           const productKey = costKey.slice(0, -'_cost'.length);
-          acc[costKey as keyof typeof COSTS] = (bloodProductUnits[productKey as BloodComponent] || 0) * (costObj.unitCost || 0);
+          acc[costKey as keyof typeof COSTS] = (bloodProductUnits[productKey as BloodComponent] || 0) * (this.unitCosts[costKey as Cost] || 0);
           return acc;
         }, {} as Record<Cost, number>);
 
@@ -129,7 +130,6 @@ export class RootStore {
           ...adherenceFlags,
           ...outcomeFlags,
           ...prophMedFlags,
-          ...antifibrinolyticUsed,
           ...overallAdherenceFlags,
           ...bloodProductCosts,
           ...totalBloodProductCosts,
@@ -142,14 +142,14 @@ export class RootStore {
   }
 
   get filteredVisits() {
+    const { filterValues } = this.filtersStore;
+    const dateFrom = filterValues.dateFrom.getTime();
+    const dateTo = filterValues.dateTo.getTime();
+
     return this.allVisits
       // Apply filter store filters
       .filter((visit) => {
-        const { filterValues } = this.filtersStore;
-
         // Check date range
-        const dateFrom = filterValues.dateFrom.getTime();
-        const dateTo = filterValues.dateTo.getTime();
         const visitDate = safeParseDate(visit.adm_dtm).getTime();
         if (visitDate < dateFrom || visitDate > dateTo) {
           return false;
@@ -180,24 +180,43 @@ export class RootStore {
           return false;
         }
 
-        // Check death flag
-        if (filterValues.death && visit.pat_expired_f === null) {
-          return false;
-        }
-        if (filterValues.death === false && visit.pat_expired_f !== null) {
+        // Check B12
+        if ((filterValues.b12 && visit.b12 === 0) || (filterValues.b12 === false && visit.b12 === 1)) {
           return false;
         }
 
-        // Check ventilator flag
-        if (filterValues.vent && visit.total_vent_mins <= TIME_CONSTANTS.VENTILATOR_THRESHOLD_MINS) {
+        // Check Iron
+        if ((filterValues.iron && visit.iron === 0) || (filterValues.iron === false && visit.iron === 1)) {
           return false;
         }
-        if (filterValues.vent === false && visit.total_vent_mins >= TIME_CONSTANTS.VENTILATOR_THRESHOLD_MINS) {
+
+        // Check Antifibrinolytic
+        if ((filterValues.antifibrinolytic && visit.antifibrinolytic === 0) || (filterValues.antifibrinolytic === false && visit.antifibrinolytic === 1)) {
           return false;
         }
 
         // Check length of stay
         if (visit.los < filterValues.los[0] || visit.los > filterValues.los[1]) {
+          return false;
+        }
+
+        // Check death flag
+        if ((filterValues.death && visit.death === 0) || (filterValues.death === false && visit.death === 1)) {
+          return false;
+        }
+
+        // Check ventilator flag
+        if ((filterValues.vent && visit.vent === 0) || (filterValues.vent === false && visit.vent === 1)) {
+          return false;
+        }
+
+        // Check stroke flag
+        if ((filterValues.stroke && visit.stroke === 0) || (filterValues.stroke === false && visit.stroke === 1)) {
+          return false;
+        }
+
+        // Check ECMO flag
+        if ((filterValues.ecmo && visit.ecmo === 0) || (filterValues.ecmo === false && visit.ecmo === 1)) {
           return false;
         }
 

@@ -9,27 +9,43 @@ export class FiltersStore {
   _initialFilterValues = {
     dateFrom: new Date(new Date().getFullYear() - 5, 0, 1), // 5 years ago from today
     dateTo: new Date(),
+
     visitRBCs: [0, Infinity] as [number, number],
     visitFFPs: [0, Infinity] as [number, number],
     visitPLTs: [0, Infinity] as [number, number],
     visitCryo: [0, Infinity] as [number, number],
     visitCellSaver: [0, Infinity] as [number, number],
-    death: false as boolean | null,
-    vent: false as boolean | null,
+
+    b12: null as boolean | null,
+    iron: null as boolean | null,
+    antifibrinolytic: null as boolean | null,
+
     los: [0, Infinity] as [number, number],
+    death: null as boolean | null,
+    vent: null as boolean | null,
+    stroke: null as boolean | null,
+    ecmo: null as boolean | null,
   };
 
   _filterValues: typeof this._initialFilterValues = {
     dateFrom: new Date(new Date().getFullYear() - 5, 0, 1), // 5 years ago from today
     dateTo: new Date(),
+
     visitRBCs: [0, Infinity],
     visitFFPs: [0, Infinity],
     visitPLTs: [0, Infinity],
     visitCryo: [0, Infinity],
     visitCellSaver: [0, Infinity],
+
+    b12: null,
+    iron: null,
+    antifibrinolytic: null,
+
+    los: [0, Infinity],
     death: null,
     vent: null,
-    los: [0, Infinity],
+    stroke: null,
+    ecmo: null,
   };
 
   showFilterHistograms = false;
@@ -98,14 +114,22 @@ export class FiltersStore {
     this._filterValues = {
       dateFrom,
       dateTo,
+
       visitRBCs,
       visitFFPs,
       visitPLTs,
       visitCryo,
       visitCellSaver,
+
+      b12: null,
+      iron: null,
+      antifibrinolytic: null,
+
+      los,
       death: null,
       vent: null,
-      los,
+      stroke: null,
+      ecmo: null,
     };
 
     this._initialFilterValues = { ...this._filterValues };
@@ -126,7 +150,7 @@ export class FiltersStore {
    */
   get outcomeFiltersAppliedCount(): number {
     let count = 0;
-    const keys = ['death', 'vent', 'los'] as const;
+    const keys = ['los', 'death', 'vent', 'stroke', 'ecmo'] as const;
     keys.forEach((key) => {
       if (key === 'los'
         ? (this._filterValues.los[0] !== this._initialFilterValues.los[0]
@@ -140,8 +164,14 @@ export class FiltersStore {
   }
 
   get medicationsFiltersAppliedCount(): number {
-    // Currently no medication filters, so this is always 0
-    return 0;
+    let count = 0;
+    const keys = ['b12', 'iron', 'antifibrinolytic'] as const;
+    keys.forEach((key) => {
+      if (this._filterValues[key] !== this._initialFilterValues[key]) {
+        count += 1;
+      }
+    });
+    return count;
   }
 
   /*
@@ -149,9 +179,7 @@ export class FiltersStore {
   */
   get bloodComponentFiltersAppliedCount(): number {
     let count = 0;
-    const keys: (keyof typeof this._filterValues)[] = [
-      'visitRBCs', 'visitFFPs', 'visitPLTs', 'visitCryo', 'visitCellSaver',
-    ];
+    const keys = ['visitRBCs', 'visitFFPs', 'visitPLTs', 'visitCryo', 'visitCellSaver'] as const;
     keys.forEach((key) => {
       const [min, max] = this._filterValues[key] as [number, number];
       const [initMin, initMax] = this._initialFilterValues[key] as [number, number];
@@ -179,12 +207,16 @@ export class FiltersStore {
   }
 
   resetMedicationsFilters() {
-    // Currently no medication filters, so this is a no-op
+    const medKeys = ['b12', 'iron', 'antifibrinolytic'] as const;
+    medKeys.forEach((key) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
+    });
   }
 
   // Reset Patient Outcome filters to initial values
   resetOutcomeFilters() {
-    const outcomeKeys = ['death', 'vent', 'los'] as const;
+    const outcomeKeys = ['los', 'death', 'vent', 'stroke', 'ecmo'] as const;
     outcomeKeys.forEach((key) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this._filterValues[key] = this._initialFilterValues[key] as unknown as any;

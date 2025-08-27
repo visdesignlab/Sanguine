@@ -155,7 +155,7 @@ export const PROPHYL_MEDS = [
     value: 'b12',
     label: {
       base: 'B12 Pre-Surgery',
-      sum: 'Total Visits Using B12 Pre-Surgery',
+      sum: 'Total Visits Used B12 Pre-Surgery',
       avg: 'Percentage of Visits Used B12 Pre-Surgery',
     },
     aliases: ['b12', 'cobalamin'],
@@ -166,7 +166,7 @@ export const PROPHYL_MEDS = [
     value: 'iron',
     label: {
       base: 'Iron Pre-Surgery',
-      sum: 'Total Visits Using Iron Pre-Surgery',
+      sum: 'Total Visits Used Iron Pre-Surgery',
       avg: 'Percentage of Visits Used Iron Pre-Surgery',
     },
     aliases: ['iron', 'ferrous', 'ferric'],
@@ -174,24 +174,13 @@ export const PROPHYL_MEDS = [
     decimals: 0,
   },
   {
-    value: 'txa',
+    value: 'antifibrinolytic',
     label: {
-      base: 'Tranexamic Acid Pre-Surgery',
-      sum: 'Total Visits Using Tranexamic Acid Pre-Surgery',
-      avg: 'Percentage of Visits Used Tranexamic Acid Pre-Surgery',
+      base: 'Antifibrinolytics Used Pre-Surgery',
+      sum: 'Total Visits Used Antifibrinolytics Pre-Surgery',
+      avg: 'Percentage of Visits Used Antifibrinolytics Pre-Surgery',
     },
-    aliases: ['tranexamic', 'txa'],
-    units: { sum: 'Visits', avg: '% of Visits' },
-    decimals: 0,
-  },
-  {
-    value: 'amicar',
-    label: {
-      base: 'Amicar Pre-Surgery',
-      sum: 'Total Visits Using Amicar Pre-Surgery',
-      avg: 'Percentage of Visits Used Amicar Pre-Surgery',
-    },
-    aliases: ['amicar', 'aminocaproic'],
+    aliases: ['tranexamic', 'txa', 'aminocaproic', 'amicar'],
     units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
   },
@@ -206,20 +195,6 @@ export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
   units: { sum: string; avg: string };
   decimals: number;
 }>;
-
-export const ANTIFIBRINOLYTIC_USED = {
-  value: 'antifibrinolytic_used',
-  label: {
-    base: 'Antifibrinolytics Used Pre-Surgery',
-    sum: 'Total Visits Using Antifibrinolytics Pre-Surgery',
-    avg: 'Percentage of Visits Used Antifibrinolytics Pre-Surgery',
-  },
-  units: { sum: 'Visits', avg: '% of Visits' },
-  decimals: 0,
-} as const;
-
-// Types for overall antifibrinolytic fields
-export type AntifibrinolyticUsed = typeof ANTIFIBRINOLYTIC_USED['value'];
 
 // Guideline adherence ---------------------------------------------
 export const GUIDELINE_ADHERENCE = {
@@ -327,6 +302,7 @@ export const GUIDELINE_ADHERENCE_OPTIONS = Object.values(GUIDELINE_ADHERENCE) as
 }>;
 
 // Costs / Savings -------------------------------------------------
+
 // Types of costs
 export const COSTS = {
   rbc_units_cost: {
@@ -338,7 +314,6 @@ export const COSTS = {
     },
     units: { sum: '$', avg: '$' },
     decimals: { sum: 0, avg: 0 },
-    unitCost: 200,
   },
   ffp_units_cost: {
     value: 'ffp_units_cost',
@@ -349,7 +324,6 @@ export const COSTS = {
     },
     units: { sum: '$', avg: '$' },
     decimals: { sum: 0, avg: 0 },
-    unitCost: 55,
   },
   plt_units_cost: {
     value: 'plt_units_cost',
@@ -360,7 +334,6 @@ export const COSTS = {
     },
     units: { sum: '$', avg: '$' },
     decimals: { sum: 0, avg: 0 },
-    unitCost: 650,
   },
   cryo_units_cost: {
     value: 'cryo_units_cost',
@@ -371,7 +344,6 @@ export const COSTS = {
     },
     units: { sum: '$', avg: '$' },
     decimals: { sum: 0, avg: 0 },
-    unitCost: 70,
   },
   // TODO: Unit cost is wrong
   cell_saver_ml_cost: {
@@ -383,7 +355,6 @@ export const COSTS = {
     },
     units: { sum: '$', avg: '$' },
     decimals: { sum: 0, avg: 0 },
-    unitCost: 2.50,
   },
 } as const;
 
@@ -406,8 +377,7 @@ export const OVERALL_BLOOD_PRODUCT_COST = {
   },
   units: { sum: '$', avg: '$' },
   decimals: { sum: 0, avg: 0 },
-  unitCost: -1, // Not used for total
-};
+} as const;
 
 export type OverallBloodProductCost = typeof OVERALL_BLOOD_PRODUCT_COST['value'];
 
@@ -446,7 +416,6 @@ export const dashboardYAxisOptions = [
   ...PROPHYL_MED_OPTIONS,
   ...COST_OPTIONS,
   OVERALL_BLOOD_PRODUCT_COST,
-  ANTIFIBRINOLYTIC_USED,
 ];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 

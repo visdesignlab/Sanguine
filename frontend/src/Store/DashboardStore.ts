@@ -63,7 +63,7 @@ export class DashboardStore {
   // Chart configurations by default
   _chartConfigs: DashboardChartConfig[] = [
     {
-      chartId: '0', xAxisVar: 'quarter', yAxisVar: 'antifibrinolytic_used', aggregation: 'sum', chartType: 'line',
+      chartId: '0', xAxisVar: 'quarter', yAxisVar: 'antifibrinolytic', aggregation: 'sum', chartType: 'line',
     },
     {
       chartId: '1', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'line',
