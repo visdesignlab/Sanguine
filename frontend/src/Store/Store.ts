@@ -2,7 +2,6 @@
 import { makeAutoObservable } from 'mobx';
 import { createContext } from 'react';
 import { DatabaseVisit } from '../Types/database';
-import { DashboardStore } from './DashboardStore';
 import {
   getAdherenceFlags, getOverallAdherenceFlags, getProphMedFlags, isValidVisit, safeParseDate,
 } from '../Utils/store';
@@ -26,7 +25,9 @@ import {
   OVERALL_BLOOD_PRODUCT_COST,
 } from '../Types/application';
 import { getTimePeriodFromDate } from '../Utils/dashboard';
+import { DashboardStore } from './DashboardStore';
 import { FiltersStore } from './FiltersStore';
+import { ExploreStore } from './ExploreStore';
 
 export type Visit = DatabaseVisit & {
   dischargeDate: Date;
@@ -50,9 +51,10 @@ export class RootStore {
   // Stores
   dashboardStore: DashboardStore;
 
-  filtersStore: FiltersStore;
+  exploreStore: ExploreStore;
   // providersStore:
-  // exploreStore:
+
+  filtersStore: FiltersStore;
 
   // Visits - Main data type
   _allVisits: DatabaseVisit[] = [];
@@ -68,6 +70,7 @@ export class RootStore {
   constructor() {
     // Initialize stores
     this.dashboardStore = new DashboardStore(this);
+    this.exploreStore = new ExploreStore(this);
     this.filtersStore = new FiltersStore(this);
 
     makeAutoObservable(this);

@@ -391,6 +391,17 @@ export const CPT_CODES = {
   ],
 } as const;
 
+// Charting -------------------------------------------------------
+
+// Chart configuration type
+type ChartConfig<X, Y, A, T> = {
+  chartId: string;
+  xAxisVar: X;
+  yAxisVar: Y;
+  aggregation: A;
+  chartType: T;
+};
+
 // PBM Dashboard ---------------------------------------------------
 
 // --- Dashboard charts ---
@@ -422,14 +433,7 @@ export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 // Dashboard aggregate y-axis variable type
 export type DashboardAggYAxisVar = `${keyof typeof AGGREGATION_OPTIONS}_${typeof dashboardYAxisVars[number]}`;
 
-// Chart configuration type
-export type DashboardChartConfig = {
-  chartId: string;
-  xAxisVar: typeof dashboardXAxisVars[number];
-  yAxisVar: typeof dashboardYAxisVars[number];
-  aggregation: keyof typeof AGGREGATION_OPTIONS;
-  chartType?: 'line' | 'bar';
-};
+export type DashboardChartConfig = ChartConfig<typeof dashboardXAxisVars[number], typeof dashboardYAxisVars[number], keyof typeof AGGREGATION_OPTIONS, 'line' | 'bar'>;
 
 // Dashboard chart configuration key type
 export type DashboardChartConfigKey = `${DashboardAggYAxisVar}_${typeof dashboardXAxisVars[number]}`;
@@ -455,3 +459,26 @@ export const chartColors = [
   '#FFD13C',
   '#73C3C5',
 ];
+
+// Explore View ----------------------------------------------------
+// Aggregation options for explore view
+const _AGGREGATIONS = ['surgeon_prov_id', 'anesth_prov_id', 'year', 'quarter'] as const;
+export type Aggregation = typeof _AGGREGATIONS[number];
+
+// --- Cost bar charts ---
+const CostAggregations: { value: Aggregation; label: string }[] = [
+  { value: 'surgeon_prov_id', label: 'Surgeon ID' },
+  { value: 'anesth_prov_id', label: 'Anesthesiologist ID' },
+  { value: 'year', label: 'Year' },
+  { value: 'quarter', label: 'Quarter' },
+];
+
+export const costXAxisOptions = [{ value: 'cost', label: 'Cost ($)' }] as const;
+export const costXAxisVars = costXAxisOptions.map((opt) => opt.value);
+
+export const costYAxisOptions = [...CostAggregations];
+export const costYAxisVars = costYAxisOptions.map((opt) => opt.value);
+
+export type CostChartConfig = ChartConfig<typeof costXAxisVars[number], typeof costYAxisVars[number], 'sum' | 'avg', 'cost'>;
+
+export type ExploreChartConfig = CostChartConfig;

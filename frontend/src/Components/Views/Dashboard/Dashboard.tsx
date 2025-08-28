@@ -274,7 +274,7 @@ export function Dashboard() {
                         <ActionIcon
                           variant="subtle"
                           onClick={() => store.dashboardStore.setChartConfig(chartId, {
-                            chartId, yAxisVar, xAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum',
+                            chartId, yAxisVar, xAxisVar, aggregation: aggregation === 'sum' ? 'avg' : 'sum', chartType,
                           })}
                         >
                           <IconPercentage size={18} color={theme.colors.gray[6]} stroke={3} />
@@ -285,7 +285,7 @@ export function Dashboard() {
                         <ActionIcon
                           variant="subtle"
                           onClick={() => store.dashboardStore.setChartConfig(chartId, {
-                            chartId, yAxisVar, xAxisVar: xAxisVar === 'month' ? 'quarter' : xAxisVar === 'quarter' ? 'year' : 'month', aggregation,
+                            chartId, yAxisVar, xAxisVar: xAxisVar === 'month' ? 'quarter' : xAxisVar === 'quarter' ? 'year' : 'month', aggregation, chartType,
                           })}
                         >
                           <IconCalendarCode size={18} color={theme.colors.gray[6]} stroke={3} />
@@ -335,6 +335,7 @@ export function Dashboard() {
                         interval: 'equidistantPreserveStart',
                       }}
                       type="stacked"
+                      withLegend={chartDataKeys.length > 1}
                       tooltipAnimationDuration={200}
                       tooltipProps={
                         chartDataKeys.length === 1
@@ -371,6 +372,7 @@ export function Dashboard() {
                       xAxisProps={{
                         interval: 'equidistantPreserveStart',
                       }}
+                      withLegend={chartDataKeys.length > 1}
                       tooltipAnimationDuration={200}
                       tooltipProps={
                         chartDataKeys.length === 1
