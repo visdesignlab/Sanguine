@@ -6,7 +6,7 @@ import {
   AppShell, Group, Tabs, ActionIcon, Title, Flex, Container, Menu, Box, Text, Tooltip,
 } from '@mantine/core';
 import {
-  IconDatabase, IconSettings, IconFilter, IconBook,
+  IconDatabase, IconSettings, IconBook,
   IconTrash, IconArrowNarrowLeftDashed,
   IconArrowNarrowRightDashed, IconDeviceFloppy,
   IconCamera, IconLogout, IconUser, IconMenu,
@@ -19,6 +19,7 @@ import { ProvidersView } from '../Components/Views/ProvidersView/ProvidersView';
 import { Dashboard } from '../Components/Views/Dashboard/Dashboard';
 import classes from './Shell.module.css';
 import { FilterPanel } from '../Components/Toolbar/Filters/FilterPanel';
+import { FilterIcon } from '../Components/Toolbar/Filters/FilterIcon';
 import { Store } from '../Store/Store';
 import { SettingsPanel } from '../Components/Toolbar/Settings/SettingsPanel';
 
@@ -65,7 +66,7 @@ export function Shell() {
   // Left toolbar icons
   const leftToolbarIcons: { icon: React.ComponentType<IconProps>; label: string, content: ReactNode, actionButtons?: ReactNode[] }[] = [
     {
-      icon: IconFilter,
+      icon: FilterIcon,
       label: 'Filter Panel',
       content: <FilterPanel />,
       actionButtons: [
@@ -194,6 +195,7 @@ export function Shell() {
                     onClick={() => (index === activeLeftPanel ? setActiveLeftPanel(null) : setActiveLeftPanel(index))}
                     data-active={index === activeLeftPanel}
                     className={classes.leftToolbarIcon}
+                    style={{ overflow: 'visible' }}
                   >
                     <Icon
                       stroke={iconStroke}

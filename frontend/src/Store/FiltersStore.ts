@@ -188,6 +188,13 @@ export class FiltersStore {
     return count;
   }
 
+  get totalFiltersAppliedCount(): number {
+    return this.dateFiltersAppliedCount
+      + this.bloodComponentFiltersAppliedCount
+      + this.medicationsFiltersAppliedCount
+      + this.outcomeFiltersAppliedCount;
+  }
+
   /**
    * Resets all filters to their initial values.
    */
