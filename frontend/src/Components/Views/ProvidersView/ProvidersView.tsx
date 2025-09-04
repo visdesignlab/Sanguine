@@ -1,9 +1,13 @@
 import {
   Autocomplete,
-  Divider, Flex, Stack, Title, Tooltip,
+  Badge,
+  Card,
+  Divider, Flex, Group, Stack, Title, Tooltip,
 } from '@mantine/core';
-import { useContext } from 'react';
-import { DateInput } from '@mantine/dates';
+import { useContext, useState } from 'react';
+import { DatePickerInput } from '@mantine/dates';
+import dayjs from 'dayjs';
+import { IconCalendarWeek, IconSearch } from '@tabler/icons-react';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 
@@ -11,7 +15,8 @@ export function ProvidersView() {
   const store = useContext(Store);
 
   const { toolbarWidth } = useThemeConstants();
-  const dateSimplify = (date: Date) => date.toISOString().split('T')[0];
+
+  const [dateRange, setDateRange] = useState<[string | null, string | null]>([null, null]);
 
   return (
     <Stack mb="xl" gap="lg">
@@ -31,9 +36,9 @@ export function ProvidersView() {
       <Divider />
       <Flex direction="row" gap="md" align="flex-end">
         <Autocomplete
-          label="Provider"
           placeholder="Search for a provider"
           defaultValue="Dr. John Doe"
+          leftSection={<IconSearch size={18} stroke={1} />}
           data={[
             'Dr. John Doe',
             'Dr. Jane Smith',
@@ -42,23 +47,53 @@ export function ProvidersView() {
           ]}
           w="10%"
         />
-        <DateInput
-          label="Date From"
-          value={dateSimplify(store.filtersStore.filterValues.dateFrom)}
-          onChange={(date) => date && store.filtersStore.setFilterValue('dateFrom', new Date(date))}
-          minDate={dateSimplify(store.filtersStore.initialFilterValues.dateFrom)}
-          maxDate={dateSimplify(store.filtersStore.initialFilterValues.dateTo)}
-          valueFormat="YYYY-MM-DD"
-          w="6%"
-        />
-        <DateInput
-          label="Date To"
-          value={dateSimplify(store.filtersStore.filterValues.dateTo)}
-          onChange={(date) => date && store.filtersStore.setFilterValue('dateTo', new Date(date))}
-          minDate={dateSimplify(store.filtersStore.initialFilterValues.dateFrom)}
-          maxDate={dateSimplify(store.filtersStore.initialFilterValues.dateTo)}
-          valueFormat="YYYY-MM-DD"
-          w="6%"
+        <DatePickerInput
+          type="range"
+          defaultValue={[
+            dayjs().subtract(6, 'month').startOf('day').toDate(),
+            dayjs().toDate(),
+          ]}
+          leftSection={<IconCalendarWeek size={18} stroke={1} />}
+          placeholder="Pick dates range"
+          presets={[
+            {
+              value: [
+                dayjs().subtract(3, 'month').startOf('day').format('YYYY-MM-DD'),
+                dayjs().format('YYYY-MM-DD'),
+              ],
+              label: 'Past Quarter',
+            },
+            {
+              value: [
+                dayjs().subtract(3, 'month').startOf('day').format('YYYY-MM-DD'),
+                dayjs().format('YYYY-MM-DD'),
+              ],
+              label: 'Last 3 Months',
+            },
+            {
+              value: [
+                dayjs().subtract(6, 'month').startOf('day').format('YYYY-MM-DD'),
+                dayjs().format('YYYY-MM-DD'),
+              ],
+              label: 'Last 6 Months',
+            },
+            {
+              value: [
+                dayjs().startOf('year').format('YYYY-MM-DD'),
+                dayjs().format('YYYY-MM-DD'),
+              ],
+              label: 'This Calendar Year',
+            },
+            {
+              value: [
+                '2000-01-01',
+                dayjs().format('YYYY-MM-DD'),
+              ],
+              label: 'All Time',
+            },
+          ]}
+          value={dateRange}
+          onChange={setDateRange}
         />
       </Flex>
     </Stack>
