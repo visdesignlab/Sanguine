@@ -1,8 +1,6 @@
 import {
   Autocomplete,
-  Badge,
-  Card,
-  Divider, Flex, Group, Stack, Title, Tooltip,
+  Divider, Flex, Stack, Title, Tooltip,
 } from '@mantine/core';
 import { useContext, useState } from 'react';
 import { DatePickerInput } from '@mantine/dates';
