@@ -27,7 +27,7 @@ export function FilterPanel() {
   const store = useContext(Store);
 
   return useObserver(() => (
-    <ScrollArea h={`calc(100vh - ${toolbarWidth}px - 45px)`} type="scroll" overscrollBehavior="contain">
+    <ScrollArea h={`calc(100vh - ${toolbarWidth}px - 45px)`} type="scroll" overscrollBehavior="contain" mt="sm">
       <Accordion multiple defaultValue={['date-filters', 'blood-component-filters']}>
         {/** Date Filters */}
         <Accordion.Item value="date-filters" key="date-filters">
