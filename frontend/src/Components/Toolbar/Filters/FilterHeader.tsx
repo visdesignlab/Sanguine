@@ -17,7 +17,7 @@ export function FilterHeader({ countName, title, resetFunc }: { countName: keyof
       <Flex align="center">
         <Accordion.Control px="xs">
           <Flex justify="space-between" align="center" gap="xs" mr="xs">
-            <Title order={5} c={count ? 'blue.6' : undefined}>{title}</Title>
+            <Title order={4} c={count ? 'blue.6' : undefined}>{title}</Title>
             {count > 0 ? (
               <Badge color="blue" radius="sm" variant="light">
                 {count}
