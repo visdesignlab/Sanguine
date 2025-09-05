@@ -65,9 +65,10 @@ export function ProvidersView() {
   return (
     <Stack mb="xl" gap="lg">
       <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
-        {/** Dashboard Title */}
+        {/* Dashboard Title */}
         <Title order={3}>Providers</Title>
-        <Flex direction="row" align="center" gap="md">
+        <Flex direction="row" align="center" gap="md" ml="auto">
+          {/** Visits Count */}
           <Tooltip label="Visible visits after filters" position="bottom">
             <Title order={5} c="dimmed">
               {`${store.filteredVisits.length} / ${store.allVisits.length}`}
@@ -75,6 +76,34 @@ export function ProvidersView() {
               Visits
             </Title>
           </Tooltip>
+          {/** Provider Search */}
+          <Autocomplete
+            placeholder="Search for a provider"
+            defaultValue="Dr. John Doe"
+            leftSection={<IconSearch size={18} stroke={1} />}
+            data={[
+              'Dr. John Doe',
+              'Dr. Jane Smith',
+              'Dr. Emily Carter',
+              'Dr. Michael Brown',
+            ]}
+            w="fit-content"
+            style={{ minWidth: 180 }}
+          />
+          {/** Date Range Picker */}
+          <DatePickerInput
+            type="range"
+            defaultValue={[
+              dayjs().subtract(6, 'month').startOf('day').toDate(),
+              dayjs().toDate(),
+            ]}
+            defaultLevel="month"
+            leftSection={<IconCalendarWeek size={18} stroke={1} />}
+            placeholder="Pick dates range"
+            presets={dateRangePresets}
+            value={dateRange}
+            onChange={setDateRange}
+          />
           <Button>
             <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
             Add Chart
@@ -82,35 +111,6 @@ export function ProvidersView() {
         </Flex>
       </Flex>
       <Divider />
-      {/** Search Provider */}
-      <Flex direction="row" gap="md" align="flex-end">
-        <Autocomplete
-          placeholder="Search for a provider"
-          defaultValue="Dr. John Doe"
-          leftSection={<IconSearch size={18} stroke={1} />}
-          data={[
-            'Dr. John Doe',
-            'Dr. Jane Smith',
-            'Dr. Emily Carter',
-            'Dr. Michael Brown',
-          ]}
-          w="10%"
-        />
-        {/** Pick Date */}
-        <DatePickerInput
-          type="range"
-          defaultValue={[
-            dayjs().subtract(6, 'month').startOf('day').toDate(),
-            dayjs().toDate(),
-          ]}
-          defaultLevel="month"
-          leftSection={<IconCalendarWeek size={18} stroke={1} />}
-          placeholder="Pick dates range"
-          presets={dateRangePresets}
-          value={dateRange}
-          onChange={setDateRange}
-        />
-      </Flex>
       {/* Provider Summary Card */}
       <Card shadow="sm" radius="md" p="xl" mb="md" withBorder>
         <Stack gap="xs">
