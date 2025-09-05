@@ -65,7 +65,7 @@ export function FilterPanel() {
                   h={30}
                   style={{ width: 'calc(100% - 12px)' }}
                   barProps={{ barSize: '100%' }}
-                  data={store.filtersStore.visitRBCsHistogramData}
+                  data={store.filtersStore.rbc_unitsHistogramData}
                   dataKey="units"
                   withXAxis={false}
                   withYAxis={false}
@@ -75,7 +75,7 @@ export function FilterPanel() {
                   ml={1}
                 />
               </Flex>
-              <FilterRangeSlider varName="visitRBCs" />
+              <FilterRangeSlider varName="rbc_units" />
             </Input.Wrapper>
             <Input.Wrapper label="FFP Units" mb="lg">
               <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
@@ -83,7 +83,7 @@ export function FilterPanel() {
                   h={30}
                   style={{ width: 'calc(100% - 12px)' }}
                   barProps={{ barSize: '100%' }}
-                  data={store.filtersStore.visitFFPsHistogramData}
+                  data={store.filtersStore.ffp_unitsHistogramData}
                   dataKey="units"
                   withXAxis={false}
                   withYAxis={false}
@@ -93,7 +93,7 @@ export function FilterPanel() {
                   ml={1}
                 />
               </Flex>
-              <FilterRangeSlider varName="visitFFPs" />
+              <FilterRangeSlider varName="ffp_units" />
             </Input.Wrapper>
             <Input.Wrapper label="Platelet Units" mb="lg">
               <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
@@ -101,7 +101,7 @@ export function FilterPanel() {
                   h={30}
                   style={{ width: 'calc(100% - 12px)' }}
                   barProps={{ barSize: '100%' }}
-                  data={store.filtersStore.visitPLTsHistogramData}
+                  data={store.filtersStore.plt_unitsHistogramData}
                   dataKey="units"
                   withXAxis={false}
                   withYAxis={false}
@@ -111,7 +111,7 @@ export function FilterPanel() {
                   ml={1}
                 />
               </Flex>
-              <FilterRangeSlider varName="visitPLTs" />
+              <FilterRangeSlider varName="plt_units" />
             </Input.Wrapper>
             <Input.Wrapper label="Cryo Units" mb="lg">
               <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
@@ -119,7 +119,7 @@ export function FilterPanel() {
                   h={30}
                   style={{ width: 'calc(100% - 12px)' }}
                   barProps={{ barSize: '100%' }}
-                  data={store.filtersStore.visitCryoHistogramData}
+                  data={store.filtersStore.cryo_unitsHistogramData}
                   dataKey="units"
                   withXAxis={false}
                   withYAxis={false}
@@ -129,7 +129,7 @@ export function FilterPanel() {
                   ml={1}
                 />
               </Flex>
-              <FilterRangeSlider varName="visitCryo" />
+              <FilterRangeSlider varName="cryo_units" />
             </Input.Wrapper>
             <Input.Wrapper label="Cell Saver (mL)" mb="lg">
               <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
@@ -137,7 +137,7 @@ export function FilterPanel() {
                   h={30}
                   style={{ width: 'calc(100% - 12px)' }}
                   barProps={{ barSize: '100%' }}
-                  data={store.filtersStore.visitCellSaverHistogramData}
+                  data={store.filtersStore.cell_saver_mlHistogramData}
                   dataKey="units"
                   withXAxis={false}
                   withYAxis={false}
@@ -147,7 +147,7 @@ export function FilterPanel() {
                   ml={1}
                 />
               </Flex>
-              <FilterRangeSlider varName="visitCellSaver" />
+              <FilterRangeSlider varName="cell_saver_ml" />
             </Input.Wrapper>
           </Accordion.Panel>
         </Accordion.Item>

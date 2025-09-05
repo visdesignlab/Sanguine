@@ -27,7 +27,7 @@ export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<Filter
       onChangeEnd={(v) => store.filtersStore.setFilterValue(varName, v)}
       min={store.filtersStore.initialFilterValues[varName][0]}
       max={store.filtersStore.initialFilterValues[varName][1]}
-      step={varName === 'visitCellSaver' ? 50 : 1}
+      step={varName === 'cell_saver_ml' ? 50 : 1}
       marks={store.filtersStore.initialFilterValues[varName].map((val) => ({ value: val, label: String(val) }))}
       minRange={0}
       mb="md"

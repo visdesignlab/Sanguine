@@ -70,6 +70,9 @@ export function Shell() {
       label: 'Filter Panel',
       content: <FilterPanel />,
       actionButtons: [
+        <ActionIcon key="reset-filters" aria-label="Reset all filters" onClick={() => { store.filtersStore.resetAllFilters(); }} className={classes.leftToolbarIcon}>
+          <IconRestore stroke={iconStroke} size={21} />
+        </ActionIcon>,
         <ActionIcon key="toggle-filter-histograms" aria-label="Toggle filter historgrams" onClick={() => { store.filtersStore.showFilterHistograms = !store.filtersStore.showFilterHistograms; }} data-active={store.filtersStore.showFilterHistograms} className={classes.leftToolbarIcon}>
           <IconChartBar stroke={iconStroke} />
         </ActionIcon>,

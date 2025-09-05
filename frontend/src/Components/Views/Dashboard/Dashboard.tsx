@@ -115,7 +115,7 @@ export function Dashboard() {
           <Flex direction="row" align="center" gap="md">
             <Tooltip label="Visible visits after filters" position="bottom">
               <Title order={5} c="dimmed">
-                {`${store.filteredVisits.length} / ${store.allVisits.length}`}
+                {`${store.filteredVisitsLength} / ${store.allVisitsLength}`}
                 {' '}
                 Visits
               </Title>

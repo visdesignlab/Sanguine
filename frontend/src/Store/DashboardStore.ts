@@ -1,26 +1,22 @@
-import { makeAutoObservable } from 'mobx';
-import { rollup } from 'd3';
+import { makeAutoObservable, observable } from 'mobx';
 import { Layout } from 'react-grid-layout';
 
 import type { RootStore } from './Store';
 
 import {
-  TIME_CONSTANTS, // Time constants
   AGGREGATION_OPTIONS, // Dashboard configuration
   dashboardYAxisVars,
   type DashboardChartConfig,
   type DashboardStatConfig,
-  DashboardChartData, DashboardStatData,
+  DashboardChartData,
   TimeAggregation,
   dashboardXAxisVars,
   type DashboardAggYAxisVar,
   dashboardYAxisOptions,
-  TimePeriod,
-  COST_OPTIONS, // Dashboard data types
+  TimePeriod, // Dashboard data types
 } from '../Types/application';
 import {
-  aggregateVisitsBySumAvg,
-  compareTimePeriods, formatValueForDisplay,
+  compareTimePeriods,
 } from '../Utils/dashboard';
 
 /**
@@ -32,7 +28,7 @@ export class DashboardStore {
   // Initialize store with the root store
   constructor(rootStore: RootStore) {
     this._rootStore = rootStore;
-    makeAutoObservable(this);
+    makeAutoObservable(this, { chartData: observable.ref });
   }
 
   // Chart settings ------------------------------------------------------------
@@ -43,12 +39,12 @@ export class DashboardStore {
       {
         i: '0', x: 0, y: 0, w: 2, h: 1, maxH: 2,
       },
-      {
-        i: '1', x: 0, y: 1, w: 1, h: 1, maxH: 2,
-      },
-      {
-        i: '2', x: 1, y: 1, w: 1, h: 1, maxH: 2,
-      },
+      // {
+      //   i: '1', x: 0, y: 1, w: 1, h: 1, maxH: 2,
+      // },
+      // {
+      //   i: '2', x: 1, y: 1, w: 1, h: 1, maxH: 2,
+      // },
     ],
   };
 
@@ -63,14 +59,14 @@ export class DashboardStore {
   // Chart configurations by default
   _chartConfigs: DashboardChartConfig[] = [
     {
-      chartId: '0', xAxisVar: 'quarter', yAxisVar: 'antifibrinolytic', aggregation: 'sum', chartType: 'line',
+      chartId: '0', xAxisVar: 'month', yAxisVar: 'rbc_units', aggregation: 'sum', chartType: 'line',
     },
-    {
-      chartId: '1', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'line',
-    },
-    {
-      chartId: '2', xAxisVar: 'quarter', yAxisVar: 'total_blood_product_costs', aggregation: 'sum', chartType: 'bar',
-    },
+    // {
+    //   chartId: '1', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'line',
+    // },
+    // {
+    //   chartId: '2', xAxisVar: 'quarter', yAxisVar: 'total_blood_product_costs', aggregation: 'sum', chartType: 'bar',
+    // },
   ];
 
   get chartConfigs() {
@@ -84,24 +80,24 @@ export class DashboardStore {
   // Stats settings ------------------------------------------------------------
   // Stat configurations by default
   _statConfigs: DashboardStatConfig[] = [
-    {
-      statId: '1', var: 'rbc_units', aggregation: 'avg', title: 'RBC Units Transfused',
-    },
-    {
-      statId: '2', var: 'plt_units', aggregation: 'avg', title: 'Platelet Units Transfused',
-    },
-    {
-      statId: '3', var: 'cell_saver_ml', aggregation: 'sum', title: 'Total Cell Salvage Volume (ml) Used',
-    },
-    {
-      statId: '4', var: 'total_blood_product_costs', aggregation: 'sum', title: 'Total Blood Product Costs',
-    },
-    {
-      statId: '5', var: 'rbc_adherence', aggregation: 'avg', title: 'Guideline Adherent RBC Transfusions',
-    },
-    {
-      statId: '6', var: 'plt_adherence', aggregation: 'avg', title: 'Guideline Adherent Platelet Transfusions',
-    },
+    // {
+    //   statId: '1', var: 'rbc_units', aggregation: 'avg', title: 'RBC Units Transfused',
+    // },
+    // {
+    //   statId: '2', var: 'plt_units', aggregation: 'avg', title: 'Platelet Units Transfused',
+    // },
+    // {
+    //   statId: '3', var: 'cell_saver_ml', aggregation: 'sum', title: 'Total Cell Salvage Volume (ml) Used',
+    // },
+    // {
+    //   statId: '4', var: 'total_blood_product_costs', aggregation: 'sum', title: 'Total Blood Product Costs',
+    // },
+    // {
+    //   statId: '5', var: 'rbc_adherence', aggregation: 'avg', title: 'Guideline Adherent RBC Transfusions',
+    // },
+    // {
+    //   statId: '6', var: 'plt_adherence', aggregation: 'avg', title: 'Guideline Adherent Platelet Transfusions',
+    // },
   ];
 
   get statConfigs() {
@@ -218,50 +214,164 @@ export class DashboardStore {
    * Returns all possible chart data needed for the dashboard.
    * Optimized to avoid redundant mapping/filtering/aggregation.
    */
-  get chartData() {
+  // get chartData() {
+  //   const result = {} as DashboardChartData;
+
+  //   // --- Calculate data for every possible chart (aggregation, yAxisVar, xAxisVar) combination ---
+  //   // For each aggregation option (e.g. sum, avg)...
+  //   // Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
+  //   //   const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
+  //   //   // For each xAxisVar (e.g. quarter, month)...
+  //   //   dashboardXAxisVars.forEach((xAxisVar) => {
+  //   //     const timeAggregation = xAxisVar as TimeAggregation;
+
+  //   //     // --- Aggregate all other yAxisVars by time period, sum, and avg ---
+  //   //     const aggregatedData = rollup(
+  //   //       this._rootStore.filteredVisits,
+  //   //       (visits) => aggregateVisitsBySumAvg(visits),
+  //   //       (d) => d[timeAggregation],
+  //   //     );
+  //   //     // Derive the sum & avg total_blood_product_costs for each time period
+  //   //     result[`${aggType}_total_blood_product_costs_${timeAggregation}`] = Array.from(aggregatedData.entries())
+  //   //       .map(([timePeriod, aggregations]) => {
+  //   //         const costObj: Record<string, number> = {};
+  //   //         COST_OPTIONS.forEach(({ value: costVar }) => {
+  //   //           const key = `${aggType}_${costVar}` as DashboardAggYAxisVar;
+  //   //           costObj[costVar] = aggregations[key] || 0;
+  //   //         });
+  //   //         return {
+  //   //           timePeriod: timePeriod! as TimePeriod,
+  //   //           ...costObj,
+  //   //         };
+  //   //       })
+  //   //       .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
+
+  //   //     // For each yAxisVar (e.g. rbc_units, guideline_adherence)...
+  //   //     dashboardYAxisVars.forEach((yAxisVar) => {
+  //   //       if (yAxisVar === 'total_blood_product_costs') return; // Already handled above
+  //   //       const aggVar: DashboardAggYAxisVar = `${aggType}_${yAxisVar}`;
+  //   //       // Format the aggregated data into chart format: (timePeriod, data)
+  //   //       const chartDatum = Array.from(aggregatedData.entries())
+  //   //         .map(([timePeriod, aggregations]) => ({
+  //   //           timePeriod: timePeriod! as TimePeriod,
+  //   //           data: aggregations[aggVar] || 0,
+  //   //         }))
+  //   //         .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
+
+  //   //       // Log filtered data for debugging
+  //   //       if (chartDatum.length === 0) {
+  //   //         console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and aggVar "${aggVar}"`);
+  //   //       }
+
+  //   //       // Return result (E.g. Key: "sum_rbc_units_quarter", Value: chartDatum)
+  //   //       const compositeKey = `${aggVar}_${xAxisVar}` as keyof DashboardChartData;
+  //   //       result[compositeKey] = chartDatum;
+  //   //     });
+  //   //   });
+  //   // });
+
+  //   return result;
+  // }
+
+  chartData: DashboardChartData = {};
+
+  async computeChartData() {
+    if (!this._rootStore.duckDB) return;
+
+    console.time('Chart data computation time');
     const result = {} as DashboardChartData;
+
+    // for now just compute sum_rbc_units_month
+    // const query = `
+    //   SELECT month, SUM(rbc_units) AS data
+    //   FROM filteredVisits
+    //   GROUP BY month
+    //   ORDER BY month;
+    // `;
+    // const queryResult = await this._rootStore.duckDB.query(query);
+    // const rows = queryResult.toArray().map((row) => row.toJSON());
+    // result['sum_rbc_units_month'] = rows.map((row) => ({
+    //   timePeriod: row.month as TimePeriod,
+    //   data: Number(row.data),
+    // }));
 
     // --- Calculate data for every possible chart (aggregation, yAxisVar, xAxisVar) combination ---
     // For each aggregation option (e.g. sum, avg)...
-    Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
-      const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
-      // For each xAxisVar (e.g. quarter, month)...
-      dashboardXAxisVars.forEach((xAxisVar) => {
-        const timeAggregation = xAxisVar as TimeAggregation;
+    // Write one query that gets all data at once
+    const query = `
+      SELECT 
+        month,
+        quarter,
+        year,
 
-        // --- Aggregate all other yAxisVars by time period, sum, and avg ---
-        const aggregatedData = rollup(
-          this._rootStore.filteredVisits,
-          (visits) => aggregateVisitsBySumAvg(visits),
-          (d) => d[timeAggregation],
-        );
-        // Derive the sum & avg total_blood_product_costs for each time period
-        result[`${aggType}_total_blood_product_costs_${timeAggregation}`] = Array.from(aggregatedData.entries())
-          .map(([timePeriod, aggregations]) => {
-            const costObj: Record<string, number> = {};
-            COST_OPTIONS.forEach(({ value: costVar }) => {
-              const key = `${aggType}_${costVar}` as DashboardAggYAxisVar;
-              costObj[costVar] = aggregations[key] || 0;
-            });
-            return {
-              timePeriod: timePeriod! as TimePeriod,
-              ...costObj,
-            };
-          })
-          .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
+        SUM(rbc_units) AS sum_rbc_units,
+        AVG(rbc_units) AS avg_rbc_units,
+        SUM(plt_units) AS sum_plt_units,
+        AVG(plt_units) AS avg_plt_units,
+        SUM(ffp_units) AS sum_ffp_units,
+        AVG(ffp_units) AS avg_ffp_units,
+        SUM(cryo_units) AS sum_cryo_units,
+        AVG(cryo_units) AS avg_cryo_units,
+        SUM(whole_units) AS sum_whole_units,
+        AVG(whole_units) AS avg_whole_units,
+        SUM(cell_saver_ml) AS sum_cell_saver_ml,
+        AVG(cell_saver_ml) AS avg_cell_saver_ml,
 
+        SUM(los) AS sum_los,
+        AVG(los) AS avg_los,
+        SUM(death) aS sum_death,
+        AVG(death) AS avg_death,
+        SUM(vent) AS sum_vent,
+        AVG(vent) AS avg_vent,
+        SUM(stroke) AS sum_stroke,
+        AVG(stroke) AS avg_stroke,
+        SUM(ecmo) AS sum_ecmo,
+        AVG(ecmo) AS avg_ecmo,
+        
+        SUM(b12) AS sum_b12,
+        AVG(b12) AS avg_b12,
+        SUM(iron) AS sum_iron,
+        AVG(iron) AS avg_iron,
+        SUM(antifibrinolytic) AS sum_antifibrinolytic,
+        AVG(antifibrinolytic) AS avg_antifibrinolytic,
+        
+        sum(rbc_cost) as sum_rbc_cost,
+        avg(rbc_cost) as avg_rbc_cost,
+        sum(plt_cost) as sum_plt_cost,
+        avg(plt_cost) as avg_plt_cost,
+        sum(ffp_cost) as sum_ffp_cost,
+        avg(ffp_cost) as avg_ffp_cost,
+        sum(cryo_cost) as sum_cryo_cost,
+        avg(cryo_cost) as avg_cryo_cost,
+        -- sum(whole_cost) as sum_whole_cost,
+        -- avg(whole_cost) as avg_whole_cost,
+
+        
+      FROM filteredVisits
+      GROUP BY month, quarter, year
+      ORDER BY year, quarter, month;
+    `;
+    const queryResult = await this._rootStore.duckDB.query(query);
+    const rows = queryResult.toArray().map((row) => row.toJSON());
+
+    // For each xAxisVar (e.g. quarter, month)...
+    dashboardXAxisVars.forEach((xAxisVar) => {
+      const timeAggregation = xAxisVar as TimeAggregation;
+      // For each aggregation option (e.g. sum, avg)...
+      Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
+        const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
         // For each yAxisVar (e.g. rbc_units, guideline_adherence)...
         dashboardYAxisVars.forEach((yAxisVar) => {
-          if (yAxisVar === 'total_blood_product_costs') return; // Already handled above
+          if (yAxisVar === 'total_blood_product_costs') return; // Skip for now
+
           const aggVar: DashboardAggYAxisVar = `${aggType}_${yAxisVar}`;
           // Format the aggregated data into chart format: (timePeriod, data)
-          const chartDatum = Array.from(aggregatedData.entries())
-            .map(([timePeriod, aggregations]) => ({
-              timePeriod: timePeriod! as TimePeriod,
-              data: aggregations[aggVar] || 0,
+          const chartDatum = rows
+            .map((row) => ({
+              timePeriod: row[timeAggregation] as TimePeriod,
+              data: Number(row[aggVar] || 0),
             }))
             .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
-
           // Log filtered data for debugging
           if (chartDatum.length === 0) {
             console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and aggVar "${aggVar}"`);
@@ -274,7 +384,9 @@ export class DashboardStore {
       });
     });
 
-    return result;
+    this.chartData = result;
+    console.log('This.chartdata:', this.chartData);
+    console.timeEnd('Chart data computation time');
   }
 
   /**
@@ -282,102 +394,108 @@ export class DashboardStore {
    * Optimized to avoid redundant filtering and aggregation.
    */
   get statData() {
-    // --- Find the current period (last 30 days) for the stats ---
-    const latestDate = new Date(Math.max(...this._rootStore.filteredVisits.map((v) => v.dischargeDate.getTime())));
+  //   console.log(0);
+  //   // --- Find the current period (last 30 days) for the stats ---
+  //   const latestDate = new Date(Math.max(...this._rootStore.filteredVisits.map((v) => v.dsch_dtm.getTime())));
+  //   console.log(1);
+  //   // Calculate current period (last 30 days)
+  //   const currentPeriodStart = new Date(latestDate.getTime() - (30 * TIME_CONSTANTS.ONE_DAY_MS));
 
-    // Calculate current period (last 30 days)
-    const currentPeriodStart = new Date(latestDate.getTime() - (30 * TIME_CONSTANTS.ONE_DAY_MS));
+    //   // Find most recent full month that doesn't overlap with 30-day window
+    //   const currentPeriodStartMonth = currentPeriodStart.getMonth();
+    //   const currentPeriodStartYear = currentPeriodStart.getFullYear();
 
-    // Find most recent full month that doesn't overlap with 30-day window
-    const currentPeriodStartMonth = currentPeriodStart.getMonth();
-    const currentPeriodStartYear = currentPeriodStart.getFullYear();
+    //   // --- Find comparison period (closest non-overlapping calendar month) for the stats ---
+    //   let comparisonMonth = currentPeriodStartMonth - 1;
+    //   let comparisonYear = currentPeriodStartYear;
+    //   if (comparisonMonth < 0) {
+    //     comparisonMonth = 11; // December
+    //     comparisonYear -= 1;
+    //   }
+    //   const comparisonPeriodStart = new Date(comparisonYear, comparisonMonth, 1);
+    //   const comparisonPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
+    //   const comparisonMonthName = comparisonPeriodStart.toLocaleDateString('en-US', { month: 'short' });
+    //   console.log(2);
 
-    // --- Find comparison period (closest non-overlapping calendar month) for the stats ---
-    let comparisonMonth = currentPeriodStartMonth - 1;
-    let comparisonYear = currentPeriodStartYear;
-    if (comparisonMonth < 0) {
-      comparisonMonth = 11; // December
-      comparisonYear -= 1;
-    }
-    const comparisonPeriodStart = new Date(comparisonYear, comparisonMonth, 1);
-    const comparisonPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
-    const comparisonMonthName = comparisonPeriodStart.toLocaleDateString('en-US', { month: 'short' });
+    //   // --- Sparkline Data - Find intermediate periods between current and comparison periods ---
+    //   const intermediatePeriodNumber = 4;
+    //   const sparklineStart = comparisonPeriodStart < currentPeriodStart ? comparisonPeriodStart : currentPeriodStart;
+    //   const sparklineEnd = latestDate;
+    //   const intervalMs = Math.floor((sparklineEnd.getTime() - sparklineStart.getTime()) / intermediatePeriodNumber);
 
-    // --- Sparkline Data - Find intermediate periods between current and comparison periods ---
-    const intermediatePeriodNumber = 4;
-    const sparklineStart = comparisonPeriodStart < currentPeriodStart ? comparisonPeriodStart : currentPeriodStart;
-    const sparklineEnd = latestDate;
-    const intervalMs = Math.floor((sparklineEnd.getTime() - sparklineStart.getTime()) / intermediatePeriodNumber);
+    //   // Calculate sparkline periods
+    //   const sparklinePeriods: Array<{ start: Date, end: Date }> = [];
+    //   for (let i = 0; i < intermediatePeriodNumber; i += 1) {
+    //     const periodStart = new Date(sparklineStart.getTime() + i * intervalMs);
+    //     const periodEnd = new Date(periodStart.getTime() + intervalMs - 1);
+    //     sparklinePeriods.push({ start: periodStart, end: periodEnd });
+    //   }
 
-    // Calculate sparkline periods
-    const sparklinePeriods: Array<{ start: Date, end: Date }> = [];
-    for (let i = 0; i < intermediatePeriodNumber; i += 1) {
-      const periodStart = new Date(sparklineStart.getTime() + i * intervalMs);
-      const periodEnd = new Date(periodStart.getTime() + intervalMs - 1);
-      sparklinePeriods.push({ start: periodStart, end: periodEnd });
-    }
+    //   // --- Find visits from each time period (current, comparison, sparkline periods) ---
+    //   const currentPeriodVisits: typeof this._rootStore.filteredVisits = [];
+    //   const comparisonPeriodVisits: typeof this._rootStore.filteredVisits = [];
+    //   const sparklineVisits: typeof this._rootStore.filteredVisits[] = Array(intermediatePeriodNumber).fill(null).map(() => []);
+    //   console.log(3);
 
-    // --- Find visits from each time period (current, comparison, sparkline periods) ---
-    const currentPeriodVisits: typeof this._rootStore.filteredVisits = [];
-    const comparisonPeriodVisits: typeof this._rootStore.filteredVisits = [];
-    const sparklineVisits: typeof this._rootStore.filteredVisits[] = Array(intermediatePeriodNumber).fill(null).map(() => []);
+    //   for (const v of this._rootStore.filteredVisits) {
+    //     const t = v.dischargeDate.getTime();
+    //     if (t >= currentPeriodStart.getTime() && t <= latestDate.getTime()) {
+    //       currentPeriodVisits.push(v);
+    //     }
+    //     if (t >= comparisonPeriodStart.getTime() && t <= comparisonPeriodEnd.getTime()) {
+    //       comparisonPeriodVisits.push(v);
+    //     }
+    //     for (let i = 0; i < intermediatePeriodNumber; i += 1) {
+    //       if (t >= sparklinePeriods[i].start.getTime() && t <= sparklinePeriods[i].end.getTime()) {
+    //         sparklineVisits[i].push(v);
+    //       }
+    //     }
+    //   }
 
-    for (const v of this._rootStore.filteredVisits) {
-      const t = v.dischargeDate.getTime();
-      if (t >= currentPeriodStart.getTime() && t <= latestDate.getTime()) {
-        currentPeriodVisits.push(v);
-      }
-      if (t >= comparisonPeriodStart.getTime() && t <= comparisonPeriodEnd.getTime()) {
-        comparisonPeriodVisits.push(v);
-      }
-      for (let i = 0; i < intermediatePeriodNumber; i += 1) {
-        if (t >= sparklinePeriods[i].start.getTime() && t <= sparklinePeriods[i].end.getTime()) {
-          sparklineVisits[i].push(v);
-        }
-      }
-    }
+    //   // --- For each period of visits, aggregate by sum and average ---
+    //   const currentPeriodData = aggregateVisitsBySumAvg(currentPeriodVisits);
+    //   const comparisonPeriodData = aggregateVisitsBySumAvg(comparisonPeriodVisits);
+    //   const sparklinePeriodData = sparklineVisits.map((visits) => aggregateVisitsBySumAvg(visits));
+    //   console.log(4);
 
-    // --- For each period of visits, aggregate by sum and average ---
-    const currentPeriodData = aggregateVisitsBySumAvg(currentPeriodVisits);
-    const comparisonPeriodData = aggregateVisitsBySumAvg(comparisonPeriodVisits);
-    const sparklinePeriodData = sparklineVisits.map((visits) => aggregateVisitsBySumAvg(visits));
+    //   // --- Return data for every possible stat (aggregation, yAxisVar) combination ---
+    //   const result = {} as DashboardStatData;
+    //   // For each aggregation option (e.g. sum, avg)...
+    //   Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
+    //     const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
+    //     // For each yAxisVar (e.g. rbc_units, guideline_adherence)...
+    //     dashboardYAxisVars.forEach((yAxisVar) => {
+    //       const key = `${aggType}_${yAxisVar}` as DashboardAggYAxisVar;
+    //       // Calculate percentage change (diff)
+    //       const currentValue = currentPeriodData[key] || 0;
+    //       const comparisonValue = comparisonPeriodData[key] || 0;
+    //       const diff = comparisonValue === 0
+    //         ? (currentValue > 0 ? 100 : 0)
+    //         : ((currentValue - comparisonValue) / comparisonValue) * 100;
 
-    // --- Return data for every possible stat (aggregation, yAxisVar) combination ---
-    const result = {} as DashboardStatData;
-    // For each aggregation option (e.g. sum, avg)...
-    Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
-      const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
-      // For each yAxisVar (e.g. rbc_units, guideline_adherence)...
-      dashboardYAxisVars.forEach((yAxisVar) => {
-        const key = `${aggType}_${yAxisVar}` as DashboardAggYAxisVar;
-        // Calculate percentage change (diff)
-        const currentValue = currentPeriodData[key] || 0;
-        const comparisonValue = comparisonPeriodData[key] || 0;
-        const diff = comparisonValue === 0
-          ? (currentValue > 0 ? 100 : 0)
-          : ((currentValue - comparisonValue) / comparisonValue) * 100;
+    //       // Format the stat value (E.g. "Overall Guideline Adherence")
+    //       let formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
 
-        // Format the stat value (E.g. "Overall Guideline Adherence")
-        let formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
+    //       // For adherence variables, don't include full units
+    //       if (yAxisVar.includes('adherence')) {
+    //         formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType, false);
+    //       }
 
-        // For adherence variables, don't include full units
-        if (yAxisVar.includes('adherence')) {
-          formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType, false);
-        }
+    //       // Sparkline calculation
+    //       const sparklineData: number[] = sparklinePeriodData.map((periodData) => (periodData[key] || 0) ** 2);
 
-        // Sparkline calculation
-        const sparklineData: number[] = sparklinePeriodData.map((periodData) => (periodData[key] || 0) ** 2);
+    //       // Return result
+    //       result[key] = {
+    //         value: formattedValue, // E.g. "85 Units"
+    //         diff: Math.round(diff), // E.g. 20 (percentage change)
+    //         comparedTo: comparisonMonthName || '', // E.g. "Jan"
+    //         sparklineData, // E.g. [80, 90, 85, 95]
+    //       };
+    //     });
+    //   });
+    //   console.log(5);
 
-        // Return result
-        result[key] = {
-          value: formattedValue, // E.g. "85 Units"
-          diff: Math.round(diff), // E.g. 20 (percentage change)
-          comparedTo: comparisonMonthName || '', // E.g. "Jan"
-          sparklineData, // E.g. [80, 90, 85, 95]
-        };
-      });
-    });
-
-    return result;
+    //   return result;
+    return {};
   }
 }

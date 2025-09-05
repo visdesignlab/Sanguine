@@ -92,47 +92,9 @@ export type Patient = {
 export interface DatabaseVisit {
   visit_no: string; // BigIntegerField, primary key
   mrn: string; // ForeignKey to Patient, use string to match Patient.mrn
-  epic_pat_id: string;
-  hsp_account_id: string;
   adm_dtm: string; // ISO date string
   dsch_dtm: string; // ISO date string
-  clinical_los: number | null;
   age_at_adm: number;
   pat_class_desc: string;
-  pat_type_desc: string;
-  pat_expired_f: string | null;
-  invasive_vent_f: string | null;
-  total_vent_mins: number;
-  total_vent_days: number;
-  apr_drg_code: string;
-  apr_drg_rom: string | null;
-  apr_drg_soi: string | null;
-  apr_drg_desc: string;
   apr_drg_weight: number;
-  ms_drg_weight: number;
-  cci_mi: number | null;
-  cci_chf: number | null;
-  cci_pvd: number | null;
-  cci_cvd: number | null;
-  cci_dementia: number | null;
-  cci_copd: number | null;
-  cci_rheum_dz: number | null;
-  cci_pud: number | null;
-  cci_liver_dz_mild: number | null;
-  cci_dm_wo_compl: number | null;
-  cci_dm_w_compl: number | null;
-  cci_paraplegia: number | null;
-  cci_renal_dz: number | null;
-  cci_malign_wo_mets: number | null;
-  cci_liver_dz_severe: number | null;
-  cci_malign_w_mets: number | null;
-  cci_hiv_aids: number | null;
-  cci_score: number | null;
-
-  patient: Patient;
-  transfusions: TransfusionEvent[];
-  surgeries: Surgery[];
-  labs: Lab[];
-  medications: Medication[];
-  billing_codes: BillingCode[];
 }

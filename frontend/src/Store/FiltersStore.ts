@@ -1,6 +1,9 @@
+/* eslint-disable camelcase */
 import { makeAutoObservable } from 'mobx';
 import type { RootStore } from './Store';
 import { safeParseDate } from '../Utils/store';
+
+const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
 
 // This store contains all filters that can be applied to the data.
 export class FiltersStore {
@@ -10,17 +13,17 @@ export class FiltersStore {
     dateFrom: new Date(new Date().getFullYear() - 5, 0, 1), // 5 years ago from today
     dateTo: new Date(),
 
-    visitRBCs: [0, Infinity] as [number, number],
-    visitFFPs: [0, Infinity] as [number, number],
-    visitPLTs: [0, Infinity] as [number, number],
-    visitCryo: [0, Infinity] as [number, number],
-    visitCellSaver: [0, Infinity] as [number, number],
+    rbc_units: [0, MANUAL_INFINITY] as [number, number],
+    ffp_units: [0, MANUAL_INFINITY] as [number, number],
+    plt_units: [0, MANUAL_INFINITY] as [number, number],
+    cryo_units: [0, MANUAL_INFINITY] as [number, number],
+    cell_saver_ml: [0, MANUAL_INFINITY] as [number, number],
 
     b12: null as boolean | null,
     iron: null as boolean | null,
     antifibrinolytic: null as boolean | null,
 
-    los: [0, Infinity] as [number, number],
+    los: [0, MANUAL_INFINITY] as [number, number],
     death: null as boolean | null,
     vent: null as boolean | null,
     stroke: null as boolean | null,
@@ -31,17 +34,17 @@ export class FiltersStore {
     dateFrom: new Date(new Date().getFullYear() - 5, 0, 1), // 5 years ago from today
     dateTo: new Date(),
 
-    visitRBCs: [0, Infinity],
-    visitFFPs: [0, Infinity],
-    visitPLTs: [0, Infinity],
-    visitCryo: [0, Infinity],
-    visitCellSaver: [0, Infinity],
+    rbc_units: [0, MANUAL_INFINITY],
+    ffp_units: [0, MANUAL_INFINITY],
+    plt_units: [0, MANUAL_INFINITY],
+    cryo_units: [0, MANUAL_INFINITY],
+    cell_saver_ml: [0, MANUAL_INFINITY],
 
     b12: null,
     iron: null,
     antifibrinolytic: null,
 
-    los: [0, Infinity],
+    los: [0, MANUAL_INFINITY],
     death: null,
     vent: null,
     stroke: null,
@@ -49,6 +52,8 @@ export class FiltersStore {
   };
 
   showFilterHistograms = false;
+
+  histogramData: Record<string, { units: string, count: number }[] | undefined> = {};
 
   // Initialize store with the root store
   constructor(rootStore: RootStore) {
@@ -66,60 +71,55 @@ export class FiltersStore {
 
   setFilterValue<T extends keyof typeof this._filterValues>(key: T, value: typeof this._filterValues[T]) {
     this._filterValues[key] = value;
+    this._rootStore.updateFilteredData();
   }
 
-  calculateDefaultFilterValues() {
-    // Calculate default date range based on all visits
-    const { allVisits } = this._rootStore;
-    if (allVisits.length === 0) {
+  async calculateDefaultFilterValues() {
+    // Use duckdb to calculate initial filter values
+    const { duckDB } = this._rootStore;
+    if (!duckDB) {
       return;
     }
 
-    const admDates = allVisits.map((visit) => safeParseDate(visit.adm_dtm).getTime());
-    const dschDates = allVisits.map((visit) => safeParseDate(visit.dsch_dtm).getTime());
-    const dateFrom = new Date(Math.min(...admDates));
-    const dateTo = new Date(Math.max(...dschDates));
+    const result = await duckDB.query(`
+      SELECT
+        MIN(adm_dtm) AS min_adm,
+        MAX(dsch_dtm) AS max_dsch,
+        MIN(rbc_units) AS min_rbc,
+        MIN(ffp_units) AS min_ffp,
+        MAX(ffp_units) AS max_ffp,
+        MIN(plt_units) AS min_plt,
+        MAX(plt_units) AS max_plt,
+        MIN(cryo_units) AS min_cryo,
+        MAX(cryo_units) AS max_cryo,
+        MIN(cell_saver_ml) AS min_cell_saver,
+        MAX(rbc_units) AS max_rbc,
+        MAX(cell_saver_ml) AS max_cell_saver,
 
-    const {
-      visitRBCs,
-      visitFFPs,
-      visitPLTs,
-      visitCryo,
-      visitCellSaver,
-      los,
-    } = allVisits.reduce((acc, visit) => {
-      const rbcUnits = visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.rbc_units || 0), 0);
-      const ffpUnits = visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.ffp_units || 0), 0);
-      const pltUnits = visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.plt_units || 0), 0);
-      const cryoUnits = visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.cryo_units || 0), 0);
-      const cellSaverMl = visit.transfusions.reduce((sum, transfusion) => sum + (transfusion.cell_saver_ml || 0), 0);
+        MIN(los) AS min_los,
+        MAX(los) AS max_los
+      FROM visits;
+    `);
+    const row = result.toArray()[0].toJSON();
 
-      return {
-        visitRBCs: [Math.min(acc.visitRBCs[0], rbcUnits), Math.max(acc.visitRBCs[1], rbcUnits)] as [number, number],
-        visitFFPs: [Math.min(acc.visitFFPs[0], ffpUnits), Math.max(acc.visitFFPs[1], ffpUnits)] as [number, number],
-        visitPLTs: [Math.min(acc.visitPLTs[0], pltUnits), Math.max(acc.visitPLTs[1], pltUnits)] as [number, number],
-        visitCryo: [Math.min(acc.visitCryo[0], cryoUnits), Math.max(acc.visitCryo[1], cryoUnits)] as [number, number],
-        visitCellSaver: [Math.min(acc.visitCellSaver[0], cellSaverMl), Math.max(acc.visitCellSaver[1], cellSaverMl)] as [number, number],
-        los: [Math.min(acc.los[0], visit.los || 0), Math.max(acc.los[1], visit.los || 0)] as [number, number],
-      };
-    }, {
-      visitRBCs: [Infinity, -Infinity] as [number, number],
-      visitFFPs: [Infinity, -Infinity] as [number, number],
-      visitPLTs: [Infinity, -Infinity] as [number, number],
-      visitCryo: [Infinity, -Infinity] as [number, number],
-      visitCellSaver: [Infinity, -Infinity] as [number, number],
-      los: [Infinity, -Infinity] as [number, number],
-    });
+    const dateFrom = safeParseDate(row.min_adm);
+    const dateTo = safeParseDate(row.max_dsch);
+    const rbc_units: [number, number] = [Number(row.min_rbc), Number(row.max_rbc)];
+    const ffp_units: [number, number] = [Number(row.min_ffp), Number(row.max_ffp)];
+    const plt_units: [number, number] = [Number(row.min_plt), Number(row.max_plt)];
+    const cryo_units: [number, number] = [Number(row.min_cryo), Number(row.max_cryo)];
+    const cell_saver_ml: [number, number] = [Number(row.min_cell_saver), Number(row.max_cell_saver)];
+    const los: [number, number] = [Number(row.min_los), Number(row.max_los)];
 
     this._filterValues = {
       dateFrom,
       dateTo,
 
-      visitRBCs,
-      visitFFPs,
-      visitPLTs,
-      visitCryo,
-      visitCellSaver,
+      rbc_units,
+      ffp_units,
+      plt_units,
+      cryo_units,
+      cell_saver_ml,
 
       b12: null,
       iron: null,
@@ -132,7 +132,26 @@ export class FiltersStore {
       ecmo: null,
     };
 
-    this._initialFilterValues = { ...this._filterValues };
+    this._initialFilterValues = {
+      dateFrom,
+      dateTo,
+
+      rbc_units,
+      ffp_units,
+      plt_units,
+      cryo_units,
+      cell_saver_ml,
+
+      b12: null,
+      iron: null,
+      antifibrinolytic: null,
+
+      los,
+      death: null,
+      vent: null,
+      stroke: null,
+      ecmo: null,
+    };
   }
 
   /**
@@ -179,7 +198,7 @@ export class FiltersStore {
   */
   get bloodComponentFiltersAppliedCount(): number {
     let count = 0;
-    const keys = ['visitRBCs', 'visitFFPs', 'visitPLTs', 'visitCryo', 'visitCellSaver'] as const;
+    const keys = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml'] as const;
     keys.forEach((key) => {
       const [min, max] = this._filterValues[key] as [number, number];
       const [initMin, initMax] = this._initialFilterValues[key] as [number, number];
@@ -195,30 +214,36 @@ export class FiltersStore {
       + this.outcomeFiltersAppliedCount;
   }
 
-  /**
-   * Resets all filters to their initial values.
-   */
+  // Resets all filters to their initial values.
+  resetAllFilters() {
+    this._filterValues = { ...this._initialFilterValues };
+    this._rootStore.updateFilteredData();
+  }
+
+  // Reset only date filters to initial values
   resetDateFilters() {
     this._filterValues.dateFrom = new Date(this._initialFilterValues.dateFrom);
     this._filterValues.dateTo = new Date(this._initialFilterValues.dateTo);
+    this._rootStore.updateFilteredData();
   }
 
-  /**
-  * Reset only blood component filters to initial values
-  */
+  // Reset Blood Component filters to initial values
   resetBloodComponentFilters() {
-    const bloodKeys = ['visitRBCs', 'visitFFPs', 'visitPLTs', 'visitCryo', 'visitCellSaver'] as const;
+    const bloodKeys = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml'] as const;
     bloodKeys.forEach((key) => {
       this._filterValues[key] = [...this._initialFilterValues[key]];
     });
+    this._rootStore.updateFilteredData();
   }
 
+  // Reset Medication filters to initial values
   resetMedicationsFilters() {
     const medKeys = ['b12', 'iron', 'antifibrinolytic'] as const;
     medKeys.forEach((key) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
     });
+    this._rootStore.updateFilteredData();
   }
 
   // Reset Patient Outcome filters to initial values
@@ -228,58 +253,57 @@ export class FiltersStore {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
     });
+    this._rootStore.updateFilteredData();
   }
 
   // Cached histogram data for each blood component
-  get visitRBCsHistogramData() {
-    return this._getHistogramData('visitRBCs');
+  get rbc_unitsHistogramData() {
+    return this.histogramData.rbc_units || [];
   }
 
-  get visitFFPsHistogramData() {
-    return this._getHistogramData('visitFFPs');
+  get ffp_unitsHistogramData() {
+    return this.histogramData.ffp_units || [];
   }
 
-  get visitPLTsHistogramData() {
-    return this._getHistogramData('visitPLTs');
+  get plt_unitsHistogramData() {
+    return this.histogramData.plt_units || [];
   }
 
-  get visitCryoHistogramData() {
-    return this._getHistogramData('visitCryo');
+  get cryo_unitsHistogramData() {
+    return this.histogramData.cryo_units || [];
   }
 
-  get visitCellSaverHistogramData() {
-    return this._getHistogramData('visitCellSaver');
+  get cell_saver_mlHistogramData() {
+    return this.histogramData.cell_saver_ml || [];
   }
 
   get losHistogramData() {
-    return this._getHistogramData('los');
+    return this.histogramData.los || [];
   }
 
-  // Internal method for computing histogram data
-  private _getHistogramData(
-    component: 'visitRBCs' | 'visitFFPs' | 'visitPLTs' | 'visitCryo' | 'visitCellSaver' | 'los',
-  ): Array<{ units: string, count: number }> {
-    const filterKeyMap = {
-      visitRBCs: 'rbc_units',
-      visitFFPs: 'ffp_units',
-      visitPLTs: 'plt_units',
-      visitCryo: 'cryo_units',
-      visitCellSaver: 'cell_saver_ml',
-      los: 'los',
-    } as const;
-    const visitKey = filterKeyMap[component];
-    const [min, max] = this._initialFilterValues[component];
-    const visits = this._rootStore.allVisits;
-    const data: Array<{ units: string, count: number }> = [];
-
-    for (let binStart = min; binStart < max; binStart += 1) {
-      const binEnd = binStart + 1;
-      const isLastBin = binEnd === max;
-      const count = visits.filter((v) => (isLastBin
-        ? v[visitKey] >= binStart && v[visitKey] <= binEnd
-        : v[visitKey] >= binStart && v[visitKey] < binEnd)).length;
-      data.push({ units: `${binStart}-${binEnd}`, count });
+  // Generate histogram data for a given component with duckdb
+  async generateHistogramData() {
+    const { duckDB } = this._rootStore;
+    if (duckDB) {
+      // TODO: Not hard coded list
+      const components = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml', 'los'];
+      const histogramData: Record<string, { units: string, count: number }[]> = {};
+      const numBins = 10;
+      await Promise.all(components.map(async (component) => {
+        const result = await duckDB.query(`
+          WITH bins AS (
+            SELECT equi_width_bins(min(${component}), max(${component}), ${numBins}, false) AS bin
+            FROM filteredVisits
+          )
+          SELECT HISTOGRAM(${component}, bins.bin) AS histogram,
+          FROM filteredVisits, bins;
+        `);
+        histogramData[component] = result.toArray().flatMap((row) => {
+          const { histogram } = row.toJSON();
+          // return Object.entries(histogram).map(([units, count]) => ({ units, count: Number(count) }));
+        });
+      }));
+      this.histogramData = histogramData;
     }
-    return data;
   }
 }

@@ -5,10 +5,10 @@ import { useIdleTimer } from 'react-idle-timer';
 import { Shell } from './Shell/Shell';
 import { Store } from './Store/Store';
 import { mantineTheme } from './Theme/mantineTheme';
-import type { DatabaseVisit } from './Types/database';
 import { logoutHandler, whoamiAPICall } from './Store/UserManagement';
 import { BrowserWarning } from './Components/Modals/BrowserWarning';
 import { DataRetrieval } from './Components/Modals/DataRetrieval';
+import { conn } from './duckdb';
 
 function App() {
   // Data Loading states
@@ -30,20 +30,30 @@ function App() {
     async function fetchAllVisits() {
       setDataLoading(true);
       try {
-        // Fetch all visits data
-        const visitsRequest = await fetch(`${import.meta.env.VITE_QUERY_URL}get_all_data`);
-        const visits = await visitsRequest.json() as DatabaseVisit[];
+        store.duckDB = conn;
 
-        // Check if visits data is empty
-        if (visits.length === 0) {
-          throw new Error('There was an issue fetching data. No results were returned.');
-        }
+        await store.duckDB.query(`
+          CREATE TABLE IF NOT EXISTS visits AS
+          SELECT * FROM read_parquet('${import.meta.env.VITE_QUERY_URL}get_all_data');
+          
+          CREATE TABLE IF NOT EXISTS filteredVisitIds AS
+          SELECT visit_no FROM visits;
 
-        // Update the store with fetched visits
-        store._allVisits = visits;
-        store.filtersStore.calculateDefaultFilterValues();
+          CREATE VIEW IF NOT EXISTS filteredVisits AS
+          SELECT v.*
+          FROM visits v
+          INNER JOIN filteredVisitIds fvi ON v.visit_no = fvi.visit_no;
+        `);
+
+        await store.updateAllVisitsLength();
+        await store.filtersStore.calculateDefaultFilterValues();
+        await store.updateFilteredVisitsLength();
+
+        await store.filtersStore.generateHistogramData();
+        await store.dashboardStore.computeChartData();
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
+        console.error('Error fetching visits data:', e);
         setDataLoadingFailed(true);
       } finally {
         // Data loading is complete

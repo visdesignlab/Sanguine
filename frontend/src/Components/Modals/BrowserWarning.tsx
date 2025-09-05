@@ -1,6 +1,5 @@
 import {
   Modal, Text, Group, Button,
-  Title,
 } from '@mantine/core';
 import { useEffect, useState } from 'react';
 
@@ -43,7 +42,7 @@ export function BrowserWarning() {
       withCloseButton={false}
       centered
       size="md"
-      title={<Title order={3}>Browser Incompatible</Title>}
+      title="Browser Incompatible"
     >
       <Text>
         This application is designed to be used on Chrome. Using it on other browsers may cause inaccurate visual representations of the data.

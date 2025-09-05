@@ -7,7 +7,11 @@ import { useObserver } from 'mobx-react';
 import { Store } from '../../../Store/Store';
 import { FiltersStore } from '../../../Store/FiltersStore';
 
-export function FilterHeader({ countName, title, tooltipLabel?, resetFunc }: { countName: keyof FiltersStore, title: string, tooltipLabel: string, resetFunc: () => void }) {
+export function FilterHeader({
+  countName, title, tooltipLabel, resetFunc,
+}: {
+  countName: keyof FiltersStore, title: string, tooltipLabel: string, resetFunc: () => void
+}) {
   const store = useContext(Store);
 
   return useObserver(() => {
