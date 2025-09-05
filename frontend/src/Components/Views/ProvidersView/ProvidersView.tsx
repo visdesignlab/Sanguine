@@ -2,11 +2,12 @@ import {
   Autocomplete,
   Card,
   Divider, Flex, Stack, Title, Tooltip, Text,
+  Button,
 } from '@mantine/core';
 import { useContext, useState } from 'react';
 import { DatePickerInput } from '@mantine/dates';
 import dayjs from 'dayjs';
-import { IconCalendarWeek, IconSearch } from '@tabler/icons-react';
+import { IconCalendarWeek, IconPlus, IconSearch } from '@tabler/icons-react';
 import { BarChart } from '@mantine/charts';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
@@ -17,6 +18,49 @@ export function ProvidersView() {
   const { toolbarWidth } = useThemeConstants();
 
   const [dateRange, setDateRange] = useState<[string | null, string | null]>([null, null]);
+
+  const dateRangePresets = [
+    {
+      value: [
+        dayjs().subtract(3, 'month').startOf('day').format('YYYY-MM-DD'),
+        dayjs().format('YYYY-MM-DD'),
+      ] as [string | null, string | null],
+      label: 'Past Quarter',
+    },
+    {
+      value: [
+        dayjs().subtract(3, 'month').startOf('day').format('YYYY-MM-DD'),
+        dayjs().format('YYYY-MM-DD'),
+      ] as [string | null, string | null],
+      label: 'Last 3 Months',
+    },
+    {
+      value: [
+        dayjs().subtract(6, 'month').startOf('day').format('YYYY-MM-DD'),
+        dayjs().format('YYYY-MM-DD'),
+      ] as [string | null, string | null],
+      label: 'Last 6 Months',
+    },
+    {
+      value: [
+        dayjs().startOf('year').format('YYYY-MM-DD'),
+        dayjs().format('YYYY-MM-DD'),
+      ] as [string | null, string | null],
+      label: 'This Calendar Year',
+    },
+    {
+      value: [
+        '2000-01-01',
+        dayjs().format('YYYY-MM-DD'),
+      ] as [string | null, string | null],
+      label: 'All Time',
+    },
+  ];
+
+  const {
+    cardIconStroke,
+    buttonIconSize,
+  } = useThemeConstants();
 
   return (
     <Stack mb="xl" gap="lg">
@@ -31,9 +75,14 @@ export function ProvidersView() {
               Visits
             </Title>
           </Tooltip>
+          <Button>
+            <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
+            Add Chart
+          </Button>
         </Flex>
       </Flex>
       <Divider />
+      {/** Search Provider */}
       <Flex direction="row" gap="md" align="flex-end">
         <Autocomplete
           placeholder="Search for a provider"
@@ -47,51 +96,17 @@ export function ProvidersView() {
           ]}
           w="10%"
         />
+        {/** Pick Date */}
         <DatePickerInput
           type="range"
           defaultValue={[
             dayjs().subtract(6, 'month').startOf('day').toDate(),
             dayjs().toDate(),
           ]}
+          defaultLevel="month"
           leftSection={<IconCalendarWeek size={18} stroke={1} />}
           placeholder="Pick dates range"
-          presets={[
-            {
-              value: [
-                dayjs().subtract(3, 'month').startOf('day').format('YYYY-MM-DD'),
-                dayjs().format('YYYY-MM-DD'),
-              ],
-              label: 'Past Quarter',
-            },
-            {
-              value: [
-                dayjs().subtract(3, 'month').startOf('day').format('YYYY-MM-DD'),
-                dayjs().format('YYYY-MM-DD'),
-              ],
-              label: 'Last 3 Months',
-            },
-            {
-              value: [
-                dayjs().subtract(6, 'month').startOf('day').format('YYYY-MM-DD'),
-                dayjs().format('YYYY-MM-DD'),
-              ],
-              label: 'Last 6 Months',
-            },
-            {
-              value: [
-                dayjs().startOf('year').format('YYYY-MM-DD'),
-                dayjs().format('YYYY-MM-DD'),
-              ],
-              label: 'This Calendar Year',
-            },
-            {
-              value: [
-                '2000-01-01',
-                dayjs().format('YYYY-MM-DD'),
-              ],
-              label: 'All Time',
-            },
-          ]}
+          presets={dateRangePresets}
           value={dateRange}
           onChange={setDateRange}
         />
@@ -140,25 +155,79 @@ export function ProvidersView() {
       </Card>
       <Title order={3}>Anemia Management</Title>
       {/** Anemia Management Bar Chart */}
-      <Card h={150} w={300} p="md" shadow="sm">
-        <BarChart
-          h={200}
-          p="sm"
-          w="100%"
-          data={[
-            { group: 'Benchmark', Adherence: 75 },
-            { group: 'Best', Adherence: 60 },
-            { group: 'Dr. John Doe', Adherence: 25 },
-          ]}
-          dataKey="group"
-          orientation="vertical"
-          yAxisProps={{ width: 80 }}
-          barProps={{ radius: 10 }}
-          series={[{ name: 'Adherence', color: 'blue.6' }]}
-        />
-      </Card>
+      <Flex gap="sm">
+        <Card h={200} w={300} p="md" shadow="sm">
+          <BarChart
+            h={200}
+            p="sm"
+            w="100%"
+            data={[
+              { group: 'Benchmark', Adherence: 75 },
+              { group: 'Best', Adherence: 60 },
+              { group: 'Dr. John Doe', Adherence: 25 },
+            ]}
+            dataKey="group"
+            orientation="vertical"
+            yAxisProps={{ width: 80 }}
+            barProps={{ radius: 10 }}
+            series={[{ name: 'Adherence', color: 'blue.6' }]}
+          />
+        </Card>
+        <Card h={200} w={300} p="md" shadow="sm">
+          <BarChart
+            h={200}
+            p="sm"
+            w="100%"
+            data={[
+              { group: 'Benchmark', Adherence: 75 },
+              { group: 'Best', Adherence: 60 },
+              { group: 'Dr. John Doe', Adherence: 25 },
+            ]}
+            dataKey="group"
+            orientation="vertical"
+            yAxisProps={{ width: 80 }}
+            barProps={{ radius: 10 }}
+            series={[{ name: 'Adherence', color: 'blue.6' }]}
+          />
+        </Card>
+      </Flex>
       <Title order={3}>Outcomes</Title>
-
+      <Flex gap="sm">
+        <Card h={200} w={300} p="md" shadow="sm">
+          <BarChart
+            h={200}
+            p="sm"
+            w="100%"
+            data={[
+              { group: 'Benchmark', Adherence: 75 },
+              { group: 'Best', Adherence: 60 },
+              { group: 'Dr. John Doe', Adherence: 25 },
+            ]}
+            dataKey="group"
+            orientation="vertical"
+            yAxisProps={{ width: 80 }}
+            barProps={{ radius: 10 }}
+            series={[{ name: 'Adherence', color: 'blue.6' }]}
+          />
+        </Card>
+        <Card h={200} w={300} p="md" shadow="sm">
+          <BarChart
+            h={200}
+            p="sm"
+            w="100%"
+            data={[
+              { group: 'Benchmark', Adherence: 75 },
+              { group: 'Best', Adherence: 60 },
+              { group: 'Dr. John Doe', Adherence: 25 },
+            ]}
+            dataKey="group"
+            orientation="vertical"
+            yAxisProps={{ width: 80 }}
+            barProps={{ radius: 10 }}
+            series={[{ name: 'Adherence', color: 'blue.6' }]}
+          />
+        </Card>
+      </Flex>
     </Stack>
   );
 }
