@@ -240,19 +240,6 @@ class Command(BaseCommand):
                     pat_class_desc=fake.random_element(
                         elements=("EMERGENCY", "INPATIENT", "OUTPATIENT")
                     ),
-                    pat_type_desc=fake.random_element(
-                        elements=(
-                            "BEDDED OUTPATIENT",
-                            "DAY SURGERY",
-                            "EMERGENCY",
-                            "INPATIENT",
-                            "NEWBORN",
-                            "OBSERVATION",
-                            "OUTPATIENT",
-                            "TO BE ADMITTED",
-                            "UNI INPATIENT",
-                        )
-                    ),
                     pat_expired_f=fake.random_element(elements=tuple(["Y"] + [None] * 9)),
                     invasive_vent_f=fake.random_element(elements=("Y", None)),
                     total_vent_mins=fake.random_int(min=0, max=10000),

@@ -52,3 +52,5 @@ mariadb_data/
 __pycache__/
 
 clarity-queries
+
+backend/parquet_cache

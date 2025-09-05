@@ -77,6 +77,10 @@ DATABASES = {
         'PASSWORD': env("MARIADB_PASSWORD"),
         'HOST': env("MARIADB_HOST"),
         'PORT': env("MARIADB_PORT"),
+        'OPTIONS': {
+            'compress': True,
+            'local_infile': True,
+        },
     }
 }
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

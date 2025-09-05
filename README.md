@@ -83,7 +83,8 @@ Now, to run the devcontainer using vscode, follow these steps:
     ```bash
     docker-compose exec -it backend bash
     poetry run python manage.py migrate api
-    poetry run python manage.py fill_db_mock_patient_data
+    poetry run python manage.py mock50million
+    poetry run python manage.py generate_parquets
     ```
 
 1. The database should now be populated with mock data and you should be able to see it in the frontend by adding a chart to the dashboard.

@@ -16,12 +16,11 @@ services:
       MARIADB_PASSWORD: ${MARIADB_PASSWORD}
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_DATABASE: ${MARIADB_DATABASE}
-    expose:
-      - "3306"
+    ports:
+      - "3306:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./mariadb/conf.d:/etc/mysql/conf.d:z
-      # - ./sftp/upload:/var/lib/mysql-files
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       start_period: 3s
@@ -34,14 +33,6 @@ services:
       - "8080:8080"
     depends_on:
       - backend
-
-  # sftp:
-  #   image: docker.io/atmoz/sftp
-  #   volumes:
-  #     - ./sftp/upload:/home/intelvia
-  #   ports:
-  #     - "2222:22"
-  #   command: intelvia:password:1001
 
 volumes:
   mariadb_data:
