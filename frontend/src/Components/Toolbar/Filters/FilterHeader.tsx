@@ -7,7 +7,7 @@ import { useObserver } from 'mobx-react';
 import { Store } from '../../../Store/Store';
 import { FiltersStore } from '../../../Store/FiltersStore';
 
-export function FilterHeader({ countName, title, resetFunc }: { countName: keyof FiltersStore, title: string, resetFunc: () => void }) {
+export function FilterHeader({ countName, title, tooltipLabel?, resetFunc }: { countName: keyof FiltersStore, title: string, tooltipLabel: string, resetFunc: () => void }) {
   const store = useContext(Store);
 
   return useObserver(() => {
@@ -17,7 +17,9 @@ export function FilterHeader({ countName, title, resetFunc }: { countName: keyof
       <Flex align="center">
         <Accordion.Control px="xs">
           <Flex justify="space-between" align="center" gap="xs" mr="xs">
-            <Title order={4} c={count ? 'blue.6' : undefined}>{title}</Title>
+            <Tooltip label={tooltipLabel}>
+              <Title order={4} c={count ? 'blue.6' : undefined}>{title}</Title>
+            </Tooltip>
             {count > 0 ? (
               <Badge color="blue" radius="sm" variant="light">
                 {count}

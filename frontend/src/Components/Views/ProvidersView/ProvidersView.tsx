@@ -3,6 +3,7 @@ import {
   Card,
   Divider, Flex, Stack, Title, Tooltip, Text,
   Button,
+  Select,
 } from '@mantine/core';
 import { useContext, useState } from 'react';
 import { DatePickerInput } from '@mantine/dates';
@@ -77,10 +78,11 @@ export function ProvidersView() {
             </Title>
           </Tooltip>
           {/** Provider Search */}
-          <Autocomplete
+          <Select
             placeholder="Search for a provider"
             defaultValue="Dr. John Doe"
             leftSection={<IconSearch size={18} stroke={1} />}
+            searchable
             data={[
               'Dr. John Doe',
               'Dr. Jane Smith',
@@ -156,6 +158,21 @@ export function ProvidersView() {
       <Title order={3}>Anemia Management</Title>
       {/** Anemia Management Bar Chart */}
       <Flex gap="sm">
+        <Card h={200} w={300} p="md" shadow="sm">
+          <BarChart
+            h={200}
+            p="sm"
+            w="100%"
+            data={[
+              { group: 'Group1', Adherence: 75 },
+              { group: 'Best', Adherence: 60 },
+              { group: 'Dr. John Doe', Adherence: 25 },
+            ]}
+            dataKey="Adherence"
+            barProps={{ radius: 10 }}
+            series={[{ name: 'Adherence', color: 'blue.6' }]}
+          />
+        </Card>
         <Card h={200} w={300} p="md" shadow="sm">
           <BarChart
             h={200}
