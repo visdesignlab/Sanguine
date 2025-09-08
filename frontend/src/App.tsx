@@ -31,6 +31,13 @@ function App() {
       setDataLoading(true);
       try {
         store.duckDB = conn;
+        const queryUrl = import.meta.env.VITE_QUERY_URL;
+        if (typeof queryUrl === 'undefined' || !queryUrl) {
+          console.error('VITE_QUERY_URL is undefined');
+          setDataLoadingFailed(true);
+          setDataLoading(false);
+          return;
+        }
 
         await store.duckDB.query(`
           CREATE TABLE IF NOT EXISTS visits AS

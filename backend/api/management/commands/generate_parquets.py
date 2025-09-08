@@ -71,6 +71,7 @@ class Command(BaseCommand):
             pa.field("ffp_cost", pa.decimal128(10, 2), nullable=False),
             pa.field("plt_cost", pa.decimal128(10, 2), nullable=False),
             pa.field("cryo_cost", pa.decimal128(10, 2), nullable=False),
+            pa.field("cell_saver_ml_cost", pa.uint16(), nullable=False),
             pa.field("overall_cost", pa.decimal128(10, 2), nullable=False)  # computed/stored
         ])
 

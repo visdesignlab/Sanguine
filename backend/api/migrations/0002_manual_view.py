@@ -45,6 +45,7 @@ def create_materialize_proc(apps, schema_editor):
             ffp_cost,
             plt_cost,
             cryo_cost
+            cell_saver_ml_cost
             )
             SELECT
                 v.visit_no,
@@ -85,6 +86,7 @@ def create_materialize_proc(apps, schema_editor):
                 COALESCE(SUM(t.ffp_units * 50),0)    AS ffp_cost,
                 COALESCE(SUM(t.plt_units * 300),0)   AS plt_cost,
                 COALESCE(SUM(t.cryo_units * 75),0)   AS cryo_cost
+                CASE WHEN SUM(t.cell_saver_ml) > 0 THEN 500 ELSE 0 END AS cell_saver_ml_cost
 
             FROM Visit v
             LEFT JOIN Transfusion t ON t.visit_no = v.visit_no
@@ -158,7 +160,8 @@ class Migration(migrations.Migration):
                 ffp_cost DECIMAL(10,2) DEFAULT 0,
                 plt_cost DECIMAL(10,2) DEFAULT 0,
                 cryo_cost DECIMAL(10,2) DEFAULT 0,
-                overall_cost DECIMAL(10,2) AS (rbc_cost + ffp_cost + plt_cost + cryo_cost) STORED,
+                cell_saver_ml_cost MEDIUMINT UNSIGNED DEFAULT 0,
+                overall_cost DECIMAL(10,2) AS (rbc_cost + ffp_cost + plt_cost + cryo_cost + cell_saver_ml_cost) STORED,
 
                 PRIMARY KEY (visit_no),
                 FOREIGN KEY (visit_no) REFERENCES Visit(visit_no),

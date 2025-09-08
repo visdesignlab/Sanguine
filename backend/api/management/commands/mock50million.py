@@ -10,9 +10,11 @@ from faker.providers import date_time
 import random
 import tempfile
 
-OUTPUT_DIR = "mock_data"
+from api.views.utils.utils import get_all_cpt_code_filters
+
+DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 # MILLION = 10**6
-MILLION = 50
+MILLION = 1000
 
 
 class Command(BaseCommand):
@@ -76,6 +78,7 @@ class Command(BaseCommand):
         pats = []
         visits = []
         surgeries = []
+        labs = []
         surgeons = [
             (fake.unique.random_number(digits=10), fake.name()) for _ in range(50)
         ]
@@ -232,8 +235,8 @@ class Command(BaseCommand):
                         "mrn": pat["mrn"],
                         "epic_pat_id": fake.unique.random_number(digits=10),
                         "hsp_account_id": fake.unique.random_number(digits=10),
-                        "adm_dtm": admit_date.strftime("%Y-%m-%d %H:%M:%S"),
-                        "dsch_dtm": discharge_date.strftime("%Y-%m-%d %H:%M:%S"),
+                        "adm_dtm": admit_date.strftime(DATE_FORMAT),
+                        "dsch_dtm": discharge_date.strftime(DATE_FORMAT),
                         "clinical_los": clinical_los,
                         "age_at_adm": age_at_adm,
                         "pat_class_desc": "Inpatient",
@@ -276,25 +279,52 @@ class Command(BaseCommand):
         ]
 
         def gen_surgery_cases():
-            for i in range(int(0.4 * MILLION)):
-                yield {
-                    "case_id": i,
-                    "visit_no": (i % int(1 * MILLION)),
-                    "mrn": f"MRN{(i % int(0.5 * MILLION)):07d}",
-                    "case_date": "2020-01-02",
-                    "surgery_start_dtm": "2020-01-02 08:00:00",
-                    "surgery_end_dtm": "2020-01-02 10:00:00",
-                    "surgery_elap": 120.0,
-                    "surgery_type_desc": "Appendectomy",
-                    "surgeon_prov_id": f"SURG{i:05d}",
-                    "surgeon_prov_name": f"Dr. Surgeon{i}",
-                    "anesth_prov_id": f"ANES{i:05d}",
-                    "anesth_prov_name": f"Dr. Anesth{i}",
-                    "prim_proc_desc": "Laparoscopic Appendectomy",
-                    "postop_icu_los": 1.0 if i % 5 == 0 else None,
-                    "sched_site_desc": "Main OR",
-                    "asa_code": "II",
-                }
+            for pat, bad_pat, visit in visits:
+                surg1_start = make_aware(fake.date_time_between(
+                    start_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT),
+                    end_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT) + timedelta(days=1),
+                ))
+                surg2_start = make_aware(fake.date_time_between(
+                    start_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT) + timedelta(days=3),
+                    end_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT) + timedelta(days=4),
+                ))
+                surg_starts = [surg1_start, surg2_start] if bad_pat else [surg1_start]
+                for start_time in surg_starts:
+                    surg_end = start_time + timedelta(hours=5)
+
+                    surgeon = fake.random_element(elements=surgeons)
+                    anesth = fake.random_element(elements=anests)
+
+                    surgery = {
+                        "case_id": fake.unique.random_number(digits=10),
+                        "visit_no": visit["visit_no"],
+                        "mrn": pat["mrn"],
+                        "case_date": start_time.date().strftime("%Y-%m-%d"),
+                        "surgery_start_dtm": start_time.strftime(DATE_FORMAT),
+                        "surgery_end_dtm": surg_end.strftime(DATE_FORMAT),
+                        "surgery_elap": (surg_end - start_time).total_seconds() / 60,
+                        "surgery_type_desc": fake.random_element(
+                            elements=(
+                                "Elective",
+                                "Emergent",
+                                "Trauma Emergent",
+                                "Trauma Urgent",
+                                "Urgent",
+                            )
+                        ),
+                        "surgeon_prov_id": surgeon[0],
+                        "surgeon_prov_name": surgeon[1],
+                        "anesth_prov_id": anesth[0],
+                        "anesth_prov_name": anesth[1],
+                        "prim_proc_desc": fake.sentence(),
+                        "postop_icu_los": fake.random_int(min=0, max=10),
+                        "sched_site_desc": fake.sentence(),
+                        "asa_code": fake.random_element(
+                            elements=("1", "2", "3", "4", "5", "6")
+                        ),
+                    }
+                    surgeries.append((pat, bad_pat, visit, surgery))
+                    yield surgery
         self.send_csv_to_db(gen_surgery_cases(), fieldnames=surgery_case_fieldnames, table_name="SurgeryCase")
 
         # Generate billing codes
@@ -309,17 +339,193 @@ class Command(BaseCommand):
         ]
 
         def gen_billing_codes():
-            for i in range(int(10 * MILLION)):
-                yield {
-                    "visit_no": (i % int(1 * MILLION)),
-                    "cpt_code": f"{10000 + (i % 5000)}",
-                    "cpt_code_desc": "Sample CPT Description",
-                    "proc_dtm": "2020-01-02 09:00:00",
-                    "prov_id": f"PROV{i:05d}",
-                    "prov_name": f"Dr. Provider{i}",
-                    "code_rank": float(i % 10 + 1),
-                }
+            codes, _, _ = get_all_cpt_code_filters()
+            for _, bad_pat, _, surg in surgeries:
+                for rank in range(random.randint(1, 5)):
+                    yield {
+                        "visit_no": surg["visit_no"],
+                        "cpt_code": fake.random_element(elements=codes),
+                        "cpt_code_desc": fake.sentence(),
+                        "proc_dtm": surg["surgery_start_dtm"],
+                        "prov_id": surg["surgeon_prov_id"],
+                        "prov_name": surg["surgeon_prov_name"],
+                        "code_rank": rank,
+                    }
+                # Add ecmo codes
+                if bad_pat and random.random() < 0.2:
+                    yield {
+                        "visit_no": surg["visit_no"],
+                        "cpt_code": fake.random_element(elements=['33946', '33947', '33948', '33949', '33952', '33953', '33954', '33955', '33956', '33957', '33958', '33959', '33960', '33961', '33962', '33963', '33964', '33965', '33966', '33969', '33984', '33985', '33986', '33987', '33988', '33989']),
+                        "cpt_code_desc": fake.sentence(),
+                        "proc_dtm": surg["surgery_start_dtm"],
+                        "prov_id": surg["anesth_prov_id"],
+                        "prov_name": surg["anesth_prov_name"],
+                        "code_rank": rank + 1,
+                    }
+                # Add stroke codes
+                if bad_pat and random.random() < 0.05:
+                    yield {
+                        "visit_no": surg["visit_no"],
+                        "cpt_code": fake.random_element(elements=['99291', '1065F', '1066F']),
+                        "cpt_code_desc": fake.sentence(),
+                        "proc_dtm": surg["surgery_start_dtm"],
+                        "prov_id": surg["anesth_prov_id"],
+                        "prov_name": surg["anesth_prov_name"],
+                        "code_rank": rank + 2,
+                    }
         self.send_csv_to_db(gen_billing_codes(), fieldnames=billing_code_fieldnames, table_name="BillingCode")
+
+        # Generate Labs
+        def make_lab_row(fake, pat, visit, lab_draw_dtm, last_lab, test_type):
+            if test_type == ["HGB", "Hemoglobin"]:
+                if last_lab is None:
+                    result_value = fake.pydecimal(left_digits=2, right_digits=1, positive=True, min_value=6, max_value=16)
+                else:
+                    if last_lab["result_value"] < 6:
+                        result_value = last_lab["result_value"] + 2
+                    elif last_lab["result_value"] < 8:
+                        result_value = last_lab["result_value"] + 1
+                    else:
+                        result_value = fake.pydecimal(
+                            left_digits=2,
+                            right_digits=1,
+                            positive=True,
+                            min_value=max(last_lab["result_value"] - 2, 5),
+                            max_value=min(last_lab["result_value"] + 2, 20),
+                        )
+                lower_limit = 12
+                upper_limit = 18
+                uom = "g/dL"
+            elif test_type == ["INR"]:
+                if last_lab is None:
+                    result_value = fake.pydecimal(left_digits=2, right_digits=2, positive=True, min_value=0.5, max_value=5.0)
+                else:
+                    if last_lab["result_value"] > 4.0:
+                        result_value = last_lab["result_value"] - 1.5
+                    elif last_lab["result_value"] > 2.0:
+                        result_value = last_lab["result_value"] - 0.5
+                    else:
+                        result_value = fake.pydecimal(
+                            left_digits=2,
+                            right_digits=2,
+                            positive=True,
+                            min_value=max(last_lab["result_value"] - 1, 1.0),
+                            max_value=min(last_lab["result_value"] + 1, 5.0),
+                        )
+                lower_limit = 0.8
+                upper_limit = 1.2
+                uom = "unitless"
+            elif test_type == ["PLT", "Platelet Count"]:
+                if last_lab is None:
+                    result_value = fake.pydecimal(left_digits=5, right_digits=0, positive=True, min_value=5000, max_value=100000)
+                else:
+                    if last_lab["result_value"] < 10000:
+                        result_value = last_lab["result_value"] + 5000
+                    elif last_lab["result_value"] < 20000:
+                        result_value = last_lab["result_value"] + 2000
+                    else:
+                        result_value = fake.pydecimal(
+                            left_digits=5,
+                            right_digits=0,
+                            positive=True,
+                            min_value=max(last_lab["result_value"] - 10000, 2000),
+                            max_value=min(last_lab["result_value"] + 10000, 100000),
+                        )
+                lower_limit = 15000
+                upper_limit = 45000
+                uom = "cells/uL"
+            elif test_type == ["Fibrinogen"]:
+                if last_lab is None:
+                    result_value = fake.pydecimal(left_digits=3, right_digits=1, positive=True, min_value=80, max_value=300)
+                else:
+                    if last_lab["result_value"] < 150:
+                        result_value = last_lab["result_value"] + 100
+                    elif last_lab["result_value"] < 200:
+                        result_value = last_lab["result_value"] + 50
+                    else:
+                        result_value = fake.pydecimal(
+                            left_digits=3,
+                            right_digits=1,
+                            positive=True,
+                            min_value=max(last_lab["result_value"] - 100, 50),
+                            max_value=min(last_lab["result_value"] + 100, 400),
+                        )
+                lower_limit = 150
+                upper_limit = 400
+                uom = "mg/dL"
+
+            return {
+                "visit_no": visit["visit_no"],
+                "mrn": pat["mrn"],
+                "lab_id": fake.unique.random_number(digits=10),
+                "lab_draw_dtm": lab_draw_dtm.strftime(DATE_FORMAT),
+                "lab_panel_code": fake.unique.random_number(digits=10),
+                "lab_panel_desc": fake.sentence(),
+                "result_dtm": (lab_draw_dtm + timedelta(hours=random.randint(1, 12))).strftime(DATE_FORMAT),
+                "result_code": fake.unique.random_number(digits=10),
+                "result_loinc": fake.unique.random_number(digits=10),
+                "result_desc": fake.random_element(elements=test_type),
+                "result_value": float(result_value),
+                "uom_code": uom,
+                "lower_limit": lower_limit,
+                "upper_limit": upper_limit,
+            }
+        lab_fieldnames = [
+            "visit_no",
+            "mrn",
+            "lab_id",
+            "lab_draw_dtm",
+            "lab_panel_desc",
+            "lab_panel_code",
+            "result_dtm",
+            "result_code",
+            "result_loinc",
+            "result_desc",
+            "result_value",
+            "uom_code",
+            "lower_limit",
+            "upper_limit",
+        ]
+
+        def gen_labs():
+            result_desc_options = [["HGB", "Hemoglobin"], ["INR"], ["PLT", "Platelet Count"], ["Fibrinogen"]]
+            for pat, _, visit, surgery in surgeries:
+                for result_desc_option in result_desc_options:
+                    lab = None
+                    # Pre-op labs
+                    for i in range(2):
+                        draw_dtm = make_aware(
+                            fake.date_time_between(
+                                start_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT),
+                                end_date=datetime.strptime(surgery["surgery_start_dtm"], DATE_FORMAT) - timedelta(minutes=30)
+                            )
+                        )
+                        lab_row = make_lab_row(fake, pat, visit, draw_dtm, lab, result_desc_option)
+                        yield lab_row
+                        lab = lab_row
+                    # Intra-op labs
+                    for i in range(random.randint(1, 5)):
+                        draw_dtm = fake.date_time_between(
+                            start_date=datetime.strptime(surgery["surgery_start_dtm"], DATE_FORMAT) + timedelta(hours=i),
+                            end_date=datetime.strptime(surgery["surgery_start_dtm"], DATE_FORMAT) + timedelta(hours=i + 1),
+                        )
+                        lab_row = make_lab_row(fake, pat, visit, draw_dtm, lab, result_desc_option)
+                        yield lab_row
+                        lab = lab_row
+                    # Post-op labs
+                    for i in range(random.randint(1, 2)):
+                        draw_dtm = make_aware(
+                            fake.date_time_between(
+                                start_date=datetime.strptime(surgery["surgery_end_dtm"], DATE_FORMAT) + timedelta(hours=i),
+                                end_date=datetime.strptime(surgery["surgery_end_dtm"], DATE_FORMAT) + timedelta(hours=i + 1),
+                            )
+                        )
+                        lab_row = make_lab_row(fake, pat, visit, draw_dtm, lab, result_desc_option)
+                        labs.append((surgery, lab))
+                        yield lab_row
+                        lab = lab_row
+                
+        self.send_csv_to_db(gen_labs(), fieldnames=lab_fieldnames, table_name="Lab")
 
         # Generate Medications
         medication_fieldnames = [
@@ -339,61 +545,59 @@ class Command(BaseCommand):
         ]
 
         def gen_medications():
-            for i in range(int(15 * MILLION)):
-                yield {
-                    "visit_no": (i % int(1 * MILLION)),
-                    "order_med_id": i,
-                    "order_dtm": "2020-01-02 10:00:00",
-                    "medication_id": 2000 + (i % 1000),
-                    "medication_name": f"Med{i % 1000}",
-                    "med_admin_line": i,
-                    "admin_dtm": "2020-01-02 12:00:00",
-                    "admin_dose": f"{50 + (i % 50)} mg",
-                    "med_form": "Tablet",
-                    "admin_route_desc": "Oral",
-                    "dose_unit_desc": "mg",
-                    "med_start_dtm": "2020-01-02 10:00:00",
-                    "med_end_dtm": "2020-01-05 10:00:00",
-                }
+            med_types = [
+                "TXA",
+                "B12",
+                "AMICAR",
+                "tranexamic acid",
+                "vitamin B12",
+                "aminocaproic acid",
+                "iron",
+                "ferrous sulfate",
+                "ferric carboxymaltose",
+            ]
+            for _, _, visit, surg in surgeries:
+                order_dtm = make_aware(
+                    fake.date_time_between(
+                        start_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT),
+                        end_date=datetime.strptime(visit["dsch_dtm"], DATE_FORMAT),
+                    )
+                )
+                admin_dtm = order_dtm + timedelta(minutes=fake.random_int(min=1, max=120))
+                for _ in range(random.randint(1, 5)):
+                    yield {
+                        "visit_no": surg["visit_no"],
+                        "order_med_id": fake.unique.random_number(digits=10),
+                        "order_dtm": order_dtm,
+                        "medication_id": fake.unique.random_number(digits=10),
+                        "medication_name": fake.random_element(elements=med_types),
+                        "med_admin_line": fake.random_int(min=1, max=4),
+                        "admin_dtm": admin_dtm,
+                        "admin_dose": fake.pydecimal(
+                            left_digits=2,
+                            right_digits=1,
+                            positive=True,
+                            min_value=0.1,
+                            max_value=10,
+                        ),
+                        "med_form": fake.random_element(
+                            elements=("tablet", "capsule", "injection", "syrup")
+                        ),
+                        "admin_route_desc": fake.random_element(
+                            elements=(
+                                "oral",
+                                "intravenous",
+                                "intramuscular",
+                                "subcutaneous",
+                            )
+                        ),
+                        "dose_unit_desc": fake.random_element(
+                            elements=("mg", "g", "mL", "unit")
+                        ),
+                        "med_start_dtm": admin_dtm,
+                        "med_end_dtm": admin_dtm + timedelta(hours=fake.random_int(min=1, max=12)),
+                    }
         self.send_csv_to_db(gen_medications(), fieldnames=medication_fieldnames, table_name="Medication")
-
-        # Generate Labs
-        lab_fieldnames = [
-            "visit_no",
-            "mrn",
-            "lab_id",
-            "lab_draw_dtm",
-            "lab_panel_desc",
-            "lab_panel_code",
-            "result_dtm",
-            "result_code",
-            "result_loinc",
-            "result_desc",
-            "result_value",
-            "uom_code",
-            "lower_limit",
-            "upper_limit",
-        ]
-
-        def gen_labs():
-            for i in range(int(8 * MILLION)):
-                yield {
-                    "visit_no": (i % int(1 * MILLION)),
-                    "mrn": f"MRN{(i % int(0.5 * MILLION)):07d}",
-                    "lab_id": i,
-                    "lab_draw_dtm": "2020-01-03 07:00:00",
-                    "lab_panel_code": f"LABP{100 + (i % 10)}",
-                    "lab_panel_desc": f"Panel Desc {i % 10}",
-                    "result_dtm": "2020-01-03 09:00:00",
-                    "result_code": f"RESC{200 + (i % 20)}",
-                    "result_loinc": f"LOINC{300 + (i % 30)}",
-                    "result_desc": f"Result Desc {i % 20}",
-                    "result_value": round(100.0 + (i % 50) * 0.1, 4),
-                    "uom_code": "mg/dL",
-                    "lower_limit": 90.0,
-                    "upper_limit": 110.0,
-                }
-        self.send_csv_to_db(gen_labs(), fieldnames=lab_fieldnames, table_name="Lab")
 
         # Generate Transfusions
         transfusion_fieldnames = [
@@ -415,24 +619,77 @@ class Command(BaseCommand):
         ]
 
         def gen_transfusions():
-            for i in range(int(.25 * MILLION)):
-                yield {
-                    "visit_no": (i % int(1 * MILLION)),
-                    "trnsfsn_dtm": "2020-01-04 14:00:00",
-                    "transfusion_rank": float(i),
-                    "blood_unit_number": f"BU{i:08d}",
-                    "rbc_units": 1.0 if i % 3 == 0 else None,
-                    "ffp_units": 1.0 if i % 4 == 0 else None,
-                    "plt_units": 1.0 if i % 5 == 0 else None,
-                    "cryo_units": None,
-                    "whole_units": None,
-                    "rbc_vol": 300.0 if i % 3 == 0 else None,
-                    "ffp_vol": 250.0 if i % 4 == 0 else None,
-                    "plt_vol": 200.0 if i % 5 == 0 else None,
-                    "cryo_vol": None,
-                    "whole_vol": None,
-                    "cell_saver_ml": None,
-                }
+            for rank, (surg, lab) in enumerate(labs):
+                rcb_units = 0
+                cell_saver_ml = 0
+                if lab["result_desc"] in ["HGB", "Hemoglobin"]:
+                    if lab["result_value"] < 6:
+                        rcb_units = fake.random_int(min=2, max=3)
+                        cell_saver_ml = fake.random_int(min=300, max=1000)
+                    elif lab["result_value"] < 7:
+                        rcb_units = fake.random_int(min=1, max=2)
+                        cell_saver_ml = fake.random_int(min=100, max=500)
+                    elif lab["result_value"] < 8:
+                        rcb_units = fake.random_int(min=0, max=1)
+                        cell_saver_ml = fake.random_int(min=100, max=200)
+
+                rbcs = rcb_units
+                cell_saver = cell_saver_ml
+
+                # FFP if INR > 2
+                ffp_units = 0
+                if lab["result_desc"] == "INR":
+                    if lab["result_value"] > 2:
+                        ffp_units = fake.random_int(min=2, max=4)
+                    elif lab["result_value"] > 4:
+                        ffp_units = fake.random_int(min=3, max=7)
+                ffp = ffp_units
+
+                # PLT if PLT count below 10,000
+                plt_units = 0
+                if lab["result_desc"] in ["PLT", "Platelet Count"]:
+                    if lab["result_value"] < 10000:
+                        # One plt unit = ~6 Pooled WB Units
+                        plt_units = fake.random_int(min=1, max=2)
+                    elif lab["result_value"] < 20000:
+                        plt_units = fake.random_int(min=0, max=1)
+                plt = plt_units
+
+                # CRYO if Fibrinogen < 150 mg/dL in bleeding patient
+                cryo_units = 0
+                if lab["result_desc"] == "Fibrinogen":
+                    if lab["result_value"] < 150:
+                        cryo_units = fake.random_int(min=1, max=2)
+                    elif lab["result_value"] < 200:
+                        cryo_units = fake.random_int(min=0, max=1)
+                cryo = cryo_units
+
+                whole = 0
+                type = fake.random_element(elements=("unit", "vol"))
+
+                if rbcs + cell_saver + ffp + plt + cryo + whole > 0:
+                    yield {
+                        "visit_no": surg["visit_no"],
+                        "trnsfsn_dtm": make_aware(
+                            fake.date_time_between(
+                                start_date=datetime.strptime(surg["surgery_start_dtm"], DATE_FORMAT),
+                                end_date=datetime.strptime(surg["surgery_end_dtm"], DATE_FORMAT),
+                            )
+                        ),
+                        "transfusion_rank": rank,
+                        "blood_unit_number": fake.unique.random_number(digits=10),
+                        "rbc_units": rbcs if type == "unit" else None,
+                        "ffp_units": ffp if type == "unit" else None,
+                        "plt_units": plt if type == "unit" else None,
+                        "cryo_units": cryo if type == "unit" else None,
+                        "whole_units": whole if type == "unit" else None,
+                        "rbc_vol": rbcs * 250 if type == "vol" else None,
+                        "ffp_vol": ffp * 220 if type == "vol" else None,
+                        "plt_vol": plt * 300 if type == "vol" else None,
+                        "cryo_vol": cryo * 75 if type == "vol" else None,
+                        "whole_vol": whole * 450 if type == "vol" else None,
+                        "cell_saver_ml": cell_saver
+                    }
         self.send_csv_to_db(gen_transfusions(), fieldnames=transfusion_fieldnames, table_name="Transfusion")
 
         # Generate Attending Providers

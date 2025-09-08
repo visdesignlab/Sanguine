@@ -335,16 +335,18 @@ export class DashboardStore {
         SUM(antifibrinolytic) AS sum_antifibrinolytic,
         AVG(antifibrinolytic) AS avg_antifibrinolytic,
         
-        sum(rbc_cost) as sum_rbc_cost,
-        avg(rbc_cost) as avg_rbc_cost,
-        sum(plt_cost) as sum_plt_cost,
-        avg(plt_cost) as avg_plt_cost,
-        sum(ffp_cost) as sum_ffp_cost,
-        avg(ffp_cost) as avg_ffp_cost,
-        sum(cryo_cost) as sum_cryo_cost,
-        avg(cryo_cost) as avg_cryo_cost,
-        -- sum(whole_cost) as sum_whole_cost,
-        -- avg(whole_cost) as avg_whole_cost,
+        sum(rbc_cost) as sum_rbc_units_cost,
+        avg(rbc_cost) as avg_rbc_units_cost,
+        sum(plt_cost) as sum_plt_units_cost,
+        avg(plt_cost) as avg_plt_units_cost,
+        sum(ffp_cost) as sum_ffp_units_cost,
+        avg(ffp_cost) as avg_ffp_units_cost,
+        sum(cryo_cost) as sum_cryo_units_cost,
+        avg(cryo_cost) as avg_cryo_units_cost,
+        sum(cell_saver_ml_cost) as sum_cell_saver_ml_cost,
+        avg(cell_saver_ml_cost) as avg_cell_saver_ml_cost,
+        -- sum(whole_cost) as sum_whole_units_cost,
+        -- avg(whole_cost) as avg_whole_units_cost,
 
         
       FROM filteredVisits
@@ -371,6 +373,16 @@ export class DashboardStore {
               timePeriod: row[timeAggregation] as TimePeriod,
               data: Number(row[aggVar] || 0),
             }))
+            .reduce((acc, curr) => {
+              // Combine entries with the same timePeriod by summing their data values
+              const existing = acc.find((item) => item.timePeriod === curr.timePeriod);
+              if (existing) {
+                existing.data += curr.data;
+              } else {
+                acc.push(curr);
+              }
+              return acc;
+            }, [] as { timePeriod: TimePeriod; data: number }[])
             .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
           // Log filtered data for debugging
           if (chartDatum.length === 0) {
@@ -385,7 +397,6 @@ export class DashboardStore {
     });
 
     this.chartData = result;
-    console.log('This.chartdata:', this.chartData);
     console.timeEnd('Chart data computation time');
   }
 
