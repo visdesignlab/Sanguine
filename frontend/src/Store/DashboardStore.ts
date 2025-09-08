@@ -13,7 +13,8 @@ import {
   dashboardXAxisVars,
   type DashboardAggYAxisVar,
   dashboardYAxisOptions,
-  TimePeriod, // Dashboard data types
+  TimePeriod,
+  DashboardStatData, // Dashboard data types
 } from '../Types/application';
 import {
   compareTimePeriods,
@@ -39,12 +40,12 @@ export class DashboardStore {
       {
         i: '0', x: 0, y: 0, w: 2, h: 1, maxH: 2,
       },
-      // {
-      //   i: '1', x: 0, y: 1, w: 1, h: 1, maxH: 2,
-      // },
-      // {
-      //   i: '2', x: 1, y: 1, w: 1, h: 1, maxH: 2,
-      // },
+      {
+        i: '1', x: 0, y: 1, w: 1, h: 1, maxH: 2,
+      },
+      {
+        i: '2', x: 1, y: 1, w: 1, h: 1, maxH: 2,
+      },
     ],
   };
 
@@ -61,12 +62,12 @@ export class DashboardStore {
     {
       chartId: '0', xAxisVar: 'month', yAxisVar: 'rbc_units', aggregation: 'sum', chartType: 'line',
     },
-    // {
-    //   chartId: '1', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'line',
-    // },
-    // {
-    //   chartId: '2', xAxisVar: 'quarter', yAxisVar: 'total_blood_product_costs', aggregation: 'sum', chartType: 'bar',
-    // },
+    {
+      chartId: '1', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'line',
+    },
+    {
+      chartId: '2', xAxisVar: 'quarter', yAxisVar: 'rbc_units_cost', aggregation: 'sum', chartType: 'bar',
+    },
   ];
 
   get chartConfigs() {
@@ -210,90 +211,15 @@ export class DashboardStore {
   }
 
   // Dashboard data ----------------------------------------------------------------
-  /**
-   * Returns all possible chart data needed for the dashboard.
-   * Optimized to avoid redundant mapping/filtering/aggregation.
-   */
-  // get chartData() {
-  //   const result = {} as DashboardChartData;
-
-  //   // --- Calculate data for every possible chart (aggregation, yAxisVar, xAxisVar) combination ---
-  //   // For each aggregation option (e.g. sum, avg)...
-  //   // Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
-  //   //   const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
-  //   //   // For each xAxisVar (e.g. quarter, month)...
-  //   //   dashboardXAxisVars.forEach((xAxisVar) => {
-  //   //     const timeAggregation = xAxisVar as TimeAggregation;
-
-  //   //     // --- Aggregate all other yAxisVars by time period, sum, and avg ---
-  //   //     const aggregatedData = rollup(
-  //   //       this._rootStore.filteredVisits,
-  //   //       (visits) => aggregateVisitsBySumAvg(visits),
-  //   //       (d) => d[timeAggregation],
-  //   //     );
-  //   //     // Derive the sum & avg total_blood_product_costs for each time period
-  //   //     result[`${aggType}_total_blood_product_costs_${timeAggregation}`] = Array.from(aggregatedData.entries())
-  //   //       .map(([timePeriod, aggregations]) => {
-  //   //         const costObj: Record<string, number> = {};
-  //   //         COST_OPTIONS.forEach(({ value: costVar }) => {
-  //   //           const key = `${aggType}_${costVar}` as DashboardAggYAxisVar;
-  //   //           costObj[costVar] = aggregations[key] || 0;
-  //   //         });
-  //   //         return {
-  //   //           timePeriod: timePeriod! as TimePeriod,
-  //   //           ...costObj,
-  //   //         };
-  //   //       })
-  //   //       .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
-
-  //   //     // For each yAxisVar (e.g. rbc_units, guideline_adherence)...
-  //   //     dashboardYAxisVars.forEach((yAxisVar) => {
-  //   //       if (yAxisVar === 'total_blood_product_costs') return; // Already handled above
-  //   //       const aggVar: DashboardAggYAxisVar = `${aggType}_${yAxisVar}`;
-  //   //       // Format the aggregated data into chart format: (timePeriod, data)
-  //   //       const chartDatum = Array.from(aggregatedData.entries())
-  //   //         .map(([timePeriod, aggregations]) => ({
-  //   //           timePeriod: timePeriod! as TimePeriod,
-  //   //           data: aggregations[aggVar] || 0,
-  //   //         }))
-  //   //         .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
-
-  //   //       // Log filtered data for debugging
-  //   //       if (chartDatum.length === 0) {
-  //   //         console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and aggVar "${aggVar}"`);
-  //   //       }
-
-  //   //       // Return result (E.g. Key: "sum_rbc_units_quarter", Value: chartDatum)
-  //   //       const compositeKey = `${aggVar}_${xAxisVar}` as keyof DashboardChartData;
-  //   //       result[compositeKey] = chartDatum;
-  //   //     });
-  //   //   });
-  //   // });
-
-  //   return result;
-  // }
-
   chartData: DashboardChartData = {};
+
+  statData: DashboardStatData = {};
 
   async computeChartData() {
     if (!this._rootStore.duckDB) return;
 
     console.time('Chart data computation time');
     const result = {} as DashboardChartData;
-
-    // for now just compute sum_rbc_units_month
-    // const query = `
-    //   SELECT month, SUM(rbc_units) AS data
-    //   FROM filteredVisits
-    //   GROUP BY month
-    //   ORDER BY month;
-    // `;
-    // const queryResult = await this._rootStore.duckDB.query(query);
-    // const rows = queryResult.toArray().map((row) => row.toJSON());
-    // result['sum_rbc_units_month'] = rows.map((row) => ({
-    //   timePeriod: row.month as TimePeriod,
-    //   data: Number(row.data),
-    // }));
 
     // --- Calculate data for every possible chart (aggregation, yAxisVar, xAxisVar) combination ---
     // For each aggregation option (e.g. sum, avg)...
@@ -400,11 +326,18 @@ export class DashboardStore {
     console.timeEnd('Chart data computation time');
   }
 
+  async computeStatData() {
+    if (!this._rootStore.duckDB) return;
+    
+    console.time('Stat data computation time');
+    const result = {} as DashboardStatData;
+  }
+
   /**
    * Returns all stat chart data needed for the dashboard.
    * Optimized to avoid redundant filtering and aggregation.
    */
-  get statData() {
+  // get statData() {
   //   console.log(0);
   //   // --- Find the current period (last 30 days) for the stats ---
   //   const latestDate = new Date(Math.max(...this._rootStore.filteredVisits.map((v) => v.dsch_dtm.getTime())));
@@ -507,6 +440,6 @@ export class DashboardStore {
     //   console.log(5);
 
     //   return result;
-    return {};
-  }
+  //   return {};
+  // }
 }
