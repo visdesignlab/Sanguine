@@ -57,8 +57,16 @@ export function ProvidersView() {
     },
   ];
 
+  // TEMPORARY MOCK DATA ------------
   // TODO: Replace with real chart configs from a provider store
-  const allCharts = {
+  type ChartOrientation = 'vertical' | 'horizontal';
+  type ProviderChart = {
+    title: string;
+    data: { group: string; Adherence: number }[];
+    dataKey: string;
+    orientation: ChartOrientation;
+  };
+  const allCharts: Record<string, ProviderChart> = {
     anemia1: {
       title: 'Anemia Management',
       data: [

@@ -16,6 +16,7 @@ import gridItemStyles from '../GridLayoutItem.module.css';
 import statsGridStyles from './StatsGrid.module.css';
 import { Store } from '../../../Store/Store';
 import { getIconForVar, isMetricChangeGood } from '../../../Utils/dashboard';
+import { DashboardAggYAxisVar, DashboardStatData } from '../../../Types/application';
 
 export function StatsGrid() {
   // Icon styles
@@ -41,7 +42,7 @@ export function StatsGrid() {
       const aggregationKey = statConfig.aggregation || 'sum';
       const dataKey = `${aggregationKey}_${statConfig.var}` as keyof typeof store.dashboardStore.statData;
       // Stat data for this card
-      const statData = store.dashboardStore.statData[dataKey];
+      const statData = store.dashboardStore.statData[dataKey] as DashboardStatData[DashboardAggYAxisVar];
       const statValue = statData?.value || '0';
       const diff = statData?.diff || 0;
       const statSparklineData = statData?.sparklineData || [];

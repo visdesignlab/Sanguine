@@ -298,10 +298,10 @@ export class FiltersStore {
           SELECT HISTOGRAM(${component}, bins.bin) AS histogram,
           FROM filteredVisits, bins;
         `);
-        histogramData[component] = result.toArray().flatMap((row) => {
-          const { histogram } = row.toJSON();
-          // return Object.entries(histogram).map(([units, count]) => ({ units, count: Number(count) }));
-        });
+        // histogramData[component] = result.toArray().flatMap((row) => {
+        //   const { histogram } = row.toJSON();
+        //   // return Object.entries(histogram).map(([units, count]) => ({ units, count: Number(count) }));
+        // });
       }));
       this.histogramData = histogramData;
     }

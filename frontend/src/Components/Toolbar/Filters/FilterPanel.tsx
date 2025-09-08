@@ -31,7 +31,12 @@ export function FilterPanel() {
       <Accordion multiple defaultValue={['date-filters', 'blood-component-filters']}>
         {/** Date Filters */}
         <Accordion.Item value="date-filters" key="date-filters">
-          <FilterHeader countName="dateFiltersAppliedCount" title="Visit Date" resetFunc={() => store.filtersStore.resetDateFilters()} />
+          <FilterHeader
+            countName="dateFiltersAppliedCount"
+            title="Visit Date"
+            tooltipLabel="Number of date filters applied"
+            resetFunc={() => store.filtersStore.resetDateFilters()}
+          />
           <Accordion.Panel>
             <Flex direction="row" justify="space-between" align="center">
               <DateInput
@@ -57,7 +62,12 @@ export function FilterPanel() {
         </Accordion.Item>
         {/* Blood Component Filters */}
         <Accordion.Item value="blood-component-filters" key="blood-component-filters">
-          <FilterHeader countName="bloodComponentFiltersAppliedCount" title="Blood Products Used" resetFunc={() => store.filtersStore.resetBloodComponentFilters()} />
+          <FilterHeader
+            countName="bloodComponentFiltersAppliedCount"
+            title="Blood Products Used"
+            tooltipLabel="Number of blood product filters applied"
+            resetFunc={() => store.filtersStore.resetBloodComponentFilters()}
+          />
           <Accordion.Panel>
             <Input.Wrapper label="RBC Units" mb="lg">
               <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
@@ -153,7 +163,12 @@ export function FilterPanel() {
         </Accordion.Item>
         {/** Medication Filters */}
         <Accordion.Item value="medication-filters" key="medication-filters">
-          <FilterHeader countName="medicationsFiltersAppliedCount" title="Medications Used" resetFunc={() => store.filtersStore.resetMedicationsFilters()} />
+          <FilterHeader
+            countName="medicationsFiltersAppliedCount"
+            title="Medications Used"
+            tooltipLabel="Number of medication filters applied"
+            resetFunc={() => store.filtersStore.resetMedicationsFilters()}
+          />
           <Accordion.Panel>
             <Stack gap={0}>
               <Grid>
@@ -208,7 +223,12 @@ export function FilterPanel() {
         </Accordion.Item>
         {/** Outcome Filters */}
         <Accordion.Item value="outcome-filters" key="outcome-filters">
-          <FilterHeader countName="outcomeFiltersAppliedCount" title="Patient Outcomes" resetFunc={() => store.filtersStore.resetOutcomeFilters()} />
+          <FilterHeader
+            countName="outcomeFiltersAppliedCount"
+            title="Patient Outcomes"
+            tooltipLabel="Number of outcome filters applied"
+            resetFunc={() => store.filtersStore.resetOutcomeFilters()}
+          />
           <Accordion.Panel>
             <Stack gap={0}>
               <Grid>
