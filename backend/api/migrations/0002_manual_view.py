@@ -44,7 +44,7 @@ def create_materialize_proc(apps, schema_editor):
             rbc_cost,
             ffp_cost,
             plt_cost,
-            cryo_cost
+            cryo_cost,
             cell_saver_ml_cost
             )
             SELECT
@@ -85,7 +85,7 @@ def create_materialize_proc(apps, schema_editor):
                 COALESCE(SUM(t.rbc_units * 200),0)   AS rbc_cost,
                 COALESCE(SUM(t.ffp_units * 50),0)    AS ffp_cost,
                 COALESCE(SUM(t.plt_units * 300),0)   AS plt_cost,
-                COALESCE(SUM(t.cryo_units * 75),0)   AS cryo_cost
+                COALESCE(SUM(t.cryo_units * 75),0)   AS cryo_cost,
                 CASE WHEN SUM(t.cell_saver_ml) > 0 THEN 500 ELSE 0 END AS cell_saver_ml_cost
 
             FROM Visit v
