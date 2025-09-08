@@ -57,6 +57,60 @@ export function ProvidersView() {
     },
   ];
 
+  // TODO: Replace with real chart configs from a provider store
+  const allCharts = {
+    anemia1: {
+      title: 'Anemia Management',
+      data: [
+        { group: 'Group1', Adherence: 75 },
+        { group: 'Best', Adherence: 60 },
+        { group: 'Dr. John Doe', Adherence: 25 },
+      ],
+      dataKey: 'Adherence',
+      orientation: 'horizontal',
+    },
+    anemia2: {
+      title: 'Anemia Management',
+      data: [
+        { group: 'Benchmark', Adherence: 75 },
+        { group: 'Best', Adherence: 60 },
+        { group: 'Dr. John Doe', Adherence: 25 },
+      ],
+      dataKey: 'group',
+      orientation: 'vertical',
+    },
+    anemia3: {
+      title: 'Anemia Management',
+      data: [
+        { group: 'Benchmark', Adherence: 75 },
+        { group: 'Best', Adherence: 60 },
+        { group: 'Dr. John Doe', Adherence: 25 },
+      ],
+      dataKey: 'group',
+      orientation: 'vertical',
+    },
+    outcome1: {
+      title: 'Outcomes',
+      data: [
+        { group: 'Benchmark', Adherence: 75 },
+        { group: 'Best', Adherence: 60 },
+        { group: 'Dr. John Doe', Adherence: 25 },
+      ],
+      dataKey: 'group',
+      orientation: 'vertical',
+    },
+    outcome2: {
+      title: 'Outcomes',
+      data: [
+        { group: 'Benchmark', Adherence: 75 },
+        { group: 'Best', Adherence: 60 },
+        { group: 'Dr. John Doe', Adherence: 25 },
+      ],
+      dataKey: 'group',
+      orientation: 'vertical',
+    },
+  };
+
   const {
     cardIconStroke,
     buttonIconSize,
@@ -155,94 +209,44 @@ export function ProvidersView() {
         </Stack>
       </Card>
       <Title order={3}>Anemia Management</Title>
-      {/** Anemia Management Bar Chart */}
       <Flex gap="sm">
-        <Card h={200} w={300} p="md" shadow="sm">
-          <BarChart
-            h={200}
-            p="sm"
-            w="100%"
-            data={[
-              { group: 'Group1', Adherence: 75 },
-              { group: 'Best', Adherence: 60 },
-              { group: 'Dr. John Doe', Adherence: 25 },
-            ]}
-            dataKey="Adherence"
-            barProps={{ radius: 10 }}
-            series={[{ name: 'Adherence', color: 'blue.6' }]}
-          />
-        </Card>
-        <Card h={200} w={300} p="md" shadow="sm">
-          <BarChart
-            h={200}
-            p="sm"
-            w="100%"
-            data={[
-              { group: 'Benchmark', Adherence: 75 },
-              { group: 'Best', Adherence: 60 },
-              { group: 'Dr. John Doe', Adherence: 25 },
-            ]}
-            dataKey="group"
-            orientation="vertical"
-            yAxisProps={{ width: 80 }}
-            barProps={{ radius: 10 }}
-            series={[{ name: 'Adherence', color: 'blue.6' }]}
-          />
-        </Card>
-        <Card h={200} w={300} p="md" shadow="sm">
-          <BarChart
-            h={200}
-            p="sm"
-            w="100%"
-            data={[
-              { group: 'Benchmark', Adherence: 75 },
-              { group: 'Best', Adherence: 60 },
-              { group: 'Dr. John Doe', Adherence: 25 },
-            ]}
-            dataKey="group"
-            orientation="vertical"
-            yAxisProps={{ width: 80 }}
-            barProps={{ radius: 10 }}
-            series={[{ name: 'Adherence', color: 'blue.6' }]}
-          />
-        </Card>
+        {Object.entries(allCharts)
+          .filter(([chartId, chart]) => chart.title === 'Anemia Management')
+          .map(([chartId, chart]) => (
+            <Card key={chartId} h={200} w={300} p="md" shadow="sm">
+              <BarChart
+                h={200}
+                p="sm"
+                w="100%"
+                data={chart.data}
+                dataKey={chart.dataKey}
+                orientation={chart.orientation}
+                yAxisProps={chart.orientation === 'vertical' ? { width: 80 } : undefined}
+                barProps={{ radius: 10 }}
+                series={[{ name: 'Adherence', color: 'blue.6' }]}
+              />
+            </Card>
+          ))}
       </Flex>
       <Title order={3}>Outcomes</Title>
       <Flex gap="sm">
-        <Card h={200} w={300} p="md" shadow="sm">
-          <BarChart
-            h={200}
-            p="sm"
-            w="100%"
-            data={[
-              { group: 'Benchmark', Adherence: 75 },
-              { group: 'Best', Adherence: 60 },
-              { group: 'Dr. John Doe', Adherence: 25 },
-            ]}
-            dataKey="group"
-            orientation="vertical"
-            yAxisProps={{ width: 80 }}
-            barProps={{ radius: 10 }}
-            series={[{ name: 'Adherence', color: 'blue.6' }]}
-          />
-        </Card>
-        <Card h={200} w={300} p="md" shadow="sm">
-          <BarChart
-            h={200}
-            p="sm"
-            w="100%"
-            data={[
-              { group: 'Benchmark', Adherence: 75 },
-              { group: 'Best', Adherence: 60 },
-              { group: 'Dr. John Doe', Adherence: 25 },
-            ]}
-            dataKey="group"
-            orientation="vertical"
-            yAxisProps={{ width: 80 }}
-            barProps={{ radius: 10 }}
-            series={[{ name: 'Adherence', color: 'blue.6' }]}
-          />
-        </Card>
+        {Object.entries(allCharts)
+          .filter(([chartId, chart]) => chart.title === 'Outcomes')
+          .map(([chartId, chart]) => (
+            <Card key={chartId} h={200} w={300} p="md" shadow="sm">
+              <BarChart
+                h={200}
+                p="sm"
+                w="100%"
+                data={chart.data}
+                dataKey={chart.dataKey}
+                orientation={chart.orientation}
+                yAxisProps={chart.orientation === 'vertical' ? { width: 80 } : undefined}
+                barProps={{ radius: 10 }}
+                series={[{ name: 'Adherence', color: 'blue.6' }]}
+              />
+            </Card>
+          ))}
       </Flex>
     </Stack>
   );
