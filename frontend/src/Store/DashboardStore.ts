@@ -17,6 +17,7 @@ import {
   DashboardStatData, // Dashboard data types
 } from '../Types/application';
 import { compareTimePeriods } from '../Utils/dates';
+import { formatValueForDisplay } from '../Utils/dashboard';
 
 /**
  * DashboardStore manages the state of the PBM dashboard: stats, layouts, and chart data.
@@ -79,23 +80,23 @@ export class DashboardStore {
   // Stats settings ------------------------------------------------------------
   // Stat configurations by default
   _statConfigs: DashboardStatConfig[] = [
-    // {
-    //   statId: '1', var: 'rbc_units', aggregation: 'avg', title: 'RBC Units Transfused',
-    // },
-    // {
-    //   statId: '2', var: 'plt_units', aggregation: 'avg', title: 'Platelet Units Transfused',
-    // },
-    // {
-    //   statId: '3', var: 'cell_saver_ml', aggregation: 'sum', title: 'Total Cell Salvage Volume (ml) Used',
-    // },
+    {
+      statId: '1', var: 'rbc_units', aggregation: 'avg', title: 'Average RBCs Transfused Per Visit',
+    },
+    {
+      statId: '2', var: 'plt_units', aggregation: 'avg', title: 'Average Platelets Transfused Per Visit',
+    },
+    {
+      statId: '3', var: 'cell_saver_ml', aggregation: 'sum', title: 'Total Cell Salvage Volume (ml) Used',
+    },
     // {
     //   statId: '4', var: 'total_blood_product_costs', aggregation: 'sum', title: 'Total Blood Product Costs',
     // },
     // {
-    //   statId: '5', var: 'rbc_adherence', aggregation: 'avg', title: 'Guideline Adherent RBC Transfusions',
+    //   statId: '5', var: 'rbc_adherent', aggregation: 'avg', title: 'Guideline Adherent RBC Transfusions',
     // },
     // {
-    //   statId: '6', var: 'plt_adherence', aggregation: 'avg', title: 'Guideline Adherent Platelet Transfusions',
+    //   statId: '6', var: 'plt_adherent', aggregation: 'avg', title: 'Guideline Adherent Platelet Transfusions',
     // },
   ];
 
@@ -180,7 +181,7 @@ export class DashboardStore {
 
   // Stat management -----------------------------------------------------------
   /**
-   * @param statVar Variable to use for the stat (e.g. 'total_adherence')
+   * @param statVar Variable to use for the stat (e.g. 'total_adherent')
    * @param aggregation Aggregation method to use (e.g. 'avg', 'sum')
    * @description Adds new stat to dashboard with a generated title.
    */
@@ -211,7 +212,7 @@ export class DashboardStore {
   // Dashboard data ----------------------------------------------------------------
   chartData: DashboardChartData = {};
 
-  statData: DashboardStatData = {};
+  statData: DashboardStatData = {} as DashboardStatData;
 
   async computeChartData() {
     if (!this._rootStore.duckDB) return;
@@ -259,14 +260,14 @@ export class DashboardStore {
         SUM(antifibrinolytic) AS sum_antifibrinolytic,
         AVG(antifibrinolytic) AS avg_antifibrinolytic,
         
-        sum(rbc_cost) as sum_rbc_units_cost,
-        avg(rbc_cost) as avg_rbc_units_cost,
-        sum(plt_cost) as sum_plt_units_cost,
-        avg(plt_cost) as avg_plt_units_cost,
-        sum(ffp_cost) as sum_ffp_units_cost,
-        avg(ffp_cost) as avg_ffp_units_cost,
-        sum(cryo_cost) as sum_cryo_units_cost,
-        avg(cryo_cost) as avg_cryo_units_cost,
+        sum(rbc_units_cost) as sum_rbc_units_cost,
+        avg(rbc_units_cost) as avg_rbc_units_cost,
+        sum(plt_units_cost) as sum_plt_units_cost,
+        avg(plt_units_cost) as avg_plt_units_cost,
+        sum(ffp_units_cost) as sum_ffp_units_cost,
+        avg(ffp_units_cost) as avg_ffp_units_cost,
+        sum(cryo_units_cost) as sum_cryo_units_cost,
+        avg(cryo_units_cost) as avg_cryo_units_cost,
         sum(cell_saver_ml_cost) as sum_cell_saver_ml_cost,
         avg(cell_saver_ml_cost) as avg_cell_saver_ml_cost,
         -- sum(whole_cost) as sum_whole_units_cost,
@@ -286,7 +287,7 @@ export class DashboardStore {
       // For each aggregation option (e.g. sum, avg)...
       Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
         const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
-        // For each yAxisVar (e.g. rbc_units, guideline_adherence)...
+        // For each yAxisVar (e.g. rbc_units, GUIDELINE_ADHERENT)...
         dashboardYAxisVars.forEach((yAxisVar) => {
           if (yAxisVar === 'total_blood_product_costs') return; // Skip for now
 
@@ -326,118 +327,99 @@ export class DashboardStore {
 
   async computeStatData() {
     if (!this._rootStore.duckDB) return;
-    
+
     console.time('Stat data computation time');
     const result = {} as DashboardStatData;
+
+    const latestDateQuery = 'SELECT MAX(dsch_dtm) as latest_date FROM filteredVisits';
+    const latestDateResult = await this._rootStore.duckDB.query(latestDateQuery);
+    const latestDateRow = latestDateResult.toArray()[0];
+    const latestDate = new Date(latestDateRow.latest_date as string);
+
+    // Calculate current period (last 30 days)
+    const currentPeriodStart = new Date(latestDate.getTime() - (30 * 24 * 60 * 60 * 1000));
+
+    // Find most recent full month that doesn't overlap with 30-day window
+    const currentPeriodStartMonth = currentPeriodStart.getMonth();
+    const currentPeriodStartYear = currentPeriodStart.getFullYear();
+
+    // --- Find comparison period (closest non-overlapping calendar month) for the stats ---
+    let comparisonMonth = currentPeriodStartMonth - 1;
+    let comparisonYear = currentPeriodStartYear;
+    if (comparisonMonth < 0) {
+      comparisonMonth = 11; // December
+      comparisonYear -= 1;
+    }
+    const comparisonPeriodStart = new Date(comparisonYear, comparisonMonth, 1);
+    const comparisonPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
+    const comparisonMonthName = comparisonPeriodStart.toLocaleDateString('en-US', { month: 'short' });
+
+    await Promise.all(
+      dashboardYAxisVars.map(async (yAxisVar) => {
+      // Query to get current period and comparison period values
+        const statQuery = `
+        SELECT
+        SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN filteredVisits.${yAxisVar} ELSE 0 END) AS current_sum,
+        AVG(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN filteredVisits.${yAxisVar} ELSE NULL END) AS current_avg,
+        SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN filteredVisits.${yAxisVar} ELSE 0 END) AS comparison_sum,
+        AVG(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN filteredVisits.${yAxisVar} ELSE NULL END) AS comparison_avg
+        FROM filteredVisits;
+      `;
+
+        // Execute the query
+        try {
+          const statResult = await this._rootStore.duckDB!.query(statQuery);
+          const statRow = statResult.toArray()[0];
+
+          await Promise.all(Object.keys(AGGREGATION_OPTIONS).map(async (aggregation) => {
+            const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
+            const key = `${aggType}_${yAxisVar}` as DashboardAggYAxisVar;
+
+            const currentValue = aggType === 'sum' ? Number(statRow.current_sum) : Number(statRow.current_avg);
+            const comparisonValue = aggType === 'sum' ? Number(statRow.comparison_sum) : Number(statRow.comparison_avg);
+
+            // Calculate percentage change (diff)
+            const diff = comparisonValue === 0
+              ? (currentValue > 0 ? 100 : 0)
+              : ((currentValue - comparisonValue) / comparisonValue) * 100;
+
+            // Format the stat value (E.g. "Overall Guideline Adherence")
+            let formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
+
+            // For adherence variables, don't include full units
+            if (yAxisVar.includes('adherence')) {
+              formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType, false);
+            }
+            // Query to get sparkline data for the past 6 months
+            const sparklineQuery = `
+              SELECT
+              month,
+              ${aggType.toUpperCase()}(${yAxisVar}) AS total
+              FROM filteredVisits
+              WHERE dsch_dtm >= '${new Date(latestDate.getFullYear(), latestDate.getMonth() - 5, 1).toISOString()}'
+              AND dsch_dtm <= '${latestDate.toISOString()}'
+              GROUP BY month
+              ORDER BY month;
+            `;
+            const sparklineResult = await this._rootStore.duckDB!.query(sparklineQuery);
+            const sparklineRows = sparklineResult.toArray().map((row) => row.toJSON());
+            const sparklineData = sparklineRows.map((row) => Number(row.total) || 0);
+
+            // Store in result
+            result[key] = {
+              value: formattedValue,
+              diff: Math.round(diff),
+              comparedTo: comparisonMonthName,
+              sparklineData,
+            };
+          }));
+        } catch (error) {
+          console.error(`Error computing stat for ${yAxisVar}:`, error);
+        }
+      }),
+    );
+
+    this.statData = result;
+    console.timeEnd('Stat data computation time');
   }
-
-  /**
-   * Returns all stat chart data needed for the dashboard.
-   * Optimized to avoid redundant filtering and aggregation.
-   */
-  // get statData() {
-  //   console.log(0);
-  //   // --- Find the current period (last 30 days) for the stats ---
-  //   const latestDate = new Date(Math.max(...this._rootStore.filteredVisits.map((v) => v.dsch_dtm.getTime())));
-  //   console.log(1);
-  //   // Calculate current period (last 30 days)
-  //   const currentPeriodStart = new Date(latestDate.getTime() - (30 * TIME_CONSTANTS.ONE_DAY_MS));
-
-    //   // Find most recent full month that doesn't overlap with 30-day window
-    //   const currentPeriodStartMonth = currentPeriodStart.getMonth();
-    //   const currentPeriodStartYear = currentPeriodStart.getFullYear();
-
-    //   // --- Find comparison period (closest non-overlapping calendar month) for the stats ---
-    //   let comparisonMonth = currentPeriodStartMonth - 1;
-    //   let comparisonYear = currentPeriodStartYear;
-    //   if (comparisonMonth < 0) {
-    //     comparisonMonth = 11; // December
-    //     comparisonYear -= 1;
-    //   }
-    //   const comparisonPeriodStart = new Date(comparisonYear, comparisonMonth, 1);
-    //   const comparisonPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
-    //   const comparisonMonthName = comparisonPeriodStart.toLocaleDateString('en-US', { month: 'short' });
-    //   console.log(2);
-
-    //   // --- Sparkline Data - Find intermediate periods between current and comparison periods ---
-    //   const intermediatePeriodNumber = 4;
-    //   const sparklineStart = comparisonPeriodStart < currentPeriodStart ? comparisonPeriodStart : currentPeriodStart;
-    //   const sparklineEnd = latestDate;
-    //   const intervalMs = Math.floor((sparklineEnd.getTime() - sparklineStart.getTime()) / intermediatePeriodNumber);
-
-    //   // Calculate sparkline periods
-    //   const sparklinePeriods: Array<{ start: Date, end: Date }> = [];
-    //   for (let i = 0; i < intermediatePeriodNumber; i += 1) {
-    //     const periodStart = new Date(sparklineStart.getTime() + i * intervalMs);
-    //     const periodEnd = new Date(periodStart.getTime() + intervalMs - 1);
-    //     sparklinePeriods.push({ start: periodStart, end: periodEnd });
-    //   }
-
-    //   // --- Find visits from each time period (current, comparison, sparkline periods) ---
-    //   const currentPeriodVisits: typeof this._rootStore.filteredVisits = [];
-    //   const comparisonPeriodVisits: typeof this._rootStore.filteredVisits = [];
-    //   const sparklineVisits: typeof this._rootStore.filteredVisits[] = Array(intermediatePeriodNumber).fill(null).map(() => []);
-    //   console.log(3);
-
-    //   for (const v of this._rootStore.filteredVisits) {
-    //     const t = v.dischargeDate.getTime();
-    //     if (t >= currentPeriodStart.getTime() && t <= latestDate.getTime()) {
-    //       currentPeriodVisits.push(v);
-    //     }
-    //     if (t >= comparisonPeriodStart.getTime() && t <= comparisonPeriodEnd.getTime()) {
-    //       comparisonPeriodVisits.push(v);
-    //     }
-    //     for (let i = 0; i < intermediatePeriodNumber; i += 1) {
-    //       if (t >= sparklinePeriods[i].start.getTime() && t <= sparklinePeriods[i].end.getTime()) {
-    //         sparklineVisits[i].push(v);
-    //       }
-    //     }
-    //   }
-
-    //   // --- For each period of visits, aggregate by sum and average ---
-    //   const currentPeriodData = aggregateVisitsBySumAvg(currentPeriodVisits);
-    //   const comparisonPeriodData = aggregateVisitsBySumAvg(comparisonPeriodVisits);
-    //   const sparklinePeriodData = sparklineVisits.map((visits) => aggregateVisitsBySumAvg(visits));
-    //   console.log(4);
-
-    //   // --- Return data for every possible stat (aggregation, yAxisVar) combination ---
-    //   const result = {} as DashboardStatData;
-    //   // For each aggregation option (e.g. sum, avg)...
-    //   Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
-    //     const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
-    //     // For each yAxisVar (e.g. rbc_units, guideline_adherence)...
-    //     dashboardYAxisVars.forEach((yAxisVar) => {
-    //       const key = `${aggType}_${yAxisVar}` as DashboardAggYAxisVar;
-    //       // Calculate percentage change (diff)
-    //       const currentValue = currentPeriodData[key] || 0;
-    //       const comparisonValue = comparisonPeriodData[key] || 0;
-    //       const diff = comparisonValue === 0
-    //         ? (currentValue > 0 ? 100 : 0)
-    //         : ((currentValue - comparisonValue) / comparisonValue) * 100;
-
-    //       // Format the stat value (E.g. "Overall Guideline Adherence")
-    //       let formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
-
-    //       // For adherence variables, don't include full units
-    //       if (yAxisVar.includes('adherence')) {
-    //         formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType, false);
-    //       }
-
-    //       // Sparkline calculation
-    //       const sparklineData: number[] = sparklinePeriodData.map((periodData) => (periodData[key] || 0) ** 2);
-
-    //       // Return result
-    //       result[key] = {
-    //         value: formattedValue, // E.g. "85 Units"
-    //         diff: Math.round(diff), // E.g. 20 (percentage change)
-    //         comparedTo: comparisonMonthName || '', // E.g. "Jan"
-    //         sparklineData, // E.g. [80, 90, 85, 95]
-    //       };
-    //     });
-    //   });
-    //   console.log(5);
-
-    //   return result;
-  //   return {};
-  // }
 }

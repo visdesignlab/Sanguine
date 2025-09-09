@@ -160,8 +160,10 @@ export class FiltersStore {
   get dateFiltersAppliedCount(): number {
     const { dateFrom, dateTo } = this._filterValues;
     // Only count if user has changed from initial values
-    return (dateFrom.getTime() !== this._initialFilterValues.dateFrom.getTime()
-            || dateTo.getTime() !== this._initialFilterValues.dateTo.getTime()) ? 1 : 0;
+    return (
+      dateFrom.getTime() !== this._initialFilterValues.dateFrom.getTime()
+      || dateTo.getTime() !== this._initialFilterValues.dateTo.getTime()
+    ) ? 1 : 0;
   }
 
   /**

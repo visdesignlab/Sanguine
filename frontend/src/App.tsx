@@ -58,6 +58,7 @@ function App() {
 
         await store.filtersStore.generateHistogramData();
         await store.dashboardStore.computeChartData();
+        await store.dashboardStore.computeStatData();
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         console.error('Error fetching visits data:', e);

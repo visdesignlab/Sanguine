@@ -2,7 +2,7 @@ import {
   IconDropletHalf2Filled, IconTestPipe2, IconShieldHeart, IconMedicineSyrup, IconCoin,
 } from '@tabler/icons-react';
 import {
-  dashboardYAxisVars, BLOOD_COMPONENT_OPTIONS, OUTCOME_OPTIONS, COST_OPTIONS, OVERALL_BLOOD_PRODUCT_COST, GUIDELINE_ADHERENCE_OPTIONS, OVERALL_GUIDELINE_ADHERENCE, PROPHYL_MED_OPTIONS,
+  dashboardYAxisVars, BLOOD_COMPONENT_OPTIONS, OUTCOME_OPTIONS, COST_OPTIONS, OVERALL_BLOOD_PRODUCT_COST, GUIDELINE_ADHERENT_OPTIONS, OVERALL_GUIDELINE_ADHERENT, PROPHYL_MED_OPTIONS,
   AGGREGATION_OPTIONS,
   dashboardYAxisOptions,
 } from '../Types/application';
@@ -92,8 +92,8 @@ export function isMetricChangeGood(metricVar: typeof dashboardYAxisVars[number],
   const isCost = [...COST_OPTIONS, OVERALL_BLOOD_PRODUCT_COST].some((opt) => opt.value === metricVar);
 
   // Guideline adherence and prophylactic medications - higher is better (positive change is good)
-  const isAdherence = GUIDELINE_ADHERENCE_OPTIONS.some((opt) => opt.value === metricVar);
-  const isOverallAdherence = metricVar === OVERALL_GUIDELINE_ADHERENCE.value;
+  const isAdherence = GUIDELINE_ADHERENT_OPTIONS.some((opt) => opt.value === metricVar);
+  const isOverallAdherence = metricVar === OVERALL_GUIDELINE_ADHERENT.value;
   const isProphylMed = PROPHYL_MED_OPTIONS.some((opt) => opt.value === metricVar);
 
   if (isBloodComponent || isOutcome || isCost) {
@@ -129,9 +129,9 @@ export function getIconForVar(varName: typeof dashboardYAxisVars[number]) {
   const bloodComponent = BLOOD_COMPONENT_OPTIONS.find((opt) => opt.value === varName);
   if (bloodComponent) return icons.bloodComponent;
 
-  const adherence = GUIDELINE_ADHERENCE_OPTIONS.find((opt) => opt.value === varName);
+  const adherence = GUIDELINE_ADHERENT_OPTIONS.find((opt) => opt.value === varName);
   if (adherence) return icons.adherence;
-  if (adherence || varName === OVERALL_GUIDELINE_ADHERENCE.value) return icons.adherence;
+  if (adherence || varName === OVERALL_GUIDELINE_ADHERENT.value) return icons.adherence;
 
   const outcome = OUTCOME_OPTIONS.find((opt) => opt.value === varName);
   if (outcome) return icons.outcome;

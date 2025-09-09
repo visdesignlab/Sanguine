@@ -197,9 +197,9 @@ export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
 }>;
 
 // Guideline adherence ---------------------------------------------
-export const GUIDELINE_ADHERENCE = {
+export const GUIDELINE_ADHERENT = {
   rbc: {
-    value: 'rbc_adherence',
+    value: 'rbc_adherent',
     label: {
       base: 'Guideline Adherent RBC Transfusions',
       sum: 'Total Guideline Adherent RBC Transfusions',
@@ -207,7 +207,7 @@ export const GUIDELINE_ADHERENCE = {
     },
     // To calculate adherence, we need:
     adherentCount: 'rbc_adherent',
-    totalTransfused: 'rbc_total',
+    totalTransfused: 'rbc_units',
     // The lab description used to determine adherence
     labDesc: ['HGB', 'Hemoglobin'],
     adherenceCheck: (labValue: number) => labValue <= 7.5,
@@ -218,14 +218,14 @@ export const GUIDELINE_ADHERENCE = {
     decimals: 0,
   },
   ffp: {
-    value: 'ffp_adherence',
+    value: 'ffp_adherent',
     label: {
       base: 'Guideline Adherent FFP Transfusions',
       sum: 'Total Guideline Adherent FFP Transfusions',
       avg: 'Percentage of Guideline Adherent FFP Transfusions',
     },
     adherentCount: 'ffp_adherent',
-    totalTransfused: 'ffp_total',
+    totalTransfused: 'ffp_units',
     labDesc: ['INR'],
     adherenceCheck: (labValue: number) => labValue >= 1.5,
     transfusionUnits: ['ffp_units', 'ffp_vol'] as const,
@@ -233,14 +233,14 @@ export const GUIDELINE_ADHERENCE = {
     decimals: 0,
   },
   plt: {
-    value: 'plt_adherence',
+    value: 'plt_adherent',
     label: {
       base: 'Guideline Adherent Platelet Transfusions',
       sum: 'Total Guideline Adherent Platelet Transfusions',
       avg: 'Percentage of Adherent Platelet Transfusions',
     },
     adherentCount: 'plt_adherent',
-    totalTransfused: 'plt_total',
+    totalTransfused: 'plt_units',
     labDesc: ['PLT', 'Platelet Count'],
     adherenceCheck: (labValue: number) => labValue >= 15000,
     transfusionUnits: ['plt_units', 'plt_vol'] as const,
@@ -248,14 +248,14 @@ export const GUIDELINE_ADHERENCE = {
     decimals: 0,
   },
   cryo: {
-    value: 'cryo_adherence',
+    value: 'cryo_adherent',
     label: {
       base: 'Guideline Adherent Cryo Transfusions',
       sum: 'Total Guideline Adherent Cryo Transfusions',
       avg: 'Percentage of Guideline Adherent Cryo Transfusions',
     },
     adherentCount: 'cryo_adherent',
-    totalTransfused: 'cryo_total',
+    totalTransfused: 'cryo_units',
     labDesc: ['Fibrinogen'],
     adherenceCheck: (labValue: number) => labValue >= 175,
     transfusionUnits: ['cryo_units', 'cryo_vol'] as const,
@@ -265,8 +265,8 @@ export const GUIDELINE_ADHERENCE = {
 } as const;
 
 // Total guideline adherence (Across all blood products)
-export const OVERALL_GUIDELINE_ADHERENCE = {
-  value: 'overall_adherence',
+export const OVERALL_GUIDELINE_ADHERENT = {
+  value: 'overall_adherent',
   adherentCount: 'overall_adherent',
   totalTransfused: 'overall_transfused',
   label: {
@@ -279,17 +279,17 @@ export const OVERALL_GUIDELINE_ADHERENCE = {
 } as const;
 
 // Types for guideline adherence fields
-export type GuidelineAdherence = typeof GUIDELINE_ADHERENCE[keyof typeof GUIDELINE_ADHERENCE]['value'];
-export type AdherentCountField = typeof GUIDELINE_ADHERENCE[keyof typeof GUIDELINE_ADHERENCE]['adherentCount'];
-export type TotalTransfusedField = typeof GUIDELINE_ADHERENCE[keyof typeof GUIDELINE_ADHERENCE]['totalTransfused'];
+export type GuidelineAdherence = typeof GUIDELINE_ADHERENT[keyof typeof GUIDELINE_ADHERENT]['value'];
+export type AdherentCountField = typeof GUIDELINE_ADHERENT[keyof typeof GUIDELINE_ADHERENT]['adherentCount'];
+export type TotalTransfusedField = typeof GUIDELINE_ADHERENT[keyof typeof GUIDELINE_ADHERENT]['totalTransfused'];
 
 // Types for overall guideline adherence fields
-export type OverallAdherentCountField = typeof OVERALL_GUIDELINE_ADHERENCE['adherentCount'];
-export type OverallTotalTransfusedField = typeof OVERALL_GUIDELINE_ADHERENCE['totalTransfused'];
-export type OverallGuidelineAdherence = typeof OVERALL_GUIDELINE_ADHERENCE['value'];
+export type OverallAdherentCountField = typeof OVERALL_GUIDELINE_ADHERENT['adherentCount'];
+export type OverallTotalTransfusedField = typeof OVERALL_GUIDELINE_ADHERENT['totalTransfused'];
+export type OverallGuidelineAdherence = typeof OVERALL_GUIDELINE_ADHERENT['value'];
 
 // Guideline adherence options for dashboard
-export const GUIDELINE_ADHERENCE_OPTIONS = Object.values(GUIDELINE_ADHERENCE) as ReadonlyArray<{
+export const GUIDELINE_ADHERENT_OPTIONS = Object.values(GUIDELINE_ADHERENT) as ReadonlyArray<{
   value: GuidelineAdherence;
   label: { base: string; sum: string; avg: string };
   adherentCount: AdherentCountField;
@@ -421,8 +421,8 @@ export const dashboardXAxisVars = dashboardXAxisOptions.map((opt) => opt.value);
 // Dashboard chart y-axis variable options
 export const dashboardYAxisOptions = [
   ...BLOOD_COMPONENT_OPTIONS,
-  OVERALL_GUIDELINE_ADHERENCE,
-  ...GUIDELINE_ADHERENCE_OPTIONS,
+  OVERALL_GUIDELINE_ADHERENT,
+  ...GUIDELINE_ADHERENT_OPTIONS,
   ...OUTCOME_OPTIONS,
   ...PROPHYL_MED_OPTIONS,
   ...COST_OPTIONS,

@@ -94,10 +94,10 @@ class VisitAttributes(models.Model):
     cryo_adherent = models.IntegerField()
     overall_adherent = models.IntegerField()
 
-    rbc_cost = models.DecimalField(max_digits=6, decimal_places=2)
-    ffp_cost = models.DecimalField(max_digits=6, decimal_places=2)
-    plt_cost = models.DecimalField(max_digits=6, decimal_places=2)
-    cryo_cost = models.DecimalField(max_digits=6, decimal_places=2)
+    rbc_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
+    ffp_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
+    plt_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
+    cryo_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
     overall_cost = models.DecimalField(max_digits=6, decimal_places=2)
 
     class Meta:

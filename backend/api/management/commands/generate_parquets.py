@@ -67,10 +67,10 @@ class Command(BaseCommand):
             pa.field("cryo_adherent", pa.uint16(), nullable=False),
             pa.field("overall_adherent", pa.uint16(), nullable=False),     # computed/stored
 
-            pa.field("rbc_cost", pa.decimal128(10, 2), nullable=False),
-            pa.field("ffp_cost", pa.decimal128(10, 2), nullable=False),
-            pa.field("plt_cost", pa.decimal128(10, 2), nullable=False),
-            pa.field("cryo_cost", pa.decimal128(10, 2), nullable=False),
+            pa.field("rbc_units_cost", pa.decimal128(10, 2), nullable=False),
+            pa.field("ffp_units_cost", pa.decimal128(10, 2), nullable=False),
+            pa.field("plt_units_cost", pa.decimal128(10, 2), nullable=False),
+            pa.field("cryo_units_cost", pa.decimal128(10, 2), nullable=False),
             pa.field("cell_saver_ml_cost", pa.uint16(), nullable=False),
             pa.field("overall_cost", pa.decimal128(10, 2), nullable=False)  # computed/stored
         ])

@@ -110,6 +110,7 @@ export class RootStore {
     await this.updateFilteredVisitsLength();
 
     await this.dashboardStore.computeChartData();
+    await this.dashboardStore.computeStatData();
   }
 
   async updateFilteredVisitsLength() {

@@ -134,7 +134,7 @@ export function StatsGrid() {
                 isHovered && statsGridStyles.comparisonTextHovered,
               )}
             >
-              {`last 30 days vs. ${statData.comparedTo || 'previous period'}`}
+              {`last 30 days vs. ${statData?.comparedTo || 'previous period'}`}
             </Text>
           </Group>
         </Paper>
