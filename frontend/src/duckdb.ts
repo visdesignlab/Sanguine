@@ -10,6 +10,6 @@ const worker = new Worker(new URL(bundle.mainWorker, import.meta.url), {
 });
 
 // 4. Create the database instance
-const db = new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger(), worker);
+const db = new duckdb.AsyncDuckDB(new duckdb.VoidLogger(), worker);
 await db.instantiate(bundle.mainModule);
 export const conn = await db.connect();
