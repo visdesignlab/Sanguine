@@ -299,6 +299,7 @@ export function Dashboard() {
                         }))}
                         defaultValue={yAxisVar}
                         value={yAxisVar}
+                        allowDeselect={false}
                         onChange={(value) => {
                           const selectedOption = dashboardYAxisOptions.find((opt) => opt.value === value);
                           let inferredChartType: DashboardChartConfig['chartType'] = 'line';
