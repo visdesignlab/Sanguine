@@ -1,26 +1,11 @@
-import { sum, mean } from 'd3';
 import {
-  IconCoin, IconDropletHalf2Filled, IconMedicineSyrup, IconShieldHeart, IconTestPipe2,
+  IconDropletHalf2Filled, IconTestPipe2, IconShieldHeart, IconMedicineSyrup, IconCoin,
 } from '@tabler/icons-react';
 import {
+  dashboardYAxisVars, BLOOD_COMPONENT_OPTIONS, OUTCOME_OPTIONS, COST_OPTIONS, OVERALL_BLOOD_PRODUCT_COST, GUIDELINE_ADHERENCE_OPTIONS, OVERALL_GUIDELINE_ADHERENCE, PROPHYL_MED_OPTIONS,
   AGGREGATION_OPTIONS,
-  BLOOD_COMPONENT_OPTIONS,
-  DashboardAggYAxisVar,
   dashboardYAxisOptions,
-  dashboardYAxisVars,
-  GUIDELINE_ADHERENCE_OPTIONS,
-  OUTCOME_OPTIONS,
-  OVERALL_GUIDELINE_ADHERENCE,
-  PROPHYL_MED_OPTIONS,
-  TimeAggregation,
-  TimePeriod,
-  COST_OPTIONS,
-  OVERALL_BLOOD_PRODUCT_COST,
-  Year,
-  Month,
-  Quarter,
 } from '../Types/application';
-import type { Visit } from '../Store/Store';
 
 /**
  * Format stat values appropriately based on the variable type
@@ -126,70 +111,6 @@ export function isMetricChangeGood(metricVar: typeof dashboardYAxisVars[number],
   return diffPercent >= 0;
 }
 
-/**
- * Calculate time period string from a date based on aggregation type
- */
-export function getTimePeriodFromDate(date: Date, aggregation: 'month'): Month | null;
-export function getTimePeriodFromDate(date: Date, aggregation: 'quarter'): Quarter | null
-export function getTimePeriodFromDate(date: Date, aggregation: 'year'): Year | null;
-export function getTimePeriodFromDate(date: Date, aggregation: TimeAggregation): TimePeriod | null {
-  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
-    console.error('Invalid date for time period calculation:', date);
-    return null;
-  }
-
-  const year = date.getFullYear();
-
-  switch (aggregation) {
-    case 'quarter': {
-      const quarter = Math.floor(date.getMonth() / 3) + 1 as 1 | 2 | 3 | 4;
-      return `${year}-Q${quarter}`;
-    }
-    case 'month': {
-      const monthName = date.toLocaleDateString('en-US', { month: 'short' });
-      return `${year}-${monthName}`;
-    }
-    case 'year': {
-      return `${year}`;
-    }
-    default:
-      console.error('Unknown time aggregation type:', aggregation);
-      return null;
-  }
-}
-
-/**
- * Compare two time periods for sorting
- */
-export function compareTimePeriods(a: TimePeriod, b: TimePeriod): number {
-  // Extract year from both periods
-  const yearA = parseInt(a.split('-')[0], 10);
-  const yearB = parseInt(b.split('-')[0], 10);
-
-  if (yearA !== yearB) {
-    return yearA - yearB;
-  }
-
-  // If same year, compare based on type
-  if (a.includes('Q') && b.includes('Q')) {
-    // Quarter comparison
-    const quarterA = parseInt(a.split('Q')[1], 10);
-    const quarterB = parseInt(b.split('Q')[1], 10);
-    return quarterA - quarterB;
-  }
-
-  if (a.includes('-') && b.includes('-') && !a.includes('Q') && !b.includes('Q')) {
-    // Month comparison
-    const monthA = a.split('-')[1];
-    const monthB = b.split('-')[1];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return months.indexOf(monthA) - months.indexOf(monthB);
-  }
-
-  // Year only - already compared above
-  return 0;
-}
-
 // Icon mapping to variable type
 export const icons = {
   bloodComponent: IconDropletHalf2Filled,
@@ -220,68 +141,4 @@ export function getIconForVar(varName: typeof dashboardYAxisVars[number]) {
 
   // Default icon
   return icons.bloodComponent;
-}
-
-/**
- * Aggregate visit y-axis variables data for the dashboard
- * (E.g. rbc_units -> sum_rbc_units, avg_rbc_units, etc.)
- * Aggregates by each y-axis aggregation type (sum, avg)
-*/
-export function aggregateVisitsBySumAvg(visits: Visit[]) {
-  const aggregations: Record<DashboardAggYAxisVar, number> = {} as Record<DashboardAggYAxisVar, number>;
-
-  try {
-    // Aggregate Blood components, Outcomes, Prophylactic Meds by sum and average
-    [BLOOD_COMPONENT_OPTIONS, OUTCOME_OPTIONS, PROPHYL_MED_OPTIONS].forEach((options) => {
-      options.forEach(({ value }) => {
-        const sumKey: DashboardAggYAxisVar = `sum_${value}`;
-        const avgKey: DashboardAggYAxisVar = `avg_${value}`;
-
-        aggregations[sumKey] = sum(visits, (d) => d[value as keyof typeof d] as number || 0);
-        aggregations[avgKey] = mean(visits, (d) => d[value as keyof typeof d] as number || 0) || 0;
-      });
-    });
-
-    // Aggregate Guideline Adherence by sum and average
-    GUIDELINE_ADHERENCE_OPTIONS.forEach(({ value, adherentCount, totalTransfused }) => {
-      const totalAdherent = visits.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
-      const totalTransfusions = visits.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
-
-      const sumKey: DashboardAggYAxisVar = `sum_${value}`;
-      const avgKey: DashboardAggYAxisVar = `avg_${value}`;
-
-      aggregations[sumKey] = totalAdherent;
-      aggregations[avgKey] = totalTransfusions > 0 ? totalAdherent / totalTransfusions : 0;
-    });
-
-    // Aggregate Overall Guideline Adherence by sum and average
-    const { value, adherentCount, totalTransfused } = OVERALL_GUIDELINE_ADHERENCE;
-
-    const totalAdherent = visits.reduce((acc, d) => acc + (d[adherentCount] || 0), 0);
-    const totalTransfusions = visits.reduce((acc, d) => acc + (d[totalTransfused] || 0), 0);
-
-    const sumKey: DashboardAggYAxisVar = `sum_${value}`;
-    const avgKey: DashboardAggYAxisVar = `avg_${value}`;
-
-    aggregations[sumKey] = totalAdherent;
-    aggregations[avgKey] = totalTransfusions > 0 ? totalAdherent / totalTransfusions : 0;
-
-    // Aggregate cost per blood product by sum and average
-    COST_OPTIONS.forEach(({ value: costVar }) => {
-      const costSumKey: DashboardAggYAxisVar = `sum_${costVar}`;
-      const costAvgKey: DashboardAggYAxisVar = `avg_${costVar}`;
-      // Each visit has cost fields like rbc_cost, ffp_cost, etc.
-      aggregations[costSumKey] = sum(visits, (d) => d[costVar as keyof typeof d] as number || 0);
-      aggregations[costAvgKey] = mean(visits, (d) => d[costVar as keyof typeof d] as number || 0) || 0;
-    });
-
-    // Aggregate overall blood product cost (total)
-    const totalCostKey = OVERALL_BLOOD_PRODUCT_COST.value as keyof typeof visits[0];
-    aggregations[`sum_${totalCostKey}` as DashboardAggYAxisVar] = sum(visits, (v) => v[totalCostKey] as number || 0);
-    aggregations[`avg_${totalCostKey}` as DashboardAggYAxisVar] = mean(visits, (v) => v[totalCostKey] as number || 0) || 0;
-  } catch (error) {
-    console.error('Error aggregating time period data:', error);
-  }
-
-  return aggregations;
 }

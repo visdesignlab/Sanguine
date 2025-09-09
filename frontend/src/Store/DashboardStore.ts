@@ -16,9 +16,7 @@ import {
   TimePeriod,
   DashboardStatData, // Dashboard data types
 } from '../Types/application';
-import {
-  compareTimePeriods,
-} from '../Utils/dashboard';
+import { compareTimePeriods } from '../Utils/dates';
 
 /**
  * DashboardStore manages the state of the PBM dashboard: stats, layouts, and chart data.
