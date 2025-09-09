@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { makeAutoObservable } from 'mobx';
 import type { RootStore } from './Store';
-import { safeParseDate } from '../Utils/store';
+import { safeParseDate } from '../Utils/dates';
 
 const MANUAL_INFINITY = Number.MAX_SAFE_INTEGER;
 
@@ -298,10 +298,10 @@ export class FiltersStore {
           SELECT HISTOGRAM(${component}, bins.bin) AS histogram,
           FROM filteredVisits, bins;
         `);
-        // histogramData[component] = result.toArray().flatMap((row) => {
-        //   const { histogram } = row.toJSON();
-        //   // return Object.entries(histogram).map(([units, count]) => ({ units, count: Number(count) }));
-        // });
+        histogramData[component] = result.toArray().flatMap((row) => {
+          const { histogram } = row.toJSON();
+          return Object.entries(histogram.toJSON()).map(([units, count]) => ({ units, count: Number(count) }));
+        });
       }));
       this.histogramData = histogramData;
     }
