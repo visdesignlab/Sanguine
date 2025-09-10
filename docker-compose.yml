@@ -3,8 +3,8 @@ services:
     image: docker.io/intelvia/intelvia-backend:v0.0.4
     env_file:
       - .env
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     depends_on:
       mariadb:
         condition: service_healthy
