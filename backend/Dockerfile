@@ -3,10 +3,6 @@
 # The backend needs packages for mariadb
 FROM python:3.13-slim
 
-# Copy the backend code into the container
-COPY . /app
-WORKDIR /app
-
 # Install apt dependencies
 RUN apt-get update && apt-get install -y \
     python3-dev \
@@ -16,8 +12,15 @@ RUN apt-get update && apt-get install -y \
     mariadb-client  # This is useful to connect to the database from the container
 
 RUN pip install poetry
+
+COPY pyproject.toml poetry.lock* /app/
+WORKDIR /app
+
 RUN poetry config virtualenvs.create false
 RUN poetry install
+
+# Copy the backend code into the container
+COPY . /app
 
 # Expose the port the app runs on
 EXPOSE 8000
