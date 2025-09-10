@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.27.6.tgz#ec4070a04d76bae8ddbb10770ba55714a417b7c6"
   integrity sha512-vbavdySgbTTrmFE+EsiqUTzlOr5bzlnJtUv9PynGCAKvfQqjIXbvFdumPM/GxMDfyuGMJaJAU6TO4zc1Jf1i8Q==
 
-"@duckdb/duckdb-wasm@^1.29.1-dev283.0":
-  version "1.29.1-dev9.0"
-  resolved "https://registry.yarnpkg.com/@duckdb/duckdb-wasm/-/duckdb-wasm-1.29.1-dev9.0.tgz#55c5ae666bb21eb8ab0e195b07b5d0505ab73335"
-  integrity sha512-OguW37uPSVDfWY13RQPiBt1fZaX2Qn1iCXL9YGhl1/+e1gcOlzT4HFMsvODjv2sXC0GgGClU/e1iYnmn1C74EQ==
+"@duckdb/duckdb-wasm@^1.30.0":
+  version "1.30.0"
+  resolved "https://registry.yarnpkg.com/@duckdb/duckdb-wasm/-/duckdb-wasm-1.30.0.tgz#b6dcc228af441a38de2c54208f6f653d8342b38d"
+  integrity sha512-9aWrm+4ayl4sTlvGtl/b+LxrUyXaac3yyVqkoJ3F7Vkd62PoS8PcQIRJ/KjXBW36LP1CnPY5jjvFyIcTFLtcXA==
   dependencies:
     apache-arrow "^17.0.0"
 

@@ -289,8 +289,6 @@ export class DashboardStore {
         const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
         // For each yAxisVar (e.g. rbc_units, GUIDELINE_ADHERENT)...
         dashboardYAxisVars.forEach((yAxisVar) => {
-          if (yAxisVar === 'total_blood_product_costs') return; // Skip for now
-
           const aggVar: DashboardAggYAxisVar = `${aggType}_${yAxisVar}`;
           // Format the aggregated data into chart format: (timePeriod, data)
           const chartDatum = rows
@@ -343,7 +341,6 @@ export class DashboardStore {
     const currentPeriodStartMonth = currentPeriodStart.getMonth();
     const currentPeriodStartYear = currentPeriodStart.getFullYear();
 
-    // --- Find comparison period (closest non-overlapping calendar month) for the stats ---
     let comparisonMonth = currentPeriodStartMonth - 1;
     let comparisonYear = currentPeriodStartYear;
     if (comparisonMonth < 0) {
@@ -354,70 +351,100 @@ export class DashboardStore {
     const comparisonPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
     const comparisonMonthName = comparisonPeriodStart.toLocaleDateString('en-US', { month: 'short' });
 
-    await Promise.all(
-      dashboardYAxisVars.map(async (yAxisVar) => {
-      // Query to get current period and comparison period values
-        const statQuery = `
-        SELECT
-        SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN filteredVisits.${yAxisVar} ELSE 0 END) AS current_sum,
-        AVG(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN filteredVisits.${yAxisVar} ELSE NULL END) AS current_avg,
-        SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN filteredVisits.${yAxisVar} ELSE 0 END) AS comparison_sum,
-        AVG(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN filteredVisits.${yAxisVar} ELSE NULL END) AS comparison_avg
-        FROM filteredVisits;
-      `;
+    // --- Main stats query (unchanged) ---
+    const statSelects: string[] = [];
+    dashboardYAxisVars.forEach((yAxisVar) => {
+      statSelects.push(
+        `SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS ${yAxisVar}_current_sum`,
+        `AVG(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_current_avg`,
+        `SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS ${yAxisVar}_comparison_sum`,
+        `AVG(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_comparison_avg`,
+      );
+    });
 
-        // Execute the query
-        try {
-          const statResult = await this._rootStore.duckDB!.query(statQuery);
-          const statRow = statResult.toArray()[0];
+    console.time('Stat data main query time');
+    const statQuery = `
+    SELECT
+      ${statSelects.join(',\n')}
+    FROM filteredVisits;
+  `;
+    const statResult = await this._rootStore.duckDB!.query(statQuery);
+    const statRow = statResult.toArray()[0];
+    console.timeEnd('Stat data main query time');
 
-          await Promise.all(Object.keys(AGGREGATION_OPTIONS).map(async (aggregation) => {
-            const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
-            const key = `${aggType}_${yAxisVar}` as DashboardAggYAxisVar;
+    // --- Sparkline query (all variables, all aggs, all months) ---
+    // Get the last 6 months as YYYY-mmm
+    const sparklineMonths: string[] = [];
+    for (let i = 5; i >= 0; i -= 1) {
+      const d = new Date(latestDate.getFullYear(), latestDate.getMonth() - i, 1);
+      const year = d.getFullYear();
+      const monthShort = d.toLocaleString('en-US', { month: 'short' });
+      sparklineMonths.push(`${year}-${monthShort}`);
+    }
 
-            const currentValue = aggType === 'sum' ? Number(statRow.current_sum) : Number(statRow.current_avg);
-            const comparisonValue = aggType === 'sum' ? Number(statRow.comparison_sum) : Number(statRow.comparison_avg);
+    const sparklineSelects: string[] = [];
+    dashboardYAxisVars.forEach((yAxisVar) => {
+      Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
+        const aggFn = aggregation.toUpperCase();
+        sparklineSelects.push(
+          `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`,
+        );
+      });
+    });
 
-            // Calculate percentage change (diff)
-            const diff = comparisonValue === 0
-              ? (currentValue > 0 ? 100 : 0)
-              : ((currentValue - comparisonValue) / comparisonValue) * 100;
+    const sparklineQuery = `
+    SELECT
+      month,
+      ${sparklineSelects.join(',\n')}
+    FROM filteredVisits
+    WHERE month IN (${sparklineMonths.map((m) => `'${m}'`).join(', ')})
+    GROUP BY month
+    ORDER BY month;
+  `;
+    const sparklineResult = await this._rootStore.duckDB!.query(sparklineQuery);
+    const sparklineRows = sparklineResult.toArray().map((row) => row.toJSON());
 
-            // Format the stat value (E.g. "Overall Guideline Adherence")
-            let formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
+    // Now fill the result object as before, but using the combined statRow and sparklineRows
+    dashboardYAxisVars.forEach((yAxisVar) => {
+      Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
+        const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
+        const key = `${aggType}_${yAxisVar}` as DashboardAggYAxisVar;
 
-            // For adherence variables, don't include full units
-            if (yAxisVar.includes('adherence')) {
-              formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType, false);
-            }
-            // Query to get sparkline data for the past 6 months
-            const sparklineQuery = `
-              SELECT
-              month,
-              ${aggType.toUpperCase()}(${yAxisVar}) AS total
-              FROM filteredVisits
-              WHERE dsch_dtm >= '${new Date(latestDate.getFullYear(), latestDate.getMonth() - 5, 1).toISOString()}'
-              AND dsch_dtm <= '${latestDate.toISOString()}'
-              GROUP BY month
-              ORDER BY month;
-            `;
-            const sparklineResult = await this._rootStore.duckDB!.query(sparklineQuery);
-            const sparklineRows = sparklineResult.toArray().map((row) => row.toJSON());
-            const sparklineData = sparklineRows.map((row) => Number(row.total) || 0);
+        const currentValue = aggType === 'sum'
+          ? Number(statRow[`${yAxisVar}_current_sum`])
+          : Number(statRow[`${yAxisVar}_current_avg`]);
+        const comparisonValue = aggType === 'sum'
+          ? Number(statRow[`${yAxisVar}_comparison_sum`])
+          : Number(statRow[`${yAxisVar}_comparison_avg`]);
 
-            // Store in result
-            result[key] = {
-              value: formattedValue,
-              diff: Math.round(diff),
-              comparedTo: comparisonMonthName,
-              sparklineData,
-            };
-          }));
-        } catch (error) {
-          console.error(`Error computing stat for ${yAxisVar}:`, error);
+        // Calculate percentage change (diff)
+        const diff = comparisonValue === 0
+          ? (currentValue > 0 ? 100 : 0)
+          : ((currentValue - comparisonValue) / comparisonValue) * 100;
+
+        // Format the stat value (E.g. "Overall Guideline Adherence")
+        let formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
+
+        // For adherence variables, don't include full units
+        if (yAxisVar.includes('adherence')) {
+          formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType, false);
         }
-      }),
-    );
+
+        // Sparkline data for this variable/agg, in month order
+        const sparklineData = sparklineMonths.map((month) => {
+          const row = sparklineRows.find((r) => r.month === month);
+          return row ? Number(row[`${aggregation}_${yAxisVar}`]) || 0 : 0;
+        });
+
+        // Store in result
+        result[key] = {
+          value: formattedValue,
+          diff: Math.round(diff),
+          comparedTo: comparisonMonthName,
+          sparklineData,
+        };
+      });
+    });
 
     this.statData = result;
     console.timeEnd('Stat data computation time');

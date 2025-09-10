@@ -426,7 +426,7 @@ export const dashboardYAxisOptions = [
   ...OUTCOME_OPTIONS,
   ...PROPHYL_MED_OPTIONS,
   ...COST_OPTIONS,
-  OVERALL_BLOOD_PRODUCT_COST,
+  // OVERALL_BLOOD_PRODUCT_COST,
 ];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 
