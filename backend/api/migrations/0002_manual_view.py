@@ -7,31 +7,6 @@ def create_materialize_proc(apps, schema_editor):
     BEGIN
         TRUNCATE TABLE VisitAttributes;
 
-        WITH transfusion_agg AS (
-            SELECT
-                visit_no,
-                SUM(rbc_units) AS sum_rbc_units,
-                SUM(ffp_units) AS sum_ffp_units,
-                SUM(plt_units) AS sum_plt_units,
-                SUM(cryo_units) AS sum_cryo_units,
-                SUM(whole_units) AS sum_whole_units,
-                SUM(cell_saver_ml) AS sum_cell_saver_ml,
-                SUM(rbc_units * 200) AS sum_rbc_units_cost,
-                SUM(ffp_units * 50) AS sum_ffp_units_cost,
-                SUM(plt_units * 300) AS sum_plt_units_cost,
-                SUM(cryo_units * 75) AS sum_cryo_units_cost
-            FROM Transfusion
-            GROUP BY visit_no
-        ), medication_flags AS (
-            SELECT
-                visit_no,
-                MAX(CASE WHEN medication_name LIKE '%B12%' OR medication_name LIKE '%COBALAMIN%' THEN 1 ELSE 0 END) AS has_b12,
-                MAX(CASE WHEN medication_name LIKE '%IRON%' OR medication_name LIKE '%FERROUS%' OR medication_name LIKE '%FERRIC%' THEN 1 ELSE 0 END) AS has_iron,
-                MAX(CASE WHEN medication_name LIKE '%TRANEXAMIC%' OR medication_name LIKE '%AMICAR%' THEN 1 ELSE 0 END) AS has_antifibrinolytic
-            FROM Medication
-            GROUP BY visit_no
-        )
-
         INSERT INTO VisitAttributes (
             visit_no,
             mrn,
@@ -102,8 +77,31 @@ def create_materialize_proc(apps, schema_editor):
             COALESCE(t.sum_cryo_units_cost, 0) AS cryo_units_cost,
             CASE WHEN COALESCE(t.sum_cell_saver_ml,0) > 0 THEN 500 ELSE 0 END AS cell_saver_ml_cost
         FROM Visit v
-        LEFT JOIN transfusion_agg t ON t.visit_no = v.visit_no
-        LEFT JOIN medication_flags m ON m.visit_no = v.visit_no;
+        LEFT JOIN (
+            SELECT
+                visit_no,
+                SUM(rbc_units) AS sum_rbc_units,
+                SUM(ffp_units) AS sum_ffp_units,
+                SUM(plt_units) AS sum_plt_units,
+                SUM(cryo_units) AS sum_cryo_units,
+                SUM(whole_units) AS sum_whole_units,
+                SUM(cell_saver_ml) AS sum_cell_saver_ml,
+                SUM(rbc_units * 200) AS sum_rbc_units_cost,
+                SUM(ffp_units * 50) AS sum_ffp_units_cost,
+                SUM(plt_units * 300) AS sum_plt_units_cost,
+                SUM(cryo_units * 75) AS sum_cryo_units_cost
+            FROM Transfusion
+            GROUP BY visit_no
+        ) t ON t.visit_no = v.visit_no
+        LEFT JOIN (
+            SELECT
+                visit_no,
+                MAX(CASE WHEN medication_name LIKE '%B12%' OR medication_name LIKE '%COBALAMIN%' THEN 1 ELSE 0 END) AS has_b12,
+                MAX(CASE WHEN medication_name LIKE '%IRON%' OR medication_name LIKE '%FERROUS%' OR medication_name LIKE '%FERRIC%' THEN 1 ELSE 0 END) AS has_iron,
+                MAX(CASE WHEN medication_name LIKE '%TRANEXAMIC%' OR medication_name LIKE '%AMICAR%' THEN 1 ELSE 0 END) AS has_antifibrinolytic
+            FROM Medication
+            GROUP BY visit_no
+        ) m ON m.visit_no = v.visit_no;
     END;
     """
     conn = schema_editor.connection
