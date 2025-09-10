@@ -14,14 +14,14 @@ WORKDIR /app
 
 # Install the dependencies
 RUN set -ex; \
-      yarn install --frozen-lockfile; \
-      yarn cache clean
+      yarn install --frozen-lockfile;
 
 # Now copy the rest of the code
 COPY . .
 
-# Build the app
+# Build the app and clean up
 RUN yarn run build
+RUN yarn cache clean
 
 # Use nginx:stable as the base image
 FROM docker.io/nginx:stable-alpine
