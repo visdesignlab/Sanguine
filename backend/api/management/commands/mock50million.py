@@ -275,7 +275,7 @@ class Command(BaseCommand):
                         "apr_drg_desc": fake.sentence(),
                         "apr_drg_weight": str(fake.random_int(1, 999)).zfill(3),
                         "ms_drg_weight": str(fake.random_int(1, 999)).zfill(3),
-                        "cci": cci,
+                        **cci,
                         "cci_score": sum(cci.values()),
                     }
                     visits.append((pat, bad_pat, visit))
@@ -549,16 +549,20 @@ class Command(BaseCommand):
                     )
                     lab_row = make_lab_row(fake, pat, visit, draw_dtm, lab, result_desc_option)
                     yield lab_row
+                    labs.append((surgery, lab_row))
                     lab = lab_row
 
                     # Intra-op: 0-2 tests
                     for i in range(random.randint(0, 3)):
-                        draw_dtm = fake.date_time_between(
-                            start_date=datetime.strptime(surgery["surgery_start_dtm"], DATE_FORMAT) + timedelta(hours=i),
-                            end_date=datetime.strptime(surgery["surgery_start_dtm"], DATE_FORMAT) + timedelta(hours=i + 1),
+                        draw_dtm = make_aware(    # <-- ensure timezone-aware
+                            fake.date_time_between(
+                                start_date=datetime.strptime(surgery["surgery_start_dtm"], DATE_FORMAT) + timedelta(hours=i),
+                                end_date=datetime.strptime(surgery["surgery_start_dtm"], DATE_FORMAT) + timedelta(hours=i + 1),
+                            )
                         )
                         lab_row = make_lab_row(fake, pat, visit, draw_dtm, lab, result_desc_option)
                         yield lab_row
+                        labs.append((surgery, lab_row))    # <-- append intra-op lab
                         lab = lab_row
 
                     # Post-op: 0-1 tests
@@ -725,7 +729,7 @@ class Command(BaseCommand):
                                     start_date=datetime.strptime(surg["surgery_start_dtm"], DATE_FORMAT),
                                     end_date=datetime.strptime(surg["surgery_end_dtm"], DATE_FORMAT),
                                 )
-                            ),
+                            ).strftime(DATE_FORMAT),
                             "transfusion_rank": rank,
                             "blood_unit_number": fake.unique.random_number(digits=10),
                             "rbc_units": rbcs if type == "unit" else None,
