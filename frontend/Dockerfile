@@ -9,14 +9,19 @@ RUN apk add --no-cache git openssh
 ARG VITE_QUERY_URL="/api/"
 
 # Copy the frontend code into the container
-COPY . /app
+COPY package.json yarn.lock* ./
 WORKDIR /app
 
 # Install the dependencies
 RUN set -ex; \
       yarn install --frozen-lockfile; \
-      yarn cache clean; \
-      yarn run build
+      yarn cache clean
+
+# Now copy the rest of the code
+COPY . .
+
+# Build the app
+RUN yarn run build
 
 # Use nginx:stable as the base image
 FROM docker.io/nginx:stable-alpine
