@@ -6,6 +6,7 @@ import {
   Rating,
   ThemeIcon,
   Text,
+  Tooltip,
 } from '@mantine/core';
 import { BarChart } from '@mantine/charts';
 import { DateInput } from '@mantine/dates';
@@ -69,96 +70,110 @@ export function FilterPanel() {
             resetFunc={() => store.filtersStore.resetBloodComponentFilters()}
           />
           <Accordion.Panel>
-            <Input.Wrapper label="RBC Units" mb="lg">
-              <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
-                <BarChart
-                  h={30}
-                  style={{ width: 'calc(100% - 12px)' }}
-                  barProps={{ barSize: '100%' }}
-                  data={store.filtersStore.rbc_unitsHistogramData}
-                  dataKey="units"
-                  withXAxis={false}
-                  withYAxis={false}
-                  withTooltip={false}
-                  gridAxis="none"
-                  series={[{ name: 'count', color: 'blue' }]}
-                  ml={1}
-                />
-              </Flex>
-              <FilterRangeSlider varName="rbc_units" />
-            </Input.Wrapper>
-            <Input.Wrapper label="FFP Units" mb="lg">
-              <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
-                <BarChart
-                  h={30}
-                  style={{ width: 'calc(100% - 12px)' }}
-                  barProps={{ barSize: '100%' }}
-                  data={store.filtersStore.ffp_unitsHistogramData}
-                  dataKey="units"
-                  withXAxis={false}
-                  withYAxis={false}
-                  withTooltip={false}
-                  gridAxis="none"
-                  series={[{ name: 'count', color: 'blue' }]}
-                  ml={1}
-                />
-              </Flex>
-              <FilterRangeSlider varName="ffp_units" />
-            </Input.Wrapper>
-            <Input.Wrapper label="Platelet Units" mb="lg">
-              <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
-                <BarChart
-                  h={30}
-                  style={{ width: 'calc(100% - 12px)' }}
-                  barProps={{ barSize: '100%' }}
-                  data={store.filtersStore.plt_unitsHistogramData}
-                  dataKey="units"
-                  withXAxis={false}
-                  withYAxis={false}
-                  withTooltip={false}
-                  gridAxis="none"
-                  series={[{ name: 'count', color: 'blue' }]}
-                  ml={1}
-                />
-              </Flex>
-              <FilterRangeSlider varName="plt_units" />
-            </Input.Wrapper>
-            <Input.Wrapper label="Cryo Units" mb="lg">
-              <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
-                <BarChart
-                  h={30}
-                  style={{ width: 'calc(100% - 12px)' }}
-                  barProps={{ barSize: '100%' }}
-                  data={store.filtersStore.cryo_unitsHistogramData}
-                  dataKey="units"
-                  withXAxis={false}
-                  withYAxis={false}
-                  withTooltip={false}
-                  gridAxis="none"
-                  series={[{ name: 'count', color: 'blue' }]}
-                  ml={1}
-                />
-              </Flex>
-              <FilterRangeSlider varName="cryo_units" />
-            </Input.Wrapper>
-            <Input.Wrapper label="Cell Saver (mL)" mb="lg">
-              <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
-                <BarChart
-                  h={30}
-                  style={{ width: 'calc(100% - 12px)' }}
-                  barProps={{ barSize: '100%' }}
-                  data={store.filtersStore.cell_saver_mlHistogramData}
-                  dataKey="units"
-                  withXAxis={false}
-                  withYAxis={false}
-                  withTooltip={false}
-                  gridAxis="none"
-                  series={[{ name: 'count', color: 'blue' }]}
-                  ml={1}
-                />
-              </Flex>
-              <FilterRangeSlider varName="cell_saver_ml" />
-            </Input.Wrapper>
+            <Tooltip label="Filter for Visits That Used ..." position="top-start">
+              <Input.Wrapper label="RBC Units" mb="lg">
+                <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
+                  <BarChart
+                    h={30}
+                    style={{ width: 'calc(100% - 12px)' }}
+                    barProps={{ barSize: '100%' }}
+                    data={store.filtersStore.rbc_unitsHistogramData}
+                    dataKey="units"
+                    withXAxis={false}
+                    withYAxis={false}
+                    withTooltip={false}
+                    gridAxis="none"
+                    series={[{ name: 'count', color: 'blue' }]}
+                    ml={1}
+                  />
+                </Flex>
+                <FilterRangeSlider varName="rbc_units" />
+              </Input.Wrapper>
+            </Tooltip>
+
+            <Tooltip label="Filter for Visits That Used ..." position="top-start">
+              <Input.Wrapper label="FFP Units" mb="lg">
+                <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
+                  <BarChart
+                    h={30}
+                    style={{ width: 'calc(100% - 12px)' }}
+                    barProps={{ barSize: '100%' }}
+                    data={store.filtersStore.ffp_unitsHistogramData}
+                    dataKey="units"
+                    withXAxis={false}
+                    withYAxis={false}
+                    withTooltip={false}
+                    gridAxis="none"
+                    series={[{ name: 'count', color: 'blue' }]}
+                    ml={1}
+                  />
+                </Flex>
+                <FilterRangeSlider varName="ffp_units" />
+              </Input.Wrapper>
+            </Tooltip>
+
+            <Tooltip label="Filter for Visits That Used ..." position="top-start">
+              <Input.Wrapper label="Platelet Units" mb="lg">
+                <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
+                  <BarChart
+                    h={30}
+                    style={{ width: 'calc(100% - 12px)' }}
+                    barProps={{ barSize: '100%' }}
+                    data={store.filtersStore.plt_unitsHistogramData}
+                    dataKey="units"
+                    withXAxis={false}
+                    withYAxis={false}
+                    withTooltip={false}
+                    gridAxis="none"
+                    series={[{ name: 'count', color: 'blue' }]}
+                    ml={1}
+                  />
+                </Flex>
+                <FilterRangeSlider varName="plt_units" />
+              </Input.Wrapper>
+            </Tooltip>
+
+            <Tooltip label="Filter for Visits That Used ..." position="top-start">
+              <Input.Wrapper label="Cryo Units" mb="lg">
+                <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
+                  <BarChart
+                    h={30}
+                    style={{ width: 'calc(100% - 12px)' }}
+                    barProps={{ barSize: '100%' }}
+                    data={store.filtersStore.cryo_unitsHistogramData}
+                    dataKey="units"
+                    withXAxis={false}
+                    withYAxis={false}
+                    withTooltip={false}
+                    gridAxis="none"
+                    series={[{ name: 'count', color: 'blue' }]}
+                    ml={1}
+                  />
+                </Flex>
+                <FilterRangeSlider varName="cryo_units" />
+              </Input.Wrapper>
+            </Tooltip>
+
+            <Tooltip label="Filter for Visits That Used ..." position="top-start">
+              <Input.Wrapper label="Cell Saver (mL)" mb="lg">
+                <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
+                  <BarChart
+                    h={30}
+                    style={{ width: 'calc(100% - 12px)' }}
+                    barProps={{ barSize: '100%' }}
+                    data={store.filtersStore.cell_saver_mlHistogramData}
+                    dataKey="units"
+                    withXAxis={false}
+                    withYAxis={false}
+                    withTooltip={false}
+                    gridAxis="none"
+                    series={[{ name: 'count', color: 'blue' }]}
+                    ml={1}
+                  />
+                </Flex>
+                <FilterRangeSlider varName="cell_saver_ml" />
+              </Input.Wrapper>
+            </Tooltip>
           </Accordion.Panel>
         </Accordion.Item>
         {/** Medication Filters */}
