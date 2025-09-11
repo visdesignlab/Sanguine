@@ -145,7 +145,7 @@ class Migration(migrations.Migration):
                 plt_units SMALLINT UNSIGNED DEFAULT 0,
                 cryo_units SMALLINT UNSIGNED DEFAULT 0,
                 whole_units SMALLINT UNSIGNED DEFAULT 0,
-                cell_saver_ml INT UNSIGNED DEFAULT 0,
+                cell_saver_ml MEDIUMINT UNSIGNED DEFAULT 0,
                 overall_units SMALLINT UNSIGNED AS (rbc_units + ffp_units + plt_units + cryo_units + whole_units) STORED,
 
                 los DECIMAL(6,2),

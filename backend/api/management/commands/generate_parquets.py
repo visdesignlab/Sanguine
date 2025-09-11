@@ -48,7 +48,7 @@ class Command(BaseCommand):
             pa.field("plt_units", pa.uint16(), nullable=False),
             pa.field("cryo_units", pa.uint16(), nullable=False),
             pa.field("whole_units", pa.uint16(), nullable=False),
-            pa.field("cell_saver_ml", pa.uint16(), nullable=False),
+            pa.field("cell_saver_ml", pa.uint32(), nullable=False),
             pa.field("overall_units", pa.uint16(), nullable=False),        # computed/stored
 
             pa.field("los", pa.decimal128(6, 2), nullable=True),
