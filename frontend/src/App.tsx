@@ -8,7 +8,7 @@ import { mantineTheme } from './Theme/mantineTheme';
 import { logoutHandler, whoamiAPICall } from './Store/UserManagement';
 import { BrowserWarning } from './Components/Modals/BrowserWarning';
 import { DataRetrieval } from './Components/Modals/DataRetrieval';
-import { conn } from './duckdb';
+import { db, conn } from './duckdb';
 
 function App() {
   // Data Loading states
@@ -39,9 +39,15 @@ function App() {
           return;
         }
 
+        const res = await fetch(`${queryUrl}get_all_data`);
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        await db.registerFileBuffer('data.parquet', new Uint8Array(await res.arrayBuffer()));
+
         await store.duckDB.query(`
           CREATE TABLE IF NOT EXISTS visits AS
-          SELECT * FROM read_parquet('${import.meta.env.VITE_QUERY_URL}get_all_data');
+          SELECT * FROM read_parquet('data.parquet');
           
           CREATE TABLE IF NOT EXISTS filteredVisitIds AS
           SELECT visit_no FROM visits;
