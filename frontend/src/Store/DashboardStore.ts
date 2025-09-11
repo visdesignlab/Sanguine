@@ -5,7 +5,6 @@ import type { RootStore } from './Store';
 
 import {
   AGGREGATION_OPTIONS, // Dashboard configuration
-  dashboardYAxisVars,
   type DashboardChartConfig,
   type DashboardStatConfig,
   DashboardChartData,
@@ -81,13 +80,13 @@ export class DashboardStore {
   // Stat configurations by default
   _statConfigs: DashboardStatConfig[] = [
     {
-      statId: '1', var: 'rbc_units', aggregation: 'avg', title: 'Average RBCs Transfused Per Visit',
+      statId: '1', yAxisVar: 'rbc_units', aggregation: 'avg', title: 'Average RBCs Transfused Per Visit',
     },
     {
-      statId: '2', var: 'plt_units', aggregation: 'avg', title: 'Average Platelets Transfused Per Visit',
+      statId: '2', yAxisVar: 'plt_units', aggregation: 'avg', title: 'Average Platelets Transfused Per Visit',
     },
     {
-      statId: '3', var: 'cell_saver_ml', aggregation: 'sum', title: 'Total Cell Salvage Volume (ml) Used',
+      statId: '3', yAxisVar: 'cell_saver_ml', aggregation: 'sum', title: 'Total Cell Salvage Volume (ml) Used',
     },
     // {
     //   statId: '4', var: 'total_blood_product_costs', aggregation: 'sum', title: 'Total Blood Product Costs',
@@ -113,12 +112,18 @@ export class DashboardStore {
    * Initializes the dashboard with default chart configurations.
    */
   setChartConfig(chartId: string, input: DashboardChartConfig) {
+    const refreshData = input.yAxisVar !== this._chartConfigs.find((c) => c.chartId === chartId)?.yAxisVar;
+
     this._chartConfigs = this._chartConfigs.map((config) => {
       if (config.chartId === chartId) {
         return { ...config, ...input };
       }
       return config;
     });
+
+    if (refreshData) {
+      this.computeChartData();
+    }
   }
 
   /**
@@ -177,6 +182,7 @@ export class DashboardStore {
       main: newMainLayouts,
       ...(this._chartLayouts.sm && { sm: newSmLayouts }),
     };
+    this.computeChartData();
   }
 
   // Stat management -----------------------------------------------------------
@@ -185,7 +191,7 @@ export class DashboardStore {
    * @param aggregation Aggregation method to use (e.g. 'avg', 'sum')
    * @description Adds new stat to dashboard with a generated title.
    */
-  addStat(statVar: DashboardStatConfig['var'], aggregation: DashboardStatConfig['aggregation']) {
+  addStat(statVar: DashboardStatConfig['yAxisVar'], aggregation: DashboardStatConfig['aggregation']) {
   // Generate unique ID and title internally
     const statId = `stat-${Date.now()}`;
     const opt = dashboardYAxisOptions.find((o) => o.value === statVar);
@@ -193,13 +199,14 @@ export class DashboardStore {
 
     const fullStatConfig: DashboardStatConfig = {
       statId,
-      var: statVar,
+      yAxisVar: statVar,
       aggregation,
       title,
     };
 
     // Add the stat
     this._statConfigs = [...this._statConfigs, fullStatConfig];
+    this.computeStatData();
   }
 
   /**
@@ -217,63 +224,22 @@ export class DashboardStore {
   async computeChartData() {
     if (!this._rootStore.duckDB) return;
 
-    console.time('Chart data computation time');
     const result = {} as DashboardChartData;
 
-    // --- Calculate data for every possible chart (aggregation, yAxisVar, xAxisVar) combination ---
-    // For each aggregation option (e.g. sum, avg)...
-    // Write one query that gets all data at once
+    // Dynamically build the query to ensure all current charts are included
+    const selectClauses = this._chartConfigs.flatMap(({ yAxisVar }) => (
+      // For every aggregation option
+      Object.keys(AGGREGATION_OPTIONS).map((aggregation) => {
+        const aggFn = aggregation.toUpperCase();
+        return `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`;
+      })
+    ));
     const query = `
       SELECT 
         month,
         quarter,
         year,
-
-        SUM(rbc_units) AS sum_rbc_units,
-        AVG(rbc_units) AS avg_rbc_units,
-        SUM(plt_units) AS sum_plt_units,
-        AVG(plt_units) AS avg_plt_units,
-        SUM(ffp_units) AS sum_ffp_units,
-        AVG(ffp_units) AS avg_ffp_units,
-        SUM(cryo_units) AS sum_cryo_units,
-        AVG(cryo_units) AS avg_cryo_units,
-        SUM(whole_units) AS sum_whole_units,
-        AVG(whole_units) AS avg_whole_units,
-        SUM(cell_saver_ml) AS sum_cell_saver_ml,
-        AVG(cell_saver_ml) AS avg_cell_saver_ml,
-
-        SUM(los) AS sum_los,
-        AVG(los) AS avg_los,
-        SUM(death) aS sum_death,
-        AVG(death) AS avg_death,
-        SUM(vent) AS sum_vent,
-        AVG(vent) AS avg_vent,
-        SUM(stroke) AS sum_stroke,
-        AVG(stroke) AS avg_stroke,
-        SUM(ecmo) AS sum_ecmo,
-        AVG(ecmo) AS avg_ecmo,
-        
-        SUM(b12) AS sum_b12,
-        AVG(b12) AS avg_b12,
-        SUM(iron) AS sum_iron,
-        AVG(iron) AS avg_iron,
-        SUM(antifibrinolytic) AS sum_antifibrinolytic,
-        AVG(antifibrinolytic) AS avg_antifibrinolytic,
-        
-        sum(rbc_units_cost) as sum_rbc_units_cost,
-        avg(rbc_units_cost) as avg_rbc_units_cost,
-        sum(plt_units_cost) as sum_plt_units_cost,
-        avg(plt_units_cost) as avg_plt_units_cost,
-        sum(ffp_units_cost) as sum_ffp_units_cost,
-        avg(ffp_units_cost) as avg_ffp_units_cost,
-        sum(cryo_units_cost) as sum_cryo_units_cost,
-        avg(cryo_units_cost) as avg_cryo_units_cost,
-        sum(cell_saver_ml_cost) as sum_cell_saver_ml_cost,
-        avg(cell_saver_ml_cost) as avg_cell_saver_ml_cost,
-        -- sum(whole_cost) as sum_whole_units_cost,
-        -- avg(whole_cost) as avg_whole_units_cost,
-
-        
+        ${selectClauses.join(',\n')}
       FROM filteredVisits
       GROUP BY month, quarter, year
       ORDER BY year, quarter, month;
@@ -284,11 +250,9 @@ export class DashboardStore {
     // For each xAxisVar (e.g. quarter, month)...
     dashboardXAxisVars.forEach((xAxisVar) => {
       const timeAggregation = xAxisVar as TimeAggregation;
-      // For each aggregation option (e.g. sum, avg)...
-      Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
-        const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
-        // For each yAxisVar (e.g. rbc_units, GUIDELINE_ADHERENT)...
-        dashboardYAxisVars.forEach((yAxisVar) => {
+      this.chartConfigs.forEach(({ yAxisVar }) => {
+        Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
+          const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
           const aggVar: DashboardAggYAxisVar = `${aggType}_${yAxisVar}`;
           // Format the aggregated data into chart format: (timePeriod, data)
           const chartDatum = rows
@@ -307,7 +271,7 @@ export class DashboardStore {
               return acc;
             }, [] as { timePeriod: TimePeriod; data: number }[])
             .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
-          // Log filtered data for debugging
+            // Log filtered data for debugging
           if (chartDatum.length === 0) {
             console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and aggVar "${aggVar}"`);
           }
@@ -320,13 +284,11 @@ export class DashboardStore {
     });
 
     this.chartData = result;
-    console.timeEnd('Chart data computation time');
   }
 
   async computeStatData() {
     if (!this._rootStore.duckDB) return;
 
-    console.time('Stat data computation time');
     const result = {} as DashboardStatData;
 
     const latestDateQuery = 'SELECT MAX(dsch_dtm) as latest_date FROM filteredVisits';
@@ -353,16 +315,20 @@ export class DashboardStore {
 
     // --- Main stats query (unchanged) ---
     const statSelects: string[] = [];
-    dashboardYAxisVars.forEach((yAxisVar) => {
-      statSelects.push(
-        `SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS ${yAxisVar}_current_sum`,
-        `AVG(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_current_avg`,
-        `SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS ${yAxisVar}_comparison_sum`,
-        `AVG(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_comparison_avg`,
-      );
+    this.statConfigs.forEach(({ yAxisVar, aggregation }) => {
+      if (aggregation === 'sum') {
+        statSelects.push(
+          `SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS ${yAxisVar}_current_sum`,
+          `SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS ${yAxisVar}_comparison_sum`,
+        );
+      } else if (aggregation === 'avg') {
+        statSelects.push(
+          `AVG(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_current_avg`,
+          `AVG(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_comparison_avg`,
+        );
+      }
     });
 
-    console.time('Stat data main query time');
     const statQuery = `
     SELECT
       ${statSelects.join(',\n')}
@@ -370,7 +336,6 @@ export class DashboardStore {
   `;
     const statResult = await this._rootStore.duckDB!.query(statQuery);
     const statRow = statResult.toArray()[0];
-    console.timeEnd('Stat data main query time');
 
     // --- Sparkline query (all variables, all aggs, all months) ---
     // Get the last 6 months as YYYY-mmm
@@ -383,13 +348,11 @@ export class DashboardStore {
     }
 
     const sparklineSelects: string[] = [];
-    dashboardYAxisVars.forEach((yAxisVar) => {
-      Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
-        const aggFn = aggregation.toUpperCase();
-        sparklineSelects.push(
-          `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`,
-        );
-      });
+    this.statConfigs.forEach(({ yAxisVar, aggregation }) => {
+      const aggFn = aggregation.toUpperCase();
+      sparklineSelects.push(
+        `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`,
+      );
     });
 
     const sparklineQuery = `
@@ -405,48 +368,45 @@ export class DashboardStore {
     const sparklineRows = sparklineResult.toArray().map((row) => row.toJSON());
 
     // Now fill the result object as before, but using the combined statRow and sparklineRows
-    dashboardYAxisVars.forEach((yAxisVar) => {
-      Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
-        const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
-        const key = `${aggType}_${yAxisVar}` as DashboardAggYAxisVar;
+    this.statConfigs.forEach(({ yAxisVar, aggregation }) => {
+      const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
+      const key = `${aggType}_${yAxisVar}` as DashboardAggYAxisVar;
 
-        const currentValue = aggType === 'sum'
-          ? Number(statRow[`${yAxisVar}_current_sum`])
-          : Number(statRow[`${yAxisVar}_current_avg`]);
-        const comparisonValue = aggType === 'sum'
-          ? Number(statRow[`${yAxisVar}_comparison_sum`])
-          : Number(statRow[`${yAxisVar}_comparison_avg`]);
+      const currentValue = aggType === 'sum'
+        ? Number(statRow[`${yAxisVar}_current_sum`])
+        : Number(statRow[`${yAxisVar}_current_avg`]);
+      const comparisonValue = aggType === 'sum'
+        ? Number(statRow[`${yAxisVar}_comparison_sum`])
+        : Number(statRow[`${yAxisVar}_comparison_avg`]);
 
-        // Calculate percentage change (diff)
-        const diff = comparisonValue === 0
-          ? (currentValue > 0 ? 100 : 0)
-          : ((currentValue - comparisonValue) / comparisonValue) * 100;
+      // Calculate percentage change (diff)
+      const diff = comparisonValue === 0
+        ? (currentValue > 0 ? 100 : 0)
+        : ((currentValue - comparisonValue) / comparisonValue) * 100;
 
-        // Format the stat value (E.g. "Overall Guideline Adherence")
-        let formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
+      // Format the stat value (E.g. "Overall Guideline Adherence")
+      let formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
 
-        // For adherence variables, don't include full units
-        if (yAxisVar.includes('adherence')) {
-          formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType, false);
-        }
+      // For adherence variables, don't include full units
+      if (yAxisVar.includes('adherence')) {
+        formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType, false);
+      }
 
-        // Sparkline data for this variable/agg, in month order
-        const sparklineData = sparklineMonths.map((month) => {
-          const row = sparklineRows.find((r) => r.month === month);
-          return row ? Number(row[`${aggregation}_${yAxisVar}`]) || 0 : 0;
-        });
-
-        // Store in result
-        result[key] = {
-          value: formattedValue,
-          diff: Math.round(diff),
-          comparedTo: comparisonMonthName,
-          sparklineData,
-        };
+      // Sparkline data for this variable/agg, in month order
+      const sparklineData = sparklineMonths.map((month) => {
+        const row = sparklineRows.find((r) => r.month === month);
+        return row ? Number(row[`${aggregation}_${yAxisVar}`]) || 0 : 0;
       });
+
+      // Store in result
+      result[key] = {
+        value: formattedValue,
+        diff: Math.round(diff),
+        comparedTo: comparisonMonthName,
+        sparklineData,
+      };
     });
 
     this.statData = result;
-    console.timeEnd('Stat data computation time');
   }
 }

@@ -444,8 +444,8 @@ export type DashboardChartData = Record<DashboardChartConfigKey, ({ timePeriod: 
 // --- Dashboard stats ---
 export type DashboardStatConfig = {
   statId: string;
-  var: typeof dashboardYAxisVars[number];
-  aggregation?: keyof typeof AGGREGATION_OPTIONS;
+  yAxisVar: typeof dashboardYAxisVars[number];
+  aggregation: keyof typeof AGGREGATION_OPTIONS;
   title: string;
 };
 

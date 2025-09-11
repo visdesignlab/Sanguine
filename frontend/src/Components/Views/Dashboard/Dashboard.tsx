@@ -8,6 +8,8 @@ import { useObserver } from 'mobx-react';
 import { useDisclosure } from '@mantine/hooks';
 import {
   useMantineTheme, Title, Stack, Card, Flex, Select, Button, CloseButton, ActionIcon, Menu, Modal, Divider, Tooltip,
+  LoadingOverlay,
+  Box,
 } from '@mantine/core';
 import { BarChart, LineChart } from '@mantine/charts';
 import {
@@ -96,7 +98,7 @@ export function Dashboard() {
     } else {
     // Add stat
       store.dashboardStore.addStat(
-      selectedYAxisVar as DashboardStatConfig['var'],
+      selectedYAxisVar as DashboardStatConfig['yAxisVar'],
       selectedAggregation as DashboardStatConfig['aggregation'],
       );
     }
@@ -319,80 +321,83 @@ export function Dashboard() {
                       <CloseButton onClick={() => handleRemoveChart(chartId)} />
                     </Flex>
                   </Flex>
-                  { chartType === 'bar' ? (
-                    // Bar Chart
-                    <BarChart
-                      h={`calc(100% - (${theme.spacing.md} * 2))`}
-                      data={chartData}
-                      dataKey="timePeriod"
-                      series={
-                        chartDataKeys.map((name, idx) => ({
-                          name,
-                          color: chartColors[idx % chartColors.length],
-                          label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
-                        }))
-                      }
-                      xAxisProps={{
-                        interval: 'equidistantPreserveStart',
-                      }}
-                      type="stacked"
-                      withLegend={chartDataKeys.length > 1}
-                      tooltipAnimationDuration={200}
-                      tooltipProps={
-                        chartDataKeys.length === 1
-                          ? {
-                            content: ({ active, payload, label }) => (
-                              <DashboardChartTooltip
-                                active={active}
-                                payload={payload}
-                                xAxisVar={label}
-                                yAxisVar={yAxisVar}
-                                aggregation={aggregation}
-                              />
-                            ),
-                          }
-                          : {}
-                      }
-                      valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
-                    />
-                  ) : (
-                    // Line Chart
-                    <LineChart
-                      h={`calc(100% - (${theme.spacing.md} * 2))`}
-                      data={chartData}
-                      dataKey="timePeriod"
-                      series={
-                        chartDataKeys.map((name, idx) => ({
-                          name,
-                          color: chartColors[idx % chartColors.length],
-                          label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
-                        }))
-                      }
-                      curveType="linear"
-                      tickLine="none"
-                      xAxisProps={{
-                        interval: 'equidistantPreserveStart',
-                      }}
-                      withLegend={chartDataKeys.length > 1}
-                      tooltipAnimationDuration={200}
-                      tooltipProps={
-                        chartDataKeys.length === 1
-                          ? {
-                            content: ({ active, payload, label }) => (
-                              <DashboardChartTooltip
-                                active={active}
-                                payload={payload}
-                                xAxisVar={label}
-                                yAxisVar={yAxisVar}
-                                aggregation={aggregation}
-                              />
-                            ),
-                          }
-                          : {}
-                      }
-                      valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
-                    />
-                  )}
+                  <Box h="100%">
+                    <LoadingOverlay visible={chartData.length === 0} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }} />
+                    { chartType === 'bar' ? (
+                      // Bar Chart
+                      <BarChart
+                        h="100%"
+                        data={chartData}
+                        dataKey="timePeriod"
+                        series={
+                          chartDataKeys.map((name, idx) => ({
+                            name,
+                            color: chartColors[idx % chartColors.length],
+                            label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
+                          }))
+                        }
+                        xAxisProps={{
+                          interval: 'equidistantPreserveStart',
+                        }}
+                        type="stacked"
+                        withLegend={chartDataKeys.length > 1}
+                        tooltipAnimationDuration={200}
+                        tooltipProps={
+                          chartDataKeys.length === 1
+                            ? {
+                              content: ({ active, payload, label }) => (
+                                <DashboardChartTooltip
+                                  active={active}
+                                  payload={payload}
+                                  xAxisVar={label}
+                                  yAxisVar={yAxisVar}
+                                  aggregation={aggregation}
+                                />
+                              ),
+                            }
+                            : {}
+                        }
+                        valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
+                      />
+                    ) : (
+                      // Line Chart
+                      <LineChart
+                        h="100%"
+                        data={chartData}
+                        dataKey="timePeriod"
+                        series={
+                          chartDataKeys.map((name, idx) => ({
+                            name,
+                            color: chartColors[idx % chartColors.length],
+                            label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
+                          }))
+                        }
+                        curveType="linear"
+                        tickLine="none"
+                        xAxisProps={{
+                          interval: 'equidistantPreserveStart',
+                        }}
+                        withLegend={chartDataKeys.length > 1}
+                        tooltipAnimationDuration={200}
+                        tooltipProps={
+                          chartDataKeys.length === 1
+                            ? {
+                              content: ({ active, payload, label }) => (
+                                <DashboardChartTooltip
+                                  active={active}
+                                  payload={payload}
+                                  xAxisVar={label}
+                                  yAxisVar={yAxisVar}
+                                  aggregation={aggregation}
+                                />
+                              ),
+                            }
+                            : {}
+                        }
+                        valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
+                      />
+                    )}
+                  </Box>
                 </Flex>
               </Card>
             );

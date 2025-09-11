@@ -3,8 +3,9 @@ import {
   IconArrowUpRight,
 } from '@tabler/icons-react';
 import {
+  Card,
   CloseButton,
-  Group, Paper, SimpleGrid, Text,
+  Group, LoadingOverlay, SimpleGrid, Text,
   Title,
 } from '@mantine/core';
 import { useState, useContext, useCallback } from 'react';
@@ -40,7 +41,7 @@ export function StatsGrid() {
     const statCards = store.dashboardStore._statConfigs.map((statConfig, idx) => {
       // Get the stat value from statData
       const aggregationKey = statConfig.aggregation || 'sum';
-      const dataKey = `${aggregationKey}_${statConfig.var}` as keyof typeof store.dashboardStore.statData;
+      const dataKey = `${aggregationKey}_${statConfig.yAxisVar}` as keyof typeof store.dashboardStore.statData;
       // Stat data for this card
       const statData = store.dashboardStore.statData[dataKey] as DashboardStatData[DashboardAggYAxisVar];
       const statValue = statData?.value || '0';
@@ -48,13 +49,13 @@ export function StatsGrid() {
       const statSparklineData = statData?.sparklineData || [];
 
       // Get the icon for this stat
-      const Icon = getIconForVar(statConfig.var);
+      const Icon = getIconForVar(statConfig.yAxisVar);
 
       // Get the value diff icon
       const DiffIcon = diff > 0 ? IconArrowUpRight : IconArrowDownRight;
 
       // Positive (green) or negative (red) color based on diff
-      const statColor = isMetricChangeGood(statConfig.var, diff)
+      const statColor = isMetricChangeGood(statConfig.yAxisVar, diff)
         ? positiveColor
         : negativeColor;
 
@@ -62,7 +63,7 @@ export function StatsGrid() {
       const isHovered = hoveredIdx === idx;
 
       return (
-        <Paper
+        <Card
           key={statConfig.statId}
           className={clsx(
             gridItemStyles.gridItem,
@@ -71,6 +72,7 @@ export function StatsGrid() {
           onMouseEnter={() => setHoveredIdx(idx)}
           onMouseLeave={() => setHoveredIdx(null)}
         >
+          <LoadingOverlay visible={statData?.value === undefined} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }} />
           <Group justify="space-between" align="center">
             {/** Stat Title */}
             <Text
@@ -137,7 +139,7 @@ export function StatsGrid() {
               {`last 30 days vs. ${statData?.comparedTo || 'previous period'}`}
             </Text>
           </Group>
-        </Paper>
+        </Card>
       );
     });
 
