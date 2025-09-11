@@ -15,7 +15,7 @@ from api.views.utils.utils import get_all_cpt_code_filters
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # Scale mock counts to match real-data percentages.
-MOCK_TOTAL = 100000  # Change to scale
+MOCK_TOTAL = 40 * 10**6  # Change to scale
 REAL_COUNTS = {
     "Patients": 303_000,
     "Visits": 704_000,
@@ -88,12 +88,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Successfully loaded data into {table_name}."))
 
         os.remove(tmpfile_path)
-
-    def materialize_visit_attributes(self):
-        self.stdout.write("Materializing VisitAttributes...")
-        with connection.cursor() as cursor:
-            cursor.execute("CALL intelvia.materializeVisitAttributes()")
-        self.stdout.write(self.style.SUCCESS("Successfully materialized VisitAttributes."))
 
     def handle(self, *args, **options):
         # Initialize the Faker object
@@ -799,6 +793,3 @@ class Command(BaseCommand):
                     "bed_room_dept_line": float(i),
                 }
         self.send_csv_to_db(gen_room_traces(), fieldnames=room_trace_fieldnames, table_name="RoomTrace")
-
-        # Materialize VisitAttributes
-        self.materialize_visit_attributes()
