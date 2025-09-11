@@ -72,7 +72,7 @@ export function StatsGrid() {
           onMouseEnter={() => setHoveredIdx(idx)}
           onMouseLeave={() => setHoveredIdx(null)}
         >
-          <LoadingOverlay visible={statData?.value === undefined} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }} />
+          <LoadingOverlay visible={statData?.value === undefined} zIndex={1} overlayProps={{ radius: 'sm', blur: 2 }} />
           <Group justify="space-between" align="center">
             {/** Stat Title */}
             <Text

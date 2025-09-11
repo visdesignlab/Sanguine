@@ -13,7 +13,8 @@ import {
   type DashboardAggYAxisVar,
   dashboardYAxisOptions,
   TimePeriod,
-  DashboardStatData, // Dashboard data types
+  DashboardStatData,
+  Cost, // Dashboard data types
 } from '../Types/application';
 import { compareTimePeriods } from '../Utils/dates';
 import { formatValueForDisplay } from '../Utils/dashboard';
@@ -64,7 +65,7 @@ export class DashboardStore {
       chartId: '1', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'line',
     },
     {
-      chartId: '2', xAxisVar: 'quarter', yAxisVar: 'rbc_units_cost', aggregation: 'sum', chartType: 'bar',
+      chartId: '2', xAxisVar: 'quarter', yAxisVar: 'total_blood_product_cost', aggregation: 'sum', chartType: 'bar',
     },
   ];
 
@@ -88,15 +89,15 @@ export class DashboardStore {
     {
       statId: '3', yAxisVar: 'cell_saver_ml', aggregation: 'sum', title: 'Total Cell Salvage Volume (ml) Used',
     },
-    // {
-    //   statId: '4', var: 'total_blood_product_costs', aggregation: 'sum', title: 'Total Blood Product Costs',
-    // },
-    // {
-    //   statId: '5', var: 'rbc_adherent', aggregation: 'avg', title: 'Guideline Adherent RBC Transfusions',
-    // },
-    // {
-    //   statId: '6', var: 'plt_adherent', aggregation: 'avg', title: 'Guideline Adherent Platelet Transfusions',
-    // },
+    {
+      statId: '4', yAxisVar: 'total_blood_product_cost', aggregation: 'sum', title: 'Total Blood Product Costs',
+    },
+    {
+      statId: '5', yAxisVar: 'rbc_adherent', aggregation: 'avg', title: 'Guideline Adherent RBC Transfusions',
+    },
+    {
+      statId: '6', yAxisVar: 'plt_adherent', aggregation: 'avg', title: 'Guideline Adherent Platelet Transfusions',
+    },
   ];
 
   get statConfigs() {
@@ -231,7 +232,15 @@ export class DashboardStore {
       // For every aggregation option
       Object.keys(AGGREGATION_OPTIONS).map((aggregation) => {
         const aggFn = aggregation.toUpperCase();
-        return `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`;
+        return yAxisVar === 'total_blood_product_cost'
+          ? [
+            `${aggFn}(rbc_units_cost) AS ${aggregation}_rbc_units_cost`,
+            `${aggFn}(plt_units_cost) AS ${aggregation}_plt_units_cost`,
+            `${aggFn}(ffp_units_cost) AS ${aggregation}_ffp_units_cost`,
+            `${aggFn}(cryo_units_cost) AS ${aggregation}_cryo_units_cost`,
+            `${aggFn}(cell_saver_ml_cost) AS ${aggregation}_cell_saver_ml_cost`,
+          ]
+          : `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`;
       })
     ));
     const query = `
@@ -256,20 +265,48 @@ export class DashboardStore {
           const aggVar: DashboardAggYAxisVar = `${aggType}_${yAxisVar}`;
           // Format the aggregated data into chart format: (timePeriod, data)
           const chartDatum = rows
-            .map((row) => ({
-              timePeriod: row[timeAggregation] as TimePeriod,
-              data: Number(row[aggVar] || 0),
-            }))
+            .map((row) => {
+              if (yAxisVar === 'total_blood_product_cost') {
+                return {
+                  timePeriod: row[timeAggregation] as TimePeriod,
+                  data: {
+                    rbc_units_cost: Number(row[`${aggType}_rbc_units_cost`] || 0),
+                    plt_units_cost: Number(row[`${aggType}_plt_units_cost`] || 0),
+                    ffp_units_cost: Number(row[`${aggType}_ffp_units_cost`] || 0),
+                    cryo_units_cost: Number(row[`${aggType}_cryo_units_cost`] || 0),
+                    cell_saver_ml_cost: Number(row[`${aggType}_cell_saver_ml_cost`] || 0),
+                  },
+                };
+              }
+              return {
+                timePeriod: row[timeAggregation] as TimePeriod,
+                data: Number(row[aggVar] || 0),
+              };
+            })
+            // Filter out entries with null/undefined timePeriod or NaN data
+            .filter((entry) => entry.timePeriod !== null && entry.timePeriod !== undefined && !Number.isNaN(entry.data))
+            // Combine entries with the same timePeriod by summing their data values
             .reduce((acc, curr) => {
               // Combine entries with the same timePeriod by summing their data values
               const existing = acc.find((item) => item.timePeriod === curr.timePeriod);
               if (existing) {
-                existing.data += curr.data;
+                if (typeof existing.data === 'object' && typeof curr.data === 'object') {
+                  // Sum each cost component separately
+                  existing.data = {
+                    rbc_units_cost: existing.data.rbc_units_cost + curr.data.rbc_units_cost,
+                    plt_units_cost: existing.data.plt_units_cost + curr.data.plt_units_cost,
+                    ffp_units_cost: existing.data.ffp_units_cost + curr.data.ffp_units_cost,
+                    cryo_units_cost: existing.data.cryo_units_cost + curr.data.cryo_units_cost,
+                    cell_saver_ml_cost: existing.data.cell_saver_ml_cost + curr.data.cell_saver_ml_cost,
+                  };
+                } else {
+                  (existing.data as number) += curr.data as number;
+                }
               } else {
                 acc.push(curr);
               }
               return acc;
-            }, [] as { timePeriod: TimePeriod; data: number }[])
+            }, [] as { timePeriod: TimePeriod; data: number | Record<Cost, number> }[])
             .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
             // Log filtered data for debugging
           if (chartDatum.length === 0) {
@@ -316,17 +353,27 @@ export class DashboardStore {
     // --- Main stats query (unchanged) ---
     const statSelects: string[] = [];
     this.statConfigs.forEach(({ yAxisVar, aggregation }) => {
-      if (aggregation === 'sum') {
+      const aggFn = aggregation.toUpperCase();
+      if (yAxisVar === 'total_blood_product_cost') {
         statSelects.push(
-          `SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS ${yAxisVar}_current_sum`,
-          `SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS ${yAxisVar}_comparison_sum`,
+          `${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN rbc_units_cost ELSE 0 END
+          + CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN plt_units_cost ELSE 0 END
+          + CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ffp_units_cost ELSE 0 END
+          + CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN cryo_units_cost ELSE 0 END
+          + CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN cell_saver_ml_cost ELSE 0 END) AS total_blood_product_cost_current_${aggregation},
+          ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN rbc_units_cost ELSE 0 END
+          + CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN plt_units_cost ELSE 0 END
+          + CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ffp_units_cost ELSE 0 END
+          + CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN cryo_units_cost ELSE 0 END
+          + CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN cell_saver_ml_cost ELSE 0 END) AS total_blood_product_cost_comparison_${aggregation}
+          `,
         );
-      } else if (aggregation === 'avg') {
-        statSelects.push(
-          `AVG(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_current_avg`,
-          `AVG(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_comparison_avg`,
-        );
+        return; // Skip to next statConfig
       }
+      statSelects.push(
+        `${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS ${yAxisVar}_current_${aggregation}`,
+        `${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS ${yAxisVar}_comparison_${aggregation}`,
+      );
     });
 
     const statQuery = `
@@ -350,6 +397,12 @@ export class DashboardStore {
     const sparklineSelects: string[] = [];
     this.statConfigs.forEach(({ yAxisVar, aggregation }) => {
       const aggFn = aggregation.toUpperCase();
+      if (yAxisVar === 'total_blood_product_cost') {
+        sparklineSelects.push(
+          `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_ml_cost) AS ${aggregation}_total_blood_product_cost`,
+        );
+        return;
+      }
       sparklineSelects.push(
         `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`,
       );

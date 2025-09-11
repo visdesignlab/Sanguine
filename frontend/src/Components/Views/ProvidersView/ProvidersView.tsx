@@ -219,7 +219,7 @@ export function ProvidersView() {
       <Title order={3}>Anemia Management</Title>
       <Flex gap="sm">
         {Object.entries(allCharts)
-          .filter(([chartId, chart]) => chart.title === 'Anemia Management')
+          .filter(([_, chart]) => chart.title === 'Anemia Management')
           .map(([chartId, chart]) => (
             <Card key={chartId} h={200} w={300} p="md" shadow="sm">
               <BarChart
@@ -239,7 +239,7 @@ export function ProvidersView() {
       <Title order={3}>Outcomes</Title>
       <Flex gap="sm">
         {Object.entries(allCharts)
-          .filter(([chartId, chart]) => chart.title === 'Outcomes')
+          .filter(([_, chart]) => chart.title === 'Outcomes')
           .map(([chartId, chart]) => (
             <Card key={chartId} h={200} w={300} p="md" shadow="sm">
               <BarChart

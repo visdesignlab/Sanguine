@@ -31,6 +31,7 @@ import {
   type DashboardChartConfig,
   DashboardStatConfig,
   chartColors,
+  Cost,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 
@@ -221,7 +222,10 @@ export function Dashboard() {
           {Object.values(store.dashboardStore.chartConfigs).map(({
             chartId, yAxisVar, xAxisVar, aggregation, chartType,
           }) => {
-            const chartData = store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
+            let chartData = store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
+            if (yAxisVar === 'total_blood_product_cost' && Array.isArray(chartData)) {
+              chartData = chartData.map((data) => ({ timePeriod: data.timePeriod, ...data.data as Record<Cost, number> }));
+            }
             const chartDataKeys = chartData.length > 0
               ? Object.keys(chartData[0]).filter((k) => k !== 'timePeriod')
               : [];
@@ -322,7 +326,7 @@ export function Dashboard() {
                     </Flex>
                   </Flex>
                   <Box h="100%">
-                    <LoadingOverlay visible={chartData.length === 0} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }} />
+                    <LoadingOverlay visible={chartData.length === 0} overlayProps={{ radius: 'sm', blur: 2 }} />
                     { chartType === 'bar' ? (
                       // Bar Chart
                       <BarChart

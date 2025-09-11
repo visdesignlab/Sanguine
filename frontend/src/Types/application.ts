@@ -369,7 +369,7 @@ export const COST_OPTIONS = Object.values(COSTS) as ReadonlyArray<{
 }>;
 
 export const OVERALL_BLOOD_PRODUCT_COST = {
-  value: 'total_blood_product_costs',
+  value: 'total_blood_product_cost',
   label: {
     base: 'Blood Product Costs',
     sum: 'Total Blood Product Costs',
@@ -426,7 +426,7 @@ export const dashboardYAxisOptions = [
   ...OUTCOME_OPTIONS,
   ...PROPHYL_MED_OPTIONS,
   ...COST_OPTIONS,
-  // OVERALL_BLOOD_PRODUCT_COST,
+  OVERALL_BLOOD_PRODUCT_COST,
 ];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 
@@ -439,7 +439,7 @@ export type DashboardChartConfig = ChartConfig<typeof dashboardXAxisVars[number]
 export type DashboardChartConfigKey = `${DashboardAggYAxisVar}_${typeof dashboardXAxisVars[number]}`;
 
 // Dashboard chart data type (key, value)
-export type DashboardChartData = Record<DashboardChartConfigKey, ({ timePeriod: TimePeriod, [key: string]: string | number })[]>;
+export type DashboardChartData = Record<DashboardChartConfigKey, ({ timePeriod: TimePeriod, [key: string]: string | number | Record<Cost, number> })[]>;
 
 // --- Dashboard stats ---
 export type DashboardStatConfig = {
