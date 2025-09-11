@@ -11,11 +11,8 @@ services:
 
   mariadb:
     image: docker.io/mariadb:11
-    environment:
-      MARIADB_USER: ${MARIADB_USER}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
-      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
-      MARIADB_DATABASE: ${MARIADB_DATABASE}
+    env_file:
+      - .env
     ports:
       - "3306:3306"
     volumes:
@@ -29,6 +26,8 @@ services:
 
   frontend:
     image: docker.io/intelvia/intelvia-frontend:v0.0.4
+    env_file:
+      - .env
     ports:
       - "8080:8080"
     depends_on:
