@@ -350,48 +350,34 @@ export class DashboardStore {
     const comparisonPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
     const comparisonMonthName = comparisonPeriodStart.toLocaleDateString('en-US', { month: 'short' });
 
-    // --- Current period stat query ----
-    const statSelects: string[] = this.statConfigs.map(({ yAxisVar, aggregation }) => {
-      const aggFn = aggregation.toUpperCase();
-      if (yAxisVar === 'total_blood_product_cost') {
-        return `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_ml_cost) AS total_blood_product_cost_current_${aggregation}`;
-      }
-      return `${aggFn}(${yAxisVar}) AS ${yAxisVar}_current_${aggregation}`;
-    });
-
-    const currentPeriodStatsQuery = `
+    // --- Main stats query ----
+    // Return the current and comparison values for all stat configs
+    const mainStatsQuery = `
       SELECT
-        ${statSelects.join(',\n')}
+        ${this.statConfigs.map(({ yAxisVar, aggregation }) => {
+          const aggFn = aggregation.toUpperCase();
+          // Special handling for total_blood_product_cost
+          if (yAxisVar === 'total_blood_product_cost') {
+            return `
+              ${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_ml_cost) AS total_blood_product_cost_current_${aggregation},
+              ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+                THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_ml_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
+            `;
+          }
+          // Otherwise, return the cases in the current periods and cases in comparison periods
+          return `
+            ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+              THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_current_${aggregation},
+            ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+              THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_comparison_${aggregation}
+          `;
+        }).join(',\n')}
       FROM filteredVisits
-      WHERE dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}';
+      WHERE dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}';
     `;
-    const currentPeriodStatsResult = await this._rootStore.duckDB!.query(currentPeriodStatsQuery);
 
-    // --- Comparison period stat query ---
-    const compareStatSelects: string[] = this.statConfigs.map(({ yAxisVar, aggregation }) => {
-      const aggFn = aggregation.toUpperCase();
-      if (yAxisVar === 'total_blood_product_cost') {
-        return `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_ml_cost) AS total_blood_product_cost_comparison_${aggregation}`;
-      }
-      return `${aggFn}(${yAxisVar}) AS ${yAxisVar}_comparison_${aggregation}`;
-    });
-
-    const comparePeriodStatsQuery = `
-      SELECT
-        ${compareStatSelects.join(',\n')}
-      FROM filteredVisits
-      WHERE dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}';
-    `;
-    const comparePeriodStatsResult = await this._rootStore.duckDB!.query(comparePeriodStatsQuery);
-
-    // Combine current and comparison period results
-    const currentPeriodRow = currentPeriodStatsResult.toArray()[0];
-    const comparisonPeriodRow = comparePeriodStatsResult.toArray()[0];
-
-    const statRow = {
-      ...comparisonPeriodRow, // Add comparison period stats
-      ...currentPeriodRow,
-    };
+    const mainStatsResult = await this._rootStore.duckDB!.query(mainStatsQuery);
+    const statRow = mainStatsResult.toArray()[0];
 
     // --- Sparkline query (all variables, all aggs, all months) ---
     // Get the last 6 months as YYYY-mmm
