@@ -5,6 +5,97 @@ def create_materialize_proc(apps, schema_editor):
     create_sql = """
     CREATE PROCEDURE intelvia.materializeVisitAttributes()
     BEGIN
+        /* 1) Materialize guideline adherence per visit */
+        TRUNCATE TABLE GuidelineAdherence;
+
+        INSERT INTO GuidelineAdherence (
+            visit_no,
+            rbc_adherent,
+            ffp_adherent,
+            plt_adherent,
+            cryo_adherent
+        )
+        SELECT
+            t.visit_no,
+            /* RBC adherence: HGB/Hemoglobin <= 7.5 within 2 hours prior */
+            SUM(
+                CASE
+                    WHEN (COALESCE(t.rbc_units, 0) > 0 OR COALESCE(t.rbc_vol, 0) > 0) THEN
+                        CASE
+                            WHEN (
+                                SELECT l.result_value
+                                FROM Lab l
+                                WHERE l.visit_no = t.visit_no
+                                  AND UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN')
+                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC
+                                LIMIT 1
+                            ) <= 7.5 THEN 1 ELSE 0
+                        END
+                    ELSE 0
+                END
+            ) AS rbc_adherent,
+
+            /* FFP adherence: INR >= 1.5 within 2 hours prior */
+            SUM(
+                CASE
+                    WHEN (COALESCE(t.ffp_units, 0) > 0 OR COALESCE(t.ffp_vol, 0) > 0) THEN
+                        CASE
+                            WHEN (
+                                SELECT l.result_value
+                                FROM Lab l
+                                WHERE l.visit_no = t.visit_no
+                                  AND UPPER(l.result_desc) = 'INR'
+                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC
+                                LIMIT 1
+                            ) >= 1.5 THEN 1 ELSE 0
+                        END
+                    ELSE 0
+                END
+            ) AS ffp_adherent,
+
+            /* Platelet adherence: PLT/Platelet Count >= 15000 within 2 hours prior */
+            SUM(
+                CASE
+                    WHEN (COALESCE(t.plt_units, 0) > 0 OR COALESCE(t.plt_vol, 0) > 0) THEN
+                        CASE
+                            WHEN (
+                                SELECT l.result_value
+                                FROM Lab l
+                                WHERE l.visit_no = t.visit_no
+                                  AND UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT')
+                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC
+                                LIMIT 1
+                            ) >= 15000 THEN 1 ELSE 0
+                        END
+                    ELSE 0
+                END
+            ) AS plt_adherent,
+
+            /* Cryo adherence: Fibrinogen >= 175 within 2 hours prior */
+            SUM(
+                CASE
+                    WHEN (COALESCE(t.cryo_units, 0) > 0 OR COALESCE(t.cryo_vol, 0) > 0) THEN
+                        CASE
+                            WHEN (
+                                SELECT l.result_value
+                                FROM Lab l
+                                WHERE l.visit_no = t.visit_no
+                                  AND UPPER(l.result_desc) = 'FIBRINOGEN'
+                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
+                                ORDER BY l.lab_draw_dtm DESC
+                                LIMIT 1
+                            ) >= 175 THEN 1 ELSE 0
+                        END
+                    ELSE 0
+                END
+            ) AS cryo_adherent
+        FROM Transfusion t
+        GROUP BY t.visit_no;
+
+        /* 2) Materialize visit attributes (referencing guideline adherence) */
         TRUNCATE TABLE VisitAttributes;
 
         INSERT INTO VisitAttributes (
@@ -67,10 +158,10 @@ def create_materialize_proc(apps, schema_editor):
             CASE WHEN m.has_b12 = 1 THEN TRUE ELSE FALSE END AS b12,
             CASE WHEN m.has_iron = 1 THEN TRUE ELSE FALSE END AS iron,
             CASE WHEN m.has_antifibrinolytic = 1 THEN TRUE ELSE FALSE END AS antifibrinolytic,
-            0 AS rbc_adherent,
-            0 AS ffp_adherent,
-            0 AS plt_adherent,
-            0 AS cryo_adherent,
+            COALESCE(ga.rbc_adherent, 0) AS rbc_adherent,
+            COALESCE(ga.ffp_adherent, 0) AS ffp_adherent,
+            COALESCE(ga.plt_adherent, 0) AS plt_adherent,
+            COALESCE(ga.cryo_adherent, 0) AS cryo_adherent,
             COALESCE(t.sum_rbc_units_cost, 0) AS rbc_units_cost,
             COALESCE(t.sum_ffp_units_cost, 0) AS ffp_units_cost,
             COALESCE(t.sum_plt_units_cost, 0) AS plt_units_cost,
@@ -101,7 +192,8 @@ def create_materialize_proc(apps, schema_editor):
                 MAX(CASE WHEN medication_name LIKE '%TRANEXAMIC%' OR medication_name LIKE '%AMICAR%' THEN 1 ELSE 0 END) AS has_antifibrinolytic
             FROM Medication
             GROUP BY visit_no
-        ) m ON m.visit_no = v.visit_no;
+        ) m ON m.visit_no = v.visit_no
+        LEFT JOIN GuidelineAdherence ga ON ga.visit_no = v.visit_no;
     END;
     """
     conn = schema_editor.connection
@@ -119,10 +211,29 @@ def drop_materialize_proc(apps, schema_editor):
 class Migration(migrations.Migration):
     atomic = False
     dependencies = [
-        # Update this to the previous migration in your app
         ('api', '0001_initial'),
     ]
     operations = [
+        # Materialized table for guideline adherence
+        migrations.RunSQL(
+            sql="""
+            DROP TABLE IF EXISTS GuidelineAdherence;
+
+            CREATE TABLE GuidelineAdherence (
+                visit_no BIGINT,
+                rbc_adherent SMALLINT UNSIGNED DEFAULT 0,
+                ffp_adherent SMALLINT UNSIGNED DEFAULT 0,
+                plt_adherent SMALLINT UNSIGNED DEFAULT 0,
+                cryo_adherent SMALLINT UNSIGNED DEFAULT 0,
+                PRIMARY KEY (visit_no),
+                FOREIGN KEY (visit_no) REFERENCES Visit(visit_no)
+            ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
+            """,
+            reverse_sql="""
+            DROP TABLE IF EXISTS GuidelineAdherence;
+            """
+        ),
+        # Materialized table for visit attributes
         migrations.RunSQL(
             sql="""
             DROP TABLE IF EXISTS VisitAttributes;
@@ -180,7 +291,9 @@ class Migration(migrations.Migration):
             DROP TABLE IF EXISTS VisitAttributes;
             """
         ),
+        # Procedure to (re)materialize both tables
         migrations.RunPython(create_materialize_proc, reverse_code=drop_materialize_proc),
+        # Nightly event to refresh
         migrations.RunSQL(
             sql="""
             -- Set up the event to run the procedure daily at 2 AM
