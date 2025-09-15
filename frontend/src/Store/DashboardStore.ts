@@ -350,39 +350,48 @@ export class DashboardStore {
     const comparisonPeriodEnd = new Date(comparisonYear, comparisonMonth + 1, 0, 23, 59, 59, 999);
     const comparisonMonthName = comparisonPeriodStart.toLocaleDateString('en-US', { month: 'short' });
 
-    // --- Main stats query (unchanged) ---
-    const statSelects: string[] = [];
-    this.statConfigs.forEach(({ yAxisVar, aggregation }) => {
+    // --- Current period stat query ----
+    const statSelects: string[] = this.statConfigs.map(({ yAxisVar, aggregation }) => {
       const aggFn = aggregation.toUpperCase();
       if (yAxisVar === 'total_blood_product_cost') {
-        statSelects.push(
-          `${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN rbc_units_cost ELSE 0 END
-          + CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN plt_units_cost ELSE 0 END
-          + CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ffp_units_cost ELSE 0 END
-          + CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN cryo_units_cost ELSE 0 END
-          + CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN cell_saver_ml_cost ELSE 0 END) AS total_blood_product_cost_current_${aggregation},
-          ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN rbc_units_cost ELSE 0 END
-          + CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN plt_units_cost ELSE 0 END
-          + CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ffp_units_cost ELSE 0 END
-          + CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN cryo_units_cost ELSE 0 END
-          + CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN cell_saver_ml_cost ELSE 0 END) AS total_blood_product_cost_comparison_${aggregation}
-          `,
-        );
-        return; // Skip to next statConfig
+        return `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_ml_cost) AS total_blood_product_cost_current_${aggregation}`;
       }
-      statSelects.push(
-        `${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS ${yAxisVar}_current_${aggregation}`,
-        `${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}' THEN ${yAxisVar} ELSE 0 END) AS ${yAxisVar}_comparison_${aggregation}`,
-      );
+      return `${aggFn}(${yAxisVar}) AS ${yAxisVar}_current_${aggregation}`;
     });
 
-    const statQuery = `
-    SELECT
-      ${statSelects.join(',\n')}
-    FROM filteredVisits;
-  `;
-    const statResult = await this._rootStore.duckDB!.query(statQuery);
-    const statRow = statResult.toArray()[0];
+    const currentPeriodStatsQuery = `
+      SELECT
+        ${statSelects.join(',\n')}
+      FROM filteredVisits
+      WHERE dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}';
+    `;
+    const currentPeriodStatsResult = await this._rootStore.duckDB!.query(currentPeriodStatsQuery);
+
+    // --- Comparison period stat query ---
+    const compareStatSelects: string[] = this.statConfigs.map(({ yAxisVar, aggregation }) => {
+      const aggFn = aggregation.toUpperCase();
+      if (yAxisVar === 'total_blood_product_cost') {
+        return `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_ml_cost) AS total_blood_product_cost_comparison_${aggregation}`;
+      }
+      return `${aggFn}(${yAxisVar}) AS ${yAxisVar}_comparison_${aggregation}`;
+    });
+
+    const comparePeriodStatsQuery = `
+      SELECT
+        ${compareStatSelects.join(',\n')}
+      FROM filteredVisits
+      WHERE dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}';
+    `;
+    const comparePeriodStatsResult = await this._rootStore.duckDB!.query(comparePeriodStatsQuery);
+
+    // Combine current and comparison period results
+    const currentPeriodRow = currentPeriodStatsResult.toArray()[0];
+    const comparisonPeriodRow = comparePeriodStatsResult.toArray()[0];
+
+    const statRow = {
+      ...comparisonPeriodRow, // Add comparison period stats
+      ...currentPeriodRow,
+    };
 
     // --- Sparkline query (all variables, all aggs, all months) ---
     // Get the last 6 months as YYYY-mmm
@@ -441,7 +450,7 @@ export class DashboardStore {
       let formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
 
       // For adherence variables, don't include full units
-      if (yAxisVar.includes('adherence')) {
+      if (yAxisVar.includes('adherent')) {
         formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType, false);
       }
 
