@@ -153,8 +153,8 @@ def create_materialize_proc(apps, schema_editor):
             v.clinical_los AS los,
             CASE WHEN v.pat_expired_f = 'Y' THEN TRUE ELSE FALSE END AS death,
             CASE WHEN v.total_vent_mins > 1440 THEN TRUE ELSE FALSE END AS vent,
-            FALSE AS stroke,
-            FALSE AS ecmo,
+            CASE WHEN bc.stroke = 1 THEN TRUE ELSE FALSE END AS stroke,
+            CASE WHEN bc.ecmo = 1 THEN TRUE ELSE FALSE END AS ecmo,
             CASE WHEN m.has_b12 = 1 THEN TRUE ELSE FALSE END AS b12,
             CASE WHEN m.has_iron = 1 THEN TRUE ELSE FALSE END AS iron,
             CASE WHEN m.has_antifibrinolytic = 1 THEN TRUE ELSE FALSE END AS antifibrinolytic,
@@ -184,6 +184,14 @@ def create_materialize_proc(apps, schema_editor):
             FROM Transfusion
             GROUP BY visit_no
         ) t ON t.visit_no = v.visit_no
+        LEFT JOIN (
+            SELECT
+                visit_no,
+                MAX(CASE WHEN cpt_code in ('99291', '1065F', '1066F') THEN 1 ELSE 0 END) AS stroke,
+                MAX(CASE WHEN cpt_code in ('33946', '33947', '33948', '33949', '33952', '33953', '33954', '33955', '33956', '33957', '33958', '33959', '33960', '33961', '33962', '33963', '33964', '33965', '33966', '33969', '33984', '33985', '33986', '33987', '33988', '33989') THEN 1 ELSE 0 END) AS ecmo
+            FROM BillingCode
+            GROUP BY visit_no
+        ) bc ON bc.visit_no = v.visit_no
         LEFT JOIN (
             SELECT
                 visit_no,
