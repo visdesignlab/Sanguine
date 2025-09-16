@@ -28,6 +28,8 @@ services:
     image: docker.io/intelvia/intelvia-frontend:v0.0.4
     ports:
       - "8080:8080"
+    depends_on:
+      - backend
 
 volumes:
   mariadb_data:
