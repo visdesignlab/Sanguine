@@ -14,7 +14,7 @@ ARG VITE_QUERY_URL="/api/"
 COPY package.json yarn.lock ./
 
 # Install the dependencies (cached unless these files change)
-RUN yarn install --frozen-lockfile && yarn cache clean
+RUN yarn install --frozen-lockfile --production && yarn cache clean
 
 # Copy the rest of the frontend code
 COPY . .
