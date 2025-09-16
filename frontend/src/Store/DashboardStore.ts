@@ -218,7 +218,7 @@ export class DashboardStore {
   }
 
   // Dashboard data ----------------------------------------------------------------
-  chartData: DashboardChartData = {};
+  chartData: DashboardChartData = {} as DashboardChartData;
 
   statData: DashboardStatData = {} as DashboardStatData;
 

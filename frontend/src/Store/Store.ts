@@ -2,39 +2,12 @@
 import { makeAutoObservable } from 'mobx';
 import { createContext } from 'react';
 import { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';
-import { DatabaseVisit } from '../Types/database';
 import {
-  AdherentCountField,
-  BloodComponent,
   Cost,
-  Month,
-  Outcome,
-  OverallAdherentCountField,
-  OverallBloodProductCost,
-  OverallTotalTransfusedField,
-  ProphylMed,
-  Quarter,
-  TotalTransfusedField,
-  Year,
 } from '../Types/application';
 import { DashboardStore } from './DashboardStore';
 import { FiltersStore } from './FiltersStore';
 import { ExploreStore } from './ExploreStore';
-
-export type Visit = DatabaseVisit & {
-  month: Month | null;
-  quarter: Quarter | null;
-  year: Year | null;
-}
-& Record<BloodComponent, number>
-& Record<AdherentCountField, number>
-& Record<TotalTransfusedField, number>
-& Record<Outcome, number>
-& Record<ProphylMed, number>
-& Record<OverallAdherentCountField, number>
-& Record<OverallTotalTransfusedField, number>
-& Record<Cost, number>
-& Record<OverallBloodProductCost, number>;
 
 export class RootStore {
   // Provenance
