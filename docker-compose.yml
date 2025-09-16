@@ -27,12 +27,7 @@ services:
       timeout: 5s
 
   frontend:
-    build:
-      context: ./frontend
-      args:
-        VITE_QUERY_URL: ${VITE_QUERY_URL}
-    env_file:
-      - .env
+    image: docker.io/intelvia/intelvia-frontend:v0.0.4
     ports:
       - "8080:8080"
     depends_on:
