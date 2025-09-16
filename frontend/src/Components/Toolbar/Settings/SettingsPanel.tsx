@@ -2,7 +2,9 @@ import {
   Button, Flex, LoadingOverlay, Modal, NumberInput, Stack,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { useCallback, useContext, useState } from 'react';
+import {
+  useCallback, useContext, useEffect, useState,
+} from 'react';
 import { Store } from '../../../Store/Store';
 
 export function SettingsPanel() {
@@ -25,9 +27,16 @@ export function SettingsPanel() {
       cell_saver_ml_cost: 0,
     };
     setBloodLoading(false);
-  }, [store.unitCosts]);
+  }, [store]);
 
   const [openedGuideline, { open: openGuideline, close: closeGuideline }] = useDisclosure(false);
+
+  useEffect(() => {
+    setRbcCost(store.unitCosts.rbc_units_cost);
+    setPltCost(store.unitCosts.plt_units_cost);
+    setFfpCost(store.unitCosts.ffp_units_cost);
+    setCryoCost(store.unitCosts.cryo_units_cost);
+  }, [store.unitCosts, openedBlood]);
 
   return (
     <Stack p="md">
@@ -38,21 +47,41 @@ export function SettingsPanel() {
           label="Red Blood Cell Unit Cost"
           value={rbcCost}
           onChange={setRbcCost}
+          decimalScale={2}
+          fixedDecimalScale
+          allowLeadingZeros={false}
+          prefix="$"
+          isAllowed={(value) => value.value.length < 12}
         />
         <NumberInput
           label="Platelet Unit Cost"
           value={pltCost}
           onChange={setPltCost}
+          decimalScale={2}
+          fixedDecimalScale
+          allowLeadingZeros={false}
+          prefix="$"
+          isAllowed={(value) => value.value.length < 12}
         />
         <NumberInput
           label="Fresh Frozen Plasma Unit Cost"
           value={ffpCost}
           onChange={setFfpCost}
+          decimalScale={2}
+          fixedDecimalScale
+          allowLeadingZeros={false}
+          prefix="$"
+          isAllowed={(value) => value.value.length < 12}
         />
         <NumberInput
           label="Cryoprecipitate Unit Cost"
           value={cryoCost}
           onChange={setCryoCost}
+          decimalScale={2}
+          fixedDecimalScale
+          allowLeadingZeros={false}
+          prefix="$"
+          isAllowed={(value) => value.value.length < 12}
         />
         <Flex direction="row" justify="flex-end">
           <Button mt="md" onClick={() => { saveCosts(rbcCost, pltCost, ffpCost, cryoCost); closeBlood(); }} variant="filled" color="blue">Save</Button>
