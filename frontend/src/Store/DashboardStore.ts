@@ -352,26 +352,29 @@ export class DashboardStore {
 
     // --- Main stats query ----
     // Return the current and comparison values for all stat configs
-    const mainStatsQuery = `
-      SELECT
-        ${this.statConfigs.map(({ yAxisVar, aggregation }) => {
-          const aggFn = aggregation.toUpperCase();
-          // Special handling for total_blood_product_cost
-          if (yAxisVar === 'total_blood_product_cost') {
-            return `
-              ${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_ml_cost) AS total_blood_product_cost_current_${aggregation},
+    const statSelects = this.statConfigs.map(({ yAxisVar, aggregation }) => {
+      const aggFn = aggregation.toUpperCase();
+      // Special handling for total_blood_product_cost
+      if (yAxisVar === 'total_blood_product_cost') {
+        return `
+              ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+                THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_ml_cost ELSE NULL END) AS total_blood_product_cost_current_${aggregation},
               ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
                 THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_ml_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
             `;
-          }
-          // Otherwise, return the cases in the current periods and cases in comparison periods
-          return `
+      }
+      // Otherwise, return the cases in the current periods and cases in comparison periods
+      return `
             ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
               THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_current_${aggregation},
             ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
               THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_comparison_${aggregation}
           `;
-        }).join(',\n')}
+    }).join(',\n');
+
+    const mainStatsQuery = `
+    SELECT
+      ${statSelects}
       FROM filteredVisits
       WHERE dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}';
     `;
