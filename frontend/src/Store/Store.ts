@@ -22,13 +22,22 @@ export class RootStore {
 
   duckDB: AsyncDuckDBConnection | null = null;
 
-  unitCosts: Record<Cost, number> = {
+  _unitCosts: Record<Cost, number> = {
     rbc_units_cost: 200,
     ffp_units_cost: 55,
     plt_units_cost: 650,
     cryo_units_cost: 70,
     cell_saver_ml_cost: 2.5,
   };
+
+  get unitCosts() {
+    return this._unitCosts;
+  }
+
+  set unitCosts(costs: Record<Cost, number>) {
+    this._unitCosts = costs;
+    this.updateCostsTable();
+  }
 
   allVisitsLength = 0;
 
@@ -100,6 +109,23 @@ export class RootStore {
     const result = await this.duckDB.query('SELECT COUNT(visit_no) AS count FROM visits;');
     const row = result.toArray()[0].toJSON();
     this.allVisitsLength = Number(row.count);
+  }
+
+  async updateCostsTable() {
+    if (!this.duckDB) return;
+
+    await this.duckDB.query(`
+      DELETE FROM costs;
+      INSERT INTO costs VALUES (
+        ${this.unitCosts.rbc_units_cost},
+        ${this.unitCosts.ffp_units_cost},
+        ${this.unitCosts.plt_units_cost},
+        ${this.unitCosts.cryo_units_cost}
+      );
+    `);
+
+    await this.dashboardStore.computeStatData();
+    await this.dashboardStore.computeChartData();
   }
 }
 

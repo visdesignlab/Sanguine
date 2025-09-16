@@ -57,14 +57,33 @@ function App() {
         await store.duckDB.query(`
           CREATE TABLE IF NOT EXISTS visits AS
           SELECT * FROM read_parquet('data.parquet');
+
+          CREATE TABLE IF NOT EXISTS costs (
+            rbc_units_cost DECIMAL(10,2),
+            ffp_units_cost DECIMAL(10,2),
+            plt_units_cost DECIMAL(10,2),
+            cryo_units_cost DECIMAL(10,2)
+          );
+          INSERT INTO costs VALUES (
+            ${store.unitCosts.rbc_units_cost},
+            ${store.unitCosts.ffp_units_cost},
+            ${store.unitCosts.plt_units_cost},
+            ${store.unitCosts.cryo_units_cost}
+          );
           
           CREATE TABLE IF NOT EXISTS filteredVisitIds AS
           SELECT visit_no FROM visits;
 
           CREATE VIEW IF NOT EXISTS filteredVisits AS
-          SELECT v.*
+          SELECT
+            v.*,
+            v.rbc_units * c.rbc_units_cost AS rbc_units_cost,
+            0 AS ffp_units_cost,
+            v.plt_units * c.plt_units_cost AS plt_units_cost,
+            v.cryo_units * c.cryo_units_cost AS cryo_units_cost
           FROM visits v
-          INNER JOIN filteredVisitIds fvi ON v.visit_no = fvi.visit_no;
+          INNER JOIN filteredVisitIds fvi ON v.visit_no = fvi.visit_no
+          CROSS JOIN costs c;
         `);
 
         await store.updateAllVisitsLength();

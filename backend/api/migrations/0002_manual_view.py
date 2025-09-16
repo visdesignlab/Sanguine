@@ -127,10 +127,6 @@ def create_materialize_proc(apps, schema_editor):
             ffp_adherent,
             plt_adherent,
             cryo_adherent,
-            rbc_units_cost,
-            ffp_units_cost,
-            plt_units_cost,
-            cryo_units_cost,
             cell_saver_ml_cost
         )
         SELECT
@@ -162,10 +158,6 @@ def create_materialize_proc(apps, schema_editor):
             COALESCE(ga.ffp_adherent, 0) AS ffp_adherent,
             COALESCE(ga.plt_adherent, 0) AS plt_adherent,
             COALESCE(ga.cryo_adherent, 0) AS cryo_adherent,
-            COALESCE(t.sum_rbc_units_cost, 0) AS rbc_units_cost,
-            COALESCE(t.sum_ffp_units_cost, 0) AS ffp_units_cost,
-            COALESCE(t.sum_plt_units_cost, 0) AS plt_units_cost,
-            COALESCE(t.sum_cryo_units_cost, 0) AS cryo_units_cost,
             CASE WHEN COALESCE(t.sum_cell_saver_ml,0) > 0 THEN 500 ELSE 0 END AS cell_saver_ml_cost
         FROM Visit v
         LEFT JOIN (
@@ -176,11 +168,7 @@ def create_materialize_proc(apps, schema_editor):
                 SUM(plt_units) AS sum_plt_units,
                 SUM(cryo_units) AS sum_cryo_units,
                 SUM(whole_units) AS sum_whole_units,
-                SUM(cell_saver_ml) AS sum_cell_saver_ml,
-                SUM(rbc_units * 200) AS sum_rbc_units_cost,
-                SUM(ffp_units * 50) AS sum_ffp_units_cost,
-                SUM(plt_units * 300) AS sum_plt_units_cost,
-                SUM(cryo_units * 75) AS sum_cryo_units_cost
+                SUM(cell_saver_ml) AS sum_cell_saver_ml
             FROM Transfusion
             GROUP BY visit_no
         ) t ON t.visit_no = v.visit_no
@@ -283,12 +271,7 @@ class Migration(migrations.Migration):
                 cryo_adherent SMALLINT UNSIGNED DEFAULT 0,
                 overall_adherent SMALLINT UNSIGNED AS (rbc_adherent + ffp_adherent + plt_adherent + cryo_adherent) STORED,
 
-                rbc_units_cost DECIMAL(10,2) DEFAULT 0,
-                ffp_units_cost DECIMAL(10,2) DEFAULT 0,
-                plt_units_cost DECIMAL(10,2) DEFAULT 0,
-                cryo_units_cost DECIMAL(10,2) DEFAULT 0,
-                cell_saver_ml_cost MEDIUMINT UNSIGNED DEFAULT 0,
-                overall_cost DECIMAL(10,2) AS (rbc_units_cost + ffp_units_cost + plt_units_cost + cryo_units_cost + cell_saver_ml_cost) STORED,
+                cell_saver_ml_cost SMALLINT UNSIGNED DEFAULT 0,
 
                 PRIMARY KEY (visit_no),
                 FOREIGN KEY (visit_no) REFERENCES Visit(visit_no),

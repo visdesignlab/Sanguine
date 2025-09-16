@@ -17,10 +17,13 @@ export function SettingsPanel() {
   // Save blood product costs to global state
   const saveCosts = useCallback((rbc: string | number, plt: string | number, ffp: string | number, cryo: string | number) => {
     setBloodLoading(true);
-    store.unitCosts.rbc_units_cost = Number(rbc);
-    store.unitCosts.plt_units_cost = Number(plt);
-    store.unitCosts.ffp_units_cost = Number(ffp);
-    store.unitCosts.cryo_units_cost = Number(cryo);
+    store.unitCosts = {
+      rbc_units_cost: Number(rbc),
+      plt_units_cost: Number(plt),
+      ffp_units_cost: Number(ffp),
+      cryo_units_cost: Number(cryo),
+      cell_saver_ml_cost: 0,
+    };
     setBloodLoading(false);
   }, [store.unitCosts]);
 
