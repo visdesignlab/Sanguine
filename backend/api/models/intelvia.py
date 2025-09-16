@@ -105,6 +105,18 @@ class VisitAttributes(models.Model):
         managed = False
 
 
+class GuidelineAdherence(models.Model):
+    visit_no = models.OneToOneField(Visit, on_delete=models.CASCADE, db_column="visit_no", primary_key=True, related_name="guideline_adherence")
+    rbc_adherent = models.IntegerField()
+    ffp_adherent = models.IntegerField()
+    plt_adherent = models.IntegerField()
+    cryo_adherent = models.IntegerField()
+
+    class Meta:
+        db_table = "GuidelineAdherence"
+        managed = False
+
+
 class SurgeryCase(models.Model):
     visit_no = models.ForeignKey(Visit, on_delete=models.CASCADE, db_column="visit_no")
     mrn = models.ForeignKey(Patient, on_delete=models.CASCADE, db_column="mrn")
