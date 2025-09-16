@@ -8,7 +8,7 @@ import { mantineTheme } from './Theme/mantineTheme';
 import { logoutHandler, whoamiAPICall } from './Store/UserManagement';
 import { BrowserWarning } from './Components/Modals/BrowserWarning';
 import { DataRetrieval } from './Components/Modals/DataRetrieval';
-import { db, conn } from './duckdb';
+import { initDuckDB } from './duckdb';
 
 function App() {
   // Data Loading states
@@ -30,7 +30,16 @@ function App() {
     async function fetchAllVisits() {
       setDataLoading(true);
       try {
-        store.duckDB = conn;
+        if (store.duckDB) {
+          // DuckDB is already initialized so don't re-initialize
+          setDataLoading(false);
+          return;
+        }
+
+        // Initialize DuckDB here
+        const { db, conn } = await initDuckDB();
+        store.duckDB = conn!;
+
         const queryUrl = import.meta.env.VITE_QUERY_URL;
         if (typeof queryUrl === 'undefined' || !queryUrl) {
           console.error('VITE_QUERY_URL is undefined');

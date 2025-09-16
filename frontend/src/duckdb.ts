@@ -5,11 +5,17 @@ const bundle = {
   mainWorker: new URL('@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js', import.meta.url).toString(),
 };
 
-const worker = new Worker(new URL(bundle.mainWorker, import.meta.url), {
-  type: 'module',
-});
+let db: duckdb.AsyncDuckDB | null = null;
+let conn: duckdb.AsyncDuckDBConnection | null = null;
 
-// 4. Create the database instance
-export const db = new duckdb.AsyncDuckDB(new duckdb.VoidLogger(), worker);
-await db.instantiate(bundle.mainModule);
-export const conn = await db.connect();
+export async function initDuckDB() {
+  if (!db) {
+    const worker = new Worker(new URL(bundle.mainWorker, import.meta.url), {
+      type: 'module',
+    });
+    db = new duckdb.AsyncDuckDB(new duckdb.VoidLogger(), worker);
+    await db.instantiate(bundle.mainModule);
+    conn = await db.connect();
+  }
+  return { db, conn };
+}
