@@ -8,6 +8,8 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+    volumes:
+      - backend_parquets:/app/parquet_cache
 
   mariadb:
     image: docker.io/mariadb:11
@@ -25,11 +27,14 @@ services:
       timeout: 5s
 
   frontend:
-    image: docker.io/intelvia/intelvia-frontend:v0.0.4
+    build:
+      context: ./frontend
+      args:
+        VITE_QUERY_URL: ${VITE_QUERY_URL}
+    env_file:
+      - .env
     ports:
       - "8080:8080"
-    depends_on:
-      - backend
 
 volumes:
   mariadb_data:
