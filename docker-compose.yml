@@ -38,3 +38,4 @@ services:
 
 volumes:
   mariadb_data:
+  backend_parquets:
