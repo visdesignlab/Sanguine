@@ -206,6 +206,7 @@ class Migration(migrations.Migration):
     atomic = False
     dependencies = [
         ('api', '0001_initial'),
+        ('api', '0002_guidelineadherence_visitattributes'),
     ]
     operations = [
         # Materialized table for guideline adherence
