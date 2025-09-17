@@ -202,7 +202,7 @@ export function ProvidersView() {
             <Text size="md">
               • Average Complexity of cases
               {' '}
-              <Text component="span" td="underline">10% higher</Text>
+              <Text component="span" td="underline">higher</Text>
               {' '}
               than average
             </Text>
