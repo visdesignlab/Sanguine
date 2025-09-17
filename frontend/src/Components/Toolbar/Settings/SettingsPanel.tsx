@@ -16,15 +16,16 @@ export function SettingsPanel() {
   const [pltCost, setPltCost] = useState<string | number>(store.unitCosts.plt_units_cost);
   const [ffpCost, setFfpCost] = useState<string | number>(store.unitCosts.ffp_units_cost);
   const [cryoCost, setCryoCost] = useState<string | number>(store.unitCosts.cryo_units_cost);
+  const [cellSaverCost, setCellSaverCost] = useState<string | number>(store.unitCosts.cell_saver_cost);
   // Save blood product costs to global state
-  const saveCosts = useCallback((rbc: string | number, plt: string | number, ffp: string | number, cryo: string | number) => {
+  const saveCosts = useCallback((rbc: string | number, plt: string | number, ffp: string | number, cryo: string | number, cellSaver: string | number) => {
     setBloodLoading(true);
     store.unitCosts = {
       rbc_units_cost: Number(rbc),
       plt_units_cost: Number(plt),
       ffp_units_cost: Number(ffp),
       cryo_units_cost: Number(cryo),
-      cell_saver_ml_cost: 0,
+      cell_saver_cost: Number(cellSaver),
     };
     setBloodLoading(false);
   }, [store]);
@@ -83,8 +84,18 @@ export function SettingsPanel() {
           prefix="$"
           isAllowed={(value) => value.value.length < 12}
         />
+        <NumberInput
+          label="Cell Saver Cost"
+          value={cellSaverCost}
+          onChange={setCellSaverCost}
+          decimalScale={2}
+          fixedDecimalScale
+          allowLeadingZeros={false}
+          prefix="$"
+          isAllowed={(value) => value.value.length < 12}
+        />
         <Flex direction="row" justify="flex-end">
-          <Button mt="md" onClick={() => { saveCosts(rbcCost, pltCost, ffpCost, cryoCost); closeBlood(); }} variant="filled" color="blue">Save</Button>
+          <Button mt="md" onClick={() => { saveCosts(rbcCost, pltCost, ffpCost, cryoCost, cellSaverCost); closeBlood(); }} variant="filled" color="blue">Save</Button>
         </Flex>
       </Modal>
 

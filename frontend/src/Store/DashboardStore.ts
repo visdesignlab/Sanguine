@@ -238,7 +238,7 @@ export class DashboardStore {
             `${aggFn}(plt_units_cost) AS ${aggregation}_plt_units_cost`,
             `${aggFn}(ffp_units_cost) AS ${aggregation}_ffp_units_cost`,
             `${aggFn}(cryo_units_cost) AS ${aggregation}_cryo_units_cost`,
-            `${aggFn}(cell_saver_ml_cost) AS ${aggregation}_cell_saver_ml_cost`,
+            `${aggFn}(cell_saver_cost) AS ${aggregation}_cell_saver_cost`,
           ]
           : `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`;
       })
@@ -274,7 +274,7 @@ export class DashboardStore {
                     plt_units_cost: Number(row[`${aggType}_plt_units_cost`] || 0),
                     ffp_units_cost: Number(row[`${aggType}_ffp_units_cost`] || 0),
                     cryo_units_cost: Number(row[`${aggType}_cryo_units_cost`] || 0),
-                    cell_saver_ml_cost: Number(row[`${aggType}_cell_saver_ml_cost`] || 0),
+                    cell_saver_cost: Number(row[`${aggType}_cell_saver_cost`] || 0),
                   },
                 };
               }
@@ -297,7 +297,7 @@ export class DashboardStore {
                     plt_units_cost: existing.data.plt_units_cost + curr.data.plt_units_cost,
                     ffp_units_cost: existing.data.ffp_units_cost + curr.data.ffp_units_cost,
                     cryo_units_cost: existing.data.cryo_units_cost + curr.data.cryo_units_cost,
-                    cell_saver_ml_cost: existing.data.cell_saver_ml_cost + curr.data.cell_saver_ml_cost,
+                    cell_saver_cost: existing.data.cell_saver_cost + curr.data.cell_saver_cost,
                   };
                 } else {
                   (existing.data as number) += curr.data as number;
@@ -358,9 +358,9 @@ export class DashboardStore {
       if (yAxisVar === 'total_blood_product_cost') {
         return `
               ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
-                THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_ml_cost ELSE NULL END) AS total_blood_product_cost_current_${aggregation},
+                THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_current_${aggregation},
               ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
-                THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_ml_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
+                THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
             `;
       }
       // Otherwise, return the cases in the current periods and cases in comparison periods
@@ -397,7 +397,7 @@ export class DashboardStore {
       const aggFn = aggregation.toUpperCase();
       if (yAxisVar === 'total_blood_product_cost') {
         sparklineSelects.push(
-          `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_ml_cost) AS ${aggregation}_total_blood_product_cost`,
+          `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost) AS ${aggregation}_total_blood_product_cost`,
         );
         return;
       }

@@ -66,8 +66,6 @@ class Command(BaseCommand):
             pa.field("plt_adherent", pa.uint16(), nullable=False),
             pa.field("cryo_adherent", pa.uint16(), nullable=False),
             pa.field("overall_adherent", pa.uint16(), nullable=False),     # computed/stored
-
-            pa.field("cell_saver_ml_cost", pa.uint16(), nullable=False),
         ])
 
         table = pa.Table.from_pylist(visits, schema=visit_attributes_schema)

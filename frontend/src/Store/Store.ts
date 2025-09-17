@@ -27,7 +27,7 @@ export class RootStore {
     ffp_units_cost: 55,
     plt_units_cost: 650,
     cryo_units_cost: 70,
-    cell_saver_ml_cost: 2.5,
+    cell_saver_cost: 500,
   };
 
   get unitCosts() {
@@ -120,7 +120,8 @@ export class RootStore {
         ${this.unitCosts.rbc_units_cost},
         ${this.unitCosts.ffp_units_cost},
         ${this.unitCosts.plt_units_cost},
-        ${this.unitCosts.cryo_units_cost}
+        ${this.unitCosts.cryo_units_cost},
+        ${this.unitCosts.cell_saver_cost}
       );
     `);
 

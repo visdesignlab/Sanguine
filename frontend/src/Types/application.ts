@@ -295,12 +295,12 @@ export const COSTS = {
     decimals: { sum: 0, avg: 0 },
   },
   // TODO: Unit cost is wrong
-  cell_saver_ml_cost: {
-    value: 'cell_saver_ml_cost',
+  cell_saver_cost: {
+    value: 'cell_saver_cost',
     label: {
-      base: 'Cell Salvage Cost',
-      sum: 'Total Cell Salvage Cost',
-      avg: 'Average Cell Salvage Cost Per Visit',
+      base: 'Cell Saver Cost',
+      sum: 'Total Cell Saver Cost',
+      avg: 'Average Cell Saver Cost Per Visit',
     },
     units: { sum: '$', avg: '$' },
     decimals: { sum: 0, avg: 0 },

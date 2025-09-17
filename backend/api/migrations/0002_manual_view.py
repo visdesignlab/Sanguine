@@ -126,8 +126,7 @@ def create_materialize_proc(apps, schema_editor):
             rbc_adherent,
             ffp_adherent,
             plt_adherent,
-            cryo_adherent,
-            cell_saver_ml_cost
+            cryo_adherent
         )
         SELECT
             v.visit_no,
@@ -157,8 +156,7 @@ def create_materialize_proc(apps, schema_editor):
             COALESCE(ga.rbc_adherent, 0) AS rbc_adherent,
             COALESCE(ga.ffp_adherent, 0) AS ffp_adherent,
             COALESCE(ga.plt_adherent, 0) AS plt_adherent,
-            COALESCE(ga.cryo_adherent, 0) AS cryo_adherent,
-            CASE WHEN COALESCE(t.sum_cell_saver_ml,0) > 0 THEN 500 ELSE 0 END AS cell_saver_ml_cost
+            COALESCE(ga.cryo_adherent, 0) AS cryo_adherent
         FROM Visit v
         LEFT JOIN (
             SELECT
@@ -270,8 +268,6 @@ class Migration(migrations.Migration):
                 plt_adherent SMALLINT UNSIGNED DEFAULT 0,
                 cryo_adherent SMALLINT UNSIGNED DEFAULT 0,
                 overall_adherent SMALLINT UNSIGNED AS (rbc_adherent + ffp_adherent + plt_adherent + cryo_adherent) STORED,
-
-                cell_saver_ml_cost SMALLINT UNSIGNED DEFAULT 0,
 
                 PRIMARY KEY (visit_no),
                 FOREIGN KEY (visit_no) REFERENCES Visit(visit_no),

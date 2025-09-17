@@ -62,13 +62,15 @@ function App() {
             rbc_units_cost DECIMAL(10,2),
             ffp_units_cost DECIMAL(10,2),
             plt_units_cost DECIMAL(10,2),
-            cryo_units_cost DECIMAL(10,2)
+            cryo_units_cost DECIMAL(10,2),
+            cell_saver_cost DECIMAL(10,2)
           );
           INSERT INTO costs VALUES (
             ${store.unitCosts.rbc_units_cost},
             ${store.unitCosts.ffp_units_cost},
             ${store.unitCosts.plt_units_cost},
-            ${store.unitCosts.cryo_units_cost}
+            ${store.unitCosts.cryo_units_cost},
+            ${store.unitCosts.cell_saver_cost}
           );
           
           CREATE TABLE IF NOT EXISTS filteredVisitIds AS
@@ -78,9 +80,10 @@ function App() {
           SELECT
             v.*,
             v.rbc_units * c.rbc_units_cost AS rbc_units_cost,
-            0 AS ffp_units_cost,
+            v.ffp_units * c.ffp_units_cost AS ffp_units_cost,
             v.plt_units * c.plt_units_cost AS plt_units_cost,
-            v.cryo_units * c.cryo_units_cost AS cryo_units_cost
+            v.cryo_units * c.cryo_units_cost AS cryo_units_cost,
+            CASE WHEN COALESCE(v.cell_saver_ml, 0) > 0 THEN c.cell_saver_cost ELSE 0 END AS cell_saver_cost
           FROM visits v
           INNER JOIN filteredVisitIds fvi ON v.visit_no = fvi.visit_no
           CROSS JOIN costs c;
