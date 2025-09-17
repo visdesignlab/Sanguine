@@ -25,8 +25,7 @@
         "react-grid-layout": "^1.5.2",
         "react-idle-timer": "^5.7.2",
         "recharts": "2",
-        "use-deep-compare-effect": "^1.8.1",
-        "vite": "^7.1.4"
+        "vite": "^7.1.5"
     },
     "devDependencies": {
         "@types/d3": "^7.0.0",
