@@ -62,7 +62,7 @@ export function formatValueForDisplay(
 
   // First, check for millions
   if (Math.abs(rawValue) >= 1_000_000) {
-    displayValue = formatMillions(rawValue, 3);
+    displayValue = formatMillions(rawValue, 2);
   } else if (Number.isInteger(rawValue)) {
     displayValue = formatWithCommas(rawValue, 0);
   } else {
