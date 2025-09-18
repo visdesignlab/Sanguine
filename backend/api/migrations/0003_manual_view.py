@@ -145,7 +145,7 @@ def create_materialize_proc(apps, schema_editor):
             COALESCE(t.sum_cryo_units, 0) AS cryo_units,
             COALESCE(t.sum_whole_units, 0) AS whole_units,
             COALESCE(t.sum_cell_saver_ml, 0) AS cell_saver_ml,
-            v.clinical_los AS los,
+            v.los AS los,
             CASE WHEN v.pat_expired_f = 'Y' THEN TRUE ELSE FALSE END AS death,
             CASE WHEN v.total_vent_mins > 1440 THEN TRUE ELSE FALSE END AS vent,
             CASE WHEN bc.stroke = 1 THEN TRUE ELSE FALSE END AS stroke,
