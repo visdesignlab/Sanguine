@@ -1,8 +1,10 @@
-import { useContext, useMemo, useState } from 'react';
+import { useCallback, useContext, useMemo, useState } from 'react';
 import {
   Title, Card, Group, Box, Text, Stack, Flex, Button,
   Divider,
   Tooltip,
+  Modal,
+  Select,
 } from '@mantine/core';
 import {
   IconPlus, IconArrowUpRight,
@@ -15,20 +17,11 @@ import cardStyles from './PresetStateCard.module.css';
 import { presetStateCards } from './PresetStateCards';
 import { Store } from '../../../Store/Store';
 import classes from '../GridLayoutItem.module.css';
-import { ExploreChartConfig } from '../../../Types/application';
+import { BLOOD_COMPONENT_OPTIONS, costYAxisOptions, dashboardYAxisOptions, ExploreChartConfig, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS } from '../../../Types/application';
 import { CostChart } from './Charts/CostChart';
 import { ScatterPlot } from './Charts/ScatterPlot';
+import { useDisclosure } from '@mantine/hooks';
 
-function renderChart(chartConfig: ExploreChartConfig) {
-  switch (chartConfig.chartType) {
-    case 'cost':
-      return <CostChart chartConfig={chartConfig} />;
-    case 'scatterChart':
-      return <ScatterPlot chartConfig={chartConfig} />;
-    default:
-      return null;
-  }
-}
 
 export function ExploreView() {
   const store = useContext(Store);
@@ -38,10 +31,8 @@ export function ExploreView() {
 
   // Hovered preset card
   const [hoveredIdx, setHoveredIdx] = useState<{ group: number; card: number } | null>(null);
-
   const verticalMargin = 'md';
 
-  // const theme = useMantineTheme();
   // Sizes
   const {
     cardIconSize,
@@ -61,6 +52,84 @@ export function ExploreView() {
     };
   };
 
+  // Add Chart Modal State ---------------------------------
+  const [isAddModalOpen, { open: openAddModal, close: closeAddModal }] = useDisclosure(false);
+  const [chartType, setChartType] = useState<'cost' | 'scatter'>('cost');
+  const [aggregation, setAggregation] = useState<'sum' | 'avg'>('sum');
+  const [costGroupVar, setCostGroupVar] = useState<string>('');
+  const [scatterXAxisVar, setScatterXAxisVar] = useState<string>('quarter');
+  const [scatterYAxisVar, setScatterYAxisVar] = useState<string>('');
+
+  const resetModal = useCallback(() => {
+    setChartType('cost');
+    setAggregation('sum');
+    setCostGroupVar('');
+    setScatterXAxisVar('quarter');
+    setScatterYAxisVar('');
+  }, []);
+
+  const handleOpenAdd = () => {
+    resetModal();
+    openAddModal();
+  };
+
+  const handleAddChart = () => {
+    const id = `explore-${Date.now()}`;
+    if (chartType === 'cost') {
+      if (!costGroupVar) return;
+      store.exploreStore.addChart({
+        chartId: id,
+        chartType: 'cost',
+        xAxisVar: 'cost',
+        yAxisVar: costGroupVar as any,
+        aggregation,
+      });
+    } else {
+      if (!scatterXAxisVar || !scatterYAxisVar) return;
+      store.exploreStore.addChart({
+        chartId: id,
+        chartType: 'scatterChart',
+        xAxisVar: scatterXAxisVar as any,
+        yAxisVar: scatterYAxisVar as any,
+        aggregation,
+      });
+    }
+    closeAddModal();
+  };
+
+  // Options ------------------------------------------------------
+  const aggregationOptions = [
+    { value: 'sum', label: 'Sum' },
+    { value: 'avg', label: 'Average' },
+  ];
+
+  const costGroupOptions = costYAxisOptions.map(o => ({ value: o.value, label: o.label }));
+
+  const scatterXOptions = [
+    // Time aggregations
+    ...Object.entries(TIME_AGGREGATION_OPTIONS).map(([value, { label }]) => ({
+      value,
+      label,
+    })),
+    // Blood components
+    ...BLOOD_COMPONENT_OPTIONS.map(b => ({
+      value: b.value,
+      label: b.label.base,
+    })),
+  ];
+
+  const scatterYOptions = [
+    ...dashboardYAxisOptions.map(o => ({
+      value: o.value,
+      label: o.label.base,
+    })),
+    ...LAB_RESULT_OPTIONS.map(l => ({
+      value: l.value,
+      label: l.label.base,
+    })),
+  ];
+
+  // -------------------------------------------------------
   return useObserver(() => (
     <Stack>
       {/* Title, Add Chart Button */}
@@ -75,14 +144,75 @@ export function ExploreView() {
               Visits
             </Title>
           </Tooltip>
-          <Button>
+          <Button onClick={handleOpenAdd}>
             <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
             Add Chart
           </Button>
         </Flex>
       </Flex>
       <Divider />
+      {/* Add Chart Modal */}
+      <Modal
+        opened={isAddModalOpen}
+        onClose={closeAddModal}
+        title="Add Chart"
+        centered
+      >
+        <Stack gap="md">
+          <Select
+            label="Chart Type"
+            value={chartType}
+            data={[
+              { value: 'cost', label: 'Costs & Savings' },
+              { value: 'scatter', label: 'Scatter' },
+            ]}
+            onChange={(v) => setChartType((v as 'cost' | 'scatter') || 'cost')}
+          />
+          <Select
+            label="Aggregation"
+            value={aggregation}
+            data={aggregationOptions}
+            onChange={(v) => setAggregation((v as 'sum' | 'avg') || 'sum')}
+          />
 
+            {chartType === 'cost' ? (
+              <Select
+                label="Group By"
+                placeholder="Choose grouping variable"
+                value={costGroupVar}
+                data={costGroupOptions}
+                onChange={(v) => setCostGroupVar(v || '')}
+              />
+            ) : (
+              <>
+                <Select
+                  label="X Variable"
+                  placeholder="Choose X variable"
+                  value={scatterXAxisVar}
+                  data={scatterXOptions}
+                  onChange={(v) => setScatterXAxisVar(v || '')}
+                />
+                <Select
+                  label="Y Variable"
+                  placeholder="Choose Y variable"
+                  value={scatterYAxisVar}
+                  data={scatterYOptions}
+                  onChange={(v) => setScatterYAxisVar(v || '')}
+                />
+              </>
+            )}
+          <Button
+            onClick={handleAddChart}
+            disabled={
+              (chartType === 'cost' && !costGroupVar)
+              || (chartType === 'scatter' && (!scatterXAxisVar || !scatterYAxisVar))
+            }
+            fullWidth
+          >
+            Done
+          </Button>
+        </Stack>
+      </Modal>
       {store.exploreStore.chartLayouts.main.length > 0 ? (
         <ResponsiveGridLayout
           className="layout"
@@ -107,7 +237,7 @@ export function ExploreView() {
               withBorder
               className={classes.gridItem}
             >
-              {renderChart(chartConfig)}
+              {chartConfig.chartType === 'cost' && <CostChart chartConfig={chartConfig} />}
             </Card>
           ))}
         </ResponsiveGridLayout>

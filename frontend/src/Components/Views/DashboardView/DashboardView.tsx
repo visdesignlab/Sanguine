@@ -38,7 +38,7 @@ import { formatValueForDisplay } from '../../../Utils/dashboard';
 /**
  * @returns Patient Blood Management Dashboard - Stats and Charts
  */
-export function Dashboard() {
+export function DashboardView() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive) as any, []);
 
