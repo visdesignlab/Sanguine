@@ -460,6 +460,15 @@ export type ExploreChartConfig = CostChartConfig | ScatterChartConfig;
 import { ScatterChartSeries } from "@mantine/charts";
 export type ScatterPlotData = ScatterChartSeries[];
 
+// TOOD: Update or remove CostBarData type
+export interface CostBarDatum extends Record<Cost, number> {
+  surgeon_prov_id?: string;
+  anesth_prov_id?: string;
+  year?: string | number;
+  quarter?: string;
+}
+export type CostBarData = CostBarDatum[];
+
 // TODO: Update ExploreChartData type
-export type ExploreChartData = Record<string, ScatterPlotData>;
+export type ExploreChartData = Record<string, ScatterPlotData | CostBarData>;
 

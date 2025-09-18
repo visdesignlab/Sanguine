@@ -39,6 +39,7 @@ export class ExploreStore {
 
   // TODO: Remove dummy data and replace with query results
   dummyData: ExploreChartData = {
+    // Scatter plot dummy data (cell salvage volume vs post-op hemoglobin)
     sum_post_op_hgb_cell_saver_ml: [
       {
         name: 'Anesth 101',
@@ -46,7 +47,7 @@ export class ExploreStore {
         data: [
           { cell_saver_ml: 50, post_op_hgb: 11.2 },
           { cell_saver_ml: 120, post_op_hgb: 10.8 },
-            { cell_saver_ml: 180, post_op_hgb: 10.5 },
+          { cell_saver_ml: 180, post_op_hgb: 10.5 },
           { cell_saver_ml: 240, post_op_hgb: 10.1 },
           { cell_saver_ml: 310, post_op_hgb: 9.7 },
           { cell_saver_ml: 400, post_op_hgb: 9.4 },
@@ -75,6 +76,42 @@ export class ExploreStore {
           { cell_saver_ml: 220, post_op_hgb: 10.8 },
           { cell_saver_ml: 300, post_op_hgb: 10.4 },
         ],
+      },
+    ],
+
+    // Cost bar chart dummy data (sum of costs per surgeon)
+    sum_surgeon_prov_id_cost: [
+      {
+        surgeon_prov_id: 'Dr. Smith',
+        rbc_units_cost: 600,
+        ffp_units_cost: 950,
+        plt_units_cost: 900,
+        cryo_units_cost: 850,
+        cell_saver_cost: 800,
+      },
+      {
+        surgeon_prov_id: 'Dr. Lee',
+        rbc_units_cost: 400,
+        ffp_units_cost: 800,
+        plt_units_cost: 750,
+        cryo_units_cost: 700,
+        cell_saver_cost: 650,
+      },
+      {
+        surgeon_prov_id: 'Dr. Patel',
+        rbc_units_cost: 700,
+        ffp_units_cost: 1000,
+        plt_units_cost: 950,
+        cryo_units_cost: 900,
+        cell_saver_cost: 850,
+      },
+      {
+        surgeon_prov_id: 'Dr. Jones',
+        rbc_units_cost: 300,
+        ffp_units_cost: 700,
+        plt_units_cost: 650,
+        cryo_units_cost: 600,
+        cell_saver_cost: 550,
       },
     ],
   };

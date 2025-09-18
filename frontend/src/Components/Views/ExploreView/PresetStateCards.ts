@@ -50,7 +50,7 @@ export const presetStateCards: PresetGroup[] = [
         Icon: IconRecycle,
         // Scatter plot config: sum of cell_saver_ml by month
         chartConfigs: [{
-          chartId: 'sum_post_op_hgb_cell_saver_ml',
+          chartId: '0',
           yAxisVar: 'post_op_hgb',
           xAxisVar: 'cell_saver_ml',
           aggregation: 'sum',
@@ -79,7 +79,7 @@ export const presetStateCards: PresetGroup[] = [
           yAxisVar: 'surgeon_prov_id',
           xAxisVar: 'cost',
           aggregation: 'sum',
-          chartType: 'cost',
+            chartType: 'cost',
         }],
         chartLayouts: {
           main: [{

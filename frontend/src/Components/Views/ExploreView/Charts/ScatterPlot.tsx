@@ -4,7 +4,7 @@ import { IconGripVertical } from '@tabler/icons-react';
 import { ScatterChart } from '@mantine/charts';
 import { useContext, useMemo } from 'react';
 import { Store } from '../../../../Store/Store';
-import { ExploreChartConfig } from '../../../../Types/application';
+import { ExploreChartConfig, ScatterPlotData } from '../../../../Types/application';
 
 export function ScatterPlot({ chartConfig }: { chartConfig: ExploreChartConfig }) {
   if (chartConfig.chartType !== 'scatterChart') return null;
@@ -16,7 +16,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ExploreChartConfig }
     [chartConfig.aggregation, chartConfig.yAxisVar, chartConfig.xAxisVar],
   );
 
-  const data = store.exploreStore.chartData[dataKeyString] || [];
+  const data = store.exploreStore.chartData[dataKeyString] as ScatterPlotData || [];
 
   return (
     <>
