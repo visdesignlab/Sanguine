@@ -1,6 +1,8 @@
 import { Accordion, Box, Button, Card, Divider, Flex, LoadingOverlay, NumberInput } from "@mantine/core";
 import { useContext, useState, useCallback, useEffect, useMemo } from "react";
 import { Store } from "../../../Store/Store";
+import { icons, getIconForVar } from "../../../Utils/icons";
+import { useThemeConstants } from "../../../Theme/mantineTheme";
 
 export function BloodProductCostSettings() {
   const store = useContext(Store);
@@ -40,9 +42,12 @@ export function BloodProductCostSettings() {
     cellSaverCost !== store.unitCosts.cell_saver_cost
   ), [rbcCost, pltCost, ffpCost, cryoCost, cellSaverCost, store.unitCosts]);
 
+  const ControlIcon = getIconForVar('rbc_units' as any);
+  const {cardIconStroke} = useThemeConstants();
+
   return (
     <Accordion.Item value="bloodProductCosts">
-      <Accordion.Control>Blood Product Costs</Accordion.Control>
+      <Accordion.Control icon={<ControlIcon size={16} />} >Blood Product Costs</Accordion.Control>
       <Accordion.Panel>
         <LoadingOverlay visible={loading} overlayProps={{ radius: 'sm', blur: 2 }} />
         <Divider mb="sm" />

@@ -8,6 +8,7 @@ import {
 import { DashboardStore } from './DashboardStore';
 import { FiltersStore } from './FiltersStore';
 import { ExploreStore } from './ExploreStore';
+import { SelectionsStore } from './SelectionsStore';
 
 export class RootStore {
   // Provenance
@@ -19,6 +20,8 @@ export class RootStore {
   // // providersStore:
 
   filtersStore: FiltersStore;
+
+  selectionsStore: SelectionsStore;
 
   duckDB: AsyncDuckDBConnection | null = null;
 
@@ -48,6 +51,7 @@ export class RootStore {
     this.dashboardStore = new DashboardStore(this);
     this.exploreStore = new ExploreStore(this);
     this.filtersStore = new FiltersStore(this);
+    this.selectionsStore = new SelectionsStore(this);
 
     makeAutoObservable(this);
   }

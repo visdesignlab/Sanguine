@@ -12,7 +12,9 @@ import {
   IconCamera, IconLogout, IconUser, IconMenu,
   IconRestore, type IconProps,
   IconChartBar,
+  IconClipboardList,
 } from '@tabler/icons-react';
+import { Store } from '../Store/Store';
 import { useThemeConstants } from '../Theme/mantineTheme';
 import { DashboardView } from '../Components/Views/DashboardView/DashboardView';
 import { ExploreView } from '../Components/Views/ExploreView/ExploreView';
@@ -21,7 +23,7 @@ import { SettingsView } from '../Components/Views/SettingsView/SettingsView';
 import classes from './Shell.module.css';
 import { FilterPanel } from '../Components/Toolbar/Filters/FilterPanel';
 import { FilterIcon } from '../Components/Toolbar/Filters/FilterIcon';
-import { Store } from '../Store/Store';
+import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/SelectedVisitsPanel';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -82,6 +84,7 @@ export function Shell() {
         </ActionIcon>,
       ],
     },
+    { icon: IconClipboardList, label: 'Selected Visits', content: <SelectedVisitsPanel /> },
     { icon: IconDatabase, label: 'Database', content: <Text>Database content</Text> },
     { icon: IconBook, label: 'Learn', content: <Text>Learning content</Text> },
   ];

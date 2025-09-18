@@ -16,8 +16,9 @@ import { useThemeConstants } from '../../../Theme/mantineTheme';
 import gridItemStyles from '../GridLayoutItem.module.css';
 import statsGridStyles from './StatsGrid.module.css';
 import { Store } from '../../../Store/Store';
-import { getIconForVar, isMetricChangeGood } from '../../../Utils/dashboard';
+import { isMetricChangeGood } from '../../../Utils/dashboard';
 import { DashboardAggYAxisVar, DashboardStatData } from '../../../Types/application';
+import { getIconForVar } from '../../../Utils/icons';
 
 export function StatsGrid() {
   // Icon styles
