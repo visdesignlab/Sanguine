@@ -70,7 +70,7 @@ export function Shell() {
 
   // Toolbar icons ----------------------
   // Left toolbar icons
-  const leftToolbarIcons: { icon: React.ComponentType<IconProps>; label: string, content: ReactNode, actionButtons?: ReactNode[] }[] = [
+  const leftToolbarIcons: { icon: React.ComponentType<IconProps>; label: string; content: ReactNode; actionButtons?: ReactNode[]; disabled?: boolean }[] = [
     {
       icon: FilterIcon,
       label: 'Filter Panel',
@@ -84,9 +84,23 @@ export function Shell() {
         </ActionIcon>,
       ],
     },
-    { icon: IconClipboardList, label: 'Selected Visits', content: <SelectedVisitsPanel /> },
-    { icon: IconDatabase, label: 'Database', content: <Text>Database content</Text> },
-    { icon: IconBook, label: 'Learn', content: <Text>Learning content</Text> },
+    {
+      icon: IconClipboardList,
+      label: 'Selected Visits',
+      content: <SelectedVisitsPanel />,
+    },
+    {
+      icon: IconDatabase,
+      label: 'Database',
+      content: <Text>Database content</Text>,
+      disabled: true,
+    },
+    {
+      icon: IconBook,
+      label: 'Learn',
+      content: <Text>Learning content</Text>,
+      disabled: true,
+    },
   ];
 
   // Header toolbar icons
@@ -192,7 +206,7 @@ export function Shell() {
               w={toolbarWidth}
               pt="md"
             >
-              {leftToolbarIcons.map(({ icon: Icon, label }, index) => (
+              {leftToolbarIcons.map(({ icon: Icon, label, disabled }, index) => (
                 <Tooltip
                   key={label}
                   label={label}
@@ -205,6 +219,7 @@ export function Shell() {
                     data-active={index === activeLeftPanel}
                     className={classes.leftToolbarIcon}
                     style={{ overflow: 'visible' }}
+                    disabled={disabled}
                   >
                     <Icon
                       stroke={iconStroke}
