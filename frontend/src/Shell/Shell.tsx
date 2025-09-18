@@ -4,6 +4,9 @@ import {
 import { useDisclosure } from '@mantine/hooks';
 import {
   AppShell, Group, Tabs, ActionIcon, Title, Flex, Container, Menu, Box, Text, Tooltip,
+  Modal,
+  Button,
+  Stack,
 } from '@mantine/core';
 import {
   IconDatabase, IconSettings, IconBook,
@@ -56,6 +59,14 @@ export function Shell() {
   // Active tab in the view tabs
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
 
+  // Reset to defaults modal ----------------------
+  const [resetModalOpened, setResetModalOpened] = useState(false);
+  const handleConfirmReset = () => {
+    // Reset filters (add other reset logic as needed)
+    store.filtersStore.resetAllFilters();
+    setResetModalOpened(false);
+  };
+
   // Toolbar & Left Panel states ----------------------
   // Width of the header toolbar & left toolbar
   const { toolbarWidth, iconStroke } = useThemeConstants();
@@ -105,7 +116,6 @@ export function Shell() {
 
   // Header toolbar icons
   const headerIcons: { icon: React.ComponentType<IconProps>; label: string }[] = [
-    { icon: IconTrash, label: 'Delete' },
     { icon: IconArrowNarrowLeftDashed, label: 'Back' },
     { icon: IconArrowNarrowRightDashed, label: 'Forward' },
     { icon: IconDeviceFloppy, label: 'Save' },
@@ -185,6 +195,7 @@ export function Shell() {
                 <Menu.Label>User</Menu.Label>
                 <Menu.Item
                   leftSection={<IconRestore size={14} />}
+                  onClick={() => setResetModalOpened(true)}
                 >
                   Reset to defaults
                 </Menu.Item>
@@ -266,6 +277,24 @@ export function Shell() {
           ))}
         </Container>
       </AppShell.Main>
+      {/** Reset to Defaults Modal */}
+      <Modal
+        opened={resetModalOpened}
+        onClose={() => setResetModalOpened(false)}
+        title="Are you sure you want to reset?"
+        centered
+      >
+        <Stack gap="md">
+            <Text size="sm">
+            This action will reset to Intelvia's default state.<br />
+            All custom charts and filters will be removed.
+            </Text>
+          <Group justify="flex-end" mt="xs">
+            <Button variant="default" onClick={() => setResetModalOpened(false)}>Cancel</Button>
+            <Button color="red" onClick={handleConfirmReset}>Reset</Button>
+          </Group>
+        </Stack>
+      </Modal>
     </AppShell>
   );
 }
