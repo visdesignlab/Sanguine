@@ -33,7 +33,8 @@ export function CostChart({ chartConfig }: { chartConfig: CostChartConfig }) {
 
   const rawData = store.exploreStore.chartData[dataKeyString] as CostBarData || [];
 
-  const processedData = useMemo(() => {
+  // Sort data if needed
+  const sortedData = useMemo(() => {
     if (!isSortActive) return rawData;
     const clone = [...rawData];
     clone.sort((a, b) => {
@@ -62,8 +63,8 @@ export function CostChart({ chartConfig }: { chartConfig: CostChartConfig }) {
           <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
           <Title order={4}>
             {isAverage
-              ? `Average Cost Components per ${groupLabel}`
-              : `Total Cost Components per ${groupLabel}`}
+              ? `Average Costs per ${groupLabel}`
+              : `Total Costs per ${groupLabel}`}
           </Title>
         </Flex>
 
@@ -91,7 +92,7 @@ export function CostChart({ chartConfig }: { chartConfig: CostChartConfig }) {
       </Flex>
       <BarChart
         h={500}
-        data={processedData}
+        data={sortedData}
         dataKey={chartConfig.yAxisVar}
         type="stacked"
         orientation="vertical"
