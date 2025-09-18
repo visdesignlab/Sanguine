@@ -120,6 +120,21 @@ export class ExploreStore {
     ...this.dummyData,
   };
 
+  // Adds a new chart to the top of the layout
+  addChart(config: ExploreChartConfig) {
+    this._chartConfigs = [config, ...this._chartConfigs];
+    const shifted = this._chartLayouts.main.map(l => ({ ...l, y: l.y + 1 }));
+    shifted.unshift({
+      i: config.chartId,
+      x: 0,
+      y: 0,
+      w: 2,
+      h: 1,
+      maxH: 2,
+    });
+    this._chartLayouts = { ...this._chartLayouts, main: shifted };
+  }
+  
   // Removes chart from layouts (position) and config (info)
   removeChart(chartId: string) {
     this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
