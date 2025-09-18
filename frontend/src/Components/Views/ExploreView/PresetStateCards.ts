@@ -48,11 +48,11 @@ export const presetStateCards: PresetGroup[] = [
       {
         question: 'What are the outcomes of using cell salvage, for each anesthesiologist?',
         Icon: IconRecycle,
-        // TODO: Update with real chart config for scatterplot
+        // Scatter plot config: sum of cell_saver_ml by month
         chartConfigs: [{
-          chartId: '0',
-          yAxisVar: 'cell_saver_ml',
-          xAxisVar: 'month',
+          chartId: 'sum_post_op_hgb_cell_saver_ml',
+          yAxisVar: 'post_op_hgb',
+          xAxisVar: 'cell_saver_ml',
           aggregation: 'sum',
           chartType: 'scatterChart',
         }],

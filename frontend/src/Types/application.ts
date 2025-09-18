@@ -250,6 +250,27 @@ export const GUIDELINE_ADHERENT_OPTIONS = Object.values(GUIDELINE_ADHERENT) as R
   decimals: number;
 }>;
 
+// Lab Results ---------------------------------------------------
+export const LAB_RESULTS = [
+  {
+    value: 'post_op_hgb',
+    label: {
+      base: 'Post-Operative Hemoglobin',
+      sum: 'Total Post-Operative Hemoglobin',
+      avg: 'Average Post-Operative Hemoglobin',
+    },
+    units: { sum: 'g/dL', avg: 'g/dL' },
+    decimals: { sum: 0, avg: 2 },
+  },
+] as const;
+export type LabResult = typeof LAB_RESULTS[number]['value'];
+export const LAB_RESULT_OPTIONS = LAB_RESULTS as ReadonlyArray<{
+  value: LabResult;
+  label: { base: string; sum: string; avg: string };
+  units: { sum: string; avg: string };
+  decimals: { sum: number; avg: number };
+}>;
+
 // Costs / Savings -------------------------------------------------
 
 // Types of costs
@@ -431,6 +452,14 @@ export const costYAxisVars = costYAxisOptions.map((opt) => opt.value);
 export type CostChartConfig = ChartConfig<typeof costXAxisVars[number], typeof costYAxisVars[number], 'sum' | 'avg', 'cost'>;
 
 // TODO: Update ScatterChartConfig type
-export type ScatterChartConfig = ChartConfig<typeof dashboardXAxisVars[number], typeof dashboardYAxisVars[number], keyof typeof AGGREGATION_OPTIONS, 'scatterChart'>;
+export type ScatterChartConfig = ChartConfig<typeof dashboardXAxisVars[number] | BloodComponent, typeof dashboardYAxisVars[number] | LabResult, keyof typeof AGGREGATION_OPTIONS, 'scatterChart'>;
 
 export type ExploreChartConfig = CostChartConfig | ScatterChartConfig;
+
+// TODO: Update ScatterPlot data type
+import { ScatterChartSeries } from "@mantine/charts";
+export type ScatterPlotData = ScatterChartSeries[];
+
+// TODO: Update ExploreChartData type
+export type ExploreChartData = Record<string, ScatterPlotData>;
+
