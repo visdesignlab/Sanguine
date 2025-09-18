@@ -17,7 +17,6 @@ export function SelectedVisitsPanel() {
 
   const [selectedVisit, setSelectedVisit] = useState<any | null>(null);
 
-  console.log("Selected Visits:", store.selectionsStore.selectedVisits);
   return useObserver(() => (
     <Stack>
       <ScrollArea h={250}>
