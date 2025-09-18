@@ -24,7 +24,7 @@ export function ScatterPlot({ chartConfig }: { chartConfig: ExploreChartConfig }
         <Flex direction="row" align="center" gap="md" ml={-12}>
           <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
           <Title order={4}>
-            {`${chartConfig.aggregation} ${chartConfig.yAxisVar} per ${chartConfig.xAxisVar}`}
+            {`${chartConfig.yAxisVar} over ${chartConfig.xAxisVar}`}
           </Title>
         </Flex>
         <Flex direction="row" align="center" gap="sm">
