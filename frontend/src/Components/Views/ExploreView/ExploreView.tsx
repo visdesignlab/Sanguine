@@ -17,11 +17,14 @@ import { Store } from '../../../Store/Store';
 import classes from '../GridLayoutItem.module.css';
 import { ExploreChartConfig } from '../../../Types/application';
 import { CostChart } from './Charts/CostChart';
+import { ScatterPlot } from './Charts/ScatterPlot';
 
 function renderChart(chartConfig: ExploreChartConfig) {
   switch (chartConfig.chartType) {
     case 'cost':
       return <CostChart chartConfig={chartConfig} />;
+    case 'scatterChart':
+      return <ScatterPlot chartConfig={chartConfig} />;
     default:
       return null;
   }

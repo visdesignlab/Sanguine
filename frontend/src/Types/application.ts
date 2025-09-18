@@ -430,4 +430,7 @@ export const costYAxisVars = costYAxisOptions.map((opt) => opt.value);
 
 export type CostChartConfig = ChartConfig<typeof costXAxisVars[number], typeof costYAxisVars[number], 'sum' | 'avg', 'cost'>;
 
-export type ExploreChartConfig = CostChartConfig;
+// TODO: Update ScatterChartConfig type
+export type ScatterChartConfig = ChartConfig<typeof dashboardXAxisVars[number], typeof dashboardYAxisVars[number], keyof typeof AGGREGATION_OPTIONS, 'scatterChart'>;
+
+export type ExploreChartConfig = CostChartConfig | ScatterChartConfig;
