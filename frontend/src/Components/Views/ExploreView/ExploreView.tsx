@@ -88,7 +88,7 @@ export function ExploreView() {
       if (!scatterXAxisVar || !scatterYAxisVar) return;
       store.exploreStore.addChart({
         chartId: id,
-        chartType: 'scatterChart',
+        chartType: 'scatterPlot',
         xAxisVar: scatterXAxisVar as any,
         yAxisVar: scatterYAxisVar as any,
         aggregation,

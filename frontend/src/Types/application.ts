@@ -451,10 +451,10 @@ export const costYAxisVars = costYAxisOptions.map((opt) => opt.value);
 
 export type CostChartConfig = ChartConfig<typeof costXAxisVars[number], typeof costYAxisVars[number], 'sum' | 'avg', 'cost'>;
 
-// TODO: Update ScatterChartConfig type
-export type ScatterChartConfig = ChartConfig<typeof dashboardXAxisVars[number] | BloodComponent, typeof dashboardYAxisVars[number] | LabResult, keyof typeof AGGREGATION_OPTIONS, 'scatterChart'>;
+// TODO: Update scatterPlotConfig type
+export type ScatterPlotConfig = ChartConfig<typeof dashboardXAxisVars[number] | BloodComponent, typeof dashboardYAxisVars[number] | LabResult, keyof typeof AGGREGATION_OPTIONS, 'scatterPlot'>;
 
-export type ExploreChartConfig = CostChartConfig | ScatterChartConfig;
+export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig;
 
 // TODO: Update ScatterPlot data type
 import { ScatterChartSeries } from "@mantine/charts";

@@ -53,7 +53,7 @@ export const presetStateCards: PresetGroup[] = [
           yAxisVar: 'post_op_hgb',
           xAxisVar: 'cell_saver_ml',
           aggregation: 'sum',
-          chartType: 'scatterChart',
+          chartType: 'scatterPlot',
         }],
         chartLayouts: {
           main: [{
