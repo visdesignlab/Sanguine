@@ -78,7 +78,7 @@ export const presetStateCards: PresetGroup[] = [
           yAxisVar: 'surgeon_prov_id',
           xAxisVar: 'cost',
           aggregation: 'sum',
-            chartType: 'cost',
+          chartType: 'cost',
         }],
         chartLayouts: {
           main: [{

@@ -1,7 +1,4 @@
 import {
-  IconDropletHalf2Filled, IconTestPipe2, IconShieldHeart, IconMedicineSyrup, IconCoin,
-} from '@tabler/icons-react';
-import {
   dashboardYAxisVars, BLOOD_COMPONENT_OPTIONS, OUTCOME_OPTIONS, COST_OPTIONS, OVERALL_BLOOD_PRODUCT_COST, GUIDELINE_ADHERENT_OPTIONS, OVERALL_GUIDELINE_ADHERENT, PROPHYL_MED_OPTIONS,
   AGGREGATION_OPTIONS,
   dashboardYAxisOptions,
@@ -110,5 +107,3 @@ export function isMetricChangeGood(metricVar: typeof dashboardYAxisVars[number],
   console.warn(`Unclassified metric: ${metricVar}`);
   return diffPercent >= 0;
 }
-
-

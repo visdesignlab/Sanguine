@@ -1,8 +1,11 @@
-import { Accordion, Box, Button, Card, Divider, Flex, LoadingOverlay, NumberInput } from "@mantine/core";
-import { useContext, useState, useCallback, useEffect, useMemo } from "react";
-import { Store } from "../../../Store/Store";
-import { icons, getIconForVar } from "../../../Utils/icons";
-import { useThemeConstants } from "../../../Theme/mantineTheme";
+import {
+  Accordion, Box, Button, Divider, Flex, LoadingOverlay, NumberInput,
+} from '@mantine/core';
+import {
+  useContext, useState, useCallback, useEffect, useMemo,
+} from 'react';
+import { Store } from '../../../Store/Store';
+import { getIconForVar } from '../../../Utils/icons';
 
 export function BloodProductCostSettings() {
   const store = useContext(Store);
@@ -35,19 +38,18 @@ export function BloodProductCostSettings() {
   }, [store.unitCosts]);
 
   const dirty = useMemo(() => (
-    rbcCost !== store.unitCosts.rbc_units_cost ||
-    pltCost !== store.unitCosts.plt_units_cost ||
-    ffpCost !== store.unitCosts.ffp_units_cost ||
-    cryoCost !== store.unitCosts.cryo_units_cost ||
-    cellSaverCost !== store.unitCosts.cell_saver_cost
+    rbcCost !== store.unitCosts.rbc_units_cost
+    || pltCost !== store.unitCosts.plt_units_cost
+    || ffpCost !== store.unitCosts.ffp_units_cost
+    || cryoCost !== store.unitCosts.cryo_units_cost
+    || cellSaverCost !== store.unitCosts.cell_saver_cost
   ), [rbcCost, pltCost, ffpCost, cryoCost, cellSaverCost, store.unitCosts]);
 
-  const ControlIcon = getIconForVar('rbc_units' as any);
-  const {cardIconStroke} = useThemeConstants();
+  const ControlIcon = getIconForVar('rbc_units');
 
   return (
     <Accordion.Item value="bloodProductCosts">
-      <Accordion.Control icon={<ControlIcon size={16} />} >Blood Product Costs</Accordion.Control>
+      <Accordion.Control icon={<ControlIcon size={16} />}>Blood Product Costs</Accordion.Control>
       <Accordion.Panel>
         <LoadingOverlay visible={loading} overlayProps={{ radius: 'sm', blur: 2 }} />
         <Divider mb="sm" />
@@ -102,10 +104,11 @@ export function BloodProductCostSettings() {
             prefix="$"
             isAllowed={(value) => value.value.length < 12}
           />
-          {dirty && <Flex direction="row" justify="flex-end">
+          {dirty && (
+          <Flex direction="row" justify="flex-end">
             <Button mt="md" onClick={() => { saveCosts(rbcCost, pltCost, ffpCost, cryoCost, cellSaverCost); }} variant="filled" color="blue">Apply</Button>
           </Flex>
-          }
+          )}
         </Box>
       </Accordion.Panel>
     </Accordion.Item>

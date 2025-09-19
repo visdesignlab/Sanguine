@@ -1,4 +1,6 @@
-import { useCallback, useContext, useMemo, useState } from 'react';
+import {
+  useCallback, useContext, useMemo, useState,
+} from 'react';
 import {
   Title, Card, Group, Box, Text, Stack, Flex, Button,
   Divider,
@@ -12,16 +14,17 @@ import {
 import clsx from 'clsx';
 import { Layout, Responsive, WidthProvider } from 'react-grid-layout';
 import { useObserver } from 'mobx-react';
+import { useDisclosure } from '@mantine/hooks';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import cardStyles from './PresetStateCard.module.css';
 import { presetStateCards } from './PresetStateCards';
 import { Store } from '../../../Store/Store';
 import classes from '../GridLayoutItem.module.css';
-import { BLOOD_COMPONENT_OPTIONS, costYAxisOptions, dashboardYAxisOptions, ExploreChartConfig, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS } from '../../../Types/application';
+import {
+  BLOOD_COMPONENT_OPTIONS, costYAxisOptions, dashboardYAxisOptions, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS,
+} from '../../../Types/application';
 import { CostChart } from './Charts/CostChart';
 import { ScatterPlot } from './Charts/ScatterPlot';
-import { useDisclosure } from '@mantine/hooks';
-
 
 export function ExploreView() {
   const store = useContext(Store);
@@ -103,7 +106,7 @@ export function ExploreView() {
     { value: 'avg', label: 'Average' },
   ];
 
-  const costGroupOptions = costYAxisOptions.map(o => ({ value: o.value, label: o.label }));
+  const costGroupOptions = costYAxisOptions.map((o) => ({ value: o.value, label: o.label }));
 
   const scatterXOptions = [
     // Time aggregations
@@ -112,18 +115,18 @@ export function ExploreView() {
       label,
     })),
     // Blood components
-    ...BLOOD_COMPONENT_OPTIONS.map(b => ({
+    ...BLOOD_COMPONENT_OPTIONS.map((b) => ({
       value: b.value,
       label: b.label.base,
     })),
   ];
 
   const scatterYOptions = [
-    ...dashboardYAxisOptions.map(o => ({
+    ...dashboardYAxisOptions.map((o) => ({
       value: o.value,
       label: o.label.base,
     })),
-    ...LAB_RESULT_OPTIONS.map(l => ({
+    ...LAB_RESULT_OPTIONS.map((l) => ({
       value: l.value,
       label: l.label.base,
     })),
@@ -175,32 +178,32 @@ export function ExploreView() {
             onChange={(v) => setAggregation((v as 'sum' | 'avg') || 'sum')}
           />
 
-            {chartType === 'cost' ? (
+          {chartType === 'cost' ? (
+            <Select
+              label="Group By"
+              placeholder="Choose grouping variable"
+              value={costGroupVar}
+              data={costGroupOptions}
+              onChange={(v) => setCostGroupVar(v || '')}
+            />
+          ) : (
+            <>
               <Select
-                label="Group By"
-                placeholder="Choose grouping variable"
-                value={costGroupVar}
-                data={costGroupOptions}
-                onChange={(v) => setCostGroupVar(v || '')}
+                label="X Variable"
+                placeholder="Choose X variable"
+                value={scatterXAxisVar}
+                data={scatterXOptions}
+                onChange={(v) => setScatterXAxisVar(v || '')}
               />
-            ) : (
-              <>
-                <Select
-                  label="X Variable"
-                  placeholder="Choose X variable"
-                  value={scatterXAxisVar}
-                  data={scatterXOptions}
-                  onChange={(v) => setScatterXAxisVar(v || '')}
-                />
-                <Select
-                  label="Y Variable"
-                  placeholder="Choose Y variable"
-                  value={scatterYAxisVar}
-                  data={scatterYOptions}
-                  onChange={(v) => setScatterYAxisVar(v || '')}
-                />
-              </>
-            )}
+              <Select
+                label="Y Variable"
+                placeholder="Choose Y variable"
+                value={scatterYAxisVar}
+                data={scatterYOptions}
+                onChange={(v) => setScatterYAxisVar(v || '')}
+              />
+            </>
+          )}
           <Button
             onClick={handleAddChart}
             disabled={

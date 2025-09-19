@@ -34,7 +34,7 @@ export class ExploreStore {
   set chartConfigs(input: ExploreChartConfig[]) {
     this._chartConfigs = input;
   }
-  
+
   // Explore View Chart Data -----------------------------------
 
   // TODO: Remove dummy data and replace with query results
@@ -115,7 +115,7 @@ export class ExploreStore {
       },
     ],
   };
-  
+
   chartData: ExploreChartData = {
     ...this.dummyData,
   };
@@ -123,7 +123,7 @@ export class ExploreStore {
   // Adds a new chart to the top of the layout
   addChart(config: ExploreChartConfig) {
     this._chartConfigs = [config, ...this._chartConfigs];
-    const shifted = this._chartLayouts.main.map(l => ({ ...l, y: l.y + 1 }));
+    const shifted = this._chartLayouts.main.map((l) => ({ ...l, y: l.y + 1 }));
     shifted.unshift({
       i: config.chartId,
       x: 0,
@@ -134,7 +134,7 @@ export class ExploreStore {
     });
     this._chartLayouts = { ...this._chartLayouts, main: shifted };
   }
-  
+
   // Removes chart from layouts (position) and config (info)
   removeChart(chartId: string) {
     this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);

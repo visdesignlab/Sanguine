@@ -1,5 +1,9 @@
-import { IconDropletHalf2Filled, IconTestPipe2, IconShieldHeart, IconMedicineSyrup, IconCoin } from "@tabler/icons-react";
-import { dashboardYAxisVars, BLOOD_COMPONENT_OPTIONS, GUIDELINE_ADHERENT_OPTIONS, OVERALL_GUIDELINE_ADHERENT, OUTCOME_OPTIONS, PROPHYL_MED_OPTIONS } from "../Types/application";
+import {
+  IconDropletHalf2Filled, IconTestPipe2, IconShieldHeart, IconMedicineSyrup, IconCoin,
+} from '@tabler/icons-react';
+import {
+  dashboardYAxisVars, BLOOD_COMPONENT_OPTIONS, GUIDELINE_ADHERENT_OPTIONS, OVERALL_GUIDELINE_ADHERENT, OUTCOME_OPTIONS, PROPHYL_MED_OPTIONS,
+} from '../Types/application';
 
 // Icon mapping to variable type
 export const icons = {

@@ -9,8 +9,8 @@ import {
   Stack,
 } from '@mantine/core';
 import {
-  IconDatabase, IconSettings, IconBook,
-  IconTrash, IconArrowNarrowLeftDashed,
+  IconDatabase, IconBook,
+  IconArrowNarrowLeftDashed,
   IconArrowNarrowRightDashed, IconDeviceFloppy,
   IconCamera, IconLogout, IconUser, IconMenu,
   IconRestore, type IconProps,
@@ -51,7 +51,7 @@ export function Shell() {
     {
       key: 'Settings',
       content: <SettingsView />,
-    }
+    },
   ];
   // Default tab shown initial load
   const defaultTab = TABS[0].key;
@@ -285,10 +285,11 @@ export function Shell() {
         centered
       >
         <Stack gap="md">
-            <Text size="sm">
-            This action will reset to Intelvia's default state.<br />
+          <Text size="sm">
+            This action will reset to Intelvia&apos;s default state.
+            <br />
             All custom charts and filters will be removed.
-            </Text>
+          </Text>
           <Group justify="flex-end" mt="xs">
             <Button variant="default" onClick={() => setResetModalOpened(false)}>Cancel</Button>
             <Button color="red" onClick={handleConfirmReset}>Reset</Button>

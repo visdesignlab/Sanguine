@@ -1,4 +1,3 @@
-/* eslint-disable import/no-cycle */
 import { makeAutoObservable } from 'mobx';
 import { createContext } from 'react';
 import { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm';

@@ -1,5 +1,8 @@
 // Time formatting ------------------------------------------------
 // Time period types
+// TODO: Update ScatterPlot data type
+import { ScatterChartSeries } from '@mantine/charts';
+
 export type Quarter = `${number}-Q${1 | 2 | 3 | 4}`;
 export type Month = `${number}-${string}`; // e.g. "2023-Jan"
 export type Year = `${number}`; // e.g. "2023"
@@ -455,9 +458,6 @@ export type CostChartConfig = ChartConfig<typeof costXAxisVars[number], typeof c
 export type ScatterPlotConfig = ChartConfig<typeof dashboardXAxisVars[number] | BloodComponent, typeof dashboardYAxisVars[number] | LabResult, keyof typeof AGGREGATION_OPTIONS, 'scatterPlot'>;
 
 export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig;
-
-// TODO: Update ScatterPlot data type
-import { ScatterChartSeries } from "@mantine/charts";
 export type ScatterPlotData = ScatterChartSeries[];
 
 // TOOD: Update or remove CostBarData type
@@ -471,4 +471,3 @@ export type CostBarData = CostBarDatum[];
 
 // TODO: Update ExploreChartData type
 export type ExploreChartData = Record<string, ScatterPlotData | CostBarData>;
-

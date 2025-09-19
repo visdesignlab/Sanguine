@@ -6,7 +6,9 @@ import {
 } from '@tabler/icons-react';
 import { BarChart } from '@mantine/charts';
 import { useContext, useMemo, useState } from 'react';
-import { chartColors, COST_OPTIONS, CostBarData, CostChartConfig, costXAxisOptions, costYAxisOptions } from '../../../../Types/application';
+import {
+  chartColors, COST_OPTIONS, CostBarData, CostChartConfig, costXAxisOptions, costYAxisOptions,
+} from '../../../../Types/application';
 import { Store } from '../../../../Store/Store';
 
 const costSeries = COST_OPTIONS.map((c, idx) => ({
@@ -31,7 +33,7 @@ export function CostChart({ chartConfig }: { chartConfig: CostChartConfig }) {
     [chartConfig.aggregation, chartConfig.yAxisVar, chartConfig.xAxisVar],
   );
 
-  const rawData = store.exploreStore.chartData[dataKeyString] as CostBarData || [];
+  const rawData = useMemo(() => (store.exploreStore.chartData[dataKeyString] as CostBarData) || [], [store.exploreStore.chartData, dataKeyString]);
 
   // Sort data if needed
   const sortedData = useMemo(() => {

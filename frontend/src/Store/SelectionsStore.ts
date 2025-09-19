@@ -1,8 +1,6 @@
 import { makeAutoObservable, observable } from 'mobx';
-import { Layout } from 'react-grid-layout';
 
 import type { RootStore } from './Store';
-import { ExploreChartConfig, ExploreChartData } from '../Types/application';
 
 export class SelectionsStore {
   _rootStore: RootStore;
@@ -13,11 +11,13 @@ export class SelectionsStore {
     makeAutoObservable(this, { selectedVisits: observable.ref });
   }
 
+  // TODO: replace 'any' with actual visit type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   selectedVisits: any[] = [];
 
   async updateSelectedVisits() {
     if (!this._rootStore.duckDB) return;
-  
+
     const query = `
       SELECT *
       FROM filteredVisits
@@ -25,8 +25,8 @@ export class SelectionsStore {
       LIMIT 100;
     `;
     const result = await this._rootStore.duckDB.query(query);
-    
+
     // jsonify all the rows into the selected visits
-    this.selectedVisits = result.toArray().map(row => row.toJSON());
+    this.selectedVisits = result.toArray().map((row) => row.toJSON());
   }
 }

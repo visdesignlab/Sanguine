@@ -7,8 +7,6 @@ import { Store } from '../../../../Store/Store';
 import { ExploreChartConfig, ScatterPlotData } from '../../../../Types/application';
 
 export function ScatterPlot({ chartConfig }: { chartConfig: ExploreChartConfig }) {
-  if (chartConfig.chartType !== 'scatterPlot') return null;
-
   const store = useContext(Store);
 
   const dataKeyString = useMemo(
