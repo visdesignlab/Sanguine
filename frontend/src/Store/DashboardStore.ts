@@ -229,20 +229,32 @@ export class DashboardStore {
 
     // Dynamically build the query to ensure all current charts are included
     const selectClauses = this._chartConfigs.flatMap(({ yAxisVar }) => (
-      // For every aggregation option
-      Object.keys(AGGREGATION_OPTIONS).map((aggregation) => {
+      Object.keys(AGGREGATION_OPTIONS).flatMap((aggregation) => {
         const aggFn = aggregation.toUpperCase();
-        return yAxisVar === 'total_blood_product_cost'
-          ? [
+
+        // Special case: Sum of all blood product costs
+        if (yAxisVar === 'total_blood_product_cost') {
+          return [
             `${aggFn}(rbc_units_cost) AS ${aggregation}_rbc_units_cost`,
             `${aggFn}(plt_units_cost) AS ${aggregation}_plt_units_cost`,
             `${aggFn}(ffp_units_cost) AS ${aggregation}_ffp_units_cost`,
             `${aggFn}(cryo_units_cost) AS ${aggregation}_cryo_units_cost`,
             `${aggFn}(cell_saver_cost) AS ${aggregation}_cell_saver_cost`,
-          ]
-          : `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`;
+          ];
+        }
+
+        // Special case: Count of patient discharges
+        if (yAxisVar === 'dsch_dtm') {
+          // COUNT of non-null discharge datetimes per group
+          return `COUNT(dsch_dtm) AS ${aggregation}_dsch_dtm`;
+        }
+
+        // Return aggregated attribute. (E.g. "SUM(rbc_units) AS sum_rbc_units")
+        return `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`;
       })
     ));
+
+    // Return all chart data, group chart attributes by month, quarter, year
     const query = `
       SELECT 
         month,
@@ -363,6 +375,16 @@ export class DashboardStore {
                 THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
             `;
       }
+
+      if (yAxisVar === 'dsch_dtm') {
+        // Special case: Count of patient discharges
+        return `
+              COUNT(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+                THEN dsch_dtm ELSE NULL END) AS dsch_dtm_current_${aggregation},
+              COUNT(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+                THEN dsch_dtm ELSE NULL END) AS dsch_dtm_comparison_${aggregation}
+            `;
+      }
       // Otherwise, return the cases in the current periods and cases in comparison periods
       return `
             ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
@@ -398,6 +420,12 @@ export class DashboardStore {
       if (yAxisVar === 'total_blood_product_cost') {
         sparklineSelects.push(
           `${aggFn}(rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost) AS ${aggregation}_total_blood_product_cost`,
+        );
+        return;
+      }
+      if (yAxisVar === 'dsch_dtm') {
+        sparklineSelects.push(
+          `COUNT(dsch_dtm) AS ${aggregation}_dsch_dtm`,
         );
         return;
       }
