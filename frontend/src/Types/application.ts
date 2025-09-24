@@ -367,6 +367,17 @@ export const PATIENT_DISCHARGES = {
 
 export type PatientDischarges = typeof PATIENT_DISCHARGES['value'];
 
+export const CASE_MIX_INDEX = {
+  value: 'case_mix_index',
+  label: {
+    base: 'Case Mix Index',
+    sum: 'Case Mix Index',
+    avg: 'Case Mix Index',
+  },
+  units: { sum: '', avg: '' },
+  decimals: { sum: 2, avg: 2 },
+}
+
 // CPT Codes -------------------------------------------------------
 export const CPT_CODES = {
   stroke: ['99291', '1065F', '1066F'],
