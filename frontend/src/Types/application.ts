@@ -354,18 +354,18 @@ export const OVERALL_BLOOD_PRODUCT_COST = {
 
 export type OverallBloodProductCost = typeof OVERALL_BLOOD_PRODUCT_COST['value'];
 
-export const PATIENT_DISCHARGES = {
-  value: 'dsch_dtm',
+export const VISIT_COUNT = {
+  value: 'visit_count',
   label: {
-    base: 'Patient Discharges',
-    sum: 'Total Patient Discharges',
-    avg: 'Average Patient Discharges',
+    base: 'Number of Visits',
+    sum: 'Total Number of Visits',
+    avg: 'Average Number of Visits',
   },
-  units: { sum: 'Discharges', avg: 'Discharges' },
+  units: { sum: 'Visits', avg: 'Visits' },
   decimals: { sum: 0, avg: 0 },
 } as const;
 
-export type PatientDischarges = typeof PATIENT_DISCHARGES['value'];
+export type VisitCount = typeof VISIT_COUNT['value'];
 
 export const CASE_MIX_INDEX = {
   value: 'case_mix_index',
@@ -376,7 +376,7 @@ export const CASE_MIX_INDEX = {
   },
   units: { sum: '', avg: '' },
   decimals: { sum: 2, avg: 2 },
-}
+};
 
 // CPT Codes -------------------------------------------------------
 export const CPT_CODES = {
@@ -424,7 +424,8 @@ export const dashboardYAxisOptions = [
   ...PROPHYL_MED_OPTIONS,
   ...COST_OPTIONS,
   OVERALL_BLOOD_PRODUCT_COST,
-  PATIENT_DISCHARGES
+  VISIT_COUNT,
+  CASE_MIX_INDEX,
 ];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 

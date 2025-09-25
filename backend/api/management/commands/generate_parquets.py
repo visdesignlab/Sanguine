@@ -38,6 +38,7 @@ class Command(BaseCommand):
             pa.field("age_at_adm", pa.bool8(), nullable=True),            # TINYINT UNSIGNED
             pa.field("pat_class_desc", pa.string(), nullable=True),
             pa.field("apr_drg_weight", pa.float32(), nullable=True),
+            pa.field("ms_drg_weight", pa.float32(), nullable=True),
 
             pa.field("month", pa.string(), nullable=True),                 # char(8)
             pa.field("quarter", pa.string(), nullable=True),               # char(7)

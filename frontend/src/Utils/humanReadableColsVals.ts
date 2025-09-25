@@ -3,6 +3,7 @@ const columnNameMap: Record<string, string> = {
   age_at_adm: 'Age at Admission',
   antifibrinolytic: 'Antifibrinolytic',
   apr_drg_weight: 'APR DRG Weight',
+  ms_drg_weight: 'MS DRG Weight',
   b12: 'B12',
   cell_saver_cost: 'Cell Saver Cost',
   cell_saver_ml: 'Cell Saver (mL)',

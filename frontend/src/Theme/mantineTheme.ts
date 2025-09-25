@@ -123,7 +123,7 @@ export const mantineTheme = createTheme({
       },
     },
     LineChart: {
-      defaultProps: { activeDotProps: {r: 6, strokeWidth: 0, fill: smallHoverColor}}
+      defaultProps: { activeDotProps: { r: 6, strokeWidth: 0, fill: smallHoverColor } },
     },
   },
 });

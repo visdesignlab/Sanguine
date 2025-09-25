@@ -387,10 +387,6 @@ export function DashboardView() {
                           strokeWidth: 0,
                           fill: smallHoverColor,
                           style: { cursor: 'pointer' },
-                          onClick: (_point: unknown, i: any) => {
-                            if (!i) return;
-                            console.log('Clicked active data point', i.payload.timePeriod);
-                          },
                         }}
                         tooltipAnimationDuration={200}
                         tooltipProps={

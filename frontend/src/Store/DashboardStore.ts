@@ -243,10 +243,8 @@ export class DashboardStore {
           ];
         }
 
-        // Special case: Count of patient discharges
-        if (yAxisVar === 'dsch_dtm') {
-          // COUNT of non-null discharge datetimes per group
-          return `COUNT(dsch_dtm) AS ${aggregation}_dsch_dtm`;
+        if (yAxisVar === 'case_mix_index') {
+          return `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`;
         }
 
         // Return aggregated attribute. (E.g. "SUM(rbc_units) AS sum_rbc_units")
@@ -260,6 +258,7 @@ export class DashboardStore {
         month,
         quarter,
         year,
+        COUNT(visit_no) AS visit_count,
         ${selectClauses.join(',\n')}
       FROM filteredVisits
       GROUP BY month, quarter, year
@@ -288,11 +287,13 @@ export class DashboardStore {
                     cryo_units_cost: Number(row[`${aggType}_cryo_units_cost`] || 0),
                     cell_saver_cost: Number(row[`${aggType}_cell_saver_cost`] || 0),
                   },
+                  counts_per_period: Number(row.visit_count || 0), // For weighted averages
                 };
               }
               return {
                 timePeriod: row[timeAggregation] as TimePeriod,
                 data: Number(row[aggVar] || 0),
+                counts_per_period: Number(row.visit_count || 0), // For weighted averages
               };
             })
             // Filter out entries with null/undefined timePeriod or NaN data
@@ -302,23 +303,54 @@ export class DashboardStore {
               // Combine entries with the same timePeriod by summing their data values
               const existing = acc.find((item) => item.timePeriod === curr.timePeriod);
               if (existing) {
-                if (typeof existing.data === 'object' && typeof curr.data === 'object') {
-                  // Sum each cost component separately
-                  existing.data = {
-                    rbc_units_cost: existing.data.rbc_units_cost + curr.data.rbc_units_cost,
-                    plt_units_cost: existing.data.plt_units_cost + curr.data.plt_units_cost,
-                    ffp_units_cost: existing.data.ffp_units_cost + curr.data.ffp_units_cost,
-                    cryo_units_cost: existing.data.cryo_units_cost + curr.data.cryo_units_cost,
-                    cell_saver_cost: existing.data.cell_saver_cost + curr.data.cell_saver_cost,
-                  };
-                } else {
-                  (existing.data as number) += curr.data as number;
+                if (aggType === 'sum') {
+                  if (typeof existing.data === 'object' && typeof curr.data === 'object') {
+                    // Sum each cost component separately
+                    existing.data = {
+                      rbc_units_cost: existing.data.rbc_units_cost + curr.data.rbc_units_cost,
+                      plt_units_cost: existing.data.plt_units_cost + curr.data.plt_units_cost,
+                      ffp_units_cost: existing.data.ffp_units_cost + curr.data.ffp_units_cost,
+                      cryo_units_cost: existing.data.cryo_units_cost + curr.data.cryo_units_cost,
+                      cell_saver_cost: existing.data.cell_saver_cost + curr.data.cell_saver_cost,
+                    };
+                  } else {
+                    (existing.data as number) += curr.data as number;
+                  }
+                } else if (aggType === 'avg') {
+                  // For averages, compute a weighted average based on counts_per_period and data_per_period
+                  existing.counts_per_period!.push(curr.counts_per_period || 0);
+                  existing.data_per_period!.push(curr.data);
+
+                  // Recalculate average
+                  const totalCount = existing.counts_per_period!.reduce((a, b) => a + b, 0);
+                  if (typeof existing.data === 'object' && typeof curr.data === 'object') {
+                    // Handle object structure: compute weighted average for each cost component
+                    const costKeys = Object.keys(existing.data) as (keyof typeof existing.data)[];
+                    const avgObj: Record<string, number> = {};
+                    for (const key of costKeys) {
+                      // Build an array of values for this key from data_per_period
+                      const values = existing.data_per_period!.map((d) => (typeof d === 'object' ? d[key] : 0));
+                      const weighted = existing.counts_per_period!.map((count, idx) => (count * (values[idx] || 0)) / (totalCount || 1));
+                      avgObj[key] = weighted.reduce((a, b) => a + b, 0);
+                    }
+                    existing.data = avgObj;
+                  } else {
+                    // Scalar case
+                    const terms = existing.counts_per_period!.map((count, idx) => (count * (existing.data_per_period ? (existing.data_per_period[idx] as number) : 0)) / (totalCount || 1));
+                    existing.data = terms.reduce((a, b) => a + b, 0);
+                  }
                 }
               } else {
-                acc.push(curr);
+                acc.push({ ...curr, counts_per_period: curr.counts_per_period ? [curr.counts_per_period] : [], data_per_period: [curr.data] });
               }
               return acc;
-            }, [] as { timePeriod: TimePeriod; data: number | Record<Cost, number> }[])
+            }, [] as { timePeriod: TimePeriod; data: number | Record<Cost, number>, counts_per_period?: number[], data_per_period?: (number | Record<Cost, number>)[] }[])
+            .map((entry) => {
+              // Remove temporary count/total properties used for averaging
+              delete entry.counts_per_period;
+              delete entry.data_per_period;
+              return entry as { timePeriod: TimePeriod; data: number | Record<Cost, number> };
+            })
             .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
             // Log filtered data for debugging
           if (chartDatum.length === 0) {
@@ -331,7 +363,6 @@ export class DashboardStore {
         });
       });
     });
-
     this.chartData = result;
   }
 
@@ -364,35 +395,46 @@ export class DashboardStore {
 
     // --- Main stats query ----
     // Return the current and comparison values for all stat configs
-    const statSelects = this.statConfigs.map(({ yAxisVar, aggregation }) => {
-      const aggFn = aggregation.toUpperCase();
-      // Special handling for total_blood_product_cost
-      if (yAxisVar === 'total_blood_product_cost') {
+    const statSelects = [
+      `
+      COUNT(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+        THEN visit_no ELSE NULL END) AS visit_count_current_sum,
+      COUNT(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+        THEN visit_no ELSE NULL END) AS visit_count_comparison_sum,
+      COUNT(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+        THEN visit_no ELSE NULL END) AS visit_count_current_avg,
+      COUNT(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+        THEN visit_no ELSE NULL END) AS visit_count_comparison_avg
+      `,
+      this.statConfigs.map(({ yAxisVar, aggregation }) => {
+        const aggFn = aggregation.toUpperCase();
+        // Special handling for total_blood_product_cost
+        if (yAxisVar === 'total_blood_product_cost') {
+          return `
+                ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+                  THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_current_${aggregation},
+                ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+                  THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
+              `;
+        }
+
+        if (yAxisVar === 'case_mix_index') {
+          return `
+                SUM(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
+                  THEN ms_drg_weight ELSE NULL END) / visit_count_current_sum AS case_mix_index_current_${aggregation},
+                SUM(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
+                  THEN ms_drg_weight ELSE NULL END) / visit_count_comparison_sum AS case_mix_index_comparison_${aggregation}
+              `;
+        }
+        // Otherwise, return the cases in the current periods and cases in comparison periods
         return `
               ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
-                THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_current_${aggregation},
+                THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_current_${aggregation},
               ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
-                THEN rbc_units_cost + plt_units_cost + ffp_units_cost + cryo_units_cost + cell_saver_cost ELSE NULL END) AS total_blood_product_cost_comparison_${aggregation}
+                THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_comparison_${aggregation}
             `;
-      }
-
-      if (yAxisVar === 'dsch_dtm') {
-        // Special case: Count of patient discharges
-        return `
-              COUNT(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
-                THEN dsch_dtm ELSE NULL END) AS dsch_dtm_current_${aggregation},
-              COUNT(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
-                THEN dsch_dtm ELSE NULL END) AS dsch_dtm_comparison_${aggregation}
-            `;
-      }
-      // Otherwise, return the cases in the current periods and cases in comparison periods
-      return `
-            ${aggFn}(CASE WHEN dsch_dtm >= '${currentPeriodStart.toISOString()}' AND dsch_dtm <= '${latestDate.toISOString()}'
-              THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_current_${aggregation},
-            ${aggFn}(CASE WHEN dsch_dtm >= '${comparisonPeriodStart.toISOString()}' AND dsch_dtm <= '${comparisonPeriodEnd.toISOString()}'
-              THEN ${yAxisVar} ELSE NULL END) AS ${yAxisVar}_comparison_${aggregation}
-          `;
-    }).join(',\n');
+      }),
+    ].join(',\n');
 
     const mainStatsQuery = `
     SELECT
@@ -426,6 +468,12 @@ export class DashboardStore {
       if (yAxisVar === 'dsch_dtm') {
         sparklineSelects.push(
           `COUNT(dsch_dtm) AS ${aggregation}_dsch_dtm`,
+        );
+        return;
+      }
+      if (yAxisVar === 'case_mix_index') {
+        sparklineSelects.push(
+          `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`,
         );
         return;
       }

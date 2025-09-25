@@ -67,6 +67,7 @@ class VisitAttributes(models.Model):
     age_at_adm = models.IntegerField()
     pat_class_desc = models.CharField(max_length=100)
     apr_drg_weight = models.FloatField()
+    ms_drg_weight = models.FloatField()
 
     month = models.CharField(max_length=8)  # YYYY-mmm
     quarter = models.CharField(max_length=7)  # YYYY-Qn
