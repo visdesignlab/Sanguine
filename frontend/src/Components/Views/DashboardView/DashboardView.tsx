@@ -238,7 +238,7 @@ export function DashboardView() {
                 onMouseEnter={() => setHoveredChartId(chartId)}
                 onMouseLeave={() => setHoveredChartId(null)}
               >
-                <Flex direction="column" gap="sm" h="100%">
+                <Flex direction="column" gap="sm" style={{ flex: 1, minHeight: 0 }}>
                   {/* Chart Header */}
                   <Flex direction="row" justify="space-between" align="center" pl="md">
                     <Flex direction="row" align="center" gap="md" ml={-12}>
@@ -325,7 +325,7 @@ export function DashboardView() {
                       <CloseButton onClick={() => handleRemoveChart(chartId)} />
                     </Flex>
                   </Flex>
-                  <Box h="100%">
+                  <Box style={{ flex: 1, minHeight: 0, padding: '0 15px' }}>
                     <LoadingOverlay visible={chartData.length === 0} overlayProps={{ radius: 'sm', blur: 2 }} />
                     { chartType === 'bar' ? (
                       // Bar Chart
