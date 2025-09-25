@@ -31,6 +31,14 @@ const BLACK_STROKE_COLOR = 'var(--mantine-color-black)';
 const DIMMED_STROKE_COLOR = 'var(--mantine-color-gray-6)';
 const POSITIVE_STROKE_COLOR = 'var(--mantine-color-teal-6, #12b886)';
 const NEGATIVE_STROKE_COLOR = 'var(--mantine-color-red-6, #fa5252)';
+
+// Selection and hover colors
+export const smallHoverColor = '#FFCF76';
+export const smallSelectColor = '#E29609';
+export const backgroundHoverColor = '#FFE8BE';
+export const backgroundSelectedColor = '#FFCF76';
+export const highlightOrange = '#d98532';
+
 // Stroke widths
 const STROKE_WIDTH = '1px';
 const DIMMED_STROKE_WIDTH = '1.5px';
@@ -113,6 +121,9 @@ export const mantineTheme = createTheme({
           fontWeight: standardTextSizes.h3.fontWeight,
         },
       },
+    },
+    LineChart: {
+      defaultProps: { activeDotProps: {r: 6, strokeWidth: 0, fill: smallHoverColor}}
     },
   },
 });

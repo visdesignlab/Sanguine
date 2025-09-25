@@ -23,7 +23,7 @@ import classes from '../GridLayoutItem.module.css';
 
 // Application
 import { Store } from '../../../Store/Store';
-import { useThemeConstants } from '../../../Theme/mantineTheme';
+import { smallHoverColor, useThemeConstants } from '../../../Theme/mantineTheme';
 import {
   dashboardYAxisOptions,
   AGGREGATION_OPTIONS,
@@ -382,6 +382,16 @@ export function DashboardView() {
                           interval: 'equidistantPreserveStart',
                         }}
                         withLegend={chartDataKeys.length > 1}
+                        activeDotProps={{
+                          r: 6,
+                          strokeWidth: 0,
+                          fill: smallHoverColor,
+                          style: { cursor: 'pointer' },
+                          onClick: (_point: unknown, i: any) => {
+                            if (!i) return;
+                            console.log('Clicked active data point', i.payload.timePeriod);
+                          },
+                        }}
                         tooltipAnimationDuration={200}
                         tooltipProps={
                           chartDataKeys.length === 1
