@@ -44,7 +44,7 @@
         "typescript": "^5.9.2"
     },
     "scripts": {
-        "serve": "vite --host=0.0.0.0 --port=8080",
+        "serve": "vite --host=0.0.0.0 --port=8080 --open",
         "build": "vite build",
         "typecheck": "tsc",
         "lint": "eslint src"
