@@ -127,7 +127,8 @@ def create_materialize_proc(apps, schema_editor):
             rbc_adherent,
             ffp_adherent,
             plt_adherent,
-            cryo_adherent
+            cryo_adherent,
+            departments
         )
         SELECT
             v.visit_no,
@@ -158,7 +159,13 @@ def create_materialize_proc(apps, schema_editor):
             COALESCE(ga.rbc_adherent, 0) AS rbc_adherent,
             COALESCE(ga.ffp_adherent, 0) AS ffp_adherent,
             COALESCE(ga.plt_adherent, 0) AS plt_adherent,
-            COALESCE(ga.cryo_adherent, 0) AS cryo_adherent
+            COALESCE(ga.cryo_adherent, 0) AS cryo_adherent,
+            /* Randomly choose departments */
+            CASE
+                WHEN RAND() < 0.4 THEN JSON_ARRAY('cardio-thoracic')
+                WHEN RAND() < 0.4 THEN JSON_ARRAY('oncology')
+                ELSE JSON_ARRAY('cardio-thoracic', 'oncology')
+            END AS departments
         FROM Visit v
         LEFT JOIN (
             SELECT

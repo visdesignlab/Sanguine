@@ -28,6 +28,8 @@ export class FiltersStore {
     vent: null as boolean | null,
     stroke: null as boolean | null,
     ecmo: null as boolean | null,
+
+    departments: [] as string[], // New filter for departments
   };
 
   _filterValues: typeof this._initialFilterValues = {
@@ -49,6 +51,8 @@ export class FiltersStore {
     vent: null,
     stroke: null,
     ecmo: null,
+
+    departments: [],
   };
 
   showFilterHistograms = false;
@@ -130,6 +134,8 @@ export class FiltersStore {
       vent: null,
       stroke: null,
       ecmo: null,
+
+      departments: [],
     };
 
     this._initialFilterValues = {
@@ -151,6 +157,9 @@ export class FiltersStore {
       vent: null,
       stroke: null,
       ecmo: null,
+
+      departments: [],
+
     };
   }
 

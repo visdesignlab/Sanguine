@@ -66,6 +66,11 @@ export class RootStore {
     const filtersToApply = Object.entries(filterValues)
       .filter(([key, value]) => JSON.stringify(value) !== JSON.stringify(initialFilterValues[key as keyof typeof initialFilterValues]))
       .map(([key, value]) => {
+        // Departments
+        if (key === 'departments' && Array.isArray(value) && value.length > 0) {
+          return value.map((dept) => `list_contains(departments, '${dept}')`).join(' OR ');
+        }
+
         // Arrays
         if (Array.isArray(value)) {
           return `${key} BETWEEN ${value[0]} AND ${value[1]}`;
