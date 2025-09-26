@@ -162,9 +162,11 @@ def create_materialize_proc(apps, schema_editor):
             COALESCE(ga.cryo_adherent, 0) AS cryo_adherent,
             /* Randomly choose departments */
             CASE
-                WHEN RAND() < 0.4 THEN JSON_ARRAY('cardio-thoracic')
-                WHEN RAND() < 0.4 THEN JSON_ARRAY('oncology')
-                ELSE JSON_ARRAY('cardio-thoracic', 'oncology')
+                WHEN RAND(v.visit_no) < 0.33 THEN JSON_ARRAY('cardio-thoracic')
+                WHEN RAND(v.visit_no) < 0.66 THEN JSON_ARRAY('oncology')
+                WHEN RAND(v.visit_no) < 0.85 THEN JSON_ARRAY('cardiology')
+                WHEN RAND(v.visit_no) < 0.95 THEN JSON_ARRAY('cardio-thoracic', 'oncology')
+                ELSE JSON_ARRAY('cardio-thoracic', 'oncology', 'cardiology')
             END AS departments
         FROM Visit v
         LEFT JOIN (
