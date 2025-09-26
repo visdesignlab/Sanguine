@@ -209,6 +209,63 @@ class Command(BaseCommand):
             "cci_score",
         ]
 
+
+        # Small estimator for APR-DRG relative weight (average ~1.0, range ~0.3–30)
+        def estimate_apr_drg_weight(soi, rom, cci_score, age, vent_days, pat_expired, bad_pat):
+            # Defaults
+            soi = soi or 2
+            rom = rom or 2
+            cci = max(0, int(cci_score or 0))
+            w = 1.0
+            # Multipliers: Severity of Illness, Risk of Mortality, Comorbidities
+            soi_f = {1: 0.7, 2: 1.0, 3: 1.9, 4: 3.5}.get(soi, 1.0)
+            rom_f = {1: 0.95, 2: 1.0, 3: 1.15, 4: 1.35}.get(rom, 1.0)
+            w *= soi_f * rom_f
+            w *= 1.0 + min(cci, 14) * 0.06
+            if vent_days >= 4:
+                w *= 2.2
+            elif vent_days > 0:
+                w *= 1.25
+            if age is not None:
+                if age < 1:
+                    w *= 1.3
+                elif age >= 75:
+                    w *= 1.15
+            if pat_expired == "Y":
+                w *= 1.2
+            if bad_pat:
+                w *= 1.25
+            w *= random.uniform(0.95, 1.10)
+            return round(max(0.3, min(w, 30.0)), 2)
+        
+        # Small estimator for MS-DRG relative weight (average ~1.0, range ~0.5–13)
+        def estimate_ms_drg_weight(cci_score, vent_days, had_major_or, age, pat_expired, bad_pat):
+            # Default
+            cci = max(0, int(cci_score or 0))
+            # Comorbidities
+            if cci >= 4:
+                base = 1.3
+            elif cci >= 2:
+                base = 0.8
+            else:
+                base = 0.6
+            w = base
+            # Major OR procedure
+            if had_major_or:
+                w *= 1.2
+            if vent_days >= 4:
+                w *= 1.6
+            elif vent_days > 0:
+                w *= 1.15
+            if age is not None and age >= 75:
+                w *= 1.03
+            if pat_expired == "Y":
+                w *= 1.08
+            if bad_pat:
+                w *= 1.08
+            w *= random.uniform(0.95, 1.08)
+            return round(max(0.5, min(w, 13.0)), 2)
+        
         def gen_visits():
             visit_no = 0
             for pat, bad_pat in pats:
@@ -247,7 +304,44 @@ class Command(BaseCommand):
                     }
                     vent = fake.random_element(elements=(True, True, False)) if bad_pat else fake.random_element(elements=(True, False, False, False, False))
                     vent_mins = fake.random_int(min=30, max=10000) if vent else 0
-                    vent_days = max(1, vent_mins // 1440) if vent else 0 
+                    vent_days = max(1, vent_mins // 1440) if vent else 0
+                    pat_expired_f = fake.random_element(elements=tuple(["Y"] + [None] * 9))
+                    
+                    if bad_pat:
+                        # Risk of mortality (rom) and severity of illness (soi)
+                        apr_drg_rom_val = fake.random_element(elements=OrderedDict([(4, 0.45), (3, 0.35), (2, 0.15), (1, 0.03), (None, 0.02)]))
+                        apr_drg_soi_val = fake.random_element(elements=OrderedDict([(4, 0.45), (3, 0.35), (2, 0.15), (1, 0.03), (None, 0.02)]))
+                    else:
+                        apr_drg_rom_val = fake.random_element(elements=OrderedDict([(1, 0.40), (2, 0.35), (3, 0.20), (4, 0.03), (None, 0.02)]))
+                        apr_drg_soi_val = fake.random_element(elements=OrderedDict([(1, 0.40), (2, 0.35), (3, 0.20), (4, 0.03), (None, 0.02)]))
+
+                    # Chance of major OR procedure for MS-DRG-Weight estimation
+                    had_major_or = (
+                        (bad_pat and random.random() < 0.6) or
+                        (cci_score_val >= 4 and random.random() < 0.4) or
+                        (random.random() < 0.2)
+                    )
+                    # Number of comorbidities
+                    cci_score_val = sum(cci.values())
+
+                    # APR & DRG weights
+                    apr_weight = estimate_apr_drg_weight(
+                        apr_drg_soi_val,
+                        apr_drg_rom_val,
+                        cci_score_val,
+                        age_at_adm,
+                        vent_days,
+                        pat_expired_f,
+                        bad_pat,
+                    )
+                    ms_weight = estimate_ms_drg_weight(
+                        cci_score_val,
+                        vent_days,
+                        had_major_or,
+                        age_at_adm,
+                        pat_expired_f,
+                        bad_pat,
+                    )
                     
                     visit = {
                         "visit_no": visit_no,
@@ -259,16 +353,16 @@ class Command(BaseCommand):
                         "clinical_los": clinical_los,
                         "age_at_adm": age_at_adm,
                         "pat_class_desc": "Inpatient",
-                        "pat_expired_f": fake.random_element(elements=tuple(["Y"] + [None] * 9)),
+                        "pat_expired_f": pat_expired_f,
                         "invasive_vent_f": "Y" if vent else None,
                         "total_vent_mins": vent_mins,
                         "total_vent_days": vent_days,
                         "apr_drg_code": fake.random_element(elements=("001", "002", "003")),
-                        "apr_drg_rom": fake.random_element(elements=(1, 2, 3, 4, None)),
-                        "apr_drg_soi": fake.random_element(elements=(1, 2, 3, 4, None)),
+                        "apr_drg_rom": apr_drg_rom_val,
+                        "apr_drg_soi": apr_drg_soi_val,
                         "apr_drg_desc": fake.sentence(),
-                        "apr_drg_weight": str(fake.random_int(1, 999)).zfill(3),
-                        "ms_drg_weight": str(fake.random_int(1, 999)).zfill(3),
+                        "apr_drg_weight": apr_weight,
+                        "ms_drg_weight": ms_weight,
                         **cci,
                         "cci_score": sum(cci.values()),
                     }
