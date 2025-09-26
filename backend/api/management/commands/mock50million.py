@@ -315,14 +315,15 @@ class Command(BaseCommand):
                         apr_drg_rom_val = fake.random_element(elements=OrderedDict([(1, 0.40), (2, 0.35), (3, 0.20), (4, 0.03), (None, 0.02)]))
                         apr_drg_soi_val = fake.random_element(elements=OrderedDict([(1, 0.40), (2, 0.35), (3, 0.20), (4, 0.03), (None, 0.02)]))
 
+
+                    # Number of comorbidities
+                    cci_score_val = sum(cci.values())
                     # Chance of major OR procedure for MS-DRG-Weight estimation
                     had_major_or = (
                         (bad_pat and random.random() < 0.6) or
                         (cci_score_val >= 4 and random.random() < 0.4) or
                         (random.random() < 0.2)
                     )
-                    # Number of comorbidities
-                    cci_score_val = sum(cci.values())
 
                     # APR & DRG weights
                     apr_weight = estimate_apr_drg_weight(
