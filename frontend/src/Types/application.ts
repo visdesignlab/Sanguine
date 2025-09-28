@@ -333,6 +333,10 @@ export const COSTS = {
 
 // Values of prophylactic medications
 export type Cost = typeof COSTS[keyof typeof COSTS]['value'];
+
+// Keys of Cost options
+export const COST_KEYS = Object.keys(COSTS) as Cost[];
+
 // Readonly array of prophylactic medication options
 export const COST_OPTIONS = Object.values(COSTS) as ReadonlyArray<{
   value: Cost;
@@ -437,8 +441,18 @@ export type DashboardChartConfig = ChartConfig<typeof dashboardXAxisVars[number]
 // Dashboard chart configuration key type
 export type DashboardChartConfigKey = `${DashboardAggYAxisVar}_${typeof dashboardXAxisVars[number]}`;
 
-// Dashboard chart data type (key, value)
-export type DashboardChartData = Record<DashboardChartConfigKey, ({ timePeriod: TimePeriod, [key: string]: string | number | Record<Cost, number> })[]>;
+// A single dashboard chart
+export type DashboardChartDatum =
+  // Departmentally split charts
+  | { timePeriod: TimePeriod; department: string; value: number;}
+  // Cost charts
+  | ({ [K in Cost]?: number } & { timePeriod: TimePeriod })
+
+// All Dashboard Charts
+export type DashboardChartData = Record<
+  DashboardChartConfigKey,
+  (DashboardChartDatum)[]
+>;
 
 // --- Dashboard stats ---
 export type DashboardStatConfig = {
