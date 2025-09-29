@@ -52,7 +52,7 @@ export class FiltersStore {
     stroke: null,
     ecmo: null,
 
-    departments: ['Department 0', 'Department 1', 'Department 2'],
+    departments: [],
   };
 
   showFilterHistograms = false;
@@ -159,7 +159,6 @@ export class FiltersStore {
       ecmo: null,
 
       departments: [],
-
     };
   }
 
@@ -218,11 +217,17 @@ export class FiltersStore {
     return count;
   }
 
+  get departmentsFiltersAppliedCount(): number {
+    // Count as applied if the current filter is different from the initial (which is an empty array)
+    return this._filterValues.departments.length;
+  }
+
   get totalFiltersAppliedCount(): number {
     return this.dateFiltersAppliedCount
       + this.bloodComponentFiltersAppliedCount
       + this.medicationsFiltersAppliedCount
-      + this.outcomeFiltersAppliedCount;
+      + this.outcomeFiltersAppliedCount
+      + this.departmentsFiltersAppliedCount;
   }
 
   // Resets all filters to their initial values.
@@ -264,6 +269,11 @@ export class FiltersStore {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
     });
+    this._rootStore.updateFilteredData();
+  }
+
+  resetDepartmentFilters() {
+    this._filterValues.departments = [...this._initialFilterValues.departments];
     this._rootStore.updateFilteredData();
   }
 

@@ -17,6 +17,7 @@ import { useThemeConstants } from '../../../Theme/mantineTheme';
 import { FilterRangeSlider } from './FilterRangeSlider';
 import { Store } from '../../../Store/Store';
 import { FilterHeader } from './FilterHeader';
+import { DepartmentFilters } from './DepartmentFilters';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0];
 
@@ -327,6 +328,18 @@ export function FilterPanel() {
                 <FilterRangeSlider varName="los" />
               </Input.Wrapper>
             </Stack>
+          </Accordion.Panel>
+        </Accordion.Item>
+        {/** Department Filters */}
+        <Accordion.Item value="department-filter" key="department-filters">
+          <FilterHeader
+            countName="departmentsFiltersAppliedCount"
+            title="Departments"
+            tooltipLabel="Number of department filters applied"
+            resetFunc={() => store.filtersStore.resetDepartmentFilters()}
+          />
+          <Accordion.Panel p={0}>
+            <DepartmentFilters />
           </Accordion.Panel>
         </Accordion.Item>
       </Accordion>

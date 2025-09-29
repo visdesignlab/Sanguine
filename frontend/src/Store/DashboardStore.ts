@@ -272,6 +272,10 @@ export class DashboardStore {
 
     // --- Process query results into chart format ---
     const rows = queryResult.toArray().map((row) => row.toJSON());
+    // console.log(rows.map((r) => r.department).reduce((acc: string[], dept: string) => {
+    //   if (!acc.includes(dept)) acc.push(dept);
+    //   return acc;
+    // }, []));
     // For each xAxisVar (e.g. quarter, month)...
     dashboardXAxisVars.forEach((xAxisVar) => {
       const timeAggregation = xAxisVar as TimeAggregation;
@@ -359,27 +363,22 @@ export class DashboardStore {
                 }
                 return acc;
               }
-
               // Group data by department within the time period
               if (existing) {
                 existing.weightedVal = existing.weightedVal || {};
                 existing.totalVisitCount = existing.totalVisitCount || {};
 
                 if (aggType === 'sum') {
-                  // Add to the existing value for this department
+                  // Add to the existing value
                   existing[dept] = (existing[dept] || 0) + value;
                 } else if (aggType === 'avg') {
-                  // Add weighted value to existing value for this department
+                  // Add weighted value to existing value
                   existing.weightedVal[dept] = (existing.weightedVal[dept] || 0) + (value * (curr.visitCount || 0));
                   existing.totalVisitCount[dept] = (existing.totalVisitCount[dept] || 0) + (curr.visitCount || 0);
                 }
               } else {
-                const base: {
-                  timePeriod: TimePeriod;
-                  weightedVal?: Record<string, number>;
-                  totalVisitCount?: Record<string, number>;
-                  [dept: string]: number | TimePeriod | Record<string, number> | undefined;
-                } = { timePeriod: curr.timePeriod };
+                // Initialize base
+                const base: Record<string, unknown> = { timePeriod: curr.timePeriod };
                 if (aggType === 'sum') {
                   base[dept] = value;
                 } else if (aggType === 'avg') {
@@ -390,7 +389,39 @@ export class DashboardStore {
                 acc.push(base);
               }
               return acc;
-            }, [] as any[])
+            }, [] as Record<string, any>[])
+            // Only return the department values of interest, i.e. don't calculate a value for filtered out departments
+            .map((entry) => {
+              // Special case
+              if (yAxisVar === 'total_blood_product_cost') {
+                return entry;
+              }
+              // If no departments combine all department data into total
+              if (this._rootStore.filtersStore.filterValues.departments.length === 0) {
+                const toReturn = { timePeriod: entry.timePeriod, all: 0 };
+                if (aggType === 'avg') {
+                  const totalVisitCount = Object.values(entry.totalVisitCount || {}).reduce((a: number, b: number) => a + b, 0);
+                  const totalWeightedVal = Object.values(entry.weightedVal || {}).reduce((a: number, b: number) => a + b, 0);
+                  toReturn.all = totalVisitCount === 0 ? 0 : (totalWeightedVal / totalVisitCount);
+                } else if (aggType === 'sum') {
+                  const totalValue = Object.keys(entry)
+                    .filter((key) => key !== 'timePeriod' && key !== 'weightedVal' && key !== 'totalVisitCount')
+                    .reduce((sum, key) => sum + (entry[key] || 0), 0);
+                  toReturn.all = totalValue;
+                }
+                return toReturn;
+              }
+
+              // Else handle departments
+              const filteredEntry: Record<string, any> = { timePeriod: entry.timePeriod };
+              // Only include departments that are in the filter (or all if no filter)
+              (this._rootStore.filtersStore.filterValues.departments || []).forEach((dept) => {
+                filteredEntry[dept] = entry[dept] || 0;
+                filteredEntry.weightedVal = { ...(filteredEntry.weightedVal || {}), [dept]: entry.weightedVal?.[dept] || 0 };
+                filteredEntry.totalVisitCount = { ...(filteredEntry.totalVisitCount || {}), [dept]: entry.totalVisitCount?.[dept] || 0 };
+              });
+              return filteredEntry;
+            })
             // Compute weighted average if needed, remove temporary fields
             .map((entry) => {
               // If averaging, compute weighted average per department
@@ -413,7 +444,6 @@ export class DashboardStore {
           if (chartDatum.length === 0) {
             console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and aggVar "${aggVar}"`);
           }
-
           // Return result (E.g. Key: "sum_rbc_units_quarter", Value: chartDatum)
           const compositeKey = `${aggVar}_${xAxisVar}` as keyof DashboardChartData;
           result[compositeKey] = chartDatum;

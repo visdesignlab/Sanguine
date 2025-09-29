@@ -341,7 +341,7 @@ export function DashboardView() {
                           interval: 'equidistantPreserveStart',
                         }}
                         type="stacked"
-                        withLegend={chartDataKeys.length > 1}
+                        withLegend
                         tooltipAnimationDuration={200}
                         tooltipProps={
                           chartDataKeys.length === 1
@@ -378,7 +378,7 @@ export function DashboardView() {
                         xAxisProps={{
                           interval: 'equidistantPreserveStart',
                         }}
-                        withLegend={chartDataKeys.length > 1}
+                        withLegend
                         activeDotProps={{
                           r: 6,
                           strokeWidth: 0,
