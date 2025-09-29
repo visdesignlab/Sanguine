@@ -52,7 +52,7 @@ export class FiltersStore {
     stroke: null,
     ecmo: null,
 
-    departments: [],
+    departments: ['Department 0', 'Department 1', 'Department 2'],
   };
 
   showFilterHistograms = false;
