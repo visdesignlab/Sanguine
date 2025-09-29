@@ -15,6 +15,7 @@ import {
   dashboardYAxisOptions,
   TimePeriod,
   DashboardStatData,
+  Cost,
 } from '../Types/application';
 import { compareTimePeriods } from '../Utils/dates';
 import { formatValueForDisplay } from '../Utils/dashboard';
@@ -337,7 +338,7 @@ export class DashboardStore {
                     });
                     const totalCount = existing.counts_per_period!.reduce((a: number, b: number) => a + b, 0);
                     for (const key of COST_KEYS) {
-                      const values = existing.data_per_period!.map((d: any) => d[key]);
+                      const values = existing.data_per_period!.map((d: Record<Cost, number>) => d[key]);
                       const weighted = existing.counts_per_period!.map((visitCount: number, idx: number) => (visitCount * (values[idx] || 0)) / (totalCount || 1));
                       existing[key] = weighted.reduce((a: number, b: number) => a + b, 0);
                     }
