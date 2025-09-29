@@ -16,6 +16,7 @@ import {
   TimePeriod,
   DashboardStatData,
   Cost,
+  DashboardChartDatum,
 } from '../Types/application';
 import { compareTimePeriods } from '../Utils/dates';
 import { formatValueForDisplay } from '../Utils/dashboard';
@@ -407,7 +408,7 @@ export class DashboardStore {
               return entry;
             })
             // Sort by time period
-            .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod)) as any;
+            .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod)) as DashboardChartDatum[];
 
           if (chartDatum.length === 0) {
             console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and aggVar "${aggVar}"`);

@@ -451,7 +451,7 @@ export type DashboardChartDatum =
 // All Dashboard Charts
 export type DashboardChartData = Record<
   DashboardChartConfigKey,
-  (DashboardChartDatum)[]
+  DashboardChartDatum[]
 >;
 
 // --- Dashboard stats ---
