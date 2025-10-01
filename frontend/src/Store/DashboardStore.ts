@@ -374,24 +374,21 @@ export class DashboardStore {
                 }
               } else {
                 // Initialize department sum or weighted avg (for this department)
-                const base: {
-                  timePeriod: TimePeriod;
-                  weightedVal: Record<string, number>;
-                  totalVisitCount: Record<string, number>;
-                  [dept: string]: TimePeriod | Record<string, number> | number | undefined;
-                } = {
-                  timePeriod: curr.timePeriod,
-                  weightedVal: {},
-                  totalVisitCount: {},
-                };
-                if (aggType === 'sum') {
-                  base[dept] = value;
-                } else if (aggType === 'avg') {
-                  base[dept] = {};
-                  base.weightedVal = { [dept]: value * (curr.visitCount || 0) };
-                  base.totalVisitCount = { [dept]: (curr.visitCount || 0) };
-                }
-                acc.push(base);
+                acc.push(
+                  aggType === 'sum'
+                    ? {
+                      timePeriod,
+                      weightedVal: {},
+                      totalVisitCount: {},
+                      [dept]: value,
+                    }
+                    : {
+                      timePeriod,
+                      weightedVal: { [dept]: value * (visitCount || 0) },
+                      totalVisitCount: { [dept]: visitCount || 0 },
+                      [dept]: {},
+                    },
+                );
               }
               return acc;
             }, [] as (DashboardChartDatum & {
