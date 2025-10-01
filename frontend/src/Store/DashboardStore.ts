@@ -271,11 +271,7 @@ export class DashboardStore {
     const queryResult = await this._rootStore.duckDB.query(query);
 
     // --- Process query results into chart format ---
-    const rows = queryResult.toArray().map((row) => row.toJSON());
-    // console.log(rows.map((r) => r.department).reduce((acc: string[], dept: string) => {
-    //   if (!acc.includes(dept)) acc.push(dept);
-    //   return acc;
-    // }, []));
+    const entries = queryResult.toArray().map((row) => row.toJSON());
     // For each xAxisVar (e.g. quarter, month)...
     dashboardXAxisVars.forEach((xAxisVar) => {
       const timeAggregation = xAxisVar as TimeAggregation;
@@ -287,36 +283,33 @@ export class DashboardStore {
           // Declare chart y-axis variable (e.g. "sum_rbc_units")
           const aggVar: DashboardAggYAxisVar = `${aggType}_${yAxisVar}`;
 
-          const chartDatum = rows
-            // For each row, get the time period, department, value, and visit count
-            .map((row) => {
+          const chartDatum = entries
+            // Find the time period, department, value, and visit count for each row
+            .map((entry) => {
+              const { department, visit_count: visitCount } = entry;
               // Special case
               if (yAxisVar === 'total_blood_product_cost') {
+                // Cost breakdown for this entry
+                const costs = COST_KEYS.reduce((acc, key) => {
+                  acc[key] = Number(entry[`${aggType}_${key}`] || 0);
+                  return acc;
+                }, {} as Record<Cost, number>);
                 return {
-                  timePeriod: row[timeAggregation] as TimePeriod,
-                  rbc_units_cost: Number(row[`${aggType}_rbc_units_cost`] || 0),
-                  plt_units_cost: Number(row[`${aggType}_plt_units_cost`] || 0),
-                  ffp_units_cost: Number(row[`${aggType}_ffp_units_cost`] || 0),
-                  cryo_units_cost: Number(row[`${aggType}_cryo_units_cost`] || 0),
-                  cell_saver_cost: Number(row[`${aggType}_cell_saver_cost`] || 0),
-                  counts_per_period: Number(row.visit_count || 0),
+                  timePeriod: entry[timeAggregation] as TimePeriod,
+                  ...costs,
+                  counts_per_period: Number(visitCount || 0),
                 };
               }
+              // Else, return info about this entry
               return {
-                timePeriod: row[timeAggregation] as TimePeriod,
-                department: String(row.department || ''),
-                value: Number(row[aggVar] || 0),
-                visitCount: Number(row.visit_count || 0), // For weighted avg per department
+                timePeriod: entry[timeAggregation] as TimePeriod,
+                department: String(department || ''),
+                value: Number(entry[aggVar] || 0),
+                visitCount: Number(visitCount || 0),
               };
             })
-            // Filter out invalid periods or data
-            .filter((entry) => {
-              if (yAxisVar === 'total_blood_product_cost') {
-                return entry.timePeriod !== null && entry.timePeriod !== undefined;
-              }
-              return entry.timePeriod !== null && entry.timePeriod !== undefined
-                && entry.department && !Number.isNaN(entry.value);
-            })
+            // Filter nulls
+            .filter((entry) => entry.timePeriod != null && (yAxisVar === 'total_blood_product_cost' || (entry.department && !Number.isNaN(entry.value))))
             // Combine entries with the same timePeriod & department
             .reduce((acc, curr) => {
               const existing = acc.find((item) => item.timePeriod === curr.timePeriod);
@@ -328,20 +321,19 @@ export class DashboardStore {
                 if (existing) {
                   // Sum & average costs regaurdless of department
                   if (aggType === 'sum') {
-                    existing.rbc_units_cost = (existing.rbc_units_cost ?? 0) + (curr.rbc_units_cost ?? 0);
-                    existing.plt_units_cost = (existing.plt_units_cost ?? 0) + (curr.plt_units_cost ?? 0);
-                    existing.ffp_units_cost = (existing.ffp_units_cost ?? 0) + (curr.ffp_units_cost ?? 0);
-                    existing.cryo_units_cost = (existing.cryo_units_cost ?? 0) + (curr.cryo_units_cost ?? 0);
-                    existing.cell_saver_cost = (existing.cell_saver_cost ?? 0) + (curr.cell_saver_cost ?? 0);
-                  } else if (aggType === 'avg') {
-                    existing.counts_per_period!.push(curr.counts_per_period || 0);
-                    existing.data_per_period!.push({
-                      rbc_units_cost: curr.rbc_units_cost ?? 0,
-                      plt_units_cost: curr.plt_units_cost ?? 0,
-                      ffp_units_cost: curr.ffp_units_cost ?? 0,
-                      cryo_units_cost: curr.cryo_units_cost ?? 0,
-                      cell_saver_cost: curr.cell_saver_cost ?? 0,
+                    COST_KEYS.forEach((key) => {
+                      existing[key] = (existing[key] ?? 0) + ((curr as Record<Cost, number>)[key] ?? 0);
                     });
+                  } else if (aggType === 'avg') {
+                    if ('counts_per_period' in curr) {
+                      existing.counts_per_period!.push(curr.counts_per_period || 0);
+                    }
+                    existing.data_per_period!.push(
+                      COST_KEYS.reduce((cost, key) => {
+                        cost[key] = (curr as Record<Cost, number>)[key] ?? 0;
+                        return cost;
+                      }, {} as Record<Cost, number>),
+                    );
                     const totalCount = existing.counts_per_period!.reduce((a: number, b: number) => a + b, 0);
                     for (const key of COST_KEYS) {
                       const values = existing.data_per_period!.map((d: Record<Cost, number>) => d[key]);
@@ -353,14 +345,13 @@ export class DashboardStore {
                   // Initialize counts and costs for averaging
                   acc.push({
                     ...curr,
-                    counts_per_period: curr.counts_per_period ? [curr.counts_per_period] : [],
-                    data_per_period: [{
-                      rbc_units_cost: curr.rbc_units_cost ?? 0,
-                      plt_units_cost: curr.plt_units_cost ?? 0,
-                      ffp_units_cost: curr.ffp_units_cost ?? 0,
-                      cryo_units_cost: curr.cryo_units_cost ?? 0,
-                      cell_saver_cost: curr.cell_saver_cost ?? 0,
-                    }],
+                    counts_per_period: 'counts_per_period' in curr ? [curr.counts_per_period] : [],
+                    data_per_period: [
+                      COST_KEYS.reduce((cost, key) => {
+                        cost[key] = (curr as Record<Cost, number>)[key] ?? 0;
+                        return cost;
+                      }, {} as Record<Cost, number>),
+                    ],
                   });
                 }
                 return acc;
