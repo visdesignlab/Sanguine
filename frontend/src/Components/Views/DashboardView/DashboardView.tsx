@@ -394,7 +394,9 @@ export function DashboardView() {
                         xAxisProps={{
                           interval: 'equidistantPreserveStart',
                         }}
+                        strokeWidth={1.5}
                         withLegend
+                        dotProps={{ strokeWidth: 0.5 }}
                         activeDotProps={{
                           r: 6,
                           strokeWidth: 0,
