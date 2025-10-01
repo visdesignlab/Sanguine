@@ -289,14 +289,11 @@ export class DashboardStore {
               const { department, visit_count: visitCount } = entry;
               // Special case
               if (yAxisVar === 'total_blood_product_cost') {
-                // Cost breakdown for this entry
-                const costs = COST_KEYS.reduce((acc, key) => {
-                  acc[key] = Number(entry[`${aggType}_${key}`] || 0);
-                  return acc;
-                }, {} as Record<Cost, number>);
                 return {
                   timePeriod: entry[timeAggregation] as TimePeriod,
-                  ...costs,
+                  ...Object.fromEntries(
+                    COST_KEYS.map((key) => [key, Number(entry[`${aggType}_${key}`] || 0)]),
+                  ) as Record<Cost, number>,
                   counts_per_period: Number(visitCount || 0),
                 };
               }
