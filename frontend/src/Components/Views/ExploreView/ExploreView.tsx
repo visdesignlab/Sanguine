@@ -21,7 +21,7 @@ import { presetStateCards } from './PresetStateCards';
 import { Store } from '../../../Store/Store';
 import classes from '../GridLayoutItem.module.css';
 import {
-  BLOOD_COMPONENT_OPTIONS, costYAxisOptions, dashboardYAxisOptions, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS,
+  BLOOD_COMPONENT_OPTIONS, costYAxisOptions, costYAxisVars, dashboardXAxisVars, dashboardYAxisOptions, dashboardYAxisVars, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS,
 } from '../../../Types/application';
 import { CostChart } from './Charts/CostChart';
 import { ScatterPlot } from './Charts/ScatterPlot';
@@ -84,7 +84,7 @@ export function ExploreView() {
         chartId: id,
         chartType: 'cost',
         xAxisVar: 'cost',
-        yAxisVar: costGroupVar as any,
+        yAxisVar: costGroupVar as typeof costYAxisVars[number],
         aggregation,
       });
     } else {
@@ -92,8 +92,8 @@ export function ExploreView() {
       store.exploreStore.addChart({
         chartId: id,
         chartType: 'scatterPlot',
-        xAxisVar: scatterXAxisVar as any,
-        yAxisVar: scatterYAxisVar as any,
+        xAxisVar: scatterXAxisVar as typeof dashboardXAxisVars[number],
+        yAxisVar: scatterYAxisVar as typeof dashboardYAxisVars[number],
         aggregation,
       });
     }
