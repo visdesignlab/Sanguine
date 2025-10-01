@@ -237,12 +237,12 @@ export function DashboardView() {
               label: name,
             }));
 
-            // If total chart, use defaultDataColor
+            // If all departments, use defaultDataColor
             if (chartDataKeys.length === 1 && chartDataKeys[0] === 'all') {
               series = [{
                 name: chartDataKeys[0],
                 color: defaultDataColor,
-                label: dashboardYAxisOptions.find((o) => o.value === yAxisVar)?.label?.base || chartDataKeys[0],
+                label: 'All Departments',
               }];
             }
 
