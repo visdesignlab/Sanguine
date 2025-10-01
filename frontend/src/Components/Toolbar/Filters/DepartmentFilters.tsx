@@ -4,7 +4,7 @@ import {
 } from '@mantine/core';
 import { useObserver } from 'mobx-react';
 import { Store } from '../../../Store/Store';
-import { chartColors } from '../../../Types/application';
+import { departmentColors } from '../../../Types/application';
 
 function CustomControl({
   count, departmentMaxCount, dept,
