@@ -564,6 +564,10 @@ export class DashboardStore {
         );
         return;
       }
+      if (yAxisVar === 'visit_count') {
+        sparklineSelects.push(`COUNT(visit_no) AS ${aggregation}_visit_count`);
+        return;
+      }
       sparklineSelects.push(
         `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`,
       );
