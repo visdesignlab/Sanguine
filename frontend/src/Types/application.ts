@@ -464,14 +464,21 @@ export type DashboardStatConfig = {
 
 export type DashboardStatData = Record<DashboardAggYAxisVar, {value: string, diff: number, comparedTo?: string, sparklineData: number[]} >;
 
-// Chart colors (for up to 5 lines/bars)
-export const chartColors = [
-  '#1770B8',
-  '#EF2026',
-  '#897BD3',
-  '#FFD13C',
-  '#73C3C5',
-];
+export const bloodProductCostColorMap: Record<Cost, string> = {
+  rbc_units_cost: '#1770B8',
+  ffp_units_cost: '#897BD3',
+  plt_units_cost: '#EF2026',
+  cryo_units_cost: '#FFD13C',
+  cell_saver_cost: '#73C3C5',
+};
+
+export const departmentColors: Record<string, string> = {
+  Emergency: '#2196F3', // cyan (shifted from blue)
+  Surgery: '#FF8C42', // orange (shifted from red)
+  Cardiology: '#6CBA7C', // green (shifted from purple)
+  Orthopedics: '#F7A8B8', // pink (shifted from yellow)
+  ICU: '#A3A1FB', // periwinkle (shifted from teal)
+};
 
 // Explore View ----------------------------------------------------
 // Aggregation options for explore view

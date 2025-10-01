@@ -30,7 +30,8 @@ import {
   dashboardXAxisOptions,
   type DashboardChartConfig,
   DashboardStatConfig,
-  chartColors,
+  bloodProductCostColorMap,
+  departmentColors,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 
@@ -45,7 +46,7 @@ export function DashboardView() {
   const store = useContext(Store);
   const theme = useMantineTheme();
   const {
-    buttonIconSize, cardIconSize, cardIconStroke, toolbarWidth,
+    buttonIconSize, cardIconSize, cardIconStroke, toolbarWidth, defaultDataColor,
   } = useThemeConstants();
 
   // --- Charts ---
@@ -223,10 +224,37 @@ export function DashboardView() {
           }) => {
             const chartData = store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
 
+            // Y-axis keys (e.g. departments) for this chart
             const chartDataKeys = chartData.length > 0
               ? Object.keys(chartData[0]).filter((k) => k !== 'timePeriod')
               : [];
 
+            // Name, color, label for each key in this chart
+            let series = chartDataKeys.map((name) => ({
+              name,
+              // Default: department colors for each line/series
+              color: departmentColors[name as keyof typeof departmentColors],
+              label: name,
+            }));
+
+            // If total chart, use defaultDataColor
+            if (chartDataKeys.length === 1 && chartDataKeys[0] === 'all') {
+              series = [{
+                name: chartDataKeys[0],
+                color: defaultDataColor,
+                label: dashboardYAxisOptions.find((o) => o.value === yAxisVar)?.label?.base || chartDataKeys[0],
+              }];
+            }
+
+            // Use bloodProductCostColors for cost charts
+            const isCostChart = (yAxisVar === 'total_blood_product_cost');
+            if (isCostChart) {
+              series = chartDataKeys.map((name) => ({
+                name,
+                color: bloodProductCostColorMap[name as keyof typeof bloodProductCostColorMap],
+                label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
+              }));
+            }
             return (
               <Card
                 key={chartId}
@@ -330,13 +358,7 @@ export function DashboardView() {
                         h="100%"
                         data={chartData}
                         dataKey="timePeriod"
-                        series={
-                          chartDataKeys.map((name, idx) => ({
-                            name,
-                            color: chartColors[idx % chartColors.length],
-                            label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
-                          }))
-                        }
+                        series={series}
                         xAxisProps={{
                           interval: 'equidistantPreserveStart',
                         }}
@@ -366,13 +388,7 @@ export function DashboardView() {
                         h="100%"
                         data={chartData}
                         dataKey="timePeriod"
-                        series={
-                          chartDataKeys.map((name, idx) => ({
-                            name,
-                            color: chartColors[idx % chartColors.length],
-                            label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
-                          }))
-                        }
+                        series={series}
                         curveType="monotone"
                         tickLine="none"
                         xAxisProps={{
