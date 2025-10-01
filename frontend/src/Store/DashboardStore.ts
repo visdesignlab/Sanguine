@@ -326,20 +326,21 @@ export class DashboardStore {
               // Special case
               if (yAxisVar === 'total_blood_product_cost') {
                 if (existing) {
+                  // Sum & average costs regaurdless of department
                   if (aggType === 'sum') {
-                    existing.rbc_units_cost += curr.rbc_units_cost ?? 0;
-                    existing.plt_units_cost += curr.plt_units_cost ?? 0;
-                    existing.ffp_units_cost += curr.ffp_units_cost ?? 0;
-                    existing.cryo_units_cost += curr.cryo_units_cost ?? 0;
-                    existing.cell_saver_cost += curr.cell_saver_cost ?? 0;
+                    existing.rbc_units_cost = (existing.rbc_units_cost ?? 0) + (curr.rbc_units_cost ?? 0);
+                    existing.plt_units_cost = (existing.plt_units_cost ?? 0) + (curr.plt_units_cost ?? 0);
+                    existing.ffp_units_cost = (existing.ffp_units_cost ?? 0) + (curr.ffp_units_cost ?? 0);
+                    existing.cryo_units_cost = (existing.cryo_units_cost ?? 0) + (curr.cryo_units_cost ?? 0);
+                    existing.cell_saver_cost = (existing.cell_saver_cost ?? 0) + (curr.cell_saver_cost ?? 0);
                   } else if (aggType === 'avg') {
                     existing.counts_per_period!.push(curr.counts_per_period || 0);
                     existing.data_per_period!.push({
-                      rbc_units_cost: curr.rbc_units_cost,
-                      plt_units_cost: curr.plt_units_cost,
-                      ffp_units_cost: curr.ffp_units_cost,
-                      cryo_units_cost: curr.cryo_units_cost,
-                      cell_saver_cost: curr.cell_saver_cost,
+                      rbc_units_cost: curr.rbc_units_cost ?? 0,
+                      plt_units_cost: curr.plt_units_cost ?? 0,
+                      ffp_units_cost: curr.ffp_units_cost ?? 0,
+                      cryo_units_cost: curr.cryo_units_cost ?? 0,
+                      cell_saver_cost: curr.cell_saver_cost ?? 0,
                     });
                     const totalCount = existing.counts_per_period!.reduce((a: number, b: number) => a + b, 0);
                     for (const key of COST_KEYS) {
@@ -349,36 +350,46 @@ export class DashboardStore {
                     }
                   }
                 } else {
+                  // Initialize counts and costs for averaging
                   acc.push({
                     ...curr,
                     counts_per_period: curr.counts_per_period ? [curr.counts_per_period] : [],
                     data_per_period: [{
-                      rbc_units_cost: curr.rbc_units_cost,
-                      plt_units_cost: curr.plt_units_cost,
-                      ffp_units_cost: curr.ffp_units_cost,
-                      cryo_units_cost: curr.cryo_units_cost,
-                      cell_saver_cost: curr.cell_saver_cost,
+                      rbc_units_cost: curr.rbc_units_cost ?? 0,
+                      plt_units_cost: curr.plt_units_cost ?? 0,
+                      ffp_units_cost: curr.ffp_units_cost ?? 0,
+                      cryo_units_cost: curr.cryo_units_cost ?? 0,
+                      cell_saver_cost: curr.cell_saver_cost ?? 0,
                     }],
                   });
                 }
                 return acc;
               }
-              // Group data by department within the time period
+              // Group data by department (within the time period)
               if (existing) {
                 existing.weightedVal = existing.weightedVal || {};
                 existing.totalVisitCount = existing.totalVisitCount || {};
 
                 if (aggType === 'sum') {
-                  // Add to the existing value
-                  existing[dept] = (existing[dept] || 0) + value;
+                  // Add to the existing value (for this department)
+                  existing[dept] = (typeof existing[dept] === 'number' ? existing[dept] : 0) + value;
                 } else if (aggType === 'avg') {
-                  // Add weighted value to existing value
+                  // Add weighted value to existing value (for this department)
                   existing.weightedVal[dept] = (existing.weightedVal[dept] || 0) + (value * (curr.visitCount || 0));
                   existing.totalVisitCount[dept] = (existing.totalVisitCount[dept] || 0) + (curr.visitCount || 0);
                 }
               } else {
-                // Initialize base
-                const base: Record<string, unknown> = { timePeriod: curr.timePeriod };
+                // Initialize department sum or weighted avg (for this department)
+                const base: {
+                  timePeriod: TimePeriod;
+                  weightedVal: Record<string, number>;
+                  totalVisitCount: Record<string, number>;
+                  [dept: string]: TimePeriod | Record<string, number> | number | undefined;
+                } = {
+                  timePeriod: curr.timePeriod,
+                  weightedVal: {},
+                  totalVisitCount: {},
+                };
                 if (aggType === 'sum') {
                   base[dept] = value;
                 } else if (aggType === 'avg') {
@@ -389,34 +400,54 @@ export class DashboardStore {
                 acc.push(base);
               }
               return acc;
-            }, [] as Record<string, any>[])
-            // Only return the department values of interest, i.e. don't calculate a value for filtered out departments
+            }, [] as (DashboardChartDatum & {
+              weightedVal?: Record<string, number>;
+              totalVisitCount?: Record<string, number>;
+              counts_per_period?: number[];
+              data_per_period?: Record<Cost, number>[];
+              rbc_units_cost?: number;
+              plt_units_cost?: number;
+              ffp_units_cost?: number;
+              cryo_units_cost?: number;
+              cell_saver_cost?: number;
+              [dept: string]: unknown;
+            })[])
+            // Filter out departments (Only calculate values for filtered-in departments)
             .map((entry) => {
               // Special case
               if (yAxisVar === 'total_blood_product_cost') {
                 return entry;
               }
-              // If no departments combine all department data into total
+              // If no departments filtered, combine all department data into totals
               if (this._rootStore.filtersStore.filterValues.departments.length === 0) {
                 const toReturn = { timePeriod: entry.timePeriod, all: 0 };
                 if (aggType === 'avg') {
+                  // Total average across all departments
                   const totalVisitCount = Object.values(entry.totalVisitCount || {}).reduce((a: number, b: number) => a + b, 0);
                   const totalWeightedVal = Object.values(entry.weightedVal || {}).reduce((a: number, b: number) => a + b, 0);
                   toReturn.all = totalVisitCount === 0 ? 0 : (totalWeightedVal / totalVisitCount);
                 } else if (aggType === 'sum') {
+                  // Total sum across all departments
                   const totalValue = Object.keys(entry)
                     .filter((key) => key !== 'timePeriod' && key !== 'weightedVal' && key !== 'totalVisitCount')
-                    .reduce((sum, key) => sum + (entry[key] || 0), 0);
+                    .reduce((sum, key) => {
+                      const val = entry[key];
+                      return sum + (typeof val === 'number' ? val : 0);
+                    }, 0);
                   toReturn.all = totalValue;
                 }
                 return toReturn;
               }
-
-              // Else handle departments
-              const filteredEntry: Record<string, any> = { timePeriod: entry.timePeriod };
+              // Else, filter to only the selected departments
+              const filteredEntry: {
+                timePeriod: TimePeriod;
+                weightedVal?: Record<string, number>;
+                totalVisitCount?: Record<string, number>;
+                [dept: string]: TimePeriod | number | string | Record<string, number> | undefined;
+                } = { timePeriod: entry.timePeriod };
               // Only include departments that are in the filter (or all if no filter)
               (this._rootStore.filtersStore.filterValues.departments || []).forEach((dept) => {
-                filteredEntry[dept] = entry[dept] || 0;
+                filteredEntry[dept] = typeof entry[dept] === 'number' ? entry[dept] : 0;
                 filteredEntry.weightedVal = { ...(filteredEntry.weightedVal || {}), [dept]: entry.weightedVal?.[dept] || 0 };
                 filteredEntry.totalVisitCount = { ...(filteredEntry.totalVisitCount || {}), [dept]: entry.totalVisitCount?.[dept] || 0 };
               });
@@ -425,17 +456,22 @@ export class DashboardStore {
             // Compute weighted average if needed, remove temporary fields
             .map((entry) => {
               // If averaging, compute weighted average per department
-              if (aggType === 'avg' && yAxisVar !== 'total_blood_product_cost') {
-                Object.keys(entry.weightedVal || {}).forEach((dept) => {
-                  const denom = entry.totalVisitCount?.[dept] || 0;
-                  entry[dept] = denom === 0 ? 0 : (entry.weightedVal[dept] / denom);
+              if (
+                aggType === 'avg'
+                && yAxisVar !== 'total_blood_product_cost'
+                && 'totalVisitCount' in entry
+                && entry.weightedVal
+              ) {
+                Object.keys(entry.weightedVal).forEach((dept) => {
+                  const denom = entry.totalVisitCount![dept] || 0;
+                  entry[dept] = denom === 0 ? 0 : (entry.weightedVal![dept] / denom);
                 });
               }
               // Always remove temporary fields
-              delete entry.weightedVal;
-              delete entry.totalVisitCount;
-              delete entry.counts_per_period;
-              delete entry.data_per_period;
+              if ('weightedVal' in entry) delete entry.weightedVal;
+              if ('totalVisitCount' in entry) delete entry.totalVisitCount;
+              if ('counts_per_period' in entry) delete entry.counts_per_period;
+              if ('data_per_period' in entry) delete entry.data_per_period;
               return entry;
             })
             // Sort by time period
