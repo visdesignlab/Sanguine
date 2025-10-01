@@ -312,9 +312,11 @@ export class DashboardStore {
             .filter((entry) => entry.timePeriod != null && (yAxisVar === 'total_blood_product_cost' || (entry.department && !Number.isNaN(entry.value))))
             // Combine entries with the same timePeriod & department
             .reduce((acc, curr) => {
-              const existing = acc.find((item) => item.timePeriod === curr.timePeriod);
-              const dept = curr.department as string;
-              const value = curr.value ?? 0;
+              const {
+                timePeriod, department, value = 0, visitCount = 0,
+              } = curr;
+              const existing = acc.find((item) => item.timePeriod === timePeriod);
+              const dept = department as string;
 
               // Special case
               if (yAxisVar === 'total_blood_product_cost') {
@@ -335,9 +337,10 @@ export class DashboardStore {
                       }, {} as Record<Cost, number>),
                     );
                     const totalCount = existing.counts_per_period!.reduce((a: number, b: number) => a + b, 0);
+                    // Accumulate weighted costs for this time period
                     for (const key of COST_KEYS) {
                       const values = existing.data_per_period!.map((d: Record<Cost, number>) => d[key]);
-                      const weighted = existing.counts_per_period!.map((visitCount: number, idx: number) => (visitCount * (values[idx] || 0)) / (totalCount || 1));
+                      const weighted = existing.counts_per_period!.map((existingCount: number, idx: number) => (existingCount * (values[idx] || 0)) / (totalCount || 1));
                       existing[key] = weighted.reduce((a: number, b: number) => a + b, 0);
                     }
                   }
@@ -366,8 +369,8 @@ export class DashboardStore {
                   existing[dept] = (typeof existing[dept] === 'number' ? existing[dept] : 0) + value;
                 } else if (aggType === 'avg') {
                   // Add weighted value to existing value (for this department)
-                  existing.weightedVal[dept] = (existing.weightedVal[dept] || 0) + (value * (curr.visitCount || 0));
-                  existing.totalVisitCount[dept] = (existing.totalVisitCount[dept] || 0) + (curr.visitCount || 0);
+                  existing.weightedVal[dept] = (existing.weightedVal[dept] || 0) + (value * (visitCount || 0));
+                  existing.totalVisitCount[dept] = (existing.totalVisitCount[dept] || 0) + (visitCount || 0);
                 }
               } else {
                 // Initialize department sum or weighted avg (for this department)
