@@ -89,13 +89,7 @@ function App() {
           CROSS JOIN costs c;
         `);
 
-        await store.updateAllVisitsLength();
-        await store.filtersStore.calculateDefaultFilterValues();
-        await store.updateFilteredVisitsLength();
-
-        await store.filtersStore.generateHistogramData();
-        await store.dashboardStore.computeChartData();
-        await store.dashboardStore.computeStatData();
+        await store.initializeFiltersAndData();
       } catch (e) {
         console.error('Error fetching visits data:', e);
         setDataLoadingFailed(true);

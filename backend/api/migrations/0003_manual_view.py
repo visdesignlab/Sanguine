@@ -127,7 +127,8 @@ def create_materialize_proc(apps, schema_editor):
             rbc_adherent,
             ffp_adherent,
             plt_adherent,
-            cryo_adherent
+            cryo_adherent,
+            departments
         )
         SELECT
             v.visit_no,
@@ -158,7 +159,8 @@ def create_materialize_proc(apps, schema_editor):
             COALESCE(ga.rbc_adherent, 0) AS rbc_adherent,
             COALESCE(ga.ffp_adherent, 0) AS ffp_adherent,
             COALESCE(ga.plt_adherent, 0) AS plt_adherent,
-            COALESCE(ga.cryo_adherent, 0) AS cryo_adherent
+            COALESCE(ga.cryo_adherent, 0) AS cryo_adherent,
+            COALESCE(depts.departments, JSON_ARRAY()) AS departments
         FROM Visit v
         LEFT JOIN (
             SELECT
@@ -189,7 +191,14 @@ def create_materialize_proc(apps, schema_editor):
             FROM Medication
             GROUP BY visit_no
         ) m ON m.visit_no = v.visit_no
-        LEFT JOIN GuidelineAdherence ga ON ga.visit_no = v.visit_no;
+        LEFT JOIN GuidelineAdherence ga ON ga.visit_no = v.visit_no
+        LEFT JOIN (
+            SELECT
+                visit_no,
+                JSON_ARRAYAGG(DISTINCT department_name) AS departments
+            FROM RoomTrace
+            GROUP BY visit_no
+        ) depts ON depts.visit_no = v.visit_no;
     END;
     """
     conn = schema_editor.connection
@@ -272,6 +281,7 @@ class Migration(migrations.Migration):
                 plt_adherent SMALLINT UNSIGNED DEFAULT 0,
                 cryo_adherent SMALLINT UNSIGNED DEFAULT 0,
                 overall_adherent SMALLINT UNSIGNED AS (rbc_adherent + ffp_adherent + plt_adherent + cryo_adherent) STORED,
+                departments JSON,
 
                 PRIMARY KEY (visit_no),
                 FOREIGN KEY (visit_no) REFERENCES Visit(visit_no),

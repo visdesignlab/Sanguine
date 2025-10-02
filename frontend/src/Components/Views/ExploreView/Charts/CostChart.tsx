@@ -7,14 +7,14 @@ import {
 import { BarChart } from '@mantine/charts';
 import { useContext, useMemo, useState } from 'react';
 import {
-  chartColors, COST_OPTIONS, CostBarData, CostChartConfig, costXAxisOptions, costYAxisOptions,
+  bloodProductCostColorMap, COST_OPTIONS, CostBarData, CostChartConfig, costXAxisOptions, costYAxisOptions,
 } from '../../../../Types/application';
 import { Store } from '../../../../Store/Store';
 
-const costSeries = COST_OPTIONS.map((c, idx) => ({
+const costSeries = COST_OPTIONS.map((c) => ({
   name: c.value,
   label: c.label.base,
-  color: chartColors[idx % chartColors.length],
+  color: bloodProductCostColorMap[c.value as keyof typeof bloodProductCostColorMap], // Use predefined color map
 }));
 
 type CostSeriesKey = typeof costSeries[number]['name'];

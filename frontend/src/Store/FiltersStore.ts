@@ -28,6 +28,8 @@ export class FiltersStore {
     vent: null as boolean | null,
     stroke: null as boolean | null,
     ecmo: null as boolean | null,
+
+    departments: [] as string[], // New filter for departments
   };
 
   _filterValues: typeof this._initialFilterValues = {
@@ -49,6 +51,8 @@ export class FiltersStore {
     vent: null,
     stroke: null,
     ecmo: null,
+
+    departments: [],
   };
 
   showFilterHistograms = false;
@@ -130,6 +134,8 @@ export class FiltersStore {
       vent: null,
       stroke: null,
       ecmo: null,
+
+      departments: [],
     };
 
     this._initialFilterValues = {
@@ -151,6 +157,8 @@ export class FiltersStore {
       vent: null,
       stroke: null,
       ecmo: null,
+
+      departments: [],
     };
   }
 
@@ -209,11 +217,17 @@ export class FiltersStore {
     return count;
   }
 
+  get departmentsFiltersAppliedCount(): number {
+    // Count as applied if the current filter is different from the initial (which is an empty array)
+    return this._filterValues.departments.length;
+  }
+
   get totalFiltersAppliedCount(): number {
     return this.dateFiltersAppliedCount
       + this.bloodComponentFiltersAppliedCount
       + this.medicationsFiltersAppliedCount
-      + this.outcomeFiltersAppliedCount;
+      + this.outcomeFiltersAppliedCount
+      + this.departmentsFiltersAppliedCount;
   }
 
   // Resets all filters to their initial values.
@@ -255,6 +269,11 @@ export class FiltersStore {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
     });
+    this._rootStore.updateFilteredData();
+  }
+
+  resetDepartmentFilters() {
+    this._filterValues.departments = [...this._initialFilterValues.departments];
     this._rootStore.updateFilteredData();
   }
 

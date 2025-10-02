@@ -30,8 +30,7 @@ import {
   dashboardXAxisOptions,
   type DashboardChartConfig,
   DashboardStatConfig,
-  chartColors,
-  Cost,
+  bloodProductCostColorMap,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 
@@ -46,7 +45,7 @@ export function DashboardView() {
   const store = useContext(Store);
   const theme = useMantineTheme();
   const {
-    buttonIconSize, cardIconSize, cardIconStroke, toolbarWidth,
+    buttonIconSize, cardIconSize, cardIconStroke, toolbarWidth, defaultDataColor,
   } = useThemeConstants();
 
   // --- Charts ---
@@ -222,14 +221,37 @@ export function DashboardView() {
           {Object.values(store.dashboardStore.chartConfigs).map(({
             chartId, yAxisVar, xAxisVar, aggregation, chartType,
           }) => {
-            let chartData = store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
-            if (yAxisVar === 'total_blood_product_cost' && Array.isArray(chartData)) {
-              chartData = chartData.map((data) => ({ timePeriod: data.timePeriod, ...data.data as Record<Cost, number> }));
-            }
+            const chartData = store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
+
+            // Y-axis keys (e.g. departments) for this chart
             const chartDataKeys = chartData.length > 0
               ? Object.keys(chartData[0]).filter((k) => k !== 'timePeriod')
               : [];
 
+            // Name, color, label for each key in this chart
+            let series: {name: string, color: string, label: string}[] = [];
+
+            // If all departments, use defaultDataColor
+            if (chartDataKeys.length === 1 && chartDataKeys[0] === 'all') {
+              series = [{
+                name: chartDataKeys[0],
+                color: defaultDataColor,
+                label: 'All Departments',
+              }];
+            } else if (yAxisVar === 'total_blood_product_cost') {
+              series = chartDataKeys.map((name) => ({
+                name,
+                color: bloodProductCostColorMap[name as keyof typeof bloodProductCostColorMap],
+                label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
+              }));
+            } else {
+              series = chartDataKeys.map((name) => ({
+                name,
+                // Default: department colors for each line/series
+                color: store.departments[name].color,
+                label: name,
+              }));
+            }
             return (
               <Card
                 key={chartId}
@@ -333,18 +355,12 @@ export function DashboardView() {
                         h="100%"
                         data={chartData}
                         dataKey="timePeriod"
-                        series={
-                          chartDataKeys.map((name, idx) => ({
-                            name,
-                            color: chartColors[idx % chartColors.length],
-                            label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
-                          }))
-                        }
+                        series={series}
                         xAxisProps={{
                           interval: 'equidistantPreserveStart',
                         }}
                         type="stacked"
-                        withLegend={chartDataKeys.length > 1}
+                        withLegend
                         tooltipAnimationDuration={200}
                         tooltipProps={
                           chartDataKeys.length === 1
@@ -369,19 +385,15 @@ export function DashboardView() {
                         h="100%"
                         data={chartData}
                         dataKey="timePeriod"
-                        series={
-                          chartDataKeys.map((name, idx) => ({
-                            name,
-                            color: chartColors[idx % chartColors.length],
-                            label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
-                          }))
-                        }
-                        curveType="linear"
+                        series={series}
+                        curveType="monotone"
                         tickLine="none"
                         xAxisProps={{
                           interval: 'equidistantPreserveStart',
                         }}
-                        withLegend={chartDataKeys.length > 1}
+                        strokeWidth={1.5}
+                        withLegend
+                        dotProps={{ strokeWidth: 0.5 }}
                         activeDotProps={{
                           r: 6,
                           strokeWidth: 0,

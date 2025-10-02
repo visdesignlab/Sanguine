@@ -333,6 +333,10 @@ export const COSTS = {
 
 // Values of prophylactic medications
 export type Cost = typeof COSTS[keyof typeof COSTS]['value'];
+
+// Keys of Cost options
+export const COST_KEYS = Object.values(COSTS).map((cost) => cost.value);
+
 // Readonly array of prophylactic medication options
 export const COST_OPTIONS = Object.values(COSTS) as ReadonlyArray<{
   value: Cost;
@@ -437,8 +441,18 @@ export type DashboardChartConfig = ChartConfig<typeof dashboardXAxisVars[number]
 // Dashboard chart configuration key type
 export type DashboardChartConfigKey = `${DashboardAggYAxisVar}_${typeof dashboardXAxisVars[number]}`;
 
-// Dashboard chart data type (key, value)
-export type DashboardChartData = Record<DashboardChartConfigKey, ({ timePeriod: TimePeriod, [key: string]: string | number | Record<Cost, number> })[]>;
+// A single dashboard chart
+export type DashboardChartDatum =
+  // Departmentally split charts
+  | { timePeriod: TimePeriod; department: string; value: number;}
+  // Cost charts
+  | ({ [K in Cost]?: number } & { timePeriod: TimePeriod })
+
+// All Dashboard Charts
+export type DashboardChartData = Record<
+  DashboardChartConfigKey,
+  DashboardChartDatum[]
+>;
 
 // --- Dashboard stats ---
 export type DashboardStatConfig = {
@@ -450,14 +464,13 @@ export type DashboardStatConfig = {
 
 export type DashboardStatData = Record<DashboardAggYAxisVar, {value: string, diff: number, comparedTo?: string, sparklineData: number[]} >;
 
-// Chart colors (for up to 5 lines/bars)
-export const chartColors = [
-  '#1770B8',
-  '#EF2026',
-  '#897BD3',
-  '#FFD13C',
-  '#73C3C5',
-];
+export const bloodProductCostColorMap: Record<Cost, string> = {
+  rbc_units_cost: '#EF2026',
+  ffp_units_cost: '#FFD13C',
+  plt_units_cost: '#1770B8',
+  cryo_units_cost: '#897BD3',
+  cell_saver_cost: '#73C3C5',
+};
 
 // Explore View ----------------------------------------------------
 // Aggregation options for explore view

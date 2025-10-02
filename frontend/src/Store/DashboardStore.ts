@@ -5,6 +5,7 @@ import type { RootStore } from './Store';
 
 import {
   AGGREGATION_OPTIONS, // Dashboard configuration
+  COST_KEYS,
   type DashboardChartConfig,
   type DashboardStatConfig,
   DashboardChartData,
@@ -14,7 +15,8 @@ import {
   dashboardYAxisOptions,
   TimePeriod,
   DashboardStatData,
-  Cost, // Dashboard data types
+  Cost,
+  DashboardChartDatum,
 } from '../Types/application';
 import { compareTimePeriods } from '../Utils/dates';
 import { formatValueForDisplay } from '../Utils/dashboard';
@@ -224,10 +226,10 @@ export class DashboardStore {
 
   async computeChartData() {
     if (!this._rootStore.duckDB) return;
-
+    // Initialize result
     const result = {} as DashboardChartData;
 
-    // Dynamically build the query to ensure all current charts are included
+    // --- Build and run query ---
     const selectClauses = this._chartConfigs.flatMap(({ yAxisVar }) => (
       Object.keys(AGGREGATION_OPTIONS).flatMap((aggregation) => {
         const aggFn = aggregation.toUpperCase();
@@ -252,111 +254,210 @@ export class DashboardStore {
       })
     ));
 
-    // Return all chart data, group chart attributes by month, quarter, year
+    // Query chart data: Group chart attributes by month, quarter, year, department
     const query = `
       SELECT 
         month,
         quarter,
         year,
+        d.department as department,
         COUNT(visit_no) AS visit_count,
         ${selectClauses.join(',\n')}
       FROM filteredVisits
-      GROUP BY month, quarter, year
-      ORDER BY year, quarter, month;
+      CROSS JOIN UNNEST(from_json(departments, '["VARCHAR"]')) AS d(department)
+      GROUP BY month, quarter, year, department
+      ORDER BY year, quarter, month, department;
     `;
     const queryResult = await this._rootStore.duckDB.query(query);
-    const rows = queryResult.toArray().map((row) => row.toJSON());
 
+    // --- Process query results into chart format ---
+    const entries = queryResult.toArray().map((row) => row.toJSON());
     // For each xAxisVar (e.g. quarter, month)...
     dashboardXAxisVars.forEach((xAxisVar) => {
       const timeAggregation = xAxisVar as TimeAggregation;
+      // For each yAxisVar (e.g. rbc_units, los)...
       this.chartConfigs.forEach(({ yAxisVar }) => {
+        // For each aggregation (e.g. sum, avg)...
         Object.keys(AGGREGATION_OPTIONS).forEach((aggregation) => {
           const aggType = aggregation as keyof typeof AGGREGATION_OPTIONS;
+          // Declare chart y-axis variable (e.g. "sum_rbc_units")
           const aggVar: DashboardAggYAxisVar = `${aggType}_${yAxisVar}`;
-          // Format the aggregated data into chart format: (timePeriod, data)
-          const chartDatum = rows
-            .map((row) => {
+
+          const chartDatum = entries
+            // Find the time period, department, value, and visit count for each row
+            .map((entry) => {
+              const { department, visit_count: visitCount } = entry;
+              // Special case
               if (yAxisVar === 'total_blood_product_cost') {
                 return {
-                  timePeriod: row[timeAggregation] as TimePeriod,
-                  data: {
-                    rbc_units_cost: Number(row[`${aggType}_rbc_units_cost`] || 0),
-                    plt_units_cost: Number(row[`${aggType}_plt_units_cost`] || 0),
-                    ffp_units_cost: Number(row[`${aggType}_ffp_units_cost`] || 0),
-                    cryo_units_cost: Number(row[`${aggType}_cryo_units_cost`] || 0),
-                    cell_saver_cost: Number(row[`${aggType}_cell_saver_cost`] || 0),
-                  },
-                  counts_per_period: Number(row.visit_count || 0), // For weighted averages
+                  timePeriod: entry[timeAggregation] as TimePeriod,
+                  ...Object.fromEntries(
+                    COST_KEYS.map((key) => [key, Number(entry[`${aggType}_${key}`] || 0)]),
+                  ) as Record<Cost, number>,
+                  counts_per_period: Number(visitCount || 0),
                 };
               }
+              // Else, return info about this entry
               return {
-                timePeriod: row[timeAggregation] as TimePeriod,
-                data: Number(row[aggVar] || 0),
-                counts_per_period: Number(row.visit_count || 0), // For weighted averages
+                timePeriod: entry[timeAggregation] as TimePeriod,
+                department: String(department || ''),
+                value: Number(entry[aggVar] || 0),
+                visitCount: Number(visitCount || 0),
               };
             })
-            // Filter out entries with null/undefined timePeriod or NaN data
-            .filter((entry) => entry.timePeriod !== null && entry.timePeriod !== undefined && !Number.isNaN(entry.data))
-            // Combine entries with the same timePeriod by summing their data values
+            // Filter nulls
+            .filter((entry) => entry.timePeriod != null && (yAxisVar === 'total_blood_product_cost' || (entry.department && !Number.isNaN(entry.value))))
+            // Combine entries with the same timePeriod & department
             .reduce((acc, curr) => {
-              // Combine entries with the same timePeriod by summing their data values
-              const existing = acc.find((item) => item.timePeriod === curr.timePeriod);
-              if (existing) {
-                if (aggType === 'sum') {
-                  if (typeof existing.data === 'object' && typeof curr.data === 'object') {
-                    // Sum each cost component separately
-                    existing.data = {
-                      rbc_units_cost: existing.data.rbc_units_cost + curr.data.rbc_units_cost,
-                      plt_units_cost: existing.data.plt_units_cost + curr.data.plt_units_cost,
-                      ffp_units_cost: existing.data.ffp_units_cost + curr.data.ffp_units_cost,
-                      cryo_units_cost: existing.data.cryo_units_cost + curr.data.cryo_units_cost,
-                      cell_saver_cost: existing.data.cell_saver_cost + curr.data.cell_saver_cost,
-                    };
-                  } else {
-                    (existing.data as number) += curr.data as number;
-                  }
-                } else if (aggType === 'avg') {
-                  // For averages, compute a weighted average based on counts_per_period and data_per_period
-                  existing.counts_per_period!.push(curr.counts_per_period || 0);
-                  existing.data_per_period!.push(curr.data);
+              const {
+                timePeriod, department, value = 0, visitCount = 0,
+              } = curr;
+              const existing = acc.find((item) => item.timePeriod === timePeriod);
+              const dept = department as string;
 
-                  // Recalculate average
-                  const totalCount = existing.counts_per_period!.reduce((a, b) => a + b, 0);
-                  if (typeof existing.data === 'object' && typeof curr.data === 'object') {
-                    // Handle object structure: compute weighted average for each cost component
-                    const costKeys = Object.keys(existing.data) as (keyof typeof existing.data)[];
-                    const avgObj: Record<string, number> = {};
-                    for (const key of costKeys) {
-                      // Build an array of values for this key from data_per_period
-                      const values = existing.data_per_period!.map((d) => (typeof d === 'object' ? d[key] : 0));
-                      const weighted = existing.counts_per_period!.map((count, idx) => (count * (values[idx] || 0)) / (totalCount || 1));
-                      avgObj[key] = weighted.reduce((a, b) => a + b, 0);
+              // Special case
+              if (yAxisVar === 'total_blood_product_cost') {
+                if (existing) {
+                  // Sum & average costs regardless of department
+                  if (aggType === 'sum') {
+                    COST_KEYS.forEach((key) => {
+                      existing[key] = (existing[key] ?? 0) + ((curr as Record<Cost, number>)[key] ?? 0);
+                    });
+                  } else if (aggType === 'avg') {
+                    if ('counts_per_period' in curr) {
+                      existing.counts_per_period!.push(curr.counts_per_period || 0);
                     }
-                    existing.data = avgObj;
-                  } else {
-                    // Scalar case
-                    const terms = existing.counts_per_period!.map((count, idx) => (count * (existing.data_per_period ? (existing.data_per_period[idx] as number) : 0)) / (totalCount || 1));
-                    existing.data = terms.reduce((a, b) => a + b, 0);
+                    existing.data_per_period!.push({ ...curr } as Record<Cost, number>);
+                    const totalCount = existing.counts_per_period!.reduce((a: number, b: number) => a + b, 0);
+                    // Accumulate weighted costs for this time period
+                    COST_KEYS.forEach((key) => {
+                      const values = existing.data_per_period!.map((d: Record<Cost, number>) => d[key]);
+                      const weighted = existing.counts_per_period!.map((existingCount: number, idx: number) => (existingCount * (values[idx] || 0)) / (totalCount || 1));
+                      existing[key] = weighted.reduce((a: number, b: number) => a + b, 0);
+                    });
                   }
+                } else {
+                  // Initialize counts and costs for averaging
+                  acc.push({
+                    ...curr,
+                    counts_per_period: 'counts_per_period' in curr ? [curr.counts_per_period] : [],
+                    data_per_period: [{ ...curr }] as Record<Cost, number>[],
+                  });
+                }
+                return acc;
+              }
+              // Group data by department (within the time period)
+              if (existing) {
+                existing.weightedVal = existing.weightedVal || {};
+                existing.totalVisitCount = existing.totalVisitCount || {};
+
+                if (aggType === 'sum') {
+                  // Add to the existing value (for this department)
+                  existing[dept] = (typeof existing[dept] === 'number' ? existing[dept] : 0) + value;
+                } else if (aggType === 'avg') {
+                  // Add weighted value to existing value (for this department)
+                  existing.weightedVal[dept] = (existing.weightedVal[dept] || 0) + (value * (visitCount || 0));
+                  existing.totalVisitCount[dept] = (existing.totalVisitCount[dept] || 0) + (visitCount || 0);
                 }
               } else {
-                acc.push({ ...curr, counts_per_period: curr.counts_per_period ? [curr.counts_per_period] : [], data_per_period: [curr.data] });
+                // Initialize department sum or weighted avg (for this department)
+                acc.push(
+                  aggType === 'sum'
+                    ? {
+                      timePeriod,
+                      weightedVal: {},
+                      totalVisitCount: {},
+                      [dept]: value,
+                    }
+                    : {
+                      timePeriod,
+                      weightedVal: { [dept]: value * (visitCount || 0) },
+                      totalVisitCount: { [dept]: visitCount || 0 },
+                      [dept]: {},
+                    },
+                );
               }
               return acc;
-            }, [] as { timePeriod: TimePeriod; data: number | Record<Cost, number>, counts_per_period?: number[], data_per_period?: (number | Record<Cost, number>)[] }[])
+            }, [] as (DashboardChartDatum & {
+              weightedVal?: Record<string, number>;
+              totalVisitCount?: Record<string, number>;
+              counts_per_period?: number[];
+              data_per_period?: Record<Cost, number>[];
+              rbc_units_cost?: number;
+              plt_units_cost?: number;
+              ffp_units_cost?: number;
+              cryo_units_cost?: number;
+              cell_saver_cost?: number;
+              [dept: string]: unknown;
+            })[])
+            // Filter out departments (Only calculate values for filtered-in departments)
             .map((entry) => {
-              // Remove temporary count/total properties used for averaging
-              delete entry.counts_per_period;
-              delete entry.data_per_period;
-              return entry as { timePeriod: TimePeriod; data: number | Record<Cost, number> };
+              // Special case
+              if (yAxisVar === 'total_blood_product_cost') {
+                return entry;
+              }
+              // If no departments filtered, combine all department data into totals
+              if (this._rootStore.filtersStore.filterValues.departments.length === 0) {
+                const toReturn = { timePeriod: entry.timePeriod, all: 0 };
+                if (aggType === 'avg') {
+                  // Total average across all departments
+                  const totalVisitCount = Object.values(entry.totalVisitCount || {}).reduce((a: number, b: number) => a + b, 0);
+                  const totalWeightedVal = Object.values(entry.weightedVal || {}).reduce((a: number, b: number) => a + b, 0);
+                  toReturn.all = totalVisitCount === 0 ? 0 : (totalWeightedVal / totalVisitCount);
+                } else if (aggType === 'sum') {
+                  // Total sum across all departments
+                  const totalValue = Object.keys(entry)
+                    .filter((key) => key !== 'timePeriod' && key !== 'weightedVal' && key !== 'totalVisitCount')
+                    .reduce((sum, key) => {
+                      const val = entry[key];
+                      return sum + (typeof val === 'number' ? val : 0);
+                    }, 0);
+                  toReturn.all = totalValue;
+                }
+                return toReturn;
+              }
+              // Else, filter to only the selected departments
+              const filteredEntry: {
+                timePeriod: TimePeriod;
+                weightedVal?: Record<string, number>;
+                totalVisitCount?: Record<string, number>;
+                [dept: string]: TimePeriod | number | string | Record<string, number> | undefined;
+                } = { timePeriod: entry.timePeriod };
+              // Only include departments that are in the filter
+              this._rootStore.filtersStore.filterValues.departments.forEach((dept) => {
+                filteredEntry[dept] = typeof entry[dept] === 'number' ? entry[dept] : 0;
+                filteredEntry.weightedVal = { ...(filteredEntry.weightedVal || {}), [dept]: entry.weightedVal?.[dept] || 0 };
+                filteredEntry.totalVisitCount = { ...(filteredEntry.totalVisitCount || {}), [dept]: entry.totalVisitCount?.[dept] || 0 };
+              });
+              return filteredEntry;
             })
-            .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
-            // Log filtered data for debugging
+            // Compute weighted average if needed, remove temporary fields
+            .map((entry) => {
+              // If averaging, compute weighted average per department
+              if (
+                aggType === 'avg'
+                && yAxisVar !== 'total_blood_product_cost'
+                && 'totalVisitCount' in entry
+                && entry.weightedVal
+              ) {
+                Object.keys(entry.weightedVal).forEach((dept) => {
+                  const denom = entry.totalVisitCount![dept] || 0;
+                  entry[dept] = denom === 0 ? 0 : (entry.weightedVal![dept] / denom);
+                });
+              }
+              // Always remove temporary fields
+              if ('weightedVal' in entry) delete entry.weightedVal;
+              if ('totalVisitCount' in entry) delete entry.totalVisitCount;
+              if ('counts_per_period' in entry) delete entry.counts_per_period;
+              if ('data_per_period' in entry) delete entry.data_per_period;
+              return entry;
+            })
+            // Sort by time period
+            .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod)) as DashboardChartDatum[];
+
           if (chartDatum.length === 0) {
             console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and aggVar "${aggVar}"`);
           }
-
           // Return result (E.g. Key: "sum_rbc_units_quarter", Value: chartDatum)
           const compositeKey = `${aggVar}_${xAxisVar}` as keyof DashboardChartData;
           result[compositeKey] = chartDatum;
@@ -475,6 +576,10 @@ export class DashboardStore {
         sparklineSelects.push(
           `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`,
         );
+        return;
+      }
+      if (yAxisVar === 'visit_count') {
+        sparklineSelects.push(`COUNT(visit_no) AS ${aggregation}_visit_count`);
         return;
       }
       sparklineSelects.push(

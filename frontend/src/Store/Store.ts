@@ -9,6 +9,10 @@ import { FiltersStore } from './FiltersStore';
 import { ExploreStore } from './ExploreStore';
 import { SelectionsStore } from './SelectionsStore';
 
+const departmentPalette = [
+  '#2196F3', '#FF8C42', '#6CBA7C', '#F7A8B8', '#A3A1FB', '#FFD13C', '#EF2026', '#73C3C5', '#897BD3', '#1770B8',
+];
+
 export class RootStore {
   // Provenance
 
@@ -45,6 +49,8 @@ export class RootStore {
 
   filteredVisitsLength = 0;
 
+  departments: Record<string, { count: number, color: string }> = {};
+
   constructor() {
     // Initialize stores
     this.dashboardStore = new DashboardStore(this);
@@ -66,6 +72,15 @@ export class RootStore {
     const filtersToApply = Object.entries(filterValues)
       .filter(([key, value]) => JSON.stringify(value) !== JSON.stringify(initialFilterValues[key as keyof typeof initialFilterValues]))
       .map(([key, value]) => {
+        // Departments
+        if (key === 'departments') {
+          // Use json_contains to check if each department is in the departments JSON array
+          return value && Array.isArray(value) && value.length > 0 ? `(${value
+            .map(
+              (dept) => `json_contains(departments, '"${dept}"')`,
+            )
+            .join(' OR ')})` : '';
+        }
         // Arrays
         if (Array.isArray(value)) {
           return `${key} BETWEEN ${value[0]} AND ${value[1]}`;
@@ -92,6 +107,7 @@ export class RootStore {
         ;
     `;
     await this.duckDB.query(query);
+
     await this.updateFilteredVisitsLength();
 
     await this.dashboardStore.computeChartData();
@@ -114,6 +130,26 @@ export class RootStore {
     this.allVisitsLength = Number(row.count);
   }
 
+  async updateDepartments() {
+    if (!this.duckDB) return;
+
+    const result = await this.duckDB.query(`
+    SELECT 
+      json_extract_string(value, '$') AS department, 
+      COUNT(*) AS count
+    FROM visits, json_each(departments)
+    GROUP BY department
+    ORDER BY department;
+    `);
+    this.departments = result.toArray().map((row) => row.toJSON()).reduce((acc, curr, idx) => {
+      acc[curr.department as string] = {
+        count: Number(curr.count),
+        color: departmentPalette[idx % departmentPalette.length],
+      };
+      return acc;
+    }, {} as Record<string, number>);
+  }
+
   async updateCostsTable() {
     if (!this.duckDB) return;
 
@@ -130,6 +166,22 @@ export class RootStore {
 
     await this.dashboardStore.computeStatData();
     await this.dashboardStore.computeChartData();
+  }
+
+  async initializeFiltersAndData() {
+    // Overall Visits, Departments, etc.
+    await this.updateAllVisitsLength();
+    await this.updateDepartments();
+
+    // Filters
+    await this.updateFilteredData();
+    await this.filtersStore.calculateDefaultFilterValues();
+    await this.updateFilteredVisitsLength();
+
+    // Charting
+    await this.filtersStore.generateHistogramData();
+    await this.dashboardStore.computeChartData();
+    await this.dashboardStore.computeStatData();
   }
 }
 
