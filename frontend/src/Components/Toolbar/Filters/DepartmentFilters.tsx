@@ -4,13 +4,14 @@ import {
 } from '@mantine/core';
 import { useObserver } from 'mobx-react';
 import { Store } from '../../../Store/Store';
-import { departmentColors } from '../../../Types/application';
 
 function CustomControl({
   count, departmentMaxCount, dept,
 }: { count: number, departmentMaxCount: number, dept: string }) {
   const controlHeight = 40;
   const controlWidthPercent = 100;
+  const { departmentColors } = useContext(Store);
+
   return (
     <Accordion.Control p={0}>
       <Box

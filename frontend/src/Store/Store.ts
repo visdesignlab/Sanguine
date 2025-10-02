@@ -47,6 +47,8 @@ export class RootStore {
 
   departments: Record<string, number> = {};
 
+  departmentColors: Record<string, string> = {};
+
   constructor() {
     // Initialize stores
     this.dashboardStore = new DashboardStore(this);
@@ -126,21 +128,37 @@ export class RootStore {
     this.allVisitsLength = Number(row.count);
   }
 
+  private generateDepartmentColors(departments: string[]) {
+    // If need be, expand palette or generate more colors
+    const palette = [
+      '#2196F3', '#FF8C42', '#6CBA7C', '#F7A8B8', '#A3A1FB', '#FFD13C', '#EF2026', '#73C3C5', '#897BD3', '#1770B8',
+    ];
+    const colors: Record<string, string> = {};
+    departments.forEach((dept, idx) => {
+      colors[dept] = palette[idx % palette.length];
+    });
+    return colors;
+  }
+
   async updateDepartments() {
     if (!this.duckDB) return;
 
     const result = await this.duckDB.query(`
-      SELECT 
-        json_extract_string(value, '$') AS department, 
-        COUNT(*) AS count
-      FROM visits, json_each(departments)
-      GROUP BY department
-      ORDER BY department;
-    `);
+    SELECT 
+      json_extract_string(value, '$') AS department, 
+      COUNT(*) AS count
+    FROM visits, json_each(departments)
+    GROUP BY department
+    ORDER BY department;
+  `);
     this.departments = result.toArray().map((row) => row.toJSON()).reduce((acc, curr) => {
       acc[curr.department as string] = Number(curr.count);
       return acc;
     }, {} as Record<string, number>);
+
+    // Generate and assign colors to departments
+    const departmentNames = Object.keys(this.departments);
+    this.departmentColors = this.generateDepartmentColors(departmentNames);
   }
 
   async updateCostsTable() {

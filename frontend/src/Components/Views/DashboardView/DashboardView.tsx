@@ -31,7 +31,6 @@ import {
   type DashboardChartConfig,
   DashboardStatConfig,
   bloodProductCostColorMap,
-  departmentColors,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 
@@ -41,6 +40,7 @@ import { formatValueForDisplay } from '../../../Utils/dashboard';
 export function DashboardView() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive) as any, []);
+  const { departmentColors } = useContext(Store);
 
   // --- Store and styles ---
   const store = useContext(Store);

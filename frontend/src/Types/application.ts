@@ -472,14 +472,6 @@ export const bloodProductCostColorMap: Record<Cost, string> = {
   cell_saver_cost: '#73C3C5',
 };
 
-export const departmentColors: Record<string, string> = {
-  Emergency: '#2196F3', // cyan (shifted from blue)
-  Surgery: '#FF8C42', // orange (shifted from red)
-  Cardiology: '#6CBA7C', // green (shifted from purple)
-  Orthopedics: '#F7A8B8', // pink (shifted from yellow)
-  ICU: '#A3A1FB', // periwinkle (shifted from teal)
-};
-
 // Explore View ----------------------------------------------------
 // Aggregation options for explore view
 const _AGGREGATIONS = ['surgeon_prov_id', 'anesth_prov_id', 'year', 'quarter'] as const;
