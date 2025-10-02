@@ -335,7 +335,7 @@ export const COSTS = {
 export type Cost = typeof COSTS[keyof typeof COSTS]['value'];
 
 // Keys of Cost options
-export const COST_KEYS = Object.keys(COSTS) as Cost[];
+export const COST_KEYS = Object.values(COSTS).map((cost) => cost.value);
 
 // Readonly array of prophylactic medication options
 export const COST_OPTIONS = Object.values(COSTS) as ReadonlyArray<{
@@ -465,10 +465,10 @@ export type DashboardStatConfig = {
 export type DashboardStatData = Record<DashboardAggYAxisVar, {value: string, diff: number, comparedTo?: string, sparklineData: number[]} >;
 
 export const bloodProductCostColorMap: Record<Cost, string> = {
-  rbc_units_cost: '#1770B8',
-  ffp_units_cost: '#897BD3',
-  plt_units_cost: '#EF2026',
-  cryo_units_cost: '#FFD13C',
+  rbc_units_cost: '#EF2026',
+  ffp_units_cost: '#FFD13C',
+  plt_units_cost: '#1770B8',
+  cryo_units_cost: '#897BD3',
   cell_saver_cost: '#73C3C5',
 };
 

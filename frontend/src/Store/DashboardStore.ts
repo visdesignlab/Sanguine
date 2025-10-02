@@ -260,7 +260,7 @@ export class DashboardStore {
         month,
         quarter,
         year,
-        d.department AS department,
+        d.department as department,
         COUNT(visit_no) AS visit_count,
         ${selectClauses.join(',\n')}
       FROM filteredVisits
@@ -318,7 +318,7 @@ export class DashboardStore {
               // Special case
               if (yAxisVar === 'total_blood_product_cost') {
                 if (existing) {
-                  // Sum & average costs regaurdless of department
+                  // Sum & average costs regardless of department
                   if (aggType === 'sum') {
                     COST_KEYS.forEach((key) => {
                       existing[key] = (existing[key] ?? 0) + ((curr as Record<Cost, number>)[key] ?? 0);
@@ -327,31 +327,21 @@ export class DashboardStore {
                     if ('counts_per_period' in curr) {
                       existing.counts_per_period!.push(curr.counts_per_period || 0);
                     }
-                    existing.data_per_period!.push(
-                      COST_KEYS.reduce((cost, key) => {
-                        cost[key] = (curr as Record<Cost, number>)[key] ?? 0;
-                        return cost;
-                      }, {} as Record<Cost, number>),
-                    );
+                    existing.data_per_period!.push({ ...curr } as Record<Cost, number>);
                     const totalCount = existing.counts_per_period!.reduce((a: number, b: number) => a + b, 0);
                     // Accumulate weighted costs for this time period
-                    for (const key of COST_KEYS) {
+                    COST_KEYS.forEach((key) => {
                       const values = existing.data_per_period!.map((d: Record<Cost, number>) => d[key]);
                       const weighted = existing.counts_per_period!.map((existingCount: number, idx: number) => (existingCount * (values[idx] || 0)) / (totalCount || 1));
                       existing[key] = weighted.reduce((a: number, b: number) => a + b, 0);
-                    }
+                    });
                   }
                 } else {
                   // Initialize counts and costs for averaging
                   acc.push({
                     ...curr,
                     counts_per_period: 'counts_per_period' in curr ? [curr.counts_per_period] : [],
-                    data_per_period: [
-                      COST_KEYS.reduce((cost, key) => {
-                        cost[key] = (curr as Record<Cost, number>)[key] ?? 0;
-                        return cost;
-                      }, {} as Record<Cost, number>),
-                    ],
+                    data_per_period: [{ ...curr }] as Record<Cost, number>[],
                   });
                 }
                 return acc;
@@ -433,8 +423,8 @@ export class DashboardStore {
                 totalVisitCount?: Record<string, number>;
                 [dept: string]: TimePeriod | number | string | Record<string, number> | undefined;
                 } = { timePeriod: entry.timePeriod };
-              // Only include departments that are in the filter (or all if no filter)
-              (this._rootStore.filtersStore.filterValues.departments || []).forEach((dept) => {
+              // Only include departments that are in the filter
+              this._rootStore.filtersStore.filterValues.departments.forEach((dept) => {
                 filteredEntry[dept] = typeof entry[dept] === 'number' ? entry[dept] : 0;
                 filteredEntry.weightedVal = { ...(filteredEntry.weightedVal || {}), [dept]: entry.weightedVal?.[dept] || 0 };
                 filteredEntry.totalVisitCount = { ...(filteredEntry.totalVisitCount || {}), [dept]: entry.totalVisitCount?.[dept] || 0 };

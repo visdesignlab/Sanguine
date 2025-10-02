@@ -40,7 +40,6 @@ import { formatValueForDisplay } from '../../../Utils/dashboard';
 export function DashboardView() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive) as any, []);
-  const { departmentColors } = useContext(Store);
 
   // --- Store and styles ---
   const store = useContext(Store);
@@ -230,12 +229,7 @@ export function DashboardView() {
               : [];
 
             // Name, color, label for each key in this chart
-            let series = chartDataKeys.map((name) => ({
-              name,
-              // Default: department colors for each line/series
-              color: departmentColors[name as keyof typeof departmentColors],
-              label: name,
-            }));
+            let series: {name: string, color: string, label: string}[] = [];
 
             // If all departments, use defaultDataColor
             if (chartDataKeys.length === 1 && chartDataKeys[0] === 'all') {
@@ -244,15 +238,18 @@ export function DashboardView() {
                 color: defaultDataColor,
                 label: 'All Departments',
               }];
-            }
-
-            // Use bloodProductCostColors for cost charts
-            const isCostChart = (yAxisVar === 'total_blood_product_cost');
-            if (isCostChart) {
+            } else if (yAxisVar === 'total_blood_product_cost') {
               series = chartDataKeys.map((name) => ({
                 name,
                 color: bloodProductCostColorMap[name as keyof typeof bloodProductCostColorMap],
                 label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
+              }));
+            } else {
+              series = chartDataKeys.map((name) => ({
+                name,
+                // Default: department colors for each line/series
+                color: store.departments[name].color,
+                label: name,
               }));
             }
             return (
