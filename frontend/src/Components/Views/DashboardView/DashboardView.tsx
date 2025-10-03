@@ -23,7 +23,9 @@ import classes from '../GridLayoutItem.module.css';
 
 // Application
 import { Store } from '../../../Store/Store';
-import { smallHoverColor, smallSelectColor, useThemeConstants } from '../../../Theme/mantineTheme';
+import {
+  DEFAULT_DATA_COLOR, smallHoverColor, smallSelectColor, useThemeConstants,
+} from '../../../Theme/mantineTheme';
 import {
   dashboardYAxisOptions,
   AGGREGATION_OPTIONS,
@@ -229,6 +231,15 @@ export function DashboardView() {
             const chartDataKeys = chartData.length > 0
               ? Object.keys(chartData[0]).filter((k) => k !== 'timePeriod')
               : [];
+
+            const series = chartDataKeys.map((name, idx) => ({
+              name,
+              color:
+              chartDataKeys.length === 1
+                ? DEFAULT_DATA_COLOR // Or use a constant like DEFAULT_DATA_COLOR if defined
+                : chartColors[idx % chartColors.length],
+              label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
+            }));
             return (
               <Card
                 key={chartId}
@@ -332,13 +343,7 @@ export function DashboardView() {
                         h="100%"
                         data={chartData}
                         dataKey="timePeriod"
-                        series={
-                          chartDataKeys.map((name, idx) => ({
-                            name,
-                            color: chartColors[idx % chartColors.length],
-                            label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
-                          }))
-                        }
+                        series={series}
                         xAxisProps={{
                           interval: 'equidistantPreserveStart',
                         }}
@@ -382,13 +387,7 @@ export function DashboardView() {
                         h="100%"
                         data={chartData}
                         dataKey="timePeriod"
-                        series={
-                          chartDataKeys.map((name, idx) => ({
-                            name,
-                            color: chartColors[idx % chartColors.length],
-                            label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
-                          }))
-                        }
+                        series={series}
                         curveType="monotone"
                         tickLine="none"
                         xAxisProps={{

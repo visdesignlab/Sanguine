@@ -32,6 +32,9 @@ const DIMMED_STROKE_COLOR = 'var(--mantine-color-gray-6)';
 const POSITIVE_STROKE_COLOR = 'var(--mantine-color-teal-6, #12b886)';
 const NEGATIVE_STROKE_COLOR = 'var(--mantine-color-red-6, #fa5252)';
 
+// Default data color
+export const DEFAULT_DATA_COLOR = 'var(--mantine-color-gray-7)';
+
 // Selection and hover colors
 export const smallHoverColor = '#FFCF76';
 export const smallSelectColor = '#E29609';
