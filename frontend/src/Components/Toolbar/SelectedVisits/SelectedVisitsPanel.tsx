@@ -18,7 +18,7 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
-import { List, RowComponentProps } from 'react-window';
+import { List } from 'react-window';
 import { IconSearch } from '@tabler/icons-react';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
@@ -26,34 +26,6 @@ import {
   makeHumanReadableColumn,
   makeHumanReadableValues,
 } from '../../../Utils/humanReadableColsVals';
-
-/**
- * Visit list row renderer for react-window's List
- * Renders a single visit number as a selectable NavLink.
- */
-function RowComponent({
-  index,
-  visitNos,
-  selectedVisitNo,
-  setSelectedVisitNo,
-  style,
-}: RowComponentProps<{
-  visitNos: number[];
-  selectedVisitNo: number | null;
-  setSelectedVisitNo: (visitNo: number) => void;
-}>) {
-  const visitNo = visitNos[index];
-
-  return (
-    <NavLink
-      label={visitNo}
-      key={visitNo}
-      active={selectedVisitNo === visitNo}
-      onClick={() => setSelectedVisitNo(visitNo)}
-      style={style}
-    />
-  );
-}
 
 /**
  * SelectedVisitsPanel
@@ -68,7 +40,7 @@ export function SelectedVisitsPanel() {
   // All selected visit numbers from the store
   const visitNos = store.selectionsStore.selectedVisitNos;
 
-  // Filter case numbers search query
+  // Filter visit numbers by search query
   const [searchQuery, setSearchQuery] = useState('');
   const filteredVisitNos = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -156,14 +128,22 @@ export function SelectedVisitsPanel() {
         />
         {/* Virtualized list of visit numbers */}
         <List
-          rowComponent={RowComponent}
-          rowCount={filteredVisitNos.length}
-          rowHeight={25}
+          rowComponent={({ index, style }) => (
+            <NavLink
+              label={filteredVisitNos[index]}
+              key={filteredVisitNos[index]}
+              active={selectedVisitNo === filteredVisitNos[index]}
+              onClick={() => setSelectedVisitNo(filteredVisitNos[index])}
+              style={style}
+            />
+          )}
           rowProps={{
             visitNos: filteredVisitNos,
             selectedVisitNo,
             setSelectedVisitNo,
           }}
+          rowCount={filteredVisitNos.length}
+          rowHeight={25}
           overscanCount={3}
           style={{ height: 250, overflow: 'auto' }}
         />
