@@ -361,18 +361,14 @@ export function DashboardView() {
                         }
                         valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
                         barProps={{
-                          onClick: (...args: any[]) => {
-                            const a = (args[0] || {}) as { payload?: any };
-                            const b = (args[1] || {}) as { payload?: any };
-                            const source = b && b.payload ? b : a;
-                            const payload = source?.payload?.payload ?? source?.payload;
-                            const tp = String(payload?.timePeriod ?? '');
-                            if (tp) {
-                              const isSelected = store.selectionsStore.selectedTimePeriods.includes(tp);
+                          onClick: (data: { payload?: { timePeriod?: string } }) => {
+                            const timePeriod = data?.payload?.timePeriod;
+                            if (timePeriod) {
+                              const isSelected = store.selectionsStore.selectedTimePeriods.includes(timePeriod);
                               if (isSelected) {
-                                store.selectionsStore.removeSelectedTimePeriod(tp);
+                                store.selectionsStore.removeSelectedTimePeriod(timePeriod);
                               } else {
-                                store.selectionsStore.addSelectedTimePeriod(tp);
+                                store.selectionsStore.addSelectedTimePeriod(timePeriod);
                               }
                             }
                           },
@@ -401,7 +397,14 @@ export function DashboardView() {
                         withLegend
                         lineProps={{
                           // Per-point rendering for dots to allow dynamic fill based on selection
-                          dot: (props: any) => {
+                          dot: (props: {
+                            cx?: number;
+                            cy?: number;
+                            payload?: { timePeriod?: string };
+                            stroke?: string;
+                            fill?: string;
+                            key?: string | number;
+                          }) => {
                             const {
                               cx, cy, payload, stroke, fill, key,
                             } = props || {};
