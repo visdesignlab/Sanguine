@@ -6,7 +6,9 @@ import {
 import { useObserver } from 'mobx-react-lite';
 import {
   Badge,
+  Box,
   Divider,
+  Flex,
   NavLink,
   ScrollArea,
   Space,
@@ -90,52 +92,59 @@ export function SelectedVisitsPanel() {
   }, [selectedVisitNo, store.selectionsStore]);
 
   return useObserver(() => (
-    <Stack>
-      {/* Header: count of selected visits */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <Badge variant="light" size="sm" mt="md">
-          {store.selectionsStore.selectedVisitNos.length}
-          {' '}
-          Visits
-        </Badge>
-      </div>
-      {/* Virtualized list of visit numbers */}
-      <List
-        rowComponent={RowComponent}
-        rowCount={visitNos.length}
-        rowHeight={25}
-        rowProps={{
-          visitNos,
-          selectedVisitNo,
-          setSelectedVisitNo,
-        }}
-        overscanCount={3}
-        style={{ height: 250, overflow: 'auto' }}
-      />
-      <Divider />
-      {/* Details panel for the selected visit */}
-      <ScrollArea h={`calc(100vh - ${toolbarWidth}px - 45px - 250px - 30px)`}>
-        {selectedVisit ? (
-          <Stack p="sm">
-            {Object.entries(selectedVisit).map(([key, value]) => (
-              <Stack key={key} gap={0}>
-                <Title order={6}>{makeHumanReadableColumn(key)}</Title>
-                <Text>
-                  {makeHumanReadableValues(
-                    key as keyof typeof makeHumanReadableColumn,
-                    value,
-                  )}
-                </Text>
-              </Stack>
-            ))}
-            <Space h={15} />
-          </Stack>
-        ) : (
-          <Stack p="sm">
-            <Text c="dimmed">Select a visit to see its details.</Text>
-          </Stack>
-        )}
-      </ScrollArea>
-    </Stack>
+    <Box>
+      {/* Panel Header */}
+      <Flex direction="row" justify="space-between" align="center" h={40}>
+        <Title order={3}>Selected Visits</Title>
+        <Flex direction="row" align="center">
+          <Badge variant="light" size="sm">
+            {store.selectionsStore.selectedVisitNos.length}
+            {' '}
+            Visits
+          </Badge>
+        </Flex>
+      </Flex>
+
+      {/* Panel Content */}
+      <Stack mt="md">
+        {/* Virtualized list of visit numbers */}
+        <List
+          rowComponent={RowComponent}
+          rowCount={visitNos.length}
+          rowHeight={25}
+          rowProps={{
+            visitNos,
+            selectedVisitNo,
+            setSelectedVisitNo,
+          }}
+          overscanCount={3}
+          style={{ height: 250, overflow: 'auto' }}
+        />
+        <Divider />
+        {/* Details panel for the selected visit */}
+        <ScrollArea h={`calc(100vh - ${toolbarWidth}px - 45px - 250px - 30px - 40px)`}>
+          {selectedVisit ? (
+            <Stack p="sm">
+              {Object.entries(selectedVisit).map(([key, value]) => (
+                <Stack key={key} gap={0}>
+                  <Title order={6}>{makeHumanReadableColumn(key)}</Title>
+                  <Text>
+                    {makeHumanReadableValues(
+                      key as keyof typeof makeHumanReadableColumn,
+                      value,
+                    )}
+                  </Text>
+                </Stack>
+              ))}
+              <Space h={15} />
+            </Stack>
+          ) : (
+            <Stack p="sm">
+              <Text c="dimmed">Select a visit to see its details.</Text>
+            </Stack>
+          )}
+        </ScrollArea>
+      </Stack>
+    </Box>
   ));
 }

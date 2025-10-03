@@ -7,6 +7,7 @@ import {
   Modal,
   Button,
   Stack,
+  Badge,
 } from '@mantine/core';
 import {
   IconDatabase, IconBook,
@@ -99,6 +100,14 @@ export function Shell() {
       icon: IconClipboardList,
       label: 'Selected Visits',
       content: <SelectedVisitsPanel />,
+      actionButtons: [
+        <Badge key="selected-visits-badge" variant="light" size="sm">
+          {store.selectionsStore.selectedVisitNos.length}
+          {' '}
+          Visits
+        </Badge>,
+
+      ],
     },
     {
       icon: IconDatabase,
@@ -244,21 +253,7 @@ export function Shell() {
           {/** Left Panel Content */}
           {activeLeftPanel !== null && (
             <Box style={{ flexGrow: 1 }} p="md">
-              <Flex direction="row" justify="space-between" align="center">
-                <Title order={3}>
-                  {leftToolbarIcons[activeLeftPanel].label}
-                </Title>
-                <Flex direction="row" align="center">
-                  {leftToolbarIcons[activeLeftPanel].actionButtons?.map((button, index) => (
-                    <Box key={index} ml="xs">
-                      {button}
-                    </Box>
-                  ))}
-                </Flex>
-              </Flex>
-              <Box>
-                {leftToolbarIcons[activeLeftPanel].content}
-              </Box>
+              {leftToolbarIcons[activeLeftPanel].content}
             </Box>
           )}
         </Flex>
