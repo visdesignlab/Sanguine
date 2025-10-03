@@ -1,6 +1,7 @@
 import {
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 import { useObserver } from 'mobx-react-lite';
@@ -14,9 +15,11 @@ import {
   Space,
   Stack,
   Text,
+  TextInput,
   Title,
 } from '@mantine/core';
 import { List, RowComponentProps } from 'react-window';
+import { IconSearch } from '@tabler/icons-react';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import {
@@ -65,6 +68,15 @@ export function SelectedVisitsPanel() {
   // All selected visit numbers from the store
   const visitNos = store.selectionsStore.selectedVisitNos;
 
+  // Filter by search query
+  const [searchQuery, setSearchQuery] = useState('');
+  const filteredVisitNos = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return visitNos;
+    }
+    return visitNos.filter((visitNo) => visitNo.toString().includes(searchQuery.trim()));
+  }, [visitNos, searchQuery]);
+
   // Chosen visit from list
   const [selectedVisitNo, setSelectedVisitNo] = useState<number | null>(null);
   const [selectedVisit, setSelectedVisit] = useState<{
@@ -74,14 +86,19 @@ export function SelectedVisitsPanel() {
 
   // Choose first visit by default
   useEffect(() => {
-    if (selectedVisitNo === null && visitNos.length > 0) {
-      setSelectedVisitNo(visitNos[0]);
+    if (selectedVisitNo === null && filteredVisitNos.length > 0) {
+      setSelectedVisitNo(filteredVisitNos[0]);
     }
-    if (visitNos.length === 0) {
+    if (filteredVisitNos.length === 0) {
       setSelectedVisitNo(null);
       setSelectedVisit(null);
     }
-  }, [visitNos, selectedVisitNo]);
+    // If current selection is not in filtered results, clear it
+    if (selectedVisitNo !== null && !filteredVisitNos.includes(selectedVisitNo)) {
+      setSelectedVisitNo(filteredVisitNos.length > 0 ? filteredVisitNos[0] : null);
+    }
+  }, [filteredVisitNos, selectedVisitNo]);
+
   // Fetch details whenever a visit number is chosen
   useEffect(() => {
     if (selectedVisitNo != null) {
@@ -107,13 +124,20 @@ export function SelectedVisitsPanel() {
 
       {/* Panel Content */}
       <Stack mt="md">
+        <TextInput
+          placeholder="Search visits..."
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.currentTarget.value)}
+          leftSection={<IconSearch size={16} />}
+          size="sm"
+        />
         {/* Virtualized list of visit numbers */}
         <List
           rowComponent={RowComponent}
-          rowCount={visitNos.length}
+          rowCount={filteredVisitNos.length}
           rowHeight={25}
           rowProps={{
-            visitNos,
+            visitNos: filteredVisitNos,
             selectedVisitNo,
             setSelectedVisitNo,
           }}
