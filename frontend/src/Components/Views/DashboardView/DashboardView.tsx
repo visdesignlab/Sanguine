@@ -398,29 +398,17 @@ export function DashboardView() {
                         withLegend
                         lineProps={{
                           // Per-point rendering for dots to allow dynamic fill based on selection
-                          dot: (props: {
-                            cx?: number;
-                            cy?: number;
-                            payload?: { timePeriod?: string };
-                            stroke?: string;
-                            fill?: string;
-                            key?: string | number;
-                          }) => {
-                            const {
-                              cx, cy, payload, stroke, fill, key,
-                            } = props || {};
-                            const tp = String(payload?.timePeriod ?? '');
-                            const isSelected = selectedSet.has(tp);
-                            const seriesFill = fill || stroke;
-
+                          dot: (props) => {
+                            const timePeriod = String(props?.payload?.timePeriod ?? '');
+                            const isSelected = selectedSet.has(timePeriod);
                             return (
                               <circle
-                                key={key}
-                                cx={cx ?? 0}
-                                cy={cy ?? 0}
+                                key={props?.key}
+                                cx={props?.cx}
+                                cy={props?.cy}
                                 r={isSelected ? 5 : 3}
                                 strokeWidth={0}
-                                fill={isSelected ? smallSelectColor : seriesFill}
+                                fill={isSelected ? smallSelectColor : (props?.fill || props?.stroke)}
                               />
                             );
                           },
@@ -430,16 +418,14 @@ export function DashboardView() {
                             fill: smallHoverColor,
                             style: { cursor: 'pointer' },
                             onClick: (...args: unknown[]) => {
-                              const a = (args[0] || {}) as { payload?: Record<string, unknown> };
-                              const b = (args[1] || {}) as { payload?: Record<string, unknown> };
-                              const source = b && b.payload ? b : a;
-                              const tp = String(source?.payload?.timePeriod ?? '');
-                              if (tp) {
-                                const isSelected = store.selectionsStore.selectedTimePeriods.includes(tp);
+                              const source = (args[1] || {}) as { payload?: Record<string, unknown> };
+                              const timePeriod = String(source.payload?.timePeriod ?? '');
+                              if (timePeriod) {
+                                const isSelected = selectedSet.has(timePeriod);
                                 if (isSelected) {
-                                  store.selectionsStore.removeSelectedTimePeriod(tp);
+                                  store.selectionsStore.removeSelectedTimePeriod(timePeriod);
                                 } else {
-                                  store.selectionsStore.addSelectedTimePeriod(tp);
+                                  store.selectionsStore.addSelectedTimePeriod(timePeriod);
                                 }
                               }
                             },
