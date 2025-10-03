@@ -23,7 +23,9 @@ import classes from '../GridLayoutItem.module.css';
 
 // Application
 import { Store } from '../../../Store/Store';
-import { smallHoverColor, smallSelectColor, useThemeConstants } from '../../../Theme/mantineTheme';
+import {
+  DEFAULT_DATA_COLOR, smallHoverColor, smallSelectColor, useThemeConstants,
+} from '../../../Theme/mantineTheme';
 import {
   dashboardYAxisOptions,
   AGGREGATION_OPTIONS,
@@ -31,6 +33,7 @@ import {
   type DashboardChartConfig,
   DashboardStatConfig,
   chartColors,
+  Cost,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 
@@ -228,6 +231,17 @@ export function DashboardView() {
             const chartDataKeys = chartData.length > 0
               ? Object.keys(chartData[0]).filter((k) => k !== 'timePeriod')
               : [];
+
+            const series = chartDataKeys.map((name, idx) => ({
+              name,
+              color:
+              chartDataKeys.length === 1
+                ? DEFAULT_DATA_COLOR // Or use a constant like DEFAULT_DATA_COLOR if defined
+                : chartColors[idx % chartColors.length],
+              label: chartDataKeys.length === 1
+                ? 'Total'
+                : dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
+            }));
             return (
               <Card
                 key={chartId}
@@ -331,13 +345,7 @@ export function DashboardView() {
                         h="100%"
                         data={chartData}
                         dataKey="timePeriod"
-                        series={
-                          chartDataKeys.map((name, idx) => ({
-                            name,
-                            color: chartColors[idx % chartColors.length],
-                            label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
-                          }))
-                        }
+                        series={series}
                         xAxisProps={{
                           interval: 'equidistantPreserveStart',
                         }}
@@ -361,18 +369,14 @@ export function DashboardView() {
                         }
                         valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
                         barProps={{
-                          onClick: (...args: any[]) => {
-                            const a = (args[0] || {}) as { payload?: any };
-                            const b = (args[1] || {}) as { payload?: any };
-                            const source = b && b.payload ? b : a;
-                            const payload = source?.payload?.payload ?? source?.payload;
-                            const tp = String(payload?.timePeriod ?? '');
-                            if (tp) {
-                              const isSelected = store.selectionsStore.selectedTimePeriods.includes(tp);
+                          onClick: (data: { payload?: { timePeriod?: string } }) => {
+                            const timePeriod = data?.payload?.timePeriod;
+                            if (timePeriod) {
+                              const isSelected = store.selectionsStore.selectedTimePeriods.includes(timePeriod);
                               if (isSelected) {
-                                store.selectionsStore.removeSelectedTimePeriod(tp);
+                                store.selectionsStore.removeSelectedTimePeriod(timePeriod);
                               } else {
-                                store.selectionsStore.addSelectedTimePeriod(tp);
+                                store.selectionsStore.addSelectedTimePeriod(timePeriod);
                               }
                             }
                           },
@@ -385,13 +389,7 @@ export function DashboardView() {
                         h="100%"
                         data={chartData}
                         dataKey="timePeriod"
-                        series={
-                          chartDataKeys.map((name, idx) => ({
-                            name,
-                            color: chartColors[idx % chartColors.length],
-                            label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
-                          }))
-                        }
+                        series={series}
                         curveType="monotone"
                         tickLine="none"
                         xAxisProps={{
@@ -401,22 +399,17 @@ export function DashboardView() {
                         withLegend
                         lineProps={{
                           // Per-point rendering for dots to allow dynamic fill based on selection
-                          dot: (props: any) => {
-                            const {
-                              cx, cy, payload, stroke, fill, key,
-                            } = props || {};
-                            const tp = String(payload?.timePeriod ?? '');
-                            const isSelected = selectedSet.has(tp);
-                            const seriesFill = fill || stroke;
-
+                          dot: (props) => {
+                            const timePeriod = String(props?.payload?.timePeriod ?? '');
+                            const isSelected = selectedSet.has(timePeriod);
                             return (
                               <circle
-                                key={key}
-                                cx={cx ?? 0}
-                                cy={cy ?? 0}
+                                key={props?.key}
+                                cx={props?.cx}
+                                cy={props?.cy}
                                 r={isSelected ? 5 : 3}
                                 strokeWidth={0}
-                                fill={isSelected ? smallSelectColor : seriesFill}
+                                fill={isSelected ? smallSelectColor : (props?.fill || props?.stroke)}
                               />
                             );
                           },
@@ -426,16 +419,14 @@ export function DashboardView() {
                             fill: smallHoverColor,
                             style: { cursor: 'pointer' },
                             onClick: (...args: unknown[]) => {
-                              const a = (args[0] || {}) as { payload?: Record<string, unknown> };
-                              const b = (args[1] || {}) as { payload?: Record<string, unknown> };
-                              const source = b && b.payload ? b : a;
-                              const tp = String(source?.payload?.timePeriod ?? '');
-                              if (tp) {
-                                const isSelected = store.selectionsStore.selectedTimePeriods.includes(tp);
+                              const source = (args[1] || {}) as { payload?: Record<string, unknown> };
+                              const timePeriod = String(source.payload?.timePeriod ?? '');
+                              if (timePeriod) {
+                                const isSelected = selectedSet.has(timePeriod);
                                 if (isSelected) {
-                                  store.selectionsStore.removeSelectedTimePeriod(tp);
+                                  store.selectionsStore.removeSelectedTimePeriod(timePeriod);
                                 } else {
-                                  store.selectionsStore.addSelectedTimePeriod(tp);
+                                  store.selectionsStore.addSelectedTimePeriod(timePeriod);
                                 }
                               }
                             },

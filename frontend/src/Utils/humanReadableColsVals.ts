@@ -35,6 +35,7 @@ const columnNameMap: Record<string, string> = {
   visit_no: 'Visit Number',
   whole_units: '# Whole Blood Units',
   year: 'Year',
+  departments: 'Departments',
 };
 
 export function makeHumanReadableColumn(columnName: keyof typeof columnNameMap): string {
@@ -51,6 +52,15 @@ export function makeHumanReadableValues(columnName: keyof typeof columnNameMap, 
   }
   if (['death', 'vent', 'stroke', 'ecmo', 'b12', 'iron', 'antifibrinolytic'].includes(columnName)) {
     return (value === 1 || value === true) ? 'Yes' : 'No';
+  }
+  if (
+    (columnName === 'apr_drg_weight' || columnName === 'ms_drg_weight')
+    && typeof value === 'number'
+  ) {
+    return value.toFixed(3);
+  }
+  if (columnName === 'departments') {
+    return (value as string).replace(/["[\]]/g, '').replace(/,\s*/g, ', ');
   }
   return `${value}`;
 }
