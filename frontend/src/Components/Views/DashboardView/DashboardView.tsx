@@ -23,7 +23,7 @@ import classes from '../GridLayoutItem.module.css';
 
 // Application
 import { Store } from '../../../Store/Store';
-import { smallHoverColor, useThemeConstants } from '../../../Theme/mantineTheme';
+import { smallHoverColor, smallSelectColor, useThemeConstants } from '../../../Theme/mantineTheme';
 import {
   dashboardYAxisOptions,
   AGGREGATION_OPTIONS,
@@ -31,7 +31,6 @@ import {
   type DashboardChartConfig,
   DashboardStatConfig,
   chartColors,
-  Cost,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 
@@ -105,11 +104,9 @@ export function DashboardView() {
     }
     close();
   }, [selectedAggregation, selectedXAxisVar, selectedYAxisVar, itemModalType, close, store.dashboardStore]);
-
   // --- Render Dashboard ---
   return useObserver(() => {
     const chartRowHeight = 300;
-
     return (
       <Stack mb="xl" gap="lg">
         <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
@@ -222,6 +219,8 @@ export function DashboardView() {
           {Object.values(store.dashboardStore.chartConfigs).map(({
             chartId, yAxisVar, xAxisVar, aggregation, chartType,
           }) => {
+            const selectedSet = new Set(store.selectionsStore.selectedTimePeriods);
+
             let chartData = store.dashboardStore.chartData[`${aggregation}_${yAxisVar}_${xAxisVar}`] || [];
             if (yAxisVar === 'total_blood_product_cost' && Array.isArray(chartData)) {
               chartData = chartData.map((data) => ({ timePeriod: data.timePeriod, ...data.data as Record<Cost, number> }));
@@ -229,7 +228,6 @@ export function DashboardView() {
             const chartDataKeys = chartData.length > 0
               ? Object.keys(chartData[0]).filter((k) => k !== 'timePeriod')
               : [];
-
             return (
               <Card
                 key={chartId}
@@ -344,7 +342,7 @@ export function DashboardView() {
                           interval: 'equidistantPreserveStart',
                         }}
                         type="stacked"
-                        withLegend={chartDataKeys.length > 1}
+                        withLegend
                         tooltipAnimationDuration={200}
                         tooltipProps={
                           chartDataKeys.length === 1
@@ -362,6 +360,24 @@ export function DashboardView() {
                             : {}
                         }
                         valueFormatter={(value) => formatValueForDisplay(yAxisVar, value, aggregation, false)}
+                        barProps={{
+                          onClick: (...args: any[]) => {
+                            const a = (args[0] || {}) as { payload?: any };
+                            const b = (args[1] || {}) as { payload?: any };
+                            const source = b && b.payload ? b : a;
+                            const payload = source?.payload?.payload ?? source?.payload;
+                            const tp = String(payload?.timePeriod ?? '');
+                            if (tp) {
+                              const isSelected = store.selectionsStore.selectedTimePeriods.includes(tp);
+                              if (isSelected) {
+                                store.selectionsStore.removeSelectedTimePeriod(tp);
+                              } else {
+                                store.selectionsStore.addSelectedTimePeriod(tp);
+                              }
+                            }
+                          },
+                          style: { cursor: 'pointer' },
+                        }}
                       />
                     ) : (
                       // Line Chart
@@ -376,17 +392,54 @@ export function DashboardView() {
                             label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
                           }))
                         }
-                        curveType="linear"
+                        curveType="monotone"
                         tickLine="none"
                         xAxisProps={{
                           interval: 'equidistantPreserveStart',
                         }}
-                        withLegend={chartDataKeys.length > 1}
-                        activeDotProps={{
-                          r: 6,
-                          strokeWidth: 0,
-                          fill: smallHoverColor,
-                          style: { cursor: 'pointer' },
+                        strokeWidth={1.5}
+                        withLegend
+                        lineProps={{
+                          // Per-point rendering for dots to allow dynamic fill based on selection
+                          dot: (props: any) => {
+                            const {
+                              cx, cy, payload, stroke, fill, key,
+                            } = props || {};
+                            const tp = String(payload?.timePeriod ?? '');
+                            const isSelected = selectedSet.has(tp);
+                            const seriesFill = fill || stroke;
+
+                            return (
+                              <circle
+                                key={key}
+                                cx={cx ?? 0}
+                                cy={cy ?? 0}
+                                r={isSelected ? 5 : 3}
+                                strokeWidth={0}
+                                fill={isSelected ? smallSelectColor : seriesFill}
+                              />
+                            );
+                          },
+                          activeDot: {
+                            r: 5,
+                            strokeWidth: 0,
+                            fill: smallHoverColor,
+                            style: { cursor: 'pointer' },
+                            onClick: (...args: unknown[]) => {
+                              const a = (args[0] || {}) as { payload?: Record<string, unknown> };
+                              const b = (args[1] || {}) as { payload?: Record<string, unknown> };
+                              const source = b && b.payload ? b : a;
+                              const tp = String(source?.payload?.timePeriod ?? '');
+                              if (tp) {
+                                const isSelected = store.selectionsStore.selectedTimePeriods.includes(tp);
+                                if (isSelected) {
+                                  store.selectionsStore.removeSelectedTimePeriod(tp);
+                                } else {
+                                  store.selectionsStore.addSelectedTimePeriod(tp);
+                                }
+                              }
+                            },
+                          },
                         }}
                         tooltipAnimationDuration={200}
                         tooltipProps={
