@@ -31,6 +31,7 @@ import {
   type DashboardChartConfig,
   DashboardStatConfig,
   chartColors,
+  Cost,
 } from '../../../Types/application';
 import { formatValueForDisplay } from '../../../Utils/dashboard';
 
