@@ -238,7 +238,9 @@ export function DashboardView() {
               chartDataKeys.length === 1
                 ? DEFAULT_DATA_COLOR // Or use a constant like DEFAULT_DATA_COLOR if defined
                 : chartColors[idx % chartColors.length],
-              label: dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
+              label: chartDataKeys.length === 1
+                ? 'Total'
+                : dashboardYAxisOptions.find((o) => o.value === name)?.label?.base || name,
             }));
             return (
               <Card
