@@ -68,7 +68,7 @@ export function SelectedVisitsPanel() {
   // All selected visit numbers from the store
   const visitNos = store.selectionsStore.selectedVisitNos;
 
-  // Filter by search query
+  // Filter case numbers search query
   const [searchQuery, setSearchQuery] = useState('');
   const filteredVisitNos = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -108,6 +108,29 @@ export function SelectedVisitsPanel() {
     }
   }, [selectedVisitNo, store.selectionsStore]);
 
+  // Filter visit details based on search query
+  const [attributeSearchQuery, setAttributeSearchQuery] = useState('');
+  const filteredVisitAttributes = useMemo(() => {
+    if (!selectedVisit || !attributeSearchQuery.trim()) {
+      return selectedVisit ? Object.entries(selectedVisit) : [];
+    }
+
+    const searchTerm = attributeSearchQuery.toLowerCase().trim();
+    return Object.entries(selectedVisit).filter(([key, value]) => {
+      // Search in the human-readable column name
+      const humanReadableKey = makeHumanReadableColumn(key).toLowerCase();
+      // Search in the human-readable value
+      const humanReadableValue = makeHumanReadableValues(
+        key as keyof typeof makeHumanReadableColumn,
+        value,
+      ).toString().toLowerCase();
+
+      return humanReadableKey.includes(searchTerm)
+             || humanReadableValue.includes(searchTerm)
+             || key.toLowerCase().includes(searchTerm);
+    });
+  }, [selectedVisit, attributeSearchQuery]);
+
   return useObserver(() => (
     <Box>
       {/* Panel Header */}
@@ -146,20 +169,39 @@ export function SelectedVisitsPanel() {
         />
         <Divider />
         {/* Details panel for the selected visit */}
-        <ScrollArea h={`calc(100vh - ${toolbarWidth}px - 45px - 250px - 30px - 40px)`}>
+        <ScrollArea h={`calc(100vh - ${toolbarWidth}px - 45px - 250px - 30px - 40px - 40px)`}>
           {selectedVisit ? (
             <Stack p="sm">
-              {Object.entries(selectedVisit).map(([key, value]) => (
-                <Stack key={key} gap={0}>
-                  <Title order={6}>{makeHumanReadableColumn(key)}</Title>
-                  <Text>
-                    {makeHumanReadableValues(
-                      key as keyof typeof makeHumanReadableColumn,
-                      value,
-                    )}
-                  </Text>
-                </Stack>
-              ))}
+              {/* Search bar for visit attributes */}
+              <TextInput
+                placeholder="Search visit attributes..."
+                value={attributeSearchQuery}
+                onChange={(event) => setAttributeSearchQuery(event.currentTarget.value)}
+                leftSection={<IconSearch size={14} />}
+                size="xs"
+                mb="sm"
+              />
+
+              {/* Display filtered attributes */}
+              {filteredVisitAttributes.length > 0 ? (
+                filteredVisitAttributes.map(([key, value]) => (
+                  <Stack key={key} gap={0}>
+                    <Title order={6}>{makeHumanReadableColumn(key)}</Title>
+                    <Text>
+                      {makeHumanReadableValues(
+                        key as keyof typeof makeHumanReadableColumn,
+                        value,
+                      )}
+                    </Text>
+                  </Stack>
+                ))
+              ) : (
+                <Text c="dimmed" size="sm">
+                  No attributes match your search "
+                  {attributeSearchQuery}
+                  "
+                </Text>
+              )}
               <Space h={15} />
             </Stack>
           ) : (
