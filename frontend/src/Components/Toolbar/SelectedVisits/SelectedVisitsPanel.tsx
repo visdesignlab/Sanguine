@@ -177,9 +177,9 @@ export function SelectedVisitsPanel() {
                 ))
               ) : (
                 <Text c="dimmed" size="sm">
-                  No attributes match your search "
+                  No attributes match your search &quot;
                   {attributeSearchQuery}
-                  "
+                  &quot;
                 </Text>
               )}
               <Space h={15} />
