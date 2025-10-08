@@ -646,7 +646,6 @@ export function FilterPanel() {
                 <Divider my="xs" />
                 <Input.Wrapper
                   label="Length of Stay"
-                  mb="lg"
                   styles={{ label: { color: rangeChanged('los') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                 >
                   {store.filtersStore.showFilterHistograms && (

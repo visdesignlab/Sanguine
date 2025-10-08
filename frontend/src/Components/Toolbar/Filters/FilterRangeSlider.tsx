@@ -41,7 +41,7 @@ export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<Filter
           { value: max, label: String(max) },
         ]}
         minRange={0}
-        mb="md"
+        mb="xl"
         styles={{
           label: {
             backgroundColor: 'white',
