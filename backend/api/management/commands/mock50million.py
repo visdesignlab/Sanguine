@@ -777,12 +777,29 @@ class Command(BaseCommand):
             "bed_room_dept_line",
         ]
 
+        dept_choices = [
+                    ("Emergency", 0.15),
+                    ("Radiology", 0.25),
+                    ("Hemoc", 0.10),
+                    ("Cardiology", 0.40),
+                    ("Orthopedics", 0.10),
+                ]
+        dept_names, dept_weights = zip(*dept_choices)
+        dept_id_map = {
+            "Emergency": "DEPT101",
+            "Radiology": "DEPT102",
+            "Hemoc": "DEPT103",
+            "Cardiology": "DEPT104",
+            "Orthopedics": "DEPT105",
+        }
+
         def gen_room_traces():
             for i in range(int(target_roomtraces_count)):
+                dept_name = random.choices(dept_names, weights=dept_weights, k=1)[0]
                 yield {
                     "visit_no": (i % int(target_visits_count + 1)),
-                    "department_id": f"DEPT{100 + (i % 10)}",
-                    "department_name": f"Department {i % 10}",
+                    "department_id": dept_id_map[dept_name],
+                    "department_name": dept_name,
                     "room_id": f"ROOM{200 + (i % 20)}",
                     "bed_id": f"BED{300 + (i % 30)}",
                     "service_in_c": "A",
