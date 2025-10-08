@@ -31,6 +31,15 @@ export function FilterPanel() {
   const { toolbarWidth } = useThemeConstants();
   const store = useContext(Store);
 
+  // Detect if a range filter has been applied
+  const rangeChanged = (
+    key: 'rbc_units' | 'ffp_units' | 'plt_units' | 'cryo_units' | 'cell_saver_ml' | 'los',
+  ) => {
+    const cur = store.filtersStore.filterValues[key];
+    const init = store.filtersStore.initialFilterValues[key];
+    return cur[0] !== init[0] || cur[1] !== init[1];
+  };
+
   return useObserver(() => (
     <Box>
       <ScrollArea
@@ -82,7 +91,11 @@ export function FilterPanel() {
             />
             <Accordion.Panel>
               <Tooltip label="Filter for Visits That Used ..." position="top-start">
-                <Input.Wrapper label="RBC Units" mb="lg">
+                <Input.Wrapper
+                  label="RBC Units"
+                  mb="lg"
+                  styles={{ label: { color: rangeChanged('rbc_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                >
                   <Flex
                     justify="center"
                     style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}
@@ -106,7 +119,11 @@ export function FilterPanel() {
               </Tooltip>
 
               <Tooltip label="Filter for Visits That Used ..." position="top-start">
-                <Input.Wrapper label="FFP Units" mb="lg">
+                <Input.Wrapper
+                  label="FFP Units"
+                  mb="lg"
+                  styles={{ label: { color: rangeChanged('ffp_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                >
                   <Flex
                     justify="center"
                     style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}
@@ -130,7 +147,11 @@ export function FilterPanel() {
               </Tooltip>
 
               <Tooltip label="Filter for Visits That Used ..." position="top-start">
-                <Input.Wrapper label="Platelet Units" mb="lg">
+                <Input.Wrapper
+                  label="Platelet Units"
+                  mb="lg"
+                  styles={{ label: { color: rangeChanged('plt_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                >
                   <Flex
                     justify="center"
                     style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}
@@ -154,7 +175,11 @@ export function FilterPanel() {
               </Tooltip>
 
               <Tooltip label="Filter for Visits That Used ..." position="top-start">
-                <Input.Wrapper label="Cryo Units" mb="lg">
+                <Input.Wrapper
+                  label="Cryo Units"
+                  mb="lg"
+                  styles={{ label: { color: rangeChanged('cryo_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                >
                   <Flex
                     justify="center"
                     style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}
@@ -178,7 +203,11 @@ export function FilterPanel() {
               </Tooltip>
 
               <Tooltip label="Filter for Visits That Used ..." position="top-start">
-                <Input.Wrapper label="Cell Saver (mL)" mb="lg">
+                <Input.Wrapper
+                  label="Cell Saver (mL)"
+                  mb="lg"
+                  styles={{ label: { color: rangeChanged('cell_saver_ml') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                >
                   <Flex
                     justify="center"
                     style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}
@@ -581,7 +610,11 @@ export function FilterPanel() {
                   />
                 </Flex>
                 <Divider my="xs" />
-                <Input.Wrapper label="Length of Stay" mb="lg">
+                <Input.Wrapper
+                  label="Length of Stay"
+                  mb="lg"
+                  styles={{ label: { color: rangeChanged('los') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                >
                   {store.filtersStore.showFilterHistograms && (
                     <Flex justify="center">
                       <BarChart
