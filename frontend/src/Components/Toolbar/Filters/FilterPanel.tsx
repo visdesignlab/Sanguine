@@ -11,16 +11,21 @@ import {
   Text,
   Tooltip,
   Box,
+  ActionIcon,
+  Title,
 } from '@mantine/core';
 import { BarChart } from '@mantine/charts';
 import { DateInput } from '@mantine/dates';
-import { IconCircle, IconCircleFilled } from '@tabler/icons-react';
+import {
+  IconChartBar, IconCircle, IconCircleFilled, IconRestore,
+} from '@tabler/icons-react';
 import { useContext } from 'react';
 import { useObserver } from 'mobx-react';
 import { DEFAULT_DATA_COLOR, useThemeConstants } from '../../../Theme/mantineTheme';
 import { FilterRangeSlider } from './FilterRangeSlider';
 import { Store } from '../../../Store/Store';
 import { FilterHeader } from './FilterHeader';
+import classes from '../../../Shell/Shell.module.css';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0];
 
@@ -28,7 +33,7 @@ const dateSimplify = (date: Date) => date.toISOString().split('T')[0];
  * @returns Filter Panel accordion with multiple filter sections
  */
 export function FilterPanel() {
-  const { toolbarWidth } = useThemeConstants();
+  const { toolbarWidth, iconStroke } = useThemeConstants();
   const store = useContext(Store);
 
   // Detect if a range filter has been applied
@@ -45,6 +50,30 @@ export function FilterPanel() {
 
   return useObserver(() => (
     <Box>
+      {/* Panel Header */}
+      <Flex direction="row" justify="space-between" align="center" h={40}>
+        <Title order={3}>Filter Panel</Title>
+        <Flex direction="row" align="center">
+          <ActionIcon
+            aria-label="Reset all filters"
+            onClick={() => { store.filtersStore.resetAllFilters(); }}
+            className={classes.leftToolbarIcon}
+            ml="xs"
+          >
+            <IconRestore stroke={iconStroke} size={21} />
+          </ActionIcon>
+          <ActionIcon
+            aria-label="Toggle filter histograms"
+            onClick={() => { store.filtersStore.showFilterHistograms = !store.filtersStore.showFilterHistograms; }}
+            data-active={store.filtersStore.showFilterHistograms}
+            className={classes.leftToolbarIcon}
+            ml="xs"
+          >
+            <IconChartBar stroke={iconStroke} />
+          </ActionIcon>
+        </Flex>
+      </Flex>
+
       <ScrollArea
         h={`calc(100vh - ${toolbarWidth}px - 45px)`}
         type="scroll"
