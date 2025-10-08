@@ -290,8 +290,9 @@ export class FiltersStore {
       // TODO: Not hard coded list
       const components = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml', 'los'];
       const histogramData: Record<string, { units: string, count: number }[]> = {};
-      const numBins = 10;
       await Promise.all(components.map(async (component) => {
+        const [minRange, maxRange] = this._filterValues[component as keyof typeof this._filterValues] as [number, number];
+        const numBins = Math.min(50, Math.max(1, maxRange - minRange));
         const result = await duckDB.query(`
           WITH bins AS (
             SELECT equi_width_bins(min(${component}), max(${component}), ${numBins}, false) AS bin
