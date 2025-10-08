@@ -3,6 +3,7 @@ import { RangeSlider } from '@mantine/core';
 import { useObserver } from 'mobx-react-lite';
 import { Store } from '../../../Store/Store';
 import { FiltersStore } from '../../../Store/FiltersStore';
+import { DEFAULT_DATA_COLOR } from '../../../Theme/mantineTheme';
 
 type NumberArrayKeys<T> = {
   [K in keyof T]: T[K] extends number[] ? K : never
@@ -23,11 +24,13 @@ export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<Filter
     <RangeSlider
       defaultValue={store.filtersStore.filterValues[varName]}
       value={value}
+      size="sm"
       onChange={setValue}
       onChangeEnd={(v) => store.filtersStore.setFilterValue(varName, v)}
       min={store.filtersStore.initialFilterValues[varName][0]}
       max={store.filtersStore.initialFilterValues[varName][1]}
       step={varName === 'cell_saver_ml' ? 50 : 1}
+      color={DEFAULT_DATA_COLOR}
       marks={store.filtersStore.initialFilterValues[varName].map((val) => ({ value: val, label: String(val) }))}
       minRange={0}
       mb="md"
