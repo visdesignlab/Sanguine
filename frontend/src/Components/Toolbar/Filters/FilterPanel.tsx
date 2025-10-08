@@ -40,6 +40,9 @@ export function FilterPanel() {
     return cur[0] !== init[0] || cur[1] !== init[1];
   };
 
+  const dateChanged = (key: 'dateFrom' | 'dateTo') => store.filtersStore.filterValues[key].getTime()
+    !== store.filtersStore.initialFilterValues[key].getTime();
+
   return useObserver(() => (
     <Box>
       <ScrollArea
@@ -61,6 +64,7 @@ export function FilterPanel() {
               <Flex direction="row" justify="space-between" align="center">
                 <DateInput
                   label="Date From"
+                  styles={{ label: { color: dateChanged('dateFrom') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                   value={dateSimplify(store.filtersStore.filterValues.dateFrom)}
                   onChange={(date) => date && store.filtersStore.setFilterValue('dateFrom', new Date(date))}
                   minDate={dateSimplify(store.filtersStore.initialFilterValues.dateFrom)}
@@ -70,6 +74,7 @@ export function FilterPanel() {
                 />
                 <DateInput
                   label="Date To"
+                  styles={{ label: { color: dateChanged('dateTo') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                   value={dateSimplify(store.filtersStore.filterValues.dateTo)}
                   onChange={(date) => date && store.filtersStore.setFilterValue('dateTo', new Date(date))}
                   minDate={dateSimplify(store.filtersStore.initialFilterValues.dateFrom)}
