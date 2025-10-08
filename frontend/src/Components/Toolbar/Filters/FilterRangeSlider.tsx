@@ -42,7 +42,6 @@ export function FilterRangeSlider({ varName }: { varName: NumberArrayKeys<Filter
         ]}
         minRange={0}
         mb="md"
-        mt="xs"
         styles={{
           label: {
             backgroundColor: 'white',
