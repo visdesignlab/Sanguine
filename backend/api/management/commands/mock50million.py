@@ -89,6 +89,31 @@ class Command(BaseCommand):
 
         os.remove(tmpfile_path)
 
+    def _report_counts(self):
+        """Compare target counts vs actual table row counts and print % difference."""
+        table_targets = OrderedDict([
+            ("Patient", target_patients_count),
+            ("Visit", target_visits_count),
+            ("SurgeryCase", target_surgeries_count),
+            ("BillingCode", target_billings_count),
+            ("Lab", target_labs_count),
+            ("Medication", target_meds_count),
+            ("Transfusion", target_transfusions_count),
+            ("AttendingProvider", target_attending_provs_count),
+            ("RoomTrace", target_roomtraces_count),
+        ])
+        self.stdout.write(self.style.MIGRATE_HEADING("Row count summary"))
+        with connection.cursor() as cursor:
+            for table, target in table_targets.items():
+                cursor.execute(f"SELECT COUNT(*) FROM {table}")
+                actual = cursor.fetchone()[0] or 0
+                diff = actual - (target or 0)
+                diff_pct = (diff / target * 100.0) if target else 0.0
+                self.stdout.write(
+                    f"- {table}: target={target:,}  actual={actual:,}  "
+                    f"diff={diff:+,} ({diff_pct:.2f}%)"
+                )
+                
     def handle(self, *args, **options):
         # Initialize the Faker object
         Faker.seed(42)
@@ -810,3 +835,5 @@ class Command(BaseCommand):
                     "bed_room_dept_line": float(i),
                 }
         self.send_csv_to_db(gen_room_traces(), fieldnames=room_trace_fieldnames, table_name="RoomTrace")
+
+        self._report_counts()
