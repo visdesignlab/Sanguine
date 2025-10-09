@@ -571,9 +571,9 @@ class Command(BaseCommand):
                     labs.append((surgery, lab_row))
                     lab = lab_row
 
-                    # Intra-op: 0-2 tests
-                    for i in range(random.randint(0, 3)):
-                        draw_dtm = make_aware(    # <-- ensure timezone-aware
+                    # Intra-op: 0-4 tests
+                    for i in range(random.randint(0, 4)):
+                        draw_dtm = make_aware(
                             fake.date_time_between(
                                 start_date=datetime.strptime(surgery["surgery_start_dtm"], DATE_FORMAT) + timedelta(hours=i),
                                 end_date=datetime.strptime(surgery["surgery_start_dtm"], DATE_FORMAT) + timedelta(hours=i + 1),
@@ -581,11 +581,11 @@ class Command(BaseCommand):
                         )
                         lab_row = make_lab_row(fake, pat, visit, draw_dtm, lab, result_desc_option)
                         yield lab_row
-                        labs.append((surgery, lab_row))    # <-- append intra-op lab
+                        labs.append((surgery, lab_row))
                         lab = lab_row
 
-                    # Post-op: 0-1 tests
-                    for i in range(random.randint(0, 2)):
+                    # Post-op: 0-3 tests
+                    for i in range(random.randint(0, 3)):
                         draw_dtm = make_aware(
                             fake.date_time_between(
                                 start_date=datetime.strptime(surgery["surgery_end_dtm"], DATE_FORMAT) + timedelta(hours=i),
