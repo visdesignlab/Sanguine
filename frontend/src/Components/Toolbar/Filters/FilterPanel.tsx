@@ -276,7 +276,7 @@ export function FilterPanel() {
             />
             <Accordion.Panel>
               <Stack gap={0}>
-                <Grid>
+                <Grid ml="sm">
                   <Grid.Col span={7}>
                     <Text
                       ta="right"
@@ -323,6 +323,7 @@ export function FilterPanel() {
                     color={DEFAULT_DATA_COLOR}
                     count={3}
                     highlightSelectedOnly
+                    ml="sm"
                     emptySymbol={(
                       <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
                         <IconCircle />
@@ -363,6 +364,7 @@ export function FilterPanel() {
                     color={DEFAULT_DATA_COLOR}
                     count={3}
                     highlightSelectedOnly
+                    ml="sm"
                     emptySymbol={(
                       <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
                         <IconCircle />
@@ -410,6 +412,7 @@ export function FilterPanel() {
                     color={DEFAULT_DATA_COLOR}
                     count={3}
                     highlightSelectedOnly
+                    ml="sm"
                     emptySymbol={(
                       <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
                         <IconCircle />
