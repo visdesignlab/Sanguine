@@ -690,36 +690,57 @@ class Command(BaseCommand):
         ]
 
         def gen_transfusions():
-            # Index labs and surgeries by visit_no for quick lookup
+            # Get the labs for each visit
             labs_by_visit = {}
             for surg, lab in labs:
                 labs_by_visit.setdefault(surg["visit_no"], []).append(lab)
 
+            # For this visit's labs, return the worst measurements, to later estimate blood products given.
+            def visit_lab_values_extrema(vlabs):
+                # Worst measurements across all labs for this visit
+                extrema = {
+                    "HGB": None,            
+                    "INR": None,   
+                    "PLT": None,   
+                    "Fibrinogen": None,
+                }
+                # For each lab, update worst lab values
+                for l in vlabs:
+                    desc = l["result_desc"]
+                    val = float(l["result_value"])
+                    if desc in ("HGB", "Hemoglobin"):
+                        # Find min HGB across entire visit
+                        extrema["HGB"] = val if extrema["HGB"] is None else min(extrema["HGB"], val)
+                    elif desc == "INR":
+                        extrema["INR"] = val if extrema["INR"] is None else max(extrema["INR"], val)
+                    elif desc in ("PLT", "Platelet Count"):
+                        extrema["PLT"] = val if extrema["PLT"] is None else min(extrema["PLT"], val)
+                    elif desc == "Fibrinogen":
+                        extrema["Fibrinogen"] = val if extrema["Fibrinogen"] is None else min(extrema["Fibrinogen"], val)
+                return extrema
+
+            # Get the surgeries for each visit
             surg_by_visit = {}
             for _, _, _, s in surgeries:
-                # keep the first surgery per visit (good enough here)
                 surg_by_visit.setdefault(s["visit_no"], s)
 
-            rank = 0
+            # --- Assign transfusions to visits based on labs and surgery ---
+            rank_by_visit = {}
             for _, _, visit in visits:
                 visit_no = visit["visit_no"]
-                has_surgery = visit_no in surg_by_visit
 
-                # Probability of >= 1 transfusion: 30% if surgery, 35% if no surgery
+                # Probability of at least one transfusion event, sometimes none.
+                has_surgery = visit_no in surg_by_visit
                 p = 0.5 if has_surgery else 0.2
                 if random.random() >= p:
                     continue
 
-                # Number of transfusions
-                num_transfusions = random.choices([1, 2, 3, 4], weights=[0.8, 0.3, 0.02, 0.01])[0]
+                # Number of transfusion events, maybe more than one.
+                num_events = random.choices([1, 2, 3, 4], weights=[0.65, 0.28, 0.06, 0.01])[0]
 
-                # Choose a lab for this visit if available; otherwise synthesize a simple HGB
-                v_labs = labs_by_visit.get(visit_no)
-                # pick a random lab tied to this visit to drive unit logic
-                chosen_lab = random.choice(v_labs) if v_labs else {
-                    "result_desc": "HGB",
-                    "result_value": float(Faker().pydecimal(left_digits=2, right_digits=1, positive=True, min_value=6, max_value=10)),
-                }
+                # Prepare lab context for this visit
+                v_labs = labs_by_visit.get(visit_no, [])
+                extrema = visit_lab_values_extrema(v_labs)
 
                 # Time window: surgery if available, else visit window
                 if has_surgery:
@@ -730,91 +751,104 @@ class Command(BaseCommand):
                     start_dt = datetime.strptime(visit["adm_dtm"], DATE_FORMAT)
                     end_dt = datetime.strptime(visit["dsch_dtm"], DATE_FORMAT)
 
-                for _ in range(max(1, num_transfusions)):
-                    lab = chosen_lab
+                # Initialize rank for this visit
+                rank = rank_by_visit.get(visit_no, 0)
 
-                    rcb_units = 0
-                    cell_saver_ml = 0
-                    if lab["result_desc"] in ["HGB", "Hemoglobin"]:
-                        if lab["result_value"] < 6:
-                            rcb_units = fake.random_int(min=2, max=3)
-                            cell_saver_ml = fake.random_int(min=300, max=1000)
-                        elif lab["result_value"] < 7:
-                            rcb_units = fake.random_int(min=1, max=2)
-                            cell_saver_ml = fake.random_int(min=100, max=500)
-                        elif lab["result_value"] < 8:
-                            rcb_units = fake.random_int(min=0, max=1)
-                            cell_saver_ml = fake.random_int(min=100, max=200)
-                        elif lab["result_value"] < 9 and random.random() < 0.5:
-                            rcb_units = 1
-                        elif lab["result_value"] < 10 and random.random() < 0.35:
-                            rcb_units = 1
-                        elif rcb_units > 0 and random.random() < 0.1:
-                            rcb_units += 1
-                        rcb_units = min(rcb_units, 4)
+                # --- Generate each transfusion event ---
+                for _ in range(num_events):
+                    # Estimate blood products needed based on worst labs
+                    rbc_units = 0
+                    if extrema["HGB"] is not None:
+                        hgb = extrema["HGB"]
+                        if hgb < 6:
+                            rbc_units = random.randint(2, 4)
+                        elif hgb < 7:
+                            rbc_units = random.randint(1, 3)
+                        elif hgb < 8:
+                            rbc_units = random.randint(0, 2)
+                        elif hgb < 9 and random.random() < 0.4:
+                            rbc_units = 1
+                        elif hgb < 10 and random.random() < 0.25:
+                            rbc_units = 1
+                        rbc_units = min(rbc_units, 6)
 
-                    rbcs = rcb_units
-                    cell_saver = cell_saver_ml
-
-                    # FFP if INR > 2
                     ffp_units = 0
-                    if lab["result_desc"] == "INR":
-                        if lab["result_value"] > 4:
-                            ffp_units = fake.random_int(min=3, max=7)
-                        elif lab["result_value"] > 2:
-                            ffp_units = fake.random_int(min=2, max=4)
-                    ffp = ffp_units
-
-                    # PLT if PLT count below thresholds
+                    if extrema["INR"] is not None:
+                        inr = extrema["INR"]
+                        if inr > 1.5:
+                            ffp_units = random.randint(1, 4)
+                        elif inr > 2:
+                            ffp_units = random.randint(2, 4)
+                        elif inr > 4:
+                            ffp_units = random.randint(3, 7)
                     plt_units = 0
-                    if lab["result_desc"] in ["PLT", "Platelet Count"]:
-                        if lab["result_value"] < 10000:
-                            plt_units = fake.random_int(min=1, max=3)
-                        elif lab["result_value"] < 20000:
-                            plt_units = fake.random_int(min=0, max=2)
-                        elif lab["result_value"] < 30000:
-                            plt_units = fake.random_int(min=0, max=1)
-                        elif lab["result_value"] < 40000 and random.random() < 0.3:
-                            plt_units = fake.random_int(min=0, max=1)
-                    plt = plt_units
+                    if extrema["PLT"] is not None:
+                        plt = extrema["PLT"]
+                        if plt < 10000:
+                            plt_units = random.randint(1, 3)
+                        elif plt < 20000:
+                            plt_units = random.randint(0, 2)
+                        elif plt < 30000:
+                            plt_units = random.randint(0, 1)
+                        elif plt < 40000 and random.random() < 0.3:
+                            plt_units = random.randint(0, 1)
 
-                    # CRYO if Fibrinogen < 150 mg/dL
                     cryo_units = 0
-                    if lab["result_desc"] == "Fibrinogen":
-                        if lab["result_value"] < 150:
-                            cryo_units = fake.random_int(min=1, max=2)
-                        elif lab["result_value"] < 200:
-                            cryo_units = fake.random_int(min=0, max=1)
-                    cryo = cryo_units
+                    if extrema["Fibrinogen"] is not None:
+                        fib = extrema["Fibrinogen"]
+                        if fib < 150:
+                            cryo_units = random.randint(1, 2)
+                        elif fib < 200:
+                            cryo_units = random.randint(0, 1)
 
-                    whole = 0
-                    type = fake.random_element(elements=("unit", "vol"))
+                    # Correlate components for heavier bleeding scenarios
+                    massive = (random.random() < (0.15 if has_surgery else 0.05)) or (rbc_units >= 2 and has_surgery)
+                    if massive:
+                        rbc_units += random.randint(0, 2)
+                        ffp_units += random.randint(0, 2)
+                        plt_units += random.randint(0, 1)
+                        if extrema["Fibrinogen"] is None or extrema["Fibrinogen"] < 200:
+                            cryo_units += random.randint(0, 1)
 
-                    total_transfused = sum((x if x is not None else 0) for x in (rbcs, cell_saver, ffp, plt, cryo, whole))
-                    if total_transfused > 0:
-                        yield {
-                            "visit_no": visit_no,
-                            "trnsfsn_dtm": make_aware(
-                                fake.date_time_between(
-                                    start_date=start_dt,
-                                    end_date=end_dt,
-                                )
-                            ).strftime(DATE_FORMAT),
-                            "transfusion_rank": rank,
-                            "blood_unit_number": fake.unique.random_number(digits=10),
-                            "rbc_units": rbcs if type == "unit" else None,
-                            "ffp_units": ffp if type == "unit" else None,
-                            "plt_units": plt if type == "unit" else None,
-                            "cryo_units": cryo if type == "unit" else None,
-                            "whole_units": whole if type == "unit" else None,
-                            "rbc_vol": rbcs * 250 if type == "vol" else None,
-                            "ffp_vol": ffp * 220 if type == "vol" else None,
-                            "plt_vol": plt * 300 if type == "vol" else None,
-                            "cryo_vol": cryo * 75 if type == "vol" else None,
-                            "whole_vol": whole * 450 if type == "vol" else None,
-                            "cell_saver_ml": cell_saver,
-                        }
-                        rank += 1
+                    # Small chance to co-administer a unit of another component even if labs borderline
+                    if rbc_units > 0 and random.random() < 0.2:
+                        ffp_units = max(ffp_units, random.randint(0, 2))
+                    if (ffp_units > 0 or rbc_units > 0) and extrema["PLT"] is not None and extrema["PLT"] < 80000 and random.random() < 0.3:
+                        plt_units = max(plt_units, 1)
+
+                    # Cell saver if surgical and RBCs used
+                    cell_saver_ml = 0
+                    if has_surgery and rbc_units > 0:
+                        cell_saver_ml = random.randint(100, 1000)
+
+                    # If nothing was transfused, skip this event
+                    if (rbc_units + ffp_units + plt_units + cryo_units) <= 0:
+                        continue
+
+                    # Randomly choose if we report in units or volume
+                    mode = random.choice(("unit", "vol"))
+                    yield {
+                        "visit_no": visit_no,
+                        "trnsfsn_dtm": make_aware(
+                            Faker().date_time_between(start_date=start_dt, end_date=end_dt)
+                        ).strftime(DATE_FORMAT),
+                        "transfusion_rank": rank,
+                        "blood_unit_number": Faker().unique.random_number(digits=10),
+                        "rbc_units": rbc_units if mode == "unit" else None,
+                        "ffp_units": ffp_units if mode == "unit" else None,
+                        "plt_units": plt_units if mode == "unit" else None,
+                        "cryo_units": cryo_units if mode == "unit" else None,
+                        "whole_units": 0 if mode == "unit" else None,
+                        "rbc_vol": rbc_units * 250 if mode == "vol" else None,
+                        "ffp_vol": ffp_units * 220 if mode == "vol" else None,
+                        "plt_vol": plt_units * 300 if mode == "vol" else None,
+                        "cryo_vol": cryo_units * 75 if mode == "vol" else None,
+                        "whole_vol": 0 if mode == "vol" else None,
+                        "cell_saver_ml": cell_saver_ml,
+                    }
+
+                    rank += 1
+                rank_by_visit[visit_no] = rank
         self.send_csv_to_db(gen_transfusions(), fieldnames=transfusion_fieldnames, table_name="Transfusion")
 
         # Generate Attending Providers
