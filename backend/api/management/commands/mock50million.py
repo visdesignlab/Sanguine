@@ -475,22 +475,14 @@ class Command(BaseCommand):
                 uom = "unitless"
             elif test_type == ["PLT", "Platelet Count"]:
                 if last_lab is None:
-                    result_value = fake.pydecimal(left_digits=5, right_digits=0, positive=True, min_value=5000, max_value=100000)
+                    # Normal adult range ~150k–450k per µL
+                    result_value = fake.pydecimal(left_digits=6, right_digits=0, positive=True, min_value=150000, max_value=450000)
                 else:
-                    if last_lab["result_value"] < 10000:
-                        result_value = last_lab["result_value"] + 5000
-                    elif last_lab["result_value"] < 20000:
-                        result_value = last_lab["result_value"] + 2000
-                    else:
-                        result_value = fake.pydecimal(
-                            left_digits=5,
-                            right_digits=0,
-                            positive=True,
-                            min_value=max(last_lab["result_value"] - 10000, 2000),
-                            max_value=min(last_lab["result_value"] + 10000, 100000),
-                        )
-                lower_limit = 15000
-                upper_limit = 45000
+                    # Small random walk toward/around normal
+                    delta = fake.random_int(min=-30000, max=30000)
+                    result_value = max(5000, min(700000, int(last_lab["result_value"]) + delta))
+                lower_limit = 150000
+                upper_limit = 450000
                 uom = "cells/uL"
             elif test_type == ["Fibrinogen"]:
                 if last_lab is None:
@@ -787,11 +779,11 @@ class Command(BaseCommand):
                         if plt < 10000:
                             plt_units = random.randint(1, 3)
                         elif plt < 20000:
-                            plt_units = random.randint(0, 2)
-                        elif plt < 30000:
+                            plt_units = random.randint(1, 2)
+                        elif plt < 50000:
                             plt_units = random.randint(0, 1)
-                        elif plt < 40000 and random.random() < 0.3:
-                            plt_units = random.randint(0, 1)
+                        elif has_surgery and plt < 100000 and random.random() < 0.2:
+                            plt_units = max(plt_units, 1)
 
                     cryo_units = 0
                     if extrema["Fibrinogen"] is not None:
