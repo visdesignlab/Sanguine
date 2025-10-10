@@ -15,7 +15,7 @@ from api.views.utils.utils import get_all_cpt_code_filters
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # Scale mock counts to match real-data percentages.
-MOCK_TOTAL = 40 * 10**4  # Change to scale
+MOCK_TOTAL = 40 * 10**6  # Change to scale
 REAL_COUNTS = {
     "Patients": 303_000,
     "Visits": 704_000,
@@ -177,7 +177,7 @@ class Command(BaseCommand):
                     death_date if fake.random_element(elements=(True, False)) else None
                 )
                 # bad_pat = fake.random_element(elements=(True, True, False)) if death_date is not None else fake.random_element(False, False, True)
-                bad_pat = fake.random_element(elements=OrderedDict([(True, 0.7), (False, 0.3)]))
+                bad_pat = fake.random_element(elements=OrderedDict([(True, 0.67), (False, 0.33)]))
 
                 patient = {
                     "mrn": fake.unique.random_number(digits=10),
@@ -339,9 +339,9 @@ class Command(BaseCommand):
                     start_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT) + timedelta(days=3),
                     end_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT) + timedelta(days=4),
                 ))
-                # Bad cases: 50% 2 surgeries, 50% 1 surgery
+                # Bad cases: 35% 2 surgeries, 65% 1 surgery
                 # Good cases: always 1 surgery
-                if bad_pat and random.random() < 0.5:
+                if bad_pat and random.random() < 0.65:
                     surg_starts = [surg1_start]
                 else:
                     surg_starts = [surg1_start, surg2_start] if bad_pat else [surg1_start]
@@ -399,7 +399,7 @@ class Command(BaseCommand):
         def gen_billing_codes():
             codes, _, _ = get_all_cpt_code_filters()
             for _, bad_pat, _, surg in surgeries:
-                for rank in range(random.randint(1, 40)):
+                for rank in range(random.randint(1, 55)):
                     yield {
                         "visit_no": surg["visit_no"],
                         "cpt_code": fake.random_element(elements=codes),
@@ -563,8 +563,8 @@ class Command(BaseCommand):
                     labs.append((surgery, lab_row))
                     lab = lab_row
 
-                    # Intra-op: 0-4 tests
-                    for i in range(random.randint(0, 4)):
+                    # Intra-op: 0-5 tests
+                    for i in range(random.randint(0, 5)):
                         draw_dtm = make_aware(
                             fake.date_time_between(
                                 start_date=datetime.strptime(surgery["surgery_start_dtm"], DATE_FORMAT) + timedelta(hours=i),
@@ -576,8 +576,8 @@ class Command(BaseCommand):
                         labs.append((surgery, lab_row))
                         lab = lab_row
 
-                    # Post-op: 0-3 tests
-                    for i in range(random.randint(0, 3)):
+                    # Post-op: 0-4 tests
+                    for i in range(random.randint(0, 4)):
                         draw_dtm = make_aware(
                             fake.date_time_between(
                                 start_date=datetime.strptime(surgery["surgery_end_dtm"], DATE_FORMAT) + timedelta(hours=i),
@@ -627,7 +627,7 @@ class Command(BaseCommand):
                     )
                 )
                 admin_dtm = order_dtm + timedelta(minutes=fake.random_int(min=1, max=120))
-                for _ in range(random.randint(1, 70)):
+                for _ in range(random.randint(1, 80)):
                     yield {
                         "visit_no": surg["visit_no"],
                         "order_med_id": fake.unique.random_number(digits=10),
@@ -719,16 +719,16 @@ class Command(BaseCommand):
                     if lab["result_desc"] == "Fibrinogen":
                         score += max(0, (150 - float(lab["result_value"])) / 50)
                     # Higher score = more likely to transfuse
-                    if score > 0.5 and random.random() < min(0.9, 0.2 + score/8):
+                    if score > 0.5 and random.random() < min(0.9, 0.1 + score/12):
                         transfusion_events.append((lab_time, lab))
 
-                # For surgical cases, also allow intraop transfusions even if no labs
-                if has_surg and (not transfusion_events or random.random() < 0.5):
+                # For surgical cases, we have an extra chance of intra-op transfusion
+                if has_surg and random.random() < 0.1:
                     mid_surg = datetime.strptime(surg["surgery_start_dtm"], DATE_FORMAT) + timedelta(minutes=random.randint(30, int(surg_len*60-10)))
                     transfusion_events.append((mid_surg, None))
 
                 # For trauma/emergent/long cases, increase chance of transfusion
-                if has_surg and (("Emergent" in surg_type or "Trauma" in surg_type or surg_len > 4) and random.random() < 0.7):
+                if has_surg and (("Emergent" in surg_type or "Trauma" in surg_type or surg_len > 4) and random.random() < 0.2):
                     mid_surg = datetime.strptime(surg["surgery_start_dtm"], DATE_FORMAT) + timedelta(minutes=random.randint(10, int(surg_len*60-10)))
                     transfusion_events.append((mid_surg, None))
 
