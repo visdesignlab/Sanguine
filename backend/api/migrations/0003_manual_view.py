@@ -64,7 +64,11 @@ def create_materialize_proc(apps, schema_editor):
                         SELECT l.result_value
                         FROM Lab l
                         WHERE l.visit_no = t.visit_no
-                          AND UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT')
+                          AND (
+                            UPPER(l.result_desc) = 'PLT'
+                            OR UPPER(l.result_desc) LIKE 'PLATELET%'
+                            OR UPPER(l.result_desc) LIKE '%PLT%'
+                        )
                           AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
                         ORDER BY l.lab_draw_dtm DESC
                         LIMIT 1
