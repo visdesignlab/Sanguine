@@ -26,3 +26,7 @@
 .iconHovered {
   color: var(--mantine-color-blue-6);
 }
+
+.iconInfoHovered {
+  color: var(--mantine-color-blue-9);
+}

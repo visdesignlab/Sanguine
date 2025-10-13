@@ -1,11 +1,12 @@
 import {
   IconArrowDownRight,
   IconArrowUpRight,
+  IconInfoCircle,
 } from '@tabler/icons-react';
 import {
   Card,
   CloseButton,
-  Group, LoadingOverlay, SimpleGrid, Text,
+  Group, LoadingOverlay, Modal, SimpleGrid, Text,
   Title,
 } from '@mantine/core';
 import { useState, useContext, useCallback } from 'react';
@@ -20,6 +21,13 @@ import { isMetricChangeGood } from '../../../Utils/dashboard';
 import { DashboardAggYAxisVar, DashboardStatData } from '../../../Types/application';
 import { getIconForVar } from '../../../Utils/icons';
 
+const statInfoModals: Record<string, string> = {
+  rbc_adherence: 'Guideline Adherent RBC Transfusions: Percentage of RBC transfusions that met clinical guidelines.',
+  plt_adherence: 'Guideline Adherent Platelet Transfusions: Percentage of platelet transfusions that met clinical guidelines.',
+  ffp_adherence: 'Guideline Adherent FFP Transfusions: Percentage of FFP transfusions that met clinical guidelines.',
+  cryo_adherence: 'Guideline Adherent Cryo Transfusions: Percentage of cryoprecipitate transfusions that met clinical guidelines.',
+};
+
 export function StatsGrid() {
   // Icon styles
   const {
@@ -28,6 +36,10 @@ export function StatsGrid() {
 
   // Get store context
   const store = useContext(Store);
+
+  // Info Modal
+  const [infoModal, setInfoModal] = useState<{ open: boolean; content: string }>({ open: false, content: '' });
+  const [infoIconHoveredIdx, setInfoIconHoveredIdx] = useState<number | null>(null);
 
   // Track hovered card index
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -40,6 +52,8 @@ export function StatsGrid() {
   return useObserver(() => {
     // For every stat config, create a card describing it.
     const statCards = store.dashboardStore._statConfigs.map((statConfig, idx) => {
+      // Has info modal content for this stat?
+      const hasInfo = Object.prototype.hasOwnProperty.call(statInfoModals, statConfig.yAxisVar);
       // Get the stat value from statData
       const aggregationKey = statConfig.aggregation || 'sum';
       const dataKey = `${aggregationKey}_${statConfig.yAxisVar}` as keyof typeof store.dashboardStore.statData;
@@ -86,6 +100,35 @@ export function StatsGrid() {
               {statConfig.title}
             </Text>
             <Group gap={4} align="center" style={{ justifyContent: 'flex-end' }}>
+              {/* Info Icon (if applicable) */}
+              {hasInfo && isHovered && (
+                <>
+                  <IconInfoCircle
+                    size={cardIconSize}
+                    stroke={cardIconStroke}
+                    className={clsx(
+                      statsGridStyles.icon,
+                      isHovered && statsGridStyles.iconHovered,
+                      infoIconHoveredIdx === idx && statsGridStyles.iconInfoHovered,
+                    )}
+                    onMouseEnter={() => setInfoIconHoveredIdx(idx)}
+                    onMouseLeave={() => setInfoIconHoveredIdx(null)}
+                    onClick={() => setInfoModal({ open: true, content: statInfoModals[statConfig.yAxisVar] })}
+                  />
+                  <Modal
+                    opened={infoModal.open}
+                    onClose={() => {
+                      setInfoModal({ open: false, content: '' });
+                      setHoveredIdx(null);
+                      setInfoIconHoveredIdx(null);
+                    }}
+                    title="Stat Explanation"
+                    centered
+                  >
+                    <Text>{statInfoModals[statConfig.yAxisVar]}</Text>
+                  </Modal>
+                </>
+              )}
               {/** Stat Icon */}
               <Icon
                 className={clsx(
