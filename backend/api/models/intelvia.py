@@ -120,10 +120,10 @@ class GuidelineAdherence(models.Model):
     ffp_adherent_count = models.IntegerField()
     plt_adherent_count = models.IntegerField()
     cryo_adherent_count = models.IntegerField()
-    rbc_transfusion_count = models.IntegerField()
-    ffp_transfusion_count = models.IntegerField()
-    plt_transfusion_count = models.IntegerField()
-    cryo_transfusion_count = models.IntegerField()
+    rbc_transfusions_count = models.IntegerField()
+    ffp_transfusions_count = models.IntegerField()
+    plt_transfusions_count = models.IntegerField()
+    cryo_transfusions_count = models.IntegerField()
 
     class Meta:
         db_table = "GuidelineAdherence"

@@ -189,7 +189,7 @@ export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
 export const GUIDELINE_ADHERENT = {
   // Transfusion counts
   rbc_transfusion: {
-    value: 'rbc_transfusion_count',
+    value: 'rbc_transfusions_count',
     label: {
       base: 'RBC Transfusions',
       sum: 'Total RBC Transfusions',
@@ -199,7 +199,7 @@ export const GUIDELINE_ADHERENT = {
     decimals: 0,
   },
   ffp_transfusion: {
-    value: 'ffp_transfusion_count',
+    value: 'ffp_transfusions_count',
     label: {
       base: 'FFP Transfusions',
       sum: 'Total FFP Transfusions',
@@ -209,7 +209,7 @@ export const GUIDELINE_ADHERENT = {
     decimals: 0,
   },
   plt_transfusion: {
-    value: 'plt_transfusion_count',
+    value: 'plt_transfusions_count',
     label: {
       base: 'Platelet Transfusions',
       sum: 'Total Platelet Transfusions',
@@ -219,7 +219,7 @@ export const GUIDELINE_ADHERENT = {
     decimals: 0,
   },
   cryo_transfusion: {
-    value: 'cryo_transfusion_count',
+    value: 'cryo_transfusions_count',
     label: {
       base: 'Cryo Transfusions',
       sum: 'Total Cryo Transfusions',
