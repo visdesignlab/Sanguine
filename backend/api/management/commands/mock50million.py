@@ -399,7 +399,7 @@ class Command(BaseCommand):
         def gen_billing_codes():
             codes, _, _ = get_all_cpt_code_filters()
             for _, bad_pat, _, surg in surgeries:
-                for rank in range(random.randint(1, 55)):
+                for rank in range(random.randint(1, 52)):
                     yield {
                         "visit_no": surg["visit_no"],
                         "cpt_code": fake.random_element(elements=codes),
