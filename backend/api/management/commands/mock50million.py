@@ -474,19 +474,19 @@ class Command(BaseCommand):
                 upper_limit = 1.2
                 uom = "unitless"
             elif test_type == ["PLT", "Platelet Count"]:
-                CRITICAL_LOW_MAX = 50000
+                CRITICAL_LOW_MAX = 30000
                 if last_lab is None:
                     # Normal adult range ~150k–450k per µL
-                    if random.random() < 0.05:
-                        # 5% of labs are critically low (5,000 to 50,000)
+                    if random.random() < 0.1:
+                        # 10% of labs are critically low (5,000 to 30,000)
                         result_value = fake.pydecimal(left_digits=5, right_digits=0, positive=True, min_value=5000, max_value=CRITICAL_LOW_MAX)
                     else:
                         # The normal range
                         result_value = fake.pydecimal(left_digits=6, right_digits=0, positive=True, min_value=150000, max_value=450000)
                 else:
                     # If the last lab was very low, it might rise, or it might stay low.
-                    if last_lab["result_value"] < CRITICAL_LOW_MAX or random.random() < 0.02:
-                        # A small chance (2%) of an *incident* of critical low
+                    if last_lab["result_value"] < CRITICAL_LOW_MAX or random.random() < 0.1:
+                        # A small chance (10%) of an *incident* of critical low
                         delta = fake.random_int(min=-30000, max=30000)
                     else:
                         # Smaller change when already high/normal
@@ -800,6 +800,27 @@ class Command(BaseCommand):
                             plt_units = random.randint(0, 1)
                         elif has_surg and plt < 100000 and random.random() < 0.2:
                             plt_units = max(plt_units, 1)
+                    if plt_units > 0:
+                        # 50% of the time, create a qualifying lab within 2 hours before transfusion
+                        if random.random() < 0.5:
+                            qualifying_lab_time = event_time - timedelta(minutes=random.randint(1, 110))
+                            qualifying_lab = {
+                                "visit_no": visit_no,
+                                "mrn": visit["mrn"],
+                                "lab_id": Faker().unique.random_number(digits=10),
+                                "lab_draw_dtm": qualifying_lab_time.strftime(DATE_FORMAT),
+                                "lab_panel_code": "PLT",
+                                "lab_panel_desc": "Platelet Panel",
+                                "result_dtm": (qualifying_lab_time + timedelta(hours=1)).strftime(DATE_FORMAT),
+                                "result_code": "PLT",
+                                "result_loinc": "PLT",
+                                "result_desc": random.choice(["PLT", "Platelet Count"]),
+                                "result_value": random.randint(5000, 15000),
+                                "uom_code": "cells/uL",
+                                "lower_limit": 150000,
+                                "upper_limit": 450000,
+                            }
+                            labs.append((surg, qualifying_lab))
                     cryo_units = 0
                     fib = lab_test_extrema["Fibrinogen"]
                     if fib is not None:
