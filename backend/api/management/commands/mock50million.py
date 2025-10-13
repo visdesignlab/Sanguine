@@ -474,13 +474,27 @@ class Command(BaseCommand):
                 upper_limit = 1.2
                 uom = "unitless"
             elif test_type == ["PLT", "Platelet Count"]:
+                CRITICAL_LOW_MAX = 50000
                 if last_lab is None:
                     # Normal adult range ~150k–450k per µL
-                    result_value = fake.pydecimal(left_digits=6, right_digits=0, positive=True, min_value=150000, max_value=450000)
+                    if random.random() < 0.05:
+                        # 5% of labs are critically low (5,000 to 50,000)
+                        result_value = fake.pydecimal(left_digits=5, right_digits=0, positive=True, min_value=5000, max_value=CRITICAL_LOW_MAX)
+                    else:
+                        # The normal range
+                        result_value = fake.pydecimal(left_digits=6, right_digits=0, positive=True, min_value=150000, max_value=450000)
                 else:
-                    # Small random walk toward/around normal
-                    delta = fake.random_int(min=-30000, max=30000)
+                    # If the last lab was very low, it might rise, or it might stay low.
+                    if last_lab["result_value"] < CRITICAL_LOW_MAX or random.random() < 0.02:
+                        # A small chance (2%) of an *incident* of critical low
+                        delta = fake.random_int(min=-30000, max=30000)
+                    else:
+                        # Smaller change when already high/normal
+                        delta = fake.random_int(min=-15000, max=15000)
+                    
+                    # Ensure result_value is between 5000 and 700000
                     result_value = max(5000, min(700000, int(last_lab["result_value"]) + delta))
+
                 lower_limit = 150000
                 upper_limit = 450000
                 uom = "cells/uL"
