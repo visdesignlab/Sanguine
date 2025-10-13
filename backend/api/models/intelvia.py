@@ -89,17 +89,25 @@ class VisitAttributes(models.Model):
     iron = models.BooleanField()
     antifibrinolytic = models.BooleanField()
 
-    rbc_adherent = models.IntegerField()
-    ffp_adherent = models.IntegerField()
-    plt_adherent = models.IntegerField()
-    cryo_adherent = models.IntegerField()
-    overall_adherent = models.IntegerField()
+    rbc_adherent_count = models.IntegerField()
+    ffp_adherent_count = models.IntegerField()
+    plt_adherent_count = models.IntegerField()
+    cryo_adherent_count = models.IntegerField()
+
+    rbc_transfusions_count = models.IntegerField()
+    ffp_transfusions_count = models.IntegerField()
+    plt_transfusions_count = models.IntegerField()
+    cryo_transfusions_count = models.IntegerField()
+
+    rbc_adherence = models.IntegerField()
+    ffp_adherence = models.IntegerField()
+    plt_adherence = models.IntegerField()
+    cryo_adherence = models.IntegerField()
 
     rbc_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
     ffp_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
     plt_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
     cryo_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
-    overall_cost = models.DecimalField(max_digits=6, decimal_places=2)
 
     class Meta:
         db_table = "VisitAttributes"
@@ -108,10 +116,14 @@ class VisitAttributes(models.Model):
 
 class GuidelineAdherence(models.Model):
     visit_no = models.OneToOneField(Visit, on_delete=models.CASCADE, db_column="visit_no", primary_key=True, related_name="guideline_adherence")
-    rbc_adherent = models.IntegerField()
-    ffp_adherent = models.IntegerField()
-    plt_adherent = models.IntegerField()
-    cryo_adherent = models.IntegerField()
+    rbc_adherent_count = models.IntegerField()
+    ffp_adherent_count = models.IntegerField()
+    plt_adherent_count = models.IntegerField()
+    cryo_adherent_count = models.IntegerField()
+    rbc_transfusion_count = models.IntegerField()
+    ffp_transfusion_count = models.IntegerField()
+    plt_transfusion_count = models.IntegerField()
+    cryo_transfusion_count = models.IntegerField()
 
     class Meta:
         db_table = "GuidelineAdherence"

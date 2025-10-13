@@ -93,10 +93,10 @@ export class DashboardStore {
       statId: '4', yAxisVar: 'total_blood_product_cost', aggregation: 'sum', title: 'Total Blood Product Costs',
     },
     {
-      statId: '5', yAxisVar: 'rbc_adherent', aggregation: 'avg', title: 'Guideline Adherent RBC Transfusions',
+      statId: '5', yAxisVar: 'rbc_adherence', aggregation: 'avg', title: 'Guideline Adherent RBC Transfusions',
     },
     {
-      statId: '6', yAxisVar: 'plt_adherent', aggregation: 'avg', title: 'Guideline Adherent Platelet Transfusions',
+      statId: '6', yAxisVar: 'plt_adherence', aggregation: 'avg', title: 'Guideline Adherent Platelet Transfusions',
     },
   ];
 
@@ -515,7 +515,7 @@ export class DashboardStore {
       let formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType);
 
       // For adherence variables, don't include full units
-      if (yAxisVar.includes('adherent')) {
+      if (yAxisVar.includes('adherence')) {
         formattedValue = formatValueForDisplay(yAxisVar, currentValue, aggType, false);
       }
 

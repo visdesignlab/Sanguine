@@ -62,11 +62,20 @@ class Command(BaseCommand):
             pa.field("iron", pa.bool8(), nullable=True),
             pa.field("antifibrinolytic", pa.bool8(), nullable=True),
 
-            pa.field("rbc_adherent", pa.uint16(), nullable=False),
-            pa.field("ffp_adherent", pa.uint16(), nullable=False),
-            pa.field("plt_adherent", pa.uint16(), nullable=False),
-            pa.field("cryo_adherent", pa.uint16(), nullable=False),
-            pa.field("overall_adherent", pa.uint16(), nullable=False),     # computed/stored
+            pa.field("rbc_adherent_count", pa.uint16(), nullable=False),
+            pa.field("ffp_adherent_count", pa.uint16(), nullable=False),
+            pa.field("plt_adherent_count", pa.uint16(), nullable=False),
+            pa.field("cryo_adherent_count", pa.uint16(), nullable=False),
+
+            pa.field("rbc_transfusions_count", pa.uint16(), nullable=False),
+            pa.field("ffp_transfusions_count", pa.uint16(), nullable=False),
+            pa.field("plt_transfusions_count", pa.uint16(), nullable=False),
+            pa.field("cryo_transfusions_count", pa.uint16(), nullable=False),
+
+            pa.field("rbc_adherence", pa.uint16(), nullable=False),
+            pa.field("ffp_adherence", pa.uint16(), nullable=False),
+            pa.field("plt_adherence", pa.uint16(), nullable=False),
+            pa.field("cryo_adherence", pa.uint16(), nullable=False),
         ])
 
         table = pa.Table.from_pylist(visits, schema=visit_attributes_schema)

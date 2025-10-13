@@ -188,7 +188,7 @@ export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
 // Guideline adherence ---------------------------------------------
 export const GUIDELINE_ADHERENT = {
   rbc: {
-    value: 'rbc_adherent',
+    value: 'rbc_adherent_count',
     label: {
       base: 'Guideline Adherent RBC Transfusions',
       sum: 'Total Guideline Adherent RBC Transfusions',
@@ -199,7 +199,7 @@ export const GUIDELINE_ADHERENT = {
     decimals: 0,
   },
   ffp: {
-    value: 'ffp_adherent',
+    value: 'ffp_adherent_count',
     label: {
       base: 'Guideline Adherent FFP Transfusions',
       sum: 'Total Guideline Adherent FFP Transfusions',
@@ -209,7 +209,7 @@ export const GUIDELINE_ADHERENT = {
     decimals: 0,
   },
   plt: {
-    value: 'plt_adherent',
+    value: 'plt_adherent_count',
     label: {
       base: 'Guideline Adherent Platelet Transfusions',
       sum: 'Total Guideline Adherent Platelet Transfusions',
@@ -219,7 +219,7 @@ export const GUIDELINE_ADHERENT = {
     decimals: 0,
   },
   cryo: {
-    value: 'cryo_adherent',
+    value: 'cryo_adherent_count',
     label: {
       base: 'Guideline Adherent Cryo Transfusions',
       sum: 'Total Guideline Adherent Cryo Transfusions',
@@ -232,7 +232,7 @@ export const GUIDELINE_ADHERENT = {
 
 // Total guideline adherence (Across all blood products)
 export const OVERALL_GUIDELINE_ADHERENT = {
-  value: 'overall_adherent',
+  value: 'overall_adherent_count',
   label: {
     base: 'Guideline Adherent Transfusions',
     sum: 'Total Guideline Adherent Transfusions',

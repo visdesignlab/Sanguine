@@ -10,88 +10,101 @@ def create_materialize_proc(apps, schema_editor):
 
         INSERT INTO GuidelineAdherence (
             visit_no,
-            rbc_adherent,
-            ffp_adherent,
-            plt_adherent,
-            cryo_adherent
+            rbc_adherent_count,
+            ffp_adherent_count,
+            plt_adherent_count,
+            cryo_adherent_count,
+            rbc_transfusions_count,
+            ffp_transfusions_count,
+            plt_transfusions_count,
+            cryo_transfusions_count
         )
         SELECT
             t.visit_no,
-            /* RBC adherence: HGB/Hemoglobin <= 7.5 within 2 hours prior */
-            SUM(
-                CASE
-                    WHEN (COALESCE(t.rbc_units, 0) > 0 OR COALESCE(t.rbc_vol, 0) > 0) THEN
-                        CASE
-                            WHEN (
-                                SELECT l.result_value
-                                FROM Lab l
-                                WHERE l.visit_no = t.visit_no
-                                  AND UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN')
-                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
-                                ORDER BY l.lab_draw_dtm DESC
-                                LIMIT 1
-                            ) <= 7.5 THEN 1 ELSE 0
-                        END
-                    ELSE 0
-                END
-            ) AS rbc_adherent,
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN (COALESCE(t.rbc_units, 0) > 0 OR COALESCE(t.rbc_vol, 0) > 0) THEN
+                            CASE
+                                WHEN (
+                                    SELECT l.result_value
+                                    FROM Lab l
+                                    WHERE l.visit_no = t.visit_no
+                                      AND UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN')
+                                      AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
+                                    ORDER BY l.lab_draw_dtm DESC
+                                    LIMIT 1
+                                ) <= 7.5 THEN 1 ELSE 0
+                            END
+                        ELSE 0
+                    END
+                ), 0
+            ) AS rbc_adherent_count,
 
-            /* FFP adherence: INR >= 1.5 within 2 hours prior */
-            SUM(
-                CASE
-                    WHEN (COALESCE(t.ffp_units, 0) > 0 OR COALESCE(t.ffp_vol, 0) > 0) THEN
-                        CASE
-                            WHEN (
-                                SELECT l.result_value
-                                FROM Lab l
-                                WHERE l.visit_no = t.visit_no
-                                  AND UPPER(l.result_desc) = 'INR'
-                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
-                                ORDER BY l.lab_draw_dtm DESC
-                                LIMIT 1
-                            ) >= 1.5 THEN 1 ELSE 0
-                        END
-                    ELSE 0
-                END
-            ) AS ffp_adherent,
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN (COALESCE(t.ffp_units, 0) > 0 OR COALESCE(t.ffp_vol, 0) > 0) THEN
+                            CASE
+                                WHEN (
+                                    SELECT l.result_value
+                                    FROM Lab l
+                                    WHERE l.visit_no = t.visit_no
+                                      AND UPPER(l.result_desc) = 'INR'
+                                      AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
+                                    ORDER BY l.lab_draw_dtm DESC
+                                    LIMIT 1
+                                ) >= 1.5 THEN 1 ELSE 0
+                            END
+                        ELSE 0
+                    END
+                ), 0
+            ) AS ffp_adherent_count,
 
-            /* Platelet adherence: PLT/Platelet Count >= 15000 within 2 hours prior */
-            SUM(
-                CASE
-                    WHEN (COALESCE(t.plt_units, 0) > 0 OR COALESCE(t.plt_vol, 0) > 0) THEN
-                        CASE
-                            WHEN (
-                                SELECT l.result_value
-                                FROM Lab l
-                                WHERE l.visit_no = t.visit_no
-                                  AND UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT')
-                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
-                                ORDER BY l.lab_draw_dtm DESC
-                                LIMIT 1
-                            ) >= 15000 THEN 1 ELSE 0
-                        END
-                    ELSE 0
-                END
-            ) AS plt_adherent,
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN (COALESCE(t.plt_units, 0) > 0 OR COALESCE(t.plt_vol, 0) > 0) THEN
+                            CASE
+                                WHEN (
+                                    SELECT l.result_value
+                                    FROM Lab l
+                                    WHERE l.visit_no = t.visit_no
+                                      AND UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT')
+                                      AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
+                                    ORDER BY l.lab_draw_dtm DESC
+                                    LIMIT 1
+                                ) <= 15000 THEN 1 ELSE 0
+                            END
+                        ELSE 0
+                    END
+                ), 0
+            ) AS plt_adherent_count,
 
-            /* Cryo adherence: Fibrinogen >= 175 within 2 hours prior */
-            SUM(
-                CASE
-                    WHEN (COALESCE(t.cryo_units, 0) > 0 OR COALESCE(t.cryo_vol, 0) > 0) THEN
-                        CASE
-                            WHEN (
-                                SELECT l.result_value
-                                FROM Lab l
-                                WHERE l.visit_no = t.visit_no
-                                  AND UPPER(l.result_desc) = 'FIBRINOGEN'
-                                  AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
-                                ORDER BY l.lab_draw_dtm DESC
-                                LIMIT 1
-                            ) >= 175 THEN 1 ELSE 0
-                        END
-                    ELSE 0
-                END
-            ) AS cryo_adherent
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN (COALESCE(t.cryo_units, 0) > 0 OR COALESCE(t.cryo_vol, 0) > 0) THEN
+                            CASE
+                                WHEN (
+                                    SELECT l.result_value
+                                    FROM Lab l
+                                    WHERE l.visit_no = t.visit_no
+                                      AND UPPER(l.result_desc) = 'FIBRINOGEN'
+                                      AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
+                                    ORDER BY l.lab_draw_dtm DESC
+                                    LIMIT 1
+                                ) <= 175 THEN 1 ELSE 0
+                            END
+                        ELSE 0
+                    END
+                ), 0
+            ) AS cryo_adherent_count,
+
+            COALESCE(COUNT(CASE WHEN COALESCE(t.rbc_units, 0) > 0 THEN 1 ELSE NULL END), 0) AS rbc_transfusions_count,
+            COALESCE(COUNT(CASE WHEN COALESCE(t.ffp_units, 0) > 0 THEN 1 ELSE NULL END), 0) AS ffp_transfusions_count,
+            COALESCE(COUNT(CASE WHEN COALESCE(t.plt_units, 0) > 0 THEN 1 ELSE NULL END), 0) AS plt_transfusions_count,
+            COALESCE(COUNT(CASE WHEN COALESCE(t.cryo_units, 0) > 0 THEN 1 ELSE NULL END), 0) AS cryo_transfusions_count
         FROM Transfusion t
         GROUP BY t.visit_no;
 
@@ -124,10 +137,18 @@ def create_materialize_proc(apps, schema_editor):
             b12,
             iron,
             antifibrinolytic,
-            rbc_adherent,
-            ffp_adherent,
-            plt_adherent,
-            cryo_adherent
+            rbc_adherent_count,
+            ffp_adherent_count,
+            plt_adherent_count,
+            cryo_adherent_count,
+            rbc_transfusions_count,
+            ffp_transfusions_count,
+            plt_transfusions_count,
+            cryo_transfusions_count,
+            rbc_adherence,
+            ffp_adherence,
+            plt_adherence,
+            cryo_adherence
         )
         SELECT
             v.visit_no,
@@ -155,10 +176,18 @@ def create_materialize_proc(apps, schema_editor):
             CASE WHEN m.has_b12 = 1 THEN TRUE ELSE FALSE END AS b12,
             CASE WHEN m.has_iron = 1 THEN TRUE ELSE FALSE END AS iron,
             CASE WHEN m.has_antifibrinolytic = 1 THEN TRUE ELSE FALSE END AS antifibrinolytic,
-            COALESCE(ga.rbc_adherent, 0) AS rbc_adherent,
-            COALESCE(ga.ffp_adherent, 0) AS ffp_adherent,
-            COALESCE(ga.plt_adherent, 0) AS plt_adherent,
-            COALESCE(ga.cryo_adherent, 0) AS cryo_adherent
+            COALESCE(ga.rbc_adherent_count, 0) AS rbc_adherent_count,
+            COALESCE(ga.ffp_adherent_count, 0) AS ffp_adherent_count,
+            COALESCE(ga.plt_adherent_count, 0) AS plt_adherent_count,
+            COALESCE(ga.cryo_adherent_count, 0) AS cryo_adherent_count,
+            COALESCE(ga.rbc_transfusions_count, 0) AS rbc_transfusions_count,
+            COALESCE(ga.ffp_transfusions_count, 0) AS ffp_transfusions_count,
+            COALESCE(ga.plt_transfusions_count, 0) AS plt_transfusions_count,
+            COALESCE(ga.cryo_transfusions_count, 0) AS cryo_transfusions_count,
+            COALESCE(COALESCE(ga.rbc_adherent_count, 0) / NULLIF(COALESCE(ga.rbc_transfusions_count, 1), 0), 0) AS rbc_adherence,
+            COALESCE(COALESCE(ga.ffp_adherent_count, 0) / NULLIF(COALESCE(ga.ffp_transfusions_count, 1), 0), 0) AS ffp_adherence,
+            COALESCE(COALESCE(ga.plt_adherent_count, 0) / NULLIF(COALESCE(ga.plt_transfusions_count, 1), 0), 0) AS plt_adherence,
+            COALESCE(COALESCE(ga.cryo_adherent_count, 0) / NULLIF(COALESCE(ga.cryo_transfusions_count, 1), 0), 0) AS cryo_adherence
         FROM Visit v
         LEFT JOIN (
             SELECT
@@ -218,10 +247,14 @@ class Migration(migrations.Migration):
 
             CREATE TABLE GuidelineAdherence (
                 visit_no BIGINT,
-                rbc_adherent SMALLINT UNSIGNED DEFAULT 0,
-                ffp_adherent SMALLINT UNSIGNED DEFAULT 0,
-                plt_adherent SMALLINT UNSIGNED DEFAULT 0,
-                cryo_adherent SMALLINT UNSIGNED DEFAULT 0,
+                rbc_adherent_count SMALLINT UNSIGNED DEFAULT 0,
+                ffp_adherent_count SMALLINT UNSIGNED DEFAULT 0,
+                plt_adherent_count SMALLINT UNSIGNED DEFAULT 0,
+                cryo_adherent_count SMALLINT UNSIGNED DEFAULT 0,
+                rbc_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
+                ffp_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
+                plt_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
+                cryo_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
                 PRIMARY KEY (visit_no),
                 FOREIGN KEY (visit_no) REFERENCES Visit(visit_no)
             ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
@@ -267,11 +300,20 @@ class Migration(migrations.Migration):
                 iron BOOLEAN,
                 antifibrinolytic BOOLEAN,
 
-                rbc_adherent SMALLINT UNSIGNED DEFAULT 0,
-                ffp_adherent SMALLINT UNSIGNED DEFAULT 0,
-                plt_adherent SMALLINT UNSIGNED DEFAULT 0,
-                cryo_adherent SMALLINT UNSIGNED DEFAULT 0,
-                overall_adherent SMALLINT UNSIGNED AS (rbc_adherent + ffp_adherent + plt_adherent + cryo_adherent) STORED,
+                rbc_adherent_count SMALLINT UNSIGNED DEFAULT 0,
+                ffp_adherent_count SMALLINT UNSIGNED DEFAULT 0,
+                plt_adherent_count SMALLINT UNSIGNED DEFAULT 0,
+                cryo_adherent_count SMALLINT UNSIGNED DEFAULT 0,
+
+                rbc_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
+                ffp_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
+                plt_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
+                cryo_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
+
+                rbc_adherence SMALLINT UNSIGNED DEFAULT 0,
+                ffp_adherence SMALLINT UNSIGNED DEFAULT 0,
+                plt_adherence SMALLINT UNSIGNED DEFAULT 0,
+                cryo_adherence SMALLINT UNSIGNED DEFAULT 0,
 
                 PRIMARY KEY (visit_no),
                 FOREIGN KEY (visit_no) REFERENCES Visit(visit_no),
