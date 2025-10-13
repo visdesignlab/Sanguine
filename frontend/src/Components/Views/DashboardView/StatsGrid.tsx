@@ -22,10 +22,10 @@ import { DashboardAggYAxisVar, DashboardStatData } from '../../../Types/applicat
 import { getIconForVar } from '../../../Utils/icons';
 
 const statInfoModals: Record<string, string> = {
-  rbc_adherence: 'Guideline Adherent RBC Transfusions: Percentage of RBC transfusions that met clinical guidelines.',
-  plt_adherence: 'Guideline Adherent Platelet Transfusions: Percentage of platelet transfusions that met clinical guidelines.',
-  ffp_adherence: 'Guideline Adherent FFP Transfusions: Percentage of FFP transfusions that met clinical guidelines.',
-  cryo_adherence: 'Guideline Adherent Cryo Transfusions: Percentage of cryoprecipitate transfusions that met clinical guidelines.',
+  rbc_adherence: 'Percentage of RBC transfusions that met clinical guidelines.',
+  plt_adherence: 'Percentage of platelet transfusions that met clinical guidelines.',
+  ffp_adherence: 'Percentage of FFP transfusions that met clinical guidelines.',
+  cryo_adherence: 'Percentage of cryoprecipitate transfusions that met clinical guidelines.',
 };
 
 export function StatsGrid() {
@@ -53,7 +53,7 @@ export function StatsGrid() {
     // For every stat config, create a card describing it.
     const statCards = store.dashboardStore._statConfigs.map((statConfig, idx) => {
       // Has info modal content for this stat?
-      const hasInfo = Object.prototype.hasOwnProperty.call(statInfoModals, statConfig.yAxisVar);
+      const hasInfo = statConfig.yAxisVar in statInfoModals;
       // Get the stat value from statData
       const aggregationKey = statConfig.aggregation || 'sum';
       const dataKey = `${aggregationKey}_${statConfig.yAxisVar}` as keyof typeof store.dashboardStore.statData;
@@ -122,7 +122,7 @@ export function StatsGrid() {
                       setHoveredIdx(null);
                       setInfoIconHoveredIdx(null);
                     }}
-                    title="Stat Explanation"
+                    title={statConfig.title}
                     centered
                   >
                     <Text>{statInfoModals[statConfig.yAxisVar]}</Text>
