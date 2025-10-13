@@ -54,6 +54,12 @@ export function makeHumanReadableValues(columnName: keyof typeof columnNameMap, 
     return (value === 1 || value === true) ? 'Yes' : 'No';
   }
   if (
+    ['rbc_adherence', 'ffp_adherence', 'plt_adherence', 'cryo_adherence'].includes(columnName)
+    && (value === null || value === undefined)
+  ) {
+    return 'N/A';
+  }
+  if (
     (columnName === 'apr_drg_weight' || columnName === 'ms_drg_weight')
     && typeof value === 'number'
   ) {

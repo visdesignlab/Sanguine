@@ -187,46 +187,87 @@ export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
 
 // Guideline adherence ---------------------------------------------
 export const GUIDELINE_ADHERENT = {
-  rbc: {
-    value: 'rbc_adherent_count',
+  // Transfusion counts
+  rbc_transfusion: {
+    value: 'rbc_transfusion_count',
     label: {
-      base: 'Guideline Adherent RBC Transfusions',
-      sum: 'Total Guideline Adherent RBC Transfusions',
-      avg: 'Percentage of Guideline Adherent RBC Transfusions',
+      base: 'RBC Transfusions',
+      sum: 'Total RBC Transfusions',
+      avg: 'Average RBC Transfusions',
     },
-    // Adherence units & decimal truncation for display
-    units: { sum: 'Adherent RBC Transfusions', avg: '% Adherent RBC Transfusions' },
+    units: { sum: 'RBC Transfusions', avg: 'RBC Transfusions' },
     decimals: 0,
   },
-  ffp: {
-    value: 'ffp_adherent_count',
+  ffp_transfusion: {
+    value: 'ffp_transfusion_count',
     label: {
-      base: 'Guideline Adherent FFP Transfusions',
-      sum: 'Total Guideline Adherent FFP Transfusions',
-      avg: 'Percentage of Guideline Adherent FFP Transfusions',
+      base: 'FFP Transfusions',
+      sum: 'Total FFP Transfusions',
+      avg: 'Average FFP Transfusions',
     },
-    units: { sum: 'Adherent Plasma Transfusions', avg: '% Adherent Plasma Transfusions' },
+    units: { sum: 'FFP Transfusions', avg: 'FFP Transfusions' },
     decimals: 0,
   },
-  plt: {
-    value: 'plt_adherent_count',
+  plt_transfusion: {
+    value: 'plt_transfusion_count',
     label: {
-      base: 'Guideline Adherent Platelet Transfusions',
-      sum: 'Total Guideline Adherent Platelet Transfusions',
-      avg: 'Percentage of Adherent Platelet Transfusions',
+      base: 'Platelet Transfusions',
+      sum: 'Total Platelet Transfusions',
+      avg: 'Average Platelet Transfusions',
     },
-    units: { sum: 'Adherent Platelet Transfusions', avg: '% Adherent Platelet Transfusions' },
+    units: { sum: 'Platelet Transfusions', avg: 'Platelet Transfusions' },
     decimals: 0,
   },
-  cryo: {
-    value: 'cryo_adherent_count',
+  cryo_transfusion: {
+    value: 'cryo_transfusion_count',
     label: {
-      base: 'Guideline Adherent Cryo Transfusions',
-      sum: 'Total Guideline Adherent Cryo Transfusions',
-      avg: 'Percentage of Guideline Adherent Cryo Transfusions',
+      base: 'Cryo Transfusions',
+      sum: 'Total Cryo Transfusions',
+      avg: 'Average Cryo Transfusions',
     },
-    units: { sum: 'Adherent Cryo Transfusions', avg: '% Adherent Cryo Transfusions' },
+    units: { sum: 'Cryo Transfusions', avg: 'Cryo Transfusions' },
     decimals: 0,
+  },
+  // Add adherence ratios
+  rbc_adherence: {
+    value: 'rbc_adherence',
+    label: {
+      base: 'RBC Guideline Adherence',
+      sum: 'RBC Guideline Adherence',
+      avg: 'RBC Guideline Adherence',
+    },
+    units: { sum: '%', avg: '%' },
+    decimals: 2,
+  },
+  ffp_adherence: {
+    value: 'ffp_adherence',
+    label: {
+      base: 'FFP Guideline Adherence',
+      sum: 'FFP Guideline Adherence',
+      avg: 'FFP Guideline Adherence',
+    },
+    units: { sum: '%', avg: '%' },
+    decimals: 2,
+  },
+  plt_adherence: {
+    value: 'plt_adherence',
+    label: {
+      base: 'Platelet Guideline Adherence',
+      sum: 'Platelet Guideline Adherence',
+      avg: 'Platelet Guideline Adherence',
+    },
+    units: { sum: '%', avg: '%' },
+    decimals: 2,
+  },
+  cryo_adherence: {
+    value: 'cryo_adherence',
+    label: {
+      base: 'Cryo Guideline Adherence',
+      sum: 'Cryo Guideline Adherence',
+      avg: 'Cryo Guideline Adherence',
+    },
+    units: { sum: '%', avg: '%' },
+    decimals: 2,
   },
 } as const;
 

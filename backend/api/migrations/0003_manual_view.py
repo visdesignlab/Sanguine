@@ -184,10 +184,22 @@ def create_materialize_proc(apps, schema_editor):
             COALESCE(ga.ffp_transfusions_count, 0) AS ffp_transfusions_count,
             COALESCE(ga.plt_transfusions_count, 0) AS plt_transfusions_count,
             COALESCE(ga.cryo_transfusions_count, 0) AS cryo_transfusions_count,
-            COALESCE(COALESCE(ga.rbc_adherent_count, 0) / NULLIF(COALESCE(ga.rbc_transfusions_count, 1), 0), 0) AS rbc_adherence,
-            COALESCE(COALESCE(ga.ffp_adherent_count, 0) / NULLIF(COALESCE(ga.ffp_transfusions_count, 1), 0), 0) AS ffp_adherence,
-            COALESCE(COALESCE(ga.plt_adherent_count, 0) / NULLIF(COALESCE(ga.plt_transfusions_count, 1), 0), 0) AS plt_adherence,
-            COALESCE(COALESCE(ga.cryo_adherent_count, 0) / NULLIF(COALESCE(ga.cryo_transfusions_count, 1), 0), 0) AS cryo_adherence
+            CASE
+                WHEN ga.rbc_transfusions_count > 0 THEN ga.rbc_adherent_count / ga.rbc_transfusions_count
+                ELSE NULL
+            END AS rbc_adherence,
+            CASE
+                WHEN ga.ffp_transfusions_count > 0 THEN ga.ffp_adherent_count / ga.ffp_transfusions_count
+                ELSE NULL
+            END AS ffp_adherence,
+            CASE
+                WHEN ga.plt_transfusions_count > 0 THEN ga.plt_adherent_count / ga.plt_transfusions_count
+                ELSE NULL
+            END AS plt_adherence,
+            CASE
+                WHEN ga.cryo_transfusions_count > 0 THEN ga.cryo_adherent_count / ga.cryo_transfusions_count
+                ELSE NULL
+            END AS cryo_adherence
         FROM Visit v
         LEFT JOIN (
             SELECT
@@ -310,10 +322,10 @@ class Migration(migrations.Migration):
                 plt_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
                 cryo_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
 
-                rbc_adherence SMALLINT UNSIGNED DEFAULT 0,
-                ffp_adherence SMALLINT UNSIGNED DEFAULT 0,
-                plt_adherence SMALLINT UNSIGNED DEFAULT 0,
-                cryo_adherence SMALLINT UNSIGNED DEFAULT 0,
+                rbc_adherence SMALLINT UNSIGNED DEFAULT NULL,
+                ffp_adherence SMALLINT UNSIGNED DEFAULT NULL,
+                plt_adherence SMALLINT UNSIGNED DEFAULT NULL,
+                cryo_adherence SMALLINT UNSIGNED DEFAULT NULL,
 
                 PRIMARY KEY (visit_no),
                 FOREIGN KEY (visit_no) REFERENCES Visit(visit_no),
