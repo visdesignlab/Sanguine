@@ -21,90 +21,81 @@ def create_materialize_proc(apps, schema_editor):
         )
         SELECT
             t.visit_no,
-            COALESCE(
-                SUM(
-                    CASE
-                        WHEN (COALESCE(t.rbc_units, 0) > 0 OR COALESCE(t.rbc_vol, 0) > 0) THEN
-                            CASE
-                                WHEN (
-                                    SELECT l.result_value
-                                    FROM Lab l
-                                    WHERE l.visit_no = t.visit_no
-                                      AND UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN')
-                                      AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
-                                    ORDER BY l.lab_draw_dtm DESC
-                                    LIMIT 1
-                                ) <= 7.5 THEN 1 ELSE 0
-                            END
-                        ELSE 0
-                    END
-                ), 0
-            ) AS rbc_adherent_count,
 
-            COALESCE(
-                SUM(
-                    CASE
-                        WHEN (COALESCE(t.ffp_units, 0) > 0 OR COALESCE(t.ffp_vol, 0) > 0) THEN
-                            CASE
-                                WHEN (
-                                    SELECT l.result_value
-                                    FROM Lab l
-                                    WHERE l.visit_no = t.visit_no
-                                      AND UPPER(l.result_desc) = 'INR'
-                                      AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
-                                    ORDER BY l.lab_draw_dtm DESC
-                                    LIMIT 1
-                                ) >= 1.5 THEN 1 ELSE 0
-                            END
-                        ELSE 0
-                    END
-                ), 0
-            ) AS ffp_adherent_count,
+            -- RBC adherent events
+            COALESCE(SUM(
+                CASE
+                    WHEN (COALESCE(t.rbc_units, 0) > 0 OR COALESCE(t.rbc_vol, 0) > 0)
+                    AND (
+                        SELECT l.result_value
+                        FROM Lab l
+                        WHERE l.visit_no = t.visit_no
+                          AND UPPER(l.result_desc) IN ('HGB', 'HEMOGLOBIN')
+                          AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
+                        ORDER BY l.lab_draw_dtm DESC
+                        LIMIT 1
+                    ) <= 7.5
+                    THEN 1 ELSE 0
+                END
+            ), 0) AS rbc_adherent_count,
 
-            COALESCE(
-                SUM(
-                    CASE
-                        WHEN (COALESCE(t.plt_units, 0) > 0 OR COALESCE(t.plt_vol, 0) > 0) THEN
-                            CASE
-                                WHEN (
-                                    SELECT l.result_value
-                                    FROM Lab l
-                                    WHERE l.visit_no = t.visit_no
-                                      AND UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT')
-                                      AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
-                                    ORDER BY l.lab_draw_dtm DESC
-                                    LIMIT 1
-                                ) <= 15000 THEN 1 ELSE 0
-                            END
-                        ELSE 0
-                    END
-                ), 0
-            ) AS plt_adherent_count,
+            -- FFP adherent events
+            COALESCE(SUM(
+                CASE
+                    WHEN (COALESCE(t.ffp_units, 0) > 0 OR COALESCE(t.ffp_vol, 0) > 0)
+                    AND (
+                        SELECT l.result_value
+                        FROM Lab l
+                        WHERE l.visit_no = t.visit_no
+                          AND UPPER(l.result_desc) = 'INR'
+                          AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
+                        ORDER BY l.lab_draw_dtm DESC
+                        LIMIT 1
+                    ) >= 1.5
+                    THEN 1 ELSE 0
+                END
+            ), 0) AS ffp_adherent_count,
 
-            COALESCE(
-                SUM(
-                    CASE
-                        WHEN (COALESCE(t.cryo_units, 0) > 0 OR COALESCE(t.cryo_vol, 0) > 0) THEN
-                            CASE
-                                WHEN (
-                                    SELECT l.result_value
-                                    FROM Lab l
-                                    WHERE l.visit_no = t.visit_no
-                                      AND UPPER(l.result_desc) = 'FIBRINOGEN'
-                                      AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
-                                    ORDER BY l.lab_draw_dtm DESC
-                                    LIMIT 1
-                                ) <= 175 THEN 1 ELSE 0
-                            END
-                        ELSE 0
-                    END
-                ), 0
-            ) AS cryo_adherent_count,
+            -- PLT adherent events
+            COALESCE(SUM(
+                CASE
+                    WHEN (COALESCE(t.plt_units, 0) > 0 OR COALESCE(t.plt_vol, 0) > 0)
+                    AND (
+                        SELECT l.result_value
+                        FROM Lab l
+                        WHERE l.visit_no = t.visit_no
+                          AND UPPER(l.result_desc) IN ('PLT', 'PLATELET COUNT')
+                          AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
+                        ORDER BY l.lab_draw_dtm DESC
+                        LIMIT 1
+                    ) <= 15000
+                    THEN 1 ELSE 0
+                END
+            ), 0) AS plt_adherent_count,
 
-            COALESCE(COUNT(CASE WHEN COALESCE(t.rbc_units, 0) > 0 THEN 1 ELSE NULL END), 0) AS rbc_transfusions_count,
-            COALESCE(COUNT(CASE WHEN COALESCE(t.ffp_units, 0) > 0 THEN 1 ELSE NULL END), 0) AS ffp_transfusions_count,
-            COALESCE(COUNT(CASE WHEN COALESCE(t.plt_units, 0) > 0 THEN 1 ELSE NULL END), 0) AS plt_transfusions_count,
-            COALESCE(COUNT(CASE WHEN COALESCE(t.cryo_units, 0) > 0 THEN 1 ELSE NULL END), 0) AS cryo_transfusions_count
+            -- CRYO adherent events
+            COALESCE(SUM(
+                CASE
+                    WHEN (COALESCE(t.cryo_units, 0) > 0 OR COALESCE(t.cryo_vol, 0) > 0)
+                    AND (
+                        SELECT l.result_value
+                        FROM Lab l
+                        WHERE l.visit_no = t.visit_no
+                          AND UPPER(l.result_desc) = 'FIBRINOGEN'
+                          AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
+                        ORDER BY l.lab_draw_dtm DESC
+                        LIMIT 1
+                    ) <= 175
+                    THEN 1 ELSE 0
+                END
+            ), 0) AS cryo_adherent_count,
+
+            -- RBC transfusion events
+            COALESCE(SUM(CASE WHEN (COALESCE(t.rbc_units, 0) > 0 OR COALESCE(t.rbc_vol, 0) > 0) THEN 1 ELSE 0 END), 0) AS rbc_transfusions_count,
+            COALESCE(SUM(CASE WHEN (COALESCE(t.ffp_units, 0) > 0 OR COALESCE(t.ffp_vol, 0) > 0) THEN 1 ELSE 0 END), 0) AS ffp_transfusions_count,
+            COALESCE(SUM(CASE WHEN (COALESCE(t.plt_units, 0) > 0 OR COALESCE(t.plt_vol, 0) > 0) THEN 1 ELSE 0 END), 0) AS plt_transfusions_count,
+            COALESCE(SUM(CASE WHEN (COALESCE(t.cryo_units, 0) > 0 OR COALESCE(t.cryo_vol, 0) > 0) THEN 1 ELSE 0 END), 0) AS cryo_transfusions_count
+
         FROM Transfusion t
         GROUP BY t.visit_no;
 
