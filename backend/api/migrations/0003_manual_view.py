@@ -180,19 +180,19 @@ def create_materialize_proc(apps, schema_editor):
             COALESCE(ga.plt_transfusions_count, 0) AS plt_transfusions_count,
             COALESCE(ga.cryo_transfusions_count, 0) AS cryo_transfusions_count,
             CASE
-                WHEN ga.rbc_transfusions_count > 0 THEN ga.rbc_adherent_count / ga.rbc_transfusions_count
+                WHEN ga.rbc_transfusions_count > 0 THEN CAST(ga.rbc_adherent_count AS DECIMAL(6,4)) / CAST(ga.rbc_transfusions_count AS DECIMAL(6,4))
                 ELSE NULL
             END AS rbc_adherence,
             CASE
-                WHEN ga.ffp_transfusions_count > 0 THEN ga.ffp_adherent_count / ga.ffp_transfusions_count
+                WHEN ga.ffp_transfusions_count > 0 THEN CAST(ga.ffp_adherent_count AS DECIMAL(6,4)) / CAST(ga.ffp_transfusions_count AS DECIMAL(6,4))
                 ELSE NULL
             END AS ffp_adherence,
             CASE
-                WHEN ga.plt_transfusions_count > 0 THEN ga.plt_adherent_count / ga.plt_transfusions_count
+                WHEN ga.plt_transfusions_count > 0 THEN CAST(ga.plt_adherent_count AS DECIMAL(6,4)) / CAST(ga.plt_transfusions_count AS DECIMAL(6,4))
                 ELSE NULL
             END AS plt_adherence,
             CASE
-                WHEN ga.cryo_transfusions_count > 0 THEN ga.cryo_adherent_count / ga.cryo_transfusions_count
+                WHEN ga.cryo_transfusions_count > 0 THEN CAST(ga.cryo_adherent_count AS DECIMAL(6,4)) / CAST(ga.cryo_transfusions_count AS DECIMAL(6,4))
                 ELSE NULL
             END AS cryo_adherence
         FROM Visit v
@@ -317,10 +317,10 @@ class Migration(migrations.Migration):
                 plt_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
                 cryo_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
 
-                rbc_adherence SMALLINT UNSIGNED DEFAULT NULL,
-                ffp_adherence SMALLINT UNSIGNED DEFAULT NULL,
-                plt_adherence SMALLINT UNSIGNED DEFAULT NULL,
-                cryo_adherence SMALLINT UNSIGNED DEFAULT NULL,
+                rbc_adherence DECIMAL(6,4) DEFAULT NULL,
+                ffp_adherence DECIMAL(6,4) DEFAULT NULL,
+                plt_adherence DECIMAL(6,4) DEFAULT NULL,
+                cryo_adherence DECIMAL(6,4) DEFAULT NULL,
 
                 PRIMARY KEY (visit_no),
                 FOREIGN KEY (visit_no) REFERENCES Visit(visit_no),

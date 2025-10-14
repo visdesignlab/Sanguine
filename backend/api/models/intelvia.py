@@ -99,10 +99,10 @@ class VisitAttributes(models.Model):
     plt_transfusions_count = models.IntegerField()
     cryo_transfusions_count = models.IntegerField()
 
-    rbc_adherence = models.IntegerField(null=True)
-    ffp_adherence = models.IntegerField(null=True)
-    plt_adherence = models.IntegerField(null=True)
-    cryo_adherence = models.IntegerField(null=True)
+    rbc_adherence = models.DecimalField(max_digits=6, decimal_places=4, null=True)
+    ffp_adherence = models.DecimalField(max_digits=6, decimal_places=4, null=True)
+    plt_adherence = models.DecimalField(max_digits=6, decimal_places=4, null=True)
+    cryo_adherence = models.DecimalField(max_digits=6, decimal_places=4, null=True)
 
     rbc_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
     ffp_units_cost = models.DecimalField(max_digits=6, decimal_places=2)

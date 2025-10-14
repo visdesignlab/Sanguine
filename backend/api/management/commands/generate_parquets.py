@@ -72,10 +72,10 @@ class Command(BaseCommand):
             pa.field("plt_transfusions_count", pa.uint16(), nullable=False),
             pa.field("cryo_transfusions_count", pa.uint16(), nullable=False),
 
-            pa.field("rbc_adherence", pa.uint16(), nullable=True),
-            pa.field("ffp_adherence", pa.uint16(), nullable=True),
-            pa.field("plt_adherence", pa.uint16(), nullable=True),
-            pa.field("cryo_adherence", pa.uint16(), nullable=True),
+            pa.field("rbc_adherence", pa.decimal128(6, 4), nullable=True),
+            pa.field("ffp_adherence", pa.decimal128(6, 4), nullable=True),
+            pa.field("plt_adherence", pa.decimal128(6, 4), nullable=True),
+            pa.field("cryo_adherence", pa.decimal128(6, 4), nullable=True),
         ])
 
         table = pa.Table.from_pylist(visits, schema=visit_attributes_schema)
