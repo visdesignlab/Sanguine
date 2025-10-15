@@ -187,6 +187,47 @@ export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
 
 // Guideline adherence ---------------------------------------------
 export const GUIDELINE_ADHERENT = {
+  rbc_adherence: {
+    value: 'rbc_adherence',
+    label: {
+      base: 'RBC Guideline Adherence',
+      sum: 'RBC Guideline Adherence',
+      avg: 'RBC Guideline Adherence',
+    },
+    units: { sum: '%', avg: '%' },
+    decimals: 2,
+  },
+  ffp_adherence: {
+    value: 'ffp_adherence',
+    label: {
+      base: 'FFP Guideline Adherence',
+      sum: 'FFP Guideline Adherence',
+      avg: 'FFP Guideline Adherence',
+    },
+    units: { sum: '%', avg: '%' },
+    decimals: 2,
+  },
+  plt_adherence: {
+    value: 'plt_adherence',
+    label: {
+      base: 'Platelet Guideline Adherence',
+      sum: 'Platelet Guideline Adherence',
+      avg: 'Platelet Guideline Adherence',
+    },
+    units: { sum: '%', avg: '%' },
+    decimals: 2,
+  },
+  cryo_adherence: {
+    value: 'cryo_adherence',
+    label: {
+      base: 'Cryo Guideline Adherence',
+      sum: 'Cryo Guideline Adherence',
+      avg: 'Cryo Guideline Adherence',
+    },
+    units: { sum: '%', avg: '%' },
+    decimals: 2,
+  },
+
   // Transfusion counts
   rbc_transfusion: {
     value: 'rbc_transfusions_count',
@@ -227,47 +268,6 @@ export const GUIDELINE_ADHERENT = {
     },
     units: { sum: 'Cryo Transfusions', avg: 'Cryo Transfusions' },
     decimals: { sum: 0, avg: 2 },
-  },
-  // Add adherence ratios
-  rbc_adherence: {
-    value: 'rbc_adherence',
-    label: {
-      base: 'RBC Guideline Adherence',
-      sum: 'RBC Guideline Adherence',
-      avg: 'RBC Guideline Adherence',
-    },
-    units: { sum: '%', avg: '%' },
-    decimals: 2,
-  },
-  ffp_adherence: {
-    value: 'ffp_adherence',
-    label: {
-      base: 'FFP Guideline Adherence',
-      sum: 'FFP Guideline Adherence',
-      avg: 'FFP Guideline Adherence',
-    },
-    units: { sum: '%', avg: '%' },
-    decimals: 2,
-  },
-  plt_adherence: {
-    value: 'plt_adherence',
-    label: {
-      base: 'Platelet Guideline Adherence',
-      sum: 'Platelet Guideline Adherence',
-      avg: 'Platelet Guideline Adherence',
-    },
-    units: { sum: '%', avg: '%' },
-    decimals: 2,
-  },
-  cryo_adherence: {
-    value: 'cryo_adherence',
-    label: {
-      base: 'Cryo Guideline Adherence',
-      sum: 'Cryo Guideline Adherence',
-      avg: 'Cryo Guideline Adherence',
-    },
-    units: { sum: '%', avg: '%' },
-    decimals: 2,
   },
 } as const;
 
@@ -458,15 +458,16 @@ export const dashboardXAxisVars = dashboardXAxisOptions.map((opt) => opt.value);
 
 // Dashboard chart y-axis variable options
 export const dashboardYAxisOptions = [
-  ...BLOOD_COMPONENT_OPTIONS,
   OVERALL_GUIDELINE_ADHERENT,
   ...GUIDELINE_ADHERENT_OPTIONS,
-  ...OUTCOME_OPTIONS,
-  ...PROPHYL_MED_OPTIONS,
+
   ...COST_OPTIONS,
   OVERALL_BLOOD_PRODUCT_COST,
-  VISIT_COUNT,
+  ...BLOOD_COMPONENT_OPTIONS,
+  ...OUTCOME_OPTIONS,
+  ...PROPHYL_MED_OPTIONS,
   CASE_MIX_INDEX,
+  VISIT_COUNT,
 ];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
 
