@@ -196,7 +196,7 @@ export const GUIDELINE_ADHERENT = {
       avg: 'Average RBC Transfusions',
     },
     units: { sum: 'RBC Transfusions', avg: 'RBC Transfusions' },
-    decimals: 0,
+    decimals: { sum: 0, avg: 2 },
   },
   ffp_transfusion: {
     value: 'ffp_transfusions_count',
@@ -206,7 +206,7 @@ export const GUIDELINE_ADHERENT = {
       avg: 'Average FFP Transfusions',
     },
     units: { sum: 'FFP Transfusions', avg: 'FFP Transfusions' },
-    decimals: 0,
+    decimals: { sum: 0, avg: 2 },
   },
   plt_transfusion: {
     value: 'plt_transfusions_count',
@@ -216,7 +216,7 @@ export const GUIDELINE_ADHERENT = {
       avg: 'Average Platelet Transfusions',
     },
     units: { sum: 'Platelet Transfusions', avg: 'Platelet Transfusions' },
-    decimals: 0,
+    decimals: { sum: 0, avg: 2 },
   },
   cryo_transfusion: {
     value: 'cryo_transfusions_count',
@@ -226,7 +226,7 @@ export const GUIDELINE_ADHERENT = {
       avg: 'Average Cryo Transfusions',
     },
     units: { sum: 'Cryo Transfusions', avg: 'Cryo Transfusions' },
-    decimals: 0,
+    decimals: { sum: 0, avg: 2 },
   },
   // Add adherence ratios
   rbc_adherence: {
