@@ -193,7 +193,7 @@ export const GUIDELINE_ADHERENT = {
     label: {
       base: 'RBC Transfusions',
       sum: 'Total RBC Transfusions',
-      avg: 'Average RBC Transfusions',
+      avg: 'Average RBC Transfusions Per Visit',
     },
     units: { sum: 'RBC Transfusions', avg: 'RBC Transfusions' },
     decimals: { sum: 0, avg: 2 },
@@ -203,7 +203,7 @@ export const GUIDELINE_ADHERENT = {
     label: {
       base: 'FFP Transfusions',
       sum: 'Total FFP Transfusions',
-      avg: 'Average FFP Transfusions',
+      avg: 'Average FFP Transfusions Per Visit',
     },
     units: { sum: 'FFP Transfusions', avg: 'FFP Transfusions' },
     decimals: { sum: 0, avg: 2 },
@@ -213,7 +213,7 @@ export const GUIDELINE_ADHERENT = {
     label: {
       base: 'Platelet Transfusions',
       sum: 'Total Platelet Transfusions',
-      avg: 'Average Platelet Transfusions',
+      avg: 'Average Platelet Transfusions Per Visit',
     },
     units: { sum: 'Platelet Transfusions', avg: 'Platelet Transfusions' },
     decimals: { sum: 0, avg: 2 },
@@ -223,7 +223,7 @@ export const GUIDELINE_ADHERENT = {
     label: {
       base: 'Cryo Transfusions',
       sum: 'Total Cryo Transfusions',
-      avg: 'Average Cryo Transfusions',
+      avg: 'Average Cryo Transfusions Per Visit',
     },
     units: { sum: 'Cryo Transfusions', avg: 'Cryo Transfusions' },
     decimals: { sum: 0, avg: 2 },
