@@ -23,11 +23,29 @@ import { useContext } from 'react';
 import { useObserver } from 'mobx-react';
 import { DEFAULT_DATA_COLOR, useThemeConstants } from '../../../Theme/mantineTheme';
 import { FilterRangeSlider } from './FilterRangeSlider';
-import { Store } from '../../../Store/Store';
+import { RootStore, Store } from '../../../Store/Store';
 import { FilterHeader } from './FilterHeader';
 import classes from '../../../Shell/Shell.module.css';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0];
+
+// Utility: Detect if a range filter has been applied
+function rangeChanged(
+  store: RootStore,
+  key: 'rbc_units' | 'ffp_units' | 'plt_units' | 'cryo_units' | 'cell_saver_ml' | 'los',
+) {
+  const cur = store.filtersStore.filterValues[key];
+  const init = store.filtersStore.initialFilterValues[key];
+  return cur[0] !== init[0] || cur[1] !== init[1];
+}
+
+// Utility: Detect if a date filter has been applied
+function dateChanged(
+  store: RootStore,
+  key: 'dateFrom' | 'dateTo',
+) {
+  return store.filtersStore.filterValues[key].getTime() !== store.filtersStore.initialFilterValues[key].getTime();
+}
 
 /**
  * @returns Filter Panel accordion with multiple filter sections
@@ -35,18 +53,6 @@ const dateSimplify = (date: Date) => date.toISOString().split('T')[0];
 export function FilterPanel() {
   const { toolbarWidth, iconStroke } = useThemeConstants();
   const store = useContext(Store);
-
-  // Detect if a range filter has been applied
-  const rangeChanged = (
-    key: 'rbc_units' | 'ffp_units' | 'plt_units' | 'cryo_units' | 'cell_saver_ml' | 'los',
-  ) => {
-    const cur = store.filtersStore.filterValues[key];
-    const init = store.filtersStore.initialFilterValues[key];
-    return cur[0] !== init[0] || cur[1] !== init[1];
-  };
-
-  const dateChanged = (key: 'dateFrom' | 'dateTo') => store.filtersStore.filterValues[key].getTime()
-    !== store.filtersStore.initialFilterValues[key].getTime();
 
   return useObserver(() => (
     <Box>
@@ -93,7 +99,7 @@ export function FilterPanel() {
               <Flex direction="row" justify="space-between" align="center">
                 <DateInput
                   label="Date From"
-                  styles={{ label: { color: dateChanged('dateFrom') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                  styles={{ label: { color: dateChanged(store, 'dateFrom') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                   value={dateSimplify(store.filtersStore.filterValues.dateFrom)}
                   onChange={(date) => date && store.filtersStore.setFilterValue('dateFrom', new Date(date))}
                   minDate={dateSimplify(store.filtersStore.initialFilterValues.dateFrom)}
@@ -103,7 +109,7 @@ export function FilterPanel() {
                 />
                 <DateInput
                   label="Date To"
-                  styles={{ label: { color: dateChanged('dateTo') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                  styles={{ label: { color: dateChanged(store, 'dateTo') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                   value={dateSimplify(store.filtersStore.filterValues.dateTo)}
                   onChange={(date) => date && store.filtersStore.setFilterValue('dateTo', new Date(date))}
                   minDate={dateSimplify(store.filtersStore.initialFilterValues.dateFrom)}
@@ -128,7 +134,7 @@ export function FilterPanel() {
                 <Input.Wrapper
                   label="RBC Units"
                   mb="lg"
-                  styles={{ label: { color: rangeChanged('rbc_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                  styles={{ label: { color: rangeChanged(store, 'rbc_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                 >
                   <Flex
                     justify="center"
@@ -156,7 +162,7 @@ export function FilterPanel() {
                 <Input.Wrapper
                   label="FFP Units"
                   mb="lg"
-                  styles={{ label: { color: rangeChanged('ffp_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                  styles={{ label: { color: rangeChanged(store, 'ffp_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                 >
                   <Flex
                     justify="center"
@@ -184,7 +190,7 @@ export function FilterPanel() {
                 <Input.Wrapper
                   label="Platelet Units"
                   mb="lg"
-                  styles={{ label: { color: rangeChanged('plt_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                  styles={{ label: { color: rangeChanged(store, 'plt_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                 >
                   <Flex
                     justify="center"
@@ -212,7 +218,7 @@ export function FilterPanel() {
                 <Input.Wrapper
                   label="Cryo Units"
                   mb="lg"
-                  styles={{ label: { color: rangeChanged('cryo_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                  styles={{ label: { color: rangeChanged(store, 'cryo_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                 >
                   <Flex
                     justify="center"
@@ -240,7 +246,7 @@ export function FilterPanel() {
                 <Input.Wrapper
                   label="Cell Saver (mL)"
                   mb="lg"
-                  styles={{ label: { color: rangeChanged('cell_saver_ml') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                  styles={{ label: { color: rangeChanged(store, 'cell_saver_ml') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                 >
                   <Flex
                     justify="center"
@@ -649,7 +655,7 @@ export function FilterPanel() {
                 <Divider my="xs" />
                 <Input.Wrapper
                   label="Length of Stay"
-                  styles={{ label: { color: rangeChanged('los') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                  styles={{ label: { color: rangeChanged(store, 'los') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                 >
                   {store.filtersStore.showFilterHistograms && (
                     <Flex justify="center">
