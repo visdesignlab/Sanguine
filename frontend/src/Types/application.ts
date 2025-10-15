@@ -227,6 +227,9 @@ export const GUIDELINE_ADHERENT = {
     units: { sum: '%', avg: '%' },
     decimals: 2,
   },
+} as const;
+
+export const TRANSFUSION_COUNT = {
 
   // Transfusion counts
   rbc_transfusion: {
@@ -270,6 +273,17 @@ export const GUIDELINE_ADHERENT = {
     decimals: { sum: 0, avg: 2 },
   },
 } as const;
+
+// Types for guideline adherence fields
+export type TrasnfusionCounts = typeof TRANSFUSION_COUNT[keyof typeof TRANSFUSION_COUNT]['value'];
+
+// Guideline adherence options for dashboard
+export const TRANSFUSION_COUNT_OPTIONS = Object.values(TRANSFUSION_COUNT) as ReadonlyArray<{
+  value: TrasnfusionCounts;
+  label: { base: string; sum: string; avg: string };
+  units: { sum: string; avg: string };
+  decimals: { sum: number; avg: number };
+}>;
 
 // Total guideline adherence (Across all blood products)
 export const OVERALL_GUIDELINE_ADHERENT = {
@@ -411,9 +425,9 @@ export type VisitCount = typeof VISIT_COUNT['value'];
 export const CASE_MIX_INDEX = {
   value: 'case_mix_index',
   label: {
-    base: 'Case Mix Index',
-    sum: 'Case Mix Index',
-    avg: 'Case Mix Index',
+    base: 'Case Mix Index (CMI)',
+    sum: 'Case Mix Index (CMI)',
+    avg: 'Case Mix Index (CMI)',
   },
   units: { sum: '', avg: '' },
   decimals: { sum: 2, avg: 2 },
@@ -460,16 +474,77 @@ export const dashboardXAxisVars = dashboardXAxisOptions.map((opt) => opt.value);
 export const dashboardYAxisOptions = [
   OVERALL_GUIDELINE_ADHERENT,
   ...GUIDELINE_ADHERENT_OPTIONS,
-
   ...COST_OPTIONS,
   OVERALL_BLOOD_PRODUCT_COST,
   ...BLOOD_COMPONENT_OPTIONS,
   ...OUTCOME_OPTIONS,
   ...PROPHYL_MED_OPTIONS,
   CASE_MIX_INDEX,
+  ...TRANSFUSION_COUNT_OPTIONS,
   VISIT_COUNT,
 ];
 export const dashboardYAxisVars = dashboardYAxisOptions.map((opt) => opt.value);
+
+// Grouped y-axis options for easier selection in UI
+export const dashboardYAxisGroupedOptions = [
+  {
+    group: 'Transfusion Guidelines',
+    items: [
+      { value: OVERALL_GUIDELINE_ADHERENT.value, label: OVERALL_GUIDELINE_ADHERENT.label.base },
+      ...GUIDELINE_ADHERENT_OPTIONS.map((o) => ({
+        value: o.value,
+        label: o.label.base,
+      })),
+    ],
+  },
+  {
+    group: 'Costs',
+    items: COST_OPTIONS.map((o) => ({
+      value: o.value,
+      label: o.label.base,
+    })),
+  },
+  {
+    group: 'Blood Products Used',
+    items: [
+      { value: OVERALL_BLOOD_PRODUCT_COST.value, label: OVERALL_BLOOD_PRODUCT_COST.label.base },
+      ...BLOOD_COMPONENT_OPTIONS.map((o) => ({
+        value: o.value,
+        label: o.label.base,
+      })),
+    ],
+  },
+  {
+    group: 'Visit Outcomes',
+    items: OUTCOME_OPTIONS.map((o) => ({
+      value: o.value,
+      label: o.label.base,
+    })),
+  },
+  {
+    group: 'Medications Used',
+    items: PROPHYL_MED_OPTIONS.map((o) => ({
+      value: o.value,
+      label: o.label.base,
+    })),
+  },
+  {
+    group: 'Severity',
+    items: [
+      { value: CASE_MIX_INDEX.value, label: CASE_MIX_INDEX.label.base },
+      ...TRANSFUSION_COUNT_OPTIONS.map((o) => ({
+        value: o.value,
+        label: o.label.base,
+      })),
+    ],
+  },
+  {
+    group: 'Other',
+    items: [
+      { value: VISIT_COUNT.value, label: VISIT_COUNT.label.base },
+    ],
+  },
+];
 
 // Dashboard aggregate y-axis variable type
 export type DashboardAggYAxisVar = `${keyof typeof AGGREGATION_OPTIONS}_${typeof dashboardYAxisVars[number]}`;
