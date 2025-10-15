@@ -35,7 +35,10 @@ export function FilterHeader({
                     <ActionIcon
                       size="xs"
                       aria-label={`Reset ${title}`}
-                      onClick={() => resetFunc()}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        resetFunc();
+                      }}
                     >
                       <IconRestore stroke={1} />
                     </ActionIcon>
