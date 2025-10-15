@@ -19,23 +19,35 @@ export function FilterHeader({
 
     return (
       <Flex align="center">
-        <Accordion.Control px="xs">
-          <Flex justify="space-between" align="center" gap="xs" mr="xs">
+        <Accordion.Control px={5}>
+          <Flex align="center">
             <Tooltip label={tooltipLabel}>
               <Title order={4} c={count ? 'blue.6' : undefined}>{title}</Title>
             </Tooltip>
-            {count > 0 ? (
-              <Badge color="blue" radius="sm" variant="light">
-                {count}
-              </Badge>
-            ) : null}
+
+            <Flex align="center" gap="xs" ml="auto" mr="xs">
+              {count > 0 && (
+                <>
+                  <Badge color="blue" radius="sm" variant="light">
+                    {count}
+                  </Badge>
+                  <Tooltip label={`Reset ${title}`}>
+                    <ActionIcon
+                      size="xs"
+                      aria-label={`Reset ${title}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        resetFunc();
+                      }}
+                    >
+                      <IconRestore stroke={1} />
+                    </ActionIcon>
+                  </Tooltip>
+                </>
+              )}
+            </Flex>
           </Flex>
         </Accordion.Control>
-        <Tooltip label={`Reset ${title}`}>
-          <ActionIcon size="sm" onClick={(event) => (count === 0 ? event.preventDefault() : resetFunc())} data-disabled={count === 0}>
-            <IconRestore stroke={1} />
-          </ActionIcon>
-        </Tooltip>
       </Flex>
     );
   });

@@ -1,5 +1,8 @@
 import {
-  ScrollArea, Accordion, Flex, Input,
+  ScrollArea,
+  Accordion,
+  Flex,
+  Input,
   Stack,
   Divider,
   Grid,
@@ -18,13 +21,31 @@ import {
 } from '@tabler/icons-react';
 import { useContext } from 'react';
 import { useObserver } from 'mobx-react';
-import { useThemeConstants } from '../../../Theme/mantineTheme';
+import { DEFAULT_DATA_COLOR, useThemeConstants } from '../../../Theme/mantineTheme';
 import { FilterRangeSlider } from './FilterRangeSlider';
-import { Store } from '../../../Store/Store';
+import { RootStore, Store } from '../../../Store/Store';
 import { FilterHeader } from './FilterHeader';
 import classes from '../../../Shell/Shell.module.css';
 
 const dateSimplify = (date: Date) => date.toISOString().split('T')[0];
+
+// Utility: Detect if a range filter has been applied
+function rangeChanged(
+  store: RootStore,
+  key: 'rbc_units' | 'ffp_units' | 'plt_units' | 'cryo_units' | 'cell_saver_ml' | 'los',
+) {
+  const cur = store.filtersStore.filterValues[key];
+  const init = store.filtersStore.initialFilterValues[key];
+  return cur[0] !== init[0] || cur[1] !== init[1];
+}
+
+// Utility: Detect if a date filter has been applied
+function dateChanged(
+  store: RootStore,
+  key: 'dateFrom' | 'dateTo',
+) {
+  return store.filtersStore.filterValues[key].getTime() !== store.filtersStore.initialFilterValues[key].getTime();
+}
 
 /**
  * @returns Filter Panel accordion with multiple filter sections
@@ -58,9 +79,15 @@ export function FilterPanel() {
           </ActionIcon>
         </Flex>
       </Flex>
-      <ScrollArea h={`calc(100vh - ${toolbarWidth}px - 45px)`} type="scroll" overscrollBehavior="contain" mt="sm">
+
+      <ScrollArea
+        h={`calc(100vh - ${toolbarWidth}px - 45px)`}
+        type="scroll"
+        overscrollBehavior="contain"
+        mt="sm"
+      >
         <Accordion multiple defaultValue={['date-filters', 'blood-component-filters']}>
-          {/** Date Filters */}
+          {/* Date Filters */}
           <Accordion.Item value="date-filters" key="date-filters">
             <FilterHeader
               countName="dateFiltersAppliedCount"
@@ -72,6 +99,7 @@ export function FilterPanel() {
               <Flex direction="row" justify="space-between" align="center">
                 <DateInput
                   label="Date From"
+                  styles={{ label: { color: dateChanged(store, 'dateFrom') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                   value={dateSimplify(store.filtersStore.filterValues.dateFrom)}
                   onChange={(date) => date && store.filtersStore.setFilterValue('dateFrom', new Date(date))}
                   minDate={dateSimplify(store.filtersStore.initialFilterValues.dateFrom)}
@@ -81,6 +109,7 @@ export function FilterPanel() {
                 />
                 <DateInput
                   label="Date To"
+                  styles={{ label: { color: dateChanged(store, 'dateTo') ? 'var(--mantine-color-blue-filled)' : undefined } }}
                   value={dateSimplify(store.filtersStore.filterValues.dateTo)}
                   onChange={(date) => date && store.filtersStore.setFilterValue('dateTo', new Date(date))}
                   minDate={dateSimplify(store.filtersStore.initialFilterValues.dateFrom)}
@@ -91,6 +120,7 @@ export function FilterPanel() {
               </Flex>
             </Accordion.Panel>
           </Accordion.Item>
+
           {/* Blood Component Filters */}
           <Accordion.Item value="blood-component-filters" key="blood-component-filters">
             <FilterHeader
@@ -101,8 +131,15 @@ export function FilterPanel() {
             />
             <Accordion.Panel>
               <Tooltip label="Filter for Visits That Used ..." position="top-start">
-                <Input.Wrapper label="RBC Units" mb="lg">
-                  <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
+                <Input.Wrapper
+                  label="RBC Units"
+                  mb="lg"
+                  styles={{ label: { color: rangeChanged(store, 'rbc_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                >
+                  <Flex
+                    justify="center"
+                    style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}
+                  >
                     <BarChart
                       h={30}
                       style={{ width: 'calc(100% - 12px)' }}
@@ -113,7 +150,7 @@ export function FilterPanel() {
                       withYAxis={false}
                       withTooltip={false}
                       gridAxis="none"
-                      series={[{ name: 'count', color: 'blue' }]}
+                      series={[{ name: 'count', color: DEFAULT_DATA_COLOR }]}
                       ml={1}
                     />
                   </Flex>
@@ -122,8 +159,15 @@ export function FilterPanel() {
               </Tooltip>
 
               <Tooltip label="Filter for Visits That Used ..." position="top-start">
-                <Input.Wrapper label="FFP Units" mb="lg">
-                  <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
+                <Input.Wrapper
+                  label="FFP Units"
+                  mb="lg"
+                  styles={{ label: { color: rangeChanged(store, 'ffp_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                >
+                  <Flex
+                    justify="center"
+                    style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}
+                  >
                     <BarChart
                       h={30}
                       style={{ width: 'calc(100% - 12px)' }}
@@ -134,7 +178,7 @@ export function FilterPanel() {
                       withYAxis={false}
                       withTooltip={false}
                       gridAxis="none"
-                      series={[{ name: 'count', color: 'blue' }]}
+                      series={[{ name: 'count', color: DEFAULT_DATA_COLOR }]}
                       ml={1}
                     />
                   </Flex>
@@ -143,8 +187,15 @@ export function FilterPanel() {
               </Tooltip>
 
               <Tooltip label="Filter for Visits That Used ..." position="top-start">
-                <Input.Wrapper label="Platelet Units" mb="lg">
-                  <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
+                <Input.Wrapper
+                  label="Platelet Units"
+                  mb="lg"
+                  styles={{ label: { color: rangeChanged(store, 'plt_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                >
+                  <Flex
+                    justify="center"
+                    style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}
+                  >
                     <BarChart
                       h={30}
                       style={{ width: 'calc(100% - 12px)' }}
@@ -155,7 +206,7 @@ export function FilterPanel() {
                       withYAxis={false}
                       withTooltip={false}
                       gridAxis="none"
-                      series={[{ name: 'count', color: 'blue' }]}
+                      series={[{ name: 'count', color: DEFAULT_DATA_COLOR }]}
                       ml={1}
                     />
                   </Flex>
@@ -164,8 +215,15 @@ export function FilterPanel() {
               </Tooltip>
 
               <Tooltip label="Filter for Visits That Used ..." position="top-start">
-                <Input.Wrapper label="Cryo Units" mb="lg">
-                  <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
+                <Input.Wrapper
+                  label="Cryo Units"
+                  mb="lg"
+                  styles={{ label: { color: rangeChanged(store, 'cryo_units') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                >
+                  <Flex
+                    justify="center"
+                    style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}
+                  >
                     <BarChart
                       h={30}
                       style={{ width: 'calc(100% - 12px)' }}
@@ -176,7 +234,7 @@ export function FilterPanel() {
                       withYAxis={false}
                       withTooltip={false}
                       gridAxis="none"
-                      series={[{ name: 'count', color: 'blue' }]}
+                      series={[{ name: 'count', color: DEFAULT_DATA_COLOR }]}
                       ml={1}
                     />
                   </Flex>
@@ -185,8 +243,15 @@ export function FilterPanel() {
               </Tooltip>
 
               <Tooltip label="Filter for Visits That Used ..." position="top-start">
-                <Input.Wrapper label="Cell Saver (mL)" mb="lg">
-                  <Flex justify="center" style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}>
+                <Input.Wrapper
+                  label="Cell Saver (mL)"
+                  mb="lg"
+                  styles={{ label: { color: rangeChanged(store, 'cell_saver_ml') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                >
+                  <Flex
+                    justify="center"
+                    style={{ display: store.filtersStore.showFilterHistograms ? 'flex' : 'none' }}
+                  >
                     <BarChart
                       h={30}
                       style={{ width: 'calc(100% - 12px)' }}
@@ -197,7 +262,7 @@ export function FilterPanel() {
                       withYAxis={false}
                       withTooltip={false}
                       gridAxis="none"
-                      series={[{ name: 'count', color: 'blue' }]}
+                      series={[{ name: 'count', color: DEFAULT_DATA_COLOR }]}
                       ml={1}
                     />
                   </Flex>
@@ -206,7 +271,8 @@ export function FilterPanel() {
               </Tooltip>
             </Accordion.Panel>
           </Accordion.Item>
-          {/** Medication Filters */}
+
+          {/* Medication Filters */}
           <Accordion.Item value="medication-filters" key="medication-filters">
             <FilterHeader
               countName="medicationsFiltersAppliedCount"
@@ -216,57 +282,173 @@ export function FilterPanel() {
             />
             <Accordion.Panel>
               <Stack gap={0}>
-                <Grid>
+                <Grid ml="sm">
                   <Grid.Col span={7}>
-                    <Text ta="right">False</Text>
+                    <Text
+                      ta="right"
+                      c={[
+                        store.filtersStore.filterValues.b12,
+                        store.filtersStore.filterValues.iron,
+                        store.filtersStore.filterValues.antifibrinolytic,
+                      ].some((v) => v === false)
+                        ? 'blue'
+                        : undefined}
+                    >
+                      False
+                    </Text>
                   </Grid.Col>
                   <Grid.Col span={2}>
                     <Text>Off</Text>
                   </Grid.Col>
                   <Grid.Col span={3}>
-                    <Text>True</Text>
+                    <Text
+                      c={[
+                        store.filtersStore.filterValues.b12,
+                        store.filtersStore.filterValues.iron,
+                        store.filtersStore.filterValues.antifibrinolytic,
+                      ].some((v) => v === true)
+                        ? 'blue'
+                        : undefined}
+                    >
+                      True
+                    </Text>
                   </Grid.Col>
                 </Grid>
                 <Flex>
-                  <Text w="45%">B12</Text>
+                  <Text w="45%" c={store.filtersStore.filterValues.b12 === null ? undefined : 'blue'}>
+                    B12
+                  </Text>
                   <Rating
-                    value={store.filtersStore.filterValues.b12 === true ? 3 : store.filtersStore.filterValues.b12 === false ? 1 : 2}
-                    color="blue"
+                    value={
+                      store.filtersStore.filterValues.b12 === true
+                        ? 3
+                        : store.filtersStore.filterValues.b12 === false
+                          ? 1
+                          : 2
+                    }
+                    color={DEFAULT_DATA_COLOR}
                     count={3}
                     highlightSelectedOnly
-                    emptySymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircle /></ThemeIcon>}
-                    fullSymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircleFilled /></ThemeIcon>}
-                    onChange={(value) => store.filtersStore.setFilterValue('b12', value === 3 ? true : value === 1 ? false : null)}
+                    ml="sm"
+                    emptySymbol={(
+                      <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
+                        <IconCircle />
+                      </ThemeIcon>
+                    )}
+                    fullSymbol={(
+                      <ThemeIcon
+                        variant="white"
+                        color={
+                          store.filtersStore.filterValues.b12 === null
+                            ? DEFAULT_DATA_COLOR
+                            : 'blue'
+                        }
+                        size="sm"
+                        mr="lg"
+                      >
+                        <IconCircleFilled />
+                      </ThemeIcon>
+                    )}
+                    onChange={(value) => store.filtersStore.setFilterValue(
+                      'b12',
+                      value === 3 ? true : value === 1 ? false : null,
+                    )}
                   />
                 </Flex>
                 <Flex>
-                  <Text w="45%">Iron</Text>
+                  <Text w="45%" c={store.filtersStore.filterValues.iron === null ? undefined : 'blue'}>
+                    Iron
+                  </Text>
                   <Rating
-                    value={store.filtersStore.filterValues.iron === true ? 3 : store.filtersStore.filterValues.iron === false ? 1 : 2}
-                    color="blue"
+                    value={
+                      store.filtersStore.filterValues.iron === true
+                        ? 3
+                        : store.filtersStore.filterValues.iron === false
+                          ? 1
+                          : 2
+                    }
+                    color={DEFAULT_DATA_COLOR}
                     count={3}
                     highlightSelectedOnly
-                    emptySymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircle /></ThemeIcon>}
-                    fullSymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircleFilled /></ThemeIcon>}
-                    onChange={(value) => store.filtersStore.setFilterValue('iron', value === 3 ? true : value === 1 ? false : null)}
+                    ml="sm"
+                    emptySymbol={(
+                      <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
+                        <IconCircle />
+                      </ThemeIcon>
+                    )}
+                    fullSymbol={(
+                      <ThemeIcon
+                        variant="white"
+                        color={
+                          store.filtersStore.filterValues.iron === null
+                            ? DEFAULT_DATA_COLOR
+                            : 'blue'
+                        }
+                        size="sm"
+                        mr="lg"
+                      >
+                        <IconCircleFilled />
+                      </ThemeIcon>
+                    )}
+                    onChange={(value) => store.filtersStore.setFilterValue(
+                      'iron',
+                      value === 3 ? true : value === 1 ? false : null,
+                    )}
                   />
                 </Flex>
                 <Flex>
-                  <Text w="45%">Antifibrinolytic </Text>
+                  <Text
+                    w="45%"
+                    c={
+                      store.filtersStore.filterValues.antifibrinolytic === null
+                        ? undefined
+                        : 'blue'
+                    }
+                  >
+                    Antifibrinolytic
+                  </Text>
                   <Rating
-                    value={store.filtersStore.filterValues.antifibrinolytic === true ? 3 : store.filtersStore.filterValues.antifibrinolytic === false ? 1 : 2}
-                    color="blue"
+                    value={
+                      store.filtersStore.filterValues.antifibrinolytic === true
+                        ? 3
+                        : store.filtersStore.filterValues.antifibrinolytic === false
+                          ? 1
+                          : 2
+                    }
+                    color={DEFAULT_DATA_COLOR}
                     count={3}
                     highlightSelectedOnly
-                    emptySymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircle /></ThemeIcon>}
-                    fullSymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircleFilled /></ThemeIcon>}
-                    onChange={(value) => store.filtersStore.setFilterValue('antifibrinolytic', value === 3 ? true : value === 1 ? false : null)}
+                    ml="sm"
+                    emptySymbol={(
+                      <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
+                        <IconCircle />
+                      </ThemeIcon>
+                    )}
+                    fullSymbol={(
+                      <ThemeIcon
+                        variant="white"
+                        color={
+                          store.filtersStore.filterValues.antifibrinolytic === null
+                            ? DEFAULT_DATA_COLOR
+                            : 'blue'
+                        }
+                        size="sm"
+                        mr="lg"
+                      >
+                        <IconCircleFilled />
+                      </ThemeIcon>
+                    )}
+                    onChange={(value) => store.filtersStore.setFilterValue(
+                      'antifibrinolytic',
+                      value === 3 ? true : value === 1 ? false : null,
+                    )}
                   />
                 </Flex>
               </Stack>
             </Accordion.Panel>
           </Accordion.Item>
-          {/** Outcome Filters */}
+
+          {/* Outcome Filters */}
           <Accordion.Item value="outcome-filters" key="outcome-filters">
             <FilterHeader
               countName="outcomeFiltersAppliedCount"
@@ -278,81 +460,219 @@ export function FilterPanel() {
               <Stack gap={0}>
                 <Grid>
                   <Grid.Col span={7}>
-                    <Text ta="right">False</Text>
+                    <Text
+                      ta="right"
+                      c={[
+                        store.filtersStore.filterValues.death,
+                        store.filtersStore.filterValues.vent,
+                        store.filtersStore.filterValues.stroke,
+                        store.filtersStore.filterValues.ecmo,
+                      ].some((v) => v === false)
+                        ? 'blue'
+                        : undefined}
+                    >
+                      False
+                    </Text>
                   </Grid.Col>
                   <Grid.Col span={2}>
                     <Text>Off</Text>
                   </Grid.Col>
                   <Grid.Col span={3}>
-                    <Text>True</Text>
+                    <Text
+                      c={[
+                        store.filtersStore.filterValues.death,
+                        store.filtersStore.filterValues.vent,
+                        store.filtersStore.filterValues.stroke,
+                        store.filtersStore.filterValues.ecmo,
+                      ].some((v) => v === true)
+                        ? 'blue'
+                        : undefined}
+                    >
+                      True
+                    </Text>
                   </Grid.Col>
                 </Grid>
                 <Flex>
-                  <Text w="45%">Death</Text>
+                  <Text w="45%" c={store.filtersStore.filterValues.death === null ? undefined : 'blue'}>
+                    Death
+                  </Text>
                   <Rating
-                    value={store.filtersStore.filterValues.death === true ? 3 : store.filtersStore.filterValues.death === false ? 1 : 2}
-                    color="blue"
+                    value={
+                      store.filtersStore.filterValues.death === true
+                        ? 3
+                        : store.filtersStore.filterValues.death === false
+                          ? 1
+                          : 2
+                    }
+                    color={DEFAULT_DATA_COLOR}
                     count={3}
                     highlightSelectedOnly
-                    emptySymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircle /></ThemeIcon>}
-                    fullSymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircleFilled /></ThemeIcon>}
-                    onChange={(value) => store.filtersStore.setFilterValue('death', value === 3 ? true : value === 1 ? false : null)}
+                    emptySymbol={(
+                      <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
+                        <IconCircle />
+                      </ThemeIcon>
+                    )}
+                    fullSymbol={(
+                      <ThemeIcon
+                        variant="white"
+                        color={
+                          store.filtersStore.filterValues.death === null
+                            ? DEFAULT_DATA_COLOR
+                            : 'blue'
+                        }
+                        size="sm"
+                        mr="lg"
+                      >
+                        <IconCircleFilled />
+                      </ThemeIcon>
+                    )}
+                    onChange={(value) => store.filtersStore.setFilterValue(
+                      'death',
+                      value === 3 ? true : value === 1 ? false : null,
+                    )}
                   />
                 </Flex>
                 <Flex>
-                  <Text w="45%">Vent</Text>
+                  <Text w="45%" c={store.filtersStore.filterValues.vent === null ? undefined : 'blue'}>
+                    Vent
+                  </Text>
                   <Rating
-                    value={store.filtersStore.filterValues.vent === true ? 3 : store.filtersStore.filterValues.vent === false ? 1 : 2}
-                    color="blue"
+                    value={
+                      store.filtersStore.filterValues.vent === true
+                        ? 3
+                        : store.filtersStore.filterValues.vent === false
+                          ? 1
+                          : 2
+                    }
+                    color={DEFAULT_DATA_COLOR}
                     count={3}
                     highlightSelectedOnly
-                    emptySymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircle /></ThemeIcon>}
-                    fullSymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircleFilled /></ThemeIcon>}
-                    onChange={(value) => store.filtersStore.setFilterValue('vent', value === 3 ? true : value === 1 ? false : null)}
+                    emptySymbol={(
+                      <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
+                        <IconCircle />
+                      </ThemeIcon>
+                    )}
+                    fullSymbol={(
+                      <ThemeIcon
+                        variant="white"
+                        color={
+                          store.filtersStore.filterValues.vent === null
+                            ? DEFAULT_DATA_COLOR
+                            : 'blue'
+                        }
+                        size="sm"
+                        mr="lg"
+                      >
+                        <IconCircleFilled />
+                      </ThemeIcon>
+                    )}
+                    onChange={(value) => store.filtersStore.setFilterValue(
+                      'vent',
+                      value === 3 ? true : value === 1 ? false : null,
+                    )}
                   />
                 </Flex>
                 <Flex>
-                  <Text w="45%">Stroke</Text>
+                  <Text w="45%" c={store.filtersStore.filterValues.stroke === null ? undefined : 'blue'}>
+                    Stroke
+                  </Text>
                   <Rating
-                    value={store.filtersStore.filterValues.stroke === true ? 3 : store.filtersStore.filterValues.stroke === false ? 1 : 2}
-                    color="blue"
+                    value={
+                      store.filtersStore.filterValues.stroke === true
+                        ? 3
+                        : store.filtersStore.filterValues.stroke === false
+                          ? 1
+                          : 2
+                    }
+                    color={DEFAULT_DATA_COLOR}
                     count={3}
                     highlightSelectedOnly
-                    emptySymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircle /></ThemeIcon>}
-                    fullSymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircleFilled /></ThemeIcon>}
-                    onChange={(value) => store.filtersStore.setFilterValue('stroke', value === 3 ? true : value === 1 ? false : null)}
+                    emptySymbol={(
+                      <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
+                        <IconCircle />
+                      </ThemeIcon>
+                    )}
+                    fullSymbol={(
+                      <ThemeIcon
+                        variant="white"
+                        color={
+                          store.filtersStore.filterValues.stroke === null
+                            ? DEFAULT_DATA_COLOR
+                            : 'blue'
+                        }
+                        size="sm"
+                        mr="lg"
+                      >
+                        <IconCircleFilled />
+                      </ThemeIcon>
+                    )}
+                    onChange={(value) => store.filtersStore.setFilterValue(
+                      'stroke',
+                      value === 3 ? true : value === 1 ? false : null,
+                    )}
                   />
                 </Flex>
                 <Flex>
-                  <Text w="45%">ECMO</Text>
+                  <Text w="45%" c={store.filtersStore.filterValues.ecmo === null ? undefined : 'blue'}>
+                    ECMO
+                  </Text>
                   <Rating
-                    value={store.filtersStore.filterValues.ecmo === true ? 3 : store.filtersStore.filterValues.ecmo === false ? 1 : 2}
-                    color="blue"
+                    value={
+                      store.filtersStore.filterValues.ecmo === true
+                        ? 3
+                        : store.filtersStore.filterValues.ecmo === false
+                          ? 1
+                          : 2
+                    }
+                    color={DEFAULT_DATA_COLOR}
                     count={3}
                     highlightSelectedOnly
-                    emptySymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircle /></ThemeIcon>}
-                    fullSymbol={<ThemeIcon variant="white" size="sm" mr="lg"><IconCircleFilled /></ThemeIcon>}
-                    onChange={(value) => store.filtersStore.setFilterValue('ecmo', value === 3 ? true : value === 1 ? false : null)}
+                    emptySymbol={(
+                      <ThemeIcon variant="white" color={DEFAULT_DATA_COLOR} size="sm" mr="lg">
+                        <IconCircle />
+                      </ThemeIcon>
+                    )}
+                    fullSymbol={(
+                      <ThemeIcon
+                        variant="white"
+                        color={
+                          store.filtersStore.filterValues.ecmo === null
+                            ? DEFAULT_DATA_COLOR
+                            : 'blue'
+                        }
+                        size="sm"
+                        mr="lg"
+                      >
+                        <IconCircleFilled />
+                      </ThemeIcon>
+                    )}
+                    onChange={(value) => store.filtersStore.setFilterValue(
+                      'ecmo',
+                      value === 3 ? true : value === 1 ? false : null,
+                    )}
                   />
                 </Flex>
                 <Divider my="xs" />
-                <Input.Wrapper label="Length of Stay" mb="lg">
+                <Input.Wrapper
+                  label="Length of Stay"
+                  styles={{ label: { color: rangeChanged(store, 'los') ? 'var(--mantine-color-blue-filled)' : undefined } }}
+                >
                   {store.filtersStore.showFilterHistograms && (
-                  <Flex justify="center">
-                    <BarChart
-                      h={30}
-                      style={{ width: 'calc(100% - 12px)' }}
-                      barProps={{ barSize: '100%' }}
-                      data={store.filtersStore.losHistogramData}
-                      dataKey="units"
-                      withXAxis={false}
-                      withYAxis={false}
-                      withTooltip={false}
-                      gridAxis="none"
-                      series={[{ name: 'count', color: 'blue' }]}
-                      ml={1}
-                    />
-                  </Flex>
+                    <Flex justify="center">
+                      <BarChart
+                        h={30}
+                        style={{ width: 'calc(100% - 12px)' }}
+                        barProps={{ barSize: '100%' }}
+                        data={store.filtersStore.losHistogramData}
+                        dataKey="units"
+                        withXAxis={false}
+                        withYAxis={false}
+                        withTooltip={false}
+                        gridAxis="none"
+                        series={[{ name: 'count', color: DEFAULT_DATA_COLOR }]}
+                        ml={1}
+                      />
+                    </Flex>
                   )}
                   <FilterRangeSlider varName="los" />
                 </Input.Wrapper>
