@@ -297,7 +297,7 @@ export const TRANSFUSION_COUNT_OPTIONS = Object.values(TRANSFUSION_COUNT) as Rea
 
 // Total guideline adherence (Across all blood products)
 export const OVERALL_GUIDELINE_ADHERENT = {
-  value: 'overall_adherent_count',
+  value: 'overall_adherence',
   label: {
     base: 'Guideline Adherent Transfusions',
     sum: 'Total Guideline Adherent Transfusions',

@@ -25,6 +25,7 @@ const statInfoModals: Record<string, string> = {
   plt_adherence: 'Percentage of platelet transfusions that met clinical guidelines.',
   ffp_adherence: 'Percentage of FFP transfusions that met clinical guidelines.',
   cryo_adherence: 'Percentage of cryoprecipitate transfusions that met clinical guidelines.',
+  overall_adherence: 'Overall percentage of transfusions that met clinical guidelines.',
 };
 
 export function StatsGrid() {
