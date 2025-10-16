@@ -272,6 +272,16 @@ export const TRANSFUSION_COUNT = {
     units: { sum: 'Cryo Transfusions', avg: 'Cryo Transfusions' },
     decimals: { sum: 0, avg: 2 },
   },
+  overall_transfusion: {
+    value: 'overall_transfusions_count',
+    label: {
+      base: 'Total Transfusions',
+      sum: 'Total Transfusions',
+      avg: 'Average Transfusions Per Visit',
+    },
+    units: { sum: 'Transfusions', avg: 'Transfusions' },
+    decimals: { sum: 0, avg: 2 },
+  },
 } as const;
 
 // Types for guideline adherence fields
@@ -499,15 +509,17 @@ export const dashboardYAxisGroupedOptions = [
   },
   {
     group: 'Costs',
-    items: COST_OPTIONS.map((o) => ({
-      value: o.value,
-      label: o.label.base,
-    })),
+    items: [
+      { value: OVERALL_BLOOD_PRODUCT_COST.value, label: OVERALL_BLOOD_PRODUCT_COST.label.base },
+      ...COST_OPTIONS.map((o) => ({
+        value: o.value,
+        label: o.label.base,
+      })),
+    ],
   },
   {
     group: 'Blood Products Used',
     items: [
-      { value: OVERALL_BLOOD_PRODUCT_COST.value, label: OVERALL_BLOOD_PRODUCT_COST.label.base },
       ...BLOOD_COMPONENT_OPTIONS.map((o) => ({
         value: o.value,
         label: o.label.base,

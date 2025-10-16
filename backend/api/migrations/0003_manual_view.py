@@ -262,6 +262,8 @@ class Migration(migrations.Migration):
                 ffp_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
                 plt_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
                 cryo_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
+                overall_adherent_count SMALLINT UNSIGNED AS (rbc_adherent_count + ffp_adherent_count + plt_adherent_count + cryo_adherent_count) STORED,
+                overall_transfusions_count SMALLINT UNSIGNED AS (rbc_transfusions_count + ffp_transfusions_count + plt_transfusions_count + cryo_transfusions_count) STORED,
                 PRIMARY KEY (visit_no),
                 FOREIGN KEY (visit_no) REFERENCES Visit(visit_no)
             ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
@@ -311,16 +313,31 @@ class Migration(migrations.Migration):
                 ffp_adherent_count SMALLINT UNSIGNED DEFAULT 0,
                 plt_adherent_count SMALLINT UNSIGNED DEFAULT 0,
                 cryo_adherent_count SMALLINT UNSIGNED DEFAULT 0,
+                overall_adherent_count SMALLINT UNSIGNED AS (rbc_adherent_count + ffp_adherent_count + plt_adherent_count + cryo_adherent_count) STORED,
 
                 rbc_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
                 ffp_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
                 plt_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
                 cryo_transfusions_count SMALLINT UNSIGNED DEFAULT 0,
+                overall_transfusions_count SMALLINT UNSIGNED AS (rbc_transfusions_count + ffp_transfusions_count + plt_transfusions_count + cryo_transfusions_count) STORED,
 
                 rbc_adherence DECIMAL(6,4) DEFAULT NULL,
                 ffp_adherence DECIMAL(6,4) DEFAULT NULL,
                 plt_adherence DECIMAL(6,4) DEFAULT NULL,
                 cryo_adherence DECIMAL(6,4) DEFAULT NULL,
+                overall_adherence DECIMAL(6,4) AS (
+                    (
+                        COALESCE(rbc_adherence, 0) +
+                        COALESCE(ffp_adherence, 0) +
+                        COALESCE(plt_adherence, 0) +
+                        COALESCE(cryo_adherence, 0)
+                    ) / NULLIF(
+                        (IF(rbc_adherence IS NOT NULL, 1, 0) +
+                        IF(ffp_adherence IS NOT NULL, 1, 0) +
+                        IF(plt_adherence IS NOT NULL, 1, 0) +
+                        IF(cryo_adherence IS NOT NULL, 1, 0)), 0
+                    )
+                ) STORED,
 
                 PRIMARY KEY (visit_no),
                 FOREIGN KEY (visit_no) REFERENCES Visit(visit_no),

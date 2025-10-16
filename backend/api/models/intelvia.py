@@ -93,21 +93,25 @@ class VisitAttributes(models.Model):
     ffp_adherent_count = models.IntegerField()
     plt_adherent_count = models.IntegerField()
     cryo_adherent_count = models.IntegerField()
+    overall_adherent_count = models.IntegerField()
 
     rbc_transfusions_count = models.IntegerField()
     ffp_transfusions_count = models.IntegerField()
     plt_transfusions_count = models.IntegerField()
     cryo_transfusions_count = models.IntegerField()
+    overall_transfusions_count = models.IntegerField()
 
     rbc_adherence = models.DecimalField(max_digits=6, decimal_places=4, null=True)
     ffp_adherence = models.DecimalField(max_digits=6, decimal_places=4, null=True)
     plt_adherence = models.DecimalField(max_digits=6, decimal_places=4, null=True)
     cryo_adherence = models.DecimalField(max_digits=6, decimal_places=4, null=True)
+    overall_adherence = models.DecimalField(max_digits=6, decimal_places=4, null=True)
 
     rbc_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
     ffp_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
     plt_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
     cryo_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
+    overall_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
 
     class Meta:
         db_table = "VisitAttributes"
@@ -120,10 +124,12 @@ class GuidelineAdherence(models.Model):
     ffp_adherent_count = models.IntegerField()
     plt_adherent_count = models.IntegerField()
     cryo_adherent_count = models.IntegerField()
+    overall_adherent_count = models.IntegerField()
     rbc_transfusions_count = models.IntegerField()
     ffp_transfusions_count = models.IntegerField()
     plt_transfusions_count = models.IntegerField()
     cryo_transfusions_count = models.IntegerField()
+    overall_transfusions_count = models.IntegerField()
 
     class Meta:
         db_table = "GuidelineAdherence"
