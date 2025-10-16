@@ -26,8 +26,6 @@ class Command(BaseCommand):
             columns = [col[0] for col in cursor.description]
             rows = cursor.fetchall()
             visits = [dict(zip(columns, row)) for row in rows]
-            for v in visits:
-                v["los"] = float(v["los"]) if v["los"] is not None else None
 
         # Use pyarrow to create a Parquet file
 
@@ -54,7 +52,7 @@ class Command(BaseCommand):
             pa.field("cell_saver_ml", pa.uint32(), nullable=False),
             pa.field("overall_units", pa.uint16(), nullable=False),        # computed/stored
 
-            pa.field("los", pa.float32(), nullable=True),
+            pa.field("los", pa.decimal128(6, 2), nullable=True),
             pa.field("death", pa.bool8(), nullable=True),
             pa.field("vent", pa.bool8(), nullable=True),
             pa.field("stroke", pa.bool8(), nullable=True),
