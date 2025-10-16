@@ -64,7 +64,7 @@ export function makeHumanReadableValues(columnName: keyof typeof columnNameMap, 
     return (value === 1 || value === true) ? 'Yes' : 'No';
   }
   if (
-    ['rbc_adherence', 'ffp_adherence', 'plt_adherence', 'cryo_adherence'].includes(columnName)
+    ['rbc_adherence', 'ffp_adherence', 'plt_adherence', 'cryo_adherence', 'overall_adherence'].includes(columnName)
     && (value === null || value === undefined)
   ) {
     return 'N/A';
