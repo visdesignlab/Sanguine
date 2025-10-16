@@ -1,7 +1,6 @@
 import {
   IconArrowDownRight,
   IconArrowUpRight,
-  IconInfoCircle,
 } from '@tabler/icons-react';
 import {
   Card,
@@ -38,8 +37,7 @@ export function StatsGrid() {
   const store = useContext(Store);
 
   // Info Modal
-  const [infoModal, setInfoModal] = useState<{ open: boolean; content: string }>({ open: false, content: '' });
-  const [infoIconHoveredIdx, setInfoIconHoveredIdx] = useState<number | null>(null);
+  const [infoModal, setInfoModal] = useState<{ open: boolean; content: string; title: string }>({ open: false, content: '', title: '' });
 
   // Track hovered card index
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -75,17 +73,26 @@ export function StatsGrid() {
         : negativeColor;
 
       // Determine if this card is currently hovered
-      const isHovered = hoveredIdx === idx;
+      const isStatHovered = hoveredIdx === idx;
+
+      // Card click handler for info modal
+      const handleCardClick = () => {
+        if (hasInfo) {
+          setInfoModal({ open: true, content: statInfoModals[statConfig.yAxisVar], title: statConfig.title });
+        }
+      };
 
       return (
         <Card
           key={statConfig.statId}
           className={clsx(
             gridItemStyles.gridItem,
-            isHovered && gridItemStyles.gridItemHovered,
+            isStatHovered && gridItemStyles.gridItemHovered,
           )}
           onMouseEnter={() => setHoveredIdx(idx)}
           onMouseLeave={() => setHoveredIdx(null)}
+          onClick={handleCardClick}
+          style={{ cursor: hasInfo ? 'pointer' : undefined }}
         >
           <LoadingOverlay visible={statData?.value === undefined} zIndex={1} overlayProps={{ radius: 'sm', blur: 2 }} />
           <Group justify="space-between" align="center">
@@ -93,54 +100,25 @@ export function StatsGrid() {
             <Text
               className={clsx(
                 gridItemStyles.variableTitle,
-                isHovered && gridItemStyles.active,
+                isStatHovered && gridItemStyles.active,
               )}
               style={{ flex: 1, textAlign: 'left' }}
             >
               {statConfig.title}
             </Text>
             <Group gap={4} align="center" style={{ justifyContent: 'flex-end' }}>
-              {/* Info Icon (if applicable) */}
-              {hasInfo && isHovered && (
-                <>
-                  <IconInfoCircle
-                    size={cardIconSize}
-                    stroke={cardIconStroke}
-                    className={clsx(
-                      statsGridStyles.icon,
-                      isHovered && statsGridStyles.iconHovered,
-                      infoIconHoveredIdx === idx && statsGridStyles.iconInfoHovered,
-                    )}
-                    onMouseEnter={() => setInfoIconHoveredIdx(idx)}
-                    onMouseLeave={() => setInfoIconHoveredIdx(null)}
-                    onClick={() => setInfoModal({ open: true, content: statInfoModals[statConfig.yAxisVar] })}
-                  />
-                  <Modal
-                    opened={infoModal.open}
-                    onClose={() => {
-                      setInfoModal({ open: false, content: '' });
-                      setHoveredIdx(null);
-                      setInfoIconHoveredIdx(null);
-                    }}
-                    title={statConfig.title}
-                    centered
-                  >
-                    <Text>{statInfoModals[statConfig.yAxisVar]}</Text>
-                  </Modal>
-                </>
-              )}
               {/** Stat Icon */}
               <Icon
                 className={clsx(
                   statsGridStyles.icon,
-                  isHovered && statsGridStyles.iconHovered,
+                  isStatHovered && statsGridStyles.iconHovered,
                 )}
                 size={cardIconSize}
                 stroke={cardIconStroke}
               />
               {/** Stat Close / Delete Button */}
-              {isHovered && (
-              <CloseButton size="xs" onClick={() => handleRemoveStat(statConfig.statId)} />
+              {isStatHovered && (
+                <CloseButton size="xs" onClick={(e) => { e.stopPropagation(); handleRemoveStat(statConfig.statId); }} />
               )}
             </Group>
           </Group>
@@ -177,7 +155,7 @@ export function StatsGrid() {
               ml={2}
               className={clsx(
                 statsGridStyles.comparisonText,
-                isHovered && statsGridStyles.comparisonTextHovered,
+                isStatHovered && statsGridStyles.comparisonTextHovered,
               )}
             >
               {`last 30 days vs. ${statData?.comparedTo || 'previous period'}`}
@@ -188,8 +166,19 @@ export function StatsGrid() {
     });
 
     return (
-      // TODO: Breakpoints should be the same for the entire dashboard
-      <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>{statCards}</SimpleGrid>
+      <>
+        {/* Stat Cards */}
+        <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>{statCards}</SimpleGrid>
+        {/* Info Modal */}
+        <Modal
+          opened={infoModal.open}
+          onClose={() => setInfoModal({ open: false, content: '', title: '' })}
+          title={infoModal.title}
+          centered
+        >
+          <Text>{infoModal.content}</Text>
+        </Modal>
+      </>
     );
   });
 }
