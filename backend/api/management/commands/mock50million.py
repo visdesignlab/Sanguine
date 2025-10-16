@@ -176,7 +176,6 @@ class Command(BaseCommand):
                 death_date = (
                     death_date if fake.random_element(elements=(True, False)) else None
                 )
-                # bad_pat = fake.random_element(elements=(True, True, False)) if death_date is not None else fake.random_element(False, False, True)
                 bad_pat = fake.random_element(elements=OrderedDict([(True, 0.67), (False, 0.33)]))
 
                 patient = {
@@ -437,7 +436,10 @@ class Command(BaseCommand):
         def make_lab_row(fake, pat, visit, lab_draw_dtm, last_lab, test_type):
             if test_type == ["HGB", "Hemoglobin"]:
                 if last_lab is None:
-                    result_value = fake.pydecimal(left_digits=2, right_digits=1, positive=True, min_value=6, max_value=16)
+                    if random.random() < 0.4:  # 40% chance low
+                        result_value = fake.pydecimal(left_digits=1, right_digits=1, positive=True, min_value=6, max_value=9)
+                    else:
+                        result_value = fake.pydecimal(left_digits=2, right_digits=1, positive=True, min_value=10, max_value=16)
                 else:
                     if last_lab["result_value"] < 6:
                         result_value = last_lab["result_value"] + 2
@@ -456,7 +458,10 @@ class Command(BaseCommand):
                 uom = "g/dL"
             elif test_type == ["INR"]:
                 if last_lab is None:
-                    result_value = fake.pydecimal(left_digits=2, right_digits=2, positive=True, min_value=0.5, max_value=5.0)
+                    if random.random() < 0.4:  # 40% chance low
+                        result_value = fake.pydecimal(left_digits=1, right_digits=1, positive=True, min_value=6, max_value=9)
+                    else:
+                        result_value = fake.pydecimal(left_digits=2, right_digits=1, positive=True, min_value=10, max_value=16)
                 else:
                     if last_lab["result_value"] > 4.0:
                         result_value = last_lab["result_value"] - 1.5
@@ -477,8 +482,8 @@ class Command(BaseCommand):
                 CRITICAL_LOW_MAX = 30000
                 if last_lab is None:
                     # Normal adult range ~150k–450k per µL
-                    if random.random() < 0.1:
-                        # 10% of labs are critically low (5,000 to 30,000)
+                    if random.random() < 0.25:
+                        # 25% of labs are critically low (5,000 to 30,000)
                         result_value = fake.pydecimal(left_digits=5, right_digits=0, positive=True, min_value=5000, max_value=CRITICAL_LOW_MAX)
                     else:
                         # The normal range
@@ -500,7 +505,10 @@ class Command(BaseCommand):
                 uom = "cells/uL"
             elif test_type == ["Fibrinogen"]:
                 if last_lab is None:
-                    result_value = fake.pydecimal(left_digits=3, right_digits=1, positive=True, min_value=80, max_value=300)
+                    if random.random() < 0.35:  # 35% chance low
+                        result_value = fake.pydecimal(left_digits=3, right_digits=1, positive=True, min_value=80, max_value=150)
+                    else:
+                        result_value = fake.pydecimal(left_digits=3, right_digits=1, positive=True, min_value=151, max_value=300)
                 else:
                     if last_lab["result_value"] < 150:
                         result_value = last_lab["result_value"] + 100
