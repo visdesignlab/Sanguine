@@ -731,7 +731,6 @@ class Command(BaseCommand):
                     elif hgb < 8: rbc_units = random.randint(0, 2)
                     elif hgb < 9 and random.random() < 0.4: rbc_units = 1
                     elif hgb < 10 and random.random() < 0.25: rbc_units = 1
-                    rbc_units = min(rbc_units, 6)
                 if inr is not None:
                     if inr > 4: ffp_units = random.randint(3, 7)
                     elif inr > 2: ffp_units = random.randint(2, 4)
