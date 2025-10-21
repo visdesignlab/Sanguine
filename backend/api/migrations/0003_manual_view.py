@@ -127,7 +127,9 @@ def create_materialize_proc(apps, schema_editor):
             rbc_adherent,
             ffp_adherent,
             plt_adherent,
-            cryo_adherent
+            cryo_adherent,
+            attending_provider,
+            attending_provider_id
         )
         SELECT
             v.visit_no,
@@ -159,19 +161,24 @@ def create_materialize_proc(apps, schema_editor):
             COALESCE(ga.ffp_adherent, 0) AS ffp_adherent,
             COALESCE(ga.plt_adherent, 0) AS plt_adherent,
             COALESCE(ga.cryo_adherent, 0) AS cryo_adherent
-        FROM Visit v
-        LEFT JOIN (
-            SELECT
-                visit_no,
+        FROM (
+            select 
+                ap.visit_no,
+                ap.prov_id,
+                ap.prov_name,
+                ap.attend_prov_line,
                 SUM(rbc_units) AS sum_rbc_units,
                 SUM(ffp_units) AS sum_ffp_units,
                 SUM(plt_units) AS sum_plt_units,
                 SUM(cryo_units) AS sum_cryo_units,
                 SUM(whole_units) AS sum_whole_units,
                 SUM(cell_saver_ml) AS sum_cell_saver_ml
-            FROM Transfusion
-            GROUP BY visit_no
-        ) t ON t.visit_no = v.visit_no
+            from AttendingProvider ap
+            left join Transfusion t on ap.visit_no = t.visit_no and t.trnsfsn_dtm between ap.attend_start_dtm and ap.attend_end_dtm
+            group by ap.visit_no, ap.prov_id, ap.prov_name, ap.attend_prov_line
+            having SUM(rbc_units) > 0 or SUM(ffp_units) > 0 or SUM(plt_units) > 0 or SUM(cryo_units) > 0 or SUM(whole_units) > 0 or SUM(cell_saver_ml) > 0
+        )
+        FROM Visit v
         LEFT JOIN (
             SELECT
                 visit_no,
@@ -272,6 +279,8 @@ class Migration(migrations.Migration):
                 plt_adherent SMALLINT UNSIGNED DEFAULT 0,
                 cryo_adherent SMALLINT UNSIGNED DEFAULT 0,
                 overall_adherent SMALLINT UNSIGNED AS (rbc_adherent + ffp_adherent + plt_adherent + cryo_adherent) STORED,
+                attending_provider = list of providers that were on this visit
+                attending_provider_id = list of provider ids that were on this visit
 
                 PRIMARY KEY (visit_no),
                 FOREIGN KEY (visit_no) REFERENCES Visit(visit_no),

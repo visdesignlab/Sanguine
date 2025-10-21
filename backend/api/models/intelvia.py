@@ -101,6 +101,9 @@ class VisitAttributes(models.Model):
     cryo_units_cost = models.DecimalField(max_digits=6, decimal_places=2)
     overall_cost = models.DecimalField(max_digits=6, decimal_places=2)
 
+    attending_provider = models.CharField(max_length=100)
+    attending_provider_id = models.CharField(max_length=25)
+
     class Meta:
         db_table = "VisitAttributes"
         managed = False

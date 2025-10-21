@@ -67,6 +67,9 @@ class Command(BaseCommand):
             pa.field("plt_adherent", pa.uint16(), nullable=False),
             pa.field("cryo_adherent", pa.uint16(), nullable=False),
             pa.field("overall_adherent", pa.uint16(), nullable=False),     # computed/stored
+
+            pa.field("attending_provider", pa.string(), nullable=False),
+            pa.field("attending_provider_id", pa.string(), nullable=False),
         ])
 
         table = pa.Table.from_pylist(visits, schema=visit_attributes_schema)
