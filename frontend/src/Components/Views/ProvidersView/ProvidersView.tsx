@@ -20,7 +20,7 @@ import { useThemeConstants } from '../../../Theme/mantineTheme';
 export function ProvidersView() {
   const store = useContext(Store);
 
-  // Todo: Remove initialization
+  // Initialize provider view data
   useEffect(() => {
     if (store.providersStore?.getProviderCharts && store.duckDB) {
       store.providersStore.getProviderCharts();
@@ -30,6 +30,7 @@ export function ProvidersView() {
     }
   }, [store.providersStore, store.duckDB]);
 
+  // Styles
   const { toolbarWidth, cardIconStroke, buttonIconSize } = useThemeConstants();
 
   // Local state
@@ -44,6 +45,7 @@ export function ProvidersView() {
         <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
           <Title order={3}>Providers</Title>
           <Flex direction="row" align="center" gap="md" ml="auto">
+            {/* Visit Count */}
             <Tooltip label="Visible visits after filters" position="bottom">
               <Title order={5} c="dimmed">
                 {`${store.filteredVisitsLength} / ${store.allVisitsLength}`}
@@ -51,7 +53,7 @@ export function ProvidersView() {
                 Visits
               </Title>
             </Tooltip>
-
+            {/* Provider Select */}
             <Select
               placeholder="Search for a provider"
               leftSection={<IconSearch size={18} stroke={1} />}
@@ -62,7 +64,7 @@ export function ProvidersView() {
               style={{ minWidth: 180 }}
               onChange={(val) => { if (store.providersStore) store.providersStore.selectedProvider = val; }}
             />
-
+            {/* Date Range Picker */}
             <DatePickerInput
               type="range"
               defaultValue={[
@@ -75,16 +77,15 @@ export function ProvidersView() {
               value={dateRange}
               onChange={setDateRange}
             />
-
+            {/* Add Chart Button */}
             <Button>
               <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
               Add Chart
             </Button>
           </Flex>
         </Flex>
-
         <Divider />
-
+        {/* Provider Summary Card */}
         <Card shadow="sm" radius="md" p="xl" mb="md" withBorder>
           <Stack gap="xs">
             <Title order={3}>
@@ -133,14 +134,17 @@ export function ProvidersView() {
             </Stack>
           </Stack>
         </Card>
-
+        {/* Provider Charts - e.g. Anemia Management */}
         {chartGroups.map((group) => (
           <div key={group}>
-            <Title order={3}>{group}</Title>
-            <Flex gap="sm">
+            <Title order={3} mt="md">{group}</Title>
+            <Flex gap="md" mt="md">
+              {/* For each chart in chart data ... */}
               {Object.entries(store.providersStore?.providerChartData || {})
+                // Render the charts in this chart group
                 .filter(([, chart]) => chart.group === group)
                 .map(([chartId, chart]) => {
+                  // Chart series
                   const series = (chart.data && chart.data.length > 0)
                     ? Object.keys(chart.data[0]).filter((k) => k !== chart.dataKey).map((name) => ({ name, color: 'blue.6' }))
                     : [];
