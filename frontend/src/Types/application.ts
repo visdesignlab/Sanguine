@@ -458,6 +458,7 @@ export const chartColors = [
   '#FFD13C',
   '#73C3C5',
 ];
+
 // Provider View ----------------------------------------------------
 type ProviderChart = {
     group?: string;
@@ -471,7 +472,16 @@ type ProviderChart = {
     orientation: 'horizontal' | 'vertical';
   };
 
+export const providerChartGroups = ['Anemia Management', 'Outcomes'];
+
 export type ProviderChartData = Record<string, ProviderChart>;
+
+export type ProviderChartConfig = ChartConfig<
+  typeof dashboardXAxisVars[number],
+  typeof dashboardYAxisVars[number],
+  keyof typeof AGGREGATION_OPTIONS,
+  'bar'
+> & { group?: (typeof providerChartGroups)[number] };
 
 // Explore View ----------------------------------------------------
 // Aggregation options for explore view

@@ -1,18 +1,6 @@
 import { makeAutoObservable } from 'mobx';
 import type { RootStore } from './Store';
-import { dashboardYAxisOptions, ProviderChartData } from '../Types/application';
-
-type ProviderChart = {
-    group?: string;
-    title: string;
-    data: Array<Record<string, string | number | boolean | null>>;
-    dataKey: string;
-    bestMark?: number;
-    recommendedMark?: number;
-    providerMark?: number;
-    providerName?: string | null;
-    orientation: 'horizontal' | 'vertical';
-  };
+import { AGGREGATION_OPTIONS, dashboardYAxisOptions, ProviderChartConfig, ProviderChartData } from '../Types/application';
 
 /**
  * ProvidersStore manages provider data for the provider view.
@@ -20,11 +8,15 @@ type ProviderChart = {
 export class ProvidersStore {
   _rootStore: RootStore;
 
+  constructor(rootStore: RootStore) {
+    this._rootStore = rootStore;
+    makeAutoObservable(this);
+  }
+
   providerChartData: ProviderChartData = {};
 
   providerList: string[] = [];
 
-  // backing field for selectedProvider — use getter/setter so changes trigger chart recalculation
   _selectedProvider: string | null = null;
 
   get selectedProvider(): string | null {
@@ -34,19 +26,14 @@ export class ProvidersStore {
   set selectedProvider(val: string | null) {
     if (this._selectedProvider === val) return;
     this._selectedProvider = val;
-    // Recompute charts when selected provider changes. Fire-and-forget; errors logged.
+    // Recompute charts when selected provider changes
     this.getProviderCharts().catch((e) => {
       console.error('Error refreshing provider charts after provider change:', e);
     });
   }
 
-  constructor(rootStore: RootStore) {
-    this._rootStore = rootStore;
-    makeAutoObservable(this);
-  }
-
   // Chart configurations by default
-  _chartConfigs = [
+  _chartConfigs: ProviderChartConfig[] = [
     {
       chartId: '0', xAxisVar: 'month', yAxisVar: 'rbc_adherent', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
     },
@@ -71,7 +58,7 @@ export class ProvidersStore {
     return this._chartConfigs;
   }
 
-  set chartConfigs(input: any[]) {
+  set chartConfigs(input: ProviderChartConfig[]) {
     this._chartConfigs = input;
   }
 
@@ -109,33 +96,60 @@ export class ProvidersStore {
     }
 
     try {
-      const charts: Record<string, ProviderChart> = {};
+      const charts: ProviderChartData = {};
 
-      for (const cfg of this._chartConfigs) {
+      // --- Build charts query ---
+      const selectClauses = this._chartConfigs.flatMap(({ yAxisVar }) => (
+        Object.keys(AGGREGATION_OPTIONS).flatMap((aggregation) => {
+          const aggFn = aggregation.toUpperCase();
+
+          // Special case: Sum of all blood product costs
+          if (yAxisVar === 'total_blood_product_cost') {
+            return [
+              `${aggFn}(rbc_units_cost) AS ${aggregation}_rbc_units_cost`,
+              `${aggFn}(plt_units_cost) AS ${aggregation}_plt_units_cost`,
+              `${aggFn}(ffp_units_cost) AS ${aggregation}_ffp_units_cost`,
+              `${aggFn}(cryo_units_cost) AS ${aggregation}_cryo_units_cost`,
+              `${aggFn}(cell_saver_cost) AS ${aggregation}_cell_saver_cost`,
+            ];
+          }
+
+          if (yAxisVar === 'case_mix_index') {
+            return `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`;
+          }
+
+          // Return aggregated attribute. (E.g. "SUM(rbc_units) AS sum_rbc_units")
+          return `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`;
+        })
+      ));
+
+      const query = `
+        SELECT attending_provider, ${selectClauses.join(', ')}
+        FROM filteredVisits
+        WHERE attending_provider IS NOT NULL
+        GROUP BY attending_provider;
+      `;
+
+      // --- Execute query ---
+      const res = await this._rootStore.duckDB.query(query);
+      const rows = res.toArray().map((r) => r.toJSON());
+
+      // Helper to round values appropriately
+      const roundVal = (num: number) => {
+        if (!Number.isFinite(num)) return NaN;
+        return Math.abs(num - Math.round(num)) < 1e-9 ? Math.round(num) : Math.round(num * 10) / 10;
+      };
+
+      // --- For each chart config, build the chart data ---
+      this._chartConfigs.forEach((cfg) => {
         const yVar = cfg.yAxisVar;
         const chartKey = `${cfg.chartId}_${yVar}`;
         const aggregation = cfg.aggregation || 'avg';
 
-        // Query average per provider for this metric
-        const query = `
-          SELECT attending_provider, AVG(${yVar}) AS avg_val
-          FROM filteredVisits
-          WHERE attending_provider IS NOT NULL
-          GROUP BY attending_provider;
-        `;
-        const res = await this._rootStore.duckDB.query(query);
-        const rows = res.toArray().map((r) => r.toJSON());
-
-        // helper to round values same way we bucket them
-        const roundVal = (num: number) => {
-          if (!Number.isFinite(num)) return NaN;
-          return Math.abs(num - Math.round(num)) < 1e-9 ? Math.round(num) : Math.round(num * 10) / 10;
-        };
-
-        // Build a simple frequency distribution (bucket by rounded value)
+        // Frequency distribution for this yVar
         const freq = new Map<number, number>();
         rows.forEach((r) => {
-          const raw = r.avg_val;
+          const raw = r[`avg_${yVar}`];
           if (raw === null || raw === undefined || Number.isNaN(Number(raw))) return;
           const num = Number(raw);
           const rounded = roundVal(num);
@@ -155,12 +169,14 @@ export class ProvidersStore {
         let providerName: string | null = null;
         if (this.selectedProvider) {
           const match = rows.find((r) => String(r.attending_provider) === String(this.selectedProvider));
-          if (match && match.avg_val !== null && match.avg_val !== undefined && !Number.isNaN(Number(match.avg_val))) {
-            providerMark = roundVal(Number(match.avg_val));
+          const matchVal = match ? match[`avg_${yVar}`] : undefined;
+          if (match && matchVal !== null && matchVal !== undefined && !Number.isNaN(Number(matchVal))) {
+            providerMark = roundVal(Number(matchVal));
             providerName = String(match.attending_provider);
           }
         }
 
+        // TODO: Update recommended and best marks based on provider benchmarks
         const recommendedMark = (providerMark !== undefined && !Number.isNaN(providerMark))
           ? roundVal(providerMark * 1.2)
           : undefined;
@@ -168,12 +184,14 @@ export class ProvidersStore {
           ? roundVal(providerMark * 1.5)
           : undefined;
 
+        // Get chart title
         const chartYAxis = dashboardYAxisOptions.find((o) => o.value === yVar);
-        const yLabel = chartYAxis?.label?.[aggregation] ?? yVar;
+        const chartTitle = chartYAxis?.label?.[aggregation] ?? yVar;
 
+        // Save chart
         charts[chartKey] = {
           group: cfg.group || 'Ungrouped',
-          title: yLabel,
+          title: chartTitle,
           data,
           dataKey: yVar,
           orientation: 'horizontal',
@@ -182,12 +200,13 @@ export class ProvidersStore {
           providerMark,
           providerName,
         };
-      }
+      });
 
+      // Update store
       this.providerChartData = charts;
-
       return this.providerChartData;
     } catch (e) {
+      // Error handling
       console.error('Error building provider charts:', e);
       this.providerChartData = {};
       return this.providerChartData;
