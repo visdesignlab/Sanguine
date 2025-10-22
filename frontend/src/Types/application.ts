@@ -458,6 +458,20 @@ export const chartColors = [
   '#FFD13C',
   '#73C3C5',
 ];
+// Provider View ----------------------------------------------------
+type ProviderChart = {
+    group?: string;
+    title: string;
+    data: Array<Record<string, string | number | boolean | null>>;
+    dataKey: string;
+    bestMark?: number;
+    recommendedMark?: number;
+    providerMark?: number;
+    providerName?: string | null;
+    orientation: 'horizontal' | 'vertical';
+  };
+
+export type ProviderChartData = Record<string, ProviderChart>;
 
 // Explore View ----------------------------------------------------
 // Aggregation options for explore view

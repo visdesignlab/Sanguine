@@ -1,5 +1,6 @@
 import { makeAutoObservable } from 'mobx';
 import type { RootStore } from './Store';
+import { ProviderChartData } from '../Types/application';
 
 type ProviderChart = {
     group?: string;
@@ -19,7 +20,7 @@ type ProviderChart = {
 export class ProvidersStore {
   _rootStore: RootStore;
 
-  providerChartData: Record<string, ProviderChart> = {};
+  providerChartData: ProviderChartData = {};
 
   providerList: string[] = [];
 
@@ -199,22 +200,7 @@ export class ProvidersStore {
       }
 
       this.providerChartData = charts;
-      // Pretty-print built charts for easier inspection
-      console.log(`Built provider charts (${Object.keys(this.providerChartData).length}):`);
-      for (const [key, chart] of Object.entries(this.providerChartData)) {
-        console.groupCollapsed(`${key} — ${chart.title} (${chart.group ?? 'Ungrouped'})`);
-        console.log('dataKey:', chart.dataKey);
-        console.log('orientation:', chart.orientation);
-        console.log('bestMark:', chart.bestMark, 'recommendedMark:', chart.recommendedMark, 'providerMark:', chart.providerMark);
-        if (chart.providerName) console.log('providerName:', chart.providerName);
-        if (Array.isArray(chart.data) && chart.data.length) {
-          console.table(chart.data.slice(0, 20));
-          if (chart.data.length > 20) console.log(`...and ${chart.data.length - 20} more rows`);
-        } else {
-          console.log('data: (empty)');
-        }
-        console.groupEnd();
-      }
+
       return this.providerChartData;
     } catch (e) {
       console.error('Error building provider charts:', e);
