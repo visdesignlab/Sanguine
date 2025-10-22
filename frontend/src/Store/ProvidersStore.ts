@@ -1,6 +1,6 @@
 import { makeAutoObservable } from 'mobx';
 import type { RootStore } from './Store';
-import { ProviderChartData } from '../Types/application';
+import { dashboardYAxisOptions, ProviderChartData } from '../Types/application';
 
 type ProviderChart = {
     group?: string;
@@ -54,7 +54,7 @@ export class ProvidersStore {
       chartId: '1', xAxisVar: 'quarter', yAxisVar: 'ffp_adherent', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
     },
     {
-      chartId: '2', xAxisVar: 'quarter', yAxisVar: 'cryo_adherent', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
+      chartId: '2', xAxisVar: 'quarter', yAxisVar: 'plt_adherent', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
     },
     {
       chartId: '0', xAxisVar: 'month', yAxisVar: 'death', aggregation: 'avg', chartType: 'bar', group: 'Outcomes',
@@ -114,6 +114,7 @@ export class ProvidersStore {
       for (const cfg of this._chartConfigs) {
         const yVar = cfg.yAxisVar;
         const chartKey = `${cfg.chartId}_${yVar}`;
+        const aggregation = cfg.aggregation || 'avg';
 
         // Query average per provider for this metric
         const query = `
@@ -167,30 +168,12 @@ export class ProvidersStore {
           ? roundVal(providerMark * 1.5)
           : undefined;
 
-        // Title: convert snake_case to Title Case
-        const baseTitle = String(yVar)
-          .split('_')
-          .map((s) => s.charAt(0) + s.slice(1))
-          .join(' ');
-
-        const agg = String(cfg.aggregation ?? '').toLowerCase();
-        let title = baseTitle;
-        if (agg === 'avg' || agg === 'average') {
-          title = `Average ${baseTitle} Per Visit`;
-        } else if (agg === 'sum' || agg === 'total') {
-          title = `Total ${baseTitle}`;
-        } else if (agg === 'count') {
-          title = `Number of ${baseTitle}`;
-        } else if (agg === 'rate') {
-          title = `${baseTitle} Rate`;
-        } else if (agg) {
-          // fallback: include raw aggregation string
-          title = `${baseTitle} (${cfg.aggregation})`;
-        }
+        const chartYAxis = dashboardYAxisOptions.find((o) => o.value === yVar);
+        const yLabel = chartYAxis?.label?.[aggregation] ?? yVar;
 
         charts[chartKey] = {
           group: cfg.group || 'Ungrouped',
-          title,
+          title: yLabel,
           data,
           dataKey: yVar,
           orientation: 'horizontal',
