@@ -4,18 +4,29 @@ import {
   Button,
   Select,
 } from '@mantine/core';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { DatePickerInput } from '@mantine/dates';
 import dayjs from 'dayjs';
 import { IconCalendarWeek, IconPlus, IconSearch } from '@tabler/icons-react';
 import { BarChart } from '@mantine/charts';
+import { useObserver } from 'mobx-react';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
+import { formatValueForDisplay } from '../../../Utils/dashboard';
 
 export function ProvidersView() {
   const store = useContext(Store);
 
   const { toolbarWidth } = useThemeConstants();
+
+  useEffect(() => {
+    if (store.providersStore?.getProviderCharts && store.duckDB) {
+      store.providersStore.getProviderCharts();
+    }
+    if (store.providersStore?.fetchProviderList && store.duckDB) {
+      store.providersStore.fetchProviderList();
+    }
+  }, [store.providersStore, store.duckDB]);
 
   const [dateRange, setDateRange] = useState<[string | null, string | null]>([null, null]);
 
@@ -57,205 +68,223 @@ export function ProvidersView() {
     },
   ];
 
-  // TEMPORARY MOCK DATA ------------
-  // TODO: Replace with real chart configs from a provider store
-  type ChartOrientation = 'vertical' | 'horizontal';
-  type ProviderChart = {
-    title: string;
-    data: { group: string; Adherence: number }[];
-    dataKey: string;
-    orientation: ChartOrientation;
-  };
-  const allCharts: Record<string, ProviderChart> = {
-    anemia1: {
-      title: 'Anemia Management',
-      data: [
-        { group: 'Group1', Adherence: 75 },
-        { group: 'Best', Adherence: 60 },
-        { group: 'Dr. John Doe', Adherence: 25 },
-      ],
-      dataKey: 'Adherence',
-      orientation: 'horizontal',
-    },
-    anemia2: {
-      title: 'Anemia Management',
-      data: [
-        { group: 'Benchmark', Adherence: 75 },
-        { group: 'Best', Adherence: 60 },
-        { group: 'Dr. John Doe', Adherence: 25 },
-      ],
-      dataKey: 'group',
-      orientation: 'vertical',
-    },
-    anemia3: {
-      title: 'Anemia Management',
-      data: [
-        { group: 'Benchmark', Adherence: 75 },
-        { group: 'Best', Adherence: 60 },
-        { group: 'Dr. John Doe', Adherence: 25 },
-      ],
-      dataKey: 'group',
-      orientation: 'vertical',
-    },
-    outcome1: {
-      title: 'Outcomes',
-      data: [
-        { group: 'Benchmark', Adherence: 75 },
-        { group: 'Best', Adherence: 60 },
-        { group: 'Dr. John Doe', Adherence: 25 },
-      ],
-      dataKey: 'group',
-      orientation: 'vertical',
-    },
-    outcome2: {
-      title: 'Outcomes',
-      data: [
-        { group: 'Benchmark', Adherence: 75 },
-        { group: 'Best', Adherence: 60 },
-        { group: 'Dr. John Doe', Adherence: 25 },
-      ],
-      dataKey: 'group',
-      orientation: 'vertical',
-    },
-  };
+  const providerCharts = store.providersStore?.providerChartData;
 
   const {
     cardIconStroke,
     buttonIconSize,
   } = useThemeConstants();
 
-  return (
-    <Stack mb="xl" gap="lg">
-      <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
-        {/* Dashboard Title */}
-        <Title order={3}>Providers</Title>
-        <Flex direction="row" align="center" gap="md" ml="auto">
-          {/** Visits Count */}
-          <Tooltip label="Visible visits after filters" position="bottom">
-            <Title order={5} c="dimmed">
-              {`${store.filteredVisitsLength} / ${store.allVisitsLength}`}
-              {' '}
-              Visits
-            </Title>
-          </Tooltip>
-          {/** Provider Search */}
-          <Select
-            placeholder="Search for a provider"
-            defaultValue="Dr. John Doe"
-            leftSection={<IconSearch size={18} stroke={1} />}
-            searchable
-            data={[
-              'Dr. John Doe',
-              'Dr. Jane Smith',
-              'Dr. Emily Carter',
-              'Dr. Michael Brown',
-            ]}
-            w="fit-content"
-            style={{ minWidth: 180 }}
-          />
-          {/** Date Range Picker */}
-          <DatePickerInput
-            type="range"
-            defaultValue={[
-              dayjs().subtract(6, 'month').startOf('day').toDate(),
-              dayjs().toDate(),
-            ]}
-            defaultLevel="month"
-            leftSection={<IconCalendarWeek size={18} stroke={1} />}
-            placeholder="Pick dates range"
-            presets={dateRangePresets}
-            value={dateRange}
-            onChange={setDateRange}
-          />
-          <Button>
-            <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
-            Add Chart
-          </Button>
+  return useObserver(() => {
+    const selectedProviderName = store.providersStore?.selectedProvider ?? 'Dr. John Doe';
+    const providerSelectData = store.providersStore?.providerList ?? [];
+    return (
+      <Stack mb="xl" gap="lg">
+        <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
+          {/* Dashboard Title */}
+          <Title order={3}>Providers</Title>
+          <Flex direction="row" align="center" gap="md" ml="auto">
+            {/** Visits Count */}
+            <Tooltip label="Visible visits after filters" position="bottom">
+              <Title order={5} c="dimmed">
+                {`${store.filteredVisitsLength} / ${store.allVisitsLength}`}
+                {' '}
+                Visits
+              </Title>
+            </Tooltip>
+            {/** Provider Search */}
+            <Select
+              placeholder="Search for a provider"
+              leftSection={<IconSearch size={18} stroke={1} />}
+              searchable
+              data={providerSelectData}
+              value={store.providersStore?.selectedProvider ?? undefined}
+              w="fit-content"
+              style={{ minWidth: 180 }}
+              onChange={(val) => {
+                if (store.providersStore) {
+                  store.providersStore.selectedProvider = val;
+                }
+              }}
+            />
+            {/** Date Range Picker */}
+            <DatePickerInput
+              type="range"
+              defaultValue={[
+                dayjs().subtract(6, 'month').startOf('day').toDate(),
+                dayjs().toDate(),
+              ]}
+              defaultLevel="month"
+              leftSection={<IconCalendarWeek size={18} stroke={1} />}
+              placeholder="Pick dates range"
+              presets={dateRangePresets}
+              value={dateRange}
+              onChange={setDateRange}
+            />
+            <Button>
+              <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
+              Add Chart
+            </Button>
+          </Flex>
         </Flex>
-      </Flex>
-      <Divider />
-      {/* Provider Summary Card */}
-      <Card shadow="sm" radius="md" p="xl" mb="md" withBorder>
-        <Stack gap="xs">
-          <Title order={3}>Provider Summary - Dr. John Doe</Title>
-          <Title order={4} mt="xs">
-            In the past
-            {' '}
-            <Text component="span" td="underline">3 Months</Text>
-            , Dr. John Doe has recorded:
-          </Title>
-          <Stack gap={2} mt="xs">
-            <Text size="md">
-              •
+        <Divider />
+        {/* Provider Summary Card */}
+        <Card shadow="sm" radius="md" p="xl" mb="md" withBorder>
+          <Stack gap="xs">
+            <Title order={3}>
+              Provider Summary -
               {' '}
-              <Text component="span" td="underline">28</Text>
+              {selectedProviderName}
+            </Title>
+            <Title order={4} mt="xs">
+              In the past
               {' '}
-              Cardiac Surgeries
-            </Text>
-            <Text size="md">
-              • Used
+              <Text component="span" td="underline">3 Months</Text>
+              ,
               {' '}
-              <Text component="span" td="underline">187</Text>
+              {selectedProviderName}
               {' '}
-              Units of Blood Products
-            </Text>
-            <Text size="md">
-              • Average Complexity of cases
-              {' '}
-              <Text component="span" td="underline">higher</Text>
-              {' '}
-              than average
-            </Text>
-            <Text size="md">
-              •
-              {' '}
-              <Text component="span" td="underline">13%</Text>
-              {' '}
-              of transfused patients had post operative hemoglobin above the recommended threshold
-            </Text>
+              has recorded:
+            </Title>
+            <Stack gap={2} mt="xs">
+              <Text size="md">
+                •
+                {' '}
+                <Text component="span" td="underline">28</Text>
+                {' '}
+                Cardiac Surgeries
+              </Text>
+              <Text size="md">
+                • Used
+                {' '}
+                <Text component="span" td="underline">187</Text>
+                {' '}
+                Units of Blood Products
+              </Text>
+              <Text size="md">
+                • Average Complexity of cases
+                {' '}
+                <Text component="span" td="underline">higher</Text>
+                {' '}
+                than average
+              </Text>
+              <Text size="md">
+                •
+                {' '}
+                <Text component="span" td="underline">13%</Text>
+                {' '}
+                of transfused patients had post operative hemoglobin above the recommended threshold
+              </Text>
+            </Stack>
           </Stack>
-        </Stack>
-      </Card>
-      <Title order={3}>Anemia Management</Title>
-      <Flex gap="sm">
-        {Object.entries(allCharts)
-          .filter(([_, chart]) => chart.title === 'Anemia Management')
-          .map(([chartId, chart]) => (
-            <Card key={chartId} h={200} w={300} p="md" shadow="sm">
-              <BarChart
-                h={200}
-                p="sm"
-                w="100%"
-                data={chart.data}
-                dataKey={chart.dataKey}
-                orientation={chart.orientation}
-                yAxisProps={chart.orientation === 'vertical' ? { width: 80 } : undefined}
-                barProps={{ radius: 10 }}
-                series={[{ name: 'Adherence', color: 'blue.6' }]}
-              />
-            </Card>
-          ))}
-      </Flex>
-      <Title order={3}>Outcomes</Title>
-      <Flex gap="sm">
-        {Object.entries(allCharts)
-          .filter(([_, chart]) => chart.title === 'Outcomes')
-          .map(([chartId, chart]) => (
-            <Card key={chartId} h={200} w={300} p="md" shadow="sm">
-              <BarChart
-                h={200}
-                p="sm"
-                w="100%"
-                data={chart.data}
-                dataKey={chart.dataKey}
-                orientation={chart.orientation}
-                yAxisProps={chart.orientation === 'vertical' ? { width: 80 } : undefined}
-                barProps={{ radius: 10 }}
-                series={[{ name: 'Adherence', color: 'blue.6' }]}
-              />
-            </Card>
-          ))}
-      </Flex>
-    </Stack>
-  );
+        </Card>
+        <Title order={3}>Anemia Management</Title>
+        <Flex gap="sm">
+          {Object.entries(providerCharts)
+            .filter(([_, chart]) => chart.group === 'Anemia Management')
+            .map(([chartId, chart]) => {
+              const series = (chart.data && chart.data.length > 0)
+                ? Object.keys(chart.data[0])
+                  .filter((k) => k !== chart.dataKey)
+                  .map((name) => ({ name, color: 'blue.6' }))
+                : [];
+              return (
+                <Card key={chartId} h={200} w={300} p="md" shadow="sm">
+                  <BarChart
+                    h={200}
+                    p="xs"
+                    w="100%"
+                    data={chart.data}
+                    dataKey={chart.dataKey}
+                    orientation={chart.orientation}
+                    barChartProps={{
+                      margin: {
+                        top: 8,
+                        right: 8,
+                        bottom: 8,
+                        left: 8,
+                      },
+                    }}
+                    yAxisProps={{ width: 20 }}
+                    barProps={{ radius: 5 }}
+                    series={series}
+                    xAxisProps={{
+                      label: {
+                        value: chart.title,
+                        position: 'bottom',
+                        offset: 10,
+                        dx: -6,
+                        style: { fontWeight: 600, fontSize: 13 },
+                      },
+                    }}
+                    valueFormatter={(value) => formatValueForDisplay(chart.dataKey, value, 'avg', false)}
+                    referenceLines={[
+                      {
+                        x: chart.providerMark!,
+                        color: '#4a4a4a',
+                        label: store.providersStore?.selectedProvider ?? 'Provider',
+                        labelPosition: 'top',
+                      },
+                    ]}
+                  />
+                </Card>
+              );
+            })}
+        </Flex>
+        <Title order={3}>Outcomes</Title>
+        <Flex gap="sm">
+          {Object.entries(providerCharts)
+            .filter(([_, chart]) => chart.group === 'Outcomes')
+            .map(([chartId, chart]) => {
+              const series = (chart.data && chart.data.length > 0)
+                ? Object.keys(chart.data[0])
+                  .filter((k) => k !== chart.dataKey)
+                  .map((name) => ({ name, color: 'blue.6' }))
+                : [];
+              return (
+                <Card key={chartId} h={200} w={300} p="md" shadow="sm">
+                  <BarChart
+                    h={200}
+                    p="xs"
+                    w="100%"
+                    data={chart.data}
+                    dataKey={chart.dataKey}
+                    orientation={chart.orientation}
+                    barChartProps={{
+                      margin: {
+                        top: 8,
+                        right: 8,
+                        bottom: 8,
+                        left: 8,
+                      },
+                    }}
+                    yAxisProps={{ width: 20 }}
+                    barProps={{ radius: 5 }}
+                    series={series}
+                    xAxisProps={{
+                      label: {
+                        value: chart.title,
+                        position: 'bottom',
+                        offset: 10,
+                        dx: -6,
+                        style: { fontWeight: 600, fontSize: 13 },
+                      },
+                    }}
+                    valueFormatter={(value) => formatValueForDisplay(chart.dataKey, value, 'avg', false)}
+                    referenceLines={[
+                      {
+                        x: chart.providerMark!,
+                        color: '#4a4a4a',
+                        label: store.providersStore?.selectedProvider ?? '',
+                        labelPosition: 'top',
+                      },
+                    ]}
+                  />
+                </Card>
+              );
+            })}
+        </Flex>
+      </Stack>
+    );
+  });
 }

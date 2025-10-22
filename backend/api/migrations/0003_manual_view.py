@@ -279,8 +279,8 @@ class Migration(migrations.Migration):
                 plt_adherent SMALLINT UNSIGNED DEFAULT 0,
                 cryo_adherent SMALLINT UNSIGNED DEFAULT 0,
                 overall_adherent SMALLINT UNSIGNED AS (rbc_adherent + ffp_adherent + plt_adherent + cryo_adherent) STORED,
-                attending_provider = list of providers that were on this visit
-                attending_provider_id = list of provider ids that were on this visit
+                attending_provider varchar(100),
+                attending_provider_id varchar(25),
 
                 PRIMARY KEY (visit_no),
                 FOREIGN KEY (visit_no) REFERENCES Visit(visit_no),

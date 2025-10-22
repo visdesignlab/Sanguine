@@ -8,6 +8,7 @@ import { DashboardStore } from './DashboardStore';
 import { FiltersStore } from './FiltersStore';
 import { ExploreStore } from './ExploreStore';
 import { SelectionsStore } from './SelectionsStore';
+import { ProvidersStore } from './ProvidersStore';
 
 export class RootStore {
   // Provenance
@@ -16,7 +17,8 @@ export class RootStore {
   dashboardStore: DashboardStore;
 
   exploreStore: ExploreStore;
-  // // providersStore:
+
+  providersStore: ProvidersStore;
 
   filtersStore: FiltersStore;
 
@@ -49,6 +51,7 @@ export class RootStore {
     // Initialize stores
     this.dashboardStore = new DashboardStore(this);
     this.exploreStore = new ExploreStore(this);
+    this.providersStore = new ProvidersStore(this);
     this.filtersStore = new FiltersStore(this);
     this.selectionsStore = new SelectionsStore(this);
 
