@@ -12,6 +12,7 @@ import { BarChart } from '@mantine/charts';
 import { useObserver } from 'mobx-react';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
+import { providerChartGroups } from '../../../Types/application';
 
 /**
  * ProvidersView component displays provider-related charts and information.
@@ -35,7 +36,6 @@ export function ProvidersView() {
 
   // Local state
   const [dateRange, setDateRange] = useState<[string | null, string | null]>([null, null]);
-  const chartGroups = ['Anemia Management', 'Outcomes'];
 
   return useObserver(() => {
     const selectedProviderName = store.providersStore?.selectedProvider ?? 'Dr. John Doe';
@@ -135,7 +135,7 @@ export function ProvidersView() {
           </Stack>
         </Card>
         {/* Provider Charts - e.g. Anemia Management */}
-        {chartGroups.map((group) => (
+        {providerChartGroups.map((group) => (
           <div key={group}>
             <Title order={3} mt="md">{group}</Title>
             <Flex gap="md" mt="md">
