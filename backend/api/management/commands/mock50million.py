@@ -9,6 +9,7 @@ from faker import Faker
 from faker.providers import date_time
 import random
 import tempfile
+import string
 
 from api.views.utils.utils import get_all_cpt_code_filters
 
@@ -99,10 +100,18 @@ class Command(BaseCommand):
         surgeries = []
         labs = []
         surgeons = [
-            (fake.unique.random_number(digits=10), fake.name()) for _ in range(50)
+            (
+                fake.unique.random_number(digits=10),
+                f"Dr. {fake.first_name()} {random.choice(string.ascii_uppercase)}. {fake.last_name()}"
+            )
+            for _ in range(50)
         ]
         anests = [
-            (fake.unique.random_number(digits=10), fake.name()) for _ in range(50)
+            (
+                fake.unique.random_number(digits=10),
+                f"Dr. {fake.first_name()} {random.choice(string.ascii_uppercase)}. {fake.last_name()}"
+            )
+            for _ in range(50)
         ]
 
         # Generate patients
@@ -751,11 +760,14 @@ class Command(BaseCommand):
         ]
 
         def gen_attending_providers():
+            provider_pool = surgeons + anests
+            pool_len = len(provider_pool) or 1
             for i in range(int(target_attending_provs_count)):
+                prov_id, prov_name = provider_pool[i % pool_len]
                 yield {
                     "visit_no": (i % int(target_visits_count + 1)),
-                    "prov_id": f"PROV{i:05d}",
-                    "prov_name": f"Dr. Attending{i}",
+                    "prov_id": prov_id,
+                    "prov_name": prov_name,
                     "attend_start_dtm": "2020-01-01 08:00:00",
                     "attend_end_dtm": "2020-01-05 17:00:00",
                     "attend_prov_line": float(i),
