@@ -12,7 +12,6 @@ import { BarChart } from '@mantine/charts';
 import { useObserver } from 'mobx-react';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
-import { formatValueForDisplay } from '../../../Utils/dashboard';
 
 export function ProvidersView() {
   const store = useContext(Store);
@@ -192,17 +191,16 @@ export function ProvidersView() {
                 <Card key={chartId} h={200} w={300} p="md" shadow="sm">
                   <BarChart
                     h={200}
-                    p="xs"
                     w="100%"
                     data={chart.data}
                     dataKey={chart.dataKey}
                     orientation={chart.orientation}
                     barChartProps={{
                       margin: {
-                        top: 8,
-                        right: 8,
-                        bottom: 8,
-                        left: 8,
+                        top: 20,
+                        right: 20,
+                        bottom: 20,
+                        left: 20,
                       },
                     }}
                     yAxisProps={{ width: 20 }}
@@ -217,7 +215,6 @@ export function ProvidersView() {
                         style: { fontWeight: 600, fontSize: 13 },
                       },
                     }}
-                    valueFormatter={(value) => formatValueForDisplay(chart.dataKey, value, 'avg', false)}
                     referenceLines={[
                       {
                         x: chart.providerMark!,
@@ -245,17 +242,16 @@ export function ProvidersView() {
                 <Card key={chartId} h={200} w={300} p="md" shadow="sm">
                   <BarChart
                     h={200}
-                    p="xs"
                     w="100%"
                     data={chart.data}
                     dataKey={chart.dataKey}
                     orientation={chart.orientation}
                     barChartProps={{
                       margin: {
-                        top: 8,
-                        right: 8,
-                        bottom: 8,
-                        left: 8,
+                        top: 20,
+                        right: 20,
+                        bottom: 20,
+                        left: 20,
                       },
                     }}
                     yAxisProps={{ width: 20 }}
@@ -270,12 +266,11 @@ export function ProvidersView() {
                         style: { fontWeight: 600, fontSize: 13 },
                       },
                     }}
-                    valueFormatter={(value) => formatValueForDisplay(chart.dataKey, value, 'avg', false)}
                     referenceLines={[
                       {
                         x: chart.providerMark!,
                         color: '#4a4a4a',
-                        label: store.providersStore?.selectedProvider ?? '',
+                        label: store.providersStore?.selectedProvider ?? 'Provider',
                         labelPosition: 'top',
                       },
                     ]}
