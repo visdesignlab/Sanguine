@@ -104,24 +104,28 @@ export function ProvidersView() {
             <Stack gap={2} mt="xs">
               <Text size="md">
                 •
+                {' '}
                 <Text component="span" td="underline">28</Text>
                 {' '}
                 Cardiac Surgeries
               </Text>
               <Text size="md">
                 • Used
+                {' '}
                 <Text component="span" td="underline">187</Text>
                 {' '}
                 Units of Blood Products
               </Text>
               <Text size="md">
                 • Average Complexity of cases
+                {' '}
                 <Text component="span" td="underline">higher</Text>
                 {' '}
                 than average
               </Text>
               <Text size="md">
                 •
+                {' '}
                 <Text component="span" td="underline">13%</Text>
                 {' '}
                 of transfused patients had post operative hemoglobin above the recommended threshold
