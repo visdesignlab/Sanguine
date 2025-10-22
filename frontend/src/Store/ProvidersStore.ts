@@ -114,26 +114,7 @@ export class ProvidersStore {
       for (const cfg of this._chartConfigs) {
         const yVar = cfg.yAxisVar;
         const chartKey = `${cfg.chartId}_${yVar}`;
-        // Title: convert snake_case to Title Case
-        const baseTitle = String(yVar)
-          .split('_')
-          .map((s) => s.charAt(0) + s.slice(1))
-          .join(' ');
 
-        const agg = String(cfg.aggregation ?? '').toLowerCase();
-        let title = baseTitle;
-        if (agg === 'avg' || agg === 'average') {
-          title = `Average ${baseTitle} Per Visit`;
-        } else if (agg === 'sum' || agg === 'total') {
-          title = `Total ${baseTitle}`;
-        } else if (agg === 'count') {
-          title = `Number of ${baseTitle}`;
-        } else if (agg === 'rate') {
-          title = `${baseTitle} Rate`;
-        } else if (agg) {
-          // fallback: include raw aggregation string
-          title = `${baseTitle} (${cfg.aggregation})`;
-        }
         // Query average per provider for this metric
         const query = `
           SELECT attending_provider, AVG(${yVar}) AS avg_val
@@ -152,19 +133,19 @@ export class ProvidersStore {
 
         // Build a simple frequency distribution (bucket by rounded value)
         const freq = new Map<number, number>();
-        for (const r of rows) {
+        rows.forEach((r) => {
           const raw = r.avg_val;
-          if (raw === null || raw === undefined || Number.isNaN(Number(raw))) continue;
+          if (raw === null || raw === undefined || Number.isNaN(Number(raw))) return;
           const num = Number(raw);
           const rounded = roundVal(num);
-          if (Number.isNaN(rounded)) continue;
+          if (Number.isNaN(rounded)) return;
           freq.set(rounded, (freq.get(rounded) || 0) + 1);
-        }
+        });
 
         const data = Array.from(freq.entries())
           .sort((a, b) => a[0] - b[0])
           .map(([val, count]) => ({
-            [title]: val,
+            [yVar]: val,
             'Number of Providers': count,
           }));
 
@@ -186,11 +167,32 @@ export class ProvidersStore {
           ? roundVal(providerMark * 1.5)
           : undefined;
 
+        // Title: convert snake_case to Title Case
+        const baseTitle = String(yVar)
+          .split('_')
+          .map((s) => s.charAt(0) + s.slice(1))
+          .join(' ');
+
+        const agg = String(cfg.aggregation ?? '').toLowerCase();
+        let title = baseTitle;
+        if (agg === 'avg' || agg === 'average') {
+          title = `Average ${baseTitle} Per Visit`;
+        } else if (agg === 'sum' || agg === 'total') {
+          title = `Total ${baseTitle}`;
+        } else if (agg === 'count') {
+          title = `Number of ${baseTitle}`;
+        } else if (agg === 'rate') {
+          title = `${baseTitle} Rate`;
+        } else if (agg) {
+          // fallback: include raw aggregation string
+          title = `${baseTitle} (${cfg.aggregation})`;
+        }
+
         charts[chartKey] = {
           group: cfg.group || 'Ungrouped',
           title,
           data,
-          dataKey: title,
+          dataKey: yVar,
           orientation: 'horizontal',
           bestMark,
           recommendedMark,
