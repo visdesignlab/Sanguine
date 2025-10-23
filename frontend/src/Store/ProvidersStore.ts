@@ -140,31 +140,33 @@ export class ProvidersStore {
         return Math.abs(num - Math.round(num)) < 1e-9 ? Math.round(num) : Math.round(num * 10) / 10;
       };
 
-      // --- For each chart config, build the chart data ---
+      // --- For each chart config, build the histogram chart data ---
       this._chartConfigs.forEach((cfg) => {
         const yVar = cfg.yAxisVar;
         const chartKey = `${cfg.chartId}_${yVar}`;
         const aggregation = cfg.aggregation || 'avg';
 
-        // Frequency distribution for this yVar
-        const freq = new Map<number, number>();
+        // --- Build histogram chart data for providers ---
+        const provCounts = new Map<number, number>();
         rows.forEach((r) => {
-          const raw = r[`avg_${yVar}`];
-          if (raw === null || raw === undefined || Number.isNaN(Number(raw))) return;
-          const num = Number(raw);
-          const rounded = roundVal(num);
-          if (Number.isNaN(rounded)) return;
-          freq.set(rounded, (freq.get(rounded) || 0) + 1);
+          // Use rounded value as bin
+          const value = r[`avg_${yVar}`];
+          if (value === null || value === undefined || Number.isNaN(Number(value))) return;
+          const bin = roundVal(Number(value));
+          if (Number.isNaN(bin)) return;
+          // Increment count for this bin
+          provCounts.set(bin, (provCounts.get(bin) || 0) + 1);
         });
 
-        const data = Array.from(freq.entries())
+        // Build sorted histogram data array
+        const providerHistogramData = Array.from(provCounts.entries())
           .sort((a, b) => a[0] - b[0])
           .map(([val, count]) => ({
             [yVar]: val,
             'Number of Providers': count,
           }));
 
-        // Determine provider-specific marks if a provider is selected
+        // --- Determine provider-specific marks for comparison to histogram ---
         let providerMark: number | undefined;
         let providerName: string | null = null;
         if (this.selectedProvider) {
@@ -184,6 +186,7 @@ export class ProvidersStore {
           ? roundVal(providerMark * 1.5)
           : undefined;
 
+        // --- Save Chart ---
         // Get chart title
         const chartYAxis = dashboardYAxisOptions.find((o) => o.value === yVar);
         const chartTitle = chartYAxis?.label?.[aggregation] ?? yVar;
@@ -192,7 +195,7 @@ export class ProvidersStore {
         charts[chartKey] = {
           group: cfg.group || 'Ungrouped',
           title: chartTitle,
-          data,
+          data: providerHistogramData,
           dataKey: yVar,
           orientation: 'horizontal',
           bestMark,
