@@ -17,11 +17,13 @@ import { useObserver } from 'mobx-react';
 import {
   useCallback, useContext, useEffect, useState,
 } from 'react';
+import clsx from 'clsx';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import {
   AGGREGATION_OPTIONS, dashboardYAxisOptions, ProviderChartConfig, providerChartGroups,
 } from '../../../Types/application';
+import classes from '../GridLayoutItem.module.css';
 
 /**
  * ProvidersView component displays provider-related charts and information.
@@ -246,6 +248,8 @@ export function ProvidersView() {
                       w={300}
                       p="md"
                       shadow="sm"
+                      withBorder
+                      className={clsx(classes.gridItem, hoveredChartId === cfg.chartId && classes.gridItemHovered)}
                       style={{ position: 'relative' }}
                       onMouseLeave={() => setHoveredChartId(null)}
                       onMouseEnter={() => setHoveredChartId(cfg.chartId)}
@@ -270,10 +274,10 @@ export function ProvidersView() {
                         orientation={chart.orientation}
                         barChartProps={{
                           margin: {
-                            top: 20,
-                            right: 20,
-                            bottom: 20,
-                            left: 20,
+                            top: 30,
+                            right: 25,
+                            bottom: 25,
+                            left: 25,
                           },
                         }}
                         yAxisProps={{ width: 20 }}
