@@ -1,25 +1,36 @@
+import { BarChart } from '@mantine/charts';
 import {
   Card,
   Divider, Flex, Stack, Title, Tooltip, Text,
   Button,
   Select,
+  Modal,
+  CloseButton,
 } from '@mantine/core';
-import { useContext, useEffect, useState } from 'react';
 import { DatePickerInput } from '@mantine/dates';
+import { useDisclosure } from '@mantine/hooks';
+import {
+  IconCalendarWeek, IconPlus, IconSearch,
+} from '@tabler/icons-react';
 import dayjs from 'dayjs';
-import { IconCalendarWeek, IconPlus, IconSearch } from '@tabler/icons-react';
-import { BarChart } from '@mantine/charts';
 import { useObserver } from 'mobx-react';
+import {
+  useCallback, useContext, useEffect, useState,
+} from 'react';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
-import { providerChartGroups } from '../../../Types/application';
+import {
+  AGGREGATION_OPTIONS, dashboardYAxisOptions, ProviderChartConfig, providerChartGroups,
+} from '../../../Types/application';
 
 /**
  * ProvidersView component displays provider-related charts and information.
  * @returns The Providers View component
  */
 export function ProvidersView() {
+  // --- Store and contexts ---
   const store = useContext(Store);
+  const aggregationOptions = Object.entries(AGGREGATION_OPTIONS).map(([value, { label }]) => ({ value, label }));
 
   // Initialize provider view data
   useEffect(() => {
@@ -32,11 +43,48 @@ export function ProvidersView() {
   }, [store.providersStore, store.duckDB]);
 
   // Styles
-  const { toolbarWidth, cardIconStroke, buttonIconSize } = useThemeConstants();
+  const {
+    buttonIconSize, cardIconStroke, toolbarWidth,
+  } = useThemeConstants();
 
-  // Local state
+  // --- Add Chart Modal ----
+  const [selectedAggregation, setSelectedAggregation] = useState<string>('sum');
+  const [selectedVar, setSelectedVar] = useState<string>('');
+  const [isAddChartModalOpen, { open, close }] = useDisclosure(false);
+
+  const openAddChartModal = useCallback(() => {
+    setSelectedAggregation('avg');
+    setSelectedVar('');
+    open();
+  }, [open]);
+
+  // --- Handle Charts ---
+
+  const handleRemoveChart = useCallback((chartId: string) => {
+    store.providersStore.removeChart(chartId);
+  }, [store.providersStore]);
+
+  const addChart = useCallback(() => {
+    // TODO: Change provider chart config based on what we want.
+    store.providersStore.addChart({
+      chartId: `chart-${Date.now()}`,
+      xAxisVar: 'month' as ProviderChartConfig['xAxisVar'],
+      yAxisVar: selectedVar as ProviderChartConfig['yAxisVar'],
+      aggregation: selectedAggregation as ProviderChartConfig['aggregation'],
+      chartType: 'bar',
+      group: 'Anemia Management',
+
+    });
+    close();
+  }, [selectedAggregation, selectedVar, close, store.providersStore]);
+
+  // TODO: Handle Chart Hover
+  const [hoveredChartId, setHoveredChartId] = useState<string | null>(null);
+
+  // --- Date Range Picker ---
   const [dateRange, setDateRange] = useState<[string | null, string | null]>([null, null]);
 
+  // --- Render ---
   return useObserver(() => {
     const selectedProviderName = store.providersStore?.selectedProvider ?? 'Dr. John Doe';
 
@@ -77,14 +125,52 @@ export function ProvidersView() {
               value={dateRange}
               onChange={setDateRange}
             />
-            {/* Add Chart Button */}
-            <Button>
+            {/** Add Chart Button */}
+            <Button onClick={openAddChartModal}>
               <IconPlus size={buttonIconSize} stroke={cardIconStroke} style={{ marginRight: 6 }} />
               Add Chart
             </Button>
           </Flex>
         </Flex>
         <Divider />
+        {/** Modal when add chart or stat clicked */}
+        <Modal
+          opened={isAddChartModalOpen}
+          onClose={close}
+          title={`Add chart for ${selectedProviderName}`}
+          centered
+        >
+          <Stack gap="md">
+            {/** Modal - choose aggregation for chart */}
+            <Select
+              label="Aggregation"
+              placeholder="Choose aggregation type"
+              data={aggregationOptions}
+              value={selectedAggregation}
+              onChange={(value) => setSelectedAggregation(value || 'Average')}
+            />
+            {/** Modal - choose y-axis for chart or stat */}
+            <Select
+              label="Variable"
+              placeholder="Choose Variable"
+              data={dashboardYAxisOptions.map((opt) => ({
+                value: opt.value,
+                label: opt.label.base,
+              }))}
+              value={selectedVar}
+              onChange={(value) => setSelectedVar(value || '')}
+            />
+            {/** Done Button - Add chart to view */}
+            <Button
+              mt="md"
+              onClick={addChart}
+              disabled={!selectedVar}
+              fullWidth
+            >
+              Done
+            </Button>
+          </Stack>
+        </Modal>
         {/* Provider Summary Card */}
         <Card shadow="sm" radius="md" p="xl" mb="md" withBorder>
           <Stack gap="xs">
@@ -134,23 +220,48 @@ export function ProvidersView() {
             </Stack>
           </Stack>
         </Card>
-        {/* Provider Charts - e.g. Anemia Management */}
+        {/* Provider Charts - render for each chart group (i.e 'Outcomes') */}
         {providerChartGroups.map((group) => (
           <div key={group}>
             <Title order={3} mt="md">{group}</Title>
             <Flex gap="md" mt="md">
-              {/* For each chart in chart data ... */}
-              {Object.entries(store.providersStore?.providerChartData || {})
-                // Render the charts in this chart group
-                .filter(([, chart]) => chart.group === group)
-                .map(([chartId, chart]) => {
+              {/* For each chart configuration, render charts for this group. */}
+              {(store.providersStore?.chartConfigs || [])
+                .filter((cfg) => cfg.group === group)
+                .map((cfg) => {
+                  // Get chart key and data
+                  const chartKey = `${cfg.chartId}_${cfg.yAxisVar}`;
+                  const chart = store.providersStore?.providerChartData?.[chartKey];
+                  if (!chart) return null;
+
                   // Chart series
                   const series = (chart.data && chart.data.length > 0)
                     ? Object.keys(chart.data[0]).filter((k) => k !== chart.dataKey).map((name) => ({ name, color: 'blue.6' }))
                     : [];
 
                   return (
-                    <Card key={chartId} h={200} w={300} p="md" shadow="sm">
+                    <Card
+                      key={chartKey}
+                      h={200}
+                      w={300}
+                      p="md"
+                      shadow="sm"
+                      style={{ position: 'relative' }}
+                      onMouseLeave={() => setHoveredChartId(null)}
+                      onMouseEnter={() => setHoveredChartId(cfg.chartId)}
+                    >
+                      {/** Close button */}
+                      {hoveredChartId === cfg.chartId && (
+                        <CloseButton
+                          size="xs"
+                          onClick={() => handleRemoveChart(cfg.chartId)}
+                          style={{
+                            position: 'absolute', top: 8, right: 8, zIndex: 2,
+                          }}
+                          aria-label="Remove chart"
+                        />
+                      )}
+                      {/** Chart */}
                       <BarChart
                         h={200}
                         w="100%"

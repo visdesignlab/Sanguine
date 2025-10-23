@@ -1,6 +1,8 @@
 import { makeAutoObservable } from 'mobx';
 import type { RootStore } from './Store';
-import { AGGREGATION_OPTIONS, dashboardYAxisOptions, ProviderChartConfig, ProviderChartData } from '../Types/application';
+import {
+  AGGREGATION_OPTIONS, dashboardYAxisOptions, ProviderChartConfig, ProviderChartData,
+} from '../Types/application';
 
 /**
  * ProvidersStore manages provider data for the provider view.
@@ -44,13 +46,13 @@ export class ProvidersStore {
       chartId: '2', xAxisVar: 'quarter', yAxisVar: 'plt_adherent', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
     },
     {
-      chartId: '0', xAxisVar: 'month', yAxisVar: 'death', aggregation: 'avg', chartType: 'bar', group: 'Outcomes',
+      chartId: '3', xAxisVar: 'month', yAxisVar: 'death', aggregation: 'avg', chartType: 'bar', group: 'Outcomes',
     },
     {
-      chartId: '1', xAxisVar: 'quarter', yAxisVar: 'stroke', aggregation: 'avg', chartType: 'bar', group: 'Outcomes',
+      chartId: '4', xAxisVar: 'quarter', yAxisVar: 'stroke', aggregation: 'avg', chartType: 'bar', group: 'Outcomes',
     },
     {
-      chartId: '2', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'bar', group: 'Outcomes',
+      chartId: '5', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'bar', group: 'Outcomes',
     },
   ];
 
@@ -60,6 +62,22 @@ export class ProvidersStore {
 
   set chartConfigs(input: ProviderChartConfig[]) {
     this._chartConfigs = input;
+  }
+
+  /**
+     * Adds new chart
+     * @param config Chart data specification for chart to add
+     */
+  addChart(config: ProviderChartConfig) {
+    this._chartConfigs = [config, ...this._chartConfigs];
+    this.getProviderCharts();
+  }
+
+  /**
+   * Removes chart, by ID.
+   */
+  removeChart(chartId: string) {
+    this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
   }
 
   async fetchProviderList() {
