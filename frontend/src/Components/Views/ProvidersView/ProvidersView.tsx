@@ -18,12 +18,14 @@ import {
   useCallback, useContext, useEffect, useState,
 } from 'react';
 import clsx from 'clsx';
+import { ReferenceLine } from 'recharts';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import {
   AGGREGATION_OPTIONS, dashboardYAxisOptions, ProviderChartConfig, providerChartGroups,
 } from '../../../Types/application';
 import classes from '../GridLayoutItem.module.css';
+import { ProviderChartTooltip } from './ProviderChartTooltip';
 
 /**
  * ProvidersView component displays provider-related charts and information.
@@ -70,8 +72,8 @@ export function ProvidersView() {
     // TODO: Change provider chart config based on what we want.
     store.providersStore.addChart({
       chartId: `chart-${Date.now()}`,
-      xAxisVar: 'month' as ProviderChartConfig['xAxisVar'],
-      yAxisVar: selectedVar as ProviderChartConfig['yAxisVar'],
+      xAxisVar: selectedVar as ProviderChartConfig['xAxisVar'],
+      yAxisVar: 'attending_provider',
       aggregation: selectedAggregation as ProviderChartConfig['aggregation'],
       chartType: 'bar',
       group: 'Anemia Management',
@@ -85,6 +87,8 @@ export function ProvidersView() {
 
   // --- Date Range Picker ---
   const [dateRange, setDateRange] = useState<[string | null, string | null]>([null, null]);
+
+  // --- Tooltip ---
 
   // --- Render ---
   return useObserver(() => {
@@ -232,7 +236,7 @@ export function ProvidersView() {
                 .filter((cfg) => cfg.group === group)
                 .map((cfg) => {
                   // Get chart key and data
-                  const chartKey = `${cfg.chartId}_${cfg.yAxisVar}`;
+                  const chartKey = `${cfg.chartId}_${cfg.xAxisVar}`;
                   const chart = store.providersStore?.providerChartData?.[chartKey];
                   if (!chart) return null;
 
@@ -292,15 +296,32 @@ export function ProvidersView() {
                             style: { fontWeight: 600, fontSize: 13 },
                           },
                         }}
-                        referenceLines={[
-                          {
-                            x: chart.providerMark!,
-                            color: '#4a4a4a',
-                            label: store.providersStore?.selectedProvider ?? 'Provider',
-                            labelPosition: 'top',
-                          },
-                        ]}
-                      />
+                        tooltipProps={{
+                          content: (props) => (
+                            <ProviderChartTooltip
+                              active
+                              payload={props.payload}
+                              xAxisVar={cfg.xAxisVar}
+                              yAxisVar={cfg.yAxisVar}
+                              aggregation={cfg.aggregation}
+                            />
+                          ),
+                        }}
+                      >
+                        <ReferenceLine
+                          yAxisId="left"
+                          x={chart.providerMark}
+                          ifOverflow="visible"
+                          stroke="#4a4a4a"
+                          label={{
+                            value: store.providersStore?.selectedProvider ?? 'Provider',
+                            fill: '#4a4a4a',
+                            position: 'insideTop',
+                            offset: -25,
+                            fontSize: 12,
+                          }}
+                        />
+                      </BarChart>
                     </Card>
                   );
                 })}
