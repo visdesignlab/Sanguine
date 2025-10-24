@@ -2,18 +2,20 @@ import {
   dashboardYAxisVars, BLOOD_COMPONENT_OPTIONS, OUTCOME_OPTIONS, COST_OPTIONS, OVERALL_BLOOD_PRODUCT_COST, GUIDELINE_ADHERENT_OPTIONS, OVERALL_GUIDELINE_ADHERENT, PROPHYL_MED_OPTIONS,
   AGGREGATION_OPTIONS,
   dashboardYAxisOptions,
+  providerXAxisVars,
+  providerXAxisOptions,
 } from '../Types/application';
 
 /**
  * Format stat values appropriately based on the variable type
- * @param yAxisVar - The dashboard variable being formatted
+ * @param variable - The dashboard variable being formatted
  * @param value - The numeric value to format
  * @param aggregation - The aggregation type ('sum' or 'avg')
  * @param fullUnits - Whether to include units in the formatted string (default: true)
  * @returns A formatted string for display
  */
 export function formatValueForDisplay(
-  yAxisVar: typeof dashboardYAxisVars[number],
+  variable: typeof dashboardYAxisVars[number] | typeof providerXAxisVars[number],
   value: number,
   aggregation: keyof typeof AGGREGATION_OPTIONS,
   fullUnits?: boolean,
@@ -21,18 +23,26 @@ export function formatValueForDisplay(
   // Show units by default unless specified otherwise
   const showFullUnits = fullUnits !== undefined ? fullUnits : true;
 
+  // All options (both dashboard and provider)
+  const allOptions = [...dashboardYAxisOptions, ...providerXAxisOptions];
+
   // Y-Axis variable object
-  const yAxisOption = dashboardYAxisOptions.find((opt) => opt.value === yAxisVar);
-  if (!yAxisOption) {
-    console.warn(`Invalid yAxisVar: ${yAxisVar} is not present in dashboardYAxisOptions`);
+  const variableType = allOptions.find((opt) => opt.value === variable);
+  if (!variableType) {
+    console.warn(`Invalid variable: ${variable} is not present in dashboardYAxisOptions`);
     return value.toString();
   }
 
   // Units for display
-  const unit = yAxisOption?.units?.[aggregation] ?? '';
+  const unit = variableType?.units?.[aggregation] ?? '';
+
+  // Return early if single provider count
+  if (value === 1 && unit === 'Providers') {
+    return '1 Provider';
+  }
 
   // Decimal count
-  const { decimals: yAxisDecimals } = yAxisOption;
+  const { decimals: yAxisDecimals } = variableType;
   const decimalCount = typeof yAxisDecimals === 'number'
     ? yAxisDecimals
     : (yAxisDecimals && yAxisDecimals[aggregation]) ?? 0;

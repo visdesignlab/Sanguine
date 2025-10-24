@@ -378,6 +378,19 @@ export const CASE_MIX_INDEX = {
   decimals: { sum: 2, avg: 2 },
 };
 
+export const PROVIDERS = {
+  value: 'attending_provider',
+  label: {
+    base: 'Provider',
+    sum: 'Providers',
+    avg: 'Average Number of Providers',
+  },
+  units: { one: 'Provider', sum: 'Providers', avg: 'Providers' },
+  decimals: { sum: 0, avg: 2 },
+} as const;
+
+export type Providers = typeof PROVIDERS['value'];
+
 // CPT Codes -------------------------------------------------------
 export const CPT_CODES = {
   stroke: ['99291', '1065F', '1066F'],
@@ -472,13 +485,18 @@ type ProviderChart = {
     orientation: 'horizontal' | 'vertical';
   };
 
+export const providerXAxisOptions = [
+  ...dashboardYAxisOptions,
+  PROVIDERS,
+];
+export const providerXAxisVars = providerXAxisOptions.map((opt) => opt.value);
 export const providerChartGroups = ['Anemia Management', 'Outcomes'];
 
 export type ProviderChartData = Record<string, ProviderChart>;
 
 export type ProviderChartConfig = ChartConfig<
-  typeof dashboardXAxisVars[number],
   typeof dashboardYAxisVars[number],
+  typeof dashboardXAxisVars[number] | 'attending_provider',
   keyof typeof AGGREGATION_OPTIONS,
   'bar'
 > & { group?: (typeof providerChartGroups)[number] };
