@@ -1,42 +1,26 @@
-import React from 'react';
+import { formatValueForDisplay } from '../../../Utils/dashboard';
 
 type ProviderChartTooltipProps = {
-  active?: boolean;
-  payload?: any[];
-  label?: string | number;
-  xAxisVar?: string; // chart.title
-  yAxisVar?: string; // "Number of Providers"
+    active?: boolean;
+    payload?: { payload?: Record<string, number> }[];
+    xAxisVar?: string; // chart.title
+    yAxisVar?: string; // "Number of Providers"
+    aggregation: 'sum' | 'avg';
 };
 
 export function ProviderChartTooltip({
   active,
   payload,
-  label,
   xAxisVar,
   yAxisVar,
+  aggregation,
 }: ProviderChartTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
 
-  const fmt = (v: any) => {
-    if (v === null || v === undefined) return '—';
-    if (typeof v === 'number') {
-      return Number.isInteger(v) ? String(v) : String(Math.round(v * 10) / 10);
-    }
-    return String(v);
-  };
-
+  // --- Get formatted values ---
   const row = payload?.[0]?.payload ?? {};
-
-  console.log("Tooltip row:", row);
-  console.log("xAxisVar:", xAxisVar, "yAxisVar:", yAxisVar);
-  console.log("x val", row[xAxisVar ?? ''], "y val:", row[yAxisVar ?? '']);
-  console.log("Formatted x value:", fmt(row[xAxisVar ?? '']));
-  console.log("Formatted y value:", fmt(row[yAxisVar ?? '']));
-  
-  const xValue = fmt(row[xAxisVar ?? '']);
-  const yValue = fmt(row[yAxisVar ?? '']);
-
-  const xLabel = xAxisVar ?? String(label ?? '');
+  const xValue = row[xAxisVar ?? ''];
+  const yValue = row[yAxisVar ?? ''];
 
   return (
     <div style={{
@@ -51,15 +35,20 @@ export function ProviderChartTooltip({
     }}
     >
       <div style={{ fontWeight: 700, fontSize: 12 }}>
-        {yValue}
-        {' '}
-        Providers
+        {formatValueForDisplay(yAxisVar ?? '', yValue, aggregation)}
       </div>
-      <div style={{ marginTop: 4, fontSize: 11, color: '#444' }}>
-        {xLabel}
-        :
-        {' '}
-        {xValue}
+      <div
+        style={{
+          marginTop: 4,
+          fontSize: 11,
+          color: '#444',
+          maxWidth: 175, // limit width so long labels wrap
+          whiteSpace: 'normal', // allow wrapping
+          wordBreak: 'break-word', // break long words if needed
+          overflowWrap: 'anywhere', // more aggressive wrapping for long tokens
+        }}
+      >
+        {formatValueForDisplay(xAxisVar ?? '', xValue, aggregation)}
       </div>
     </div>
   );
