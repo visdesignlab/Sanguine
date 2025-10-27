@@ -1,8 +1,9 @@
 import { makeAutoObservable } from 'mobx';
 import type { RootStore } from './Store';
 import {
-  AGGREGATION_OPTIONS, dashboardYAxisOptions, ProviderChartConfig, ProviderChartData,
+  AGGREGATION_OPTIONS, dashboardYAxisOptions, ProviderChart, ProviderChartConfig, ProviderChartData,
 } from '../Types/application';
+import { formatValueForDisplay } from '../Utils/dashboard';
 
 /**
  * ProvidersStore manages provider data for the provider view.
@@ -37,22 +38,19 @@ export class ProvidersStore {
   // Chart configurations by default
   _chartConfigs: ProviderChartConfig[] = [
     {
-      chartId: '0', xAxisVar: 'month', yAxisVar: 'rbc_adherent', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
+      chartId: '0', xAxisVar: 'rbc_adherent', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
     },
     {
-      chartId: '1', xAxisVar: 'quarter', yAxisVar: 'ffp_adherent', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
+      chartId: '1', xAxisVar: 'ffp_adherent', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
     },
     {
-      chartId: '2', xAxisVar: 'quarter', yAxisVar: 'plt_adherent', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
+      chartId: '2', xAxisVar: 'antifibrinolytic', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
     },
     {
-      chartId: '3', xAxisVar: 'month', yAxisVar: 'death', aggregation: 'avg', chartType: 'bar', group: 'Outcomes',
+      chartId: '3', xAxisVar: 'b12', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Outcomes',
     },
     {
-      chartId: '4', xAxisVar: 'quarter', yAxisVar: 'stroke', aggregation: 'avg', chartType: 'bar', group: 'Outcomes',
-    },
-    {
-      chartId: '5', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'bar', group: 'Outcomes',
+      chartId: '4', xAxisVar: 'los', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Outcomes',
     },
   ];
 
@@ -117,12 +115,12 @@ export class ProvidersStore {
       const charts: ProviderChartData = {};
 
       // --- Build charts query ---
-      const selectClauses = this._chartConfigs.flatMap(({ yAxisVar }) => (
+      const selectClauses = this._chartConfigs.flatMap(({ xAxisVar }) => (
         Object.keys(AGGREGATION_OPTIONS).flatMap((aggregation) => {
           const aggFn = aggregation.toUpperCase();
 
           // Special case: Sum of all blood product costs
-          if (yAxisVar === 'total_blood_product_cost') {
+          if (xAxisVar === 'total_blood_product_cost') {
             return [
               `${aggFn}(rbc_units_cost) AS ${aggregation}_rbc_units_cost`,
               `${aggFn}(plt_units_cost) AS ${aggregation}_plt_units_cost`,
@@ -132,12 +130,12 @@ export class ProvidersStore {
             ];
           }
 
-          if (yAxisVar === 'case_mix_index') {
+          if (xAxisVar === 'case_mix_index') {
             return `SUM(ms_drg_weight) / COUNT(visit_no) AS ${aggregation}_case_mix_index`;
           }
 
           // Return aggregated attribute. (E.g. "SUM(rbc_units) AS sum_rbc_units")
-          return `${aggFn}(${yAxisVar}) AS ${aggregation}_${yAxisVar}`;
+          return `${aggFn}(${xAxisVar}) AS ${aggregation}_${xAxisVar}`;
         })
       ));
 
@@ -152,71 +150,93 @@ export class ProvidersStore {
       const res = await this._rootStore.duckDB.query(query);
       const rows = res.toArray().map((r) => r.toJSON());
 
-      // Helper to round values appropriately
-      const roundVal = (num: number) => {
-        if (!Number.isFinite(num)) return NaN;
-        return Math.abs(num - Math.round(num)) < 1e-9 ? Math.round(num) : Math.round(num * 10) / 10;
-      };
-
-      // --- For each chart config, build the histogram chart data ---
+      // --- For each chart config, bin data by x-axis ---
       this._chartConfigs.forEach((cfg) => {
         const yVar = cfg.yAxisVar;
-        const chartKey = `${cfg.chartId}_${yVar}`;
+        const xVar = cfg.xAxisVar;
+        const chartKey = `${cfg.chartId}_${xVar}`;
         const aggregation = cfg.aggregation || 'avg';
 
-        // --- Build histogram chart data for providers ---
-        const provCounts = new Map<number, number>();
+        // TODO: Change to recommendation from application
+        const recommendedMark = 0.74;
+
+        // Collect numeric x values
+        const values: number[] = [];
         rows.forEach((r) => {
-          // Use rounded value as bin
-          const value = r[`avg_${yVar}`];
-          if (value === null || value === undefined || Number.isNaN(Number(value))) return;
-          const bin = roundVal(Number(value));
-          if (Number.isNaN(bin)) return;
-          // Increment count for this bin
-          provCounts.set(bin, (provCounts.get(bin) || 0) + 1);
+          const value = r[`${aggregation}_${xVar}`];
+          if (value === null || value === undefined) return;
+          const num = Number(value);
+          if (Number.isNaN(num) || !Number.isFinite(num)) return;
+          values.push(num);
         });
 
-        // Build sorted histogram data array
-        const providerHistogramData = Array.from(provCounts.entries())
-          .sort((a, b) => a[0] - b[0])
-          .map(([val, count]) => ({
-            [yVar]: val,
-            'Number of Providers': count,
-          }));
+        let providerChartData: ProviderChart['data'] = [];
 
-        // --- Determine provider-specific marks for comparison to histogram ---
+        if (values.length === 0) {
+          providerChartData = [];
+        } else {
+          const min = Math.min(recommendedMark, ...values);
+          const max = Math.max(...values, recommendedMark);
+
+          // Count unique values after rounding to 2 decimals
+          const uniqueRounded = new Set(values.map((v) => Number(v.toFixed(2)))).size;
+          const bins = Math.min(uniqueRounded || 1, 20);
+
+          // Edge case of 1 bin
+          if (min === max) {
+            providerChartData = [{
+              [xVar]: Number(min.toFixed(2)),
+              [yVar]: values.length,
+            }];
+            // Otherwise, bin normally
+          } else {
+            const binCount = Math.max(1, bins);
+            const binWidth = (max - min) / binCount;
+            // Initialize counts
+            const counts = new Array<number>(binCount).fill(0);
+
+            // Assign each value to a bin
+            values.forEach((v) => {
+              let idx = Math.floor((v - min) / binWidth);
+              if (idx < 0) idx = 0;
+              if (idx >= binCount) idx = binCount - 1;
+              counts[idx] += 1;
+            });
+
+            // Convert bins to chart data using bin center as x value
+            providerChartData = counts.map((count, i) => {
+              const center = min + (i + 0.5) * binWidth;
+              return {
+                [xVar]: Number(center.toFixed(2)),
+                [yVar]: count,
+              };
+            });
+          }
+        }
+
+        // --- Determine provider-specific marks for comparison ---
         let providerMark: number | undefined;
         let providerName: string | null = null;
         if (this.selectedProvider) {
           const match = rows.find((r) => String(r.attending_provider) === String(this.selectedProvider));
-          const matchVal = match ? match[`avg_${yVar}`] : undefined;
+          const matchVal = match ? match[`${aggregation}_${xVar}`] : undefined;
           if (match && matchVal !== null && matchVal !== undefined && !Number.isNaN(Number(matchVal))) {
-            providerMark = roundVal(Number(matchVal));
+            providerMark = Number(Number(matchVal).toFixed(2));
             providerName = String(match.attending_provider);
           }
         }
 
-        // TODO: Update recommended and best marks based on provider benchmarks
-        const recommendedMark = (providerMark !== undefined && !Number.isNaN(providerMark))
-          ? roundVal(providerMark * 1.2)
-          : undefined;
-        const bestMark = (providerMark !== undefined && !Number.isNaN(providerMark))
-          ? roundVal(providerMark * 1.5)
-          : undefined;
 
         // --- Save Chart ---
-        // Get chart title
-        const chartYAxis = dashboardYAxisOptions.find((o) => o.value === yVar);
-        const chartTitle = chartYAxis?.label?.[aggregation] ?? yVar;
+        const chartXAxis = dashboardYAxisOptions.find((o) => o.value === xVar);
+        const chartTitle = chartXAxis?.label?.[aggregation] ?? xVar;
 
-        // Save chart
         charts[chartKey] = {
           group: cfg.group || 'Ungrouped',
           title: chartTitle,
-          data: providerHistogramData,
-          dataKey: yVar,
+          data: providerChartData,
+          dataKey: xVar,
           orientation: 'horizontal',
-          bestMark,
           recommendedMark,
           providerMark,
           providerName,
