@@ -312,19 +312,37 @@ export function ProvidersView() {
                           ),
                         }}
                       >
-                        <ReferenceLine
-                          yAxisId="left"
-                          x={chart.providerMark}
-                          ifOverflow="visible"
-                          stroke="#4a4a4a"
-                          label={{
-                            value: store.providersStore?.selectedProvider ?? 'Provider',
-                            fill: '#4a4a4a',
-                            position: 'insideTop',
-                            offset: -25,
-                            fontSize: 12,
-                          }}
-                        />
+                        {/** Reference Lines */}
+                        {(() => {
+                          // Label position adjusts if too close to min or max
+                          const values = (chart.data || []).map((r) => Number(r[chart.dataKey])).filter(Number.isFinite);
+                          const min = values.length ? Math.min(...values) : 0;
+                          const max = values.length ? Math.max(...values) : 1;
+                          const marker = Number(chart.providerMark) || 0;
+
+                          const range = (max - min) || 1;
+                          const pct = (marker - min) / range;
+
+                          let labelPosition: 'insideTop' | 'insideTopLeft' | 'insideTopRight' = 'insideTop';
+                          if (pct <= 0.1) labelPosition = 'insideTopLeft';
+                          else if (pct >= 0.9) labelPosition = 'insideTopRight';
+
+                          return (
+                            <ReferenceLine
+                              yAxisId="left"
+                              x={chart.providerMark}
+                              ifOverflow="visible"
+                              stroke="#4a4a4a"
+                              label={{
+                                value: store.providersStore?.selectedProvider ?? 'Provider',
+                                fill: '#4a4a4a',
+                                position: labelPosition,
+                                offset: -25,
+                                fontSize: 12,
+                              }}
+                            />
+                          );
+                        })()}
                         <ReferenceLine
                           yAxisId="left"
                           x={Number(chart.recommendedMark)}
