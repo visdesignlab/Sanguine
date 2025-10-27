@@ -291,6 +291,7 @@ export function ProvidersView() {
                         xAxisProps={{
                           type: 'number',
                           domain: ['dataMin', 'dataMax'],
+                          padding: { left: 10, right: 10 },
                           label: {
                             value: chart.title,
                             position: 'bottom',
