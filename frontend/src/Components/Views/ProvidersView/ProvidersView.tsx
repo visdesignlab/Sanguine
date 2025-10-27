@@ -26,6 +26,7 @@ import {
 } from '../../../Types/application';
 import classes from '../GridLayoutItem.module.css';
 import { ProviderChartTooltip } from './ProviderChartTooltip';
+import { formatValueForDisplay } from '../../../Utils/dashboard';
 
 /**
  * ProvidersView component displays provider-related charts and information.
@@ -288,6 +289,8 @@ export function ProvidersView() {
                         barProps={{ radius: 5 }}
                         series={series}
                         xAxisProps={{
+                          type: 'number',
+                          domain: ['dataMin', 'dataMax'],
                           label: {
                             value: chart.title,
                             position: 'bottom',
@@ -295,6 +298,7 @@ export function ProvidersView() {
                             dx: -6,
                             style: { fontWeight: 600, fontSize: 13 },
                           },
+                          tickFormatter: (value: number) => formatValueForDisplay(cfg.xAxisVar, value, cfg.aggregation, false),
                         }}
                         tooltipProps={{
                           content: (props) => (
@@ -320,6 +324,13 @@ export function ProvidersView() {
                             offset: -25,
                             fontSize: 12,
                           }}
+                        />
+                        <ReferenceLine
+                          yAxisId="left"
+                          x={Number(chart.recommendedMark)}
+                          ifOverflow="visible"
+                          stroke="#82ca9d"
+                          strokeDasharray="3 3"
                         />
                       </BarChart>
                     </Card>
