@@ -103,6 +103,7 @@ class VisitAttributes(models.Model):
 
     attending_provider = models.CharField(max_length=100)
     attending_provider_id = models.CharField(max_length=25)
+    attending_provider_line = models.IntegerField()
 
     class Meta:
         db_table = "VisitAttributes"

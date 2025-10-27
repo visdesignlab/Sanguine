@@ -129,7 +129,8 @@ def create_materialize_proc(apps, schema_editor):
             plt_adherent,
             cryo_adherent,
             attending_provider,
-            attending_provider_id
+            attending_provider_id,
+            attending_provider_line
         )
         SELECT
             v.visit_no,
@@ -143,12 +144,12 @@ def create_materialize_proc(apps, schema_editor):
             DATE_FORMAT(v.dsch_dtm, '%Y-%b') AS month,
             CONCAT(YEAR(v.dsch_dtm), '-Q', QUARTER(v.dsch_dtm)) AS quarter,
             YEAR(v.dsch_dtm) AS year,
-            COALESCE(t.sum_rbc_units, 0) AS rbc_units,
-            COALESCE(t.sum_ffp_units, 0) AS ffp_units,
-            COALESCE(t.sum_plt_units, 0) AS plt_units,
-            COALESCE(t.sum_cryo_units, 0) AS cryo_units,
-            COALESCE(t.sum_whole_units, 0) AS whole_units,
-            COALESCE(t.sum_cell_saver_ml, 0) AS cell_saver_ml,
+            COALESCE(apt.sum_rbc_units, 0) AS rbc_units,
+            COALESCE(apt.sum_ffp_units, 0) AS ffp_units,
+            COALESCE(apt.sum_plt_units, 0) AS plt_units,
+            COALESCE(apt.sum_cryo_units, 0) AS cryo_units,
+            COALESCE(apt.sum_whole_units, 0) AS whole_units,
+            COALESCE(apt.sum_cell_saver_ml, 0) AS cell_saver_ml,
             v.clinical_los AS los,
             CASE WHEN v.pat_expired_f = 'Y' THEN TRUE ELSE FALSE END AS death,
             CASE WHEN v.total_vent_mins > 1440 THEN TRUE ELSE FALSE END AS vent,
@@ -160,13 +161,16 @@ def create_materialize_proc(apps, schema_editor):
             COALESCE(ga.rbc_adherent, 0) AS rbc_adherent,
             COALESCE(ga.ffp_adherent, 0) AS ffp_adherent,
             COALESCE(ga.plt_adherent, 0) AS plt_adherent,
-            COALESCE(ga.cryo_adherent, 0) AS cryo_adherent
+            COALESCE(ga.cryo_adherent, 0) AS cryo_adherent,
+            apt.prov_name AS attending_provider,
+            apt.prov_id AS attending_provider_id,
+            apt.attending_provider_line AS attending_provider_line
         FROM (
             select 
-                ap.visit_no,
-                ap.prov_id,
-                ap.prov_name,
-                ap.attend_prov_line,
+                ap.visit_no as visit_no,
+                ap.prov_id as prov_id,
+                ap.prov_name as prov_name,
+                ap.attend_prov_line as attending_provider_line,
                 SUM(rbc_units) AS sum_rbc_units,
                 SUM(ffp_units) AS sum_ffp_units,
                 SUM(plt_units) AS sum_plt_units,
@@ -174,11 +178,12 @@ def create_materialize_proc(apps, schema_editor):
                 SUM(whole_units) AS sum_whole_units,
                 SUM(cell_saver_ml) AS sum_cell_saver_ml
             from AttendingProvider ap
-            left join Transfusion t on ap.visit_no = t.visit_no and t.trnsfsn_dtm between ap.attend_start_dtm and ap.attend_end_dtm
+            LEFT JOIN Transfusion t on ap.visit_no = t.visit_no 
+            /* and t.trnsfsn_dtm between ap.attend_start_dtm and ap.attend_end_dtm */
+            WHERE ap.attend_prov_line = 0
             group by ap.visit_no, ap.prov_id, ap.prov_name, ap.attend_prov_line
-            having SUM(rbc_units) > 0 or SUM(ffp_units) > 0 or SUM(plt_units) > 0 or SUM(cryo_units) > 0 or SUM(whole_units) > 0 or SUM(cell_saver_ml) > 0
-        )
-        FROM Visit v
+        ) as apt
+        LEFT JOIN Visit v on apt.visit_no = v.visit_no
         LEFT JOIN (
             SELECT
                 visit_no,
@@ -281,6 +286,7 @@ class Migration(migrations.Migration):
                 overall_adherent SMALLINT UNSIGNED AS (rbc_adherent + ffp_adherent + plt_adherent + cryo_adherent) STORED,
                 attending_provider varchar(100),
                 attending_provider_id varchar(25),
+                attending_provider_line SMALLINT UNSIGNED DEFAULT 0,
 
                 PRIMARY KEY (visit_no),
                 FOREIGN KEY (visit_no) REFERENCES Visit(visit_no),

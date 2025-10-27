@@ -70,6 +70,7 @@ class Command(BaseCommand):
 
             pa.field("attending_provider", pa.string(), nullable=False),
             pa.field("attending_provider_id", pa.string(), nullable=False),
+            pa.field("attending_provider_line", pa.uint16(), nullable=False)
         ])
 
         table = pa.Table.from_pylist(visits, schema=visit_attributes_schema)
