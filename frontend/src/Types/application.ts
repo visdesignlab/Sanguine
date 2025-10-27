@@ -89,7 +89,7 @@ export const OUTCOMES = [
       avg: 'Average Length of Stay',
     },
     units: { sum: 'Days', avg: 'Days' },
-    recommendation: { avg: 7 },
+    recommendation: { avg: 7.2 },
     decimals: { sum: 0, avg: 2 },
   },
   {
@@ -197,7 +197,7 @@ export const GUIDELINE_ADHERENT = {
     },
     // Adherence units & decimal truncation for display
     units: { sum: 'Adherent RBC Transfusions', avg: '% RBC Trasfusions Adherent' },
-    recommendation: { avg: 65 },
+    recommendation: { avg: 0.65 },
     decimals: 0,
   },
   ffp: {
@@ -208,7 +208,7 @@ export const GUIDELINE_ADHERENT = {
       avg: 'FFP Transfusions Guideline Adherence %',
     },
     units: { sum: 'Adherent Plasma Transfusions', avg: '% Plasma Trasfusions Adherent' },
-    recommendation: { avg: 50 },
+    recommendation: { avg: 0.50 },
     decimals: 0,
   },
   plt: {
@@ -219,7 +219,7 @@ export const GUIDELINE_ADHERENT = {
       avg: 'PLT Transfusions Guideline Adherence %',
     },
     units: { sum: 'Adherent Platelet Transfusions', avg: '% Platelet Trasfusions Adherent' },
-    recommendation: { avg: 60 },
+    recommendation: { avg: 0.60 },
     decimals: 0,
   },
   cryo: {
@@ -230,7 +230,7 @@ export const GUIDELINE_ADHERENT = {
       avg: 'Cryo Transfusions Guideline Adherence %',
     },
     units: { sum: 'Adherent Cryo Transfusions', avg: '% Cryo Trasfusions Adherent' },
-    recommendation: { avg: 80 },
+    recommendation: { avg: 0.80 },
     decimals: 0,
   },
 } as const;
@@ -244,7 +244,7 @@ export const OVERALL_GUIDELINE_ADHERENT = {
     avg: 'Adherent Transfusions Guideline Adherence %',
   },
   units: { sum: 'Adherent Transfusions', avg: '% Trasfusions Adherent' },
-  recommendation: { avg: 65 },
+  recommendation: { avg: 0.65 },
   decimals: 0,
 } as const;
 

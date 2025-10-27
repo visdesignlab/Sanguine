@@ -2,6 +2,7 @@ import { makeAutoObservable } from 'mobx';
 import type { RootStore } from './Store';
 import {
   AGGREGATION_OPTIONS, dashboardYAxisOptions, ProviderChart, ProviderChartConfig, ProviderChartData,
+  providerXAxisOptions,
 } from '../Types/application';
 import { formatValueForDisplay } from '../Utils/dashboard';
 
@@ -157,8 +158,11 @@ export class ProvidersStore {
         const chartKey = `${cfg.chartId}_${xVar}`;
         const aggregation = cfg.aggregation || 'avg';
 
-        // TODO: Change to recommendation from application
-        const recommendedMark = 0.74;
+        // --- Recommended mark ---
+        const opt = providerXAxisOptions.find((o) => o.value === xVar) as
+          | { recommendation?: Partial<Record<keyof typeof AGGREGATION_OPTIONS, number>> }
+          | undefined;
+        const recommendedMark = opt?.recommendation?.[aggregation as keyof typeof AGGREGATION_OPTIONS] ?? NaN;
 
         // Collect numeric x values
         const values: number[] = [];
@@ -175,8 +179,16 @@ export class ProvidersStore {
         if (values.length === 0) {
           providerChartData = [];
         } else {
-          const min = Math.min(recommendedMark, ...values);
-          const max = Math.max(...values, recommendedMark);
+          // Determine min/max including recommended mark if applicable
+          let min: number;
+          let max: number;
+          if (!Number.isNaN(recommendedMark)) {
+            min = Math.min(recommendedMark, ...values);
+            max = Math.max(...values, recommendedMark);
+          } else {
+            min = Math.min(...values);
+            max = Math.max(...values);
+          }
 
           // Count unique values after rounding to 2 decimals
           const uniqueRounded = new Set(values.map((v) => Number(v.toFixed(2)))).size;
@@ -225,7 +237,6 @@ export class ProvidersStore {
             providerName = String(match.attending_provider);
           }
         }
-
 
         // --- Save Chart ---
         const chartXAxis = dashboardYAxisOptions.find((o) => o.value === xVar);
