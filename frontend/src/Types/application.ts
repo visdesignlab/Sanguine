@@ -147,9 +147,9 @@ export const PROPHYL_MEDS = [
   {
     value: 'b12',
     label: {
-      base: 'B12 Pre-Surgery',
-      sum: 'Total Visits Used B12 Pre-Surgery',
-      avg: '(%) Visits Used B12 Pre-Surgery',
+      base: 'B12 Pre-Surg',
+      sum: 'Total Visits Used B12 Pre-Surg',
+      avg: '(%) Visits Used B12 Pre-Surg',
     },
     units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
@@ -157,9 +157,9 @@ export const PROPHYL_MEDS = [
   {
     value: 'iron',
     label: {
-      base: 'Iron Pre-Surgery',
-      sum: 'Total Visits Used Iron Pre-Surgery',
-      avg: '(%) Visits Used Iron Pre-Surgery',
+      base: 'Iron Pre-Surg',
+      sum: 'Total Visits Used Iron Pre-Surg',
+      avg: '(%) Visits Used Iron Pre-Surg',
     },
     units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
@@ -167,9 +167,9 @@ export const PROPHYL_MEDS = [
   {
     value: 'antifibrinolytic',
     label: {
-      base: 'Antifibrinolytics Used Pre-Surgery',
-      sum: 'Total Visits Used Antifibrinolytics Pre-Surgery',
-      avg: '(%) Visits Used Antifibrinolytics Pre-Surgery',
+      base: 'Antifibrinolytics Used Pre-Surg',
+      sum: 'Total Visits Used Antifibrinolytics Pre-Surg',
+      avg: '(%) Visits Used Antifibrinolytics Pre-Surg',
     },
     units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
@@ -192,10 +192,11 @@ export const GUIDELINE_ADHERENT = {
     label: {
       base: 'Guideline Adherent RBC Transfusions',
       sum: 'Total Guideline Adherent RBC Transfusions',
-      avg: '(%) Guideline Adherent RBC Transfusions',
+      avg: 'RBC Transfusions Guideline Adherence %',
     },
     // Adherence units & decimal truncation for display
-    units: { sum: 'Adherent RBC Transfusions', avg: '% Adherent RBC Transfusions' },
+    units: { sum: 'Adherent RBC Transfusions', avg: '% RBC Trasfusions Adherent' },
+    recommendation: { avg: 75 },
     decimals: 0,
   },
   ffp: {
@@ -203,9 +204,9 @@ export const GUIDELINE_ADHERENT = {
     label: {
       base: 'Guideline Adherent FFP Transfusions',
       sum: 'Total Guideline Adherent FFP Transfusions',
-      avg: '(%) Guideline Adherent FFP Transfusions',
+      avg: 'FFP Transfusions Guideline Adherence %',
     },
-    units: { sum: 'Adherent Plasma Transfusions', avg: '% Adherent Plasma Transfusions' },
+    units: { sum: 'Adherent Plasma Transfusions', avg: '% Plasma Trasfusions Adherent' },
     decimals: 0,
   },
   plt: {
@@ -213,9 +214,9 @@ export const GUIDELINE_ADHERENT = {
     label: {
       base: 'Guideline Adherent PLT Transfusions',
       sum: 'Total Guideline Adherent PLT Transfusions',
-      avg: '(%) Guideline Adherent PLT Transfusions',
+      avg: 'PLT Transfusions Guideline Adherence %',
     },
-    units: { sum: 'Adherent Platelet Transfusions', avg: '% Adherent Platelet Transfusions' },
+    units: { sum: 'Adherent Platelet Transfusions', avg: '% Platelet Trasfusions Adherent' },
     decimals: 0,
   },
   cryo: {
@@ -223,9 +224,9 @@ export const GUIDELINE_ADHERENT = {
     label: {
       base: 'Guideline Adherent Cryo Transfusions',
       sum: 'Total Guideline Adherent Cryo Transfusions',
-      avg: '(%) Guideline Adherent Cryo Transfusions',
+      avg: 'Cryo Transfusions Guideline Adherence %',
     },
-    units: { sum: 'Adherent Cryo Transfusions', avg: '% Adherent Cryo Transfusions' },
+    units: { sum: 'Adherent Cryo Transfusions', avg: '% Cryo Trasfusions Adherent' },
     decimals: 0,
   },
 } as const;
@@ -236,9 +237,9 @@ export const OVERALL_GUIDELINE_ADHERENT = {
   label: {
     base: 'Guideline Adherent Transfusions',
     sum: 'Total Guideline Adherent Transfusions',
-    avg: '(%) Guideline Adherent Transfusions',
+    avg: 'Adherent Transfusions Guideline Adherence %',
   },
-  units: { sum: 'Adherent Transfusions', avg: '% Adherent Transfusions' },
+  units: { sum: 'Adherent Transfusions', avg: '% Trasfusions Adherent' },
   decimals: 0,
 } as const;
 
@@ -473,12 +474,11 @@ export const chartColors = [
 ];
 
 // Provider View ----------------------------------------------------
-type ProviderChart = {
+export type ProviderChart = {
     group?: string;
     title: string;
     data: Array<Record<string, string | number | boolean | null>>;
     dataKey: string;
-    bestMark?: number;
     recommendedMark?: number;
     providerMark?: number;
     providerName?: string | null;
