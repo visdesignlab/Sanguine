@@ -7,7 +7,7 @@ import {
   Modal,
   CloseButton,
 } from '@mantine/core';
-import { DatePickerInput } from '@mantine/dates';
+import { DatePickerInput, DatePickerPreset } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
 import {
   IconCalendarWeek, IconPlus, IconSearch,
@@ -89,7 +89,15 @@ export function ProvidersView() {
   // --- Date Range Picker ---
   const [dateRange, setDateRange] = useState<[string | null, string | null]>([null, null]);
 
-  // --- Tooltip ---
+  const DATE_FORMAT = 'YYYY-MM-DD';
+  const datePresets: DatePickerPreset<'range'>[] = [
+    { label: 'This month', value: [dayjs().startOf('month').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
+    { label: 'This quarter', value: [dayjs().subtract(dayjs().month() % 3, 'month').startOf('month').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
+    { label: 'Past 3 months', value: [dayjs().subtract(3, 'month').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
+    { label: 'Past 6 months', value: [dayjs().subtract(6, 'month').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
+    { label: 'Past year', value: [dayjs().subtract(1, 'year').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
+    { label: 'All time', value: [dayjs('2020-01-01').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
+  ];
 
   // --- Render ---
   return useObserver(() => {
@@ -108,6 +116,17 @@ export function ProvidersView() {
                 Visits
               </Title>
             </Tooltip>
+            {/* Date Range Picker */}
+            <DatePickerInput
+              type="range"
+              presets={datePresets}
+              defaultValue={[dayjs().format(DATE_FORMAT), dayjs().format(DATE_FORMAT)]}
+              defaultLevel="month"
+              leftSection={<IconCalendarWeek size={18} stroke={1} />}
+              placeholder="Pick dates range"
+              value={dateRange}
+              onChange={setDateRange}
+            />
             {/* Provider Select */}
             <Select
               placeholder="Search for a provider"
@@ -118,19 +137,6 @@ export function ProvidersView() {
               w="fit-content"
               style={{ minWidth: 180 }}
               onChange={(val) => { if (store.providersStore) store.providersStore.selectedProvider = val; }}
-            />
-            {/* Date Range Picker */}
-            <DatePickerInput
-              type="range"
-              defaultValue={[
-                dayjs().subtract(6, 'month').startOf('day').toDate(),
-                dayjs().toDate(),
-              ]}
-              defaultLevel="month"
-              leftSection={<IconCalendarWeek size={18} stroke={1} />}
-              placeholder="Pick dates range"
-              value={dateRange}
-              onChange={setDateRange}
             />
             {/** Add Chart Button */}
             <Button onClick={openAddChartModal}>
