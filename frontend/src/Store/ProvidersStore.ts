@@ -4,8 +4,6 @@ import {
   AGGREGATION_OPTIONS, dashboardYAxisOptions, ProviderChart, ProviderChartConfig, ProviderChartData,
   providerXAxisOptions,
 } from '../Types/application';
-import { formatValueForDisplay } from '../Utils/dashboard';
-
 /**
  * ProvidersStore manages provider data for the provider view.
  */
@@ -23,6 +21,36 @@ export class ProvidersStore {
 
   _selectedProvider: string | null = null;
 
+  // Number of unique surgeries performed by the selected provider (all time)
+  selectedProvSurgCount: number | null = null;
+
+  /**
+   * Fetch count of unique surgeries for the currently selected provider.
+   * Sets selectedProvSurgCount to 0 when no provider is selected or duckDB missing.
+   */
+  async fetchSelectedProvSurgCount() {
+    if (!this._rootStore.duckDB || !this.selectedProvider) {
+      this.selectedProvSurgCount = 0;
+      return this.selectedProvSurgCount;
+    }
+
+    try {
+      // protect single quotes in provider name
+      // const prov = String(this.selectedProvider).replace(/'/g, "''");
+      // Todo: Query
+      const query = '';
+      const res = await this._rootStore.duckDB.query(query);
+      const rows = res.toArray().map((r: any) => r.toJSON());
+      const cnt = rows[0]?.cnt ?? 0;
+      this.selectedProvSurgCount = Number(cnt) || 0;
+    } catch (e) {
+      console.error('Error fetching selected provider surgery count:', e);
+      this.selectedProvSurgCount = 0;
+    }
+
+    return this.selectedProvSurgCount;
+  }
+
   get selectedProvider(): string | null {
     return this._selectedProvider;
   }
@@ -33,6 +61,10 @@ export class ProvidersStore {
     // Recompute charts when selected provider changes
     this.getProviderCharts().catch((e) => {
       console.error('Error refreshing provider charts after provider change:', e);
+    });
+    // Refresh surgery count for the newly selected provider
+    this.fetchSelectedProvSurgCount().catch((e) => {
+      console.error('Error fetching surgery count after provider change:', e);
     });
   }
 
@@ -98,6 +130,10 @@ export class ProvidersStore {
       // If no provider is selected yet, pick the first one so UI has a default
       if (!this.selectedProvider && this.providerList.length > 0) {
         this.selectedProvider = this.providerList[0];
+        // ensure surgery count populated for default provider
+        this.fetchSelectedProvSurgCount().catch((e) => {
+          console.error('Error fetching surgery count for default provider:', e);
+        });
       }
     } catch (e) {
       console.error('Error fetching provider list:', e);

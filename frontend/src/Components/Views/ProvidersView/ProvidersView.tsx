@@ -189,6 +189,7 @@ export function ProvidersView() {
           <Stack gap="xs">
             <Title order={3}>
               Provider Summary -
+              {' '}
               {selectedProviderName}
             </Title>
             <Title order={4} mt="xs">
@@ -199,15 +200,15 @@ export function ProvidersView() {
               {' '}
               {selectedProviderName}
               {' '}
-              has recorded:
+              has been involved in:
             </Title>
             <Stack gap={2} mt="xs">
               <Text size="md">
                 •
                 {' '}
-                <Text component="span" td="underline">28</Text>
+                <Text component="span" td="underline">{store.providersStore?.selectedProvSurgCount ?? 0}</Text>
                 {' '}
-                Cardiac Surgeries
+                Surgeries
               </Text>
               <Text size="md">
                 • Used
