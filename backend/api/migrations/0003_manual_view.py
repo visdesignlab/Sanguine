@@ -212,11 +212,23 @@ def create_materialize_proc(apps, schema_editor):
             surgery_count
         )
         SELECT
-            COALESCE(surgeon_prov_id, '') AS prov_id,
-            COALESCE(surgeon_prov_name, '') AS prov_name,
+            prov_id,
+            MAX(prov_name) AS prov_name,
             COUNT(DISTINCT case_id) AS surgery_count
-        FROM SurgeryCase
-        GROUP BY surgeon_prov_id, surgeon_prov_name;
+        FROM (
+            SELECT
+                surgeon_prov_id AS prov_id,
+                surgeon_prov_name AS prov_name,
+                case_id
+            FROM SurgeryCase
+            UNION ALL
+            SELECT
+                anesth_prov_id AS prov_id,
+                anesth_prov_name AS prov_name,
+                case_id
+            FROM SurgeryCase
+        ) sc
+        GROUP BY prov_id;
     END;
     """
     conn = schema_editor.connection

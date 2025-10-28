@@ -197,14 +197,10 @@ export function ProvidersView() {
               {' '}
               <Text component="span" td="underline">3 Months</Text>
               ,
-              {' '}
-              {selectedProviderName}
-              {' '}
-              has been involved in:
             </Title>
             <Stack gap={2} mt="xs">
               <Text size="md">
-                •
+                • Involved in
                 {' '}
                 <Text component="span" td="underline">{store.providersStore?.selectedProvSurgCount ?? 0}</Text>
                 {' '}
@@ -224,13 +220,13 @@ export function ProvidersView() {
                 {' '}
                 than average
               </Text>
-              <Text size="md">
+              {/* <Text size="md">
                 •
                 {' '}
                 <Text component="span" td="underline">13%</Text>
                 {' '}
                 of transfused patients had post operative hemoglobin above the recommended threshold
-              </Text>
+              </Text> */}
             </Stack>
           </Stack>
         </Card>

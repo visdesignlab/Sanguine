@@ -307,6 +307,40 @@ class Command(BaseCommand):
         ]
 
         def gen_surgery_cases():
+            # Seed one surgery per surgeon so every provider has surgery_count >= 1
+            if visits:
+                for prov_id, prov_name in surgeons:
+                    pat, bad_pat, visit = random.choice(visits)
+                    # schedule somewhere during the stay
+                    start_time = make_aware(
+                        fake.date_time_between(
+                            start_date=datetime.strptime(visit["adm_dtm"], DATE_FORMAT),
+                            end_date=datetime.strptime(visit["dsch_dtm"], DATE_FORMAT),
+                        )
+                    )
+                    end_time = start_time + timedelta(hours=3)
+                    anesth = fake.random_element(elements=anests)
+                    surgery = {
+                        "case_id": fake.unique.random_number(digits=10),
+                        "visit_no": visit["visit_no"],
+                        "mrn": pat["mrn"],
+                        "case_date": start_time.date().strftime("%Y-%m-%d"),
+                        "surgery_start_dtm": start_time.strftime(DATE_FORMAT),
+                        "surgery_end_dtm": end_time.strftime(DATE_FORMAT),
+                        "surgery_elap": (end_time - start_time).total_seconds() / 60,
+                        "surgery_type_desc": fake.random_element(elements=("Elective","Emergent","Urgent")),
+                        "surgeon_prov_id": prov_id,
+                        "surgeon_prov_name": prov_name,
+                        "anesth_prov_id": anesth[0],
+                        "anesth_prov_name": anesth[1],
+                        "prim_proc_desc": fake.sentence(),
+                        "postop_icu_los": fake.random_int(min=0, max=10),
+                        "sched_site_desc": fake.sentence(),
+                        "asa_code": fake.random_element(elements=("1","2","3","4","5","6")),
+                    }
+                    surgeries.append((pat, bad_pat, visit, surgery))
+                    yield surgery
+
             for pat, bad_pat, visit in visits:
                 # Randomly decide if this visit gets a surgery case, most don't
                 if not bad_pat and random.random() < 0.9:
