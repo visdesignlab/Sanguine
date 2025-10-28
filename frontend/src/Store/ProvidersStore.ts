@@ -36,9 +36,13 @@ export class ProvidersStore {
 
     try {
       // protect single quotes in provider name
-      // const prov = String(this.selectedProvider).replace(/'/g, "''");
-      // Todo: Query
-      const query = '';
+      const prov = String(this.selectedProvider).replace(/'/g, "''");
+      // Use ProviderAttributes if available (parquet export)
+      const query = `
+        SELECT surgery_count AS cnt
+        FROM ProviderAttributes
+        WHERE prov_id = '${prov}' OR prov_name = '${prov}';
+      `;
       const res = await this._rootStore.duckDB.query(query);
       const rows = res.toArray().map((r: any) => r.toJSON());
       const cnt = rows[0]?.cnt ?? 0;

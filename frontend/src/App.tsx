@@ -27,7 +27,7 @@ function App() {
 
   // Fetch all visits data on initial load
   useEffect(() => {
-    async function fetchAllVisits() {
+    async function fetchAllData() {
       setDataLoading(true);
       try {
         if (store.duckDB) {
@@ -48,15 +48,16 @@ function App() {
           return;
         }
 
-        const res = await fetch(`${queryUrl}get_all_data`);
+        // Fetch visit attributes Parquet file from backend
+        const res = await fetch(`${queryUrl}get_visit_attributes`);
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
-        await db.registerFileBuffer('data.parquet', new Uint8Array(await res.arrayBuffer()));
+        await db.registerFileBuffer('visits.parquet', new Uint8Array(await res.arrayBuffer()));
 
         await store.duckDB.query(`
           CREATE TABLE IF NOT EXISTS visits AS
-          SELECT * FROM read_parquet('data.parquet');
+          SELECT * FROM read_parquet('visits.parquet');
 
           CREATE TABLE IF NOT EXISTS costs (
             rbc_units_cost DECIMAL(10,2),
@@ -89,6 +90,19 @@ function App() {
           CROSS JOIN costs c;
         `);
 
+        // Fetch provider attributes Parquet file from backend
+        const provRes = await fetch(`${queryUrl}get_provider_attributes`);
+        if (!provRes.ok) {
+          throw new Error(`HTTP error! status: ${provRes.status}`);
+        }
+        await db.registerFileBuffer('providers.parquet', new Uint8Array(await provRes.arrayBuffer()));
+
+        await store.duckDB.query(`
+          CREATE TABLE IF NOT EXISTS ProviderAttributes AS
+          SELECT * FROM read_parquet('providers.parquet');
+        `);
+
+        // Update all stores
         await store.updateAllVisitsLength();
         await store.filtersStore.calculateDefaultFilterValues();
         await store.updateFilteredVisitsLength();
@@ -96,6 +110,10 @@ function App() {
         await store.filtersStore.generateHistogramData();
         await store.dashboardStore.computeChartData();
         await store.dashboardStore.computeStatData();
+
+        await store.providersStore.fetchSelectedProvSurgCount();
+        await store.providersStore.getProviderCharts();
+        await store.providersStore.fetchProviderList();
       } catch (e) {
         console.error('Error fetching visits data:', e);
         setDataLoadingFailed(true);
@@ -105,7 +123,7 @@ function App() {
       }
     }
     // Call the function to fetch visits data
-    fetchAllVisits();
+    fetchAllData();
   }, [store]);
 
   return (
