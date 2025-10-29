@@ -272,87 +272,168 @@ export function ProvidersView() {
                         />
                       )}
                       {/** Chart */}
-                      <BarChart
-                        h={200}
-                        w="100%"
-                        data={chart.data}
-                        dataKey={chart.dataKey}
-                        orientation={chart.orientation}
-                        barChartProps={{
-                          margin: {
-                            top: 30,
-                            right: 25,
-                            bottom: 25,
-                            left: 25,
-                          },
-                        }}
-                        yAxisProps={{ width: 20 }}
-                        barProps={{ radius: 5 }}
-                        series={series}
-                        xAxisProps={{
-                          type: 'number',
-                          domain: ['dataMin', 'dataMax'],
-                          padding: { left: 10, right: 10 },
-                          label: {
-                            value: chart.title,
-                            position: 'bottom',
-                            offset: 10,
-                            dx: -6,
-                            style: { fontWeight: 600, fontSize: 13 },
-                          },
-                          tickFormatter: (value: number) => formatValueForDisplay(cfg.xAxisVar, value, cfg.aggregation, false),
-                        }}
-                        tooltipProps={{
-                          content: (props) => (
-                            <ProviderChartTooltip
-                              active
-                              payload={props.payload}
-                              xAxisVar={cfg.xAxisVar}
-                              yAxisVar={cfg.yAxisVar}
-                              aggregation={cfg.aggregation}
-                            />
-                          ),
-                        }}
-                      >
-                        {/** Reference Lines */}
-                        {(() => {
-                          // Label position adjusts if too close to min or max
-                          const values = (chart.data || []).map((r) => Number(r[chart.dataKey])).filter(Number.isFinite);
-                          const min = values.length ? Math.min(...values) : 0;
-                          const max = values.length ? Math.max(...values) : 1;
-                          const marker = Number(chart.providerMark) || 0;
+                      {cfg.chartType === 'line' ? (
+                        <LineChart
+                          h={200}
+                          w="100%"
+                          data={chart.data}
+                          dataKey={chart.dataKey}
+                          orientation={chart.orientation}
+                          lineProps={{ strokeWidth: 2, dot: false }}
+                          lineChartProps={{
+                            margin: {
+                              top: 30,
+                              right: 25,
+                              bottom: 25,
+                              left: 25,
+                            },
+                          }}
+                          yAxisProps={{ width: 20 }}
+                          series={series}
+                          xAxisProps={{
+                            type: 'number',
+                            domain: ['dataMin', 'dataMax'],
+                            padding: { left: 10, right: 10 },
+                            label: {
+                              value: chart.title,
+                              position: 'bottom',
+                              offset: 10,
+                              dx: -6,
+                              style: { fontWeight: 600, fontSize: 13 },
+                            },
+                            tickFormatter: (value: number) => formatValueForDisplay(cfg.xAxisVar, value, cfg.aggregation, false),
+                          }}
+                          tooltipProps={{
+                            content: (props) => (
+                              <ProviderChartTooltip
+                                active
+                                payload={props.payload}
+                                xAxisVar={cfg.xAxisVar}
+                                yAxisVar={cfg.yAxisVar}
+                                aggregation={cfg.aggregation}
+                              />
+                            ),
+                          }}
+                        >
+                          {/** Reference Lines (same logic as bar chart) */}
+                          {(() => {
+                            const values = (chart.data || []).map((r) => Number(r[chart.dataKey])).filter(Number.isFinite);
+                            const min = values.length ? Math.min(...values) : 0;
+                            const max = values.length ? Math.max(...values) : 1;
+                            const marker = Number(chart.providerMark) || 0;
 
-                          const range = (max - min) || 1;
-                          const pct = (marker - min) / range;
+                            const range = (max - min) || 1;
+                            const pct = (marker - min) / range;
 
-                          let labelPosition: 'insideTop' | 'insideTopLeft' | 'insideTopRight' = 'insideTop';
-                          if (pct <= 0.1) labelPosition = 'insideTopLeft';
-                          else if (pct >= 0.9) labelPosition = 'insideTopRight';
+                            let labelPosition: 'insideTop' | 'insideTopLeft' | 'insideTopRight' = 'insideTop';
+                            if (pct <= 0.1) labelPosition = 'insideTopLeft';
+                            else if (pct >= 0.9) labelPosition = 'insideTopRight';
 
-                          return (
-                            <ReferenceLine
-                              yAxisId="left"
-                              x={chart.providerMark}
-                              ifOverflow="visible"
-                              stroke="#4a4a4a"
-                              label={{
-                                value: store.providersStore?.selectedProvider ?? 'Provider',
-                                fill: '#4a4a4a',
-                                position: labelPosition,
-                                offset: -25,
-                                fontSize: 12,
-                              }}
-                            />
-                          );
-                        })()}
-                        <ReferenceLine
-                          yAxisId="left"
-                          x={Number(chart.recommendedMark)}
-                          ifOverflow="visible"
-                          stroke="#82ca9d"
-                          strokeDasharray="3 3"
-                        />
-                      </BarChart>
+                            return (
+                              <ReferenceLine
+                                yAxisId="left"
+                                x={chart.providerMark}
+                                ifOverflow="visible"
+                                stroke="#4a4a4a"
+                                label={{
+                                  value: store.providersStore?.selectedProvider ?? 'Provider',
+                                  fill: '#4a4a4a',
+                                  position: labelPosition,
+                                  offset: -25,
+                                  fontSize: 12,
+                                }}
+                              />
+                            );
+                          })()}
+                          <ReferenceLine
+                            yAxisId="left"
+                            x={Number(chart.recommendedMark)}
+                            ifOverflow="visible"
+                            stroke="#82ca9d"
+                            strokeDasharray="3 3"
+                          />
+                        </LineChart>
+                      ) : (
+                        <BarChart
+                          h={200}
+                          w="100%"
+                          data={chart.data}
+                          dataKey={chart.dataKey}
+                          orientation={chart.orientation}
+                          barChartProps={{
+                            margin: {
+                              top: 30,
+                              right: 25,
+                              bottom: 25,
+                              left: 25,
+                            },
+                          }}
+                          yAxisProps={{ width: 20 }}
+                          barProps={{ radius: 5 }}
+                          series={series}
+                          xAxisProps={{
+                            type: 'number',
+                            domain: ['dataMin', 'dataMax'],
+                            padding: { left: 10, right: 10 },
+                            label: {
+                              value: chart.title,
+                              position: 'bottom',
+                              offset: 10,
+                              dx: -6,
+                              style: { fontWeight: 600, fontSize: 13 },
+                            },
+                            tickFormatter: (value: number) => formatValueForDisplay(cfg.xAxisVar, value, cfg.aggregation, false),
+                          }}
+                          tooltipProps={{
+                            content: (props) => (
+                              <ProviderChartTooltip
+                                active
+                                payload={props.payload}
+                                xAxisVar={cfg.xAxisVar}
+                                yAxisVar={cfg.yAxisVar}
+                                aggregation={cfg.aggregation}
+                              />
+                            ),
+                          }}
+                        >
+                          {(() => {
+                            const values = (chart.data || []).map((r) => Number(r[chart.dataKey])).filter(Number.isFinite);
+                            const min = values.length ? Math.min(...values) : 0;
+                            const max = values.length ? Math.max(...values) : 1;
+                            const marker = Number(chart.providerMark) || 0;
+
+                            const range = (max - min) || 1;
+                            const pct = (marker - min) / range;
+
+                            let labelPosition: 'insideTop' | 'insideTopLeft' | 'insideTopRight' = 'insideTop';
+                            if (pct <= 0.1) labelPosition = 'insideTopLeft';
+                            else if (pct >= 0.9) labelPosition = 'insideTopRight';
+
+                            return (
+                              <ReferenceLine
+                                yAxisId="left"
+                                x={chart.providerMark}
+                                ifOverflow="visible"
+                                stroke="#4a4a4a"
+                                label={{
+                                  value: store.providersStore?.selectedProvider ?? 'Provider',
+                                  fill: '#4a4a4a',
+                                  position: labelPosition,
+                                  offset: -25,
+                                  fontSize: 12,
+                                }}
+                              />
+                            );
+                          })()}
+                          <ReferenceLine
+                            yAxisId="left"
+                            x={Number(chart.recommendedMark)}
+                            ifOverflow="visible"
+                            stroke="#82ca9d"
+                            strokeDasharray="3 3"
+                          />
+                        </BarChart>
+                      )}
                     </Card>
                   );
                 })}

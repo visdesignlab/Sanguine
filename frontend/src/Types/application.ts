@@ -504,7 +504,7 @@ export type ProviderChartConfig = ChartConfig<
   typeof dashboardYAxisVars[number],
   typeof dashboardXAxisVars[number] | 'attending_provider',
   keyof typeof AGGREGATION_OPTIONS,
-  'bar'
+  'bar' | 'line'
 > & { group?: (typeof providerChartGroups)[number] };
 
 // Explore View ----------------------------------------------------
