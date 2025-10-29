@@ -209,16 +209,14 @@ export function ProvidersView() {
               <Text size="md">
                 • Used
                 {' '}
-                <Text component="span" td="underline">187</Text>
+                <Text component="span" td="underline">{store.providersStore?.selectedProvRbcUnits ?? 0}</Text>
                 {' '}
-                Units of Blood Products
+                Units of Red Blood Cells
               </Text>
               <Text size="md">
                 • Average Complexity of cases
                 {' '}
-                <Text component="span" td="underline">higher</Text>
-                {' '}
-                than average
+                <Text component="span" td="underline">{store.providersStore?.cmiComparisonLabel ?? 'within typical range'}</Text>
               </Text>
               {/* <Text size="md">
                 •

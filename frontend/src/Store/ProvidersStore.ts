@@ -1,4 +1,5 @@
 import { makeAutoObservable } from 'mobx';
+import dayjs from 'dayjs';
 import type { RootStore } from './Store';
 import {
   AGGREGATION_OPTIONS, dashboardYAxisOptions, ProviderChart, ProviderChartConfig, ProviderChartData,
@@ -23,6 +24,14 @@ export class ProvidersStore {
 
   // Number of unique surgeries performed by the selected provider (all time)
   selectedProvSurgCount: number | null = null;
+
+  selectedProvRbcUnits: number | null = null;
+
+  selectedProvCmi: number | null = null;
+
+  averageProvCmi: number | null = null;
+
+  cmiComparisonLabel: string = 'within typical range';
 
   /**
    * Fetch count of unique surgeries for the currently selected provider.
@@ -55,6 +64,45 @@ export class ProvidersStore {
     return this.selectedProvSurgCount;
   }
 
+  async fetchSelectedProvRbcUnits(startDate?: string | null, endDate?: string | null) {
+    // If no DB or no selected provider, set to zero and return
+    if (!this._rootStore.duckDB || !this.selectedProvider) {
+      this.selectedProvRbcUnits = 0;
+      return this.selectedProvRbcUnits;
+    }
+
+    try {
+      const prov = String(this.selectedProvider).replace(/'/g, "''");
+
+      // Build WHERE clause (optionally constrain by discharge date range)
+      let dateClause = '';
+      if (startDate) {
+        // duckdb accepts DATE 'YYYY-MM-DD' or comparable formats
+        dateClause += ` AND dsch_dtm >= DATE '${startDate}'`;
+      }
+      if (endDate) {
+        dateClause += ` AND dsch_dtm <= DATE '${endDate}'`;
+      }
+
+      const query = `
+        SELECT SUM(rbc_units) AS total_rbc
+        FROM filteredVisits
+        WHERE attending_provider = '${prov}' ${dateClause};
+      `;
+
+      const res = await this._rootStore.duckDB.query(query);
+      const rows = res.toArray().map((r: any) => r.toJSON());
+
+      const total = rows[0]?.total_rbc ?? 0;
+      this.selectedProvRbcUnits = Number(total) || 0;
+    } catch (e) {
+      console.error('Error fetching selected provider RBC units:', e);
+      this.selectedProvRbcUnits = 0;
+    }
+
+    return this.selectedProvRbcUnits;
+  }
+
   get selectedProvider(): string | null {
     return this._selectedProvider;
   }
@@ -69,6 +117,13 @@ export class ProvidersStore {
     // Refresh surgery count for the newly selected provider
     this.fetchSelectedProvSurgCount().catch((e) => {
       console.error('Error fetching surgery count after provider change:', e);
+    });
+    // Refresh RBC units (all time by default) when provider changes
+    this.fetchSelectedProvRbcUnits().catch((e) => {
+      console.error('Error fetching RBC units after provider change:', e);
+    });
+    this.fetchCmiComparison().catch((e) => {
+      console.error('Error fetching CMI comparison after provider change:', e);
     });
   }
 
@@ -113,6 +168,73 @@ export class ProvidersStore {
    */
   removeChart(chartId: string) {
     this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
+  }
+
+  /**
+   * Fetches CMI for all providers (optionally bounded by date range),
+   * computes average CMI across providers and selected provider CMI,
+   * and sets cmiComparisonLabel based on relative difference.
+   */
+  async fetchCmiComparison() {
+    if (!this._rootStore.duckDB || !this.selectedProvider) {
+      this.selectedProvCmi = null;
+      this.averageProvCmi = null;
+      this.cmiComparisonLabel = 'within typical range';
+      return this.cmiComparisonLabel;
+    }
+
+    try {
+      const query = `
+        SELECT attending_provider, SUM(ms_drg_weight) / COUNT(visit_no) AS cmi
+        FROM filteredVisits
+        GROUP BY attending_provider;
+      `;
+      const res = await this._rootStore.duckDB.query(query);
+      const rows = res.toArray().map((r: any) => r.toJSON());
+
+      const cmiValues = rows
+        .map((r) => {
+          const v = Number(r.cmi);
+          return Number.isFinite(v) ? v : NaN;
+        })
+        .filter(Number.isFinite);
+
+      if (cmiValues.length === 0) {
+        this.selectedProvCmi = null;
+        this.averageProvCmi = null;
+        this.cmiComparisonLabel = 'within typical range';
+        return this.cmiComparisonLabel;
+      }
+
+      const avg = cmiValues.reduce((a, b) => a + b, 0) / cmiValues.length;
+      this.averageProvCmi = avg;
+
+      const match = rows.find((r) => String(r.attending_provider) === String(this.selectedProvider));
+      this.selectedProvCmi = match && match.cmi != null ? Number(match.cmi) : null;
+
+      // relative difference
+      const sel = this.selectedProvCmi ?? avg;
+      const rel = avg === 0 ? 0 : (sel - avg) / avg;
+
+      // thresholds (tunable)
+      let label = 'within typical range';
+      if (rel >= 0.15) label = 'much higher than average';
+      else if (rel >= 0.7) label = 'higher than average';
+      else if (rel >= 0.03) label = 'slightly higher than average';
+      else if (rel <= -0.15) label = 'much lower than average';
+      else if (rel <= -0.7) label = 'lower than average';
+      else if (rel <= -0.03) label = 'slightly lower than average';
+      else label = 'within typical range';
+
+      this.cmiComparisonLabel = label;
+      return this.cmiComparisonLabel;
+    } catch (e) {
+      console.error('Error fetching CMI comparison:', e);
+      this.selectedProvCmi = null;
+      this.averageProvCmi = null;
+      this.cmiComparisonLabel = 'within typical range';
+      return this.cmiComparisonLabel;
+    }
   }
 
   async fetchProviderList() {
