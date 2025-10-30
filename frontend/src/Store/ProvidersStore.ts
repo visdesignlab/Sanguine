@@ -1,5 +1,4 @@
 import { makeAutoObservable } from 'mobx';
-import dayjs from 'dayjs';
 import type { RootStore } from './Store';
 import {
   AGGREGATION_OPTIONS, dashboardYAxisOptions, ProviderChart, ProviderChartConfig, ProviderChartData,
@@ -32,8 +31,34 @@ export class ProvidersStore {
   averageProvCmi: number | null = null;
 
   cmiComparisonLabel: string = 'within typical range';
+
   // Current date range applied for Providers view (nullable = all time)
   dateStart: string | null = null;
+
+  dateEnd: string | null = null;
+
+  earliestDate: string | null = null;
+
+  async findEarliestDate(): Promise<string | null> {
+    if (!this._rootStore.duckDB) {
+      return null;
+    }
+
+    try {
+      const query = `
+        SELECT MIN(dsch_dtm) AS earliest_date
+        FROM filteredVisits
+        WHERE dsch_dtm IS NOT NULL;
+      `;
+      const res = await this._rootStore.duckDB.query(query);
+      const rows = res.toArray().map((r: { toJSON: () => Record<string, unknown> }) => r.toJSON());
+      const earliestDate = rows[0]?.earliest_date ?? null;
+      return earliestDate ? String(earliestDate) : null;
+    } catch (e) {
+      console.error('Error finding earliest discharge date:', e);
+      return null;
+    }
+  }
 
   dateEnd: string | null = null;
   /**
