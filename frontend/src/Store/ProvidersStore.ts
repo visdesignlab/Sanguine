@@ -60,7 +60,6 @@ export class ProvidersStore {
     }
   }
 
-  dateEnd: string | null = null;
   /**
    * Set date range for Providers view and refresh provider-related data.
    */
@@ -114,7 +113,7 @@ export class ProvidersStore {
         WHERE attending_provider = '${prov}' ${dateClause};
       `;
       const res = await this._rootStore.duckDB.query(query);
-      const rows = res.toArray().map((r: any) => r.toJSON());
+      const rows = res.toArray().map((r: { toJSON: () => Record<string, unknown> }) => r.toJSON());
       const cnt = rows[0]?.cnt ?? 0;
       this.selectedProvSurgCount = Number(cnt) || 0;
     } catch (e) {
@@ -152,7 +151,7 @@ export class ProvidersStore {
       `;
 
       const res = await this._rootStore.duckDB.query(query);
-      const rows = res.toArray().map((r: any) => r.toJSON());
+      const rows = res.toArray().map((r: { toJSON: () => Record<string, unknown> }) => r.toJSON());
 
       const total = rows[0]?.total_rbc ?? 0;
       this.selectedProvRbcUnits = Number(total) || 0;
@@ -173,19 +172,19 @@ export class ProvidersStore {
     this._selectedProvider = val;
     // Recompute charts and stats when selected provider changes, respecting current date range
     const s = this.dateStart ?? null;
-    const e = this.dateEnd ?? null;
-    this.getProviderCharts(s, e).catch((e) => {
+    const eDate = this.dateEnd ?? null;
+    this.getProviderCharts(s, eDate).catch((e) => {
       console.error('Error refreshing provider charts after provider change:', e);
     });
     // Refresh surgery count for the newly selected provider
-    this.fetchSelectedProvSurgCount(s, e).catch((e) => {
+    this.fetchSelectedProvSurgCount(s, eDate).catch((e) => {
       console.error('Error fetching surgery count after provider change:', e);
     });
     // Refresh RBC units (all time by default) when provider changes
-    this.fetchSelectedProvRbcUnits(s, e).catch((e) => {
+    this.fetchSelectedProvRbcUnits(s, eDate).catch((e) => {
       console.error('Error fetching RBC units after provider change:', e);
     });
-    this.fetchCmiComparison(s, e).catch((e) => {
+    this.fetchCmiComparison(s, eDate).catch((e) => {
       console.error('Error fetching CMI comparison after provider change:', e);
     });
   }
@@ -196,7 +195,7 @@ export class ProvidersStore {
       chartId: '0', xAxisVar: 'rbc_adherent', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
     },
     {
-      chartId: '1', xAxisVar: 'ffp_adherent', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'line', group: 'Anemia Management',
+      chartId: '1', xAxisVar: 'ffp_adherent', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
     },
     {
       chartId: '2', xAxisVar: 'antifibrinolytic', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
@@ -205,7 +204,7 @@ export class ProvidersStore {
       chartId: '3', xAxisVar: 'b12', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Outcomes',
     },
     {
-      chartId: '4', xAxisVar: 'los', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Outcomes',
+      chartId: '4', xAxisVar: 'los', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'line', group: 'Outcomes',
     },
   ];
 
@@ -260,7 +259,7 @@ export class ProvidersStore {
         GROUP BY attending_provider;
       `;
       const res = await this._rootStore.duckDB.query(query);
-      const rows = res.toArray().map((r: any) => r.toJSON());
+      const rows = res.toArray().map((r: { toJSON: () => Record<string, unknown> }) => r.toJSON());
 
       const cmiValues = rows
         .map((r) => {
