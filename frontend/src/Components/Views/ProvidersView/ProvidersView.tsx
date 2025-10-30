@@ -1,4 +1,4 @@
-import { BarChart } from '@mantine/charts';
+import { BarChart, LineChart } from '@mantine/charts';
 import {
   Card,
   Divider, Flex, Stack, Title, Tooltip, Text,
@@ -39,13 +39,14 @@ export function ProvidersView() {
 
   // Initialize provider view data
   useEffect(() => {
-    if (store.providersStore?.getProviderCharts && store.duckDB) {
-      store.providersStore.getProviderCharts();
+    // If we have a duckDB instance, ensure providersStore uses its current dateRange (or default)
+    if (store.duckDB && store.providersStore) {
+      // Trigger initial load using providersStore's dateRange (if any)
+      const s = store.providersStore.dateStart ?? null;
+      const e = store.providersStore.dateEnd ?? null;
+      store.providersStore.setDateRange(s, e);
     }
-    if (store.providersStore?.fetchProviderList && store.duckDB) {
-      store.providersStore.fetchProviderList();
-    }
-  }, [store.providersStore, store.duckDB]);
+  }, [store.duckDB, store.providersStore]);
 
   // Styles
   const {
@@ -91,13 +92,23 @@ export function ProvidersView() {
 
   const DATE_FORMAT = 'YYYY-MM-DD';
   const datePresets: DatePickerPreset<'range'>[] = [
-    { label: 'This month', value: [dayjs().startOf('month').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
+    { label: 'Past month', value: [dayjs().startOf('month').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
     { label: 'This quarter', value: [dayjs().subtract(dayjs().month() % 3, 'month').startOf('month').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
     { label: 'Past 3 months', value: [dayjs().subtract(3, 'month').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
     { label: 'Past 6 months', value: [dayjs().subtract(6, 'month').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
     { label: 'Past year', value: [dayjs().subtract(1, 'year').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
     { label: 'All time', value: [dayjs('2020-01-01').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
   ];
+
+  // Keep providersStore in sync when user changes date range.
+  const onDateRangeChange = useCallback((val: [string | null, string | null]) => {
+    setDateRange(val);
+    if (store.providersStore) {
+      const s = val?.[0] ?? null;
+      const e = val?.[1] ?? null;
+      store.providersStore.setDateRange(s, e);
+    }
+  }, [store.providersStore]);
 
   // --- Render ---
   return useObserver(() => {
@@ -125,7 +136,7 @@ export function ProvidersView() {
               leftSection={<IconCalendarWeek size={18} stroke={1} />}
               placeholder="Pick dates range"
               value={dateRange}
-              onChange={setDateRange}
+              onChange={onDateRangeChange}
             />
             {/* Provider Select */}
             <Select
@@ -200,7 +211,7 @@ export function ProvidersView() {
             </Title>
             <Stack gap={2} mt="xs">
               <Text size="md">
-                • Involved in
+                • Involvement in
                 {' '}
                 <Text component="span" td="underline">{store.providersStore?.selectedProvSurgCount ?? 0}</Text>
                 {' '}

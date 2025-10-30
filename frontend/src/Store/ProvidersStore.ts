@@ -32,12 +32,44 @@ export class ProvidersStore {
   averageProvCmi: number | null = null;
 
   cmiComparisonLabel: string = 'within typical range';
+  // Current date range applied for Providers view (nullable = all time)
+  dateStart: string | null = null;
+
+  dateEnd: string | null = null;
+  /**
+   * Set date range for Providers view and refresh provider-related data.
+   */
+  setDateRange(startDate: string | null, endDate: string | null) {
+    this.dateStart = startDate || null;
+    this.dateEnd = endDate || null;
+
+    // Refresh provider view data constrained to this date range
+    this.getProviderCharts(this.dateStart, this.dateEnd).catch((e) => {
+      console.error('Error refreshing provider charts after date range change:', e);
+    });
+    this.fetchProviderList(this.dateStart, this.dateEnd).catch((e) => {
+      console.error('Error refreshing provider list after date range change:', e);
+    });
+    // If a selected provider exists, refresh provider-specific stats constrained to date range
+    if (this.selectedProvider) {
+      this.fetchSelectedProvSurgCount(this.dateStart, this.dateEnd).catch((e) => {
+        console.error('Error refreshing surgery count after date range change:', e);
+      });
+      this.fetchSelectedProvRbcUnits(this.dateStart, this.dateEnd).catch((e) => {
+        console.error('Error refreshing RBC units after date range change:', e);
+      });
+      this.fetchCmiComparison(this.dateStart, this.dateEnd).catch((e) => {
+        console.error('Error refreshing CMI comparison after date range change:', e);
+      });
+    }
+  }
 
   /**
-   * Fetch count of unique surgeries for the currently selected provider.
-   * Sets selectedProvSurgCount to 0 when no provider is selected or duckDB missing.
-   */
-  async fetchSelectedProvSurgCount() {
+     * Fetch count of unique surgeries for the currently selected provider.
+     * If startDate/endDate provided, restrict to that discharge date range.
+     * Sets selectedProvSurgCount to 0 when no provider is selected or duckDB missing.
+     */
+  async fetchSelectedProvSurgCount(startDate?: string | null, endDate?: string | null) {
     if (!this._rootStore.duckDB || !this.selectedProvider) {
       this.selectedProvSurgCount = 0;
       return this.selectedProvSurgCount;
@@ -46,11 +78,15 @@ export class ProvidersStore {
     try {
       // protect single quotes in provider name
       const prov = String(this.selectedProvider).replace(/'/g, "''");
-      // Use ProviderAttributes if available (parquet export)
+
+      let dateClause = '';
+      if (startDate) dateClause += ` AND dsch_dtm >= DATE '${startDate}'`;
+      if (endDate) dateClause += ` AND dsch_dtm <= DATE '${endDate}'`;
+
       const query = `
-        SELECT surgery_count AS cnt
-        FROM ProviderAttributes
-        WHERE prov_id = '${prov}' OR prov_name = '${prov}';
+        SELECT COUNT(DISTINCT visit_no) AS cnt
+        FROM filteredVisits
+        WHERE attending_provider = '${prov}' ${dateClause};
       `;
       const res = await this._rootStore.duckDB.query(query);
       const rows = res.toArray().map((r: any) => r.toJSON());
@@ -110,19 +146,21 @@ export class ProvidersStore {
   set selectedProvider(val: string | null) {
     if (this._selectedProvider === val) return;
     this._selectedProvider = val;
-    // Recompute charts when selected provider changes
-    this.getProviderCharts().catch((e) => {
+    // Recompute charts and stats when selected provider changes, respecting current date range
+    const s = this.dateStart ?? null;
+    const e = this.dateEnd ?? null;
+    this.getProviderCharts(s, e).catch((e) => {
       console.error('Error refreshing provider charts after provider change:', e);
     });
     // Refresh surgery count for the newly selected provider
-    this.fetchSelectedProvSurgCount().catch((e) => {
+    this.fetchSelectedProvSurgCount(s, e).catch((e) => {
       console.error('Error fetching surgery count after provider change:', e);
     });
     // Refresh RBC units (all time by default) when provider changes
-    this.fetchSelectedProvRbcUnits().catch((e) => {
+    this.fetchSelectedProvRbcUnits(s, e).catch((e) => {
       console.error('Error fetching RBC units after provider change:', e);
     });
-    this.fetchCmiComparison().catch((e) => {
+    this.fetchCmiComparison(s, e).catch((e) => {
       console.error('Error fetching CMI comparison after provider change:', e);
     });
   }
@@ -133,7 +171,7 @@ export class ProvidersStore {
       chartId: '0', xAxisVar: 'rbc_adherent', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
     },
     {
-      chartId: '1', xAxisVar: 'ffp_adherent', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
+      chartId: '1', xAxisVar: 'ffp_adherent', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'line', group: 'Anemia Management',
     },
     {
       chartId: '2', xAxisVar: 'antifibrinolytic', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
@@ -160,7 +198,7 @@ export class ProvidersStore {
      */
   addChart(config: ProviderChartConfig) {
     this._chartConfigs = [config, ...this._chartConfigs];
-    this.getProviderCharts();
+    this.getProviderCharts(this.dateStart, this.dateEnd);
   }
 
   /**
@@ -175,7 +213,7 @@ export class ProvidersStore {
    * computes average CMI across providers and selected provider CMI,
    * and sets cmiComparisonLabel based on relative difference.
    */
-  async fetchCmiComparison() {
+  async fetchCmiComparison(startDate?: string | null, endDate?: string | null) {
     if (!this._rootStore.duckDB || !this.selectedProvider) {
       this.selectedProvCmi = null;
       this.averageProvCmi = null;
@@ -184,9 +222,16 @@ export class ProvidersStore {
     }
 
     try {
+      let dateClause = '';
+      if (startDate) dateClause += ` WHERE dsch_dtm >= DATE '${startDate}'`;
+      if (endDate) {
+        dateClause += `${dateClause ? ' AND' : ' WHERE'} dsch_dtm <= DATE '${endDate}'`;
+      }
+
       const query = `
         SELECT attending_provider, SUM(ms_drg_weight) / COUNT(visit_no) AS cmi
         FROM filteredVisits
+        ${dateClause}
         GROUP BY attending_provider;
       `;
       const res = await this._rootStore.duckDB.query(query);
@@ -237,19 +282,31 @@ export class ProvidersStore {
     }
   }
 
-  async fetchProviderList() {
+  async fetchProviderList(startDate?: string | null, endDate?: string | null) {
     if (!this._rootStore.duckDB) {
       return [];
     }
 
     try {
+      let dateClause = '';
+      if (startDate) dateClause += ` WHERE dsch_dtm >= DATE '${startDate}'`;
+      if (endDate) {
+        dateClause += `${dateClause ? ' AND' : ' WHERE'} dsch_dtm <= DATE '${endDate}'`;
+      }
+
       const query = `
         SELECT DISTINCT attending_provider
         FROM filteredVisits
+        ${dateClause}
         WHERE attending_provider IS NOT NULL
         ORDER BY attending_provider;
         `;
-      const res = await this._rootStore.duckDB.query(query);
+      // Note: because we may have prefixed WHERE above, ensure query correctness by replacing double WHERE sequence.
+      // Quick fix: if dateClause provided, the query will have "FROM filteredVisits\n WHERE ...\n WHERE attending_provider IS NOT NULL"
+      // Normalize:
+      const normalizedQuery = query.replace(/\n\s*WHERE\s+attending_provider/, (m) => (dateClause ? '\n AND attending_provider' : m));
+
+      const res = await this._rootStore.duckDB.query(normalizedQuery);
       const rows = res.toArray().map((r) => r.toJSON());
       this.providerList = rows.map((r) => String(r.attending_provider)).filter((v) => v);
 
@@ -257,7 +314,7 @@ export class ProvidersStore {
       if (!this.selectedProvider && this.providerList.length > 0) {
         this.selectedProvider = this.providerList[0];
         // ensure surgery count populated for default provider
-        this.fetchSelectedProvSurgCount().catch((e) => {
+        this.fetchSelectedProvSurgCount(startDate, endDate).catch((e) => {
           console.error('Error fetching surgery count for default provider:', e);
         });
       }
@@ -269,7 +326,7 @@ export class ProvidersStore {
     return this.providerList;
   }
 
-  async getProviderCharts() {
+  async getProviderCharts(startDate?: string | null, endDate?: string | null) {
     if (!this._rootStore.duckDB) {
       return {};
     }
