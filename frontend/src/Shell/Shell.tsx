@@ -235,7 +235,7 @@ export function Shell() {
             {headerIcons.map(({ icon: Icon, label, onClick }) => (
               // Hover Menu for Camera to show screenshots
               label === 'Camera' ? (
-                <Menu key={label} shadow="md" width={320} trigger="hover" openDelay={80} closeDelay={200}>
+                <Menu key={label} shadow="md" width={320} trigger="hover" openDelay={80} closeDelay={200} offset={12}>
                   <Menu.Target>
                     <ActionIcon aria-label={label} onClick={onClick}>
                       <Icon stroke={iconStroke} />
@@ -281,7 +281,7 @@ export function Shell() {
               )
             ))}
             {/** Header Icon - User Menu */}
-            <Menu shadow="md" width={200}>
+            <Menu shadow="md" width={200} offset={12}>
               <Menu.Target>
                 <Tooltip
                   key="User"
