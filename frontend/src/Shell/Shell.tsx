@@ -191,11 +191,65 @@ export function Shell() {
     document.body.removeChild(link);
   };
 
-  const emailScreenshot = (_dataUrl: string) => {
-    // Dummy email handler
-    // Replace with real email flow later
-    // eslint-disable-next-line no-console
-    console.log('Email action (dummy)');
+  const emailScreenshot = (dataUrl: string, filename = 'screenshot.png') => {
+    try {
+      const match = dataUrl.match(/^data:(image\/\w+);base64,(.*)$/);
+      if (!match) {
+        console.error('Invalid data URL for screenshot');
+        return;
+      }
+      const mime = match[1];
+      const base64 = match[2];
+      const boundary = `----=_Intelvia_${Date.now()}`;
+      const cid = 'screenshot-cid';
+
+      // Simple HTML body referencing the inline CID image
+      const htmlBody = `<html><body><p>Intelvia screenshot attached below:</p><img src="cid:${cid}" alt="screenshot" /></body></html>`;
+
+      const emlParts = [
+        'To: ',
+        'Subject: Intelvia Screenshot',
+        'MIME-Version: 1.0',
+        `Content-Type: multipart/related; boundary="${boundary}"`,
+        '',
+        `--${boundary}`,
+        'Content-Type: text/html; charset="UTF-8"',
+        'Content-Transfer-Encoding: 7bit',
+        '',
+        htmlBody,
+        '',
+        `--${boundary}`,
+        `Content-Type: ${mime}; name="${filename}"`,
+        'Content-Transfer-Encoding: base64',
+        `Content-ID: <${cid}>`,
+        `Content-Disposition: inline; filename="${filename}"`,
+        '',
+        base64,
+        '',
+        `--${boundary}--`,
+        '',
+      ].join('\r\n');
+
+      const blob = new Blob([emlParts], { type: 'message/rfc822' });
+      const url = URL.createObjectURL(blob);
+
+      // Create and click an anchor to initiate download/open of the .eml file.
+      // Many mail clients (including Apple Mail on macOS) will open .eml files as a new draft.
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Intelvia_Screenshot_${new Date().toISOString().replace(/[:.]/g, '-')}.eml`;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+
+      // cleanup
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        a.remove();
+      }, 1500);
+    } catch (err) {
+      console.error('Failed to create email draft for screenshot:', err);
+    }
   };
 
   // New: delete selected screenshots
