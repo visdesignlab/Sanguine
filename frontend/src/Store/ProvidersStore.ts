@@ -334,6 +334,11 @@ export class ProvidersStore {
     try {
       const charts: ProviderChartData = {};
 
+      // --- Prepare date clause used for queries ---
+      let dateClause = '';
+      if (startDate) dateClause += ` AND dsch_dtm >= DATE '${startDate}'`;
+      if (endDate) dateClause += ` AND dsch_dtm <= DATE '${endDate}'`;
+
       // --- Build charts query ---
       const selectClauses = this._chartConfigs.flatMap(({ xAxisVar }) => (
         Object.keys(AGGREGATION_OPTIONS).flatMap((aggregation) => {
@@ -360,11 +365,11 @@ export class ProvidersStore {
       ));
 
       const query = `
-        SELECT attending_provider, ${selectClauses.join(', ')}
-        FROM filteredVisits
-        WHERE attending_provider IS NOT NULL
-        GROUP BY attending_provider;
-      `;
+          SELECT attending_provider, ${selectClauses.join(', ')}
+          FROM filteredVisits
+          WHERE attending_provider IS NOT NULL ${dateClause}
+          GROUP BY attending_provider;
+        `;
 
       // --- Execute query ---
       const res = await this._rootStore.duckDB.query(query);
