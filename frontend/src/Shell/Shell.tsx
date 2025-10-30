@@ -191,64 +191,95 @@ export function Shell() {
     document.body.removeChild(link);
   };
 
-  const emailScreenshot = (dataUrl: string, filename = 'screenshot.png') => {
+  const emailScreenshot = async (dataUrl: string, filename = 'screenshot.png') => {
+    // Convert data URL to Blob
+    const dataURLToBlob = (dataurl: string) => {
+      const parts = dataurl.split(',');
+      const mimeMatch = parts[0].match(/:(.*?);/);
+      const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+      const bstr = atob(parts[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) u8arr[n] = bstr.charCodeAt(n);
+      return new Blob([u8arr], { type: mime });
+    };
+
+    const wrapBase64 = (base64: string, lineLength = 76) => {
+      const re = new RegExp(`(.{1,${lineLength}})`, 'g');
+      return base64.match(re)?.join('\r\n') ?? base64;
+    };
+
+    // Validate and extract base64 + mime
+    const m = dataUrl.match(/^data:(image\/\w+);base64,(.*)$/);
+    if (!m) {
+      console.error('emailScreenshot: invalid data URL');
+      return;
+    }
+    const mime = m[1];
+    const base64 = m[2];
+
+    // 1) Try Web Share API with files (best experience on supported platforms)
     try {
-      const match = dataUrl.match(/^data:(image\/\w+);base64,(.*)$/);
-      if (!match) {
-        console.error('Invalid data URL for screenshot');
+      const blob = dataURLToBlob(dataUrl);
+      const file = new File([blob], filename, { type: blob.type });
+
+      const canShareFiles = typeof (navigator as any).canShare === 'function'
+        ? (navigator as any).canShare({ files: [file] })
+        : true;
+
+      if ((navigator as any).share && canShareFiles) {
+        await (navigator as any).share({
+          files: [file],
+          text: 'Screenshot from Intelvia - Patient Blood Management Analytics: \n',
+        });
         return;
       }
-      const mime = match[1];
-      const base64 = match[2];
-      const boundary = `----=_Intelvia_${Date.now()}`;
-      const cid = 'screenshot-cid';
+    } catch (err) {
+      console.warn('Web Share API failed or unsupported', err);
+    }
 
-      // Simple HTML body referencing the inline CID image
-      const htmlBody = `<html><body><p>Intelvia screenshot attached below:</p><img src="cid:${cid}" alt="screenshot" /></body></html>`;
+    // 2) Try simple mailto fallback (subject should appear in Subject line)
+    try {
+      const body = 'Screenshot from Intelvia - Patient Blood Management Analytics: \n';
+      const mailto = `mailto:?body=${encodeURIComponent(body)}`;
+      // open in new tab to favour webmail (Gmail) while keeping user on the app
+      window.open(mailto, '_blank');
+      return;
+    } catch (err) {
+      console.warn('mailto fallback failed', err);
+    }
 
-      const emlParts = [
+    // 3) Fallback: build a single-part .eml with HTML that embeds the image inline,
+    // add X-Unsent: 1 so Mail clients treat it as a draft/compose (avoids opening inbox).
+    try {
+      const wrapped = wrapBase64(base64);
+      const htmlBody = `<html><body><p>Screenshot from Intelvia - Patient Blood Management Analytics: \n</p><img src="data:${mime};base64,${wrapped}" alt="screenshot" /></body></html>`;
+
+      const parts = [
         'To: ',
-        'Subject: Intelvia Screenshot',
+        'X-Unsent: 1', // <- important: tells many clients this is an unsent/draft message
         'MIME-Version: 1.0',
-        `Content-Type: multipart/related; boundary="${boundary}"`,
-        '',
-        `--${boundary}`,
-        'Content-Type: text/html; charset="UTF-8"',
+        'Content-Type: text/html; charset="utf-8"',
         'Content-Transfer-Encoding: 7bit',
         '',
         htmlBody,
         '',
-        `--${boundary}`,
-        `Content-Type: ${mime}; name="${filename}"`,
-        'Content-Transfer-Encoding: base64',
-        `Content-ID: <${cid}>`,
-        `Content-Disposition: inline; filename="${filename}"`,
-        '',
-        base64,
-        '',
-        `--${boundary}--`,
-        '',
       ].join('\r\n');
 
-      const blob = new Blob([emlParts], { type: 'message/rfc822' });
-      const url = URL.createObjectURL(blob);
+      const emlBlob = new Blob([parts], { type: 'message/rfc822' });
+      const url = URL.createObjectURL(emlBlob);
 
-      // Create and click an anchor to initiate download/open of the .eml file.
-      // Many mail clients (including Apple Mail on macOS) will open .eml files as a new draft.
+      // Prefer forcing a download rather than window.open (which can trigger client quirks).
       const a = document.createElement('a');
       a.href = url;
       a.download = `Intelvia_Screenshot_${new Date().toISOString().replace(/[:.]/g, '-')}.eml`;
-      a.target = '_blank';
       document.body.appendChild(a);
       a.click();
+      a.remove();
 
-      // cleanup
-      setTimeout(() => {
-        URL.revokeObjectURL(url);
-        a.remove();
-      }, 1500);
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
     } catch (err) {
-      console.error('Failed to create email draft for screenshot:', err);
+      console.error('emailScreenshot: .eml fallback failed', err);
     }
   };
 
