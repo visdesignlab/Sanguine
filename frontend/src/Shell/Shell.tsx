@@ -1,6 +1,7 @@
 import {
   ReactNode, useContext, useMemo, useState,
 } from 'react';
+
 import { useDisclosure } from '@mantine/hooks';
 import {
   AppShell, Group, Tabs, ActionIcon, Title, Flex, Container, Menu, Box, Text, Tooltip,
@@ -184,6 +185,7 @@ export function Shell() {
     { icon: IconArrowNarrowRightDashed, label: 'Forward' },
     { icon: IconDeviceFloppy, label: 'Save' },
     { icon: IconCamera, label: 'Camera', onClick: handleScreenshot },
+    { icon: IconUser, label: 'User' },
   ];
 
   return (
@@ -230,82 +232,85 @@ export function Shell() {
               </Tabs.List>
             </Tabs>
           </Group>
-          {/** Header Icons, right-aligned */}
+          {/** All Header Icons, right-aligned */}
           <Group gap="sm" pr="md">
-            {headerIcons.map(({ icon: Icon, label, onClick }) => (
+            {headerIcons.map(({ icon: Icon, label, onClick }) => {
               // Hover Menu for Camera to show screenshots
-              label === 'Camera' ? (
-                <Menu key={label} shadow="md" width={320} trigger="hover" openDelay={80} closeDelay={200} offset={12}>
-                  <Menu.Target>
-                    <ActionIcon aria-label={label} onClick={onClick}>
-                      <Icon stroke={iconStroke} />
-                    </ActionIcon>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Label>Screenshots</Menu.Label>
-                    <Box style={{ maxHeight: 240, overflow: 'auto' }}>
-                      {screenshots.length === 0 ? (
-                        <Menu.Item disabled>No screenshots</Menu.Item>
-                      ) : screenshots.map((s) => (
-                        <Menu.Item
-                          key={s.id}
-                          onClick={() => downloadScreenshot(s.dataUrl, `Intelvia_Screenshot_${s.id}.png`)}
-                          style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-                        >
-                          <Box style={{
-                            display: 'flex', gap: 6, alignItems: 'center', marginRight: 8,
-                          }}
+              if (label === 'Camera') {
+                return (
+                  <Menu key={label} shadow="md" width={320} trigger="hover" closeDelay={200} offset={12}>
+                    <Menu.Target>
+                      <ActionIcon aria-label={label} onClick={onClick}>
+                        <Icon stroke={iconStroke} />
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Label>Screenshots</Menu.Label>
+                      <Box style={{ maxHeight: 240, overflow: 'auto' }}>
+                        {screenshots.length === 0 ? (
+                          <Menu.Item disabled>No screenshots</Menu.Item>
+                        ) : screenshots.map((s) => (
+                          <Menu.Item
+                            key={s.id}
+                            onClick={() => downloadScreenshot(s.dataUrl, `Intelvia_Screenshot_${s.id}.png`)}
+                            style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                           >
-                            <ActionIcon size="xs" variant="transparent" onClick={(e) => { e.stopPropagation(); downloadScreenshot(s.dataUrl, `Intelvia_Screenshot_${s.id}.png`); }}>
-                              <IconDownload size={14} />
-                            </ActionIcon>
-                            <ActionIcon size="xs" variant="transparent" onClick={(e) => { e.stopPropagation(); emailScreenshot(s.dataUrl); }}>
-                              <IconMail size={14} />
-                            </ActionIcon>
-                          </Box>
-                          <Box style={{ flex: 1, textAlign: 'left' }}>
-                            <Text size="sm">{s.tab}</Text>
-                            <Text size="xs" color="dimmed">{new Date(s.ts).toLocaleString()}</Text>
-                          </Box>
-                        </Menu.Item>
-                      ))}
-                    </Box>
-                  </Menu.Dropdown>
-                </Menu>
-              ) : (
+                            <Box style={{
+                              display: 'flex', gap: 6, alignItems: 'center', marginRight: 8,
+                            }}
+                            >
+                              <ActionIcon size="xs" variant="transparent" onClick={(e) => { e.stopPropagation(); downloadScreenshot(s.dataUrl, `Intelvia_Screenshot_${s.id}.png`); }}>
+                                <IconDownload size={14} />
+                              </ActionIcon>
+                              <ActionIcon size="xs" variant="transparent" onClick={(e) => { e.stopPropagation(); emailScreenshot(s.dataUrl); }}>
+                                <IconMail size={14} />
+                              </ActionIcon>
+                            </Box>
+                            <Box style={{ flex: 1, textAlign: 'left' }}>
+                              <Text size="sm">{s.tab}</Text>
+                              <Text size="xs" color="dimmed">{new Date(s.ts).toLocaleString()}</Text>
+                            </Box>
+                          </Menu.Item>
+                        ))}
+                      </Box>
+                    </Menu.Dropdown>
+                  </Menu>
+                );
+              }
+              // User menu
+              if (label === 'User') {
+                return (
+                  <Menu shadow="md" width={200} offset={12} trigger="hover" closeDelay={200} key="user-menu">
+                    <Menu.Target>
+                      <ActionIcon aria-label="User">
+                        <IconUser stroke={iconStroke} />
+                      </ActionIcon>
+                    </Menu.Target>
+
+                    <Menu.Dropdown>
+                      <Menu.Label>User</Menu.Label>
+                      <Menu.Item
+                        leftSection={<IconRestore size={14} />}
+                        onClick={() => setResetModalOpened(true)}
+                      >
+                        Reset to defaults
+                      </Menu.Item>
+                      <Menu.Item leftSection={<IconLogout size={14} />}>
+                        Log out
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                );
+              }
+              // Default header icon button
+              return (
                 <Tooltip key={label} label={label}>
                   <ActionIcon aria-label={label} onClick={onClick}>
                     <Icon stroke={iconStroke} />
                   </ActionIcon>
                 </Tooltip>
-              )
-            ))}
-            {/** Header Icon - User Menu */}
-            <Menu shadow="md" width={200} offset={12}>
-              <Menu.Target>
-                <Tooltip
-                  key="User"
-                  label="User"
-                >
-                  <ActionIcon aria-label="User">
-                    <IconUser stroke={iconStroke} />
-                  </ActionIcon>
-                </Tooltip>
-              </Menu.Target>
-
-              <Menu.Dropdown>
-                <Menu.Label>User</Menu.Label>
-                <Menu.Item
-                  leftSection={<IconRestore size={14} />}
-                  onClick={() => setResetModalOpened(true)}
-                >
-                  Reset to defaults
-                </Menu.Item>
-                <Menu.Item leftSection={<IconLogout size={14} />}>
-                  Log out
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
+              );
+            })}
           </Group>
         </Group>
       </AppShell.Header>
