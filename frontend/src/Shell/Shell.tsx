@@ -17,6 +17,7 @@ import {
   IconRestore, type IconProps,
   IconChartBar,
   IconClipboardList,
+  IconDownload, IconMail,
 } from '@tabler/icons-react';
 import * as htmlToImage from 'html-to-image';
 import { Store } from '../Store/Store';
@@ -36,6 +37,7 @@ import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/Select
  */
 export function Shell() {
   const store = useContext(Store);
+  const [screenshots, setScreenshots] = useState<{ id: string; dataUrl: string; tab: string; ts: string }[]>([]);
   // View tabs -----------------
   const TABS = [
     {
@@ -145,17 +147,35 @@ export function Shell() {
 
     try {
       const dataUrl = await htmlToImage.toPng(htmlEl, options);
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = `Intelvia_Screenshot_${dateString}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Store screenshot
+      const item = {
+        id: dateString,
+        dataUrl,
+        tab: activeTab,
+        ts: new Date().toISOString(),
+      };
+      setScreenshots((prev) => [item, ...prev]);
     } catch (error) {
       console.error('Screenshot failed:', error);
     } finally {
       document.head.removeChild(tempStyleEl);
     }
+  };
+
+  const downloadScreenshot = (dataUrl: string, filename: string) => {
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const emailScreenshot = (_dataUrl: string) => {
+    // Dummy email handler
+    // Replace with real email flow later
+    // eslint-disable-next-line no-console
+    console.log('Email action (dummy)');
   };
 
   // Header toolbar icons
@@ -213,14 +233,52 @@ export function Shell() {
           {/** Header Icons, right-aligned */}
           <Group gap="sm" pr="md">
             {headerIcons.map(({ icon: Icon, label, onClick }) => (
-              <Tooltip
-                key={label}
-                label={label}
-              >
-                <ActionIcon aria-label={label} onClick={onClick}>
-                  <Icon stroke={iconStroke} />
-                </ActionIcon>
-              </Tooltip>
+              // Hover Menu for Camera to show screenshots
+              label === 'Camera' ? (
+                <Menu key={label} shadow="md" width={320} trigger="hover" openDelay={80} closeDelay={200}>
+                  <Menu.Target>
+                    <ActionIcon aria-label={label} onClick={onClick}>
+                      <Icon stroke={iconStroke} />
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Label>Screenshots</Menu.Label>
+                    <Box style={{ maxHeight: 240, overflow: 'auto' }}>
+                      {screenshots.length === 0 ? (
+                        <Menu.Item disabled>No screenshots</Menu.Item>
+                      ) : screenshots.map((s) => (
+                        <Menu.Item
+                          key={s.id}
+                          onClick={() => downloadScreenshot(s.dataUrl, `Intelvia_Screenshot_${s.id}.png`)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                        >
+                          <Box style={{
+                            display: 'flex', gap: 6, alignItems: 'center', marginRight: 8,
+                          }}
+                          >
+                            <ActionIcon size="xs" variant="transparent" onClick={(e) => { e.stopPropagation(); downloadScreenshot(s.dataUrl, `Intelvia_Screenshot_${s.id}.png`); }}>
+                              <IconDownload size={14} />
+                            </ActionIcon>
+                            <ActionIcon size="xs" variant="transparent" onClick={(e) => { e.stopPropagation(); emailScreenshot(s.dataUrl); }}>
+                              <IconMail size={14} />
+                            </ActionIcon>
+                          </Box>
+                          <Box style={{ flex: 1, textAlign: 'left' }}>
+                            <Text size="sm">{s.tab}</Text>
+                            <Text size="xs" color="dimmed">{new Date(s.ts).toLocaleString()}</Text>
+                          </Box>
+                        </Menu.Item>
+                      ))}
+                    </Box>
+                  </Menu.Dropdown>
+                </Menu>
+              ) : (
+                <Tooltip key={label} label={label}>
+                  <ActionIcon aria-label={label} onClick={onClick}>
+                    <Icon stroke={iconStroke} />
+                  </ActionIcon>
+                </Tooltip>
+              )
             ))}
             {/** Header Icon - User Menu */}
             <Menu shadow="md" width={200}>
