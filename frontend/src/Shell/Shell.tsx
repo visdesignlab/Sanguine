@@ -18,6 +18,7 @@ import {
   IconChartBar,
   IconClipboardList,
 } from '@tabler/icons-react';
+import * as htmlToImage from 'html-to-image';
 import { Store } from '../Store/Store';
 import { useThemeConstants } from '../Theme/mantineTheme';
 import { DashboardView } from '../Components/Views/DashboardView/DashboardView';
@@ -123,12 +124,46 @@ export function Shell() {
     },
   ];
 
+  // Screenshot function
+  const handleScreenshot = async () => {
+    const htmlEl = document.documentElement;
+    const filter = (node: HTMLElement) => node.tagName !== 'NOSCRIPT';
+    const tempStyleEl: HTMLStyleElement = document.createElement('style');
+    // make common grid items overflow visible for full-page capture
+    tempStyleEl.innerHTML = '.react-grid-item, .layout, .MuiGrid-item { overflow: visible !important; }';
+    document.head.appendChild(tempStyleEl);
+
+    const options = {
+      backgroundColor: '#ffffff',
+      pixelRatio: 2,
+      filter,
+      width: htmlEl.scrollWidth,
+      height: htmlEl.scrollHeight,
+    };
+
+    const dateString = new Date().toISOString().replace(/T/, '_').split('.')[0].replace(/:/g, '-');
+
+    try {
+      const dataUrl = await htmlToImage.toPng(htmlEl, options);
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `Intelvia_Screenshot_${dateString}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Screenshot failed:', error);
+    } finally {
+      document.head.removeChild(tempStyleEl);
+    }
+  };
+
   // Header toolbar icons
-  const headerIcons: { icon: React.ComponentType<IconProps>; label: string }[] = [
+  const headerIcons: { icon: React.ComponentType<IconProps>; label: string; onClick?: () => void }[] = [
     { icon: IconArrowNarrowLeftDashed, label: 'Back' },
     { icon: IconArrowNarrowRightDashed, label: 'Forward' },
     { icon: IconDeviceFloppy, label: 'Save' },
-    { icon: IconCamera, label: 'Camera' },
+    { icon: IconCamera, label: 'Camera', onClick: handleScreenshot },
   ];
 
   return (
@@ -177,12 +212,12 @@ export function Shell() {
           </Group>
           {/** Header Icons, right-aligned */}
           <Group gap="sm" pr="md">
-            {headerIcons.map(({ icon: Icon, label }) => (
+            {headerIcons.map(({ icon: Icon, label, onClick }) => (
               <Tooltip
                 key={label}
                 label={label}
               >
-                <ActionIcon aria-label={label}>
+                <ActionIcon aria-label={label} onClick={onClick}>
                   <Icon stroke={iconStroke} />
                 </ActionIcon>
               </Tooltip>
