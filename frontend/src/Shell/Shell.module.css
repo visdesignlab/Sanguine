@@ -1,10 +1,31 @@
 .leftToolbarIcon {
+  position: relative;
+  z-index: 2; /* sit above the Menu.Item hover overlay */
+  pointer-events: auto;
+
   &[data-active="true"] {
     color: var(--mantine-color-blue-6) !important;
-    background-color: var(--mantine-color-blue-0);
+    background-color: var(--mantine-color-blue-0) !important;
     border-color: var(--mantine-color-blue-3) !important;
   }
+
+  /* direct hover / focus on the ActionIcon (per-icon only) */
+  &:hover,
+  &:focus {
+    color: var(--mantine-color-blue-6) !important;
+    background-color: var(--mantine-color-blue-0) !important;
+    border-color: var(--mantine-color-blue-3) !important;
+  }
+
+  /* make sure the SVG icon uses the button color */
+  svg {
+    stroke: currentColor !important;
+    fill: none;
+  }
 }
+
+/* removed: :global(.mantine-Menu-item:hover) .leftToolbarIcon { ... } */
+
 .tabOutlineActive {
   border-bottom: 1px solid var(--mantine-color-gray-3) !important;
 }

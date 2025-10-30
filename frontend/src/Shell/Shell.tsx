@@ -18,7 +18,7 @@ import {
   IconRestore, type IconProps,
   IconChartBar,
   IconClipboardList,
-  IconDownload, IconMail,
+  IconDownload, IconMail, IconMenu4, IconTrash,
 } from '@tabler/icons-react';
 import * as htmlToImage from 'html-to-image';
 import { Store } from '../Store/Store';
@@ -39,6 +39,25 @@ import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/Select
 export function Shell() {
   const store = useContext(Store);
   const [screenshots, setScreenshots] = useState<{ id: string; dataUrl: string; tab: string; ts: string }[]>([]);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedScreenshotIds, setSelectedScreenshotIds] = useState<Set<string>>(new Set());
+  const toggleSelectionFor = (id: string) => {
+    setSelectedScreenshotIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const clearSelections = () => setSelectedScreenshotIds(new Set());
+  const toggleSelectionMode = () => {
+    setSelectionMode((prev) => {
+      const next = !prev;
+      if (!next) clearSelections(); // leaving selection mode clears selections
+      return next;
+    });
+  };
+
   // View tabs -----------------
   const TABS = [
     {
@@ -179,6 +198,22 @@ export function Shell() {
     console.log('Email action (dummy)');
   };
 
+  // New: delete selected screenshots
+  const deleteSelectedScreenshots = () => {
+    if (selectedScreenshotIds.size === 0) return;
+    setScreenshots((prev) => prev.filter((s) => !selectedScreenshotIds.has(s.id)));
+    clearSelections();
+    setSelectionMode(false);
+  };
+
+  // New: download selected screenshots (adds a small delay between downloads)
+  const downloadSelectedScreenshots = async () => {
+    const toDownload = screenshots.filter((s) => selectedScreenshotIds.has(s.id));
+    for (const s of toDownload) {
+      downloadScreenshot(s.dataUrl, `Intelvia_Screenshot_${s.id}.png`);
+    }
+  };
+
   // Header toolbar icons
   const headerIcons: { icon: React.ComponentType<IconProps>; label: string; onClick?: () => void }[] = [
     { icon: IconArrowNarrowLeftDashed, label: 'Back' },
@@ -238,36 +273,99 @@ export function Shell() {
               // Hover Menu for Camera to show screenshots
               if (label === 'Camera') {
                 return (
-                  <Menu key={label} shadow="md" width={320} trigger="hover" closeDelay={200} offset={12}>
+                  <Menu key={label} shadow="md" width={280} trigger="hover" closeDelay={200} offset={12}>
                     <Menu.Target>
                       <ActionIcon aria-label={label} onClick={onClick}>
                         <Icon stroke={iconStroke} />
                       </ActionIcon>
                     </Menu.Target>
                     <Menu.Dropdown>
-                      <Menu.Label>Screenshots</Menu.Label>
+                      <Box style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px',
+                      }}
+                      >
+                        <Text size="sm">Screenshots</Text>
+                        <Box style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          {selectionMode && (
+                            <>
+                              <ActionIcon
+                                size="xs"
+                                variant="transparent"
+                                className={classes.leftToolbarIcon}
+                                onClick={(e) => { e.stopPropagation(); deleteSelectedScreenshots(); }}
+                                aria-label="Delete selected screenshots"
+                              >
+                                <IconTrash stroke={iconStroke} size={18} />
+                              </ActionIcon>
+                              <ActionIcon
+                                size="xs"
+                                variant="transparent"
+                                className={classes.leftToolbarIcon}
+                                onClick={(e) => { e.stopPropagation(); downloadSelectedScreenshots(); }}
+                                aria-label="Download selected screenshots"
+                              >
+                                <IconDownload stroke={iconStroke} size={18} />
+                              </ActionIcon>
+                            </>
+                          )}
+                          <ActionIcon
+                            size="xs"
+                            variant="transparent"
+                            className={classes.leftToolbarIcon}
+                            onClick={(e) => { e.stopPropagation(); toggleSelectionMode(); }}
+                            aria-label="Toggle selection mode"
+                            data-active={selectionMode}
+                          >
+                            <IconMenu4 stroke={iconStroke} size={18} />
+                          </ActionIcon>
+                        </Box>
+                      </Box>
                       <Box style={{ maxHeight: 240, overflow: 'auto' }}>
                         {screenshots.length === 0 ? (
                           <Menu.Item disabled>No screenshots</Menu.Item>
                         ) : screenshots.map((s) => (
                           <Menu.Item
                             key={s.id}
-                            onClick={() => downloadScreenshot(s.dataUrl, `Intelvia_Screenshot_${s.id}.png`)}
-                            style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-                          >
-                            <Box style={{
-                              display: 'flex', gap: 6, alignItems: 'center', marginRight: 8,
+                            onClick={(e) => {
+                              if (selectionMode) { e.stopPropagation(); toggleSelectionFor(s.id); } else { downloadScreenshot(s.dataUrl, `Intelvia_Screenshot_${s.id}.png`); }
                             }}
-                            >
-                              <ActionIcon size="xs" variant="transparent" onClick={(e) => { e.stopPropagation(); downloadScreenshot(s.dataUrl, `Intelvia_Screenshot_${s.id}.png`); }}>
-                                <IconDownload size={14} />
-                              </ActionIcon>
-                              <ActionIcon size="xs" variant="transparent" onClick={(e) => { e.stopPropagation(); emailScreenshot(s.dataUrl); }}>
-                                <IconMail size={14} />
-                              </ActionIcon>
-                            </Box>
-                            <Box style={{ flex: 1, textAlign: 'left' }}>
-                              <Text size="sm">{s.tab}</Text>
+                            style={{ display: 'block', padding: '8px 12px' }}
+                          >
+                            <Box style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                              <Box style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                              }}
+                              >
+                                <Box style={{
+                                  display: 'flex', gap: 8, alignItems: 'center', flex: 1,
+                                }}
+                                >
+                                  {selectionMode && (
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedScreenshotIds.has(s.id)}
+                                    onChange={(ev) => { ev.stopPropagation(); toggleSelectionFor(s.id); }}
+                                    onClick={(ev) => ev.stopPropagation()}
+                                  />
+                                  )}
+                                  <Text size="sm" style={{ textAlign: 'left' }}>
+                                    {s.tab}
+                                    {' '}
+                                    View
+                                  </Text>
+                                </Box>
+                                <Box style={{ display: 'flex', gap: 6 }}>
+                                  <ActionIcon
+                                    size="xs"
+                                    variant="transparent"
+                                    className={classes.leftToolbarIcon}
+                                    onClick={(e) => { e.stopPropagation(); emailScreenshot(s.dataUrl); }}
+                                    aria-label="Email screenshot"
+                                  >
+                                    <IconMail stroke={iconStroke} size={18} />
+                                  </ActionIcon>
+                                </Box>
+                              </Box>
                               <Text size="xs" color="dimmed">{new Date(s.ts).toLocaleString()}</Text>
                             </Box>
                           </Menu.Item>
