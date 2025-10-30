@@ -492,7 +492,9 @@ export type ProviderChart = {
   };
 
 export const providerXAxisOptions = [
-  ...dashboardYAxisOptions,
+  ...dashboardYAxisOptions.filter(
+    (opt) => opt.value !== 'stroke' && opt.value !== 'death' && opt.value !== 'ecmo',
+  ),
   PROVIDERS,
 ];
 export const providerXAxisVars = providerXAxisOptions.map((opt) => opt.value);
@@ -501,7 +503,7 @@ export const providerChartGroups = ['Anemia Management', 'Outcomes'];
 export type ProviderChartData = Record<string, ProviderChart>;
 
 export type ProviderChartConfig = ChartConfig<
-  typeof dashboardYAxisVars[number],
+  typeof providerXAxisVars[number],
   typeof dashboardXAxisVars[number] | 'attending_provider',
   keyof typeof AGGREGATION_OPTIONS,
   'bar' | 'line'

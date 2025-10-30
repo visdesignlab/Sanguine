@@ -22,7 +22,8 @@ import { ReferenceLine } from 'recharts';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 import {
-  AGGREGATION_OPTIONS, dashboardYAxisOptions, ProviderChartConfig, providerChartGroups,
+  AGGREGATION_OPTIONS, ProviderChartConfig, providerChartGroups,
+  providerXAxisOptions,
 } from '../../../Types/application';
 import classes from '../GridLayoutItem.module.css';
 import { ProviderChartTooltip } from './ProviderChartTooltip';
@@ -110,6 +111,21 @@ export function ProvidersView() {
     }
   }, [store.providersStore]);
 
+  useEffect(() => {
+    // If we have a duckDB instance, ensure providersStore uses its current dateRange (or default)
+    if (store.duckDB && store.providersStore) {
+      (async () => {
+        // populate earliestDate once DB is ready
+        await store.providersStore.findEarliestDate().catch((e) => {
+          console.error('Error finding earliest provider date:', e);
+        });
+        const s = store.providersStore.dateStart ?? null;
+        const e = store.providersStore.dateEnd ?? null;
+        store.providersStore.setDateRange(s, e);
+      })();
+    }
+  }, [store.duckDB, store.providersStore]);
+
   // --- Render ---
   return useObserver(() => {
     const selectedProviderName = store.providersStore?.selectedProvider ?? 'Dr. John Doe';
@@ -177,7 +193,7 @@ export function ProvidersView() {
             <Select
               label="Variable"
               placeholder="Choose Variable"
-              data={dashboardYAxisOptions.map((opt) => ({
+              data={providerXAxisOptions.map((opt) => ({
                 value: opt.value,
                 label: opt.label.base,
               }))}
@@ -204,10 +220,56 @@ export function ProvidersView() {
               {selectedProviderName}
             </Title>
             <Title order={4} mt="xs">
-              In the past
-              {' '}
-              <Text component="span" td="underline">3 Months</Text>
+              {(() => {
+                const s = dateRange?.[0] ?? store.providersStore?.dateStart ?? null;
+                const e = dateRange?.[1] ?? store.providersStore?.dateEnd ?? null;
+
+                // Default "All time" when nothing is set; try to emit "Since <date>" if store has a start
+                if (!s || !e) {
+                  const storeStart = store.providersStore?.dateStart ?? null;
+                  if (storeStart) {
+                    return <Text component="span" td="underline">{`Since ${dayjs(storeStart).format('MMM D, YYYY')}`}</Text>;
+                  }
+                  return (
+                    <Text component="span" td="underline">
+                      Since
+                      {store.providersStore.earliestDate ? ` ${dayjs(store.providersStore.earliestDate).format('MMM D, YYYY')}` : ' our earliest records'}
+                    </Text>
+                  );
+                }
+                // If the selected range exactly matches one of the presets, use its label.
+                const matchedPreset = datePresets.find((p) => p.value[0] === s && p.value[1] === e);
+
+                if (matchedPreset) {
+                  // Ensure label is treated as a string for safe string operations
+                  const labelRaw = matchedPreset.label;
+                  const label = String(labelRaw);
+                  if (label.startsWith('Past ')) {
+                    // "Past month" -> "In the past month"
+                    return <Text component="span" td="underline">{`In the past ${label.slice(5)}`}</Text>;
+                  }
+                  if (label.startsWith('This ')) {
+                    // "This quarter" -> "This quarter"
+                    return <Text component="span" td="underline">{label}</Text>;
+                  }
+                  if (label === 'All time') {
+                    // "All time" -> "Since <start>"
+                    return <Text component="span" td="underline">{`Since ${dayjs(s).format('MMM D, YYYY')}`}</Text>;
+                  }
+                  // Fallback to preset label
+                  return <Text component="span" td="underline">{label}</Text>;
+                }
+
+                // Not a preset: show explicit start — end
+                const start = dayjs(s).format('MMM D, YYYY');
+                const end = dayjs(e).format('MMM D, YYYY');
+                return <Text component="span" td="underline">{`During ${start} — ${end}`}</Text>;
+              })()}
               ,
+              {' '}
+              {store.providersStore?.selectedProvider ?? 0}
+              {' '}
+              has recorded:
             </Title>
             <Stack gap={2} mt="xs">
               <Text size="md">
