@@ -422,9 +422,26 @@ export function Shell() {
                       </Box>
                       <Box style={{ maxHeight: 240, overflow: 'auto' }}>
                         {selectionMode && screenshots.length > 1 && (
-                        <Box style={{
-                          padding: '8px 12px', borderBottom: '1px solid var(--mantine-color-gray-2)', display: 'flex', alignItems: 'center', gap: 8,
-                        }}
+                        <Box
+                          role="button"
+                          tabIndex={0}
+                          onClick={(e) => { e.stopPropagation(); toggleSelectAll(); }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleSelectAll();
+                            }
+                          }}
+                          style={{
+                            padding: '8px 12px',
+                            borderBottom: '1px solid var(--mantine-color-gray-2)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            cursor: 'pointer',
+                          }}
+                          aria-label="Select all screenshots"
                         >
                           <input
                             ref={selectAllRef}
@@ -432,7 +449,8 @@ export function Shell() {
                             checked={selectedScreenshotIds.size === screenshots.length && screenshots.length > 0}
                             onChange={() => toggleSelectAll()}
                             onClick={(e) => e.stopPropagation()}
-                            aria-label="Select all screenshots"
+                            aria-hidden={false}
+                            aria-label="Select all screenshots checkbox"
                           />
                           {' '}
                           <Text size="sm">All</Text>
