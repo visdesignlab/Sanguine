@@ -53,7 +53,7 @@ export function Shell() {
   const toggleSelectionMode = () => {
     setSelectionMode((prev) => {
       const next = !prev;
-      if (!next) clearSelections(); // leaving selection mode clears selections
+      if (!next) clearSelections();
       return next;
     });
   };
@@ -269,7 +269,6 @@ export function Shell() {
     await emailScreenshot(toEmail.map((s) => ({ dataUrl: s.dataUrl, filename: s.filename })));
   };
 
-  // Delete selected screenshots
   // Open delete confirmation modal for currently selected screenshots
   const openDeleteModalForSelected = () => {
     if (selectedScreenshotIds.size === 0) return;
@@ -297,6 +296,11 @@ export function Shell() {
       downloadScreenshot(s.dataUrl, s.filename);
     }
   };
+
+  // Floating preview state + refs for dropdown
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const [hoveredPreview, setHoveredPreview] = useState<{ id: string; src: string; top: number } | null>(null);
 
   // Header toolbar icons
   const headerIcons: { icon: React.ComponentType<IconProps>; label: string; onClick?: () => void }[] = [
@@ -357,7 +361,7 @@ export function Shell() {
               // Hover Menu for Camera to show screenshots
               if (label === 'Camera') {
                 return (
-                  <Menu key={label} shadow="md" width={280} trigger="hover" offset={12}>
+                  <Menu key={label} shadow="md" width={280} trigger="hover" closeDelay={200} offset={12}>
                     <Menu.Target>
                       <Tooltip label="Screenshot" position="left">
                         <ActionIcon aria-label={label} onClick={onClick}>
@@ -421,78 +425,105 @@ export function Shell() {
                           </ActionIcon>
                         </Box>
                       </Box>
-                      <Box style={{ maxHeight: 240, overflow: 'auto' }}>
-                        {selectionMode && screenshots.length > 1 && (
+
+                      {/* Dropdown list */}
+                      <Box
+                        ref={dropdownRef}
+                        style={{ position: 'relative', overflow: 'visible' }}
+                        onMouseLeave={() => setHoveredPreview(null)}
+                      >
                         <Box
-                          role="button"
-                          tabIndex={0}
-                          onClick={(e) => { e.stopPropagation(); toggleSelectAll(); }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              toggleSelectAll();
-                            }
-                          }}
-                          style={{
-                            padding: '8px 12px',
-                            borderBottom: '1px solid var(--mantine-color-gray-2)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                            cursor: 'pointer',
-                          }}
-                          aria-label="Select all screenshots"
+                          ref={scrollContainerRef}
+                          style={{ maxHeight: 240, overflow: 'auto' }}
                         >
-                          <input
-                            ref={selectAllRef}
-                            type="checkbox"
-                            checked={selectedScreenshotIds.size === screenshots.length && screenshots.length > 0}
-                            onChange={() => toggleSelectAll()}
-                            onClick={(e) => e.stopPropagation()}
-                            aria-hidden={false}
-                            aria-label="Select all screenshots checkbox"
-                          />
-                          {' '}
-                          <Text size="sm">All</Text>
-                        </Box>
-                        )}
-                        {screenshots.length === 0 ? (
-                          <Menu.Item disabled>No screenshots</Menu.Item>
-                        ) : screenshots.map((s) => (
-                          <Menu.Item
-                            key={s.id}
-                            closeMenuOnClick={false}
-                            onClick={(e) => {
-                              if (selectionMode) { e.stopPropagation(); toggleSelectionFor(s.id); } else { downloadScreenshot(s.dataUrl, s.filename); }
+                          {selectionMode && screenshots.length > 1 && (
+                          <Box
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => { e.stopPropagation(); toggleSelectAll(); }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleSelectAll();
+                              }
                             }}
-                            style={{ display: 'block', padding: '8px 12px' }}
+                            style={{
+                              padding: '8px 12px',
+                              borderBottom: '1px solid var(--mantine-color-gray-2)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 8,
+                              cursor: 'pointer',
+                            }}
+                            aria-label="Select all screenshots"
                           >
-                            <Box style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                              <Box style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                            <input
+                              ref={selectAllRef}
+                              type="checkbox"
+                              checked={selectedScreenshotIds.size === screenshots.length && screenshots.length > 0}
+                              onChange={() => toggleSelectAll()}
+                              onClick={(e) => e.stopPropagation()}
+                              aria-hidden={false}
+                              aria-label="Select all screenshots checkbox"
+                            />
+                            {' '}
+                            <Text size="sm">All</Text>
+                          </Box>
+                          )}
+                          {screenshots.length === 0 ? (
+                            <Menu.Item disabled>No screenshots</Menu.Item>
+                          ) : screenshots.map((s) => (
+                            <Menu.Item
+                              key={s.id}
+                              closeMenuOnClick={false}
+                              onClick={(e) => {
+                                if (selectionMode) { e.stopPropagation(); toggleSelectionFor(s.id); } else { downloadScreenshot(s.dataUrl, s.filename); }
                               }}
-                              >
+                              // Set screenshot preview
+                              onMouseEnter={(e) => {
+                                // Find vertical center position relative to item
+                                const itemEl = e.currentTarget as HTMLElement;
+                                const dropdownEl = dropdownRef.current;
+                                const scrollEl = scrollContainerRef.current;
+                                if (!dropdownEl || !scrollEl) return;
+                                const itemRect = itemEl.getBoundingClientRect();
+                                const dropdownRect = dropdownEl.getBoundingClientRect();
+                                // Find center top position relative to dropdown, adjusted for scroll
+                                const centerTop = (itemRect.top - dropdownRect.top) + (scrollEl.scrollTop || 0) + (itemRect.height / 2);
+                                setHoveredPreview({ id: s.id, src: s.dataUrl, top: centerTop });
+                              }}
+                              onMouseLeave={() => {
+                                // Clear preview when leaving item
+                                setHoveredPreview(null);
+                              }}
+                              style={{ display: 'block', padding: '8px 12px' }}
+                            >
+                              <Box style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                 <Box style={{
-                                  display: 'flex', gap: 8, alignItems: 'center', flex: 1,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
                                 }}
                                 >
-                                  {selectionMode && (
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedScreenshotIds.has(s.id)}
-                                    onChange={(ev) => { ev.stopPropagation(); toggleSelectionFor(s.id); }}
-                                    onClick={(ev) => ev.stopPropagation()}
-                                  />
-                                  )}
-                                  <Text size="sm" style={{ textAlign: 'left' }}>
-                                    {s.tab}
-                                    {' '}
-                                    View
-                                  </Text>
-                                </Box>
-                                <Box style={{ display: 'flex', gap: 6 }}>
-                                  {!selectionMode && (
+                                  <Box style={{
+                                    display: 'flex', gap: 8, alignItems: 'center', flex: 1,
+                                  }}
+                                  >
+                                    {selectionMode && (
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedScreenshotIds.has(s.id)}
+                                      onChange={(ev) => { ev.stopPropagation(); toggleSelectionFor(s.id); }}
+                                      onClick={(ev) => ev.stopPropagation()}
+                                    />
+                                    )}
+                                    <Text size="sm" style={{ textAlign: 'left' }}>
+                                      {s.tab}
+                                      {' '}
+                                      View
+                                    </Text>
+                                  </Box>
+                                  <Box style={{ display: 'flex', gap: 6 }}>
+                                    {!selectionMode && (
                                     <ActionIcon
                                       size="xs"
                                       variant="transparent"
@@ -512,13 +543,30 @@ export function Shell() {
                                     >
                                       <IconMail stroke={iconStroke} size={18} />
                                     </ActionIcon>
-                                  )}
+                                    )}
+                                  </Box>
                                 </Box>
+                                <Text size="xs" color="dimmed">{new Date(s.ts).toLocaleString()}</Text>
                               </Box>
-                              <Text size="xs" color="dimmed">{new Date(s.ts).toLocaleString()}</Text>
-                            </Box>
-                          </Menu.Item>
-                        ))}
+                            </Menu.Item>
+                          ))}
+                          {/* Screenshot preview */}
+                          {hoveredPreview && (
+                          <Box
+                            className={classes.screenshotPreview}
+                            data-screenshot-hidden="true"
+                            style={{
+                              position: 'absolute',
+                              right: 'calc(100% + 8px)',
+                              top: hoveredPreview.top,
+                              transform: 'translateY(-50%)',
+                              width: 220,
+                            }}
+                          >
+                            <img src={hoveredPreview.src} alt="screenshot preview" />
+                          </Box>
+                          )}
+                        </Box>
                       </Box>
                     </Menu.Dropdown>
                   </Menu>
@@ -527,7 +575,7 @@ export function Shell() {
               // User menu
               if (label === 'User') {
                 return (
-                  <Menu shadow="md" width={200} offset={12} trigger="hover" key="user-menu">
+                  <Menu shadow="md" width={200} offset={12} trigger="hover" closeDelay={200} key="user-menu">
                     <Menu.Target>
                       <ActionIcon aria-label="User">
                         <IconUser stroke={iconStroke} />
@@ -597,9 +645,9 @@ export function Shell() {
 
           {/** Left Panel Content */}
           {activeLeftPanel !== null && (
-            <Box style={{ flexGrow: 1 }} p="md">
-              {leftToolbarIcons[activeLeftPanel].content}
-            </Box>
+          <Box style={{ flexGrow: 1 }} p="md">
+            {leftToolbarIcons[activeLeftPanel].content}
+          </Box>
           )}
         </Flex>
       </AppShell.Navbar>
@@ -645,7 +693,7 @@ export function Shell() {
             <Title order={3}>Confirm Screenshot Deletion</Title>
             <Badge size="sm" variant="light" color="black">{screenshots.length}</Badge>
           </Group>
-        )}
+       )}
         centered
         styles={{
           body: { padding: '8px 12px' },
