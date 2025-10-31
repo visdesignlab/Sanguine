@@ -58,14 +58,8 @@ export function Shell() {
     });
   };
 
-  // New: ref + select-all handling for screenshots checkbox
+  // Select all checkbox ref
   const selectAllRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    if (!selectAllRef.current) return;
-    // indeterminate when some but not all selected
-    selectAllRef.current.indeterminate = (selectedScreenshotIds.size > 0 && selectedScreenshotIds.size < screenshots.length);
-  }, [selectedScreenshotIds, screenshots.length, selectionMode]);
 
   const toggleSelectAll = () => {
     if (screenshots.length === 0) return;
@@ -349,7 +343,8 @@ export function Shell() {
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px',
                       }}
                       >
-                        <Text size="sm">Screenshots</Text>
+
+                        <Menu.Label className={classes.menuLabelNoMargin}>Screenshots</Menu.Label>
                         <Box style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                           {selectionMode && selectedScreenshotIds.size !== 0 && (
                           <>
