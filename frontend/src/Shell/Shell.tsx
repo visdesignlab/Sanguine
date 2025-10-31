@@ -333,36 +333,36 @@ export function Shell() {
                       >
                         <Text size="sm">Screenshots</Text>
                         <Box style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                          {selectionMode && (
-                            <>
-                              <ActionIcon
-                                size="xs"
-                                variant="transparent"
-                                className={classes.leftToolbarIcon}
-                                onClick={(e) => { e.stopPropagation(); deleteSelectedScreenshots(); }}
-                                aria-label="Delete selected screenshots"
-                              >
-                                <IconTrash stroke={iconStroke} size={18} />
-                              </ActionIcon>
-                              <ActionIcon
-                                size="xs"
-                                variant="transparent"
-                                className={classes.leftToolbarIcon}
-                                onClick={(e) => { e.stopPropagation(); downloadSelectedScreenshots(); }}
-                                aria-label="Download selected screenshots"
-                              >
-                                <IconDownload stroke={iconStroke} size={18} />
-                              </ActionIcon>
-                              <ActionIcon
-                                size="xs"
-                                variant="transparent"
-                                className={classes.leftToolbarIcon}
-                                onClick={(e) => { e.stopPropagation(); emailSelectedScreenshots(); }}
-                                aria-label="Email selected screenshots"
-                              >
-                                <IconMail stroke={iconStroke} size={18} />
-                              </ActionIcon>
-                            </>
+                          {selectionMode && selectedScreenshotIds.size !== 0 && (
+                          <>
+                            <ActionIcon
+                              size="xs"
+                              variant="transparent"
+                              className={classes.leftToolbarIcon}
+                              onClick={(e) => { e.stopPropagation(); deleteSelectedScreenshots(); }}
+                              aria-label="Delete selected screenshots"
+                            >
+                              <IconTrash stroke={iconStroke} size={18} />
+                            </ActionIcon>
+                            <ActionIcon
+                              size="xs"
+                              variant="transparent"
+                              className={classes.leftToolbarIcon}
+                              onClick={(e) => { e.stopPropagation(); downloadSelectedScreenshots(); }}
+                              aria-label="Download selected screenshots"
+                            >
+                              <IconDownload stroke={iconStroke} size={18} />
+                            </ActionIcon>
+                            <ActionIcon
+                              size="xs"
+                              variant="transparent"
+                              className={classes.leftToolbarIcon}
+                              onClick={(e) => { e.stopPropagation(); emailSelectedScreenshots(); }}
+                              aria-label="Email selected screenshots"
+                            >
+                              <IconMail stroke={iconStroke} size={18} />
+                            </ActionIcon>
+                          </>
                           )}
                           <ActionIcon
                             size="xs"
