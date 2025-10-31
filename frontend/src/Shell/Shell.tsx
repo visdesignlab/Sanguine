@@ -1,5 +1,5 @@
 import {
-  ReactNode, useContext, useMemo, useState, useRef, useEffect,
+  ReactNode, useContext, useMemo, useState, useRef,
 } from 'react';
 
 import { useDisclosure } from '@mantine/hooks';
