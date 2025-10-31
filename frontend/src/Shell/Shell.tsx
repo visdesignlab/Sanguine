@@ -359,11 +359,13 @@ export function Shell() {
                 return (
                   <Menu key={label} shadow="md" width={280} trigger="hover" closeDelay={200} offset={12}>
                     <Menu.Target>
-                      <ActionIcon aria-label={label} onClick={onClick}>
-                        <Icon stroke={iconStroke} />
-                      </ActionIcon>
+                      <Tooltip label="Screenshot" position="left">
+                        <ActionIcon aria-label={label} onClick={onClick}>
+                          <Icon stroke={iconStroke} />
+                        </ActionIcon>
+                      </Tooltip>
                     </Menu.Target>
-                    <Menu.Dropdown>
+                    <Menu.Dropdown data-screenshot-hidden="true">
                       <Box style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px',
                       }}
