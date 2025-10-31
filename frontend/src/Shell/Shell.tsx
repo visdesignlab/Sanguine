@@ -204,19 +204,12 @@ export function Shell() {
       return new Blob([u8arr], { type: mime });
     };
 
-    const wrapBase64 = (base64: string, lineLength = 76) => {
-      const re = new RegExp(`(.{1,${lineLength}})`, 'g');
-      return base64.match(re)?.join('\r\n') ?? base64;
-    };
-
     // Validate and extract base64 + mime
     const m = dataUrl.match(/^data:(image\/\w+);base64,(.*)$/);
     if (!m) {
       console.error('emailScreenshot: invalid data URL');
       return;
     }
-    const mime = m[1];
-    const base64 = m[2];
 
     // 1) Try Web Share API with files (best experience on supported platforms)
     try {
@@ -232,54 +225,9 @@ export function Shell() {
           files: [file],
           text: 'Screenshot from Intelvia - Patient Blood Management Analytics: \n',
         });
-        return;
       }
     } catch (err) {
       console.warn('Web Share API failed or unsupported', err);
-    }
-
-    // 2) Try simple mailto fallback (subject should appear in Subject line)
-    try {
-      const body = 'Screenshot from Intelvia - Patient Blood Management Analytics: \n';
-      const mailto = `mailto:?body=${encodeURIComponent(body)}`;
-      // open in new tab to favour webmail (Gmail) while keeping user on the app
-      window.open(mailto, '_blank');
-      return;
-    } catch (err) {
-      console.warn('mailto fallback failed', err);
-    }
-
-    // 3) Fallback: build a single-part .eml with HTML that embeds the image inline,
-    // add X-Unsent: 1 so Mail clients treat it as a draft/compose (avoids opening inbox).
-    try {
-      const wrapped = wrapBase64(base64);
-      const htmlBody = `<html><body><p>Screenshot from Intelvia - Patient Blood Management Analytics: \n</p><img src="data:${mime};base64,${wrapped}" alt="screenshot" /></body></html>`;
-
-      const parts = [
-        'To: ',
-        'X-Unsent: 1', // <- important: tells many clients this is an unsent/draft message
-        'MIME-Version: 1.0',
-        'Content-Type: text/html; charset="utf-8"',
-        'Content-Transfer-Encoding: 7bit',
-        '',
-        htmlBody,
-        '',
-      ].join('\r\n');
-
-      const emlBlob = new Blob([parts], { type: 'message/rfc822' });
-      const url = URL.createObjectURL(emlBlob);
-
-      // Prefer forcing a download rather than window.open (which can trigger client quirks).
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Intelvia_Screenshot_${new Date().toISOString().replace(/[:.]/g, '-')}.eml`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-
-      setTimeout(() => URL.revokeObjectURL(url), 3000);
-    } catch (err) {
-      console.error('emailScreenshot: .eml fallback failed', err);
     }
   };
 
