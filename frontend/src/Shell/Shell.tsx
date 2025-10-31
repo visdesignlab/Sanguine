@@ -363,6 +363,7 @@ export function Shell() {
                         ) : screenshots.map((s) => (
                           <Menu.Item
                             key={s.id}
+                            closeMenuOnClick={!selectionMode}
                             onClick={(e) => {
                               if (selectionMode) { e.stopPropagation(); toggleSelectionFor(s.id); } else { downloadScreenshot(s.dataUrl, s.filename); }
                             }}
@@ -392,21 +393,30 @@ export function Shell() {
                                   </Text>
                                 </Box>
                                 <Box style={{ display: 'flex', gap: 6 }}>
-                                  <ActionIcon
-                                    size="xs"
-                                    variant="transparent"
-                                    className={`${classes.leftToolbarIcon} ${selectionMode ? classes.selected : ''}`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      toggleSelectionMode();
-                                      (e.currentTarget as HTMLElement).blur();
-                                    }}
-                                    aria-label="Toggle selection mode"
-                                    data-active={selectionMode ? 'true' : 'false'}
-                                    aria-pressed={selectionMode}
-                                  >
-                                    <IconMail stroke={iconStroke} size={18} />
-                                  </ActionIcon>
+                                  {!selectionMode && (
+                                    <ActionIcon
+                                      size="xs"
+                                      variant="transparent"
+                                      className={`${classes.leftToolbarIcon} ${selectionMode ? classes.selected : ''}`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleSelectionMode();
+                                        (e.currentTarget as HTMLElement).blur();
+                                        // If selection mode is active, toggle selection for this screenshot
+                                        if (selectionMode) {
+                                          toggleSelectionFor(s.id);
+                                          return;
+                                        }
+                                        // Otherwise email/share the screenshot
+                                        emailScreenshot(s.dataUrl, s.filename);
+                                      }}
+                                      aria-label="Toggle selection mode"
+                                      data-active={selectionMode ? 'true' : 'false'}
+                                      aria-pressed={selectionMode}
+                                    >
+                                      <IconMail stroke={iconStroke} size={18} />
+                                    </ActionIcon>
+                                  )}
                                 </Box>
                               </Box>
                               <Text size="xs" color="dimmed">{new Date(s.ts).toLocaleString()}</Text>
