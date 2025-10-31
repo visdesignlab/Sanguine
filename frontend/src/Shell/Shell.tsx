@@ -199,7 +199,8 @@ export function Shell() {
       const blob = await res.blob();
       const file = new File([blob], filename, { type: blob.type || 'image/png' });
 
-      const nav = navigator as any;
+      // Share using Web Share API
+      const nav = navigator as Navigator;
       const canShareFiles = typeof nav.canShare === 'function' ? nav.canShare({ files: [file] }) : true;
 
       if (nav.share && canShareFiles) {
