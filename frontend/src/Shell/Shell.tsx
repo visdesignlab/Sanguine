@@ -192,42 +192,26 @@ export function Shell() {
   };
 
   const emailScreenshot = async (dataUrl: string, filename = 'screenshot.png') => {
-    // Convert data URL to Blob
-    const dataURLToBlob = (dataurl: string) => {
-      const parts = dataurl.split(',');
-      const mimeMatch = parts[0].match(/:(.*?);/);
-      const mime = mimeMatch ? mimeMatch[1] : 'image/png';
-      const bstr = atob(parts[1]);
-      let n = bstr.length;
-      const u8arr = new Uint8Array(n);
-      while (n--) u8arr[n] = bstr.charCodeAt(n);
-      return new Blob([u8arr], { type: mime });
-    };
-
-    // Validate and extract base64 + mime
-    const m = dataUrl.match(/^data:(image\/\w+);base64,(.*)$/);
-    if (!m) {
-      console.error('emailScreenshot: invalid data URL');
-      return;
-    }
-
-    // 1) Try Web Share API with files (best experience on supported platforms)
     try {
-      const blob = dataURLToBlob(dataUrl);
-      const file = new File([blob], filename, { type: blob.type });
+    // Convert data URL to Blob using fetch
+      const res = await fetch(dataUrl);
+      if (!res.ok) throw new Error('Failed to convert data URL to blob');
+      const blob = await res.blob();
+      const file = new File([blob], filename, { type: blob.type || 'image/png' });
 
-      const canShareFiles = typeof (navigator as any).canShare === 'function'
-        ? (navigator as any).canShare({ files: [file] })
-        : true;
+      const nav = navigator as any;
+      const canShareFiles = typeof nav.canShare === 'function' ? nav.canShare({ files: [file] }) : true;
 
-      if ((navigator as any).share && canShareFiles) {
-        await (navigator as any).share({
+      if (nav.share && canShareFiles) {
+        await nav.share({
           files: [file],
-          text: 'Screenshot from Intelvia - Patient Blood Management Analytics: \n',
+          text: 'Screenshot from Intelvia - Patient Blood Management Analytics:',
         });
+      } else {
+        console.warn('Web Share API not available or cannot share files');
       }
     } catch (err) {
-      console.warn('Web Share API failed or unsupported', err);
+      console.warn('emailScreenshot failed or unsupported', err);
     }
   };
 
