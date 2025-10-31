@@ -415,6 +415,7 @@ export function Shell() {
                             }}
                             aria-label="Toggle selection mode"
                             data-active={selectionMode ? 'true' : 'false'}
+                            disabled={screenshots.length === 0}
                           >
                             <IconMenu4 stroke={iconStroke} size={18} />
                           </ActionIcon>
