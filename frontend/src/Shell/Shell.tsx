@@ -97,6 +97,9 @@ export function Shell() {
 
   // Reset to defaults modal ----------------------
   const [resetModalOpened, setResetModalOpened] = useState(false);
+  // Delete confirmation modal state
+  const [deleteModalOpened, setDeleteModalOpened] = useState(false);
+  const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
   const handleConfirmReset = () => {
     // Reset filters (add other reset logic as needed)
     store.filtersStore.resetAllFilters();
@@ -240,7 +243,7 @@ export function Shell() {
       if (nav.share && canShareFiles) {
         await nav.share({
           files,
-          text: 'Screenshot(s) from Intelvia - Patient Blood Management Analytics:',
+          text: 'Screenshots from Intelvia - Patient Blood Management Analytics:',
         });
       } else {
         console.warn('Web Share API not available or cannot share files');
@@ -258,11 +261,24 @@ export function Shell() {
   };
 
   // Delete selected screenshots
-  const deleteSelectedScreenshots = () => {
+  // Open delete confirmation modal for currently selected screenshots
+  const openDeleteModalForSelected = () => {
     if (selectedScreenshotIds.size === 0) return;
-    setScreenshots((prev) => prev.filter((s) => !selectedScreenshotIds.has(s.id)));
+    setDeleteTargetIds(Array.from(selectedScreenshotIds));
+    setDeleteModalOpened(true);
+  };
+
+  // Perform deletion after user confirms
+  const confirmDeleteSelected = () => {
+    if (deleteTargetIds.length === 0) {
+      setDeleteModalOpened(false);
+      return;
+    }
+    setScreenshots((prev) => prev.filter((s) => !deleteTargetIds.includes(s.id)));
     clearSelections();
     setSelectionMode(false);
+    setDeleteTargetIds([]);
+    setDeleteModalOpened(false);
   };
 
   // Download selected screenshots
@@ -352,7 +368,7 @@ export function Shell() {
                               size="xs"
                               variant="transparent"
                               className={classes.leftToolbarIcon}
-                              onClick={(e) => { e.stopPropagation(); deleteSelectedScreenshots(); }}
+                              onClick={(e) => { e.stopPropagation(); openDeleteModalForSelected(); }}
                               aria-label="Delete selected screenshots"
                             >
                               <IconTrash stroke={iconStroke} size={18} />
@@ -587,6 +603,50 @@ export function Shell() {
           <Group justify="flex-end" mt="xs">
             <Button variant="default" onClick={() => setResetModalOpened(false)}>Cancel</Button>
             <Button color="red" onClick={handleConfirmReset}>Reset</Button>
+          </Group>
+        </Stack>
+      </Modal>
+      {/** Delete Confirmation Modal */}
+      <Modal
+        opened={deleteModalOpened}
+        onClose={() => { setDeleteModalOpened(false); setDeleteTargetIds([]); }}
+        title={(
+          <Group align="center">
+            <Title order={3}>Confirm Screenshot Deletion</Title>
+            <Badge size="sm" variant="light" color="black">{screenshots.length}</Badge>
+          </Group>
+        )}
+        centered
+        styles={{
+          body: { padding: '8px 12px' },
+        }}
+      >
+        <Stack gap="md">
+          <Box style={{ maxHeight: 200, overflow: 'auto' }}>
+            {deleteTargetIds.map((id) => {
+              const s = screenshots.find((ss) => ss.id === id);
+              return (
+                <Box
+                  key={id}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 6,
+                    padding: '8px 6px',
+                    borderBottom: '1px solid var(--mantine-color-gray-2)',
+                  }}
+                >
+                  <Text size="sm" style={{ fontWeight: 600, textTransform: 'capitalize' }}>
+                    {s ? `${s.tab} View` : id}
+                  </Text>
+                  {s && <Text size="xs" color="dimmed">{new Date(s.ts).toLocaleString()}</Text>}
+                </Box>
+              );
+            })}
+          </Box>
+          <Group justify="flex-end" mt="xs">
+            <Button variant="default" onClick={() => { setDeleteModalOpened(false); setDeleteTargetIds([]); }}>Cancel</Button>
+            <Button color="red" onClick={confirmDeleteSelected}>Delete</Button>
           </Group>
         </Stack>
       </Modal>
