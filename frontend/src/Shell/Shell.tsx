@@ -38,7 +38,7 @@ import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/Select
  */
 export function Shell() {
   const store = useContext(Store);
-  const [screenshots, setScreenshots] = useState<{ id: string; dataUrl: string; tab: string; ts: string }[]>([]);
+  const [screenshots, setScreenshots] = useState<{ id: string; dataUrl: string; tab: string; ts: string; filename: string }[]>([]);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedScreenshotIds, setSelectedScreenshotIds] = useState<Set<string>>(new Set());
   const toggleSelectionFor = (id: string) => {
@@ -146,6 +146,13 @@ export function Shell() {
     },
   ];
 
+  const buildScreenshotFilename = (tab?: string) => {
+    const sanitize = (s: string) => s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const tabPart = sanitize(tab || activeTab || 'dashboard');
+    const ts = new Date().toISOString().replace(/T/, '_').split('.')[0].replace(/:/g, '-');
+    return `intelvia-${tabPart}-view-${ts}.png`;
+  };
+
   // Screenshot function
   const handleScreenshot = async () => {
     const htmlEl = document.documentElement;
@@ -167,12 +174,15 @@ export function Shell() {
 
     try {
       const dataUrl = await htmlToImage.toPng(htmlEl, options);
+      // Build filename once and store it with the screenshot
+      const filename = buildScreenshotFilename(activeTab);
       // Store screenshot
       const item = {
         id: dateString,
         dataUrl,
         tab: activeTab,
         ts: new Date().toISOString(),
+        filename,
       };
       setScreenshots((prev) => [item, ...prev]);
     } catch (error) {
@@ -182,31 +192,35 @@ export function Shell() {
     }
   };
 
-  const downloadScreenshot = (dataUrl: string, filename: string) => {
+  const downloadScreenshot = (dataUrl: string, filename?: string) => {
     const link = document.createElement('a');
     link.href = dataUrl;
-    link.download = filename;
+    link.download = filename || buildScreenshotFilename();
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const emailScreenshot = async (dataUrl: string, filename = 'screenshot.png') => {
+  const emailScreenshot = async (dataUrl: string, filename?: string) => {
     try {
-    // Convert data URL to Blob using fetch
+      // Convert data URL to Blob using fetch
       const res = await fetch(dataUrl);
       if (!res.ok) throw new Error('Failed to convert data URL to blob');
       const blob = await res.blob();
-      const file = new File([blob], filename, { type: blob.type || 'image/png' });
+
+      // Build filename using helper when not provided
+      const finalFilename = filename || buildScreenshotFilename();
 
       // Share using Web Share API
+      const fileForShare = new File([blob], finalFilename, { type: blob.type || 'image/png' });
       const nav = navigator as Navigator;
-      const canShareFiles = typeof nav.canShare === 'function' ? nav.canShare({ files: [file] }) : true;
+      const canShareFiles = typeof nav.canShare === 'function' ? nav.canShare({ files: [fileForShare] }) : true;
 
       if (nav.share && canShareFiles) {
         await nav.share({
-          files: [file],
+          files: [fileForShare],
           text: 'Screenshot from Intelvia - Patient Blood Management Analytics:',
+          title: 'Intelvia Screenshot',
         });
       } else {
         console.warn('Web Share API not available or cannot share files');
@@ -216,7 +230,7 @@ export function Shell() {
     }
   };
 
-  // New: delete selected screenshots
+  // Delete selected screenshots
   const deleteSelectedScreenshots = () => {
     if (selectedScreenshotIds.size === 0) return;
     setScreenshots((prev) => prev.filter((s) => !selectedScreenshotIds.has(s.id)));
@@ -224,11 +238,11 @@ export function Shell() {
     setSelectionMode(false);
   };
 
-  // New: download selected screenshots (adds a small delay between downloads)
+  // Download selected screenshots
   const downloadSelectedScreenshots = async () => {
     const toDownload = screenshots.filter((s) => selectedScreenshotIds.has(s.id));
     for (const s of toDownload) {
-      downloadScreenshot(s.dataUrl, `Intelvia_Screenshot_${s.id}.png`);
+      downloadScreenshot(s.dataUrl, s.filename);
     }
   };
 
@@ -345,7 +359,7 @@ export function Shell() {
                           <Menu.Item
                             key={s.id}
                             onClick={(e) => {
-                              if (selectionMode) { e.stopPropagation(); toggleSelectionFor(s.id); } else { downloadScreenshot(s.dataUrl, `Intelvia_Screenshot_${s.id}.png`); }
+                              if (selectionMode) { e.stopPropagation(); toggleSelectionFor(s.id); } else { downloadScreenshot(s.dataUrl, s.filename); }
                             }}
                             style={{ display: 'block', padding: '8px 12px' }}
                           >
@@ -377,7 +391,7 @@ export function Shell() {
                                     size="xs"
                                     variant="transparent"
                                     className={classes.leftToolbarIcon}
-                                    onClick={(e) => { e.stopPropagation(); emailScreenshot(s.dataUrl); }}
+                                    onClick={(e) => { e.stopPropagation(); emailScreenshot(s.dataUrl, s.filename); }}
                                     aria-label="Email screenshot"
                                   >
                                     <IconMail stroke={iconStroke} size={18} />
