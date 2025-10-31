@@ -357,7 +357,7 @@ export function Shell() {
               // Hover Menu for Camera to show screenshots
               if (label === 'Camera') {
                 return (
-                  <Menu key={label} shadow="md" width={280} trigger="hover" closeDelay={200} offset={12}>
+                  <Menu key={label} shadow="md" width={280} trigger="hover" offset={12}>
                     <Menu.Target>
                       <Tooltip label="Screenshot" position="left">
                         <ActionIcon aria-label={label} onClick={onClick}>
@@ -527,7 +527,7 @@ export function Shell() {
               // User menu
               if (label === 'User') {
                 return (
-                  <Menu shadow="md" width={200} offset={12} trigger="hover" closeDelay={200} key="user-menu">
+                  <Menu shadow="md" width={200} offset={12} trigger="hover" key="user-menu">
                     <Menu.Target>
                       <ActionIcon aria-label="User">
                         <IconUser stroke={iconStroke} />
