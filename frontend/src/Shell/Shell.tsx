@@ -1,5 +1,5 @@
 import {
-  ReactNode, useContext, useMemo, useState,
+  ReactNode, useContext, useMemo, useState, useRef, useEffect,
 } from 'react';
 
 import { useDisclosure } from '@mantine/hooks';
@@ -56,6 +56,24 @@ export function Shell() {
       if (!next) clearSelections(); // leaving selection mode clears selections
       return next;
     });
+  };
+
+  // New: ref + select-all handling for screenshots checkbox
+  const selectAllRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!selectAllRef.current) return;
+    // indeterminate when some but not all selected
+    selectAllRef.current.indeterminate = (selectedScreenshotIds.size > 0 && selectedScreenshotIds.size < screenshots.length);
+  }, [selectedScreenshotIds, screenshots.length, selectionMode]);
+
+  const toggleSelectAll = () => {
+    if (screenshots.length === 0) return;
+    if (selectedScreenshotIds.size === screenshots.length) {
+      clearSelections();
+    } else {
+      setSelectedScreenshotIds(new Set(screenshots.map((s) => s.id)));
+    }
   };
 
   // View tabs -----------------
@@ -371,7 +389,6 @@ export function Shell() {
                             onClick={(e) => {
                               e.stopPropagation();
                               toggleSelectionMode();
-                              // remove focus so :focus styling doesn't stick after toggle
                               (e.currentTarget as HTMLElement).blur();
                             }}
                             aria-label="Toggle selection mode"
@@ -382,12 +399,29 @@ export function Shell() {
                         </Box>
                       </Box>
                       <Box style={{ maxHeight: 240, overflow: 'auto' }}>
+                        {selectionMode && screenshots.length > 1 && (
+                        <Box style={{
+                          padding: '8px 12px', borderBottom: '1px solid var(--mantine-color-gray-2)', display: 'flex', alignItems: 'center', gap: 8,
+                        }}
+                        >
+                          <input
+                            ref={selectAllRef}
+                            type="checkbox"
+                            checked={selectedScreenshotIds.size === screenshots.length && screenshots.length > 0}
+                            onChange={() => toggleSelectAll()}
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label="Select all screenshots"
+                          />
+                          {' '}
+                          <Text size="sm">All</Text>
+                        </Box>
+                        )}
                         {screenshots.length === 0 ? (
                           <Menu.Item disabled>No screenshots</Menu.Item>
                         ) : screenshots.map((s) => (
                           <Menu.Item
                             key={s.id}
-                            closeMenuOnClick={!selectionMode}
+                            closeMenuOnClick={false}
                             onClick={(e) => {
                               if (selectionMode) { e.stopPropagation(); toggleSelectionFor(s.id); } else { downloadScreenshot(s.dataUrl, s.filename); }
                             }}
