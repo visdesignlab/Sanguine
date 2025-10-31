@@ -343,10 +343,15 @@ export function Shell() {
                           <ActionIcon
                             size="xs"
                             variant="transparent"
-                            className={classes.leftToolbarIcon}
-                            onClick={(e) => { e.stopPropagation(); toggleSelectionMode(); }}
+                            className={`${classes.leftToolbarIcon} ${selectionMode ? classes.selected : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSelectionMode();
+                              // remove focus so :focus styling doesn't stick after toggle
+                              (e.currentTarget as HTMLElement).blur();
+                            }}
                             aria-label="Toggle selection mode"
-                            data-active={selectionMode}
+                            data-active={selectionMode ? 'true' : 'false'}
                           >
                             <IconMenu4 stroke={iconStroke} size={18} />
                           </ActionIcon>
@@ -390,9 +395,15 @@ export function Shell() {
                                   <ActionIcon
                                     size="xs"
                                     variant="transparent"
-                                    className={classes.leftToolbarIcon}
-                                    onClick={(e) => { e.stopPropagation(); emailScreenshot(s.dataUrl, s.filename); }}
-                                    aria-label="Email screenshot"
+                                    className={`${classes.leftToolbarIcon} ${selectionMode ? classes.selected : ''}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleSelectionMode();
+                                      (e.currentTarget as HTMLElement).blur();
+                                    }}
+                                    aria-label="Toggle selection mode"
+                                    data-active={selectionMode ? 'true' : 'false'}
+                                    aria-pressed={selectionMode}
                                   >
                                     <IconMail stroke={iconStroke} size={18} />
                                   </ActionIcon>
