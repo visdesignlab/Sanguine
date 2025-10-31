@@ -171,7 +171,16 @@ export function Shell() {
   // Screenshot function
   const handleScreenshot = async () => {
     const htmlEl = document.documentElement;
-    const filter = (node: HTMLElement) => node.tagName !== 'NOSCRIPT';
+    const filter = (node: Node) => {
+      try {
+        if (!(node instanceof Element)) return true;
+        if (node.tagName === 'NOSCRIPT') return false;
+        if (node.closest && node.closest('[data-screenshot-hidden]')) return false;
+        return true;
+      } catch {
+        return true;
+      }
+    };
     const tempStyleEl: HTMLStyleElement = document.createElement('style');
     // make common grid items overflow visible for full-page capture
     tempStyleEl.innerHTML = '.react-grid-item, .layout, .MuiGrid-item { overflow: visible !important; }';
