@@ -201,26 +201,34 @@ export function Shell() {
     document.body.removeChild(link);
   };
 
-  const emailScreenshot = async (dataUrl: string, filename?: string) => {
+  const emailScreenshot = async (
+    input: string | { dataUrl: string; filename?: string }[],
+    filename?: string,
+  ) => {
     try {
-      // Convert data URL to Blob using fetch
-      const res = await fetch(dataUrl);
-      if (!res.ok) throw new Error('Failed to convert data URL to blob');
-      const blob = await res.blob();
+      const items = Array.isArray(input) ? input : [{ dataUrl: input, filename }];
+      if (items.length === 0) return;
 
-      // Build filename using helper when not provided
-      const finalFilename = filename || buildScreenshotFilename();
+      // Convert all data URLs to blobs in parallel
+      const blobs = await Promise.all(items.map(async (it) => {
+        const res = await fetch(it.dataUrl);
+        if (!res.ok) throw new Error('Failed to convert data URL to blob');
+        const blob = await res.blob();
+        return {
+          blob,
+          filename: it.filename || buildScreenshotFilename(),
+        };
+      }));
 
-      // Share using Web Share API
-      const fileForShare = new File([blob], finalFilename, { type: blob.type || 'image/png' });
+      const files = blobs.map(({ blob, filename: fname }) => new File([blob], fname, { type: blob.type || 'image/png' }));
+
       const nav = navigator as Navigator;
-      const canShareFiles = typeof nav.canShare === 'function' ? nav.canShare({ files: [fileForShare] }) : true;
+      const canShareFiles = typeof (nav).canShare === 'function' ? (nav).canShare({ files }) : true;
 
       if (nav.share && canShareFiles) {
         await nav.share({
-          files: [fileForShare],
-          text: 'Screenshot from Intelvia - Patient Blood Management Analytics:',
-          title: 'Intelvia Screenshot',
+          files,
+          text: 'Screenshot(s) from Intelvia - Patient Blood Management Analytics:',
         });
       } else {
         console.warn('Web Share API not available or cannot share files');
@@ -228,6 +236,13 @@ export function Shell() {
     } catch (err) {
       console.warn('emailScreenshot failed or unsupported', err);
     }
+  };
+
+  // Email currently selected screenshots
+  const emailSelectedScreenshots = async () => {
+    const toEmail = screenshots.filter((s) => selectedScreenshotIds.has(s.id));
+    if (toEmail.length === 0) return;
+    await emailScreenshot(toEmail.map((s) => ({ dataUrl: s.dataUrl, filename: s.filename })));
   };
 
   // Delete selected screenshots
@@ -338,6 +353,15 @@ export function Shell() {
                               >
                                 <IconDownload stroke={iconStroke} size={18} />
                               </ActionIcon>
+                              <ActionIcon
+                                size="xs"
+                                variant="transparent"
+                                className={classes.leftToolbarIcon}
+                                onClick={(e) => { e.stopPropagation(); emailSelectedScreenshots(); }}
+                                aria-label="Email selected screenshots"
+                              >
+                                <IconMail stroke={iconStroke} size={18} />
+                              </ActionIcon>
                             </>
                           )}
                           <ActionIcon
@@ -400,17 +424,14 @@ export function Shell() {
                                       className={`${classes.leftToolbarIcon} ${selectionMode ? classes.selected : ''}`}
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        toggleSelectionMode();
                                         (e.currentTarget as HTMLElement).blur();
-                                        // If selection mode is active, toggle selection for this screenshot
                                         if (selectionMode) {
                                           toggleSelectionFor(s.id);
                                           return;
                                         }
-                                        // Otherwise email/share the screenshot
                                         emailScreenshot(s.dataUrl, s.filename);
                                       }}
-                                      aria-label="Toggle selection mode"
+                                      aria-label="Email screenshot"
                                       data-active={selectionMode ? 'true' : 'false'}
                                       aria-pressed={selectionMode}
                                     >
