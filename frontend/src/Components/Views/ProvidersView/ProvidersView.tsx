@@ -89,9 +89,10 @@ export function ProvidersView() {
   const [hoveredChartId, setHoveredChartId] = useState<string | null>(null);
 
   // --- Date Range Picker ---
-  const [dateRange, setDateRange] = useState<[string | null, string | null]>([null, null]);
 
   const DATE_FORMAT = 'YYYY-MM-DD';
+  const [dateRange, setDateRange] = useState<[string | null, string | null]>([dayjs('2020-01-01').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)]);
+
   const datePresets: DatePickerPreset<'range'>[] = [
     { label: 'Past month', value: [dayjs().startOf('month').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
     { label: 'This quarter', value: [dayjs().subtract(dayjs().month() % 3, 'month').startOf('month').format(DATE_FORMAT), dayjs().format(DATE_FORMAT)] },
