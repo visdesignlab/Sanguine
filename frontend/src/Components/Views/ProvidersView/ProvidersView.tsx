@@ -25,6 +25,7 @@ export function ProvidersView() {
   const [exportMenuOpened, setExportMenuOpened] = useState(false);
   const [sharingInProgress, setSharingInProgress] = useState(false);
   const prevExportMenuOpen = useRef(false);
+  const screenshotRef = useRef<HTMLDivElement | null>(null);
 
   // Filename helper
   const buildScreenshotFilename = (tab = 'providers') => {
@@ -44,17 +45,46 @@ export function ProvidersView() {
     }
   };
 
-  // Create a PNG data URL of the full page
+  // Create a PNG data URL with border
   const createFullPagePng = async () => {
-    const htmlEl = document.documentElement;
-    const dataUrl = await htmlToImage.toPng(htmlEl, {
+    const targetEl = screenshotRef.current ?? document.documentElement;
+    // Use the full scroll size of the target element
+    const width = targetEl instanceof Element ? (targetEl as Element).scrollWidth : document.documentElement.scrollWidth;
+    const height = targetEl instanceof Element ? (targetEl as Element).scrollHeight : document.documentElement.scrollHeight;
+
+    // Render the element to a PNG first
+    const pixelRatio = 2;
+    const dataUrl = await htmlToImage.toPng(targetEl as HTMLElement, {
       backgroundColor: '#ffffff',
-      pixelRatio: 2,
+      pixelRatio,
       filter: screenshotFilter,
-      width: htmlEl.scrollWidth,
-      height: htmlEl.scrollHeight,
+      width,
+      height,
     });
-    return dataUrl;
+
+    // Add a white padding border to the generated PNG only
+    const paddingCssPx = 16;
+    const pad = Math.round(paddingCssPx * pixelRatio);
+
+    // Load the generated image and draw it onto a larger canvas with white background padding.
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = (e) => reject(e);
+      image.src = dataUrl;
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width + pad * 2;
+    canvas.height = img.height + pad * 2;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return dataUrl;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, pad, pad);
+
+    return canvas.toDataURL('image/png');
   };
 
   // Download helper
@@ -81,7 +111,7 @@ export function ProvidersView() {
       if (nav.share && canShareFiles) {
         await nav.share({
           files: [file],
-          text: 'Screenshot from Intelvia - Patient Blood Management Analytics',
+          text: 'Screenshot from Intelvia - Patient Blood Management Analytics\n\n',
         });
       } else {
         // Fallback: attempt to open mailto link (attachments not supported via mailto)
@@ -316,88 +346,91 @@ export function ProvidersView() {
         </Flex>
       </Flex>
       <Divider />
-      {/* Provider Summary Card */}
-      <Card shadow="sm" radius="md" p="xl" mb="md" withBorder>
-        <Stack gap="xs">
-          <Title order={3}>Provider Summary - Dr. John Doe</Title>
-          <Title order={4} mt="xs">
-            In the past
-            {' '}
-            <Text component="span" td="underline">3 Months</Text>
-            , Dr. John Doe has recorded:
-          </Title>
-          <Stack gap={2} mt="xs">
-            <Text size="md">
-              •
+      {/* Screenshot target: everything from Provider Summary down will be captured */}
+      <div ref={screenshotRef} data-screenshot-target>
+        {/* Provider Summary Card */}
+        <Card shadow="sm" radius="md" p="xl" mb="md" withBorder>
+          <Stack gap="xs">
+            <Title order={3}>Provider Summary - Dr. John Doe</Title>
+            <Title order={4} mt="xs">
+              In the past
               {' '}
-              <Text component="span" td="underline">28</Text>
-              {' '}
-              Cardiac Surgeries
-            </Text>
-            <Text size="md">
-              • Used
-              {' '}
-              <Text component="span" td="underline">187</Text>
-              {' '}
-              Units of Blood Products
-            </Text>
-            <Text size="md">
-              • Average Complexity of cases
-              {' '}
-              <Text component="span" td="underline">higher</Text>
-              {' '}
-              than average
-            </Text>
-            <Text size="md">
-              •
-              {' '}
-              <Text component="span" td="underline">13%</Text>
-              {' '}
-              of transfused patients had post operative hemoglobin above the recommended threshold
-            </Text>
+              <Text component="span" td="underline">3 Months</Text>
+              , Dr. John Doe has recorded:
+            </Title>
+            <Stack gap={2} mt="xs">
+              <Text size="md">
+                •
+                {' '}
+                <Text component="span" td="underline">28</Text>
+                {' '}
+                Cardiac Surgeries
+              </Text>
+              <Text size="md">
+                • Used
+                {' '}
+                <Text component="span" td="underline">187</Text>
+                {' '}
+                Units of Blood Products
+              </Text>
+              <Text size="md">
+                • Average Complexity of cases
+                {' '}
+                <Text component="span" td="underline">higher</Text>
+                {' '}
+                than average
+              </Text>
+              <Text size="md">
+                •
+                {' '}
+                <Text component="span" td="underline">13%</Text>
+                {' '}
+                of transfused patients had post operative hemoglobin above the recommended threshold
+              </Text>
+            </Stack>
           </Stack>
-        </Stack>
-      </Card>
-      <Title order={3}>Anemia Management</Title>
-      <Flex gap="sm">
-        {Object.entries(allCharts)
-          .filter(([_, chart]) => chart.title === 'Anemia Management')
-          .map(([chartId, chart]) => (
-            <Card key={chartId} h={200} w={300} p="md" shadow="sm">
-              <BarChart
-                h={200}
-                p="sm"
-                w="100%"
-                data={chart.data}
-                dataKey={chart.dataKey}
-                orientation={chart.orientation}
-                yAxisProps={chart.orientation === 'vertical' ? { width: 80 } : undefined}
-                barProps={{ radius: 10 }}
-                series={[{ name: 'Adherence', color: 'blue.6' }]}
-              />
-            </Card>
-          ))}
-      </Flex>
-      <Title order={3}>Outcomes</Title>
-      <Flex gap="sm">
-        {Object.entries(allCharts)
-          .filter(([_, chart]) => chart.title === 'Outcomes')
-          .map(([chartId, chart]) => (
-            <Card key={chartId} h={200} w={300} p="md" shadow="sm">
-              <BarChart
-                h={200}
-                p="sm"
-                w="100%"
-                data={chart.data}
-                dataKey={chart.dataKey}
-                orientation={chart.orientation}
-                yAxisProps={chart.orientation === 'vertical' ? { width: 80 } : undefined}
-                barProps={{ radius: 10 }}
-                series={[{ name: 'Adherence', color: 'blue.6' }]}
-              />
-            </Card>
-          ))}
-      </Flex>
+        </Card>
+        <Title order={3} mt="xl" mb="lg">Anemia Management</Title>
+        <Flex gap="sm">
+          {Object.entries(allCharts)
+            .filter(([_, chart]) => chart.title === 'Anemia Management')
+            .map(([chartId, chart]) => (
+              <Card key={chartId} h={200} w={300} p="md" shadow="sm">
+                <BarChart
+                  h={200}
+                  p="sm"
+                  w="100%"
+                  data={chart.data}
+                  dataKey={chart.dataKey}
+                  orientation={chart.orientation}
+                  yAxisProps={chart.orientation === 'vertical' ? { width: 80 } : undefined}
+                  barProps={{ radius: 10 }}
+                  series={[{ name: 'Adherence', color: 'blue.6' }]}
+                />
+              </Card>
+            ))}
+        </Flex>
+        <Title order={3} mt="xl" mb="lg">Outcomes</Title>
+        <Flex gap="sm">
+          {Object.entries(allCharts)
+            .filter(([_, chart]) => chart.title === 'Outcomes')
+            .map(([chartId, chart]) => (
+              <Card key={chartId} h={200} w={300} p="md" shadow="sm">
+                <BarChart
+                  h={200}
+                  p="sm"
+                  w="100%"
+                  data={chart.data}
+                  dataKey={chart.dataKey}
+                  orientation={chart.orientation}
+                  yAxisProps={chart.orientation === 'vertical' ? { width: 80 } : undefined}
+                  barProps={{ radius: 10 }}
+                  series={[{ name: 'Adherence', color: 'blue.6' }]}
+                />
+              </Card>
+            ))}
+        </Flex>
+      </div>
     </Stack>
   );
 }
