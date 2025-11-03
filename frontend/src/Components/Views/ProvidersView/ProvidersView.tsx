@@ -3,19 +3,110 @@ import {
   Divider, Flex, Stack, Title, Tooltip, Text,
   Button,
   Select,
+  ActionIcon,
+  Menu,
 } from '@mantine/core';
 import { useContext, useState } from 'react';
 import { DatePickerInput } from '@mantine/dates';
 import dayjs from 'dayjs';
-import { IconCalendarWeek, IconPlus, IconSearch } from '@tabler/icons-react';
+import {
+  IconCalendarWeek, IconDotsVertical, IconDownload, IconMail, IconPlus, IconSearch, IconShare,
+  IconShare2,
+} from '@tabler/icons-react';
 import { BarChart } from '@mantine/charts';
+import * as htmlToImage from 'html-to-image';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
 
 export function ProvidersView() {
   const store = useContext(Store);
 
-  const { toolbarWidth } = useThemeConstants();
+  // Filename helper
+  const buildScreenshotFilename = (tab = 'providers') => {
+    const ts = new Date().toISOString().replace(/T/, '_').split('.')[0].replace(/:/g, '-');
+    return `intelvia-${tab}-view-${ts}.png`;
+  };
+
+  // Shared filter to exclude unwanted elements from screenshot
+  const screenshotFilter = (node: Node) => {
+    try {
+      if (!(node instanceof Element)) return true;
+      if (node.tagName === 'NOSCRIPT') return false;
+      if (node.closest && node.closest('[data-screenshot-hidden]')) return false;
+      return true;
+    } catch {
+      return true;
+    }
+  };
+
+  // Create a PNG data URL of the full page
+  const createFullPagePng = async () => {
+    const htmlEl = document.documentElement;
+    const dataUrl = await htmlToImage.toPng(htmlEl, {
+      backgroundColor: '#ffffff',
+      pixelRatio: 2,
+      filter: screenshotFilter,
+      width: htmlEl.scrollWidth,
+      height: htmlEl.scrollHeight,
+    });
+    return dataUrl;
+  };
+
+  // Download helper
+  const downloadScreenshot = (dataUrl: string, filename?: string) => {
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = filename || buildScreenshotFilename();
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Share screenshot menu
+  const shareScreenshot = async (dataUrl: string, filename?: string) => {
+    try {
+      const res = await fetch(dataUrl);
+      if (!res.ok) throw new Error('Failed to fetch data URL');
+      const blob = await res.blob();
+      const file = new File([blob], filename || buildScreenshotFilename(), { type: blob.type || 'image/png' });
+
+      const nav = navigator as Navigator;
+      const canShareFiles = typeof (nav).canShare === 'function' ? (nav).canShare({ files: [file] }) : true;
+
+      if (nav.share && canShareFiles) {
+        await nav.share({
+          files: [file],
+          text: 'Screenshot from Intelvia - Patient Blood Management Analytics',
+        });
+      } else {
+        // Fallback: attempt to open mailto link (attachments not supported via mailto)
+        // Provide user guidance in console; UI fallback can be implemented later.
+        console.warn('Web Share API not available or cannot share files. No direct email attachment fallback available.');
+      }
+    } catch (err) {
+      console.warn('shareScreenshot failed or unsupported', err);
+    }
+  };
+
+  // Download the view
+  const handleDownloadView = async () => {
+    try {
+      const dataUrl = await createFullPagePng();
+      downloadScreenshot(dataUrl, buildScreenshotFilename('providers'));
+    } catch (err) {
+      console.error('ProvidersView: Download View failed', err);
+    }
+  };
+
+  // Share the view
+  const handleShareView = async () => {
+    try {
+      const dataUrl = await createFullPagePng();
+      await shareScreenshot(dataUrl, buildScreenshotFilename('providers'));
+    } catch (err) {
+      console.error('ProvidersView: Share View failed', err);
+    }
+  };
 
   const [dateRange, setDateRange] = useState<[string | null, string | null]>([null, null]);
 
@@ -122,6 +213,8 @@ export function ProvidersView() {
   const {
     cardIconStroke,
     buttonIconSize,
+    toolbarWidth,
+    iconStroke,
   } = useThemeConstants();
 
   return (
@@ -138,7 +231,27 @@ export function ProvidersView() {
               Visits
             </Title>
           </Tooltip>
-          {/** Provider Search */}
+          {/* Export menu: vertical ellipsis with tooltip */}
+          <Tooltip label="Export View" position="bottom">
+            <Menu withinPortal shadow="md">
+              <Menu.Target>
+                <ActionIcon size="lg" aria-label="Export View">
+                  <IconShare2
+                    stroke={iconStroke}
+                  />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item leftSection={<IconDownload size={16} />} onClick={handleDownloadView}>
+                  Download View
+                </Menu.Item>
+                <Menu.Item leftSection={<IconShare size={16} />} onClick={handleShareView}>
+                  Share View
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </Tooltip>
+          {/** Select Provider */}
           <Select
             placeholder="Search for a provider"
             defaultValue="Dr. John Doe"
