@@ -6,11 +6,11 @@ import {
   ActionIcon,
   Menu,
 } from '@mantine/core';
-import { useContext, useState } from 'react';
+import { useContext, useState, useRef } from 'react';
 import { DatePickerInput } from '@mantine/dates';
 import dayjs from 'dayjs';
 import {
-  IconCalendarWeek, IconDotsVertical, IconDownload, IconMail, IconPlus, IconSearch, IconShare,
+  IconCalendarWeek, IconDownload, IconPlus, IconSearch, IconShare,
   IconShare2,
 } from '@tabler/icons-react';
 import { BarChart } from '@mantine/charts';
@@ -20,6 +20,11 @@ import { useThemeConstants } from '../../../Theme/mantineTheme';
 
 export function ProvidersView() {
   const store = useContext(Store);
+
+  // keep export menu open while native share sheet is active (same pattern as Shell)
+  const [exportMenuOpened, setExportMenuOpened] = useState(false);
+  const [sharingInProgress, setSharingInProgress] = useState(false);
+  const prevExportMenuOpen = useRef(false);
 
   // Filename helper
   const buildScreenshotFilename = (tab = 'providers') => {
@@ -95,16 +100,28 @@ export function ProvidersView() {
       downloadScreenshot(dataUrl, buildScreenshotFilename('providers'));
     } catch (err) {
       console.error('ProvidersView: Download View failed', err);
+    } finally {
+      // close export menu after download
+      setExportMenuOpened(false);
     }
   };
 
   // Share the view
   const handleShareView = async () => {
     try {
+      // preserve current menu open state and keep menu open while native share sheet is active
+      prevExportMenuOpen.current = exportMenuOpened;
+      setSharingInProgress(true);
+      setExportMenuOpened(true);
+
       const dataUrl = await createFullPagePng();
       await shareScreenshot(dataUrl, buildScreenshotFilename('providers'));
     } catch (err) {
       console.error('ProvidersView: Share View failed', err);
+    } finally {
+      setSharingInProgress(false);
+      // restore previous menu open state
+      setExportMenuOpened(prevExportMenuOpen.current);
     }
   };
 
@@ -233,7 +250,19 @@ export function ProvidersView() {
           </Tooltip>
           {/* Export menu: vertical ellipsis with tooltip */}
           <Tooltip label="Export View" position="bottom">
-            <Menu withinPortal shadow="md">
+            <Menu
+              withinPortal
+              shadow="md"
+              trigger="hover"
+              closeOnItemClick={false}
+              opened={exportMenuOpened}
+              onOpen={() => setExportMenuOpened(true)}
+              onClose={() => {
+                // prevent closing the menu when a native share sheet is in progress
+                if (sharingInProgress) return;
+                setExportMenuOpened(false);
+              }}
+            >
               <Menu.Target>
                 <ActionIcon size="lg" aria-label="Export View">
                   <IconShare2
