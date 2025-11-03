@@ -1,7 +1,6 @@
 import {
   ReactNode, useContext, useMemo, useState, useRef,
 } from 'react';
-
 import { useDisclosure } from '@mantine/hooks';
 import {
   AppShell, Group, Tabs, ActionIcon, Title, Flex, Container, Menu, Box, Text, Tooltip,
@@ -23,14 +22,14 @@ import {
 import * as htmlToImage from 'html-to-image';
 import { Store } from '../Store/Store';
 import { useThemeConstants } from '../Theme/mantineTheme';
+import classes from './Shell.module.css';
 import { DashboardView } from '../Components/Views/DashboardView/DashboardView';
 import { ExploreView } from '../Components/Views/ExploreView/ExploreView';
 import { ProvidersView } from '../Components/Views/ProvidersView/ProvidersView';
 import { SettingsView } from '../Components/Views/SettingsView/SettingsView';
-import classes from './Shell.module.css';
+import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/SelectedVisitsPanel';
 import { FilterPanel } from '../Components/Toolbar/Filters/FilterPanel';
 import { FilterIcon } from '../Components/Toolbar/Filters/FilterIcon';
-import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/SelectedVisitsPanel';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -38,9 +37,14 @@ import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/Select
  */
 export function Shell() {
   const store = useContext(Store);
+
+  // --- Screenshots ---
+  const [screenshotsMenuOpened, setScreenshotsMenuOpened] = useState(false);
   const [screenshots, setScreenshots] = useState<{ id: string; dataUrl: string; tab: string; ts: string; filename: string }[]>([]);
+  // Selection mode - select multiple screenshots
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedScreenshotIds, setSelectedScreenshotIds] = useState<Set<string>>(new Set());
+  // Toggle select a screenshot
   const toggleSelectionFor = (id: string) => {
     setSelectedScreenshotIds((prev) => {
       const next = new Set(prev);
@@ -57,10 +61,8 @@ export function Shell() {
       return next;
     });
   };
-
-  // Select all checkbox ref
-  const selectAllRef = useRef<HTMLInputElement | null>(null);
-
+  // Select all screenshots checkbox
+  const selectAll = useRef<HTMLInputElement | null>(null);
   const toggleSelectAll = () => {
     if (screenshots.length === 0) return;
     if (selectedScreenshotIds.size === screenshots.length) {
@@ -69,6 +71,10 @@ export function Shell() {
       setSelectedScreenshotIds(new Set(screenshots.map((s) => s.id)));
     }
   };
+  // Sharing in progress flag to keep menu open
+  const [sharingInProgress, setSharingInProgress] = useState(false);
+  // Preview images
+  const prevMenuOpen = useRef<boolean>(false);
 
   // View tabs -----------------
   const TABS = [
@@ -162,15 +168,15 @@ export function Shell() {
   ];
 
   const buildScreenshotFilename = (tab?: string) => {
-    const sanitize = (s: string) => s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    const tabPart = sanitize(tab || activeTab || 'dashboard');
+    const tabName = tab || activeTab || 'dashboard';
     const ts = new Date().toISOString().replace(/T/, '_').split('.')[0].replace(/:/g, '-');
-    return `intelvia-${tabPart}-view-${ts}.png`;
+    return `intelvia-${tabName}-view-${ts}.png`;
   };
 
-  // Screenshot function
+  // Screenshot webpage
   const handleScreenshot = async () => {
     const htmlEl = document.documentElement;
+    // Exclude unwanted elements from screenshot
     const filter = (node: Node) => {
       try {
         if (!(node instanceof Element)) return true;
@@ -181,38 +187,29 @@ export function Shell() {
         return true;
       }
     };
-    const tempStyleEl: HTMLStyleElement = document.createElement('style');
-    // make common grid items overflow visible for full-page capture
-    tempStyleEl.innerHTML = '.react-grid-item, .layout, .MuiGrid-item { overflow: visible !important; }';
-    document.head.appendChild(tempStyleEl);
-
-    const options = {
-      backgroundColor: '#ffffff',
-      pixelRatio: 2,
-      filter,
-      width: htmlEl.scrollWidth,
-      height: htmlEl.scrollHeight,
-    };
-
-    const dateString = new Date().toISOString().replace(/T/, '_').split('.')[0].replace(/:/g, '-');
-
     try {
-      const dataUrl = await htmlToImage.toPng(htmlEl, options);
-      // Build filename once and store it with the screenshot
-      const filename = buildScreenshotFilename(activeTab);
+      // Create png
+      const dataUrl = await htmlToImage.toPng(
+        htmlEl,
+        {
+          backgroundColor: '#ffffff',
+          pixelRatio: 2,
+          filter,
+          width: htmlEl.scrollWidth,
+          height: htmlEl.scrollHeight,
+        },
+      );
       // Store screenshot
       const item = {
-        id: dateString,
+        id: new Date().toISOString().replace(/T/, '_').split('.')[0].replace(/:/g, '-'),
         dataUrl,
         tab: activeTab,
         ts: new Date().toISOString(),
-        filename,
+        filename: buildScreenshotFilename(activeTab),
       };
       setScreenshots((prev) => [item, ...prev]);
     } catch (error) {
       console.error('Screenshot failed:', error);
-    } finally {
-      document.head.removeChild(tempStyleEl);
     }
   };
 
@@ -229,6 +226,11 @@ export function Shell() {
     input: string | { dataUrl: string; filename?: string }[],
     filename?: string,
   ) => {
+    // Keep the screenshots menu open while the native share sheet is active.
+    prevMenuOpen.current = screenshotsMenuOpened;
+    setSharingInProgress(true);
+    setScreenshotsMenuOpened(true);
+
     try {
       const items = Array.isArray(input) ? input : [{ dataUrl: input, filename }];
       if (items.length === 0) return;
@@ -259,6 +261,10 @@ export function Shell() {
       }
     } catch (err) {
       console.warn('emailScreenshot failed or unsupported', err);
+    } finally {
+      // restore previous menu open state and clear sharing flag
+      setSharingInProgress(false);
+      setScreenshotsMenuOpened(prevMenuOpen.current);
     }
   };
 
@@ -361,7 +367,21 @@ export function Shell() {
               // Hover Menu for Camera to show screenshots
               if (label === 'Camera') {
                 return (
-                  <Menu key={label} shadow="md" width={280} trigger="hover" closeDelay={200} offset={12}>
+                  <Menu
+                    key={label}
+                    shadow="md"
+                    width={280}
+                    trigger="hover"
+                    closeDelay={200}
+                    offset={12}
+                    opened={screenshotsMenuOpened}
+                    onOpen={() => setScreenshotsMenuOpened(true)}
+                    onClose={() => {
+                      // prevent closing the menu when a native share sheet is in progress
+                      if (sharingInProgress) return;
+                      setScreenshotsMenuOpened(false);
+                    }}
+                  >
                     <Menu.Target>
                       <Tooltip label="Screenshot" position="left">
                         <ActionIcon aria-label={label} onClick={onClick}>
@@ -459,7 +479,7 @@ export function Shell() {
                             aria-label="Select all screenshots"
                           >
                             <input
-                              ref={selectAllRef}
+                              ref={selectAll}
                               type="checkbox"
                               checked={selectedScreenshotIds.size === screenshots.length && screenshots.length > 0}
                               onChange={() => toggleSelectAll()}
