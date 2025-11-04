@@ -482,8 +482,9 @@ export type CostChartConfig = ChartConfig<typeof costXAxisVars[number], typeof c
 
 // TODO: Update scatterPlotConfig type
 export type ScatterPlotConfig = ChartConfig<typeof dashboardXAxisVars[number] | BloodComponent, typeof dashboardYAxisVars[number] | LabResult, keyof typeof AGGREGATION_OPTIONS, 'scatterPlot'>;
+export type HeatMapConfig = ChartConfig<string, string, 'sum', 'heatmap'>;
 
-export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig;
+export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | HeatMapConfig;
 export type ScatterPlotData = ScatterChartSeries[];
 
 // TOOD: Update or remove CostBarData type
