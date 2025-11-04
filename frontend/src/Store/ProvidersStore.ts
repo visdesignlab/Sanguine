@@ -605,7 +605,7 @@ export class ProvidersStore {
           const allMap = aggregateRowsByX(lineRowsAll);
           const selMap = aggregateRowsByX(lineRowsSel);
 
-          const allLabel = 'All Providers';
+          const allLabel = 'All';
           const providerLabel = this.selectedProvider ? String(this.selectedProvider) : null;
 
           // Build points from aggregated maps

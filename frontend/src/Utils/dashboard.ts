@@ -20,6 +20,11 @@ export function formatValueForDisplay(
   aggregation: keyof typeof AGGREGATION_OPTIONS,
   fullUnits?: boolean,
 ): string {
+  // If value is null/undefined/NaN, return placeholder
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return 'N/A';
+  }
+
   // Show units by default unless specified otherwise
   const showFullUnits = fullUnits !== undefined ? fullUnits : true;
 
