@@ -2,7 +2,7 @@ import { formatValueForDisplay } from '../../../Utils/dashboard';
 
 type ProviderChartTooltipProps = {
     active?: boolean;
-    payload?: { payload?: Record<string, number> }[];
+    payload?: { payload?: Record<string, unknown> }[]; // changed to unknown to handle labels & numbers
     xAxisVar?: string; // chart.title
     yAxisVar?: string; // "Number of Providers"
     aggregation: 'sum' | 'avg';
@@ -20,7 +20,16 @@ export function ProviderChartTooltip({
   // --- Get formatted values ---
   const row = payload?.[0]?.payload ?? {};
   const xValue = row[xAxisVar ?? ''];
-  const yValue = row[yAxisVar ?? ''];
+
+  // If the explicit yAxisVar is present, use it. Otherwise collect every entry that isn't the x-axis value.
+  let yEntries: Array<[string, unknown]> = [];
+  if (yAxisVar && Object.prototype.hasOwnProperty.call(row, yAxisVar)) {
+    yEntries = [[yAxisVar, row[yAxisVar]]];
+  } else {
+    yEntries = Object.entries(row)
+      .filter(([k]) => k !== (xAxisVar ?? '')) // skip the x axis key
+      .filter(([k]) => k !== 'payload');
+  }
 
   return (
     <div style={{
@@ -35,7 +44,15 @@ export function ProviderChartTooltip({
     }}
     >
       <div style={{ fontWeight: 700, fontSize: 12 }}>
-        {formatValueForDisplay(yAxisVar ?? '', yValue, aggregation)}
+        {yEntries.map(([label, val], idx) => (
+          <div key={`${String(label)}-${idx}`} style={{ marginBottom: 2 }}>
+            <span style={{ marginRight: 6 }}>
+              {String(label)}
+              :
+            </span>
+            <span>{formatValueForDisplay(yAxisVar ?? String(label), val as any, aggregation)}</span>
+          </div>
+        ))}
       </div>
       <div
         style={{
@@ -48,7 +65,7 @@ export function ProviderChartTooltip({
           overflowWrap: 'anywhere', // more aggressive wrapping for long tokens
         }}
       >
-        {formatValueForDisplay(xAxisVar ?? '', xValue, aggregation)}
+        {formatValueForDisplay(xAxisVar ?? '', xValue as any, aggregation)}
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import {
   Select,
   Modal,
   CloseButton,
+  Tabs,
 } from '@mantine/core';
 import { DatePickerInput, DatePickerPreset } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
@@ -24,6 +25,7 @@ import { useThemeConstants } from '../../../Theme/mantineTheme';
 import {
   AGGREGATION_OPTIONS, ProviderChartConfig, providerChartGroups,
   providerXAxisOptions,
+  TIME_AGGREGATION_OPTIONS,
 } from '../../../Types/application';
 import classes from '../GridLayoutItem.module.css';
 import { ProviderChartTooltip } from './ProviderChartTooltip';
@@ -56,12 +58,16 @@ export function ProvidersView() {
 
   // --- Add Chart Modal ----
   const [selectedAggregation, setSelectedAggregation] = useState<string>('sum');
+  const [selectedChartType, setSelectedChartType] = useState<string>('population-histogram');
   const [selectedVar, setSelectedVar] = useState<string>('');
+  const [selectedTimeGrouping, setSelectedTimeGrouping] = useState<string>('month');
   const [isAddChartModalOpen, { open, close }] = useDisclosure(false);
 
   const openAddChartModal = useCallback(() => {
     setSelectedAggregation('avg');
     setSelectedVar('');
+    setSelectedChartType('population-histogram');
+    setSelectedTimeGrouping('month');
     open();
   }, [open]);
 
@@ -72,18 +78,27 @@ export function ProvidersView() {
   }, [store.providersStore]);
 
   const addChart = useCallback(() => {
-    // TODO: Change provider chart config based on what we want.
+    const isHistogram = selectedChartType === 'population-histogram';
+
+    const xAxisVar = isHistogram
+      ? (selectedVar as ProviderChartConfig['xAxisVar'])
+      : (selectedTimeGrouping as ProviderChartConfig['xAxisVar']);
+
+    const yAxisVar = isHistogram
+      ? ('attending_provider' as ProviderChartConfig['yAxisVar'])
+      : (selectedVar as ProviderChartConfig['yAxisVar']);
+
     store.providersStore.addChart({
       chartId: `chart-${Date.now()}`,
-      xAxisVar: selectedVar as ProviderChartConfig['xAxisVar'],
-      yAxisVar: 'attending_provider',
+      xAxisVar,
+      yAxisVar,
       aggregation: selectedAggregation as ProviderChartConfig['aggregation'],
-      chartType: 'bar',
+      chartType: selectedChartType as ProviderChartConfig['chartType'],
       group: 'Anemia Management',
-
     });
+
     close();
-  }, [selectedAggregation, selectedVar, close, store.providersStore]);
+  }, [selectedAggregation, selectedVar, selectedChartType, close, store.providersStore]);
 
   // TODO: Handle Chart Hover
   const [hoveredChartId, setHoveredChartId] = useState<string | null>(null);
@@ -181,36 +196,86 @@ export function ProvidersView() {
           title={`Add chart for ${selectedProviderName}`}
           centered
         >
-          <Stack gap="md">
-            {/** Modal - choose aggregation for chart */}
-            <Select
-              label="Aggregation"
-              placeholder="Choose aggregation type"
-              data={aggregationOptions}
-              value={selectedAggregation}
-              onChange={(value) => setSelectedAggregation(value || 'Average')}
-            />
-            {/** Modal - choose y-axis for chart or stat */}
-            <Select
-              label="Variable"
-              placeholder="Choose Variable"
-              data={providerXAxisOptions.map((opt) => ({
-                value: opt.value,
-                label: opt.label.base,
-              }))}
-              value={selectedVar}
-              onChange={(value) => setSelectedVar(value || '')}
-            />
-            {/** Done Button - Add chart to view */}
-            <Button
-              mt="md"
-              onClick={addChart}
-              disabled={!selectedVar}
-              fullWidth
-            >
-              Done
-            </Button>
-          </Stack>
+          <Tabs defaultValue="compare" style={{ width: '100%' }} onChange={(val) => { setSelectedChartType(val === 'progress' ? 'time-series-line' : 'population-histogram'); }}>
+            <Tabs.List grow>
+              <Tabs.Tab value="compare">Compare to Population</Tabs.Tab>
+              <Tabs.Tab value="progress">Progress over Time</Tabs.Tab>
+            </Tabs.List>
+
+            <Tabs.Panel value="compare" pt="md">
+              <Stack gap="md">
+                {/** Modal - choose aggregation for chart */}
+                <Select
+                  label="Aggregation"
+                  placeholder="Choose aggregation type"
+                  data={aggregationOptions}
+                  value={selectedAggregation}
+                  onChange={(value) => setSelectedAggregation(value || 'Average')}
+                />
+                {/** Modal - choose y-axis for chart or stat */}
+                <Select
+                  label="Variable"
+                  placeholder="Choose Variable"
+                  data={providerXAxisOptions.map((opt) => ({
+                    value: opt.value,
+                    label: opt.label.base,
+                  }))}
+                  value={selectedVar}
+                  onChange={(value) => setSelectedVar(value || '')}
+                />
+                {/** Done Button - Add chart to view */}
+                <Button
+                  mt="md"
+                  onClick={addChart}
+                  disabled={!selectedVar}
+                  fullWidth
+                >
+                  Done
+                </Button>
+              </Stack>
+            </Tabs.Panel>
+
+            <Tabs.Panel value="progress" pt="md">
+              <Stack gap="md">
+                {/** Modal - choose aggregation for chart */}
+                <Select
+                  label="Aggregation"
+                  placeholder="Choose aggregation type"
+                  data={aggregationOptions}
+                  value={selectedAggregation}
+                  onChange={(value) => setSelectedAggregation(value || 'Average')}
+                />
+                {/** Modal - choose y-axis for chart or stat */}
+                <Select
+                  label="Variable"
+                  placeholder="Choose Variable"
+                  data={providerXAxisOptions.map((opt) => ({
+                    value: opt.value,
+                    label: opt.label.base,
+                  }))}
+                  value={selectedVar}
+                  onChange={(value) => setSelectedVar(value || '')}
+                />
+                {/** Modal - choose time grouping for time-series */}
+                <Select
+                  label="Time Grouping"
+                  placeholder="Month / Quarter / Year"
+                  data={Object.entries(TIME_AGGREGATION_OPTIONS).map(([value, { label }]) => ({ value, label }))}
+                  value={selectedTimeGrouping}
+                  onChange={(value) => setSelectedTimeGrouping(value || 'month')}
+                />
+                {/** Done Button - Add chart to view */}
+                <Button
+                  mt="md"
+                  onClick={addChart}
+                  disabled={!selectedVar}
+                  fullWidth
+                >
+                  Done
+                </Button>
+              </Stack>
+            </Tabs.Panel>
+          </Tabs>
         </Modal>
         {/* Provider Summary Card */}
         <Card shadow="sm" radius="md" p="xl" mb="md" withBorder>
@@ -317,8 +382,17 @@ export function ProvidersView() {
                   if (!chart) return null;
 
                   // Chart series
+                  const MANTINE_BLUE = '#1C7ED6';
+                  const GOLD = '#FFD43B';
+
                   const series = (chart.data && chart.data.length > 0)
-                    ? Object.keys(chart.data[0]).filter((k) => k !== chart.dataKey).map((name) => ({ name, color: 'blue.6' }))
+                    ? Object.keys(chart.data[0])
+                      .filter((k) => k !== chart.dataKey)
+                      .map((name, idx) => ({
+                        name,
+                        color: idx % 2 === 0 ? MANTINE_BLUE : GOLD,
+                        label: name,
+                      }))
                     : [];
 
                   return (
@@ -346,7 +420,7 @@ export function ProvidersView() {
                         />
                       )}
                       {/** Chart */}
-                      {cfg.chartType === 'line' ? (
+                      {cfg.chartType === 'time-series-line' ? (
                         <LineChart
                           h={200}
                           w="100%"
@@ -356,16 +430,29 @@ export function ProvidersView() {
                           lineProps={{ strokeWidth: 2, dot: false }}
                           lineChartProps={{
                             margin: {
-                              top: 30,
+                              top: 12,
                               right: 25,
                               bottom: 25,
                               left: 25,
                             },
                           }}
-                          yAxisProps={{ width: 20 }}
+                          withLegend
+                          legendProps={{
+                            wrapperStyle: { padding: 0, margin: 0, top: -5 },
+                            iconSize: 2, // shrink the icon if desired
+                            verticalAlign: 'top',
+                            height: 18,
+                            formatter: (value) => <span style={{ fontSize: 12 }}>{value}</span>,
+                          }}
+                          yAxisProps={{
+                            type: 'number',
+                            width: 20,
+                            domain: ['dataMin', 'dataMax'],
+                            tickFormatter: (value) => formatValueForDisplay(cfg.yAxisVar, value, cfg.aggregation, false),
+                          }}
                           series={series}
                           xAxisProps={{
-                            type: 'number',
+                            type: 'category',
                             domain: ['dataMin', 'dataMax'],
                             padding: { left: 10, right: 10 },
                             label: {
@@ -375,7 +462,7 @@ export function ProvidersView() {
                               dx: -6,
                               style: { fontWeight: 600, fontSize: 13 },
                             },
-                            tickFormatter: (value: number) => formatValueForDisplay(cfg.xAxisVar, value, cfg.aggregation, false),
+                            tickFormatter: (value) => formatValueForDisplay(cfg.xAxisVar, value, cfg.aggregation, false),
                           }}
                           tooltipProps={{
                             content: (props) => (
@@ -388,45 +475,7 @@ export function ProvidersView() {
                               />
                             ),
                           }}
-                        >
-                          {/** Reference Lines (same logic as bar chart) */}
-                          {(() => {
-                            const values = (chart.data || []).map((r) => Number(r[chart.dataKey])).filter(Number.isFinite);
-                            const min = values.length ? Math.min(...values) : 0;
-                            const max = values.length ? Math.max(...values) : 1;
-                            const marker = Number(chart.providerMark) || 0;
-
-                            const range = (max - min) || 1;
-                            const pct = (marker - min) / range;
-
-                            let labelPosition: 'insideTop' | 'insideTopLeft' | 'insideTopRight' = 'insideTop';
-                            if (pct <= 0.1) labelPosition = 'insideTopLeft';
-                            else if (pct >= 0.9) labelPosition = 'insideTopRight';
-
-                            return (
-                              <ReferenceLine
-                                yAxisId="left"
-                                x={chart.providerMark}
-                                ifOverflow="visible"
-                                stroke="#4a4a4a"
-                                label={{
-                                  value: store.providersStore?.selectedProvider ?? 'Provider',
-                                  fill: '#4a4a4a',
-                                  position: labelPosition,
-                                  offset: -25,
-                                  fontSize: 12,
-                                }}
-                              />
-                            );
-                          })()}
-                          <ReferenceLine
-                            yAxisId="left"
-                            x={Number(chart.recommendedMark)}
-                            ifOverflow="visible"
-                            stroke="#82ca9d"
-                            strokeDasharray="3 3"
-                          />
-                        </LineChart>
+                        />
                       ) : (
                         <BarChart
                           h={200}

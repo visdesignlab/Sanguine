@@ -503,10 +503,10 @@ export const providerChartGroups = ['Anemia Management', 'Outcomes'];
 export type ProviderChartData = Record<string, ProviderChart>;
 
 export type ProviderChartConfig = ChartConfig<
-  typeof providerXAxisVars[number],
-  typeof dashboardXAxisVars[number] | 'attending_provider',
+  typeof providerXAxisVars[number] | typeof dashboardXAxisVars[number] | 'attending_provider',
+  typeof dashboardXAxisVars[number] | 'attending_provider' | typeof providerXAxisVars[number],
   keyof typeof AGGREGATION_OPTIONS,
-  'bar' | 'line'
+  'time-series-line' | 'population-histogram'
 > & { group?: (typeof providerChartGroups)[number] };
 
 // Explore View ----------------------------------------------------

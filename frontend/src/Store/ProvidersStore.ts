@@ -4,6 +4,7 @@ import {
   AGGREGATION_OPTIONS, dashboardYAxisOptions, ProviderChart, ProviderChartConfig, ProviderChartData,
   providerXAxisOptions,
 } from '../Types/application';
+import { compareTimePeriods } from '../Utils/dates';
 /**
  * ProvidersStore manages provider data for the provider view.
  */
@@ -192,19 +193,19 @@ export class ProvidersStore {
   // Chart configurations by default
   _chartConfigs: ProviderChartConfig[] = [
     {
-      chartId: '0', xAxisVar: 'rbc_adherent', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
+      chartId: '0', xAxisVar: 'quarter', yAxisVar: 'rbc_adherent', aggregation: 'avg', chartType: 'time-series-line', group: 'Anemia Management',
     },
     {
-      chartId: '1', xAxisVar: 'ffp_adherent', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
+      chartId: '1', xAxisVar: 'ffp_adherent', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'population-histogram', group: 'Anemia Management',
     },
     {
-      chartId: '2', xAxisVar: 'antifibrinolytic', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Anemia Management',
+      chartId: '2', xAxisVar: 'antifibrinolytic', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'population-histogram', group: 'Anemia Management',
     },
     {
-      chartId: '3', xAxisVar: 'b12', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'bar', group: 'Outcomes',
+      chartId: '3', xAxisVar: 'b12', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'population-histogram', group: 'Outcomes',
     },
     {
-      chartId: '4', xAxisVar: 'los', yAxisVar: 'attending_provider', aggregation: 'avg', chartType: 'line', group: 'Outcomes',
+      chartId: '4', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'time-series-line', group: 'Outcomes',
     },
   ];
 
@@ -363,8 +364,10 @@ export class ProvidersStore {
       if (startDate) dateClause += ` AND dsch_dtm >= DATE '${startDate}'`;
       if (endDate) dateClause += ` AND dsch_dtm <= DATE '${endDate}'`;
 
+      // Create histogram charts ----------------------
       // --- Build charts query ---
-      const selectClauses = this._chartConfigs.flatMap(({ xAxisVar }) => (
+      const histConfigs = this._chartConfigs.filter((cfg) => cfg.chartType === 'population-histogram');
+      const selectClauses = histConfigs.flatMap(({ xAxisVar }) => (
         Object.keys(AGGREGATION_OPTIONS).flatMap((aggregation) => {
           const aggFn = aggregation.toUpperCase();
 
@@ -388,7 +391,8 @@ export class ProvidersStore {
         })
       ));
 
-      const query = `
+      // --- Histograms ----
+      const histQuery = `
           SELECT attending_provider, ${selectClauses.join(', ')}
           FROM filteredVisits
           WHERE attending_provider IS NOT NULL ${dateClause}
@@ -396,11 +400,11 @@ export class ProvidersStore {
         `;
 
       // --- Execute query ---
-      const res = await this._rootStore.duckDB.query(query);
+      const res = await this._rootStore.duckDB.query(histQuery);
       const rows = res.toArray().map((r) => r.toJSON());
 
       // --- For each chart config, bin data by x-axis ---
-      this._chartConfigs.forEach((cfg) => {
+      histConfigs.forEach((cfg) => {
         const yVar = cfg.yAxisVar;
         const xVar = cfg.xAxisVar;
         const chartKey = `${cfg.chartId}_${xVar}`;
@@ -502,8 +506,162 @@ export class ProvidersStore {
         };
       });
 
+      // Create time-series line charts ----------------------
+      const lineConfigs = this._chartConfigs.filter((cfg) => cfg.chartType === 'time-series-line');
+
+      // Build unique select clauses for the query based on yAxis variables used by line charts.
+      const lineSelectMap = new Map<string, { select: string; alias: string; yVar: string; agg: string }>();
+      lineConfigs.forEach((cfg) => {
+        const agg = (cfg.aggregation || 'avg').toLowerCase();
+        const aggFn = agg.toUpperCase();
+        const yVar = cfg.yAxisVar;
+        // Special-case handling similar to histograms for case_mix_index or total_blood_product_cost if needed
+        // For now, use standard aggregation of the y variable.
+        const alias = `${agg}_${yVar}`;
+        if (!lineSelectMap.has(alias)) {
+          lineSelectMap.set(alias, {
+            select: `${aggFn}(${yVar}) AS ${alias}`, alias, yVar, agg,
+          });
+        }
+      });
+
+      if (lineConfigs.length > 0) {
+        const lineSelects = Array.from(lineSelectMap.values()).map((v) => v.select).join(', ');
+
+        // Build two queries: one aggregated across ALL providers by time period,
+        // and one aggregated for the selected provider (if any). We'll merge results
+        // in JS to produce points with both values (e.g. { month: '2022-Jan', los_all: 10, los_provider: 9 }).
+        const provEscaped = this.selectedProvider ? String(this.selectedProvider).replace(/'/g, "''") : null;
+
+        // Query for everyone (grouped by time)
+        const allQuery = `
+          SELECT month, quarter, year, ${lineSelects}
+          FROM filteredVisits
+          WHERE attending_provider IS NOT NULL ${dateClause}
+          GROUP BY month, quarter, year;
+        `;
+
+        // Query for selected provider (grouped by time) if provider selected
+        const selQuery = provEscaped ? `
+          SELECT month, quarter, year, ${lineSelects}
+          FROM filteredVisits
+          WHERE attending_provider = '${provEscaped}' ${dateClause}
+          GROUP BY month, quarter, year;
+        ` : null;
+
+        // Execute queries (selected provider query only when needed)
+        const allRes = await this._rootStore.duckDB.query(allQuery);
+        const lineRowsAll = allRes.toArray().map((r) => r.toJSON());
+
+        let lineRowsSel: Array<Record<string, unknown>> = [];
+        if (selQuery) {
+          const selRes = await this._rootStore.duckDB.query(selQuery);
+          lineRowsSel = selRes.toArray().map((r) => r.toJSON());
+        }
+
+        console.log('Line chart (all) query results:', lineRowsAll);
+        console.log('Line chart (selected provider) query results:', lineRowsSel);
+
+        // For each line chart config, build chart data
+        lineConfigs.forEach((cfg) => {
+          const agg = (cfg.aggregation || 'avg').toLowerCase();
+          const yVar = cfg.yAxisVar;
+          const xVar = cfg.xAxisVar as 'month' | 'quarter' | 'year';
+          const alias = `${agg}_${yVar}`;
+          const chartKey = `${cfg.chartId}_${xVar}`;
+
+          // Build point list from query results: one point per time period (month/quarter/year)
+          const points: Array<Record<string, string | number | undefined>> = [];
+
+          // Aggregate rows by the configured x-axis (month/quarter/year) so "All Providers"
+          // is grouped at the same granularity as the chart (not always by month).
+          const aggregateRowsByX = (rowsArr: Array<Record<string, unknown>>) => {
+            const buckets = new Map<string, number[]>();
+            rowsArr.forEach((r) => {
+              const timeVal = r[xVar];
+              if (timeVal === null || timeVal === undefined) return;
+              const timePeriod = String(timeVal);
+              const raw = r[alias];
+              if (raw === null || raw === undefined) return;
+              const num = Number(raw);
+              if (!Number.isFinite(num)) return;
+              const arr = buckets.get(timePeriod) ?? [];
+              arr.push(num);
+              buckets.set(timePeriod, arr);
+            });
+
+            const aggregated = new Map<string, number>();
+            buckets.forEach((arr, tp) => {
+              let val: number;
+              if (agg === 'sum') val = arr.reduce((a, b) => a + b, 0);
+              else if (agg === 'min') val = Math.min(...arr);
+              else if (agg === 'max') val = Math.max(...arr);
+              else /* 'avg' or fallback */ val = arr.reduce((a, b) => a + b, 0) / arr.length;
+              aggregated.set(tp, val);
+            });
+            return aggregated;
+          };
+
+          const allMap = aggregateRowsByX(lineRowsAll);
+          const selMap = aggregateRowsByX(lineRowsSel);
+
+          const allLabel = 'All Providers';
+          const providerLabel = this.selectedProvider ? String(this.selectedProvider) : null;
+
+          // Build points from aggregated maps
+          Array.from(allMap.keys()).forEach((timePeriod) => {
+            const numAll = allMap.get(timePeriod);
+            if (numAll === undefined || !Number.isFinite(numAll)) return;
+            const numSel = selMap.get(timePeriod);
+
+            const point: Record<string, string | number | undefined> = {
+              [xVar]: timePeriod,
+              [allLabel]: Number(numAll),
+            };
+            if (providerLabel) {
+              if (numSel !== undefined && Number.isFinite(numSel)) {
+                point[providerLabel] = Number(numSel);
+              } else {
+                point[providerLabel] = undefined;
+              }
+            }
+            points.push(point);
+          });
+
+          // Sort by time period using compareTimePeriods (safely cast to TimePeriod)
+          points.sort((a, b) => {
+            try {
+              return compareTimePeriods(a[xVar] as any, b[xVar] as any);
+            } catch {
+              return 0;
+            }
+          });
+
+          // Chart title & recommended mark (if provided in y-axis options)
+          const yOption = dashboardYAxisOptions.find((o) => o.value === yVar) as any | undefined;
+          const chartTitle = yOption?.label?.[agg as 'sum' | 'avg'] ?? String(yVar);
+          const recommendedMark = yOption?.recommendation?.[agg] ?? NaN;
+
+          // Provider-specific mark is not available from this time-aggregated query (leave undefined)
+          let providerMark: number | undefined;
+          const providerName: string | null = this.selectedProvider ? String(this.selectedProvider) : null;
+
+          charts[chartKey] = {
+            group: cfg.group || 'Ungrouped',
+            title: chartTitle,
+            data: points,
+            dataKey: xVar,
+            orientation: 'horizontal',
+            recommendedMark,
+            providerMark,
+            providerName,
+          };
+        });
+      }
+
       // Update store
       this.providerChartData = charts;
+      console.log('Built provider charts:', this.providerChartData);
       return this.providerChartData;
     } catch (e) {
       // Error handling
