@@ -498,7 +498,7 @@ export const providerXAxisOptions = [
   PROVIDERS,
 ];
 export const providerXAxisVars = providerXAxisOptions.map((opt) => opt.value);
-export const providerChartGroups = ['Anemia Management', 'Outcomes'];
+export const providerChartGroups = ['Anemia Management', 'Outcomes', 'Costs'] as const;
 
 export type ProviderChartData = Record<string, ProviderChart>;
 

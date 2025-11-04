@@ -207,6 +207,9 @@ export class ProvidersStore {
     {
       chartId: '4', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'time-series-line', group: 'Outcomes',
     },
+    {
+      chartId: '5', xAxisVar: 'quarter', yAxisVar: 'rbc_units_cost', aggregation: 'avg', chartType: 'time-series-line', group: 'Costs',
+    },
   ];
 
   get chartConfigs() {
@@ -515,12 +518,24 @@ export class ProvidersStore {
         const agg = (cfg.aggregation || 'avg').toLowerCase();
         const aggFn = agg.toUpperCase();
         const yVar = cfg.yAxisVar;
-        // Special-case handling similar to histograms for case_mix_index or total_blood_product_cost if needed
-        // For now, use standard aggregation of the y variable.
-        const alias = `${agg}_${yVar}`;
+
+        // Special-case: case_mix_index computed from ms_drg_weight / COUNT(visit_no)
+        let alias: string;
+        let selectClause: string;
+        if (yVar === 'case_mix_index') {
+          alias = `${agg}_case_mix_index`;
+          selectClause = `SUM(ms_drg_weight) / COUNT(visit_no) AS ${alias}`;
+        } else {
+          alias = `${agg}_${yVar}`;
+          selectClause = `${aggFn}(${yVar}) AS ${alias}`;
+        }
+
         if (!lineSelectMap.has(alias)) {
           lineSelectMap.set(alias, {
-            select: `${aggFn}(${yVar}) AS ${alias}`, alias, yVar, agg,
+            select: selectClause,
+            alias,
+            yVar,
+            agg,
           });
         }
       });
@@ -552,6 +567,8 @@ export class ProvidersStore {
         // Execute queries (selected provider query only when needed)
         const allRes = await this._rootStore.duckDB.query(allQuery);
         const lineRowsAll = allRes.toArray().map((r) => r.toJSON());
+        console.log("Executing line chart (all providers) query:", allQuery);
+        console.log("Line chart (all providers) query results:", lineRowsAll);
 
         let lineRowsSel: Array<Record<string, unknown>> = [];
         if (selQuery) {
