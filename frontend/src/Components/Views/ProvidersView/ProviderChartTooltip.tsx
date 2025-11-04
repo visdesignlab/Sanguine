@@ -46,11 +46,15 @@ export function ProviderChartTooltip({
       <div style={{ fontWeight: 700, fontSize: 12 }}>
         {yEntries.map(([label, val], idx) => (
           <div key={`${String(label)}-${idx}`} style={{ marginBottom: 2 }}>
-            <span style={{ marginRight: 6 }}>
-              {String(label)}
-              :
+            {yEntries.length > 1 && (
+              <span style={{ marginRight: 6 }}>
+                {String(label)}
+                :
+              </span>
+            )}
+            <span style={{ fontWeight: yEntries.length > 1 ? 400 : 700 }}>
+              {formatValueForDisplay(yAxisVar ?? String(label), val as any, aggregation)}
             </span>
-            <span>{formatValueForDisplay(yAxisVar ?? String(label), val as any, aggregation)}</span>
           </div>
         ))}
       </div>
