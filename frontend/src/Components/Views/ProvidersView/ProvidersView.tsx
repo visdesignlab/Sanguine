@@ -39,7 +39,7 @@ export function ProvidersView() {
   // --- Store and contexts ---
   const store = useContext(Store);
   const aggregationOptions = Object.entries(AGGREGATION_OPTIONS).map(([value, { label }]) => ({ value, label }));
-
+  const [hoveredRecommendedLine, setHoveredRecommendedLine] = useState<string | null>(null);
   // Initialize provider view data
   useEffect(() => {
     // If we have a duckDB instance, ensure providersStore uses its current dateRange (or default)
@@ -554,6 +554,25 @@ export function ProvidersView() {
                             ifOverflow="visible"
                             stroke="#82ca9d"
                             strokeDasharray="3 3"
+                          />
+                          {/* Invisible hithox for recommended hovering */}
+                          <ReferenceLine
+                            yAxisId="left"
+                            x={Number(chart.recommendedMark)}
+                            ifOverflow="visible"
+                            // Invisible
+                            stroke="transparent"
+                            strokeWidth={8}
+                            style={{ pointerEvents: 'stroke', cursor: 'pointer', zIndex: 9999 }}
+                            onMouseEnter={() => setHoveredRecommendedLine(chartKey)}
+                            onMouseLeave={() => setHoveredRecommendedLine(null)}
+                            label={hoveredRecommendedLine === chartKey ? {
+                              value: 'Recommended',
+                              position: 'bottom',
+                              fill: '#2f9e44',
+                              fontSize: 12,
+                              style: { zIndex: 9999 },
+                            } : undefined}
                           />
                         </BarChart>
                       )}
