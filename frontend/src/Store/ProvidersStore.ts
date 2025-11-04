@@ -567,17 +567,12 @@ export class ProvidersStore {
         // Execute queries (selected provider query only when needed)
         const allRes = await this._rootStore.duckDB.query(allQuery);
         const lineRowsAll = allRes.toArray().map((r) => r.toJSON());
-        console.log("Executing line chart (all providers) query:", allQuery);
-        console.log("Line chart (all providers) query results:", lineRowsAll);
 
         let lineRowsSel: Array<Record<string, unknown>> = [];
         if (selQuery) {
           const selRes = await this._rootStore.duckDB.query(selQuery);
           lineRowsSel = selRes.toArray().map((r) => r.toJSON());
         }
-
-        console.log('Line chart (all) query results:', lineRowsAll);
-        console.log('Line chart (selected provider) query results:', lineRowsSel);
 
         // For each line chart config, build chart data
         lineConfigs.forEach((cfg) => {
@@ -678,7 +673,6 @@ export class ProvidersStore {
 
       // Update store
       this.providerChartData = charts;
-      console.log('Built provider charts:', this.providerChartData);
       return this.providerChartData;
     } catch (e) {
       // Error handling
