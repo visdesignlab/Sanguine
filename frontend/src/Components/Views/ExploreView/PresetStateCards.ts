@@ -19,9 +19,28 @@ export const presetStateCards: PresetGroup[] = [
       {
         question: 'In cases with preoperative anemia, how many RBCs were transfused per surgeon?',
         Icon: IconDropletHalf2Filled,
-        chartConfigs: [],
+        // Add a heatmap chart config so clicking this preset opens the HeatMap.
+        chartConfigs: [
+          {
+            chartId: 'preset-heatmap-preop-anemia',
+            chartType: 'heatmap',
+            // xAxisVar = blood component to show transfused units
+            xAxisVar: 'rbc_units',
+            // yAxisVar = aggregation by surgeon
+            yAxisVar: 'surgeon_prov_id',
+            aggregation: 'sum',
+          },
+        ],
         chartLayouts: {
-          main: [],
+          main: [
+            {
+              i: 'preset-heatmap-preop-anemia',
+              x: 0,
+              y: 0,
+              w: 1,
+              h: 1,
+            },
+          ],
         },
       },
       {

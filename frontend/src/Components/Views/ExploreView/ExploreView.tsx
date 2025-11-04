@@ -25,6 +25,7 @@ import {
 } from '../../../Types/application';
 import { CostChart } from './Charts/CostChart';
 import { ScatterPlot } from './Charts/ScatterPlot';
+import HeatMap from './Charts/HeatMap';
 
 export function ExploreView() {
   const store = useContext(Store);
@@ -242,6 +243,7 @@ export function ExploreView() {
             >
               {chartConfig.chartType === 'cost' && <CostChart chartConfig={chartConfig} />}
               {chartConfig.chartType === 'scatterPlot' && <ScatterPlot chartConfig={chartConfig} />}
+              {chartConfig.chartType === 'heatmap' && <HeatMap chartConfig={chartConfig} />}
             </Card>
           ))}
         </ResponsiveGridLayout>
