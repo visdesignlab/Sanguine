@@ -8,6 +8,7 @@ import {
   Button,
   Stack,
   Badge,
+  Checkbox,
 } from '@mantine/core';
 import {
   IconDatabase, IconBook,
@@ -173,15 +174,15 @@ export function Shell() {
     return `intelvia-${tabName}-view-${ts}.png`;
   };
 
-  // Screenshot webpage
-  const handleScreenshot = async () => {
+  // Capture screenshot of webpage
+  const captureScreenshot = async () => {
     const htmlEl = document.documentElement;
     // Exclude unwanted elements from screenshot
     const filter = (node: Node) => {
       try {
         if (!(node instanceof Element)) return true;
         if (node.tagName === 'NOSCRIPT') return false;
-        if (node.closest && node.closest('[data-screenshot-hidden]')) return false;
+        if (node.closest && node.closest('[hide-menu-from-screenshot]')) return false;
         return true;
       } catch {
         return true;
@@ -296,16 +297,15 @@ export function Shell() {
   };
 
   // Download selected screenshots
-  const downloadSelectedScreenshots = async () => {
+  const downloadSelectedScreenshots = () => {
     const toDownload = screenshots.filter((s) => selectedScreenshotIds.has(s.id));
-    for (const s of toDownload) {
+    toDownload.forEach((s) => {
       downloadScreenshot(s.dataUrl, s.filename);
-    }
+    });
   };
 
   // Floating preview state + refs for dropdown
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [hoveredPreview, setHoveredPreview] = useState<{ id: string; src: string; top: number } | null>(null);
 
   // Header toolbar icons
@@ -313,7 +313,7 @@ export function Shell() {
     { icon: IconArrowNarrowLeftDashed, label: 'Back' },
     { icon: IconArrowNarrowRightDashed, label: 'Forward' },
     { icon: IconDeviceFloppy, label: 'Save' },
-    { icon: IconCamera, label: 'Camera', onClick: handleScreenshot },
+    { icon: IconCamera, label: 'Camera', onClick: captureScreenshot },
     { icon: IconUser, label: 'User' },
   ];
 
@@ -364,7 +364,7 @@ export function Shell() {
           {/** All Header Icons, right-aligned */}
           <Group gap="sm" pr="md">
             {headerIcons.map(({ icon: Icon, label, onClick }) => {
-              // Hover Menu for Camera to show screenshots
+              // --- Hover Menu for Camera to show screenshots ---
               if (label === 'Camera') {
                 return (
                   <Menu
@@ -382,6 +382,7 @@ export function Shell() {
                       setScreenshotsMenuOpened(false);
                     }}
                   >
+                    {/** Screenshot Capture Button */}
                     <Menu.Target>
                       <Tooltip label="Screenshot" position="left">
                         <ActionIcon aria-label={label} onClick={onClick}>
@@ -389,14 +390,16 @@ export function Shell() {
                         </ActionIcon>
                       </Tooltip>
                     </Menu.Target>
-                    <Menu.Dropdown data-screenshot-hidden="true">
+                    {/** Screenshots Menu */}
+                    <Menu.Dropdown hide-menu-from-screenshot="true">
+                      {/** Screenshots Menu Header */}
                       <Box style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px',
                       }}
                       >
-
                         <Menu.Label className={classes.menuLabelNoMargin}>Screenshots</Menu.Label>
                         <Box style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          {/** Delete, Download, Email Buttons */}
                           {selectionMode && selectedScreenshotIds.size !== 0 && (
                           <>
                             <ActionIcon
@@ -428,6 +431,7 @@ export function Shell() {
                             </ActionIcon>
                           </>
                           )}
+                          { /* Selection mode toggle (Select multiple screenshots) */}
                           <ActionIcon
                             size="xs"
                             variant="transparent"
@@ -445,17 +449,17 @@ export function Shell() {
                           </ActionIcon>
                         </Box>
                       </Box>
-
-                      {/* Dropdown list */}
+                      {/* Dropdown list of screenshots */}
                       <Box
                         ref={dropdownRef}
                         style={{ position: 'relative', overflow: 'visible' }}
                         onMouseLeave={() => setHoveredPreview(null)}
                       >
+                        {/** Scrollable */}
                         <Box
-                          ref={scrollContainerRef}
                           style={{ maxHeight: 240, overflow: 'auto' }}
                         >
+                          {/* 'Select All' Screenshots */}
                           {selectionMode && screenshots.length > 1 && (
                           <Box
                             role="button"
@@ -478,19 +482,20 @@ export function Shell() {
                             }}
                             aria-label="Select all screenshots"
                           >
-                            <input
+                            <Checkbox
                               ref={selectAll}
-                              type="checkbox"
                               checked={selectedScreenshotIds.size === screenshots.length && screenshots.length > 0}
-                              onChange={() => toggleSelectAll()}
+                              onChange={(e) => { e.stopPropagation(); toggleSelectAll(); }}
                               onClick={(e) => e.stopPropagation()}
                               aria-hidden={false}
                               aria-label="Select all screenshots checkbox"
+                              size="xs"
                             />
                             {' '}
                             <Text size="sm">All</Text>
                           </Box>
                           )}
+                          { /* List of screenshots */}
                           {screenshots.length === 0 ? (
                             <Menu.Item disabled>No screenshots</Menu.Item>
                           ) : screenshots.map((s) => (
@@ -500,21 +505,20 @@ export function Shell() {
                               onClick={(e) => {
                                 if (selectionMode) { e.stopPropagation(); toggleSelectionFor(s.id); } else { downloadScreenshot(s.dataUrl, s.filename); }
                               }}
-                              // Set screenshot preview
                               onMouseEnter={(e) => {
-                                // Find vertical center position relative to item
+                                // Find screenshot elements
                                 const itemEl = e.currentTarget as HTMLElement;
                                 const dropdownEl = dropdownRef.current;
-                                const scrollEl = scrollContainerRef.current;
-                                if (!dropdownEl || !scrollEl) return;
                                 const itemRect = itemEl.getBoundingClientRect();
                                 const dropdownRect = dropdownEl.getBoundingClientRect();
-                                // Find center top position relative to dropdown, adjusted for scroll
-                                const centerTop = (itemRect.top - dropdownRect.top) + (scrollEl.scrollTop || 0) + (itemRect.height / 2);
+                                let centerTop = (itemRect.top - dropdownRect.top) + (itemRect.height / 2);
+                                // Clamp to dropdown bounds so preview doesn't overflow far outside
+                                const dropdownInnerHeight = dropdownEl.clientHeight || 240;
+                                const minPad = 8;
+                                centerTop = Math.max(minPad, Math.min(centerTop, dropdownInnerHeight - minPad));
                                 setHoveredPreview({ id: s.id, src: s.dataUrl, top: centerTop });
                               }}
                               onMouseLeave={() => {
-                                // Clear preview when leaving item
                                 setHoveredPreview(null);
                               }}
                               style={{ display: 'block', padding: '8px 12px' }}
@@ -529,11 +533,12 @@ export function Shell() {
                                   }}
                                   >
                                     {selectionMode && (
-                                    <input
-                                      type="checkbox"
+                                    <Checkbox
                                       checked={selectedScreenshotIds.has(s.id)}
                                       onChange={(ev) => { ev.stopPropagation(); toggleSelectionFor(s.id); }}
                                       onClick={(ev) => ev.stopPropagation()}
+                                      aria-label={`Select screenshot ${s.id}`}
+                                      size="xs"
                                     />
                                     )}
                                     <Text size="sm" style={{ textAlign: 'left' }}>
@@ -574,7 +579,7 @@ export function Shell() {
                           {hoveredPreview && (
                           <Box
                             className={classes.screenshotPreview}
-                            data-screenshot-hidden="true"
+                            hide-menu-from-screenshot="true"
                             style={{
                               position: 'absolute',
                               right: 'calc(100% + 8px)',
@@ -592,7 +597,7 @@ export function Shell() {
                   </Menu>
                 );
               }
-              // User menu
+              // --- User menu ---
               if (label === 'User') {
                 return (
                   <Menu shadow="md" width={200} offset={12} trigger="hover" closeDelay={200} key="user-menu">
