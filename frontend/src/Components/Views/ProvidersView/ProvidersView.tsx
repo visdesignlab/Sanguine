@@ -37,8 +37,7 @@ export function ProvidersView() {
   const screenshotFilter = (node: Node) => {
     try {
       if (!(node instanceof Element)) return true;
-      if (node.tagName === 'NOSCRIPT') return false;
-      if (node.closest && node.closest('[data-screenshot-hidden]')) return false;
+      if (node.closest('[data-screenshot-hidden]')) return false;
       return true;
     } catch {
       return true;
@@ -46,7 +45,7 @@ export function ProvidersView() {
   };
 
   // Create a PNG data URL with border
-  const createFullPagePng = async () => {
+  const screenshotProviderView = async () => {
     const targetEl = screenshotRef.current ?? document.documentElement;
     // Use the full scroll size of the target element
     const width = targetEl instanceof Element ? (targetEl as Element).scrollWidth : document.documentElement.scrollWidth;
@@ -104,11 +103,8 @@ export function ProvidersView() {
       if (!res.ok) throw new Error('Failed to fetch data URL');
       const blob = await res.blob();
       const file = new File([blob], filename || buildScreenshotFilename(), { type: blob.type || 'image/png' });
-
       const nav = navigator as Navigator;
-      const canShareFiles = typeof (nav).canShare === 'function' ? (nav).canShare({ files: [file] }) : true;
-
-      if (nav.share && canShareFiles) {
+      if (nav.share) {
         await nav.share({
           files: [file],
           text: 'Screenshot from Intelvia - Patient Blood Management Analytics\n\n',
@@ -126,7 +122,7 @@ export function ProvidersView() {
   // Download the view
   const handleDownloadView = async () => {
     try {
-      const dataUrl = await createFullPagePng();
+      const dataUrl = await screenshotProviderView();
       downloadScreenshot(dataUrl, buildScreenshotFilename('providers'));
     } catch (err) {
       console.error('ProvidersView: Download View failed', err);
@@ -144,7 +140,7 @@ export function ProvidersView() {
       setSharingInProgress(true);
       setExportMenuOpened(true);
 
-      const dataUrl = await createFullPagePng();
+      const dataUrl = await screenshotProviderView();
       await shareScreenshot(dataUrl, buildScreenshotFilename('providers'));
     } catch (err) {
       console.error('ProvidersView: Share View failed', err);
