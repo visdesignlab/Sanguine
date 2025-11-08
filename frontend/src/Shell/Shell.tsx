@@ -114,7 +114,6 @@ export function Shell() {
   const [sharingInProgress, setSharingInProgress] = useState(false);
 
   // Preview images
-  const prevMenuOpen = useRef<boolean>(false);
   const [hoveredPreview, setHoveredPreview] = useState<{ id: string; src: string; top: number } | null>(null);
 
   // Floating preview state + refs for dropdown
@@ -134,8 +133,7 @@ export function Shell() {
     const filter = (node: Node) => {
       try {
         if (!(node instanceof Element)) return true;
-        if (node.tagName === 'NOSCRIPT') return false;
-        if (node.closest && node.closest('[hide-menu-from-screenshot]')) return false;
+        if (node.closest('[hide-menu-from-screenshot]')) return false;
         return true;
       } catch {
         return true;
@@ -177,22 +175,15 @@ export function Shell() {
   };
 
   const emailScreenshot = async (
-    input: string | { dataUrl: string; filename?: string }[],
-    filename?: string,
+    items: { dataUrl: string; filename?: string }[],
   ) => {
-    // Keep the screenshots menu open while the native share sheet is active.
-    prevMenuOpen.current = screenshotsMenuOpened;
     setSharingInProgress(true);
-    setScreenshotsMenuOpened(true);
-
     try {
-      const items = Array.isArray(input) ? input : [{ dataUrl: input, filename }];
-      if (items.length === 0) return;
-
+      if (!items || items.length === 0) return;
       // Convert all data URLs to blobs in parallel
       const blobs = await Promise.all(items.map(async (it) => {
         const res = await fetch(it.dataUrl);
-        if (!res.ok) throw new Error('Failed to convert data URL to blob');
+        if (!res.ok) throw new Error('Failed to convert screenshot URL to blob');
         const blob = await res.blob();
         return {
           blob,
@@ -200,15 +191,13 @@ export function Shell() {
         };
       }));
 
+      // Share using Web Share API
       const files = blobs.map(({ blob, filename: fname }) => new File([blob], fname, { type: blob.type || 'image/png' }));
-
       const nav = navigator as Navigator;
-      const canShareFiles = typeof (nav).canShare === 'function' ? (nav).canShare({ files }) : true;
-
-      if (nav.share && canShareFiles) {
+      if (nav.share) {
         await nav.share({
           files,
-          text: 'Screenshots from Intelvia - Patient Blood Management Analytics:',
+          text: 'Screenshots from Intelvia - Patient Blood Management Analytics:\n\n',
         });
       } else {
         console.warn('Web Share API not available or cannot share files');
@@ -216,9 +205,7 @@ export function Shell() {
     } catch (err) {
       console.warn('emailScreenshot failed or unsupported', err);
     } finally {
-      // restore previous menu open state and clear sharing flag
       setSharingInProgress(false);
-      setScreenshotsMenuOpened(prevMenuOpen.current);
     }
   };
 
@@ -252,9 +239,7 @@ export function Shell() {
   // Download selected screenshots
   const downloadSelectedScreenshots = () => {
     const toDownload = screenshots.filter((s) => selectedScreenshotIds.has(s.id));
-    toDownload.forEach((s) => {
-      downloadScreenshot(s.dataUrl, s.filename);
-    });
+    toDownload.forEach((s) => downloadScreenshot(s.dataUrl, s.filename));
   };
 
   // Toolbar & Left Panel states ----------------------
@@ -565,7 +550,7 @@ export function Shell() {
                                           toggleSelectionFor(s.id);
                                           return;
                                         }
-                                        emailScreenshot(s.dataUrl, s.filename);
+                                        emailScreenshot([{ dataUrl: s.dataUrl, filename: s.filename }]);
                                       }}
                                       aria-label="Email screenshot"
                                       data-active={selectionMode ? 'true' : 'false'}
