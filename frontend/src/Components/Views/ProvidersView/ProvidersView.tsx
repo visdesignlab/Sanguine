@@ -110,8 +110,6 @@ export function ProvidersView() {
           text: 'Screenshot from Intelvia - Patient Blood Management Analytics\n\n',
         });
       } else {
-        // Fallback: attempt to open mailto link (attachments not supported via mailto)
-        // Provide user guidance in console; UI fallback can be implemented later.
         console.warn('Web Share API not available or cannot share files. No direct email attachment fallback available.');
       }
     } catch (err) {
