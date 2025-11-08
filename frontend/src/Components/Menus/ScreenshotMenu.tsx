@@ -6,19 +6,28 @@ import {
 import {
   IconCamera, IconMail, IconMenu4, IconTrash, IconDownload,
 } from '@tabler/icons-react';
-import * as htmlToImage from 'html-to-image';
+import {
+  buildScreenshotFilename,
+  captureScreenshot as utilCaptureScreenshot,
+  downloadDataUrl,
+  dataUrlToFile,
+  shareFiles,
+  type ScreenshotItem,
+} from '../../Utils/screenshotUtils';
 import { useThemeConstants } from '../../Theme/mantineTheme';
 import classes from '../../Shell/Shell.module.css';
 
 /**
  * ScreenshotMenu - Menu for capturing, viewing, sharing,
  * downloading and deleting screenshots.
+ * Props:
+ * - activeTab: string - name of currently active tab/view, for filename purposes.
  */
 export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
   const { iconStroke } = useThemeConstants();
 
   const [screenshotsMenuOpened, setScreenshotsMenuOpened] = useState(false);
-  const [screenshots, setScreenshots] = useState<{ id: string; dataUrl: string; tab: string; ts: string; filename: string }[]>([]);
+  const [screenshots, setScreenshots] = useState<ScreenshotItem[]>([]);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedScreenshotIds, setSelectedScreenshotIds] = useState<Set<string>>(new Set());
   const [sharingInProgress, setSharingInProgress] = useState(false);
@@ -26,12 +35,30 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const selectAll = useRef<HTMLInputElement | null>(null);
 
-  const buildScreenshotFilename = (tab?: string) => {
-    const tabName = tab || activeTab || 'dashboard';
-    const ts = new Date().toISOString().replace(/T/, '_').split('.')[0].replace(/:/g, '-');
-    return `intelvia-${tabName}-view-${ts}.png`;
+  const screenshotID = () => new Date().toISOString().replace(/T/, '_').split('.')[0].replace(/:/g, '-');
+
+  // Create Screenshot ---
+  const captureScreenshot = async () => {
+    try {
+      const dataUrl = await utilCaptureScreenshot(document.documentElement, {
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+        hideSelector: '[hide-menu-from-screenshot]',
+      });
+      const item: ScreenshotItem = {
+        id: screenshotID(),
+        dataUrl,
+        tab: activeTab,
+        ts: new Date().toISOString(),
+        filename: buildScreenshotFilename(activeTab),
+      };
+      setScreenshots((prev) => [item, ...prev]);
+    } catch (error) {
+      console.error('Screenshot failed:', error);
+    }
   };
 
+  // Select multiple screenshots
   const toggleSelectionFor = (id: string) => {
     setSelectedScreenshotIds((prev) => {
       const next = new Set(prev);
@@ -57,48 +84,9 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
     }
   };
 
-  const captureScreenshot = async () => {
-    const htmlEl = document.documentElement;
-    const filter = (node: Node) => {
-      try {
-        if (!(node instanceof Element)) return true;
-        if (node.closest('[hide-menu-from-screenshot]')) return false;
-        return true;
-      } catch {
-        return true;
-      }
-    };
-    try {
-      const dataUrl = await htmlToImage.toPng(
-        htmlEl,
-        {
-          backgroundColor: '#ffffff',
-          pixelRatio: 2,
-          filter,
-          width: htmlEl.scrollWidth,
-          height: htmlEl.scrollHeight,
-        },
-      );
-      const item = {
-        id: new Date().toISOString().replace(/T/, '_').split('.')[0].replace(/:/g, '-'),
-        dataUrl,
-        tab: activeTab,
-        ts: new Date().toISOString(),
-        filename: buildScreenshotFilename(activeTab),
-      };
-      setScreenshots((prev) => [item, ...prev]);
-    } catch (error) {
-      console.error('Screenshot failed:', error);
-    }
-  };
-
+  // Download / Email Individual Screenshots ---
   const downloadScreenshot = (dataUrl: string, filename?: string) => {
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = filename || buildScreenshotFilename();
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadDataUrl(dataUrl, filename || buildScreenshotFilename(activeTab));
   };
 
   const emailScreenshot = async (
@@ -107,26 +95,8 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
     setSharingInProgress(true);
     try {
       if (!items || items.length === 0) return;
-      const blobs = await Promise.all(items.map(async (it) => {
-        const res = await fetch(it.dataUrl);
-        if (!res.ok) throw new Error('Failed to convert screenshot URL to blob');
-        const blob = await res.blob();
-        return {
-          blob,
-          filename: it.filename || buildScreenshotFilename(),
-        };
-      }));
-
-      const files = blobs.map(({ blob, filename: fname }) => new File([blob], fname, { type: blob.type || 'image/png' }));
-      const nav = navigator as Navigator;
-      if (nav.share) {
-        await nav.share({
-          files,
-          text: 'Screenshots from Intelvia - Patient Blood Management Analytics:\n\n',
-        });
-      } else {
-        console.warn('Web Share API not available or cannot share files');
-      }
+      const files = await Promise.all(items.map(async (it) => dataUrlToFile(it.dataUrl, it.filename || buildScreenshotFilename(activeTab))));
+      await shareFiles(files, 'Screenshots from Intelvia - Patient Blood Management Analytics:\n\n');
     } catch (err) {
       console.warn('emailScreenshot failed or unsupported', err);
     } finally {
@@ -134,12 +104,19 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
     }
   };
 
+  // Download / Email Selected Screenshots ---
   const emailSelectedScreenshots = async () => {
     const toEmail = screenshots.filter((s) => selectedScreenshotIds.has(s.id));
     if (toEmail.length === 0) return;
     await emailScreenshot(toEmail.map((s) => ({ dataUrl: s.dataUrl, filename: s.filename })));
   };
 
+  const downloadSelectedScreenshots = () => {
+    const toDownload = screenshots.filter((s) => selectedScreenshotIds.has(s.id));
+    toDownload.forEach((s) => downloadScreenshot(s.dataUrl, s.filename));
+  };
+
+  // Delete Screenshots Modal ---
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
   const openDeleteModalForSelected = () => {
@@ -159,11 +136,6 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
     setDeleteModalOpened(false);
   };
 
-  const downloadSelectedScreenshots = () => {
-    const toDownload = screenshots.filter((s) => selectedScreenshotIds.has(s.id));
-    toDownload.forEach((s) => downloadScreenshot(s.dataUrl, s.filename));
-  };
-
   return (
     <>
       <Menu
@@ -179,6 +151,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
           setScreenshotsMenuOpened(false);
         }}
       >
+        {/* Camera Icon: Capture Screenshot Button */}
         <Menu.Target>
           <Tooltip label="Screenshot" position="left">
             <ActionIcon aria-label="Camera" onClick={captureScreenshot}>
@@ -187,13 +160,16 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
           </Tooltip>
         </Menu.Target>
 
+        {/* Screenshot Menu */}
         <Menu.Dropdown hide-menu-from-screenshot="true">
           <Box style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px',
           }}
           >
-            <Box className={classes.menuLabelNoMargin}>Screenshots</Box>
+            <Menu.Label className={classes.menuLabelNoMargin}>Screenshots</Menu.Label>
+            {' '}
             <Box style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              {/* Delete / Download / Email Selected Screenshots */}
               {selectionMode && selectedScreenshotIds.size !== 0 && (
               <>
                 <ActionIcon
@@ -225,6 +201,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
                 </ActionIcon>
               </>
               )}
+              {/* Toggle to Select Multiple Screenshots */}
               <ActionIcon
                 size="xs"
                 variant="transparent"
@@ -242,15 +219,16 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
               </ActionIcon>
             </Box>
           </Box>
-
+          {/* Screenshot Items List */}
           <Box
             ref={dropdownRef}
             style={{ position: 'relative', overflow: 'visible' }}
             onMouseLeave={() => setHoveredPreview(null)}
           >
             <Box style={{ maxHeight: 240, overflow: 'auto' }}>
+              {/* If selection mode, show "Select All" checkbox */}
               {selectionMode && screenshots.length > 1 && (
-              <Box
+              <Stack
                 role="button"
                 tabIndex={0}
                 onClick={(e) => { e.stopPropagation(); toggleSelectAll(); }}
@@ -262,107 +240,107 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
                   }
                 }}
                 style={{
-                  padding: '8px 12px',
                   borderBottom: '1px solid var(--mantine-color-gray-2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
                   cursor: 'pointer',
+                  padding: '8px 12px',
                 }}
                 aria-label="Select all screenshots"
               >
-                <Checkbox
-                  ref={selectAll}
-                  checked={selectedScreenshotIds.size === screenshots.length && screenshots.length > 0}
-                  onChange={(e) => { e.stopPropagation(); toggleSelectAll(); }}
-                  onClick={(e) => e.stopPropagation()}
-                  aria-hidden={false}
-                  aria-label="Select all screenshots checkbox"
-                  size="xs"
-                />
-                {' '}
-                <Text size="sm">All</Text>
-              </Box>
+                <Group gap={24}>
+                  <Checkbox
+                    ref={selectAll}
+                    checked={selectedScreenshotIds.size === screenshots.length && screenshots.length > 0}
+                    onChange={(e) => { e.stopPropagation(); toggleSelectAll(); }}
+                    onClick={(e) => e.stopPropagation()}
+                    aria-hidden={false}
+                    aria-label="Select all screenshots checkbox"
+                    size="xs"
+                  />
+                  <Text size="sm">All</Text>
+                </Group>
+              </Stack>
               )}
+              {/* Screenshot Items */}
               {screenshots.length === 0 ? (
                 <Menu.Item disabled>No screenshots</Menu.Item>
-              ) : screenshots.map((s) => (
-                <Menu.Item
-                  key={s.id}
-                  closeMenuOnClick={false}
-                  onClick={(e) => {
-                    if (selectionMode) { e.stopPropagation(); toggleSelectionFor(s.id); } else { downloadScreenshot(s.dataUrl, s.filename); }
-                  }}
-                  onMouseEnter={(e) => {
-                    const itemEl = e.currentTarget as HTMLElement;
-                    const dropdownEl = dropdownRef.current;
-                    const itemRect = itemEl.getBoundingClientRect();
-                    if (!dropdownEl) {
-                      const centerTopFallback = itemRect.height / 2;
-                      setHoveredPreview({ id: s.id, src: s.dataUrl, top: centerTopFallback });
-                      return;
-                    }
-                    const dropdownRect = dropdownEl.getBoundingClientRect();
-                    const centerTop = (itemRect.top - dropdownRect.top) + (itemRect.height / 2);
-                    setHoveredPreview({ id: s.id, src: s.dataUrl, top: centerTop });
-                  }}
-                  onMouseLeave={() => {
-                    setHoveredPreview(null);
-                  }}
-                  style={{ display: 'block', padding: '8px 12px' }}
-                >
-                  <Box style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <Box style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-                    }}
-                    >
-                      <Box style={{
-                        display: 'flex', gap: 8, alignItems: 'center', flex: 1,
-                      }}
-                      >
-                        {selectionMode && (
-                        <Checkbox
-                          checked={selectedScreenshotIds.has(s.id)}
-                          onChange={(ev) => { ev.stopPropagation(); toggleSelectionFor(s.id); }}
-                          onClick={(ev) => ev.stopPropagation()}
-                          aria-label={`Select screenshot ${s.id}`}
-                          size="xs"
-                        />
-                        )}
-                        <Text size="sm" style={{ textAlign: 'left' }}>
-                          {s.tab}
-                          {' '}
-                          View
-                        </Text>
-                      </Box>
-                      <Box style={{ display: 'flex', gap: 6 }}>
+              ) : screenshots.map((s) => {
+                const ts = new Date(s.ts).toLocaleString();
+
+                const handleScreenshotClick = (e: React.MouseEvent) => {
+                  if (selectionMode) {
+                    e.stopPropagation();
+                    toggleSelectionFor(s.id);
+                  } else {
+                    downloadScreenshot(s.dataUrl, s.filename);
+                  }
+                };
+
+                const handleSetPreview = (e: React.MouseEvent) => {
+                  const itemEl = e.currentTarget as HTMLElement;
+                  const dropdownEl = dropdownRef.current;
+                  if (!dropdownEl) return;
+                  const itemRect = itemEl.getBoundingClientRect();
+                  const dropdownRect = dropdownEl.getBoundingClientRect();
+                  const centerTop = (itemRect.top - dropdownRect.top) + (itemRect.height / 2);
+                  setHoveredPreview({ id: s.id, src: s.dataUrl, top: centerTop });
+                };
+
+                return (
+                  <Menu.Item
+                    key={s.id}
+                    closeMenuOnClick={false}
+                    onClick={handleScreenshotClick}
+                    onMouseEnter={handleSetPreview}
+                    onMouseLeave={() => setHoveredPreview(null)}
+                    style={{ display: 'block', padding: '8px 12px' }}
+                  >
+                    <Stack gap="xs">
+                      <Group align="center" style={{ width: '100%' }}>
+                        <Group align="center" style={{ flex: 1 }}>
+                          {/** Add checkbox in selection mode */}
+                          {selectionMode && (
+                          <Checkbox
+                            checked={selectedScreenshotIds.has(s.id)}
+                            onChange={(ev) => { ev.stopPropagation(); toggleSelectionFor(s.id); }}
+                            onClick={(ev) => ev.stopPropagation()}
+                            aria-label={`Select screenshot ${s.id}`}
+                            size="xs"
+                            style={{ alignSelf: 'center', marginRight: 8 }}
+                          />
+                          )}
+                          <Stack gap="xs" style={{ flex: 1 }}>
+                            <Text size="sm" style={{ lineHeight: 1 }}>
+                              {s.tab}
+                              {' '}
+                              View
+                            </Text>
+                            {selectionMode && <Text size="xs" style={{ opacity: 0.8 }}>{ts}</Text>}
+                          </Stack>
+                        </Group>
+                        {/** Add share icon when not selection mode */}
                         {!selectionMode && (
-                        <ActionIcon
-                          size="xs"
-                          variant="transparent"
-                          className={`${classes.leftToolbarIcon} ${selectionMode ? classes.selected : ''}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            (e.currentTarget as HTMLElement).blur();
-                            if (selectionMode) {
-                              toggleSelectionFor(s.id);
-                              return;
-                            }
-                            emailScreenshot([{ dataUrl: s.dataUrl, filename: s.filename }]);
-                          }}
-                          aria-label="Email screenshot"
-                          data-active={selectionMode ? 'true' : 'false'}
-                          aria-pressed={selectionMode}
-                        >
-                          <IconMail stroke={iconStroke} size={18} />
-                        </ActionIcon>
+                          <ActionIcon
+                            size="xs"
+                            variant="transparent"
+                            className={`${classes.leftToolbarIcon} ${selectionMode ? classes.selected : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              (e.currentTarget as HTMLElement).blur();
+                              emailScreenshot([{ dataUrl: s.dataUrl, filename: s.filename }]);
+                            }}
+                            aria-label="Email screenshot"
+                          >
+                            <IconMail stroke={iconStroke} size={18} />
+                          </ActionIcon>
                         )}
-                      </Box>
-                    </Box>
-                    <Text size="xs">{new Date(s.ts).toLocaleString()}</Text>
-                  </Box>
-                </Menu.Item>
-              ))}
+                      </Group>
+                      {/** Screenshot time stamp */}
+                      {!selectionMode && <Text size="xs">{ts}</Text>}
+                    </Stack>
+                  </Menu.Item>
+                );
+              })}
+              {/** Screenshot Preview */}
               {hoveredPreview && (
               <Box
                 className={classes.screenshotPreview}
@@ -399,6 +377,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
         }}
       >
         <Stack gap="md">
+          {/** List of screenshots to be deleted */}
           <Box style={{ maxHeight: 200, overflow: 'auto' }}>
             {deleteTargetIds.map((id) => {
               const s = screenshots.find((ss) => ss.id === id);
@@ -421,6 +400,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
               );
             })}
           </Box>
+          {/** Cancel or Delete */}
           <Group justify="flex-end" mt="xs">
             <Button variant="default" onClick={() => { setDeleteModalOpened(false); setDeleteTargetIds([]); }}>Cancel</Button>
             <Button color="red" onClick={confirmDeleteSelected}>Delete</Button>

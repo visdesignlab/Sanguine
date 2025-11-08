@@ -14,9 +14,15 @@ import {
   IconShare2,
 } from '@tabler/icons-react';
 import { BarChart } from '@mantine/charts';
-import * as htmlToImage from 'html-to-image';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
+import {
+  captureScreenshot,
+  downloadDataUrl,
+  dataUrlToFile,
+  shareFiles,
+  buildScreenshotFilename,
+} from '../../../Utils/screenshotUtils';
 
 export function ProvidersView() {
   const store = useContext(Store);
@@ -24,108 +30,27 @@ export function ProvidersView() {
   // keep export menu open while native share sheet is active (same pattern as Shell)
   const [exportMenuOpened, setExportMenuOpened] = useState(false);
   const [sharingInProgress, setSharingInProgress] = useState(false);
-  const prevExportMenuOpen = useRef(false);
   const screenshotRef = useRef<HTMLDivElement | null>(null);
-
-  // Filename helper
-  const buildScreenshotFilename = (tab = 'providers') => {
-    const ts = new Date().toISOString().replace(/T/, '_').split('.')[0].replace(/:/g, '-');
-    return `intelvia-${tab}-view-${ts}.png`;
-  };
-
-  // Shared filter to exclude unwanted elements from screenshot
-  const screenshotFilter = (node: Node) => {
-    try {
-      if (!(node instanceof Element)) return true;
-      if (node.closest('[data-screenshot-hidden]')) return false;
-      return true;
-    } catch {
-      return true;
-    }
-  };
-
-  // Create a PNG data URL with border
-  const screenshotProviderView = async () => {
-    const targetEl = screenshotRef.current ?? document.documentElement;
-    // Use the full scroll size of the target element
-    const width = targetEl instanceof Element ? (targetEl as Element).scrollWidth : document.documentElement.scrollWidth;
-    const height = targetEl instanceof Element ? (targetEl as Element).scrollHeight : document.documentElement.scrollHeight;
-
-    // Render the element to a PNG first
-    const pixelRatio = 2;
-    const dataUrl = await htmlToImage.toPng(targetEl as HTMLElement, {
-      backgroundColor: '#ffffff',
-      pixelRatio,
-      filter: screenshotFilter,
-      width,
-      height,
-    });
-
-    // Add a white padding border to the generated PNG only
-    const paddingCssPx = 16;
-    const pad = Math.round(paddingCssPx * pixelRatio);
-
-    // Load the generated image and draw it onto a larger canvas with white background padding.
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const image = new Image();
-      image.onload = () => resolve(image);
-      image.onerror = (e) => reject(e);
-      image.src = dataUrl;
-    });
-
-    const canvas = document.createElement('canvas');
-    canvas.width = img.width + pad * 2;
-    canvas.height = img.height + pad * 2;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return dataUrl;
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, pad, pad);
-
-    return canvas.toDataURL('image/png');
-  };
-
-  // Download helper
-  const downloadScreenshot = (dataUrl: string, filename?: string) => {
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = filename || buildScreenshotFilename();
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // Share screenshot menu
-  const shareScreenshot = async (dataUrl: string, filename?: string) => {
-    try {
-      const res = await fetch(dataUrl);
-      if (!res.ok) throw new Error('Failed to fetch data URL');
-      const blob = await res.blob();
-      const file = new File([blob], filename || buildScreenshotFilename(), { type: blob.type || 'image/png' });
-      const nav = navigator as Navigator;
-      if (nav.share) {
-        await nav.share({
-          files: [file],
-          text: 'Screenshot from Intelvia - Patient Blood Management Analytics\n\n',
-        });
-      } else {
-        console.warn('Web Share API not available or cannot share files. No direct email attachment fallback available.');
-      }
-    } catch (err) {
-      console.warn('shareScreenshot failed or unsupported', err);
-    }
-  };
 
   // Download the view
   const handleDownloadView = async () => {
     try {
-      const dataUrl = await screenshotProviderView();
-      downloadScreenshot(dataUrl, buildScreenshotFilename('providers'));
+      // Capture Screenshot
+      const dataUrl = await captureScreenshot(
+        screenshotRef.current ?? document.documentElement,
+        {
+          pixelRatio: 2,
+          paddingPx: 16,
+          backgroundColor: '#ffffff',
+          hideSelector: '[data-screenshot-hidden]',
+        },
+      );
+      // Download Screenshot
+      downloadDataUrl(dataUrl, buildScreenshotFilename('providers'));
     } catch (err) {
       console.error('ProvidersView: Download View failed', err);
     } finally {
-      // close export menu after download
+      // Close export menu after download
       setExportMenuOpened(false);
     }
   };
@@ -133,19 +58,28 @@ export function ProvidersView() {
   // Share the view
   const handleShareView = async () => {
     try {
-      // preserve current menu open state and keep menu open while native share sheet is active
-      prevExportMenuOpen.current = exportMenuOpened;
+      // Keep menu open while sharing
       setSharingInProgress(true);
-      setExportMenuOpened(true);
 
-      const dataUrl = await screenshotProviderView();
-      await shareScreenshot(dataUrl, buildScreenshotFilename('providers'));
+      // Capture Screenshot
+      const dataUrl = await captureScreenshot(
+        screenshotRef.current ?? document.documentElement,
+        {
+          pixelRatio: 2,
+          paddingPx: 16,
+          backgroundColor: '#ffffff',
+          hideSelector: '[data-screenshot-hidden]',
+        },
+      );
+
+      // Share files
+      const file = await dataUrlToFile(dataUrl, buildScreenshotFilename('providers'));
+      await shareFiles([file], 'Screenshot from Intelvia - Patient Blood Management Analytics\n\n');
     } catch (err) {
       console.error('ProvidersView: Share View failed', err);
     } finally {
       setSharingInProgress(false);
-      // restore previous menu open state
-      setExportMenuOpened(prevExportMenuOpen.current);
+      setExportMenuOpened(false);
     }
   };
 
@@ -272,7 +206,7 @@ export function ProvidersView() {
               Visits
             </Title>
           </Tooltip>
-          {/* Export menu: vertical ellipsis with tooltip */}
+          {/* Export menu */}
           <Tooltip label="Export View" position="bottom">
             <Menu
               withinPortal
@@ -282,7 +216,7 @@ export function ProvidersView() {
               opened={exportMenuOpened}
               onOpen={() => setExportMenuOpened(true)}
               onClose={() => {
-                // prevent closing the menu when a native share sheet is in progress
+                // Prevent closing the menu sharing in progress
                 if (sharingInProgress) return;
                 setExportMenuOpened(false);
               }}
