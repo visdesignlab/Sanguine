@@ -38,45 +38,6 @@ import { FilterIcon } from '../Components/Toolbar/Filters/FilterIcon';
  */
 export function Shell() {
   const store = useContext(Store);
-
-  // --- Screenshots ---
-  const [screenshotsMenuOpened, setScreenshotsMenuOpened] = useState(false);
-  const [screenshots, setScreenshots] = useState<{ id: string; dataUrl: string; tab: string; ts: string; filename: string }[]>([]);
-  // Selection mode - select multiple screenshots
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedScreenshotIds, setSelectedScreenshotIds] = useState<Set<string>>(new Set());
-  // Toggle select a screenshot
-  const toggleSelectionFor = (id: string) => {
-    setSelectedScreenshotIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-  const clearSelections = () => setSelectedScreenshotIds(new Set());
-  const toggleSelectionMode = () => {
-    setSelectionMode((prev) => {
-      const next = !prev;
-      if (!next) clearSelections();
-      return next;
-    });
-  };
-  // Select all screenshots checkbox
-  const selectAll = useRef<HTMLInputElement | null>(null);
-  const toggleSelectAll = () => {
-    if (screenshots.length === 0) return;
-    if (selectedScreenshotIds.size === screenshots.length) {
-      clearSelections();
-    } else {
-      setSelectedScreenshotIds(new Set(screenshots.map((s) => s.id)));
-    }
-  };
-  // Sharing in progress flag to keep menu open
-  const [sharingInProgress, setSharingInProgress] = useState(false);
-  // Preview images
-  const prevMenuOpen = useRef<boolean>(false);
-
   // View tabs -----------------
   const TABS = [
     {
@@ -113,61 +74,53 @@ export function Shell() {
     setResetModalOpened(false);
   };
 
-  // Toolbar & Left Panel states ----------------------
-  // Width of the header toolbar & left toolbar
-  const { toolbarWidth, iconStroke } = useThemeConstants();
+  // Screenshots ----------------------
+  const [screenshotsMenuOpened, setScreenshotsMenuOpened] = useState(false);
+  const [screenshots, setScreenshots] = useState<{ id: string; dataUrl: string; tab: string; ts: string; filename: string }[]>([]);
 
-  // Width of the navbar when left toolbar is open
-  const LEFT_PANEL_WIDTH = 6 * toolbarWidth;
+  // Selection mode - select multiple screenshots
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedScreenshotIds, setSelectedScreenshotIds] = useState<Set<string>>(new Set());
 
-  // Open and close the left toolbar, burger toggle visible on hover.
-  const [leftToolbarOpened, { toggle: toggleLeftToolbar }] = useDisclosure(true);
-  const [activeLeftPanel, setActiveLeftPanel] = useState<number | null>(null);
-  const navbarWidth = useMemo(() => (activeLeftPanel === null ? toolbarWidth : LEFT_PANEL_WIDTH), [activeLeftPanel, LEFT_PANEL_WIDTH, toolbarWidth]);
+  // Toggle select a screenshot
+  const toggleSelectionFor = (id: string) => {
+    setSelectedScreenshotIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const clearSelections = () => setSelectedScreenshotIds(new Set());
+  const toggleSelectionMode = () => {
+    setSelectionMode((prev) => {
+      const next = !prev;
+      if (!next) clearSelections();
+      return next;
+    });
+  };
 
-  // Toolbar icons ----------------------
-  // Left toolbar icons
-  const leftToolbarIcons: { icon: React.ComponentType<IconProps>; label: string; content: ReactNode; actionButtons?: ReactNode[]; disabled?: boolean }[] = [
-    {
-      icon: FilterIcon,
-      label: 'Filter Panel',
-      content: <FilterPanel />,
-      actionButtons: [
-        <ActionIcon key="reset-filters" aria-label="Reset all filters" onClick={() => { store.filtersStore.resetAllFilters(); }} className={classes.leftToolbarIcon}>
-          <IconRestore stroke={iconStroke} size={21} />
-        </ActionIcon>,
-        <ActionIcon key="toggle-filter-histograms" aria-label="Toggle filter historgrams" onClick={() => { store.filtersStore.showFilterHistograms = !store.filtersStore.showFilterHistograms; }} data-active={store.filtersStore.showFilterHistograms} className={classes.leftToolbarIcon}>
-          <IconChartBar stroke={iconStroke} />
-        </ActionIcon>,
-      ],
-    },
-    {
-      icon: IconClipboardList,
-      label: 'Selected Visits',
-      content: <SelectedVisitsPanel />,
-      actionButtons: [
-        <Badge key="selected-visits-badge" variant="light" size="sm">
-          {store.selectionsStore.selectedVisitNos.length}
-          {' '}
-          Visits
-        </Badge>,
+  // Select all screenshots checkbox
+  const selectAll = useRef<HTMLInputElement | null>(null);
+  const toggleSelectAll = () => {
+    if (screenshots.length === 0) return;
+    if (selectedScreenshotIds.size === screenshots.length) {
+      clearSelections();
+    } else {
+      setSelectedScreenshotIds(new Set(screenshots.map((s) => s.id)));
+    }
+  };
+  // Sharing in progress flag to keep menu open
+  const [sharingInProgress, setSharingInProgress] = useState(false);
 
-      ],
-    },
-    {
-      icon: IconDatabase,
-      label: 'Database',
-      content: <Text>Database content</Text>,
-      disabled: true,
-    },
-    {
-      icon: IconBook,
-      label: 'Learn',
-      content: <Text>Learning content</Text>,
-      disabled: true,
-    },
-  ];
+  // Preview images
+  const prevMenuOpen = useRef<boolean>(false);
+  const [hoveredPreview, setHoveredPreview] = useState<{ id: string; src: string; top: number } | null>(null);
 
+  // Floating preview state + refs for dropdown
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // Screenshot filename
   const buildScreenshotFilename = (tab?: string) => {
     const tabName = tab || activeTab || 'dashboard';
     const ts = new Date().toISOString().replace(/T/, '_').split('.')[0].replace(/:/g, '-');
@@ -304,9 +257,60 @@ export function Shell() {
     });
   };
 
-  // Floating preview state + refs for dropdown
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const [hoveredPreview, setHoveredPreview] = useState<{ id: string; src: string; top: number } | null>(null);
+  // Toolbar & Left Panel states ----------------------
+  // Width of the header toolbar & left toolbar
+  const { toolbarWidth, iconStroke } = useThemeConstants();
+
+  // Width of the navbar when left toolbar is open
+  const LEFT_PANEL_WIDTH = 6 * toolbarWidth;
+
+  // Open and close the left toolbar, burger toggle visible on hover.
+  const [leftToolbarOpened, { toggle: toggleLeftToolbar }] = useDisclosure(true);
+  const [activeLeftPanel, setActiveLeftPanel] = useState<number | null>(null);
+  const navbarWidth = useMemo(() => (activeLeftPanel === null ? toolbarWidth : LEFT_PANEL_WIDTH), [activeLeftPanel, LEFT_PANEL_WIDTH, toolbarWidth]);
+
+  // Toolbar icons ----------------------
+  // Left toolbar icons
+  const leftToolbarIcons: { icon: React.ComponentType<IconProps>; label: string; content: ReactNode; actionButtons?: ReactNode[]; disabled?: boolean }[] = [
+    {
+      icon: FilterIcon,
+      label: 'Filter Panel',
+      content: <FilterPanel />,
+      actionButtons: [
+        <ActionIcon key="reset-filters" aria-label="Reset all filters" onClick={() => { store.filtersStore.resetAllFilters(); }} className={classes.leftToolbarIcon}>
+          <IconRestore stroke={iconStroke} size={21} />
+        </ActionIcon>,
+        <ActionIcon key="toggle-filter-histograms" aria-label="Toggle filter historgrams" onClick={() => { store.filtersStore.showFilterHistograms = !store.filtersStore.showFilterHistograms; }} data-active={store.filtersStore.showFilterHistograms} className={classes.leftToolbarIcon}>
+          <IconChartBar stroke={iconStroke} />
+        </ActionIcon>,
+      ],
+    },
+    {
+      icon: IconClipboardList,
+      label: 'Selected Visits',
+      content: <SelectedVisitsPanel />,
+      actionButtons: [
+        <Badge key="selected-visits-badge" variant="light" size="sm">
+          {store.selectionsStore.selectedVisitNos.length}
+          {' '}
+          Visits
+        </Badge>,
+
+      ],
+    },
+    {
+      icon: IconDatabase,
+      label: 'Database',
+      content: <Text>Database content</Text>,
+      disabled: true,
+    },
+    {
+      icon: IconBook,
+      label: 'Learn',
+      content: <Text>Learning content</Text>,
+      disabled: true,
+    },
+  ];
 
   // Header toolbar icons
   const headerIcons: { icon: React.ComponentType<IconProps>; label: string; onClick?: () => void }[] = [
@@ -362,7 +366,7 @@ export function Shell() {
             </Tabs>
           </Group>
           {/** All Header Icons, right-aligned */}
-          <Group gap="sm" pr="md">
+          <Group gap="sm" pr="md" wrap="nowrap">
             {headerIcons.map(({ icon: Icon, label, onClick }) => {
               // --- Hover Menu for Camera to show screenshots ---
               if (label === 'Camera') {
@@ -510,12 +514,13 @@ export function Shell() {
                                 const itemEl = e.currentTarget as HTMLElement;
                                 const dropdownEl = dropdownRef.current;
                                 const itemRect = itemEl.getBoundingClientRect();
+                                if (!dropdownEl) {
+                                  const centerTopFallback = itemRect.height / 2;
+                                  setHoveredPreview({ id: s.id, src: s.dataUrl, top: centerTopFallback });
+                                  return;
+                                }
                                 const dropdownRect = dropdownEl.getBoundingClientRect();
-                                let centerTop = (itemRect.top - dropdownRect.top) + (itemRect.height / 2);
-                                // Clamp to dropdown bounds so preview doesn't overflow far outside
-                                const dropdownInnerHeight = dropdownEl.clientHeight || 240;
-                                const minPad = 8;
-                                centerTop = Math.max(minPad, Math.min(centerTop, dropdownInnerHeight - minPad));
+                                const centerTop = (itemRect.top - dropdownRect.top) + (itemRect.height / 2);
                                 setHoveredPreview({ id: s.id, src: s.dataUrl, top: centerTop });
                               }}
                               onMouseLeave={() => {
@@ -716,7 +721,7 @@ export function Shell() {
         title={(
           <Group align="center">
             <Title order={3}>Confirm Screenshot Deletion</Title>
-            <Badge size="sm" variant="light" color="black">{screenshots.length}</Badge>
+            <Badge size="sm" variant="light" color="black">{deleteTargetIds.length}</Badge>
           </Group>
        )}
         centered
@@ -725,6 +730,7 @@ export function Shell() {
         }}
       >
         <Stack gap="md">
+          { /* List of screenshots to be deleted */ }
           <Box style={{ maxHeight: 200, overflow: 'auto' }}>
             {deleteTargetIds.map((id) => {
               const s = screenshots.find((ss) => ss.id === id);
@@ -742,7 +748,7 @@ export function Shell() {
                   <Text size="sm" style={{ fontWeight: 600, textTransform: 'capitalize' }}>
                     {s ? `${s.tab} View` : id}
                   </Text>
-                  {s && <Text size="xs" color="dimmed">{new Date(s.ts).toLocaleString()}</Text>}
+                  {s && <Text size="xs">{new Date(s.ts).toLocaleString()}</Text>}
                 </Box>
               );
             })}
