@@ -216,6 +216,9 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
     return { maxVent: maxVentVal, maxB12: maxB12Val, maxCases: maxCasesVal };
   }, [records]);
 
+  // compute max number of RBC buckets across rows (at least 5 for a stable scale)
+  const maxRbcBuckets = useMemo(() => Math.max(5, ...records.map((r) => r.rbcTransfused?.length ?? 0)), [records]);
+
   // helper to render a horizontal bar behind the numeric label
   const renderBar = (value: number, max: number, opts?: { suffix?: string; color?: string; percentColor?: boolean }) => {
     const pct = Math.max(0, Math.min(100, (value / max) * 100));
@@ -243,6 +246,32 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
     );
   };
 
+  // render a simple x-axis style footer for numeric columns
+  const renderScaleFooter = (max: number, opts?: { suffix?: string }) => {
+    const displayMax = opts?.suffix ? `${max}${opts.suffix}` : `${max}`;
+    return (
+      <div style={{ width: '100%' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12,
+        }}
+        >
+          <div>0</div>
+          <div style={{ textAlign: 'right' }}>{displayMax}</div>
+        </div>
+        <div style={{
+          height: 6, marginTop: 6, background: '#eee', borderRadius: 3, position: 'relative',
+        }}
+        >
+          {/* small centered underline to mimic axis line */}
+          <div style={{
+            position: 'absolute', left: 6, right: 6, top: '50%', height: 2, background: '#bdbdbd', transform: 'translateY(-50%)', borderRadius: 1,
+          }}
+          />
+        </div>
+      </div>
+    );
+  };
+
   const { effectiveColumns } = useDataTableColumns<Row>({
     key: colKey,
     columns: [
@@ -253,6 +282,7 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
         textAlign: 'left',
         render: ({ vent }) => renderBar(vent, maxVent, { suffix: '%', percentColor: true }),
         sortable: true,
+        footer: renderScaleFooter(maxVent, { suffix: '%' }),
         ...colProps,
       },
       {
@@ -262,6 +292,7 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
         textAlign: 'left',
         render: ({ b12 }) => renderBar(b12, maxB12, { suffix: '%', percentColor: true }),
         sortable: true,
+        footer: renderScaleFooter(maxB12, { suffix: '%' }),
         ...colProps,
       },
       {
@@ -297,10 +328,12 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
         resizable: true,
         sortable: true,
         render: ({ cases }) => renderBar(cases, maxCases, { color: '#2b8be6' }),
+        footer: renderScaleFooter(maxCases),
       },
       {
         accessor: 'rbcTransfused',
-        title: 'RBC Heatmap',
+        // header includes an x-axis style scale (1..N) that aligns with the buckets in each row
+        title: 'RBCs Transfused',
         textAlign: 'left',
         render: ({ rbcTransfused }) => (
           <Grid
@@ -337,6 +370,21 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
               </Grid.Col>
             ))}
           </Grid>
+        ),
+        footer: (
+          <div style={{ width: '100%' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${maxRbcBuckets}, 1fr)`,
+                gap: 0,
+              }}
+            >
+              {Array.from({ length: maxRbcBuckets }).map((_, i) => (
+                <div key={i} style={{ textAlign: 'center', fontSize: 12 }}>{i + 1}</div>
+              ))}
+            </div>
+          </div>
         ),
       },
     ],
