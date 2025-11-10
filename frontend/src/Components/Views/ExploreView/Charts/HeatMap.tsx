@@ -1,205 +1,392 @@
 import {
-  Flex, Title, ActionIcon, CloseButton,
-} from '@mantine/core';
-import { IconGripVertical, IconSortDescending } from '@tabler/icons-react';
-import {
-  useContext, useRef, useEffect, useState,
+  useContext, useEffect, useState, useMemo,
 } from 'react';
-import * as d3 from 'd3';
+import {
+  CloseButton,
+  Flex,
+  Title,
+  Stack,
+  ActionIcon,
+  Box,
+  Tooltip,
+  Grid,
+  TextInput,
+} from '@mantine/core';
+import {
+  IconGripVertical, IconPlus, IconSearch, IconX,
+} from '@tabler/icons-react';
+import { DataTable, useDataTableColumns, type DataTableSortStatus } from 'mantine-datatable';
+import sortBy from 'lodash/sortBy';
+import { useDebouncedValue } from '@mantine/hooks';
 import { Store } from '../../../../Store/Store';
-import { CostChartConfig } from '../../../../Types/application';
+import { ExploreChartConfig } from '../../../../Types/application';
+import { backgroundHoverColor } from '../../../../Theme/mantineTheme';
+import './HeatMap.css';
 
-// x ticks: 0 through 20 (RBC units)
-// y ticks: list of surgeon names
-export const surgeons = [
-  'Dr. Adams',
-  'Dr. Baker',
-  'Dr. Carter',
-  'Dr. Davis',
-  'Dr. Evans',
-  'Dr. Flores',
-  'Dr. Garcia',
-  'Dr. Harris',
-  'Dr. Irving',
-  'Dr. Jones',
-];
+type Row = {
+  id: number;
+  vent: number; // percent
+  b12: number; // percent
+  surgeon: string; // array
+  cases: number;
+  rbcTransfused: {rbc_units: number, percentCases: number}[]; // array of datapoints
+};
 
-export const xTicks = Array.from({ length: 21 }, (_, i) => i); // 0..20
+const dummyData = [
+  {
+    id: 1,
+    vent: 85,
+    b12: 72,
+    surgeon: 'Dr. Smith',
+    cases: 42,
+    stretch: 0,
+    rbcTransfused: [
+      { rbc_units: 4, percentCases: 40 },
+      { rbc_units: 3, percentCases: 30 },
+      { rbc_units: 4, percentCases: 20 },
+      { rbc_units: 2, percentCases: 7 },
+      { rbc_units: 1, percentCases: 3 },
+    ],
+  },
+  {
+    id: 2,
+    vent: 85,
+    b12: 72,
+    surgeon: 'Dr. Lee',
+    cases: 42,
+    stretch: 0,
+    rbcTransfused: [
+      { rbc_units: 3, percentCases: 30 },
+      { rbc_units: 3, percentCases: 25 },
+      { rbc_units: 2, percentCases: 20 },
+      { rbc_units: 2, percentCases: 15 },
+      { rbc_units: 1, percentCases: 10 },
+    ],
+  },
+  {
+    id: 3,
+    vent: 12,
+    b12: 8,
+    surgeon: 'Dr. Patel',
+    cases: 5,
+    stretch: 0,
+    rbcTransfused: [
+      { rbc_units: 0, percentCases: 0 },
+      { rbc_units: 1, percentCases: 50 },
+      { rbc_units: 0, percentCases: 0 },
+      { rbc_units: 1, percentCases: 50 },
+      { rbc_units: 0, percentCases: 0 },
+    ],
+  },
+  {
+    id: 4,
+    vent: 55,
+    b12: 60,
+    surgeon: 'Dr. Gomez',
+    cases: 18,
+    stretch: 0,
+    rbcTransfused: [
+      { rbc_units: 2, percentCases: 20 },
+      { rbc_units: 2, percentCases: 20 },
+      { rbc_units: 1, percentCases: 10 },
+      { rbc_units: 1, percentCases: 10 },
+      { rbc_units: 0, percentCases: 0 },
+    ],
+  },
+  {
+    id: 5,
+    vent: 55,
+    b12: 60,
+    surgeon: 'Dr. Park',
+    cases: 18,
+    stretch: 0,
+    rbcTransfused: [
+      { rbc_units: 2, percentCases: 18 },
+      { rbc_units: 3, percentCases: 25 },
+      { rbc_units: 2, percentCases: 18 },
+      { rbc_units: 1, percentCases: 10 },
+      { rbc_units: 1, percentCases: 9 },
+    ],
+  },
+  {
+    id: 6,
+    vent: 55,
+    b12: 60,
+    surgeon: 'Dr. Huang',
+    cases: 18,
+    stretch: 0,
+    rbcTransfused: [
+      { rbc_units: 1, percentCases: 33 },
+      { rbc_units: 1, percentCases: 33 },
+      { rbc_units: 1, percentCases: 34 },
+      { rbc_units: 0, percentCases: 0 },
+      { rbc_units: 0, percentCases: 0 },
+    ],
+  },
+  {
+    id: 7,
+    vent: 98,
+    b12: 93,
+    surgeon: 'Dr. Nguyen',
+    cases: 120,
+    stretch: 0,
+    rbcTransfused: [
+      { rbc_units: 4, percentCases: 28 },
+      { rbc_units: 4, percentCases: 28 },
+      { rbc_units: 4, percentCases: 22 },
+      { rbc_units: 3, percentCases: 12 },
+      { rbc_units: 4, percentCases: 10 },
+    ],
+  },
+  {
+    id: 8,
+    vent: 30,
+    b12: 40,
+    surgeon: 'Dr. Alvarez',
+    cases: 9,
+    stretch: 0,
+    rbcTransfused: [
+      { rbc_units: 1, percentCases: 33 },
+      { rbc_units: 0, percentCases: 0 },
+      { rbc_units: 1, percentCases: 33 },
+      { rbc_units: 1, percentCases: 34 },
+      { rbc_units: 0, percentCases: 0 },
+    ],
+  },
+  {
+    id: 9,
+    vent: 30,
+    b12: 40,
+    surgeon: 'Dr. Chen',
+    cases: 9,
+    stretch: 0,
+    rbcTransfused: [
+      { rbc_units: 0, percentCases: 0 },
+      { rbc_units: 0, percentCases: 0 },
+      { rbc_units: 0, percentCases: 0 },
+      { rbc_units: 1, percentCases: 11 },
+      { rbc_units: 0, percentCases: 0 },
+    ],
+  },
+] as unknown as Row[];
 
-// Generate deterministic sample values so the heatmap shows peaks per surgeon.
-// Each tuple: [xIndex, yIndex, value]
-export const heatmapData = surgeons.flatMap((_, yIdx) => (
-  xTicks.map((x) => {
-    // create a shifted peak per surgeon for visualization (values 0..10)
-    const peak = (yIdx * 3) % xTicks.length;
-    const value = Math.max(0, 10 - Math.abs(x - peak));
-    return [x, yIdx, value];
-  })
-));
-
-export default function HeatMap({ chartConfig }: { chartConfig: CostChartConfig }) {
+export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConfig }) {
   const store = useContext(Store);
-  const svgRef = useRef<SVGSVGElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Margins and defaults (kept consistent for measurement + drawing)
-  const margin = {
-    top: 20, right: 20, bottom: 40, left: 120,
+  // enable per-chart persistent column resizing / reordering
+  const colKey = `heatmap-${chartConfig.chartId}`;
+  const colProps = { resizable: true, draggable: true, toggleable: true };
+
+  // sorting state + derived records (sort dummyData when sort status changes)
+  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<Row>>({
+    columnAccessor: 'surgeon',
+    direction: 'asc',
+  });
+
+  // surgeon search state (debounced)
+  const [surgeonQuery, setSurgeonQuery] = useState('');
+  const [debouncedSurgeonQuery] = useDebouncedValue(surgeonQuery, 200);
+  const [showSurgeonFilter, setShowSurgeonFilter] = useState(false);
+
+  const [records, setRecords] = useState<Row[]>(() => sortBy(dummyData, 'surgeon') as Row[]);
+
+  useEffect(() => {
+    // apply surgeon filter first, then sort
+    const filtered = dummyData.filter((r) => (debouncedSurgeonQuery.trim() === ''
+      ? true
+      : String(r.surgeon).toLowerCase().includes(debouncedSurgeonQuery.trim().toLowerCase())));
+
+    const accessor = sortStatus.columnAccessor as keyof Row;
+    const sorted = sortBy(filtered, accessor as any) as Row[];
+    setRecords(sortStatus.direction === 'desc' ? sorted.reverse() : sorted);
+  }, [sortStatus, debouncedSurgeonQuery]);
+
+  const getHeatColor = (percent: number) => {
+    const p = Math.max(0, Math.min(100, percent));
+    const hue = 60 - (p * 0.6); // 60 = yellow, 0 = red
+    const lightness = 62 - (p * 0.32); // higher percent -> darker
+    return `hsl(${hue}, 100%, ${lightness}%)`;
   };
-  const defaultWidth = chartConfig?.width ?? 700;
-  const defaultHeightPerRow = 28;
 
-  // State driven size (content area, already subtracting margins)
-  const [contentWidth, setContentWidth] = useState<number>(
-    (containerRef.current?.clientWidth ?? defaultWidth) - margin.left - margin.right,
-  );
-  const [contentHeight, setContentHeight] = useState<number>(
-    (chartConfig?.height ?? (surgeons.length * defaultHeightPerRow)) - margin.top - margin.bottom,
-  );
+  // compute maxima for scaling horizontal bars
+  const { maxVent, maxB12, maxCases } = useMemo(() => {
+    const maxVentVal = Math.max(100, ...records.map((r) => r.vent));
+    const maxB12Val = Math.max(100, ...records.map((r) => r.b12));
+    const maxCasesVal = Math.max(1, ...records.map((r) => r.cases));
+    return { maxVent: maxVentVal, maxB12: maxB12Val, maxCases: maxCasesVal };
+  }, [records]);
 
-  // ResizeObserver to update sizes when container changes
-  useEffect(() => {
-    const innerEl = containerRef.current;
-    const defaultH = (chartConfig?.height ?? (surgeons.length * defaultHeightPerRow)) - margin.top - margin.bottom;
+  // helper to render a horizontal bar behind the numeric label
+  const renderBar = (value: number, max: number, opts?: { suffix?: string; color?: string; percentColor?: boolean }) => {
+    const pct = Math.max(0, Math.min(100, (value / max) * 100));
+    const fillColor = '#8c8c8c';
+    return (
+      <div style={{
+        position: 'relative', width: '100%', height: '100%', display: 'flex', boxSizing: 'border-box',
+      }}
+      >
+        {/* fill (removed the light grey track/background) */}
+        <div style={{
+          position: 'absolute', left: 6, height: '100%', top: '50%', borderRadius: '2px', transform: 'translateY(-50%)', width: `${pct}%`, maxWidth: 'calc(100% - 12px)', background: fillColor,
+        }}
+        />
+        {/* label */}
+        <div style={{
+          position: 'relative', zIndex: 2, width: '100%', textAlign: 'center', fontSize: 13, fontStyle: 'normal', color: pct > 50 ? '#fff' : '#000', pointerEvents: 'none',
+        }}
+        >
+          {typeof opts?.suffix === 'string'
+            ? <span style={{ fontStyle: 'italic', fontSize: '14px' }}>{`${value}${opts.suffix}`}</span>
+            : <span style={{ fontStyle: 'italic', fontSize: '14px' }}>{value}</span>}
+        </div>
+      </div>
+    );
+  };
 
-    if (!innerEl) {
-      // ensure initial values if ref not present yet
-      setContentWidth(defaultWidth - margin.left - margin.right);
-      setContentHeight(defaultH);
-      return undefined;
-    }
-
-    // Prefer observing the parent grid/card element (react-grid-layout resizes that)
-    const observedEl: HTMLElement = (innerEl.parentElement ?? innerEl) as HTMLElement;
-
-    const updateSize = () => {
-      // use getBoundingClientRect for reliable measured width
-      const rect = observedEl.getBoundingClientRect();
-      const w = (rect.width || defaultWidth) - margin.left - margin.right;
-      const h = (chartConfig?.height ?? (surgeons.length * defaultHeightPerRow)) - margin.top - margin.bottom;
-      setContentWidth(Math.max(0, Math.floor(w)));
-      setContentHeight(Math.max(0, Math.floor(h)));
-    };
-
-    updateSize();
-    const observer = new ResizeObserver(() => updateSize());
-    observer.observe(observedEl);
-    window.addEventListener('resize', updateSize);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', updateSize);
-    };
-    // chartConfig.height included so changes to desired height update observer measurements
-  }, [chartConfig?.height]);
-
-  useEffect(() => {
-    // Only draw when we have a positive size
-    if (contentWidth <= 0 || contentHeight <= 0) return;
-
-    const data: Array<[number, number, number]> = heatmapData as any;
-    const width = contentWidth;
-    const height = contentHeight;
-
-    const svg = d3.select(svgRef.current);
-    svg.selectAll('*').remove();
-
-    svg
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom);
-
-    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
-
-    // scales
-    const xScale = d3.scaleBand<number>()
-      .domain(xTicks)
-      .range([0, width])
-      .paddingInner(0.05)
-      .paddingOuter(0);
-
-    const yScale = d3.scaleBand<string>()
-      .domain(surgeons)
-      .range([0, height])
-      .paddingInner(0.05)
-      .paddingOuter(0);
-
-    const color = d3.scaleSequential(d3.interpolateYlOrRd)
-      .domain([0, 10]); // value range known 0..10
-
-    // draw cells
-    g.selectAll('rect')
-      .data(data)
-      .join('rect')
-      .attr('x', (d) => xScale(d[0]) ?? 0)
-      .attr('y', (d) => {
-        const yName = surgeons[d[1]];
-        return yScale(yName) ?? 0;
-      })
-      .attr('width', () => xScale.bandwidth())
-      .attr('height', () => yScale.bandwidth())
-      .attr('fill', (d) => color(d[2]) as string)
-      .attr('stroke', '#fff')
-      .append('title')
-      .text((d) => `RBCs: ${d[0]}, Surgeon: ${surgeons[d[1]]}, Value: ${d[2]}`);
-
-    // x axis
-    const xAxis = d3.axisBottom(xScale).tickValues(xTicks).tickFormat(d3.format('d'));
-    g.append('g')
-      .attr('transform', `translate(0, ${height})`)
-      .call(xAxis)
-      .call((gSel) => gSel.selectAll('text').attr('font-size', 11));
-
-    // y axis
-    const yAxis = d3.axisLeft(yScale);
-    g.append('g')
-      .call(yAxis)
-      .call((gSel) => gSel.selectAll('text').attr('font-size', 12));
-
-    // axis labels
-    svg.append('text')
-      .attr('x', margin.left + width / 2)
-      .attr('y', margin.top + height + 35)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', 12)
-      .text('Intraoperative RBC Units Transfused');
-
-    svg.append('text')
-      .attr('transform', `translate(16, ${margin.top + height / 2}) rotate(-90)`)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', 12)
-      .text('Surgeon');
-
-    // cleanup handled by clearing svg at start of effect
-  }, [contentWidth, contentHeight, chartConfig]);
+  const { effectiveColumns } = useDataTableColumns<Row>({
+    key: colKey,
+    columns: [
+      {
+        accessor: 'vent',
+        title: 'Vent',
+        width: 110,
+        textAlign: 'left',
+        render: ({ vent }) => renderBar(vent, maxVent, { suffix: '%', percentColor: true }),
+        sortable: true,
+        ...colProps,
+      },
+      {
+        accessor: 'b12',
+        title: 'B12',
+        width: 110,
+        textAlign: 'left',
+        render: ({ b12 }) => renderBar(b12, maxB12, { suffix: '%', percentColor: true }),
+        sortable: true,
+        ...colProps,
+      },
+      {
+        accessor: 'surgeon',
+        title: 'Surgeon',
+        width: 130,
+        resizable: true,
+        sortable: true,
+        filter: (
+          <TextInput
+            placeholder="Search surgeons..."
+            leftSection={<IconSearch size={16} />}
+            rightSection={(
+              <ActionIcon size="sm" variant="transparent" c="dimmed" onClick={() => setSurgeonQuery('')}>
+                <IconX size={14} />
+              </ActionIcon>
+                )}
+            value={surgeonQuery}
+            onChange={(e) => setSurgeonQuery(e.currentTarget.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                (e.currentTarget as HTMLInputElement).blur();
+              }
+            }}
+          />
+        ),
+      },
+      {
+        accessor: 'cases',
+        title: 'Cases',
+        width: 75,
+        textAlign: 'right',
+        resizable: true,
+        sortable: true,
+        render: ({ cases }) => renderBar(cases, maxCases, { color: '#2b8be6' }),
+      },
+      {
+        accessor: 'rbcTransfused',
+        title: 'RBC Heatmap',
+        textAlign: 'left',
+        render: ({ rbcTransfused }) => (
+          <Grid
+            style={{
+              width: '100%', height: '100%', margin: 0, padding: 0,
+            }}
+            gutter={0}
+            columns={rbcTransfused.length}
+            align="stretch"
+          >
+            {rbcTransfused.map((d, i) => (
+              <Grid.Col key={i} span={1} style={{ padding: 0, height: '100%' }}>
+                <Tooltip
+                  label={`rbc_units: ${d.rbc_units}, percentCases: ${d.percentCases}`}
+                  position="top"
+                  withArrow
+                >
+                  <Box
+                    style={{
+                      height: '100%',
+                      width: '100%',
+                      backgroundColor: getHeatColor(d.percentCases),
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: d.percentCases > 45 ? '#fff' : '#000',
+                      fontSize: 11,
+                      padding: 0, // ensure no internal padding on the box
+                    }}
+                  >
+                    {d.rbc_units}
+                  </Box>
+                </Tooltip>
+              </Grid.Col>
+            ))}
+          </Grid>
+        ),
+      },
+    ],
+  });
 
   return (
-    <>
+    // make the stack fill the card so inner box can define a real height for the table
+    <Stack style={{ height: '100%', width: '100%' }}>
       <Flex direction="row" justify="space-between" align="center" pl="md">
         <Flex direction="row" align="center" gap="md" ml={-12}>
           <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
-          <Title order={4}>
-            RBC Units Transfused Per Surgeon
-          </Title>
+          <Title order={4}>RBC Units Transfused Per Surgeon</Title>
         </Flex>
 
         <Flex direction="row" align="center" gap="sm">
           <ActionIcon
             variant="subtle"
-            onClick={() => {
-              // toggle sort placeholder
-            }}
+            onClick={() => {}}
             title="Toggle sort by total cost"
           >
-            <IconSortDescending size={18} />
+            <IconPlus size={18} />
           </ActionIcon>
           <CloseButton onClick={() => { store.exploreStore.removeChart(chartConfig.chartId); }} />
         </Flex>
       </Flex>
-
-      {/* Heatmap chart */}
-      <div ref={containerRef} style={{ width: '100%', overflow: 'auto', marginTop: 8 }}>
-        <svg ref={svgRef} />
-      </div>
-    </>
+      {/*
+        Wrap the table in a flex child with minHeight: 0 so the table's height can
+        be constrained by the surrounding grid/card. DataTable will then honor
+        height="100%" and become vertically scrollable when needed.
+      */}
+      <Box style={{ flex: 1, minHeight: 0, width: '100%' }}>
+        <DataTable
+          borderRadius="sm"
+          striped
+          withTableBorder={false}
+          highlightOnHover
+          highlightOnHoverColor={backgroundHoverColor}
+          height="100%"
+            // provide data
+          records={records}
+          sortStatus={sortStatus}
+          onSortStatusChange={setSortStatus}
+            // use persisted/resizable/reorderable columns
+          storeColumnsKey={colKey}
+          columns={effectiveColumns}
+          style={{ fontStyle: 'italic' }}
+            // execute this callback when a row is clicked
+          onRowClick={() => {}}
+        />
+      </Box>
+    </Stack>
   );
 }
