@@ -1,3 +1,4 @@
+// ...existing code...
 import {
   useContext, useEffect, useState, useMemo,
 } from 'react';
@@ -9,8 +10,8 @@ import {
   ActionIcon,
   Box,
   Tooltip,
-  Grid,
   TextInput,
+  Text,
 } from '@mantine/core';
 import {
   IconGripVertical, IconPlus, IconSearch, IconX,
@@ -18,11 +19,38 @@ import {
 import { DataTable, useDataTableColumns, type DataTableSortStatus } from 'mantine-datatable';
 import sortBy from 'lodash/sortBy';
 import { useDebouncedValue } from '@mantine/hooks';
-import { BarChart } from '@mantine/charts';
+import { BarChart, ChartTooltipProps } from '@mantine/charts';
+import { interpolateReds } from 'd3';
 import { Store } from '../../../../Store/Store';
 import { ExploreChartConfig } from '../../../../Types/application';
 import { backgroundHoverColor } from '../../../../Theme/mantineTheme';
 import './HeatMap.css';
+
+function FooterHistogramTooltip({ active, payload }: ChartTooltipProps) {
+  if (!active || !payload || payload.length === 0) return null;
+
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 4,
+      padding: 6,
+      background: 'rgba(255,255,255,0.95)',
+      borderRadius: 4,
+      minWidth: 40,
+      zIndex: 1000,
+    }}
+    >
+      {payload.map((item: any) => (
+        <Text key={item.name} style={{ color: item.color, lineHeight: 1 }} fz={10}>
+          {item.name}
+          :
+          {item.value}
+        </Text>
+      ))}
+    </div>
+  );
+}
 
 type Row = {
   id: number;
@@ -30,89 +58,328 @@ type Row = {
   b12: number; // percent
   surgeon: string; // array
   cases: number;
-  rbcTransfused: {rbc_units: number, percentCases: number}[]; // array of datapoints
+  // replaced rbcTransfused array with explicit percent fields per bucket
+  percent_1_rbc: number;
+  percent_2_rbc: number;
+  percent_3_rbc: number;
+  percent_4_rbc: number;
+  percent_5_rbc: number;
 };
 
 const dummyData = [
   {
-    id: 1, vent: 0, b12: 72, surgeon: 'Dr. Smith', cases: 42, stretch: 0, rbcTransfused: [{ rbc_units: 4, percentCases: 40 }, { rbc_units: 3, percentCases: 30 }, { rbc_units: 4, percentCases: 20 }, { rbc_units: 2, percentCases: 7 }, { rbc_units: 1, percentCases: 3 }],
+    id: 1,
+    vent: 0,
+    b12: 72,
+    surgeon: 'Dr. Smith',
+    cases: 42,
+    percent_1_rbc: 40,
+    percent_2_rbc: 30,
+    percent_3_rbc: 20,
+    percent_4_rbc: 7,
+    percent_5_rbc: 3,
   },
   {
-    id: 2, vent: 85, b12: 72, surgeon: 'Dr. Lee', cases: 42, stretch: 0, rbcTransfused: [{ rbc_units: 3, percentCases: 30 }, { rbc_units: 3, percentCases: 25 }, { rbc_units: 2, percentCases: 20 }, { rbc_units: 2, percentCases: 15 }, { rbc_units: 1, percentCases: 10 }],
+    id: 2,
+    vent: 85,
+    b12: 72,
+    surgeon: 'Dr. Lee',
+    cases: 42,
+    percent_1_rbc: 30,
+    percent_2_rbc: 25,
+    percent_3_rbc: 20,
+    percent_4_rbc: 15,
+    percent_5_rbc: 10,
   },
   {
-    id: 3, vent: 12, b12: 8, surgeon: 'Dr. Patel', cases: 5, stretch: 0, rbcTransfused: [{ rbc_units: 0, percentCases: 0 }, { rbc_units: 1, percentCases: 50 }, { rbc_units: 0, percentCases: 0 }, { rbc_units: 1, percentCases: 50 }, { rbc_units: 0, percentCases: 0 }],
+    id: 3,
+    vent: 12,
+    b12: 8,
+    surgeon: 'Dr. Patel',
+    cases: 5,
+    percent_1_rbc: 0,
+    percent_2_rbc: 50,
+    percent_3_rbc: 0,
+    percent_4_rbc: 50,
+    percent_5_rbc: 0,
   },
   {
-    id: 4, vent: 55, b12: 60, surgeon: 'Dr. Gomez', cases: 18, stretch: 0, rbcTransfused: [{ rbc_units: 2, percentCases: 20 }, { rbc_units: 2, percentCases: 20 }, { rbc_units: 1, percentCases: 10 }, { rbc_units: 1, percentCases: 10 }, { rbc_units: 0, percentCases: 0 }],
+    id: 4,
+    vent: 55,
+    b12: 60,
+    surgeon: 'Dr. Gomez',
+    cases: 18,
+    percent_1_rbc: 20,
+    percent_2_rbc: 20,
+    percent_3_rbc: 10,
+    percent_4_rbc: 10,
+    percent_5_rbc: 0,
   },
   {
-    id: 5, vent: 55, b12: 60, surgeon: 'Dr. Park', cases: 18, stretch: 0, rbcTransfused: [{ rbc_units: 2, percentCases: 18 }, { rbc_units: 3, percentCases: 25 }, { rbc_units: 2, percentCases: 18 }, { rbc_units: 1, percentCases: 10 }, { rbc_units: 1, percentCases: 9 }],
+    id: 5,
+    vent: 55,
+    b12: 60,
+    surgeon: 'Dr. Park',
+    cases: 18,
+    percent_1_rbc: 18,
+    percent_2_rbc: 25,
+    percent_3_rbc: 18,
+    percent_4_rbc: 10,
+    percent_5_rbc: 9,
   },
   {
-    id: 6, vent: 55, b12: 60, surgeon: 'Dr. Huang', cases: 18, stretch: 0, rbcTransfused: [{ rbc_units: 1, percentCases: 33 }, { rbc_units: 1, percentCases: 33 }, { rbc_units: 1, percentCases: 34 }, { rbc_units: 0, percentCases: 0 }, { rbc_units: 0, percentCases: 0 }],
+    id: 6,
+    vent: 55,
+    b12: 60,
+    surgeon: 'Dr. Huang',
+    cases: 18,
+    percent_1_rbc: 33,
+    percent_2_rbc: 33,
+    percent_3_rbc: 34,
+    percent_4_rbc: 0,
+    percent_5_rbc: 0,
   },
   {
-    id: 7, vent: 98, b12: 93, surgeon: 'Dr. Nguyen', cases: 120, stretch: 0, rbcTransfused: [{ rbc_units: 4, percentCases: 28 }, { rbc_units: 4, percentCases: 28 }, { rbc_units: 4, percentCases: 22 }, { rbc_units: 3, percentCases: 12 }, { rbc_units: 4, percentCases: 10 }],
+    id: 7,
+    vent: 98,
+    b12: 93,
+    surgeon: 'Dr. Nguyen',
+    cases: 120,
+    percent_1_rbc: 28,
+    percent_2_rbc: 28,
+    percent_3_rbc: 22,
+    percent_4_rbc: 12,
+    percent_5_rbc: 10,
   },
   {
-    id: 8, vent: 30, b12: 40, surgeon: 'Dr. Alvarez', cases: 9, stretch: 0, rbcTransfused: [{ rbc_units: 1, percentCases: 33 }, { rbc_units: 0, percentCases: 0 }, { rbc_units: 1, percentCases: 33 }, { rbc_units: 1, percentCases: 34 }, { rbc_units: 0, percentCases: 0 }],
+    id: 8,
+    vent: 30,
+    b12: 40,
+    surgeon: 'Dr. Alvarez',
+    cases: 9,
+    percent_1_rbc: 33,
+    percent_2_rbc: 0,
+    percent_3_rbc: 33,
+    percent_4_rbc: 34,
+    percent_5_rbc: 0,
   },
   {
-    id: 9, vent: 30, b12: 40, surgeon: 'Dr. Chen', cases: 9, stretch: 0, rbcTransfused: [{ rbc_units: 0, percentCases: 0 }, { rbc_units: 0, percentCases: 0 }, { rbc_units: 0, percentCases: 0 }, { rbc_units: 1, percentCases: 11 }, { rbc_units: 0, percentCases: 0 }],
+    id: 9,
+    vent: 30,
+    b12: 40,
+    surgeon: 'Dr. Chen',
+    cases: 9,
+    percent_1_rbc: 0,
+    percent_2_rbc: 0,
+    percent_3_rbc: 0,
+    percent_4_rbc: 11,
+    percent_5_rbc: 0,
   },
 
   // additional synthetic records
   {
-    id: 10, vent: 67, b12: 70, surgeon: 'Dr. Rivera', cases: 36, stretch: 0, rbcTransfused: [{ rbc_units: 2, percentCases: 25 }, { rbc_units: 2, percentCases: 20 }, { rbc_units: 1, percentCases: 30 }, { rbc_units: 0, percentCases: 15 }, { rbc_units: 1, percentCases: 10 }],
+    id: 10,
+    vent: 67,
+    b12: 70,
+    surgeon: 'Dr. Rivera',
+    cases: 36,
+    percent_1_rbc: 25,
+    percent_2_rbc: 20,
+    percent_3_rbc: 30,
+    percent_4_rbc: 15,
+    percent_5_rbc: 10,
   },
   {
-    id: 11, vent: 45, b12: 50, surgeon: 'Dr. Johnson', cases: 22, stretch: 0, rbcTransfused: [{ rbc_units: 1, percentCases: 40 }, { rbc_units: 1, percentCases: 30 }, { rbc_units: 0, percentCases: 10 }, { rbc_units: 2, percentCases: 15 }, { rbc_units: 0, percentCases: 5 }],
+    id: 11,
+    vent: 45,
+    b12: 50,
+    surgeon: 'Dr. Johnson',
+    cases: 22,
+    percent_1_rbc: 40,
+    percent_2_rbc: 30,
+    percent_3_rbc: 10,
+    percent_4_rbc: 15,
+    percent_5_rbc: 5,
   },
   {
-    id: 12, vent: 12, b12: 20, surgeon: 'Dr. Williams', cases: 7, stretch: 0, rbcTransfused: [{ rbc_units: 0, percentCases: 0 }, { rbc_units: 1, percentCases: 60 }, { rbc_units: 1, percentCases: 40 }, { rbc_units: 0, percentCases: 0 }, { rbc_units: 0, percentCases: 0 }],
+    id: 12,
+    vent: 12,
+    b12: 20,
+    surgeon: 'Dr. Williams',
+    cases: 7,
+    percent_1_rbc: 0,
+    percent_2_rbc: 60,
+    percent_3_rbc: 40,
+    percent_4_rbc: 0,
+    percent_5_rbc: 0,
   },
   {
-    id: 13, vent: 90, b12: 88, surgeon: 'Dr. Brown', cases: 80, stretch: 0, rbcTransfused: [{ rbc_units: 5, percentCases: 35 }, { rbc_units: 4, percentCases: 30 }, { rbc_units: 4, percentCases: 20 }, { rbc_units: 3, percentCases: 10 }, { rbc_units: 2, percentCases: 5 }],
+    id: 13,
+    vent: 90,
+    b12: 88,
+    surgeon: 'Dr. Brown',
+    cases: 80,
+    percent_1_rbc: 35,
+    percent_2_rbc: 30,
+    percent_3_rbc: 20,
+    percent_4_rbc: 10,
+    percent_5_rbc: 5,
   },
   {
-    id: 14, vent: 20, b12: 18, surgeon: 'Dr. Davis', cases: 6, stretch: 0, rbcTransfused: [{ rbc_units: 0, percentCases: 0 }, { rbc_units: 0, percentCases: 0 }, { rbc_units: 1, percentCases: 80 }, { rbc_units: 0, percentCases: 20 }, { rbc_units: 0, percentCases: 0 }],
+    id: 14,
+    vent: 20,
+    b12: 18,
+    surgeon: 'Dr. Davis',
+    cases: 6,
+    percent_1_rbc: 0,
+    percent_2_rbc: 0,
+    percent_3_rbc: 80,
+    percent_4_rbc: 20,
+    percent_5_rbc: 0,
   },
   {
-    id: 15, vent: 75, b12: 64, surgeon: 'Dr. Miller', cases: 48, stretch: 0, rbcTransfused: [{ rbc_units: 3, percentCases: 30 }, { rbc_units: 3, percentCases: 25 }, { rbc_units: 2, percentCases: 20 }, { rbc_units: 1, percentCases: 15 }, { rbc_units: 0, percentCases: 10 }],
+    id: 15,
+    vent: 75,
+    b12: 64,
+    surgeon: 'Dr. Miller',
+    cases: 48,
+    percent_1_rbc: 30,
+    percent_2_rbc: 25,
+    percent_3_rbc: 20,
+    percent_4_rbc: 15,
+    percent_5_rbc: 10,
   },
   {
-    id: 16, vent: 58, b12: 55, surgeon: 'Dr. Wilson', cases: 28, stretch: 0, rbcTransfused: [{ rbc_units: 2, percentCases: 22 }, { rbc_units: 2, percentCases: 22 }, { rbc_units: 2, percentCases: 22 }, { rbc_units: 1, percentCases: 18 }, { rbc_units: 1, percentCases: 16 }],
+    id: 16,
+    vent: 58,
+    b12: 55,
+    surgeon: 'Dr. Wilson',
+    cases: 28,
+    percent_1_rbc: 22,
+    percent_2_rbc: 22,
+    percent_3_rbc: 22,
+    percent_4_rbc: 18,
+    percent_5_rbc: 16,
   },
   {
-    id: 17, vent: 33, b12: 36, surgeon: 'Dr. Moore', cases: 12, stretch: 0, rbcTransfused: [{ rbc_units: 1, percentCases: 50 }, { rbc_units: 1, percentCases: 30 }, { rbc_units: 0, percentCases: 10 }, { rbc_units: 0, percentCases: 10 }, { rbc_units: 0, percentCases: 0 }],
+    id: 17,
+    vent: 33,
+    b12: 36,
+    surgeon: 'Dr. Moore',
+    cases: 12,
+    percent_1_rbc: 50,
+    percent_2_rbc: 30,
+    percent_3_rbc: 10,
+    percent_4_rbc: 10,
+    percent_5_rbc: 0,
   },
   {
-    id: 18, vent: 82, b12: 79, surgeon: 'Dr. Taylor', cases: 64, stretch: 0, rbcTransfused: [{ rbc_units: 4, percentCases: 30 }, { rbc_units: 4, percentCases: 25 }, { rbc_units: 3, percentCases: 20 }, { rbc_units: 2, percentCases: 15 }, { rbc_units: 1, percentCases: 10 }],
+    id: 18,
+    vent: 82,
+    b12: 79,
+    surgeon: 'Dr. Taylor',
+    cases: 64,
+    percent_1_rbc: 30,
+    percent_2_rbc: 25,
+    percent_3_rbc: 20,
+    percent_4_rbc: 15,
+    percent_5_rbc: 10,
   },
   {
-    id: 19, vent: 14, b12: 10, surgeon: 'Dr. Anderson', cases: 4, stretch: 0, rbcTransfused: [{ rbc_units: 0, percentCases: 0 }, { rbc_units: 1, percentCases: 75 }, { rbc_units: 0, percentCases: 0 }, { rbc_units: 0, percentCases: 25 }, { rbc_units: 0, percentCases: 0 }],
+    id: 19,
+    vent: 14,
+    b12: 10,
+    surgeon: 'Dr. Anderson',
+    cases: 4,
+    percent_1_rbc: 0,
+    percent_2_rbc: 75,
+    percent_3_rbc: 0,
+    percent_4_rbc: 25,
+    percent_5_rbc: 0,
   },
   {
-    id: 20, vent: 49, b12: 52, surgeon: 'Dr. Thomas', cases: 20, stretch: 0, rbcTransfused: [{ rbc_units: 1, percentCases: 30 }, { rbc_units: 2, percentCases: 30 }, { rbc_units: 1, percentCases: 20 }, { rbc_units: 1, percentCases: 10 }, { rbc_units: 0, percentCases: 10 }],
+    id: 20,
+    vent: 49,
+    b12: 52,
+    surgeon: 'Dr. Thomas',
+    cases: 20,
+    percent_1_rbc: 30,
+    percent_2_rbc: 30,
+    percent_3_rbc: 20,
+    percent_4_rbc: 10,
+    percent_5_rbc: 10,
   },
   {
-    id: 21, vent: 71, b12: 68, surgeon: 'Dr. Jackson', cases: 44, stretch: 0, rbcTransfused: [{ rbc_units: 3, percentCases: 28 }, { rbc_units: 3, percentCases: 26 }, { rbc_units: 2, percentCases: 24 }, { rbc_units: 1, percentCases: 12 }, { rbc_units: 1, percentCases: 10 }],
+    id: 21,
+    vent: 71,
+    b12: 68,
+    surgeon: 'Dr. Jackson',
+    cases: 44,
+    percent_1_rbc: 28,
+    percent_2_rbc: 26,
+    percent_3_rbc: 24,
+    percent_4_rbc: 12,
+    percent_5_rbc: 10,
   },
   {
-    id: 22, vent: 27, b12: 30, surgeon: 'Dr. White', cases: 11, stretch: 0, rbcTransfused: [{ rbc_units: 0, percentCases: 10 }, { rbc_units: 1, percentCases: 60 }, { rbc_units: 0, percentCases: 10 }, { rbc_units: 1, percentCases: 20 }, { rbc_units: 0, percentCases: 0 }],
+    id: 22,
+    vent: 27,
+    b12: 30,
+    surgeon: 'Dr. White',
+    cases: 11,
+    percent_1_rbc: 10,
+    percent_2_rbc: 60,
+    percent_3_rbc: 10,
+    percent_4_rbc: 20,
+    percent_5_rbc: 0,
   },
   {
-    id: 23, vent: 94, b12: 90, surgeon: 'Dr. Harris', cases: 95, stretch: 0, rbcTransfused: [{ rbc_units: 5, percentCases: 40 }, { rbc_units: 4, percentCases: 30 }, { rbc_units: 4, percentCases: 15 }, { rbc_units: 3, percentCases: 10 }, { rbc_units: 2, percentCases: 5 }],
+    id: 23,
+    vent: 94,
+    b12: 90,
+    surgeon: 'Dr. Harris',
+    cases: 95,
+    percent_1_rbc: 40,
+    percent_2_rbc: 30,
+    percent_3_rbc: 15,
+    percent_4_rbc: 10,
+    percent_5_rbc: 5,
   },
   {
-    id: 24, vent: 38, b12: 35, surgeon: 'Dr. Martin', cases: 15, stretch: 0, rbcTransfused: [{ rbc_units: 1, percentCases: 40 }, { rbc_units: 1, percentCases: 30 }, { rbc_units: 1, percentCases: 20 }, { rbc_units: 0, percentCases: 5 }, { rbc_units: 0, percentCases: 5 }],
+    id: 24,
+    vent: 38,
+    b12: 35,
+    surgeon: 'Dr. Martin',
+    cases: 15,
+    percent_1_rbc: 40,
+    percent_2_rbc: 30,
+    percent_3_rbc: 20,
+    percent_4_rbc: 5,
+    percent_5_rbc: 5,
   },
   {
-    id: 25, vent: 60, b12: 58, surgeon: 'Dr. Thompson', cases: 34, stretch: 0, rbcTransfused: [{ rbc_units: 2, percentCases: 30 }, { rbc_units: 2, percentCases: 25 }, { rbc_units: 2, percentCases: 20 }, { rbc_units: 1, percentCases: 15 }, { rbc_units: 0, percentCases: 10 }],
+    id: 25,
+    vent: 60,
+    b12: 58,
+    surgeon: 'Dr. Thompson',
+    cases: 34,
+    percent_1_rbc: 30,
+    percent_2_rbc: 25,
+    percent_3_rbc: 20,
+    percent_4_rbc: 15,
+    percent_5_rbc: 10,
   },
   {
-    id: 26, vent: 52, b12: 48, surgeon: 'Dr. Garcia', cases: 26, stretch: 0, rbcTransfused: [{ rbc_units: 2, percentCases: 24 }, { rbc_units: 2, percentCases: 24 }, { rbc_units: 1, percentCases: 22 }, { rbc_units: 1, percentCases: 18 }, { rbc_units: 0, percentCases: 12 }],
+    id: 26,
+    vent: 52,
+    b12: 48,
+    surgeon: 'Dr. Garcia',
+    cases: 26,
+    percent_1_rbc: 24,
+    percent_2_rbc: 24,
+    percent_3_rbc: 22,
+    percent_4_rbc: 18,
+    percent_5_rbc: 12,
   },
 ] as unknown as Row[];
 
@@ -148,10 +415,13 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
   }, [sortStatus, debouncedSurgeonQuery]);
 
   const getHeatColor = (percent: number) => {
-    const p = Math.max(0, Math.min(100, percent));
-    const hue = 60 - (p * 0.6); // 60 = yellow, 0 = red
-    const lightness = 62 - (p * 0.32); // higher percent -> darker
-    return `hsl(${hue}, 100%, ${lightness}%)`;
+    // Use perceptual Lab interpolation between the light and dark colors.
+    // Memoize the interpolator to avoid recreating it on every call.
+    // percent is expected 0..100, convert to 0..1 for the interpolator.
+    const t = Math.max(0, Math.min(1, percent / 100));
+    // create interpolator once
+
+    return interpolateReds(t);
   };
 
   // compute maxima for scaling horizontal bars
@@ -162,8 +432,8 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
     return { maxVent: maxVentVal, maxB12: maxB12Val, maxCases: maxCasesVal };
   }, [records]);
 
-  // compute max number of RBC buckets across rows (at least 5 for a stable scale)
-  const maxRbcBuckets = useMemo(() => Math.max(5, ...records.map((r) => r.rbcTransfused?.length ?? 0)), [records]);
+  // fixed number of RBC buckets (data now provides percent_1_rbc ... percent_5_rbc)
+  const NUM_RBC_BUCKETS = 5;
 
   // compute histogram bins (always 10 bins from 0..100)
   const computeBins = (values: number[], bins = 10, min = 0, max = 100) => {
@@ -189,81 +459,134 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
   const b12Bins = useMemo(() => computeBins(records.map((r) => r.b12)), [records]);
   const casesBins = useMemo(() => computeBins(records.map((r) => r.cases)), [records]);
 
-  // compute per-RBC-unit histogram bins: for each unit index collect percentCases across rows
-  const rbcBins = useMemo(() => Array.from({ length: maxRbcBuckets }).map((_, idx) => {
-    const values = records.map((r) => {
-      const d = r.rbcTransfused?.[idx];
-      // treat missing entries as 0 so histogram shows absence as zero contribution;
-      // if you prefer to ignore missing rows, use: d ? d.percentCases : undefined and filter undefined out before computeBins
-      return d?.percentCases ?? 0;
-    });
+  // compute per-RBC-unit histogram bins: for each unit index collect percent_*_rbc across rows
+  const rbcBins = useMemo(() => Array.from({ length: NUM_RBC_BUCKETS }).map((_, idx) => {
+    const key = `percent_${idx + 1}_rbc` as keyof Row;
+    const values = records.map((r) => Number(r[key] ?? 0));
     return computeBins(values);
-  }), [records, maxRbcBuckets]);
+  }), [records]);
 
-  const renderHistogramFooter = (bins: number[]) => (
-    <div style={{ width: '100%', borderBottom: '1px solid #8c8c8c' }}>
-      <BarChart
-        data={bins.map((count) => ({ bin: '', count }))}
-        series={[{ name: 'count', color: '#8c8c8c' }]}
-        w="100%"
-        h={25}
-        dataKey="bin"
-        withXAxis={false}
-        withYAxis={false}
-        gridAxis="none"
-        // remove any outer spacing applied to the chart element
-        style={{
-          marginLeft: '-1%', width: 'calc(100% + 16px)',
-        }}
-      />
-    </div>
-  );
+  const renderHistogramFooter = (bins: number[], useReds?: boolean) => {
+    // if no bins, keep layout stable
+    if (!bins || bins.length === 0) {
+      return null;
+    }
+
+    // build a color for each bin
+    const colors = bins.map((_, i) => {
+      if (useReds) {
+        const t = bins.length > 1 ? i / (bins.length - 1) : 0;
+        return interpolateReds(t);
+      }
+      return '#8c8c8c';
+    });
+
+    const data = [
+      bins.reduce((acc, count, i) => {
+        acc[`bin${i}`] = count;
+        return acc;
+      }, {} as Record<string, any>),
+    ];
+
+    const series = bins.map((_, i) => ({ name: `bin${i}`, color: colors[i] }));
+
+    console.log('renderHistogramFooter', { bins, data, series });
+
+    return (
+      <div style={{ width: 'calc(100% - 3px)', borderBottom: `1px solid ${useReds ? interpolateReds(0.25) : '#8c8c8c'}`, overflow: 'hidden' }}>
+        <BarChart
+          data={data}
+          series={series}
+          w="calc(126%)"
+          h={25}
+          dataKey="bin"
+          barChartProps={{ barGap: '0.5%' }}
+          withXAxis={false}
+          withYAxis={false}
+          gridAxis="none"
+          style={{
+            marginLeft: '-12%',
+            angle: 25,
+            marginBottom: 0,
+          }}
+          tooltipProps={{
+            content: ({ active, payload }) => (
+              <FooterHistogramTooltip
+                active={active}
+                payload={payload}
+              />
+            ),
+          }}
+        />
+      </div>
+    );
+  };
 
   // helper to render a horizontal bar behind the numeric label
   const renderBar = (value: number, max: number, opts?: { suffix?: string; color?: string; percentColor?: boolean }) => {
     const pct = Math.max(0, Math.min(100, (value / max) * 100));
     const fillColor = '#8c8c8c';
+    const percent = Number(value ?? 0);
+    const hasValue = percent !== 0;
     return (
-      <div style={{
-        position: 'relative', width: '100%', height: '100%', display: 'flex', boxSizing: 'border-box', overflow: 'hidden', paddingLeft: 0, paddingRight: 0,
-      }}
+      <Tooltip
+        label={hasValue ? `${percent}% of cases` : 'No data'}
+        position="top"
+        withArrow
       >
-        {/* fill (removed the light grey track/background) */}
         <div style={{
-          position: 'absolute', left: 0, height: '100%', top: '50%', borderRadius: '2px', transform: 'translateY(-50%)', width: `${pct}%`, maxWidth: '100%', background: fillColor,
-        }}
-        />
-        {/* label */}
-        <div style={{
-          position: 'relative', zIndex: 1, width: '100%', textAlign: 'center', fontSize: 13, fontStyle: 'normal', color: pct > 50 ? '#fff' : '#000', pointerEvents: 'none',
+          position: 'relative', width: '100%', height: '100%', display: 'flex', boxSizing: 'border-box', overflow: 'hidden', paddingLeft: 0, paddingRight: 0,
         }}
         >
-          {typeof opts?.suffix === 'string'
-            ? <span style={{ fontStyle: 'italic', fontSize: '14px' }}>{`${value}${opts.suffix}`}</span>
-            : <span style={{ fontStyle: 'italic', fontSize: '14px' }}>{value}</span>}
+          {/* fill (removed the light grey track/background) */}
+          <div style={{
+            position: 'absolute', left: 0, height: '100%', top: '50%', borderRadius: '2px', transform: 'translateY(-50%)', width: `${pct}%`, maxWidth: '100%', background: fillColor,
+          }}
+          />
+          {/* label */}
+          <div style={{
+            position: 'relative', zIndex: 1, width: '100%', textAlign: 'center', fontSize: 13, fontStyle: 'normal', color: pct > 50 ? '#fff' : '#000', pointerEvents: 'none',
+          }}
+          >
+            {typeof opts?.suffix === 'string'
+              ? <span style={{ fontStyle: 'italic', fontSize: '14px' }}>{`${value}${opts.suffix}`}</span>
+              : <span style={{ fontStyle: 'italic', fontSize: '14px' }}>{value}</span>}
+          </div>
         </div>
-      </div>
+      </Tooltip>
     );
   };
 
   // (removed old numeric scale footer — replaced by histograms)
 
   // build dynamic RBC unit columns (one column per unit bucket)
-  const rbcUnitColumns = Array.from({ length: maxRbcBuckets }).map((_, idx) => {
-    const unitIndex = idx; // 0-based index into rbcTransfused arrays
-    const title = `${idx + 1} ${idx === 0 ? 'RBC' : 'RBCs'}`;
+  const rbcUnitColumns = Array.from({ length: NUM_RBC_BUCKETS }).map((_, idx) => {
+    const unitIndex = idx; // 0-based index into percent_*_rbc fields
+    const titleText = (idx + 1) === 5 ? '5+ RBCs' : `${idx + 1} ${idx === 0 ? 'RBC' : 'RBCs'}`;
+    const accessor = `rbc_${idx + 1}`;
+    const percentKey = `percent_${idx + 1}_rbc` as keyof Row;
+
     return {
-      accessor: `rbc_${idx + 1}`,
-      title,
+      accessor,
+      title: (
+        <Tooltip
+          label={(idx + 1) === 5
+            ? '5+ RBCs Transfused Intraoperatively'
+            : `${idx + 1} ${idx === 0 ? 'RBC' : 'RBCs'} Transfused Intraoperatively`}
+          position="top"
+          withArrow
+        >
+          <div style={{ display: 'inline-block', cursor: 'help' }}>{titleText}</div>
+        </Tooltip>
+      ),
       width: 72,
-      textAlign: 'center' as const,
-      render: ({ rbcTransfused }: Row) => {
-        const d = rbcTransfused?.[unitIndex];
-        const percent = d?.percentCases ?? 0;
-        const hasValue = d !== undefined && percent !== 0;
+      render: (row: Row) => {
+        const percent = Number(row[percentKey] ?? 0);
+        const hasValue = percent !== 0;
         return (
           <Tooltip
-            label={d ? `rbc_units: ${d.rbc_units}, percentCases: ${d.percentCases}` : 'No data'}
+            // tooltip now shows percent only (source data no longer contains rbc_units)
+            label={hasValue ? `${percent}% of cases` : 'No data'}
             position="top"
             withArrow
           >
@@ -280,7 +603,7 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
               }}
             >
               {hasValue
-                ? `${d!.percentCases}%`
+                ? `${percent}%`
                 : (
                   <div style={{
                     width: '30%',
@@ -294,9 +617,10 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
           </Tooltip>
         );
       },
+      sortable: true,
       // use the per-unit histogram computed above; fallback to empty bins if missing
-      footer: renderHistogramFooter(rbcBins[unitIndex] ?? new Array(10).fill(0)),
-      ...colProps,
+      footer: renderHistogramFooter(rbcBins[unitIndex] ?? new Array(10).fill(0), true),
+      ...{ ...colProps, draggable: false },
     };
   });
 
