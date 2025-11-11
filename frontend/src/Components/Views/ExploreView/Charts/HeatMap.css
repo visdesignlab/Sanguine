@@ -1,34 +1,10 @@
-.mantine-DataTable-table td > div,
-.mantine-DataTable-table th > div {
-  display: flex;
-  align-items: stretch;
-  height: 100%;
-  width: 100%;
+.heatmap-data-table td {
+  padding: 3px;
 }
-
-/* heatmap-specific classes */
-.heatmap-grid {
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-.heatmap-col {
-  display: flex !important;
-  height: 100% !important;
-}
-.heatmap-col > * {
-  flex: 1 1 auto;
-  height: 100% !important;
-}
-
-.heatmap-cell {
-  height: 100%;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  box-sizing: border-box;
+.heatmap-data-table tfoot td,
+.heatmap-data-table tfoot th {
+  padding-left: 3px;
+  padding-right: 3px;
+  padding-top: 2px;
+  padding-bottom: 9px;
 }
