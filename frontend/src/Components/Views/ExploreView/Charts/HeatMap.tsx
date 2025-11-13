@@ -216,7 +216,7 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
   // NEW: min / max DRG weight filters (strings so empty = no filter)
   const [drgMinQuery, setDrgMinQuery] = useState('');
   const [drgMaxQuery, setDrgMaxQuery] = useState('');
-  const [debouncedDrgMinQuery] = useDebouncedValue(drgMinQuery, 200);
+  const [debouncedDrgMinQuery, setDebouncedDrgMinQuery] = useDebouncedValue(drgMinQuery, 200);
   const [debouncedDrgMaxQuery, setDebouncedDrgMaxQuery] = useDebouncedValue(drgMaxQuery, 200);
 
   // NEW: comparator toggles for each input ('>' or '<')
@@ -621,205 +621,150 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
     };
   });
 
+  // Define column types and their configurations
+  type ColumnType = 'heatmapColumn' | 'textColumn' | 'numericColumn' | 'violinColumn';
+
+  interface ColumnConfig {
+    accessor: string;
+    title: string | JSX.Element;
+    type: ColumnType;
+    sortable?: boolean;
+    filterable?: boolean;
+    render?: (row: Row) => JSX.Element;
+    sortFunction?: (a: Row, b: Row) => number;
+    filterFunction?: (row: Row, query: string) => boolean;
+    footer?: JSX.Element;
+    width?: number;
+    textAlign?: 'left' | 'center' | 'right';
+  }
+
+  // Function to generate columns dynamically
+  const generateColumns = (configs: ColumnConfig[]): any[] => configs.map((config) => {
+    const {
+      accessor, title, type, sortable, filterable, render, sortFunction, filterFunction, footer, width, textAlign,
+    } = config;
+
+    const column: any = {
+      accessor,
+      title,
+      sortable,
+      width,
+      textAlign,
+      footer,
+      render: render || ((row: Row) => <div>{row[accessor]}</div>), // Default render
+    };
+
+    if (sortable && sortFunction) {
+      column.sortFunction = sortFunction;
+    }
+
+    if (filterable && filterFunction) {
+      column.filter = (
+        <TextInput
+          placeholder={`Filter ${accessor}`}
+          size="xs"
+          onChange={(e) => {
+            const query = e.currentTarget.value;
+            setRecords((prevRecords) => prevRecords.filter((row) => filterFunction(row, query)));
+          }}
+        />
+      );
+    }
+
+    // Add specific rendering logic for each column type
+    if (type === 'heatmapColumn') {
+      column.render = (row: Row) => {
+        const value = Number(row[accessor] ?? 0);
+        const hasValue = value !== 0;
+        return (
+          <Box
+            style={{
+              height: 21,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: hasValue ? getHeatColor(value) : 'transparent',
+              color: value > 30 ? '#fff' : '#000',
+              fontSize: 14,
+              padding: 0,
+            }}
+          >
+            {hasValue ? `${value}%` : 'No data'}
+          </Box>
+        );
+      };
+    } else if (type === 'violinColumn') {
+      column.render = (row: Row) => {
+        const samples = makeFakeSamplesForRow(row, 40);
+        return <ViolinCell samples={samples} domain={[drgAggregate.minAll, drgAggregate.maxAll]} />;
+      };
+    } else if (type === 'numericColumn') {
+      column.render = (row: Row) => renderBar(Number(row[accessor]), 100, { suffix: '%' });
+    }
+
+    return column;
+  });
+
+  // Example column configurations
+  const columnConfigs: ColumnConfig[] = [
+    {
+      accessor: 'drg_weight',
+      title: 'DRG Weight',
+      type: 'violinColumn',
+      sortable: true,
+      filterable: true,
+      sortFunction: (a, b) => computeMedian(makeFakeSamplesForRow(a, 40)) - computeMedian(makeFakeSamplesForRow(b, 40)),
+      filterFunction: (row, query) => {
+        const samples = makeFakeSamplesForRow(row, 40);
+        const median = computeMedian(samples);
+        return median.toString().includes(query);
+      },
+      footer: (
+        <ViolinCell samples={drgAggregate.samples} domain={[drgAggregate.minAll, drgAggregate.maxAll]} height={24} padding={0} />
+      ),
+    },
+    {
+      accessor: 'vent',
+      title: 'Vent',
+      type: 'numericColumn',
+      sortable: true,
+      footer: renderHistogramFooter(ventBins, false, 0, maxVent),
+    },
+    {
+      accessor: 'b12',
+      title: 'B12',
+      type: 'numericColumn',
+      sortable: true,
+      footer: renderHistogramFooter(b12Bins, false, 0, maxB12),
+    },
+    {
+      accessor: 'surgeon',
+      title: 'Surgeon',
+      type: 'textColumn',
+      sortable: true,
+      filterable: true,
+      filterFunction: (row, query) => String(row.surgeon).toLowerCase().includes(query.toLowerCase()),
+    },
+    {
+      accessor: 'cases',
+      title: 'Cases',
+      type: 'numericColumn',
+      sortable: true,
+      footer: renderHistogramFooter(casesBins, false, 0, maxCases),
+    },
+    ...Array.from({ length: NUM_RBC_BUCKETS }).map((_, idx) => ({
+      accessor: `rbc_${idx + 1}`,
+      title: `${idx + 1} RBC`,
+      type: 'heatmapColumn',
+      sortable: true,
+      footer: renderHistogramFooter((rbcBins[idx]?.bins) ?? new Array(10).fill(0), true, 0, rbcBins[idx]?.max ?? 100),
+    })),
+  ];
+
+  // Generate columns dynamically
   const { effectiveColumns } = useDataTableColumns<Row>({
     key: colKey,
-    columns: [
-      {
-        accessor: 'drg_weight',
-        title: 'DRG Weight',
-        textAlign: 'center',
-        render: (row: Row) => {
-          const samples = makeFakeSamplesForRow(row, 40);
-          return <ViolinCell samples={samples} domain={[drgAggregate.minAll, drgAggregate.maxAll]} />;
-        },
-        sortable: true,
-        filter: (
-          <Stack>
-            <TextInput
-              placeholder="Min"
-              size="xs"
-              value={drgMinQuery}
-              onChange={(e) => setDrgMinQuery(e.currentTarget.value)}
-              rightSection={(
-                <div style={{
-                  display: 'flex', gap: 6, alignItems: 'center', whiteSpace: 'nowrap', marginRight: 20,
-                }}
-                >
-
-                  <ActionIcon
-                    size="xs"
-                    variant="transparent"
-                    c="dimmed"
-                    onClick={() => setDrgMinCmp((p) => (p === '>' ? '<' : '>'))}
-                    title="Toggle comparator"
-                  >
-                    {drgMinCmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
-                  </ActionIcon>
-                  <ActionIcon size="xs" variant="transparent" c="dimmed" onClick={() => setDrgMinQuery('')}>
-                    <IconX size={12} />
-                  </ActionIcon>
-                </div>
-              )}
-              onKeyDown={(e) => { if (e.key === 'Enter') (e.currentTarget as HTMLInputElement).blur(); }}
-            />
-            <TextInput
-              placeholder="Median"
-              size="xs"
-              value={drgMedianQuery}
-              onChange={(e) => setDrgMedianQuery(e.currentTarget.value)}
-              rightSection={(
-                <div style={{
-                  display: 'flex', gap: 6, alignItems: 'center', whiteSpace: 'nowrap', marginRight: 20,
-                }}
-                >
-                  <ActionIcon
-                    size="xs"
-                    variant="transparent"
-                    c="dimmed"
-                    onClick={() => setDrgMedianCmp((p) => (p === '>' ? '<' : '>'))}
-                    title="Toggle comparator"
-                  >
-                    {drgMedianCmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
-                  </ActionIcon>
-                  <ActionIcon size="xs" variant="transparent" c="dimmed" onClick={() => setDrgMedianQuery('')}>
-                    <IconX size={12} />
-                  </ActionIcon>
-                </div>
-
-              )}
-              onKeyDown={(e) => { if (e.key === 'Enter') (e.currentTarget as HTMLInputElement).blur(); }}
-            />
-            <TextInput
-              placeholder="Max"
-              size="xs"
-              value={drgMaxQuery}
-              onChange={(e) => setDrgMaxQuery(e.currentTarget.value)}
-              rightSection={(
-                <div style={{
-                  display: 'flex', gap: 6, alignItems: 'center', whiteSpace: 'nowrap', marginRight: 20,
-                }}
-                >
-                  <ActionIcon
-                    size="xs"
-                    variant="transparent"
-                    c="dimmed"
-                    onClick={() => setDrgMaxCmp((p) => (p === '>' ? '<' : '>'))}
-                    title="Toggle comparator"
-                  >
-                    {drgMaxCmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
-                  </ActionIcon>
-                  <ActionIcon size="xs" variant="transparent" c="dimmed" onClick={() => setDrgMaxQuery('')}>
-                    <IconX size={12} />
-                  </ActionIcon>
-                </div>
-              )}
-              onKeyDown={(e) => { if (e.key === 'Enter') (e.currentTarget as HTMLInputElement).blur(); }}
-            />
-          </Stack>
-        ),
-        footer: (
-          <div style={{
-            display: 'flex', justifyContent: 'center', paddingTop: 0, paddingBottom: 0,
-          }}
-          >
-            <div style={{
-              width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
-            }}
-            >
-              <div style={{ width: '100%' }}>
-                <ViolinCell samples={drgAggregate.samples} domain={[drgAggregate.minAll, drgAggregate.maxAll]} height={24} padding={0} />
-              </div>
-
-              <div style={{ width: '100%', marginTop: 2 }}>
-                <div
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    boxSizing: 'border-box',
-                    fontSize: 10,
-                    fontWeight: 600,
-                    opacity: 0.7,
-                  }}
-                >
-                  <div style={{ paddingLeft: 4, color: '#6f6f6f' }}>{drgAggregate.minAll}</div>
-                  <div style={{ paddingRight: 4, color: '#6f6f6f' }}>{drgAggregate.maxAll}</div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        ),
-        ...colProps,
-      },
-      {
-        accessor: 'vent',
-        title: 'Vent',
-        textAlign: 'left',
-        render: ({ vent }) => renderBar(vent, maxVent, { suffix: '%', percentColor: true }),
-        sortable: true,
-        footer: renderHistogramFooter(ventBins, false, 0, maxVent),
-        ...colProps,
-      },
-      {
-        accessor: 'b12',
-        title: 'B12',
-        textAlign: 'left',
-        render: ({ b12 }) => renderBar(b12, maxB12, { suffix: '%', percentColor: true }),
-        sortable: true,
-        footer: renderHistogramFooter(b12Bins, false, 0, maxB12),
-        ...colProps,
-      },
-      {
-        accessor: 'surgeon',
-        title: 'Surgeon',
-        resizable: true,
-        sortable: true,
-        filter: (
-          <TextInput
-            placeholder="Search surgeons..."
-            leftSection={<IconSearch size={16} />}
-            rightSection={(
-              <ActionIcon size="sm" variant="transparent" c="dimmed" onClick={() => setSurgeonQuery('')}>
-                <IconX size={14} />
-              </ActionIcon>
-                )}
-            value={surgeonQuery}
-            onChange={(e) => setSurgeonQuery(e.currentTarget.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                (e.currentTarget as HTMLInputElement).blur();
-              }
-            }}
-          />
-        ),
-        render: ({ surgeon }) => (
-          <div
-            style={{
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              width: '100%',
-            }}
-            title={String(surgeon)}
-          >
-            {surgeon}
-          </div>
-        ),
-      },
-      {
-        accessor: 'cases',
-        title: 'Cases',
-        width: 70,
-        textAlign: 'right',
-        resizable: true,
-        sortable: true,
-        render: ({ cases }) => renderBar(cases, maxCases, { color: '#2b8be6' }),
-        footer: renderHistogramFooter(casesBins, false, 0, maxCases),
-      },
-      ...rbcUnitColumns,
-    ],
+    columns: generateColumns(columnConfigs),
   });
 
   return (
