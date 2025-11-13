@@ -630,6 +630,7 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
     type: ColumnType;
     sortable?: boolean;
     filterable?: boolean;
+    resizable?: boolean;
     render?: (row: Row) => JSX.Element;
     sortFunction?: (a: Row, b: Row) => number;
     filterFunction?: (row: Row, query: string) => boolean;
@@ -641,13 +642,14 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
   // Function to generate columns dynamically
   const generateColumns = (configs: ColumnConfig[]): any[] => configs.map((config) => {
     const {
-      accessor, title, type, sortable, filterable, render, sortFunction, filterFunction, footer, width, textAlign,
+      accessor, title, type, sortable, filterable, resizable, render, sortFunction, filterFunction, footer, width, textAlign,
     } = config;
 
     const column: any = {
       accessor,
       title,
       sortable,
+      resizable,
       width,
       textAlign,
       footer,
@@ -713,6 +715,7 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
       type: 'violinColumn',
       sortable: true,
       filterable: true,
+      resizable: true,
       sortFunction: (a, b) => computeMedian(makeFakeSamplesForRow(a, 40)) - computeMedian(makeFakeSamplesForRow(b, 40)),
       filterFunction: (row, query) => {
         const samples = makeFakeSamplesForRow(row, 40);
@@ -728,6 +731,7 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
       title: 'Vent',
       type: 'numericColumn',
       sortable: true,
+      resizable: true,
       footer: renderHistogramFooter(ventBins, false, 0, maxVent),
     },
     {
@@ -735,6 +739,7 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
       title: 'B12',
       type: 'numericColumn',
       sortable: true,
+      resizable: true,
       footer: renderHistogramFooter(b12Bins, false, 0, maxB12),
     },
     {
@@ -743,6 +748,7 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
       type: 'textColumn',
       sortable: true,
       filterable: true,
+      resizable: true,
       filterFunction: (row, query) => String(row.surgeon).toLowerCase().includes(query.toLowerCase()),
     },
     {
@@ -750,6 +756,7 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
       title: 'Cases',
       type: 'numericColumn',
       sortable: true,
+      resizable: true,
       footer: renderHistogramFooter(casesBins, false, 0, maxCases),
     },
     ...Array.from({ length: NUM_RBC_BUCKETS }).map((_, idx) => ({
@@ -757,6 +764,7 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
       title: `${idx + 1} RBC`,
       type: 'heatmapColumn',
       sortable: true,
+      resizable: true,
       footer: renderHistogramFooter((rbcBins[idx]?.bins) ?? new Array(10).fill(0), true, 0, rbcBins[idx]?.max ?? 100),
     })),
   ];
