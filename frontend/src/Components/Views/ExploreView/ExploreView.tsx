@@ -23,7 +23,7 @@ import classes from '../GridLayoutItem.module.css';
 import {
   BLOOD_COMPONENT_OPTIONS, costYAxisOptions, costYAxisVars, dashboardXAxisVars, dashboardYAxisOptions, dashboardYAxisVars, LAB_RESULT_OPTIONS, TIME_AGGREGATION_OPTIONS,
 } from '../../../Types/application';
-import { CostChart } from './Charts/CostChart';
+import CostChart from './Charts/CostChart';
 import { ScatterPlot } from './Charts/ScatterPlot';
 import HeatMap from './Charts/HeatMap';
 
