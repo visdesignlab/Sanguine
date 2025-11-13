@@ -13,7 +13,7 @@ import {
   Text,
 } from '@mantine/core';
 import {
-  IconGripVertical, IconPlus, IconSearch, IconX, IconMathGreater, IconMathLower,
+  IconGripVertical, IconPlus,
 } from '@tabler/icons-react';
 import { DataTable, useDataTableColumns, type DataTableSortStatus } from 'mantine-datatable';
 import sortBy from 'lodash/sortBy';
@@ -559,68 +559,6 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
     );
   };
 
-  // Rbc unit columns
-  const rbcUnitColumns = Array.from({ length: NUM_RBC_BUCKETS }).map((_, idx) => {
-    const unitIndex = idx; // 0-based index into percent_*_rbc fields
-    const titleText = (idx + 1) === 5 ? '5+ RBCs' : `${idx + 1} ${idx === 0 ? 'RBC' : 'RBCs'}`;
-    const accessor = `rbc_${idx + 1}`;
-    const percentKey = `percent_${idx + 1}_rbc` as keyof Row;
-
-    return {
-      accessor,
-      title: (
-        <Tooltip
-          label={(idx + 1) === 5
-            ? '5+ RBCs Transfused Intraoperatively'
-            : `${idx + 1} ${idx === 0 ? 'RBC' : 'RBCs'} Transfused Intraoperatively`}
-          position="top"
-          withArrow
-        >
-          <div style={{ display: 'inline-block', cursor: 'help' }}>{titleText}</div>
-        </Tooltip>
-      ),
-      render: (row: Row) => {
-        const percent = Number(row[percentKey] ?? 0);
-        const hasValue = percent !== 0;
-        return (
-          <Tooltip
-            label={hasValue ? `${percent}% of cases` : 'No data'}
-            position="top"
-            withArrow
-          >
-            <Box
-              style={{
-                height: 21,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: hasValue ? getHeatColor(percent) : 'transparent',
-                color: percent > 30 ? '#fff' : '#000',
-                fontSize: 14,
-                padding: 0,
-              }}
-            >
-              {hasValue
-                ? `${percent}%`
-                : (
-                  <div style={{
-                    width: '30%',
-                    height: 1,
-                    background: '#bbb',
-                    borderRadius: 2,
-                  }}
-                  />
-                )}
-            </Box>
-          </Tooltip>
-        );
-      },
-      sortable: true,
-      footer: renderHistogramFooter((rbcBins[unitIndex]?.bins) ?? new Array(10).fill(0), true, 0, rbcBins[unitIndex]?.max ?? 100),
-      ...{ ...colProps, draggable: false },
-    };
-  });
-
   // Define column types and their configurations
   type ColumnType = 'heatmapColumn' | 'textColumn' | 'numericColumn' | 'violinColumn';
 
@@ -640,7 +578,7 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
   }
 
   // Function to generate columns dynamically
-  const generateColumns = (configs: ColumnConfig[]): any[] => configs.map((config) => {
+  const generateColumns = (configs: ColumnConfig[]): ColumnConfig[] => configs.map((config) => {
     const {
       accessor, title, type, sortable, filterable, resizable, render, sortFunction, filterFunction, footer, width, textAlign,
     } = config;
