@@ -44,7 +44,6 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
 
   // enable per-chart persistent column resizing / reordering
   const colKey = `heatmap-${chartConfig.chartId}`;
-  const colProps = { resizable: true, draggable: true, toggleable: true };
 
   // sorting state + derived records (sort dummyData when sort status changes)
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<Row>>({
@@ -129,13 +128,6 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
     return interpolateReds(t);
   };
 
-  const { maxVent, maxB12, maxCases } = useMemo(() => {
-    const maxVentVal = Math.max(100, ...records.map((r) => r.vent));
-    const maxB12Val = Math.max(100, ...records.map((r) => r.b12));
-    const maxCasesVal = Math.max(1, ...records.map((r) => r.cases));
-    return { maxVent: maxVentVal, maxB12: maxB12Val, maxCases: maxCasesVal };
-  }, [records]);
-
   const NUM_RBC_BUCKETS = 5;
 
   const computeBins = (values: number[], bins = 10, min = 0, max = 100) => {
@@ -156,16 +148,6 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
     return counts;
   };
 
-  const ventBins = useMemo(() => computeBins(records.map((r) => r.vent), 10, 0, maxVent), [records, maxVent]);
-  const b12Bins = useMemo(() => computeBins(records.map((r) => r.b12), 10, 0, maxB12), [records, maxB12]);
-  const casesBins = useMemo(() => computeBins(records.map((r) => r.cases), 10, 0, maxCases), [records, maxCases]);
-
-  const rbcBins = useMemo(() => Array.from({ length: NUM_RBC_BUCKETS }).map((_, idx) => {
-    const key = `percent_${idx + 1}_rbc` as keyof Row;
-    const values = records.map((r) => Number(r[key] ?? 0));
-    const maxVal = values.length ? Math.max(...values) : 0;
-    return { bins: computeBins(values, 10, 0, maxVal), max: maxVal };
-  }), [records]);
   const drgAggregate = useMemo(() => {
     if (!records || records.length === 0) {
       return {
@@ -390,7 +372,9 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
 
   // Function to generate columns dynamically
   const generateColumns = (configs: ColumnConfig[]): any[] => configs.map((config) => {
-    const { accessor, title, type, values } = config;
+    const {
+      accessor, title, type, values,
+    } = config;
 
     const column: any = {
       accessor,
@@ -402,7 +386,6 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
 
     // Shared helpers
     const maxFromValues = (vals?: number[]) => (vals && vals.length ? Math.max(...vals) : 0);
-    const minFromValues = (vals?: number[]) => (vals && vals.length ? Math.min(...vals) : 0);
 
     if (type === 'heatmapColumn') {
       // cell render
