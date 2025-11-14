@@ -10,7 +10,6 @@ import {
   Box,
   Tooltip,
   TextInput,
-  Text,
 } from '@mantine/core';
 import {
   IconGripVertical, IconPlus,
@@ -18,208 +17,27 @@ import {
 import { DataTable, useDataTableColumns, type DataTableSortStatus } from 'mantine-datatable';
 import sortBy from 'lodash/sortBy';
 import { useDebouncedValue } from '@mantine/hooks';
-import { BarChart, ChartTooltipProps } from '@mantine/charts';
+import { BarChart } from '@mantine/charts';
 import { interpolateReds } from 'd3';
-import { area, curveCatmullRom } from 'd3-shape';
-import { scaleLinear } from 'd3-scale';
-import { mean as d3Mean, max as d3Max } from 'd3-array';
 import { Store } from '../../../../Store/Store';
 import { ExploreChartConfig } from '../../../../Types/application';
 import { backgroundHoverColor } from '../../../../Theme/mantineTheme';
 import './HeatMap.css';
 import { dummyData, Row } from './dummyData';
-
-function FooterHistogramTooltip({ active, payload }: ChartTooltipProps) {
-  if (!active || !payload || payload.length === 0) return null;
-
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 4,
-      padding: 6,
-      background: 'rgba(255,255,255,0.95)',
-      borderRadius: 4,
-      minWidth: 40,
-      zIndex: 1000,
-    }}
-    >
-      {payload.map((item: any) => (
-        <Text key={item.name} style={{ lineHeight: 1 }} fz={10}>
-          {item.name}
-          :
-          {item.value}
-        </Text>
-      ))}
-    </div>
-  );
-}
-
-// ---------- Violin helpers & small violin cell component ----------
-function kernelEpanechnikov(k: number) {
-  return function (v: number) {
-    // Epanechnikov kernel
-    v /= k;
-    return Math.abs(v) <= 1 ? (0.75 * (1 - v * v)) / k : 0;
-  };
-}
-
-function kernelDensityEstimator(kernel: (v: number) => number, X: number[]) {
-  return function (V: number[]) {
-    return X.map((x) => [x, d3Mean(V, (v) => kernel(x - v)) ?? 0] as [number, number]);
-  };
-}
-
-function computeMedian(arr: number[]) {
-  if (!arr || arr.length === 0) return 0;
-  const s = [...arr].sort((a, b) => a - b);
-  const mid = Math.floor(s.length / 2);
-  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
-}
-
-// deterministic pseudo-random generator to make "fake" samples reproducible per-row
-function mulberry32(a: number) {
-  return function () {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function makeFakeSamplesForRow(row: Row, count = 40) {
-  // base seed derived from surgeon name + cases so it's stable
-  const seedStr = `${row.surgeon ?? ''}:${row.cases ?? 0}`;
-  let h = 2166136261;
-  for (let i = 0; i < seedStr.length; i++) {
-    h = Math.imul(h ^ seedStr.charCodeAt(i), 16777619);
-  }
-  const rnd = mulberry32(h);
-  // produce samples in range ~[0.2 .. 1.8] scaled by cases (fake)
-  const samples = new Array(count).fill(0).map(() => {
-    // use a simple skewed distribution
-    const v = rnd() ** 1.3 * 1.5 + 0.2 + (Number(row.cases ?? 0) % 5) * 0.05;
-    return Math.round(v * 100) / 100;
-  });
-  return samples;
-}
-
-function ViolinCell({
-  samples, domain, height = 25, padding = 0,
-}: { samples: number[]; domain?: [number, number]; height?: number; padding?: number }) {
-  const internalWidth = 120; // internal coordinate width for the svg path
-  if (!samples || samples.length === 0) {
-    return (
-      <div style={{ width: '100%', height }}>
-        <div style={{
-          width: '30%', height: 6, background: '#ddd', margin: '0 auto', borderRadius: 3,
-        }}
-        />
-      </div>
-    );
-  }
-
-  const sampleMin = Math.min(...samples);
-  const sampleMax = Math.max(...samples);
-
-  // use provided global domain (for visual comparability) or fall back to per-sample domain
-  const domainMin = (domain && typeof domain[0] === 'number') ? domain[0] : sampleMin;
-  const domainMax = (domain && typeof domain[1] === 'number') ? domain[1] : sampleMax;
-  // guard against zero-range domain
-  const domainRange = Math.max(1e-6, domainMax - domainMin);
-
-  const ticks = 20;
-  // center line for horizontal violin (vertical center of svg)
-  const centerY = height / 2;
-
-  // x scale maps value to horizontal position inside svg (horizontal violin)
-  // use internalWidth for path coordinate system; svg will stretch to fill cell
-  const xScale = scaleLinear().domain([domainMin, domainMax]).range([padding, internalWidth - padding]);
-
-  // compute density over domain values (use domain for the liner so all violins share same axis)
-  const liner = Array.from({ length: ticks }).map((_, i) => domainMin + (i * domainRange) / Math.max(1, ticks - 1));
-  // choose bandwidth relative to domain range (not per-sample range) for consistent smoothing
-  const bandwidth = Math.max((domainRange) / 8, 1e-3);
-  const kde = kernelDensityEstimator(kernelEpanechnikov(bandwidth), liner);
-  const density = kde(samples);
-  const maxDens = d3Max(density.map((d) => d[1])) ?? 1;
-
-  // yDensityScale maps density -> vertical half-width of the violin
-  const yDensityScale = scaleLinear().domain([0, maxDens]).range([0, (height - padding * 2) / 2 * 0.85]);
-
-  // build a horizontal-area shape: x = value, y0 = center - dens, y1 = center + dens
-  const path = area<[number, number]>()
-    .x((d) => xScale(d[0]))
-    .y0((d) => centerY - yDensityScale(d[1]))
-    .y1((d) => centerY + yDensityScale(d[1]))
-    .curve(curveCatmullRom);
-
-  const d = path(density) ?? '';
-
-  const median = (() => {
-    const sorted = [...samples].sort((a, b) => a - b);
-    const mid = Math.floor(sorted.length / 2);
-    return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-  })();
-
-  // median x position and violin half-height for vertical line
-  const medianX = xScale(median);
-  const medianHalfH = yDensityScale(maxDens);
-
-  return (
-    <Tooltip
-      label={`Min ${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(sampleMin)} • Median ${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(median)} • Max ${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(sampleMax)}`}
-      position="top"
-      withArrow
-    >
-      <div style={{
-        width: '100%',
-        height,
-        flex: 1,
-        position: 'relative', // make a stacking context so we can overlay the median line as a DOM element
-        display: 'flex',
-        alignItems: 'center',
-      }}
-      >
-        {/* svg uses a fixed internal coordinate width but stretches to fill the cell */}
-        <svg viewBox={`0 0 ${internalWidth} ${height}`} preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }} aria-hidden>
-          <path d={d} fill="#a6a6a6" stroke="#8c8c8c" strokeWidth={1} opacity={0.95} />
-        </svg>
-
-        {/* median line as a DOM overlay so it does not horizontally stretch with the SVG */}
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            left: `${(medianX / internalWidth) * 100}%`,
-            transform: 'translateX(-50%)',
-            top: `${centerY - medianHalfH}px`,
-            height: `${medianHalfH * 2}px`,
-            width: 1, // constant pixel width — does not scale with SVG
-            background: '#8c8c8c',
-            opacity: 0.95,
-            pointerEvents: 'none',
-          }}
-        />
-      </div>
-    </Tooltip>
-  );
-}
-// ---------- end violin helpers ----------
+import { ViolinCell, makeFakeSamplesForRow, computeMedian } from './ViolinPlot';
 
 export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConfig }) {
   const store = useContext(Store);
   const [drgMedianQuery, setDrgMedianQuery] = useState('');
   const [debouncedDrgMedianQuery] = useDebouncedValue(drgMedianQuery, 200);
 
-  // NEW: min / max DRG weight filters (strings so empty = no filter)
+  // min / max DRG weight filters (strings so empty = no filter)
   const [drgMinQuery, setDrgMinQuery] = useState('');
   const [drgMaxQuery, setDrgMaxQuery] = useState('');
   const [debouncedDrgMinQuery, setDebouncedDrgMinQuery] = useDebouncedValue(drgMinQuery, 200);
   const [debouncedDrgMaxQuery, setDebouncedDrgMaxQuery] = useDebouncedValue(drgMaxQuery, 200);
 
-  // NEW: comparator toggles for each input ('>' or '<')
+  // comparator toggles for each input ('>' or '<')
   const [drgMinCmp, setDrgMinCmp] = useState<'>' | '<'>('>');
   const [drgMedianCmp, setDrgMedianCmp] = useState<'>' | '<'>('>');
   const [drgMaxCmp, setDrgMaxCmp] = useState<'>' | '<'>('<');
