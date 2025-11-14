@@ -5,6 +5,7 @@ export type Row = {
   b12: number; // percent
   surgeon: string; // array
   cases: number;
+  drg_weight: number;
   percent_1_rbc: number;
   percent_2_rbc: number;
   percent_3_rbc: number;

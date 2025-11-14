@@ -563,56 +563,31 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
   type ColumnType = 'heatmapColumn' | 'textColumn' | 'numericColumn' | 'violinColumn';
 
   interface ColumnConfig {
-    accessor: string;
+    accessor: keyof Row;
     title: string | JSX.Element;
     type: ColumnType;
-    sortable?: boolean;
-    filterable?: boolean;
-    resizable?: boolean;
-    render?: (row: Row) => JSX.Element;
-    sortFunction?: (a: Row, b: Row) => number;
-    filterFunction?: (row: Row, query: string) => boolean;
-    footer?: JSX.Element;
-    width?: number;
-    textAlign?: 'left' | 'center' | 'right';
+    // values are used for footers (histograms) and ranges when applicable
+    values?: number[];
   }
 
   // Function to generate columns dynamically
-  const generateColumns = (configs: ColumnConfig[]): ColumnConfig[] => configs.map((config) => {
-    const {
-      accessor, title, type, sortable, filterable, resizable, render, sortFunction, filterFunction, footer, width, textAlign,
-    } = config;
+  const generateColumns = (configs: ColumnConfig[]): any[] => configs.map((config) => {
+    const { accessor, title, type, values } = config;
 
     const column: any = {
       accessor,
       title,
-      sortable,
-      resizable,
-      width,
-      textAlign,
-      footer,
-      render: render || ((row: Row) => <div>{row[accessor]}</div>), // Default render
+      sortable: true,
+      resizable: true,
+      render: (row: Row) => <div>{String(row[accessor] ?? '')}</div>, // default text
     };
 
-    if (sortable && sortFunction) {
-      column.sortFunction = sortFunction;
-    }
+    // Shared helpers
+    const maxFromValues = (vals?: number[]) => (vals && vals.length ? Math.max(...vals) : 0);
+    const minFromValues = (vals?: number[]) => (vals && vals.length ? Math.min(...vals) : 0);
 
-    if (filterable && filterFunction) {
-      column.filter = (
-        <TextInput
-          placeholder={`Filter ${accessor}`}
-          size="xs"
-          onChange={(e) => {
-            const query = e.currentTarget.value;
-            setRecords((prevRecords) => prevRecords.filter((row) => filterFunction(row, query)));
-          }}
-        />
-      );
-    }
-
-    // Add specific rendering logic for each column type
     if (type === 'heatmapColumn') {
+      // cell render
       column.render = (row: Row) => {
         const value = Number(row[accessor] ?? 0);
         const hasValue = value !== 0;
@@ -633,78 +608,116 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
           </Box>
         );
       };
-    } else if (type === 'violinColumn') {
+
+      // footer (histogram) — use reds gradient and provided values
+      if (values && values.length) {
+        const max = maxFromValues(values);
+        const bins = computeBins(values, 10, 0, max);
+        column.footer = renderHistogramFooter(bins, true, 0, max);
+      }
+    }
+
+    if (type === 'numericColumn') {
+      // standard numeric bar renderer (as before)
+      column.render = (row: Row) => renderBar(Number(row[accessor]), 100, { suffix: '%' });
+
+      // footer (histogram) — grayscale and provided values
+      if (values && values.length) {
+        const max = maxFromValues(values);
+        const bins = computeBins(values, 10, 0, max);
+        column.footer = renderHistogramFooter(bins, false, 0, max);
+      }
+    }
+
+    if (type === 'textColumn') {
+      // default text cell already set; make it filterable via top-level surgeon query
+      if (accessor === 'surgeon') {
+        column.filter = (
+          <TextInput
+            placeholder="Filter surgeon"
+            size="xs"
+            value={surgeonQuery}
+            onChange={(e) => setSurgeonQuery(e.currentTarget.value)}
+          />
+        );
+      }
+    }
+
+    if (type === 'violinColumn') {
+      // consistent violin render using global domain
       column.render = (row: Row) => {
         const samples = makeFakeSamplesForRow(row, 40);
         return <ViolinCell samples={samples} domain={[drgAggregate.minAll, drgAggregate.maxAll]} />;
       };
-    } else if (type === 'numericColumn') {
-      column.render = (row: Row) => renderBar(Number(row[accessor]), 100, { suffix: '%' });
+
+      // always filterable by median via shared state
+      column.filter = (
+        <TextInput
+          placeholder="Filter by median"
+          size="xs"
+          value={drgMedianQuery}
+          onChange={(e) => setDrgMedianQuery(e.currentTarget.value)}
+        />
+      );
+
+      // sort by median
+      column.sortFunction = (a: Row, b: Row) => (
+        computeMedian(makeFakeSamplesForRow(a, 40)) - computeMedian(makeFakeSamplesForRow(b, 40))
+      );
+
+      // shared violin footer across rows using aggregate domain
+      column.footer = (
+        <ViolinCell
+          samples={drgAggregate.samples}
+          domain={[drgAggregate.minAll, drgAggregate.maxAll]}
+          height={24}
+          padding={0}
+        />
+      );
     }
 
     return column;
   });
 
-  // Example column configurations
+  // Column configurations
   const columnConfigs: ColumnConfig[] = [
     {
       accessor: 'drg_weight',
       title: 'DRG Weight',
       type: 'violinColumn',
-      sortable: true,
-      filterable: true,
-      resizable: true,
-      sortFunction: (a, b) => computeMedian(makeFakeSamplesForRow(a, 40)) - computeMedian(makeFakeSamplesForRow(b, 40)),
-      filterFunction: (row, query) => {
-        const samples = makeFakeSamplesForRow(row, 40);
-        const median = computeMedian(samples);
-        return median.toString().includes(query);
-      },
-      footer: (
-        <ViolinCell samples={drgAggregate.samples} domain={[drgAggregate.minAll, drgAggregate.maxAll]} height={24} padding={0} />
-      ),
     },
     {
       accessor: 'vent',
       title: 'Vent',
       type: 'numericColumn',
-      sortable: true,
-      resizable: true,
-      footer: renderHistogramFooter(ventBins, false, 0, maxVent),
+      values: records.map((r) => r.vent),
     },
     {
       accessor: 'b12',
       title: 'B12',
       type: 'numericColumn',
-      sortable: true,
-      resizable: true,
-      footer: renderHistogramFooter(b12Bins, false, 0, maxB12),
+      values: records.map((r) => r.b12),
     },
     {
       accessor: 'surgeon',
       title: 'Surgeon',
       type: 'textColumn',
-      sortable: true,
-      filterable: true,
-      resizable: true,
-      filterFunction: (row, query) => String(row.surgeon).toLowerCase().includes(query.toLowerCase()),
     },
     {
       accessor: 'cases',
       title: 'Cases',
       type: 'numericColumn',
-      sortable: true,
-      resizable: true,
-      footer: renderHistogramFooter(casesBins, false, 0, maxCases),
+      values: records.map((r) => r.cases),
     },
-    ...Array.from({ length: NUM_RBC_BUCKETS }).map((_, idx) => ({
-      accessor: `rbc_${idx + 1}`,
-      title: `${idx + 1} RBC`,
-      type: 'heatmapColumn',
-      sortable: true,
-      resizable: true,
-      footer: renderHistogramFooter((rbcBins[idx]?.bins) ?? new Array(10).fill(0), true, 0, rbcBins[idx]?.max ?? 100),
-    })),
+    ...Array.from({ length: NUM_RBC_BUCKETS }).map((_, idx) => {
+      const key = `percent_${idx + 1}_rbc` as keyof Row;
+      return {
+        accessor: `rbc_${idx + 1}` as keyof Row,
+        title: `${idx + 1} RBC`,
+        type: 'heatmapColumn',
+        values: records.map((r) => Number(r[key] ?? 0)),
+      } as ColumnConfig;
+    }),
   ];
 
   // Generate columns dynamically
@@ -713,8 +726,10 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
     columns: generateColumns(columnConfigs),
   });
 
+  // Render the DataTable with columns ----
   return (
     <Stack style={{ height: '100%', width: '100%' }}>
+      {/** Title, Add Column, Close Chart */}
       <Flex direction="row" justify="space-between" align="center" pl="md">
         <Flex direction="row" align="center" gap="md" ml={-12}>
           <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
@@ -725,13 +740,15 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
           <ActionIcon
             variant="subtle"
             onClick={() => {}}
-            title="Toggle sort by total cost"
+            title="Add Column"
           >
             <IconPlus size={18} />
           </ActionIcon>
           <CloseButton onClick={() => { store.exploreStore.removeChart(chartConfig.chartId); }} />
         </Flex>
       </Flex>
+
+      {/** Data Table */}
       <Box style={{ minHeight: 0, width: '100%' }}>
         <DataTable
           className="heatmap-data-table"
