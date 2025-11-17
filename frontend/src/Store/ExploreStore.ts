@@ -36,6 +36,7 @@ export class ExploreStore {
   }
 
   // Explore View Chart Data -----------------------------------
+  chartData: ExploreChartData = {} as ExploreChartData;
 
   // TODO: Remove dummy data and replace with query results
   dummyData: ExploreChartData = {
@@ -116,9 +117,9 @@ export class ExploreStore {
     ],
   };
 
-  chartData: ExploreChartData = {
-    ...this.dummyData,
-  };
+  async computeChartData() {
+    this.chartData = this.dummyData;
+  }
 
   // Adds a new chart to the top of the layout
   addChart(config: ExploreChartConfig) {
@@ -141,5 +142,10 @@ export class ExploreStore {
     Object.keys(this._chartLayouts).forEach((key) => {
       this._chartLayouts[key] = this._chartLayouts[key].filter((layout) => layout.i !== chartId);
     });
+  }
+
+  // E.g., add or remove a column from the heatmap
+  updateChartConfig(config: HeatMapConfig) {
+    // Add Chart Column
   }
 }
