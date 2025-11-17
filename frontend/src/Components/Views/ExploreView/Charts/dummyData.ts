@@ -1,3 +1,5 @@
+import { ExploreTableData } from '../../../../Types/application';
+
 // ...existing code...
 export type Row = {
   id: number;
@@ -465,5 +467,5 @@ export const dummyData = [
     cryo_cost: 4,
     salvage_savings: 5,
   },
-] as Row[];
+] as ExploreTableData;
 // ...existing code...

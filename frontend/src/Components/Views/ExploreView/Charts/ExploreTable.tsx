@@ -20,47 +20,48 @@ import { useDebouncedValue } from '@mantine/hooks';
 import { BarChart } from '@mantine/charts';
 import { interpolateReds } from 'd3';
 import { Store } from '../../../../Store/Store';
-import { ExploreChartConfig } from '../../../../Types/application';
+import { ExploreChartConfig, ExploreTableRow, ExploreTableData } from '../../../../Types/application';
 import { backgroundHoverColor } from '../../../../Theme/mantineTheme';
-import './HeatMap.css';
-import { dummyData, Row } from './dummyData';
+import './ExploreTable.css';
 import { ViolinCell, makeFakeSamplesForRow, computeMedian } from './ViolinPlot';
 
-export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConfig }) {
+export default function ExploreTable({ chartConfig }: { chartConfig: ExploreChartConfig }) {
   const store = useContext(Store);
+  const chartData = store.exploreStore.chartData[chartConfig.chartId] as ExploreTableData;
+
   const [drgMedianQuery, setDrgMedianQuery] = useState('');
   const [debouncedDrgMedianQuery] = useDebouncedValue(drgMedianQuery, 200);
 
   // min / max DRG weight filters (strings so empty = no filter)
-  const [drgMinQuery, setDrgMinQuery] = useState('');
-  const [drgMaxQuery, setDrgMaxQuery] = useState('');
-  const [debouncedDrgMinQuery, setDebouncedDrgMinQuery] = useDebouncedValue(drgMinQuery, 200);
-  const [debouncedDrgMaxQuery, setDebouncedDrgMaxQuery] = useDebouncedValue(drgMaxQuery, 200);
+  const [drgMinQuery] = useState('');
+  const [drgMaxQuery] = useState('');
+  const [debouncedDrgMinQuery] = useDebouncedValue(drgMinQuery, 200);
+  const [debouncedDrgMaxQuery] = useDebouncedValue(drgMaxQuery, 200);
 
   // comparator toggles for each input ('>' or '<')
-  const [drgMinCmp, setDrgMinCmp] = useState<'>' | '<'>('>');
-  const [drgMedianCmp, setDrgMedianCmp] = useState<'>' | '<'>('>');
-  const [drgMaxCmp, setDrgMaxCmp] = useState<'>' | '<'>('<');
+  const [drgMinCmp] = useState<'>' | '<'>('>');
+  const [drgMedianCmp] = useState<'>' | '<'>('>');
+  const [drgMaxCmp] = useState<'>' | '<'>('<');
 
   // enable per-chart persistent column resizing / reordering
-  const colKey = `heatmap-${chartConfig.chartId}`;
+  const colKey = `ExploreTable-${chartConfig.chartId}`;
 
-  // sorting state + derived records (sort dummyData when sort status changes)
-  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<Row>>({
+  // sorting state + derived records (sort chartData when sort status changes)
+  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<ExploreTableRow>>({
     columnAccessor: 'surgeon',
     direction: 'asc',
   });
 
   // surgeon search state (debounced)
   const [surgeonQuery, setSurgeonQuery] = useState('');
-  const [debouncedSurgeonQuery, setDebouncedSurgeonQuery] = useDebouncedValue(surgeonQuery, 200);
+  const [debouncedSurgeonQuery] = useDebouncedValue(surgeonQuery, 200);
   const [_showSurgeonFilter, _setShowSurgeonFilter] = useState(false);
 
-  const [records, setRecords] = useState<Row[]>(() => sortBy(dummyData, 'surgeon') as Row[]);
+  const [records, setRecords] = useState<ExploreTableRow[]>(() => sortBy(chartData, 'surgeon') as ExploreTableRow[]);
 
   useEffect(() => {
     // apply surgeon filter first
-    let filtered = dummyData.filter((r) => (debouncedSurgeonQuery.trim() === ''
+    let filtered = chartData.filter((r) => (debouncedSurgeonQuery.trim() === ''
       ? true
       : String(r.surgeon).toLowerCase().includes(debouncedSurgeonQuery.trim().toLowerCase())));
 
@@ -97,16 +98,16 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
       }
     }
 
-    const accessor = sortStatus.columnAccessor as keyof Row;
-    let sorted: Row[] = [];
+    const accessor = sortStatus.columnAccessor as keyof ExploreTableRow;
+    let sorted: ExploreTableRow[] = [];
 
     if (accessor === 'drg_weight') {
-      sorted = sortBy(filtered, (r: Row) => {
+      sorted = sortBy(filtered, (r: ExploreTableRow) => {
         const samples = makeFakeSamplesForRow(r, 40);
         return computeMedian(samples);
-      }) as Row[];
+      }) as ExploreTableRow[];
     } else {
-      sorted = sortBy(filtered, accessor) as Row[];
+      sorted = sortBy(filtered, accessor) as ExploreTableRow[];
     }
 
     setRecords(sortStatus.direction === 'desc' ? sorted.reverse() : sorted);
@@ -360,10 +361,10 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
   };
 
   // Define column types and their configurations
-  type ColumnType = 'heatmapColumn' | 'textColumn' | 'numericColumn' | 'violinColumn';
+  type ColumnType = 'ExploreTableColumn' | 'textColumn' | 'numericColumn' | 'violinColumn';
 
   interface ColumnConfig {
-    accessor: keyof Row;
+    accessor: keyof ExploreTableRow;
     title: string | JSX.Element;
     type: ColumnType;
     // values are used for footers (histograms) and ranges when applicable
@@ -381,15 +382,15 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
       title,
       sortable: true,
       resizable: true,
-      render: (row: Row) => <div>{String(row[accessor] ?? '')}</div>, // default text
+      render: (row: ExploreTableRow) => <div>{String(row[accessor] ?? '')}</div>, // default text
     };
 
     // Shared helpers
     const maxFromValues = (vals?: number[]) => (vals && vals.length ? Math.max(...vals) : 0);
 
-    if (type === 'heatmapColumn') {
+    if (type === 'ExploreTableColumn') {
       // cell render
-      column.render = (row: Row) => {
+      column.render = (row: ExploreTableRow) => {
         const value = Number(row[accessor] ?? 0);
         const hasValue = value !== 0;
         return (
@@ -420,7 +421,7 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
 
     if (type === 'numericColumn') {
       // standard numeric bar renderer (as before)
-      column.render = (row: Row) => renderBar(Number(row[accessor]), 100, { suffix: '%' });
+      column.render = (row: ExploreTableRow) => renderBar(Number(row[accessor]), 100, { suffix: '%' });
 
       // footer (histogram) — grayscale and provided values
       if (values && values.length) {
@@ -446,7 +447,7 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
 
     if (type === 'violinColumn') {
       // consistent violin render using global domain
-      column.render = (row: Row) => {
+      column.render = (row: ExploreTableRow) => {
         const samples = makeFakeSamplesForRow(row, 40);
         return <ViolinCell samples={samples} domain={[drgAggregate.minAll, drgAggregate.maxAll]} />;
       };
@@ -462,7 +463,7 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
       );
 
       // sort by median
-      column.sortFunction = (a: Row, b: Row) => (
+      column.sortFunction = (a: ExploreTableRow, b: ExploreTableRow) => (
         computeMedian(makeFakeSamplesForRow(a, 40)) - computeMedian(makeFakeSamplesForRow(b, 40))
       );
 
@@ -511,18 +512,18 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
       values: records.map((r) => r.cases),
     },
     ...Array.from({ length: NUM_RBC_BUCKETS }).map((_, idx) => {
-      const key = `percent_${idx + 1}_rbc` as keyof Row;
+      const key = `percent_${idx + 1}_rbc` as keyof ExploreTableRow;
       return {
-        accessor: `rbc_${idx + 1}` as keyof Row,
+        accessor: `rbc_${idx + 1}` as keyof ExploreTableRow,
         title: `${idx + 1} RBC`,
-        type: 'heatmapColumn',
+        type: 'ExploreTableColumn',
         values: records.map((r) => Number(r[key] ?? 0)),
       } as ColumnConfig;
     }),
   ];
 
   // Generate columns dynamically
-  const { effectiveColumns } = useDataTableColumns<Row>({
+  const { effectiveColumns } = useDataTableColumns<ExploreTableRow>({
     key: colKey,
     columns: generateColumns(columnConfigs),
   });
@@ -552,7 +553,7 @@ export default function HeatMap({ chartConfig }: { chartConfig: ExploreChartConf
       {/** Data Table */}
       <Box style={{ minHeight: 0, width: '100%' }}>
         <DataTable
-          className="heatmap-data-table"
+          className="ExploreTable-data-table"
           borderRadius="sm"
           striped
           withTableBorder={false}

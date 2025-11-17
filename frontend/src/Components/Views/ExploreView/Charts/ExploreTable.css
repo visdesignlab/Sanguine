@@ -1,11 +1,11 @@
-.heatmap-data-table td {
+.explore-table-data-table td {
   padding-left: 1.5px !important;
   padding-right: 1.5px !important;
   padding-top: 1.75px !important;
   padding-bottom: 1.75px !important;
 }
-.heatmap-data-table tfoot td,
-.heatmap-data-table tfoot th {
+.explore-table-data-table tfoot td,
+.explore-table-data-table tfoot th {
   padding-left: 1.5px !important;
   padding-right: 1.5px !important;
   padding-top: 5px !important;
