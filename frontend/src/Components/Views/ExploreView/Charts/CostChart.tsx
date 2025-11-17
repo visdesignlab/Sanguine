@@ -41,7 +41,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
   const [surgeonQuery, setSurgeonQuery] = useState('');
   const [debouncedSurgeonQuery] = useDebouncedValue(surgeonQuery, 200);
 
-  // ---------- DRG filter states (copied from HeatMap for parity) ----------
+  // ---------- DRG filter states (copied from ExploreTable for parity) ----------
   const [drgMedianQuery, setDrgMedianQuery] = useState('');
   const [debouncedDrgMedianQuery] = useDebouncedValue(drgMedianQuery, 200);
 
@@ -57,7 +57,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
 
   const [records, setRecords] = useState<Row[]>(() => sortBy(dummyData, 'surgeon') as Row[]);
 
-  // ---------- helpers copied from HeatMap for DRG violin rendering ----------
+  // ---------- helpers copied from ExploreTable for DRG violin rendering ----------
   function kernelEpanechnikov(k: number) {
     return function (v: number) {
       v /= k;
@@ -198,7 +198,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
       ? true
       : String(r.surgeon).toLowerCase().includes(debouncedSurgeonQuery.trim().toLowerCase())));
 
-    // apply DRG min / max filters (copied from HeatMap)
+    // apply DRG min / max filters (copied from ExploreTable)
     if (debouncedDrgMinQuery.trim() !== '') {
       const minVal = Number(debouncedDrgMinQuery);
       if (!Number.isNaN(minVal)) {
@@ -275,7 +275,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
     };
   }, [records]);
 
-  // ---------- added: small histogram/bar helpers + cases footer (copied/adapted from HeatMap) ----------
+  // ---------- added: small histogram/bar helpers + cases footer (copied/adapted from ExploreTable) ----------
   const computeBins = (values: number[], bins = 10, min = 0, max = 100) => {
     const counts = new Array(bins).fill(0);
     const range = Math.max(1, max - min);
@@ -625,7 +625,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
   const { effectiveColumns } = useDataTableColumns<Row>({
     key: colKey,
     columns: [
-      // ---------- DRG Weight column (copied from HeatMap) ----------
+      // ---------- DRG Weight column (copied from ExploreTable) ----------
       {
         accessor: 'drg_weight',
         title: 'DRG Weight',
@@ -790,7 +790,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
         ),
         ...colProps,
       },
-      // ---------- added Cases column (same as HeatMap) ----------
+      // ---------- added Cases column (same as ExploreTable) ----------
       {
         accessor: 'cases',
         title: 'Cases',
@@ -836,7 +836,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
 
       <Box style={{ minHeight: 0, width: '100%' }}>
         <DataTable
-          className="heatmap-data-table"
+          className="ExploreTable-data-table"
           borderRadius="sm"
           striped
           withTableBorder={false}

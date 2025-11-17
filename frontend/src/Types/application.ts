@@ -491,7 +491,7 @@ export const chartColors = [
 const _AGGREGATIONS = ['surgeon_prov_id', 'anesth_prov_id', 'year', 'quarter'] as const;
 export type Aggregation = typeof _AGGREGATIONS[number];
 
-// --- Cost bar charts ---
+// --- Cost bar charts TODO: Change to Explore Table ---
 const CostAggregations: { value: Aggregation; label: string }[] = [
   { value: 'surgeon_prov_id', label: 'Surgeon ID' },
   { value: 'anesth_prov_id', label: 'Anesthesiologist ID' },
@@ -507,27 +507,6 @@ export const costYAxisVars = costYAxisOptions.map((opt) => opt.value);
 
 export type CostChartConfig = ChartConfig<typeof costXAxisVars[number], typeof costYAxisVars[number], 'sum' | 'avg', 'cost'>;
 
-// TODO: Update scatterPlotConfig type
-export type ScatterPlotConfig = ChartConfig<typeof dashboardXAxisVars[number] | BloodComponent, typeof dashboardYAxisVars[number] | LabResult, keyof typeof AGGREGATION_OPTIONS, 'scatterPlot'>;
-
-export type HeatMapMetric = {
-  var: string; // e.g., 'b12', 'visit_count', 'vent'
-  aggregation: keyof typeof AGGREGATION_OPTIONS; // 'sum' | 'avg'
-};
-
-export type HeatMapConfig = {
-  chartId: string;
-  chartType: 'heatmap';
-  yAxisVar: string; // e.g., 'surgeon_prov_id'
-  xAxisVars: HeatMapMetric[]; // e.g., [{ var: 'b12', aggregation: 'avg' }, { var: 'visit_count', aggregation: 'sum' }]
-};
-
-// TODO: Update HeatMapData type
-export type HeatMapData = Record<string, string | number>[];
-
-export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | HeatMapConfig;
-export type ScatterPlotData = ScatterChartSeries[];
-
 // TOOD: Update or remove CostBarData type
 export interface CostBarDatum extends Record<Cost, number> {
   surgeon_prov_id?: string;
@@ -537,5 +516,29 @@ export interface CostBarDatum extends Record<Cost, number> {
 }
 export type CostBarData = CostBarDatum[];
 
+// --- Scatter plots ---
+// TODO: Update scatterPlotConfig type
+export type ScatterPlotConfig = ChartConfig<typeof dashboardXAxisVars[number] | BloodComponent, typeof dashboardYAxisVars[number] | LabResult, keyof typeof AGGREGATION_OPTIONS, 'scatterPlot'>;
+export type ScatterPlotData = ScatterChartSeries[];
+
+// --- Explore Table ---
+export type ExploreTableColumn = {
+  var: string; // e.g., 'b12', 'visit_count', 'vent'
+  aggregation: keyof typeof AGGREGATION_OPTIONS; // 'sum' | 'avg'
+};
+
+export type ExploreTableConfig = {
+  chartId: string;
+  chartType: 'ExploreTable';
+  rowVar: string; // e.g., 'surgeon_prov_id'
+  columns: ExploreTableColumn[]; // e.g., [{ var: 'b12', aggregation: 'avg' }, { var: 'visit_count', aggregation: 'sum' }]
+};
+
+// TODO: Update ExploreTableData type
+export type ExploreTableRow = Record<string, string | number>;
+export type ExploreTableData = ExploreTableRow[];
+
 // TODO: Update ExploreChartData type
-export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | HeatMapData>;
+export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | ExploreTableData>;
+
+export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | ExploreTableConfig;
