@@ -523,15 +523,17 @@ export type ScatterPlotData = ScatterChartSeries[];
 
 // --- Explore Table ---
 export type ExploreTableColumn = {
-  var: string; // e.g., 'b12', 'visit_count', 'vent'
-  aggregation: keyof typeof AGGREGATION_OPTIONS; // 'sum' | 'avg'
+  colVar: string; // e.g., 'b12', 'visit_count', 'vent'
+  aggregation: keyof typeof AGGREGATION_OPTIONS | 'none'; // 'sum' | 'avg'
+  type: 'numeric' | 'text' | 'violin' | 'heatmap';
+  title: string;
 };
 
 export type ExploreTableConfig = {
   chartId: string;
-  chartType: 'ExploreTable';
+  chartType: 'exploreTable';
   rowVar: string; // e.g., 'surgeon_prov_id'
-  columns: ExploreTableColumn[]; // e.g., [{ var: 'b12', aggregation: 'avg' }, { var: 'visit_count', aggregation: 'sum' }]
+  columns: ExploreTableColumn[];
 };
 
 // TODO: Update ExploreTableData type

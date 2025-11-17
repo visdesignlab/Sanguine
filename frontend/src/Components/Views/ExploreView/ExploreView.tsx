@@ -243,7 +243,7 @@ export function ExploreView() {
             >
               {chartConfig.chartType === 'cost' && <CostChart chartConfig={chartConfig} />}
               {chartConfig.chartType === 'scatterPlot' && <ScatterPlot chartConfig={chartConfig} />}
-              {chartConfig.chartType === 'ExploreTable' && <ExploreTable chartConfig={chartConfig} />}
+              {chartConfig.chartType === 'exploreTable' && <ExploreTable chartConfig={chartConfig} />}
             </Card>
           ))}
         </ResponsiveGridLayout>
