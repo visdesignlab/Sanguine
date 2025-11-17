@@ -369,7 +369,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
   // Function to generate columns dynamically (derive values from records internally)
   const generateColumns = (configs: ExploreTableColumn[]): any[] => configs.map((config) => {
-    console.log('Column config:', config);
     const {
       colVar, aggregation, type, title,
     } = config;
@@ -466,19 +465,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     return column;
   });
 
-  // Column configurations (no inline values now)
-  const columnConfigs: ColumnConfig[] = [
-    { accessor: 'drg_weight', title: 'DRG Weight', type: 'violinColumn' },
-    { accessor: 'surgeon_prov_id', title: 'Surgeon', type: 'textColumn' },
-    { accessor: 'cases', title: 'Cases', type: 'numericColumn' },
-    { accessor: 'percent_1_rbc', title: '1 RBC', type: 'HeatMapColumn' },
-    { accessor: 'percent_2_rbc', title: '2 RBCs', type: 'HeatMapColumn' },
-    { accessor: 'percent_3_rbc', title: '3 RBCs', type: 'HeatMapColumn' },
-    { accessor: 'percent_4_rbc', title: '4 RBCs', type: 'HeatMapColumn' },
-    { accessor: 'percent_5_rbc', title: '5 RBCs', type: 'HeatMapColumn' },
-  ];
-
-  console.log('Chart Data in ExploreTable:', chartData);
   // Generate columns dynamically
   const { effectiveColumns } = useDataTableColumns<ExploreTableRow>({
     key: colKey,
@@ -509,9 +495,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
       {/** Data Table */}
       <Box style={{ minHeight: 0, width: '100%' }}>
-        {console.log('ExploreTable records:', records)}
-
-        {console.log('ExploreTable columns:', effectiveColumns)}
         <DataTable
           className="ExploreTable-data-table"
           borderRadius="sm"
