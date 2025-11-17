@@ -16,27 +16,25 @@ import {
 } from '@tabler/icons-react';
 import { DataTable, useDataTableColumns, type DataTableSortStatus } from 'mantine-datatable';
 import sortBy from 'lodash/sortBy';
-import { useDebouncedValue } from '@mantine/hooks';
 import { BarChart } from '@mantine/charts';
 import { interpolateReds } from 'd3';
 import { Store } from '../../../../Store/Store';
-import { ExploreChartConfig, ExploreTableRow, ExploreTableData } from '../../../../Types/application';
+import {
+  ExploreTableRow, ExploreTableData, ExploreTableConfig, ExploreTableColumn,
+} from '../../../../Types/application';
 import { backgroundHoverColor } from '../../../../Theme/mantineTheme';
 import './ExploreTable.css';
 import { ViolinCell, makeFakeSamplesForRow, computeMedian } from './ViolinPlot';
 
-export default function ExploreTable({ chartConfig }: { chartConfig: ExploreChartConfig }) {
+export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTableConfig }) {
   const store = useContext(Store);
   const chartData = store.exploreStore.chartData[chartConfig.chartId] as ExploreTableData;
 
   const [drgMedianQuery, setDrgMedianQuery] = useState('');
-  const [debouncedDrgMedianQuery] = useDebouncedValue(drgMedianQuery, 200);
 
   // min / max DRG weight filters (strings so empty = no filter)
   const [drgMinQuery] = useState('');
   const [drgMaxQuery] = useState('');
-  const [debouncedDrgMinQuery] = useDebouncedValue(drgMinQuery, 200);
-  const [debouncedDrgMaxQuery] = useDebouncedValue(drgMaxQuery, 200);
 
   // comparator toggles for each input ('>' or '<')
   const [drgMinCmp] = useState<'>' | '<'>('>');
@@ -48,25 +46,24 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreChar
 
   // sorting state + derived records (sort chartData when sort status changes)
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<ExploreTableRow>>({
-    columnAccessor: 'surgeon',
+    columnAccessor: 'surgeon_prov_id',
     direction: 'asc',
   });
 
-  // surgeon search state (debounced)
+  // surgeon search state
   const [surgeonQuery, setSurgeonQuery] = useState('');
-  const [debouncedSurgeonQuery] = useDebouncedValue(surgeonQuery, 200);
   const [_showSurgeonFilter, _setShowSurgeonFilter] = useState(false);
 
-  const [records, setRecords] = useState<ExploreTableRow[]>(() => sortBy(chartData, 'surgeon') as ExploreTableRow[]);
+  const [records, setRecords] = useState<ExploreTableRow[]>(() => sortBy(chartData, 'surgeon_prov_id') as ExploreTableRow[]);
 
   useEffect(() => {
     // apply surgeon filter first
-    let filtered = chartData.filter((r) => (debouncedSurgeonQuery.trim() === ''
+    let filtered = chartData.filter((r) => (surgeonQuery.trim() === ''
       ? true
-      : String(r.surgeon).toLowerCase().includes(debouncedSurgeonQuery.trim().toLowerCase())));
+      : String(r.surgeon_prov_id).toLowerCase().includes(surgeonQuery.trim().toLowerCase())));
 
-    if (debouncedDrgMinQuery.trim() !== '') {
-      const minVal = Number(debouncedDrgMinQuery);
+    if (drgMinQuery.trim() !== '') {
+      const minVal = Number(drgMinQuery);
       if (!Number.isNaN(minVal)) {
         if (drgMinCmp === '>') {
           filtered = filtered.filter((r) => Number(r.drg_weight) >= minVal);
@@ -75,8 +72,8 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreChar
         }
       }
     }
-    if (debouncedDrgMaxQuery.trim() !== '') {
-      const maxVal = Number(debouncedDrgMaxQuery);
+    if (drgMaxQuery.trim() !== '') {
+      const maxVal = Number(drgMaxQuery);
       if (!Number.isNaN(maxVal)) {
         if (drgMaxCmp === '>') {
           filtered = filtered.filter((r) => Number(r.drg_weight) >= maxVal);
@@ -87,8 +84,8 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreChar
     }
 
     // Apply DRG median filter
-    if (debouncedDrgMedianQuery.trim() !== '') {
-      const pivot = Number(debouncedDrgMedianQuery);
+    if (drgMedianQuery.trim() !== '') {
+      const pivot = Number(drgMedianQuery);
       if (!Number.isNaN(pivot)) {
         filtered = filtered.filter((r) => {
           const samples = makeFakeSamplesForRow(r, 40);
@@ -113,13 +110,14 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreChar
     setRecords(sortStatus.direction === 'desc' ? sorted.reverse() : sorted);
   }, [
     sortStatus,
-    debouncedSurgeonQuery,
-    debouncedDrgMedianQuery,
-    debouncedDrgMinQuery,
-    debouncedDrgMaxQuery,
+    surgeonQuery,
+    drgMedianQuery,
+    drgMinQuery,
+    drgMaxQuery,
     drgMinCmp,
     drgMedianCmp,
     drgMaxCmp,
+    chartData,
   ]);
 
   const getHeatColor = (percent: number) => {
@@ -361,37 +359,37 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreChar
   };
 
   // Define column types and their configurations
-  type ColumnType = 'ExploreTableColumn' | 'textColumn' | 'numericColumn' | 'violinColumn';
+  type ColumnType = 'HeatMapColumn' | 'textColumn' | 'numericColumn' | 'violinColumn';
 
   interface ColumnConfig {
     accessor: keyof ExploreTableRow;
     title: string | JSX.Element;
     type: ColumnType;
-    // values are used for footers (histograms) and ranges when applicable
-    values?: number[];
   }
 
-  // Function to generate columns dynamically
-  const generateColumns = (configs: ColumnConfig[]): any[] => configs.map((config) => {
+  // Function to generate columns dynamically (derive values from records internally)
+  const generateColumns = (configs: ExploreTableColumn[]): any[] => configs.map((config) => {
+    console.log('Column config:', config);
     const {
-      accessor, title, type, values,
+      colVar, aggregation, type, title,
     } = config;
 
     const column: any = {
-      accessor,
+      accessor: colVar,
       title,
       sortable: true,
       resizable: true,
-      render: (row: ExploreTableRow) => <div>{String(row[accessor] ?? '')}</div>, // default text
+      render: (row: ExploreTableRow) => <div>{String(row[colVar] ?? '')}</div>,
     };
 
-    // Shared helpers
-    const maxFromValues = (vals?: number[]) => (vals && vals.length ? Math.max(...vals) : 0);
+    // derive values for histograms
+    const values = records.map((r) => Number(r[colVar] ?? 0));
+    const maxFromValues = (vals: number[]) => (vals.length ? Math.max(...vals) : 0);
 
-    if (type === 'ExploreTableColumn') {
-      // cell render
+    if (type === 'heatmap') {
+      const valueValues = values;
       column.render = (row: ExploreTableRow) => {
-        const value = Number(row[accessor] ?? 0);
+        const value = Number(row[colVar] ?? 0);
         const hasValue = value !== 0;
         return (
           <Box
@@ -410,30 +408,24 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreChar
           </Box>
         );
       };
-
-      // footer (histogram) — use reds gradient and provided values
-      if (values && values.length) {
-        const max = maxFromValues(values);
-        const bins = computeBins(values, 10, 0, max);
+      if (valueValues.length) {
+        const max = maxFromValues(valueValues);
+        const bins = computeBins(valueValues, 10, 0, max);
         column.footer = renderHistogramFooter(bins, true, 0, max);
       }
     }
 
-    if (type === 'numericColumn') {
-      // standard numeric bar renderer (as before)
-      column.render = (row: ExploreTableRow) => renderBar(Number(row[accessor]), 100, { suffix: '%' });
-
-      // footer (histogram) — grayscale and provided values
-      if (values && values.length) {
+    if (type === 'numeric') {
+      column.render = (row: ExploreTableRow) => renderBar(Number(row[colVar]), 100, { suffix: '%' });
+      if (values.length) {
         const max = maxFromValues(values);
         const bins = computeBins(values, 10, 0, max);
         column.footer = renderHistogramFooter(bins, false, 0, max);
       }
     }
 
-    if (type === 'textColumn') {
-      // default text cell already set; make it filterable via top-level surgeon query
-      if (accessor === 'surgeon') {
+    if (type === 'text') {
+      if (colVar === 'surgeon_prov_id') {
         column.filter = (
           <TextInput
             placeholder="Filter surgeon"
@@ -445,14 +437,11 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreChar
       }
     }
 
-    if (type === 'violinColumn') {
-      // consistent violin render using global domain
+    if (type === 'violin') {
       column.render = (row: ExploreTableRow) => {
         const samples = makeFakeSamplesForRow(row, 40);
         return <ViolinCell samples={samples} domain={[drgAggregate.minAll, drgAggregate.maxAll]} />;
       };
-
-      // always filterable by median via shared state
       column.filter = (
         <TextInput
           placeholder="Filter by median"
@@ -461,13 +450,9 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreChar
           onChange={(e) => setDrgMedianQuery(e.currentTarget.value)}
         />
       );
-
-      // sort by median
       column.sortFunction = (a: ExploreTableRow, b: ExploreTableRow) => (
         computeMedian(makeFakeSamplesForRow(a, 40)) - computeMedian(makeFakeSamplesForRow(b, 40))
       );
-
-      // shared violin footer across rows using aggregate domain
       column.footer = (
         <ViolinCell
           samples={drgAggregate.samples}
@@ -481,51 +466,23 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreChar
     return column;
   });
 
-  // Column configurations
+  // Column configurations (no inline values now)
   const columnConfigs: ColumnConfig[] = [
-    {
-      accessor: 'drg_weight',
-      title: 'DRG Weight',
-      type: 'violinColumn',
-    },
-    {
-      accessor: 'vent',
-      title: 'Vent',
-      type: 'numericColumn',
-      values: records.map((r) => r.vent),
-    },
-    {
-      accessor: 'b12',
-      title: 'B12',
-      type: 'numericColumn',
-      values: records.map((r) => r.b12),
-    },
-    {
-      accessor: 'surgeon',
-      title: 'Surgeon',
-      type: 'textColumn',
-    },
-    {
-      accessor: 'cases',
-      title: 'Cases',
-      type: 'numericColumn',
-      values: records.map((r) => r.cases),
-    },
-    ...Array.from({ length: NUM_RBC_BUCKETS }).map((_, idx) => {
-      const key = `percent_${idx + 1}_rbc` as keyof ExploreTableRow;
-      return {
-        accessor: `rbc_${idx + 1}` as keyof ExploreTableRow,
-        title: `${idx + 1} RBC`,
-        type: 'ExploreTableColumn',
-        values: records.map((r) => Number(r[key] ?? 0)),
-      } as ColumnConfig;
-    }),
+    { accessor: 'drg_weight', title: 'DRG Weight', type: 'violinColumn' },
+    { accessor: 'surgeon_prov_id', title: 'Surgeon', type: 'textColumn' },
+    { accessor: 'cases', title: 'Cases', type: 'numericColumn' },
+    { accessor: 'percent_1_rbc', title: '1 RBC', type: 'HeatMapColumn' },
+    { accessor: 'percent_2_rbc', title: '2 RBCs', type: 'HeatMapColumn' },
+    { accessor: 'percent_3_rbc', title: '3 RBCs', type: 'HeatMapColumn' },
+    { accessor: 'percent_4_rbc', title: '4 RBCs', type: 'HeatMapColumn' },
+    { accessor: 'percent_5_rbc', title: '5 RBCs', type: 'HeatMapColumn' },
   ];
 
+  console.log('Chart Data in ExploreTable:', chartData);
   // Generate columns dynamically
   const { effectiveColumns } = useDataTableColumns<ExploreTableRow>({
     key: colKey,
-    columns: generateColumns(columnConfigs),
+    columns: generateColumns(chartConfig.columns),
   });
 
   // Render the DataTable with columns ----
@@ -552,6 +509,9 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreChar
 
       {/** Data Table */}
       <Box style={{ minHeight: 0, width: '100%' }}>
+        {console.log('ExploreTable records:', records)}
+
+        {console.log('ExploreTable columns:', effectiveColumns)}
         <DataTable
           className="ExploreTable-data-table"
           borderRadius="sm"
