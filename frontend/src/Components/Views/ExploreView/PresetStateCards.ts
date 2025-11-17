@@ -24,11 +24,39 @@ export const presetStateCards: PresetGroup[] = [
           {
             chartId: 'preset-explore-table-preop-anemia',
             chartType: 'ExploreTable',
-            // xAxisVar = blood component to show transfused units
-            xAxisVar: 'rbc_units',
-            // yAxisVar = aggregation by surgeon
-            yAxisVar: 'surgeon_prov_id',
-            aggregation: 'sum',
+            rowVar: 'surgeon_prov_id',
+            columns: [{
+              var: 'drg_weight',
+              aggregation: 'sum',
+            },
+            {
+              var: 'surgeon_prov_id',
+              aggregation: 'sum',
+            },
+            {
+              var: 'cases',
+              aggregation: 'sum',
+            },
+            {
+              var: '1_rbc_transfused',
+              aggregation: 'sum',
+            },
+            {
+              var: '2_rbc_transfused',
+              aggregation: 'sum',
+            },
+            {
+              var: '3_rbc_transfused',
+              aggregation: 'sum',
+            },
+            {
+              var: '4_rbc_transfused',
+              aggregation: 'sum',
+            },
+            {
+              var: '5+_rbc_transfused',
+              aggregation: 'sum',
+            }],
           },
         ],
         chartLayouts: {
