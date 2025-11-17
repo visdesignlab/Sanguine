@@ -21,6 +21,7 @@ export const BLOOD_COMPONENTS = [
   {
     value: 'rbc_units',
     label: {
+      short: 'RBCs',
       base: 'RBCs Transfused',
       sum: 'Total RBCs Transfused',
       avg: 'Average RBCs Transfused Per Visit',
@@ -31,6 +32,7 @@ export const BLOOD_COMPONENTS = [
   {
     value: 'ffp_units',
     label: {
+      short: 'FFP',
       base: 'FFP Transfused',
       sum: 'Total FFP Transfused',
       avg: 'Average FFP Transfused Per Visit',
@@ -41,6 +43,7 @@ export const BLOOD_COMPONENTS = [
   {
     value: 'plt_units',
     label: {
+      short: 'Platelets',
       base: 'Platelets Transfused',
       sum: 'Total Platelets Transfused',
       avg: 'Average Platelets Transfused Per Visit',
@@ -51,6 +54,7 @@ export const BLOOD_COMPONENTS = [
   {
     value: 'cryo_units',
     label: {
+      short: 'Cryo',
       base: 'Cryo Transfused',
       sum: 'Total Cryo Transfused',
       avg: 'Average Cryo Transfused Per Visit',
@@ -61,6 +65,7 @@ export const BLOOD_COMPONENTS = [
   {
     value: 'cell_saver_ml',
     label: {
+      short: 'Cell Salvage',
       base: 'Cell Salvage Volume (ml) Used',
       sum: 'Total Cell Salvage Volume (ml) Used',
       avg: 'Average Cell Salvage Volume (ml) Used Per Visit',
@@ -74,7 +79,7 @@ export type BloodComponent = typeof BLOOD_COMPONENTS[number]['value'];
 // Readonly array of blood component options
 export const BLOOD_COMPONENT_OPTIONS = BLOOD_COMPONENTS as ReadonlyArray<{
   value: BloodComponent;
-  label: { base: string; sum: string; avg: string };
+  label: { short: string; base: string; sum: string; avg: string };
   units: { sum: string; avg: string };
   decimals: { sum: number; avg: number };
 }>;
@@ -84,6 +89,7 @@ export const OUTCOMES = [
   {
     value: 'los',
     label: {
+      short: 'LOS',
       base: 'Length of Stay',
       sum: 'Total Length of Stay',
       avg: 'Average Length of Stay',
@@ -94,6 +100,7 @@ export const OUTCOMES = [
   {
     value: 'death',
     label: {
+      short: 'Death',
       base: 'Death',
       sum: 'Total Deaths',
       avg: 'Percentage of Visits with Death',
@@ -104,6 +111,7 @@ export const OUTCOMES = [
   {
     value: 'vent',
     label: {
+      short: 'Vent',
       base: 'Ventilator >24hr',
       sum: 'Total Ventilator >24hr',
       avg: 'Percentage of Visits with Ventilator >24hr',
@@ -114,6 +122,7 @@ export const OUTCOMES = [
   {
     value: 'stroke',
     label: {
+      short: 'Stroke',
       base: 'Stroke',
       sum: 'Total Stroke',
       avg: 'Percentage of Visits with Stroke',
@@ -124,6 +133,7 @@ export const OUTCOMES = [
   {
     value: 'ecmo',
     label: {
+      short: 'ECMO',
       base: 'ECMO',
       sum: 'Total ECMO',
       avg: 'Percentage of Visits with ECMO',
@@ -137,7 +147,7 @@ export type Outcome = typeof OUTCOMES[number]['value'];
 // Readonly array of outcome options
 export const OUTCOME_OPTIONS = OUTCOMES as ReadonlyArray<{
   value: Outcome;
-  label: { base: string; sum: string; avg: string };
+  label: { short: string; base: string; sum: string; avg: string };
   units: { sum: string; avg: string };
   decimals: number | { sum: number; avg: number };
 }>;
@@ -147,6 +157,7 @@ export const PROPHYL_MEDS = [
   {
     value: 'b12',
     label: {
+      short: 'B12',
       base: 'B12 Pre-Surgery',
       sum: 'Total Visits Used B12 Pre-Surgery',
       avg: 'Percentage of Visits Used B12 Pre-Surgery',
@@ -157,6 +168,7 @@ export const PROPHYL_MEDS = [
   {
     value: 'iron',
     label: {
+      short: 'Iron',
       base: 'Iron Pre-Surgery',
       sum: 'Total Visits Used Iron Pre-Surgery',
       avg: 'Percentage of Visits Used Iron Pre-Surgery',
@@ -167,6 +179,7 @@ export const PROPHYL_MEDS = [
   {
     value: 'antifibrinolytic',
     label: {
+      short: 'Antifibrinolytics',
       base: 'Antifibrinolytics Used Pre-Surgery',
       sum: 'Total Visits Used Antifibrinolytics Pre-Surgery',
       avg: 'Percentage of Visits Used Antifibrinolytics Pre-Surgery',
@@ -180,7 +193,7 @@ export type ProphylMed = typeof PROPHYL_MEDS[number]['value'];
 // Readonly array of prophylactic medication options
 export const PROPHYL_MED_OPTIONS = PROPHYL_MEDS as ReadonlyArray<{
   value: ProphylMed;
-  label: { base: string; sum: string; avg: string };
+  label: { short: string; base: string; sum: string; avg: string };
   units: { sum: string; avg: string };
   decimals: number;
 }>;
@@ -190,6 +203,7 @@ export const GUIDELINE_ADHERENT = {
   rbc: {
     value: 'rbc_adherent',
     label: {
+      short: 'Adherent RBC',
       base: 'Guideline Adherent RBC Transfusions',
       sum: 'Total Guideline Adherent RBC Transfusions',
       avg: 'Percentage of Guideline Adherent RBC Transfusions',
@@ -201,6 +215,7 @@ export const GUIDELINE_ADHERENT = {
   ffp: {
     value: 'ffp_adherent',
     label: {
+      short: 'Adherent FFP',
       base: 'Guideline Adherent FFP Transfusions',
       sum: 'Total Guideline Adherent FFP Transfusions',
       avg: 'Percentage of Guideline Adherent FFP Transfusions',
@@ -211,6 +226,7 @@ export const GUIDELINE_ADHERENT = {
   plt: {
     value: 'plt_adherent',
     label: {
+      short: 'Adherent Platelet',
       base: 'Guideline Adherent Platelet Transfusions',
       sum: 'Total Guideline Adherent Platelet Transfusions',
       avg: 'Percentage of Adherent Platelet Transfusions',
@@ -221,6 +237,7 @@ export const GUIDELINE_ADHERENT = {
   cryo: {
     value: 'cryo_adherent',
     label: {
+      short: 'Adherent Cryo',
       base: 'Guideline Adherent Cryo Transfusions',
       sum: 'Total Guideline Adherent Cryo Transfusions',
       avg: 'Percentage of Guideline Adherent Cryo Transfusions',
@@ -234,6 +251,7 @@ export const GUIDELINE_ADHERENT = {
 export const OVERALL_GUIDELINE_ADHERENT = {
   value: 'overall_adherent',
   label: {
+    short: 'Adherent Transfusions',
     base: 'Guideline Adherent Transfusions',
     sum: 'Total Guideline Adherent Transfusions',
     avg: 'Percentage of Guideline Adherent Transfusions',
@@ -248,7 +266,7 @@ export type GuidelineAdherence = typeof GUIDELINE_ADHERENT[keyof typeof GUIDELIN
 // Guideline adherence options for dashboard
 export const GUIDELINE_ADHERENT_OPTIONS = Object.values(GUIDELINE_ADHERENT) as ReadonlyArray<{
   value: GuidelineAdherence;
-  label: { base: string; sum: string; avg: string };
+  label: { short: string; base: string; sum: string; avg: string };
   units: { sum: string; avg: string };
   decimals: number;
 }>;
@@ -258,6 +276,7 @@ export const LAB_RESULTS = [
   {
     value: 'post_op_hgb',
     label: {
+      short: 'Post-op Hgb',
       base: 'Post-Operative Hemoglobin',
       sum: 'Total Post-Operative Hemoglobin',
       avg: 'Average Post-Operative Hemoglobin',
@@ -269,7 +288,7 @@ export const LAB_RESULTS = [
 export type LabResult = typeof LAB_RESULTS[number]['value'];
 export const LAB_RESULT_OPTIONS = LAB_RESULTS as ReadonlyArray<{
   value: LabResult;
-  label: { base: string; sum: string; avg: string };
+  label: { short: string; base: string; sum: string; avg: string };
   units: { sum: string; avg: string };
   decimals: { sum: number; avg: number };
 }>;
@@ -281,6 +300,7 @@ export const COSTS = {
   rbc_units_cost: {
     value: 'rbc_units_cost',
     label: {
+      short: 'RBC Cost',
       base: 'RBC Cost',
       sum: 'Total RBC Cost',
       avg: 'Average RBC Cost Per Visit',
@@ -291,6 +311,7 @@ export const COSTS = {
   ffp_units_cost: {
     value: 'ffp_units_cost',
     label: {
+      short: 'FFP Cost',
       base: 'FFP Cost',
       sum: 'Total FFP Cost',
       avg: 'Average FFP Cost Per Visit',
@@ -301,6 +322,7 @@ export const COSTS = {
   plt_units_cost: {
     value: 'plt_units_cost',
     label: {
+      short: 'Platelet Cost',
       base: 'Platelet Cost',
       sum: 'Total Platelet Cost',
       avg: 'Average Platelet Cost Per Visit',
@@ -311,6 +333,7 @@ export const COSTS = {
   cryo_units_cost: {
     value: 'cryo_units_cost',
     label: {
+      short: 'Cryo Cost',
       base: 'Cryo Cost',
       sum: 'Total Cryo Cost',
       avg: 'Average Cryo Cost Per Visit',
@@ -322,6 +345,7 @@ export const COSTS = {
   cell_saver_cost: {
     value: 'cell_saver_cost',
     label: {
+      short: 'Cell Saver Cost',
       base: 'Cell Saver Cost',
       sum: 'Total Cell Saver Cost',
       avg: 'Average Cell Saver Cost Per Visit',
@@ -336,7 +360,7 @@ export type Cost = typeof COSTS[keyof typeof COSTS]['value'];
 // Readonly array of prophylactic medication options
 export const COST_OPTIONS = Object.values(COSTS) as ReadonlyArray<{
   value: Cost;
-  label: { base: string; sum: string; avg: string };
+  label: { short: string; base: string; sum: string; avg: string };
   units: { sum: string; avg: string };
   decimals: { sum: number; avg: number };
 }>;
@@ -344,6 +368,7 @@ export const COST_OPTIONS = Object.values(COSTS) as ReadonlyArray<{
 export const OVERALL_BLOOD_PRODUCT_COST = {
   value: 'total_blood_product_cost',
   label: {
+    short: 'Blood Product Costs',
     base: 'Blood Product Costs',
     sum: 'Total Blood Product Costs',
     avg: 'Average Blood Product Costs Per Visit',
@@ -357,6 +382,7 @@ export type OverallBloodProductCost = typeof OVERALL_BLOOD_PRODUCT_COST['value']
 export const VISIT_COUNT = {
   value: 'visit_count',
   label: {
+    short: 'Visits',
     base: 'Number of Visits',
     sum: 'Total Number of Visits',
     avg: 'Average Number of Visits',
@@ -370,6 +396,7 @@ export type VisitCount = typeof VISIT_COUNT['value'];
 export const CASE_MIX_INDEX = {
   value: 'case_mix_index',
   label: {
+    short: 'CMI',
     base: 'Case Mix Index',
     sum: 'Case Mix Index',
     avg: 'Case Mix Index',
@@ -482,7 +509,21 @@ export type CostChartConfig = ChartConfig<typeof costXAxisVars[number], typeof c
 
 // TODO: Update scatterPlotConfig type
 export type ScatterPlotConfig = ChartConfig<typeof dashboardXAxisVars[number] | BloodComponent, typeof dashboardYAxisVars[number] | LabResult, keyof typeof AGGREGATION_OPTIONS, 'scatterPlot'>;
-export type HeatMapConfig = ChartConfig<string, string, 'sum', 'heatmap'>;
+
+export type HeatMapMetric = {
+  var: string; // e.g., 'b12', 'visit_count', 'vent'
+  aggregation: keyof typeof AGGREGATION_OPTIONS; // 'sum' | 'avg'
+};
+
+export type HeatMapConfig = {
+  chartId: string;
+  chartType: 'heatmap';
+  yAxisVar: string; // e.g., 'surgeon_prov_id'
+  xAxisVars: HeatMapMetric[]; // e.g., [{ var: 'b12', aggregation: 'avg' }, { var: 'visit_count', aggregation: 'sum' }]
+};
+
+// TODO: Update HeatMapData type
+export type HeatMapData = Record<string, string | number>[];
 
 export type ExploreChartConfig = CostChartConfig | ScatterPlotConfig | HeatMapConfig;
 export type ScatterPlotData = ScatterChartSeries[];
@@ -497,4 +538,4 @@ export interface CostBarDatum extends Record<Cost, number> {
 export type CostBarData = CostBarDatum[];
 
 // TODO: Update ExploreChartData type
-export type ExploreChartData = Record<string, ScatterPlotData | CostBarData>;
+export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | HeatMapData>;

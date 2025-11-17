@@ -94,8 +94,10 @@ export class RootStore {
     await this.duckDB.query(query);
     await this.updateFilteredVisitsLength();
 
+    // Update Dashboard and Explore chart data
     await this.dashboardStore.computeChartData();
     await this.dashboardStore.computeStatData();
+    await this.exploreStore.computeChartData();
   }
 
   async updateFilteredVisitsLength() {
