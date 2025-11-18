@@ -1,13 +1,13 @@
 import { ExploreTableData } from '../../../../Types/application';
 
-// ...existing code...
 export type Row = {
   id: number;
   vent: number; // percent
   b12: number; // percent
   surgeon_prov_id: string; // array
   cases: number;
-  drg_weight: number;
+  // change to an array of samples
+  drg_weight: number[]; // samples for violin plot
   percent_1_rbc: number;
   percent_2_rbc: number;
   percent_3_rbc: number;
@@ -28,6 +28,7 @@ export const dummyData = [
     b12: 72,
     surgeon_prov_id: 'Dr. Smith',
     cases: 42,
+    drg_weight: [0.9, 1.0, 1.05, 1.1, 0.95, 1.02, 1.12, 1.08, 1.0, 1.03],
     percent_1_rbc: 40,
     percent_2_rbc: 30,
     percent_3_rbc: 20,
@@ -46,6 +47,7 @@ export const dummyData = [
     b12: 72,
     surgeon_prov_id: 'Dr. Lee',
     cases: 42,
+    drg_weight: [0.85, 0.9, 0.95, 1.0, 1.05, 0.92, 1.0, 1.08, 1.1, 0.96],
     percent_1_rbc: 30,
     percent_2_rbc: 25,
     percent_3_rbc: 20,
@@ -63,6 +65,7 @@ export const dummyData = [
     b12: 8,
     surgeon_prov_id: 'Dr. Patel',
     cases: 5,
+    drg_weight: [1.2, 1.28, 1.35, 1.3, 1.25, 1.38, 1.32, 1.27],
     percent_1_rbc: 0,
     percent_2_rbc: 50,
     percent_3_rbc: 0,
@@ -80,6 +83,7 @@ export const dummyData = [
     b12: 60,
     surgeon_prov_id: 'Dr. Gomez',
     cases: 18,
+    drg_weight: [0.95, 1.0, 1.05, 1.1, 1.12, 1.08, 1.02, 0.98],
     percent_1_rbc: 20,
     percent_2_rbc: 20,
     percent_3_rbc: 10,
@@ -97,6 +101,7 @@ export const dummyData = [
     b12: 60,
     surgeon_prov_id: 'Dr. Park',
     cases: 18,
+    drg_weight: [0.9, 0.97, 1.02, 1.07, 1.12, 0.95, 1.0, 1.05, 1.1],
     percent_1_rbc: 18,
     percent_2_rbc: 25,
     percent_3_rbc: 18,
@@ -114,6 +119,7 @@ export const dummyData = [
     b12: 60,
     surgeon_prov_id: 'Dr. Huang',
     cases: 18,
+    drg_weight: [0.88, 0.93, 0.99, 1.03, 1.06, 1.09, 0.95, 1.0, 1.04],
     percent_1_rbc: 33,
     percent_2_rbc: 33,
     percent_3_rbc: 34,
@@ -131,6 +137,7 @@ export const dummyData = [
     b12: 93,
     surgeon_prov_id: 'Dr. Nguyen',
     cases: 120,
+    drg_weight: [0.82, 0.88, 0.9, 0.95, 1.0, 0.92, 0.98, 0.96, 0.94, 0.9],
     percent_1_rbc: 28,
     percent_2_rbc: 28,
     percent_3_rbc: 22,
@@ -149,6 +156,7 @@ export const dummyData = [
     b12: 40,
     surgeon_prov_id: 'Dr. Alvarez',
     cases: 9,
+    drg_weight: [1.1, 1.2, 1.25, 1.18, 1.22, 1.16, 1.3, 1.12],
     percent_1_rbc: 33,
     percent_2_rbc: 0,
     percent_3_rbc: 33,
@@ -166,6 +174,7 @@ export const dummyData = [
     b12: 40,
     surgeon_prov_id: 'Dr. Chen',
     cases: 9,
+    drg_weight: [1.05, 1.12, 1.18, 1.2, 1.15, 1.1, 1.14],
     percent_1_rbc: 0,
     percent_2_rbc: 0,
     percent_3_rbc: 0,
@@ -184,6 +193,7 @@ export const dummyData = [
     b12: 70,
     surgeon_prov_id: 'Dr. Rivera',
     cases: 36,
+    drg_weight: [0.9, 0.96, 1.0, 1.04, 1.08, 0.92, 0.98, 1.02, 1.06],
     percent_1_rbc: 25,
     percent_2_rbc: 20,
     percent_3_rbc: 30,
@@ -201,6 +211,7 @@ export const dummyData = [
     b12: 50,
     surgeon_prov_id: 'Dr. Johnson',
     cases: 22,
+    drg_weight: [0.92, 0.98, 1.05, 1.1, 1.12, 1.0, 1.08, 1.04],
     percent_1_rbc: 40,
     percent_2_rbc: 30,
     percent_3_rbc: 10,
@@ -218,6 +229,7 @@ export const dummyData = [
     b12: 20,
     surgeon_prov_id: 'Dr. Williams',
     cases: 7,
+    drg_weight: [1.25, 1.32, 1.38, 1.4, 1.35, 1.3, 1.28],
     percent_1_rbc: 0,
     percent_2_rbc: 60,
     percent_3_rbc: 40,
@@ -235,6 +247,7 @@ export const dummyData = [
     b12: 88,
     surgeon_prov_id: 'Dr. Brown',
     cases: 80,
+    drg_weight: [0.88, 0.92, 0.96, 1.0, 1.02, 1.06, 0.98, 0.94, 1.04],
     percent_1_rbc: 35,
     percent_2_rbc: 30,
     percent_3_rbc: 20,
@@ -252,6 +265,7 @@ export const dummyData = [
     b12: 18,
     surgeon_prov_id: 'Dr. Davis',
     cases: 6,
+    drg_weight: [1.3, 1.35, 1.4, 1.28, 1.24, 1.32, 1.36],
     percent_1_rbc: 0,
     percent_2_rbc: 0,
     percent_3_rbc: 80,
@@ -269,6 +283,7 @@ export const dummyData = [
     b12: 64,
     surgeon_prov_id: 'Dr. Miller',
     cases: 48,
+    drg_weight: [0.9, 0.95, 1.0, 1.05, 1.08, 1.02, 0.98, 1.1],
     percent_1_rbc: 30,
     percent_2_rbc: 25,
     percent_3_rbc: 20,
@@ -286,6 +301,7 @@ export const dummyData = [
     b12: 55,
     surgeon_prov_id: 'Dr. Wilson',
     cases: 28,
+    drg_weight: [0.92, 0.96, 1.0, 1.05, 1.1, 1.12, 1.08, 1.04],
     percent_1_rbc: 22,
     percent_2_rbc: 22,
     percent_3_rbc: 22,
@@ -303,6 +319,7 @@ export const dummyData = [
     b12: 36,
     surgeon_prov_id: 'Dr. Moore',
     cases: 12,
+    drg_weight: [0.98, 1.02, 1.06, 1.12, 1.18, 1.22, 1.1],
     percent_1_rbc: 50,
     percent_2_rbc: 30,
     percent_3_rbc: 10,
@@ -320,6 +337,7 @@ export const dummyData = [
     b12: 79,
     surgeon_prov_id: 'Dr. Taylor',
     cases: 64,
+    drg_weight: [0.86, 0.9, 0.94, 0.98, 1.0, 0.96, 1.02, 1.04, 0.92],
     percent_1_rbc: 30,
     percent_2_rbc: 25,
     percent_3_rbc: 20,
@@ -337,6 +355,7 @@ export const dummyData = [
     b12: 10,
     surgeon_prov_id: 'Dr. Anderson',
     cases: 4,
+    drg_weight: [1.3, 1.36, 1.4, 1.44, 1.38, 1.32, 1.28],
     percent_1_rbc: 0,
     percent_2_rbc: 75,
     percent_3_rbc: 0,
@@ -354,6 +373,7 @@ export const dummyData = [
     b12: 52,
     surgeon_prov_id: 'Dr. Thomas',
     cases: 20,
+    drg_weight: [0.94, 0.98, 1.02, 1.06, 1.1, 1.04, 1.08, 1.12],
     percent_1_rbc: 30,
     percent_2_rbc: 30,
     percent_3_rbc: 20,
@@ -371,6 +391,7 @@ export const dummyData = [
     b12: 68,
     surgeon_prov_id: 'Dr. Jackson',
     cases: 44,
+    drg_weight: [0.9, 0.94, 0.98, 1.02, 1.06, 1.0, 1.04, 1.08],
     percent_1_rbc: 28,
     percent_2_rbc: 26,
     percent_3_rbc: 24,
@@ -388,6 +409,7 @@ export const dummyData = [
     b12: 30,
     surgeon_prov_id: 'Dr. White',
     cases: 11,
+    drg_weight: [1.12, 1.18, 1.22, 1.2, 1.16, 1.14, 1.24],
     percent_1_rbc: 10,
     percent_2_rbc: 60,
     percent_3_rbc: 10,
@@ -405,6 +427,7 @@ export const dummyData = [
     b12: 90,
     surgeon_prov_id: 'Dr. Harris',
     cases: 95,
+    drg_weight: [0.84, 0.88, 0.92, 0.96, 1.0, 0.94, 0.98, 0.9],
     percent_1_rbc: 40,
     percent_2_rbc: 30,
     percent_3_rbc: 15,
@@ -422,6 +445,7 @@ export const dummyData = [
     b12: 35,
     surgeon_prov_id: 'Dr. Martin',
     cases: 15,
+    drg_weight: [0.96, 1.0, 1.04, 1.08, 1.1, 1.06, 1.02, 0.98],
     percent_1_rbc: 40,
     percent_2_rbc: 30,
     percent_3_rbc: 20,
@@ -439,6 +463,7 @@ export const dummyData = [
     b12: 58,
     surgeon_prov_id: 'Dr. Thompson',
     cases: 34,
+    drg_weight: [0.92, 0.96, 1.0, 1.04, 1.06, 1.08, 1.02, 0.98],
     percent_1_rbc: 30,
     percent_2_rbc: 25,
     percent_3_rbc: 20,
@@ -456,6 +481,7 @@ export const dummyData = [
     b12: 48,
     surgeon_prov_id: 'Dr. Garcia',
     cases: 26,
+    drg_weight: [0.95, 1.0, 1.02, 1.07, 1.12, 0.98, 1.05, 1.1, 1.03, 1.08],
     percent_1_rbc: 24,
     percent_2_rbc: 24,
     percent_3_rbc: 22,
@@ -468,4 +494,3 @@ export const dummyData = [
     salvage_savings: 5,
   },
 ] as ExploreTableData;
-// ...existing code...

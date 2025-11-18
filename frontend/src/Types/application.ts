@@ -537,7 +537,7 @@ export type ExploreTableConfig = {
 };
 
 // TODO: Update ExploreTableData type
-export type ExploreTableRow = Record<string, string | number>;
+export type ExploreTableRow = Record<string, string | number | number[]>;
 export type ExploreTableData = ExploreTableRow[];
 
 // TODO: Update ExploreChartData type
