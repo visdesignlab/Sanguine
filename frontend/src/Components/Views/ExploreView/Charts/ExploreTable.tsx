@@ -12,9 +12,11 @@ import {
   TextInput,
 } from '@mantine/core';
 import {
-  IconGripVertical, IconPlus,
+  IconGripVertical, IconPlus, IconMathGreater, IconMathLower,
 } from '@tabler/icons-react';
-import { DataTable, useDataTableColumns, type DataTableSortStatus } from 'mantine-datatable';
+import {
+  DataTable, DataTableColumn, useDataTableColumns, type DataTableSortStatus,
+} from 'mantine-datatable';
 import sortBy from 'lodash/sortBy';
 import { BarChart } from '@mantine/charts';
 import { interpolateReds } from 'd3';
@@ -24,85 +26,151 @@ import {
 } from '../../../../Types/application';
 import { backgroundHoverColor } from '../../../../Theme/mantineTheme';
 import './ExploreTable.css';
-import { ViolinCell, makeFakeSamplesForRow, computeMedian } from './ViolinPlot';
+import { ViolinCell, computeMedian } from './ViolinPlot';
 
 export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTableConfig }) {
   const store = useContext(Store);
   const chartData = store.exploreStore.chartData[chartConfig.chartId] as ExploreTableData;
 
-  const [drgMedianQuery, setDrgMedianQuery] = useState('');
+  // Violin filters per column (unlimited)
+  type Comparator = '>' | '<';
+  type ViolinFilter = {
+    minQuery: string;
+    minCmp: Comparator;
+    medianQuery: string;
+    medianCmp: Comparator;
+    maxQuery: string;
+    maxCmp: Comparator;
+  };
+  const defaultViolinFilter: ViolinFilter = {
+    minQuery: '',
+    minCmp: '>',
+    medianQuery: '',
+    medianCmp: '>',
+    maxQuery: '',
+    maxCmp: '<',
+  };
+  const [violinFilters, setViolinFilters] = useState<Record<string, ViolinFilter>>({});
+  const getViolinFilter = (key: string): ViolinFilter => violinFilters[key] ?? defaultViolinFilter;
+  const patchViolinFilter = (key: string, patch: Partial<ViolinFilter>) => {
+    setViolinFilters((prev) => {
+      const curr = prev[key] ?? defaultViolinFilter;
+      return { ...prev, [key]: { ...curr, ...patch } };
+    });
+  };
 
-  // min / max DRG weight filters (strings so empty = no filter)
-  const [drgMinQuery] = useState('');
-  const [drgMaxQuery] = useState('');
+  // Numeric filters per column (unlimited)
+  type NumericFilter = { query: string; cmp: Comparator };
+  const defaultNumericFilter: NumericFilter = { query: '', cmp: '>' };
+  const [numericFilters, setNumericFilters] = useState<Record<string, NumericFilter>>({});
+  const getNumericFilter = (key: string): NumericFilter => numericFilters[key] ?? defaultNumericFilter;
+  const patchNumericFilter = (key: string, patch: Partial<NumericFilter>) => {
+    setNumericFilters((prev) => {
+      const curr = prev[key] ?? defaultNumericFilter;
+      return { ...prev, [key]: { ...curr, ...patch } };
+    });
+  };
 
-  // comparator toggles for each input ('>' or '<')
-  const [drgMinCmp] = useState<'>' | '<'>('>');
-  const [drgMedianCmp] = useState<'>' | '<'>('>');
-  const [drgMaxCmp] = useState<'>' | '<'>('<');
+  // Text filters per column (unlimited)
+  const [textFilters, setTextFilters] = useState<Record<string, string>>({});
+  const getTextFilter = (key: string) => textFilters[key] ?? '';
+  const patchTextFilter = (key: string, value: string) => {
+    setTextFilters((prev) => ({ ...prev, [key]: value }));
+  };
 
-  // enable per-chart persistent column resizing / reordering
+  // Column Resizing
   const colKey = `ExploreTable-${chartConfig.chartId}`;
 
-  // sorting state + derived records (sort chartData when sort status changes)
+  // Sorting
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<ExploreTableRow>>({
     columnAccessor: 'surgeon_prov_id',
     direction: 'asc',
   });
 
-  // surgeon search state
-  const [surgeonQuery, setSurgeonQuery] = useState('');
-  const [_showSurgeonFilter, _setShowSurgeonFilter] = useState(false);
-
+  // Sorting base data
   const [records, setRecords] = useState<ExploreTableRow[]>(() => sortBy(chartData, 'surgeon_prov_id') as ExploreTableRow[]);
 
+  // map accessor -> type to generalize violin-specific sorting
+  const typeMap = useMemo(() => new Map(chartConfig.columns.map((c) => [c.colVar, c.type])), [chartConfig.columns]);
+
+  // helper to get samples from a row for a given accessor
+  const getSamples = (r: ExploreTableRow, key: string) => {
+    const raw = (r as any)[key] as number[] | number | undefined;
+    return Array.isArray(raw) ? raw : typeof raw === 'number' ? [raw] : [];
+  };
+
+  // apply all filters and sorting
   useEffect(() => {
-    // apply surgeon filter first
-    let filtered = chartData.filter((r) => (surgeonQuery.trim() === ''
-      ? true
-      : String(r.surgeon_prov_id).toLowerCase().includes(surgeonQuery.trim().toLowerCase())));
+    let filtered = chartData;
 
-    if (drgMinQuery.trim() !== '') {
-      const minVal = Number(drgMinQuery);
-      if (!Number.isNaN(minVal)) {
-        if (drgMinCmp === '>') {
-          filtered = filtered.filter((r) => Number(r.drg_weight) >= minVal);
-        } else {
-          filtered = filtered.filter((r) => Number(r.drg_weight) <= minVal);
+    // text filters (AND across columns)
+    if (Object.keys(textFilters).length) {
+      filtered = filtered.filter((r) => {
+        for (const [key, q] of Object.entries(textFilters)) {
+          const qq = String(q ?? '').trim().toLowerCase();
+          if (!qq) continue;
+          const val = String((r as any)[key] ?? '').toLowerCase();
+          if (!val.includes(qq)) return false;
+        }
+        return true;
+      });
+    }
+
+    // numeric filters (AND across columns)
+    if (Object.keys(numericFilters).length) {
+      filtered = filtered.filter((r) => {
+        for (const [key, nf] of Object.entries(numericFilters)) {
+          const q = nf.query?.trim();
+          if (!q) continue;
+          const pivot = Number(q);
+          if (Number.isNaN(pivot)) continue;
+          const v = Number((r as any)[key]);
+          if (Number.isNaN(v)) return false;
+          if (nf.cmp === '>' ? !(v >= pivot) : !(v <= pivot)) return false;
+        }
+        return true;
+      });
+    }
+
+    // violin filters (AND across columns)
+    filtered = filtered.filter((r) => {
+      for (const [key, vf] of Object.entries(violinFilters)) {
+        const samples = getSamples(r, key);
+        const hasAnyQuery = !!(vf.minQuery.trim() || vf.medianQuery.trim() || vf.maxQuery.trim());
+        if (!hasAnyQuery) continue;
+        if (samples.length === 0) return false;
+
+        if (vf.minQuery.trim() !== '') {
+          const pivot = Number(vf.minQuery);
+          if (!Number.isNaN(pivot)) {
+            const minVal = Math.min(...samples);
+            if (vf.minCmp === '>' ? !(minVal >= pivot) : !(minVal <= pivot)) return false;
+          }
+        }
+        if (vf.medianQuery.trim() !== '') {
+          const pivot = Number(vf.medianQuery);
+          if (!Number.isNaN(pivot)) {
+            const med = computeMedian(samples);
+            if (vf.medianCmp === '>' ? !(med >= pivot) : !(med <= pivot)) return false;
+          }
+        }
+        if (vf.maxQuery.trim() !== '') {
+          const pivot = Number(vf.maxQuery);
+          if (!Number.isNaN(pivot)) {
+            const maxVal = Math.max(...samples);
+            if (vf.maxCmp === '>' ? !(maxVal >= pivot) : !(maxVal <= pivot)) return false;
+          }
         }
       }
-    }
-    if (drgMaxQuery.trim() !== '') {
-      const maxVal = Number(drgMaxQuery);
-      if (!Number.isNaN(maxVal)) {
-        if (drgMaxCmp === '>') {
-          filtered = filtered.filter((r) => Number(r.drg_weight) >= maxVal);
-        } else {
-          filtered = filtered.filter((r) => Number(r.drg_weight) <= maxVal);
-        }
-      }
-    }
+      return true;
+    });
 
-    // Apply DRG median filter
-    if (drgMedianQuery.trim() !== '') {
-      const pivot = Number(drgMedianQuery);
-      if (!Number.isNaN(pivot)) {
-        filtered = filtered.filter((r) => {
-          const samples = makeFakeSamplesForRow(r, 40);
-          const med = computeMedian(samples);
-          return drgMedianCmp === '>' ? med >= pivot : med <= pivot;
-        });
-      }
-    }
-
+    // sort
     const accessor = sortStatus.columnAccessor as keyof ExploreTableRow;
     let sorted: ExploreTableRow[] = [];
 
-    if (accessor === 'drg_weight') {
-      sorted = sortBy(filtered, (r: ExploreTableRow) => {
-        const samples = makeFakeSamplesForRow(r, 40);
-        return computeMedian(samples);
-      }) as ExploreTableRow[];
+    if (typeMap.get(accessor as string) === 'violin') {
+      sorted = sortBy(filtered, (r: ExploreTableRow) => computeMedian(getSamples(r, accessor as string))) as ExploreTableRow[];
     } else {
       sorted = sortBy(filtered, accessor) as ExploreTableRow[];
     }
@@ -110,14 +178,11 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     setRecords(sortStatus.direction === 'desc' ? sorted.reverse() : sorted);
   }, [
     sortStatus,
-    surgeonQuery,
-    drgMedianQuery,
-    drgMinQuery,
-    drgMaxQuery,
-    drgMinCmp,
-    drgMedianCmp,
-    drgMaxCmp,
     chartData,
+    textFilters,
+    numericFilters,
+    violinFilters,
+    typeMap,
   ]);
 
   const getHeatColor = (percent: number) => {
@@ -126,8 +191,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
     return interpolateReds(t);
   };
-
-  const NUM_RBC_BUCKETS = 5;
 
   const computeBins = (values: number[], bins = 10, min = 0, max = 100) => {
     const counts = new Array(bins).fill(0);
@@ -147,24 +210,25 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     return counts;
   };
 
-  const drgAggregate = useMemo(() => {
+  // compute aggregates for a violin column (domain and footer)
+  const computeViolinAggregate = (col: string) => {
     if (!records || records.length === 0) {
       return {
         samples: [] as number[], minAll: 0, maxAll: 0, avgAvg: 0,
       };
     }
-    const perRow = records.map((r) => makeFakeSamplesForRow(r, 40));
+    const perRow = records.map((r) => getSamples(r, col));
     const samples = perRow.flat();
-    const mins = perRow.map((s) => Math.min(...s));
-    const maxs = perRow.map((s) => Math.max(...s));
-    const avgs = perRow.map((s) => s.reduce((a, b) => a + b, 0) / Math.max(1, s.length));
-    const minAll = Math.min(...mins);
-    const maxAll = Math.max(...maxs);
-    const avgAvg = avgs.reduce((a, b) => a + b, 0) / avgs.length;
+    const mins = perRow.map((s) => (s.length ? Math.min(...s) : 0));
+    const maxs = perRow.map((s) => (s.length ? Math.max(...s) : 0));
+    const avgs = perRow.map((s) => (s.length ? s.reduce((a, b) => a + b, 0) / s.length : 0));
+    const minAll = mins.length ? Math.min(...mins) : 0;
+    const maxAll = maxs.length ? Math.max(...maxs) : 0;
+    const avgAvg = avgs.length ? avgs.reduce((a, b) => a + b, 0) / avgs.length : 0;
     return {
       samples, minAll, maxAll, avgAvg,
     };
-  }, [records]);
+  };
 
   const renderHistogramFooter = (bins: number[], useReds?: boolean, minVal = 0, maxVal = 100) => {
     if (!bins || bins.length === 0) {
@@ -250,8 +314,8 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     );
   };
 
-  // Horizontal bar
-  const renderBar = (value: number, max: number, opts?: { suffix?: string; color?: string; percentColor?: boolean }) => {
+  // Numeric Horizontal Bar Cell Renderer ----
+  const numericBarCell = (value: number, max: number, opts?: { suffix?: string; color?: string; percentColor?: boolean }) => {
     const pct = Number.isFinite(max) && max > 0
       ? Math.max(0, Math.min(100, (Number(value ?? 0) / max) * 100))
       : 0;
@@ -358,27 +422,18 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     );
   };
 
-  // Define column types and their configurations
-  type ColumnType = 'HeatMapColumn' | 'textColumn' | 'numericColumn' | 'violinColumn';
-
-  interface ColumnConfig {
-    accessor: keyof ExploreTableRow;
-    title: string | JSX.Element;
-    type: ColumnType;
-  }
-
-  // Function to generate columns dynamically (derive values from records internally)
-  const generateColumns = (configs: ExploreTableColumn[]): any[] => configs.map((config) => {
+  // Column Definitions Generator ----
+  const generateColumnDefs = (configs: ExploreTableColumn[]): DataTableColumn<ExploreTableRow>[] => configs.map((config) => {
     const {
-      colVar, aggregation, type, title,
+      colVar, type, title,
     } = config;
 
-    const column: any = {
+    const column: DataTableColumn<ExploreTableRow> = {
       accessor: colVar,
       title,
       sortable: true,
       resizable: true,
-      render: (row: ExploreTableRow) => <div>{String(row[colVar] ?? '')}</div>,
+      render: (row: ExploreTableRow, _index: number) => <div>{String(row[colVar] ?? '')}</div>,
     };
 
     // derive values for histograms
@@ -387,7 +442,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
     if (type === 'heatmap') {
       const valueValues = values;
-      column.render = (row: ExploreTableRow) => {
+      column.render = (row: ExploreTableRow, _index: number) => {
         const value = Number(row[colVar] ?? 0);
         const hasValue = value !== 0;
         return (
@@ -412,50 +467,136 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         const bins = computeBins(valueValues, 10, 0, max);
         column.footer = renderHistogramFooter(bins, true, 0, max);
       }
+
+      // numeric-style filter for heatmap values
+      const nf = getNumericFilter(colVar);
+      column.filter = (
+        <TextInput
+          placeholder="Filter value"
+          size="xs"
+          value={nf.query}
+          onChange={(e) => patchNumericFilter(colVar, { query: e.currentTarget.value })}
+          leftSection={(
+            <ActionIcon
+              size="xs"
+              onClick={() => patchNumericFilter(colVar, { cmp: nf.cmp === '>' ? '<' : '>' })}
+            >
+              {nf.cmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
+            </ActionIcon>
+          )}
+        />
+      );
     }
 
     if (type === 'numeric') {
-      column.render = (row: ExploreTableRow) => renderBar(Number(row[colVar]), 100, { suffix: '%' });
+      column.render = (row: ExploreTableRow, _index: number) => {
+        const suffix = colVar === 'cases' ? '' : '%';
+        return numericBarCell(Number(row[colVar]), 100, { suffix });
+      };
       if (values.length) {
         const max = maxFromValues(values);
         const bins = computeBins(values, 10, 0, max);
         column.footer = renderHistogramFooter(bins, false, 0, max);
       }
+
+      // per-column numeric filter
+      const nf = getNumericFilter(colVar);
+      column.filter = (
+        <TextInput
+          placeholder="Filter value"
+          size="xs"
+          value={nf.query}
+          onChange={(e) => patchNumericFilter(colVar, { query: e.currentTarget.value })}
+          leftSection={(
+            <ActionIcon
+              size="xs"
+              onClick={() => patchNumericFilter(colVar, { cmp: nf.cmp === '>' ? '<' : '>' })}
+            >
+              {nf.cmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
+            </ActionIcon>
+          )}
+        />
+      );
     }
 
     if (type === 'text') {
-      if (colVar === 'surgeon_prov_id') {
-        column.filter = (
-          <TextInput
-            placeholder="Filter surgeon"
-            size="xs"
-            value={surgeonQuery}
-            onChange={(e) => setSurgeonQuery(e.currentTarget.value)}
-          />
-        );
-      }
+      const tv = getTextFilter(colVar);
+      column.filter = (
+        <TextInput
+          placeholder="Search ..."
+          size="xs"
+          value={tv}
+          onChange={(e) => patchTextFilter(colVar, e.currentTarget.value)}
+        />
+      );
     }
 
     if (type === 'violin') {
-      column.render = (row: ExploreTableRow) => {
-        const samples = makeFakeSamplesForRow(row, 40);
-        return <ViolinCell samples={samples} domain={[drgAggregate.minAll, drgAggregate.maxAll]} />;
+      const agg = computeViolinAggregate(colVar);
+      const vf = getViolinFilter(colVar);
+
+      column.render = (row: ExploreTableRow, _index: number) => {
+        const samples = getSamples(row, colVar);
+        return <ViolinCell samples={samples} domain={[agg.minAll, agg.maxAll]} />;
       };
+
       column.filter = (
-        <TextInput
-          placeholder="Filter by median"
-          size="xs"
-          value={drgMedianQuery}
-          onChange={(e) => setDrgMedianQuery(e.currentTarget.value)}
-        />
+        <Stack>
+          <TextInput
+            placeholder="Filter by Median Value"
+            size="xs"
+            value={vf.medianQuery}
+            onChange={(e) => patchViolinFilter(colVar, { medianQuery: e.currentTarget.value })}
+            leftSection={(
+              <ActionIcon
+                size="xs"
+                onClick={() => patchViolinFilter(colVar, { medianCmp: vf.medianCmp === '>' ? '<' : '>' })}
+              >
+                {vf.medianCmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
+              </ActionIcon>
+            )}
+          />
+          <TextInput
+            placeholder="Filter by Min Value"
+            size="xs"
+            value={vf.minQuery}
+            onChange={(e) => patchViolinFilter(colVar, { minQuery: e.currentTarget.value })}
+            leftSection={(
+              <ActionIcon
+                size="xs"
+                onClick={() => patchViolinFilter(colVar, { minCmp: vf.minCmp === '>' ? '<' : '>' })}
+              >
+                {vf.minCmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
+              </ActionIcon>
+            )}
+          />
+          <TextInput
+            placeholder="Filter by Max Value"
+            size="xs"
+            value={vf.maxQuery}
+            onChange={(e) => patchViolinFilter(colVar, { maxQuery: e.currentTarget.value })}
+            leftSection={(
+              <ActionIcon
+                size="xs"
+                onClick={() => patchViolinFilter(colVar, { maxCmp: vf.maxCmp === '>' ? '<' : '>' })}
+              >
+                {vf.maxCmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
+              </ActionIcon>
+            )}
+          />
+        </Stack>
       );
-      column.sortFunction = (a: ExploreTableRow, b: ExploreTableRow) => (
-        computeMedian(makeFakeSamplesForRow(a, 40)) - computeMedian(makeFakeSamplesForRow(b, 40))
-      );
+
+      column.sortFunction = (a: ExploreTableRow, b: ExploreTableRow) => {
+        const sa = getSamples(a, colVar);
+        const sb = getSamples(b, colVar);
+        return computeMedian(sa) - computeMedian(sb);
+      };
+
       column.footer = (
         <ViolinCell
-          samples={drgAggregate.samples}
-          domain={[drgAggregate.minAll, drgAggregate.maxAll]}
+          samples={agg.samples}
+          domain={[agg.minAll, agg.maxAll]}
           height={24}
           padding={0}
         />
@@ -465,10 +606,10 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     return column;
   });
 
-  // Generate columns dynamically
+  // Generate columns dynamically from chart configuration ----
   const { effectiveColumns } = useDataTableColumns<ExploreTableRow>({
     key: colKey,
-    columns: generateColumns(chartConfig.columns),
+    columns: generateColumnDefs(chartConfig.columns),
   });
 
   // Render the DataTable with columns ----
@@ -495,7 +636,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
       {/** Data Table */}
       <Box style={{ minHeight: 0, width: '100%' }}>
-        <DataTable
+        <DataTable<ExploreTableRow>
           className="ExploreTable-data-table"
           borderRadius="sm"
           striped
