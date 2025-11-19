@@ -2,6 +2,7 @@ import {
   useContext, useEffect, useState, useMemo,
 } from 'react';
 import {
+  MultiSelect,
   CloseButton,
   Flex,
   Title,
@@ -12,7 +13,7 @@ import {
   TextInput,
 } from '@mantine/core';
 import {
-  IconGripVertical, IconPlus, IconMathGreater, IconMathLower,
+  IconGripVertical, IconMathGreater, IconMathLower,
 } from '@tabler/icons-react';
 import {
   DataTable, DataTableColumn, useDataTableColumns, type DataTableSortStatus,
@@ -22,7 +23,7 @@ import { BarChart } from '@mantine/charts';
 import { interpolateReds } from 'd3';
 import { Store } from '../../../../Store/Store';
 import {
-  ExploreTableRow, ExploreTableData, ExploreTableConfig, ExploreTableColumn,
+  ExploreTableRow, ExploreTableData, ExploreTableConfig, ExploreTableColumn, ExploreTableColumnOptions,
 } from '../../../../Types/application';
 import { backgroundHoverColor } from '../../../../Theme/mantineTheme';
 import './ExploreTable.css';
@@ -422,6 +423,85 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     );
   };
 
+  const inferColumnType = (key: string): ExploreTableColumn['type'] => {
+    const sample = chartData[0]?.[key];
+    if (Array.isArray(sample)) return 'violin';
+    if (typeof sample === 'number') {
+      // heuristics for heatmap (% style)
+      if (key.includes('adherent') || ['death', 'vent', 'stroke', 'ecmo'].includes(key)) return 'heatmap';
+      return 'numeric';
+    }
+    return 'text';
+  };
+
+  const handleAddColumns = (values: string[]) => {
+    const existing = new Set(chartConfig.columns.map((c) => c.colVar));
+    const newCols: ExploreTableColumn[] = [];
+
+    values.forEach((value) => {
+      if (!value || existing.has(value)) return;
+      const selected = ExploreTableColumnOptions.find((o) => o.value === value);
+      if (!selected) return;
+
+      newCols.push({
+        colVar: selected.value,
+        aggregation: 'none',
+        type: inferColumnType(selected.value),
+        title: selected.label.base,
+      });
+    });
+
+    if (newCols.length === 0) return;
+
+    const updatedConfig: ExploreTableConfig = {
+      ...chartConfig,
+      columns: [...chartConfig.columns, ...newCols],
+    };
+
+    store.exploreStore.updateChartConfig(updatedConfig);
+  };
+
+  const handleColumnsChange = (values: string[]) => {
+    // values is the full set of currently selected option values from the MultiSelect
+    const optionSet = new Set(ExploreTableColumnOptions.map((o) => o.value));
+    const selectedSet = new Set(values);
+
+    // Keep columns not controlled by the MultiSelect, plus selected ones
+    const retained = chartConfig.columns.filter(
+      (c) => !optionSet.has(c.colVar) || selectedSet.has(c.colVar),
+    );
+    const retainedSet = new Set(retained.map((c) => c.colVar));
+
+    // Add any newly selected columns not already retained
+    const toAdd: ExploreTableColumn[] = [];
+    values.forEach((v) => {
+      if (!v || retainedSet.has(v)) return;
+      const selected = ExploreTableColumnOptions.find((o) => o.value === v);
+      if (!selected) return;
+
+      toAdd.push({
+        colVar: selected.value,
+        aggregation: 'none',
+        type: inferColumnType(selected.value),
+        title: selected.label.base,
+      });
+    });
+
+    const nextColumns = [...retained, ...toAdd];
+
+    // No-op if columns didn’t change
+    const unchanged = nextColumns.length === chartConfig.columns.length
+      && chartConfig.columns.every((c, i) => c.colVar === nextColumns[i].colVar);
+    if (unchanged) return;
+
+    const updatedConfig: ExploreTableConfig = {
+      ...chartConfig,
+      columns: nextColumns,
+    };
+
+    store.exploreStore.updateChartConfig(updatedConfig);
+  };
+
   // Column Definitions Generator ----
   const generateColumnDefs = (configs: ExploreTableColumn[]): DataTableColumn<ExploreTableRow>[] => configs.map((config) => {
     const {
@@ -612,6 +692,11 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     columns: generateColumnDefs(chartConfig.columns),
   });
 
+  const multiSelectDefaultValues = useMemo(() => {
+    const optionSet = new Set(ExploreTableColumnOptions.map((o) => o.value));
+    return chartConfig.columns.filter((c) => optionSet.has(c.colVar)).map((c) => c.colVar);
+  }, [chartConfig.columns]);
+
   // Render the DataTable with columns ----
   return (
     <Stack style={{ height: '100%', width: '100%' }}>
@@ -623,13 +708,21 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         </Flex>
 
         <Flex direction="row" align="center" gap="sm">
-          <ActionIcon
-            variant="subtle"
-            onClick={() => {}}
-            title="Add Column"
-          >
-            <IconPlus size={18} />
-          </ActionIcon>
+          <MultiSelect
+            placeholder="Columns"
+            searchable
+            clearable
+            nothingFoundMessage="No options"
+            data={ExploreTableColumnOptions.map((opt) => ({
+              value: opt.value,
+              label: opt.label.base,
+            }))}
+            onChange={handleColumnsChange}
+            defaultValue={multiSelectDefaultValues}
+            styles={{
+              pill: { display: 'none' },
+            }}
+          />
           <CloseButton onClick={() => { store.exploreStore.removeChart(chartConfig.chartId); }} />
         </Flex>
       </Flex>
