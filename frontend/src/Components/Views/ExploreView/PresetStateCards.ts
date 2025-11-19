@@ -73,6 +73,7 @@ export const presetStateCards: PresetGroup[] = [
               type: 'heatmap',
               title: '5 RBC',
             }],
+            twoValsPerRow: true,
           },
         ],
         chartLayouts: {
