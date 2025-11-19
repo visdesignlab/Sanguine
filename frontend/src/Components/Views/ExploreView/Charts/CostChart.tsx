@@ -34,7 +34,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
   const colProps = { resizable: true, draggable: true, toggleable: true };
 
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<Row>>({
-    columnAccessor: 'surgeon',
+    columnAccessor: 'surgeon_prov_id',
     direction: 'asc',
   });
 
@@ -55,7 +55,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
   const [drgMaxCmp, setDrgMaxCmp] = useState<'>' | '<'>('<');
   // -----------------------------------------------------------------------
 
-  const [records, setRecords] = useState<Row[]>(() => sortBy(dummyData, 'surgeon') as Row[]);
+  const [records, setRecords] = useState<Row[]>(() => sortBy(dummyData, 'surgeon_prov_id') as Row[]);
 
   // ---------- helpers copied from ExploreTable for DRG violin rendering ----------
   function kernelEpanechnikov(k: number) {
@@ -89,7 +89,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
   }
 
   function makeFakeSamplesForRow(row: Row, count = 40) {
-    const seedStr = `${row.surgeon ?? ''}:${row.cases ?? 0}`;
+    const seedStr = `${row.surgeon_prov_id ?? ''}:${row.cases ?? 0}`;
     let h = 2166136261;
     for (let i = 0; i < seedStr.length; i++) {
       h = Math.imul(h ^ seedStr.charCodeAt(i), 16777619);
@@ -196,7 +196,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
   useEffect(() => {
     let filtered = dummyData.filter((r) => (debouncedSurgeonQuery.trim() === ''
       ? true
-      : String(r.surgeon).toLowerCase().includes(debouncedSurgeonQuery.trim().toLowerCase())));
+      : String(r.surgeon_prov_id).toLowerCase().includes(debouncedSurgeonQuery.trim().toLowerCase())));
 
     // apply DRG min / max filters (copied from ExploreTable)
     if (debouncedDrgMinQuery.trim() !== '') {
@@ -307,9 +307,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
 
     const scaledMax = Math.max(0, Math.min(1, maxVal / 100));
 
-    const colors = bins.map((_, i) => {
-      return '#8c8c8c';
-    });
+    const colors = bins.map((_, i) => '#8c8c8c');
 
     const data = [
       bins.reduce((acc, count, i) => {
@@ -360,7 +358,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
           style={{
             width: '100%',
             height: 1,
-            borderTop: `1px solid ${ '#6f6f6f'}`,
+            borderTop: `1px solid ${'#6f6f6f'}`,
             opacity: 0.5,
           }}
         />
@@ -381,7 +379,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
           }}
         >
           {ticks.map((t, i) => (
-            <div key={i} style={{ paddingLeft: 0, paddingRight: 0, color:  '#6f6f6f' }}>
+            <div key={i} style={{ paddingLeft: 0, paddingRight: 0, color: '#6f6f6f' }}>
               {formatter.format(Math.round(t))}
             </div>
           ))}
@@ -494,7 +492,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
     );
   };
   // ---------- end added helpers ----------
-  
+
   // compute max total for scaling stacked bars
   const maxCost = useMemo(() => {
     if (!records || records.length === 0) return 1;
@@ -757,7 +755,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
       },
       // ---------- existing Surgeon column ----------
       {
-        accessor: 'surgeon',
+        accessor: 'surgeon_prov_id',
         title: 'Surgeon',
         resizable: true,
         sortable: true,
@@ -775,7 +773,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
             onKeyDown={(e) => { if (e.key === 'Enter') (e.currentTarget as HTMLInputElement).blur(); }}
           />
         ),
-        render: ({ surgeon }) => (
+        render: ({ surgeon_prov_id }) => (
           <div
             style={{
               whiteSpace: 'nowrap',
@@ -783,9 +781,9 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
               textOverflow: 'ellipsis',
               width: '100%',
             }}
-            title={String(surgeon)}
+            title={String(surgeon_prov_id)}
           >
-            {surgeon}
+            {surgeon_prov_id}
           </div>
         ),
         ...colProps,
@@ -798,7 +796,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
         textAlign: 'right',
         resizable: true,
         sortable: true,
-        render: ({ cases }) => renderBar(cases, maxCases, { color: '#6f6f6f'}),
+        render: ({ cases }) => renderBar(cases, maxCases, { color: '#6f6f6f' }),
         footer: renderHistogramFooter(casesBins, false, 0, maxCases),
         ...colProps,
       },

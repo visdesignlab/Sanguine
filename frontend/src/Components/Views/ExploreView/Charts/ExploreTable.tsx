@@ -428,37 +428,10 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     if (Array.isArray(sample)) return 'violin';
     if (typeof sample === 'number') {
       // heuristics for heatmap (% style)
-      if (key.includes('adherent') || ['death', 'vent', 'stroke', 'ecmo'].includes(key)) return 'heatmap';
+      if (key.includes('adherent') || ['rbc', 'ffp', 'cryo'].includes(key)) return 'heatmap';
       return 'numeric';
     }
     return 'text';
-  };
-
-  const handleAddColumns = (values: string[]) => {
-    const existing = new Set(chartConfig.columns.map((c) => c.colVar));
-    const newCols: ExploreTableColumn[] = [];
-
-    values.forEach((value) => {
-      if (!value || existing.has(value)) return;
-      const selected = ExploreTableColumnOptions.find((o) => o.value === value);
-      if (!selected) return;
-
-      newCols.push({
-        colVar: selected.value,
-        aggregation: 'none',
-        type: inferColumnType(selected.value),
-        title: selected.label.base,
-      });
-    });
-
-    if (newCols.length === 0) return;
-
-    const updatedConfig: ExploreTableConfig = {
-      ...chartConfig,
-      columns: [...chartConfig.columns, ...newCols],
-    };
-
-    store.exploreStore.updateChartConfig(updatedConfig);
   };
 
   const handleColumnsChange = (values: string[]) => {
@@ -483,11 +456,11 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         colVar: selected.value,
         aggregation: 'none',
         type: inferColumnType(selected.value),
-        title: selected.label.base,
+        title: selected.label, // FIX: label is a string, not { base }
       });
     });
 
-    const nextColumns = [...retained, ...toAdd];
+    const nextColumns = [...toAdd, ...retained];
 
     // No-op if columns didn’t change
     const unchanged = nextColumns.length === chartConfig.columns.length
@@ -715,7 +688,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
             nothingFoundMessage="No options"
             data={ExploreTableColumnOptions.map((opt) => ({
               value: opt.value,
-              label: opt.label.base,
+              label: opt.label, // FIX: use string label
             }))}
             onChange={handleColumnsChange}
             defaultValue={multiSelectDefaultValues}
