@@ -120,7 +120,14 @@ export function ViolinCell({
   return (
     <Tooltip label={tooltipLabel} position="top" withArrow>
       <div style={{
-        width: '100%', height, flex: 1, position: 'relative', display: 'flex', alignItems: 'center',
+        width: '100%',
+        height,
+        minHeight: height,
+        maxHeight: height,
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        overflow: 'hidden',
       }}
       >
         <svg
