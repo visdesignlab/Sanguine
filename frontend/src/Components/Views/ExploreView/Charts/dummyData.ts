@@ -494,3 +494,27 @@ export const dummyData = [
     salvage_savings: 5,
   },
 ] as ExploreTableData;
+
+export const dummyDataTwoVals: ExploreTableData = dummyData.map((row) => {
+  const newRow: any = { ...row };
+  Object.keys(row).forEach((key) => {
+    if (key === 'id' || key === 'surgeon_prov_id') return;
+
+    const val = row[key];
+    if (Array.isArray(val)) {
+      // Split array into two for violin (simulating two datasets)
+      const mid = Math.ceil(val.length / 2);
+      // Ensure we have arrays even if empty
+      const arr = val as number[];
+      newRow[key] = [arr.slice(0, mid), arr.slice(mid)];
+    } else if (typeof val === 'number') {
+      // Create two values for numeric
+      // value 1 is roughly 60%, value 2 is 40% or slightly different to show contrast
+      // For percentages, we just vary them slightly
+      const v1 = key.includes('percent') ? Math.min(100, Math.floor(val * 1.1)) : Math.floor(val * 0.6);
+      const v2 = key.includes('percent') ? Math.max(0, Math.floor(val * 0.9)) : Math.ceil(val * 0.4);
+      newRow[key] = [v1, v2];
+    }
+  });
+  return newRow;
+});

@@ -96,7 +96,11 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
   // helper to get samples from a row for a given accessor
   const getSamples = (r: ExploreTableRow, key: string) => {
-    const raw = (r as any)[key] as number[] | number | undefined;
+    const raw = (r as any)[key];
+    // Handle twoValsPerRow: if it's an array of arrays, flatten it for sorting/filtering context
+    if (chartConfig.twoValsPerRow && Array.isArray(raw) && Array.isArray(raw[0])) {
+      return (raw as number[][]).flat();
+    }
     return Array.isArray(raw) ? raw : typeof raw === 'number' ? [raw] : [];
   };
 
@@ -106,31 +110,29 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
     // text filters (AND across columns)
     if (Object.keys(textFilters).length) {
-      filtered = filtered.filter((r) => {
-        for (const [key, q] of Object.entries(textFilters)) {
-          const qq = String(q ?? '').trim().toLowerCase();
-          if (!qq) continue;
-          const val = String((r as any)[key] ?? '').toLowerCase();
-          if (!val.includes(qq)) return false;
-        }
-        return true;
-      });
+      filtered = filtered.filter((r) => Object.entries(textFilters).every(([k, query]) => {
+        const val = r[k];
+        return String(val).toLowerCase().includes(query.toLowerCase());
+      }));
     }
 
     // numeric filters (AND across columns)
     if (Object.keys(numericFilters).length) {
-      filtered = filtered.filter((r) => {
-        for (const [key, nf] of Object.entries(numericFilters)) {
-          const q = nf.query?.trim();
-          if (!q) continue;
-          const pivot = Number(q);
-          if (Number.isNaN(pivot)) continue;
-          const v = Number((r as any)[key]);
-          if (Number.isNaN(v)) return false;
-          if (nf.cmp === '>' ? !(v >= pivot) : !(v <= pivot)) return false;
+      filtered = filtered.filter((r) => Object.entries(numericFilters).every(([k, { query, cmp }]) => {
+        if (!query) return true;
+        const threshold = Number(query);
+        const raw = r[k];
+
+        // Handle twoValsPerRow: check if ANY value meets criteria
+        if (chartConfig.twoValsPerRow && Array.isArray(raw) && typeof raw[0] === 'number') {
+          const vals = raw as number[];
+          if (cmp === '>') return vals.some((v) => v > threshold);
+          if (cmp === '<') return vals.some((v) => v < threshold);
         }
-        return true;
-      });
+
+        const val = Number(raw);
+        return cmp === '>' ? val > threshold : val < threshold;
+      }));
     }
 
     // violin filters (AND across columns)
@@ -170,11 +172,27 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     const accessor = sortStatus.columnAccessor as keyof ExploreTableRow;
     let sorted: ExploreTableRow[] = [];
 
-    if (typeMap.get(accessor as string) === 'violin') {
-      sorted = sortBy(filtered, (r: ExploreTableRow) => computeMedian(getSamples(r, accessor as string))) as ExploreTableRow[];
-    } else {
-      sorted = sortBy(filtered, accessor) as ExploreTableRow[];
-    }
+    const getSortValue = (r: ExploreTableRow) => {
+      const val = r[accessor as string];
+
+      if (chartConfig.twoValsPerRow && Array.isArray(val)) {
+        // Numeric tuple: sort by sum
+        if (typeof val[0] === 'number') {
+          return (val as number[]).reduce((a, b) => a + b, 0);
+        }
+        // Violin tuple: sort by median of combined
+        if (Array.isArray(val[0])) {
+          return computeMedian((val as number[][]).flat());
+        }
+      }
+
+      if (typeMap.get(accessor as string) === 'violin') {
+        return computeMedian(getSamples(r, accessor as string));
+      }
+      return val;
+    };
+
+    sorted = sortBy(filtered, getSortValue) as ExploreTableRow[];
 
     setRecords(sortStatus.direction === 'desc' ? sorted.reverse() : sorted);
   }, [
@@ -184,6 +202,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     numericFilters,
     violinFilters,
     typeMap,
+    chartConfig.twoValsPerRow,
   ]);
 
   const getHeatColor = (percent: number) => {
@@ -425,13 +444,26 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
   const inferColumnType = (key: string): ExploreTableColumn['type'] => {
     const sample = chartData[0]?.[key];
+
+    if (chartConfig.twoValsPerRow) {
+      if (Array.isArray(sample)) {
+        // [number[], number[]] -> violin
+        if (Array.isArray(sample[0])) return 'violin';
+        // [number, number] -> numeric or heatmap
+        if (typeof sample[0] === 'number') {
+          if (key.includes('adherent') || ['rbc', 'ffp', 'cryo'].includes(key)) return 'heatmap';
+          return 'numeric';
+        }
+      }
+      return 'text';
+    }
+
     if (Array.isArray(sample)) return 'violin';
     if (typeof sample === 'number') {
       // heuristics for heatmap (% style)
       if (key.includes('adherent') || ['rbc', 'ffp', 'cryo'].includes(key)) return 'heatmap';
-      return 'numeric';
     }
-    return 'text';
+    return 'text'; // default to text if not numeric/array
   };
 
   const handleColumnsChange = (values: string[]) => {
@@ -490,31 +522,58 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     };
 
     // derive values for histograms
-    const values = records.map((r) => Number(r[colVar] ?? 0));
+    const rawValues = records.map((r) => r[colVar]);
+    let values: number[] = [];
+
+    if (chartConfig.twoValsPerRow) {
+      // flatten [ [v1, v2], [v3, v4] ] -> [v1, v2, v3, v4]
+      // Filter out non-numeric if mixed, but dummy data is consistent
+      values = rawValues.flat().map((v) => Number(v ?? 0));
+    } else {
+      values = rawValues.map((r) => Number(r ?? 0));
+    }
+
     const maxFromValues = (vals: number[]) => (vals.length ? Math.max(...vals) : 0);
 
     if (type === 'heatmap') {
       const valueValues = values;
       column.render = (row: ExploreTableRow, _index: number) => {
-        const value = Number(row[colVar] ?? 0);
-        const hasValue = value !== 0;
+        if (chartConfig.twoValsPerRow) {
+          const val = row[colVar] as [number, number] | undefined;
+          const v1 = val?.[0] ?? 0;
+          const v2 = val?.[1] ?? 0;
+          return (
+            <Stack gap={2}>
+              <div style={{
+                backgroundColor: getHeatColor(v1), color: v1 > 50 ? 'white' : 'black', padding: '2px 4px', borderRadius: 4, textAlign: 'center', fontSize: 11,
+              }}
+              >
+                {v1}
+                %
+              </div>
+              <div style={{
+                backgroundColor: getHeatColor(v2), color: v2 > 50 ? 'white' : 'black', padding: '2px 4px', borderRadius: 4, textAlign: 'center', fontSize: 11,
+              }}
+              >
+                {v2}
+                %
+              </div>
+            </Stack>
+          );
+        }
+
+        const val = Number(row[colVar] ?? 0);
         return (
-          <Box
-            style={{
-              height: 21,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: hasValue ? getHeatColor(value) : 'transparent',
-              color: value > 30 ? '#fff' : '#000',
-              fontSize: 14,
-              padding: 0,
-            }}
+          <div style={{
+            backgroundColor: getHeatColor(val), color: val > 50 ? 'white' : 'black', padding: '4px 8px', borderRadius: 4, textAlign: 'center',
+          }}
           >
-            {hasValue ? `${value}%` : 'No data'}
-          </Box>
+            {val}
+            %
+          </div>
         );
       };
+
       if (valueValues.length) {
         const max = maxFromValues(valueValues);
         const bins = computeBins(valueValues, 10, 0, max);
@@ -542,10 +601,23 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     }
 
     if (type === 'numeric') {
+      const maxVal = maxFromValues(values);
+
       column.render = (row: ExploreTableRow, _index: number) => {
-        const suffix = colVar === 'cases' ? '' : '%';
-        return numericBarCell(Number(row[colVar]), 100, { suffix });
+        if (chartConfig.twoValsPerRow) {
+          const val = row[colVar] as [number, number] | undefined;
+          const v1 = val?.[0] ?? 0;
+          const v2 = val?.[1] ?? 0;
+          return (
+            <Stack gap={2}>
+              {numericBarCell(v1, maxVal)}
+              {numericBarCell(v2, maxVal)}
+            </Stack>
+          );
+        }
+        return numericBarCell(Number(row[colVar]), maxVal);
       };
+
       if (values.length) {
         const max = maxFromValues(values);
         const bins = computeBins(values, 10, 0, max);
@@ -585,12 +657,42 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     }
 
     if (type === 'violin') {
-      const agg = computeViolinAggregate(colVar);
+      let agg: any;
+      if (chartConfig.twoValsPerRow) {
+        // Flatten all samples from all rows and both tuples for the domain
+        const allSamples = records.flatMap((r) => {
+          const val = r[colVar] as [number[], number[]];
+          return [...(val[0] || []), ...(val[1] || [])];
+        });
+        const minAll = allSamples.length ? Math.min(...allSamples) : 0;
+        const maxAll = allSamples.length ? Math.max(...allSamples) : 0;
+        agg = { samples: allSamples, minAll, maxAll };
+      } else {
+        agg = computeViolinAggregate(colVar);
+      }
+
       const vf = getViolinFilter(colVar);
 
       column.render = (row: ExploreTableRow, _index: number) => {
-        const samples = getSamples(row, colVar);
-        return <ViolinCell samples={samples} domain={[agg.minAll, agg.maxAll]} />;
+        if (chartConfig.twoValsPerRow) {
+          const val = row[colVar] as [number[], number[]] | undefined;
+          const s1 = val?.[0] ?? [];
+          const s2 = val?.[1] ?? [];
+          return (
+            <Stack gap={0}>
+              <ViolinCell samples={s1} domain={[agg.minAll, agg.maxAll]} height={20} padding={0} />
+              <ViolinCell samples={s2} domain={[agg.minAll, agg.maxAll]} height={20} padding={0} />
+            </Stack>
+          );
+        }
+        return (
+          <ViolinCell
+            samples={getSamples(row, colVar)}
+            domain={[agg.minAll, agg.maxAll]}
+            height={40}
+            padding={4}
+          />
+        );
       };
 
       column.filter = (

@@ -534,6 +534,7 @@ export type ExploreTableConfig = {
   chartType: 'exploreTable';
   rowVar: string; // e.g., 'surgeon_prov_id'
   columns: ExploreTableColumn[];
+  twoValsPerRow?: boolean;
 };
 
 export type ExploreTableDataColumn = {
@@ -582,7 +583,7 @@ export const ExploreTableColumnOptions: { value: string; label: string }[] = [
 ];
 
 // TODO: Update ExploreTableData type
-export type ExploreTableRow = Record<string, string | number | number[]>;
+export type ExploreTableRow = Record<string, string | number | number[] | number[][]>;
 export type ExploreTableData = ExploreTableRow[];
 
 // TODO: Update ExploreChartData type
