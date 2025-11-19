@@ -6,7 +6,7 @@ import {
   ExploreChartConfig, ExploreTableConfig, ExploreTableColumn, ExploreChartData,
 } from '../Types/application';
 
-import { dummyData } from '../Components/Views/ExploreView/Charts/dummyData';
+import { dummyData, dummyDataTwoVals } from '../Components/Views/ExploreView/Charts/dummyData';
 
 export class ExploreStore {
   _rootStore: RootStore;
@@ -49,7 +49,7 @@ export class ExploreStore {
     for (const config of this._chartConfigs) {
       // Temporary: use dummy data for all chart types
       if (config.chartType === 'exploreTable') {
-        data[config.chartId] = dummyData;
+        data[config.chartId] = config.twoValsPerRow ? dummyDataTwoVals : dummyData;
       }
       if (config.chartType === 'scatterPlot') {
         data[config.chartId] = dummyData;
