@@ -2,7 +2,10 @@ import { makeAutoObservable, observable } from 'mobx';
 import { Layout } from 'react-grid-layout';
 
 import type { RootStore } from './Store';
-import { ExploreChartConfig, ExploreChartData } from '../Types/application';
+import {
+  ExploreChartConfig, ExploreTableConfig, ExploreTableColumn, ExploreChartData,
+} from '../Types/application';
+
 import { dummyData } from '../Components/Views/ExploreView/Charts/dummyData';
 
 export class ExploreStore {
@@ -83,8 +86,7 @@ export class ExploreStore {
     });
   }
 
-  // E.g., add or remove a column from the ExploreTable
-  updateChartConfig(config: ExploreTableConfig) {
-    // Add Chart Column
+  updateChartConfig(updatedConfig: ExploreChartConfig) {
+    this.chartConfigs = this._chartConfigs.map((cfg) => (cfg.chartId === updatedConfig.chartId ? updatedConfig : cfg));
   }
 }

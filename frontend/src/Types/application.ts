@@ -536,6 +536,51 @@ export type ExploreTableConfig = {
   columns: ExploreTableColumn[];
 };
 
+export type ExploreTableDataColumn = {
+  [key: string]: string | number | number[]; // key is colVar
+};
+
+export const ExploreTableColumnOptions: { value: string; label: string }[] = [
+  // Blood Components
+  ...BLOOD_COMPONENTS.map((bc) => ({
+    value: bc.value,
+    label: bc.label.base,
+  })),
+  // Outcomes
+  ...OUTCOMES.map((outcome) => ({
+    value: outcome.value,
+    label: outcome.label.base,
+  })),
+  // Prophylactic Medications
+  ...PROPHYL_MEDS.map((med) => ({
+    value: med.value,
+    label: med.label.base,
+  })),
+  // Guideline Adherence
+  ...Object.values(GUIDELINE_ADHERENT).map((ga) => ({
+    value: ga.value,
+    label: ga.label.base,
+  })),
+  // Costs
+  ...Object.values(COSTS).map((cost) => ({
+    value: cost.value,
+    label: cost.label.base,
+  })),
+  // Overall Blood Product Cost
+  {
+    value: OVERALL_BLOOD_PRODUCT_COST.value,
+    label: OVERALL_BLOOD_PRODUCT_COST.label.base,
+  },
+  {
+    value: 'surgeon_prov_id',
+    label: 'Surgeon',
+  },
+  {
+    value: 'cases',
+    label: 'Cases',
+  },
+];
+
 // TODO: Update ExploreTableData type
 export type ExploreTableRow = Record<string, string | number | number[]>;
 export type ExploreTableData = ExploreTableRow[];
