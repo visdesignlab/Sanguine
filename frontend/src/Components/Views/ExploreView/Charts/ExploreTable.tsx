@@ -726,17 +726,37 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           const s2 = val?.[1] ?? [];
           return (
             <Stack gap={0}>
-              <ViolinCell samples={s1} domain={[agg.minAll, agg.maxAll]} height={20} padding={0} />
-              <ViolinCell samples={s2} domain={[agg.minAll, agg.maxAll]} height={20} padding={0} />
+              <ViolinCell
+                samples={s1}
+                domain={[agg.minAll, agg.maxAll]}
+                height={20}
+                padding={0}
+                className="violin-cell"
+                onMouseEnter={() => setHoveredValue({ col: colVar, value: computeMedian(s1) })}
+                onMouseLeave={() => setHoveredValue(null)}
+              />
+              <ViolinCell
+                samples={s2}
+                domain={[agg.minAll, agg.maxAll]}
+                height={20}
+                padding={0}
+                className="violin-cell"
+                onMouseEnter={() => setHoveredValue({ col: colVar, value: computeMedian(s2) })}
+                onMouseLeave={() => setHoveredValue(null)}
+              />
             </Stack>
           );
         }
+        const samples = getSamples(row, colVar);
         return (
           <ViolinCell
-            samples={getSamples(row, colVar)}
+            samples={samples}
             domain={[agg.minAll, agg.maxAll]}
             height={40}
             padding={4}
+            className="violin-cell"
+            onMouseEnter={() => setHoveredValue({ col: colVar, value: computeMedian(samples) })}
+            onMouseLeave={() => setHoveredValue(null)}
           />
         );
       };

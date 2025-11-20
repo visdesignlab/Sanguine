@@ -53,16 +53,19 @@ export function makeFakeSamplesForRow(row: HasSurgeonAndCases, count = 40) {
 }
 
 export interface ViolinPlotProps {
-    samples: number[];
-    domain?: [number, number];
-    height?: number;
-    padding?: number;
-    internalWidth?: number;
-    color?: string;
-    stroke?: string;
-    showMedian?: boolean;
-    tooltipFormatter?: (stats: { min: number; median: number; max: number }) => string;
-  }
+  samples: number[];
+  domain?: [number, number];
+  height?: number;
+  padding?: number;
+  internalWidth?: number;
+  color?: string;
+  stroke?: string;
+  showMedian?: boolean;
+  tooltipFormatter?: (stats: { min: number; median: number; max: number }) => string;
+  className?: string;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+}
 
 export function ViolinCell({
   samples,
@@ -74,6 +77,9 @@ export function ViolinCell({
   stroke = '#8c8c8c',
   showMedian = true,
   tooltipFormatter,
+  className,
+  onMouseEnter,
+  onMouseLeave,
 }: ViolinPlotProps) {
   if (!samples || samples.length === 0) {
     return (
@@ -129,6 +135,9 @@ export function ViolinCell({
         alignItems: 'center',
         overflow: 'hidden',
       }}
+        className={className}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
       >
         <svg
           viewBox={`0 0 ${internalWidth} ${height}`}
@@ -139,20 +148,20 @@ export function ViolinCell({
           <path d={d} fill={color} stroke={stroke} strokeWidth={1} opacity={0.95} />
         </svg>
         {showMedian && (
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            left: `${(medianX / internalWidth) * 100}%`,
-            transform: 'translateX(-50%)',
-            top: `${centerY - medianHalfH}px`,
-            height: `${medianHalfH * 2}px`,
-            width: 1,
-            background: stroke,
-            opacity: 0.95,
-            pointerEvents: 'none',
-          }}
-        />
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute',
+              left: `${(medianX / internalWidth) * 100}%`,
+              transform: 'translateX(-50%)',
+              top: `${centerY - medianHalfH}px`,
+              height: `${medianHalfH * 2}px`,
+              width: 1,
+              background: stroke,
+              opacity: 0.95,
+              pointerEvents: 'none',
+            }}
+          />
         )}
       </div>
     </Tooltip>
