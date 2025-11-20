@@ -320,13 +320,11 @@ const NumericBarCell = ({
   );
 };
 
-// MARK: - Main Component
+// MARK: - ExploreTable
 
 export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTableConfig }) {
   const store = useContext(Store);
   const chartData = store.exploreStore.chartData[chartConfig.chartId] as ExploreTableData;
-
-  // MARK: State
 
   // Filters
   const defaultNumericFilter: NumericFilter = { query: '', cmp: '>' };
@@ -359,8 +357,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
   const updateTextFilter = (key: string, value: string) => {
     setTextFilters((prev) => ({ ...prev, [key]: value }));
   };
-
-  // MARK: Effects
 
   // Apply filters and sorting
   useEffect(() => {
@@ -413,10 +409,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     chartConfig.twoValsPerRow,
   ]);
 
-  // MARK: Column Handlers
-
   const handleColumnsChange = (values: string[]) => {
-    // values is the full set of currently selected option values from the MultiSelect
     const optionSet = new Set(ExploreTableColumnOptions.map((o) => o.value));
     const selectedSet = new Set(values);
 
@@ -441,7 +434,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       });
     });
 
-    const nextColumns = [...toAdd, ...retained];
+    const nextColumns = [...retained, ...toAdd];
 
     // No-op if columns didn’t change
     const unchanged = nextColumns.length === chartConfig.columns.length
@@ -456,9 +449,9 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     store.exploreStore.updateChartConfig(updatedConfig);
   };
 
-  // MARK: Column Definitions
-
+  // Generate Column Definitions
   const generateColumnDefs = (configs: ExploreTableColumn[]): DataTableColumn<ExploreTableRow>[] => configs.map((config) => {
+
     const {
       colVar, type, title, numericTextVisible,
     } = config;
@@ -476,8 +469,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     let values: number[] = [];
 
     if (chartConfig.twoValsPerRow) {
-      // flatten [ [v1, v2], [v3, v4] ] -> [v1, v2, v3, v4]
-      // Filter out non-numeric if mixed, but dummy data is consistent
       values = rawValues.flat().map((v) => Number(v ?? 0));
     } else {
       values = rawValues.map((r) => Number(r ?? 0));
@@ -681,27 +672,30 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     return column;
   });
 
+  // Data Table Columns -------
   const { effectiveColumns } = useDataTableColumns<ExploreTableRow>({
     key: `ExploreTable-${chartConfig.chartId}`,
     columns: generateColumnDefs(chartConfig.columns),
   });
 
-  const multiSelectDefaultValues = useMemo(() => {
-    const optionSet = new Set(ExploreTableColumnOptions.map((o) => o.value));
-    return chartConfig.columns.filter((c) => optionSet.has(c.colVar)).map((c) => c.colVar);
-  }, [chartConfig.columns]);
+  // Currently selected column variables
+  const selectedColumnVars = chartConfig.columns
+    .filter((c) => ExploreTableColumnOptions.some((o) => o.value === c.colVar))
+    .map((c) => c.colVar);
 
   // Data Table -------
   return (
     <Stack style={{ height: '100%', width: '100%' }}>
-      {/** Title, Add Column, Close Chart */}
       <Flex direction="row" justify="space-between" align="center" pl="md">
         <Flex direction="row" align="center" gap="md" ml={-12}>
+          {/** Chart Grip */}
           <IconGripVertical size={18} className="move-icon" style={{ cursor: 'move' }} />
-          <Title order={4}>RBC Units Transfused Per Surgeon</Title>
+          {/** Chart Title */}
+          <Title order={4}>{chartConfig.title}</Title>
         </Flex>
 
         <Flex direction="row" align="center" gap="sm">
+          {/** Add Column */}
           <MultiSelect
             placeholder="Columns"
             searchable
@@ -712,11 +706,12 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
               label: opt.label,
             }))}
             onChange={handleColumnsChange}
-            defaultValue={multiSelectDefaultValues}
+            value={selectedColumnVars}
             styles={{
               pill: { display: 'none' },
             }}
           />
+          {/** Close Chart */}
           <CloseButton onClick={() => { store.exploreStore.removeChart(chartConfig.chartId); }} />
         </Flex>
       </Flex>
