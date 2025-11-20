@@ -532,6 +532,7 @@ export type ExploreTableColumn = {
 
 export type ExploreTableConfig = {
   chartId: string;
+  title: string;
   chartType: 'exploreTable';
   rowVar: string; // e.g., 'surgeon_prov_id'
   columns: ExploreTableColumn[];
