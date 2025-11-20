@@ -547,14 +547,14 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           return (
             <Stack gap={2}>
               <div style={{
-                backgroundColor: getHeatColor(v1), color: v1 > 50 ? 'white' : 'black', padding: '2px 4px', borderRadius: 4, textAlign: 'center', fontSize: 11,
+                backgroundColor: getHeatColor(v1), color: v1 > 50 ? 'white' : 'black', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
               }}
               >
                 {v1}
                 %
               </div>
               <div style={{
-                backgroundColor: getHeatColor(v2), color: v2 > 50 ? 'white' : 'black', padding: '2px 4px', borderRadius: 4, textAlign: 'center', fontSize: 11,
+                backgroundColor: getHeatColor(v2), color: v2 > 50 ? 'white' : 'black', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
               }}
               >
                 {v2}
@@ -803,7 +803,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       {/** Data Table */}
       <Box style={{ minHeight: 0, width: '100%' }}>
         <DataTable<ExploreTableRow>
-          className="ExploreTable-data-table"
+          className="explore-table-data-table"
           borderRadius="sm"
           striped
           withTableBorder={false}
@@ -818,7 +818,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           style={{
             fontStyle: 'italic',
           }}
-          onRowClick={() => {}}
+          onRowClick={() => { }}
         />
       </Box>
     </Stack>
