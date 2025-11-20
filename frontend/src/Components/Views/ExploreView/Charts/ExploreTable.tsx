@@ -32,31 +32,29 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
   const store = useContext(Store);
   const chartData = store.exploreStore.chartData[chartConfig.chartId] as ExploreTableData;
 
-  // Numeric filters per column (unlimited)
-  type Comparator = '>' | '<';
-  type NumericFilter = { query: string; cmp: Comparator };
+  // Filters ------------
+
+  // Filters for columns with numeric values
+  type NumericFilter = { query: string; cmp: '>' | '<' };
   const defaultNumericFilter: NumericFilter = { query: '', cmp: '>' };
   const [numericFilters, setNumericFilters] = useState<Record<string, NumericFilter>>({});
   const getNumericFilter = (key: string): NumericFilter => numericFilters[key] ?? defaultNumericFilter;
-  const patchNumericFilter = (key: string, patch: Partial<NumericFilter>) => {
+  const updateNumericFilter = (key: string, patch: Partial<NumericFilter>) => {
     setNumericFilters((prev) => {
       const curr = prev[key] ?? defaultNumericFilter;
       return { ...prev, [key]: { ...curr, ...patch } };
     });
   };
 
-  // Text filters per column (unlimited)
+  // Filters for columns with text values
   const [textFilters, setTextFilters] = useState<Record<string, string>>({});
   const getTextFilter = (key: string) => textFilters[key] ?? '';
-  const patchTextFilter = (key: string, value: string) => {
+  const updateTextFilter = (key: string, value: string) => {
     setTextFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Hover state for cross-component highlighting
+  // Hovered cell value
   const [hoveredValue, setHoveredValue] = useState<{ col: string; value: number } | null>(null);
-
-  // Column Resizing
-  const colKey = `ExploreTable-${chartConfig.chartId}`;
 
   // Sorting
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<ExploreTableRow>>({
@@ -67,24 +65,12 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
   // Sorting base data
   const [records, setRecords] = useState<ExploreTableRow[]>(() => sortBy(chartData, 'surgeon_prov_id') as ExploreTableRow[]);
 
-  // map accessor
-  const typeMap = useMemo(() => new Map(chartConfig.columns.map((c) => [c.colVar, c.type])), [chartConfig.columns]);
 
-  // helper to get samples from a row for a given accessor
-  const getSamples = (r: ExploreTableRow, key: string) => {
-    const raw = (r as Record<string, unknown>)[key];
-    // Handle twoValsPerRow: if it's an array of arrays, flatten it for sorting/filtering context
-    if (chartConfig.twoValsPerRow && Array.isArray(raw) && Array.isArray(raw[0])) {
-      return (raw as number[][]).flat();
-    }
-    return Array.isArray(raw) ? raw : typeof raw === 'number' ? [raw] : [];
-  };
-
-  // apply all filters and sorting
+  // Apply filters and sorting
   useEffect(() => {
     let filtered = chartData;
 
-    // text filters (AND across columns)
+    // Apply text filters
     if (Object.keys(textFilters).length) {
       filtered = filtered.filter((r) => Object.entries(textFilters).every(([k, query]) => {
         const val = r[k];
@@ -92,26 +78,22 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       }));
     }
 
-    // numeric filters (AND across columns)
+    // Apply numeric filters
     if (Object.keys(numericFilters).length) {
       filtered = filtered.filter((r) => Object.entries(numericFilters).every(([k, { query, cmp }]) => {
         if (!query) return true;
         const threshold = Number(query);
         const raw = r[k];
+        const values = Array.isArray(raw) ? raw : [raw];
 
-        // Handle twoValsPerRow: check if ANY value meets criteria
-        if (chartConfig.twoValsPerRow && Array.isArray(raw) && typeof raw[0] === 'number') {
-          const vals = raw as number[];
-          if (cmp === '>') return vals.some((v) => v > threshold);
-          if (cmp === '<') return vals.some((v) => v < threshold);
-        }
-
-        const val = Number(raw);
-        return cmp === '>' ? val > threshold : val < threshold;
+        return values.some((v) => {
+          const n = Number(v);
+          return cmp === '>' ? n > threshold : n < threshold;
+        });
       }));
     }
 
-    // sort
+    // Sort
     const accessor = sortStatus.columnAccessor as keyof ExploreTableRow;
     let sorted: ExploreTableRow[] = [];
 
@@ -119,23 +101,19 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       const val = r[accessor as string];
 
       if (chartConfig.twoValsPerRow && Array.isArray(val)) {
-        // Numeric tuple: sort by sum
         if (typeof val[0] === 'number') {
           return (val as number[]).reduce((a, b) => a + b, 0);
         }
       }
       return val;
     };
-
     sorted = sortBy(filtered, getSortValue) as ExploreTableRow[];
-
     setRecords(sortStatus.direction === 'desc' ? sorted.reverse() : sorted);
   }, [
     sortStatus,
     chartData,
     textFilters,
     numericFilters,
-    typeMap,
     chartConfig.twoValsPerRow,
   ]);
 
@@ -553,11 +531,11 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           placeholder="Filter value"
           size="xs"
           value={nf.query}
-          onChange={(e) => patchNumericFilter(colVar, { query: e.currentTarget.value })}
+          onChange={(e) => updateNumericFilter(colVar, { query: e.currentTarget.value })}
           leftSection={(
             <ActionIcon
               size="xs"
-              onClick={() => patchNumericFilter(colVar, { cmp: nf.cmp === '>' ? '<' : '>' })}
+              onClick={() => updateNumericFilter(colVar, { cmp: nf.cmp === '>' ? '<' : '>' })}
             >
               {nf.cmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
             </ActionIcon>
@@ -597,11 +575,11 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           placeholder="Filter value"
           size="xs"
           value={nf.query}
-          onChange={(e) => patchNumericFilter(colVar, { query: e.currentTarget.value })}
+          onChange={(e) => updateNumericFilter(colVar, { query: e.currentTarget.value })}
           leftSection={(
             <ActionIcon
               size="xs"
-              onClick={() => patchNumericFilter(colVar, { cmp: nf.cmp === '>' ? '<' : '>' })}
+              onClick={() => updateNumericFilter(colVar, { cmp: nf.cmp === '>' ? '<' : '>' })}
             >
               {nf.cmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
             </ActionIcon>
@@ -617,7 +595,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           placeholder="Search ..."
           size="xs"
           value={tv}
-          onChange={(e) => patchTextFilter(colVar, e.currentTarget.value)}
+          onChange={(e) => updateTextFilter(colVar, e.currentTarget.value)}
         />
       );
     }
@@ -628,8 +606,9 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
   });
 
   // Generate columns dynamically from chart configuration ----
+  // Column Resizing
   const { effectiveColumns } = useDataTableColumns<ExploreTableRow>({
-    key: colKey,
+    key: `ExploreTable-${chartConfig.chartId}`,
     columns: generateColumnDefs(chartConfig.columns),
   });
 
@@ -681,7 +660,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           records={records}
           sortStatus={sortStatus}
           onSortStatusChange={setSortStatus}
-          storeColumnsKey={colKey}
+          storeColumnsKey={`ExploreTable-${chartConfig.chartId}`}
           columns={effectiveColumns}
           style={{
             fontStyle: 'italic',
