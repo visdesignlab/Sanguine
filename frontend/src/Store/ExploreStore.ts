@@ -6,7 +6,7 @@ import {
   ExploreChartConfig, ExploreTableConfig, ExploreTableColumn, ExploreChartData,
 } from '../Types/application';
 
-import { dummyData, dummyDataTwoVals } from '../Components/Views/ExploreView/Charts/dummyData';
+import { dummyData, dummyDataTwoVals } from '../Components/Views/ExploreView/Charts/exploreTableDummyData';
 
 export class ExploreStore {
   _rootStore: RootStore;
