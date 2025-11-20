@@ -263,12 +263,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     const scaledMax = Math.max(0, Math.min(1, maxVal / 100));
 
     const colors = bins.map((_, i) => {
-      if (useReds) {
-        const base = bins.length > 1 ? i / (bins.length - 1) : 0;
-        const t = Math.min(1, base * scaledMax);
-        return interpolateReds(t);
-      }
-
+      // Check if this bin should be highlighted based on hoveredValue
       if (hoveredValue && colVar && hoveredValue.col === colVar) {
         const range = Math.max(1, maxVal - minVal);
         const binSize = range / bins.length;
@@ -283,6 +278,12 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         } else if (val >= binStart && val < binEnd) {
           return smallHoverColor;
         }
+      }
+
+      if (useReds) {
+        const base = bins.length > 1 ? i / (bins.length - 1) : 0;
+        const t = Math.min(1, base * scaledMax);
+        return interpolateReds(t);
       }
 
       return '#8c8c8c';
@@ -572,18 +573,26 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           return (
             <Stack gap={2}>
               <Tooltip label={`${v1}% of cases`} withArrow>
-                <div style={{
-                  backgroundColor: getHeatColor(v1), color: v1 > 50 ? 'white' : 'black', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
-                }}
+                <div
+                  className="heatmap-cell"
+                  onMouseEnter={() => setHoveredValue({ col: colVar, value: v1 })}
+                  onMouseLeave={() => setHoveredValue(null)}
+                  style={{
+                    backgroundColor: getHeatColor(v1), color: v1 > 50 ? 'white' : 'black', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
+                  }}
                 >
                   {v1}
                   %
                 </div>
               </Tooltip>
               <Tooltip label={`${v2}% of cases`} withArrow>
-                <div style={{
-                  backgroundColor: getHeatColor(v2), color: v2 > 50 ? 'white' : 'black', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
-                }}
+                <div
+                  className="heatmap-cell"
+                  onMouseEnter={() => setHoveredValue({ col: colVar, value: v2 })}
+                  onMouseLeave={() => setHoveredValue(null)}
+                  style={{
+                    backgroundColor: getHeatColor(v2), color: v2 > 50 ? 'white' : 'black', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
+                  }}
                 >
                   {v2}
                   %
@@ -596,9 +605,13 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         const val = Number(row[colVar] ?? 0);
         return (
           <Tooltip label={`${val}% of cases`} withArrow>
-            <div style={{
-              backgroundColor: getHeatColor(val), color: val > 50 ? 'white' : 'black', padding: '4px 8px', borderRadius: 4, textAlign: 'center',
-            }}
+            <div
+              className="heatmap-cell"
+              onMouseEnter={() => setHoveredValue({ col: colVar, value: val })}
+              onMouseLeave={() => setHoveredValue(null)}
+              style={{
+                backgroundColor: getHeatColor(val), color: val > 50 ? 'white' : 'black', padding: '4px 8px', borderRadius: 4, textAlign: 'center',
+              }}
             >
               {val}
               %
