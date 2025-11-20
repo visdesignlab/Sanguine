@@ -17,3 +17,9 @@
 .numeric-bar-cell:hover .bar-fill {
   background-color: #FFCF76 !important;
 }
+
+/* Highlight heatmap cell on hover */
+.heatmap-cell:hover {
+  background-color: #FFCF76 !important;
+  color: black !important;
+}
