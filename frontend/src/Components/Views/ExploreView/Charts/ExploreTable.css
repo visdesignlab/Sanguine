@@ -12,3 +12,8 @@
   padding-top: 2.25px !important;
   padding-bottom: 2.25px !important;
 }
+
+/* Highlight bar fill on hover */
+.numeric-bar-cell:hover .bar-fill {
+  background-color: #FFCF76 !important;
+}

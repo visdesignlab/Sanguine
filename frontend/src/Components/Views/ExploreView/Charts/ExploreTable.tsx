@@ -25,7 +25,7 @@ import { Store } from '../../../../Store/Store';
 import {
   ExploreTableRow, ExploreTableData, ExploreTableConfig, ExploreTableColumn, ExploreTableColumnOptions,
 } from '../../../../Types/application';
-import { backgroundHoverColor } from '../../../../Theme/mantineTheme';
+import { backgroundHoverColor, smallHoverColor } from '../../../../Theme/mantineTheme';
 import './ExploreTable.css';
 import { ViolinCell, computeMedian } from './ViolinPlot';
 
@@ -78,6 +78,9 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
   const patchTextFilter = (key: string, value: string) => {
     setTextFilters((prev) => ({ ...prev, [key]: value }));
   };
+
+  // Hover state for cross-component highlighting
+  const [hoveredValue, setHoveredValue] = useState<{ col: string; value: number } | null>(null);
 
   // Column Resizing
   const colKey = `ExploreTable-${chartConfig.chartId}`;
@@ -252,7 +255,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     };
   };
 
-  const renderHistogramFooter = (bins: number[], useReds?: boolean, minVal = 0, maxVal = 100) => {
+  const renderHistogramFooter = (bins: number[], useReds?: boolean, minVal = 0, maxVal = 100, colVar?: string) => {
     if (!bins || bins.length === 0) {
       return null;
     }
@@ -265,6 +268,23 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         const t = Math.min(1, base * scaledMax);
         return interpolateReds(t);
       }
+
+      if (hoveredValue && colVar && hoveredValue.col === colVar) {
+        const range = Math.max(1, maxVal - minVal);
+        const binSize = range / bins.length;
+        const binStart = minVal + (i * binSize);
+        const binEnd = minVal + ((i + 1) * binSize);
+        const val = hoveredValue.value;
+
+        // Check if hovered value falls in this bin
+        // Special case for last bin to include max value
+        if (i === bins.length - 1) {
+          if (val >= binStart && val <= maxVal) return smallHoverColor;
+        } else if (val >= binStart && val < binEnd) {
+          return smallHoverColor;
+        }
+      }
+
       return '#8c8c8c';
     });
 
@@ -337,7 +357,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
   };
 
   // Numeric Horizontal Bar Cell Renderer ----
-  const numericBarCell = (value: number, max: number, opts?: { suffix?: string; color?: string; percentColor?: boolean }) => {
+  const numericBarCell = (value: number, max: number, colVar: string, opts?: { suffix?: string; color?: string; percentColor?: boolean }) => {
     const pct = Number.isFinite(max) && max > 0
       ? Math.max(0, Math.min(100, (Number(value ?? 0) / max) * 100))
       : 0;
@@ -364,6 +384,9 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           paddingLeft: 0,
           paddingRight: 0,
         }}
+          onMouseEnter={() => setHoveredValue({ col: colVar, value })}
+          onMouseLeave={() => setHoveredValue(null)}
+          className="numeric-bar-cell"
         >
           <div
             aria-hidden
@@ -395,17 +418,19 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           </div>
 
           {/* Bar fill */}
-          <div style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            height: '100%',
-            width: `${pct}%`,
-            maxWidth: '100%',
-            background: fillColor,
-            borderRadius: 2,
-            zIndex: 1,
-          }}
+          <div
+            className="bar-fill"
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              height: '100%',
+              width: `${pct}%`,
+              maxWidth: '100%',
+              background: fillColor,
+              borderRadius: 2,
+              zIndex: 1,
+            }}
           />
 
           <div
@@ -585,7 +610,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       if (valueValues.length) {
         const max = maxFromValues(valueValues);
         const bins = computeBins(valueValues, 10, 0, max);
-        column.footer = renderHistogramFooter(bins, true, 0, max);
+        column.footer = renderHistogramFooter(bins, true, 0, max, colVar);
       }
 
       // numeric-style filter for heatmap values
@@ -618,18 +643,18 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           const v2 = val?.[1] ?? 0;
           return (
             <Stack gap={2}>
-              {numericBarCell(v1, maxVal)}
-              {numericBarCell(v2, maxVal)}
+              {numericBarCell(v1, maxVal, colVar)}
+              {numericBarCell(v2, maxVal, colVar)}
             </Stack>
           );
         }
-        return numericBarCell(Number(row[colVar]), maxVal);
+        return numericBarCell(Number(row[colVar]), maxVal, colVar);
       };
 
       if (values.length) {
         const max = maxFromValues(values);
         const bins = computeBins(values, 10, 0, max);
-        column.footer = renderHistogramFooter(bins, false, 0, max);
+        column.footer = renderHistogramFooter(bins, false, 0, max, colVar);
       }
 
       // per-column numeric filter
