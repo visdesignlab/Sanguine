@@ -27,40 +27,13 @@ import {
 } from '../../../../Types/application';
 import { backgroundHoverColor, smallHoverColor } from '../../../../Theme/mantineTheme';
 import './ExploreTable.css';
-import { ViolinCell, computeMedian } from './ViolinPlot';
 
 export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTableConfig }) {
   const store = useContext(Store);
   const chartData = store.exploreStore.chartData[chartConfig.chartId] as ExploreTableData;
 
-  // Violin filters per column (unlimited)
-  type Comparator = '>' | '<';
-  type ViolinFilter = {
-    minQuery: string;
-    minCmp: Comparator;
-    medianQuery: string;
-    medianCmp: Comparator;
-    maxQuery: string;
-    maxCmp: Comparator;
-  };
-  const defaultViolinFilter: ViolinFilter = {
-    minQuery: '',
-    minCmp: '>',
-    medianQuery: '',
-    medianCmp: '>',
-    maxQuery: '',
-    maxCmp: '<',
-  };
-  const [violinFilters, setViolinFilters] = useState<Record<string, ViolinFilter>>({});
-  const getViolinFilter = (key: string): ViolinFilter => violinFilters[key] ?? defaultViolinFilter;
-  const patchViolinFilter = (key: string, patch: Partial<ViolinFilter>) => {
-    setViolinFilters((prev) => {
-      const curr = prev[key] ?? defaultViolinFilter;
-      return { ...prev, [key]: { ...curr, ...patch } };
-    });
-  };
-
   // Numeric filters per column (unlimited)
+  type Comparator = '>' | '<';
   type NumericFilter = { query: string; cmp: Comparator };
   const defaultNumericFilter: NumericFilter = { query: '', cmp: '>' };
   const [numericFilters, setNumericFilters] = useState<Record<string, NumericFilter>>({});
@@ -94,7 +67,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
   // Sorting base data
   const [records, setRecords] = useState<ExploreTableRow[]>(() => sortBy(chartData, 'surgeon_prov_id') as ExploreTableRow[]);
 
-  // map accessor -> type to generalize violin-specific sorting
+  // map accessor
   const typeMap = useMemo(() => new Map(chartConfig.columns.map((c) => [c.colVar, c.type])), [chartConfig.columns]);
 
   // helper to get samples from a row for a given accessor
@@ -138,41 +111,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       }));
     }
 
-    // violin filters (AND across columns)
-    filtered = filtered.filter((r) => {
-      for (const [key, vf] of Object.entries(violinFilters)) {
-        const samples = getSamples(r, key);
-        const hasAnyQuery = !!(vf.minQuery.trim() || vf.medianQuery.trim() || vf.maxQuery.trim());
-        if (!hasAnyQuery) {
-          return true;
-        }
-        if (samples.length === 0) return false;
-
-        if (vf.minQuery.trim() !== '') {
-          const pivot = Number(vf.minQuery);
-          if (!Number.isNaN(pivot)) {
-            const minVal = Math.min(...samples);
-            if (vf.minCmp === '>' ? !(minVal >= pivot) : !(minVal <= pivot)) return false;
-          }
-        }
-        if (vf.medianQuery.trim() !== '') {
-          const pivot = Number(vf.medianQuery);
-          if (!Number.isNaN(pivot)) {
-            const med = computeMedian(samples);
-            if (vf.medianCmp === '>' ? !(med >= pivot) : !(med <= pivot)) return false;
-          }
-        }
-        if (vf.maxQuery.trim() !== '') {
-          const pivot = Number(vf.maxQuery);
-          if (!Number.isNaN(pivot)) {
-            const maxVal = Math.max(...samples);
-            if (vf.maxCmp === '>' ? !(maxVal >= pivot) : !(maxVal <= pivot)) return false;
-          }
-        }
-      }
-      return true;
-    });
-
     // sort
     const accessor = sortStatus.columnAccessor as keyof ExploreTableRow;
     let sorted: ExploreTableRow[] = [];
@@ -185,14 +123,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         if (typeof val[0] === 'number') {
           return (val as number[]).reduce((a, b) => a + b, 0);
         }
-        // Violin tuple: sort by median of combined
-        if (Array.isArray(val[0])) {
-          return computeMedian((val as number[][]).flat());
-        }
-      }
-
-      if (typeMap.get(accessor as string) === 'violin') {
-        return computeMedian(getSamples(r, accessor as string));
       }
       return val;
     };
@@ -205,7 +135,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     chartData,
     textFilters,
     numericFilters,
-    violinFilters,
     typeMap,
     chartConfig.twoValsPerRow,
   ]);
@@ -235,25 +164,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     return counts;
   };
 
-  // compute aggregates for a violin column (domain and footer)
-  const computeViolinAggregate = (col: string) => {
-    if (!records || records.length === 0) {
-      return {
-        samples: [] as number[], minAll: 0, maxAll: 0, avgAvg: 0,
-      };
-    }
-    const perRow = records.map((r) => getSamples(r, col));
-    const samples = perRow.flat();
-    const mins = perRow.map((s) => (s.length ? Math.min(...s) : 0));
-    const maxs = perRow.map((s) => (s.length ? Math.max(...s) : 0));
-    const avgs = perRow.map((s) => (s.length ? s.reduce((a, b) => a + b, 0) / s.length : 0));
-    const minAll = mins.length ? Math.min(...mins) : 0;
-    const maxAll = maxs.length ? Math.max(...maxs) : 0;
-    const avgAvg = avgs.length ? avgs.reduce((a, b) => a + b, 0) / avgs.length : 0;
-    return {
-      samples, minAll, maxAll, avgAvg,
-    };
-  };
 
   const renderHistogramFooter = (bins: number[], useReds?: boolean, minVal = 0, maxVal = 100, colVar?: string) => {
     if (!bins || bins.length === 0) {
@@ -476,8 +386,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
     if (chartConfig.twoValsPerRow) {
       if (Array.isArray(sample)) {
-        // [number[], number[]] -> violin
-        if (Array.isArray(sample[0])) return 'violin';
         // [number, number] -> numeric or heatmap
         if (typeof sample[0] === 'number') {
           if (key.includes('adherent') || ['rbc', 'ffp', 'cryo'].includes(key)) return 'heatmap';
@@ -487,7 +395,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       return 'text';
     }
 
-    if (Array.isArray(sample)) return 'violin';
     if (typeof sample === 'number') {
       // heuristics for heatmap (% style)
       if (key.includes('adherent') || ['rbc', 'ffp', 'cryo'].includes(key)) return 'heatmap';
@@ -715,138 +622,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       );
     }
 
-    if (type === 'violin') {
-      let agg: { samples: number[]; minAll: number; maxAll: number };
-      if (chartConfig.twoValsPerRow) {
-        // Flatten all samples from all rows and both tuples for the domain
-        const allSamples = records.flatMap((r) => {
-          const val = r[colVar] as [number[], number[]];
-          return [...(val[0] || []), ...(val[1] || [])];
-        });
-        const minAll = allSamples.length ? Math.min(...allSamples) : 0;
-        const maxAll = allSamples.length ? Math.max(...allSamples) : 0;
-        agg = { samples: allSamples, minAll, maxAll };
-      } else {
-        agg = computeViolinAggregate(colVar);
-      }
-
-      const vf = getViolinFilter(colVar);
-
-      column.render = (row: ExploreTableRow, _index: number) => {
-        if (chartConfig.twoValsPerRow) {
-          const val = row[colVar] as [number[], number[]] | undefined;
-          const s1 = val?.[0] ?? [];
-          const s2 = val?.[1] ?? [];
-          return (
-            <Stack gap={0}>
-              <div
-                onMouseEnter={() => setHoveredValue({ col: colVar, value: computeMedian(s1) })}
-                onMouseLeave={() => setHoveredValue(null)}
-                style={{ padding: '2.25px 2px 1px 2px', width: '100%' }}
-              >
-                <ViolinCell
-                  samples={s1}
-                  domain={[agg.minAll, agg.maxAll]}
-                  height={20}
-                  padding={0}
-                  className="violin-cell"
-                />
-              </div>
-              <div
-                onMouseEnter={() => setHoveredValue({ col: colVar, value: computeMedian(s2) })}
-                onMouseLeave={() => setHoveredValue(null)}
-                style={{ padding: '1px 2px 2.25px 2px', width: '100%' }}
-              >
-                <ViolinCell
-                  samples={s2}
-                  domain={[agg.minAll, agg.maxAll]}
-                  height={20}
-                  padding={0}
-                  className="violin-cell"
-                />
-              </div>
-            </Stack>
-          );
-        }
-        const samples = getSamples(row, colVar);
-        return (
-          <div
-            onMouseEnter={() => setHoveredValue({ col: colVar, value: computeMedian(samples) })}
-            onMouseLeave={() => setHoveredValue(null)}
-            style={{ padding: '2.25px 2px', width: '100%' }}
-          >
-            <ViolinCell
-              samples={samples}
-              domain={[agg.minAll, agg.maxAll]}
-              height={40}
-              padding={4}
-              className="violin-cell"
-            />
-          </div>
-        );
-      };
-
-      column.filter = (
-        <Stack>
-          <TextInput
-            placeholder="Filter by Median Value"
-            size="xs"
-            value={vf.medianQuery}
-            onChange={(e) => patchViolinFilter(colVar, { medianQuery: e.currentTarget.value })}
-            leftSection={(
-              <ActionIcon
-                size="xs"
-                onClick={() => patchViolinFilter(colVar, { medianCmp: vf.medianCmp === '>' ? '<' : '>' })}
-              >
-                {vf.medianCmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
-              </ActionIcon>
-            )}
-          />
-          <TextInput
-            placeholder="Filter by Min Value"
-            size="xs"
-            value={vf.minQuery}
-            onChange={(e) => patchViolinFilter(colVar, { minQuery: e.currentTarget.value })}
-            leftSection={(
-              <ActionIcon
-                size="xs"
-                onClick={() => patchViolinFilter(colVar, { minCmp: vf.minCmp === '>' ? '<' : '>' })}
-              >
-                {vf.minCmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
-              </ActionIcon>
-            )}
-          />
-          <TextInput
-            placeholder="Filter by Max Value"
-            size="xs"
-            value={vf.maxQuery}
-            onChange={(e) => patchViolinFilter(colVar, { maxQuery: e.currentTarget.value })}
-            leftSection={(
-              <ActionIcon
-                size="xs"
-                onClick={() => patchViolinFilter(colVar, { maxCmp: vf.maxCmp === '>' ? '<' : '>' })}
-              >
-                {vf.maxCmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
-              </ActionIcon>
-            )}
-          />
-        </Stack>
-      );
-
-      column.sortable = true;
-
-      column.footer = (
-        <ViolinCell
-          samples={agg.samples}
-          domain={[agg.minAll, agg.maxAll]}
-          height={24}
-          padding={0}
-          className="violin-cell"
-          onMouseEnter={() => setHoveredValue({ col: colVar, value: computeMedian(agg.samples) })}
-          onMouseLeave={() => setHoveredValue(null)}
-        />
-      );
-    }
+    // TODO: Type of ViolinPlot in separate PR
 
     return column;
   });
