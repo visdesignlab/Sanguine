@@ -96,7 +96,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
   // helper to get samples from a row for a given accessor
   const getSamples = (r: ExploreTableRow, key: string) => {
-    const raw = (r as any)[key];
+    const raw = (r as Record<string, unknown>)[key];
     // Handle twoValsPerRow: if it's an array of arrays, flatten it for sorting/filtering context
     if (chartConfig.twoValsPerRow && Array.isArray(raw) && Array.isArray(raw[0])) {
       return (raw as number[][]).flat();
@@ -140,7 +140,9 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       for (const [key, vf] of Object.entries(violinFilters)) {
         const samples = getSamples(r, key);
         const hasAnyQuery = !!(vf.minQuery.trim() || vf.medianQuery.trim() || vf.maxQuery.trim());
-        if (!hasAnyQuery) continue;
+        if (!hasAnyQuery) {
+          return true;
+        }
         if (samples.length === 0) return false;
 
         if (vf.minQuery.trim() !== '') {
@@ -657,7 +659,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     }
 
     if (type === 'violin') {
-      let agg: any;
+      let agg: { samples: number[]; minAll: number; maxAll: number };
       if (chartConfig.twoValsPerRow) {
         // Flatten all samples from all rows and both tuples for the domain
         const allSamples = records.flatMap((r) => {
@@ -742,11 +744,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         </Stack>
       );
 
-      column.sortFunction = (a: ExploreTableRow, b: ExploreTableRow) => {
-        const sa = getSamples(a, colVar);
-        const sb = getSamples(b, colVar);
-        return computeMedian(sa) - computeMedian(sb);
-      };
+      column.sortable = true;
 
       column.footer = (
         <ViolinCell
