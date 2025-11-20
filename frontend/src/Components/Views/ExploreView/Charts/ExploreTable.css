@@ -23,3 +23,8 @@
   background-color: #FFCF76 !important;
   color: black !important;
 }
+
+/* Highlight violin cell on hover */
+.violin-cell:hover path {
+  fill: #FFCF76 !important;
+}
