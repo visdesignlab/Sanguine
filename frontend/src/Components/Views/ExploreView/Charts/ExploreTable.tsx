@@ -816,6 +816,9 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           domain={[agg.minAll, agg.maxAll]}
           height={24}
           padding={0}
+          className="violin-cell"
+          onMouseEnter={() => setHoveredValue({ col: colVar, value: computeMedian(agg.samples) })}
+          onMouseLeave={() => setHoveredValue(null)}
         />
       );
     }
