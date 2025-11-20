@@ -358,7 +358,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
   };
 
   // Numeric Horizontal Bar Cell Renderer ----
-  const numericBarCell = (value: number, max: number, colVar: string, opts?: { suffix?: string; color?: string; percentColor?: boolean }) => {
+  const numericBarCell = (value: number, max: number, colVar: string, opts?: { suffix?: string; color?: string; percentColor?: boolean; padding?: string }) => {
     const pct = Number.isFinite(max) && max > 0
       ? Math.max(0, Math.min(100, (Number(value ?? 0) / max) * 100))
       : 0;
@@ -367,6 +367,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     const fillColor = '#8c8c8c';
     const cellHeight = 21;
     const clipRightPercent = `${Math.max(0, 100 - pct)}%`;
+    const padding = opts?.padding ?? '2.25px 2px';
 
     return (
       <Tooltip
@@ -374,96 +375,96 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         position="top"
         withArrow
       >
-        <div style={{
-          position: 'relative',
-          width: '100%',
-          height: cellHeight,
-          minHeight: cellHeight,
-          display: 'block',
-          boxSizing: 'border-box',
-          overflow: 'hidden',
-          paddingLeft: 0,
-          paddingRight: 0,
-        }}
+        <div
+          style={{
+            position: 'relative',
+            width: '100%',
+            display: 'block',
+            boxSizing: 'border-box',
+            overflow: 'hidden',
+            padding,
+          }}
           onMouseEnter={() => setHoveredValue({ col: colVar, value })}
           onMouseLeave={() => setHoveredValue(null)}
           className="numeric-bar-cell"
         >
-          <div
-            aria-hidden
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              right: 0,
-              bottom: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 0,
-              pointerEvents: 'none',
-              color: '#000',
-            }}
-          >
-            <p style={{
-              margin: 0,
-              padding: 0,
-              fontStyle: 'italic',
-              fontSize: '14px',
-              lineHeight: `${cellHeight}px`,
-              whiteSpace: 'nowrap',
-            }}
+          <div style={{ position: 'relative', width: '100%', height: cellHeight }}>
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 0,
+                pointerEvents: 'none',
+                color: '#000',
+              }}
             >
-              {typeof opts?.suffix === 'string' ? `${value}${opts.suffix}` : value}
-            </p>
-          </div>
+              <p style={{
+                margin: 0,
+                padding: 0,
+                fontStyle: 'italic',
+                fontSize: '14px',
+                lineHeight: `${cellHeight}px`,
+                whiteSpace: 'nowrap',
+              }}
+              >
+                {typeof opts?.suffix === 'string' ? `${value}${opts.suffix}` : value}
+              </p>
+            </div>
 
-          {/* Bar fill */}
-          <div
-            className="bar-fill"
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              height: '100%',
-              width: `${pct}%`,
-              maxWidth: '100%',
-              background: fillColor,
-              borderRadius: 2,
-              zIndex: 1,
-            }}
-          />
+            {/* Bar fill */}
+            <div
+              className="bar-fill"
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                height: '100%',
+                width: `${pct}%`,
+                maxWidth: '100%',
+                background: fillColor,
+                borderRadius: 2,
+                zIndex: 1,
+              }}
+            />
 
-          <div
-            aria-hidden
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              right: 0,
-              bottom: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-              zIndex: 2,
-              pointerEvents: 'none',
-              color: '#fff',
-              clipPath: `inset(0 ${clipRightPercent} 0 0)`,
-              WebkitClipPath: `inset(0 ${clipRightPercent} 0 0)`,
-            }}
-          >
-            <p style={{
-              margin: 0,
-              padding: 0,
-              fontStyle: 'italic',
-              fontSize: '14px',
-              lineHeight: `${cellHeight}px`,
-              whiteSpace: 'nowrap',
-            }}
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                zIndex: 2,
+                pointerEvents: 'none',
+                color: '#fff',
+                clipPath: `inset(0 ${clipRightPercent} 0 0)`,
+                WebkitClipPath: `inset(0 ${clipRightPercent} 0 0)`,
+              }}
             >
-              {typeof opts?.suffix === 'string' ? `${value}${opts.suffix}` : value}
-            </p>
+              <p style={{
+                margin: 0,
+                padding: 0,
+                fontStyle: 'italic',
+                fontSize: '14px',
+                lineHeight: `${cellHeight}px`,
+                whiteSpace: 'nowrap',
+              }}
+              >
+                {typeof opts?.suffix === 'string' ? `${value}${opts.suffix}` : value}
+              </p>
+            </div>
           </div>
         </div>
       </Tooltip>
@@ -571,31 +572,39 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           const v1 = val?.[0] ?? 0;
           const v2 = val?.[1] ?? 0;
           return (
-            <Stack gap={2}>
+            <Stack gap={0}>
               <Tooltip label={`${v1}% of cases`} withArrow>
                 <div
-                  className="heatmap-cell"
                   onMouseEnter={() => setHoveredValue({ col: colVar, value: v1 })}
                   onMouseLeave={() => setHoveredValue(null)}
-                  style={{
-                    backgroundColor: getHeatColor(v1), color: v1 > 50 ? 'white' : 'black', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
-                  }}
+                  style={{ padding: '2.25px 2px 1px 2px', width: '100%' }}
                 >
-                  {v1}
-                  %
+                  <div
+                    className={`heatmap-cell ${numericTextVisible ? 'heatmap-cell-visible' : ''}`}
+                    style={{
+                      backgroundColor: getHeatColor(v1), color: numericTextVisible ? (v1 > 50 ? 'white' : 'black') : 'transparent', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
+                    }}
+                  >
+                    {v1}
+                    %
+                  </div>
                 </div>
               </Tooltip>
               <Tooltip label={`${v2}% of cases`} withArrow>
                 <div
-                  className="heatmap-cell"
                   onMouseEnter={() => setHoveredValue({ col: colVar, value: v2 })}
                   onMouseLeave={() => setHoveredValue(null)}
-                  style={{
-                    backgroundColor: getHeatColor(v2), color: v2 > 50 ? 'white' : 'black', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
-                  }}
+                  style={{ padding: '1px 2px 2.25px 2px', width: '100%' }}
                 >
-                  {v2}
-                  %
+                  <div
+                    className={`heatmap-cell ${numericTextVisible ? 'heatmap-cell-visible' : ''}`}
+                    style={{
+                      backgroundColor: getHeatColor(v2), color: numericTextVisible ? (v2 > 50 ? 'white' : 'black') : 'transparent', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
+                    }}
+                  >
+                    {v2}
+                    %
+                  </div>
                 </div>
               </Tooltip>
             </Stack>
@@ -606,15 +615,19 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         return (
           <Tooltip label={`${val}% of cases`} withArrow>
             <div
-              className="heatmap-cell"
               onMouseEnter={() => setHoveredValue({ col: colVar, value: val })}
               onMouseLeave={() => setHoveredValue(null)}
-              style={{
-                backgroundColor: getHeatColor(val), color: val > 50 ? 'white' : 'black', padding: '4px 8px', borderRadius: 4, textAlign: 'center',
-              }}
+              style={{ padding: '2.25px 2px', width: '100%' }}
             >
-              {val}
-              %
+              <div
+                className={`heatmap-cell ${numericTextVisible ? 'heatmap-cell-visible' : ''}`}
+                style={{
+                  backgroundColor: getHeatColor(val), color: numericTextVisible ? (val > 50 ? 'white' : 'black') : 'transparent', padding: '4px 8px', borderRadius: 4, textAlign: 'center',
+                }}
+              >
+                {val}
+                %
+              </div>
             </div>
           </Tooltip>
         );
@@ -655,9 +668,9 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           const v1 = val?.[0] ?? 0;
           const v2 = val?.[1] ?? 0;
           return (
-            <Stack gap={2}>
-              {numericBarCell(v1, maxVal, colVar)}
-              {numericBarCell(v2, maxVal, colVar)}
+            <Stack gap={0}>
+              {numericBarCell(v1, maxVal, colVar, { padding: '2.25px 2px 1px 2px' })}
+              {numericBarCell(v2, maxVal, colVar, { padding: '1px 2px 2.25px 2px' })}
             </Stack>
           );
         }
@@ -726,38 +739,50 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           const s2 = val?.[1] ?? [];
           return (
             <Stack gap={0}>
-              <ViolinCell
-                samples={s1}
-                domain={[agg.minAll, agg.maxAll]}
-                height={20}
-                padding={0}
-                className="violin-cell"
+              <div
                 onMouseEnter={() => setHoveredValue({ col: colVar, value: computeMedian(s1) })}
                 onMouseLeave={() => setHoveredValue(null)}
-              />
-              <ViolinCell
-                samples={s2}
-                domain={[agg.minAll, agg.maxAll]}
-                height={20}
-                padding={0}
-                className="violin-cell"
+                style={{ padding: '2.25px 2px 1px 2px', width: '100%' }}
+              >
+                <ViolinCell
+                  samples={s1}
+                  domain={[agg.minAll, agg.maxAll]}
+                  height={20}
+                  padding={0}
+                  className="violin-cell"
+                />
+              </div>
+              <div
                 onMouseEnter={() => setHoveredValue({ col: colVar, value: computeMedian(s2) })}
                 onMouseLeave={() => setHoveredValue(null)}
-              />
+                style={{ padding: '1px 2px 2.25px 2px', width: '100%' }}
+              >
+                <ViolinCell
+                  samples={s2}
+                  domain={[agg.minAll, agg.maxAll]}
+                  height={20}
+                  padding={0}
+                  className="violin-cell"
+                />
+              </div>
             </Stack>
           );
         }
         const samples = getSamples(row, colVar);
         return (
-          <ViolinCell
-            samples={samples}
-            domain={[agg.minAll, agg.maxAll]}
-            height={40}
-            padding={4}
-            className="violin-cell"
+          <div
             onMouseEnter={() => setHoveredValue({ col: colVar, value: computeMedian(samples) })}
             onMouseLeave={() => setHoveredValue(null)}
-          />
+            style={{ padding: '2.25px 2px', width: '100%' }}
+          >
+            <ViolinCell
+              samples={samples}
+              domain={[agg.minAll, agg.maxAll]}
+              height={40}
+              padding={4}
+              className="violin-cell"
+            />
+          </div>
         );
       };
 

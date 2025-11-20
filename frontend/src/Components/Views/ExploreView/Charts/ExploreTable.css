@@ -1,8 +1,5 @@
 .explore-table-data-table td {
-  padding-left: 2px !important;
-  padding-right: 2px !important;
-  padding-top: 2.25px !important;
-  padding-bottom: 2.25px !important;
+  padding: 0 !important;
 }
 
 .explore-table-data-table tfoot td,
@@ -21,6 +18,9 @@
 /* Highlight heatmap cell on hover */
 .heatmap-cell:hover {
   background-color: #FFCF76 !important;
+}
+
+.heatmap-cell.heatmap-cell-visible:hover {
   color: black !important;
 }
 
