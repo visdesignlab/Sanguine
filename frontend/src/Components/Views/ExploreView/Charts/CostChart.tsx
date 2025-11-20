@@ -25,7 +25,7 @@ import { BarChart } from '@mantine/charts';
 import { Store } from '../../../../Store/Store';
 import { ExploreChartConfig, chartColors } from '../../../../Types/application';
 import { backgroundHoverColor } from '../../../../Theme/mantineTheme';
-import { dummyData, type Row } from './dummyData';
+import { dummyData, type Row } from './exploreTableDummyData';
 
 export default function CostChart({ chartConfig }: { chartConfig: ExploreChartConfig }) {
   const store = useContext(Store);
@@ -238,10 +238,10 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
 
     if (accessor === 'net_cost') {
       sorted = sortBy(filtered, (r: Row) => (Number(r.rbc_cost ?? 0)
-          + Number(r.ffp_cost ?? 0)
-          + Number(r.platelets_cost ?? 0)
-          + Number(r.cryo_cost ?? 0)
-          - Number(r.salvage_savings ?? 0))) as Row[];
+        + Number(r.ffp_cost ?? 0)
+        + Number(r.platelets_cost ?? 0)
+        + Number(r.cryo_cost ?? 0)
+        - Number(r.salvage_savings ?? 0))) as Row[];
     } else if (accessor === 'drg_weight') {
       // sort by computed median drg weight
       sorted = sortBy(filtered, (r: Row) => {
@@ -823,7 +823,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
         <Flex direction="row" align="center" gap="sm">
           <ActionIcon
             variant="subtle"
-            onClick={() => {}}
+            onClick={() => { }}
             title="Toggle sort by total cost"
           >
             <IconPlus size={18} />
@@ -849,7 +849,7 @@ export default function CostChart({ chartConfig }: { chartConfig: ExploreChartCo
           style={{
             fontStyle: 'italic',
           }}
-          onRowClick={() => {}}
+          onRowClick={() => { }}
         />
       </Box>
     </Stack>
