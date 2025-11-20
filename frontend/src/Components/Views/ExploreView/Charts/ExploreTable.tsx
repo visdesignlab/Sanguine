@@ -512,7 +512,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
   // Column Definitions Generator ----
   const generateColumnDefs = (configs: ExploreTableColumn[]): DataTableColumn<ExploreTableRow>[] => configs.map((config) => {
     const {
-      colVar, type, title,
+      colVar, type, title, numericTextVisible,
     } = config;
 
     const column: DataTableColumn<ExploreTableRow> = {
@@ -546,33 +546,39 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           const v2 = val?.[1] ?? 0;
           return (
             <Stack gap={2}>
-              <div style={{
-                backgroundColor: getHeatColor(v1), color: v1 > 50 ? 'white' : 'black', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
-              }}
-              >
-                {v1}
-                %
-              </div>
-              <div style={{
-                backgroundColor: getHeatColor(v2), color: v2 > 50 ? 'white' : 'black', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
-              }}
-              >
-                {v2}
-                %
-              </div>
+              <Tooltip label={`${v1}% of cases`} withArrow>
+                <div style={{
+                  backgroundColor: getHeatColor(v1), color: v1 > 50 ? 'white' : 'black', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
+                }}
+                >
+                  {v1}
+                  %
+                </div>
+              </Tooltip>
+              <Tooltip label={`${v2}% of cases`} withArrow>
+                <div style={{
+                  backgroundColor: getHeatColor(v2), color: v2 > 50 ? 'white' : 'black', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
+                }}
+                >
+                  {v2}
+                  %
+                </div>
+              </Tooltip>
             </Stack>
           );
         }
 
         const val = Number(row[colVar] ?? 0);
         return (
-          <div style={{
-            backgroundColor: getHeatColor(val), color: val > 50 ? 'white' : 'black', padding: '4px 8px', borderRadius: 4, textAlign: 'center',
-          }}
-          >
-            {val}
-            %
-          </div>
+          <Tooltip label={`${val}% of cases`} withArrow>
+            <div style={{
+              backgroundColor: getHeatColor(val), color: val > 50 ? 'white' : 'black', padding: '4px 8px', borderRadius: 4, textAlign: 'center',
+            }}
+            >
+              {val}
+              %
+            </div>
+          </Tooltip>
         );
       };
 
