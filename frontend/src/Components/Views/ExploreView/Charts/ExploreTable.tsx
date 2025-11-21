@@ -132,9 +132,11 @@ const HistogramFooter = ({
   const minVal = bins[0]?.min ?? 0;
   const maxVal = bins[bins.length - 1]?.max ?? 0;
 
+  // Check if this column is hovered
   const isHoveredCol = hoveredValue?.col === colVar;
   const hoveredVal = hoveredValue?.value;
 
+  // Colors of histogram
   const baseColors = useMemo(() => bins.map((bin, i) => {
     if (colorInterpolator) {
       const base = bins.length > 1 ? i / (bins.length - 1) : 0;
@@ -145,6 +147,7 @@ const HistogramFooter = ({
     return '#8c8c8c';
   }), [bins, colorInterpolator, maxVal]);
 
+  // Add hovered color bins
   const colors = useMemo(() => {
     if (!isHoveredCol || hoveredVal === undefined) {
       return baseColors;
@@ -159,6 +162,7 @@ const HistogramFooter = ({
     });
   }, [bins, isHoveredCol, hoveredVal, baseColors]);
 
+  // Data for histogram
   const data = useMemo(() => [
     bins.reduce((acc, bin, i) => {
       acc[`bin${i}`] = bin.count;
@@ -204,7 +208,7 @@ const HistogramFooter = ({
         }}
       />
 
-      {/* min / max ticks under the histogram */}
+      {/* Min / Max ticks under the histogram */}
       <div
         style={{
           width: '100%',
@@ -778,10 +782,8 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
             onSortStatusChange={setSortStatus}
             storeColumnsKey={`ExploreTable-${chartConfig.chartId}`}
             columns={effectiveColumns}
-            style={{
-              fontStyle: 'italic',
-            }}
-            onRowClick={() => { }}
+            style={useMemo(() => ({ fontStyle: 'italic' }), [])}
+            onRowClick={useCallback(() => { }, [])}
           />
         </HoverContext.Provider>
       </Box>
