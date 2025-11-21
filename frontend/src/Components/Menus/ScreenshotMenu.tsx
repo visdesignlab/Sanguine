@@ -4,7 +4,7 @@ import {
   Title,
 } from '@mantine/core';
 import {
-  IconCamera, IconMail, IconMenu4, IconTrash, IconDownload,
+  IconCamera, IconMail, IconSelect, IconTrash, IconDownload,
 } from '@tabler/icons-react';
 import {
   buildScreenshotFilename,
@@ -215,7 +215,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
                 data-active={isMultiSelecting ? 'true' : 'false'}
                 disabled={screenshots.length === 0}
               >
-                <IconMenu4 stroke={iconStroke} size={18} />
+                <IconSelect stroke={iconStroke} size={18} />
               </ActionIcon>
             </Box>
           </Box>
