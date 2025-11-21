@@ -18,10 +18,10 @@ export type ScreenshotItem = {
 /**
  * Build a predictable filename for screenshots.
  */
-export const buildScreenshotFilename = (tab?: string, prefix = 'intelvia') => {
+export const buildScreenshotFilename = (tab: string) => {
   const tabName = tab || 'dashboard';
   const ts = new Date().toISOString().replace(/T/, '_').split('.')[0].replace(/:/g, '-');
-  return `${prefix}-${tabName}-view-${ts}.png`;
+  return `intelvia-${tabName}-view-${ts}.png`;
 };
 
 /**
