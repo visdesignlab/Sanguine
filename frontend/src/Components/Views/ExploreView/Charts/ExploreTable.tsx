@@ -34,11 +34,6 @@ type HoveredValue = { col: string; value: number } | null;
 // Context to pass hovered value to footers without re-rendering columns
 const HoverContext = createContext<HoveredValue>(null);
 
-const getHeatColor = (percent: number) => {
-  const t = Math.max(0, Math.min(1, percent / 100));
-  return interpolateReds(t);
-};
-
 // Compute histogram bins for a given set of values
 type HistogramBin = { min: number; max: number; count: number };
 const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
@@ -122,12 +117,10 @@ const sortRecords = <T,>(data: T[], getter: (item: T) => any): T[] => {
 
 
 const HistogramFooter = ({
-  bins, colorInterpolator, minVal = 0, maxVal = 100, colVar,
+  bins, colorInterpolator, colVar,
 }: {
   bins: HistogramBin[];
   colorInterpolator?: (t: number) => string;
-  minVal?: number;
-  maxVal?: number;
   colVar?: string;
 }) => {
   const hoveredValue = useContext(HoverContext);
@@ -136,7 +129,10 @@ const HistogramFooter = ({
     return null;
   }
 
-  const isHovered = hoveredValue?.col === colVar;
+  const minVal = bins[0]?.min ?? 0;
+  const maxVal = bins[bins.length - 1]?.max ?? 0;
+
+  const isHoveredCol = hoveredValue?.col === colVar;
   const hoveredVal = hoveredValue?.value;
 
   const baseColors = useMemo(() => bins.map((bin, i) => {
@@ -150,7 +146,9 @@ const HistogramFooter = ({
   }), [bins, colorInterpolator, maxVal]);
 
   const colors = useMemo(() => {
-    if (!isHovered || hoveredVal === undefined) return baseColors;
+    if (!isHoveredCol || hoveredVal === undefined) {
+      return baseColors;
+    }
 
     return bins.map((bin, i) => {
       const isMatch = hoveredVal >= bin.min && hoveredVal <= bin.max;
@@ -159,7 +157,7 @@ const HistogramFooter = ({
       }
       return baseColors[i];
     });
-  }, [bins, isHovered, hoveredVal, baseColors]);
+  }, [bins, isHoveredCol, hoveredVal, baseColors]);
 
   const data = useMemo(() => [
     bins.reduce((acc, bin, i) => {
@@ -237,7 +235,7 @@ const NumericBarCell = ({
   value: number;
   max: number;
   colVar: string;
-  opts?: { suffix?: string; color?: string; percentColor?: boolean; padding?: string };
+  opts?: { suffix?: string; padding?: string };
   setHoveredValue: SetHoveredValue;
 }) => {
   const pct = Number.isFinite(max) && max > 0
@@ -352,42 +350,7 @@ const NumericBarCell = ({
   );
 };
 
-const MemoizedNumericBarCell = memo(NumericBarCell);
 
-const HeatmapCell = ({
-  value, colVar, numericTextVisible, setHoveredValue, padding,
-}: {
-  value: number;
-  colVar: string;
-  numericTextVisible?: boolean;
-  setHoveredValue: SetHoveredValue;
-  padding?: string;
-}) => (
-  <Tooltip label={`${value}% of cases`} withArrow>
-    <div
-      onMouseEnter={() => setHoveredValue({ col: colVar, value })}
-      onMouseLeave={() => setHoveredValue(null)}
-      style={{ padding: padding ?? '2.25px 2px', width: '100%' }}
-    >
-      <div
-        className={`heatmap-cell ${numericTextVisible ? 'heatmap-cell-visible' : ''}`}
-        style={{
-          backgroundColor: getHeatColor(value),
-          color: numericTextVisible ? (value > 50 ? 'white' : 'black') : 'transparent',
-          padding: '2px 4px',
-          borderRadius: 2,
-          textAlign: 'center',
-          fontSize: 11,
-        }}
-      >
-        {value}
-        %
-      </div>
-    </div>
-  </Tooltip>
-);
-
-const MemoizedHeatmapCell = memo(HeatmapCell);
 
 // MARK: - ExploreTable
 
@@ -562,7 +525,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
                   <div
                     className={`heatmap-cell ${numericTextVisible ? 'heatmap-cell-visible' : ''}`}
                     style={{
-                      backgroundColor: getHeatColor(v1), color: numericTextVisible ? (v1 > 50 ? 'white' : 'black') : 'transparent', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
+                      backgroundColor: interpolateReds(v1 / 100), color: numericTextVisible ? (v1 > 50 ? 'white' : 'black') : 'transparent', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
                     }}
                   >
                     {v1}
@@ -579,7 +542,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
                   <div
                     className={`heatmap-cell ${numericTextVisible ? 'heatmap-cell-visible' : ''}`}
                     style={{
-                      backgroundColor: getHeatColor(v2), color: numericTextVisible ? (v2 > 50 ? 'white' : 'black') : 'transparent', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
+                      backgroundColor: interpolateReds(v2 / 100), color: numericTextVisible ? (v2 > 50 ? 'white' : 'black') : 'transparent', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
                     }}
                   >
                     {v2}
@@ -602,7 +565,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
               <div
                 className={`heatmap-cell ${numericTextVisible ? 'heatmap-cell-visible' : ''}`}
                 style={{
-                  backgroundColor: getHeatColor(val), color: numericTextVisible ? (val > 50 ? 'white' : 'black') : 'transparent', padding: '4px 8px', borderRadius: 4, textAlign: 'center',
+                  backgroundColor: interpolateReds(val / 100), color: numericTextVisible ? (val > 50 ? 'white' : 'black') : 'transparent', padding: '4px 8px', borderRadius: 4, textAlign: 'center',
                 }}
               >
                 {val}
@@ -615,13 +578,11 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
       if (values.length) {
         const max = maxFromValues(values);
-        const bins = computeHistogramBins(values, 10, 0, max);
+        const bins = computeHistogramBins(values, 10);
         column.footer = (
           <HistogramFooter
             bins={bins}
             colorInterpolator={interpolateReds}
-            minVal={0}
-            maxVal={max}
             colVar={colVar}
           />
         );
@@ -662,16 +623,14 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
                 max={maxVal}
                 colVar={colVar}
                 opts={{ padding: '2.25px 2px 1px 2px' }}
-                onHover={(c, v) => setHoveredValue({ col: c, value: v })}
-                onLeave={() => setHoveredValue(null)}
+                setHoveredValue={setHoveredValue}
               />
               <NumericBarCell
                 value={v2}
                 max={maxVal}
                 colVar={colVar}
                 opts={{ padding: '1px 2px 2.25px 2px' }}
-                onHover={(c, v) => setHoveredValue({ col: c, value: v })}
-                onLeave={() => setHoveredValue(null)}
+                setHoveredValue={setHoveredValue}
               />
             </Stack>
           );
@@ -681,20 +640,16 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
             value={Number(row[colVar])}
             max={maxVal}
             colVar={colVar}
-            onHover={(c, v) => setHoveredValue({ col: c, value: v })}
-            onLeave={() => setHoveredValue(null)}
+            setHoveredValue={setHoveredValue}
           />
         );
       };
 
       if (values.length) {
-        const max = maxFromValues(values);
-        const bins = computeHistogramBins(values, 10, 0, max);
+        const bins = computeHistogramBins(values, 10);
         column.footer = (
           <HistogramFooter
             bins={bins}
-            minVal={0}
-            maxVal={max}
             colVar={colVar}
           />
         );
