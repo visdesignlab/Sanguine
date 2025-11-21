@@ -4,7 +4,7 @@ import {
   Title,
 } from '@mantine/core';
 import {
-  IconCamera, IconMail, IconSelect, IconTrash, IconDownload,
+  IconCamera, IconMail, IconSquareCheck, IconTrash, IconDownload,
 } from '@tabler/icons-react';
 import {
   buildScreenshotFilename,
@@ -172,7 +172,22 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px',
           }}
           >
-            <Menu.Label className={classes.menuLabelNoMargin}>Screenshots</Menu.Label>
+            <Group gap={8} align="center">
+              {/* Select All Checkbox - only visible in multi-select mode */}
+              {isMultiSelecting && screenshots.length > 1 && (
+                <Checkbox
+                  ref={selectAll}
+                  checked={selectedScreenshotIds.size === screenshots.length && screenshots.length > 0}
+                  onChange={(e) => { e.stopPropagation(); toggleSelectAll(); }}
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label="Select all screenshots checkbox"
+                  size="xs"
+                  mr={16}
+                  indeterminate={selectedScreenshotIds.size > 0 && selectedScreenshotIds.size < screenshots.length}
+                />
+              )}
+              <Menu.Label className={classes.menuLabelNoMargin}>Screenshots</Menu.Label>
+            </Group>
             {' '}
             <Box style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {/* Delete / Download / Email Selected Screenshots */}
@@ -225,7 +240,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
                 data-active={isMultiSelecting ? 'true' : 'false'}
                 disabled={screenshots.length === 0}
               >
-                <IconSelect stroke={iconStroke} size={18} />
+                <IconSquareCheck stroke={iconStroke} size={18} />
               </ActionIcon>
             </Box>
           </Box>
@@ -236,40 +251,6 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
             onMouseLeave={() => setHoveredPreview(null)}
           >
             <Box style={{ maxHeight: 240, overflow: 'auto' }}>
-              {/* If multi-selecting screenshots, show "Select All" checkbox */}
-              {isMultiSelecting && screenshots.length > 1 && (
-                <Stack
-                  role="button"
-                  tabIndex={0}
-                  onClick={(e) => { e.stopPropagation(); toggleSelectAll(); }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      toggleSelectAll();
-                    }
-                  }}
-                  style={{
-                    borderBottom: '1px solid var(--mantine-color-gray-2)',
-                    cursor: 'pointer',
-                    padding: '8px 12px',
-                  }}
-                  aria-label="Select all screenshots"
-                >
-                  <Group gap={24}>
-                    <Checkbox
-                      ref={selectAll}
-                      checked={selectedScreenshotIds.size === screenshots.length && screenshots.length > 0}
-                      onChange={(e) => { e.stopPropagation(); toggleSelectAll(); }}
-                      onClick={(e) => e.stopPropagation()}
-                      aria-hidden={false}
-                      aria-label="Select all screenshots checkbox"
-                      size="xs"
-                    />
-                    <Text size="sm">All</Text>
-                  </Group>
-                </Stack>
-              )}
               {/* Screenshot Items */}
               {screenshots.length === 0 ? (
                 <Menu.Item disabled>No screenshots</Menu.Item>
