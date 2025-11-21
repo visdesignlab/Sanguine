@@ -285,51 +285,48 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
                     onClick={handleScreenshotClick}
                     onMouseEnter={handleSetPreview}
                     onMouseLeave={() => setHoveredPreview(null)}
-                    style={{ display: 'block', padding: '8px 12px' }}
+                    style={{ display: 'block', padding: '12px 12px' }}
                   >
-                    <Stack gap="xs">
-                      <Group align="center" style={{ width: '100%' }}>
-                        <Group align="center" style={{ flex: 1 }}>
-                          {/** Add checkbox in multi-select mode */}
-                          {isMultiSelecting && (
-                            <Checkbox
-                              checked={selectedScreenshotIds.has(s.id)}
-                              onChange={(ev) => { ev.stopPropagation(); toggleSelectionFor(s.id); }}
-                              onClick={(ev) => ev.stopPropagation()}
-                              aria-label={`Select screenshot ${s.id}`}
-                              size="xs"
-                              style={{ alignSelf: 'center', marginRight: 8 }}
-                            />
-                          )}
-                          <Stack gap="xs" style={{ flex: 1 }}>
-                            <Text size="sm" style={{ lineHeight: 1 }}>
-                              {s.tab}
-                              {' '}
-                              View
-                            </Text>
-                            {isMultiSelecting && <Text size="xs" c="dimmed">{ts}</Text>}
-                          </Stack>
-                        </Group>
-                        {/** Add share icon when not multi-selecting */}
-                        {!isMultiSelecting && (
-                          <ActionIcon
+                    <Group align="center" style={{ width: '100%' }}>
+                      <Group align="center" style={{ flex: 1, minHeight: 36 }}>
+                        {/** Add checkbox in multi-select mode */}
+                        {isMultiSelecting && (
+                          <Checkbox
+                            checked={selectedScreenshotIds.has(s.id)}
+                            onChange={(ev) => { ev.stopPropagation(); toggleSelectionFor(s.id); }}
+                            onClick={(ev) => ev.stopPropagation()}
+                            aria-label={`Select screenshot ${s.id}`}
                             size="xs"
-                            variant="transparent"
-                            className={`${classes.leftToolbarIcon} ${isMultiSelecting ? classes.selected : ''}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              (e.currentTarget as HTMLElement).blur();
-                              emailScreenshot([{ dataUrl: s.dataUrl, filename: s.filename }]);
-                            }}
-                            aria-label="Email screenshot"
-                          >
-                            <IconMail stroke={iconStroke} size={18} />
-                          </ActionIcon>
+                            style={{ marginRight: 8 }}
+                          />
                         )}
+                        <Stack gap={4} style={{ flex: 1 }}>
+                          <Text size="sm" style={{ lineHeight: 1.2 }}>
+                            {s.tab}
+                            {' '}
+                            View
+                          </Text>
+                          <Text size="xs" c="dimmed" style={{ lineHeight: 1.2 }}>{ts}</Text>
+                        </Stack>
                       </Group>
-                      {/** Screenshot time stamp */}
-                      {!isMultiSelecting && <Text size="xs" c="dimmed">{ts}</Text>}
-                    </Stack>
+                      {/** Add share icon when not multi-selecting */}
+                      {!isMultiSelecting && (
+                        <ActionIcon
+                          size="xs"
+                          variant="transparent"
+                          className={`${classes.leftToolbarIcon} ${isMultiSelecting ? classes.selected : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            (e.currentTarget as HTMLElement).blur();
+                            emailScreenshot([{ dataUrl: s.dataUrl, filename: s.filename }]);
+                          }}
+                          aria-label="Email screenshot"
+                          style={{ marginTop: 2 }}
+                        >
+                          <IconMail stroke={iconStroke} size={18} />
+                        </ActionIcon>
+                      )}
+                    </Group>
                   </Menu.Item>
                 );
               })}
