@@ -18,16 +18,18 @@ import {
   IconChartBar,
   IconClipboardList,
 } from '@tabler/icons-react';
+import * as htmlToImage from 'html-to-image';
 import { Store } from '../Store/Store';
 import { useThemeConstants } from '../Theme/mantineTheme';
+import classes from './Shell.module.css';
 import { DashboardView } from '../Components/Views/DashboardView/DashboardView';
 import { ExploreView } from '../Components/Views/ExploreView/ExploreView';
 import { ProvidersView } from '../Components/Views/ProvidersView/ProvidersView';
 import { SettingsView } from '../Components/Views/SettingsView/SettingsView';
-import classes from './Shell.module.css';
+import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/SelectedVisitsPanel';
 import { FilterPanel } from '../Components/Toolbar/Filters/FilterPanel';
 import { FilterIcon } from '../Components/Toolbar/Filters/FilterIcon';
-import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/SelectedVisitsPanel';
+import { ScreenshotMenu } from '../Components/Menus/ScreenshotMenu';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -124,11 +126,12 @@ export function Shell() {
   ];
 
   // Header toolbar icons
-  const headerIcons: { icon: React.ComponentType<IconProps>; label: string }[] = [
+  const headerIcons: { icon: React.ComponentType<IconProps>; label: string; onClick?: () => void }[] = [
     { icon: IconArrowNarrowLeftDashed, label: 'Back' },
     { icon: IconArrowNarrowRightDashed, label: 'Forward' },
     { icon: IconDeviceFloppy, label: 'Save' },
     { icon: IconCamera, label: 'Camera' },
+    { icon: IconUser, label: 'User' },
   ];
 
   return (
@@ -175,44 +178,49 @@ export function Shell() {
               </Tabs.List>
             </Tabs>
           </Group>
-          {/** Header Icons, right-aligned */}
-          <Group gap="sm" pr="md">
-            {headerIcons.map(({ icon: Icon, label }) => (
-              <Tooltip
-                key={label}
-                label={label}
-              >
-                <ActionIcon aria-label={label}>
-                  <Icon stroke={iconStroke} />
-                </ActionIcon>
-              </Tooltip>
-            ))}
-            {/** Header Icon - User Menu */}
-            <Menu shadow="md" width={200}>
-              <Menu.Target>
-                <Tooltip
-                  key="User"
-                  label="User"
-                >
-                  <ActionIcon aria-label="User">
-                    <IconUser stroke={iconStroke} />
+          {/** All Header Icons, right-aligned */}
+          <Group gap="sm" pr="md" wrap="nowrap">
+            {headerIcons.map(({ icon: Icon, label, onClick }) => {
+              // --- Hover Menu for Camera to show screenshots ---
+              if (label === 'Camera') {
+                return (
+                  <ScreenshotMenu key="screenshot-menu" activeTab={activeTab} />
+                );
+              }
+              // --- User menu ---
+              if (label === 'User') {
+                return (
+                  <Menu shadow="md" width={200} offset={12} trigger="hover" closeDelay={200} key="user-menu">
+                    <Menu.Target>
+                      <ActionIcon aria-label="User">
+                        <IconUser stroke={iconStroke} />
+                      </ActionIcon>
+                    </Menu.Target>
+
+                    <Menu.Dropdown>
+                      <Menu.Label>User</Menu.Label>
+                      <Menu.Item
+                        leftSection={<IconRestore size={14} />}
+                        onClick={() => setResetModalOpened(true)}
+                      >
+                        Reset to defaults
+                      </Menu.Item>
+                      <Menu.Item leftSection={<IconLogout size={14} />}>
+                        Log out
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                );
+              }
+              // Default header icon button
+              return (
+                <Tooltip key={label} label={label}>
+                  <ActionIcon aria-label={label} onClick={onClick}>
+                    <Icon stroke={iconStroke} />
                   </ActionIcon>
                 </Tooltip>
-              </Menu.Target>
-
-              <Menu.Dropdown>
-                <Menu.Label>User</Menu.Label>
-                <Menu.Item
-                  leftSection={<IconRestore size={14} />}
-                  onClick={() => setResetModalOpened(true)}
-                >
-                  Reset to defaults
-                </Menu.Item>
-                <Menu.Item leftSection={<IconLogout size={14} />}>
-                  Log out
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
+              );
+            })}
           </Group>
         </Group>
       </AppShell.Header>
@@ -252,9 +260,9 @@ export function Shell() {
 
           {/** Left Panel Content */}
           {activeLeftPanel !== null && (
-            <Box style={{ flexGrow: 1 }} p="md">
-              {leftToolbarIcons[activeLeftPanel].content}
-            </Box>
+          <Box style={{ flexGrow: 1 }} p="md">
+            {leftToolbarIcons[activeLeftPanel].content}
+          </Box>
           )}
         </Flex>
       </AppShell.Navbar>

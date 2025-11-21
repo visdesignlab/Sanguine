@@ -3,19 +3,85 @@ import {
   Divider, Flex, Stack, Title, Tooltip, Text,
   Button,
   Select,
+  ActionIcon,
+  Menu,
 } from '@mantine/core';
-import { useContext, useState } from 'react';
+import { useContext, useState, useRef } from 'react';
 import { DatePickerInput } from '@mantine/dates';
 import dayjs from 'dayjs';
-import { IconCalendarWeek, IconPlus, IconSearch } from '@tabler/icons-react';
+import {
+  IconCalendarWeek, IconDownload, IconPlus, IconSearch, IconShare,
+  IconShare2,
+} from '@tabler/icons-react';
 import { BarChart } from '@mantine/charts';
 import { Store } from '../../../Store/Store';
 import { useThemeConstants } from '../../../Theme/mantineTheme';
+import {
+  captureScreenshot,
+  downloadDataUrl,
+  dataUrlToFile,
+  shareFiles,
+  buildScreenshotFilename,
+} from '../../../Utils/screenshotUtils';
 
 export function ProvidersView() {
   const store = useContext(Store);
 
-  const { toolbarWidth } = useThemeConstants();
+  // keep export menu open while native share sheet is active (same pattern as Shell)
+  const [exportMenuOpened, setExportMenuOpened] = useState(false);
+  const [sharingInProgress, setSharingInProgress] = useState(false);
+  const screenshotRef = useRef<HTMLDivElement | null>(null);
+
+  // Download the view
+  const handleDownloadView = async () => {
+    try {
+      // Capture Screenshot
+      const dataUrl = await captureScreenshot(
+        screenshotRef.current ?? document.documentElement,
+        {
+          pixelRatio: 2,
+          paddingPx: 16,
+          backgroundColor: '#ffffff',
+          hideSelector: '[data-screenshot-hidden]',
+        },
+      );
+      // Download Screenshot
+      downloadDataUrl(dataUrl, buildScreenshotFilename('providers'));
+    } catch (err) {
+      console.error('ProvidersView: Download View failed', err);
+    } finally {
+      // Close export menu after download
+      setExportMenuOpened(false);
+    }
+  };
+
+  // Share the view
+  const handleShareView = async () => {
+    try {
+      // Keep menu open while sharing
+      setSharingInProgress(true);
+
+      // Capture Screenshot
+      const dataUrl = await captureScreenshot(
+        screenshotRef.current ?? document.documentElement,
+        {
+          pixelRatio: 2,
+          paddingPx: 16,
+          backgroundColor: '#ffffff',
+          hideSelector: '[data-screenshot-hidden]',
+        },
+      );
+
+      // Share files
+      const file = await dataUrlToFile(dataUrl, buildScreenshotFilename('providers'));
+      await shareFiles([file], 'Screenshot from Intelvia - Patient Blood Management Analytics\n\n');
+    } catch (err) {
+      console.error('ProvidersView: Share View failed', err);
+    } finally {
+      setSharingInProgress(false);
+      setExportMenuOpened(false);
+    }
+  };
 
   const [dateRange, setDateRange] = useState<[string | null, string | null]>([null, null]);
 
@@ -122,6 +188,8 @@ export function ProvidersView() {
   const {
     cardIconStroke,
     buttonIconSize,
+    toolbarWidth,
+    iconStroke,
   } = useThemeConstants();
 
   return (
@@ -138,7 +206,41 @@ export function ProvidersView() {
               Visits
             </Title>
           </Tooltip>
-          {/** Provider Search */}
+          {/* Export menu */}
+          <Tooltip label="Export View" position="bottom">
+            <Menu
+              withinPortal
+              shadow="md"
+              trigger="hover"
+              closeOnItemClick={false}
+              opened={exportMenuOpened}
+              onOpen={() => setExportMenuOpened(true)}
+              onClose={() => {
+                // Prevent closing the menu sharing in progress
+                if (sharingInProgress) {
+                  return;
+                }
+                setExportMenuOpened(false);
+              }}
+            >
+              <Menu.Target>
+                <ActionIcon size="lg" aria-label="Export View">
+                  <IconShare2
+                    stroke={iconStroke}
+                  />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item leftSection={<IconDownload size={16} />} onClick={handleDownloadView}>
+                  Download View
+                </Menu.Item>
+                <Menu.Item leftSection={<IconShare size={16} />} onClick={handleShareView}>
+                  Share View
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </Tooltip>
+          {/** Select Provider */}
           <Select
             placeholder="Search for a provider"
             defaultValue="Dr. John Doe"
@@ -174,88 +276,91 @@ export function ProvidersView() {
         </Flex>
       </Flex>
       <Divider />
-      {/* Provider Summary Card */}
-      <Card shadow="sm" radius="md" p="xl" mb="md" withBorder>
-        <Stack gap="xs">
-          <Title order={3}>Provider Summary - Dr. John Doe</Title>
-          <Title order={4} mt="xs">
-            In the past
-            {' '}
-            <Text component="span" td="underline">3 Months</Text>
-            , Dr. John Doe has recorded:
-          </Title>
-          <Stack gap={2} mt="xs">
-            <Text size="md">
-              •
+      {/* Screenshot target: everything from Provider Summary down will be captured */}
+      <div ref={screenshotRef} data-screenshot-target>
+        {/* Provider Summary Card */}
+        <Card shadow="sm" radius="md" p="xl" mb="md" withBorder>
+          <Stack gap="xs">
+            <Title order={3}>Provider Summary - Dr. John Doe</Title>
+            <Title order={4} mt="xs">
+              In the past
               {' '}
-              <Text component="span" td="underline">28</Text>
-              {' '}
-              Cardiac Surgeries
-            </Text>
-            <Text size="md">
-              • Used
-              {' '}
-              <Text component="span" td="underline">187</Text>
-              {' '}
-              Units of Blood Products
-            </Text>
-            <Text size="md">
-              • Average Complexity of cases
-              {' '}
-              <Text component="span" td="underline">higher</Text>
-              {' '}
-              than average
-            </Text>
-            <Text size="md">
-              •
-              {' '}
-              <Text component="span" td="underline">13%</Text>
-              {' '}
-              of transfused patients had post operative hemoglobin above the recommended threshold
-            </Text>
+              <Text component="span" td="underline">3 Months</Text>
+              , Dr. John Doe has recorded:
+            </Title>
+            <Stack gap={2} mt="xs">
+              <Text size="md">
+                •
+                {' '}
+                <Text component="span" td="underline">28</Text>
+                {' '}
+                Cardiac Surgeries
+              </Text>
+              <Text size="md">
+                • Used
+                {' '}
+                <Text component="span" td="underline">187</Text>
+                {' '}
+                Units of Blood Products
+              </Text>
+              <Text size="md">
+                • Average Complexity of cases
+                {' '}
+                <Text component="span" td="underline">higher</Text>
+                {' '}
+                than average
+              </Text>
+              <Text size="md">
+                •
+                {' '}
+                <Text component="span" td="underline">13%</Text>
+                {' '}
+                of transfused patients had post operative hemoglobin above the recommended threshold
+              </Text>
+            </Stack>
           </Stack>
-        </Stack>
-      </Card>
-      <Title order={3}>Anemia Management</Title>
-      <Flex gap="sm">
-        {Object.entries(allCharts)
-          .filter(([_, chart]) => chart.title === 'Anemia Management')
-          .map(([chartId, chart]) => (
-            <Card key={chartId} h={200} w={300} p="md" shadow="sm">
-              <BarChart
-                h={200}
-                p="sm"
-                w="100%"
-                data={chart.data}
-                dataKey={chart.dataKey}
-                orientation={chart.orientation}
-                yAxisProps={chart.orientation === 'vertical' ? { width: 80 } : undefined}
-                barProps={{ radius: 10 }}
-                series={[{ name: 'Adherence', color: 'blue.6' }]}
-              />
-            </Card>
-          ))}
-      </Flex>
-      <Title order={3}>Outcomes</Title>
-      <Flex gap="sm">
-        {Object.entries(allCharts)
-          .filter(([_, chart]) => chart.title === 'Outcomes')
-          .map(([chartId, chart]) => (
-            <Card key={chartId} h={200} w={300} p="md" shadow="sm">
-              <BarChart
-                h={200}
-                p="sm"
-                w="100%"
-                data={chart.data}
-                dataKey={chart.dataKey}
-                orientation={chart.orientation}
-                yAxisProps={chart.orientation === 'vertical' ? { width: 80 } : undefined}
-                barProps={{ radius: 10 }}
-                series={[{ name: 'Adherence', color: 'blue.6' }]}
-              />
-            </Card>
-          ))}
-      </Flex>
+        </Card>
+        <Title order={3} mt="xl" mb="lg">Anemia Management</Title>
+        <Flex gap="sm">
+          {Object.entries(allCharts)
+            .filter(([_, chart]) => chart.title === 'Anemia Management')
+            .map(([chartId, chart]) => (
+              <Card key={chartId} h={200} w={300} p="md" shadow="sm">
+                <BarChart
+                  h={200}
+                  p="sm"
+                  w="100%"
+                  data={chart.data}
+                  dataKey={chart.dataKey}
+                  orientation={chart.orientation}
+                  yAxisProps={chart.orientation === 'vertical' ? { width: 80 } : undefined}
+                  barProps={{ radius: 10 }}
+                  series={[{ name: 'Adherence', color: 'blue.6' }]}
+                />
+              </Card>
+            ))}
+        </Flex>
+        <Title order={3} mt="xl" mb="lg">Outcomes</Title>
+        <Flex gap="sm">
+          {Object.entries(allCharts)
+            .filter(([_, chart]) => chart.title === 'Outcomes')
+            .map(([chartId, chart]) => (
+              <Card key={chartId} h={200} w={300} p="md" shadow="sm">
+                <BarChart
+                  h={200}
+                  p="sm"
+                  w="100%"
+                  data={chart.data}
+                  dataKey={chart.dataKey}
+                  orientation={chart.orientation}
+                  yAxisProps={chart.orientation === 'vertical' ? { width: 80 } : undefined}
+                  barProps={{ radius: 10 }}
+                  series={[{ name: 'Adherence', color: 'blue.6' }]}
+                />
+              </Card>
+            ))}
+        </Flex>
+      </div>
     </Stack>
   );
 }

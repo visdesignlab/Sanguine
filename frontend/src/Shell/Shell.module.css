@@ -1,10 +1,56 @@
 .leftToolbarIcon {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+
   &[data-active="true"] {
     color: var(--mantine-color-blue-6) !important;
-    background-color: var(--mantine-color-blue-0);
+    background-color: var(--mantine-color-blue-0) !important;
     border-color: var(--mantine-color-blue-3) !important;
   }
+
+  &:hover,
+  &:focus {
+    color: var(--mantine-color-blue-6) !important;
+    background-color: var(--mantine-color-blue-0) !important;
+    border-color: var(--mantine-color-blue-3) !important;
+  }
+
+  svg {
+    stroke: currentColor !important;
+    fill: none;
+  }
 }
+
+/* Selected button */
+.selected {
+  color: var(--mantine-color-blue-6) !important;
+  background-color: var(--mantine-color-blue-0) !important;
+  border-color: var(--mantine-color-blue-3) !important;
+}
+
 .tabOutlineActive {
   border-bottom: 1px solid var(--mantine-color-gray-3) !important;
+}
+.menuLabelNoMargin {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Screenshot preview pop-out */
+.screenshotPreview {
+  pointer-events: none;
+  z-index: 9999;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+  border: 1px solid var(--mantine-color-gray-2);
+  background: #ffffff;
+}
+
+.screenshotPreview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
 }
