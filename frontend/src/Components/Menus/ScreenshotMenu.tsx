@@ -186,7 +186,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
                   indeterminate={selectedScreenshotIds.size > 0 && selectedScreenshotIds.size < screenshots.length}
                 />
               )}
-              <Menu.Label className={classes.menuLabelNoMargin}>Screenshots</Menu.Label>
+              <Menu.Label className={classes.menuLabelNoMargin} onClick={(e) => { e.stopPropagation(); }}>Screenshots</Menu.Label>
             </Group>
             {' '}
             <Box style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -307,7 +307,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
                               {' '}
                               View
                             </Text>
-                            {isMultiSelecting && <Text size="xs" style={{ opacity: 0.8 }}>{ts}</Text>}
+                            {isMultiSelecting && <Text size="xs" c="dimmed">{ts}</Text>}
                           </Stack>
                         </Group>
                         {/** Add share icon when not multi-selecting */}
@@ -328,7 +328,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
                         )}
                       </Group>
                       {/** Screenshot time stamp */}
-                      {!isMultiSelecting && <Text size="xs">{ts}</Text>}
+                      {!isMultiSelecting && <Text size="xs" c="dimmed">{ts}</Text>}
                     </Stack>
                   </Menu.Item>
                 );
@@ -352,12 +352,13 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
             </Box>
           </Box>
         </Menu.Dropdown>
-      </Menu>
+      </Menu >
 
       {/* Delete Confirmation Modal */}
-      <Modal
+      < Modal
         opened={deleteModalOpened}
-        onClose={() => { setDeleteModalOpened(false); setDeleteTargetIds([]); }}
+        onClose={() => { setDeleteModalOpened(false); setDeleteTargetIds([]); }
+        }
         title={(
           <Group align="center">
             <Title order={3}>Confirm Screenshot Deletion</Title>
@@ -388,7 +389,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
                   <Text size="sm" style={{ fontWeight: 600, textTransform: 'capitalize' }}>
                     {s ? `${s.tab} View` : id}
                   </Text>
-                  {s && <Text size="xs">{new Date(s.ts).toLocaleString()}</Text>}
+                  {s && <Text size="xs" c="dimmed">{new Date(s.ts).toLocaleString()}</Text>}
                 </Box>
               );
             })}
@@ -399,7 +400,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
             <Button color="red" onClick={confirmDeleteSelected}>Delete</Button>
           </Group>
         </Stack>
-      </Modal>
+      </Modal >
     </>
   );
 }
