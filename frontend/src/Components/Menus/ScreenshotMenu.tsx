@@ -341,6 +341,9 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
                     top: hoveredPreview.top,
                     transform: 'translateY(-50%)',
                     width: 220,
+                    border: selectedScreenshotIds.has(hoveredPreview.id)
+                      ? '3px solid var(--mantine-color-blue-6)'
+                      : '1px solid var(--mantine-color-gray-2)',
                   }}
                 >
                   <img src={hoveredPreview.src} alt="screenshot preview" />
