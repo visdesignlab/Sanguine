@@ -196,6 +196,7 @@ const HistogramFooter = ({
           marginBottom: 0,
           overflow: 'visible',
         }}
+        withTooltip={false}
       />
 
       {/* Bottom of histogram */}
@@ -234,27 +235,29 @@ const HistogramFooter = ({
 type SetHoveredValue = (val: HoveredValue) => void;
 
 const NumericBarCell = ({
-  value, max, colVar, opts, setHoveredValue,
+  value, max, colVar, opts = { cellHeight: 21, fillColor: '#8c8c8c', padding: '2.25px 2px' }, setHoveredValue,
 }: {
   value: number;
   max: number;
   colVar: string;
-  opts?: { suffix?: string; padding?: string };
   setHoveredValue: SetHoveredValue;
+  opts?: { suffix?: string; padding?: string; cellHeight?: number; fillColor?: string };
 }) => {
-  const pct = Number.isFinite(max) && max > 0
+  // Calculate the bar width as a percentage (0-100) of the maximum value
+  const barWidthPercent = Number.isFinite(max) && max > 0
     ? Math.max(0, Math.min(100, (Number(value ?? 0) / max) * 100))
     : 0;
-  const percent = Number(value ?? 0);
-  const hasValue = percent !== 0;
-  const fillColor = '#8c8c8c';
-  const cellHeight = 21;
-  const clipRightPercent = `${Math.max(0, 100 - pct)}%`;
-  const padding = opts?.padding ?? '2.25px 2px';
+
+  // Amount to clip from the right side to show only the filled portion
+  const clipRightAmount = `${Math.max(0, 100 - barWidthPercent)}%`;
+
+  // The actual numeric value to display
+  const displayValue = Number(value ?? 0);
+  const hasValue = displayValue !== 0;
 
   return (
     <Tooltip
-      label={hasValue ? `${percent}% of cases` : 'No data'}
+      label={hasValue ? `${displayValue}% of cases` : 'No data'}
       position="top"
       withArrow
     >
@@ -265,13 +268,13 @@ const NumericBarCell = ({
           display: 'block',
           boxSizing: 'border-box',
           overflow: 'hidden',
-          padding,
+          padding: opts.padding,
         }}
         onMouseEnter={() => setHoveredValue({ col: colVar, value })}
         onMouseLeave={() => setHoveredValue(null)}
         className="numeric-bar-cell"
       >
-        <div style={{ position: 'relative', width: '100%', height: cellHeight }}>
+        <div style={{ position: 'relative', width: '100%', height: opts.cellHeight }}>
           <div
             aria-hidden
             style={{
@@ -293,7 +296,7 @@ const NumericBarCell = ({
               padding: 0,
               fontStyle: 'italic',
               fontSize: '14px',
-              lineHeight: `${cellHeight}px`,
+              lineHeight: `${opts.cellHeight}px`,
               whiteSpace: 'nowrap',
             }}
             >
@@ -309,9 +312,9 @@ const NumericBarCell = ({
               left: 0,
               top: 0,
               height: '100%',
-              width: `${pct}%`,
+              width: `${barWidthPercent}%`,
               maxWidth: '100%',
-              background: fillColor,
+              background: opts.fillColor,
               borderRadius: 2,
               zIndex: 1,
             }}
@@ -332,8 +335,8 @@ const NumericBarCell = ({
               zIndex: 2,
               pointerEvents: 'none',
               color: '#fff',
-              clipPath: `inset(0 ${clipRightPercent} 0 0)`,
-              WebkitClipPath: `inset(0 ${clipRightPercent} 0 0)`,
+              clipPath: `inset(0 ${clipRightAmount} 0 0)`,
+              WebkitClipPath: `inset(0 ${clipRightAmount} 0 0)`,
             }}
           >
             <p style={{
@@ -341,7 +344,7 @@ const NumericBarCell = ({
               padding: 0,
               fontStyle: 'italic',
               fontSize: '14px',
-              lineHeight: `${cellHeight}px`,
+              lineHeight: `${opts.cellHeight}px`,
               whiteSpace: 'nowrap',
             }}
             >
@@ -376,8 +379,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     direction: 'asc',
   });
   const [records, setRecords] = useState<ExploreTableRow[]>(() => sortRecords(chartData, (r) => r.surgeon_prov_id) as ExploreTableRow[]);
-
-  // MARK: Filter Helpers
 
   const getNumericFilter = (key: string): NumericFilter => numericFilters[key] ?? defaultNumericFilter;
 
