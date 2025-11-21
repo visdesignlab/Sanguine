@@ -1,5 +1,5 @@
 import {
-  useContext, useEffect, useState, useMemo,
+  useContext, useEffect, useState, useMemo, useRef,
 } from 'react';
 import {
   MultiSelect,
@@ -434,7 +434,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       });
     });
 
-    const nextColumns = [...retained, ...toAdd];
+    const nextColumns = [...toAdd, ...retained];
 
     // No-op if columns didn’t change
     const unchanged = nextColumns.length === chartConfig.columns.length
@@ -446,10 +446,12 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       columns: nextColumns,
     };
 
+
+    console.log("Updated config", updatedConfig);
+
     store.exploreStore.updateChartConfig(updatedConfig);
   };
 
-  // Generate Column Definitions
   const generateColumnDefs = (configs: ExploreTableColumn[]): DataTableColumn<ExploreTableRow>[] => configs.map((config) => {
 
     const {
@@ -459,8 +461,9 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     const column: DataTableColumn<ExploreTableRow> = {
       accessor: colVar,
       title,
+      draggable: true,
+      resizable: false,
       sortable: true,
-      resizable: true,
       render: (row: ExploreTableRow, _index: number) => <div>{String(row[colVar] ?? '')}</div>,
     };
 
@@ -477,7 +480,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     const maxFromValues = (vals: number[]) => (vals.length ? Math.max(...vals) : 0);
 
     if (type === 'heatmap') {
-      const valueValues = values;
       column.render = (row: ExploreTableRow, _index: number) => {
         if (chartConfig.twoValsPerRow) {
           const val = row[colVar] as [number, number] | undefined;
@@ -545,9 +547,9 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         );
       };
 
-      if (valueValues.length) {
-        const max = maxFromValues(valueValues);
-        const bins = computeBins(valueValues, 10, 0, max);
+      if (values.length) {
+        const max = maxFromValues(values);
+        const bins = computeBins(values, 10, 0, max);
         column.footer = (
           <HistogramFooter
             bins={bins}
@@ -555,7 +557,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
             minVal={0}
             maxVal={max}
             colVar={colVar}
-            hoveredValue={hoveredValue}
+            hoveredValue={null}
           />
         );
       }
@@ -630,7 +632,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
             minVal={0}
             maxVal={max}
             colVar={colVar}
-            hoveredValue={hoveredValue}
+            hoveredValue={null}
           />
         );
       }
@@ -656,6 +658,10 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     }
 
     if (type === 'text') {
+      column.render = (row: ExploreTableRow) => (
+        <div style={{ marginLeft: '10px' }}>{String(row[colVar] ?? '')}</div>
+      );
+
       const tv = getTextFilter(colVar);
       column.filter = (
         <TextInput
@@ -673,10 +679,32 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
   });
 
   // Data Table Columns -------
-  const { effectiveColumns } = useDataTableColumns<ExploreTableRow>({
+  // Memoize column definitions to prevent recalculation on hover state changes
+  const columnDefs = useMemo(
+    () => generateColumnDefs(chartConfig.columns),
+    [
+      chartConfig.columns,
+      chartConfig.twoValsPerRow,
+      records,
+      numericFilters,
+      textFilters,
+    ],
+  );
+
+  const { effectiveColumns, resetColumnsOrder } = useDataTableColumns<ExploreTableRow>({
     key: `ExploreTable-${chartConfig.chartId}`,
-    columns: generateColumnDefs(chartConfig.columns),
+    columns: columnDefs,
   });
+
+  // Reset column order when columns change
+  const prevColumnVars = useRef(chartConfig.columns.map((c) => c.colVar).join(','));
+  useEffect(() => {
+    const currentColumnVars = chartConfig.columns.map((c) => c.colVar).join(',');
+    if (currentColumnVars !== prevColumnVars.current) {
+      resetColumnsOrder();
+      prevColumnVars.current = currentColumnVars;
+    }
+  }, [chartConfig.columns, resetColumnsOrder]);
 
   // Currently selected column variables
   const selectedColumnVars = chartConfig.columns
