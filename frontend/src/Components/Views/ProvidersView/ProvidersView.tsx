@@ -217,7 +217,9 @@ export function ProvidersView() {
               onOpen={() => setExportMenuOpened(true)}
               onClose={() => {
                 // Prevent closing the menu sharing in progress
-                if (sharingInProgress) return;
+                if (sharingInProgress) {
+                  return;
+                }
                 setExportMenuOpened(false);
               }}
             >

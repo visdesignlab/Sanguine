@@ -72,7 +72,9 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
   };
   const clearSelections = () => setSelectedScreenshotIds(new Set());
   const toggleSelectAll = () => {
-    if (screenshots.length === 0) return;
+    if (screenshots.length === 0) {
+      return;
+    }
     if (selectedScreenshotIds.size === screenshots.length) {
       clearSelections();
     } else {
@@ -90,7 +92,9 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
   ) => {
     setSharingInProgress(true);
     try {
-      if (!items || items.length === 0) return;
+      if (!items || items.length === 0) {
+        return;
+      }
       const files = await Promise.all(items.map(async (it) => dataUrlToFile(it.dataUrl, it.filename || buildScreenshotFilename(activeTab))));
       await shareFiles(files, 'Screenshots from Intelvia - Patient Blood Management Analytics:\n\n');
     } catch (err) {
@@ -103,7 +107,9 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
   // Download / Email Selected Screenshots ---
   const emailSelectedScreenshots = async () => {
     const toEmail = screenshots.filter((s) => selectedScreenshotIds.has(s.id));
-    if (toEmail.length === 0) return;
+    if (toEmail.length === 0) {
+      return;
+    }
     await emailScreenshot(toEmail.map((s) => ({ dataUrl: s.dataUrl, filename: s.filename })));
   };
 
@@ -116,7 +122,9 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
   const openDeleteModalForSelected = () => {
-    if (selectedScreenshotIds.size === 0) return;
+    if (selectedScreenshotIds.size === 0) {
+      return;
+    }
     setDeleteTargetIds(Array.from(selectedScreenshotIds));
     setDeleteModalOpened(true);
   };
@@ -143,7 +151,9 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
         opened={screenshotsMenuOpened}
         onOpen={() => setScreenshotsMenuOpened(true)}
         onClose={() => {
-          if (sharingInProgress) return;
+          if (sharingInProgress) {
+            return;
+          }
           setScreenshotsMenuOpened(false);
         }}
       >
@@ -278,7 +288,9 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
                 const handleSetPreview = (e: React.MouseEvent) => {
                   const itemEl = e.currentTarget as HTMLElement;
                   const dropdownEl = dropdownRef.current;
-                  if (!dropdownEl) return;
+                  if (!dropdownEl) {
+                    return;
+                  }
                   const itemRect = itemEl.getBoundingClientRect();
                   const dropdownRect = dropdownEl.getBoundingClientRect();
                   const centerTop = (itemRect.top - dropdownRect.top) + (itemRect.height / 2);
