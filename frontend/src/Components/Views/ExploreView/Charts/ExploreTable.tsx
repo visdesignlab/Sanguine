@@ -78,20 +78,20 @@ const inferColumnType = (key: string, data: ExploreTableData, config: ExploreTab
 
 const sortRecords = <T,>(data: T[], getter: (item: T) => any): T[] => {
   return [...data].sort((a, b) => {
-    const va = getter(a);
-    const vb = getter(b);
-    if (va < vb) return -1;
-    if (va > vb) return 1;
+    const valueA = getter(a);
+    const valueB = getter(b);
+    if (valueA < valueB) return -1;
+    if (valueA > valueB) return 1;
     return 0;
   });
 };
 
 
 const HistogramFooter = ({
-  bins, useReds, minVal = 0, maxVal = 100, colVar, hoveredValue,
+  bins, colorInterpolator, minVal = 0, maxVal = 100, colVar, hoveredValue,
 }: {
   bins: number[];
-  useReds?: boolean;
+  colorInterpolator?: (t: number) => string;
   minVal?: number;
   maxVal?: number;
   colVar?: string;
@@ -121,10 +121,10 @@ const HistogramFooter = ({
       }
     }
 
-    if (useReds) {
+    if (colorInterpolator) {
       const base = bins.length > 1 ? i / (bins.length - 1) : 0;
       const t = Math.min(1, base * scaledMax);
-      return interpolateReds(t);
+      return colorInterpolator(t);
     }
 
     return '#8c8c8c';
@@ -170,7 +170,7 @@ const HistogramFooter = ({
         style={{
           width: '100%',
           height: 1,
-          borderTop: `1px solid ${useReds ? interpolateReds(0.4) : '#6f6f6f'}`,
+          borderTop: `1px solid ${colorInterpolator ? colorInterpolator(0.4) : '#6f6f6f'}`,
           opacity: 0.5,
         }}
       />
@@ -191,8 +191,8 @@ const HistogramFooter = ({
           opacity: 0.7,
         }}
       >
-        <div style={{ paddingLeft: 0, color: useReds ? interpolateReds(0.5) : '#6f6f6f' }}>{minVal}</div>
-        <div style={{ paddingRight: 0, color: useReds ? interpolateReds(0.5) : '#6f6f6f' }}>{maxVal}</div>
+        <div style={{ paddingLeft: 0, color: colorInterpolator ? colorInterpolator(0.5) : '#6f6f6f' }}>{minVal}</div>
+        <div style={{ paddingRight: 0, color: colorInterpolator ? colorInterpolator(0.5) : '#6f6f6f' }}>{maxVal}</div>
       </div>
     </div>
   );
@@ -553,7 +553,8 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         column.footer = (
           <HistogramFooter
             bins={bins}
-            useReds
+            interpolateColor
+            colorInterpolator={interpolateReds}
             minVal={0}
             maxVal={max}
             colVar={colVar}
@@ -628,7 +629,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         column.footer = (
           <HistogramFooter
             bins={bins}
-            useReds={false}
+            interpolateColor={false}
             minVal={0}
             maxVal={max}
             colVar={colVar}
