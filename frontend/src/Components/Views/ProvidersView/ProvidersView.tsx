@@ -193,7 +193,7 @@ export function ProvidersView() {
   } = useThemeConstants();
 
   return (
-    <Stack mb="xl" gap="lg" ref={screenshotRef}>
+    <Stack mb="xl" gap="lg">
       <Flex direction="row" justify="space-between" align="center" h={toolbarWidth / 2}>
         {/* Dashboard Title */}
         <Title order={3}>Providers</Title>
