@@ -28,7 +28,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
 
   const [screenshotsMenuOpened, setScreenshotsMenuOpened] = useState(false);
   const [screenshots, setScreenshots] = useState<ScreenshotItem[]>([]);
-  const [IsMultiSelecting, setIsMultiSelecting] = useState(false);
+  const [isMultiSelecting, setIsMultiSelecting] = useState(false);
   const [selectedScreenshotIds, setSelectedScreenshotIds] = useState<Set<string>>(new Set());
   const [sharingInProgress, setSharingInProgress] = useState(false);
   const [hoveredPreview, setHoveredPreview] = useState<{ id: string; src: string; top: number } | null>(null);
@@ -166,7 +166,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
             {' '}
             <Box style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {/* Delete / Download / Email Selected Screenshots */}
-              {IsMultiSelecting && selectedScreenshotIds.size !== 0 && (
+              {isMultiSelecting && selectedScreenshotIds.size !== 0 && (
                 <>
                   <ActionIcon
                     size="xs"
@@ -201,7 +201,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
               <ActionIcon
                 size="xs"
                 variant="transparent"
-                className={`${classes.leftToolbarIcon} ${IsMultiSelecting ? classes.selected : ''}`}
+                className={`${classes.leftToolbarIcon} ${isMultiSelecting ? classes.selected : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsMultiSelecting((prev) => {
@@ -212,7 +212,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
                   (e.currentTarget as HTMLElement).blur();
                 }}
                 aria-label="Toggle multi-selection of images"
-                data-active={IsMultiSelecting ? 'true' : 'false'}
+                data-active={isMultiSelecting ? 'true' : 'false'}
                 disabled={screenshots.length === 0}
               >
                 <IconMenu4 stroke={iconStroke} size={18} />
@@ -227,7 +227,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
           >
             <Box style={{ maxHeight: 240, overflow: 'auto' }}>
               {/* If multi-selecting screenshots, show "Select All" checkbox */}
-              {IsMultiSelecting && screenshots.length > 1 && (
+              {isMultiSelecting && screenshots.length > 1 && (
                 <Stack
                   role="button"
                   tabIndex={0}
@@ -267,7 +267,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
                 const ts = new Date(s.ts).toLocaleString();
 
                 const handleScreenshotClick = (e: React.MouseEvent) => {
-                  if (IsMultiSelecting) {
+                  if (isMultiSelecting) {
                     e.stopPropagation();
                     toggleSelectionFor(s.id);
                   } else {
@@ -298,7 +298,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
                       <Group align="center" style={{ width: '100%' }}>
                         <Group align="center" style={{ flex: 1 }}>
                           {/** Add checkbox in multi-select mode */}
-                          {IsMultiSelecting && (
+                          {isMultiSelecting && (
                             <Checkbox
                               checked={selectedScreenshotIds.has(s.id)}
                               onChange={(ev) => { ev.stopPropagation(); toggleSelectionFor(s.id); }}
@@ -314,15 +314,15 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
                               {' '}
                               View
                             </Text>
-                            {IsMultiSelecting && <Text size="xs" style={{ opacity: 0.8 }}>{ts}</Text>}
+                            {isMultiSelecting && <Text size="xs" style={{ opacity: 0.8 }}>{ts}</Text>}
                           </Stack>
                         </Group>
                         {/** Add share icon when not multi-selecting */}
-                        {!IsMultiSelecting && (
+                        {!isMultiSelecting && (
                           <ActionIcon
                             size="xs"
                             variant="transparent"
-                            className={`${classes.leftToolbarIcon} ${IsMultiSelecting ? classes.selected : ''}`}
+                            className={`${classes.leftToolbarIcon} ${isMultiSelecting ? classes.selected : ''}`}
                             onClick={(e) => {
                               e.stopPropagation();
                               (e.currentTarget as HTMLElement).blur();
@@ -335,7 +335,7 @@ export function ScreenshotMenu({ activeTab }: { activeTab: string }) {
                         )}
                       </Group>
                       {/** Screenshot time stamp */}
-                      {!IsMultiSelecting && <Text size="xs">{ts}</Text>}
+                      {!isMultiSelecting && <Text size="xs">{ts}</Text>}
                     </Stack>
                   </Menu.Item>
                 );
