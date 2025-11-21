@@ -1,5 +1,5 @@
 import {
-  useContext, useEffect, useState, useMemo, useRef,
+  useContext, useEffect, useState, useMemo, useRef, createContext,
 } from 'react';
 import {
   MultiSelect,
@@ -31,28 +31,62 @@ import './ExploreTable.css';
 type NumericFilter = { query: string; cmp: '>' | '<' };
 type HoveredValue = { col: string; value: number } | null;
 
+// Context to pass hovered value to footers without re-rendering columns
+const HoverContext = createContext<HoveredValue>(null);
 
 const getHeatColor = (percent: number) => {
   const t = Math.max(0, Math.min(1, percent / 100));
   return interpolateReds(t);
 };
 
-const computeBins = (values: number[], bins = 10, min = 0, max = 100) => {
-  const counts = new Array(bins).fill(0);
-  const range = Math.max(1, max - min);
+// Compute histogram bins for a given set of values
+type HistogramBin = { min: number; max: number; count: number };
+const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
+  if (values.length === 0) {
+    return [];
+  }
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+
+  // Handle case where all values are the same
+  if (min === max) {
+    return [{
+      min: min,
+      max: min + (min === 0 ? 1 : Math.abs(min) * 0.1), // Ensure non-zero range
+      count: values.length,
+    }];
+  }
+
+  const range = max - min;
   const binSize = range / bins;
+
+  const result: HistogramBin[] = Array.from({ length: bins }, (_, i) => ({
+    min: min + i * binSize,
+    max: min + (i + 1) * binSize,
+    count: 0,
+  }));
+
   values.forEach((v) => {
-    const n = Number(v) || 0;
-    // clamp
-    const clamped = Math.max(min, Math.min(max, n));
-    if (clamped === max) {
-      counts[bins - 1] += 1;
+    const n = Number(v);
+    if (Number.isNaN(n)) {
       return;
     }
-    const idx = Math.floor((clamped - min) / binSize);
-    counts[Math.min(Math.max(0, idx), bins - 1)] += 1;
+
+    // Special handling for the maximum value
+    if (n === max) {
+      result[bins - 1].count += 1;
+      return;
+    }
+
+    const idx = Math.floor((n - min) / binSize);
+    const binIdx = Math.min(Math.max(0, idx), bins - 1); // Clamp index to valid range
+    result[binIdx].count += 1;
   });
-  return counts;
+
+
+  console.log("Bins:", result);
+  return result;
 };
 
 const inferColumnType = (key: string, data: ExploreTableData, config: ExploreTableConfig): ExploreTableColumn['type'] => {
@@ -88,35 +122,31 @@ const sortRecords = <T,>(data: T[], getter: (item: T) => any): T[] => {
 
 
 const HistogramFooter = ({
-  bins, colorInterpolator, minVal = 0, maxVal = 100, colVar, hoveredValue,
+  bins, colorInterpolator, minVal = 0, maxVal = 100, colVar,
 }: {
-  bins: number[];
+  bins: HistogramBin[];
   colorInterpolator?: (t: number) => string;
   minVal?: number;
   maxVal?: number;
   colVar?: string;
-  hoveredValue: HoveredValue;
 }) => {
+  const hoveredValue = useContext(HoverContext);
+
   if (!bins || bins.length === 0) {
     return null;
   }
 
   const scaledMax = Math.max(0, Math.min(1, maxVal / 100));
 
-  const colors = bins.map((_, i) => {
+  const colors = bins.map((bin, i) => {
     // Check if this bin should be highlighted based on hoveredValue
     if (hoveredValue && colVar && hoveredValue.col === colVar) {
-      const range = Math.max(1, maxVal - minVal);
-      const binSize = range / bins.length;
-      const binStart = minVal + (i * binSize);
-      const binEnd = minVal + ((i + 1) * binSize);
       const val = hoveredValue.value;
 
       // Check if hovered value falls in this bin
-      // Special case for last bin to include max value
-      if (i === bins.length - 1) {
-        if (val >= binStart && val <= maxVal) return smallHoverColor;
-      } else if (val >= binStart && val < binEnd) {
+      const isMatch = val >= bin.min && val <= bin.max;
+
+      if (isMatch) {
         return smallHoverColor;
       }
     }
@@ -131,8 +161,8 @@ const HistogramFooter = ({
   });
 
   const data = [
-    bins.reduce((acc, count, i) => {
-      acc[`bin${i}`] = count;
+    bins.reduce((acc, bin, i) => {
+      acc[`bin${i}`] = bin.count;
       return acc;
     }, {} as Record<string, number>),
   ];
@@ -446,9 +476,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       columns: nextColumns,
     };
 
-
-    console.log("Updated config", updatedConfig);
-
     store.exploreStore.updateChartConfig(updatedConfig);
   };
 
@@ -549,16 +576,14 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
       if (values.length) {
         const max = maxFromValues(values);
-        const bins = computeBins(values, 10, 0, max);
+        const bins = computeHistogramBins(values, 10, 0, max);
         column.footer = (
           <HistogramFooter
             bins={bins}
-            interpolateColor
             colorInterpolator={interpolateReds}
             minVal={0}
             maxVal={max}
             colVar={colVar}
-            hoveredValue={null}
           />
         );
       }
@@ -625,15 +650,13 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
       if (values.length) {
         const max = maxFromValues(values);
-        const bins = computeBins(values, 10, 0, max);
+        const bins = computeHistogramBins(values, 10, 0, max);
         column.footer = (
           <HistogramFooter
             bins={bins}
-            interpolateColor={false}
             minVal={0}
             maxVal={max}
             colVar={colVar}
-            hoveredValue={null}
           />
         );
       }
@@ -747,24 +770,26 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
       {/** Data Table */}
       <Box style={{ minHeight: 0, width: '100%' }}>
-        <DataTable<ExploreTableRow>
-          className="explore-table-data-table"
-          borderRadius="sm"
-          striped
-          withTableBorder={false}
-          highlightOnHover
-          withRowBorders={false}
-          highlightOnHoverColor={backgroundHoverColor}
-          records={records}
-          sortStatus={sortStatus}
-          onSortStatusChange={setSortStatus}
-          storeColumnsKey={`ExploreTable-${chartConfig.chartId}`}
-          columns={effectiveColumns}
-          style={{
-            fontStyle: 'italic',
-          }}
-          onRowClick={() => { }}
-        />
+        <HoverContext.Provider value={hoveredValue}>
+          <DataTable<ExploreTableRow>
+            className="explore-table-data-table"
+            borderRadius="sm"
+            striped
+            withTableBorder={false}
+            highlightOnHover
+            withRowBorders={false}
+            highlightOnHoverColor={backgroundHoverColor}
+            records={records}
+            sortStatus={sortStatus}
+            onSortStatusChange={setSortStatus}
+            storeColumnsKey={`ExploreTable-${chartConfig.chartId}`}
+            columns={effectiveColumns}
+            style={{
+              fontStyle: 'italic',
+            }}
+            onRowClick={() => { }}
+          />
+        </HoverContext.Provider>
       </Box>
     </Stack>
   );
