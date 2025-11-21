@@ -1,5 +1,5 @@
 import {
-  useContext, useEffect, useState, useMemo, useRef, createContext,
+  useContext, useEffect, useState, useMemo, useRef, createContext, memo, useCallback,
 } from 'react';
 import {
   MultiSelect,
@@ -136,38 +136,39 @@ const HistogramFooter = ({
     return null;
   }
 
-  const scaledMax = Math.max(0, Math.min(1, maxVal / 100));
+  const isHovered = hoveredValue?.col === colVar;
+  const hoveredVal = hoveredValue?.value;
 
-  const colors = bins.map((bin, i) => {
-    // Check if this bin should be highlighted based on hoveredValue
-    if (hoveredValue && colVar && hoveredValue.col === colVar) {
-      const val = hoveredValue.value;
-
-      // Check if hovered value falls in this bin
-      const isMatch = val >= bin.min && val <= bin.max;
-
-      if (isMatch) {
-        return smallHoverColor;
-      }
-    }
-
+  const baseColors = useMemo(() => bins.map((bin, i) => {
     if (colorInterpolator) {
       const base = bins.length > 1 ? i / (bins.length - 1) : 0;
+      const scaledMax = Math.max(0, Math.min(1, maxVal / 100));
       const t = Math.min(1, base * scaledMax);
       return colorInterpolator(t);
     }
-
     return '#8c8c8c';
-  });
+  }), [bins, colorInterpolator, maxVal]);
 
-  const data = [
+  const colors = useMemo(() => {
+    if (!isHovered || hoveredVal === undefined) return baseColors;
+
+    return bins.map((bin, i) => {
+      const isMatch = hoveredVal >= bin.min && hoveredVal <= bin.max;
+      if (isMatch) {
+        return smallHoverColor;
+      }
+      return baseColors[i];
+    });
+  }, [bins, isHovered, hoveredVal, baseColors]);
+
+  const data = useMemo(() => [
     bins.reduce((acc, bin, i) => {
       acc[`bin${i}`] = bin.count;
       return acc;
     }, {} as Record<string, number>),
-  ];
+  ], [bins]);
 
-  const series = bins.map((_, i) => ({ name: `bin${i}`, color: colors[i] }));
+  const series = useMemo(() => bins.map((_, i) => ({ name: `bin${i}`, color: colors[i] })), [bins, colors]);
 
   return (
     <div style={{
@@ -228,15 +229,16 @@ const HistogramFooter = ({
   );
 };
 
+type SetHoveredValue = (val: HoveredValue) => void;
+
 const NumericBarCell = ({
-  value, max, colVar, opts, onHover, onLeave,
+  value, max, colVar, opts, setHoveredValue,
 }: {
   value: number;
   max: number;
   colVar: string;
   opts?: { suffix?: string; color?: string; percentColor?: boolean; padding?: string };
-  onHover: (col: string, val: number) => void;
-  onLeave: () => void;
+  setHoveredValue: SetHoveredValue;
 }) => {
   const pct = Number.isFinite(max) && max > 0
     ? Math.max(0, Math.min(100, (Number(value ?? 0) / max) * 100))
@@ -263,8 +265,8 @@ const NumericBarCell = ({
           overflow: 'hidden',
           padding,
         }}
-        onMouseEnter={() => onHover(colVar, value)}
-        onMouseLeave={onLeave}
+        onMouseEnter={() => setHoveredValue({ col: colVar, value })}
+        onMouseLeave={() => setHoveredValue(null)}
         className="numeric-bar-cell"
       >
         <div style={{ position: 'relative', width: '100%', height: cellHeight }}>
@@ -349,6 +351,43 @@ const NumericBarCell = ({
     </Tooltip>
   );
 };
+
+const MemoizedNumericBarCell = memo(NumericBarCell);
+
+const HeatmapCell = ({
+  value, colVar, numericTextVisible, setHoveredValue, padding,
+}: {
+  value: number;
+  colVar: string;
+  numericTextVisible?: boolean;
+  setHoveredValue: SetHoveredValue;
+  padding?: string;
+}) => (
+  <Tooltip label={`${value}% of cases`} withArrow>
+    <div
+      onMouseEnter={() => setHoveredValue({ col: colVar, value })}
+      onMouseLeave={() => setHoveredValue(null)}
+      style={{ padding: padding ?? '2.25px 2px', width: '100%' }}
+    >
+      <div
+        className={`heatmap-cell ${numericTextVisible ? 'heatmap-cell-visible' : ''}`}
+        style={{
+          backgroundColor: getHeatColor(value),
+          color: numericTextVisible ? (value > 50 ? 'white' : 'black') : 'transparent',
+          padding: '2px 4px',
+          borderRadius: 2,
+          textAlign: 'center',
+          fontSize: 11,
+        }}
+      >
+        {value}
+        %
+      </div>
+    </div>
+  </Tooltip>
+);
+
+const MemoizedHeatmapCell = memo(HeatmapCell);
 
 // MARK: - ExploreTable
 
