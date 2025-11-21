@@ -19,9 +19,69 @@ export const presetStateCards: PresetGroup[] = [
       {
         question: 'In cases with preoperative anemia, how many RBCs were transfused per surgeon?',
         Icon: IconDropletHalf2Filled,
-        chartConfigs: [],
+        // Add a ExploreTable chart config so clicking this preset opens the ExploreTable.
+        chartConfigs: [
+          {
+            chartId: 'preset-explore-table-preop-anemia',
+            title: 'RBC Transfusions per Surgeon',
+            chartType: 'exploreTable',
+            rowVar: 'surgeon_prov_id',
+            columns: [
+              {
+                colVar: 'surgeon_prov_id',
+                aggregation: 'none',
+                type: 'text',
+                title: 'Surgeon',
+              },
+              {
+                colVar: 'cases',
+                aggregation: 'sum',
+                type: 'numeric',
+                title: 'Cases',
+              },
+              {
+                colVar: 'percent_1_rbc',
+                aggregation: 'sum',
+                type: 'heatmap',
+                title: '1 RBC',
+              },
+              {
+                colVar: 'percent_2_rbc',
+                aggregation: 'sum',
+                type: 'heatmap',
+                title: '2 RBC',
+              },
+              {
+                colVar: 'percent_3_rbc',
+                aggregation: 'sum',
+                type: 'heatmap',
+                title: '3 RBC',
+              },
+              {
+                colVar: 'percent_4_rbc',
+                aggregation: 'sum',
+                type: 'heatmap',
+                title: '4 RBC',
+              },
+              {
+                colVar: 'percent_5_rbc',
+                aggregation: 'sum',
+                type: 'heatmap',
+                title: '5 RBC',
+              }],
+            twoValsPerRow: true,
+          },
+        ],
         chartLayouts: {
-          main: [],
+          main: [
+            {
+              i: 'preset-explore-table-preop-anemia',
+              x: 0,
+              y: 0,
+              w: 1,
+              h: 1,
+            },
+          ],
         },
       },
       {

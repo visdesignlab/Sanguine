@@ -1,4 +1,5 @@
 import '@mantine/core/styles.css';
+import 'mantine-datatable/styles.css';
 import '@mantine/charts/styles.css';
 import '@mantine/dates/styles.css';
 import 'react-grid-layout/css/styles.css';
