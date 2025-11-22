@@ -235,7 +235,7 @@ const HistogramFooter = ({
 type SetHoveredValue = (val: HoveredValue) => void;
 
 const NumericBarCell = ({
-  value, max, colVar, opts = { cellHeight: 21, fillColor: '#8c8c8c', padding: '2.25px 2px' }, setHoveredValue,
+  value, max, colVar, opts = {}, setHoveredValue,
 }: {
   value: number;
   max: number;
@@ -243,6 +243,14 @@ const NumericBarCell = ({
   setHoveredValue: SetHoveredValue;
   opts?: { suffix?: string; padding?: string; cellHeight?: number; fillColor?: string };
 }) => {
+  // Default Options
+  const {
+    cellHeight = 21,
+    fillColor = '#8c8c8c',
+    padding = '2.25px 2px',
+    suffix,
+  } = opts;
+
   // Calculate the bar width as a percentage (0-100) of the maximum value
   const barWidthPercent = Number.isFinite(max) && max > 0
     ? Math.max(0, Math.min(100, (Number(value ?? 0) / max) * 100))
@@ -268,13 +276,14 @@ const NumericBarCell = ({
           display: 'block',
           boxSizing: 'border-box',
           overflow: 'hidden',
-          padding: opts.padding,
+          padding,
         }}
         onMouseEnter={() => setHoveredValue({ col: colVar, value })}
         onMouseLeave={() => setHoveredValue(null)}
         className="numeric-bar-cell"
       >
-        <div style={{ position: 'relative', width: '100%', height: opts.cellHeight }}>
+        <div style={{ position: 'relative', width: '100%', height: cellHeight }}>
+          {/* Black Text */}
           <div
             aria-hidden
             style={{
@@ -296,14 +305,13 @@ const NumericBarCell = ({
               padding: 0,
               fontStyle: 'italic',
               fontSize: '14px',
-              lineHeight: `${opts.cellHeight}px`,
+              lineHeight: `${cellHeight}px`,
               whiteSpace: 'nowrap',
             }}
             >
-              {typeof opts?.suffix === 'string' ? `${value}${opts.suffix}` : value}
+              {typeof suffix === 'string' ? `${value}${suffix}` : value}
             </p>
           </div>
-
           {/* Bar fill */}
           <div
             className="bar-fill"
@@ -314,12 +322,12 @@ const NumericBarCell = ({
               height: '100%',
               width: `${barWidthPercent}%`,
               maxWidth: '100%',
-              background: opts.fillColor,
+              background: fillColor,
               borderRadius: 2,
               zIndex: 1,
             }}
           />
-
+          {/* White Text */}
           <div
             aria-hidden
             style={{
@@ -344,11 +352,11 @@ const NumericBarCell = ({
               padding: 0,
               fontStyle: 'italic',
               fontSize: '14px',
-              lineHeight: `${opts.cellHeight}px`,
+              lineHeight: `${cellHeight}px`,
               whiteSpace: 'nowrap',
             }}
             >
-              {typeof opts?.suffix === 'string' ? `${value}${opts.suffix}` : value}
+              {typeof suffix === 'string' ? `${value}${suffix}` : value}
             </p>
           </div>
         </div>
@@ -370,74 +378,70 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
   const [numericFilters, setNumericFilters] = useState<Record<string, NumericFilter>>({});
   const [textFilters, setTextFilters] = useState<Record<string, string>>({});
 
-  // Interaction
-  const [hoveredValue, setHoveredValue] = useState<HoveredValue>(null);
-
-  // Sorting
-  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<ExploreTableRow>>({
-    columnAccessor: 'surgeon_prov_id',
-    direction: 'asc',
-  });
-  const [records, setRecords] = useState<ExploreTableRow[]>(() => sortRecords(chartData, (r) => r.surgeon_prov_id) as ExploreTableRow[]);
-
+  // Get filters
   const getNumericFilter = (key: string): NumericFilter => numericFilters[key] ?? defaultNumericFilter;
+  const getTextFilter = (key: string) => textFilters[key] ?? '';
 
+  // Update filters
   const updateNumericFilter = (key: string, patch: Partial<NumericFilter>) => {
     setNumericFilters((prev) => {
       const curr = prev[key] ?? defaultNumericFilter;
       return { ...prev, [key]: { ...curr, ...patch } };
     });
   };
-
-  const getTextFilter = (key: string) => textFilters[key] ?? '';
-
   const updateTextFilter = (key: string, value: string) => {
     setTextFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  // Interaction
+  const [hoveredValue, setHoveredValue] = useState<HoveredValue>(null);
+
+  // Sorting
+  const defaultSortCol = chartConfig.columns[0]?.colVar || 'surgeon_prov_id';
+  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<ExploreTableRow>>({
+    columnAccessor: defaultSortCol,
+    direction: 'asc',
+  });
+
   // Apply filters and sorting
-  useEffect(() => {
-    let filtered = chartData;
+  const records = useMemo(() => {
+    // Filter
+    const filteredData = chartData.filter((row) => {
+      // Text Filters
+      const matchesText = Object.entries(textFilters).every(([key, query]) => {
+        const val = String(row[key] ?? '').toLowerCase();
+        return val.includes(query.toLowerCase());
+      });
+      if (!matchesText) return false;
 
-    // Apply text filters
-    if (Object.keys(textFilters).length) {
-      filtered = filtered.filter((r) => Object.entries(textFilters).every(([k, query]) => {
-        const val = r[k];
-        return String(val).toLowerCase().includes(query.toLowerCase());
-      }));
-    }
-
-    // Apply numeric filters
-    if (Object.keys(numericFilters).length) {
-      filtered = filtered.filter((r) => Object.entries(numericFilters).every(([k, { query, cmp }]) => {
+      // Numeric Filters
+      const matchesNumeric = Object.entries(numericFilters).every(([key, { query, cmp }]) => {
         if (!query) return true;
         const threshold = Number(query);
-        const raw = r[k];
-        const values = Array.isArray(raw) ? raw : [raw];
+        const rawVal = row[key];
+        const values = Array.isArray(rawVal) ? rawVal : [rawVal];
 
         return values.some((v) => {
           const n = Number(v);
           return cmp === '>' ? n > threshold : n < threshold;
         });
-      }));
-    }
+      });
+      return matchesNumeric;
+    });
 
     // Sort
     const accessor = sortStatus.columnAccessor as keyof ExploreTableRow;
-    let sorted: ExploreTableRow[] = [];
 
-    const getSortValue = (r: ExploreTableRow) => {
-      const val = r[accessor as string];
-
-      if (chartConfig.twoValsPerRow && Array.isArray(val)) {
-        if (typeof val[0] === 'number') {
-          return (val as number[]).reduce((a, b) => a + b, 0);
-        }
+    const getSortValue = (row: ExploreTableRow) => {
+      const val = row[accessor];
+      if (chartConfig.twoValsPerRow && Array.isArray(val) && typeof val[0] === 'number') {
+        return (val as number[]).reduce((sum, n) => sum + n, 0);
       }
       return val;
     };
-    sorted = sortRecords(filtered, getSortValue) as ExploreTableRow[];
-    setRecords(sortStatus.direction === 'desc' ? sorted.reverse() : sorted);
+
+    const sorted = sortRecords(filteredData, getSortValue) as ExploreTableRow[];
+    return sortStatus.direction === 'desc' ? sorted.reverse() : sorted;
   }, [
     sortStatus,
     chartData,
@@ -446,24 +450,15 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     chartConfig.twoValsPerRow,
   ]);
 
-  const handleColumnsChange = (values: string[]) => {
-    const optionSet = new Set(ExploreTableColumnOptions.map((o) => o.value));
-    const selectedSet = new Set(values);
+  const handleColumnsChange = (newColValues: string[]) => {
 
-    // Keep columns not controlled by the MultiSelect, plus selected ones
-    const retained = chartConfig.columns.filter(
-      (c) => !optionSet.has(c.colVar) || selectedSet.has(c.colVar),
-    );
-    const retainedSet = new Set(retained.map((c) => c.colVar));
-
-    // Add any newly selected columns not already retained
-    const toAdd: ExploreTableColumn[] = [];
-    values.forEach((v) => {
-      if (!v || retainedSet.has(v)) return;
+    // Create new column objects
+    const newCols: ExploreTableColumn[] = [];
+    newColValues.forEach((v) => {
       const selected = ExploreTableColumnOptions.find((o) => o.value === v);
       if (!selected) return;
 
-      toAdd.push({
+      newCols.push({
         colVar: selected.value,
         aggregation: 'none',
         type: inferColumnType(selected.value, chartData, chartConfig),
@@ -471,18 +466,11 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       });
     });
 
-    const nextColumns = [...toAdd, ...retained];
-
-    // No-op if columns didn’t change
-    const unchanged = nextColumns.length === chartConfig.columns.length
-      && chartConfig.columns.every((c, i) => c.colVar === nextColumns[i].colVar);
-    if (unchanged) return;
-
+    // Update this chart's configuration with the new columns
     const updatedConfig: ExploreTableConfig = {
       ...chartConfig,
-      columns: nextColumns,
+      columns: newCols,
     };
-
     store.exploreStore.updateChartConfig(updatedConfig);
   };
 
