@@ -475,74 +475,99 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
   };
 
   const generateColumnDefs = (configs: ExploreTableColumn[]): DataTableColumn<ExploreTableRow>[] => configs.map((config) => {
-
     const {
       colVar, type, title, numericTextVisible,
     } = config;
 
+    // Base column definition
     const column: DataTableColumn<ExploreTableRow> = {
       accessor: colVar,
       title,
       draggable: true,
       resizable: false,
       sortable: true,
-      render: (row: ExploreTableRow, _index: number) => <div>{String(row[colVar] ?? '')}</div>,
+      render: (row: ExploreTableRow) => <div>{String(row[colVar] ?? '')}</div>,
     };
 
-    // derive values for histograms
+    // Extract values for histograms and max value calculation
     const rawValues = records.map((r) => r[colVar]);
-    let values: number[] = [];
+    const values = chartConfig.twoValsPerRow
+      ? rawValues.flat().map((v) => Number(v ?? 0))
+      : rawValues.map((r) => Number(r ?? 0));
 
-    if (chartConfig.twoValsPerRow) {
-      values = rawValues.flat().map((v) => Number(v ?? 0));
-    } else {
-      values = rawValues.map((r) => Number(r ?? 0));
-    }
+    const maxVal = values.length ? Math.max(...values) : 0;
 
-    const maxFromValues = (vals: number[]) => (vals.length ? Math.max(...vals) : 0);
+    // Helper to create histogram footer
+    const createHistogramFooter = () => {
+      if (values.length === 0) return undefined;
+      const bins = computeHistogramBins(values, 10);
+      return (
+        <HistogramFooter
+          bins={bins}
+          colorInterpolator={type === 'heatmap' ? interpolateReds : undefined}
+          colVar={colVar}
+        />
+      );
+    };
+
+    // Helper to create numeric filter input
+    const createNumericFilter = () => {
+      const filterState = getNumericFilter(colVar);
+      return (
+        <TextInput
+          placeholder="Filter value"
+          size="xs"
+          value={filterState.query}
+          onChange={(e) => updateNumericFilter(colVar, { query: e.currentTarget.value })}
+          leftSection={(
+            <ActionIcon
+              size="xs"
+              onClick={() => updateNumericFilter(colVar, { cmp: filterState.cmp === '>' ? '<' : '>' })}
+            >
+              {filterState.cmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
+            </ActionIcon>
+          )}
+        />
+      );
+    };
+
+    // --- Column Type Specific Logic ---
 
     if (type === 'heatmap') {
-      column.render = (row: ExploreTableRow, _index: number) => {
+      column.render = (row: ExploreTableRow) => {
+        const renderCell = (val: number, padding: string) => (
+          <Tooltip label={`${val}% of cases`} withArrow>
+            <div
+              onMouseEnter={() => setHoveredValue({ col: colVar, value: val })}
+              onMouseLeave={() => setHoveredValue(null)}
+              style={{ padding, width: '100%' }}
+            >
+              <div
+                className={`heatmap-cell ${numericTextVisible ? 'heatmap-cell-visible' : ''}`}
+                style={{
+                  backgroundColor: interpolateReds(val / 100),
+                  color: numericTextVisible ? (val > 50 ? 'white' : 'black') : 'transparent',
+                  padding: '2px 4px',
+                  borderRadius: 2,
+                  textAlign: 'center',
+                  fontSize: 11,
+                }}
+              >
+                {val}
+                %
+              </div>
+            </div>
+          </Tooltip>
+        );
+
         if (chartConfig.twoValsPerRow) {
           const val = row[colVar] as [number, number] | undefined;
           const v1 = val?.[0] ?? 0;
           const v2 = val?.[1] ?? 0;
           return (
             <Stack gap={0}>
-              <Tooltip label={`${v1}% of cases`} withArrow>
-                <div
-                  onMouseEnter={() => setHoveredValue({ col: colVar, value: v1 })}
-                  onMouseLeave={() => setHoveredValue(null)}
-                  style={{ padding: '2.25px 2px 1px 2px', width: '100%' }}
-                >
-                  <div
-                    className={`heatmap-cell ${numericTextVisible ? 'heatmap-cell-visible' : ''}`}
-                    style={{
-                      backgroundColor: interpolateReds(v1 / 100), color: numericTextVisible ? (v1 > 50 ? 'white' : 'black') : 'transparent', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
-                    }}
-                  >
-                    {v1}
-                    %
-                  </div>
-                </div>
-              </Tooltip>
-              <Tooltip label={`${v2}% of cases`} withArrow>
-                <div
-                  onMouseEnter={() => setHoveredValue({ col: colVar, value: v2 })}
-                  onMouseLeave={() => setHoveredValue(null)}
-                  style={{ padding: '1px 2px 2.25px 2px', width: '100%' }}
-                >
-                  <div
-                    className={`heatmap-cell ${numericTextVisible ? 'heatmap-cell-visible' : ''}`}
-                    style={{
-                      backgroundColor: interpolateReds(v2 / 100), color: numericTextVisible ? (v2 > 50 ? 'white' : 'black') : 'transparent', padding: '2px 4px', borderRadius: 2, textAlign: 'center', fontSize: 11,
-                    }}
-                  >
-                    {v2}
-                    %
-                  </div>
-                </div>
-              </Tooltip>
+              {renderCell(v1, '2.25px 2px 1px 2px')}
+              {renderCell(v2, '1px 2px 2.25px 2px')}
             </Stack>
           );
         }
@@ -558,7 +583,11 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
               <div
                 className={`heatmap-cell ${numericTextVisible ? 'heatmap-cell-visible' : ''}`}
                 style={{
-                  backgroundColor: interpolateReds(val / 100), color: numericTextVisible ? (val > 50 ? 'white' : 'black') : 'transparent', padding: '4px 8px', borderRadius: 4, textAlign: 'center',
+                  backgroundColor: interpolateReds(val / 100),
+                  color: numericTextVisible ? (val > 50 ? 'white' : 'black') : 'transparent',
+                  padding: '4px 8px',
+                  borderRadius: 4,
+                  textAlign: 'center',
                 }}
               >
                 {val}
@@ -569,42 +598,10 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         );
       };
 
-      if (values.length) {
-        const max = maxFromValues(values);
-        const bins = computeHistogramBins(values, 10);
-        column.footer = (
-          <HistogramFooter
-            bins={bins}
-            colorInterpolator={interpolateReds}
-            colVar={colVar}
-          />
-        );
-      }
-
-      // numeric-style filter for heatmap values
-      const nf = getNumericFilter(colVar);
-      column.filter = (
-        <TextInput
-          placeholder="Filter value"
-          size="xs"
-          value={nf.query}
-          onChange={(e) => updateNumericFilter(colVar, { query: e.currentTarget.value })}
-          leftSection={(
-            <ActionIcon
-              size="xs"
-              onClick={() => updateNumericFilter(colVar, { cmp: nf.cmp === '>' ? '<' : '>' })}
-            >
-              {nf.cmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
-            </ActionIcon>
-          )}
-        />
-      );
-    }
-
-    if (type === 'numeric') {
-      const maxVal = maxFromValues(values);
-
-      column.render = (row: ExploreTableRow, _index: number) => {
+      column.footer = createHistogramFooter();
+      column.filter = createNumericFilter();
+    } else if (type === 'numeric') {
+      column.render = (row: ExploreTableRow) => {
         if (chartConfig.twoValsPerRow) {
           const val = row[colVar] as [number, number] | undefined;
           const v1 = val?.[0] ?? 0;
@@ -638,59 +635,28 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         );
       };
 
-      if (values.length) {
-        const bins = computeHistogramBins(values, 10);
-        column.footer = (
-          <HistogramFooter
-            bins={bins}
-            colVar={colVar}
-          />
-        );
-      }
-
-      // per-column numeric filter
-      const nf = getNumericFilter(colVar);
-      column.filter = (
-        <TextInput
-          placeholder="Filter value"
-          size="xs"
-          value={nf.query}
-          onChange={(e) => updateNumericFilter(colVar, { query: e.currentTarget.value })}
-          leftSection={(
-            <ActionIcon
-              size="xs"
-              onClick={() => updateNumericFilter(colVar, { cmp: nf.cmp === '>' ? '<' : '>' })}
-            >
-              {nf.cmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
-            </ActionIcon>
-          )}
-        />
-      );
-    }
-
-    if (type === 'text') {
+      column.footer = createHistogramFooter();
+      column.filter = createNumericFilter();
+    } else if (type === 'text') {
       column.render = (row: ExploreTableRow) => (
         <div style={{ marginLeft: '10px' }}>{String(row[colVar] ?? '')}</div>
       );
 
-      const tv = getTextFilter(colVar);
+      const textFilterValue = getTextFilter(colVar);
       column.filter = (
         <TextInput
           placeholder="Search ..."
           size="xs"
-          value={tv}
+          value={textFilterValue}
           onChange={(e) => updateTextFilter(colVar, e.currentTarget.value)}
         />
       );
     }
 
-    // TODO: Type of ViolinPlot in separate PR
-
     return column;
   });
 
   // Data Table Columns -------
-  // Memoize column definitions to prevent recalculation on hover state changes
   const columnDefs = useMemo(
     () => generateColumnDefs(chartConfig.columns),
     [
@@ -701,7 +667,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       textFilters,
     ],
   );
-
   const { effectiveColumns, resetColumnsOrder } = useDataTableColumns<ExploreTableRow>({
     key: `ExploreTable-${chartConfig.chartId}`,
     columns: columnDefs,
