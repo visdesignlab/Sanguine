@@ -522,23 +522,8 @@ export type ScatterPlotConfig = ChartConfig<typeof dashboardXAxisVars[number] | 
 export type ScatterPlotData = ScatterChartSeries[];
 
 // --- Explore Table ---
-export type ExploreTableColumn = {
-  colVar: string; // e.g., 'b12', 'visit_count', 'vent'
-  aggregation: keyof typeof AGGREGATION_OPTIONS | 'none'; // 'sum' | 'avg'
-  type: 'numeric' | 'text' | 'violin' | 'heatmap';
-  title: string;
-  numericTextVisible?: boolean;
-};
 
-export type ExploreTableConfig = {
-  chartId: string;
-  title: string;
-  chartType: 'exploreTable';
-  rowVar: string; // e.g., 'surgeon_prov_id'
-  columns: ExploreTableColumn[];
-  twoValsPerRow?: boolean;
-};
-
+// Column options
 export const ExploreTableColumnOptions: { value: string; label: string }[] = [
   ...dashboardYAxisOptions.map((opt) => ({
     value: opt.value,
@@ -554,8 +539,39 @@ export const ExploreTableColumnOptions: { value: string; label: string }[] = [
   },
 ];
 
-export type ExploreTableRow = Record<string, string | number | number[] | number[][]>;
-export type ExploreTableData = ExploreTableRow[];
+// Row options
+export const ExploreTableRowOptions: { value: string; label: string }[] = [
+  { value: 'surgeon_prov_id', label: 'Surgeon' },
+  { value: 'year', label: 'Year' },
+  { value: 'quarter', label: 'Quarter' },
+];
+
+// Variables
+const ExploreTableColumnVars = ExploreTableColumnOptions.map((opt) => opt.value);
+const ExploreTableRowVars = ExploreTableRowOptions.map((opt) => opt.value);
+
+// Column type
+export type ExploreTableColumn = {
+  colVar: typeof ExploreTableColumnVars[number];
+  aggregation: keyof typeof AGGREGATION_OPTIONS | 'none';
+  type: 'numeric' | 'text' | 'violin' | 'heatmap';
+  title: string;
+  numericTextVisible?: boolean;
+};
+
+// Explore Table Chart Config
+export type ExploreTableConfig = {
+  chartId: string;
+  title: string;
+  chartType: 'exploreTable';
+  rowVar: typeof ExploreTableRowVars[number];
+  columns: ExploreTableColumn[];
+  twoValsPerRow?: boolean;
+};
+
+// Explore Table Data
+export type ExploreTableRow = Record<typeof ExploreTableRowVars[number], string | number | number[] | number[][]>;
+export type ExploreTableData = ExploreTableRow[]; // E.g. [{ surgeon_prov_id: '123', cases: 100}, { surgeon_prov_id: '456', cases: 200}]
 
 // --- Explore Chart ---
 export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | ExploreTableData>;
