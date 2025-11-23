@@ -27,15 +27,48 @@ import {
 import { backgroundHoverColor, smallHoverColor } from '../../../../Theme/mantineTheme';
 import './ExploreTable.css';
 
-
+// Types
 type NumericFilter = { query: string; cmp: '>' | '<' };
 type HoveredValue = { col: string; value: number } | null;
+type HistogramBin = { binMin: number; binMax: number; count: number };
+type SetHoveredValue = (val: HoveredValue) => void;
+
 
 // Context to pass hovered value to footers without re-rendering columns
 const HoverContext = createContext<HoveredValue>(null);
 
+const inferColumnType = (key: string, data: ExploreTableData, config: ExploreTableConfig): ExploreTableColumn['type'] => {
+  const sample = data[0]?.[key];
+
+  if (config.twoValsPerRow) {
+    if (Array.isArray(sample)) {
+      // [number, number] -> numeric or heatmap
+      if (typeof sample[0] === 'number') {
+        if (key.includes('adherent') || ['rbc', 'ffp', 'cryo'].includes(key)) return 'heatmap';
+        return 'numeric';
+      }
+    }
+    return 'text';
+  }
+
+  if (typeof sample === 'number') {
+    // heuristics for heatmap (% style)
+    if (key.includes('adherent') || ['rbc', 'ffp', 'cryo'].includes(key)) return 'heatmap';
+  }
+  return 'text'; // default to text if not numeric/array
+};
+
+const sortRecords = <T,>(data: T[], getter: (item: T) => any): T[] => {
+  return [...data].sort((a, b) => {
+    const valueA = getter(a);
+    const valueB = getter(b);
+    if (valueA < valueB) return -1;
+    if (valueA > valueB) return 1;
+    return 0;
+  });
+};
+
 // Compute histogram bins for a given set of values
-type HistogramBin = { binMin: number; binMax: number; count: number };
 const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
   if (values.length === 0) {
     return [];
@@ -83,38 +116,6 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
   console.log("Bins:", result);
   return result;
 };
-
-const inferColumnType = (key: string, data: ExploreTableData, config: ExploreTableConfig): ExploreTableColumn['type'] => {
-  const sample = data[0]?.[key];
-
-  if (config.twoValsPerRow) {
-    if (Array.isArray(sample)) {
-      // [number, number] -> numeric or heatmap
-      if (typeof sample[0] === 'number') {
-        if (key.includes('adherent') || ['rbc', 'ffp', 'cryo'].includes(key)) return 'heatmap';
-        return 'numeric';
-      }
-    }
-    return 'text';
-  }
-
-  if (typeof sample === 'number') {
-    // heuristics for heatmap (% style)
-    if (key.includes('adherent') || ['rbc', 'ffp', 'cryo'].includes(key)) return 'heatmap';
-  }
-  return 'text'; // default to text if not numeric/array
-};
-
-const sortRecords = <T,>(data: T[], getter: (item: T) => any): T[] => {
-  return [...data].sort((a, b) => {
-    const valueA = getter(a);
-    const valueB = getter(b);
-    if (valueA < valueB) return -1;
-    if (valueA > valueB) return 1;
-    return 0;
-  });
-};
-
 
 const HistogramFooter = ({
   bins, colorInterpolator, colVar,
@@ -231,8 +232,6 @@ const HistogramFooter = ({
     </div>
   );
 };
-
-type SetHoveredValue = (val: HoveredValue) => void;
 
 const NumericBarCell = ({
   value, max, colVar, opts = {}, setHoveredValue,
@@ -364,8 +363,6 @@ const NumericBarCell = ({
     </Tooltip>
   );
 };
-
-
 
 // MARK: - ExploreTable
 
