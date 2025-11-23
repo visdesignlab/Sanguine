@@ -35,30 +35,30 @@ type HoveredValue = { col: string; value: number } | null;
 const HoverContext = createContext<HoveredValue>(null);
 
 // Compute histogram bins for a given set of values
-type HistogramBin = { min: number; max: number; count: number };
+type HistogramBin = { binMin: number; binMax: number; count: number };
 const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
   if (values.length === 0) {
     return [];
   }
 
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  const histMinVal = Math.min(...values);
+  const histMaxVal = Math.max(...values);
 
   // Handle case where all values are the same
-  if (min === max) {
+  if (histMinVal === histMaxVal) {
     return [{
-      min: min,
-      max: min + (min === 0 ? 1 : Math.abs(min) * 0.1), // Ensure non-zero range
+      binMin: histMinVal,
+      binMax: histMinVal + (histMinVal === 0 ? 1 : Math.abs(histMinVal) * 0.1), // Ensure non-zero range
       count: values.length,
     }];
   }
 
-  const range = max - min;
+  const range = histMaxVal - histMinVal;
   const binSize = range / bins;
 
   const result: HistogramBin[] = Array.from({ length: bins }, (_, i) => ({
-    min: min + i * binSize,
-    max: min + (i + 1) * binSize,
+    binMin: histMinVal + i * binSize,
+    binMax: histMinVal + (i + 1) * binSize,
     count: 0,
   }));
 
@@ -69,12 +69,12 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
     }
 
     // Special handling for the maximum value
-    if (n === max) {
+    if (n === histMaxVal) {
       result[bins - 1].count += 1;
       return;
     }
 
-    const idx = Math.floor((n - min) / binSize);
+    const idx = Math.floor((n - histMinVal) / binSize);
     const binIdx = Math.min(Math.max(0, idx), bins - 1); // Clamp index to valid range
     result[binIdx].count += 1;
   });
@@ -129,8 +129,8 @@ const HistogramFooter = ({
     return null;
   }
 
-  const minVal = bins[0]?.min ?? 0;
-  const maxVal = bins[bins.length - 1]?.max ?? 0;
+  const minVal = bins[0]?.binMin ?? 0;
+  const maxVal = bins[bins.length - 1]?.binMax ?? 0;
 
   // Check if this column is hovered
   const isHoveredCol = hoveredValue?.col === colVar;
@@ -154,7 +154,7 @@ const HistogramFooter = ({
     }
 
     return bins.map((bin, i) => {
-      const isMatch = hoveredVal >= bin.min && hoveredVal <= bin.max;
+      const isMatch = hoveredVal >= bin.binMin && hoveredVal <= bin.binMax;
       if (isMatch) {
         return smallHoverColor;
       }
