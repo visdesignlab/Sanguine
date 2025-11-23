@@ -362,7 +362,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       newCols.push({
         colVar: selected.value,
         aggregation: 'none',
-        type: inferColumnType(selected.value, chartData, chartConfig),
+        type: inferColumnType(selected.value, chartData),
         title: selected.label,
       });
     });
@@ -390,7 +390,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       render: (row: ExploreTableRow) => <div>{String(row[colVar] ?? '')}</div>,
     };
 
-    // Extract values for histograms and max value calculation
+    // Extract values
     const rawValues = rows.map((r) => r[colVar]);
     const values = chartConfig.twoValsPerRow
       ? rawValues.flat().map((v) => Number(v ?? 0))
@@ -412,7 +412,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     };
 
     // Helper to create numeric filter input
-    const createNumericFilter = () => {
+    const createNumericFilterBtn = () => {
       const filterState = numericFilters[colVar] ?? defaultNumericFilter;
       return (
         <TextInput
@@ -512,7 +512,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       };
 
       column.footer = createHistogramFooter();
-      column.filter = createNumericFilter();
+      column.filter = createNumericFilterBtn();
     } else if (type === 'numeric') {
       column.render = (row: ExploreTableRow) => {
         if (chartConfig.twoValsPerRow) {
@@ -549,7 +549,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       };
 
       column.footer = createHistogramFooter();
-      column.filter = createNumericFilter();
+      column.filter = createNumericFilterBtn();
     } else if (type === 'text') {
       column.render = (row: ExploreTableRow) => (
         <div style={{ marginLeft: '10px' }}>{String(row[colVar] ?? '')}</div>
