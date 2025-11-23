@@ -353,19 +353,29 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
   ]);
 
   const handleColumnsChange = (newColValues: string[]) => {
-    // Create new column objects
-    const newCols: ExploreTableColumn[] = [];
-    newColValues.forEach((v) => {
+    const currentCols = chartConfig.columns;
+    const currentColVars = currentCols.map((c) => c.colVar);
+
+    // Identify added & prev columns
+    const addedColVars = newColValues.filter((v) => !currentColVars.includes(v));
+    const prevCols = currentCols.filter((c) => newColValues.includes(c.colVar));
+
+    // Create objects for added columns
+    const addedCols: ExploreTableColumn[] = [];
+    addedColVars.forEach((v) => {
       const selected = ExploreTableColumnOptions.find((o) => o.value === v);
       if (!selected) return;
 
-      newCols.push({
+      addedCols.push({
         colVar: selected.value,
         aggregation: 'none',
         type: inferColumnType(selected.value, chartData),
         title: selected.label,
       });
     });
+
+    // Add new cols to prev columns
+    const newCols = [...addedCols, ...prevCols];
 
     // Update this chart's configuration with the new columns
     const updatedConfig: ExploreTableConfig = {
@@ -446,6 +456,8 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
     // --- Column Type Specific Logic ---
 
+
+    // Heatmap columns ---
     if (type === 'heatmap') {
       column.render = (row: ExploreTableRow) => {
         const renderCell = (val: number, padding: string) => (
@@ -514,6 +526,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       column.footer = createHistogramFooter();
       column.filter = createNumericFilterBtn();
     } else if (type === 'numeric') {
+      // Numeric columns ---
       column.render = (row: ExploreTableRow) => {
         if (chartConfig.twoValsPerRow) {
           const val = row[colVar] as [number, number] | undefined;
@@ -551,6 +564,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       column.footer = createHistogramFooter();
       column.filter = createNumericFilterBtn();
     } else if (type === 'text') {
+      // Text columns ---
       column.render = (row: ExploreTableRow) => (
         <div style={{ marginLeft: '10px' }}>{String(row[colVar] ?? '')}</div>
       );
