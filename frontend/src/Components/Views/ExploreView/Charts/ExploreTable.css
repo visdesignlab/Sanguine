@@ -28,3 +28,106 @@
 .violin-cell:hover path {
   fill: #FFCF76 !important;
 }
+
+/* Histogram Footer */
+.histogram-footer-container {
+  width: calc(100% - 3px);
+  overflow: visible;
+  position: relative;
+  z-index: 0;
+}
+
+.histogram-footer-chart {
+  margin-left: -12%;
+  margin-bottom: 0;
+  overflow: visible;
+}
+
+.histogram-footer-line {
+  width: 100%;
+  height: 1px;
+  opacity: 0.5;
+}
+
+.histogram-footer-ticks {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0;
+  padding-bottom: 0;
+  box-sizing: border-box;
+  font-size: 10px;
+  color: #6f6f6f;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.histogram-footer-tick-min {
+  padding-left: 0;
+}
+
+.histogram-footer-tick-max {
+  padding-right: 0;
+}
+
+/* Numeric Bar Cell */
+.numeric-bar-cell {
+  position: relative;
+  width: 100%;
+  display: block;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.numeric-bar-cell-inner {
+  position: relative;
+  width: 100%;
+}
+
+.numeric-bar-cell-text-container {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 0;
+  pointer-events: none;
+  color: #000;
+}
+
+.numeric-bar-cell-text {
+  margin: 0;
+  padding: 0;
+  font-style: italic;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.numeric-bar-cell-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  max-width: 100%;
+  border-radius: 2px;
+  z-index: 1;
+}
+
+.numeric-bar-cell-text-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 2;
+  pointer-events: none;
+  color: #fff;
+}

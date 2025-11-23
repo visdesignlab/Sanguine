@@ -37,28 +37,21 @@ type SetHoveredValue = (val: HoveredValue) => void;
 // Context to pass hovered value to footers without re-rendering columns
 const HoverContext = createContext<HoveredValue>(null);
 
-const inferColumnType = (key: string, data: ExploreTableData, config: ExploreTableConfig): ExploreTableColumn['type'] => {
+// When adding column, infer column type from attribute
+const inferColumnType = (key: string, data: ExploreTableData): ExploreTableColumn['type'] => {
   const sample = data[0]?.[key];
 
-  if (config.twoValsPerRow) {
-    if (Array.isArray(sample)) {
-      // [number, number] -> numeric or heatmap
-      if (typeof sample[0] === 'number') {
-        if (key.includes('adherent') || ['rbc', 'ffp', 'cryo'].includes(key)) return 'heatmap';
-        return 'numeric';
-      }
+  if (typeof sample !== 'string') {
+    if (key.includes('adherent') || ['rbc', 'ffp', 'cryo', 'plt'].includes(key)) {
+      return 'heatmap';
     }
-    return 'text';
+    return 'numeric';
   }
-
-  if (typeof sample === 'number') {
-    // heuristics for heatmap (% style)
-    if (key.includes('adherent') || ['rbc', 'ffp', 'cryo'].includes(key)) return 'heatmap';
-  }
-  return 'text'; // default to text if not numeric/array
+  return 'text';
 };
 
-const sortRecords = <T,>(data: T[], getter: (item: T) => any): T[] => {
+// Helper function to sort rows
+const sortRows = <T,>(data: T[], getter: (item: T) => any): T[] => {
   return [...data].sort((a, b) => {
     const valueA = getter(a);
     const valueB = getter(b);
@@ -117,6 +110,7 @@ const computeHistogramBins = (values: number[], bins = 10): HistogramBin[] => {
   return result;
 };
 
+// Histogram footer component
 const HistogramFooter = ({
   bins, colorInterpolator, colVar,
 }: {
@@ -124,8 +118,6 @@ const HistogramFooter = ({
   colorInterpolator?: (t: number) => string;
   colVar?: string;
 }) => {
-  const hoveredValue = useContext(HoverContext);
-
   if (!bins || bins.length === 0) {
     return null;
   }
@@ -134,10 +126,11 @@ const HistogramFooter = ({
   const maxVal = bins[bins.length - 1]?.binMax ?? 0;
 
   // Check if this column is hovered
+  const hoveredValue = useContext(HoverContext);
   const isHoveredCol = hoveredValue?.col === colVar;
   const hoveredVal = hoveredValue?.value;
 
-  // Colors of histogram
+  // Base colors of histogram
   const baseColors = useMemo(() => bins.map((bin, i) => {
     if (colorInterpolator) {
       const base = bins.length > 1 ? i / (bins.length - 1) : 0;
@@ -148,14 +141,14 @@ const HistogramFooter = ({
     return '#8c8c8c';
   }), [bins, colorInterpolator, maxVal]);
 
-  // Add hovered color bins
+  // Final colors, coloring hovered bin
   const colors = useMemo(() => {
     if (!isHoveredCol || hoveredVal === undefined) {
       return baseColors;
     }
 
     return bins.map((bin, i) => {
-      const isMatch = hoveredVal >= bin.binMin && hoveredVal <= bin.binMax;
+      const isMatch = hoveredVal > bin.binMin && hoveredVal <= bin.binMax;
       if (isMatch) {
         return smallHoverColor;
       }
@@ -163,24 +156,19 @@ const HistogramFooter = ({
     });
   }, [bins, isHoveredCol, hoveredVal, baseColors]);
 
-  // Data for histogram
+  // Data for histogram, colored by bin ---
   const data = useMemo(() => [
-    bins.reduce((acc, bin, i) => {
-      acc[`bin${i}`] = bin.count;
-      return acc;
-    }, {} as Record<string, number>),
+    Object.fromEntries(bins.map((bin, i) => [`bin${i}`, bin.count]))
   ], [bins]);
 
-  const series = useMemo(() => bins.map((_, i) => ({ name: `bin${i}`, color: colors[i] })), [bins, colors]);
+  const series = useMemo(() => bins.map((_, i) => ({
+    name: `bin${i}`,
+    color: colors[i]
+  })), [bins, colors]);
 
+  // Render histogram ----
   return (
-    <div style={{
-      width: 'calc(100% - 3px)',
-      overflow: 'visible',
-      position: 'relative',
-      zIndex: 0,
-    }}
-    >
+    <div className="histogram-footer-container">
       <BarChart
         data={data}
         series={series}
@@ -191,43 +179,25 @@ const HistogramFooter = ({
         withXAxis={false}
         withYAxis={false}
         gridAxis="none"
+        className="histogram-footer-chart"
         style={{
-          marginLeft: '-12%',
           angle: 25,
-          marginBottom: 0,
-          overflow: 'visible',
         }}
         withTooltip={false}
       />
 
-      {/* Bottom of histogram */}
+      {/* Bottom line of histogram */}
       <div
+        className="histogram-footer-line"
         style={{
-          width: '100%',
-          height: 1,
           borderTop: `1px solid ${colorInterpolator ? colorInterpolator(0.4) : '#6f6f6f'}`,
-          opacity: 0.5,
         }}
       />
 
       {/* Min / Max ticks under the histogram */}
-      <div
-        style={{
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingTop: 0,
-          paddingBottom: 0,
-          boxSizing: 'border-box',
-          fontSize: 10,
-          color: '#6f6f6f',
-          fontWeight: 600,
-          opacity: 0.7,
-        }}
-      >
-        <div style={{ paddingLeft: 0, color: colorInterpolator ? colorInterpolator(0.5) : '#6f6f6f' }}>{minVal}</div>
-        <div style={{ paddingRight: 0, color: colorInterpolator ? colorInterpolator(0.5) : '#6f6f6f' }}>{maxVal}</div>
+      <div className="histogram-footer-ticks">
+        <div className="histogram-footer-tick-min" style={{ color: colorInterpolator ? colorInterpolator(0.5) : '#6f6f6f' }}>{minVal}</div>
+        <div className="histogram-footer-tick-max" style={{ color: colorInterpolator ? colorInterpolator(0.5) : '#6f6f6f' }}>{maxVal}</div>
       </div>
     </div>
   );
@@ -269,92 +239,41 @@ const NumericBarCell = ({
       withArrow
     >
       <div
+        className="numeric-bar-cell"
         style={{
-          position: 'relative',
-          width: '100%',
-          display: 'block',
-          boxSizing: 'border-box',
-          overflow: 'hidden',
           padding,
         }}
         onMouseEnter={() => setHoveredValue({ col: colVar, value })}
         onMouseLeave={() => setHoveredValue(null)}
-        className="numeric-bar-cell"
       >
-        <div style={{ position: 'relative', width: '100%', height: cellHeight }}>
+        <div className="numeric-bar-cell-inner" style={{ height: cellHeight }}>
           {/* Black Text */}
           <div
             aria-hidden
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              right: 0,
-              bottom: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 0,
-              pointerEvents: 'none',
-              color: '#000',
-            }}
+            className="numeric-bar-cell-text-container"
           >
-            <p style={{
-              margin: 0,
-              padding: 0,
-              fontStyle: 'italic',
-              fontSize: '14px',
-              lineHeight: `${cellHeight}px`,
-              whiteSpace: 'nowrap',
-            }}
-            >
+            <p className="numeric-bar-cell-text" style={{ lineHeight: `${cellHeight}px` }}>
               {typeof suffix === 'string' ? `${value}${suffix}` : value}
             </p>
           </div>
           {/* Bar fill */}
           <div
-            className="bar-fill"
+            className="bar-fill numeric-bar-cell-fill"
             style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              height: '100%',
               width: `${barWidthPercent}%`,
-              maxWidth: '100%',
               background: fillColor,
-              borderRadius: 2,
-              zIndex: 1,
             }}
           />
           {/* White Text */}
           <div
             aria-hidden
+            className="numeric-bar-cell-text-overlay"
             style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              right: 0,
-              bottom: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-              zIndex: 2,
-              pointerEvents: 'none',
-              color: '#fff',
               clipPath: `inset(0 ${clipRightAmount} 0 0)`,
               WebkitClipPath: `inset(0 ${clipRightAmount} 0 0)`,
             }}
           >
-            <p style={{
-              margin: 0,
-              padding: 0,
-              fontStyle: 'italic',
-              fontSize: '14px',
-              lineHeight: `${cellHeight}px`,
-              whiteSpace: 'nowrap',
-            }}
-            >
+            <p className="numeric-bar-cell-text" style={{ lineHeight: `${cellHeight}px` }}>
               {typeof suffix === 'string' ? `${value}${suffix}` : value}
             </p>
           </div>
@@ -375,21 +294,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
   const [numericFilters, setNumericFilters] = useState<Record<string, NumericFilter>>({});
   const [textFilters, setTextFilters] = useState<Record<string, string>>({});
 
-  // Get filters
-  const getNumericFilter = (key: string): NumericFilter => numericFilters[key] ?? defaultNumericFilter;
-  const getTextFilter = (key: string) => textFilters[key] ?? '';
-
-  // Update filters
-  const updateNumericFilter = (key: string, patch: Partial<NumericFilter>) => {
-    setNumericFilters((prev) => {
-      const curr = prev[key] ?? defaultNumericFilter;
-      return { ...prev, [key]: { ...curr, ...patch } };
-    });
-  };
-  const updateTextFilter = (key: string, value: string) => {
-    setTextFilters((prev) => ({ ...prev, [key]: value }));
-  };
-
   // Interaction
   const [hoveredValue, setHoveredValue] = useState<HoveredValue>(null);
 
@@ -400,19 +304,20 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     direction: 'asc',
   });
 
-  // Apply filters and sorting
-  const records = useMemo(() => {
-    // Filter
+  // Apply filters and sorting ---
+  const rows = useMemo(() => {
+    // Filter ---
     const filteredData = chartData.filter((row) => {
       // Text Filters
       const matchesText = Object.entries(textFilters).every(([key, query]) => {
         const val = String(row[key] ?? '').toLowerCase();
-        return val.includes(query.toLowerCase());
+        return val.includes((query as string).toLowerCase());
       });
       if (!matchesText) return false;
 
       // Numeric Filters
-      const matchesNumeric = Object.entries(numericFilters).every(([key, { query, cmp }]) => {
+      const matchesNumeric = Object.entries(numericFilters).every(([key, filter]) => {
+        const { query, cmp } = filter as NumericFilter;
         if (!query) return true;
         const threshold = Number(query);
         const rawVal = row[key];
@@ -426,7 +331,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       return matchesNumeric;
     });
 
-    // Sort
+    // Sort ---
     const accessor = sortStatus.columnAccessor as keyof ExploreTableRow;
 
     const getSortValue = (row: ExploreTableRow) => {
@@ -437,7 +342,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       return val;
     };
 
-    const sorted = sortRecords(filteredData, getSortValue) as ExploreTableRow[];
+    const sorted = sortRows(filteredData, getSortValue) as ExploreTableRow[];
     return sortStatus.direction === 'desc' ? sorted.reverse() : sorted;
   }, [
     sortStatus,
@@ -448,7 +353,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
   ]);
 
   const handleColumnsChange = (newColValues: string[]) => {
-
     // Create new column objects
     const newCols: ExploreTableColumn[] = [];
     newColValues.forEach((v) => {
@@ -487,7 +391,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     };
 
     // Extract values for histograms and max value calculation
-    const rawValues = records.map((r) => r[colVar]);
+    const rawValues = rows.map((r) => r[colVar]);
     const values = chartConfig.twoValsPerRow
       ? rawValues.flat().map((v) => Number(v ?? 0))
       : rawValues.map((r) => Number(r ?? 0));
@@ -509,17 +413,29 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
     // Helper to create numeric filter input
     const createNumericFilter = () => {
-      const filterState = getNumericFilter(colVar);
+      const filterState = numericFilters[colVar] ?? defaultNumericFilter;
       return (
         <TextInput
           placeholder="Filter value"
           size="xs"
           value={filterState.query}
-          onChange={(e) => updateNumericFilter(colVar, { query: e.currentTarget.value })}
+          onChange={(e) => {
+            const val = e.currentTarget.value;
+            setNumericFilters((prev: Record<string, NumericFilter>) => {
+              const curr = prev[colVar] ?? defaultNumericFilter;
+              return { ...prev, [colVar]: { ...curr, query: val } };
+            });
+          }}
           leftSection={(
             <ActionIcon
               size="xs"
-              onClick={() => updateNumericFilter(colVar, { cmp: filterState.cmp === '>' ? '<' : '>' })}
+              onClick={() => {
+                const newCmp = filterState.cmp === '>' ? '<' : '>';
+                setNumericFilters((prev: Record<string, NumericFilter>) => {
+                  const curr = prev[colVar] ?? defaultNumericFilter;
+                  return { ...prev, [colVar]: { ...curr, cmp: newCmp } };
+                });
+              }}
             >
               {filterState.cmp === '>' ? <IconMathGreater size={12} /> : <IconMathLower size={12} />}
             </ActionIcon>
@@ -639,13 +555,16 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
         <div style={{ marginLeft: '10px' }}>{String(row[colVar] ?? '')}</div>
       );
 
-      const textFilterValue = getTextFilter(colVar);
+      const textFilterValue = textFilters[colVar] ?? '';
       column.filter = (
         <TextInput
           placeholder="Search ..."
           size="xs"
           value={textFilterValue}
-          onChange={(e) => updateTextFilter(colVar, e.currentTarget.value)}
+          onChange={(e) => {
+            const val = e.currentTarget.value;
+            setTextFilters((prev: Record<string, string>) => ({ ...prev, [colVar]: val }));
+          }}
         />
       );
     }
@@ -659,7 +578,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     [
       chartConfig.columns,
       chartConfig.twoValsPerRow,
-      records,
+      rows,
       numericFilters,
       textFilters,
     ],
@@ -728,7 +647,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
             highlightOnHover
             withRowBorders={false}
             highlightOnHoverColor={backgroundHoverColor}
-            records={records}
+            records={rows}
             sortStatus={sortStatus}
             onSortStatusChange={setSortStatus}
             storeColumnsKey={`ExploreTable-${chartConfig.chartId}`}
