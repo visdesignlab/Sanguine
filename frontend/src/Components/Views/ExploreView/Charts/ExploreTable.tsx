@@ -468,14 +468,11 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
               style={{ padding, width: '100%' }}
             >
               <div
-                className={`heatmap-cell ${numericTextVisible ? 'heatmap-cell-visible' : ''}`}
+                className="heatmap-cell heatmap-cell-split"
+                data-visible={numericTextVisible}
                 style={{
                   backgroundColor: interpolateReds(val / 100),
-                  color: numericTextVisible ? (val > 50 ? 'white' : 'black') : 'transparent',
-                  padding: '2px 4px',
-                  borderRadius: 2,
-                  textAlign: 'center',
-                  fontSize: 11,
+                  '--heatmap-text-color': val > 50 ? 'white' : 'black',
                 }}
               >
                 {val}
@@ -506,13 +503,11 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
               style={{ padding: '2.25px 2px', width: '100%' }}
             >
               <div
-                className={`heatmap-cell ${numericTextVisible ? 'heatmap-cell-visible' : ''}`}
+                className="heatmap-cell heatmap-cell-full"
+                data-visible={numericTextVisible}
                 style={{
                   backgroundColor: interpolateReds(val / 100),
-                  color: numericTextVisible ? (val > 50 ? 'white' : 'black') : 'transparent',
-                  padding: '4px 8px',
-                  borderRadius: 4,
-                  textAlign: 'center',
+                  '--heatmap-text-color': val > 50 ? 'white' : 'black',
                 }}
               >
                 {val}
