@@ -489,8 +489,8 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           const v2 = val?.[1] ?? 0;
           return (
             <Stack gap={0}>
-              {renderHeatmapCell(v1, '2px 2px 0.5px 2px', true)}
-              {renderHeatmapCell(v2, '0.5px 2px 2px 2px', true)}
+              {renderHeatmapCell(v1, '1px 1px 0.5px 1px', true)}
+              {renderHeatmapCell(v2, '0.5px 1px 1px 1px', true)}
             </Stack>
           );
         }
@@ -515,14 +515,14 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
                 value={v1}
                 max={maxVal}
                 colVar={colVar}
-                opts={{ padding: '0.5px 2px 1px 2px' }}
+                opts={{ padding: '1px 1px 0.5px 1px' }}
                 setHoveredValue={setHoveredValue}
               />
               <NumericBarCell
                 value={v2}
                 max={maxVal}
                 colVar={colVar}
-                opts={{ padding: '0.5px 2px 1px 2px' }}
+                opts={{ padding: '0.5px 1px 1px 1px' }}
                 setHoveredValue={setHoveredValue}
               />
             </Stack>
