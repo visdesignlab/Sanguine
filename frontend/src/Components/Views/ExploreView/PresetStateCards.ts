@@ -64,7 +64,7 @@ export const presetStateCards: PresetGroup[] = [
                 title: '4 RBC',
               },
               {
-                colVar: 'percent_5_rbc',
+                colVar: 'percent_5+_rbc',
                 aggregation: 'sum',
                 type: 'heatmap',
                 title: '5 RBC',

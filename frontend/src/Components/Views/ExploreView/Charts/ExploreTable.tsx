@@ -204,13 +204,14 @@ const HistogramFooter = ({
 };
 
 const NumericBarCell = ({
-  value, max, colVar, opts = {}, setHoveredValue,
+  value, max, colVar, opts = {}, setHoveredValue, agg,
 }: {
   value: number;
   max: number;
   colVar: string;
   setHoveredValue: SetHoveredValue;
   opts?: { suffix?: string; padding?: string; cellHeight?: number; fillColor?: string };
+  agg?: string;
 }) => {
   // Default Options
   const {
@@ -229,12 +230,14 @@ const NumericBarCell = ({
   const clipRightAmount = `${Math.max(0, 100 - barWidthPercent)}%`;
 
   // The actual numeric value to display
-  const displayValue = Number(value ?? 0);
-  const hasValue = displayValue !== 0;
+  const unitKey = (agg === 'avg') ? 'avg' : 'sum';
+  const valueUnit = ExploreTableColumnOptions.find((opt) => opt.value === colVar)?.units?.[unitKey];
+  const displayValue = `${value} ${valueUnit}`;
+  const hasValue = Number(value ?? 0) !== 0;
 
   return (
     <Tooltip
-      label={hasValue ? `${displayValue}% of cases` : 'No data'}
+      label={hasValue ? `${displayValue}` : 'No data'}
       position="top"
       withArrow
     >
@@ -385,10 +388,10 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     store.exploreStore.updateChartConfig(updatedConfig);
   };
 
-  const generateColumnDefs = (configs: ExploreTableColumn[]): DataTableColumn<ExploreTableRow>[] => configs.map((config) => {
+  const generateColumnDefs = (colConfigs: ExploreTableColumn[]): DataTableColumn<ExploreTableRow>[] => colConfigs.map((colConfig) => {
     const {
       colVar, type, title, numericTextVisible,
-    } = config;
+    } = colConfig;
 
     // Base column definition
     const column: DataTableColumn<ExploreTableRow> = {
@@ -407,7 +410,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     }
 
     // Primary text column (e.g. surgeon) has max width & no dragging
-    const textColumns = configs.filter((c) => c.type === 'text');
+    const textColumns = colConfigs.filter((c) => c.type === 'text');
     if (textColumns.length === 1 && textColumns[0].colVar === colVar) {
       column.width = 120;
       column.draggable = false;
@@ -530,6 +533,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
                 colVar={colVar}
                 opts={{ padding: '1px 1px 0.5px 1px' }}
                 setHoveredValue={setHoveredValue}
+                agg={colConfig.aggregation}
               />
               <NumericBarCell
                 value={v2}
@@ -537,6 +541,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
                 colVar={colVar}
                 opts={{ padding: '0.5px 1px 1px 1px' }}
                 setHoveredValue={setHoveredValue}
+                agg={colConfig.aggregation}
               />
             </Stack>
           );
@@ -547,6 +552,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
             max={maxVal}
             colVar={colVar}
             setHoveredValue={setHoveredValue}
+            agg={colConfig.aggregation}
           />
         );
       };

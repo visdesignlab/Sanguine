@@ -524,11 +524,20 @@ export type ScatterPlotData = ScatterChartSeries[];
 // --- Explore Table ---
 
 // Column options
-export const ExploreTableColumnOptions: { value: string; label: string }[] = [
+const RBC_COUNTS = ['1', '2', '3', '4', '5+'] as const;
+const RBC_PERCENT_OPTIONS = RBC_COUNTS.map((count) => ({
+  value: `percent_${count}_rbc`,
+  label: `${count} RBC`,
+  units: { sum: '%', avg: '%' },
+}));
+
+export const ExploreTableColumnOptions: { value: string; label: string, units?: { sum: string, avg: string } }[] = [
   ...dashboardYAxisOptions.map((opt) => ({
     value: opt.value,
     label: opt.label.base,
+    units: { sum: opt.label.sum, avg: opt.label.avg },
   })),
+  ...RBC_PERCENT_OPTIONS,
   {
     value: 'surgeon_prov_id',
     label: 'Surgeon',
@@ -536,6 +545,7 @@ export const ExploreTableColumnOptions: { value: string; label: string }[] = [
   {
     value: 'cases',
     label: 'Cases',
+    units: { sum: 'cases', avg: '% of cases' },
   },
 ];
 
