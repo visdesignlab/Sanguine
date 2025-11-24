@@ -108,13 +108,8 @@ class VisitAttributes(models.Model):
     class Meta:
         db_table = "VisitAttributes"
         managed = False
-class ProviderAttributes(models.Model):
-    prov_id = models.CharField(max_length=25, primary_key=True)
-    prov_name = models.CharField(max_length=100, db_index=True)
-    surgery_count = models.BigIntegerField(default=0)
-    class Meta:
-        db_table = "ProviderAttributes"
-        managed = False
+
+
 class GuidelineAdherence(models.Model):
     visit_no = models.OneToOneField(Visit, on_delete=models.CASCADE, db_column="visit_no", primary_key=True, related_name="guideline_adherence")
     rbc_adherent = models.IntegerField()

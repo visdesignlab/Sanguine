@@ -129,13 +129,3 @@ def get_visit_attributes(request):
     if not file_path.exists():
         return HttpResponse("Parquet file not found. Please generate it first.", status=404)
     return FileResponse(open(file_path, 'rb'), content_type='application/vnd.apache.arrow.file')
-
-@never_cache
-@require_http_methods(["HEAD", "GET"])
-@conditional_login_required
-def get_provider_attributes(request):
-    log_request(request)
-    file_path = Path(settings.BASE_DIR) / "parquet_cache" / "provider_attributes.parquet"
-    if not file_path.exists():
-        return HttpResponse("Parquet file not found. Please generate it first.", status=404)
-    return FileResponse(open(file_path, 'rb'), content_type='application/vnd.apache.arrow.file')

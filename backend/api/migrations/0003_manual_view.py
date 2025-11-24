@@ -202,33 +202,6 @@ def create_materialize_proc(apps, schema_editor):
             GROUP BY visit_no
         ) m ON m.visit_no = v.visit_no
         LEFT JOIN GuidelineAdherence ga ON ga.visit_no = v.visit_no;
-
-        /* 3) Materialize provider attributes (surgery counts per provider) */
-        TRUNCATE TABLE ProviderAttributes;
-
-        INSERT INTO ProviderAttributes (
-            prov_id,
-            prov_name,
-            surgery_count
-        )
-        SELECT
-            prov_id,
-            MAX(prov_name) AS prov_name,
-            COUNT(DISTINCT case_id) AS surgery_count
-        FROM (
-            SELECT
-                surgeon_prov_id AS prov_id,
-                surgeon_prov_name AS prov_name,
-                case_id
-            FROM SurgeryCase
-            UNION ALL
-            SELECT
-                anesth_prov_id AS prov_id,
-                anesth_prov_name AS prov_name,
-                case_id
-            FROM SurgeryCase
-        ) sc
-        GROUP BY prov_id;
     END;
     """
     conn = schema_editor.connection
@@ -322,23 +295,6 @@ class Migration(migrations.Migration):
             """,
             reverse_sql="""
             DROP TABLE IF EXISTS VisitAttributes;
-            """
-        ),
-        # Materialized table for provider attributes
-        migrations.RunSQL(
-            sql="""
-            DROP TABLE IF EXISTS ProviderAttributes;
-
-            CREATE TABLE ProviderAttributes (
-                prov_id varchar(25),
-                prov_name varchar(100),
-                surgery_count BIGINT UNSIGNED DEFAULT 0,
-                PRIMARY KEY (prov_id),
-                INDEX (prov_name)
-            ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
-            """,
-            reverse_sql="""
-            DROP TABLE IF EXISTS ProviderAttributes;
             """
         ),
         # Procedure to (re)materialize both tables

@@ -90,17 +90,6 @@ function App() {
           CROSS JOIN costs c;
         `);
 
-        // Fetch provider attributes Parquet file from backend
-        const provRes = await fetch(`${queryUrl}get_provider_attributes`);
-        if (!provRes.ok) {
-          throw new Error(`HTTP error! status: ${provRes.status}`);
-        }
-        await db.registerFileBuffer('providers.parquet', new Uint8Array(await provRes.arrayBuffer()));
-
-        await store.duckDB.query(`
-          CREATE TABLE IF NOT EXISTS ProviderAttributes AS
-          SELECT * FROM read_parquet('providers.parquet');
-        `);
 
         // Update all stores
         await store.updateAllVisitsLength();

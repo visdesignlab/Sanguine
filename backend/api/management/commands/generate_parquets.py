@@ -14,7 +14,6 @@ class Command(BaseCommand):
         cache_dir = Path(settings.BASE_DIR) / "parquet_cache"
         cache_dir.mkdir(exist_ok=True)
         visit_file_path = cache_dir / "visit_attributes.parquet"
-        provider_file_path = cache_dir / "provider_attributes.parquet"
 
         # Refresh the materialized view using the stored procedure
         with connection.cursor() as cursor:
@@ -27,12 +26,6 @@ class Command(BaseCommand):
             columns = [col[0] for col in cursor.description]
             rows = cursor.fetchall()
             visits = [dict(zip(columns, row)) for row in rows]
-
-            # Fetch all ProviderAttributes records
-            cursor.execute("SELECT * FROM ProviderAttributes")
-            prov_columns = [col[0] for col in cursor.description]
-            prov_rows = cursor.fetchall()
-            providers = [dict(zip(prov_columns, row)) for row in prov_rows]
 
         # Define schema for visit attributes
         visit_attributes_schema = pa.schema([
@@ -78,18 +71,9 @@ class Command(BaseCommand):
             pa.field("attending_provider_line", pa.uint16(), nullable=False)
         ])
 
-         # Define schema for provider attributes
-        provider_schema = pa.schema([
-            pa.field("prov_id", pa.string(), nullable=False),
-            pa.field("prov_name", pa.string(), nullable=True),
-            pa.field("surgery_count", pa.int64(), nullable=False),
-        ])
-
-        # Write Parquet files
+        # Write Parquet file
         visit_table = pa.Table.from_pylist(visits, schema=visit_attributes_schema)
-        provider_table = pa.Table.from_pylist(providers, schema=provider_schema)
 
         pq.write_table(visit_table, visit_file_path)
-        pq.write_table(provider_table, provider_file_path)
 
-        self.stdout.write(self.style.SUCCESS(f"Parquet files generated at {visit_file_path} and {provider_file_path}"))
+        self.stdout.write(self.style.SUCCESS(f"Parquet file generated at {visit_file_path}"))
