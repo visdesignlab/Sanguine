@@ -89,7 +89,6 @@ export const OUTCOMES = [
       avg: 'Average Length of Stay',
     },
     units: { sum: 'Days', avg: 'Days' },
-    recommendation: { avg: 7.2 },
     decimals: { sum: 0, avg: 2 },
   },
   {
@@ -97,7 +96,7 @@ export const OUTCOMES = [
     label: {
       base: 'Death',
       sum: 'Total Deaths',
-      avg: '(%) Visits with Death',
+      avg: 'Percentage of Visits with Death',
     },
     units: { sum: 'Visits', avg: '% of Visits' },
     decimals: { sum: 0, avg: 1 },
@@ -107,7 +106,7 @@ export const OUTCOMES = [
     label: {
       base: 'Ventilator >24hr',
       sum: 'Total Ventilator >24hr',
-      avg: '(%) Visits with Ventilator >24hr',
+      avg: 'Percentage of Visits with Ventilator >24hr',
     },
     units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
@@ -117,7 +116,7 @@ export const OUTCOMES = [
     label: {
       base: 'Stroke',
       sum: 'Total Stroke',
-      avg: '(%) Visits with Stroke',
+      avg: 'Percentage of Visits with Stroke',
     },
     units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
@@ -127,7 +126,7 @@ export const OUTCOMES = [
     label: {
       base: 'ECMO',
       sum: 'Total ECMO',
-      avg: '(%) Visits with ECMO',
+      avg: 'Percentage of Visits with ECMO',
     },
     units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
@@ -148,9 +147,9 @@ export const PROPHYL_MEDS = [
   {
     value: 'b12',
     label: {
-      base: 'B12 Pre-Surg',
-      sum: 'Total Visits Used B12 Pre-Surg',
-      avg: '(%) Visits Used B12 Pre-Surg',
+      base: 'B12 Pre-Surgery',
+      sum: 'Total Visits Used B12 Pre-Surgery',
+      avg: 'Percentage of Visits Used B12 Pre-Surgery',
     },
     units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
@@ -158,9 +157,9 @@ export const PROPHYL_MEDS = [
   {
     value: 'iron',
     label: {
-      base: 'Iron Pre-Surg',
-      sum: 'Total Visits Used Iron Pre-Surg',
-      avg: '(%) Visits Used Iron Pre-Surg',
+      base: 'Iron Pre-Surgery',
+      sum: 'Total Visits Used Iron Pre-Surgery',
+      avg: 'Percentage of Visits Used Iron Pre-Surgery',
     },
     units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
@@ -168,9 +167,9 @@ export const PROPHYL_MEDS = [
   {
     value: 'antifibrinolytic',
     label: {
-      base: 'Antifibrinolytics Used Pre-Surg',
-      sum: 'Total Visits Used Antifibrinolytics Pre-Surg',
-      avg: '(%) Visits Used Antifibrinolytics Pre-Surg',
+      base: 'Antifibrinolytics Used Pre-Surgery',
+      sum: 'Total Visits Used Antifibrinolytics Pre-Surgery',
+      avg: 'Percentage of Visits Used Antifibrinolytics Pre-Surgery',
     },
     units: { sum: 'Visits', avg: '% of Visits' },
     decimals: 0,
@@ -193,11 +192,10 @@ export const GUIDELINE_ADHERENT = {
     label: {
       base: 'Guideline Adherent RBC Transfusions',
       sum: 'Total Guideline Adherent RBC Transfusions',
-      avg: 'RBC Transfusions Guideline Adherence %',
+      avg: 'Percentage of Guideline Adherent RBC Transfusions',
     },
     // Adherence units & decimal truncation for display
-    units: { sum: 'Adherent RBC Transfusions', avg: '% RBC Trasfusions Adherent' },
-    recommendation: { avg: 0.65 },
+    units: { sum: 'Adherent RBC Transfusions', avg: '% Adherent RBC Transfusions' },
     decimals: 0,
   },
   ffp: {
@@ -205,21 +203,19 @@ export const GUIDELINE_ADHERENT = {
     label: {
       base: 'Guideline Adherent FFP Transfusions',
       sum: 'Total Guideline Adherent FFP Transfusions',
-      avg: 'FFP Transfusions Guideline Adherence %',
+      avg: 'Percentage of Guideline Adherent FFP Transfusions',
     },
-    units: { sum: 'Adherent Plasma Transfusions', avg: '% Plasma Trasfusions Adherent' },
-    recommendation: { avg: 0.50 },
+    units: { sum: 'Adherent Plasma Transfusions', avg: '% Adherent Plasma Transfusions' },
     decimals: 0,
   },
   plt: {
     value: 'plt_adherent',
     label: {
-      base: 'Guideline Adherent PLT Transfusions',
-      sum: 'Total Guideline Adherent PLT Transfusions',
-      avg: 'PLT Transfusions Guideline Adherence %',
+      base: 'Guideline Adherent Platelet Transfusions',
+      sum: 'Total Guideline Adherent Platelet Transfusions',
+      avg: 'Percentage of Adherent Platelet Transfusions',
     },
-    units: { sum: 'Adherent Platelet Transfusions', avg: '% Platelet Trasfusions Adherent' },
-    recommendation: { avg: 0.60 },
+    units: { sum: 'Adherent Platelet Transfusions', avg: '% Adherent Platelet Transfusions' },
     decimals: 0,
   },
   cryo: {
@@ -227,10 +223,9 @@ export const GUIDELINE_ADHERENT = {
     label: {
       base: 'Guideline Adherent Cryo Transfusions',
       sum: 'Total Guideline Adherent Cryo Transfusions',
-      avg: 'Cryo Transfusions Guideline Adherence %',
+      avg: 'Percentage of Guideline Adherent Cryo Transfusions',
     },
-    units: { sum: 'Adherent Cryo Transfusions', avg: '% Cryo Trasfusions Adherent' },
-    recommendation: { avg: 0.80 },
+    units: { sum: 'Adherent Cryo Transfusions', avg: '% Adherent Cryo Transfusions' },
     decimals: 0,
   },
 } as const;
@@ -241,10 +236,9 @@ export const OVERALL_GUIDELINE_ADHERENT = {
   label: {
     base: 'Guideline Adherent Transfusions',
     sum: 'Total Guideline Adherent Transfusions',
-    avg: 'Adherent Transfusions Guideline Adherence %',
+    avg: 'Percentage of Guideline Adherent Transfusions',
   },
-  units: { sum: 'Adherent Transfusions', avg: '% Trasfusions Adherent' },
-  recommendation: { avg: 0.65 },
+  units: { sum: 'Adherent Transfusions', avg: '% Adherent Transfusions' },
   decimals: 0,
 } as const;
 
@@ -269,7 +263,6 @@ export const LAB_RESULTS = [
       avg: 'Average Post-Operative Hemoglobin',
     },
     units: { sum: 'g/dL', avg: 'g/dL' },
-    recommendation: { avg: 10.0 },
     decimals: { sum: 0, avg: 2 },
   },
 ] as const;
@@ -385,19 +378,6 @@ export const CASE_MIX_INDEX = {
   decimals: { sum: 2, avg: 2 },
 };
 
-export const PROVIDERS = {
-  value: 'attending_provider',
-  label: {
-    base: 'Provider',
-    sum: 'Providers',
-    avg: 'Average Number of Providers',
-  },
-  units: { one: 'Provider', sum: 'Providers', avg: 'Providers' },
-  decimals: { sum: 0, avg: 2 },
-} as const;
-
-export type Providers = typeof PROVIDERS['value'];
-
 // CPT Codes -------------------------------------------------------
 export const CPT_CODES = {
   stroke: ['99291', '1065F', '1066F'],
@@ -478,36 +458,6 @@ export const chartColors = [
   '#FFD13C',
   '#73C3C5',
 ];
-
-// Provider View ----------------------------------------------------
-export type ProviderChart = {
-    group?: string;
-    title: string;
-    data: Array<Record<string, string | number | boolean | null>>;
-    dataKey: string;
-    recommendedMark?: number;
-    providerMark?: number;
-    providerName?: string | null;
-    orientation: 'horizontal' | 'vertical';
-  };
-
-export const providerXAxisOptions = [
-  ...dashboardYAxisOptions.filter(
-    (opt) => opt.value !== 'stroke' && opt.value !== 'death' && opt.value !== 'ecmo',
-  ),
-  PROVIDERS,
-];
-export const providerXAxisVars = providerXAxisOptions.map((opt) => opt.value);
-export const providerChartGroups = ['Anemia Management', 'Outcomes', 'Costs'] as const;
-
-export type ProviderChartData = Record<string, ProviderChart>;
-
-export type ProviderChartConfig = ChartConfig<
-  typeof providerXAxisVars[number] | typeof dashboardXAxisVars[number] | 'attending_provider',
-  typeof dashboardXAxisVars[number] | 'attending_provider' | typeof providerXAxisVars[number],
-  keyof typeof AGGREGATION_OPTIONS,
-  'time-series-line' | 'population-histogram'
-> & { group?: (typeof providerChartGroups)[number] };
 
 // Explore View ----------------------------------------------------
 // Aggregation options for explore view
