@@ -504,9 +504,9 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           const v1 = val?.[0] ?? 0;
           const v2 = val?.[1] ?? 0;
           return (
-            <Stack gap={0}>
-              {renderHeatmapCell(v1, '1px 1px 0.5px 1px', true)}
-              {renderHeatmapCell(v2, '0.5px 1px 1px 1px', true)}
+            <Stack gap={0} padding={0}>
+              {renderHeatmapCell(v1, '1.5px 1px 0.5px 1px', true)}
+              {renderHeatmapCell(v2, '0.5px 1px 1.5px 1px', true)}
             </Stack>
           );
         }
@@ -526,7 +526,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           const v1 = val?.[0] ?? 0;
           const v2 = val?.[1] ?? 0;
           return (
-            <Stack gap={0}>
+            <Stack gap={0} padding={0}>
               <NumericBarCell
                 value={v1}
                 max={maxVal}
@@ -599,14 +599,15 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
   });
 
   // Reset column order when columns change
-  const prevColumnVars = useRef(chartConfig.columns.map((c) => c.colVar).join(','));
+  const columnVars = chartConfig.columns.map((c) => c.colVar).join(',');
+  const prevColumnVars = useRef(columnVars);
+
   useEffect(() => {
-    const currentColumnVars = chartConfig.columns.map((c) => c.colVar).join(',');
-    if (currentColumnVars !== prevColumnVars.current) {
+    if (columnVars !== prevColumnVars.current) {
       resetColumnsOrder();
-      prevColumnVars.current = currentColumnVars;
+      prevColumnVars.current = columnVars;
     }
-  }, [chartConfig.columns, resetColumnsOrder]);
+  }, [columnVars, resetColumnsOrder]);
 
   // Data Table -------
   return (
