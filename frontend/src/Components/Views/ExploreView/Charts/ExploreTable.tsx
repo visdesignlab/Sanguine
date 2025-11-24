@@ -625,7 +625,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           <MultiSelect
             placeholder="Columns"
             searchable
-            clearable
+            clearable={false}
             nothingFoundMessage="No options"
             data={ExploreTableColumnOptions.map((opt) => ({
               value: opt.value,
