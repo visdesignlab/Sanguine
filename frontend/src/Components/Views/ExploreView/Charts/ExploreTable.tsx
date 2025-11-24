@@ -148,7 +148,7 @@ const HistogramFooter = ({
     }
 
     return bins.map((bin, i) => {
-      const isMatch = hoveredVal > bin.binMin && hoveredVal <= bin.binMax;
+      const isMatch = hoveredVal >= bin.binMin && hoveredVal <= bin.binMax;
       if (isMatch) {
         return smallHoverColor;
       }
@@ -460,7 +460,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     // Heatmap columns ---
     if (type === 'heatmap') {
       column.render = (row: ExploreTableRow) => {
-        const renderCell = (val: number, padding: string) => (
+        const renderHeatmapCell = (val: number, padding: string, isSplit: boolean) => (
           <Tooltip label={`${val}% of cases`} withArrow>
             <div
               onMouseEnter={() => setHoveredValue({ col: colVar, value: val })}
@@ -468,7 +468,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
               style={{ padding, width: '100%' }}
             >
               <div
-                className="heatmap-cell heatmap-cell-split"
+                className={`heatmap-cell heatmap-cell-${isSplit ? 'split' : 'full'}`}
                 data-visible={numericTextVisible}
                 style={{
                   backgroundColor: interpolateReds(val / 100),
@@ -482,40 +482,22 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
           </Tooltip>
         );
 
+        // Render two values per row if enabled
         if (chartConfig.twoValsPerRow) {
           const val = row[colVar] as [number, number] | undefined;
           const v1 = val?.[0] ?? 0;
           const v2 = val?.[1] ?? 0;
           return (
             <Stack gap={0}>
-              {renderCell(v1, '2.25px 2px 1px 2px')}
-              {renderCell(v2, '1px 2px 2.25px 2px')}
+              {renderHeatmapCell(v1, '2px 2px 0.5px 2px', true)}
+              {renderHeatmapCell(v2, '0.5px 2px 2px 2px', true)}
             </Stack>
           );
         }
 
+        // Otherwise, render a single heatmap cell
         const val = Number(row[colVar] ?? 0);
-        return (
-          <Tooltip label={`${val}% of cases`} withArrow>
-            <div
-              onMouseEnter={() => setHoveredValue({ col: colVar, value: val })}
-              onMouseLeave={() => setHoveredValue(null)}
-              style={{ padding: '2.25px 2px', width: '100%' }}
-            >
-              <div
-                className="heatmap-cell heatmap-cell-full"
-                data-visible={numericTextVisible}
-                style={{
-                  backgroundColor: interpolateReds(val / 100),
-                  '--heatmap-text-color': val > 50 ? 'white' : 'black',
-                }}
-              >
-                {val}
-                %
-              </div>
-            </div>
-          </Tooltip>
-        );
+        return renderHeatmapCell(val, '2.25px 2px', false);
       };
 
       column.footer = createHistogramFooter();
@@ -533,14 +515,14 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
                 value={v1}
                 max={maxVal}
                 colVar={colVar}
-                opts={{ padding: '2.25px 2px 1px 2px' }}
+                opts={{ padding: '0.5px 2px 1px 2px' }}
                 setHoveredValue={setHoveredValue}
               />
               <NumericBarCell
                 value={v2}
                 max={maxVal}
                 colVar={colVar}
-                opts={{ padding: '1px 2px 2.25px 2px' }}
+                opts={{ padding: '0.5px 2px 1px 2px' }}
                 setHoveredValue={setHoveredValue}
               />
             </Stack>
