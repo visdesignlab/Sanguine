@@ -64,12 +64,12 @@ export const presetStateCards: PresetGroup[] = [
                 title: '4 RBC',
               },
               {
-                colVar: 'percent_5+_rbc',
+                colVar: 'percent_above_5_rbc',
                 aggregation: 'sum',
                 type: 'heatmap',
                 title: '5 RBC',
               }],
-            twoValsPerRow: true,
+            twoValsPerRow: false,
           },
         ],
         chartLayouts: {
