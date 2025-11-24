@@ -216,7 +216,7 @@ const NumericBarCell = ({
   const {
     cellHeight = 21,
     fillColor = '#8c8c8c',
-    padding = '2.25px 2px',
+    padding = '1px 1px 1px 1px',
     suffix,
   } = opts;
 
@@ -400,6 +400,12 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       render: (row: ExploreTableRow) => <div>{String(row[colVar] ?? '')}</div>,
     };
 
+    // If accessor is 'cases', different size
+    if (colVar === 'cases') {
+      column.width = 90;
+      column.draggable = false;
+    }
+
     // Extract values
     const rawValues = rows.map((r) => r[colVar]);
     const values = chartConfig.twoValsPerRow
@@ -497,7 +503,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
         // Otherwise, render a single heatmap cell
         const val = Number(row[colVar] ?? 0);
-        return renderHeatmapCell(val, '2.25px 2px', false);
+        return renderHeatmapCell(val, '1px 1px 1px 1px', false);
       };
 
       column.footer = createHistogramFooter();
