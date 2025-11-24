@@ -27,7 +27,7 @@ function App() {
 
   // Fetch all visits data on initial load
   useEffect(() => {
-    async function fetchAllData() {
+    async function fetchAllVisits() {
       setDataLoading(true);
       try {
         if (store.duckDB) {
@@ -112,7 +112,7 @@ function App() {
       }
     }
     // Call the function to fetch visits data
-    fetchAllData();
+    fetchAllVisits();
   }, [store]);
 
   return (
