@@ -20,8 +20,28 @@
   background-color: #FFCF76 !important;
 }
 
-.heatmap-cell.heatmap-cell-visible:hover {
+.heatmap-cell {
+  text-align: center;
+  color: transparent;
+}
+
+.heatmap-cell[data-visible="true"] {
+  color: var(--heatmap-text-color);
+}
+
+.heatmap-cell[data-visible="true"]:hover {
   color: black !important;
+}
+
+.heatmap-cell-split {
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-size: 11px;
+}
+
+.heatmap-cell-full {
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
 /* Highlight violin cell on hover */
