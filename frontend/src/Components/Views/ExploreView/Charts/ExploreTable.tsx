@@ -406,6 +406,13 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
       column.draggable = false;
     }
 
+    // Primary text column (e.g. surgeon) has max width & no dragging
+    const textColumns = configs.filter((c) => c.type === 'text');
+    if (textColumns.length === 1 && textColumns[0].colVar === colVar) {
+      column.width = 120;
+      column.draggable = false;
+    }
+
     // Extract values
     const rawValues = rows.map((r) => r[colVar]);
     const values = chartConfig.twoValsPerRow
