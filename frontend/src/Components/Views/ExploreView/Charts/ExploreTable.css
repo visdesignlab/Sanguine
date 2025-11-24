@@ -34,14 +34,12 @@
 }
 
 .heatmap-cell-split {
-  padding: 2px 4px;
   border-radius: 2px;
   font-size: 11px;
 }
 
 .heatmap-cell-full {
-  padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 /* Highlight violin cell on hover */
