@@ -549,7 +549,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     } else if (type === 'text') {
       // Text columns ---
       column.render = (row: ExploreTableRow) => (
-        <div style={{ marginLeft: '10px' }}>{String(row[colVar] ?? '')}</div>
+        <div style={{ marginRight: '10px', textAlign: 'right' }}>{String(row[colVar] ?? '')}</div>
       );
 
       const textFilterValue = textFilters[colVar] ?? '';
