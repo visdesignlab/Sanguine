@@ -55,7 +55,7 @@ def create_materialize_proc(apps, schema_editor):
                 END
             ) AS ffp_adherent,
 
-            /* Platelet adherence: PLT/Platelet Count >= 15000 within 2 hours prior */
+            /* Platelet adherence: PLT/Platelet Count <= 15000 within 2 hours prior */
             SUM(
                 CASE
                     WHEN (COALESCE(t.plt_units, 0) > 0 OR COALESCE(t.plt_vol, 0) > 0) THEN
@@ -68,13 +68,13 @@ def create_materialize_proc(apps, schema_editor):
                                   AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
                                 ORDER BY l.lab_draw_dtm DESC
                                 LIMIT 1
-                            ) >= 15000 THEN 1 ELSE 0
+                            ) <= 15000 THEN 1 ELSE 0
                         END
                     ELSE 0
                 END
             ) AS plt_adherent,
 
-            /* Cryo adherence: Fibrinogen >= 175 within 2 hours prior */
+            /* Cryo adherence: Fibrinogen <= 175 within 2 hours prior */
             SUM(
                 CASE
                     WHEN (COALESCE(t.cryo_units, 0) > 0 OR COALESCE(t.cryo_vol, 0) > 0) THEN
@@ -87,7 +87,7 @@ def create_materialize_proc(apps, schema_editor):
                                   AND l.lab_draw_dtm BETWEEN t.trnsfsn_dtm - INTERVAL 2 HOUR AND t.trnsfsn_dtm
                                 ORDER BY l.lab_draw_dtm DESC
                                 LIMIT 1
-                            ) >= 175 THEN 1 ELSE 0
+                            ) <= 175 THEN 1 ELSE 0
                         END
                     ELSE 0
                 END
