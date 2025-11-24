@@ -608,11 +608,6 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
     }
   }, [chartConfig.columns, resetColumnsOrder]);
 
-  // Currently selected column variables
-  const selectedColumnVars = chartConfig.columns
-    .filter((c) => ExploreTableColumnOptions.some((o) => o.value === c.colVar))
-    .map((c) => c.colVar);
-
   // Data Table -------
   return (
     <Stack style={{ height: '100%', width: '100%' }}>
@@ -636,7 +631,7 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
               label: opt.label,
             }))}
             onChange={handleColumnsChange}
-            value={selectedColumnVars}
+            value={chartConfig.columns.map((c) => c.colVar)}
             styles={{
               pill: { display: 'none' },
             }}
