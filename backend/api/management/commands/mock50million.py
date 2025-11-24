@@ -796,15 +796,15 @@ class Command(BaseCommand):
         def gen_attending_providers():
             provider_pool = surgeons + anests
             pool_len = len(provider_pool) or 1
-            for i in range(int(target_attending_provs_count)):
+            for i in range(int(target_visits_count)):
                 prov_id, prov_name = provider_pool[i % pool_len]
                 yield {
-                    "visit_no": (i % int(target_visits_count + 1)),
+                    "visit_no": i,
                     "prov_id": prov_id,
                     "prov_name": prov_name,
                     "attend_start_dtm": "2020-01-01 08:00:00",
                     "attend_end_dtm": "2020-01-05 17:00:00",
-                    "attend_prov_line": float(i),
+                    "attend_prov_line": 0,
                 }
         self.send_csv_to_db(gen_attending_providers(), fieldnames=attending_provider_fieldnames, table_name="AttendingProvider")
 
