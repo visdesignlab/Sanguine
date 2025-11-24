@@ -46,7 +46,7 @@ export class ExploreStore {
   async computeChartData(): Promise<void> {
     const data: ExploreChartData = {};
 
-    for (const config of this._chartConfigs) {
+    this._chartConfigs.forEach((config) => {
       // Temporary: use dummy data for all chart types
       if (config.chartType === 'exploreTable') {
         data[config.chartId] = config.twoValsPerRow ? dummyDataTwoVals : dummyData;
@@ -57,7 +57,7 @@ export class ExploreStore {
       if (config.chartType === 'cost') {
         data[config.chartId] = dummyData;
       }
-    }
+    });
     this.chartData = data;
   }
 
