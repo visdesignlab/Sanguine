@@ -784,7 +784,7 @@ class Command(BaseCommand):
         self.send_csv_to_db(gen_transfusions(), fieldnames=transfusion_fieldnames, table_name="Transfusion")
 
         # Generate Attending Providers
-        attending_provider_fieldnames = [
+        admitting_attending_provider_fieldnames = [
             "visit_no",
             "prov_id",
             "prov_name",
@@ -793,7 +793,7 @@ class Command(BaseCommand):
             "attend_prov_line",
         ]
 
-        def gen_attending_providers():
+        def gen_admitting_attending_providers():
             provider_pool = surgeons + anests
             pool_len = len(provider_pool) or 1
             for i in range(int(target_visits_count)):
@@ -806,7 +806,7 @@ class Command(BaseCommand):
                     "attend_end_dtm": "2020-01-05 17:00:00",
                     "attend_prov_line": 0,
                 }
-        self.send_csv_to_db(gen_attending_providers(), fieldnames=attending_provider_fieldnames, table_name="AttendingProvider")
+        self.send_csv_to_db(gen_admitting_attending_providers(), fieldnames=admitting_attending_provider_fieldnames, table_name="AttendingProvider")
 
         # Generate Room Trace
         room_trace_fieldnames = [

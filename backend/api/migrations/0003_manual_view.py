@@ -128,9 +128,9 @@ def create_materialize_proc(apps, schema_editor):
             ffp_adherent,
             plt_adherent,
             cryo_adherent,
-            attending_provider,
-            attending_provider_id,
-            attending_provider_line
+            admitting_attending_provider,
+            admitting_attending_provider_id,
+            admitting_attending_provider_line
         )
         SELECT
             v.visit_no,
@@ -162,15 +162,15 @@ def create_materialize_proc(apps, schema_editor):
             COALESCE(ga.ffp_adherent, 0) AS ffp_adherent,
             COALESCE(ga.plt_adherent, 0) AS plt_adherent,
             COALESCE(ga.cryo_adherent, 0) AS cryo_adherent,
-            apt.prov_name AS attending_provider,
-            apt.prov_id AS attending_provider_id,
-            apt.attending_provider_line AS attending_provider_line
+            apt.prov_name AS admitting_attending_provider,
+            apt.prov_id AS admitting_attending_provider_id,
+            apt.admitting_attending_provider_line AS admitting_attending_provider_line
         FROM (
             select 
                 ap.visit_no as visit_no,
                 ap.prov_id as prov_id,
                 ap.prov_name as prov_name,
-                ap.attend_prov_line as attending_provider_line,
+                ap.attend_prov_line as admitting_attending_provider_line,
                 SUM(rbc_units) AS sum_rbc_units,
                 SUM(ffp_units) AS sum_ffp_units,
                 SUM(plt_units) AS sum_plt_units,
@@ -284,9 +284,9 @@ class Migration(migrations.Migration):
                 plt_adherent SMALLINT UNSIGNED DEFAULT 0,
                 cryo_adherent SMALLINT UNSIGNED DEFAULT 0,
                 overall_adherent SMALLINT UNSIGNED AS (rbc_adherent + ffp_adherent + plt_adherent + cryo_adherent) STORED,
-                attending_provider varchar(100),
-                attending_provider_id varchar(25),
-                attending_provider_line SMALLINT UNSIGNED DEFAULT 0,
+                admitting_attending_provider varchar(100),
+                admitting_attending_provider_id varchar(25),
+                admitting_attending_provider_line SMALLINT UNSIGNED DEFAULT 0,
 
                 PRIMARY KEY (visit_no),
                 FOREIGN KEY (visit_no) REFERENCES Visit(visit_no),

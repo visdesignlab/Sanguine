@@ -66,9 +66,9 @@ class Command(BaseCommand):
             pa.field("cryo_adherent", pa.uint16(), nullable=False),
             pa.field("overall_adherent", pa.uint16(), nullable=False),
 
-            pa.field("attending_provider", pa.string(), nullable=False),
-            pa.field("attending_provider_id", pa.string(), nullable=False),
-            pa.field("attending_provider_line", pa.uint16(), nullable=False)
+            pa.field("admitting_attending_provider", pa.string(), nullable=False),
+            pa.field("admitting_attending_provider_id", pa.string(), nullable=False),
+            pa.field("admitting_attending_provider_line", pa.uint16(), nullable=False)
         ])
 
         # Write Parquet file
