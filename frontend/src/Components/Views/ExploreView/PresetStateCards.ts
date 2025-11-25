@@ -25,10 +25,10 @@ export const presetStateCards: PresetGroup[] = [
             chartId: 'preset-explore-table-preop-anemia',
             title: 'RBC Transfusions per Surgeon',
             chartType: 'exploreTable',
-            rowVar: 'surgeon_prov_id',
+            rowVar: 'attending_provider',
             columns: [
               {
-                colVar: 'surgeon_prov_id',
+                colVar: 'attending_provider',
                 aggregation: 'none',
                 type: 'text',
                 title: 'Surgeon',
