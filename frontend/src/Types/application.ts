@@ -539,8 +539,8 @@ export const ExploreTableColumnOptions: { value: string; label: string, units?: 
   })),
   ...RBC_PERCENT_OPTIONS,
   {
-    value: 'surgeon_prov_id',
-    label: 'Surgeon',
+    value: 'attending_provider',
+    label: 'Provider',
   },
   {
     value: 'cases',
@@ -551,7 +551,7 @@ export const ExploreTableColumnOptions: { value: string; label: string, units?: 
 
 // Row options
 export const ExploreTableRowOptions: { value: string; label: string }[] = [
-  { value: 'surgeon_prov_id', label: 'Surgeon' },
+  { value: 'attending_provider', label: 'Provider' },
   { value: 'year', label: 'Year' },
   { value: 'quarter', label: 'Quarter' },
 ];
@@ -581,7 +581,7 @@ export type ExploreTableConfig = {
 
 // Explore Table Data
 export type ExploreTableRow = Record<typeof ExploreTableRowVars[number], string | number | number[] | number[][]>;
-export type ExploreTableData = ExploreTableRow[]; // E.g. [{ surgeon_prov_id: '123', cases: 100}, { surgeon_prov_id: '456', cases: 200}]
+export type ExploreTableData = ExploreTableRow[]; // E.g. [{ attending_provider: 'Dr. Smith', cases: 100}, { attending_provider: 'Dr. Johnson', cases: 200}]
 
 // --- Explore Chart ---
 export type ExploreChartData = Record<string, ScatterPlotData | CostBarData | ExploreTableData>;
