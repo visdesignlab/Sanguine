@@ -309,6 +309,10 @@ export default function ExploreTable({ chartConfig }: { chartConfig: ExploreTabl
 
   // Apply filters and sorting ---
   const rows = useMemo(() => {
+    if (!chartData || !Array.isArray(chartData)) {
+      return [];
+    }
+
     // Filter ---
     const filteredData = chartData.filter((row) => {
       // Text Filters
