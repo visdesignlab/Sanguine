@@ -70,7 +70,27 @@ export class FiltersStore {
   }
 
   setFilterValue<T extends keyof typeof this._filterValues>(key: T, value: typeof this._filterValues[T]) {
-    this._filterValues[key] = value;
+    // Dispatch action to provenance store
+    // We need to handle Date conversion for Trrack if necessary, but ProvenanceStore handles it in the action?
+    // Actually, ProvenanceStore actions expect the type in ApplicationState.
+    // But updateFilter in ProvenanceStore takes `any` for value currently in my implementation above?
+    // Let's check ProvenanceStore.ts again.
+    // actions.updateFilter: (filterKey: keyof ApplicationState['filterValues'], value: any)
+    // So we can pass the value. But if it's a Date, we should pass the string if the state expects string.
+    // In ApplicationState, dateFrom/dateTo are strings.
+
+    let val: any = value;
+    if (value instanceof Date) {
+      val = value.toISOString();
+    }
+
+    // We need to cast key to match ApplicationState keys.
+    // The keys in FiltersStore match ApplicationState keys.
+    this._rootStore.provenanceStore.actions.updateFilter(key as any, val);
+  }
+
+  loadState(newFilterValues: typeof this._filterValues) {
+    this._filterValues = newFilterValues;
     this._rootStore.updateFilteredData();
   }
 
@@ -218,24 +238,32 @@ export class FiltersStore {
 
   // Resets all filters to their initial values.
   resetAllFilters() {
-    this._filterValues = { ...this._initialFilterValues };
-    this._rootStore.updateFilteredData();
+    // this._filterValues = { ...this._initialFilterValues };
+    // this._rootStore.updateFilteredData();
+    // Use provenance action
+    // We need to implement resetAllFilters in ProvenanceStore properly first, or just manually update each filter?
+    // Or we can just call updateFilter for each one? No, that's too many actions.
+    // ProvenanceStore has resetAllFilters action.
+    this._rootStore.provenanceStore.actions.resetAllFilters();
   }
 
   // Reset only date filters to initial values
   resetDateFilters() {
-    this._filterValues.dateFrom = new Date(this._initialFilterValues.dateFrom);
-    this._filterValues.dateTo = new Date(this._initialFilterValues.dateTo);
-    this._rootStore.updateFilteredData();
+    // this._filterValues.dateFrom = new Date(this._initialFilterValues.dateFrom);
+    // this._filterValues.dateTo = new Date(this._initialFilterValues.dateTo);
+    // this._rootStore.updateFilteredData();
+    this._rootStore.provenanceStore.actions.updateFilter('dateFrom', this._initialFilterValues.dateFrom.toISOString());
+    this._rootStore.provenanceStore.actions.updateFilter('dateTo', this._initialFilterValues.dateTo.toISOString());
   }
 
   // Reset Blood Component filters to initial values
   resetBloodComponentFilters() {
     const bloodKeys = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml'] as const;
     bloodKeys.forEach((key) => {
-      this._filterValues[key] = [...this._initialFilterValues[key]];
+      // this._filterValues[key] = [...this._initialFilterValues[key]];
+      this._rootStore.provenanceStore.actions.updateFilter(key, [...this._initialFilterValues[key]]);
     });
-    this._rootStore.updateFilteredData();
+    // this._rootStore.updateFilteredData();
   }
 
   // Reset Medication filters to initial values
@@ -243,9 +271,10 @@ export class FiltersStore {
     const medKeys = ['b12', 'iron', 'antifibrinolytic'] as const;
     medKeys.forEach((key) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
+      // this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
+      this._rootStore.provenanceStore.actions.updateFilter(key, this._initialFilterValues[key]);
     });
-    this._rootStore.updateFilteredData();
+    // this._rootStore.updateFilteredData();
   }
 
   // Reset Patient Outcome filters to initial values
@@ -253,9 +282,10 @@ export class FiltersStore {
     const outcomeKeys = ['los', 'death', 'vent', 'stroke', 'ecmo'] as const;
     outcomeKeys.forEach((key) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
+      // this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
+      this._rootStore.provenanceStore.actions.updateFilter(key, this._initialFilterValues[key]);
     });
-    this._rootStore.updateFilteredData();
+    // this._rootStore.updateFilteredData();
   }
 
   // Cached histogram data for each blood component

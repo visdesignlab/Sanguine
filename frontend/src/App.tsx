@@ -93,6 +93,9 @@ function App() {
         await store.filtersStore.calculateDefaultFilterValues();
         await store.updateFilteredVisitsLength();
 
+        // Reinitialize provenance with the correct initial filter values
+        store.provenanceStore.reinitialize();
+
         await store.filtersStore.generateHistogramData();
         await store.dashboardStore.computeChartData();
         await store.dashboardStore.computeStatData();

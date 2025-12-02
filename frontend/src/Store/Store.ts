@@ -56,7 +56,9 @@ export class RootStore {
     this.selectionsStore = new SelectionsStore(this);
     this.provenanceStore = new ProvenanceStore(this);
 
-    makeAutoObservable(this);
+    makeAutoObservable(this, {
+      provenanceStore: false, // Exclude provenanceStore from auto observable to prevent deep proxying of Trrack
+    });
   }
 
   async updateFilteredData() {

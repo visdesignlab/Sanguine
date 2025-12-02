@@ -53,7 +53,8 @@ export class DashboardStore {
   }
 
   set chartLayouts(input: { [key: string]: Layout[] }) {
-    this._chartLayouts = input;
+    // this._chartLayouts = input;
+    this._rootStore.provenanceStore.actions.updateDashboardLayout(input);
   }
 
   // Chart configurations by default
@@ -113,27 +114,29 @@ export class DashboardStore {
    * Initializes the dashboard with default chart configurations.
    */
   setChartConfig(chartId: string, input: DashboardChartConfig) {
-    const refreshData = input.yAxisVar !== this._chartConfigs.find((c) => c.chartId === chartId)?.yAxisVar;
+    // const refreshData = input.yAxisVar !== this._chartConfigs.find((c) => c.chartId === chartId)?.yAxisVar;
 
-    this._chartConfigs = this._chartConfigs.map((config) => {
+    const newConfigs = this._chartConfigs.map((config) => {
       if (config.chartId === chartId) {
         return { ...config, ...input };
       }
       return config;
     });
 
-    if (refreshData) {
-      this.computeChartData();
-    }
+    // if (refreshData) {
+    //   this.computeChartData();
+    // }
+    this._rootStore.provenanceStore.actions.updateDashboardConfig(newConfigs);
   }
 
   /**
    * Removes chart from the dashboard by ID.
    */
   removeChart(chartId: string) {
-    this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
-    this._chartLayouts.main = this._chartLayouts.main.filter((layout) => layout.i !== chartId);
-    this._chartLayouts.sm = this._chartLayouts.sm.filter((layout) => layout.i !== chartId);
+    // this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
+    // this._chartLayouts.main = this._chartLayouts.main.filter((layout) => layout.i !== chartId);
+    // this._chartLayouts.sm = this._chartLayouts.sm.filter((layout) => layout.i !== chartId);
+    this._rootStore.provenanceStore.actions.removeChart(chartId);
   }
 
   /**
@@ -142,7 +145,7 @@ export class DashboardStore {
    */
   addChart(config: DashboardChartConfig) {
     // Chart data - Add chart config to beginning of array ----
-    this._chartConfigs = [config, ...this._chartConfigs];
+    // this._chartConfigs = [config, ...this._chartConfigs];
 
     // Layouts - create a new layout object ----
     const newMainLayouts = this._chartLayouts.main.map((layout) => ({
@@ -178,12 +181,13 @@ export class DashboardStore {
     }
 
     // Replace the entire layouts object
-    this._chartLayouts = {
+    const newLayouts = {
       ...this._chartLayouts,
       main: newMainLayouts,
       ...(this._chartLayouts.sm && { sm: newSmLayouts }),
     };
-    this.computeChartData();
+    // this.computeChartData();
+    this._rootStore.provenanceStore.actions.addChart(config, newLayouts);
   }
 
   // Stat management -----------------------------------------------------------
@@ -193,7 +197,7 @@ export class DashboardStore {
    * @description Adds new stat to dashboard with a generated title.
    */
   addStat(statVar: DashboardStatConfig['yAxisVar'], aggregation: DashboardStatConfig['aggregation']) {
-  // Generate unique ID and title internally
+    // Generate unique ID and title internally
     const statId = `stat-${Date.now()}`;
     const opt = dashboardYAxisOptions.find((o) => o.value === statVar);
     const title = opt?.label?.[aggregation || 'sum'] || statVar;
@@ -352,7 +356,7 @@ export class DashboardStore {
               return entry as { timePeriod: TimePeriod; data: number | Record<Cost, number> };
             })
             .sort((a, b) => compareTimePeriods(a.timePeriod, b.timePeriod));
-            // Log filtered data for debugging
+          // Log filtered data for debugging
           if (chartDatum.length === 0) {
             console.warn(`No data after filtering for xAxisVar "${xAxisVar}" and aggVar "${aggVar}"`);
           }

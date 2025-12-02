@@ -1,3 +1,4 @@
+import { observer } from 'mobx-react-lite';
 import {
   ReactNode, useContext, useMemo, useState,
 } from 'react';
@@ -8,6 +9,7 @@ import {
   Button,
   Stack,
   Badge,
+  TextInput,
 } from '@mantine/core';
 import {
   IconDatabase, IconBook,
@@ -17,6 +19,7 @@ import {
   IconRestore, type IconProps,
   IconChartBar,
   IconClipboardList,
+  IconHistory,
 } from '@tabler/icons-react';
 import * as htmlToImage from 'html-to-image';
 import { Store } from '../Store/Store';
@@ -35,7 +38,7 @@ import { ScreenshotMenu } from '../Components/Menus/ScreenshotMenu';
  * Shell component that provides the main layout for the application.
  * Includes a header toolbar (Intelvia), left toolbar, and main content area.
  */
-export function Shell() {
+export const Shell = observer(() => {
   const store = useContext(Store);
   // View tabs -----------------
   const TABS = [
@@ -68,6 +71,35 @@ export function Shell() {
     // Reset filters (add other reset logic as needed)
     store.filtersStore.resetAllFilters();
     setResetModalOpened(false);
+  };
+
+  // Save State Modal -----------------------------
+  const [saveModalOpened, setSaveModalOpened] = useState(false);
+  const [stateName, setStateName] = useState('');
+
+  const handleSaveState = () => {
+    if (stateName.trim()) {
+      store.provenanceStore.saveState(stateName);
+      setSaveModalOpened(false);
+      setStateName('');
+    }
+  };
+
+  // Restore State Modal --------------------------
+  const [restoreModalOpened, setRestoreModalOpened] = useState(false);
+  const [stateToRestore, setStateToRestore] = useState<string | null>(null);
+
+  const handleRestoreState = () => {
+    if (stateToRestore) {
+      store.provenanceStore.restoreState(stateToRestore);
+      setRestoreModalOpened(false);
+      setStateToRestore(null);
+    }
+  };
+
+  const confirmRestore = (id: string) => {
+    setStateToRestore(id);
+    setRestoreModalOpened(true);
   };
 
   // Toolbar & Left Panel states ----------------------
@@ -127,9 +159,10 @@ export function Shell() {
 
   // Header toolbar icons
   const headerIcons: { icon: React.ComponentType<IconProps>; label: string; onClick?: () => void }[] = [
-    { icon: IconArrowNarrowLeftDashed, label: 'Back' },
-    { icon: IconArrowNarrowRightDashed, label: 'Forward' },
-    { icon: IconDeviceFloppy, label: 'Save' },
+    { icon: IconArrowNarrowLeftDashed, label: 'Back', onClick: () => store.provenanceStore.provenance.undo() },
+    { icon: IconArrowNarrowRightDashed, label: 'Forward', onClick: () => store.provenanceStore.provenance.redo() },
+    { icon: IconDeviceFloppy, label: 'Save', onClick: () => setSaveModalOpened(true) },
+    { icon: IconHistory, label: 'Saved States' }, // Placeholder for dropdown logic
     { icon: IconCamera, label: 'Camera' },
     { icon: IconUser, label: 'User' },
   ];
@@ -185,6 +218,33 @@ export function Shell() {
               if (label === 'Camera') {
                 return (
                   <ScreenshotMenu key="screenshot-menu" activeTab={activeTab} />
+                );
+              }
+              // --- Saved States Menu ---
+              if (label === 'Saved States') {
+                return (
+                  <Menu shadow="md" width={200} offset={12} trigger="hover" closeDelay={200} key="saved-states-menu">
+                    <Menu.Target>
+                      <ActionIcon aria-label="Saved States">
+                        <IconHistory stroke={iconStroke} />
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Label>Saved States</Menu.Label>
+                      {store.provenanceStore.savedStates.length === 0 ? (
+                        <Menu.Item disabled>No saved states</Menu.Item>
+                      ) : (
+                        store.provenanceStore.savedStates.map((state) => (
+                          <Menu.Item
+                            key={state.id}
+                            onClick={() => confirmRestore(state.id)}
+                          >
+                            {state.name}
+                          </Menu.Item>
+                        ))
+                      )}
+                    </Menu.Dropdown>
+                  </Menu>
                 );
               }
               // --- User menu ---
@@ -260,9 +320,9 @@ export function Shell() {
 
           {/** Left Panel Content */}
           {activeLeftPanel !== null && (
-          <Box style={{ flexGrow: 1 }} p="md">
-            {leftToolbarIcons[activeLeftPanel].content}
-          </Box>
+            <Box style={{ flexGrow: 1 }} p="md">
+              {leftToolbarIcons[activeLeftPanel].content}
+            </Box>
           )}
         </Flex>
       </AppShell.Navbar>
@@ -299,6 +359,46 @@ export function Shell() {
           </Group>
         </Stack>
       </Modal>
+
+      {/** Save State Modal */}
+      <Modal
+        opened={saveModalOpened}
+        onClose={() => setSaveModalOpened(false)}
+        title="Save Current State"
+        centered
+      >
+        <Stack gap="md">
+          <TextInput
+            label="State Name"
+            placeholder="Enter a name for this state"
+            value={stateName}
+            onChange={(event) => setStateName(event.currentTarget.value)}
+            data-autofocus
+          />
+          <Group justify="flex-end" mt="xs">
+            <Button variant="default" onClick={() => setSaveModalOpened(false)}>Cancel</Button>
+            <Button onClick={handleSaveState}>Save</Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/** Restore State Modal */}
+      <Modal
+        opened={restoreModalOpened}
+        onClose={() => setRestoreModalOpened(false)}
+        title="Restore State?"
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            Are you sure you want to restore this state? Unsaved changes will be lost.
+          </Text>
+          <Group justify="flex-end" mt="xs">
+            <Button variant="default" onClick={() => setRestoreModalOpened(false)}>Cancel</Button>
+            <Button color="red" onClick={handleRestoreState}>Restore</Button>
+          </Group>
+        </Stack>
+      </Modal>
     </AppShell>
   );
-}
+});
