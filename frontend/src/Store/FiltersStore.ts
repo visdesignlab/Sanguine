@@ -70,22 +70,12 @@ export class FiltersStore {
   }
 
   setFilterValue<T extends keyof typeof this._filterValues>(key: T, value: typeof this._filterValues[T]) {
-    // Dispatch action to provenance store
-    // We need to handle Date conversion for Trrack if necessary, but ProvenanceStore handles it in the action?
-    // Actually, ProvenanceStore actions expect the type in ApplicationState.
-    // But updateFilter in ProvenanceStore takes `any` for value currently in my implementation above?
-    // Let's check ProvenanceStore.ts again.
-    // actions.updateFilter: (filterKey: keyof ApplicationState['filterValues'], value: any)
-    // So we can pass the value. But if it's a Date, we should pass the string if the state expects string.
-    // In ApplicationState, dateFrom/dateTo are strings.
 
     let val: any = value;
     if (value instanceof Date) {
       val = value.toISOString();
     }
 
-    // We need to cast key to match ApplicationState keys.
-    // The keys in FiltersStore match ApplicationState keys.
     this._rootStore.provenanceStore.actions.updateFilter(key as any, val);
   }
 
@@ -240,10 +230,6 @@ export class FiltersStore {
   resetAllFilters() {
     // this._filterValues = { ...this._initialFilterValues };
     // this._rootStore.updateFilteredData();
-    // Use provenance action
-    // We need to implement resetAllFilters in ProvenanceStore properly first, or just manually update each filter?
-    // Or we can just call updateFilter for each one? No, that's too many actions.
-    // ProvenanceStore has resetAllFilters action.
     this._rootStore.provenanceStore.actions.resetAllFilters();
   }
 
