@@ -228,16 +228,16 @@ export class FiltersStore {
 
   // Resets all filters to their initial values.
   resetAllFilters() {
-    // this._filterValues = { ...this._initialFilterValues };
-    // this._rootStore.updateFilteredData();
+    this._filterValues = { ...this._initialFilterValues };
+    this._rootStore.updateFilteredData();
     this._rootStore.provenanceStore.actions.resetAllFilters();
   }
 
   // Reset only date filters to initial values
   resetDateFilters() {
-    // this._filterValues.dateFrom = new Date(this._initialFilterValues.dateFrom);
-    // this._filterValues.dateTo = new Date(this._initialFilterValues.dateTo);
-    // this._rootStore.updateFilteredData();
+    this._filterValues.dateFrom = new Date(this._initialFilterValues.dateFrom);
+    this._filterValues.dateTo = new Date(this._initialFilterValues.dateTo);
+    this._rootStore.updateFilteredData();
     this._rootStore.provenanceStore.actions.updateFilter('dateFrom', this._initialFilterValues.dateFrom.toISOString());
     this._rootStore.provenanceStore.actions.updateFilter('dateTo', this._initialFilterValues.dateTo.toISOString());
   }
@@ -246,10 +246,10 @@ export class FiltersStore {
   resetBloodComponentFilters() {
     const bloodKeys = ['rbc_units', 'ffp_units', 'plt_units', 'cryo_units', 'cell_saver_ml'] as const;
     bloodKeys.forEach((key) => {
-      // this._filterValues[key] = [...this._initialFilterValues[key]];
+      this._filterValues[key] = [...this._initialFilterValues[key]];
       this._rootStore.provenanceStore.actions.updateFilter(key, [...this._initialFilterValues[key]]);
     });
-    // this._rootStore.updateFilteredData();
+    this._rootStore.updateFilteredData();
   }
 
   // Reset Medication filters to initial values
@@ -257,10 +257,10 @@ export class FiltersStore {
     const medKeys = ['b12', 'iron', 'antifibrinolytic'] as const;
     medKeys.forEach((key) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      // this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
+      this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
       this._rootStore.provenanceStore.actions.updateFilter(key, this._initialFilterValues[key]);
     });
-    // this._rootStore.updateFilteredData();
+    this._rootStore.updateFilteredData();
   }
 
   // Reset Patient Outcome filters to initial values
@@ -268,10 +268,10 @@ export class FiltersStore {
     const outcomeKeys = ['los', 'death', 'vent', 'stroke', 'ecmo'] as const;
     outcomeKeys.forEach((key) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      // this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
+      this._filterValues[key] = this._initialFilterValues[key] as unknown as any;
       this._rootStore.provenanceStore.actions.updateFilter(key, this._initialFilterValues[key]);
     });
-    // this._rootStore.updateFilteredData();
+    this._rootStore.updateFilteredData();
   }
 
   // Cached histogram data for each blood component

@@ -32,8 +32,8 @@ export class SelectionsStore {
     const next = new Set(this.selectedTimePeriods);
     for (const p of expandTimePeriod(timePeriod)) next.add(p);
 
-    // this.selectedTimePeriods = Array.from(next);
-    // this.updateSelectedVisits();
+    this.selectedTimePeriods = Array.from(next);
+    this.updateSelectedVisits();
     this._rootStore.provenanceStore.actions.updateSelection(Array.from(next));
   }
 
@@ -43,8 +43,8 @@ export class SelectionsStore {
     const next = new Set(this.selectedTimePeriods);
     for (const p of expandTimePeriod(timePeriod)) next.delete(p);
 
-    // this.selectedTimePeriods = Array.from(next);
-    // this.updateSelectedVisits();
+    this.selectedTimePeriods = Array.from(next);
+    this.updateSelectedVisits();
     this._rootStore.provenanceStore.actions.updateSelection(Array.from(next));
   }
 

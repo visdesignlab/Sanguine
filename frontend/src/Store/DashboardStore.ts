@@ -53,7 +53,7 @@ export class DashboardStore {
   }
 
   set chartLayouts(input: { [key: string]: Layout[] }) {
-    // this._chartLayouts = input;
+    this._chartLayouts = input;
     this._rootStore.provenanceStore.actions.updateDashboardLayout(input);
   }
 
@@ -114,7 +114,7 @@ export class DashboardStore {
    * Initializes the dashboard with default chart configurations.
    */
   setChartConfig(chartId: string, input: DashboardChartConfig) {
-    // const refreshData = input.yAxisVar !== this._chartConfigs.find((c) => c.chartId === chartId)?.yAxisVar;
+    const refreshData = input.yAxisVar !== this._chartConfigs.find((c) => c.chartId === chartId)?.yAxisVar;
 
     const newConfigs = this._chartConfigs.map((config) => {
       if (config.chartId === chartId) {
@@ -122,10 +122,11 @@ export class DashboardStore {
       }
       return config;
     });
+    this._chartConfigs = newConfigs;
 
-    // if (refreshData) {
-    //   this.computeChartData();
-    // }
+    if (refreshData) {
+      this.computeChartData();
+    }
     this._rootStore.provenanceStore.actions.updateDashboardConfig(newConfigs);
   }
 
@@ -133,9 +134,9 @@ export class DashboardStore {
    * Removes chart from the dashboard by ID.
    */
   removeChart(chartId: string) {
-    // this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
-    // this._chartLayouts.main = this._chartLayouts.main.filter((layout) => layout.i !== chartId);
-    // this._chartLayouts.sm = this._chartLayouts.sm.filter((layout) => layout.i !== chartId);
+    this._chartConfigs = this._chartConfigs.filter((config) => config.chartId !== chartId);
+    this._chartLayouts.main = this._chartLayouts.main.filter((layout) => layout.i !== chartId);
+    this._chartLayouts.sm = this._chartLayouts.sm.filter((layout) => layout.i !== chartId);
     this._rootStore.provenanceStore.actions.removeChart(chartId);
   }
 
@@ -145,7 +146,7 @@ export class DashboardStore {
    */
   addChart(config: DashboardChartConfig) {
     // Chart data - Add chart config to beginning of array ----
-    // this._chartConfigs = [config, ...this._chartConfigs];
+    this._chartConfigs = [config, ...this._chartConfigs];
 
     // Layouts - create a new layout object ----
     const newMainLayouts = this._chartLayouts.main.map((layout) => ({
@@ -186,7 +187,7 @@ export class DashboardStore {
       main: newMainLayouts,
       ...(this._chartLayouts.sm && { sm: newSmLayouts }),
     };
-    // this.computeChartData();
+    this.computeChartData();
     this._rootStore.provenanceStore.actions.addChart(config, newLayouts);
   }
 
