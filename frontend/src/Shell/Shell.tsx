@@ -161,12 +161,12 @@ export const Shell = observer(() => {
 
   // Header toolbar icons
   const headerIcons = useMemo(() => [
-    { icon: IconArrowNarrowLeftDashed, label: 'Back', onClick: () => store.provenanceStore.provenance.undo() },
-    { icon: IconArrowNarrowRightDashed, label: 'Forward', onClick: () => store.provenanceStore.provenance.redo() },
+    { icon: IconArrowNarrowLeftDashed, label: 'Back', onClick: () => store.provenanceStore.provenance.undo(), disabled: !store.provenanceStore.canUndo },
+    { icon: IconArrowNarrowRightDashed, label: 'Forward', onClick: () => store.provenanceStore.provenance.redo(), disabled: !store.provenanceStore.canRedo },
     { icon: IconDeviceFloppy, label: 'Save', onClick: () => setSaveModalOpened(true) },
     { icon: IconCamera, label: 'Camera' },
     { icon: IconUser, label: 'User' },
-  ], [store.provenanceStore.provenance]);
+  ], [store.provenanceStore.provenance, store.provenanceStore.canUndo, store.provenanceStore.canRedo]);
 
   return (
     <AppShell
@@ -214,7 +214,7 @@ export const Shell = observer(() => {
           </Group>
           {/** All Header Icons, right-aligned */}
           <Group gap="sm" pr="md" wrap="nowrap">
-            {headerIcons.map(({ icon: Icon, label, onClick }) => {
+            {headerIcons.map(({ icon: Icon, label, onClick, disabled }) => {
               // --- Hover Menu for Camera to show screenshots ---
               if (label === 'Camera') {
                 return (
@@ -254,7 +254,12 @@ export const Shell = observer(() => {
               // Default header icon button
               return (
                 <Tooltip key={label} label={label}>
-                  <ActionIcon aria-label={label} onClick={onClick}>
+                  <ActionIcon
+                    aria-label={label}
+                    onClick={onClick}
+                    disabled={disabled}
+                    className={label === 'Back' || label === 'Forward' ? classes.headerIcon : undefined}
+                  >
                     <Icon stroke={iconStroke} />
                   </ActionIcon>
                 </Tooltip>

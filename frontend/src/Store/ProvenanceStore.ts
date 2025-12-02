@@ -55,6 +55,8 @@ export class ProvenanceStore {
         makeObservable(this, {
             graphVersion: observable,
             savedStates: computed,
+            canUndo: computed,
+            canRedo: computed,
         });
 
         const rawInitialState: ApplicationState = {
@@ -515,6 +517,25 @@ export class ProvenanceStore {
                     timestamp: node.createdOn || node.metadata?.createdOn || 0
                 };
             });
+    }
+
+    get canUndo() {
+        // Access graphVersion to ensure reactivity
+        // eslint-disable-next-line no-unused-expressions
+        this.graphVersion;
+
+        const current = this.provenance.current;
+        const root = this.provenance.root;
+        return current.id !== root.id;
+    }
+
+    get canRedo() {
+        // Access graphVersion to ensure reactivity
+        // eslint-disable-next-line no-unused-expressions
+        this.graphVersion;
+
+        const current = this.provenance.current;
+        return current.children.length > 0;
     }
 
     restoreState(nodeId: NodeID) {

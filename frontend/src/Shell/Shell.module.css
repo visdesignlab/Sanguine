@@ -32,6 +32,7 @@
 .tabOutlineActive {
   border-bottom: 1px solid var(--mantine-color-gray-3) !important;
 }
+
 .menuLabelNoMargin {
   padding-left: 0 !important;
   margin-left: 0 !important;
@@ -53,4 +54,19 @@
   width: 100%;
   height: auto;
   object-fit: contain;
+}
+
+/* Disabled header icons (Back/Forward arrows) */
+.headerIcon {
+
+  &:disabled,
+  &[data-disabled] {
+    border-color: light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+    background-color: transparent;
+  }
+
+  svg {
+    stroke: light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4)) !important;
+    fill: none;
+  }
 }
