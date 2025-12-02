@@ -53,6 +53,13 @@ export class SelectionsStore {
     this.updateSelectedVisits();
   }
 
+  reset() {
+    this.selectedTimePeriods = [];
+    this.selectedVisits = [];
+    this.selectedVisitNos = [];
+    this._rootStore.provenanceStore.actions.updateSelection([]);
+  }
+
   async getVisitInfo(visitNo: number) {
     if (!this._rootStore.duckDB) return null;
     const query = `

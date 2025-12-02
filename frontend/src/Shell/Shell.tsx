@@ -19,7 +19,6 @@ import {
   IconRestore, type IconProps,
   IconChartBar,
   IconClipboardList,
-  IconHistory,
 } from '@tabler/icons-react';
 import * as htmlToImage from 'html-to-image';
 import { Store } from '../Store/Store';
@@ -162,7 +161,6 @@ export const Shell = observer(() => {
     { icon: IconArrowNarrowLeftDashed, label: 'Back', onClick: () => store.provenanceStore.provenance.undo() },
     { icon: IconArrowNarrowRightDashed, label: 'Forward', onClick: () => store.provenanceStore.provenance.redo() },
     { icon: IconDeviceFloppy, label: 'Save', onClick: () => setSaveModalOpened(true) },
-    { icon: IconHistory, label: 'Saved States' }, // Placeholder for dropdown logic
     { icon: IconCamera, label: 'Camera' },
     { icon: IconUser, label: 'User' },
   ];
@@ -220,17 +218,28 @@ export const Shell = observer(() => {
                   <ScreenshotMenu key="screenshot-menu" activeTab={activeTab} />
                 );
               }
-              // --- Saved States Menu ---
-              if (label === 'Saved States') {
+              // --- Saved States Menu on Save Icon Hover ---
+              if (label === 'Save') {
                 return (
-                  <Menu shadow="md" width={200} offset={12} trigger="hover" closeDelay={200} key="saved-states-menu">
+                  <Menu shadow="md" width={200} offset={12} trigger="hover" closeDelay={200} key="save-menu">
                     <Menu.Target>
-                      <ActionIcon aria-label="Saved States">
-                        <IconHistory stroke={iconStroke} />
+                      <ActionIcon aria-label="Save" onClick={onClick}>
+                        <IconDeviceFloppy stroke={iconStroke} />
                       </ActionIcon>
                     </Menu.Target>
                     <Menu.Dropdown>
-                      <Menu.Label>Saved States</Menu.Label>
+                      <Group justify="space-between" px="xs" py={4}>
+                        <Menu.Label p={0}>Saved States</Menu.Label>
+                        <Tooltip label="Reset to defaults">
+                          <ActionIcon
+                            variant="subtle"
+                            size="sm"
+                            onClick={() => setResetModalOpened(true)}
+                          >
+                            <IconRestore size={14} />
+                          </ActionIcon>
+                        </Tooltip>
+                      </Group>
                       {store.provenanceStore.savedStates.length === 0 ? (
                         <Menu.Item disabled>No saved states</Menu.Item>
                       ) : (
@@ -259,12 +268,6 @@ export const Shell = observer(() => {
 
                     <Menu.Dropdown>
                       <Menu.Label>User</Menu.Label>
-                      <Menu.Item
-                        leftSection={<IconRestore size={14} />}
-                        onClick={() => setResetModalOpened(true)}
-                      >
-                        Reset to defaults
-                      </Menu.Item>
                       <Menu.Item leftSection={<IconLogout size={14} />}>
                         Log out
                       </Menu.Item>

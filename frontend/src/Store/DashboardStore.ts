@@ -222,6 +222,83 @@ export class DashboardStore {
     this._statConfigs = this._statConfigs.filter((config) => config.statId !== statId);
   }
 
+  /**
+   * Load state from provenance
+   */
+  loadState(state: {
+    chartConfigs: DashboardChartConfig[];
+    statConfigs: DashboardStatConfig[];
+    chartLayouts: { [key: string]: Layout[] };
+  }) {
+    this._chartConfigs = state.chartConfigs;
+    this._statConfigs = state.statConfigs;
+    this._chartLayouts = state.chartLayouts;
+    this.computeChartData();
+    this.computeStatData();
+  }
+
+  /**
+   * Reset dashboard to default state
+   */
+  reset() {
+    this._chartLayouts = {
+      main: [
+        {
+          i: '0', x: 0, y: 0, w: 2, h: 1, maxH: 2,
+        },
+        {
+          i: '1', x: 0, y: 1, w: 1, h: 1, maxH: 2,
+        },
+        {
+          i: '2', x: 1, y: 1, w: 1, h: 1, maxH: 2,
+        },
+      ],
+    };
+
+    this._chartConfigs = [
+      {
+        chartId: '0', xAxisVar: 'month', yAxisVar: 'rbc_units', aggregation: 'sum', chartType: 'line',
+      },
+      {
+        chartId: '1', xAxisVar: 'quarter', yAxisVar: 'los', aggregation: 'avg', chartType: 'line',
+      },
+      {
+        chartId: '2', xAxisVar: 'quarter', yAxisVar: 'total_blood_product_cost', aggregation: 'sum', chartType: 'bar',
+      },
+    ];
+
+    this._statConfigs = [
+      {
+        statId: '1', yAxisVar: 'rbc_units', aggregation: 'avg', title: 'Average RBCs Transfused Per Visit',
+      },
+      {
+        statId: '2', yAxisVar: 'plt_units', aggregation: 'avg', title: 'Average Platelets Transfused Per Visit',
+      },
+      {
+        statId: '3', yAxisVar: 'cell_saver_ml', aggregation: 'sum', title: 'Total Cell Salvage Volume (ml) Used',
+      },
+      {
+        statId: '4', yAxisVar: 'total_blood_product_cost', aggregation: 'sum', title: 'Total Blood Product Costs',
+      },
+      {
+        statId: '5', yAxisVar: 'rbc_adherent', aggregation: 'avg', title: 'Guideline Adherent RBC Transfusions',
+      },
+      {
+        statId: '6', yAxisVar: 'plt_adherent', aggregation: 'avg', title: 'Guideline Adherent Platelet Transfusions',
+      },
+    ];
+
+    this.computeChartData();
+    this.computeStatData();
+
+    // Also update provenance to track this reset
+    this._rootStore.provenanceStore.actions.updateDashboardState({
+      chartConfigs: this._chartConfigs,
+      statConfigs: this._statConfigs,
+      chartLayouts: this._chartLayouts,
+    }, 'Reset Dashboard to Defaults');
+  }
+
   // Dashboard data ----------------------------------------------------------------
   chartData: DashboardChartData = {} as DashboardChartData;
 
