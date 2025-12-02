@@ -467,13 +467,25 @@ export class ProvenanceStore {
         // We just need to mark this node as a "saved" state for the UI.
         // We can use annotations or just store the NodeID in a list.
         const currentNodeId = this.provenance.current.id;
-        const currentState = this.provenance.getState(this.provenance.current);
-
-
-
 
         // Use addArtifact for structured data. addAnnotation is for strings only.
         this.provenance.addArtifact({ type: 'name', value: name }, currentNodeId);
+
+        // Trigger reactivity so UI updates
+        runInAction(() => {
+            this.graphVersion++;
+        });
+    }
+
+    // Workaround: Trrack doesn't support removing artifacts, so we track deleted state IDs locally
+    deletedStateIds: Set<NodeID> = new Set();
+
+    removeState(nodeId: NodeID) {
+        this.deletedStateIds.add(nodeId);
+        // Trigger reactivity
+        runInAction(() => {
+            this.graphVersion++;
+        });
     }
 
     get savedStates() {
@@ -486,6 +498,7 @@ export class ProvenanceStore {
 
 
         return nodes.filter(node => {
+            if (this.deletedStateIds.has(node.id)) return false;
             const artifacts = this.provenance.getAllArtifacts(node.id);
             return artifacts.some(a => a.artifact.type === 'name');
         })

@@ -32,6 +32,7 @@ import { SelectedVisitsPanel } from '../Components/Toolbar/SelectedVisits/Select
 import { FilterPanel } from '../Components/Toolbar/Filters/FilterPanel';
 import { FilterIcon } from '../Components/Toolbar/Filters/FilterIcon';
 import { ScreenshotMenu } from '../Components/Menus/ScreenshotMenu';
+import { SavedStatesMenu } from '../Components/Menus/SavedStatesMenu';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -159,13 +160,13 @@ export const Shell = observer(() => {
   ];
 
   // Header toolbar icons
-  const headerIcons: { icon: React.ComponentType<IconProps>; label: string; onClick?: () => void }[] = [
+  const headerIcons = useMemo(() => [
     { icon: IconArrowNarrowLeftDashed, label: 'Back', onClick: () => store.provenanceStore.provenance.undo() },
     { icon: IconArrowNarrowRightDashed, label: 'Forward', onClick: () => store.provenanceStore.provenance.redo() },
     { icon: IconDeviceFloppy, label: 'Save', onClick: () => setSaveModalOpened(true) },
     { icon: IconCamera, label: 'Camera' },
     { icon: IconUser, label: 'User' },
-  ];
+  ], [store.provenanceStore.provenance]);
 
   return (
     <AppShell
@@ -223,39 +224,12 @@ export const Shell = observer(() => {
               // --- Saved States Menu on Save Icon Hover ---
               if (label === 'Save') {
                 return (
-                  <Menu shadow="md" width={200} offset={12} trigger="hover" closeDelay={200} key="save-menu">
-                    <Menu.Target>
-                      <ActionIcon aria-label="Save" onClick={onClick}>
-                        <IconDeviceFloppy stroke={iconStroke} />
-                      </ActionIcon>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      <Group justify="space-between" px="xs" py={4}>
-                        <Menu.Label p={0}>Saved States</Menu.Label>
-                        <Tooltip label="Reset to defaults">
-                          <ActionIcon
-                            variant="subtle"
-                            size="sm"
-                            onClick={() => setResetModalOpened(true)}
-                          >
-                            <IconRestore size={14} />
-                          </ActionIcon>
-                        </Tooltip>
-                      </Group>
-                      {store.provenanceStore.savedStates.length === 0 ? (
-                        <Menu.Item disabled>No saved states</Menu.Item>
-                      ) : (
-                        store.provenanceStore.savedStates.map((state) => (
-                          <Menu.Item
-                            key={state.id}
-                            onClick={() => confirmRestore(state.id)}
-                          >
-                            {state.name}
-                          </Menu.Item>
-                        ))
-                      )}
-                    </Menu.Dropdown>
-                  </Menu>
+                  <SavedStatesMenu
+                    key="saved-states-menu"
+                    onSave={() => setSaveModalOpened(true)}
+                    onRestore={(id) => confirmRestore(id)}
+                    onReset={() => setResetModalOpened(true)}
+                  />
                 );
               }
               // --- User menu ---
