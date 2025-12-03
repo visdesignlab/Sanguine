@@ -76,6 +76,9 @@ export class FiltersStore {
       val = value.toISOString();
     }
 
+    this._filterValues[key] = value;
+    this._rootStore.updateFilteredData();
+
     this._rootStore.provenanceStore.actions.updateFilter(key as any, val);
   }
 

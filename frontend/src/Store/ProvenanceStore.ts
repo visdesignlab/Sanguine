@@ -89,35 +89,18 @@ export class ProvenanceStore {
 
 
 
-        // Deep clean the state to remove any MobX proxies or getters
         const initialState = JSON.parse(JSON.stringify(rawInitialState));
-
-
         this.provenance = initProvenance<ApplicationState, any, MyAnnotation>(initialState);
-
-        // Check if provenance got proxied
-        // @ts-ignore
-        const isProxy = !!this.provenance[Symbol.for("mobx administration")];
-
-        if (isProxy) {
-            console.error("CRITICAL: Provenance instance IS A PROXY. This will break Trrack.");
-        }
 
         // Verify state immediately
         const immediateState = this.provenance.getState(this.provenance.current);
 
 
-        // Set up observer to sync state back to MobX stores
-        // IMPORTANT: Only sync state back during undo/redo (CurrentChanged), not during new actions (NodeAdded)
-        // This prevents overwriting store values with stale initial state from Trrack
         this.provenance.addGlobalObserver((_graph, changeType) => {
-            // Always trigger MobX update for UI reactivity
             runInAction(() => {
                 this.graphVersion++;
             });
 
-            // Only sync state to stores when navigating history (undo/redo/restore)
-            // Don't sync when new actions are added, as the action itself updates the stores
             if (changeType === 'CurrentChanged') {
                 const state = this.provenance.getState(this.provenance.current);
 
@@ -465,12 +448,7 @@ export class ProvenanceStore {
     // Save/Restore --------------------------------------------------------------
 
     saveState(name: string) {
-        // In Trrack, every state is already "saved" in the graph.
-        // We just need to mark this node as a "saved" state for the UI.
-        // We can use annotations or just store the NodeID in a list.
         const currentNodeId = this.provenance.current.id;
-
-        // Use addArtifact for structured data. addAnnotation is for strings only.
         this.provenance.addArtifact({ type: 'name', value: name }, currentNodeId);
 
         // Trigger reactivity so UI updates
