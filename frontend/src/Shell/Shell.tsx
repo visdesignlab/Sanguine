@@ -19,7 +19,6 @@ import {
   IconRestore, type IconProps,
   IconChartBar,
   IconClipboardList,
-  IconHistory,
 } from '@tabler/icons-react';
 import * as htmlToImage from 'html-to-image';
 import { Store } from '../Store/Store';
@@ -34,7 +33,6 @@ import { FilterPanel } from '../Components/Toolbar/Filters/FilterPanel';
 import { FilterIcon } from '../Components/Toolbar/Filters/FilterIcon';
 import { ScreenshotMenu } from '../Components/Menus/ScreenshotMenu';
 import { SavedStatesMenu } from '../Components/Menus/SavedStatesMenu';
-import { HistorySidebar } from '../Components/Toolbar/History/HistorySidebar';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -146,12 +144,6 @@ export const Shell = observer(() => {
         </Badge>,
 
       ],
-    },
-    {
-      icon: IconHistory,
-      label: 'History',
-      content: <HistorySidebar />,
-      disabled: true,
     },
     {
       icon: IconDatabase,
