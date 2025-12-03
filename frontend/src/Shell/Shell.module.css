@@ -56,17 +56,25 @@
   object-fit: contain;
 }
 
-/* Disabled header icons (Back/Forward arrows) */
+/* Header icons (Back/Forward arrows) */
 .headerIcon {
+  border-color: transparent;
+  background-color: transparent;
 
-  &:disabled,
-  &[data-disabled] {
-    border-color: light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
-    background-color: transparent;
+  /* Enabled state - black arrow, no border */
+  svg {
+    stroke: light-dark(var(--mantine-color-black), var(--mantine-color-white)) !important;
+    fill: none;
   }
 
-  svg {
-    stroke: light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4)) !important;
-    fill: none;
+  /* Disabled state - gray arrow, no border */
+  &:disabled,
+  &[data-disabled] {
+    border-color: transparent;
+    background-color: transparent;
+
+    svg {
+      stroke: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-4)) !important;
+    }
   }
 }
