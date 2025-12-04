@@ -1,16 +1,238 @@
-import { useRef, useState, useContext } from 'react';
+import { useRef, useState, useContext, useMemo } from 'react';
 import {
     Menu, ActionIcon, Tooltip, Box, Text, Checkbox, Modal, Button, Stack, Group, Badge,
-    Title, Image, ScrollArea, CloseButton, TextInput,
+    Title, Image, ScrollArea, CloseButton, TextInput, Divider, Accordion, ThemeIcon
 } from '@mantine/core';
 import {
     IconFolder, IconFolderDown, IconFolderSearch, IconEdit, IconTrash, IconSquareCheck, IconCheck, IconX, IconChevronLeft, IconChevronRight,
+    IconChartBar, IconFilter, IconClick
 } from '@tabler/icons-react';
 import { useThemeConstants } from '../../Theme/mantineTheme';
 import classes from '../../Shell/Shell.module.css';
 import { Store } from '../../Store/Store';
 import { observer } from 'mobx-react-lite';
 import { captureScreenshot } from '../../Utils/screenshotUtils';
+import { ApplicationState } from '../../Store/ProvenanceStore';
+import {
+    BLOOD_COMPONENTS, OUTCOMES, PROPHYL_MEDS, GUIDELINE_ADHERENT, LAB_RESULTS, COSTS, TIME_AGGREGATION_OPTIONS,
+    AGGREGATION_OPTIONS,
+    DashboardChartConfig
+} from '../../Types/application';
+
+// Helper to get readable names
+const getReadableName = (key: string): string => {
+    // Handle date fields specifically
+    if (key === 'dateFrom') return 'Date From';
+    if (key === 'dateTo') return 'Date To';
+
+    // Check Blood Components
+    const bloodComp = BLOOD_COMPONENTS.find(c => c.value === key);
+    if (bloodComp) return bloodComp.label.base;
+
+    // Check Outcomes
+    const outcome = OUTCOMES.find(c => c.value === key);
+    if (outcome) return outcome.label.base;
+
+    // Check Prophyl Meds
+    const prophyl = PROPHYL_MEDS.find(c => c.value === key);
+    if (prophyl) return prophyl.label.base;
+
+    // Check Guideline Adherence
+    const adherence = Object.values(GUIDELINE_ADHERENT).find(c => c.value === key);
+    if (adherence) return adherence.label.base;
+
+    // Check Lab Results
+    const lab = LAB_RESULTS.find(c => c.value === key);
+    if (lab) return lab.label.base;
+
+    // Check Costs
+    const cost = Object.values(COSTS).find(c => c.value === key);
+    if (cost) return cost.label.base;
+
+    // Check Time Aggregations
+    const timeAgg = TIME_AGGREGATION_OPTIONS[key as keyof typeof TIME_AGGREGATION_OPTIONS];
+    if (timeAgg) return timeAgg.label;
+
+    // Fallback to formatting the key
+    return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+};
+
+const formatValue = (value: any): string => {
+    if (value instanceof Date) {
+        return value.toLocaleDateString();
+    }
+    if (typeof value === 'boolean') {
+        return value ? 'Yes' : 'No';
+    }
+    if (Array.isArray(value)) {
+        if (value.length === 2 && typeof value[0] === 'number') {
+            return `${value[0]} - ${value[1]}`;
+        }
+        return value.join(', ');
+    }
+    if (value === null || value === undefined) {
+        return 'Any'; // Or 'None' depending on context, 'Any' usually fits filters better
+    }
+    return String(value);
+};
+
+const formatTimestamp = (timestamp: number): string => {
+    return new Date(timestamp).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+    });
+};
+
+const StateDetails = ({ state }: { state: ApplicationState }) => {
+    const store = useContext(Store);
+    const {
+        filterValues,
+        selections,
+        dashboard
+    } = state;
+
+    // Process Charts
+    const charts = useMemo(() => {
+        const items: string[] = [];
+        if (dashboard?.chartConfigs) {
+            dashboard.chartConfigs.forEach((config: DashboardChartConfig) => {
+                const yLabel = getReadableName(config.yAxisVar);
+                const xLabel = getReadableName(config.xAxisVar);
+                const agg = AGGREGATION_OPTIONS[config.aggregation]?.label || config.aggregation;
+                items.push(`${agg} ${yLabel} by ${xLabel}`);
+            });
+        }
+        if (dashboard?.statConfigs) {
+            dashboard.statConfigs.forEach(config => {
+                items.push(`Stat: ${config.title}`);
+            });
+        }
+        return items;
+    }, [dashboard]);
+
+    // Process Filters
+    const activeFilters = useMemo(() => {
+        const items: { label: string, value: string }[] = [];
+        if (filterValues) {
+            const initialValues = store.filtersStore.initialFilterValues;
+
+            Object.entries(filterValues).forEach(([key, value]) => {
+                // Skip if value indicates "all" or "none" effectively
+                if (value === null) return;
+
+                // Check against initial values
+                const initialValue = initialValues[key as keyof typeof initialValues];
+
+                // Deep comparison for arrays (ranges)
+                if (Array.isArray(value) && Array.isArray(initialValue)) {
+                    if (value.length === initialValue.length && value.every((v, i) => v === initialValue[i])) {
+                        return; // Skip if matches initial
+                    }
+                }
+                // Date comparison
+                else if (value instanceof Date && initialValue instanceof Date) {
+                    if (value.getTime() === initialValue.getTime()) {
+                        return; // Skip if matches initial
+                    }
+                }
+                // Primitive comparison
+                else if (value === initialValue) {
+                    return; // Skip if matches initial
+                }
+
+                // Special case for dates stored as strings in Trrack but Dates in store
+                // The `state` passed here comes from Trrack, so dates might be strings if not parsed yet.
+                // However, `ProvenanceStore.ts` types say `filterValues` has string dates.
+                // Let's handle the possibility of string dates in `value` vs Date in `initialValue`.
+                if (typeof value === 'string' && initialValue instanceof Date) {
+                    const dateVal = new Date(value);
+                    if (!isNaN(dateVal.getTime()) && dateVal.getTime() === initialValue.getTime()) {
+                        return;
+                    }
+                }
+
+                items.push({
+                    label: getReadableName(key),
+                    value: formatValue(value)
+                });
+            });
+        }
+        return items;
+    }, [filterValues, store.filtersStore.initialFilterValues]);
+
+    // Process Selections
+    const selectedItems = useMemo(() => {
+        return selections?.selectedTimePeriods || [];
+    }, [selections]);
+
+    if (charts.length === 0 && activeFilters.length === 0 && selectedItems.length === 0) {
+        return <Text size="sm" c="dimmed" fs="italic">No specific state details (default view).</Text>;
+    }
+
+    return (
+        <Stack gap="xs" w="100%">
+
+            <Accordion variant="contained" radius="md" defaultValue={[]} multiple>
+                {charts.length > 0 && (
+                    <Accordion.Item value="charts">
+                        <Accordion.Control icon={<IconChartBar size={16} color="var(--mantine-color-blue-6)" />}>
+                            <Text size="sm" fw={500}>Charts & Stats ({charts.length})</Text>
+                        </Accordion.Control>
+                        <Accordion.Panel>
+                            <ScrollArea.Autosize mah={150}>
+                                <Stack gap={4}>
+                                    {charts.map((chart, i) => (
+                                        <Text key={i} size="xs" c="dimmed">• {chart}</Text>
+                                    ))}
+                                </Stack>
+                            </ScrollArea.Autosize>
+                        </Accordion.Panel>
+                    </Accordion.Item>
+                )}
+
+                {activeFilters.length > 0 && (
+                    <Accordion.Item value="filters">
+                        <Accordion.Control icon={<IconFilter size={16} color="var(--mantine-color-orange-6)" />}>
+                            <Text size="sm" fw={500}>Filters ({activeFilters.length})</Text>
+                        </Accordion.Control>
+                        <Accordion.Panel>
+                            <ScrollArea.Autosize mah={150}>
+                                <Stack gap={4}>
+                                    {activeFilters.map((filter, i) => (
+                                        <Group key={i} justify="space-between" wrap="nowrap" align="flex-start">
+                                            <Text size="xs" c="dimmed" style={{ flex: 1 }}>{filter.label}:</Text>
+                                            <Text size="xs" fw={500} style={{ flex: 1, textAlign: 'right' }}>{filter.value}</Text>
+                                        </Group>
+                                    ))}
+                                </Stack>
+                            </ScrollArea.Autosize>
+                        </Accordion.Panel>
+                    </Accordion.Item>
+                )}
+
+                {selectedItems.length > 0 && (
+                    <Accordion.Item value="selections">
+                        <Accordion.Control icon={<IconClick size={16} color="var(--mantine-color-green-6)" />}>
+                            <Text size="sm" fw={500}>Selections ({selectedItems.length})</Text>
+                        </Accordion.Control>
+                        <Accordion.Panel>
+                            <ScrollArea.Autosize mah={150}>
+                                <Stack gap={4}>
+                                    {selectedItems.map((item, i) => (
+                                        <Text key={i} size="xs" c="dimmed">• {item}</Text>
+                                    ))}
+                                </Stack>
+                            </ScrollArea.Autosize>
+                        </Accordion.Panel>
+                    </Accordion.Item>
+                )}
+            </Accordion>
+        </Stack>
+    );
+};
 
 /**
  * SavedStatesMenu - Menu for saving, restoring, and deleting application states.
@@ -148,6 +370,9 @@ export const SavedStatesMenu = observer(({
     const activePreviewState = (hoveredStateId ? sortedStates.find(s => s.id === hoveredStateId) : null) ||
         (previewStateId ? sortedStates.find(s => s.id === previewStateId) : null);
 
+    // Retrieve full state for details
+    const activeFullState = activePreviewState ? store.provenanceStore.provenance.getState(activePreviewState.id) : null;
+
     return (
         <>
             <Menu shadow="md" width={200} trigger="click" closeDelay={200} offset={12}>
@@ -182,7 +407,7 @@ export const SavedStatesMenu = observer(({
                 size="xl"
                 centered
             >
-                <Stack gap="md">
+                <Stack gap="md" h={600}>
                     <Group align="center">
                         <Box style={{ flex: 1 }}>
                             <Group justify="space-between">
@@ -233,7 +458,7 @@ export const SavedStatesMenu = observer(({
                         </Box>
                     </Group>
 
-                    <Group align="flex-start" style={{ height: 500 }}>
+                    <Group align="flex-start" style={{ flex: 1, overflow: 'hidden' }}>
                         {/* Left Column: List of States */}
                         <Stack style={{ flex: 1, height: '100%' }} gap="xs">
 
@@ -279,9 +504,16 @@ export const SavedStatesMenu = observer(({
                                                             value={tempName}
                                                             onChange={(e) => setTempName(e.currentTarget.value)}
                                                             onClick={(e) => e.stopPropagation()}
-                                                            size="xs"
+                                                            size="sm"
                                                             autoFocus
-                                                            style={{ flex: 1 }}
+                                                            styles={{
+                                                                input: {
+                                                                    fontWeight: 500,
+                                                                    width: `${Math.max(tempName.length + 2, 10)}ch`,
+                                                                    borderColor: 'var(--mantine-color-blue-2)'
+                                                                },
+                                                                root: { width: 'auto' }
+                                                            }}
                                                             onKeyDown={(e) => {
                                                                 if (e.key === 'Enter') saveRename();
                                                                 if (e.key === 'Escape') cancelEditing();
@@ -293,7 +525,7 @@ export const SavedStatesMenu = observer(({
                                                                 {state.name}
                                                             </Text>
                                                             <Text size="xs" c="dimmed">
-                                                                {new Date(state.timestamp).toLocaleString()}
+                                                                {formatTimestamp(state.timestamp)}
                                                             </Text>
                                                         </Stack>
                                                     )}
@@ -327,7 +559,7 @@ export const SavedStatesMenu = observer(({
                             </ScrollArea>
                         </Stack>
 
-                        {/* Right Column: Screenshot Preview */}
+                        {/* Right Column: Screenshot Preview and Details */}
                         <Box style={{
                             flex: 1.5,
                             height: '100%',
@@ -335,11 +567,12 @@ export const SavedStatesMenu = observer(({
                             paddingLeft: 16,
                             display: 'flex',
                             flexDirection: 'column',
-                            position: 'relative'
+                            position: 'relative',
+                            overflow: 'hidden' // Ensure scroll area works
                         }}>
                             {activePreviewState ? (
-                                <>
-                                    <Box style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                <Stack h="100%" gap="md">
+                                    <Box style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', maxHeight: '300px' }}>
                                         {activePreviewState.screenshot ? (
                                             <Image
                                                 src={activePreviewState.screenshot}
@@ -356,13 +589,18 @@ export const SavedStatesMenu = observer(({
                                             <Text c="dimmed">No screenshot available</Text>
                                         )}
                                     </Box>
-                                    <Group justify="space-between" align="center" mt="md" wrap="nowrap">
+                                    {/* State Details Scroll Area */}
+                                    <ScrollArea style={{ flex: 1 }} type="auto">
+                                        {activeFullState && <StateDetails state={activeFullState} />}
+                                    </ScrollArea>
+
+                                    <Group justify="space-between" align="center" wrap="nowrap" style={{ flex: '0 0 auto', paddingTop: 16 }}>
                                         <Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
                                             <Text fw={600} size="lg" style={{ wordBreak: 'break-word', lineHeight: 1.2 }}>
                                                 {activePreviewState.name}
                                             </Text>
                                             <Text c="dimmed" size="sm">
-                                                {new Date(activePreviewState.timestamp).toLocaleString()}
+                                                {formatTimestamp(activePreviewState.timestamp)}
                                             </Text>
                                         </Stack>
                                         <Button
@@ -375,7 +613,7 @@ export const SavedStatesMenu = observer(({
                                             Restore State
                                         </Button>
                                     </Group>
-                                </>
+                                </Stack>
                             ) : (
                                 <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
                                     <Text c="dimmed">Select a state to preview</Text>
@@ -464,7 +702,7 @@ export const SavedStatesMenu = observer(({
                                                 {zoomedState.name}
                                             </Title>
                                             <Text c="dimmed" size="sm" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
-                                                {new Date(zoomedState.timestamp).toLocaleString()}
+                                                {formatTimestamp(zoomedState.timestamp)}
                                             </Text>
                                         </Stack>
 
