@@ -33,6 +33,7 @@ import { FilterPanel } from '../Components/Toolbar/Filters/FilterPanel';
 import { FilterIcon } from '../Components/Toolbar/Filters/FilterIcon';
 import { ScreenshotMenu } from '../Components/Menus/ScreenshotMenu';
 import { SavedStatesMenu } from '../Components/Menus/SavedStatesMenu';
+import { captureScreenshot } from '../Utils/screenshotUtils';
 
 /** *
  * Shell component that provides the main layout for the application.
@@ -76,16 +77,23 @@ export const Shell = observer(() => {
   };
 
   // Save State Modal -----------------------------
+  // Save State Modal -----------------------------
   const [saveModalOpened, setSaveModalOpened] = useState(false);
   const [stateName, setStateName] = useState('');
-  const [pendingScreenshot, setPendingScreenshot] = useState<string | undefined>(undefined);
 
-  const handleSaveState = () => {
+  const handleSaveState = async () => {
     if (stateName.trim()) {
-      store.provenanceStore.saveState(stateName, pendingScreenshot);
+      // Close modal first
       setSaveModalOpened(false);
+
+      // Wait for modal transition to finish (approx 300ms is usually safe for Mantine modals)
+      await new Promise((resolve) => { setTimeout(resolve, 300); });
+
+      // Capture screenshot now that modal is gone
+      const screenshot = await captureScreenshot(null, { pixelRatio: 1 });
+
+      store.provenanceStore.saveState(stateName, screenshot);
       setStateName('');
-      setPendingScreenshot(undefined);
     }
   };
 
@@ -228,8 +236,7 @@ export const Shell = observer(() => {
                 return (
                   <SavedStatesMenu
                     key="saved-states-menu"
-                    onSave={(screenshot) => {
-                      setPendingScreenshot(screenshot);
+                    onSave={() => {
                       setSaveModalOpened(true);
                     }}
                     onRestore={(id) => confirmRestore(id)}

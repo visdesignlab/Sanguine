@@ -360,10 +360,11 @@ export const SavedStatesMenu = observer(({
         setTempName("");
     };
 
+    const [menuOpened, setMenuOpened] = useState(false);
+
     const handleSaveCurrentState = async () => {
-        // Capture screenshot before opening save modal
-        const screenshot = await captureScreenshot(null, { pixelRatio: 1 });
-        onSave(screenshot);
+        // Capture screenshot
+        onSave();
     };
 
     // Get preview image for the right side of the modal
@@ -375,9 +376,9 @@ export const SavedStatesMenu = observer(({
 
     return (
         <>
-            <Menu shadow="md" width={200} trigger="click" closeDelay={200} offset={12}>
+            <Menu shadow="md" width={200} trigger="click" closeDelay={200} offset={12} opened={menuOpened} onChange={setMenuOpened}>
                 <Menu.Target>
-                    <Tooltip label="Save State">
+                    <Tooltip label="Save State" disabled={menuOpened}>
                         <ActionIcon aria-label="Save State Menu">
                             <IconFolder stroke={iconStroke} />
                         </ActionIcon>
