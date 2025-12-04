@@ -78,12 +78,14 @@ export const Shell = observer(() => {
   // Save State Modal -----------------------------
   const [saveModalOpened, setSaveModalOpened] = useState(false);
   const [stateName, setStateName] = useState('');
+  const [pendingScreenshot, setPendingScreenshot] = useState<string | undefined>(undefined);
 
   const handleSaveState = () => {
     if (stateName.trim()) {
-      store.provenanceStore.saveState(stateName);
+      store.provenanceStore.saveState(stateName, pendingScreenshot);
       setSaveModalOpened(false);
       setStateName('');
+      setPendingScreenshot(undefined);
     }
   };
 
@@ -226,7 +228,10 @@ export const Shell = observer(() => {
                 return (
                   <SavedStatesMenu
                     key="saved-states-menu"
-                    onSave={() => setSaveModalOpened(true)}
+                    onSave={(screenshot) => {
+                      setPendingScreenshot(screenshot);
+                      setSaveModalOpened(true);
+                    }}
                     onRestore={(id) => confirmRestore(id)}
                     onReset={() => setResetModalOpened(true)}
                   />

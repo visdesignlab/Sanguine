@@ -447,9 +447,12 @@ export class ProvenanceStore {
 
     // Save/Restore --------------------------------------------------------------
 
-    saveState(name: string) {
+    saveState(name: string, screenshot?: string) {
         const currentNodeId = this.provenance.current.id;
         this.provenance.addArtifact({ type: 'name', value: name }, currentNodeId);
+        if (screenshot) {
+            this.provenance.addArtifact({ type: 'screenshot', value: screenshot }, currentNodeId);
+        }
 
         // Trigger reactivity so UI updates
         runInAction(() => {
@@ -485,9 +488,11 @@ export class ProvenanceStore {
             .map(node => {
                 const artifacts = this.provenance.getAllArtifacts(node.id);
                 const nameArtifact = artifacts.find(a => a.artifact.type === 'name');
+                const screenshotArtifact = artifacts.find(a => a.artifact.type === 'screenshot');
                 return {
                     id: node.id,
                     name: nameArtifact?.artifact.value,
+                    screenshot: screenshotArtifact?.artifact.value,
                     // timestamp: node.createdOn // createdOn might be on metadata or different property
                     // Let's assume metadata.createdOn or just use Date.now() if not available, or check node structure
                     // Trrack nodes usually have createdOn. If lint fails, we can cast to any or check type.
