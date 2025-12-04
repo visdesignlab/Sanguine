@@ -78,3 +78,14 @@
     }
   }
 }
+
+
+.clickableScreenshot {
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  border: 1px solid var(--mantine-color-gray-3);
+
+  &:hover {
+    border-color: var(--mantine-color-blue-5) !important;
+  }
+}

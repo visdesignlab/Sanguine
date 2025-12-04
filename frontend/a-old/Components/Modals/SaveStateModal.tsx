@@ -9,8 +9,8 @@ import Store from '../../Interfaces/Store';
 import { simulateAPIClick } from '../../../Store/UserManagement';
 
 type Props = {
-    visible: boolean,
-    setVisibility: (input: boolean) => void;
+  visible: boolean,
+  setVisibility: (input: boolean) => void;
 };
 
 function SaveStateModal({ visible, setVisibility }: Props) {
@@ -116,14 +116,14 @@ function SaveStateModal({ visible, setVisibility }: Props) {
                     name="state-public"
                     color="primary"
                   />
-                              )}
+                )}
                 label="Public State"
               />
               <FormControlLabel
                 value="PrivateState"
                 control={
                   <Radio name="state-private" color="primary" />
-                            }
+                }
                 label="Private State"
               />
             </RadioGroup>

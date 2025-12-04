@@ -471,6 +471,14 @@ export class ProvenanceStore {
         });
     }
 
+    renameState(nodeId: NodeID, newName: string) {
+        this.provenance.addArtifact({ type: 'name', value: newName }, nodeId);
+        // Trigger reactivity
+        runInAction(() => {
+            this.graphVersion++;
+        });
+    }
+
     get savedStates() {
         // Access graphVersion to ensure this computed property updates when the graph changes
         // eslint-disable-next-line no-unused-expressions
@@ -487,7 +495,8 @@ export class ProvenanceStore {
         })
             .map(node => {
                 const artifacts = this.provenance.getAllArtifacts(node.id);
-                const nameArtifact = artifacts.find(a => a.artifact.type === 'name');
+                // Find the LATEST name artifact
+                const nameArtifact = artifacts.filter(a => a.artifact.type === 'name').pop();
                 const screenshotArtifact = artifacts.find(a => a.artifact.type === 'screenshot');
                 return {
                     id: node.id,
