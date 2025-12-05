@@ -70,6 +70,11 @@ export class FiltersStore {
   }
 
   setFilterValue<T extends keyof typeof this._filterValues>(key: T, value: typeof this._filterValues[T]) {
+    // Ensure dates are actually Date objects
+    if ((key === 'dateFrom' || key === 'dateTo') && typeof value === 'string') {
+      // eslint-disable-next-line no-param-reassign
+      value = safeParseDate(value) as any;
+    }
 
     let val: any = value;
     if (value instanceof Date) {
@@ -84,6 +89,10 @@ export class FiltersStore {
 
   loadState(newFilterValues: typeof this._filterValues) {
     this._filterValues = newFilterValues;
+    // Ensure dates are Date objects
+    this._filterValues.dateFrom = safeParseDate(this._filterValues.dateFrom as any);
+    this._filterValues.dateTo = safeParseDate(this._filterValues.dateTo as any);
+
     this._rootStore.updateFilteredData();
   }
 
@@ -171,11 +180,15 @@ export class FiltersStore {
    * Returns 1 if filters are applied, 0 otherwise.
    */
   get dateFiltersAppliedCount(): number {
-    const { dateFrom, dateTo } = this._filterValues;
+    const dateFrom = safeParseDate(this._filterValues.dateFrom as any);
+    const dateTo = safeParseDate(this._filterValues.dateTo as any);
+    const initDateFrom = safeParseDate(this._initialFilterValues.dateFrom as any);
+    const initDateTo = safeParseDate(this._initialFilterValues.dateTo as any);
+
     // Only count if user has changed from initial values
     return (
-      dateFrom.getTime() !== this._initialFilterValues.dateFrom.getTime()
-      || dateTo.getTime() !== this._initialFilterValues.dateTo.getTime()
+      dateFrom.getTime() !== initDateFrom.getTime()
+      || dateTo.getTime() !== initDateTo.getTime()
     ) ? 1 : 0;
   }
 
